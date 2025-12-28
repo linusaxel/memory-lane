@@ -1,0 +1,22 @@
+# Database
+psycopg[binary]>=3.1.0
+sqlalchemy>=2.0.23
+
+# API
+fastapi==0.109.0
+uvicorn==0.27.0
+
+# LLM
+anthropic==0.40.0
+
+# Transcripts
+youtube-transcript-api>=1.0.0
+
+# Geocoding
+googlemaps==4.10.0
+
+# Config
+pyyaml==6.0.1
+
+# Utilities
+python-dotenv==1.0.0

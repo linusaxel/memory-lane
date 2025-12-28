@@ -1,0 +1,29 @@
+# Sample content configuration for Memory Lane
+#
+# Start with 5-10 high-quality videos known to have location-rich stories
+
+sources:
+  # Podcasts with travel stories
+  - name: "The Tim Ferriss Show"
+    platform: youtube
+    videos:
+      - url: "https://www.youtube.com/watch?v=3qHkcs3kG44"
+        title: "Naval Ravikant - The Angel Philosopher"
+      - url: "https://www.youtube.com/watch?v=CDWPxEmBWCQ"
+        title: "Tony Robbins on Morning Routines"
+
+  # Travel content
+  - name: "Rick Steves' Europe"
+    platform: youtube
+    videos:
+      - url: "https://www.youtube.com/watch?v=yH-kKi2DPWQ"
+        title: "Paris: Embracing the Art of Living"
+      - url: "https://www.youtube.com/watch?v=RwRZ_oy_j2E"
+        title: "Rome: Ancient Glory"
+
+  # Food and travel
+  - name: "Mark Wiens"
+    platform: youtube
+    videos:
+      - url: "https://www.youtube.com/watch?v=example"
+        title: "Tokyo Street Food Tour"

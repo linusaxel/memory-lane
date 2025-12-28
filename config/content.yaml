@@ -1,0 +1,17 @@
+# Content configuration for Memory Lane
+# Add YouTube videos that contain location-rich stories
+
+sources:
+  - name: "Tuesdays with Stories"
+    platform: youtube
+    videos:
+      - url: "https://www.youtube.com/watch?v=_SPUkqdle_Q"
+      - url: "https://www.youtube.com/watch?v=41q_CYtRPuM"
+      - url: "https://www.youtube.com/watch?v=eG74ck-Jy8s"
+      - url: "https://www.youtube.com/watch?v=5dRXEpQimGU"
+      - url: "https://www.youtube.com/watch?v=15ntXeFf5Wg"
+      - url: "https://www.youtube.com/watch?v=7CTC7rj5jV4"
+      - url: "https://www.youtube.com/watch?v=WFr8vnw2diI"
+      - url: "https://www.youtube.com/watch?v=kZAqbulueXc"
+      - url: "https://www.youtube.com/watch?v=QGCLljlLf1g"
+      - url: "https://www.youtube.com/watch?v=0IHZRUW72Xs"
