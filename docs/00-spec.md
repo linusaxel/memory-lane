@@ -71,7 +71,6 @@ Content (1) ──── (1) Transcript
 ## Tech Stack
 
 - **Database**: PostgreSQL + PostGIS
-- **LLM**: Claude (Anthropic API)
-- **Geocoding**: Google Places API
+- **LLM**: Claude (Anthropic API) - handles both extraction and geocoding
 - **API**: FastAPI
 - **Transcripts**: youtube-transcript-api

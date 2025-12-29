@@ -4,7 +4,7 @@
 
 - Docker and Docker Compose
 - Python 3.11+ (tested with 3.14)
-- API keys for Anthropic and Google Places
+- Anthropic API key
 
 ## Python Environment
 
@@ -20,13 +20,14 @@ pip install -r requirements.txt
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `DATABASE_URL` | No | PostgreSQL connection string (default: local Docker) |
 | `ANTHROPIC_API_KEY` | Yes | Claude API key |
-| `GOOGLE_PLACES_API_KEY` | Yes | Google Places API key |
 | `LOG_LEVEL` | No | Logging level (default: INFO) |
 | `EXTRACTION_MODEL` | No | Claude model (default: claude-sonnet-4-20250514) |
 | `CHUNK_MINUTES` | No | Transcript chunk size (default: 4) |
 | `CHUNK_OVERLAP_SECONDS` | No | Chunk overlap (default: 30) |
+
+Note: Geocoding is handled directly by Claude during extraction - no external geocoding API required.
 
 ## Database
 
@@ -110,8 +111,8 @@ memory-lane/
 │   ├── db.py               # Database connection
 │   ├── ingest.py           # Load content from config
 │   ├── transcripts.py      # Fetch YouTube transcripts
-│   ├── extract.py          # LLM memory extraction
-│   ├── geocode.py          # Place geocoding
+│   ├── extract.py          # LLM memory extraction (includes geocoding)
+│   ├── geocode.py          # Geocoding utilities (stats, manual fixes)
 │   └── run_all.py          # Run full pipeline
 ├── api/
 │   └── main.py             # FastAPI query endpoint
@@ -135,9 +136,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Run pipeline stages (with venv activated)
-python -m pipeline.ingest
-python -m pipeline.transcripts
-python -m pipeline.extract
+python -m pipeline.ingest       # Load content URLs from config
+python -m pipeline.transcripts  # Fetch YouTube transcripts
+python -m pipeline.extract      # Extract memories with coordinates
+
+# Check geocoding status (optional - coordinates come from LLM)
 python -m pipeline.geocode
 
 # Or run all stages

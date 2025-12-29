@@ -8,31 +8,28 @@ Extract location-based memories from video transcripts and make them queryable b
 # 1. Start database
 docker compose up -d
 
-# 2. Install dependencies
+# 2. Setup Python environment
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 
-# 3. Run pipeline
-python -m pipeline.run_all
+# 3. Add your API key
+cp .env.example .env
+# Edit .env and add ANTHROPIC_API_KEY
 
-# 4. Start API
-uvicorn api.main:app --reload --port 8000
+# 4. Run pipeline
+python -m pipeline.ingest
+python -m pipeline.transcripts
+python -m pipeline.extract
 ```
+
+## For AI Agents
+
+See **[CLAUDE.md](CLAUDE.md)** for a quick reference guide optimized for AI coding assistants.
 
 ## Documentation
 
 | Doc | Description |
 |-----|-------------|
-| [00-spec.md](docs/00-spec.md) | High-level project overview |
-| [01-setup.md](docs/01-setup.md) | Environment, Docker, database schema |
-| [02-ingest.md](docs/02-ingest.md) | Content ingestion from config |
-| [03-transcripts.md](docs/03-transcripts.md) | Transcript fetching |
-| [04-extract.md](docs/04-extract.md) | LLM memory extraction |
-| [05-geocode.md](docs/05-geocode.md) | Place geocoding |
-| [06-api.md](docs/06-api.md) | Query API |
-| [07-testing.md](docs/07-testing.md) | Validation strategy |
-
-## Examples
-
-- [content.yaml](examples/content.yaml) - Sample content configuration
-- [transcript.json](examples/transcript.json) - Sample transcript format
-- [extraction-examples.md](examples/extraction-examples.md) - Input/output extraction pairs
+| [00-spec.md](docs/00-spec.md) | Project specification and data model |
+| [01-setup.md](docs/01-setup.md) | Environment, database schema, project structure |
