@@ -17,8 +17,11 @@ docker compose up -d
 # Setup Python (first time)
 python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt
 
-# Run pipeline (simple/sequential)
+# Run pipeline (one command)
 source venv/bin/activate
+python -m pipeline.run_all
+
+# Or run stages individually
 python -m pipeline.ingest
 python -m pipeline.transcripts
 python -m pipeline.extract
@@ -38,6 +41,7 @@ python -m api.main
 
 | File | Purpose |
 |------|---------|
+| `pipeline/run_all.py` | **Run full pipeline** in one command with `--dry-run`, `--skip-*` options |
 | `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB |
 | `pipeline/transcripts.py` | Fetches YouTube transcripts via youtube-transcript-api |
 | `pipeline/extract.py` | **Core logic** - Claude extracts memories + coordinates (sequential) |
@@ -48,6 +52,7 @@ python -m api.main
 | `pipeline/geocode.py` | Utility to check geocoding stats (coords come from LLM) |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `api/main.py` | FastAPI server for location-based memory queries |
+| `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `config/content.yaml` | Content sources to process |
 
@@ -119,11 +124,21 @@ python -m pipeline.enqueue --status <content_id>
 
 ### API (`api/main.py`)
 FastAPI server with PostGIS proximity queries:
-- `GET /v1/memories/nearby?lat=X&lng=Y&radius_km=10` - Find memories near location
-- `GET /v1/memories/:id` - Get single memory
-- `GET /v1/places/nearby?lat=X&lng=Y` - Get places with memory counts
-- `GET /v1/places/:id/memories` - Get all memories for a place
+- `GET /v1/memories/nearby?lat=X&lng=Y&radius_km=10&tags=food,travel&min_confidence=medium` - Find memories near location (tags and confidence optional)
+- `GET /v1/memories/search?q=coffee&lat=X&lng=Y&radius_km=50` - Full-text search across summaries and place names (location optional)
+- `GET /v1/memories/{id}` - Get single memory
+- `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
+- `GET /v1/places/{id}` - Get single place details
+- `GET /v1/places/{id}/memories` - Get all memories for a place
+- `GET /v1/content/{id}/memories` - Get all memories from a video
 - `GET /v1/stats` - Database statistics
+- `GET /docs` - Swagger UI
+
+Test the API:
+```bash
+./api/test_api.sh                    # Test local server
+./api/test_api.sh http://host:port   # Test custom URL
+```
 
 ### Memory Quality
 Summaries should be vivid and personal, not generic. The prompt instructs Claude to include:
@@ -167,8 +182,9 @@ ORDER BY m.id DESC LIMIT 10;
 ## Not Yet Implemented
 
 - [x] `api/main.py` - FastAPI endpoint for proximity queries
-- [ ] `pipeline/run_all.py` - Run full pipeline in one command
+- [x] `api/test_api.sh` - API test script
+- [x] `pipeline/run_all.py` - Run full pipeline in one command
 - [ ] Deduplication across videos (same place mentioned in multiple videos)
 - [ ] Clustering nearby memories on map view
-- [ ] Full-text search across memory summaries
+- [x] Full-text search across memory summaries
 - [ ] Rate limiting / authentication for API

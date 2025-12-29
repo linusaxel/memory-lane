@@ -71,6 +71,20 @@ class NearbyResponse(BaseModel):
     meta: NearbyMeta
 
 
+class SearchMeta(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    query: str
+    center: Optional[Coordinates] = None
+    radius_km: Optional[float] = None
+
+
+class SearchResponse(BaseModel):
+    memories: list[Memory]
+    meta: SearchMeta
+
+
 class PlaceWithCount(BaseModel):
     id: int
     name: str
@@ -308,6 +322,81 @@ ORDER BY m.timestamp_start ASC
 LIMIT :limit OFFSET :offset
 """
 
+SEARCH_MEMORIES_QUERY = """
+SELECT
+    m.id,
+    m.summary,
+    m.timestamp_start,
+    m.timestamp_end,
+    m.tags,
+    m.extraction_confidence,
+    p.id as place_id,
+    p.name as place_name,
+    p.precision_meters,
+    ST_Y(p.coordinates::geometry) as lat,
+    ST_X(p.coordinates::geometry) as lng,
+    c.id as content_id,
+    c.title as content_title,
+    c.url as content_url,
+    ts_rank(
+        to_tsvector('english', m.summary || ' ' || p.name),
+        plainto_tsquery('english', :query)
+    ) as rank
+FROM memories m
+JOIN places p ON m.place_id = p.id
+JOIN content c ON m.content_id = c.id
+WHERE
+    p.coordinates IS NOT NULL
+    AND to_tsvector('english', m.summary || ' ' || p.name) @@ plainto_tsquery('english', :query)
+ORDER BY rank DESC
+LIMIT :limit OFFSET :offset
+"""
+
+SEARCH_MEMORIES_WITH_LOCATION_QUERY = """
+SELECT
+    m.id,
+    m.summary,
+    m.timestamp_start,
+    m.timestamp_end,
+    m.tags,
+    m.extraction_confidence,
+    p.id as place_id,
+    p.name as place_name,
+    p.precision_meters,
+    ST_Y(p.coordinates::geometry) as lat,
+    ST_X(p.coordinates::geometry) as lng,
+    ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters,
+    c.id as content_id,
+    c.title as content_title,
+    c.url as content_url,
+    ts_rank(
+        to_tsvector('english', m.summary || ' ' || p.name),
+        plainto_tsquery('english', :query)
+    ) as rank
+FROM memories m
+JOIN places p ON m.place_id = p.id
+JOIN content c ON m.content_id = c.id
+WHERE
+    p.coordinates IS NOT NULL
+    AND to_tsvector('english', m.summary || ' ' || p.name) @@ plainto_tsquery('english', :query)
+    AND ST_DWithin(
+        p.coordinates,
+        ST_MakePoint(:lng, :lat)::geography,
+        :radius_meters
+    )
+ORDER BY rank DESC, distance_meters ASC
+LIMIT :limit OFFSET :offset
+"""
+
+SEARCH_COUNT_QUERY = """
+SELECT COUNT(*)
+FROM memories m
+JOIN places p ON m.place_id = p.id
+WHERE
+    p.coordinates IS NOT NULL
+    AND to_tsvector('english', m.summary || ' ' || p.name) @@ plainto_tsquery('english', :query)
+"""
+
 
 # ============================================================================
 # HELPERS
@@ -404,6 +493,67 @@ async def get_nearby_memories(
             limit=limit,
             offset=offset,
             center=Coordinates(lat=lat, lng=lng),
+            radius_km=radius_km
+        )
+    )
+
+
+@app.get("/v1/memories/search", response_model=SearchResponse)
+async def search_memories(
+    q: str = Query(..., min_length=2, description="Search query"),
+    lat: Optional[float] = Query(None, ge=-90, le=90, description="Optional latitude for location filter"),
+    lng: Optional[float] = Query(None, ge=-180, le=180, description="Optional longitude for location filter"),
+    radius_km: float = Query(50, ge=0.1, le=500, description="Search radius in km (if location provided)"),
+    limit: int = Query(20, ge=1, le=100, description="Max results"),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
+):
+    """Full-text search across memory summaries and place names.
+
+    Optionally filter by location using lat/lng parameters.
+    """
+    with get_session() as session:
+        # Location filter provided
+        if lat is not None and lng is not None:
+            radius_meters = radius_km * 1000
+            result = session.execute(
+                text(SEARCH_MEMORIES_WITH_LOCATION_QUERY),
+                {
+                    "query": q,
+                    "lat": lat,
+                    "lng": lng,
+                    "radius_meters": radius_meters,
+                    "limit": limit,
+                    "offset": offset
+                }
+            )
+            rows = result.fetchall()
+            center = Coordinates(lat=lat, lng=lng)
+        else:
+            result = session.execute(
+                text(SEARCH_MEMORIES_QUERY),
+                {"query": q, "limit": limit, "offset": offset}
+            )
+            rows = result.fetchall()
+            center = None
+            radius_km = None
+
+        # Get total count
+        count_result = session.execute(
+            text(SEARCH_COUNT_QUERY),
+            {"query": q}
+        )
+        total = count_result.scalar() or 0
+
+    memories = [row_to_memory(row, include_distance=(lat is not None)) for row in rows]
+
+    return SearchResponse(
+        memories=memories,
+        meta=SearchMeta(
+            total=total,
+            limit=limit,
+            offset=offset,
+            query=q,
+            center=center,
             radius_km=radius_km
         )
     )

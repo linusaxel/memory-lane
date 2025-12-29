@@ -145,5 +145,25 @@ else
     fail "GET /docs - Expected 200, got $HTTP_CODE"
 fi
 
+# Full-text search
+echo -e "\n[13] Full-Text Search"
+RESP=$(curl -s "$BASE_URL/v1/memories/search?q=comedy")
+COUNT=$(echo "$RESP" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('memories',[])))" 2>/dev/null)
+if [ "$COUNT" -gt 0 ] 2>/dev/null; then
+    pass "GET /v1/memories/search?q=comedy - Found $COUNT memories"
+else
+    fail "GET /v1/memories/search?q=comedy"
+fi
+
+# Full-text search with location
+echo -e "\n[14] Full-Text Search with Location Filter"
+RESP=$(curl -s "$BASE_URL/v1/memories/search?q=comedy&lat=40.7128&lng=-74.0060&radius_km=100")
+COUNT=$(echo "$RESP" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('memories',[])))" 2>/dev/null)
+if [ "$COUNT" -gt 0 ] 2>/dev/null; then
+    pass "GET /v1/memories/search?q=comedy&lat=...&lng=... - Found $COUNT memories near NYC"
+else
+    fail "GET /v1/memories/search with location filter"
+fi
+
 echo -e "\n========================================"
 echo "Tests complete!"
