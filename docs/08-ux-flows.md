@@ -266,12 +266,13 @@ against the pin to decide which control to show — and that is fine, because th
 server re-measures before it hands anything over.
 
 The position is self-reported, so this stops `curl`, not a determined spoofer.
-Attestation needs accounts — Phase 3.
+Attestation needs more than accounts, which now exist. See TODO.md.
 
-**"Forever" is a device promise.** Unlocks are recorded server-side, but against
-an opaque UUID the app generates for itself and keeps in the keychain — there
-are no accounts, so a new phone starts empty. Making it portable needs identity,
-which is the same Phase 3.
+**"Forever" means as long as the account does.** Unlocks are recorded
+server-side against the keychain UUID, so clearing the app's data does not undo
+the walking. Signed out, a new phone still starts empty; signed in, the
+collection follows the person. That is F22, and it is the only thing sign-in
+is for.
 
 The client can still be generous with the animation. It just cannot be the
 thing deciding what you are allowed to read.
@@ -458,10 +459,9 @@ walking. The local copy is what renders at launch and what works in a tunnel;
 the server's arrives behind it and is merged in, with the local `unlocked_at`
 winning because that is the moment the thing was actually earned.
 
-**"Forever" is still a device promise.** There are no accounts, so a new phone
-starts empty. Making it portable needs identity — Phase 3. This is written down
-here because it is the kind of thing that is only discovered at the worst
-moment.
+**Signed out, "forever" stops at this installation.** A new phone starts empty
+unless the person has signed in — see F22. Written down here because it is the
+kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
@@ -474,7 +474,8 @@ is too late.
    and that city-centroid memories are open to everyone because asking somebody
    to walk to a guess would be a lie.
 3. Location state, with the route to Settings.
-4. That nothing is synced and there is no account.
+4. The name their submissions are signed with, and the sign-in that makes a
+   collection survive a new phone. Never a wall — see F22.
 
 ## F18 · Stand somewhere with nothing in it — **Implemented**
 
@@ -611,12 +612,13 @@ the people who found it, without waiting for us.
 4. The You tab gains a third figure once there is one — how many they have
    filed, beside how many they unlocked and in how many places.
 
-There is no sign-in behind this. A `users` row is a display name and an id, and
-the device claims it the way it already claims its unlocks. That is enough to
-sign a submission and to give Google/Apple sign-in something to attach to, and
-not enough to identify anybody.
+A name needs no sign-in behind it. A `users` row is a display name and an id
+that the device claims the way it already claims its unlocks - enough to sign a
+submission, and not enough to identify anybody. Signing in (F22) attaches to the
+same row rather than replacing it.
 
-**What can go wrong:** the same person on a second phone is a second stranger.
+**What can go wrong:** signed out, the same person on a second phone is a second
+stranger.
 That is the gap sign-in closes and nothing else does.
 
 **Done when:** a memory on the map has somebody's name under it and that name is

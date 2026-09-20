@@ -1,6 +1,6 @@
 # UI guide
 
-For agents working in `mobile/`. The app is two surfaces and one flow; this file
+For agents working in `mobile/`. Three tabs, four modals and one mechanic; this file
 says what it looks like, why, and how to check you did not break it.
 
 Read this before changing anything under `mobile/src/` or `App.tsx`.
@@ -45,7 +45,7 @@ Settings (the third tab, "You")
 ├─ account                  Apple / Google. Never a wall; see SignIn.tsx
 ├─ how unlocking works      the one place that answers "why can't I read this"
 ├─ location state + action
-└─ privacy policy, and the fact that there is no sign-in yet
+└─ privacy policy, and what signing out does and does not delete
 
 TabBar
 └─ Map | Unlocked (N) | You
@@ -158,7 +158,7 @@ outline. **`input`** is the whole text-field block, which renders in both You
 and Submit and must not drift between them.
 
 **Scale**: 34 display (tab titles) · 30 (place name) · 52 (the distance figure)
-· 19/31 prose (the summary — the hero, there are no images) · 16/25 prose (body)
+· 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
 · 11–12 mono (everything labelled).
 
 Fonts load in `App.tsx` via `useFonts`, and the app renders `null` until they
@@ -310,7 +310,7 @@ Each of these exists because something broke or would have been rejected.
    rule; the tab bar moved it out of the way.
 8. **`onRequestClose` is required on every Modal**, or the Android back button
    does nothing.
-9. **Neither tab unmounts.** Switching tabs uses `display: 'none'`, not a
+9. **No tab unmounts.** Switching tabs uses `display: 'none'`, not a
    conditional render. Unmounting the map means refetching, losing the viewport
    and re-animating to GPS every time somebody glances at their collection.
 10. **Never fetch alongside `animateToRegion`.** It fires
@@ -454,7 +454,7 @@ for the frame cost and are keyed `` `${group.key}:${reach}` ``, so they repaint
 exactly when their state changes and never otherwise. The one moving thing is
 `ReachBanner`, which is not a marker.
 
-A group is locked if any memory in it is. `reachOf()` in `App.tsx` measures from
+A group is locked if any memory in it is. `reachOf()` in `src/reach.ts` measures from
 the *person*, never from the map centre — panning to another city must not make
 its pins look reachable.
 
@@ -522,7 +522,7 @@ covers VoiceOver and not every motor impairment — the `ponytail:` marker in th
 file names the gap.
 
 **The button never decides anything.** It asks
-`GET /v1/memories/{id}?at_lat=&at_lng=` and the server re-measures, so a
+`POST /v1/memories/{id}/unlock` and the server re-measures, so a
 completed hold can still come back refused when GPS has drifted. Say so —
 "Not close enough yet" — rather than leaving a control that looks broken.
 

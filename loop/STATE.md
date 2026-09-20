@@ -1,51 +1,52 @@
-# LOOP STATE — W0–W3 complete. Phase 1.5 shipped. TODO.md is the roadmap.
+# LOOP STATE — W0–W3 and Phase 1.5 shipped. Phase 3 started. TODO.md is the roadmap.
 
 ```
 updated:  2026-09-20 (interactive session, not a loop tick)
 branch:   loop/autopilot   — pushed, and main is at the same commit
-gate:     GREEN, 265 tests
-status:   W0–W3 done. Phase 1.5 (proximity unlock) done and in the app.
-          Remaining work is TODO.md, and the human gates below.
+gate:     GREEN, 359 tests
+status:   W0–W3, Phase 1.5 (proximity unlock) and Phase 3.1–3.3 (submissions and
+          sign-in) are in. Remaining work is TODO.md and the human gates below.
 ```
 
-**Since the last tick**, in an interactive session: the whole proximity-unlock
-mechanic (server-side gate, hold-to-unlock, collection, three tabs), a visual
-direction that is written down in `docs/09-visual-design.md`, and an audit of
-`TODO.md`'s defect list that struck six entries as already fixed. W3-13 below is
-done — the app has been driven in the Simulator extensively.
+**Since the last tick**, all in interactive sessions:
 
-**This file said TERMINATED. That was wrong on two counts and is corrected here.**
+- the proximity-unlock mechanic, server-side, with the collection and three tabs;
+- **user-submitted memories** — `POST /v1/memories` with photo and audio upload,
+  a submit screen, and a report endpoint that hides a memory at three reports;
+- **Google and Apple sign-in**, so a collection survives a new phone. No
+  passwords and no session tokens: the device id stays the only credential and
+  signing in binds `devices.user_id`;
+- a tidy-up sweep that split `api/main.py` into eight modules, moved the design
+  reasoning into `docs/10-decisions.md`, deleted what nothing called, and put
+  the gate on GitHub Actions.
 
-1. W3-13 was unparked by commit `aab8d65`. It is now genuinely finished — the
-   app has been run in the Simulator many times since. Its one automated attempt
-   had failed on a missing iOS 26.5 runtime rather than on our code.
-2. The W0–W3 milestone is finished, but the project is not. **`TODO.md` at the
-   repo root is now the roadmap and the source of truth** — historical / friend
-   / stranger layers, Copenhagen launch, contrast scoring. Phase 1 arrives here
-   as W4-xx tasks. This file stays the loop's orientation doc; it does not
-   compete with TODO.md.
-
-Everything below still holds: the W0–W3 human checklist is real and unchanged.
+**`TODO.md` is the roadmap and the source of truth.** This file is the loop's
+orientation doc and does not compete with it. Where they disagree, TODO.md wins
+and this file is stale.
 
 ## What works right now
 
 ```bash
 docker compose up -d --build              # API + PostGIS
-./api/test_api.sh http://localhost:8080   # 14/14 pass
-./loop/verify.sh                          # 265 tests, GREEN
+./api/test_api.sh http://localhost:8080   # 11 checks
+./loop/verify.sh                          # 359 tests, GREEN
 cd mobile && npx expo start               # the app
 ```
 
 - **Crawler**: `@TuesdayswithStories` auto-discovered, 25 videos ingested,
   25 transcripts fetched, 0 failed. Baseline before this work: **0 videos**.
-- **Database**: 224 memories across 194 places (the unique index merged 30
-  duplicates), all geocoded. 83 of them are gated by the unlock radius; the
-  other 133 sit on shared city centroids and stay open. See F7.
-- **API**: containerized, CORS fixed, sync handlers, `/privacy` live.
-- **App**: three tabs (map, unlocked, you), proximity unlock with a
-  hold-to-unlock ring, an on-device collection, a permission primer, and a
-  typographic direction with its own doc. Bundles for iOS and Android; both
-  native manifests verified.
+- **Database**: 224 memories across 176 places, after the unique index merged 30
+  exact duplicates and `pipeline/dedup.py` merged 18 more by review. 83 memories
+  are gated by the unlock radius; the rest sit on shared city centroids and stay
+  open. See F7. Ten tables now — submissions brought `users`, `media` and
+  `reports`, sign-in brought `identities`.
+- **API**: containerized, CORS lockable, `/privacy` live, and **no longer
+  read-only** — it takes submissions, uploads and reports. There is still no
+  rate limit on any of that; see TODO 3.5, it is the real gap.
+- **App**: three tabs, proximity unlock with a hold-to-unlock ring, a collection
+  that syncs from the server, a submit screen with photo and voice, and
+  Google/Apple sign-in. Neither sign-in button works in Expo Go — they need real
+  client ids and a development build.
 
 ## THE HUMAN CHECKLIST — in dependency order
 
@@ -155,14 +156,18 @@ listing is a policy risk.
   safely, but yt-dlp's flat extraction returns no timestamp for this channel
   (verified). Real dates need a per-video fetch or the RSS feed (newest 15
   only). Nothing in the API serves it, so it blocks nothing.
-- **No auth or rate limiting.** The data is public and read-only, and an API key
-  inside an app binary is not auth. `limit<=100` and `radius_km<=100` bound the
-  blast radius. Add it when there is a bill to protect.
+- **No rate limiting on a write path that exists.** This entry used to say the
+  API was read-only, which stopped being true the day submissions shipped.
+  Nothing caps how many memories one device can file or how much it can upload,
+  so a loop fills the disk. TODO 3.5, and the most real gap on this list.
+- **No auth.** The device id is a bearer token in a request body: anyone holding
+  yours can post as you, and signing in did not change that by design. Same
+  threat model as the self-reported position. `limit<=100` and
+  `radius_km<=100` bound the read side.
 - **`/v1/memories/search` has no usable index.**
   `to_tsvector('english', m.summary || ' ' || p.name)` spans two tables, so no
   expression index can serve it — the predicate must be split into an `OR`
   first. v1 has no search screen, so nothing uses the slow path.
-- **`meta.total` is wrong** on three endpoints. The app ignores it entirely.
 - Full list in `loop/TASKS.yaml` → `inbox:`.
 
 ## Rejected approaches — do NOT retry
@@ -172,7 +177,8 @@ listing is a policy risk.
 - **Homebrew Python 3.14** — broken `pyexpat` breaks `pip` and
   `platform.mac_ver()`. The venv is uv-managed **3.12.12**. Install with
   `uv pip install --python venv/bin/python ...`, never `venv/bin/pip`.
-  The broken venv is at `venv.broken-py314/` (76MB, safe to delete).
-- **`expo-router` / bottom-sheet / react-query** — one screen, one modal, one
-  fetch. Refused on purpose.
+  The broken venv was at `venv.broken-py314/`; it is deleted and gitignored.
+- **`expo-router` / bottom-sheet / react-query** — three tabs, four modals and
+  a handful of fetches, all hand-rolled. Still refused: a router would be more
+  code than the thing it routes.
 - **Shelling out to `pytest --collect-only` inside a test** — fork bomb.

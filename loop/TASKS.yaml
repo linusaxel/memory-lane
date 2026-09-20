@@ -143,14 +143,15 @@ tasks:
       The loop is forbidden from spending Anthropic credits. All extraction-path tests
       use tests/fakes.py::FakeAnthropic, which proves chunking/parsing/DB writes but
       CANNOT prove extraction quality. Only a human can judge that.
-      Human runs:
-        source venv/bin/activate && python -m pipeline.extract --limit 1
+      Human runs (there is NO --limit flag; extract bills every pending video,
+      so go through the queue path for one):
+        source venv/bin/activate
+        python -m pipeline.enqueue --video <content_id> && python -m pipeline.worker
       then inspects:
         SELECT m.summary, p.name, m.extraction_confidence FROM memories m
         JOIN places p ON m.place_id=p.id ORDER BY m.id DESC LIMIT 20;
-      Also worth doing here: the model IDs are a generation stale
-      (claude-sonnet-4-20250514 -> claude-sonnet-5, claude-haiku-3-20240307 ->
-      claude-haiku-4-5) and the per-chunk system prompt should get cache_control.
+      The model IDs and the prompt's cache_control were both fixed since this
+      was written; pipeline/config.py has the current defaults.
 
   # -- W2 -- backend deployable ---------------------------------------------
 
@@ -336,8 +337,9 @@ tasks:
     commit: ceab849
     note: "content.timestamp_url already arrives from the API as a deep link to the right
       second - just Linking.openURL it, no timestamp math. onRequestClose is REQUIRED or
-      the Android back button does nothing. There are NO images anywhere in the schema,
-      so design around typography, not an image slot. Confidence is only ever high/medium."
+      the Android back button does nothing. Typography carries the sheet - at the time
+      there were no images in the schema at all; submissions brought them later, and
+      MemoryMedia.tsx renders them. Confidence is only ever high/medium."
 
   - id: W3-07
     goal: "mobile/app.json configures both platforms for store review"
@@ -431,7 +433,13 @@ tasks:
     verify: "MANUAL"
     touches: []
     depends_on: [W3-12]
-    state: doing
+    # blocked, not doing. /ml-tick takes the first `doing` task, and this one
+    # can only be closed by a human looking at a screen - so `doing` meant the
+    # loop picked a task it is forbidden to finish, forever, and never reached
+    # W4-07 below it.
+    state: blocked
+    blocked_on: human
+    gate: NEEDS_DECISION
     attempts: 1
     commit: null
     note: |
@@ -704,11 +712,11 @@ tasks:
       attribution always visible, legible at thumbnail size, correct in light and dark.
       One template consumed by the app sheet, the Phase 2 widget and any pasted link."
     verify: "venv/bin/python -m pytest -q tests/test_card.py"
-    touches: [api/main.py, tests/test_card.py]
+    touches: [api/card.py, tests/test_card.py]
     depends_on: [W4-01]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: fff53de
     note: "Geo-gated content cannot spread through feeds - it is invisible to anyone not
       standing there - so screenshots are the only distribution channel. Rendering server
       side means a client cannot strip the attribution the legal posture depends on."
@@ -730,13 +738,55 @@ tasks:
       The NULLS LAST assertion was mutation-checked: removing NULLS LAST from the query
       fails it. A guard that cannot fail is the defect this file exists to avoid.
 
+  # -- Phase 3 -- people, and what they write --------------------------------
+  # Shipped outside the tick loop; recorded here so TASKS.yaml stops ending five
+  # features before the repo does. TODO.md section "Phase 3" is the roadmap.
+
+  - id: P3-01
+    goal: "Users and submissions: POST /v1/memories with photo and audio, a submit
+      screen, and a report endpoint that can take something down."
+    verify: "venv/bin/python -m pytest -q tests/test_api_submit.py"
+    touches: [api/write.py, api/media.py, mobile/src/Submit.tsx, db/migrations/005_user_submissions.sql]
+    depends_on: [W4-08]
+    state: done
+    attempts: 1
+    commit: eaf9eec
+    note: |
+      The gate needed both widening and narrowing: a submission is always gated
+      because its coordinate is real, and places holding a submission are
+      excluded from COORDINATE_IS_UNIQUE - otherwise filing next to Katz's
+      unlocked Katz's. docs/10-decisions.md#the-gate.
+
+  - id: P3-02
+    goal: "Google and Apple sign-in, so a collection survives a new phone. No
+      passwords, no session tokens - signing in binds devices.user_id."
+    verify: "venv/bin/python -m pytest -q tests/test_api_auth.py"
+    touches: [api/auth.py, api/accounts.py, mobile/src/SignIn.tsx, db/migrations/006_identities.sql]
+    depends_on: [P3-01]
+    state: done
+    attempts: 1
+    commit: 98dad64
+    note: |
+      NOT exercisable end to end yet: needs real OAuth client ids and a
+      development build, because neither button works in Expo Go.
+
+  - id: P3-05
+    goal: "Rate limit the write path. Nothing caps how many memories one device can
+      file or how much it can upload."
+    verify: "venv/bin/python -m pytest -q tests/test_api_submit.py"
+    touches: [api/write.py]
+    depends_on: [P3-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "The brief asks for a hard cap on user-submitted ingestion and there is
+      none. A loop fills the disk."
+
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
   # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`
   # or deletes it. This is the ONLY legal outlet for scope creep.
-  - "places has no cross-video dedup; /v1/places/nearby can return near-duplicate pins for the same real place"
-  - "pipeline/geocode.py is a stats script, not a pipeline stage - the name misleads"
-  - "examples/content.yaml has a watch?v=example placeholder that logs a warning on ingest"
+  - "place dedup is exact-string plus pipeline/dedup.py by review; near-duplicates across videos still make separate pins"
+  - "the submission tag list and the extractor's tag list are different vocabularies: the app offers sport, the corpus stores sports, and 5 of 11 offered tags match zero memories. Needs a data migration plus a prompt change"
+  - "api/test_api.sh is not run by the gate and was the only caller of three endpoints, which is how they went unnoticed as dead"
   - "/v1/memories/search has no usable index: to_tsvector(m.summary || ' ' || p.name) spans two tables so NO expression index can serve it; needs the predicate split into an OR before indexing"
-  - "meta.total is wrong on /v1/places/nearby (returns page length) and the two count queries ignore active filters"
-  - "redis and rq are in requirements.txt but missing from the venv, so pipeline/worker.py ImportErrors"

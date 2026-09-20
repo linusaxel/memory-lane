@@ -33,9 +33,9 @@ See **[CLAUDE.md](CLAUDE.md)** for a quick reference guide optimized for AI codi
 |------|------------|
 | `pipeline/` | Ingest, transcripts, extraction (sequential and RQ-queued) |
 | `crawler/` | Channel discovery via yt-dlp |
-| `api/` | FastAPI proximity + search API over PostGIS |
-| `mobile/` | Expo app: map, pins, memory sheet |
-| `tests/` | 120 tests. Run them with `./loop/verify.sh` |
+| `api/` | FastAPI over PostGIS: proximity reads, submissions, sign-in |
+| `mobile/` | Expo app: map, collection, submit, Google/Apple sign-in |
+| `tests/` | 366 tests. Run them with `./loop/verify.sh` |
 | `db/` | Schema and one-off migrations |
 
 ## Documentation
@@ -50,6 +50,8 @@ See **[CLAUDE.md](CLAUDE.md)** for a quick reference guide optimized for AI codi
 | [04-extract.md](docs/04-extract.md) | The extraction prompt and its output contract |
 | [07-testing.md](docs/07-testing.md) | What the suite covers and how to run it |
 | [08-ux-flows.md](docs/08-ux-flows.md) | What a person actually does, start to finish |
+| [09-visual-design.md](docs/09-visual-design.md) | Why the app looks the way it does, and what was rejected |
+| [10-decisions.md](docs/10-decisions.md) | The calls where the obvious alternative is wrong |
 | [mobile/UI.md](mobile/UI.md) | Design tokens and app constraints |
 
 The API's endpoint list lives in [CLAUDE.md](CLAUDE.md#api-apimainpy).

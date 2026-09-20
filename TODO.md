@@ -42,8 +42,8 @@ the code disagreed, the code won and it is called out below.
 ### The data
 
 59 content rows: 29 extracted, 25 pending extraction, 4 transcript-failed.
-224 memories across 194 places, 186 with coordinates. 143 high confidence,
-81 medium.
+224 memories across 176 places (194 before the 1.2 merge), 168 with
+coordinates. 143 high confidence, 81 medium.
 
 **All of it is a US comedy podcast.** Density is Manhattan, New Orleans and LA.
 **Zero places within 20km of Copenhagen.** This corpus stays as end-to-end test
@@ -157,9 +157,10 @@ exist. Verify before trusting, and strike entries when you fix them.
       calls this endpoint. `tests/test_api_search.py` came out of the attempt
       and is worth keeping either way — it pins the cross-field matching that
       both designs above would change.
-- [ ] **7 of 9 endpoints have no consumer.** `mobile/src/api.ts` calls
-      `/v1/memories/nearby` and `/v1/memories/{id}`. Decided per endpoint in
-      Phase 2.
+- [x] **Endpoints with no consumer.** Settled by deletion: `/v1/places/{id}`,
+      `/v1/places/{id}/memories` and `/v1/content/{id}/memories` had no app
+      caller and no pytest, and were reached only by `api/test_api.sh` — which
+      the gate never runs. The app now calls ten of the fourteen that remain.
 - [ ] **`published_at` is always NULL** — yt-dlp flat extraction returns no
       timestamp for this channel (59 of 59 rows). Nothing serves it, so it
       blocks nothing.
@@ -475,8 +476,9 @@ audio-guide companies, city archives.
       constant in `api/embed.py`. This is the first
       thing in the product with a customer attached, so it is also the first
       thing that needs a usage bound.
-- [ ] **2.4** Settle the 8 consumerless endpoints: whatever the widget does not
-      use gets deleted rather than maintained.
+- [x] **2.4** Settle the consumerless endpoints. Three deleted; `/v1/memories/search`
+      and `/v1/places/nearby` stay — search is the one the widget would want and
+      both are tested.
 - [ ] **2.5** Delivered-corpus export for a customer who wants the data rather
       than the embed. Never the raw extracted corpus — snippets, attribution and
       deep links only.
@@ -596,8 +598,17 @@ on them. Full detail in `loop/STATE.md`.
 - **Does the podcast corpus eventually get pruned?** It stays for now as test
   data. It is US comedy anecdote in a product about Copenhagen history, and at
   some point it stops being useful and starts being noise.
-- **`pipeline/geocode.py` is misnamed** — a stats script, not a pipeline stage.
-  Rename or fold into a CLI.
+- ~~**`pipeline/geocode.py` is misnamed**~~ **Deleted.** Nothing imported it and
+  it geocoded nothing; its one query is in CLAUDE.md's key queries now.
+- **Two tag vocabularies share one column.** The corpus holds 18 tags, the app's
+  submission chips offer 11, and they overlap on six. `drink`, `art`, `work` and
+  `strange` match zero memories, and the app's `sport` never matches the stored
+  `sports` — `m.tags && …` is exact-string. Latent while nothing filters by tag;
+  fixing it is a data migration (`array_replace`) plus a prompt change, and a
+  decision about which vocabulary wins.
+- **`api/test_api.sh` is not run by the gate.** It was the sole caller of the
+  three endpoints deleted above, which is how they went unnoticed. Either wire
+  it in behind a live-server check or accept that it is a manual tool.
 
 ---
 

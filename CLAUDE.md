@@ -70,7 +70,15 @@ python -m api.main
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
-| `api/main.py` | FastAPI server for location-based memory queries, **and the write endpoints** |
+| `api/main.py` | The app: CORS, the media mount, and the router includes. 60 lines |
+| `api/models.py` | Every shape the API accepts or returns |
+| `api/queries.py` | Every SQL string. `tests/test_api_sql.py` EXPLAINs them all |
+| `api/gate.py` | row → Memory, redacted unless you are standing there |
+| `api/read.py` | The read endpoints |
+| `api/write.py` | Unlock, media, submissions, reports |
+| `api/accounts.py` | `/v1/me` and `/v1/auth/*` |
+| `api/card.py` | The server-rendered card. Gates itself; see below |
+| `api/embed.py` | The embeddable map. Off when `ENABLE_EMBED=0` |
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
@@ -89,6 +97,7 @@ python -m api.main
 | `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
 | **`mobile/UI.md`** | **Read before touching the app.** Tokens, the spacing/radius/shadow scale, measured contrast, load-bearing rules, how to see it running |
 | **`docs/08-ux-flows.md`** | **What the user does.** Implemented + proposed flows |
+| **`docs/10-decisions.md`** | **Why the code is shaped this way.** Read before "fixing" something odd |
 | `docs/09-visual-design.md` | Why the app looks the way it does, what was rejected, and why the web card does not match it yet |
 
 ## Database Tables
