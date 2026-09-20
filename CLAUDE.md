@@ -48,6 +48,9 @@ python -m pipeline.transcripts
 python -m pipeline.enqueue --all       # Queue videos for extraction
 python -m pipeline.worker              # Start worker (run multiple in separate terminals)
 
+# Seed memories you can actually reach (the real corpus has none nearby)
+python -m pipeline.seed_dev          # --clear removes them
+
 # Start API server
 python -m api.main
 # or: uvicorn api.main:app --reload
@@ -67,6 +70,8 @@ python -m api.main
 | `pipeline/enqueue.py` | CLI to queue videos for parallel processing |
 | `pipeline/queue.py` | Redis/RQ queue setup |
 | `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change |
+| `pipeline/seed_dev.py` | **Memories you can walk to.** The real corpus has none near any dev coordinate |
+| `pipeline/tags.py` | The one tag vocabulary. Both write paths filter against it |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |

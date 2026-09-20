@@ -369,11 +369,14 @@ cd mobile && npm run typecheck      # also run by the gate
 To actually look at it — this works today, no physical device:
 
 ```bash
-# 1. API with real data
+# 1. API, and memories you can actually reach
 docker compose up -d --build
+python -m pipeline.seed_dev            # --clear takes them away again
 
-# 2. dev server on the booted simulator
-cd mobile && EXPO_PUBLIC_API_URL=http://localhost:8080 npx expo start --ios
+# 2. cp .env.example .env  (once). It carries EXPO_PUBLIC_DEV_LOCATION, which
+#    pins the app's position to the seed under __DEV__ - so the Simulator's
+#    location stops being something you set after every boot.
+cd mobile && npx expo start --ios
 
 # 3. pre-grant location, or the permission dialog covers the first screen
 #    ("booted" is a literal simctl accepts - no need to look up a UUID)
@@ -400,9 +403,16 @@ Only one dev server can hold port 8081, and `npx expo start` cannot prompt in a
 non-interactive shell — it just prints "Skipping dev server". Kill the old one
 first: `lsof -ti:8081 | xargs kill -9`.
 
-Set the simulator location to Manhattan. The seeded corpus is a US comedy
-podcast — from Copenhagen you will correctly see an empty map and think you
-broke something.
+**Without the seed you cannot exercise the unlock at all**, and moving the
+Simulator does not help. Every dense point in the real corpus is a model-guessed
+centroid and therefore deliberately ungated (F7), and the memories that *are*
+gated are the scattered ones — so the nearest thing you could open is kilometres
+from any round-number coordinate. `pipeline/seed_dev.py` plants one of every
+state at `FALLBACK_REGION`: one in reach, one 400m away, a stack, an open
+centroid pair, and one filed by a person with a photo and a recording.
+
+The real corpus is a US comedy podcast — from Copenhagen you will correctly see
+an empty map and think you broke something.
 
 Pure viewport maths goes in `src/region.ts` with a `node --test` case beside it;
 the gate runs `mobile/src/*.test.ts`. Component behaviour is currently untested

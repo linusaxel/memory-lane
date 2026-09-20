@@ -24,9 +24,11 @@ services:
       DATABASE_URL: postgresql://memorylane:memorylane@db:5432/memorylane
       MEDIA_DIR: /data/media
     volumes:
-      # Uploaded photos and recordings. Without this they live in the container
-      # and a rebuild deletes everybody's submissions.
-      - media_data:/data/media
+      # Uploaded photos and recordings. A bind mount rather than a named volume:
+      # it survives a rebuild just the same, and it lets the host see the files -
+      # which is what `python -m pipeline.seed_dev` needs, since it writes its
+      # photo and recording from outside the container.
+      - ./media:/data/media
     depends_on:
       db:
         condition: service_healthy
@@ -44,6 +46,5 @@ services:
       retries: 5
 
 volumes:
-  media_data:
   postgres_data:
   redis_data:

@@ -8,6 +8,7 @@ first few). The extension decides the Content-Type on the way out, so "HTML that
 says it is a PNG" is the whole attack. NoSniff closes the rest.
 """
 
+import mimetypes
 import os
 import pathlib
 import uuid
@@ -43,6 +44,20 @@ ALLOWED = {
 }
 
 CHUNK = 64 * 1024
+
+# StaticFiles types a response from the extension, using the OS mime table - so
+# what we serve depended on the machine. macOS calls .m4a `audio/mp4a-latm`
+# (wrong: that is LATM-framed AAC) and the Linux container had no entry at all,
+# sending every recording as application/octet-stream. Pinned here so the
+# Content-Type is a property of this code and not of /etc/mime.types.
+SERVED_TYPES = {
+    ".m4a": "audio/mp4",
+    ".heic": "image/heic",
+    ".webp": "image/webp",
+    ".wav": "audio/wav",
+}
+for _extension, _type in SERVED_TYPES.items():
+    mimetypes.add_type(_type, _extension)
 
 
 class NoSniff(StaticFiles):

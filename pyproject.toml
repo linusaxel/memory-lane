@@ -4,6 +4,12 @@
 # a second pytest config is either dead or confusing.
 [tool.ruff]
 line-length = 100
+# Must match the venv. With no [project].requires-python to infer from, ruff
+# defaults to the newest Python it knows - 3.14 - and then formats FOR it. PEP
+# 758 made `except A, B:` legal there, so `ruff format` silently stripped
+# parentheses that 3.12 requires and produced a file python could not parse.
+# `ruff check` passed on it, because check ran before format.
+target-version = "py312"
 # *.md: ruff >=0.16 formats Python blocks embedded in Markdown. The code samples
 # in docs/ are prose, not compiled artifacts; leave them to the writer.
 extend-exclude = ["venv", "venv.broken-py314", "mobile", "*.md"]

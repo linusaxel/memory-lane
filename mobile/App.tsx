@@ -39,6 +39,7 @@ import {
   type Profile,
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
+import { devLocation } from './src/devLocation.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
@@ -155,10 +156,19 @@ export default function App() {
     };
   }, []);
 
-  const remember = useCallback((pos: Location.LocationObject) => {
-    positionRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    if (mounted.current) setPosition(positionRef.current);
+  /** The one writer of position. GPS, the watcher and the dev override all
+   *  funnel through here, so there is a single place that knows. */
+  const setHere = useCallback((next: Coordinates) => {
+    positionRef.current = next;
+    if (mounted.current) setPosition(next);
   }, []);
+
+  const remember = useCallback(
+    (pos: Location.LocationObject) => {
+      setHere({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+    },
+    [setHere],
+  );
 
   /** Walking into range has to change the map by itself. A position read once
    *  at launch means a pin only turns unlockable if you happen to press
@@ -192,17 +202,23 @@ export default function App() {
     // mode, or on a simulator with no location set, this rejects - and the
     // "Near me" button calls it straight from onPress, so an unhandled
     // rejection was the whole error handling.
-    let pos;
-    try {
-      pos = await Location.getCurrentPositionAsync({});
-    } catch {
-      return false;
+    // EXPO_PUBLIC_DEV_LOCATION, under __DEV__ only. See src/devLocation.ts.
+    let here = devLocation();
+    if (!here) {
+      try {
+        const pos = await Location.getCurrentPositionAsync({});
+        here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      } catch {
+        return false;
+      }
+      // No watcher when the position is pinned - it would overwrite the
+      // override on the first fix and make it look broken.
+      watchPosition();
     }
-    remember(pos);
-    watchPosition();
+    setHere(here);
     const next: Region = {
-      latitude: pos.coords.latitude,
-      longitude: pos.coords.longitude,
+      latitude: here.lat,
+      longitude: here.lng,
       latitudeDelta: LOCATED_DELTA,
       longitudeDelta: LOCATED_DELTA,
     };
@@ -214,7 +230,7 @@ export default function App() {
     flyTo(next);
     setRegion(next);
     return true;
-  }, [flyTo, remember, watchPosition]);
+  }, [flyTo, setHere, watchPosition]);
 
   useEffect(() => {
     (async () => {
