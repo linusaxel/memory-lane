@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 
 import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from './src/api.ts';
-import { groupByLocation, groupLabel, type MemoryGroup } from './src/cluster.ts';
+import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
 import { metersBetween, regionToRadiusKm, type Region } from './src/region.ts';
 import { loadUnlocked, rememberUnlocked, type Unlocked } from './src/unlocked.ts';
+import LocationPrimer from './src/LocationPrimer.tsx';
+import MemoryMarker, { type Reach } from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
+import ReachBanner from './src/ReachBanner.tsx';
 
 /**
  * Where to look when we have no location permission. A blank grey map is a
@@ -24,12 +27,14 @@ const FALLBACK_REGION: Region = {
 
 const DEBOUNCE_MS = 400;
 
+/** Only used if a memory somehow arrives without the server's radius. */
+const FALLBACK_RADIUS_M = 150;
+
 /** Separate, because "nothing here" and "we could not ask" must not look alike. */
 type Status = 'loading' | 'ready' | 'failed';
 
-/** Three pin states, because a map that looks the same whether or not you can
- *  read a memory makes you tap every pin to find out. */
-type Reach = 'open' | 'locked' | 'unlockable';
+/** 'blocked' is the one that cannot be fixed by asking again - only Settings. */
+type Permission = 'unknown' | 'granted' | 'denied' | 'blocked';
 
 export default function App() {
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
@@ -39,6 +44,8 @@ export default function App() {
   const [openIndex, setOpenIndex] = useState(0);
   const [status, setStatus] = useState<Status>('loading');
   const [position, setPosition] = useState<Coordinates | null>(null);
+  const [permission, setPermission] = useState<Permission>('unknown');
+  const [primerDismissed, setPrimerDismissed] = useState(false);
   const [unlocked, setUnlocked] = useState<Unlocked>({});
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
@@ -102,8 +109,12 @@ export default function App() {
   }, [remember]);
 
   const goToMyLocation = useCallback(async () => {
-    const { status: permission } = await Location.requestForegroundPermissionsAsync();
-    if (permission !== 'granted') return false;
+    const granted = await Location.requestForegroundPermissionsAsync();
+    if (granted.status !== 'granted') {
+      setPermission(granted.canAskAgain ? 'denied' : 'blocked');
+      return false;
+    }
+    setPermission('granted');
 
     const pos = await Location.getCurrentPositionAsync({});
     remember(pos);
@@ -122,12 +133,28 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      const centred = await goToMyLocation().catch(() => false);
-      // Permission denied, or location unavailable: show the fallback region
-      // rather than an empty map.
-      if (!centred) load(FALLBACK_REGION);
+      // Never the system dialog first. Someone who already said yes should not
+      // be asked again, so check silently and only prime a genuine newcomer.
+      const existing = await Location.getForegroundPermissionsAsync().catch(() => null);
+      if (!mounted.current) return;
+
+      if (existing?.granted) {
+        const centred = await goToMyLocation().catch(() => false);
+        if (!centred) load(FALLBACK_REGION);
+        return;
+      }
+
+      setPermission(existing && !existing.canAskAgain ? 'blocked' : 'denied');
+      // The map is real and populated behind the primer - see rule 1 in UI.md.
+      load(FALLBACK_REGION);
     })();
   }, [goToMyLocation, load]);
+
+  useEffect(() => {
+    loadUnlocked().then((stored) => {
+      if (mounted.current) setUnlocked(stored);
+    });
+  }, []);
 
   const onRegionChangeComplete = useCallback(
     (r: Region) => {
@@ -137,12 +164,6 @@ export default function App() {
     },
     [load],
   );
-
-  useEffect(() => {
-    loadUnlocked().then((stored) => {
-      if (mounted.current) setUnlocked(stored);
-    });
-  }, []);
 
   // What the device has earned wins over what the server is willing to say now:
   // walking away must not take a memory back.
@@ -156,13 +177,21 @@ export default function App() {
     [openAt, unlocked],
   );
 
-  const reachOf = (group: MemoryGroup): Reach => {
-    const locked = group.memories.filter((memory) => memory.locked);
-    if (locked.length === 0) return 'open';
-    if (!position) return 'locked';
-    const away = metersBetween(position.lat, position.lng, group.lat, group.lng);
-    return away <= (locked[0].unlock_radius_meters ?? 150) ? 'unlockable' : 'locked';
-  };
+  const reachOf = useCallback(
+    (group: MemoryGroup): Reach => {
+      const locked = group.memories.filter((memory) => memory.locked);
+      if (locked.length === 0) return 'open';
+      if (!position) return 'locked';
+      const away = metersBetween(position.lat, position.lng, group.lat, group.lng);
+      return away <= (locked[0].unlock_radius_meters ?? FALLBACK_RADIUS_M) ? 'unlockable' : 'locked';
+    },
+    [position],
+  );
+
+  const withinReach = useMemo(
+    () => groups.filter((group) => reachOf(group) === 'unlockable'),
+    [groups, reachOf],
+  );
 
   const openGroup = (group: MemoryGroup) => {
     setOpenAt(group.memories);
@@ -200,10 +229,12 @@ export default function App() {
     status === 'failed'
       ? "Can't reach Memory Lane"
       : status === 'loading' && memories.length === 0
-        ? 'Finding memories\u2026'
+        ? 'Finding memories…'
         : memories.length === 0
           ? 'No memories here yet'
           : `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} here`;
+
+  const showPrimer = permission !== 'granted' && !primerDismissed;
 
   return (
     <View style={styles.container}>
@@ -213,33 +244,17 @@ export default function App() {
         ref={mapRef}
         style={StyleSheet.absoluteFill}
         initialRegion={FALLBACK_REGION}
-        showsUserLocation
+        showsUserLocation={permission === 'granted'}
         onRegionChangeComplete={onRegionChangeComplete}
       >
-        {groups.map((group) => {
-          const reach = reachOf(group);
-          const count = group.memories.length;
-          return (
-            <Marker
-              key={group.key}
-              coordinate={{ latitude: group.lat, longitude: group.lng }}
-              title={groupLabel(group)}
-              onPress={() => openGroup(group)}
-            >
-              {reach === 'open' ? (
-                count > 1 && (
-                  <View style={styles.cluster}>
-                    <Text style={styles.clusterText}>{count}</Text>
-                  </View>
-                )
-              ) : (
-                <View style={[styles.cluster, reach === 'locked' ? styles.far : styles.reachable]}>
-                  <Text style={styles.clusterText}>{count > 1 ? count : '\u25cf'}</Text>
-                </View>
-              )}
-            </Marker>
-          );
-        })}
+        {groups.map((group) => (
+          <MemoryMarker
+            key={group.key}
+            group={group}
+            reach={reachOf(group)}
+            onPress={() => openGroup(group)}
+          />
+        ))}
       </MapView>
 
       <View style={styles.banner} pointerEvents="none">
@@ -247,7 +262,23 @@ export default function App() {
         {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
       </View>
 
-      {status === 'failed' ? (
+      {withinReach.length > 0 && !showPrimer && (
+        <ReachBanner count={withinReach.length} onPress={() => openGroup(withinReach[0])} />
+      )}
+
+      {showPrimer ? (
+        <LocationPrimer
+          blocked={permission === 'blocked'}
+          onAllow={() => {
+            if (permission === 'blocked') {
+              Linking.openSettings();
+              return;
+            }
+            goToMyLocation().catch(() => false);
+          }}
+          onDismiss={() => setPrimerDismissed(true)}
+        />
+      ) : status === 'failed' ? (
         <Pressable style={styles.locate} onPress={() => load(region)}>
           <Text style={styles.locateText}>Try again</Text>
         </Pressable>
@@ -308,20 +339,4 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   locateText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  // Sits on the default pin so a stack is countable before it is tapped.
-  cluster: {
-    minWidth: 26,
-    height: 26,
-    paddingHorizontal: 6,
-    borderRadius: 13,
-    backgroundColor: '#18181b',
-    borderWidth: 2,
-    borderColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clusterText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  // Locked reads as inert; unlockable reads as the one thing worth walking to.
-  far: { backgroundColor: '#a1a1aa' },
-  reachable: { backgroundColor: '#f59e0b' },
 });
