@@ -67,6 +67,8 @@ python -m api.main
 | `pipeline/enqueue.py` | CLI to queue videos for parallel processing |
 | `pipeline/queue.py` | Redis/RQ queue setup |
 | `pipeline/geocode.py` | Utility to check geocoding stats (coords come from LLM) |
+| `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change |
+| `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `api/main.py` | FastAPI server for location-based memory queries |
@@ -201,7 +203,28 @@ locking those would ask somebody to walk to a fiction. Full reasoning in
 `docs/08-ux-flows.md` F7; assertions in `tests/test_api_unlock.py`.
 
 ### Memory Quality
-Summaries should be vivid and personal, not generic. The prompt instructs Claude to include:
+The summary is the product: somebody standing on the spot, on a phone, outdoors.
+Measure before and after any prompt change — extraction costs money and you get
+one shot:
+
+```bash
+python -m pipeline.quality
+```
+
+Baseline on the 224-memory corpus, all four found by reading it rather than
+guessing, and all four now addressed in `SYSTEM_PROMPT`:
+
+| | | |
+|---|---|---|
+| anonymous subject | 55% | "The speaker drove the van…" instead of the name |
+| talks about talking | 20% | "He describes…" reports the recording, not the event |
+| not past tense | 12% | "He's playing the Fillmore on the 14th" is a ticket ad |
+| over 70 words | 32% | a summary of the conversation, not of what happened |
+
+The prompt now bans the labels outright, rejects upcoming shows as hard as it
+rejects hypotheticals, and asks for 2–3 sentences. **None of it has been run
+against real credits**, so the numbers above are still the current state.
+
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps
 - THE VIBE: Emotions, humor, what made it memorable

@@ -30,6 +30,11 @@ Does NOT qualify:
 - Vague references: "Somewhere in Europe"
 - General facts: "Paris is the capital of France"
 - Recommendations without personal experience: "You should check out the Eiffel Tower"
+- ANNOUNCEMENTS AND PROMOS. "I'm playing the Fillmore on the 14th, come out" is a
+  ticket ad, not a memory. If it has not happened yet, it is not a memory, however
+  specific the venue. This is the single most common mistake: a tour date names a
+  real place and reads like an event, and it is worthless to somebody standing
+  there. If the only thing anchoring the place is an upcoming show, return nothing.
 
 For each memory, extract:
 - place_name: Human-readable name (e.g., "Cafe de Flore, Paris")
@@ -37,13 +42,30 @@ For each memory, extract:
 - lat: Latitude estimate (decimal degrees, e.g., 48.8566)
 - lng: Longitude estimate (decimal degrees, e.g., 2.3522)
 - timestamp_start: When place is first mentioned (from [timestamp] markers in input)
-- summary: 2-4 sentences capturing the STORY, not just facts. Include:
-  * WHO: Use names when mentioned (e.g., "Mark and Joe" not "the hosts")
-  * WHAT HAPPENED: Specific anecdotes, funny moments, mishaps
-  * THE VIBE: Emotions, reactions, humor, what made it memorable
-  * Keep it conversational and human, like you're telling a friend
-  Bad: "He performed comedy at a theater in Boulder."
-  Good: "Mark did three sold-out shows at this old 1909 theater in Boulder, joking about how the marquee had survived prohibition, the depression, and now had to endure his act."
+- summary: 2-3 sentences, 40-70 words, capturing the STORY rather than the facts.
+  This is read by somebody standing on the spot, on a phone, outdoors. It is the
+  whole product. Rules, in order of how often they are broken:
+
+  * NEVER write "the speaker", "the host", "the hosts", "the comedian" or
+    "the narrator". Use the name if the transcript gives one. If it does not,
+    write the sentence without a subject label - "someone", or just start with
+    what happened. Half of a previous run began "The speaker...", which reads
+    like a machine describing a recording instead of a thing that happened here.
+  * PAST TENSE. Always. "Mark drove the van into a ditch", never "Mark is
+    driving" or "Mark talks about driving". You are reporting an event, not
+    narrating a transcript.
+  * NEVER refer to the recording. No "they mentioned", "he describes", "they
+    were discussing". The listener does not know there is a recording, and does
+    not care. Write what happened, not what was said about it.
+  * 2-3 sentences. If it runs past 70 words you are summarising the conversation
+    rather than the event. Cut the setup and keep the thing that happened.
+  * WHO, with names. WHAT HAPPENED - the anecdote, the mishap, the funny turn.
+    THE VIBE - what made it worth telling.
+
+  Bad: "The speaker describes performing at a theater in Boulder and mentions it
+       was built in 1909."
+  Good: "Mark did three sold-out nights at this 1909 theatre, joking that the
+        marquee had survived prohibition, the depression, and now his act."
 - tags: 1-5 from: food, travel, history, culture, adventure, romance, nightlife, nature, art, music, sports, business, personal
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
   BE HONEST ABOUT THIS. If you are returning the coordinates of a city because you
