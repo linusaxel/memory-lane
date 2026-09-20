@@ -28,7 +28,7 @@ import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from 
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
-import { regionToRadiusKm, type Region } from './src/region.ts';
+import { isSameQuery, regionToRadiusKm, type Region } from './src/region.ts';
 import {
   inUnlockOrder,
   loadUnlocked,
@@ -113,6 +113,9 @@ export default function App() {
   // that calls it would re-run and re-centre the map underneath them.
   const positionRef = useRef<Coordinates | null>(null);
   const watcher = useRef<Location.LocationSubscription | null>(null);
+  // The last viewport that actually came back with data. Only successes are
+  // recorded, so "Try again" after a failure is never mistaken for a repeat.
+  const lastFetched = useRef<Region | null>(null);
 
   useEffect(() => {
     return () => {
@@ -123,6 +126,13 @@ export default function App() {
   }, []);
 
   const load = useCallback(async (r: Region) => {
+    // Asking the same question twice. animateToRegion fires
+    // onRegionChangeComplete when it lands, and a programmatic move looks
+    // exactly like a pan from there - so recentring fetched once eagerly and
+    // again a second later. The guard lives here rather than at that callback
+    // because every caller routes through load, including "Try again".
+    if (isSameQuery(lastFetched.current, r)) return;
+
     // Responses can land out of order: a slow request for the region you just
     // left resolves after a fast one for the region you are looking at, and
     // overwrites it - including stamping 'failed' over a newer success. Only
@@ -134,6 +144,7 @@ export default function App() {
     try {
       const found = await fetchNearby(r.latitude, r.longitude, regionToRadiusKm(r));
       if (isStale()) return;
+      lastFetched.current = r;
       setMemories(found);
       setStatus('ready');
     } catch {
@@ -180,11 +191,15 @@ export default function App() {
       latitudeDelta: LOCATED_DELTA,
       longitudeDelta: LOCATED_DELTA,
     };
+    // No load() here. animateToRegion fires onRegionChangeComplete when it
+    // lands, and it does not land on `next` - the map fits the deltas to the
+    // screen, so the region it settles on covers noticeably more ground. Asking
+    // eagerly meant two requests for one press, the first of them for a
+    // viewport that never actually exists.
     mapRef.current?.animateToRegion(next, 600);
     setRegion(next);
-    load(next);
     return true;
-  }, [load, remember, watchPosition]);
+  }, [remember, watchPosition]);
 
   useEffect(() => {
     (async () => {
@@ -195,6 +210,8 @@ export default function App() {
 
       if (existing?.granted) {
         const centred = await goToMyLocation().catch(() => false);
+        // Only this branch loads by hand: nothing moved the camera, so nothing
+        // is going to report a region change.
         if (!centred) load(FALLBACK_REGION);
         return;
       }

@@ -185,6 +185,14 @@ Each of these exists because something broke or would have been rejected.
 9. **Neither tab unmounts.** Switching tabs uses `display: 'none'`, not a
    conditional render. Unmounting the map means refetching, losing the viewport
    and re-animating to GPS every time somebody glances at their collection.
+10. **Never fetch alongside `animateToRegion`.** It fires
+    `onRegionChangeComplete` when it lands, and it does *not* land on the region
+    you gave it — the map fits the deltas to the screen, so the settled viewport
+    covers noticeably more ground. Moving the camera and calling `load()` in the
+    same breath is two requests for one action, the first of them for a
+    viewport that never exists. Move the camera; let it report back.
+    The one exception is the denied-permission path, which never moves the
+    camera and so must load by hand.
 
 ## Copy
 

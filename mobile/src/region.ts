@@ -46,3 +46,26 @@ export function metersBetween(aLat: number, aLng: number, bLat: number, bLng: nu
     Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * 6371000 * Math.asin(Math.sqrt(h));
 }
+
+/** Would these two viewports ask the API the same question?
+ *
+ * `animateToRegion` fires `onRegionChangeComplete` when it lands, and a
+ * programmatic move is indistinguishable there from a pan - so recentring used
+ * to fetch twice: once eagerly, once again ~1s later when the camera settled.
+ *
+ * Comparing the regions field-by-field does not work: the map adjusts the
+ * deltas to the screen's aspect ratio, so the region it reports is never quite
+ * the one it was given. What matters is whether the *query* would differ, which
+ * is the centre and the radius.
+ */
+export function isSameQuery(a: Region | null, b: Region): boolean {
+  if (!a) return false;
+
+  // 25m is well inside the 0.1km minimum radius: a pan this small cannot change
+  // what comes back, so skipping it loses nothing.
+  const moved = metersBetween(a.latitude, a.longitude, b.latitude, b.longitude);
+  const before = regionToRadiusKm(a);
+  const after = regionToRadiusKm(b);
+
+  return moved < 25 && Math.abs(before - after) / after < 0.05;
+}

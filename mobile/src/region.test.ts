@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { MAX_RADIUS_KM, MIN_RADIUS_KM, metersBetween, regionToRadiusKm } from './region.ts';
+import {
+  MAX_RADIUS_KM,
+  MIN_RADIUS_KM,
+  isSameQuery,
+  metersBetween,
+  regionToRadiusKm,
+} from './region.ts';
 
 test('a city-sized viewport asks for a few kilometres', () => {
   const km = regionToRadiusKm({
@@ -49,4 +55,35 @@ test('longitude shrinks with latitude', () => {
   const atEquator = metersBetween(0, 0, 0, 1);
   const upNorth = metersBetween(60, 0, 60, 1);
   assert.ok(upNorth < atEquator / 1.9, 'a degree of longitude halves by 60N');
+});
+
+test('the same viewport asks the same question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  assert.equal(isSameQuery(here, here), true);
+});
+
+test('the aspect-adjusted region the map reports back still counts as the same', () => {
+  // animateToRegion never lands on exactly the region it was given - the map
+  // fits the deltas to the screen. If this stops being tolerated, recentring
+  // fetches twice again.
+  const asked = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  const landed = { ...asked, latitude: 55.67591, longitudeDelta: 0.0102 };
+  assert.equal(isSameQuery(asked, landed), true);
+});
+
+test('a real pan asks a new question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  const away = { ...here, latitude: 55.6859 };
+  assert.equal(isSameQuery(here, away), false);
+});
+
+test('zooming without moving asks a new question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  const out = { ...here, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+  assert.equal(isSameQuery(here, out), false);
+});
+
+test('nothing fetched yet is never the same question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  assert.equal(isSameQuery(null, here), false);
 });
