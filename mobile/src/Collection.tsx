@@ -4,9 +4,9 @@
  * on the map, the reward for standing somewhere was one read and then finding
  * the right pin again; as a tab it is a place the person owns.
  *
- * Nothing here touches the network. The list is exactly what `unlocked.ts`
- * holds, which is also why these never re-lock: the server has no idea who
- * unlocked what, and is not going to.
+ * Nothing here touches the network: the list is exactly what `unlocked.ts`
+ * holds, so it works on a train. The server has its own copy, merged in at
+ * launch by App.tsx - that is what survives the local one being cleared.
  */
 
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';

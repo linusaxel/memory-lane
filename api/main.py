@@ -36,25 +36,17 @@ app.add_middleware(
 app.include_router(card_router)
 app.include_router(embed_router)
 
-# Uploaded photos and recordings, straight off the disk. Not a CDN and not
-# object storage: one volume is the whole feature until somebody is paying for
-# bandwidth.
-# ponytail: swap NoSniff for an S3 bucket + signed URLs when this box stops
-# being the only one.
+# ponytail: uploads come off a local disk. An S3 bucket + signed URLs when this
+# box stops being the only one. See docs/10-decisions.md#writing.
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 app.mount(MEDIA_URL_PREFIX, NoSniff(directory=MEDIA_DIR), name="media")
 
-# How close you have to stand to read a memory. 150m and not 50m because urban
-# GPS drifts tens of metres, and a gate that will not open while you are
-# standing on the spot is a bug the person blames on themselves.
+# How close you have to stand to read a memory. 150 and not 50: see
+# docs/10-decisions.md#150-m-not-50-m.
 UNLOCK_RADIUS_METERS = int(os.getenv("UNLOCK_RADIUS_METERS", "150"))
 
-# How many different people have to report a submission before it stops being
-# served. Low, because the corpus is small and a wrongly hidden memory is
-# recoverable while a libel left up for a week is not. The row survives either
-# way - `hidden` is a flag, not a delete.
-# ponytail: no appeal, no reinstatement, no queue for a human to look at.
-# REPORT_THRESHOLD is the whole moderation system until there is a moderator.
+# ponytail: this threshold is the whole moderation system - no appeal, no
+# reinstatement, no human queue. See docs/10-decisions.md#writing.
 REPORT_THRESHOLD = int(os.getenv("REPORT_THRESHOLD", "3"))
 
 
@@ -196,24 +188,12 @@ class PlaceDetail(BaseModel):
     tags: list[str]
 
 
-# Whether this coordinate belongs to this place alone. 111 of 186 memories sit
-# on 34 city centroids the model emitted when it did not know the address (see
-# F6), and a memory filed 2km from where it happened cannot be gated on standing
-# there. So only a coordinate no other place shares is trustworthy enough to
-# make somebody walk to it; the rest stay open rather than lie about where they
-# are. 0.0001 degrees is ~11m, the same grid the app clusters on.
+# Whether this coordinate belongs to this place alone, which is what decides
+# whether a memory is worth walking to. The NOT EXISTS is what stops a
+# submission unlocking its neighbours. Both rules and the reasons:
+# docs/10-decisions.md#the-gate. api/card.py keeps a copy - change both.
 # ponytail: a correlated scan of ~200 places per row. Materialize it onto
 # places if the corpus ever reaches the tens of thousands.
-#
-# Places holding a submission do not count. Each submission mints its own place
-# row at the submitter's GPS position, so without this exclusion filing a memory
-# outside Katz's would put a second place in that grid cell and silently unlock
-# every memory already there - a gate anybody could open by posting next to it.
-# A submitted memory is gated on its own terms instead (see is_gated): the person
-# was standing there, so the coordinate is real by construction.
-#
-# NOT EXISTS over a user memory, rather than EXISTS over an extracted one: a
-# place with no memories at all still counts, which is what it did before this.
 COORDINATE_IS_UNIQUE = """(
         SELECT COUNT(*) = 1 FROM places p2
         WHERE ST_SnapToGrid(p2.coordinates::geometry, 0.0001)
@@ -223,13 +203,10 @@ COORDINATE_IS_UNIQUE = """(
           )
     ) as coordinate_is_unique"""
 
-# The 14 columns every memory-shaped response needs. row_to_memory reads the row
-# by name, so a query is free to append distance, rank or created_at.
-# Everything attached to this memory, in one round trip rather than one query
-# per memory. json_agg returns SQL NULL for no rows, hence the COALESCE - a null
-# here would make every media-less memory need a guard downstream.
-# ponytail: a correlated subquery per row, like COORDINATE_IS_UNIQUE above.
-# Fine at this size; a LEFT JOIN LATERAL if a page of 100 ever gets slow.
+# COALESCE because json_agg returns SQL NULL for no rows, and a null here would
+# make every media-less memory need a guard downstream.
+# ponytail: a correlated subquery per row. A LEFT JOIN LATERAL if a page of 100
+# ever gets slow.
 MEMORY_MEDIA = """COALESCE((
         SELECT json_agg(json_build_object(
                    'id', md.id, 'kind', md.kind, 'path', md.path,
@@ -238,6 +215,8 @@ MEMORY_MEDIA = """COALESCE((
         FROM media md WHERE md.memory_id = m.id
     ), '[]'::json) as media"""
 
+# Every column a memory-shaped response needs. row_to_memory reads the row by
+# name, so a query is free to append distance, rank or unlocked_at.
 MEMORY_COLUMNS = f"""
     m.id,
     m.summary,
@@ -267,36 +246,28 @@ MEMORY_COLUMNS = f"""
     {MEMORY_MEDIA},
     {COORDINATE_IS_UNIQUE}"""
 
-# content is LEFT because a submitted memory has none, and users is LEFT because
-# an extracted one has no author. Aliased `au` and not `u`: DEVICE_UNLOCKS_QUERY
-# already owns `u` for the unlocks table.
+# Both LEFT: a submitted memory has no content, an extracted one has no author.
+# `au` and not `u` because DEVICE_UNLOCKS_QUERY owns `u` for the unlocks table.
 MEMORY_JOIN = """
 FROM memories m
 JOIN places p ON m.place_id = p.id
 LEFT JOIN content c ON m.content_id = c.id
 LEFT JOIN users au ON m.user_id = au.id"""
 
-# Honoured by every query below that can emit a summary, including the counts.
-# A takedown that only covers the endpoint somebody complained about is not one.
+# Every query below that can emit a summary honours this, counts included. A
+# takedown that only covers the endpoint somebody complained about is not one.
 VISIBLE = "NOT m.hidden"
 
 DISTANCE = "ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters"
 WITHIN = "ST_DWithin(p.coordinates, ST_MakePoint(:lng, :lat)::geography, :radius_meters)"
 
-# ponytail: this spans two tables, so no expression index can serve it and every
-# search is a sequential scan. At 224 memories that is microseconds and nothing
-# calls this endpoint yet.
-#
-# Splitting it into `to_tsvector(m.summary) @@ q OR to_tsvector(p.name) @@ q`
-# looks like the fix and is not: an OR across two tables still cannot use either
-# index, because a row can qualify from the other side. Measured - the planner
-# keeps scanning. The two designs that would work are in TODO.md; both cost more
-# than this corpus is worth.
+# ponytail: spans two tables, so no index can serve it and every search is a
+# sequential scan. The obvious OR fix does not work - measured. See
+# docs/10-decisions.md#search-is-a-sequential-scan-on-purpose.
 SEARCH_VECTOR = "to_tsvector('english', m.summary || ' ' || p.name)"
 SEARCH_MATCH = f"{SEARCH_VECTOR} @@ plainto_tsquery('english', :query)"
 SEARCH_RANK = f"ts_rank({SEARCH_VECTOR}, plainto_tsquery('english', :query)) as rank"
 
-# Tags aggregated across every memory at a place.
 PLACE_TAGS = """COALESCE(
         (SELECT array_agg(DISTINCT t) FROM memories m2, unnest(m2.tags) t
          WHERE m2.place_id = p.id AND NOT m2.hidden),
@@ -306,15 +277,12 @@ PLACE_TAGS = """COALESCE(
 CONFIDENCE_FILTER = """(:min_confidence = 'low' OR m.extraction_confidence IN ('medium', 'high'))
     AND (:min_confidence != 'high' OR m.extraction_confidence = 'high')"""
 
-# A no-op when :layer is NULL, so one query serves filtered and unfiltered rather
-# than doubling the variants again.
+# A no-op when :layer is NULL, so one query serves filtered and unfiltered.
 LAYER_FILTER = "(CAST(:layer AS varchar) IS NULL OR m.layer = :layer)"
 
-# Contrast first: the point of the product is the gap between the memory and what
-# you are looking at now, not which pin is nearest. NULLS LAST is load-bearing -
-# Postgres sorts NULL FIRST under DESC, and every memory extracted before contrast
-# scoring existed has none, so without it the unscored ones outrank every scored
-# one and the ranking is exactly inverted.
+# Contrast first, not distance: the gap between the memory and what you are
+# looking at now is the product. NULLS LAST is load-bearing and inverts the
+# whole ranking if dropped - docs/10-decisions.md#nulls-last-is-load-bearing.
 CONTRAST_ORDER = "ORDER BY m.contrast_score DESC NULLS LAST, distance_meters ASC"
 
 NEARBY_MEMORIES_QUERY = f"""
@@ -346,8 +314,8 @@ WHERE
 LIMIT :limit OFFSET :offset
 """
 
-# A count that does not mirror its result query's WHERE is a wrong meta.total
-# and broken pagination. Keep these two in step with the queries above.
+# Must mirror the WHERE of the query above it, or meta.total is wrong and
+# pagination breaks.
 COUNT_QUERY = f"""
 SELECT COUNT(*)
 FROM memories m
@@ -487,13 +455,8 @@ WHERE
     AND {WITHIN}
 """
 
-# Every device this one shares an account with, and itself.
-#
-# Unlocks are recorded against a device, which was right while a device was all
-# there was. Signed in, the collection has to follow the person - otherwise a
-# new phone starts empty, which is the only thing sign-in exists to fix. The
-# `d.id = :device_id` arm is what keeps it working before anybody signs in, and
-# after signing out.
+# Every device this one shares an account with, and itself. The `d.id` arm keeps
+# it working signed out - docs/10-decisions.md#my_devices-keeps-a-did--device_id-arm.
 MY_DEVICES = """(
     SELECT d.id FROM devices d
     WHERE d.id = CAST(:device_id AS uuid)
@@ -503,13 +466,10 @@ MY_DEVICES = """(
        )
 )"""
 
-# One person's collection, newest first. Joined through MEMORY_COLUMNS so an
-# unlocked memory serializes exactly like a nearby one - the app should not have
-# to know which endpoint a memory arrived from.
-#
-# MIN(unlocked_at), because two of somebody's phones can both have earned the
-# same memory and the first time is the one that counts. Without the grouping it
-# would also appear twice.
+# One person's collection, newest first. Through MEMORY_COLUMNS so an unlocked
+# memory serializes exactly like a nearby one. MIN(unlocked_at) because two
+# phones on one account can both have earned it and the first time is the one
+# that counts - without the grouping it would also appear twice.
 DEVICE_UNLOCKS_QUERY = f"""
 WITH earned AS (
     SELECT memory_id, MIN(unlocked_at) AS unlocked_at
@@ -530,17 +490,9 @@ UNLOCK_COUNT_QUERY = (
     f"SELECT COUNT(DISTINCT memory_id) FROM unlocks WHERE device_id IN {MY_DEVICES}"
 )
 
-# Where the corpus actually is, for somebody standing where it is not. The app
-# is a map of nothing outside New York, and "No memories here yet" is true and
-# useless - this is what turns it into somewhere to go.
-#
-# DBSCAN rather than a rounded grid: 0.5 degrees is roughly a metro area, and a
-# grid splits any city that happens to straddle a cell boundary. New York's
-# places span 40.70-40.82 and a 0.1 grid cut them into two "hotspots".
-#
-# The label is the most common trailing component of the place names in the
-# cluster - "Gotham Comedy Club, New York" -> "New York". Crude, and it reads
-# correctly for every cluster in the corpus, which is the bar for a hint.
+# Where the corpus actually is, for somebody standing where it is not.
+# DBSCAN and not a grid, and how the label is picked:
+# docs/10-decisions.md#hotspots-use-dbscan-not-a-rounded-grid.
 HOTSPOTS_QUERY = """
 WITH clustered AS (
     SELECT
@@ -575,9 +527,9 @@ WHERE
 
 
 def row_source(row) -> Source | None:
-    """None only when nothing knows who published it - four hand-listed videos
-    from channels the config never names. A name with no link is still worth
-    showing; a link with no name is not."""
+    """None for every submission - they have no content row - and for the four
+    hand-listed videos whose channel the config never names. A name with no link
+    is still worth showing; a link with no name is not."""
     name = getattr(row, "source_name", None)
     if not name:
         return None
@@ -632,13 +584,13 @@ def is_locked(row, at: Coordinates | None) -> bool:
     memory-shaped response goes through here rather than the one endpoint the
     app happens to call.
 
-    `at` is only ever supplied by the single-memory read. The list endpoints
-    hand out nothing readable however close you are standing: walking into range
-    must *offer* the unlock, not perform it, or there is no moment to press and
-    the whole mechanic is a proximity query with extra steps.
+    The list endpoints never pass `at`, and that is the rule: walking into range
+    must *offer* the unlock, not perform it, or there is no moment to press. The
+    single read, the unlock, the submission and the card all do pass it;
+    get_unlocks passes a memory's own coordinates to force it open.
 
-    ponytail: the position is self-reported, so this stops curl, not a
-    determined spoofer. Attestation needs accounts - Phase 3.
+    ponytail: the position is self-reported, so this stops curl and not a
+    determined spoofer. docs/10-decisions.md#the-position-is-self-reported.
     """
     if not is_gated(row):
         return False
@@ -1145,8 +1097,8 @@ class UnlocksResponse(BaseModel):
 
 
 def touch_device(session, device: str) -> None:
-    """Every write path needs the device row to exist first, and every one of
-    them also wants last_seen moved. Three callers, one statement."""
+    """Every write path needs the device row to exist first, and all of them
+    want last_seen moved."""
     session.execute(
         text("""
             INSERT INTO devices (id, last_seen) VALUES (CAST(:id AS uuid), CURRENT_TIMESTAMP)
@@ -1197,12 +1149,10 @@ def get_unlocks(
     device: str = Query(..., pattern=DEVICE_PATTERN),
     limit: int = Query(200, ge=1, le=500),
 ):
-    """What this device has earned.
+    """What this device, and anything signed in alongside it, has earned.
 
     Returned unlocked regardless of where the caller is now: re-locking
-    something somebody stood in the rain for is a punishment for leaving. The
-    device id is the proof, and it is proof of nothing except that this app
-    installation was there.
+    something somebody stood in the rain for is a punishment for leaving.
     """
     with get_session() as session:
         rows = session.execute(
@@ -1253,23 +1203,11 @@ def get_stats(
     )
 
 
-# ---------------------------------------------------------------------------
-# Writing. Everything above this line reads a corpus somebody else produced.
-#
-# There is still no account. A user is a display name and a uuid, claimed by a
-# device the same way its unlocks are, and the device id is the only credential
-# there is - so this authenticates nobody and is not pretending to. What it does
-# buy is a stable name to sign a submission with, a row for Google/Apple sign-in
-# to attach to later, and a subject for a report to be about.
-#
-# ponytail: the device id is a bearer token in the request body. Anyone who has
-# yours can post as you. That is the same threat model as the unlock's
-# self-reported position, and it is what OAuth replaces.
-# ---------------------------------------------------------------------------
+# ponytail: the device id is a bearer token in the request body, so anyone
+# holding yours can post as you. OAuth did not replace this - see
+# docs/10-decisions.md#no-session-tokens-signed-in-or-not.
 
-# A submitted memory mints its own place. Not reusing one by name: two people
-# filing at the same cafe would otherwise fight over whose spelling of it wins,
-# and the map groups by coordinate anyway, so they land under one pin regardless.
+# Its own place per submission - docs/10-decisions.md#a-submission-mints-its-own-place.
 PLACE_INSERT = """
 INSERT INTO places (name, place_query, coordinates, precision_meters, geocode_status)
 VALUES (
@@ -1302,8 +1240,8 @@ WHERE id = ANY(CAST(:ids AS integer[]))
   AND memory_id IS NULL
 """
 
-# What a person is allowed to say about where they were. Free text would be a
-# tag soup of one-offs within a week; this is the set the corpus already uses.
+# Closed list: free text would be a tag soup of one-offs within a week.
+# Mirrored in mobile/src/api.ts, and tests/test_api_submit.py holds them equal.
 SUBMISSION_TAGS = [
     "food",
     "drink",
@@ -1318,9 +1256,7 @@ SUBMISSION_TAGS = [
     "strange",
 ]
 
-# A phone's GPS is good to a few tens of metres in the open and worse between
-# buildings. Claiming better would be the same lie the extraction prompt was
-# rewritten to stop telling.
+# A phone's GPS in a street, honestly stated rather than flattered.
 SUBMITTED_PRECISION_METERS = 25
 
 
@@ -1634,21 +1570,8 @@ def report_memory(memory_id: int, body: ReportRequest):
     return ReportResponse(reports=count, hidden=hidden)
 
 
-# ---------------------------------------------------------------------------
-# Signing in. Google and Apple, and nothing else.
-#
-# No passwords, so nothing to store, reset, rotate or leak, and no reset-email
-# flow to build. Apple is not a preference: App Store review requires Sign in
-# with Apple as soon as any other third-party sign-in exists on iOS.
-#
-# There is still no session token. The device id the app already sends stays the
-# only credential; signing in binds devices.user_id, so every endpoint above
-# keeps working unchanged and a second phone becomes a second device on one
-# user. That is the whole of what sign-in buys - a collection that survives a
-# new phone - and nothing else needed inventing to get it.
-#
-# api/auth.py holds the token verification and the reasons.
-# ---------------------------------------------------------------------------
+# Signing in binds devices.user_id and issues no token. api/auth.py verifies the
+# ID tokens; docs/10-decisions.md#identity has the why.
 
 
 class DeviceRequest(BaseModel):

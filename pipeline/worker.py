@@ -20,6 +20,8 @@ import sys
 
 # Before every other import, because the point is to get out of this process
 # before anything initializes the runtime we are trying to appease.
+# Must be set before any ObjC-linked import, and RQ's work horse forks:
+# docs/10-decisions.md#the-rq-worker-re-execs-itself-on-macos
 if sys.platform == "darwin" and os.environ.get("OBJC_DISABLE_INITIALIZE_FORK_SAFETY") != "YES":
     os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
     # -m, not sys.argv[0]: running the file directly puts pipeline/ on sys.path

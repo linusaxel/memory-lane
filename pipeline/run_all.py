@@ -147,7 +147,6 @@ Examples:
 
     args = parser.parse_args()
 
-    # Handle --extract-only shortcut
     if args.extract_only:
         args.skip_ingest = True
         args.skip_transcripts = True

@@ -1,8 +1,8 @@
-/** Two tabs, hand-rolled.
+/** Three tabs, hand-rolled.
  *
- * Not react-navigation: there are two destinations, no stack, no deep links and
- * no params. A router would be more code than the thing it routes, and both
- * screens stay mounted anyway - see App.tsx for why the map must not unmount.
+ * Not react-navigation: no stack, no deep links, no params. A router would be
+ * more code than the thing it routes, and every screen stays mounted anyway -
+ * see App.tsx for why the map must not unmount.
  */
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';

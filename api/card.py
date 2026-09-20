@@ -1,21 +1,9 @@
-"""Server-rendered memory card.
+"""Server-rendered memory card, for the app sheet, the embed and any pasted
+link. Why it is not JSON: docs/10-decisions.md#the-card-is-rendered-on-the-server.
 
-One template, three consumers: the app sheet, the Phase 2 embed widget, and any
-pasted link. Rendered here rather than in the client because the attribution is
-the legal posture - a client that assembles the card from JSON can drop the
-credit line, and this is the corpus of someone else's archive. Server-rendered
-means the credit ships welded to the content.
-
-Design constraints live in mobile/UI.md; the ones that bind here are that place
-name and attribution stay legible at thumbnail size, and that the card is
-correct in both colour schemes.
-
-This route is gated like every other one that can emit a summary. It was not,
-for a while: /v1/memories/{id}/card rendered a locked memory in full, and since
-ids are sequential the whole corpus was one loop away. F7's rule - "a client-side
-gate is not a gate" - is about exactly this, and the card was the side door,
-because it does not go through row_to_memory and had to be remembered separately.
-It is remembered now, and tests/test_api_unlock.py holds it to it.
+It does not go through row_to_memory, so it has to remember the proximity gate
+on its own. It once did not, and the whole corpus was one loop away.
+tests/test_api_unlock.py holds it to that now.
 """
 
 from html import escape

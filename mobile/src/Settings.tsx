@@ -1,11 +1,9 @@
-/** The third tab. Still no sign-in, but no longer nobody.
+/** The third tab.
  *
- * Three jobs: say what this device has done, hold the one thing about the
- * person that other people see - the name their submissions are signed with -
- * and be the place that explains the rule the whole app is built on. Every app
- * with a proximity gate needs somewhere to answer "why can I not read this",
- * and burying that in a sheet that only appears when you are already frustrated
- * is too late.
+ * Three jobs: say what this device has done, hold the name submissions are
+ * signed with, and answer "why can I not read this". Every app with a proximity
+ * gate needs somewhere to answer that, and a sheet you only see once you are
+ * already frustrated is too late.
  */
 
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';

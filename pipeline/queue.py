@@ -24,7 +24,6 @@ def get_queue(name: str = "default") -> Queue:
     return Queue(name, connection=get_redis())
 
 
-# Queue names
 QUEUE_CLASSIFY = "classify"  # Haiku pre-filter
 QUEUE_EXTRACT = "extract"  # Sonnet extraction
 QUEUE_AGGREGATE = "aggregate"  # Merge results

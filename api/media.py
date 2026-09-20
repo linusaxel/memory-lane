@@ -1,17 +1,11 @@
 """Where an uploaded photo or recording goes, and what is allowed to be one.
 
-Everything here is a trust boundary. The file arrives from a phone we do not
-control, is stored on our disk, and is served back to browsers from our origin -
-so three things are never taken from the client: the filename, the extension,
-and the claim about what the bytes are.
-
-The filename is generated. The extension comes from a whitelist keyed on the
-declared type, never from the upload. And the declared type has to match the
-first few bytes, because the extension is what decides the Content-Type when the
-file is served again, and "HTML that says it is a PNG" is the whole attack.
-
-Serving is `NoSniff`: StaticFiles is happy to let a browser sniff a response
-into something executable, and one header ends that.
+Every line here is a trust boundary. The file comes from a phone we do not
+control and is served back from our own origin, so three things never come from
+the client: the filename (generated), the extension (from ALLOWED, keyed on the
+declared type), and the claim about what the bytes are (checked against the
+first few). The extension decides the Content-Type on the way out, so "HTML that
+says it is a PNG" is the whole attack. NoSniff closes the rest.
 """
 
 import os

@@ -463,9 +463,9 @@ export default function App() {
             black background at night. */}
         <StatusBar style="auto" />
 
-        {/* Both tabs stay mounted. Unmounting the map means refetching, losing
-            the viewport and re-animating to GPS every time somebody glances at
-            their collection - a tab switch should cost nothing. */}
+        {/* Every tab stays mounted. Unmounting the map means refetching, losing
+            the viewport and re-animating to GPS on every glance at the
+            collection - a tab switch should cost nothing. */}
         <View style={[styles.screen, tab !== 'map' && styles.hidden]}>
           <MapView
             ref={mapRef}

@@ -1,37 +1,8 @@
 """Collapse places that are one real venue split across several rows.
 
-`db/migrations/001_places_unique.sql` made `place_query` unique, which stopped
-the same exact string minting a new row every time. What it cannot catch is the
-same venue described two ways. Live example, and the one this module is measured
-against:
-
-    [108] Gotham Comedy Club New York City           6 memories  40.75890, -73.98510
-    [211] Gotham Comedy Club Chelsea New York City   1 memory    40.74310, -73.99670
-
-One venue, two pins, 1.8km apart. That distance is the interesting part: both
-rows claim 50m precision, so the obvious rule - collapse places whose
-coordinates fall within their combined precision - would never fire. The model
-disagreed with itself about where Gotham is. Names are the reliable signal here
-and coordinates are only a sanity bound.
-
-Naive token-subset matching is far too eager: it finds 148 pairs among 194
-places, because "New Orleans Louisiana" is a subset of every venue in New
-Orleans and would be absorbed by the first one it met. The fix needs no
-gazetteer - a token that shows up in many places is a location or filler word,
-and a token that shows up in few is the venue's actual name. Both sides must
-therefore contribute a distinctive token, which is exactly what a bare city
-reference cannot do.
-
-Deliberately conservative: a wrong merge destroys data and is invisible
-afterwards, while a missed merge is a duplicate pin somebody can see. Running
-this module prints proposals and changes nothing; `--apply` performs them.
-
-About a quarter of the proposals are wrong, and not in a way more tuning fixes -
-the failures are things like a bar and a restaurant on the same block, or the
-Andaz and the Comedy Store on the same stretch of Sunset. So `--apply` alone is
-the wrong tool: it is all 25 or none. `--only` takes the pairs a human accepted
-and refuses anything that is not in the current proposal set, which keeps the
-review honest - you cannot use this to merge two rows it never suggested.
+Matches on names, not coordinates, and demands a distinctive token from both
+sides. Why - and the Gotham Comedy Club case it is measured against -
+docs/10-decisions.md#place-dedup-matches-on-names-not-coordinates.
 """
 
 import argparse

@@ -362,7 +362,6 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
         time_diff = abs(mem.get("timestamp_start", 0) - current.get("timestamp_start", 0))
 
         if same_place and time_diff <= threshold_seconds:
-            # Merge: extend time range, combine summaries, dedupe tags
             current["timestamp_end"] = max(
                 current.get("timestamp_end", current.get("timestamp_start", 0)),
                 mem.get("timestamp_start", 0),
@@ -397,8 +396,8 @@ def prompt_for(source_type: str | None) -> str:
 
 
 def layer_for(source_type: str | None) -> str:
-    """Everything ingested so far is public, permanent content. Friend and
-    stranger memories arrive through a write path that does not exist yet."""
+    """Everything the pipeline ingests is public, permanent content. The
+    `stranger` layer is written by POST /v1/memories, never from here."""
     return "historical"
 
 

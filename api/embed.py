@@ -1,23 +1,9 @@
-"""The embeddable map - Phase 2, the first surface anyone pays for.
+"""The embeddable map - Phase 2. Two routes and no build step.
 
-Two routes and no build step.
-
-`/embed.js` is the snippet a customer pastes. It writes an <iframe> pointing at
-`/embed`. An iframe rather than injecting into their page because this is
-someone else's site: their CSS cannot reach our map, our CSS cannot reach their
-article, and their Content-Security-Policy has one origin to allow instead of a
-script rewriting their DOM.
-
-`/embed` is that frame: a map of nearby memories, and the card when you click a
-pin. It fetches `/v1/memories/nearby` like any other client and renders the card
-by calling `render_card` on the server, so the attribution is identical to the
-app's and the customer's page cannot strip it. That is the whole reason the card
-is server-rendered, and an embed on a third party's site is exactly the case it
-was built for.
-
-Contrast ordering matters more here than in the app. An embed is a handful of
-pins on somebody's tourism page, so the first card has to be the one worth
-reading - `/v1/memories/nearby` already returns them in that order.
+`/embed.js` is the snippet a customer pastes; it writes an <iframe> pointing at
+`/embed`, which renders nearby memories and calls render_card on the server so
+the attribution cannot be stripped. Why an iframe:
+docs/10-decisions.md#the-embed-is-an-iframe-not-injected-markup.
 """
 
 import json

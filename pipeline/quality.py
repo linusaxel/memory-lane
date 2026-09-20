@@ -1,23 +1,10 @@
 """How good are the summaries, as a number.
 
-"Improve the memory output" is unfalsifiable until the defects are counted, and
-extraction costs money, so there is exactly one chance to tell whether a prompt
-change helped. This prints the same numbers before and after a run.
-
     python -m pipeline.quality
 
-Every check here is something a person standing at the place would notice, and
-each one was found by reading the corpus rather than imagined:
-
-    total                224
-    anonymous subject    119  (53%)   "The speaker got lost..."
-    talks about talking   61  (27%)   "He describes how they..."
-    not past tense        14  (6%)    "He's playing the Fillmore on the 14th"
-    over 70 words         79  (35%)   a conversation summary, not an event
-
-None of these is a hard failure - a summary can be long and still be the best
-thing in the corpus. They are a direction, and the direction is that over half
-of a comedy podcast's memories opened by calling a named human "the speaker".
+Run it before and after any prompt change; extraction costs money and you get
+one shot. Baseline in CLAUDE.md, reasoning in
+docs/10-decisions.md#summary-quality-is-measured-not-asserted.
 """
 
 import re

@@ -83,11 +83,8 @@ function hasCoordinates(m: Memory): m is LocatedMemory {
   return !!c && Number.isFinite(c.lat) && Number.isFinite(c.lng);
 }
 
-/**
- * A hung request is worse than a failed one: it renders as "0 memories here"
- * forever, so an unreachable server is indistinguishable from an empty area.
- * fetch has no default timeout, so this is the only thing that ends the wait.
- */
+/** fetch has no default timeout, and a hung request renders as "0 memories
+ *  here" forever - indistinguishable from an empty area. */
 export const REQUEST_TIMEOUT_MS = 8000;
 
 async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
@@ -151,14 +148,9 @@ export async function fetchNearby(
   return (body.memories ?? []).filter(hasCoordinates);
 }
 
-/**
- * Ask the server to open one memory, and to remember that it opened.
- *
- * POST because it creates something. The server re-checks the distance itself
- * and can still say no - GPS moves between the press and the request - so a
- * result that comes back still locked is a refusal, not a success, and nothing
- * is recorded.
- */
+/** Open one memory, and record that it opened. The server re-checks the
+ *  distance and can still say no, so a result that comes back still locked is a
+ *  refusal - not a success. */
 export async function unlockMemory(
   id: number,
   at: Coordinates,
@@ -172,13 +164,9 @@ export async function unlockMemory(
   return !memory.locked && hasCoordinates(memory) ? memory : null;
 }
 
-/**
- * Everything this device has earned, from the server.
- *
- * Returned unlocked regardless of where you are now, which is the whole reason
- * it exists: the local copy is the offline cache, and this is what survives the
- * local copy being cleared.
- */
+/** Everything this device - and anything signed in alongside it - has earned.
+ *  The local copy is the offline cache; this is what survives it being
+ *  cleared, and what follows you to a new phone. */
 export async function fetchUnlocked(
   device: string,
   signal?: AbortSignal,
@@ -199,11 +187,8 @@ export type Hotspot = {
   memories: number;
 };
 
-/**
- * Asked once, lazily, and only when the map turns up empty. "No memories here
- * yet" is true and useless outside New York; this is what turns it into
- * somewhere to go.
- */
+/** Asked lazily, only when the map turns up empty. "No memories here yet" is
+ *  true and useless outside New York. */
 export async function fetchHotspots(signal?: AbortSignal): Promise<Hotspot[]> {
   const body = await get<{ hotspots?: Hotspot[] }>(
     '/v1/stats',
@@ -271,13 +256,12 @@ export async function saveDisplayName(device: string, displayName: string): Prom
 }
 
 /**
- * Send one photo or recording ahead of the memory it belongs to.
+ * Send one photo or recording ahead of the memory it belongs to, so a 4 MB
+ * photo uploads while the person is still typing.
  *
- * Separate from the submission so a 4 MB photo uploads while the person is
- * still typing, and so a failed upload costs the text nothing. The timeout is
- * the request helper's 8s everywhere else in this file and deliberately not
- * here: an upload over a phone connection legitimately takes longer than a
- * query, and aborting it would make the feature unusable on the move.
+ * Deliberately not behind REQUEST_TIMEOUT_MS: an upload over a phone connection
+ * legitimately takes longer than a query, and aborting it at 8s would make the
+ * feature unusable on the move.
  */
 export async function uploadMedia(
   device: string,
@@ -297,14 +281,9 @@ export async function uploadMedia(
   return (await res.json()) as MediaItem;
 }
 
-/**
- * File a memory of where you are standing.
- *
- * One coordinate, because it is both where the person is and where the memory
- * goes. It comes back unlocked - filing something is standing there - and the
- * server has already recorded the unlock, so it belongs straight in the
- * collection.
- */
+/** File a memory of where you are standing. One coordinate, because it is both
+ *  where the person is and where the memory goes. Comes back unlocked, with the
+ *  unlock already recorded. */
 export async function submitMemory(
   device: string,
   at: Coordinates,
@@ -324,16 +303,11 @@ export async function reportMemory(id: number, device: string, reason?: string):
 // --- signing in ---------------------------------------------------------------
 
 /**
- * Hand a provider's ID token to the server and find out who that makes us.
+ * Hand a provider's ID token to the server and find out who that makes us. No
+ * session token comes back - see docs/10-decisions.md#identity.
  *
- * There is no session token in either direction. The device id stays the only
- * credential the app ever sends; this binds the device to an account, so every
- * other call keeps working exactly as it did and a second phone becomes a
- * second device on the same person.
- *
- * `displayName` exists for Apple, which gives the name to the client on the
- * very first authorization and never again - so if it is not sent now it is
- * gone.
+ * `displayName` is for Apple, which gives the name to the client on the very
+ * first authorization and never again.
  */
 export async function signIn(
   provider: 'google' | 'apple',

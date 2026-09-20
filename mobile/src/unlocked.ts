@@ -13,8 +13,8 @@ import type { LocatedMemory } from './api.ts';
 const KEY = 'memorylane.unlocked.v1';
 const PRIMER_KEY = 'memorylane.primer-dismissed.v1';
 
-/** The unlock time is what orders the collection. Nothing else records it:
- *  the server has no idea who unlocked what, and that is the point. */
+/** Recorded locally because the server's copy carries the date but the local
+ *  one is what renders offline. */
 export type UnlockedMemory = LocatedMemory & { unlocked_at: number };
 
 export type Unlocked = Record<number, UnlockedMemory>;

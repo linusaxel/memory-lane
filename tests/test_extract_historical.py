@@ -132,8 +132,8 @@ def test_a_partial_date_widens_to_the_start_of_its_period(raw, expected):
     assert _happened_at({"happened_at": raw}) == expected
 
 
-def test_everything_ingested_so_far_is_the_historical_layer():
-    """Friend and stranger memories arrive through a write path that does not exist."""
+def test_everything_the_pipeline_ingests_is_the_historical_layer():
+    """`stranger` is written by POST /v1/memories and never by extraction."""
     assert layer_for("archive") == "historical"
     assert layer_for("video") == "historical"
 

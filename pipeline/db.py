@@ -13,7 +13,7 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://memorylane:memorylane@localhost:5432/memorylane"
 )
 
-# Convert to psycopg3 dialect if using default postgresql://
+# Railway hands out postgresql:// URLs and SQLAlchemy would pick psycopg2.
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 

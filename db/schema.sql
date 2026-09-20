@@ -48,9 +48,9 @@ CREATE TABLE places (
 );
 
 -- A person, as far as this product needs one: a name to sign a submission with.
--- Still not an account - no password, no email. A device claims a user the way
--- it already claims its unlocks, and the device id is the only credential.
--- Real sign-in (Google/Apple) hangs off this table rather than replacing it.
+-- No password column and never one - sign-in is Google and Apple only, and it
+-- hangs off `identities` rather than replacing this table. The device id stays
+-- the only credential. See docs/10-decisions.md#identity.
 CREATE TABLE users (
     id UUID PRIMARY KEY,
     -- Nullable: contributing without being named is allowed, and the API
@@ -129,7 +129,6 @@ CREATE TABLE memories (
     hidden BOOLEAN NOT NULL DEFAULT FALSE
 );
 
--- Indexes
 -- Who has earned what. No accounts: a device claims an opaque UUID it generated
 -- itself, which is enough to make a collection durable and to give a future
 -- sign-in something to attach to, and not enough to identify anybody.

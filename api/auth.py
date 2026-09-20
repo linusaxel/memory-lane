@@ -1,30 +1,18 @@
-"""Google and Apple sign-in, and nothing else.
+"""Google and Apple sign-in. Why only those two, and why no session token:
+docs/10-decisions.md#identity.
 
-No passwords, so there is nothing to store, reset, rotate or leak, and no
-password-reset email flow to build. Apple is not a preference either: App Store
-review requires Sign in with Apple as soon as any other third-party sign-in
-exists on iOS.
+What arrives is an ID token - a JWT the provider signed - not an access token.
+The app does the interactive part; this module only decides whether the token is
+real and whose it is. Three checks, each of which fails open if skipped:
 
-What arrives is an **ID token** - a JWT the provider signed - not an access
-token. The app does the interactive part; the server's only job is to decide
-whether the token is real and whose it is. That is three checks, and skipping
-any one of them turns sign-in into "claim to be anybody":
+    signature   RS256 against the provider's published keys. Never
+                verify_signature=False, never alg=none.
+    audience    minted for *our* app. A valid Google token issued to some other
+                app is still a valid Google token, so an unset audience lets any
+                app's users in as ours.
+    issuer      Google's or Apple's, matched exactly.
 
-  signature   RS256 against the provider's published keys, fetched and cached
-              by PyJWKClient. Never `verify_signature=False`, never `alg=none`.
-  audience    the token was minted for *our* app. A valid Google token issued
-              to some other app is still a valid Google token, so an unset
-              audience means any app's user can sign in as ours.
-  issuer      Google's or Apple's, matched exactly.
-
-Expiry is checked by PyJWT itself and is the reason not to hand-roll any of it.
-
-There is no session token, and that is the point of the design rather than a
-gap. The device id the app already sends is still the only credential; signing
-in binds that device to a user, so every existing endpoint keeps working
-unchanged and a second phone simply becomes a second device on the same user.
-What sign-in buys is exactly that - a collection that survives a new phone - and
-nothing else needed inventing to get it.
+Expiry comes free from PyJWT, which is the reason not to hand-roll this.
 """
 
 import os

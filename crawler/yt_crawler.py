@@ -1,17 +1,8 @@
-"""YouTube channel discovery.
+"""YouTube channel discovery, via yt-dlp. Transcripts belong to
+pipeline/transcripts.py.
 
-Discovery only. Transcripts belong to pipeline/transcripts.py and the database;
-this module used to duplicate them into transcripts/*.txt that nothing read,
-which is what made it dead weight.
-
-Why yt-dlp instead of scraping the channel page: as of 2026-09-20 the old
-regex over `"videoId":"..."` in the channel HTML returns **zero** videos for
-every channel tested - YouTube no longer serves that markup to a plain client.
-Rebuilding it on the internal youtubei/v1/browse endpoint means a lot of
-undocumented JSON walking that fails silently by returning a short list.
-yt-dlp is that parser, maintained weekly, with no hard dependencies.
-
-This module must not import `pipeline` - pipeline.ingest imports it.
+Must not import `pipeline` - pipeline.ingest imports this. Why yt-dlp and not a
+scrape: docs/10-decisions.md#channel-discovery-uses-yt-dlp-not-a-scrape.
 """
 
 import argparse
