@@ -158,9 +158,9 @@ tasks:
     goal: ".dockerignore excludes venv/, .git/, .idea/, docs/, __pycache__, .env"
     verify: "test -f .dockerignore && grep -q 'venv' .dockerignore"
     touches: [.dockerignore]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 3edb43b
     note: "Without this the ~300MB venv/ goes into the build context."
 
   - id: W2-02
@@ -168,9 +168,9 @@ tasks:
     verify: "docker build -q -t memory-lane-api ."
     touches: [Dockerfile]
     depends_on: [W2-01]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 3edb43b
     note: "3.12 not 3.14 - wheel coverage for psycopg[binary]/pydantic.
       CMD MUST be shell form: exec form will not expand Railway's injected $PORT."
 
@@ -179,9 +179,9 @@ tasks:
     verify: "docker compose up -d --build api && sleep 5 && curl -fsS localhost:8080/ | grep -q '\"status\":\"ok\"'"
     touches: [docker-compose.yml]
     depends_on: [W2-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 3edb43b
     note: "~8 lines added to the existing file, no new file. This is what proves the
       image boots against real PostGIS and that DATABASE_URL overrides the localhost
       default at pipeline/db.py:12."
@@ -190,9 +190,9 @@ tasks:
     goal: "CORS no longer sends allow_credentials with a wildcard origin"
     verify: "venv/bin/python -m pytest -q tests/test_api_cors.py"
     touches: [api/main.py, tests/test_api_cors.py]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 81e71ef
     note: "api/main.py:21. allow_credentials=True with allow_origins=['*'] is an invalid
       combination browsers reject anyway, and a native app sends no cookies."
 
@@ -201,9 +201,9 @@ tasks:
       threadpool instead of stalling the event loop; engine uses pool_pre_ping"
     verify: "! grep -q '^async def' api/main.py && grep -q 'pool_pre_ping' pipeline/db.py"
     touches: [api/main.py, pipeline/db.py]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 81e71ef
     note: "Root-cause fix is DELETING a keyword on 9 handlers. Smaller diff than async
       SQLAlchemy, no new deps. pool_pre_ping or the first request after idle 500s
       against managed Postgres."
@@ -212,9 +212,9 @@ tasks:
     goal: "GET /privacy returns a static HTML privacy policy"
     verify: "venv/bin/python -m pytest -q tests/test_api_privacy.py"
     touches: [api/main.py, tests/test_api_privacy.py]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 81e71ef
     note: "~8 lines that DELETE A HUMAN BLOCKER: both stores require a reachable privacy
       policy URL and we already have an HTTPS host. Must disclose precise location use."
 
@@ -223,9 +223,9 @@ tasks:
     verify: "venv/bin/python -c \"import json;d=json.load(open('railway.json'));assert d['deploy']['healthcheckPath']=='/';print('ok')\""
     touches: [railway.json]
     depends_on: [W2-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 81e71ef
     note: "GET / already returns {'status':'ok'} so the healthcheck needs no new code.
       Railway chosen over Fly because Fly's managed Postgres has NO PostGIS extension -
       Railway runs the identical postgis/postgis:16-3.4 image already in compose."

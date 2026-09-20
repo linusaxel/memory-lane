@@ -9,3 +9,5 @@
 2026-09-20T12:25Z t6 W1-06 done  commit=522498e gate=GREEN root-cause: bare except collapsed transient into permanent transcript failures; TimeoutError now propagates, row stays pending
 2026-09-20T12:27Z t6 W1-07 done  commit=f426766 gate=GREEN documented channel:/limit: in CLAUDE.md + docs/02-ingest.md
 2026-09-20T12:29Z t6 W1-08 done  commit=f426766 gate=GREEN END-TO-END: 25 new ingested, 25 transcripts fetched, 0 failed, no credits. published_at still NULL (yt-dlp flat gives no timestamp) -> inbox
+2026-09-20T12:33Z t7 W2-01..03 done commit=3edb43b gate=GREEN Dockerfile+compose api service; container serves real data (224 memories, 215 places)
+2026-09-20T12:38Z t8 W2-04..07 done commit=81e71ef gate=GREEN CORS credentials off, 9 async handlers -> sync def, pool_pre_ping, GET /privacy, railway.json; all 14 test_api.sh checks pass
