@@ -3,10 +3,14 @@
 import argparse
 import logging
 
-from pipeline.tasks import enqueue_all_pending, task_enqueue_chunks, get_extraction_status
-from pipeline.queue import get_queue, QUEUE_CLASSIFY
+from pipeline.queue import QUEUE_CLASSIFY, get_queue
+from pipeline.tasks import enqueue_all_pending, get_extraction_status, task_enqueue_chunks
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+# force=True: pipeline.config sets an INFO default on import, and basicConfig
+# is first-call-wins. Without this the format here depends on import order.
+logging.basicConfig(
+    force=True, level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 

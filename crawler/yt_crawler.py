@@ -16,7 +16,7 @@ This module must not import `pipeline` - pipeline.ingest imports it.
 
 import argparse
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from yt_dlp import YoutubeDL
 
@@ -67,7 +67,7 @@ def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict
             {
                 "url": f"https://www.youtube.com/watch?v={video_id}",
                 "title": entry.get("title"),
-                "published_at": datetime.fromtimestamp(ts, timezone.utc) if ts else None,
+                "published_at": datetime.fromtimestamp(ts, UTC) if ts else None,
             }
         )
 

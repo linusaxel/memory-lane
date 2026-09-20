@@ -2,40 +2,34 @@
 
 import json
 import logging
-import os
-from typing import Optional
 
 import anthropic
-from dotenv import load_dotenv
 from sqlalchemy import text
 
+from pipeline.config import (
+    ANTHROPIC_API_KEY,
+    CHUNK_MINUTES,
+    CHUNK_OVERLAP_SECONDS,
+    CLASSIFIER_MODEL,
+)
 from pipeline.db import get_session
+from pipeline.extract import (
+    PENDING_EXTRACTION,
+    chunk_transcript,
+    extract_memories_from_chunk,
+    filter_low_confidence,
+    merge_nearby_memories,
+    save_memories,
+)
 from pipeline.queue import (
-    get_queue,
-    get_redis,
+    QUEUE_AGGREGATE,
     QUEUE_CLASSIFY,
     QUEUE_EXTRACT,
-    QUEUE_AGGREGATE,
-)
-from pipeline.extract import (
-    chunk_transcript,
-    merge_nearby_memories,
-    filter_low_confidence,
-    save_memories,
-    extract_memories_from_chunk,
-    PENDING_EXTRACTION,
+    get_queue,
+    get_redis,
 )
 
-load_dotenv()
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-4-20250514")
-CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-3-20240307")
-CHUNK_MINUTES = int(os.getenv("CHUNK_MINUTES", "4"))
-CHUNK_OVERLAP_SECONDS = int(os.getenv("CHUNK_OVERLAP_SECONDS", "30"))
 
 # Haiku classifier prompt - quick check if chunk has location memories
 CLASSIFIER_PROMPT = """Analyze this transcript chunk and determine if it contains any LOCATION-BASED MEMORIES.
@@ -226,9 +220,8 @@ def task_aggregate_memories(content_id: int):
     memories_hash = redis.hgetall(f"extraction:{content_id}:memories")
     all_memories = []
 
-    for chunk_idx, memories_json in memories_hash.items():
-        chunk_memories = json.loads(memories_json)
-        all_memories.extend(chunk_memories)
+    for memories_json in memories_hash.values():
+        all_memories.extend(json.loads(memories_json))
 
     logger.info(f"[content:{content_id}] Collected {len(all_memories)} raw memories")
 

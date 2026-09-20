@@ -2,11 +2,10 @@
 
 import os
 
-from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from typing import Optional
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 from sqlalchemy import text
 
 from pipeline.db import get_session
@@ -42,13 +41,13 @@ class Coordinates(BaseModel):
 class Place(BaseModel):
     id: int
     name: str
-    coordinates: Optional[Coordinates] = None
+    coordinates: Coordinates | None = None
     precision_meters: int
 
 
 class ContentRef(BaseModel):
     id: int
-    title: Optional[str]
+    title: str | None
     url: str
     timestamp_start: float
     timestamp_url: str
@@ -58,7 +57,7 @@ class Memory(BaseModel):
     id: int
     summary: str
     place: Place
-    distance_meters: Optional[float] = None
+    distance_meters: float | None = None
     content: ContentRef
     tags: list[str]
     confidence: str
@@ -82,8 +81,8 @@ class SearchMeta(BaseModel):
     limit: int
     offset: int
     query: str
-    center: Optional[Coordinates] = None
-    radius_km: Optional[float] = None
+    center: Coordinates | None = None
+    radius_km: float | None = None
 
 
 class SearchResponse(BaseModel):
@@ -94,11 +93,11 @@ class SearchResponse(BaseModel):
 class PlaceWithCount(BaseModel):
     id: int
     name: str
-    coordinates: Optional[Coordinates] = None
-    distance_meters: Optional[float] = None
+    coordinates: Coordinates | None = None
+    distance_meters: float | None = None
     memory_count: int
     tags: list[str]
-    sample_memory: Optional[str] = None
+    sample_memory: str | None = None
 
 
 class PlacesResponse(BaseModel):
@@ -110,7 +109,7 @@ class PlaceDetail(BaseModel):
     id: int
     name: str
     place_query: str
-    coordinates: Optional[Coordinates] = None
+    coordinates: Coordinates | None = None
     precision_meters: int
     geocode_status: str
     memory_count: int
@@ -492,7 +491,7 @@ def get_nearby_memories(
     radius_km: float = Query(10, ge=0.1, le=100, description="Search radius in km"),
     limit: int = Query(20, ge=1, le=100, description="Max results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    tags: Optional[str] = Query(None, description="Comma-separated tags to filter"),
+    tags: str | None = Query(None, description="Comma-separated tags to filter"),
     min_confidence: str = Query(
         "medium", pattern="^(low|medium|high)$", description="Minimum confidence"
     ),
@@ -542,10 +541,10 @@ def get_nearby_memories(
 @app.get("/v1/memories/search", response_model=SearchResponse)
 def search_memories(
     q: str = Query(..., min_length=2, description="Search query"),
-    lat: Optional[float] = Query(
+    lat: float | None = Query(
         None, ge=-90, le=90, description="Optional latitude for location filter"
     ),
-    lng: Optional[float] = Query(
+    lng: float | None = Query(
         None, ge=-180, le=180, description="Optional longitude for location filter"
     ),
     radius_km: float = Query(

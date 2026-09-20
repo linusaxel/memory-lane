@@ -2,11 +2,16 @@
 
 import logging
 import sys
+
 from rq import Worker
 
-from pipeline.queue import get_redis, QUEUE_CLASSIFY, QUEUE_EXTRACT, QUEUE_AGGREGATE
+from pipeline.queue import QUEUE_AGGREGATE, QUEUE_CLASSIFY, QUEUE_EXTRACT, get_redis
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+# force=True: pipeline.config sets an INFO default on import, and basicConfig
+# is first-call-wins. Without this the format here depends on import order.
+logging.basicConfig(
+    force=True, level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 

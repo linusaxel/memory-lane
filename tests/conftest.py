@@ -8,7 +8,6 @@ loop/verify.sh starts Docker and exits 2 before pytest runs if it cannot, so
 these fixtures may assume the db container is up.
 """
 
-import os
 import pathlib
 import subprocess
 

@@ -11,7 +11,6 @@ from sqlalchemy import text
 
 from pipeline.db import get_session
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -90,4 +89,5 @@ def geocode_pending_places():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     geocode_pending_places()

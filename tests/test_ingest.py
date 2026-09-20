@@ -8,7 +8,7 @@ No network: list_channel_videos is faked. No Anthropic: ingest never calls it.
 """
 
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import text
@@ -41,7 +41,7 @@ def fake_channel(monkeypatch):
             {
                 "url": "https://www.youtube.com/watch?v=aaaaaaaaaaa",
                 "title": "First crawled video",
-                "published_at": datetime(2026, 1, 2, tzinfo=timezone.utc),
+                "published_at": datetime(2026, 1, 2, tzinfo=UTC),
             },
             {
                 "url": "https://www.youtube.com/watch?v=bbbbbbbbbbb",

@@ -6,7 +6,7 @@ and is deselected by the gate (it belongs to W1-03).
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -61,14 +61,14 @@ def test_url_is_built_from_the_id_not_the_entry_url(fake_ydl):
 def test_timestamp_becomes_an_aware_datetime(fake_ydl):
     fake_ydl.info = {"entries": [{"id": "a" * 11, "title": "T", "timestamp": 1700000000}]}
     published = yt_crawler.list_channel_videos("https://www.youtube.com/@x")[0]["published_at"]
-    assert published == datetime.fromtimestamp(1700000000, timezone.utc)
+    assert published == datetime.fromtimestamp(1700000000, UTC)
     assert published.tzinfo is not None, "naive datetimes corrupt a TIMESTAMP column"
 
 
 def test_release_timestamp_is_used_as_a_fallback(fake_ydl):
     fake_ydl.info = {"entries": [{"id": "b" * 11, "release_timestamp": 1700000000}]}
     got = yt_crawler.list_channel_videos("https://www.youtube.com/@x")
-    assert got[0]["published_at"] == datetime.fromtimestamp(1700000000, timezone.utc)
+    assert got[0]["published_at"] == datetime.fromtimestamp(1700000000, UTC)
 
 
 def test_missing_timestamp_is_none_not_an_error(fake_ydl):

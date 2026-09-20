@@ -2,23 +2,19 @@
 
 import json
 import logging
-import os
 
 import anthropic
-from dotenv import load_dotenv
 from sqlalchemy import text
 
+from pipeline.config import (
+    ANTHROPIC_API_KEY,
+    CHUNK_MINUTES,
+    CHUNK_OVERLAP_SECONDS,
+    EXTRACTION_MODEL,
+)
 from pipeline.db import get_session
 
-load_dotenv()
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-4-20250514")
-CHUNK_MINUTES = int(os.getenv("CHUNK_MINUTES", "4"))
-CHUNK_OVERLAP_SECONDS = int(os.getenv("CHUNK_OVERLAP_SECONDS", "30"))
 
 SYSTEM_PROMPT = """You extract location-based memories from video transcripts.
 
@@ -63,7 +59,9 @@ Return only valid JSON."""
 
 
 def chunk_transcript(
-    segments: list, chunk_minutes: int = 4, overlap_seconds: int = 30
+    segments: list,
+    chunk_minutes: int = CHUNK_MINUTES,
+    overlap_seconds: int = CHUNK_OVERLAP_SECONDS,
 ) -> list[str]:
     """Split transcript segments into overlapping time-based chunks with timestamp markers."""
     if not segments:
@@ -145,7 +143,7 @@ def extract_memories_from_chunk(client: anthropic.Anthropic, chunk: str) -> list
         if "credit balance" in str(e).lower():
             raise BillingError(
                 "API credit balance too low. Please add credits at console.anthropic.com"
-            )
+            ) from e
         logger.error(f"Error calling Claude API: {e}")
         return []
     except Exception as e:
@@ -348,4 +346,5 @@ def extract_all_pending():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     extract_all_pending()

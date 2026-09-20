@@ -1,9 +1,10 @@
 """Redis queue setup and utilities."""
 
 import os
+
+from dotenv import load_dotenv
 from redis import Redis
 from rq import Queue
-from dotenv import load_dotenv
 
 load_dotenv()
 

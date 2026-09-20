@@ -9,7 +9,6 @@ from sqlalchemy import text
 
 from pipeline.db import get_session
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 CONFIG_PATH = Path(__file__).parent.parent / "config" / "content.yaml"
@@ -114,4 +113,5 @@ def ingest_content(config: dict | None = None):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     ingest_content()

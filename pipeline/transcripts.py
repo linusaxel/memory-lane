@@ -13,7 +13,6 @@ from youtube_transcript_api._errors import (
 
 from pipeline.db import get_session
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -130,4 +129,5 @@ def fetch_pending_transcripts():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     fetch_pending_transcripts()
