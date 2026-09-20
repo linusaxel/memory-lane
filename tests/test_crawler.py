@@ -5,6 +5,7 @@ no network and no cost. The one test that really hits YouTube is marked `live`
 and is deselected by the gate (it belongs to W1-03).
 """
 
+import re
 from datetime import datetime, timezone
 
 import pytest
@@ -140,3 +141,45 @@ def test_crawler_does_not_import_pipeline():
     with open(source) as f:
         text = f.read()
     assert "import pipeline" not in text and "from pipeline" not in text
+
+
+# -- the live proof (W1-03) --------------------------------------------------
+# Marked `live`: needs network, costs nothing, and is DESELECTED by the gate so
+# ticks stay deterministic and offline. Run it deliberately:
+#   venv/bin/python -m pytest -q -m live tests/test_crawler.py
+# Do NOT remove the marker, and do NOT put a network call in an unmarked test.
+
+LIVE_CHANNEL = "https://www.youtube.com/@veritasium"
+
+
+@pytest.mark.live
+def test_real_channel_paginates_past_the_first_page():
+    """The number that matters.
+
+    The scraper this replaced returned ZERO videos for every channel tested on
+    2026-09-20, and even when it worked it only ever saw the first HTML payload
+    (~30 videos). Asserting >30 proves both the outage and the truncation are
+    gone. Measured at the time of writing: 150 requested, 150 returned.
+    """
+    videos = yt_crawler.list_channel_videos(LIVE_CHANNEL, limit=60)
+
+    assert len(videos) > 30, (
+        f"only {len(videos)} videos - either discovery regressed to a single "
+        f"page, or {LIVE_CHANNEL} no longer resolves (the previous hardcoded "
+        f"channel, @TheMountainDispatch, 404s). Check the handle before "
+        f"assuming the code broke."
+    )
+
+
+@pytest.mark.live
+def test_real_channel_returns_usable_metadata():
+    videos = yt_crawler.list_channel_videos(LIVE_CHANNEL, limit=10)
+    assert videos, "no videos returned"
+
+    for v in videos:
+        video_id = v["url"].removeprefix("https://www.youtube.com/watch?v=")
+        assert re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id), f"bad video id: {v['url']}"
+
+    # Titles are the visible proof metadata capture works: before this rewrite
+    # content.title was always NULL for crawled videos.
+    assert all(v["title"] for v in videos), "some videos came back with no title"
