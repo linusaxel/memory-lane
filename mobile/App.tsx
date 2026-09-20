@@ -24,7 +24,14 @@ import {
 } from '@expo-google-fonts/ibm-plex-mono';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from './src/api.ts';
+import {
+  fetchHotspots,
+  fetchNearby,
+  unlockMemory,
+  type Coordinates,
+  type Hotspot,
+  type LocatedMemory,
+} from './src/api.ts';
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
@@ -38,6 +45,7 @@ import {
   type Unlocked,
 } from './src/unlocked.ts';
 import Collection from './src/Collection.tsx';
+import Elsewhere from './src/Elsewhere.tsx';
 import Settings from './src/Settings.tsx';
 import { color, font } from './src/theme.ts';
 import LocationPrimer from './src/LocationPrimer.tsx';
@@ -103,6 +111,7 @@ export default function App() {
   const [unlocked, setUnlocked] = useState<Unlocked>({});
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
   const [tab, setTab] = useState<Tab>('map');
 
   const mapRef = useRef<MapView>(null);
@@ -221,6 +230,18 @@ export default function App() {
       load(FALLBACK_REGION);
     })();
   }, [goToMyLocation, load]);
+
+  // Only once the map has actually come up empty. Asking on launch would spend
+  // a request on the common case, where there is something here already.
+  const nothingHere = status === 'ready' && memories.length === 0;
+  useEffect(() => {
+    if (!nothingHere || hotspots.length > 0) return;
+    fetchHotspots()
+      .then((found) => {
+        if (mounted.current) setHotspots(found);
+      })
+      .catch(() => {});
+  }, [nothingHere, hotspots.length]);
 
   useEffect(() => {
     loadUnlocked().then((stored) => {
@@ -378,7 +399,30 @@ export default function App() {
             />
           )}
 
-          {showPrimer ? (
+          {/* The empty state outranks the primer. "Walk within 150 m of a pin"
+              is a promise about pins that are not there, and asking for
+              location to unlock nothing is the wrong first impression. Once
+              there is something on the map, the primer gets its turn. */}
+          {nothingHere && (
+            <Elsewhere
+              hotspots={hotspots}
+              from={{ lat: region.latitude, lng: region.longitude }}
+              onGo={(hotspot) => {
+                const next: Region = {
+                  latitude: hotspot.lat,
+                  longitude: hotspot.lng,
+                  // Wide enough to take in a metro area, because the point is
+                  // "here is the place", not "here is one pin in it".
+                  latitudeDelta: 0.12,
+                  longitudeDelta: 0.12,
+                };
+                mapRef.current?.animateToRegion(next, 900);
+                setRegion(next);
+              }}
+            />
+          )}
+
+          {showPrimer && !nothingHere ? (
             <LocationPrimer
               blocked={permission === 'blocked'}
               onAllow={() => {
@@ -393,7 +437,7 @@ export default function App() {
                 rememberPrimerDismissed();
               }}
             />
-          ) : status === 'failed' ? (
+          ) : nothingHere ? null : status === 'failed' ? (
             <Pressable style={styles.locate} onPress={() => load(region)}>
               <Text style={styles.locateText}>Try again</Text>
             </Pressable>

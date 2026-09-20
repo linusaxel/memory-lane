@@ -15,6 +15,14 @@ export type Reach = 'open' | 'locked' | 'unlockable';
 /** Only used if a memory somehow arrives without the server's radius. */
 export const FALLBACK_RADIUS_M = 150;
 
+/**
+ * Past this, "the nearest locked memory is 6,181 km away" is not a hint, it is
+ * a fact about the corpus, and the empty-state card says it better. The pill
+ * exists to start a walk; 30km is the outer edge of somewhere you might go
+ * today.
+ */
+export const HINT_RANGE_M = 30_000;
+
 export function reachOf(group: MemoryGroup, position: Coordinates | null): Reach {
   const locked = group.memories.filter((memory) => memory.locked);
   // A group is open only when nothing in it is locked. One locked memory under
@@ -44,5 +52,5 @@ export function nearestLocked(
     const meters = metersBetween(position.lat, position.lng, group.lat, group.lng);
     if (!best || meters < best.meters) best = { group, meters };
   }
-  return best;
+  return best && best.meters <= HINT_RANGE_M ? best : null;
 }

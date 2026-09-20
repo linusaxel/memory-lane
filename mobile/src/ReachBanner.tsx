@@ -28,7 +28,15 @@ function label(count: number | null, meters: number | null): string {
   if (count != null) {
     return count === 1 ? '1 memory within reach' : `${count} memories within reach`;
   }
-  const away = meters == null ? '' : meters < 1000 ? `${Math.round(meters)} m` : `${(meters / 1000).toFixed(1)} km`;
+  // One decimal below 10km, none above: "1.4 km" is a decision and "6181.0 km"
+  // is a spreadsheet.
+  const km = meters == null ? 0 : meters / 1000;
+  const away =
+    meters == null
+      ? ''
+      : meters < 1000
+        ? `${Math.round(meters)} m`
+        : `${km < 10 ? km.toFixed(1) : Math.round(km).toLocaleString()} km`;
   return `Nearest locked memory \u00b7 ${away}`;
 }
 

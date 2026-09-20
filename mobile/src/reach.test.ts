@@ -68,3 +68,16 @@ test('nothing to walk to when something is already in reach', () => {
 test('open groups are not somewhere to walk to', () => {
   assert.equal(nearestLocked([group(...FAR, [false])], HERE), null);
 });
+
+test('a lock on another continent is not a hint', () => {
+  // Copenhagen, with a corpus in New York. "Nearest locked memory 6,181 km"
+  // is a fact about the corpus, not somewhere to walk - the empty-state card
+  // is what should speak instead.
+  const faraway = group(40.7128, -74.006, [true]);
+  assert.equal(nearestLocked([faraway], HERE), null);
+});
+
+test('a lock at the edge of a long day out still counts', () => {
+  const nearEdge = group(HERE.lat + 0.2, HERE.lng, [true]); // ~22km
+  assert.ok(nearestLocked([nearEdge], HERE));
+});

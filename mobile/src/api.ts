@@ -114,3 +114,25 @@ export async function unlockMemory(id: number, at: Coordinates): Promise<Located
   );
   return !memory.locked && hasCoordinates(memory) ? memory : null;
 }
+
+/** Where the corpus actually is, for a map that has nothing on it. */
+export type Hotspot = {
+  label: string;
+  lat: number;
+  lng: number;
+  memories: number;
+};
+
+/**
+ * Asked once, lazily, and only when the map turns up empty. "No memories here
+ * yet" is true and useless outside New York; this is what turns it into
+ * somewhere to go.
+ */
+export async function fetchHotspots(signal?: AbortSignal): Promise<Hotspot[]> {
+  const body = await get<{ hotspots?: Hotspot[] }>(
+    '/v1/stats',
+    new URLSearchParams({ hotspots: '3' }),
+    signal,
+  );
+  return body.hotspots ?? [];
+}

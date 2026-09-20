@@ -386,6 +386,38 @@ WHERE
     AND {WITHIN}
 """
 
+# Where the corpus actually is, for somebody standing where it is not. The app
+# is a map of nothing outside New York, and "No memories here yet" is true and
+# useless - this is what turns it into somewhere to go.
+#
+# DBSCAN rather than a rounded grid: 0.5 degrees is roughly a metro area, and a
+# grid splits any city that happens to straddle a cell boundary. New York's
+# places span 40.70-40.82 and a 0.1 grid cut them into two "hotspots".
+#
+# The label is the most common trailing component of the place names in the
+# cluster - "Gotham Comedy Club, New York" -> "New York". Crude, and it reads
+# correctly for every cluster in the corpus, which is the bar for a hint.
+HOTSPOTS_QUERY = """
+WITH clustered AS (
+    SELECT
+        p.name,
+        p.coordinates::geometry AS geom,
+        ST_ClusterDBSCAN(p.coordinates::geometry, eps := 0.5, minpoints := 1) OVER () AS cluster_id
+    FROM memories m
+    JOIN places p ON m.place_id = p.id
+    WHERE p.coordinates IS NOT NULL
+)
+SELECT
+    ST_Y(ST_Centroid(ST_Collect(geom))) AS lat,
+    ST_X(ST_Centroid(ST_Collect(geom))) AS lng,
+    COUNT(*) AS memories,
+    mode() WITHIN GROUP (ORDER BY btrim(split_part(name, ',', -1))) AS label
+FROM clustered
+GROUP BY cluster_id
+ORDER BY memories DESC
+LIMIT :limit
+"""
+
 # places/nearby is grouped, so its total is the number of GROUPS, not rows.
 PLACES_COUNT_QUERY = f"""
 SELECT COUNT(DISTINCT p.id)
@@ -846,9 +878,32 @@ def get_content_memories(
     return [row_to_memory(row, include_distance=False) for row in rows]
 
 
-@app.get("/v1/stats")
-def get_stats():
-    """Get database statistics."""
+class Hotspot(BaseModel):
+    """A place worth flying the map to when there is nothing where you are."""
+
+    label: str
+    lat: float
+    lng: float
+    memories: int
+
+
+class Stats(BaseModel):
+    memories: int
+    places_with_coordinates: int
+    processed_videos: int
+    hotspots: list[Hotspot]
+
+
+@app.get("/v1/stats", response_model=Stats)
+def get_stats(
+    hotspots: int = Query(5, ge=0, le=20, description="How many of the busiest areas to name"),
+):
+    """Database statistics, and where the memories actually are.
+
+    The second part is not a statistic, it is the answer to an empty map. The
+    corpus is one comedy podcast's touring history, so it is New York and then a
+    long tail - and somebody opening this in Copenhagen sees nothing at all.
+    """
     with get_session() as session:
         memories_count = session.execute(text("SELECT COUNT(*) FROM memories")).scalar()
         places_count = session.execute(
@@ -857,12 +912,24 @@ def get_stats():
         content_count = session.execute(
             text("SELECT COUNT(*) FROM content WHERE memories_extracted = TRUE")
         ).scalar()
+        rows = (
+            session.execute(text(HOTSPOTS_QUERY), {"limit": hotspots}).fetchall()
+            if hotspots
+            else []
+        )
 
-    return {
-        "memories": memories_count,
-        "places_with_coordinates": places_count,
-        "processed_videos": content_count,
-    }
+    return Stats(
+        memories=memories_count,
+        places_with_coordinates=places_count,
+        processed_videos=content_count,
+        # A cluster whose place names give no trailing component has no label
+        # worth showing, and a hint with no name is not a hint.
+        hotspots=[
+            Hotspot(label=r.label, lat=r.lat, lng=r.lng, memories=r.memories)
+            for r in rows
+            if r.label
+        ],
+    )
 
 
 if __name__ == "__main__":
