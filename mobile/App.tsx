@@ -196,6 +196,20 @@ export default function App() {
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
 
+  /** The closest thing still locked, so a map of padlocks answers "where do I
+   *  go" rather than only "you cannot read this". */
+  const nearestLocked = useMemo(() => {
+    if (!position || withinReach.length > 0) return null;
+    const locked = groups.filter((group) => reachOf(group) === 'locked');
+    if (locked.length === 0) return null;
+    return locked
+      .map((group) => ({
+        group,
+        meters: metersBetween(position.lat, position.lng, group.lat, group.lng),
+      }))
+      .reduce((closest, next) => (next.meters < closest.meters ? next : closest));
+  }, [groups, position, reachOf, withinReach]);
+
   const openGroup = (group: MemoryGroup) => {
     setOpenAt(group.memories);
     setOpenIndex(0);
@@ -265,8 +279,19 @@ export default function App() {
         {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
       </View>
 
-      {withinReach.length > 0 && !showPrimer && (
-        <ReachBanner count={withinReach.length} onPress={() => openGroup(withinReach[0])} />
+      {!showPrimer && withinReach.length > 0 && (
+        <ReachBanner
+          count={withinReach.length}
+          meters={null}
+          onPress={() => openGroup(withinReach[0])}
+        />
+      )}
+      {!showPrimer && withinReach.length === 0 && nearestLocked && (
+        <ReachBanner
+          count={null}
+          meters={nearestLocked.meters}
+          onPress={() => openGroup(nearestLocked.group)}
+        />
       )}
 
       {showPrimer ? (

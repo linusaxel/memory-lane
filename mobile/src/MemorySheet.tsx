@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,6 +40,13 @@ function formatDistance(meters: number | null): string | null {
     : `${(meters / 1000).toFixed(1)} km away`;
 }
 
+/** Walking directions to a coordinate, in whatever maps app the phone has. */
+function walkingDirectionsUrl(lat: number, lng: number): string {
+  return Platform.OS === 'ios'
+    ? `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
+    : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+}
+
 function formatTimestamp(seconds: number): string {
   const total = Math.floor(seconds);
   const h = Math.floor(total / 3600);
@@ -60,6 +68,15 @@ export default function MemorySheet({
 }: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
+  // openURL rejects when nothing can handle the link - no browser, no maps app,
+  // a locked-down device. Both links here can hit it, so both say so instead of
+  // appearing to do nothing.
+  const [linkFailed, setLinkFailed] = useState<string | null>(null);
+
+  const open = (url: string, whenNothingOpens: string) => {
+    setLinkFailed(null);
+    Linking.openURL(url).catch(() => setLinkFailed(whenNothingOpens));
+  };
 
   // distance_meters is measured from the map centre, which is not where the
   // person is. Only their own distance decides whether the gate can open.
@@ -161,6 +178,24 @@ export default function MemorySheet({
                       ? 'Turn on location to unlock memories by standing near them.'
                       : `Get within ${Math.round(radius)} m and you can open it.`}
                   </Text>
+                  {/* Knowing it is 412m away and having no idea which way is
+                      most of a dead end. The distance is the ask; this is the
+                      answer. */}
+                  <Pressable
+                    style={styles.walk}
+                    accessibilityRole="button"
+                    onPress={() =>
+                      open(
+                        walkingDirectionsUrl(
+                          memory.place.coordinates.lat,
+                          memory.place.coordinates.lng,
+                        ),
+                        'No maps app to open directions in.',
+                      )
+                    }
+                  >
+                    <Text style={styles.walkText}>Walk there</Text>
+                  </Pressable>
                 </>
               )}
             </View>
@@ -222,13 +257,16 @@ export default function MemorySheet({
               <Pressable
                 style={styles.watch}
                 // timestamp_url already points at the right second.
-                onPress={() => Linking.openURL(memory.content!.timestamp_url)}
+                onPress={() =>
+                  open(memory.content!.timestamp_url, 'Nothing here can open that video.')
+                }
               >
                 <Text style={styles.watchText}>
                   Watch at {formatTimestamp(memory.content.timestamp_start)}
                 </Text>
               </Pressable>
             )}
+            {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
             <Pressable style={styles.close} onPress={onClose}>
               <Text style={styles.closeText}>Close</Text>
             </Pressable>
@@ -255,6 +293,16 @@ const styles = StyleSheet.create({
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 14 },
   gateFigure: { fontSize: 44, fontWeight: '700', color: '#18181b', letterSpacing: -1 },
   gateNote: { fontSize: 15, lineHeight: 22, color: '#71717a', textAlign: 'center' },
+  walk: {
+    marginTop: 10,
+    borderWidth: 1.5,
+    borderColor: '#d4d4d8',
+    paddingVertical: 12,
+    paddingHorizontal: 26,
+    borderRadius: 12,
+  },
+  walkText: { fontSize: 15, fontWeight: '600', color: '#3f3f46' },
+  linkFailed: { fontSize: 13, color: '#a1a1aa', textAlign: 'center' },
   summary: { fontSize: 17, lineHeight: 26, color: '#27272a' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 22 },
   tag: {
