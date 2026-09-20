@@ -8,7 +8,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type Tab = 'map' | 'collection';
+export type Tab = 'map' | 'collection' | 'you';
 
 type Props = {
   tab: Tab;
@@ -20,6 +20,9 @@ export default function TabBar({ tab, unlockedCount, onSelect }: Props) {
   const insets = useSafeAreaInsets();
 
   return (
+    // Solid, not glass. The bar sits in the layout rather than over the map, so
+    // there is nothing behind it to blur - and an overlay bar would cover the
+    // Apple Maps attribution, which rule 7 does not allow.
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       <Item label="Map" active={tab === 'map'} onPress={() => onSelect('map')} />
       <Item
@@ -30,6 +33,7 @@ export default function TabBar({ tab, unlockedCount, onSelect }: Props) {
         active={tab === 'collection'}
         onPress={() => onSelect('collection')}
       />
+      <Item label="You" active={tab === 'you'} onPress={() => onSelect('you')} />
     </View>
   );
 }
@@ -67,9 +71,9 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f4f4f5',
-    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.12)',
+    paddingTop: 12,
   },
   item: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   label: { fontSize: 15, fontWeight: '600', color: '#a1a1aa' },

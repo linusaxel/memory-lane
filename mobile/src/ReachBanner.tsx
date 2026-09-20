@@ -15,6 +15,8 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text } from 'react-native';
 
+import Glass from './Glass.tsx';
+
 type Props = {
   /** Null when nothing is in reach: then `meters` carries the nearest lock. */
   count: number | null;
@@ -63,15 +65,23 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
         { transform: [{ scale: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] },
       ]}
     >
+      {/* Amber stays solid: it is the one thing in the app you are meant to
+          act on, and text on glass loses the contrast to say so. The muted
+          version is chrome, so it gets the glass. */}
       <Pressable
-        style={[styles.pill, !reachable && styles.distant]}
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={
           reachable ? `${label(count, meters)}. Open to unlock.` : label(count, meters)
         }
       >
-        <Text style={[styles.text, !reachable && styles.distantText]}>{label(count, meters)}</Text>
+        {reachable ? (
+          <Text style={[styles.pill, styles.text]}>{label(count, meters)}</Text>
+        ) : (
+          <Glass style={styles.distant} radius={20}>
+            <Text style={styles.distantText}>{label(count, meters)}</Text>
+          </Glass>
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -85,12 +95,24 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     shadowColor: '#b45309',
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
   },
-  distant: { backgroundColor: 'rgba(255,255,255,0.94)', shadowColor: '#000', shadowOpacity: 0.12 },
-  text: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  distantText: { color: '#71717a', fontWeight: '600' },
+  distant: {
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  text: { color: '#fff', fontSize: 14, fontWeight: '700', overflow: 'hidden' },
+  distantText: {
+    color: '#52525b',
+    fontSize: 14,
+    fontWeight: '600',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
 });

@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +15,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from './src/api.ts';
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
-import { nearestLocked, reachOf } from './src/reach.ts';
+import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
+import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import { regionToRadiusKm, type Region } from './src/region.ts';
 import {
   inUnlockOrder,
@@ -18,6 +27,8 @@ import {
   type Unlocked,
 } from './src/unlocked.ts';
 import Collection from './src/Collection.tsx';
+import Glass from './src/Glass.tsx';
+import Settings from './src/Settings.tsx';
 import LocationPrimer from './src/LocationPrimer.tsx';
 import TabBar, { type Tab } from './src/TabBar.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
@@ -197,6 +208,16 @@ export default function App() {
 
   const nearest = useMemo(() => nearestLocked(groups, position), [groups, position]);
 
+  const placesUnlocked = useMemo(
+    () => new Set(collected.map((memory) => memory.place.id)).size,
+    [collected],
+  );
+  // The radius is the server's, so read it off a memory rather than restating
+  // it here - a number in two places is a number that will disagree.
+  const radiusMeters =
+    memories.find((memory) => memory.unlock_radius_meters)?.unlock_radius_meters ??
+    FALLBACK_RADIUS_M;
+
   const openGroup = (group: MemoryGroup) => {
     setOpenAt(group.memories);
     setOpenIndex(0);
@@ -254,6 +275,10 @@ export default function App() {
             style={StyleSheet.absoluteFill}
             initialRegion={FALLBACK_REGION}
             showsUserLocation={permission === 'granted'}
+            // See src/mapStyle.ts: the map is a backdrop, not a competitor.
+            mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+            customMapStyle={MUTED_ANDROID_STYLE}
+            showsPointsOfInterests={false}
             onRegionChangeComplete={onRegionChangeComplete}
           >
             {groups.map((group) => (
@@ -266,10 +291,12 @@ export default function App() {
             ))}
           </MapView>
 
-          <View style={styles.banner} pointerEvents="none">
-            <Text style={styles.bannerText}>{bannerText}</Text>
-            {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
-          </View>
+          <Glass style={styles.banner}>
+            <View style={styles.bannerRow} pointerEvents="none">
+              <Text style={styles.bannerText}>{bannerText}</Text>
+              {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
+            </View>
+          </Glass>
 
           {!showPrimer && withinReach.length > 0 && (
             <ReachBanner
@@ -327,6 +354,22 @@ export default function App() {
           />
         </View>
 
+        <View style={[styles.screen, tab !== 'you' && styles.hidden]}>
+          <Settings
+            unlockedCount={collected.length}
+            placeCount={placesUnlocked}
+            radiusMeters={radiusMeters}
+            permission={permission}
+            onRequestLocation={() => {
+              if (permission === 'granted' || permission === 'blocked') {
+                Linking.openSettings();
+                return;
+              }
+              goToMyLocation().catch(() => false);
+            }}
+          />
+        </View>
+
         <TabBar tab={tab} unlockedCount={collected.length} onSelect={setTab} />
 
         <MemorySheet
@@ -353,33 +396,34 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 64,
     alignSelf: 'center',
+    borderRadius: 22,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 3,
+  },
+  bannerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.94)',
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
   },
-  bannerText: { fontSize: 14, color: '#3f3f46', fontWeight: '500' },
+  bannerText: { fontSize: 14, color: '#3f3f46', fontWeight: '600' },
   locate: {
     position: 'absolute',
     bottom: 44,
     alignSelf: 'center',
     backgroundColor: '#18181b',
-    paddingHorizontal: 22,
-    paddingVertical: 13,
-    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 26,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
   locateText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });

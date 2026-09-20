@@ -32,8 +32,14 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 Collection (the second tab)
 └─ what this device has unlocked, newest first; a row opens the sheet
 
+Settings (the third tab, "You")
+├─ what this device has unlocked, as a number
+├─ how unlocking works      the one place that answers "why can't I read this"
+├─ location state + action
+└─ privacy policy, and the fact that nothing is synced
+
 TabBar
-└─ Map | Unlocked (N)
+└─ Map | Unlocked (N) | You
 ```
 
 **Unlocked memories are readable forever, and that is a device promise, not a
@@ -49,7 +55,10 @@ storage survives. A new phone starts empty. Making that portable needs identity
 | `src/ReachBanner.tsx` | the only thing on the map that animates |
 | `src/LocationPrimer.tsx` | asking before the system does |
 | `src/Collection.tsx` | what the walking was for |
-| `src/TabBar.tsx` | two tabs, hand-rolled |
+| `src/TabBar.tsx` | three tabs, hand-rolled |
+| `src/Settings.tsx` | the "You" tab |
+| `src/Glass.tsx` | frosted chrome. Read its header before using it |
+| `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
 
 ## Tokens
@@ -88,7 +97,18 @@ convention and reviewing eyes.
 **Radii**: 12 primary button · 20–24 floating pill · 12 tag · 3 grabber.
 
 **Elevation**: every floating element carries both `shadow*` (iOS) and
-`elevation` (Android). Set both or it looks flat on one platform.
+`elevation` (Android). Set both or it looks flat on one platform. Shadows are
+wide and faint — roughly `radius 14–18, opacity 0.1–0.22, y 5–8`. A tight dark
+shadow reads as a sticker; a wide faint one reads as floating.
+
+**Glass**: chrome that floats *over the map* is frosted (`src/Glass.tsx`), at
+82% white — not the 55% the trend suggests, which is unreadable over streets.
+Anything that must be acted on stays solid: the amber reach pill, "Near me".
+Anything not over content stays solid too, which is why the tab bar is not
+glass. Reasoning and sources in [`docs/09-visual-design.md`](../docs/09-visual-design.md).
+
+**The map is muted on purpose.** `mutedStandard` on iOS, a style array on
+Android, points of interest off. The app has one subject and it is the pins.
 
 ## Rules that are load-bearing
 

@@ -1,6 +1,7 @@
 /** Memory Lane API client. One fetch, no wrapper library. */
 
-const BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
+export const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
+const BASE = API_BASE;
 
 export type Coordinates = { lat: number; lng: number };
 

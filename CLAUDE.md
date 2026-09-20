@@ -83,6 +83,7 @@ python -m api.main
 | `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
 | **`mobile/UI.md`** | **Read before touching the app.** Tokens, load-bearing rules, how to see it running |
 | **`docs/08-ux-flows.md`** | **What the user does.** Implemented + proposed flows |
+| `docs/09-visual-design.md` | Why the app looks the way it does, and what was rejected |
 
 ## Database Tables
 
