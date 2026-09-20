@@ -626,14 +626,29 @@ tasks:
       static description ('constructed in 1902') and Wikipedia-grade fact as hard as the
       current prompt rejects hypotheticals. Same JSON contract, same tag vocabulary."
     verify: "venv/bin/python -m pytest -q tests/test_extract_historical.py"
-    touches: [pipeline/extract.py, tests/test_extract_historical.py]
+    touches: [pipeline/extract.py, pipeline/tasks.py, tests/test_extract_historical.py]
     depends_on: [W4-03]
-    state: todo
-    attempts: 0
-    commit: null
-    note: "SYSTEM_PROMPT is tuned for personal anecdote (WHO / WHAT HAPPENED / THE VIBE)
-      and is wrong for third-party material. Use FakeAnthropic - this task must not spend
-      credits. Quality against a real API is W1-09, a human gate."
+    state: done
+    attempts: 1
+    commit: b8e1c23
+    note: |
+      HISTORICAL_SYSTEM_PROMPT alongside SYSTEM_PROMPT, chosen by content.source_type.
+      Same JSON contract and tag vocabulary; rejects a building merely existing as
+      firmly as the other rejects a hypothetical, and is told twice that an empty list
+      beats an invention.
+      Also fixes the precision dishonesty the centroid finding exposed: both prompts now
+      forbid claiming "exact" for a city guess. Nothing could filter or rank on
+      precision_meters while 35 stacked centroid places claimed 50m.
+      happened_at/happened_precision/attribution/source_url/layer are now actually
+      written - W4-01 added the columns and nothing filled them. Partial dates widen to
+      the start of their period; happened_precision carries the doubt.
+      save_memories keeps its signature (layer defaults), so the 4 existing tests and
+      tasks.py are untouched.
+      KNOWN GAP, marked at the call site and in TODO.md: tasks.py calls the extractor
+      with no prompt, so the queue path would give archival text the personal prompt.
+      Dead today (redis/rq not installed). Thread source_type down from
+      task_enqueue_chunks before using that path for anything but video.
+      18 tests, no credits spent - quality against a real API is still W1-09.
 
   - id: W4-05
     goal: "Contrast scoring: the extractor emits `then` (what stood there) plus a 0-1

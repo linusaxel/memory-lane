@@ -291,7 +291,7 @@ card is the one worth screenshotting.
       marker saying it was made up, and invented history is the one thing this
       product must not ship. **The concrete source adapter is still not chosen**
       — see Open questions.
-- [ ] **1.4 A second extraction prompt, for archival text.** The existing
+- [x] **1.4 A second extraction prompt, for archival text.** The existing
       `SYSTEM_PROMPT` is tuned for personal anecdote ("WHO / WHAT HAPPENED /
       THE VIBE") and is wrong for third-party material. The historical prompt
       must emit `happened_at`, and must reject static description ("this
