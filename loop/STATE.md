@@ -27,7 +27,7 @@ Everything below still holds: the W0–W3 human checklist is real and unchanged.
 ```bash
 docker compose up -d --build              # API + PostGIS
 ./api/test_api.sh http://localhost:8080   # 14/14 pass
-./loop/verify.sh                          # 103 tests, GREEN
+./loop/verify.sh                          # 121 tests, GREEN
 cd mobile && npx expo start               # the app
 ```
 

@@ -85,9 +85,10 @@ Docker build layers, and two pipeline-stage headings. Nothing to refactor.
 ### Known defects, unowned
 
 - [ ] **Semantic place duplicates.** The unique index catches exact repeats, but
-      `"Oslo Norway"` and `"comedy club Oslo Norway"` still land as two pins.
-      This blocks both contrast scoring and map clustering — it is a Phase 1
-      item, not a cleanup nicety.
+      near-matches still land as two pins. Live right now: *Gotham Comedy Club
+      New York City* (6 memories) and *Gotham Comedy Club Chelsea New York City*
+      (1 memory) are one venue on two pins. This blocks both contrast scoring
+      and map clustering — it is a Phase 1 item, not a cleanup nicety.
 - [ ] **`meta.total` is wrong** on `/v1/memories/nearby`, `/v1/memories/search`
       and `/v1/places/nearby` — the count queries ignore active filters, and the
       places one returns page length.
@@ -133,7 +134,8 @@ card is the one worth screenshotting.
         without changing `SELECT count(*) FROM memories` (currently 224).
 - [ ] **1.2 Semantic place dedup.** Normalise `place_query` (casefold, strip
       venue-type stopwords) and collapse places whose coordinates fall within
-      their combined `precision_meters`. Follow the pattern
+      their combined `precision_meters`. Ground truth to fix: the two *Gotham
+      Comedy Club* rows must become one. Follow the pattern
       `001_places_unique.sql` already established: merge coordinates onto the
       keeper first, repoint `memories.place_id`, then delete orphans guarded by
       `NOT EXISTS` — `memories.place_id` is `ON DELETE CASCADE` and an unguarded
