@@ -1,19 +1,24 @@
-# LOOP STATE — W0–W3 complete. A new roadmap (W4) is landing.
+# LOOP STATE — W0–W3 complete. Phase 1.5 shipped. TODO.md is the roadmap.
 
 ```
-tick:     12 (last autonomous tick)
-updated:  2026-09-20
-branch:   loop/autopilot   (~20 commits ahead of main, NEVER PUSHED)
-gate:     GREEN
-status:   33 tasks - 28 done, 4 parked on human gates, 1 doing (W3-13)
+updated:  2026-09-20 (interactive session, not a loop tick)
+branch:   loop/autopilot   — pushed, and main is at the same commit
+gate:     GREEN, 265 tests
+status:   W0–W3 done. Phase 1.5 (proximity unlock) done and in the app.
+          Remaining work is TODO.md, and the human gates below.
 ```
+
+**Since the last tick**, in an interactive session: the whole proximity-unlock
+mechanic (server-side gate, hold-to-unlock, collection, three tabs), a visual
+direction that is written down in `docs/09-visual-design.md`, and an audit of
+`TODO.md`'s defect list that struck six entries as already fixed. W3-13 below is
+done — the app has been driven in the Simulator extensively.
 
 **This file said TERMINATED. That was wrong on two counts and is corrected here.**
 
-1. W3-13 was unparked by commit `aab8d65` and is `state: doing`, so the loop no
-   longer self-terminates at STEP 2 — it would pick W3-13 up. Its one attempt
-   failed on a missing iOS 26.5 simulator runtime, not on our code; the details
-   are now recorded in its `note`. In practice it is a human gate like the rest.
+1. W3-13 was unparked by commit `aab8d65`. It is now genuinely finished — the
+   app has been run in the Simulator many times since. Its one automated attempt
+   had failed on a missing iOS 26.5 runtime rather than on our code.
 2. The W0–W3 milestone is finished, but the project is not. **`TODO.md` at the
    repo root is now the roadmap and the source of truth** — historical / friend
    / stranger layers, Copenhagen launch, contrast scoring. Phase 1 arrives here
@@ -27,16 +32,20 @@ Everything below still holds: the W0–W3 human checklist is real and unchanged.
 ```bash
 docker compose up -d --build              # API + PostGIS
 ./api/test_api.sh http://localhost:8080   # 14/14 pass
-./loop/verify.sh                          # 121 tests, GREEN
+./loop/verify.sh                          # 265 tests, GREEN
 cd mobile && npx expo start               # the app
 ```
 
 - **Crawler**: `@TuesdayswithStories` auto-discovered, 25 videos ingested,
   25 transcripts fetched, 0 failed. Baseline before this work: **0 videos**.
-- **Database**: 224 memories across 224 places, all geocoded.
+- **Database**: 224 memories across 194 places (the unique index merged 30
+  duplicates), all geocoded. 83 of them are gated by the unlock radius; the
+  other 133 sit on shared city centroids and stay open. See F7.
 - **API**: containerized, CORS fixed, sync handlers, `/privacy` live.
-- **App**: map + pins + detail sheet + YouTube deep-link; bundles for iOS and
-  Android (1.5MB each, no Metro errors); both native manifests verified.
+- **App**: three tabs (map, unlocked, you), proximity unlock with a
+  hold-to-unlock ring, an on-device collection, a permission primer, and a
+  typographic direction with its own doc. Bundles for iOS and Android; both
+  native manifests verified.
 
 ## THE HUMAN CHECKLIST — in dependency order
 
@@ -58,11 +67,11 @@ Summaries should be vivid and name people ("Mark and Joe argued about
 pastrami"), not generic ("they visited a deli"). If they are flat, tune
 `SYSTEM_PROMPT` in `pipeline/extract.py`.
 
-**While you are in there:** the model IDs are a generation stale —
-`claude-sonnet-4-20250514` → `claude-sonnet-5` and `claude-haiku-3-20240307` →
-`claude-haiku-4-5`. CLASSIFIER_MODEL is now fixed; EXTRACTION_MODEL is still the
-deprecated ID. Both live in `pipeline/config.py` now, not in the modules. Also
-add `cache_control` to the system prompt, which is resent for every chunk.
+**While you are in there:** both model IDs are current now
+(`claude-sonnet-5`, `claude-haiku-4-5`, in `pipeline/config.py`), but neither
+has been run against real credits, so `EXTRACTION_MODEL` is still unvalidated —
+that is most of what this gate is for. Also worth adding `cache_control` to the
+system prompt, which is resent for every chunk.
 
 ### 2. W2-08 · `DEPLOY` — Railway (~$5/mo)
 
@@ -79,7 +88,13 @@ running your own database container anyway. Railway runs the identical
 5. `./api/test_api.sh https://<domain>` — expect 14/14
 6. **Note the HTTPS domain. It unblocks step 4 below.**
 
-### 3. W3-13 · look at the app (free, ~5 min)
+### 3. ~~W3-13 · look at the app~~ — **done**
+
+Driven in the Simulator repeatedly across an interactive session: map, locked
+and unlocked sheets, the hold-to-unlock ring, all three tabs, the permission
+primer and the reach circle. Screenshots were reviewed rather than filed, and
+`mobile/UI.md` carries the recipe. Kept below because the recipe is still how
+you do it.
 
 Simulator builds need no Apple account and no signing.
 ```bash
