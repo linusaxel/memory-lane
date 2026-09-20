@@ -148,6 +148,24 @@ IS NOT NULL GROUP BY 1 HAVING count(*) > 1 ORDER BY 2 DESC;`
       `claude-haiku-4-5`; the extraction one has not.
 - [ ] **`redis` / `rq` declared but not installed** in the venv, so
       `pipeline/worker.py` ImportErrors. The parallel path is untested locally.
+- [ ] **`ruff format` corrupts single-line tuple `except` clauses in this
+      repo.** It rewrites `except (TypeError, ValueError):` into
+      `except TypeError, ValueError:` — Python 2, does not compile. The gate then
+      fails at `compileall`, which is step 1, so it reports `GATE=RED syntax
+      error` and never reaches the tests; a "GREEN, 176 passed" from before the
+      save looks identical to a tree that now cannot import.
+
+      Reproduce: write that snippet to any `.py` file under the repo root and run
+      `venv/bin/python -m ruff format <file>`. **Not** reproducible in `/tmp`
+      with this same `pyproject.toml` copied in, not the `.ruff_cache`, and not a
+      stray config — something about this directory. ruff 0.16.8. Root cause not
+      found and the search was called off as too expensive.
+
+      Workaround, used in `_contrast_score`: keep the tuple exploded across lines
+      with a magic trailing comma, which ruff preserves.
+      `pipeline/tasks.py:73` already had that shape and was never affected.
+      Two agents each "fixing" this file while the other saved cost real time —
+      if the gate says syntax error at a line you did not touch, check this first.
 - [ ] **The queue path would use the wrong prompt.** `pipeline/tasks.py` calls
       `extract_memories_from_chunk` with no prompt argument, so archival content
       run through the workers gets the personal "WHO / THE VIBE" prompt — an

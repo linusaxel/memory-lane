@@ -97,6 +97,20 @@ For each memory, extract:
   puts a pin on the wrong doorstep and claims 50m accuracy while doing it.
 - confidence: high (clear location + definite event), medium (somewhat vague),
   low (uncertain)
+- contrast_score: 0.0 to 1.0. How far this is from what a person standing there
+  TODAY would see. This decides what gets shown first, so it matters more than
+  historical importance:
+    0.9-1.0  the place is unrecognisable - a 400-capacity music room that is now
+             a bank branch, a bakery that is now a car park
+    0.5-0.8  same use, changed character - a pub that is still a pub but was the
+             one the dockers drank in
+    0.1-0.4  the place is essentially as it was
+    0.0      you cannot tell what is there now
+  A cathedral's founding date is famous and scores LOW: it is still a cathedral.
+  A jazz club that became a bank lobby scores HIGH. Fame is not contrast.
+- contrast_note: one line naming both sides of that gap - "a 400-capacity music
+  room above a bicycle shop; a bank branch since 1994". Null if you do not know
+  what is there now. Do not guess what is there now.
 
 Return JSON: {"memories": [...]}
 Return {"memories": []} if no memories found. An empty list is the right answer
@@ -284,6 +298,28 @@ def _happened_at(mem: dict):
     return raw if len(parts) == 3 else None
 
 
+def _contrast_score(mem: dict):
+    """Clamp the model's 0-1 score, or None if it did not give a usable number.
+
+    Ordering depends on this, so a stray "high" or a 7 must not become a rank.
+    """
+    raw = mem.get("contrast_score")
+    if raw is None or isinstance(raw, bool):
+        return None
+    try:
+        return min(1.0, max(0.0, float(raw)))
+    except (
+        TypeError,
+        ValueError,
+    ):
+        # Kept exploded with a trailing comma on purpose: `ruff format` in this
+        # repo rewrites a single-line `except (A, B):` into `except A, B:`,
+        # which is Python 2 and does not compile. The magic trailing comma stops
+        # it collapsing the tuple back onto one line. See TODO.md.
+        logger.warning("Unusable contrast_score %r, storing null", raw)
+        return None
+
+
 def save_memories(session, content_id: int, memories: list[dict], layer: str = "historical"):
     for mem in memories:
         lat = mem.get("lat")
@@ -344,12 +380,12 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
                 INSERT INTO memories (
                     place_id, content_id, timestamp_start, timestamp_end, summary, tags,
                     extraction_confidence, layer, happened_at, happened_precision,
-                    attribution, source_url
+                    attribution, source_url, contrast_score, contrast_note
                 )
                 VALUES (
                     :place_id, :content_id, :ts_start, :ts_end, :summary, :tags,
                     :confidence, :layer, CAST(:happened_at AS DATE), :happened_precision,
-                    :attribution, :source_url
+                    :attribution, :source_url, :contrast_score, :contrast_note
                 )
             """),
             {
@@ -365,6 +401,8 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
                 "happened_precision": mem.get("happened_precision"),
                 "attribution": mem.get("attribution"),
                 "source_url": mem.get("source_url"),
+                "contrast_score": _contrast_score(mem),
+                "contrast_note": mem.get("contrast_note"),
             },
         )
 
