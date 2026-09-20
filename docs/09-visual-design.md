@@ -246,3 +246,62 @@ reaches for a Tailwind hex or the system font, that is the tell coming back.
 - [The Purple Gradient Problem](https://dev.to/james_anderson_h/the-purple-gradient-problem-why-ai-ui-all-looks-alike-and-how-to-fix-it-3j65) — why the defaults are the statistical centre
 - [SaaS UI Looks AI-Generated? 7 Fixes](https://www.saasui.design/blog/saas-ui-looks-ai-generated) — the tells, including the banned-pattern list that glassmorphism is on
 - [Expo: Fonts](https://docs.expo.dev/develop/user-interface/fonts/) and [expo/google-fonts](https://github.com/expo/google-fonts) — how the two families load
+
+---
+
+# 6. The web surfaces never got the memo
+
+Part 5 rewrote the app and stopped at the app. `api/card.py` and `api/embed.py`
+render HTML for the same product and were never touched, so the one artefact
+that leaves the phone is still on the palette part 5 threw out.
+
+## The finding
+
+`api/card.py` ships this, verbatim:
+
+```css
+:root{--bg:#fff;--fg:#18181b;--muted:#71717a;--rule:#e4e4e7;--accent:#dc2626}
+```
+
+That is Tailwind's zinc ramp and `red-600`, set in `system-ui` — four of the
+five counts part 5 pleaded guilty to, on the surface with the widest audience.
+`api/embed.py` is `system-ui` with no palette at all. It also puts a coloured
+left border on the contrast note, which is on every list of tells for a
+generated card.
+
+This matters more than an internal screen would. Geo-gated content cannot be
+shared by linking to it — you had to be there — so a screenshot of this card is
+the only distribution channel the product has, and TODO.md already calls
+screenshot-native cards core rather than polish. The card is also where the
+attribution lives, which is why it is rendered server-side in the first place.
+
+## The mapping
+
+The markup does not change. Only the five variables and the two faces do.
+
+| Card variable | Becomes | Why not the obvious one |
+|---|---|---|
+| `--bg` | `paper` `#F7F4EE` / `#161412` | |
+| `--fg` | `ink` `#1C1917` / `#F2EDE4` | |
+| `--muted` | `faded` `#776E64` / `#9A9086` | **not `inkFaint`** — the card sets 13–14px in this colour and `inkFaint` is 3.4:1 on paper. See "Contrast, measured" in `mobile/UI.md` |
+| `--rule` | `rule` `#E0D9CC` / `#332E27` | |
+| `--accent` | `seal` `#C0462B` / `#E2603F` | and on a link only, never on a border-left |
+
+Set `.place` in Fraunces 700 at 30/36 and `.summary` in Fraunces 400 at 19/31 —
+the same hero size the app's sheet uses, because it is the same sentence. The
+`.layer`, `.when` and `.credit` lines take IBM Plex Mono.
+
+Both faces are on Google Fonts, so one stylesheet link covers it. Keep a real
+fallback stack: this markup gets rendered by link-preview bots that fetch no
+fonts at all, and a card that collapses to Times is worse than one that was
+never restyled.
+
+Replace the contrast note's left border with a hairline above it in `rule`,
+which is how the rest of the product separates things.
+
+## Why this is written down rather than done
+
+The app and the card are two codebases' worth of context apart, and the card has
+no visual test — the same reason it drifted in the first place. Doing it is a
+contained change to `CARD_CSS` and the embed's `font-family`; the argument above
+is the part that would otherwise have to be had again.

@@ -145,6 +145,18 @@ Two families, no more.
 tracking, `inkFaint`. Use it wherever a screen *names* a thing rather than says
 something — section headings, tab labels, meta rows, button text.
 
+**Spread it — `{ ...label }` — rather than retyping its five properties.**
+Copying a token is how it stops being one: this voice was hand-retyped across
+most of the app at one point and the tracking had already drifted between 1.0,
+1.1 and 1.2 before anybody noticed, because nothing about five repeated lines
+says they were meant to match.
+
+`theme.ts` exports two more composites for the same reason. **`buttonText`** is
+the label voice one step up in size and tracking — 12px, 1.2 — because it is the
+thing being pressed; pair it with `color.paper` on ink and `color.ink` on an
+outline. **`input`** is the whole text-field block, which renders in both You
+and Submit and must not drift between them.
+
 **Scale**: 34 display (tab titles) · 30 (place name) · 52 (the distance figure)
 · 19/31 prose (the summary — the hero, there are no images) · 16/25 prose (body)
 · 11–12 mono (everything labelled).
@@ -164,6 +176,83 @@ other platform.
 
 **The map is muted on purpose.** `mutedStandard` on iOS, a style array on
 Android, points of interest off. The app has one subject and it is the pins.
+
+Except that the POI half has never actually applied: `App.tsx` passes
+`showsPointsOfInterests`, with one `s` too many, and react-native-maps ignores a
+prop it does not know. `mutedStandard` has been doing that work alone. Fixing
+the spelling will visibly change the map, so it is a change to look at rather
+than to land blind.
+
+## Spacing, radii and the two shadows
+
+`theme.ts` names colour and type and stops there, so every padding and every
+corner is a literal at its call site. The table below is a census of what those
+literals actually are — not a scale imposed over them — taken so that a new
+screen can match the existing rhythm instead of inventing a neighbouring value.
+Match a row; do not add one between two rows.
+
+| Step | Where it is |
+|---|---|
+| 2 | baseline nudges: the gap inside a byline, the tab badge's vertical padding |
+| 4 | tag padding, the gap between the pause bars |
+| 6 | inside a collection row, inside the filed-at card |
+| 8 | the default small gap: between tags, a stat and its label, stacked buttons |
+| 10 | field label to input, the meta row under a place name |
+| 12 | **the most common gap**: sheet actions, section contents, avatar to text |
+| 14 | input and audio-row padding, the meta row's horizontal gap |
+| 16 | the pill's horizontal padding, a floating card's distance from the edge |
+| 18 | a rule to the content under it — a byline, a source line, a You section |
+| 20 | the sheet action bar, Submit's body |
+| 22 | the sheet body's top padding, the empty-area card |
+| 24 | **the screen gutter.** Collection, You and the sheet all indent by this |
+| 26 | the sheet's section rhythm, and the gap between collection rows |
+
+Anything above 26 is a one-off (36 between the stats, 38 above a You section,
+72 of bottom padding) and stays a literal.
+
+**Corners**, all of them:
+
+| Radius | On |
+|---|---|
+| 2 | the modal grabber, and nothing else |
+| 3 | the small enclosed labels: tags, submission chips, the tab count badge |
+| **4** | **the app's radius** — buttons, inputs, photos, thumbnails, the banner, the reach pill. Reach for this first |
+| 6 | the two cards that float over the map, and only those |
+| half the side | genuinely circular things only: the 84 hold ring, the 44 pager step, an avatar, a pin |
+
+**The two shadows**, in full, because there are only two and a third one is a
+rule you have not written yet:
+
+| | Offset / radius / opacity | Android | On |
+|---|---|---|---|
+| card | `0,8` / 18 / 0.14 | `elevation: 6` | the location primer and the empty-area card |
+| locate | `0,6` / 14 / 0.18 | `elevation: 5` | "Near me" — tighter and darker, because it is a small solid shape rather than a sheet of paper |
+
+## Contrast, measured
+
+Checked against the grounds each colour is actually used on, in both themes.
+Most pairs pass comfortably; two facts are worth knowing before you reach for a
+token.
+
+| Pair | Light | Dark |
+|---|---|---|
+| `ink` on `paper` | 15.4:1 | 14.2:1 |
+| `inkSoft` on `paper` | 8.8:1 | 8.5:1 |
+| **`inkFaint` on `paper`** | **3.4:1** | 4.9:1 |
+| `faded` on `paper` | 4.6:1 | 6.0:1 |
+| `paper` on `seal` | 4.6:1 | 5.3:1 |
+| `paper` on `faded` | 4.6:1 | — |
+| `sealDeep` on `paper` / on `sealSoft` | 7.4:1 / 6.1:1 | — |
+
+**`inkFaint` misses AA in light**, at 3.4:1, and it carries the label voice —
+which is set at 9 to 11px, where the floor matters most. It passes in dark
+(4.9:1), so this is a light-mode-only failure and easy to miss on a phone at
+night, which is when this app is used.
+
+It is the shipped value and it stays that way until somebody decides otherwise.
+Where a label has to pass, **use `faded`**: 4.6:1 light and 6.0:1 dark, the same
+warm family, and it already exists. It is not a new colour, it is the one next
+to it.
 
 ## Zoom, and the reach circle
 

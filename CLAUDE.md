@@ -87,9 +87,9 @@ python -m api.main
 | `mobile/src/SignIn.tsx` | Google and Apple buttons. Neither works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
-| **`mobile/UI.md`** | **Read before touching the app.** Tokens, load-bearing rules, how to see it running |
+| **`mobile/UI.md`** | **Read before touching the app.** Tokens, the spacing/radius/shadow scale, measured contrast, load-bearing rules, how to see it running |
 | **`docs/08-ux-flows.md`** | **What the user does.** Implemented + proposed flows |
-| `docs/09-visual-design.md` | Why the app looks the way it does, and what was rejected |
+| `docs/09-visual-design.md` | Why the app looks the way it does, what was rejected, and why the web card does not match it yet |
 
 ## Database Tables
 
