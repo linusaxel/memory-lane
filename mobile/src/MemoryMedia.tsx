@@ -14,12 +14,8 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { mediaUrl, type MediaItem } from './api.ts';
+import { duration } from './format.ts';
 import { color, font, label } from './theme.ts';
-
-function clock(value: number): string {
-  const total = Math.max(0, Math.round(value));
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
-}
 
 function Recording({ item }: { item: MediaItem }) {
   const player = useAudioPlayer(mediaUrl(item));
@@ -58,7 +54,7 @@ function Recording({ item }: { item: MediaItem }) {
       <View style={styles.audioText}>
         <Text style={styles.audioLabel}>In their voice</Text>
         <Text style={styles.audioTime}>
-          {status.playing ? `${clock(status.currentTime)} / ${clock(length)}` : clock(length)}
+          {status.playing ? `${duration(status.currentTime)} / ${duration(length)}` : duration(length)}
         </Text>
       </View>
     </Pressable>

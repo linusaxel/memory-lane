@@ -27,7 +27,7 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
-  fetchHotspots,
+  fetchStats,
   fetchNearby,
   fetchProfile,
   fetchUnlocked,
@@ -122,6 +122,9 @@ export default function App() {
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  // What the server says the gate radius is. Only /v1/stats can answer when
+  // there is nothing on the map, and the circle is drawn either way.
+  const [serverRadius, setServerRadius] = useState<number | null>(null);
   // Resolved once at launch. Held in state rather than awaited at each call
   // site because the submit form needs it synchronously to decide whether it
   // can open at all.
@@ -160,6 +163,10 @@ export default function App() {
   const lastFetched = useRef<Region | null>(null);
 
   useEffect(() => {
+    // Set back to true on every run, not just initialised once: a Fast Refresh
+    // runs the cleanup and then the effect again, and without this every
+    // `if (!mounted.current) return` below becomes a permanent no-op.
+    mounted.current = true;
     return () => {
       mounted.current = false;
       if (debounce.current) clearTimeout(debounce.current);
@@ -273,9 +280,11 @@ export default function App() {
   const nothingHere = status === 'ready' && memories.length === 0;
   useEffect(() => {
     if (!nothingHere || hotspots.length > 0) return;
-    fetchHotspots()
-      .then((found) => {
-        if (mounted.current) setHotspots(found);
+    fetchStats()
+      .then((stats) => {
+        if (!mounted.current) return;
+        setHotspots(stats.hotspots);
+        if (stats.unlock_radius_meters) setServerRadius(stats.unlock_radius_meters);
       })
       .catch(() => {});
   }, [nothingHere, hotspots.length]);
@@ -344,10 +353,12 @@ export default function App() {
     () => new Set(collected.map((memory) => memory.place.id)).size,
     [collected],
   );
-  // The radius is the server's, so read it off a memory rather than restating
-  // it here - a number in two places is a number that will disagree.
+  // Always the server's, never ours. Every memory now carries it; /v1/stats is
+  // the fallback for a viewport with no memories in it at all, and
+  // FALLBACK_RADIUS_M only for the moments before either has answered.
   const radiusMeters =
     memories.find((memory) => memory.unlock_radius_meters)?.unlock_radius_meters ??
+    serverRadius ??
     FALLBACK_RADIUS_M;
 
   const openGroup = (group: MemoryGroup) => {

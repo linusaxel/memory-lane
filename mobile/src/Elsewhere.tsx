@@ -14,6 +14,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Coordinates, Hotspot } from './api.ts';
+import { distance } from './format.ts';
 import { metersBetween } from './region.ts';
 import { color, font, label } from './theme.ts';
 
@@ -25,11 +26,9 @@ type Props = {
 };
 
 function distanceLabel(from: Coordinates, hotspot: Hotspot): string {
-  const km = metersBetween(from.lat, from.lng, hotspot.lat, hotspot.lng) / 1000;
-  // Nobody needs three significant figures on a number this large; they need to
-  // know whether it is a walk, a train, or a different continent.
-  if (km < 10) return `${km.toFixed(1)} km away`;
-  return `${Math.round(km).toLocaleString()} km away`;
+  return distance(metersBetween(from.lat, from.lng, hotspot.lat, hotspot.lng), {
+    suffix: 'away',
+  });
 }
 
 export default function Elsewhere({ hotspots, from, onGo }: Props) {

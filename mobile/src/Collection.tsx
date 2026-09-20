@@ -13,6 +13,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Padlock from './Padlock.tsx';
+import { when } from './format.ts';
 import { color, font, label } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
 
@@ -20,18 +21,6 @@ type Props = {
   memories: UnlockedMemory[];
   onOpen: (memory: UnlockedMemory) => void;
 };
-
-/** Anything unlocked before this app recorded timestamps has none, and the
- *  arithmetic on undefined renders as "Invalid Date". Those memories were still
- *  earned; they just cannot say when. */
-function formatWhen(at: number | undefined): string | null {
-  if (!Number.isFinite(at)) return null;
-  const days = Math.floor((Date.now() - (at as number)) / 86_400_000);
-  if (days <= 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 30) return `${days} days ago`;
-  return new Date(at as number).toLocaleDateString();
-}
 
 export default function Collection({ memories, onOpen }: Props) {
   const insets = useSafeAreaInsets();
@@ -62,7 +51,7 @@ export default function Collection({ memories, onOpen }: Props) {
               style={styles.row}
               onPress={() => onOpen(item)}
               accessibilityRole="button"
-              accessibilityLabel={[item.place.name, formatWhen(item.unlocked_at) && `unlocked ${formatWhen(item.unlocked_at)}`]
+              accessibilityLabel={[item.place.name, when(item.unlocked_at) && `unlocked ${when(item.unlocked_at)}`]
                 .filter(Boolean)
                 .join(', ')}
             >
@@ -72,8 +61,8 @@ export default function Collection({ memories, onOpen }: Props) {
               <Text style={styles.summary} numberOfLines={2}>
                 {item.summary}
               </Text>
-              {formatWhen(item.unlocked_at) && (
-                <Text style={styles.when}>{formatWhen(item.unlocked_at)}</Text>
+              {when(item.unlocked_at) && (
+                <Text style={styles.when}>{when(item.unlocked_at)}</Text>
               )}
             </Pressable>
           )}

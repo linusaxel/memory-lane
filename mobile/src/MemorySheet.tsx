@@ -17,6 +17,7 @@ import MemoryMedia from './MemoryMedia.tsx';
 import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
+import { distance, duration } from './format.ts';
 import { metersBetween } from './region.ts';
 import { color, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
@@ -42,10 +43,7 @@ type Props = {
 };
 
 function formatDistance(meters: number | null): string | null {
-  if (meters == null) return null;
-  return meters < 1000
-    ? `${Math.round(meters)} m away`
-    : `${(meters / 1000).toFixed(1)} km away`;
+  return meters == null ? null : distance(meters, { suffix: 'away' });
 }
 
 /** Walking directions to a coordinate, in whatever maps app the phone has. */
@@ -56,12 +54,7 @@ function walkingDirectionsUrl(lat: number, lng: number): string {
 }
 
 function formatTimestamp(seconds: number): string {
-  const total = Math.floor(seconds);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const mm = h > 0 ? String(m).padStart(2, '0') : String(m);
-  return `${h > 0 ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
+  return duration(seconds, { hours: true });
 }
 
 export default function MemorySheet({
@@ -178,7 +171,7 @@ export default function MemorySheet({
                 </>
               ) : (
                 <>
-                  <Padlock size={34} color="#d4d4d8" />
+                  <Padlock size={34} color={color.faded} />
                   <Text style={styles.gateFigure}>
                     {position == null
                       ? '—'
@@ -349,7 +342,7 @@ const styles = StyleSheet.create({
   // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', gap: 14, marginTop: 10 },
   meta: { ...label },
-  confident: { color: '#5C7A4A' },
+  confident: { color: color.confident },
   reachable: { color: color.seal },
   sealed: { color: color.inkFaint },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },

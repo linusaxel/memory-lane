@@ -185,6 +185,10 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         media=media,
         media_count=len(media),
         tags=row.tags or [],
+        # Set on open memories too, not just locked ones: the app needs the
+        # radius to draw the reach circle, and a viewport with nothing locked in
+        # it used to leave it guessing.
+        unlock_radius_meters=UNLOCK_RADIUS_METERS,
         confidence=row.extraction_confidence or "medium",
         layer=getattr(row, "layer", None) or "historical",
         happened_at=getattr(row, "happened_at", None),

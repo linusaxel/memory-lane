@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 from api import gate
 from api.gate import (
+    UNLOCK_RADIUS_METERS,
     meters_between,
     row_coordinates,
     row_to_memory,
@@ -314,6 +315,7 @@ def get_stats(
 
     return Stats(
         memories=memories_count,
+        unlock_radius_meters=UNLOCK_RADIUS_METERS,
         places_with_coordinates=places_count,
         processed_videos=content_count,
         # A cluster whose place names give no trailing component has no label

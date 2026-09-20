@@ -187,15 +187,26 @@ export type Hotspot = {
   memories: number;
 };
 
+export type Stats = {
+  hotspots: Hotspot[];
+  /** The server's gate radius. The app draws its reach circle from this and
+   *  must never restate it - see docs/10-decisions.md#150-m-not-50-m. */
+  unlock_radius_meters: number;
+};
+
 /** Asked lazily, only when the map turns up empty. "No memories here yet" is
- *  true and useless outside New York. */
-export async function fetchHotspots(signal?: AbortSignal): Promise<Hotspot[]> {
-  const body = await get<{ hotspots?: Hotspot[] }>(
+ *  true and useless outside New York - and the same response carries the
+ *  radius, which is the one case a memory cannot supply it. */
+export async function fetchStats(signal?: AbortSignal): Promise<Stats> {
+  const body = await get<Partial<Stats>>(
     '/v1/stats',
     new URLSearchParams({ hotspots: '3' }),
     signal,
   );
-  return body.hotspots ?? [];
+  return {
+    hotspots: body.hotspots ?? [],
+    unlock_radius_meters: body.unlock_radius_meters ?? 0,
+  };
 }
 
 // --- writing -----------------------------------------------------------------

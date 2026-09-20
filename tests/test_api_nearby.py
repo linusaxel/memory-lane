@@ -158,3 +158,23 @@ def test_the_card_fields_are_served(client, db_session):
     assert mem["contrast_score"] == pytest.approx(0.9)
     assert "bank branch" in mem["contrast_note"]
     assert mem["layer"] == "historical"
+
+
+def test_every_memory_carries_the_unlock_radius(client, db_session):
+    """The app draws the reach circle from this, and it used to be set only on
+    locked memories - so a viewport with nothing locked in it silently fell back
+    to the app's own hardcoded 150, under a comment promising the opposite."""
+    place = _place(db_session, "Vega", LAT, LNG)
+    content = _content(db_session, "https://e.invalid/rrrrrrrrrrr")
+    _memory(db_session, place, content, "the night the amp caught fire")
+    db_session.commit()
+
+    memories = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&radius_km=5").json()["memories"]
+    assert memories
+    assert all(m["unlock_radius_meters"] == gate.UNLOCK_RADIUS_METERS for m in memories)
+
+
+def test_stats_says_the_radius_too(client):
+    """The only source when there is nothing on the map at all, which is exactly
+    when the circle is still drawn around the person."""
+    assert client.get("/v1/stats").json()["unlock_radius_meters"] == gate.UNLOCK_RADIUS_METERS

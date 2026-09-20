@@ -147,6 +147,9 @@ class Hotspot(BaseModel):
 
 class Stats(BaseModel):
     memories: int
+    # The app draws the reach circle from this. It used to read the radius off a
+    # memory, which is null whenever nothing in view is locked.
+    unlock_radius_meters: int
     places_with_coordinates: int
     processed_videos: int
     hotspots: list[Hotspot]

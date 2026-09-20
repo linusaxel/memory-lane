@@ -54,6 +54,7 @@ import {
   type LocatedMemory,
   type MediaItem,
 } from './api.ts';
+import { duration } from './format.ts';
 import { color, font, label } from './theme.ts';
 
 /** Matches the server's own floor. Ten characters is not a quality bar, it is a
@@ -85,11 +86,6 @@ type Attachment = {
   failed?: boolean;
 };
 
-function seconds(value: number): string {
-  const total = Math.round(value);
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
-}
-
 export default function Submit({
   visible,
   position,
@@ -111,6 +107,11 @@ export default function Submit({
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recording = useAudioRecorderState(recorder);
   const mounted = useRef(true);
+  // `recorder.stop()` is async and durationMillis keeps ticking while it is in
+  // flight, so the cap effect below can fire twice on one recording. Without
+  // this the same uri uploads twice and there are two audio attachments where
+  // the rest of this screen assumes one.
+  const stopping = useRef(false);
 
   useEffect(() => {
     mounted.current = true;
@@ -206,14 +207,19 @@ export default function Submit({
   };
 
   const stopRecording = async () => {
-    await recorder.stop();
-    await setAudioModeAsync({ allowsRecording: false });
-    const uri = recorder.uri;
-    if (!uri) return;
-    await attach(
-      { uri, kind: 'audio', seconds: recording.durationMillis / 1000 },
-      'audio/m4a',
-    );
+    if (stopping.current) return;
+    stopping.current = true;
+    try {
+      await recorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
+      const uri = recorder.uri;
+      if (!uri) return;
+      await attach({ uri, kind: 'audio', seconds: recording.durationMillis / 1000 }, 'audio/m4a');
+    } finally {
+      // finally, not the happy path: a recorder that hands back no uri would
+      // otherwise leave the flag set and the Record button dead for the session.
+      stopping.current = false;
+    }
   };
 
   // Stopping at the cap rather than refusing afterwards: a recording thrown
@@ -222,8 +228,8 @@ export default function Submit({
     if (recording.isRecording && recording.durationMillis / 1000 >= MAX_RECORDING_SECONDS) {
       stopRecording();
     }
-    // stopRecording is recreated every render and stable in what it does.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // stopRecording is deliberately not a dependency: it is rebuilt every
+    // render, and the re-entry that used to allow is handled by `stopping`.
   }, [recording.isRecording, recording.durationMillis]);
 
   const post = async () => {
@@ -405,7 +411,7 @@ export default function Submit({
             {sound ? (
               <View style={styles.row}>
                 <Text style={styles.recorded}>
-                  {sound.failed ? 'Upload failed' : `Recorded · ${seconds(sound.seconds ?? 0)}`}
+                  {sound.failed ? 'Upload failed' : `Recorded · ${duration(sound.seconds ?? 0)}`}
                 </Text>
                 <Secondary
                   label="Remove"
@@ -419,7 +425,7 @@ export default function Submit({
                 {/* The one red dot in the app that is not the seal doing its
                     usual job - recording is the other thing worth noticing. */}
                 <View style={styles.dot} />
-                <Text style={styles.recorded}>{seconds(recording.durationMillis / 1000)}</Text>
+                <Text style={styles.recorded}>{duration(recording.durationMillis / 1000)}</Text>
                 <Secondary label="Stop" onPress={stopRecording} />
               </View>
             ) : (
