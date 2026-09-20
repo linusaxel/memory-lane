@@ -11,3 +11,7 @@
 2026-09-20T12:29Z t6 W1-08 done  commit=f426766 gate=GREEN END-TO-END: 25 new ingested, 25 transcripts fetched, 0 failed, no credits. published_at still NULL (yt-dlp flat gives no timestamp) -> inbox
 2026-09-20T12:33Z t7 W2-01..03 done commit=3edb43b gate=GREEN Dockerfile+compose api service; container serves real data (224 memories, 215 places)
 2026-09-20T12:38Z t8 W2-04..07 done commit=81e71ef gate=GREEN CORS credentials off, 9 async handlers -> sync def, pool_pre_ping, GET /privacy, railway.json; all 14 test_api.sh checks pass
+2026-09-20T12:45Z t9  W3-01..02 done commit=8234334 gate=GREEN Node pinned 22 LTS; Expo SDK 57 + react-native-maps + expo-location scaffolded
+2026-09-20T12:52Z t10 W3-03..06 done commit=ceab849 gate=GREEN api.ts (null-coord filter), region.ts + 3 node --test asserts, App.tsx map, MemorySheet
+2026-09-20T12:58Z t11 W3-07..11 done commit=b183d97 gate=GREEN app.json/eas.json store config; prebuild verified BOTH manifests offline (no Android SDK); blockedPermissions strips SYSTEM_ALERT_WINDOW+storage; icon alpha guard; store copy
+2026-09-20T13:02Z t12 W3-12 done  commit=b183d97 gate=GREEN expo export: iOS+Android bundles 1.5MB each, no Metro errors. 28 done / 5 parked / 0 remaining -> TERMINATE

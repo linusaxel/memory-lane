@@ -260,9 +260,9 @@ tasks:
     goal: ".nvmrc pins an LTS Node (22 or 24), because this machine runs non-LTS 25.9"
     verify: "test -f .nvmrc && grep -qE '^(v?22|v?24)' .nvmrc"
     touches: [.nvmrc]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 8234334
     note: "Expo targets LTS. react-native-maps declares node >= 20.19.4 so 25 nominally
       passes, but toolchain friction here would burn loop ticks on pure noise."
 
@@ -272,9 +272,9 @@ tasks:
     verify: "cd mobile && npx tsc --noEmit"
     touches: [mobile/, .gitignore]
     depends_on: [W3-01]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 8234334
     note: "Use --template blank-typescript. The DEFAULT template is the expo-router tabs
       starter and would only have to be deleted. NO expo-router (one screen + one modal
       does not need a router), NO bottom-sheet lib (RN core Modal presentationStyle
@@ -288,9 +288,9 @@ tasks:
     verify: "cd mobile && npx tsc --noEmit"
     touches: [mobile/src/]
     depends_on: [W3-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: ceab849
     note: "places.coordinates is NULLABLE in the schema and a null-coordinate marker
       CRASHES react-native-maps. That filter is the trust boundary - keep it.
       Ignore meta entirely (meta.total is wrong on 3 endpoints); use memories.length.
@@ -302,9 +302,9 @@ tasks:
     verify: "cd mobile && node --test src/region.test.ts"
     touches: [mobile/src/]
     depends_on: [W3-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: ceab849
     note: "THE one piece of non-trivial logic in the app, so it gets the one runnable check.
       radiusKm = min(100, max(0.1, hypot(latDelta*111, lngDelta*111*cos(lat)) / 2))
       The clamp is MANDATORY: the API 422s above radius_km=100 and a continent-level
@@ -318,9 +318,9 @@ tasks:
     verify: "cd mobile && npx tsc --noEmit"
     touches: [mobile/App.tsx, mobile/src/]
     depends_on: [W3-03, W3-04]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: ceab849
     note: "On DENIED permission fall back to a hardcoded region where the data actually
       is. A blank grey map is a store-review rejection and reviewers routinely tap Deny.
       Last-write-wins on the fetch is fine at one request per pan - no AbortController."
@@ -331,9 +331,9 @@ tasks:
     verify: "cd mobile && npx tsc --noEmit"
     touches: [mobile/src/]
     depends_on: [W3-05]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: ceab849
     note: "content.timestamp_url already arrives from the API as a deep link to the right
       second - just Linking.openURL it, no timestamp math. onRequestClose is REQUIRED or
       the Android back button does nothing. There are NO images anywhere in the schema,
@@ -344,9 +344,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_app_config.py"
     touches: [mobile/app.json, tests/test_app_config.py]
     depends_on: [W3-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: ccbf902
     note: |
       Four entries are review decisions, not cosmetics:
         supportsTablet: false            -> removes the iPad screenshot requirement
@@ -367,9 +367,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_app_config.py"
     touches: [mobile/eas.json, tests/test_app_config.py]
     depends_on: [W3-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: ccbf902
     note: "appVersionSource: remote + autoIncrement means EAS owns build numbers and you
       never hand-bump before a resubmit. preview with buildType apk gives a sideloadable
       Android build for screenshots without a store upload.
@@ -383,9 +383,9 @@ tasks:
     verify: "cd mobile && npx expo prebuild --clean --platform all --no-install >/dev/null 2>&1 && grep -q NSLocationWhenInUseUsageDescription ios/*/Info.plist && grep -q ACCESS_FINE_LOCATION android/app/src/main/AndroidManifest.xml && ! grep -q ACCESS_BACKGROUND_LOCATION android/app/src/main/AndroidManifest.xml"
     touches: [mobile/]
     depends_on: [W3-07]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: ccbf902
     note: "THE trick that makes the missing Android SDK a non-issue before EAS: android
       prebuild only generates Gradle + manifest files, it needs NO Android SDK.
       Run `rm -rf mobile/ios mobile/android` afterwards to stay on CNG."
@@ -395,9 +395,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_app_assets.py"
     touches: [mobile/assets/, tests/test_app_assets.py]
     depends_on: [W3-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: b183d97
     note: "Apple REJECTS icons with an alpha channel - the test must assert the mode has
       no alpha, not just that the file exists. These are placeholders; a human replaces
       them before review."
@@ -408,9 +408,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_store_copy.py"
     touches: [mobile/store/, tests/test_store_copy.py]
     depends_on: [W2-06]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: b183d97
     note: "Category: Travel. The test asserts the length limits so an over-long name is
       caught here instead of in App Store Connect."
 
@@ -419,9 +419,9 @@ tasks:
     verify: "cd mobile && npx expo export --platform all --output-dir /tmp/ml-export"
     touches: [mobile/]
     depends_on: [W3-06, W3-09]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: b183d97
     note: "SLOW (~2 min) and needs network, so it is deliberately NOT in verify.sh.
       Milestone gate - run once when every other W3 task is done. This is the last
       thing the loop can prove before the human gates."
