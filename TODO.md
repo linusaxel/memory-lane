@@ -57,16 +57,13 @@ grep for `contrast|historical|friend|stranger|arkiv|setlist|mediestream|copenhag
 returns four incidental hits: a prompt saying "like you're telling a friend",
 Docker build layers, and two pipeline-stage headings. Nothing to refactor.
 
-- [ ] **Layers** — no `layer` column, no concept. Everything is one
-      undifferentiated feed, which the brief forbids.
-- [ ] **Contrast scoring** — every query orders by `distance ASC`. There is no
-      score, and no source of "what is at this place now" to compute one from.
-- [ ] **Non-video ingestion** — `ingest_content()` warns and skips any
-      `platform != "youtube"`. Archives, newspapers and setlists have no path in.
-- [ ] **When it happened** — `memories` stores `timestamp_start`, a position in
-      a video. A 1978 gig has nowhere to record 1978.
-- [ ] **Attribution per memory** — only a join to `content`. The legal posture
-      needs per-memory credit and a deep link that survives on a shared card.
+- [x] **Layers, `happened_at`, per-memory attribution, contrast columns** —
+      added in `722fd68` (W4-01). Columns only: nothing reads or writes them yet.
+- [x] **Non-video ingestion** — `ingest_records()` in `0c9d699` (W4-03).
+      Still no real source behind it; the adapter choice is W4-00, blocked.
+- [ ] **Contrast scoring** — every query still orders by `distance ASC`. There
+      is a column now but nothing fills it, and no source of "what is at this
+      place now" to compute it from.
 - [ ] **Screenshot-native cards** — the app sheet is functional, not designed to
       survive as a screenshot.
 - [ ] Embeddable widget, auth, rate limiting, ingestion cost caps.
@@ -82,13 +79,57 @@ Docker build layers, and two pipeline-stage headings. Nothing to refactor.
 - **Precision and confidence match the brief exactly** — exact 50m / street 200m
   / neighborhood 1km / city 10km, and low confidence is filtered at extraction.
 
+### The coordinates are mostly guesses, and they do not admit it
+
+Found while building W4-02; every figure below re-verified independently
+against the live database. This is the largest single problem in the corpus and
+it reshapes several Phase 1 items.
+
+**111 of 186 placed places — 60% — sit on just 34 distinct coordinate points.**
+
+| Point | Places | Memories | What it actually is |
+|---|---|---|---|
+| `POINT(-73.9851 40.7589)` | 14 | 23 | Duffy Square, Times Square |
+| `POINT(-90.0715 29.9511)` | 11 | 11 | New Orleans centroid |
+| `POINT(-77.0369 38.9072)` | 5 | 6 | Washington DC centroid |
+| `POINT(46.6753 24.7136)` | 5 | 6 | Riyadh centroid |
+
+Fourteen unrelated venues share the Times Square point — Gotham Comedy Club,
+Caroline's, New York Comedy Club, a radio studio, someone's apartment. The model
+emits a city centroid whenever it does not know an address.
+
+**It does not confess to doing so: 35 of those stacked places claim
+`precision_meters = 50`.** "Exact" and "I guessed the city" are the same value in
+this data, so `location_precision` is unusable as a confidence signal by anything
+that filters or ranks on it.
+
+Four consequences:
+
+1. **Distance is anti-correlated with identity here.** Two places on an identical
+   centroid are usually *different venues*, while one venue appears at two
+   different points. This is the deeper reason W4-02 is blocked, beyond the
+   name-matching failure.
+2. **Structured venue/locality/region fixes matching but not placement.** After a
+   perfect dedup, 60% of pins are still at a centroid. Putting a pin on the right
+   building needs a real geocoder — the thing `docs/05-geocode.md` described and
+   which was deleted as dead because it had never been built. Whether to build it
+   is now a live question rather than a closed one.
+3. **Contrast scoring (1.5) is undermined at the root.** "The gap between this
+   memory and what is here now" cannot be computed for a point that is not where
+   the memory happened. A jazz club that is now a bank lobby is the whole product;
+   a jazz club pinned to Times Square is noise.
+4. **Clustering is mandatory, not polish.** Neither answer to D.3 helps when 14
+   places share a point — place-level pins turn 14 stacked memory-pins into 14
+   stacked place-pins. Without clustering, Times Square is one unreadable dot.
+
+Reproduce: `SELECT ST_AsText(coordinates), count(*) FROM places WHERE coordinates
+IS NOT NULL GROUP BY 1 HAVING count(*) > 1 ORDER BY 2 DESC;`
+
 ### Known defects, unowned
 
-- [ ] **Semantic place duplicates.** The unique index catches exact repeats, but
-      near-matches still land as two pins. Live right now: *Gotham Comedy Club
-      New York City* (6 memories) and *Gotham Comedy Club Chelsea New York City*
-      (1 memory) are one venue on two pins. This blocks both contrast scoring
-      and map clustering — it is a Phase 1 item, not a cleanup nicety.
+- [~] **Semantic place duplicates.** Tool shipped, merge withheld — see 1.2.
+      *Gotham Comedy Club New York City* (6 memories) and *Gotham Comedy Club
+      Chelsea New York City* (1) are still one venue on two pins.
 - [ ] **`meta.total` is wrong** on `/v1/memories/nearby`, `/v1/memories/search`
       and `/v1/places/nearby` — the count queries ignore active filters, and the
       places one returns page length.
