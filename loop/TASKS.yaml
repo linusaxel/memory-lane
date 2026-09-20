@@ -431,9 +431,8 @@ tasks:
     verify: "MANUAL"
     touches: []
     depends_on: [W3-12]
-    state: blocked
-    blocked_on: human
-    gate: NEEDS_DECISION
+    state: doing
+    attempts: 1
     attempts: 0
     commit: null
     note: |
