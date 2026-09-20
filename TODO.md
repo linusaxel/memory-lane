@@ -600,12 +600,13 @@ on them. Full detail in `loop/STATE.md`.
   some point it stops being useful and starts being noise.
 - ~~**`pipeline/geocode.py` is misnamed**~~ **Deleted.** Nothing imported it and
   it geocoded nothing; its one query is in CLAUDE.md's key queries now.
-- **Two tag vocabularies share one column.** The corpus holds 18 tags, the app's
-  submission chips offer 11, and they overlap on six. `drink`, `art`, `work` and
-  `strange` match zero memories, and the app's `sport` never matches the stored
-  `sports` — `m.tags && …` is exact-string. Latent while nothing filters by tag;
-  fixing it is a data migration (`array_replace`) plus a prompt change, and a
-  decision about which vocabulary wins.
+- ~~**Two tag vocabularies share one column.**~~ **Settled.** `pipeline/tags.py`
+  is the single list; both write paths filter against it, the prompt reads it,
+  and `008_one_tag_vocabulary.sql` renamed the four stored `sports`. The app's
+  chips are a deliberate subset and a test holds them to it. Still open: four
+  off-vocabulary tags the model invented before the filter existed
+  (`entertainment`, `celebrity`, `theater`, `festival`, 15 rows) are harmless
+  but unfilterable — decide on a mapping if a filter UI ever ships.
 - **`api/test_api.sh` is not run by the gate.** It was the sole caller of the
   three endpoints deleted above, which is how they went unnoticed. Either wire
   it in behind a live-server check or accept that it is a manual tool.

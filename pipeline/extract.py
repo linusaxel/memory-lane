@@ -13,6 +13,8 @@ from pipeline.config import (
     EXTRACTION_MODEL,
 )
 from pipeline.db import get_session
+from pipeline.tags import TAGS
+from pipeline.tags import clean as clean_tags
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +99,7 @@ hypothetical. Match the "good" column.
   <why>Half of that was the summariser thinking aloud. Say what happened.</why>
 </example>
 </examples>
-- tags: 1-5 from: food, travel, history, culture, adventure, romance, nightlife, nature, art, music, sports, business, personal
+- tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
   BE HONEST ABOUT THIS. If you are returning the coordinates of a city because you
   do not know the address, say "city". Only say "exact" when you know the specific
@@ -150,8 +152,7 @@ For each memory, extract:
 - summary: 2-4 sentences. What happened, who was involved if named, what the place
   was at the time. Concrete and sourced, not atmospheric.
 - attribution: the source as it should be credited on a card, if the text names one
-- tags: 1-5 from: food, travel, history, culture, adventure, romance, nightlife,
-  nature, art, music, sports, business, personal
+- tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
   BE HONEST. If you are returning a city's coordinates because you do not know the
   address, say "city". Only "exact" when you know the building. A wrong "exact"
@@ -176,6 +177,12 @@ For each memory, extract:
 Return JSON: {"memories": [...]}
 Return {"memories": []} if no memories found. An empty list is the right answer
 for a page of architectural description, and is always better than an invention."""
+
+
+# Substituted rather than interpolated: both prompts show JSON, so an f-string
+# would need every brace in them doubled.
+SYSTEM_PROMPT = SYSTEM_PROMPT.replace("{TAG_LIST}", ", ".join(TAGS))
+HISTORICAL_SYSTEM_PROMPT = HISTORICAL_SYSTEM_PROMPT.replace("{TAG_LIST}", ", ".join(TAGS))
 
 
 USER_PROMPT_TEMPLATE = """{context}Extract memories from this transcript chunk:
@@ -520,7 +527,9 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
                 "ts_start": mem.get("timestamp_start", 0),
                 "ts_end": mem.get("timestamp_end"),
                 "summary": mem.get("summary", ""),
-                "tags": mem.get("tags", []),
+                # Filtered here and not trusted from the model: it emitted
+                # five tags that were never on its own menu.
+                "tags": clean_tags(mem.get("tags")),
                 "confidence": mem.get("confidence", "medium"),
                 "layer": layer,
                 "happened_at": _happened_at(mem),

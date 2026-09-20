@@ -25,6 +25,7 @@ from api.models import (
 )
 from api.queries import MEDIA_ATTACH, PLACE_INSERT, SINGLE_MEMORY_QUERY, SUBMISSION_INSERT
 from pipeline.db import get_session
+from pipeline.tags import clean as clean_tags
 
 router = APIRouter()
 
@@ -36,6 +37,9 @@ REPORT_THRESHOLD = int(os.getenv("REPORT_THRESHOLD", "3"))
 # holding yours can post as you. OAuth did not replace this - see
 # docs/10-decisions.md#no-session-tokens-signed-in-or-not.
 
+# The chips the app offers, chosen for somebody filing their own memory rather
+# than for a podcast transcript. A subset of the vocabulary and not the
+# vocabulary itself - a client sending `travel` is accepted.
 SUBMISSION_TAGS = [
     "food",
     "drink",
@@ -52,20 +56,6 @@ SUBMISSION_TAGS = [
 
 # A phone's GPS in a street, honestly stated rather than flattered.
 SUBMITTED_PRECISION_METERS = 25
-
-
-def clean_tags(raw: list[str]) -> list[str]:
-    """Lowercased, deduplicated, and only from the known set.
-
-    Dropping an unknown tag rather than rejecting the submission: the tags are a
-    filing convenience and losing one is not worth losing the memory.
-    """
-    seen = []
-    for tag in raw:
-        normalized = tag.strip().lower()
-        if normalized in SUBMISSION_TAGS and normalized not in seen:
-            seen.append(normalized)
-    return seen
 
 
 @router.post("/v1/memories/{memory_id}/unlock", response_model=Memory)

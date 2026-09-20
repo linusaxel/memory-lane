@@ -234,9 +234,9 @@ export type Draft = {
 };
 
 /**
- * The tags a submission may carry. The server drops anything not on this list,
- * so the app offers exactly these rather than letting somebody type a tag that
- * silently vanishes.
+ * The chips a submission may carry. Mirrored from `api/write.py`, and
+ * `tests/test_api_submit.py` fails if the two stop matching - they had already
+ * drifted once, which is how `sport` came to match nothing.
  */
 export const SUBMISSION_TAGS = [
   'food',

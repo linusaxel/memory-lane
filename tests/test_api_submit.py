@@ -18,6 +18,7 @@ included, not just the one somebody complained about.
 """
 
 import pathlib
+import re
 import uuid
 
 import pytest
@@ -26,6 +27,9 @@ from sqlalchemy import text
 import api.main as m
 import api.media as media
 import api.write as write
+from pipeline.extract import HISTORICAL_SYSTEM_PROMPT, SYSTEM_PROMPT
+from pipeline.tags import TAGS
+from pipeline.tags import clean as extract_clean
 
 pytestmark = pytest.mark.db
 
@@ -426,3 +430,34 @@ def test_media_is_served_with_sniffing_switched_off(client):
         assert response.headers["content-type"] == "image/png"
     finally:
         served.unlink(missing_ok=True)
+
+
+# -- one vocabulary, three places -----------------------------------------------
+
+
+def _app_chips() -> list[str]:
+    """SUBMISSION_TAGS as mobile/src/api.ts declares it."""
+    source = (pathlib.Path(__file__).resolve().parents[1] / "mobile/src/api.ts").read_text()
+    body = re.search(r"SUBMISSION_TAGS = \[(.*?)\]", source, re.S)
+    assert body, "mobile/src/api.ts no longer declares SUBMISSION_TAGS"
+    return re.findall(r"'([a-z]+)'", body.group(1))
+
+
+def test_the_app_offers_exactly_the_chips_the_server_does():
+    """mobile/UI.md calls this out as a lie risk with nothing enforcing it.
+    A tag the app offers and the server drops vanishes with a 201."""
+    assert _app_chips() == write.SUBMISSION_TAGS
+
+
+def test_every_chip_is_in_the_vocabulary():
+    """The bug this closes: the app offered `sport`, the corpus stored `sports`,
+    and `m.tags && …` is exact-string - so that chip matched nothing."""
+    assert set(write.SUBMISSION_TAGS) <= set(TAGS)
+
+
+def test_the_extractor_is_held_to_the_same_list():
+    """It was emitting comedy, entertainment, celebrity, theater and festival
+    off its own menu, because nothing checked."""
+    for prompt in (SYSTEM_PROMPT, HISTORICAL_SYSTEM_PROMPT):
+        assert ", ".join(TAGS) in prompt
+    assert extract_clean(["Sport", "sports", "food", "food", "nonsense"]) == ["sport", "food"]

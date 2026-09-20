@@ -341,9 +341,11 @@ are not preferences:
   the wait belongs in the part where somebody is composing. Post stays disabled
   while an upload is in flight, and a failed one shows as failed rather than
   disappearing.
-- **Tags are a closed list** (`SUBMISSION_TAGS`, mirrored from the API). The
-  server drops anything not on it, so a free-text field would silently eat what
-  somebody typed. Change it in both places or it is a lie in one of them.
+- **Tags are a closed list** (`SUBMISSION_TAGS`, mirrored from `api/write.py`,
+  itself a subset of `pipeline/tags.py`). The server drops anything not in the
+  vocabulary, so a free-text field would silently eat what somebody typed.
+  `tests/test_api_submit.py` holds the app's copy equal to the server's - this
+  used to be a convention and the two had already drifted.
 
 A submission comes back already unlocked and its sheet opens over the map. The
 modal closing is not a confirmation, and it is also the first sight of what a
