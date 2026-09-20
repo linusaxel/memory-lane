@@ -1,0 +1,516 @@
+# ============================================================================
+# THE CONTRACT. This file is the loop's closed world.
+#
+# APPEND-ONLY. The loop MAY edit:  state, attempts, commit, note, blocked_on
+# The loop may NEVER edit:         id, goal, verify, touches, depends_on
+# The loop may NEVER delete a task or weaken a `verify`.
+#
+# If a `verify` is genuinely wrong -> set state: blocked, gate: NEEDS_DECISION.
+# You do not get to move your own goalposts.
+#
+# New ideas go in `inbox:` at the bottom. They are NOT executable.
+# ============================================================================
+
+meta:
+  branch: loop/autopilot
+  gate: ./loop/verify.sh
+  states: [todo, doing, done, blocked]
+  gates: [EAS_BUILD, STORE_ACCOUNT, API_CREDITS, DEPLOY, PUSH, SECRET, NEEDS_DECISION]
+
+tasks:
+
+  # -- W0 -- harness (built by hand in the bootstrap session) ----------------
+
+  - id: W0-01
+    goal: "Loop harness exists: verify.sh gates, contract test grades the loop, pytest runs offline"
+    verify: "venv/bin/python -m pytest -q tests/test_loop_contract.py"
+    touches: [loop/, tests/, requirements-dev.txt, .claude/commands/]
+    state: done
+    attempts: 1
+    commit: BOOTSTRAP_SHA
+    note: "Written by hand during bootstrap. The loop did not author its own contract."
+
+  # -- W1 -- crawler ---------------------------------------------------------
+
+  - id: W1-01
+    goal: "yt-dlp declared in requirements.txt under a '# Crawler' heading and importable"
+    verify: "venv/bin/python -c 'import yt_dlp; print(yt_dlp.version.__version__)'"
+    touches: [requirements.txt]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Baseline measured 2026-09-20: the existing HTML regex returns 0 videos for
+      every channel tested (@TheMountainDispatch 404s, @veritasium 302s, @mkbhd 0 ids).
+      The scraper is not brittle, it is dead. yt-dlp has ZERO hard deps (verified on PyPI)."
+
+  - id: W1-02
+    goal: "crawler/yt_crawler.py is pure discovery: one list_channel_videos(url, limit)
+      returning [{url, title, published_at}], plus an argparse __main__. fetch_transcript,
+      save_transcript_txt, crawl_channel_transcripts and extract_video_id are DELETED."
+    verify: "venv/bin/python -m pytest -q tests/test_crawler.py"
+    touches: [crawler/, tests/test_crawler.py]
+    depends_on: [W1-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Deletion is most of this task. extract_video_id's last-path-segment fallback
+      (old line 34) silently returned garbage - pipeline/ingest.py:extract_youtube_id
+      validates 11 chars and becomes the repo's ONLY id parser. crawler must NOT import
+      pipeline (one-way dependency, ingest imports crawler)."
+
+  - id: W1-03
+    goal: "Channel discovery returns well over 30 videos for a real channel (baseline today: 0)"
+    verify: "venv/bin/python -m pytest -q -m live tests/test_crawler.py"
+    touches: [crawler/, tests/test_crawler.py]
+    depends_on: [W1-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "MARKED live - NOT run by the gate. Run it explicitly for this task only.
+      It needs network but costs no money."
+
+  - id: W1-04
+    goal: "A `channel:` key in config/content.yaml auto-discovers videos through the
+      EXISTING ingest path, and published_at is populated on insert"
+    verify: "venv/bin/python -m pytest -q tests/test_ingest.py"
+    touches: [pipeline/ingest.py, tests/test_ingest.py]
+    depends_on: [W1-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Reuse, do not rewrite: the dedup SELECT at ingest.py:73 and the INSERT at :85
+      already exist. Add published_at to that INSERT (the column exists in schema.sql and
+      is unused). pipeline/run_all.py needs NO change - discovery rides Stage 1.
+      Use a local import inside the loop so yt_dlp stays off the path for yaml-only runs."
+
+  - id: W1-05
+    goal: "config/content.yaml declares a channel source with limit: 25"
+    verify: "venv/bin/python -c \"import yaml;s=yaml.safe_load(open('config/content.yaml'))['sources'];assert any(x.get('channel') for x in s),'no channel source';print('ok')\""
+    touches: [config/content.yaml]
+    depends_on: [W1-04]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Bounded first run. Removing `limit` ingests the whole channel."
+
+  - id: W1-06
+    goal: "Transient transcript failures (network, IP block, age gate) leave the row
+      PENDING for retry; only the three permanent exceptions set transcript_failed=TRUE"
+    verify: "venv/bin/python -m pytest -q tests/test_transcripts.py"
+    touches: [pipeline/transcripts.py, tests/test_transcripts.py]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "ROOT CAUSE: the bare `except Exception` at transcripts.py:48-50 returns None,
+      identical to 'no captions exist', so the caller at :107-112 permanently black-holes
+      the video. One network blip = lost forever. Delete that handler, let transients
+      propagate, catch them in fetch_pending_transcripts and `continue` WITHOUT setting
+      the flag. The retry mechanism already exists (WHERE transcript_failed = FALSE).
+      No new column, no counter, no backoff scheduler."
+
+  - id: W1-07
+    goal: "CLAUDE.md and docs/02-ingest.md document the channel: / limit: keys"
+    verify: "grep -q 'channel' docs/02-ingest.md && grep -q 'channel' CLAUDE.md"
+    touches: [CLAUDE.md, docs/02-ingest.md, docs/01-setup.md]
+    depends_on: [W1-05]
+    state: todo
+    attempts: 0
+    commit: null
+    note: null
+
+  - id: W1-08
+    goal: "End-to-end pipeline runs without spending credits"
+    verify: "venv/bin/python -m pipeline.run_all --skip-extract"
+    touches: []
+    depends_on: [W1-05, W1-06]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "--skip-extract already exists at run_all.py:139 and is what keeps Stage 3
+      (the only Anthropic caller) out of the loop entirely. Needs Docker db up."
+
+  - id: W1-09
+    goal: "Real extraction over the newly crawled channel; eyeball 20 memories for quality"
+    verify: "MANUAL"
+    touches: []
+    depends_on: [W1-08]
+    state: blocked
+    blocked_on: human
+    gate: API_CREDITS
+    attempts: 0
+    commit: null
+    note: |
+      The loop is forbidden from spending Anthropic credits. All extraction-path tests
+      use tests/fakes.py::FakeAnthropic, which proves chunking/parsing/DB writes but
+      CANNOT prove extraction quality. Only a human can judge that.
+      Human runs:
+        source venv/bin/activate && python -m pipeline.extract --limit 1
+      then inspects:
+        SELECT m.summary, p.name, m.extraction_confidence FROM memories m
+        JOIN places p ON m.place_id=p.id ORDER BY m.id DESC LIMIT 20;
+      Also worth doing here: the model IDs are a generation stale
+      (claude-sonnet-4-20250514 -> claude-sonnet-5, claude-haiku-3-20240307 ->
+      claude-haiku-4-5) and the per-chunk system prompt should get cache_control.
+
+  # -- W2 -- backend deployable ---------------------------------------------
+
+  - id: W2-01
+    goal: ".dockerignore excludes venv/, .git/, .idea/, docs/, __pycache__, .env"
+    verify: "test -f .dockerignore && grep -q 'venv' .dockerignore"
+    touches: [.dockerignore]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Without this the ~300MB venv/ goes into the build context."
+
+  - id: W2-02
+    goal: "Dockerfile builds the API on python:3.12-slim with a shell-form CMD honouring $PORT"
+    verify: "docker build -q -t memory-lane-api ."
+    touches: [Dockerfile]
+    depends_on: [W2-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "3.12 not 3.14 - wheel coverage for psycopg[binary]/pydantic.
+      CMD MUST be shell form: exec form will not expand Railway's injected $PORT."
+
+  - id: W2-03
+    goal: "docker compose brings up an api service that serves / against the real PostGIS db"
+    verify: "docker compose up -d --build api && sleep 5 && curl -fsS localhost:8080/ | grep -q '\"status\":\"ok\"'"
+    touches: [docker-compose.yml]
+    depends_on: [W2-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "~8 lines added to the existing file, no new file. This is what proves the
+      image boots against real PostGIS and that DATABASE_URL overrides the localhost
+      default at pipeline/db.py:12."
+
+  - id: W2-04
+    goal: "CORS no longer sends allow_credentials with a wildcard origin"
+    verify: "venv/bin/python -m pytest -q tests/test_api_cors.py"
+    touches: [api/main.py, tests/test_api_cors.py]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "api/main.py:21. allow_credentials=True with allow_origins=['*'] is an invalid
+      combination browsers reject anyway, and a native app sends no cookies."
+
+  - id: W2-05
+    goal: "All route handlers are sync `def` so blocking SQLAlchemy runs in FastAPI's
+      threadpool instead of stalling the event loop; engine uses pool_pre_ping"
+    verify: "! grep -q '^async def' api/main.py && grep -q 'pool_pre_ping' pipeline/db.py"
+    touches: [api/main.py, pipeline/db.py]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Root-cause fix is DELETING a keyword on 9 handlers. Smaller diff than async
+      SQLAlchemy, no new deps. pool_pre_ping or the first request after idle 500s
+      against managed Postgres."
+
+  - id: W2-06
+    goal: "GET /privacy returns a static HTML privacy policy"
+    verify: "venv/bin/python -m pytest -q tests/test_api_privacy.py"
+    touches: [api/main.py, tests/test_api_privacy.py]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "~8 lines that DELETE A HUMAN BLOCKER: both stores require a reachable privacy
+      policy URL and we already have an HTTPS host. Must disclose precise location use."
+
+  - id: W2-07
+    goal: "railway.json pins the Dockerfile builder and a healthcheck on /"
+    verify: "venv/bin/python -c \"import json;d=json.load(open('railway.json'));assert d['deploy']['healthcheckPath']=='/';print('ok')\""
+    touches: [railway.json]
+    depends_on: [W2-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "GET / already returns {'status':'ok'} so the healthcheck needs no new code.
+      Railway chosen over Fly because Fly's managed Postgres has NO PostGIS extension -
+      Railway runs the identical postgis/postgis:16-3.4 image already in compose."
+
+  - id: W2-08
+    goal: "API + PostGIS deployed to Railway on an HTTPS domain, schema applied, data loaded"
+    verify: "MANUAL"
+    touches: []
+    depends_on: [W2-03, W2-07]
+    state: blocked
+    blocked_on: human
+    gate: DEPLOY
+    attempts: 0
+    commit: null
+    note: |
+      The loop may not deploy or hold billing credentials.
+      Human does, in order:
+        1. Railway account + card. New project.
+        2. Add service from image postgis/postgis:16-3.4, volume at
+           /var/lib/postgresql/data, env PGDATA=/var/lib/postgresql/data/pgdata
+        3. psql $DATABASE_URL -f db/schema.sql
+        4. Add service from this repo (Railway auto-detects the Dockerfile).
+           Set DATABASE_URL=${{Postgres.DATABASE_URL}}
+        5. Load data: run the pipeline from your laptop against the prod DATABASE_URL,
+           or pg_dump local -> restore.
+        6. Note the HTTPS domain, then: ./api/test_api.sh https://<domain>
+      The domain from step 6 unblocks W3-08.
+
+  # -- W3 -- the app ---------------------------------------------------------
+
+  - id: W3-01
+    goal: ".nvmrc pins an LTS Node (22 or 24), because this machine runs non-LTS 25.9"
+    verify: "test -f .nvmrc && grep -qE '^(v?22|v?24)' .nvmrc"
+    touches: [.nvmrc]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Expo targets LTS. react-native-maps declares node >= 20.19.4 so 25 nominally
+      passes, but toolchain friction here would burn loop ticks on pure noise."
+
+  - id: W3-02
+    goal: "Expo SDK 57 TypeScript app scaffolded at mobile/ with expo-location and
+      react-native-maps installed via `expo install` (SDK-correct pins)"
+    verify: "cd mobile && npx tsc --noEmit"
+    touches: [mobile/, .gitignore]
+    depends_on: [W3-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Use --template blank-typescript. The DEFAULT template is the expo-router tabs
+      starter and would only have to be deleted. NO expo-router (one screen + one modal
+      does not need a router), NO bottom-sheet lib (RN core Modal presentationStyle
+      pageSheet is a native sheet), NO react-query/axios (one fetch in one useEffect).
+      Add mobile/ios/, mobile/android/, mobile/node_modules/, mobile/.expo/ to .gitignore -
+      prebuild output stays generated (CNG), never committed."
+
+  - id: W3-03
+    goal: "mobile/src/api.ts types a Memory and fetchNearby(); it drops memories whose
+      place.coordinates is null before returning"
+    verify: "cd mobile && npx tsc --noEmit"
+    touches: [mobile/src/]
+    depends_on: [W3-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "places.coordinates is NULLABLE in the schema and a null-coordinate marker
+      CRASHES react-native-maps. That filter is the trust boundary - keep it.
+      Ignore meta entirely (meta.total is wrong on 3 endpoints); use memories.length.
+      Base URL from process.env.EXPO_PUBLIC_API_URL (Expo inlines it at build time)."
+
+  - id: W3-04
+    goal: "mobile/src/region.ts converts a map viewport to a radius_km the API accepts,
+      clamped to [0.1, 100]"
+    verify: "cd mobile && node --test src/region.test.ts"
+    touches: [mobile/src/]
+    depends_on: [W3-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "THE one piece of non-trivial logic in the app, so it gets the one runnable check.
+      radiusKm = min(100, max(0.1, hypot(latDelta*111, lngDelta*111*cos(lat)) / 2))
+      The clamp is MANDATORY: the API 422s above radius_km=100 and a continent-level
+      zoom produces ~2000. Three asserts: city -> a few km, continent -> exactly 100,
+      zero-delta -> >= 0.1. Node strips TS natively - no jest, no babel, no new dep.
+      Import must use the explicit ./region.ts extension."
+
+  - id: W3-05
+    goal: "mobile/App.tsx renders a MapView with a Marker per memory, refetching on
+      region change (debounced ~400ms), with a working location-denied fallback"
+    verify: "cd mobile && npx tsc --noEmit"
+    touches: [mobile/App.tsx, mobile/src/]
+    depends_on: [W3-03, W3-04]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "On DENIED permission fall back to a hardcoded region where the data actually
+      is. A blank grey map is a store-review rejection and reviewers routinely tap Deny.
+      Last-write-wins on the fetch is fine at one request per pan - no AbortController."
+
+  - id: W3-06
+    goal: "mobile/src/MemorySheet.tsx shows summary, place, distance, tags and confidence,
+      and opens the YouTube deep link"
+    verify: "cd mobile && npx tsc --noEmit"
+    touches: [mobile/src/]
+    depends_on: [W3-05]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "content.timestamp_url already arrives from the API as a deep link to the right
+      second - just Linking.openURL it, no timestamp math. onRequestClose is REQUIRED or
+      the Android back button does nothing. There are NO images anywhere in the schema,
+      so design around typography, not an image slot. Confidence is only ever high/medium."
+
+  - id: W3-07
+    goal: "mobile/app.json configures both platforms for store review"
+    verify: "venv/bin/python -m pytest -q tests/test_app_config.py"
+    touches: [mobile/app.json, tests/test_app_config.py]
+    depends_on: [W3-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: |
+      Four entries are review decisions, not cosmetics:
+        supportsTablet: false            -> removes the iPad screenshot requirement
+        ITSAppUsesNonExemptEncryption:false -> removes the export-compliance questionnaire
+                                            from EVERY TestFlight upload (true: HTTPS only)
+        explicit permissions allowlist   -> and NEVER ACCESS_BACKGROUND_LOCATION, which
+                                            triggers Play's background-location declaration
+                                            form + screencast review, weeks of latency,
+                                            for a feature v1 does not have
+        location string via the expo-location PLUGIN, not hand-written infoPlist - the
+        plugin generates NSLocationWhenInUseUsageDescription. Apple rejects vague strings,
+        so name both the data and the benefit.
+      Bundle id + Android package stay com.PLACEHOLDER.memorylane - a deliberate tripwire.
+
+  - id: W3-08
+    goal: "mobile/eas.json defines development/preview/production profiles with remote
+      versioning, and production points at an HTTPS API URL"
+    verify: "venv/bin/python -m pytest -q tests/test_app_config.py"
+    touches: [mobile/eas.json, tests/test_app_config.py]
+    depends_on: [W3-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "appVersionSource: remote + autoIncrement means EAS owns build numbers and you
+      never hand-bump before a resubmit. preview with buildType apk gives a sideloadable
+      Android build for screenshots without a store upload.
+      EXPO_PUBLIC_API_URL MUST be https - iOS ATS blocks cleartext, so an http:// build
+      passes locally and fails on device with an opaque network error.
+      Stays PLACEHOLDER until W2-08 gives us the real domain."
+
+  - id: W3-09
+    goal: "Native config proven for BOTH platforms offline: iOS Info.plist has the location
+      string, Android manifest has FINE_LOCATION and does NOT have BACKGROUND_LOCATION"
+    verify: "cd mobile && npx expo prebuild --clean --platform all --no-install >/dev/null 2>&1 && grep -q NSLocationWhenInUseUsageDescription ios/*/Info.plist && grep -q ACCESS_FINE_LOCATION android/app/src/main/AndroidManifest.xml && ! grep -q ACCESS_BACKGROUND_LOCATION android/app/src/main/AndroidManifest.xml"
+    touches: [mobile/]
+    depends_on: [W3-07]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "THE trick that makes the missing Android SDK a non-issue before EAS: android
+      prebuild only generates Gradle + manifest files, it needs NO Android SDK.
+      Run `rm -rf mobile/ios mobile/android` afterwards to stay on CNG."
+
+  - id: W3-10
+    goal: "Placeholder icon (1024x1024, NO alpha channel), splash and adaptive icon exist"
+    verify: "venv/bin/python -m pytest -q tests/test_app_assets.py"
+    touches: [mobile/assets/, tests/test_app_assets.py]
+    depends_on: [W3-02]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Apple REJECTS icons with an alpha channel - the test must assert the mode has
+      no alpha, not just that the file exists. These are placeholders; a human replaces
+      them before review."
+
+  - id: W3-11
+    goal: "mobile/store/listing.md holds store copy within store limits (name <=30 chars,
+      subtitle <=30) and mobile/store/privacy.md matches the /privacy route"
+    verify: "venv/bin/python -m pytest -q tests/test_store_copy.py"
+    touches: [mobile/store/, tests/test_store_copy.py]
+    depends_on: [W2-06]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Category: Travel. The test asserts the length limits so an over-long name is
+      caught here instead of in App Store Connect."
+
+  - id: W3-12
+    goal: "The app bundles for both platforms with no Metro resolution errors"
+    verify: "cd mobile && npx expo export --platform all --output-dir /tmp/ml-export"
+    touches: [mobile/]
+    depends_on: [W3-06, W3-09]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "SLOW (~2 min) and needs network, so it is deliberately NOT in verify.sh.
+      Milestone gate - run once when every other W3 task is done. This is the last
+      thing the loop can prove before the human gates."
+
+  - id: W3-13
+    goal: "Verified running on the iOS Simulator against a local API with seeded location"
+    verify: "MANUAL"
+    touches: []
+    depends_on: [W3-12]
+    state: blocked
+    blocked_on: human
+    gate: NEEDS_DECISION
+    attempts: 0
+    commit: null
+    note: |
+      Borderline: iOS SIMULATOR builds need no signing identity and no Apple account, so
+      the loop technically could run this. It is parked because it opens a GUI, takes
+      several minutes, and needs a human to LOOK at the screen - the whole point is
+      visual confirmation, which no exit code provides.
+      Human runs:
+        docker compose up -d --build api
+        cd mobile && EXPO_PUBLIC_API_URL=http://localhost:8080 npx expo run:ios
+        xcrun simctl location booted set <lat>,<lng>   # a coord with real data
+      Confirm: permission prompt shows our copy, pins render, sheet opens, and the
+      Watch button opens YouTube at the right second.
+      Android CANNOT be verified locally - no SDK, no adb. It is covered by W3-09's
+      manifest assertions and then by the first EAS build.
+
+  - id: W3-14
+    goal: "Production iOS .ipa and Android .aab built by EAS"
+    verify: "MANUAL"
+    touches: []
+    depends_on: [W3-12, W2-08]
+    state: blocked
+    blocked_on: human
+    gate: EAS_BUILD
+    attempts: 0
+    commit: null
+    note: |
+      Costs money/quota and needs interactive 2FA. The loop must NEVER attempt it.
+      Human does, in order:
+        1. Replace com.PLACEHOLDER.memorylane in mobile/app.json with the real bundle id
+           and Android package. IRREVERSIBLE once submitted - choose carefully.
+        2. Put the real Railway HTTPS domain into mobile/eas.json production env.
+        3. Google Cloud -> enable Maps SDK for Android -> API key -> app.json.
+           Leave it UNRESTRICTED for now: restricting it to package+SHA-1 needs a signing
+           SHA-1 that does not exist until step 5. Lock it down after.
+        4. npm i -g eas-cli && npx eas-cli login && eas init   (writes extra.eas.projectId)
+        5. eas credentials   (Apple cert + provisioning profile; Android keystore)
+        6. eas build --profile production --platform all
+      Ready-check before starting: ./loop/verify.sh green AND W3-12 done.
+
+  - id: W3-15
+    goal: "Listings submitted to App Store Connect and Google Play"
+    verify: "MANUAL"
+    touches: []
+    depends_on: [W3-14]
+    state: blocked
+    blocked_on: human
+    gate: STORE_ACCOUNT
+    attempts: 0
+    commit: null
+    note: |
+      Requires Apple Developer Program ($99/yr, identity verification, 1-7 days) and
+      Google Play Console ($25 once). The loop cannot log in to either console.
+      Prepared for you: mobile/store/listing.md, mobile/store/privacy.md, and the live
+      privacy URL https://<railway-domain>/privacy from W2-06.
+
+      App Store Connect: app record, upload build, privacy nutrition label
+        (Location -> Precise -> App Functionality -> NOT linked to user), age rating
+        questionnaire, content rights, privacy policy URL. Export compliance is
+        pre-answered by ITSAppUsesNonExemptEncryption:false from W3-07.
+      Play Console: upload .aab, Data safety form, IARC content rating, target audience,
+        ads declaration, Play App Signing.
+      Still needed by hand: Android screenshots (>=2 phone) + a 1024x500 feature graphic.
+        Install the `preview` APK on a real Android device - there is no emulator here,
+        and using iOS screenshots on a Play listing is a policy risk.
+
+      *** THE ONE PEOPLE DISCOVER TOO LATE ***
+      If this is a PERSONAL (non-organization) Play account, production access is gated
+      behind CLOSED TESTING WITH 12 TESTERS FOR 14 CONTINUOUS DAYS, no matter how
+      finished the app is. Start that the day step 6 of W3-14 produces an .aab.
+
+inbox:
+  # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`
+  # or deletes it. This is the ONLY legal outlet for scope creep.
+  - "places has no cross-video dedup; /v1/places/nearby can return near-duplicate pins for the same real place"
+  - "pipeline/geocode.py is a stats script, not a pipeline stage - the name misleads"
+  - "examples/content.yaml has a watch?v=example placeholder that logs a warning on ingest"
+  - "/v1/memories/search has no usable index: to_tsvector(m.summary || ' ' || p.name) spans two tables so NO expression index can serve it; needs the predicate split into an OR before indexing"
+  - "meta.total is wrong on /v1/places/nearby (returns page length) and the two count queries ignore active filters"
+  - "redis and rq are in requirements.txt but missing from the venv, so pipeline/worker.py ImportErrors"
