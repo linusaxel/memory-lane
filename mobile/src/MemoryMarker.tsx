@@ -14,6 +14,7 @@
  * one either.
  */
 
+import type { ReactNode } from 'react';
 import { type ColorValue, StyleSheet, Text, View } from 'react-native';
 import { Marker } from 'react-native-maps';
 
@@ -74,7 +75,13 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
       <View style={[styles.wrap, styles.halo]}>
         <View style={[styles.ring, card && styles.ringCard]} />
         {card && <View style={styles.fold} />}
-        <Tag background={color.sealDeep} count={count} />
+        <Tag background={color.sealDeep}>
+          {count > 1 ? (
+            <Text style={styles.count}>{count}</Text>
+          ) : (
+            <Padlock size={10} color={color.paper} />
+          )}
+        </Tag>
       </View>
     );
   }
@@ -105,7 +112,11 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
           <View style={[styles.impression, card && styles.impressionCard]} />
         </View>
         {card && <View style={styles.fold} />}
-        {count > 1 && <Tag background={color.ink} count={count} />}
+        {count > 1 && (
+          <Tag background={color.ink}>
+            <Text style={styles.count}>{count}</Text>
+          </Tag>
+        )}
       </View>
     );
   }
@@ -129,15 +140,12 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
   );
 }
 
-/** A count that will not fit in the face goes to the corner, because the middle
- *  is where the blue location dot lands. */
-function Tag({ background, count }: { background: ColorValue; count: number }) {
-  if (count <= 1) return null;
-  return (
-    <View style={[styles.tag, { backgroundColor: background }]}>
-      <Text style={styles.count}>{count}</Text>
-    </View>
-  );
+/** What will not fit in the face goes to the corner, because the middle is
+ *  where the blue location dot lands. A reachable pin always carries one: on a
+ *  group of one it holds the padlock, which is the only thing on that pin
+ *  saying there is something shut behind it. */
+function Tag({ background, children }: { background: ColorValue; children: ReactNode }) {
+  return <View style={[styles.tag, { backgroundColor: background }]}>{children}</View>;
 }
 
 const DOT = 18;
