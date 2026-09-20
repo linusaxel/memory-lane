@@ -3,6 +3,7 @@ import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'r
 import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from './src/api.ts';
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
@@ -18,6 +19,7 @@ import {
 } from './src/unlocked.ts';
 import Collection from './src/Collection.tsx';
 import LocationPrimer from './src/LocationPrimer.tsx';
+import TabBar, { type Tab } from './src/TabBar.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import ReachBanner from './src/ReachBanner.tsx';
@@ -55,7 +57,7 @@ export default function App() {
   const [unlocked, setUnlocked] = useState<Unlocked>({});
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
-  const [showCollection, setShowCollection] = useState(false);
+  const [tab, setTab] = useState<Tab>('map');
 
   const mapRef = useRef<MapView>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -239,109 +241,114 @@ export default function App() {
   const showPrimer = permission !== 'granted' && !primerDismissed;
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        <StatusBar style="dark" />
 
-      <MapView
-        ref={mapRef}
-        style={StyleSheet.absoluteFill}
-        initialRegion={FALLBACK_REGION}
-        showsUserLocation={permission === 'granted'}
-        onRegionChangeComplete={onRegionChangeComplete}
-      >
-        {groups.map((group) => (
-          <MemoryMarker
-            key={group.key}
-            group={group}
-            reach={reachOf(group, position)}
-            onPress={() => openGroup(group)}
+        {/* Both tabs stay mounted. Unmounting the map means refetching, losing
+            the viewport and re-animating to GPS every time somebody glances at
+            their collection - a tab switch should cost nothing. */}
+        <View style={[styles.screen, tab !== 'map' && styles.hidden]}>
+          <MapView
+            ref={mapRef}
+            style={StyleSheet.absoluteFill}
+            initialRegion={FALLBACK_REGION}
+            showsUserLocation={permission === 'granted'}
+            onRegionChangeComplete={onRegionChangeComplete}
+          >
+            {groups.map((group) => (
+              <MemoryMarker
+                key={group.key}
+                group={group}
+                reach={reachOf(group, position)}
+                onPress={() => openGroup(group)}
+              />
+            ))}
+          </MapView>
+
+          <View style={styles.banner} pointerEvents="none">
+            <Text style={styles.bannerText}>{bannerText}</Text>
+            {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
+          </View>
+
+          {!showPrimer && withinReach.length > 0 && (
+            <ReachBanner
+              count={withinReach.length}
+              meters={null}
+              onPress={() => openGroup(withinReach[0])}
+            />
+          )}
+          {!showPrimer && withinReach.length === 0 && nearest && (
+            <ReachBanner
+              count={null}
+              meters={nearest.meters}
+              onPress={() => openGroup(nearest.group)}
+            />
+          )}
+
+          {showPrimer ? (
+            <LocationPrimer
+              blocked={permission === 'blocked'}
+              onAllow={() => {
+                if (permission === 'blocked') {
+                  Linking.openSettings();
+                  return;
+                }
+                goToMyLocation().catch(() => false);
+              }}
+              onDismiss={() => {
+                setPrimerDismissed(true);
+                rememberPrimerDismissed();
+              }}
+            />
+          ) : status === 'failed' ? (
+            <Pressable style={styles.locate} onPress={() => load(region)}>
+              <Text style={styles.locateText}>Try again</Text>
+            </Pressable>
+          ) : (
+            <Pressable style={styles.locate} onPress={goToMyLocation}>
+              {/* Without location nothing can ever unlock, so the button says so
+                  rather than leaving a map of pins that never open. */}
+              <Text style={styles.locateText}>{position ? 'Near me' : 'Turn on location'}</Text>
+            </Pressable>
+          )}
+        </View>
+
+        <View style={[styles.screen, tab !== 'collection' && styles.hidden]}>
+          <Collection
+            memories={collected}
+            onOpen={(memory) => {
+              // One memory, not its point: the collection is a list of things
+              // you earned, and a stack of strangers at the same coordinate is
+              // not that.
+              setOpenAt([memory]);
+              setOpenIndex(0);
+            }}
           />
-        ))}
-      </MapView>
+        </View>
 
-      <View style={styles.banner} pointerEvents="none">
-        <Text style={styles.bannerText}>{bannerText}</Text>
-        {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
+        <TabBar tab={tab} unlockedCount={collected.length} onSelect={setTab} />
+
+        <MemorySheet
+          memories={openMemories}
+          index={openIndex}
+          onIndex={setOpenIndex}
+          onClose={() => setOpenAt([])}
+          position={position}
+          onUnlock={unlock}
+          unlocking={unlocking}
+          unlockError={unlockError}
+        />
       </View>
-
-      {!showPrimer && withinReach.length > 0 && (
-        <ReachBanner
-          count={withinReach.length}
-          meters={null}
-          onPress={() => openGroup(withinReach[0])}
-        />
-      )}
-      {!showPrimer && withinReach.length === 0 && nearest && (
-        <ReachBanner count={null} meters={nearest.meters} onPress={() => openGroup(nearest.group)} />
-      )}
-
-      {showPrimer ? (
-        <LocationPrimer
-          blocked={permission === 'blocked'}
-          onAllow={() => {
-            if (permission === 'blocked') {
-              Linking.openSettings();
-              return;
-            }
-            goToMyLocation().catch(() => false);
-          }}
-          onDismiss={() => {
-            setPrimerDismissed(true);
-            rememberPrimerDismissed();
-          }}
-        />
-      ) : status === 'failed' ? (
-        <Pressable style={styles.locate} onPress={() => load(region)}>
-          <Text style={styles.locateText}>Try again</Text>
-        </Pressable>
-      ) : (
-        <Pressable style={styles.locate} onPress={goToMyLocation}>
-          {/* Without location nothing can ever unlock, so the button says so
-              rather than leaving a map of pins that never open. */}
-          <Text style={styles.locateText}>{position ? 'Near me' : 'Turn on location'}</Text>
-        </Pressable>
-      )}
-
-      {collected.length > 0 && !showPrimer && (
-        <Pressable
-          style={styles.collection}
-          onPress={() => setShowCollection(true)}
-          accessibilityRole="button"
-          accessibilityLabel={`${collected.length} unlocked memories`}
-        >
-          <Text style={styles.collectionText}>{collected.length} unlocked</Text>
-        </Pressable>
-      )}
-
-      <Collection
-        visible={showCollection}
-        memories={collected}
-        onOpen={(memory) => {
-          // One memory, not its point: the collection is a list of things you
-          // earned, and a stack of strangers at the same coordinate is not that.
-          setShowCollection(false);
-          setOpenAt([memory]);
-          setOpenIndex(0);
-        }}
-        onClose={() => setShowCollection(false)}
-      />
-
-      <MemorySheet
-        memories={openMemories}
-        index={openIndex}
-        onIndex={setOpenIndex}
-        onClose={() => setOpenAt([])}
-        position={position}
-        onUnlock={unlock}
-        unlocking={unlocking}
-        unlockError={unlockError}
-      />
-    </View>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#fff' },
+  screen: { flex: 1 },
+  // display:none rather than unmounting: the map keeps its region and its pins.
+  hidden: { display: 'none' },
   banner: {
     position: 'absolute',
     top: 64,
@@ -375,20 +382,4 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   locateText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  // Bottom left, out of the way of "Near me": a tally, not a call to action.
-  collection: {
-    position: 'absolute',
-    bottom: 50,
-    left: 20,
-    backgroundColor: 'rgba(255,255,255,0.94)',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  collectionText: { fontSize: 13, color: '#3f3f46', fontWeight: '600' },
 });

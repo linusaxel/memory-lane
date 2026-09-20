@@ -15,7 +15,6 @@ MapView (full bleed)
 ├─ banner  "N memories here"  top centre, non-interactive
 ├─ "N within reach"           amber, breathing, tap -> the nearest unlockable
 │    or "Nearest locked · 412 m"   muted and still, when none is in reach
-├─ "N unlocked"               bottom left -> Collection
 ├─ "Near me"                  bottom centre, recentres on GPS
 └─ LocationPrimer             bottom card, only until permission is settled
 
@@ -30,9 +29,17 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ "Walk there"     outlined      └─ "Watch at 12:04"  red, YouTube at the second
   └─ or, in reach: the ring
 
-Collection (pageSheet modal)
-└─ what this device has unlocked, newest first
+Collection (the second tab)
+└─ what this device has unlocked, newest first; a row opens the sheet
+
+TabBar
+└─ Map | Unlocked (N)
 ```
+
+**Unlocked memories are readable forever, and that is a device promise, not a
+server one.** There are no accounts, so "forever" means as long as the app's
+storage survives. A new phone starts empty. Making that portable needs identity
+— Phase 3.
 
 | File | What it owns |
 |---|---|
@@ -42,6 +49,8 @@ Collection (pageSheet modal)
 | `src/ReachBanner.tsx` | the only thing on the map that animates |
 | `src/LocationPrimer.tsx` | asking before the system does |
 | `src/Collection.tsx` | what the walking was for |
+| `src/TabBar.tsx` | two tabs, hand-rolled |
+| `src/reach.ts` | which pins look openable. Pure, and unit-tested |
 
 ## Tokens
 
@@ -101,8 +110,15 @@ Each of these exists because something broke or would have been rejected.
    do not assume `coordinates` is always present on types that allow null.
 6. **`timestamp_url` is already correct.** It points at the right second. Never
    rebuild a YouTube URL by hand.
-7. **`onRequestClose` is required on every Modal**, or the Android back button
+7. **Never cover the map attribution.** The Apple Maps logo and Legal link in
+   the bottom-left corner are a condition of using the map and have to stay
+   visible and tappable. A floating tally in that corner is what made this a
+   rule; the tab bar moved it out of the way.
+8. **`onRequestClose` is required on every Modal**, or the Android back button
    does nothing.
+9. **Neither tab unmounts.** Switching tabs uses `display: 'none'`, not a
+   conditional render. Unmounting the map means refetching, losing the viewport
+   and re-animating to GPS every time somebody glances at their collection.
 
 ## Copy
 
