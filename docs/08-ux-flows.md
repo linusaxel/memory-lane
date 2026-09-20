@@ -21,10 +21,13 @@ how you know it worked. Keep them concrete enough to test against.
 
 **Who:** someone who opened the app for the first time, standing somewhere.
 
-1. App launches, map appears already centred on `FALLBACK_REGION` (Manhattan).
-2. It immediately asks for foreground location.
-   - **Granted** → animates to the person's position over 600ms, fetches.
-   - **Denied** → stays on Manhattan and fetches there. Never a blank map.
+1. App launches, map appears already centred on `FALLBACK_REGION` (Manhattan),
+   zoomed out to ~10km — a preview of where the corpus is.
+2. It primes for location rather than firing the system dialog (see F7).
+   - **Granted** → animates to the person's position over 600ms and zooms in to
+     street scale (~1.1km), with the unlock radius drawn around them. Fetches.
+   - **Denied** → stays on Manhattan, still zoomed out, and fetches there. Never
+     a blank map, and no circle, because nothing can unlock.
 3. Pins drop for every memory with coordinates in the viewport radius.
 4. Banner reads "N memories here".
 5. Panning or zooming refetches, debounced 400ms, radius derived from the
@@ -107,8 +110,10 @@ other distribution channel (see *Design rules* in `TODO.md`).
 1. Every memory in view draws a pin. A **locked** pin is a grey padlock and
    carries the place name and the distance — enough to decide whether to walk
    there — and nothing else.
-2. Walking inside the unlock radius turns that pin into an amber ring, and the
-   map says so in words: "1 memory within reach", which opens the sheet.
+2. The unlock radius is drawn around you, so "how much closer" is a distance you
+   can see rather than a number to interpret. Walking inside it turns that pin
+   into a seal-red ring, and the map says so in words: "1 memory within reach",
+   which opens the sheet.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
    It should feel like a lock turning.

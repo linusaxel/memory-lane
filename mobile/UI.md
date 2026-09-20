@@ -126,6 +126,36 @@ other platform.
 **The map is muted on purpose.** `mutedStandard` on iOS, a style array on
 Android, points of interest off. The app has one subject and it is the pins.
 
+## Zoom, and the reach circle
+
+**Two zoom levels, because the map does two different jobs.**
+
+| | Delta | Roughly | When |
+|---|---|---|---|
+| `FALLBACK_REGION` | `0.09` | 10 km | No position. A preview of where the corpus is |
+| `LOCATED_DELTA` | `0.01` | 1.1 km tall | Centred on the person |
+
+Landing on the person at street scale is the whole point: at 10 km a 150 m
+unlock radius is four pixels and the mechanic is invisible, so the app reads as
+a map of things you cannot have. At 1.1 km the reach circle is about a quarter
+of the screen and "walk two blocks" is a visible distance.
+
+The **fallback stays wide on purpose.** With no permission nothing can unlock,
+there is no circle to draw, and the only useful thing the map can say is "here
+is roughly where the memories are". Zooming a browse state into an empty street
+would break rule 1 for no gain.
+
+**The reach circle** is drawn once, around the person, at the server's radius —
+never around each pin, which would be fifteen overlapping circles and no
+information. It is `seal` at low opacity: present, and never competing with the
+pins it is there to qualify. No position, no circle.
+
+A consequence worth knowing: the fetch radius follows the viewport
+(`regionToRadiusKm`), so at this zoom the app asks for ~700 m and the banner
+count is honestly what is near you rather than what is in the county. When
+nothing is in reach the "nearest locked memory" pill is what points further
+out.
+
 ## Rules that are load-bearing
 
 Each of these exists because something broke or would have been rejected.

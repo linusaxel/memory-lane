@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -50,6 +50,10 @@ import ReachBanner from './src/ReachBanner.tsx';
  * Where to look when we have no location permission. A blank grey map is a
  * store-review rejection, and reviewers routinely tap Deny - so this points at
  * Manhattan, where the seeded content actually is.
+ *
+ * Deliberately left wide. With no position nothing can unlock and there is no
+ * reach circle to draw, so the only useful thing this state can say is "here is
+ * roughly where the memories are".
  */
 const FALLBACK_REGION: Region = {
   latitude: 40.7484,
@@ -57,6 +61,15 @@ const FALLBACK_REGION: Region = {
   latitudeDelta: 0.09,
   longitudeDelta: 0.09,
 };
+
+/**
+ * Street scale, ~1.1km tall. The map does a different job once it knows where
+ * you are: at the fallback's 10km a 150m unlock radius is four pixels and the
+ * mechanic is invisible, which makes the app read as a map of things you cannot
+ * have. Here the reach circle is about a quarter of the screen and "two blocks"
+ * is a distance you can see.
+ */
+const LOCATED_DELTA = 0.01;
 
 const DEBOUNCE_MS = 400;
 
@@ -164,8 +177,8 @@ export default function App() {
     const next: Region = {
       latitude: pos.coords.latitude,
       longitude: pos.coords.longitude,
-      latitudeDelta: 0.09,
-      longitudeDelta: 0.09,
+      latitudeDelta: LOCATED_DELTA,
+      longitudeDelta: LOCATED_DELTA,
     };
     mapRef.current?.animateToRegion(next, 600);
     setRegion(next);
@@ -305,6 +318,19 @@ export default function App() {
             showsPointsOfInterests={false}
             onRegionChangeComplete={onRegionChangeComplete}
           >
+            {/* Once, around the person, at the server's radius - never around
+                each pin, which would be fifteen overlapping circles and no
+                information. No position, nothing to draw. */}
+            {position && (
+              <Circle
+                center={{ latitude: position.lat, longitude: position.lng }}
+                radius={radiusMeters}
+                strokeWidth={1.5}
+                strokeColor="rgba(192,70,43,0.55)"
+                fillColor="rgba(192,70,43,0.07)"
+              />
+            )}
+
             {groups.map((group) => (
               <MemoryMarker
                 key={group.key}
