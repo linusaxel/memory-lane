@@ -1,11 +1,11 @@
 # LOOP STATE — rewritten every tick. Trust this file over your instincts.
 
 ```
-tick:     4
+tick:     5
 updated:  2026-09-20
-branch:   loop/autopilot   (9 commits ahead of main, NEVER PUSHED)
-gate:     GREEN — 43 passed, 2 deselected (live) in 2.6s (~4s wall, incl. Docker db)
-head:     d79700c "W1-04: a channel: source feeds the existing ingest stage"
+branch:   loop/autopilot   (11 commits ahead of main, NEVER PUSHED)
+gate:     GREEN — 44 passed, 2 deselected (live) in 2.5s (~4s wall, incl. Docker db)
+head:     d429e33 "W1-05: auto-discover the Tuesdays with Stories channel"
 ```
 
 ## What this project is
@@ -16,32 +16,41 @@ FastAPI → (soon) an Expo map app. See `CLAUDE.md` only if a task's `touches:` 
 
 ## Where I am
 
-**LAST DONE: W1-04** — a `channel:` source now discovers videos and inserts them through
-the existing ingest path. `pipeline/run_all.py` needed **no change**. 10 tests against a
-real PostGIS database.
+**LAST DONE: W1-05** — `config/content.yaml` now auto-discovers
+`@TuesdayswithStories` (25 newest), merged into the same source as the ten
+hand-listed episodes. Verified the handle resolves and returns 25 videos.
 
-**NEXT TASK: W1-05** — declare a real channel source in `config/content.yaml`.
+**NEXT TASK: W1-06** — the transcript root-cause fix. This is the most valuable
+remaining crawler task; read the reasoning before editing.
 
-**NEXT CONCRETE ACTION:** append a source to `config/content.yaml`:
+**NEXT CONCRETE ACTION:** write `tests/test_transcripts.py` (offline — no DB, no
+network, monkeypatch `pipeline.transcripts.YouTubeTranscriptApi`), then make two edits
+to `pipeline/transcripts.py`:
 
-```yaml
-  - name: "<channel name>"
-    platform: youtube
-    channel: "https://www.youtube.com/@<handle>"
-    limit: 25
-```
+1. **Delete the bare `except Exception` at lines 48-50.** It returns `None`, which is
+   indistinguishable from "this video genuinely has no captions", so the caller at
+   lines ~107-113 sets `transcript_failed = TRUE` **permanently**. One network blip,
+   one IP block, one age gate, and that video is black-holed forever.
+2. In `fetch_pending_transcripts()`, wrap the `fetch_transcript(video_id)` call:
+   ```python
+   try:
+       result = fetch_transcript(video_id)
+   except Exception as e:
+       logger.warning(f"Transient error for {video_id}, will retry: {e}")
+       failed += 1
+       continue          # <- leaves the row PENDING, no flag set
+   ```
 
-Then verify with the task's command. **The handle must actually resolve** —
-`@TheMountainDispatch`, the channel the old crawler hardcoded, returns 404. A known-good
-handle is `@veritasium` (used by the live tests), but prefer a channel whose videos suit
-this project: Memory Lane wants **location-rich storytelling** (travel, food, city
-history), not science explainers. `config/content.yaml` currently holds
-"Tuesdays with Stories"; a comedy/story podcast channel is a better fit than @veritasium.
+Keep the three specific handlers (`TranscriptsDisabled`, `VideoUnavailable`,
+`NoTranscriptFound`) returning `None` — those are genuinely permanent.
 
-Keep `limit: 25` so the first real crawl is bounded. Removing the key ingests everything.
+**The retry mechanism already exists.** `fetch_pending_transcripts` selects
+`WHERE transcript_failed = FALSE`, so a row left pending is retried on the next run.
+Do not add a retry counter, a backoff scheduler, or an error-reason column.
 
-**Do not run extraction.** Ingest and transcripts are free; `pipeline/extract.py` spends
-Anthropic credits and is parked as W1-09 for a human.
+The regression guard is the test asserting **`TimeoutError` propagates** out of
+`fetch_transcript`. That test fails the moment anyone reintroduces a bare
+`except Exception`. Write it first.
 
 ## Do not redo — already done, leave alone
 
@@ -57,6 +66,9 @@ Anthropic credits and is parked as W1-09 for a human.
 - **W1-04** channel→ingest wiring. Commit `d79700c`. `ingest_content(config=None)` is
   backwards compatible and both existing callers still pass no argument. Do not add a
   separate crawl stage or a second dedup — Stage 1 already does it.
+- **W1-05** channel declared in `config/content.yaml`. Commit `d429e33`.
+  `@TheMountainDispatch` is dead (404); `@TuesdayswithStories` is the right channel —
+  it is where the ten hand-listed videos came from.
 - **The venv was rebuilt on Python 3.12.12** and every dependency reinstalled. Do not
   "fix" it again — see *Rejected approaches*.
 
@@ -97,9 +109,9 @@ Full instructions live in each task's `note:` in `loop/TASKS.yaml`.
 
 ```
 W0 harness    1/1  done
-W1 crawler    4/9   — 4 todo, 1 parked (API_CREDITS)
+W1 crawler    5/9   — 3 todo, 1 parked (API_CREDITS)
 W2 backend    0/8   — 7 todo, 1 parked (DEPLOY)
 W3 app        0/15  — 12 todo, 3 parked
               ----
-              5/33 done, 5 parked, 23 to build
+              6/33 done, 5 parked, 22 to build
 ```

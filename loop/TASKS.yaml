@@ -88,9 +88,9 @@ tasks:
     verify: "venv/bin/python -c \"import yaml;s=yaml.safe_load(open('config/content.yaml'))['sources'];assert any(x.get('channel') for x in s),'no channel source';print('ok')\""
     touches: [config/content.yaml]
     depends_on: [W1-04]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: d429e33
     note: "Bounded first run. Removing `limit` ingests the whole channel."
 
   - id: W1-06
