@@ -7,7 +7,6 @@ cross-field matching that any future index work would have to give up.
 """
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 import api.main as m
@@ -16,18 +15,11 @@ pytestmark = pytest.mark.db
 
 
 @pytest.fixture
-def client(db_session, monkeypatch):
-    from contextlib import contextmanager
-
-    @contextmanager
-    def _session():
-        yield db_session
-
-    monkeypatch.setattr(m, "get_session", _session)
+def client(api_client, monkeypatch):
     # Search reaches the same rows as the map, so it is gated too. These tests
     # are about matching, not about the gate - test_api_unlock.py owns that.
     monkeypatch.setattr(m, "is_gated", lambda row: False)
-    return TestClient(m.app)
+    return api_client
 
 
 @pytest.fixture

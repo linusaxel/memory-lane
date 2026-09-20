@@ -138,26 +138,27 @@ def fake_anthropic():
 def api_client(db_session, monkeypatch, tmp_path):
     """A TestClient wired to the ephemeral database.
 
-    Three patches, and leaving any of them out is a test that passes while
-    talking to the real thing:
+    The patching is **discovered, not listed**. Every module under `api/` that
+    holds a `get_session` gets it replaced. A list would be one import away from
+    wrong, and the failure is silent: `api.card` binds `get_session` at import,
+    so patching `api.main` alone once left the card route on the live database -
+    that looked like a passing gate test and was actually a 404. The same trap
+    reopens every time a module is split out of `api.main`.
 
-    - api.main, which every endpoint reads through;
-    - api.card, which binds get_session at import, so patching api.main alone
-      leaves the card route on the live database - that looked like a passing
-      gate test and was actually a 404;
-    - api.media's MEDIA_DIR, so uploads land in tmp_path and not in the repo.
-
-    The session rolls back on an exception the way pipeline.db.get_session does.
-    Without that a refused submission leaves its half-written rows behind in the
-    test and nowhere else, which is the wrong way round for a fixture.
+    `api.media.MEDIA_DIR` is redirected too, so uploads land in tmp_path and not
+    in the repo. The session rolls back on an exception the way
+    `pipeline.db.get_session` does; without that a refused write leaves its
+    half-written rows behind in the test and nowhere else.
     """
+    import importlib
+    import pkgutil
     from contextlib import contextmanager
 
     from fastapi.testclient import TestClient
 
-    import api.card as card
-    import api.main as main
-    import api.media as media
+    import api
+    import api.main
+    import api.media
 
     @contextmanager
     def _session():
@@ -167,7 +168,13 @@ def api_client(db_session, monkeypatch, tmp_path):
             db_session.rollback()
             raise
 
-    monkeypatch.setattr(main, "get_session", _session)
-    monkeypatch.setattr(card, "get_session", _session)
-    monkeypatch.setattr(media, "MEDIA_DIR", tmp_path)
-    return TestClient(main.app)
+    patched = []
+    for info in pkgutil.iter_modules(api.__path__):
+        module = importlib.import_module(f"api.{info.name}")
+        if hasattr(module, "get_session"):
+            monkeypatch.setattr(module, "get_session", _session)
+            patched.append(info.name)
+    assert patched, "no api module exposes get_session - did the import path move?"
+
+    monkeypatch.setattr(api.media, "MEDIA_DIR", tmp_path)
+    return TestClient(api.main.app)

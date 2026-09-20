@@ -12,7 +12,6 @@ still returns plausible-looking results.
 """
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 import api.main as m
@@ -32,15 +31,8 @@ def _nothing_is_gated(monkeypatch):
 
 
 @pytest.fixture
-def client(db_session, monkeypatch):
-    from contextlib import contextmanager
-
-    @contextmanager
-    def _session():
-        yield db_session
-
-    monkeypatch.setattr(m, "get_session", _session)
-    return TestClient(m.app)
+def client(api_client):
+    return api_client
 
 
 def _place(session, name, lat, lng):

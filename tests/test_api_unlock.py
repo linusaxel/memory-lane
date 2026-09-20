@@ -12,10 +12,8 @@ coordinate no other place shares is treated as real enough to lock.
 """
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-import api.card as card
 import api.main as m
 
 pytestmark = pytest.mark.db
@@ -26,19 +24,8 @@ FAR_LAT = LAT + 0.01
 
 
 @pytest.fixture
-def client(db_session, monkeypatch):
-    from contextlib import contextmanager
-
-    @contextmanager
-    def _session():
-        yield db_session
-
-    monkeypatch.setattr(m, "get_session", _session)
-    # card.py binds get_session at import, so patching api.main alone leaves the
-    # card route talking to the real database - which looks like a passing gate
-    # test and is actually a 404.
-    monkeypatch.setattr(card, "get_session", _session)
-    return TestClient(m.app)
+def client(api_client):
+    return api_client
 
 
 def _place(session, name, lat, lng):

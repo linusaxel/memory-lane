@@ -13,11 +13,7 @@ a punishment for leaving.
 """
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import text
-
-import api.card as card
-import api.main as m
 
 pytestmark = pytest.mark.db
 
@@ -28,16 +24,8 @@ OTHER_DEVICE = "99999999-8888-7777-6666-555555555555"
 
 
 @pytest.fixture
-def client(db_session, monkeypatch):
-    from contextlib import contextmanager
-
-    @contextmanager
-    def _session():
-        yield db_session
-
-    monkeypatch.setattr(m, "get_session", _session)
-    monkeypatch.setattr(card, "get_session", _session)
-    return TestClient(m.app)
+def client(api_client):
+    return api_client
 
 
 @pytest.fixture
