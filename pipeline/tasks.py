@@ -181,6 +181,12 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
     logger.info(f"[content:{content_id}] Extracting chunk {chunk_index + 1}/{total_chunks}")
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    # ponytail: always the personal prompt. This path predates prompt_for() and
+    # has no source_type to hand, so archival content run through the queue would
+    # be asked for WHO and THE VIBE - an invitation to invent, which is the one
+    # thing third-party material must not get. Harmless today because redis and rq
+    # are not installed so nothing reaches here; thread source_type down from
+    # task_enqueue_chunks before using this path for anything but video.
     memories = extract_memories_from_chunk(client, chunk_text)
 
     redis = get_redis()

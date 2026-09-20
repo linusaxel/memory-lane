@@ -46,10 +46,62 @@ For each memory, extract:
   Good: "Mark did three sold-out shows at this old 1909 theater in Boulder, joking about how the marquee had survived prohibition, the depression, and now had to endure his act."
 - tags: 1-5 from: food, travel, history, culture, adventure, romance, nightlife, nature, art, music, sports, business, personal
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
+  BE HONEST ABOUT THIS. If you are returning the coordinates of a city because you
+  do not know the address, say "city". Only say "exact" when you know the specific
+  building or street address. A wrong "exact" is worse than an honest "city": it
+  puts a pin on the wrong doorstep and claims 50m accuracy while doing it.
 - confidence: high (clear location + definite event), medium (somewhat vague), low (uncertain)
 
 Return JSON: {"memories": [...]}
 Return {"memories": []} if no memories found."""
+
+HISTORICAL_SYSTEM_PROMPT = """You extract location-based memories from archival text:
+newspaper clippings, local archive entries, venue and concert records, registries.
+
+A memory is something that HAPPENED at a SPECIFIC PHYSICAL LOCATION.
+
+QUALIFIES:
+- Events: "Bowie played this room in 1978, 400 capacity"
+- Things that stood here: "The bakery was on that corner until '78"
+- Documented incidents: "The tram derailed outside the pharmacy in March 1931"
+
+Does NOT qualify - reject these as firmly as you would reject a hypothetical:
+- Static description: "this building was constructed in 1902", "four storeys, tiled roof"
+  A building EXISTING is not something that HAPPENED. If you cannot name an event,
+  there is no memory here.
+- Architectural or stylistic commentary: "a fine example of the national romantic style"
+- Encyclopaedia facts: "Copenhagen is the capital of Denmark"
+- Anything you are inferring rather than reading. If the text does not say it
+  happened, it did not happen. Do not fill gaps with plausible history.
+
+This is third-party material, so write it straight. Do NOT use the chatty,
+first-person register you would use for someone telling a story about themselves:
+no invented emotions, no invented names, no "you can just picture it". Say what
+happened, where, and when, and let the fact carry it.
+
+For each memory, extract:
+- place_name: Human-readable name ("Vega, Vesterbro")
+- place_query: Search string for geocoding ("Vega Enghavevej Vesterbro Copenhagen Denmark")
+- lat / lng: Decimal degrees
+- happened_at: ISO date of the EVENT - "1978-06-17", "1978-06", or "1978". Null if
+  the text gives no date. This is when it happened, not when it was written about.
+- happened_precision: day | month | year | decade - how much of happened_at to trust
+- summary: 2-4 sentences. What happened, who was involved if named, what the place
+  was at the time. Concrete and sourced, not atmospheric.
+- attribution: the source as it should be credited on a card, if the text names one
+- tags: 1-5 from: food, travel, history, culture, adventure, romance, nightlife,
+  nature, art, music, sports, business, personal
+- location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
+  BE HONEST. If you are returning a city's coordinates because you do not know the
+  address, say "city". Only "exact" when you know the building. A wrong "exact"
+  puts a pin on the wrong doorstep and claims 50m accuracy while doing it.
+- confidence: high (clear location + definite event), medium (somewhat vague),
+  low (uncertain)
+
+Return JSON: {"memories": [...]}
+Return {"memories": []} if no memories found. An empty list is the right answer
+for a page of architectural description, and is always better than an invention."""
+
 
 USER_PROMPT_TEMPLATE = """Extract memories from this transcript chunk:
 
@@ -107,13 +159,15 @@ class BillingError(Exception):
     pass
 
 
-def extract_memories_from_chunk(client: anthropic.Anthropic, chunk: str) -> list[dict]:
+def extract_memories_from_chunk(
+    client: anthropic.Anthropic, chunk: str, system_prompt: str = SYSTEM_PROMPT
+) -> list[dict]:
     """Send chunk to Claude and extract memories."""
     try:
         response = client.messages.create(
             model=EXTRACTION_MODEL,
             max_tokens=2000,
-            system=SYSTEM_PROMPT,
+            system=system_prompt,
             messages=[{"role": "user", "content": USER_PROMPT_TEMPLATE.format(chunk=chunk)}],
         )
 
@@ -191,12 +245,46 @@ def filter_low_confidence(memories: list[dict]) -> list[dict]:
     return [m for m in memories if m.get("confidence", "low") in ("high", "medium")]
 
 
+def prompt_for(source_type: str | None) -> str:
+    """Archival text and someone telling a story need different instructions.
+
+    The personal prompt asks for WHO and THE VIBE, which invites invention when
+    pointed at a newspaper clipping - exactly what must not happen to third-party
+    material.
+    """
+    return SYSTEM_PROMPT if (source_type or "video") == "video" else HISTORICAL_SYSTEM_PROMPT
+
+
+def layer_for(source_type: str | None) -> str:
+    """Everything ingested so far is public, permanent content. Friend and
+    stranger memories arrive through a write path that does not exist yet."""
+    return "historical"
+
+
 def precision_to_meters(precision: str) -> int:
     mapping = {"exact": 50, "street": 200, "neighborhood": 1000, "city": 10000}
     return mapping.get(precision, 200)
 
 
-def save_memories(session, content_id: int, memories: list[dict]):
+def _happened_at(mem: dict):
+    """Normalise the model's date to something DATE accepts, or None.
+
+    It is told to answer "1978-06-17", "1978-06" or "1978", and a partial date
+    is the honest answer when a clipping only gives a year - so widen it to the
+    first of the period and let happened_precision carry how much to trust.
+    """
+    raw = (mem.get("happened_at") or "").strip()
+    if not raw:
+        return None
+    parts = raw.split("-")
+    if len(parts) == 1 and len(parts[0]) == 4:
+        return f"{parts[0]}-01-01"
+    if len(parts) == 2:
+        return f"{raw}-01"
+    return raw if len(parts) == 3 else None
+
+
+def save_memories(session, content_id: int, memories: list[dict], layer: str = "historical"):
     for mem in memories:
         lat = mem.get("lat")
         lng = mem.get("lng")
@@ -253,8 +341,16 @@ def save_memories(session, content_id: int, memories: list[dict]):
 
         session.execute(
             text("""
-                INSERT INTO memories (place_id, content_id, timestamp_start, timestamp_end, summary, tags, extraction_confidence)
-                VALUES (:place_id, :content_id, :ts_start, :ts_end, :summary, :tags, :confidence)
+                INSERT INTO memories (
+                    place_id, content_id, timestamp_start, timestamp_end, summary, tags,
+                    extraction_confidence, layer, happened_at, happened_precision,
+                    attribution, source_url
+                )
+                VALUES (
+                    :place_id, :content_id, :ts_start, :ts_end, :summary, :tags,
+                    :confidence, :layer, CAST(:happened_at AS DATE), :happened_precision,
+                    :attribution, :source_url
+                )
             """),
             {
                 "place_id": place_id,
@@ -264,6 +360,11 @@ def save_memories(session, content_id: int, memories: list[dict]):
                 "summary": mem.get("summary", ""),
                 "tags": mem.get("tags", []),
                 "confidence": mem.get("confidence", "medium"),
+                "layer": layer,
+                "happened_at": _happened_at(mem),
+                "happened_precision": mem.get("happened_precision"),
+                "attribution": mem.get("attribution"),
+                "source_url": mem.get("source_url"),
             },
         )
 
@@ -279,13 +380,13 @@ def extract_all_pending():
 
     with get_session() as session:
         pending = session.execute(
-            text(f"SELECT c.id, c.title, t.segments {PENDING_EXTRACTION}")
+            text(f"SELECT c.id, c.title, t.segments, c.source_type {PENDING_EXTRACTION}")
         ).fetchall()
 
         logger.info(f"Found {len(pending)} videos pending extraction")
 
         for row in pending:
-            content_id, title, segments_json = row
+            content_id, title, segments_json, source_type = row
             logger.info(f"Extracting memories from: {title or content_id}")
 
             try:
@@ -299,7 +400,9 @@ def extract_all_pending():
                 for i, chunk in enumerate(chunks):
                     logger.info(f"  Processing chunk {i + 1}/{len(chunks)}")
                     try:
-                        memories = extract_memories_from_chunk(client, chunk)
+                        memories = extract_memories_from_chunk(
+                            client, chunk, prompt_for(source_type)
+                        )
                         all_memories.extend(memories)
                     except BillingError as e:
                         logger.error(str(e))
@@ -312,7 +415,7 @@ def extract_all_pending():
                     f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering"
                 )
 
-                save_memories(session, content_id, filtered)
+                save_memories(session, content_id, filtered, layer_for(source_type))
 
                 session.execute(
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),

@@ -148,6 +148,13 @@ IS NOT NULL GROUP BY 1 HAVING count(*) > 1 ORDER BY 2 DESC;`
       `claude-haiku-4-5`; the extraction one has not.
 - [ ] **`redis` / `rq` declared but not installed** in the venv, so
       `pipeline/worker.py` ImportErrors. The parallel path is untested locally.
+- [ ] **The queue path would use the wrong prompt.** `pipeline/tasks.py` calls
+      `extract_memories_from_chunk` with no prompt argument, so archival content
+      run through the workers gets the personal "WHO / THE VIBE" prompt — an
+      invitation to invent, on exactly the material that must not get one.
+      Harmless while redis/rq are missing and nothing reaches it; `source_type`
+      must be threaded down from `task_enqueue_chunks` before that path is used
+      for anything but video. Marked at the call site.
 - [ ] **`published_at` is always NULL** — yt-dlp flat extraction returns no
       timestamp for this channel. Nothing serves it, so it blocks nothing.
 
