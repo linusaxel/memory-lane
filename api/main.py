@@ -178,9 +178,15 @@ JOIN content c ON m.content_id = c.id"""
 DISTANCE = "ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters"
 WITHIN = "ST_DWithin(p.coordinates, ST_MakePoint(:lng, :lat)::geography, :radius_meters)"
 
-# ponytail: the tsvector spans two tables, so no expression index can serve it and
-# every search is a sequential scan. Denormalize a search column onto memories if
-# the corpus ever outgrows it.
+# ponytail: this spans two tables, so no expression index can serve it and every
+# search is a sequential scan. At 224 memories that is microseconds and nothing
+# calls this endpoint yet.
+#
+# Splitting it into `to_tsvector(m.summary) @@ q OR to_tsvector(p.name) @@ q`
+# looks like the fix and is not: an OR across two tables still cannot use either
+# index, because a row can qualify from the other side. Measured - the planner
+# keeps scanning. The two designs that would work are in TODO.md; both cost more
+# than this corpus is worth.
 SEARCH_VECTOR = "to_tsvector('english', m.summary || ' ' || p.name)"
 SEARCH_MATCH = f"{SEARCH_VECTOR} @@ plainto_tsquery('english', :query)"
 SEARCH_RANK = f"ts_rank({SEARCH_VECTOR}, plainto_tsquery('english', :query)) as rank"

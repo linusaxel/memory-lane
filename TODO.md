@@ -127,54 +127,68 @@ IS NOT NULL GROUP BY 1 HAVING count(*) > 1 ORDER BY 2 DESC;`
 
 ### Known defects, unowned
 
+**Audited 2026-09-20.** Six of the nine entries here were already fixed and the
+list was still claiming them, which is worse than having no list: an agent
+reading it spends its afternoon re-fixing solved problems, and the one entry
+that was outright false would have sent it hunting a ruff bug that does not
+exist. Verify before trusting, and strike entries when you fix them.
+
 - [~] **Semantic place duplicates.** Tool shipped, merge withheld — see 1.2.
       *Gotham Comedy Club New York City* (6 memories) and *Gotham Comedy Club
       Chelsea New York City* (1) are still one venue on two pins.
-- [ ] **`meta.total` is wrong** on `/v1/memories/nearby`, `/v1/memories/search`
-      and `/v1/places/nearby` — the count queries ignore active filters, and the
-      places one returns page length.
-- [ ] **Search cannot be indexed as written.** `to_tsvector(m.summary || p.name)`
-      spans two tables, so no expression index can serve it and every search is
-      a sequential scan. The predicate must be split into an `OR` first.
-- [ ] **8 of 9 endpoints have no consumer.** `mobile/src/api.ts` calls only
-      `/v1/memories/nearby`. Decided per endpoint in Phase 2.
-- [ ] **No behavioural test of `/v1/memories/nearby`** — the single endpoint the
-      app depends on. `tests/test_api_sql.py` proves every SQL constant is valid
-      SQL; nothing asserts radius, ordering or filter semantics.
-- [ ] **`tests/test_app_config.py` PLACEHOLDER tripwire cannot fail** —
-      `assert isinstance(unresolved, list)` is a no-op.
-- [ ] **`EXTRACTION_MODEL` is pinned to a deprecated model**
-      (`claude-sonnet-4-20250514`). `CLASSIFIER_MODEL` has been corrected to
-      `claude-haiku-4-5`; the extraction one has not.
-- [ ] **`redis` / `rq` declared but not installed** in the venv, so
-      `pipeline/worker.py` ImportErrors. The parallel path is untested locally.
-- [ ] **`ruff format` corrupts single-line tuple `except` clauses in this
-      repo.** It rewrites `except (TypeError, ValueError):` into
-      `except TypeError, ValueError:` — Python 2, does not compile. The gate then
-      fails at `compileall`, which is step 1, so it reports `GATE=RED syntax
-      error` and never reaches the tests; a "GREEN, 176 passed" from before the
-      save looks identical to a tree that now cannot import.
+- [ ] **Search is a sequential scan by construction**, and the obvious fix is
+      not one. `to_tsvector(m.summary || ' ' || p.name)` spans two tables so no
+      expression index can serve it — but rewriting it as
+      `to_tsvector(m.summary) @@ q OR to_tsvector(p.name) @@ q` and indexing
+      both does not help either: an OR across two tables still cannot use either
+      index, because a row can qualify from the other side. That was built,
+      measured against the live database, and reverted; the planner kept
+      scanning.
 
-      Reproduce: write that snippet to any `.py` file under the repo root and run
-      `venv/bin/python -m ruff format <file>`. **Not** reproducible in `/tmp`
-      with this same `pyproject.toml` copied in, not the `.ruff_cache`, and not a
-      stray config — something about this directory. ruff 0.16.8. Root cause not
-      found and the search was called off as too expensive.
+      The two designs that would actually work:
+      1. **UNION of two indexable branches**, one per table. Pure SQL, but
+         ranking, `meta.total` and pagination all have to be rebuilt around it.
+      2. **A `search_vector` column on `memories`**, trigger-maintained from the
+         summary and the place name. One predicate, one GIN index, cross-field
+         matching preserved — at the cost of keeping it in sync when a place is
+         renamed.
 
-      Workaround, used in `_contrast_score`: keep the tuple exploded across lines
-      with a magic trailing comma, which ruff preserves.
-      `pipeline/tasks.py:73` already had that shape and was never affected.
-      Two agents each "fixing" this file while the other saved cost real time —
-      if the gate says syntax error at a line you did not touch, check this first.
-- [ ] **The queue path would use the wrong prompt.** `pipeline/tasks.py` calls
-      `extract_memories_from_chunk` with no prompt argument, so archival content
-      run through the workers gets the personal "WHO / THE VIBE" prompt — an
-      invitation to invent, on exactly the material that must not get one.
-      Harmless while redis/rq are missing and nothing reaches it; `source_type`
-      must be threaded down from `task_enqueue_chunks` before that path is used
-      for anything but video. Marked at the call site.
+      Neither is worth it yet: 224 memories scan in microseconds and no client
+      calls this endpoint. `tests/test_api_search.py` came out of the attempt
+      and is worth keeping either way — it pins the cross-field matching that
+      both designs above would change.
+- [ ] **7 of 9 endpoints have no consumer.** `mobile/src/api.ts` calls
+      `/v1/memories/nearby` and `/v1/memories/{id}`. Decided per endpoint in
+      Phase 2.
 - [ ] **`published_at` is always NULL** — yt-dlp flat extraction returns no
-      timestamp for this channel. Nothing serves it, so it blocks nothing.
+      timestamp for this channel (59 of 59 rows). Nothing serves it, so it
+      blocks nothing.
+
+#### Struck on audit — fixed, do not re-fix
+
+- [x] **`meta.total` was wrong** on three endpoints. Fixed: `COUNT_WITH_TAGS_QUERY`,
+      `SEARCH_COUNT_WITH_LOCATION_QUERY` and `PLACES_COUNT_QUERY` now mirror
+      their result queries, and `tests/test_api_nearby.py` asserts it.
+- [x] **No behavioural test of `/v1/memories/nearby`.** `tests/test_api_nearby.py`
+      covers radius, contrast ordering, NULLS LAST, layer filtering and the card
+      fields.
+- [x] **`tests/test_app_config.py` PLACEHOLDER tripwire cannot fail.** It
+      collects the unresolved placeholders and asserts the list is empty, under
+      a strict xfail that carries the fact that today it is not.
+- [x] **`EXTRACTION_MODEL` pinned to a deprecated model.** `pipeline/config.py`
+      defaults to `claude-sonnet-5`.
+- [x] **`redis` / `rq` declared but not installed.** Both import from the venv.
+- [x] **The queue path would use the wrong prompt.** `pipeline/tasks.py` reads
+      `source_type` from the Redis hash and passes `prompt_for(source_type)` and
+      `layer_for(source_type)`.
+- [x] **~~`ruff format` corrupts single-line tuple `except` clauses~~ — this was
+      never ruff.** The rewrites to `except TypeError, ValueError:` were
+      reproduced while running only `cp`, `sleep` and `md5`, with ruff nowhere
+      near the tree, and traced to an editor watching the directory. No
+      corruption ever reached a commit; the gate caught every instance at
+      `compileall`. The entry is kept struck rather than deleted because the
+      original was detailed and convincing, and somebody will otherwise rediscover
+      the symptom and re-blame the formatter.
 
 ---
 
