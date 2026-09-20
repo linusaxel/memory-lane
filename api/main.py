@@ -1,6 +1,9 @@
 """FastAPI application for Memory Lane API."""
 
+import os
+
 from fastapi import FastAPI, Query, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -17,8 +20,10 @@ app = FastAPI(
 # CORS for web clients
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
-    allow_credentials=True,
+    # A wildcard origin with credentials is rejected by browsers anyway, and the
+    # mobile app sends no cookies. Set CORS_ORIGINS to lock this down for a web client.
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -439,14 +444,52 @@ def row_to_memory(row, include_distance: bool = True) -> Memory:
 # ENDPOINTS
 # ============================================================================
 
+PRIVACY_HTML = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memory Lane - Privacy Policy</title>
+<style>body{font-family:system-ui,sans-serif;max-width:40rem;margin:3rem auto;padding:0 1rem;line-height:1.6;color:#222}h1{font-size:1.5rem}h2{font-size:1.05rem;margin-top:2rem}</style>
+</head><body>
+<h1>Memory Lane - Privacy Policy</h1>
+<p>Memory Lane shows travel memories drawn from publicly available video transcripts,
+on a map near you.</p>
+
+<h2>Location</h2>
+<p>If you grant location permission, your device's approximate coordinates are sent to
+our servers solely to look up memories near you. Coordinates are used for that request
+and are not stored, profiled, or linked to you.</p>
+
+<h2>Accounts</h2>
+<p>There are none. We do not ask for your name, email, or phone number, and we do not
+collect device identifiers for advertising.</p>
+
+<h2>What we do keep</h2>
+<p>Our servers keep standard technical request logs (timestamp, coarse IP, endpoint)
+for reliability and abuse prevention.</p>
+
+<h2>Third parties</h2>
+<p>We sell nothing and share nothing. Opening a memory's source video hands you off to
+YouTube, whose own privacy policy then applies.</p>
+
+<h2>Contact</h2>
+<p>Questions: open an issue on the project repository.</p>
+</body></html>"""
+
+
+@app.get("/privacy", response_class=HTMLResponse, include_in_schema=False)
+def privacy_policy():
+    """Both app stores require a publicly reachable privacy policy URL."""
+    return PRIVACY_HTML
+
+
 @app.get("/")
-async def root():
+def root():
     """API root - health check."""
     return {"status": "ok", "service": "memory-lane"}
 
 
 @app.get("/v1/memories/nearby", response_model=NearbyResponse)
-async def get_nearby_memories(
+def get_nearby_memories(
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lng: float = Query(..., ge=-180, le=180, description="Longitude"),
     radius_km: float = Query(10, ge=0.1, le=100, description="Search radius in km"),
@@ -499,7 +542,7 @@ async def get_nearby_memories(
 
 
 @app.get("/v1/memories/search", response_model=SearchResponse)
-async def search_memories(
+def search_memories(
     q: str = Query(..., min_length=2, description="Search query"),
     lat: Optional[float] = Query(None, ge=-90, le=90, description="Optional latitude for location filter"),
     lng: Optional[float] = Query(None, ge=-180, le=180, description="Optional longitude for location filter"),
@@ -560,7 +603,7 @@ async def search_memories(
 
 
 @app.get("/v1/memories/{memory_id}", response_model=Memory)
-async def get_memory(memory_id: int):
+def get_memory(memory_id: int):
     """Get a single memory by ID."""
     with get_session() as session:
         result = session.execute(
@@ -576,7 +619,7 @@ async def get_memory(memory_id: int):
 
 
 @app.get("/v1/places/nearby", response_model=PlacesResponse)
-async def get_nearby_places(
+def get_nearby_places(
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lng: float = Query(..., ge=-180, le=180, description="Longitude"),
     radius_km: float = Query(10, ge=0.1, le=100, description="Search radius in km"),
@@ -628,7 +671,7 @@ async def get_nearby_places(
 
 
 @app.get("/v1/places/{place_id}", response_model=PlaceDetail)
-async def get_place(place_id: int):
+def get_place(place_id: int):
     """Get details for a specific place."""
     with get_session() as session:
         result = session.execute(
@@ -657,7 +700,7 @@ async def get_place(place_id: int):
 
 
 @app.get("/v1/places/{place_id}/memories", response_model=list[Memory])
-async def get_place_memories(
+def get_place_memories(
     place_id: int,
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0)
@@ -677,7 +720,7 @@ async def get_place_memories(
 
 
 @app.get("/v1/content/{content_id}/memories", response_model=list[Memory])
-async def get_content_memories(
+def get_content_memories(
     content_id: int,
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0)
@@ -697,7 +740,7 @@ async def get_content_memories(
 
 
 @app.get("/v1/stats")
-async def get_stats():
+def get_stats():
     """Get database statistics."""
     with get_session() as session:
         memories_count = session.execute(text("SELECT COUNT(*) FROM memories")).scalar()
