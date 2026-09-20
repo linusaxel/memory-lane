@@ -95,6 +95,15 @@ def chunk_transcript(segments: list, chunk_minutes: int = 4, overlap_seconds: in
     return chunks
 
 
+PENDING_EXTRACTION = """
+FROM content c
+JOIN transcripts t ON c.id = t.content_id
+WHERE c.memories_extracted = FALSE
+  AND c.extraction_failed = FALSE
+  AND c.transcript_fetched = TRUE
+"""
+
+
 class BillingError(Exception):
     """Raised when API call fails due to billing issues."""
     pass
@@ -275,14 +284,7 @@ def extract_all_pending():
     with get_session() as session:
         # Get content with transcripts ready for extraction
         pending = session.execute(
-            text("""
-                SELECT c.id, c.title, t.segments
-                FROM content c
-                JOIN transcripts t ON c.id = t.content_id
-                WHERE c.memories_extracted = FALSE
-                  AND c.extraction_failed = FALSE
-                  AND c.transcript_fetched = TRUE
-            """)
+            text(f"SELECT c.id, c.title, t.segments {PENDING_EXTRACTION}")
         ).fetchall()
 
         logger.info(f"Found {len(pending)} videos pending extraction")

@@ -22,9 +22,8 @@ from pipeline.extract import (
     merge_nearby_memories,
     filter_low_confidence,
     save_memories,
-    SYSTEM_PROMPT,
-    USER_PROMPT_TEMPLATE,
-    BillingError,
+    extract_memories_from_chunk,
+    PENDING_EXTRACTION,
 )
 
 load_dotenv()
@@ -82,43 +81,6 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
     except Exception as e:
         logger.warning(f"Classifier error, assuming has memories: {e}")
         return True
-
-
-def extract_memories_from_chunk(client: anthropic.Anthropic, chunk: str) -> list[dict]:
-    """Send chunk to Claude Sonnet and extract memories."""
-    try:
-        response = client.messages.create(
-            model=EXTRACTION_MODEL,
-            max_tokens=2000,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": USER_PROMPT_TEMPLATE.format(chunk=chunk)}]
-        )
-
-        content = response.content[0].text
-
-        try:
-            data = json.loads(content)
-            return data.get("memories", [])
-        except json.JSONDecodeError:
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-                return data.get("memories", [])
-            elif "```" in content:
-                json_str = content.split("```")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-                return data.get("memories", [])
-            logger.warning(f"Failed to parse JSON: {content[:200]}")
-            return []
-
-    except anthropic.BadRequestError as e:
-        if "credit balance" in str(e).lower():
-            raise BillingError("API credit balance too low")
-        logger.error(f"Claude API error: {e}")
-        return []
-    except Exception as e:
-        logger.error(f"Extraction error: {e}")
-        return []
 
 
 # ============================================================================
@@ -323,14 +285,7 @@ def enqueue_all_pending():
     """Enqueue all videos that have transcripts but no extraction."""
     with get_session() as session:
         pending = session.execute(
-            text("""
-                SELECT c.id, c.title
-                FROM content c
-                JOIN transcripts t ON c.id = t.content_id
-                WHERE c.memories_extracted = FALSE
-                  AND c.extraction_failed = FALSE
-                  AND c.transcript_fetched = TRUE
-            """)
+            text(f"SELECT c.id, c.title {PENDING_EXTRACTION}")
         ).fetchall()
 
     logger.info(f"Found {len(pending)} videos pending extraction")
