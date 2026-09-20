@@ -23,6 +23,15 @@ pytestmark = pytest.mark.db
 LAT, LNG = 55.6759, 12.5655
 
 
+@pytest.fixture(autouse=True)
+def _near_enough_to_read_everything(monkeypatch):
+    """These tests assert the radius, the ordering and the fields. The proximity
+    gate is asserted in test_api_unlock.py; here the viewer stands close enough
+    to read every fixture, so a redacted summary cannot masquerade as a
+    wrong-order bug."""
+    monkeypatch.setattr(m, "UNLOCK_RADIUS_METERS", 100_000)
+
+
 @pytest.fixture
 def client(db_session, monkeypatch):
     from contextlib import contextmanager
@@ -79,7 +88,9 @@ def test_a_place_outside_the_radius_is_not_returned(client, db_session):
     _memory(db_session, far, content, "far away")
     db_session.commit()
 
-    body = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&radius_km=5").json()
+    body = client.get(
+        f"/v1/memories/nearby?at_lat={LAT}&at_lng={LNG}&lat={LAT}&lng={LNG}&radius_km=5"
+    ).json()
     assert [mem["summary"] for mem in body["memories"]] == ["close by"]
     assert body["meta"]["total"] == 1
 
@@ -93,7 +104,9 @@ def test_the_highest_contrast_memory_comes_first_even_if_further(client, db_sess
     _memory(db_session, far, content, "now a bank lobby", contrast_score=0.95)
     db_session.commit()
 
-    body = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&radius_km=5").json()
+    body = client.get(
+        f"/v1/memories/nearby?at_lat={LAT}&at_lng={LNG}&lat={LAT}&lng={LNG}&radius_km=5"
+    ).json()
     assert [mem["summary"] for mem in body["memories"]] == [
         "now a bank lobby",
         "still a cathedral",
@@ -110,7 +123,9 @@ def test_unscored_memories_sort_below_scored_ones(client, db_session):
     _memory(db_session, b, content, "never scored")
     db_session.commit()
 
-    body = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&radius_km=5").json()
+    body = client.get(
+        f"/v1/memories/nearby?at_lat={LAT}&at_lng={LNG}&lat={LAT}&lng={LNG}&radius_km=5"
+    ).json()
     assert [mem["summary"] for mem in body["memories"]] == ["scored low", "never scored"]
 
 
@@ -121,17 +136,26 @@ def test_a_layer_filter_returns_only_that_layer(client, db_session):
     _memory(db_session, place, content, "intimate and ephemeral", layer="friend")
     db_session.commit()
 
-    only = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&layer=friend").json()
+    only = client.get(
+        f"/v1/memories/nearby?at_lat={LAT}&at_lng={LNG}&lat={LAT}&lng={LNG}&layer=friend"
+    ).json()
     assert [mem["summary"] for mem in only["memories"]] == ["intimate and ephemeral"]
     assert only["meta"]["total"] == 1, "total must respect the layer filter too"
 
-    everything = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()
+    everything = client.get(
+        f"/v1/memories/nearby?at_lat={LAT}&at_lng={LNG}&lat={LAT}&lng={LNG}"
+    ).json()
     assert everything["meta"]["total"] == 2, "omitting layer means every layer"
 
 
 def test_an_unknown_layer_is_rejected_not_silently_ignored(client):
     """A typo must not quietly return friend memories to everyone."""
-    assert client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&layer=public").status_code == 422
+    assert (
+        client.get(
+            f"/v1/memories/nearby?at_lat={LAT}&at_lng={LNG}&lat={LAT}&lng={LNG}&layer=public"
+        ).status_code
+        == 422
+    )
 
 
 def test_the_card_fields_are_served(client, db_session):
@@ -151,7 +175,9 @@ def test_the_card_fields_are_served(client, db_session):
     )
     db_session.commit()
 
-    mem = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()["memories"][0]
+    mem = client.get(f"/v1/memories/nearby?at_lat={LAT}&at_lng={LNG}&lat={LAT}&lng={LNG}").json()[
+        "memories"
+    ][0]
     assert mem["happened_at"] == "1978-06-17"
     assert mem["attribution"] == "SYNTHETIC FIXTURE"
     assert mem["source_url"] == "https://example.invalid/synthetic/1"
