@@ -1,0 +1,148 @@
+# LOOP STATE — FINAL. All buildable work is complete.
+
+```
+tick:     12 (final)
+updated:  2026-09-20
+branch:   loop/autopilot   (~20 commits ahead of main, NEVER PUSHED)
+gate:     GREEN — 103 tests, ~3s
+status:   TERMINATED — 28 done, 5 parked on human gates, 0 buildable remaining
+```
+
+The loop stopped itself because every remaining task needs something it is
+forbidden to do: spend money, deploy, run a cloud build, or log into a store
+account. **Nothing below is blocked on code.**
+
+## What works right now
+
+```bash
+docker compose up -d --build              # API + PostGIS
+./api/test_api.sh http://localhost:8080   # 14/14 pass
+./loop/verify.sh                          # 103 tests, GREEN
+cd mobile && npx expo start               # the app
+```
+
+- **Crawler**: `@TuesdayswithStories` auto-discovered, 25 videos ingested,
+  25 transcripts fetched, 0 failed. Baseline before this work: **0 videos**.
+- **Database**: 224 memories across 224 places, all geocoded.
+- **API**: containerized, CORS fixed, sync handlers, `/privacy` live.
+- **App**: map + pins + detail sheet + YouTube deep-link; bundles for iOS and
+  Android (1.5MB each, no Metro errors); both native manifests verified.
+
+## THE HUMAN CHECKLIST — in dependency order
+
+### 1. W1-09 · `API_CREDITS` — check extraction quality (~$0.10)
+
+```bash
+source venv/bin/activate && python -m pipeline.extract --limit 1
+```
+Then eyeball the result:
+```sql
+SELECT m.summary, p.name, m.extraction_confidence FROM memories m
+JOIN places p ON m.place_id = p.id ORDER BY m.id DESC LIMIT 20;
+```
+Summaries should be vivid and name people ("Mark and Joe argued about
+pastrami"), not generic ("they visited a deli"). If they are flat, tune
+`SYSTEM_PROMPT` in `pipeline/extract.py`.
+
+**While you are in there:** the model IDs are a generation stale —
+`claude-sonnet-4-20250514` → `claude-sonnet-5` and `claude-haiku-3-20240307` →
+`claude-haiku-4-5` (`.env.example`, `extract.py:19`, `tasks.py:36-37`). Also
+add `cache_control` to the system prompt, which is resent for every chunk.
+
+### 2. W2-08 · `DEPLOY` — Railway (~$5/mo)
+
+Railway, not Fly: Fly's managed Postgres has **no PostGIS**, so Fly would mean
+running your own database container anyway. Railway runs the identical
+`postgis/postgis:16-3.4` image already in `docker-compose.yml`.
+
+1. New project → add service from image `postgis/postgis:16-3.4`,
+   volume at `/var/lib/postgresql/data`, env `PGDATA=/var/lib/postgresql/data/pgdata`
+2. `psql $DATABASE_URL -f db/schema.sql`
+3. Add service from this repo (Railway auto-detects the `Dockerfile`);
+   set `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+4. Load data: run the pipeline against the prod URL, or `pg_dump` local → restore
+5. `./api/test_api.sh https://<domain>` — expect 14/14
+6. **Note the HTTPS domain. It unblocks step 4 below.**
+
+### 3. W3-13 · look at the app (free, ~5 min)
+
+Simulator builds need no Apple account and no signing.
+```bash
+docker compose up -d --build api
+cd mobile && EXPO_PUBLIC_API_URL=http://localhost:8080 npx expo run:ios
+xcrun simctl location booted set 40.7484,-73.9857    # Manhattan, where the data is
+```
+Confirm: the permission prompt shows our copy, pins render, the sheet opens,
+and "Watch at 12:43" opens YouTube at the right second. Take three screenshots
+at 6.9" (`xcrun simctl io booted screenshot`) — map, sheet, near-me.
+
+*Android cannot be checked locally* — no SDK, no adb. It is covered by the
+manifest assertions and then by the first EAS build.
+
+### 4. W3-14 · `EAS_BUILD` — real binaries
+
+Three `PLACEHOLDER` tripwires must be replaced first:
+
+| Where | Replace with |
+|---|---|
+| `mobile/app.json` → `ios.bundleIdentifier` / `android.package` | your real reverse-domain id — **irreversible once submitted** |
+| `mobile/app.json` → `android.config.googleMaps.apiKey` | a Maps SDK for Android key |
+| `mobile/eas.json` → `production.env.EXPO_PUBLIC_API_URL` | the Railway HTTPS domain from step 2 |
+
+```bash
+npm i -g eas-cli && eas login && eas init
+eas credentials            # Apple cert + profile; Android keystore
+eas build --profile production --platform all
+```
+
+Note the circular dependency: restricting the Maps key to package + SHA-1 needs
+a signing SHA-1 that does not exist until `eas credentials` runs. Leave the key
+unrestricted, then lock it down afterwards.
+
+### 5. W3-15 · `STORE_ACCOUNT` — submit
+
+Apple Developer Program **$99/yr** (identity verification, 1–7 days) and Google
+Play Console **$25 once**. Copy is ready in `mobile/store/listing.md`; the
+privacy URL is `https://<domain>/privacy`, already served by the API.
+
+Pre-answered for you: export compliance (`ITSAppUsesNonExemptEncryption: false`),
+no iPad screenshots (`supportsTablet: false`), and no background-location
+declaration (the permission is deliberately absent).
+
+Still needs a real Android device: 2+ phone screenshots and a 1024×500 feature
+graphic. Install the `preview` APK from EAS — using iOS screenshots on a Play
+listing is a policy risk.
+
+> ### The one people discover too late
+> If your Play account is **personal** rather than an organization, production
+> access is gated behind **closed testing with 12 testers for 14 continuous
+> days** — no matter how finished the app is. Start it the day step 4 produces
+> an `.aab`, not after everything else is done.
+
+## Known gaps, deliberately left
+
+- **`published_at` is still NULL.** The INSERT path works and handles None
+  safely, but yt-dlp's flat extraction returns no timestamp for this channel
+  (verified). Real dates need a per-video fetch or the RSS feed (newest 15
+  only). Nothing in the API serves it, so it blocks nothing.
+- **No auth or rate limiting.** The data is public and read-only, and an API key
+  inside an app binary is not auth. `limit<=100` and `radius_km<=100` bound the
+  blast radius. Add it when there is a bill to protect.
+- **`/v1/memories/search` has no usable index.**
+  `to_tsvector('english', m.summary || ' ' || p.name)` spans two tables, so no
+  expression index can serve it — the predicate must be split into an `OR`
+  first. v1 has no search screen, so nothing uses the slow path.
+- **`meta.total` is wrong** on three endpoints. The app ignores it entirely.
+- Full list in `loop/TASKS.yaml` → `inbox:`.
+
+## Rejected approaches — do NOT retry
+
+- **Scraping channel HTML for `"videoId":"..."`** — returns 0 videos for every
+  channel tested (2026-09-20). Not a regex to fix; YouTube stopped serving it.
+- **Homebrew Python 3.14** — broken `pyexpat` breaks `pip` and
+  `platform.mac_ver()`. The venv is uv-managed **3.12.12**. Install with
+  `uv pip install --python venv/bin/python ...`, never `venv/bin/pip`.
+  The broken venv is at `venv.broken-py314/` (76MB, safe to delete).
+- **`expo-router` / bottom-sheet / react-query** — one screen, one modal, one
+  fetch. Refused on purpose.
+- **Shelling out to `pytest --collect-only` inside a test** — fork bomb.

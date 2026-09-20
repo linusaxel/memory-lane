@@ -42,7 +42,8 @@ python -m api.main
 | File | Purpose |
 |------|---------|
 | `pipeline/run_all.py` | **Run full pipeline** in one command with `--dry-run`, `--skip-*` options |
-| `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB |
+| `crawler/yt_crawler.py` | **Channel discovery** via yt-dlp — lists a channel's videos + metadata |
+| `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB (expands `channel:` sources) |
 | `pipeline/transcripts.py` | Fetches YouTube transcripts via youtube-transcript-api |
 | `pipeline/extract.py` | **Core logic** - Claude extracts memories + coordinates (sequential) |
 | `pipeline/tasks.py` | RQ tasks for parallel extraction with Haiku pre-filter |
@@ -154,7 +155,9 @@ Summaries should be vivid and personal, not generic. The prompt instructs Claude
 ## Common Tasks
 
 ### Add new videos
-1. Edit `config/content.yaml` with new URLs
+1. Edit `config/content.yaml` — either list URLs under `videos:`, or add a
+   `channel:` (plus optional `limit:`) to auto-discover a channel's back catalogue.
+   Both can be combined; ingest merges and dedups them.
 2. Run `python -m pipeline.ingest`
 3. Run `python -m pipeline.transcripts`
 4. Run `python -m pipeline.extract`

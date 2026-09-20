@@ -21,7 +21,10 @@ def fetch_transcript(video_id: str) -> dict | None:
     """
     Fetch transcript for a YouTube video using the new API.
 
-    Returns dict with segments, full_text, and language, or None on failure.
+    Returns dict with segments, full_text, and language.
+
+    Returns None only for PERMANENT failures (captions disabled, video gone,
+    no matching language). Transient errors propagate so the caller can retry.
     """
     languages = ["en", "en-US", "en-GB", "en-AU"]
 
@@ -46,9 +49,9 @@ def fetch_transcript(video_id: str) -> dict | None:
     except NoTranscriptFound:
         logger.warning(f"No transcript found for {video_id}")
         return None
-    except Exception as e:
-        logger.warning(f"Error fetching transcript for {video_id}: {e}")
-        return None
+    # Anything else - network blip, IP block, consent/age gate - is TRANSIENT and
+    # deliberately propagates. Returning None here would be indistinguishable from
+    # "no captions exist" and the caller would set transcript_failed permanently.
 
 
 def fetch_pending_transcripts():
@@ -74,7 +77,17 @@ def fetch_pending_transcripts():
             content_id, video_id, title = row
             logger.info(f"Fetching transcript for: {title or video_id}")
 
-            result = fetch_transcript(video_id)
+            try:
+                result = fetch_transcript(video_id)
+            except Exception as e:
+                # Leave transcript_failed FALSE so the next run retries this row.
+                # The retry mechanism is the existing pending-rows query - no
+                # counter column and no backoff scheduler needed.
+                # ponytail: a hard IP block makes every run re-attempt every
+                # pending video. Add a per-row attempt counter if that ever costs.
+                logger.warning(f"Transient error for {video_id}, will retry: {e}")
+                failed += 1
+                continue
 
             if result:
                 # Insert transcript

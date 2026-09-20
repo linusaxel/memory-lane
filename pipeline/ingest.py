@@ -41,9 +41,14 @@ def load_config() -> dict:
         return yaml.safe_load(f)
 
 
-def ingest_content():
-    """Ingest content from config into database."""
-    config = load_config()
+def ingest_content(config: dict | None = None):
+    """Ingest content from config into database.
+
+    `config` defaults to config/content.yaml; passing one in keeps the DB write
+    path testable without touching the file.
+    """
+    if config is None:
+        config = load_config()
     sources = config.get("sources", [])
 
     inserted = 0
@@ -54,6 +59,14 @@ def ingest_content():
             source_name = source.get("name", "Unknown")
             platform = source.get("platform", "youtube")
             videos = source.get("videos", [])
+
+            # A `channel:` source discovers its videos instead of listing them.
+            # Local import so yt_dlp stays off the path for yaml-only runs.
+            if source.get("channel"):
+                from crawler.yt_crawler import list_channel_videos
+                videos = videos + list_channel_videos(
+                    source["channel"], limit=source.get("limit")
+                )
 
             for video in videos:
                 url = video.get("url", "")
@@ -83,8 +96,8 @@ def ingest_content():
                 # Insert new content
                 session.execute(
                     text("""
-                        INSERT INTO content (url, platform, platform_id, source_name, title)
-                        VALUES (:url, :platform, :platform_id, :source_name, :title)
+                        INSERT INTO content (url, platform, platform_id, source_name, title, published_at)
+                        VALUES (:url, :platform, :platform_id, :source_name, :title, :published_at)
                     """),
                     {
                         "url": normalized_url,
@@ -92,6 +105,7 @@ def ingest_content():
                         "platform_id": video_id,
                         "source_name": source_name,
                         "title": title,
+                        "published_at": video.get("published_at"),
                     }
                 )
                 logger.info(f"Inserted: {normalized_url}")

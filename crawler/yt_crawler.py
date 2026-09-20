@@ -1,139 +1,85 @@
-import os
-import time
-import re
-import requests
-from urllib.parse import urlparse, parse_qs
+"""YouTube channel discovery.
 
-from youtube_transcript_api import (
-    YouTubeTranscriptApi,
-    TranscriptsDisabled,
-    NoTranscriptFound,
-    VideoUnavailable,
-)
+Discovery only. Transcripts belong to pipeline/transcripts.py and the database;
+this module used to duplicate them into transcripts/*.txt that nothing read,
+which is what made it dead weight.
+
+Why yt-dlp instead of scraping the channel page: as of 2026-09-20 the old
+regex over `"videoId":"..."` in the channel HTML returns **zero** videos for
+every channel tested - YouTube no longer serves that markup to a plain client.
+Rebuilding it on the internal youtubei/v1/browse endpoint means a lot of
+undocumented JSON walking that fails silently by returning a short list.
+yt-dlp is that parser, maintained weekly, with no hard dependencies.
+
+This module must not import `pipeline` - pipeline.ingest imports it.
+"""
+
+import argparse
+import logging
+from datetime import datetime, timezone
+
+from yt_dlp import YoutubeDL
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+YDL_OPTS = {
+    # Metadata only: one request for the channel, not one per video.
+    "extract_flat": "in_playlist",
+    "quiet": True,
+    "no_warnings": True,
+    "socket_timeout": 20,
+    "retries": 3,
+}
 
 
-def extract_video_id(video_url: str) -> str:
+def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict]:
+    """List a channel's videos, newest first.
+
+    Returns [{"url", "title", "published_at"}, ...] shaped for the `videos:`
+    entries that pipeline.ingest already knows how to insert.
     """
-    Extract the video ID from a YouTube URL.
-    Handles URLs like:
-      - https://www.youtube.com/watch?v=VIDEO_ID
-      - https://youtu.be/VIDEO_ID
-    """
-    parsed = urlparse(video_url)
-
-    # Short youtu.be links
-    if parsed.netloc in ("youtu.be", "www.youtu.be"):
-        return parsed.path.lstrip("/")
-
-    # Standard YouTube watch URLs
-    if parsed.path == "/watch":
-        qs = parse_qs(parsed.query)
-        if "v" in qs:
-            return qs["v"][0]
-
-    # Fallback: last path segment (not perfect, but works for many cases)
-    return parsed.path.split("/")[-1]
-
-
-def get_channel_video_urls(channel_url: str):
-    """
-    Scrape the channel /videos page for video IDs.
-    This avoids pytube and works with @handle URLs.
-    """
-    # Normalize to the /videos tab
-    if "/videos" not in channel_url:
+    if not channel_url.rstrip("/").endswith("/videos"):
         channel_url = channel_url.rstrip("/") + "/videos"
 
-    print(f"Fetching video list from: {channel_url}")
-    resp = requests.get(channel_url)
-    resp.raise_for_status()
-    html = resp.text
+    opts = dict(YDL_OPTS)
+    if limit:
+        opts["playlistend"] = limit
 
-    # Find all occurrences of "videoId":"XXXXXXXXXXX"
-    video_ids = set(re.findall(r'"videoId":"([a-zA-Z0-9_-]{11})"', html))
-    video_urls = [f"https://www.youtube.com/watch?v={vid}" for vid in video_ids]
+    with YoutubeDL(opts) as ydl:
+        info = ydl.extract_info(channel_url, download=False)
 
-    print(f"Found {len(video_urls)} unique video IDs")
-    return video_urls
+    videos = []
+    for entry in info.get("entries") or []:
+        if not entry:
+            continue
+        video_id = entry.get("id")
+        if not video_id:
+            continue
+        # Build the canonical URL from the id: the flat `url` field is not always
+        # a watch URL, and pipeline.ingest dedups on the exact normalized string.
+        # ponytail: flat extraction often omits the timestamp. Exact dates for
+        # every video would need a per-video fetch (slow) or the channel RSS
+        # feed (newest 15 only). published_at is nullable - revisit if dates
+        # become load-bearing.
+        ts = entry.get("timestamp") or entry.get("release_timestamp")
+        videos.append({
+            "url": f"https://www.youtube.com/watch?v={video_id}",
+            "title": entry.get("title"),
+            "published_at": datetime.fromtimestamp(ts, timezone.utc) if ts else None,
+        })
 
-
-def fetch_transcript(video_id: str, languages=None):
-    """
-    Fetch transcript for a given video ID using the *new* youtube-transcript-api API.
-
-    Returns:
-        list[dict] with keys 'text', 'start', 'duration'
-        or None if no transcript available.
-    """
-    languages = languages or ["en", "en-US", "en-GB"]
-
-    try:
-        api = YouTubeTranscriptApi()
-        # New API: fetch() instead of get_transcript()
-        fetched = api.fetch(video_id, languages=languages)
-        # Convert to the old-style raw data (list of dicts)
-        return fetched.to_raw_data()
-
-    except TranscriptsDisabled:
-        print(f"  ❌ Transcripts disabled for {video_id}")
-    except NoTranscriptFound:
-        print(f"  ❌ No transcript found for {video_id}")
-    except VideoUnavailable:
-        print(f"  ❌ Video unavailable: {video_id}")
-    except Exception as e:
-        print(f"  ⚠️ Unexpected error fetching transcript for {video_id}: {e}")
-
-    return None
-
-
-def save_transcript_txt(video_id: str, transcript, output_dir="transcripts"):
-    """
-    Save transcript to a text file with simple formatting.
-    Expects transcript to be a list of dicts with 'text', 'start', 'duration'.
-    """
-    os.makedirs(output_dir, exist_ok=True)
-    filepath = os.path.join(output_dir, f"{video_id}.txt")
-
-    with open(filepath, "w", encoding="utf-8") as f:
-        for entry in transcript:
-            start = entry["start"]
-            text = entry["text"]
-            # Format: [start] text
-            line = f"[{start:.2f}] {text}\n"
-            f.write(line)
-
-    print(f"  ✅ Saved transcript to {filepath}")
-
-
-def crawl_channel_transcripts(
-    channel_url: str,
-    output_dir: str = "transcripts",
-    sleep_seconds: float = 0.5,
-):
-    """
-    Main function:
-    - Lists all videos in the channel (via HTML scraping)
-    - Fetches transcripts where available
-    - Saves them as text files
-    """
-    print(f"Loading videos from channel: {channel_url}")
-    video_urls = get_channel_video_urls(channel_url)
-
-    print("\nStarting transcript crawl...\n")
-    for idx, video_url in enumerate(video_urls, start=1):
-        video_id = extract_video_id(video_url)
-        print(f"[{idx}/{len(video_urls)}] Processing video: {video_id} ({video_url})")
-
-        transcript = fetch_transcript(video_id)
-        if transcript:
-            save_transcript_txt(video_id, transcript, output_dir=output_dir)
-
-        # Be polite & avoid hammering servers:
-        time.sleep(sleep_seconds)
-
-    print("\nDone! 🎉")
+    logger.info(f"Found {len(videos)} videos on {channel_url}")
+    return videos
 
 
 if __name__ == "__main__":
-    CHANNEL_URL = "https://www.youtube.com/@TheMountainDispatch"
-    crawl_channel_transcripts(CHANNEL_URL)
+    parser = argparse.ArgumentParser(description="List a YouTube channel's videos.")
+    parser.add_argument("--channel", required=True,
+                        help="Channel URL or @handle page, e.g. https://www.youtube.com/@someone")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Stop after N videos (newest first)")
+    args = parser.parse_args()
+
+    for video in list_channel_videos(args.channel, limit=args.limit):
+        print(f"{video['url']}\t{video['title']}")

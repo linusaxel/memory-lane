@@ -4,6 +4,11 @@
 sources:
   - name: "Tuesdays with Stories"
     platform: youtube
+    # Auto-discover the newest episodes. The hand-listed videos below are kept:
+    # ingest merges both lists and dedups on the normalized URL, so an episode
+    # appearing in both is inserted once. Drop `limit` to ingest the whole channel.
+    channel: "https://www.youtube.com/@TuesdayswithStories"
+    limit: 25
     videos:
       - url: "https://www.youtube.com/watch?v=_SPUkqdle_Q"
       - url: "https://www.youtube.com/watch?v=41q_CYtRPuM"
