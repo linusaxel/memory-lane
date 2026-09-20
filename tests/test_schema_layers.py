@@ -129,7 +129,7 @@ def test_the_migration_agrees_with_the_schema(db_session, db_url):
             "-U",
             "memorylane",
             "-d",
-            "memorylane_test",
+            db_url.rsplit("/", 1)[-1],
             "-v",
             "ON_ERROR_STOP=1",
         ],

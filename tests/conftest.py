@@ -8,13 +8,19 @@ loop/verify.sh starts Docker and exits 2 before pytest runs if it cannot, so
 these fixtures may assume the db container is up.
 """
 
+import os
 import pathlib
 import subprocess
 
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-TEST_DB = "memorylane_test"
+
+# Per-process, because more than one pytest run can share this Postgres - two
+# sessions working the same repo, or xdist workers. A fixed name means one run's
+# session teardown DROPs the database another run is still using, and the second
+# fails with "database memorylane_test does not exist" nowhere near the cause.
+TEST_DB = f"memorylane_test_{os.getpid()}"
 
 
 def _psql(db, sql):
@@ -26,10 +32,25 @@ def _psql(db, sql):
     )
 
 
+def _drop_test_db():
+    """WITH (FORCE) terminates lingering backends, and the result is checked.
+
+    Both halves matter. A plain DROP fails while any connection to the database
+    is still open - which is exactly what happens when the gate runs twice in
+    quick succession, because the previous run's pooled connections have not
+    been reaped yet. The old code discarded the DROP's return code, so the
+    failure was silent and surfaced as CREATE reporting "already exists",
+    erroring every db-marked test. The gate was flaky, not the tests.
+    """
+    dropped = _psql("memorylane", f"DROP DATABASE IF EXISTS {TEST_DB} WITH (FORCE)")
+    if dropped.returncode != 0:
+        pytest.fail(f"could not drop {TEST_DB}: {dropped.stderr}")
+
+
 @pytest.fixture(scope="session")
 def db_url():
     """Create memorylane_test from db/schema.sql once per session."""
-    _psql("memorylane", f"DROP DATABASE IF EXISTS {TEST_DB}")
+    _drop_test_db()
     created = _psql("memorylane", f"CREATE DATABASE {TEST_DB}")
     if created.returncode != 0:
         pytest.fail(f"could not create {TEST_DB}: {created.stderr}")
@@ -46,7 +67,7 @@ def db_url():
         pytest.fail(f"could not load schema: {loaded.stderr}")
 
     yield f"postgresql+psycopg://memorylane:memorylane@localhost:5432/{TEST_DB}"
-    _psql("memorylane", f"DROP DATABASE IF EXISTS {TEST_DB}")
+    _drop_test_db()
 
 
 @pytest.fixture
