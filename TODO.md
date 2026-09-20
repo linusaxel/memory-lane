@@ -315,23 +315,35 @@ card is the one worth screenshotting.
       must emit `happened_at`, and must reject static description ("this
       building was constructed in 1902") and Wikipedia-grade fact as hard as the
       current one rejects hypotheticals. Same JSON contract, same tag vocabulary.
-- [ ] **1.5 Contrast scoring.** Scored once at extraction and stored, never
-      recomputed — extraction is a one-time cost per place, amortized across
-      everyone who stands there. The extractor emits `then` (what stood there)
-      and a 0–1 `contrast_score` with a one-line `contrast_note`. Present-day
-      place identity comes from OSM/Overpass (free, no key) as an enrichment
-      pass; if that proves noisy, the score stays LLM-only and we say so here.
-      A jazz club that is now a bank lobby must outrank a cathedral's founding.
-- [ ] **1.6 Query.** `/v1/memories/nearby` gains a `layer` filter and orders by
-      `contrast_score DESC, distance ASC` within the radius. Fix `meta.total` to
-      respect active filters while in there.
-- [ ] **1.7 Card.** `GET /v1/memories/{id}/card`, server-rendered. One template,
-      three consumers: the app sheet, the Phase 2 widget, and any pasted link.
-      Place name and attribution always visible, legible at thumbnail size,
-      correct in light and dark. Attribution cannot be stripped by a client.
-- [ ] **1.8 Tests.** A behavioural `/v1/memories/nearby` test covering radius,
-      layer filter and contrast order — `test_api_sql.py` only proves the SQL
-      parses.
+- [x] **1.5 Contrast scoring.** `730b786`. A 0–1 `contrast_score` on a banded
+      rubric plus a one-line `contrast_note` naming both sides of the gap. The
+      prompt says **fame is not contrast** and uses the cathedral as the worked
+      low-scoring example. `then` got no column — `contrast_note` carries both
+      sides, so W4-01's schema stands. Scores clamp to [0,1]; anything
+      unparseable stores NULL, and bool is rejected so `True` cannot become 1.0.
+
+      **The OSM/Overpass enrichment pass is deliberately NOT built.** It assumes
+      the coordinates point at the place, and 60% of them are city centroids, so
+      it would confidently describe the wrong street corner. The score is
+      LLM-only, from the source text. Revisit once geocoding is settled.
+- [x] **1.6 Query.** `c4c60be`. Optional `layer`
+      (`historical|friend|stranger`, **422** on anything else — a typo must not
+      quietly serve friend memories to everyone), ordered by
+      `contrast_score DESC NULLS LAST, distance_meters ASC`. `LAYER_FILTER` is a
+      no-op when absent, so one query serves both cases. The response now carries
+      `layer`, `happened_at`, `attribution`, `source_url`, `contrast_score` and
+      `contrast_note`. `meta.total` respects the layer filter; the other count
+      fixes landed in `b3a9189`.
+- [x] **1.7 Card.** `fff53de`, built by the cleanup session.
+      `GET /v1/memories/{id}/card`, server-rendered so a client cannot strip the
+      attribution the legal posture depends on. One template for the app sheet,
+      the Phase 2 widget and any pasted link.
+- [x] **1.8 Tests.** `tests/test_api_nearby.py` in `c4c60be` — the first
+      behavioural coverage this endpoint has ever had, despite being the only one
+      the app calls. Radius exclusion, contrast beating distance, unscored
+      sorting last, layer filtering and its effect on `meta.total`, 422 on a bad
+      layer, and the card fields being served. The NULLS LAST assertion was
+      mutation-checked: remove `NULLS LAST` and it fails.
 
 **Phase 1 is done when** standing anywhere in the chosen Copenhagen
 neighborhood returns at least one historical card, the top card is the highest-
