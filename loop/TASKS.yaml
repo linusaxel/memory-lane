@@ -683,12 +683,21 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
     touches: [api/main.py, tests/test_api_nearby.py]
     depends_on: [W4-05]
-    state: todo
-    attempts: 0
-    commit: null
-    note: "meta.total is wrong on three endpoints today - the count queries ignore active
-      filters and /v1/places/nearby returns page length. Fix it here rather than leaving
-      a fourth caller of a known-wrong number."
+    state: done
+    attempts: 1
+    commit: c4c60be
+    note: |
+      Optional `layer` param, 422 on an unknown value - a typo must not quietly serve
+      friend memories to everyone. Orders by contrast_score DESC NULLS LAST then
+      distance. LAYER_FILTER is a no-op when :layer is NULL, so one query serves both
+      cases rather than doubling the variants again.
+      NULLS LAST is load-bearing, not style: Postgres sorts NULL FIRST under DESC and all
+      224 live memories are unscored, so without it every unscored memory outranks every
+      scored one - the ranking inverted, while still looking plausible.
+      Response now carries layer/happened_at/attribution/source_url/contrast_score/
+      contrast_note, which is what W4-07's card needs.
+      Rebased onto the peer's b3a9189 meta.total work rather than around it; two of their
+      test files needed a `layer` bind added (None = all layers), assertions unchanged.
 
   - id: W4-07
     goal: "GET /v1/memories/{id}/card renders one server-side card. Place name and
@@ -710,12 +719,16 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
     touches: [tests/test_api_nearby.py]
     depends_on: [W4-06]
-    state: todo
-    attempts: 0
-    commit: null
-    note: "tests/test_api_sql.py proves every SQL constant is valid SQL; nothing asserts
-      what the endpoint actually returns. It is the single endpoint mobile/src/api.ts
-      calls, and it has no behavioural coverage at all."
+    state: done
+    attempts: 1
+    commit: c4c60be
+    note: |
+      Radius exclusion, contrast order beating distance, unscored sorting last, layer
+      filtering and its effect on meta.total, 422 on an unknown layer, and the card
+      fields being served. TestClient with get_session monkeypatched at the module, the
+      same shape as the ingest_into fixture.
+      The NULLS LAST assertion was mutation-checked: removing NULLS LAST from the query
+      fails it. A guard that cannot fail is the defect this file exists to avoid.
 
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."

@@ -23,3 +23,5 @@
 2026-09-20T15:20Z t16 W4-04 done  commit=b8e1c23 gate=GREEN HISTORICAL_SYSTEM_PROMPT chosen by source_type; both prompts now forbid claiming exact for a city guess; happened_at/attribution/layer actually persisted; queue path prompt gap marked not fixed
 2026-09-20T15:50Z t17 W4-05 done  commit=730b786 gate=GREEN contrast_score+note, banded rubric, "fame is not contrast"; OSM enrichment deliberately NOT built (60% of coords are centroids, would describe the wrong corner); NULLS LAST needed in W4-06
 2026-09-20T15:55Z t17 hazard -      commit=null gate=GREEN ruff format / IDE watcher rewrites single-line tuple except into python2 syntax in this repo; caught by compileall every time, nothing landed; workaround = exploded tuple w/ trailing comma
+2026-09-20T16:15Z t18 W4-06 done  commit=c4c60be gate=GREEN layer filter (422 on unknown) + contrast_score DESC NULLS LAST; response carries the card fields; rebased onto peer b3a9189
+2026-09-20T16:15Z t18 W4-08 done  commit=c4c60be gate=GREEN first behavioural coverage of /v1/memories/nearby; NULLS LAST assertion mutation-checked
