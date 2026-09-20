@@ -13,7 +13,7 @@ One screen, three modals.
 MapView (full bleed)
 ├─ Marker per coordinate      tap -> MemorySheet.  Four states, see Markers
 ├─ banner  "N memories here"  top centre, non-interactive
-├─ "N within reach"           amber, breathing, tap -> the nearest unlockable
+├─ "N within reach"           seal red, breathing, tap -> the nearest unlockable
 │    or "Nearest locked · 412 m"   muted and still, when none is in reach
 ├─ "Near me"                  bottom centre, recentres on GPS
 └─ LocationPrimer             bottom card, only until permission is settled
@@ -57,55 +57,71 @@ storage survives. A new phone starts empty. Making that portable needs identity
 | `src/Collection.tsx` | what the walking was for |
 | `src/TabBar.tsx` | three tabs, hand-rolled |
 | `src/Settings.tsx` | the "You" tab |
-| `src/Glass.tsx` | frosted chrome. Read its header before using it |
+| `src/theme.ts` | **every colour and font.** Start here |
 | `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
 
 ## Tokens
 
-These are already consistent across `App.tsx` and `MemorySheet.tsx`. Use them
-rather than inventing new values — there is no theme file, so consistency is by
-convention and reviewing eyes.
+**`src/theme.ts` is the only place colours and fonts are defined.** Import from
+it; never write a hex or a font name inline. If you find yourself reaching for a
+Tailwind value or the system font, that is the generic look coming back — see
+[`docs/09-visual-design.md`](../docs/09-visual-design.md) part 5 for why this
+palette exists at all.
 
-**Neutrals** (Tailwind zinc, by eye)
+**Ink and paper.** The app is an archive of anecdotes pinned to coordinates, so
+it is built to look like a field guide rather than a dashboard.
 
-| Hex | Used for |
-|-----|----------|
-| `#18181b` | primary text, "Near me" background |
-| `#27272a` | summary body text |
-| `#3f3f46` | banner text, tag text |
-| `#71717a` | secondary/meta text, Close |
-| `#a1a1aa` | source attribution |
-| `#d4d4d8` | sheet grabber |
-| `#f4f4f5` | tag background, divider |
-| `#fff` | sheet background, text on dark |
+| Token | Hex | Used for |
+|---|---|---|
+| `paper` | `#F7F4EE` | every surface. Not white, and close to the muted map underneath |
+| `paperRaised` | `#FFFDF9` | the rare surface that must lift off the paper |
+| `ink` | `#1C1917` | primary text, solid buttons |
+| `inkSoft` | `#4A443D` | secondary prose |
+| `inkFaint` | `#8A837A` | labels, captions |
+| `rule` | `#E0D9CC` | hairlines. Rules do the work shadows used to |
+| `faded` | `#776E64` | a locked pin out of reach. Dark enough to survive the parchment map |
 
-**Accents**
+**One accent, and it means one thing.**
 
-| Hex | Meaning |
-|-----|---------|
-| `#dc2626` | the watch action only. It reads as "video", and matches the map pins. Do not reuse it for generic emphasis. |
-| `#15803d` | high confidence only |
-| `#f59e0b` | the unlock only — the ring, and the pin for a memory in reach |
-| `#71717a` | a locked pin out of reach. Not `#a1a1aa`: white on that is 2.3:1, under the 3:1 a graphical object needs |
-| `#fde68a` | the filling disc inside the ring |
-| `#b45309` | the glyph inside the ring. Readable on both the empty and the filled state, which a white glyph is not |
+| Token | Hex | Meaning |
+|---|---|---|
+| `seal` | `#C0462B` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
+| `sealSoft` | `#F0D9CE` | the ring filling during a hold |
+| `sealDeep` | `#8F2F1B` | the padlock inside the ring, the count tag on a reachable pin |
 
-**Type scale**: 26/700 (place), 17/26 (summary), 16/600 (primary button),
-15 (close, button), 14/500 (banner), 13 (meta, source), 12 (tag).
+The watch button is **ink**, not red. It was YouTube red back when the map pins
+were red too; that stopped being true, and the accent is spoken for.
 
-**Radii**: 12 primary button · 20–24 floating pill · 12 tag · 3 grabber.
+## Type
 
-**Elevation**: every floating element carries both `shadow*` (iOS) and
-`elevation` (Android). Set both or it looks flat on one platform. Shadows are
-wide and faint — roughly `radius 14–18, opacity 0.1–0.22, y 5–8`. A tight dark
-shadow reads as a sticker; a wide faint one reads as floating.
+Two families, no more.
 
-**Glass**: chrome that floats *over the map* is frosted (`src/Glass.tsx`), at
-82% white — not the 55% the trend suggests, which is unreadable over streets.
-Anything that must be acted on stays solid: the amber reach pill, "Near me".
-Anything not over content stays solid too, which is why the tab bar is not
-glass. Reasoning and sources in [`docs/09-visual-design.md`](../docs/09-visual-design.md).
+| Role | Family | Why |
+|---|---|---|
+| Display, prose | **Fraunces** (`font.display` / `displaySemi` / `prose`) | an old-style serif with its wonk left in. These are stories somebody told, not table rows |
+| Apparatus | **IBM Plex Mono** (`font.mono` / `monoMedium` / `monoBold`) | distances, counts, labels, buttons. A number in a mono reads as a measurement |
+
+**The label voice** is `label` in `theme.ts`: uppercase Plex Mono, 11px, 1.1
+tracking, `inkFaint`. Use it wherever a screen *names* a thing rather than says
+something — section headings, tab labels, meta rows, button text.
+
+**Scale**: 34 display (tab titles) · 30 (place name) · 52 (the distance figure)
+· 19/31 prose (the summary — the hero, there are no images) · 16/25 prose (body)
+· 11–12 mono (everything labelled).
+
+Fonts load in `App.tsx` via `useFonts`, and the app renders `null` until they
+are ready. Two families carry the whole design, so there is no sensible
+half-loaded state.
+
+**Corners are 4px**, not pills.
+
+**Elevation is a rule, not a shadow.** Hierarchy comes from hairlines and
+weight, which is how editorial layouts have always done it and is the shortest
+way out of the stacked-card look. The only two things still casting a shadow are
+"Near me" and the location primer, which genuinely hover over a map; both carry
+`shadow*` (iOS) and `elevation` (Android), because setting one looks flat on the
+other platform.
 
 **The map is muted on purpose.** `mutedStandard` on iOS, a style array on
 Android, points of interest off. The app has one subject and it is the pins.
@@ -232,10 +248,10 @@ unreadable only by tapping it:
 
 | Pin | Meaning |
 |---|---|
-| default red pin | never gated, one memory — a shared centroid, open to everyone |
-| dark badge `#18181b` | never gated, several |
-| grey disc `#71717a` with a padlock | locked, and you are not near enough |
-| amber **ring** `#f59e0b` with a halo | locked, and you are inside the radius |
+| default map pin | never gated, one memory — a shared centroid, open to everyone |
+| badge in `ink` | never gated, several |
+| disc in `faded` with a padlock | locked, and you are not near enough |
+| **ring** in `seal` with a halo | locked, and you are inside the radius |
 
 **The reachable pin is a ring and not a disc**, and that is load-bearing. The
 pin you can open is by definition the pin you are standing on, so the blue user

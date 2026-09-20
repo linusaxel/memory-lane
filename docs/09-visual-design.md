@@ -29,7 +29,7 @@ something rather than adding a colour.
 This was one prop and it changed more than everything else combined. Do the
 cheap structural thing before the expensive decorative one.
 
-## 2. Glass chrome — **kept, but heavily tuned**
+## 2. Glass chrome — **tried, tuned, then removed**
 
 iOS 26's design language ("Liquid Glass") puts controls on floating translucent
 layers so the content leads. Over a map this is not decoration: a solid white
@@ -53,14 +53,22 @@ Two things the trend write-ups do not tell you, both found on screen:
 **Glass only where something is behind it.** The tab bar got the treatment and
 then lost it: it sits *in* the layout, not over the map, so there was nothing to
 blur, and making it an overlay would have covered the Apple Maps attribution
-(rule 7 in UI.md). Solid is correct there.
+(rule 7 in UI.md).
 
-## 3. Depth — **kept, cheaply**
+**And then the rest of it went too** — see part 5. Glassmorphism turns up on
+every list of tells for a generated interface, and having fought it to 82% white
+to keep it readable, what was left was a translucent white pill: the cost of the
+dependency without the effect. `Glass.tsx` is deleted. The two findings above
+survive it, because the next person will reach for `expo-blur` anyway.
+
+## 3. Depth — **kept only where something really floats**
 
 Soft large-radius shadows read as floating; tight dark ones read as stickers.
-Every floating element moved from roughly `radius 8–10 / opacity 0.2 / y 2–3` to
-`radius 14–18 / opacity 0.1–0.22 / y 5–8`. No new dependency, no new component,
-about a dozen changed numbers.
+That still holds for the two things that genuinely hover over the map — the
+"Near me" button and the location primer.
+
+Everywhere else the shadows came off in part 5. Stacked floating cards are the
+card-grid tell, and editorial layouts have always used rules and weight instead.
 
 ## 4. What was rejected
 
@@ -160,3 +168,81 @@ whether the embed has traffic worth owning.
 - [MapLibre React Native — Expo setup](https://maplibre.org/maplibre-react-native/docs/setup/expo/) — config plugin, custom native code
 - [OSMF Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) — why the embed cannot ship as it stands
 - [Stadia Maps pricing](https://stadiamaps.com/pricing/) · [MapTiler pricing](https://www.maptiler.com/cloud/pricing/) · [PMTiles](https://docs.protomaps.com/pmtiles/) and [a real hosting bill](https://blog.pinballmap.com/2024/11/05/protomaps-tile-hosting/)
+
+---
+
+# 5. "Too AI-y, too clean, no personality"
+
+The user's words, and correct. This is the round that matters, so the reasoning
+is worth more than the palette.
+
+## The finding
+
+> The AI-generated look is not a single visual style — it is the absence of
+> decisions.
+
+A designed interface is full of small choices that could have gone another way.
+A generated one applies the safe default everywhere, because the safe default is
+statistically what the model has seen most. Tailwind's `indigo-500` and Inter
+"win" for the same reason: they are the literal centre of the training corpus.
+
+Measured against the community "anti-slop" lists, this app was guilty on five
+counts, and I had personally added two of them that same afternoon:
+
+| Tell | Where it was |
+|---|---|
+| Tailwind's zinc ramp | every colour in the app — `#18181b`, `#71717a`, `#f4f4f5` |
+| The system sans everywhere | every string |
+| Glassmorphism | the banner and the reach pill, added in part 2 |
+| Floating white cards with soft shadows | banner, primer, pills, sheet |
+| `amber-500` as the accent | the entire unlock mechanic |
+
+Notably, none of that was *bad*. It was fine, and it was nobody's decision.
+
+## The direction, derived from the product
+
+The fix is not a different trend — that is the same mistake with a new default.
+It is to have a reason.
+
+This app is an archive of anecdotes pinned to coordinates: things people said
+happened somewhere, which you have to physically go and stand in to read. Its
+real-world neighbours are the **field guide**, the **historical plaque** and the
+**passport stamp**. Not the SaaS dashboard, which is what it looked like.
+
+So:
+
+- **Paper, not white.** `#F7F4EE`, which also happens to sit close to the muted
+  Apple map underneath, so the sheets read as cut from the same stock.
+- **Ink, not grey.** Warm near-blacks and sepias.
+- **A serif carries the prose**, because these are stories somebody told.
+  Fraunces — an old-style serif with its wonk left in, so it has an opinion,
+  which is the entire requirement.
+- **A mono carries the apparatus.** Distances, counts, labels, tab names. A
+  number in a mono reads as a *measurement*; the same number in the body face
+  reads as more prose. This is what makes the app feel like an instrument.
+- **One accent: stamp red** `#C0462B`. Everything openable wears it and nothing
+  else does. Deliberately not `amber-500`.
+- **Rules and weight, not shadows and cards.** Editorial layouts have always
+  done hierarchy this way, and it is the shortest route out of the card tell.
+  Shadows survive only on the two things that actually hover over a map.
+
+A knock-on: freeing the accent freed the watch button from YouTube red, which
+only made sense back when the map pins were red too. It is ink now.
+
+## What this cost
+
+Two Google Fonts packages and `expo-font`, a `src/theme.ts`, and about an hour
+of restyling. `src/theme.ts` is arguably overdue on its own — UI.md previously
+admitted consistency was held together "by convention and reviewing eyes".
+
+## The rule to keep
+
+Every value in `theme.ts` should be one somebody chose. If a future change
+reaches for a Tailwind hex or the system font, that is the tell coming back.
+
+## Sources
+
+- [Why AI Design Looks Generic](https://superdesign.dev/blog/why-ai-design-looks-generic) — "the absence of decisions"
+- [The Purple Gradient Problem](https://dev.to/james_anderson_h/the-purple-gradient-problem-why-ai-ui-all-looks-alike-and-how-to-fix-it-3j65) — why the defaults are the statistical centre
+- [SaaS UI Looks AI-Generated? 7 Fixes](https://www.saasui.design/blog/saas-ui-looks-ai-generated) — the tells, including the banned-pattern list that glassmorphism is on
+- [Expo: Fonts](https://docs.expo.dev/develop/user-interface/fonts/) and [expo/google-fonts](https://github.com/expo/google-fonts) — how the two families load
