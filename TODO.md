@@ -112,14 +112,19 @@ Docker build layers, and two pipeline-stage headings. Nothing to refactor.
 
 ---
 
-## Design questions — cross-cutting, sequencing NOT ratified
+## Phase 0 — Design questions, ahead of Phase 1
 
-**Provenance:** seeded 2026-09-20 by the cleanup session, which proposed running
-this *before* Phase 1 as a "Phase 0". The findings below are real and stay. The
-reordering does not stand on an agent's say-so — the brief reserves build-order
-changes for the user, and Phase 1 remains the approved next phase. Raised in
-Open questions; until it is answered, treat these as cross-cutting items to
-resolve *during* Phase 1, not a gate in front of it.
+**Provenance:** seeded 2026-09-20 by the cleanup session. The sequencing was
+briefly reverted on the grounds that build-order is the user's call, which is
+the right rule — but in this case the user had already made the call. Verbatim
+instruction to that session: *"i wanna document some user experience flows and
+build towards that, add to the todo if not already there - top of list."*
+
+That is the ratification. Phase 0 sits ahead of Phase 1 because the user put it
+there, not because an agent argued for it. D.1 and D.2 are delivered; D.3–D.5
+are open and the user has not yet said whether Phase 1 waits on them — so treat
+them as *first in line*, not as a hard gate that blocks W4-02 from proceeding in
+parallel.
 
 **The argument for doing them early, which is a good one:** every phase changes
 what a person sees, and the repo had no written UI guidance at all — no tokens,
@@ -150,7 +155,7 @@ Open, and blocking a clean Phase 1:
       that exists never fires. The realistic Copenhagen case before the
       historical corpus lands is zero memories nearby — and right now that looks
       identical to the app being broken.
-- [ ] **0.5 Write F3 properly** once the historical source is chosen (W4-00).
+- [ ] **D.5 Write F3 properly** once the historical source is chosen (W4-00).
       F3 is the product; it should not be specified by whatever the ingestion
       happens to produce.
 
@@ -312,11 +317,11 @@ on them. Full detail in `loop/STATE.md`.
 
 ## Open questions
 
-- **Should the design questions run before Phase 1?** The cleanup session
-  proposed it as a "Phase 0" and makes a fair case: three backends behind an
-  undesigned surface gets you three backends and no product. But the brief
-  reserves build-order changes, so this is the user's call, not an agent's.
-  Unanswered, Phase 1 proceeds and the design items ride alongside it.
+- ~~**Should the design questions run before Phase 1?**~~ **Answered.** The
+  user asked for it at the top of the list in so many words. Phase 0 is first.
+  What is *still* open is narrower: does Phase 1 **wait** on D.3–D.5, or run
+  alongside them? Nobody has asked that, and the two are compatible — W4-02
+  (semantic dedup) is backend work that D.3 informs but does not block.
 - **Does a pin represent a place or a memory?** Today a memory, so Gotham Comedy
   Club is six overlapping pins at one address. Place-level pins fix that but
   change what tapping means. Shapes both W4-02 and the layer UI.
