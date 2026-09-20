@@ -70,7 +70,18 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
         except json.JSONDecodeError:
             # If we can't parse, assume it might have memories (safer)
             return True
+    except (
+        anthropic.NotFoundError,
+        anthropic.AuthenticationError,
+        anthropic.PermissionDeniedError,
+    ) as e:
+        # A bad model ID or key fails identically on every chunk, forever. Failing
+        # open here is what let CLASSIFIER_MODEL sit on a nonexistent ID with the
+        # pre-filter silently disabled and every chunk billed to Sonnet.
+        raise RuntimeError(f"CLASSIFIER_MODEL={CLASSIFIER_MODEL!r} is not usable: {e}") from e
     except Exception as e:
+        # Transient (429, 5xx, connection): over-extracting one chunk beats
+        # dropping it, so keep failing open.
         logger.warning(f"Classifier error, assuming has memories: {e}")
         return True
 
