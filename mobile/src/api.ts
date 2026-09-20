@@ -62,6 +62,27 @@ function hasCoordinates(m: Memory): m is LocatedMemory {
  */
 export const REQUEST_TIMEOUT_MS = 8000;
 
+async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const forwardAbort = () => controller.abort();
+  signal?.addEventListener('abort', forwardAbort);
+
+  try {
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', forwardAbort);
+  }
+}
+
 async function get<T>(path: string, params: URLSearchParams, signal?: AbortSignal): Promise<T> {
   // AbortSignal.timeout and AbortSignal.any are not reliably present on Hermes,
   // so the timer is wired by hand and the caller's signal is forwarded onto it.
@@ -103,16 +124,43 @@ export async function fetchNearby(
 }
 
 /**
- * Ask the server to open one memory. It re-checks the distance itself and can
- * still say no - GPS moves between the press and the request - so a result that
- * comes back still locked is a refusal, not a success.
+ * Ask the server to open one memory, and to remember that it opened.
+ *
+ * POST because it creates something. The server re-checks the distance itself
+ * and can still say no - GPS moves between the press and the request - so a
+ * result that comes back still locked is a refusal, not a success, and nothing
+ * is recorded.
  */
-export async function unlockMemory(id: number, at: Coordinates): Promise<LocatedMemory | null> {
-  const memory = await get<Memory>(
-    `/v1/memories/${id}`,
-    new URLSearchParams({ at_lat: String(at.lat), at_lng: String(at.lng) }),
-  );
+export async function unlockMemory(
+  id: number,
+  at: Coordinates,
+  device: string,
+): Promise<LocatedMemory | null> {
+  const memory = await post<Memory>(`/v1/memories/${id}/unlock`, {
+    device,
+    lat: at.lat,
+    lng: at.lng,
+  });
   return !memory.locked && hasCoordinates(memory) ? memory : null;
+}
+
+/**
+ * Everything this device has earned, from the server.
+ *
+ * Returned unlocked regardless of where you are now, which is the whole reason
+ * it exists: the local copy is the offline cache, and this is what survives the
+ * local copy being cleared.
+ */
+export async function fetchUnlocked(
+  device: string,
+  signal?: AbortSignal,
+): Promise<LocatedMemory[]> {
+  const body = await get<{ memories?: Memory[] }>(
+    '/v1/unlocks',
+    new URLSearchParams({ device }),
+    signal,
+  );
+  return (body.memories ?? []).filter(hasCoordinates);
 }
 
 /** Where the corpus actually is, for a map that has nothing on it. */

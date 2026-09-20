@@ -28,6 +28,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   fetchHotspots,
   fetchNearby,
+  fetchUnlocked,
   unlockMemory,
   type Coordinates,
   type Hotspot,
@@ -40,12 +41,14 @@ import { isSameQuery, regionToRadiusKm, type Region } from './src/region.ts';
 import {
   inUnlockOrder,
   loadUnlocked,
+  mergeUnlocked,
   primerWasDismissed,
   rememberPrimerDismissed,
   rememberUnlocked,
   type Unlocked,
 } from './src/unlocked.ts';
 import Collection from './src/Collection.tsx';
+import { deviceId } from './src/device.ts';
 import Elsewhere from './src/Elsewhere.tsx';
 import Settings from './src/Settings.tsx';
 import { color, font } from './src/theme.ts';
@@ -251,6 +254,17 @@ export default function App() {
     loadUnlocked().then((stored) => {
       if (mounted.current) setUnlocked(stored);
     });
+
+    // The device's collection, from the server. The local copy loads first and
+    // renders immediately - this is what makes it survive the local copy being
+    // cleared, and it is allowed to be slow or to fail entirely.
+    deviceId()
+      .then((id) => fetchUnlocked(id))
+      .then(async (earned) => {
+        if (!mounted.current || earned.length === 0) return;
+        setUnlocked(await mergeUnlocked(earned));
+      })
+      .catch(() => {});
     primerWasDismissed().then((dismissed) => {
       if (mounted.current && dismissed) setPrimerDismissed(true);
     });
@@ -309,7 +323,7 @@ export default function App() {
       setUnlocking(true);
       setUnlockError(null);
       try {
-        const opened = await unlockMemory(memory.id, at);
+        const opened = await unlockMemory(memory.id, at, await deviceId());
         if (!mounted.current) return;
         if (opened) {
           setUnlocked(await rememberUnlocked(unlocked, opened));

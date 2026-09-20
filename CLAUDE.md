@@ -90,11 +90,27 @@ python -m api.main
 ## Database Tables
 
 ```
-content       → Source videos (url, platform_id, status flags)
+content       → Source videos (url, platform_id, publisher, status flags)
 transcripts   → JSONB segments with timestamps
 places        → Locations with PostGIS coordinates
 memories      → Extracted experiences linking content to places
+devices       → An installation's self-issued UUID. Not a user
+unlocks       → (device, memory) — who has earned what
 ```
+
+**There are no users.** `devices` is an opaque UUID the app generates for itself
+and keeps in the keychain; the server never issues one. That is enough to make a
+collection durable and to give a future sign-in something to attach to, and not
+enough to identify anybody. Real accounts are Phase 3.
+
+What survives what, because this is the question that matters and the answer is
+not uniform:
+
+| | Survives app data cleared | Survives reinstall | Survives a new phone |
+|---|---|---|---|
+| Local copy (AsyncStorage) | no | no | no |
+| Device id (keychain) | yes | usually | no |
+| Server unlocks | yes, via the id | usually | no |
 
 Key queries:
 ```sql
@@ -173,7 +189,10 @@ FastAPI server with PostGIS proximity queries:
   - Gated memories always come back locked here, with no summary, tags or source.
     This endpoint never unlocks. See "Proximity unlock" below.
 - `GET /v1/memories/search?q=coffee&lat=X&lng=Y&radius_km=50` - Full-text search across summaries and place names (location optional)
-- `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory. This is the unlock read
+- `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory, gated
+- `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
+  and the only route that records one. POST because it creates something
+- `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
 - `GET /v1/places/{id}` - Get single place details
 - `GET /v1/places/{id}/memories` - Get all memories for a place

@@ -51,7 +51,8 @@
           "locationWhenInUsePermission": "Memory Lane uses your location to show travel memories recorded near you."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ]
   }
 }

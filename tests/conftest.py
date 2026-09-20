@@ -78,9 +78,23 @@ def db_session(db_url):
 
     engine = create_engine(db_url)
     with engine.connect() as conn:
-        conn.execute(
-            text("TRUNCATE content, transcripts, places, memories RESTART IDENTITY CASCADE")
-        )
+        # Discovered rather than listed. The list used to be hardcoded, and the
+        # first table added after it was written (devices) leaked between tests:
+        # unlocks was reached through a cascade from memories, devices was not,
+        # and a test asserting "no devices yet" passed alone and failed in a
+        # file. A list that has to be maintained is one somebody will not.
+        #
+        # spatial_ref_sys belongs to PostGIS and lives in public; truncating it
+        # takes the coordinate systems with it.
+        tables = conn.execute(
+            text("""
+                SELECT string_agg(quote_ident(tablename), ', ')
+                FROM pg_tables
+                WHERE schemaname = 'public' AND tablename <> 'spatial_ref_sys'
+            """)
+        ).scalar()
+        if tables:
+            conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
         conn.commit()
 
     session = sessionmaker(bind=engine)()

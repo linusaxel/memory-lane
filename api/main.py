@@ -7,7 +7,7 @@ from math import asin, cos, radians, sin, sqrt
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 
 from api.card import router as card_router
@@ -386,6 +386,19 @@ WHERE
     AND {WITHIN}
 """
 
+# One device's collection, newest first. Joined through MEMORY_COLUMNS so an
+# unlocked memory serializes exactly like a nearby one - the app should not have
+# to know which endpoint a memory arrived from.
+DEVICE_UNLOCKS_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    u.unlocked_at
+{MEMORY_JOIN}
+JOIN unlocks u ON u.memory_id = m.id
+WHERE u.device_id = CAST(:device_id AS uuid)
+ORDER BY u.unlocked_at DESC
+LIMIT :limit
+"""
+
 # Where the corpus actually is, for somebody standing where it is not. The app
 # is a map of nothing outside New York, and "No memories here yet" is true and
 # useless - this is what turns it into somewhere to go.
@@ -568,12 +581,24 @@ on a map near you.</p>
 
 <h2>Location</h2>
 <p>If you grant location permission, your device's approximate coordinates are sent to
-our servers solely to look up memories near you. Coordinates are used for that request
-and are not stored, profiled, or linked to you.</p>
+our servers to look up memories near you, and to check that you are close enough to
+unlock one. Coordinates are used for that request and are not stored, profiled, or
+linked to you &mdash; an unlock records which memory was opened and when, never where
+you were standing.</p>
 
 <h2>Accounts</h2>
 <p>There are none. We do not ask for your name, email, or phone number, and we do not
-collect device identifiers for advertising.</p>
+collect advertising identifiers.</p>
+
+<h2>Your unlocked memories</h2>
+<p>To keep the memories you unlock, your copy of the app generates a random identifier
+for itself the first time you unlock something, and sends it with that unlock. We store
+the identifier and which memories it has opened, so your collection survives the app
+losing its local data.</p>
+<p>It is created on your device, not issued by us. It is not linked to your name, your
+phone, your advertising identifier, or any other app, and it tells us nothing except
+that one installation of Memory Lane unlocked a particular memory. Deleting the app
+discards it, and the collection it refers to becomes unreachable.</p>
 
 <h2>What we do keep</h2>
 <p>Our servers keep standard technical request logs (timestamp, coarse IP, endpoint)
@@ -892,6 +917,87 @@ class Stats(BaseModel):
     places_with_coordinates: int
     processed_videos: int
     hotspots: list[Hotspot]
+
+
+class UnlockRequest(BaseModel):
+    """Everything an unlock needs, and nothing that identifies a person.
+
+    device is a UUID the app generated for itself. The server never issues one,
+    so it never hands an identifier to a client that did not already have it.
+    """
+
+    device: str = Field(pattern=r"^[0-9a-fA-F-]{36}$")
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+
+
+class UnlocksResponse(BaseModel):
+    memories: list[Memory]
+
+
+@app.post("/v1/memories/{memory_id}/unlock", response_model=Memory)
+def unlock_memory(memory_id: int, body: UnlockRequest):
+    """Earn a memory, and record that it was earned.
+
+    POST rather than GET because it creates something. The gate is the same one
+    every read goes through - this endpoint cannot return a summary the plain
+    read would have withheld - but it is the only one that writes an unlock, and
+    unlocking is the one thing in this product that is supposed to be an act.
+    """
+    with get_session() as session:
+        row = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id}).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Memory not found")
+
+        at = Coordinates(lat=body.lat, lng=body.lng)
+        memory = row_to_memory(row, at, include_distance=False)
+        if memory.locked:
+            # Say how far off, rather than only refusing: the app turns this
+            # into "try a few steps nearer".
+            if memory.place.coordinates is not None:
+                memory.distance_meters = meters_between(at, memory.place.coordinates)
+            return memory
+
+        session.execute(
+            text("""
+                INSERT INTO devices (id, last_seen) VALUES (CAST(:id AS uuid), CURRENT_TIMESTAMP)
+                ON CONFLICT (id) DO UPDATE SET last_seen = CURRENT_TIMESTAMP
+            """),
+            {"id": body.device},
+        )
+        session.execute(
+            text("""
+                INSERT INTO unlocks (device_id, memory_id)
+                VALUES (CAST(:device AS uuid), :memory_id)
+                ON CONFLICT (device_id, memory_id) DO NOTHING
+            """),
+            {"device": body.device, "memory_id": memory_id},
+        )
+
+    return memory
+
+
+@app.get("/v1/unlocks", response_model=UnlocksResponse)
+def get_unlocks(
+    device: str = Query(..., pattern=r"^[0-9a-fA-F-]{36}$"),
+    limit: int = Query(200, ge=1, le=500),
+):
+    """What this device has earned.
+
+    Returned unlocked regardless of where the caller is now: re-locking
+    something somebody stood in the rain for is a punishment for leaving. The
+    device id is the proof, and it is proof of nothing except that this app
+    installation was there.
+    """
+    with get_session() as session:
+        rows = session.execute(
+            text(DEVICE_UNLOCKS_QUERY), {"device_id": device, "limit": limit}
+        ).fetchall()
+
+    # row_to_memory would lock these again - it has no idea they were earned.
+    return UnlocksResponse(
+        memories=[row_to_memory(row, row_coordinates(row), include_distance=False) for row in rows]
+    )
 
 
 @app.get("/v1/stats", response_model=Stats)

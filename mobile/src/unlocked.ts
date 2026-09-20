@@ -70,3 +70,29 @@ export async function rememberPrimerDismissed(): Promise<void> {
     // Being asked once more is a smaller harm than a crash on a full disk.
   }
 }
+
+/** Fold the server's copy of the collection into this device's.
+ *
+ * Read-modify-write against storage rather than against React state, because
+ * this runs at launch alongside loadUnlocked and the two would otherwise race
+ * to overwrite each other.
+ *
+ * Local wins on conflict: it has an unlocked_at from the moment it was earned,
+ * and the server's row may have been written by a retry. Neither copy is ever
+ * dropped - the point of this is that nothing you walked to disappears.
+ */
+export async function mergeUnlocked(fromServer: LocatedMemory[]): Promise<Unlocked> {
+  const current = await loadUnlocked();
+  const merged: Unlocked = { ...current };
+
+  for (const memory of fromServer) {
+    if (!merged[memory.id]) merged[memory.id] = { ...memory, unlocked_at: Date.now() };
+  }
+
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(merged));
+  } catch {
+    // Same bargain as rememberUnlocked: in memory now, gone next launch.
+  }
+  return merged;
+}

@@ -87,6 +87,25 @@ CREATE TABLE memories (
 );
 
 -- Indexes
+-- Who has earned what. No accounts: a device claims an opaque UUID it generated
+-- itself, which is enough to make a collection durable and to give a future
+-- sign-in something to attach to, and not enough to identify anybody.
+CREATE TABLE devices (
+    id UUID PRIMARY KEY,
+    first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE unlocks (
+    device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    memory_id INTEGER NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- Unlocking twice must not move the date: the first time is the earned one.
+    PRIMARY KEY (device_id, memory_id)
+);
+
+CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
+
 CREATE INDEX idx_memories_place ON memories(place_id);
 CREATE INDEX idx_memories_content ON memories(content_id);
 CREATE INDEX idx_places_coordinates ON places USING GIST(coordinates);
