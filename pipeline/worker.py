@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 def run_worker(queues: list[str] = None):
-    """Run an RQ worker listening on specified queues."""
     if queues is None:
         # Default: listen to all extraction queues (priority order)
         queues = [QUEUE_AGGREGATE, QUEUE_EXTRACT, QUEUE_CLASSIFY]

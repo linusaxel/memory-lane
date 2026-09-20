@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 def get_places_stats():
-    """Get statistics about geocoded places."""
     with get_session() as session:
         stats = session.execute(
             text("""
@@ -31,7 +30,6 @@ def get_places_stats():
 
 
 def list_places_without_coordinates():
-    """List places that don't have coordinates."""
     with get_session() as session:
         places = session.execute(
             text("""
@@ -48,7 +46,6 @@ def list_places_without_coordinates():
 
 
 def update_place_coordinates(place_id: int, lat: float, lng: float, status: str = "manual"):
-    """Manually update coordinates for a place."""
     with get_session() as session:
         session.execute(
             text("""

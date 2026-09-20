@@ -36,7 +36,6 @@ def get_session():
 
 
 def check_connection():
-    """Verify database connection is working."""
     with get_session() as session:
         result = session.execute(text("SELECT 1"))
         return result.scalar() == 1

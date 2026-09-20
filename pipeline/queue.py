@@ -14,7 +14,6 @@ _redis_conn = None
 
 
 def get_redis() -> Redis:
-    """Get Redis connection (singleton)."""
     global _redis_conn
     if _redis_conn is None:
         _redis_conn = Redis.from_url(REDIS_URL)
@@ -22,7 +21,6 @@ def get_redis() -> Redis:
 
 
 def get_queue(name: str = "default") -> Queue:
-    """Get RQ queue by name."""
     return Queue(name, connection=get_redis())
 
 

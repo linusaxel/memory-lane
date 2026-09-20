@@ -86,11 +86,6 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
         return True
 
 
-# ============================================================================
-# RQ TASKS
-# ============================================================================
-
-
 def task_enqueue_chunks(content_id: int):
     """
     Task: Fetch transcript and enqueue each chunk for classification.
@@ -121,7 +116,6 @@ def task_enqueue_chunks(content_id: int):
 
     logger.info(f"[content:{content_id}] Split '{title}' into {total_chunks} chunks")
 
-    # Initialize progress tracking in Redis
     redis = get_redis()
     redis.hset(
         f"extraction:{content_id}",
@@ -134,7 +128,6 @@ def task_enqueue_chunks(content_id: int):
         },
     )
 
-    # Enqueue each chunk for classification
     classify_queue = get_queue(QUEUE_CLASSIFY)
     for i, chunk in enumerate(chunks):
         classify_queue.enqueue(
@@ -164,7 +157,6 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
 
     if has_memories:
         redis.hincrby(f"extraction:{content_id}", "has_memories", 1)
-        # Enqueue for full extraction
         extract_queue = get_queue(QUEUE_EXTRACT)
         extract_queue.enqueue(
             task_extract_chunk,
@@ -175,7 +167,6 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
             job_timeout="5m",
         )
     else:
-        # No memories, just mark as done
         redis.hincrby(f"extraction:{content_id}", "extracted", 1)
         _check_extraction_complete(content_id, total_chunks)
 
@@ -194,7 +185,6 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
 
     redis = get_redis()
 
-    # Store memories for this chunk
     if memories:
         redis.hset(f"extraction:{content_id}:memories", str(chunk_index), json.dumps(memories))
 
@@ -227,7 +217,6 @@ def task_aggregate_memories(content_id: int):
     redis = get_redis()
     redis.hset(f"extraction:{content_id}", "status", "aggregating")
 
-    # Collect all memories from Redis
     memories_hash = redis.hgetall(f"extraction:{content_id}:memories")
     all_memories = []
 
@@ -236,13 +225,11 @@ def task_aggregate_memories(content_id: int):
 
     logger.info(f"[content:{content_id}] Collected {len(all_memories)} raw memories")
 
-    # Merge and filter
     merged = merge_nearby_memories(all_memories)
     filtered = filter_low_confidence(merged)
 
     logger.info(f"[content:{content_id}] After merge: {len(merged)}, after filter: {len(filtered)}")
 
-    # Save to database
     with get_session() as session:
         save_memories(session, content_id, filtered)
 
@@ -250,7 +237,6 @@ def task_aggregate_memories(content_id: int):
             text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": content_id}
         )
 
-    # Update Redis status
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}
     )
@@ -261,11 +247,6 @@ def task_aggregate_memories(content_id: int):
     logger.info(f"[content:{content_id}] Extraction complete: {len(filtered)} memories saved")
 
     return {"content_id": content_id, "memories_saved": len(filtered)}
-
-
-# ============================================================================
-# BATCH OPERATIONS
-# ============================================================================
 
 
 def enqueue_all_pending():

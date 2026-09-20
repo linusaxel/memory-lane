@@ -27,12 +27,10 @@ def extract_youtube_id(url: str) -> str | None:
 
 
 def normalize_youtube_url(video_id: str) -> str:
-    """Return canonical YouTube URL format."""
     return f"https://www.youtube.com/watch?v={video_id}"
 
 
 def load_config() -> dict:
-    """Load content configuration from YAML file."""
     if not CONFIG_PATH.exists():
         raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
 
@@ -80,7 +78,6 @@ def ingest_content(config: dict | None = None):
                     logger.warning(f"Unsupported platform: {platform}")
                     continue
 
-                # Check if already exists (idempotent)
                 existing = session.execute(
                     text("SELECT id FROM content WHERE url = :url"), {"url": normalized_url}
                 ).fetchone()
@@ -90,7 +87,6 @@ def ingest_content(config: dict | None = None):
                     skipped += 1
                     continue
 
-                # Insert new content
                 session.execute(
                     text("""
                         INSERT INTO content (url, platform, platform_id, source_name, title, published_at)

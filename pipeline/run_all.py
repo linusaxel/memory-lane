@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 def print_header(text: str):
-    """Print a section header."""
     width = 50
     print(f"\n{'=' * width}")
     print(f"  {text}")
@@ -29,7 +28,6 @@ def print_header(text: str):
 
 
 def print_summary(results: dict):
-    """Print final summary of pipeline run."""
     print_header("PIPELINE SUMMARY")
 
     total_time = results.get("total_time", 0)
@@ -64,7 +62,6 @@ def run_pipeline(skip_ingest=False, skip_transcripts=False, skip_extract=False, 
     results = {}
     start_time = time.time()
 
-    # Stage 1: Ingest
     if not skip_ingest:
         print_header("STAGE 1: INGEST")
         if dry_run:
@@ -82,7 +79,6 @@ def run_pipeline(skip_ingest=False, skip_transcripts=False, skip_extract=False, 
     else:
         print_header("STAGE 1: INGEST (skipped)")
 
-    # Stage 2: Transcripts
     if not skip_transcripts and not results.get("error"):
         print_header("STAGE 2: TRANSCRIPTS")
         if dry_run:
@@ -100,7 +96,6 @@ def run_pipeline(skip_ingest=False, skip_transcripts=False, skip_extract=False, 
     elif skip_transcripts:
         print_header("STAGE 2: TRANSCRIPTS (skipped)")
 
-    # Stage 3: Extract
     if not skip_extract and not results.get("error"):
         print_header("STAGE 3: EXTRACT")
         if dry_run:

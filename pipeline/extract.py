@@ -78,17 +78,14 @@ def chunk_transcript(
         if not text:
             continue
 
-        # Check if we need to start a new chunk
         if start >= chunk_start_time + chunk_seconds:
             if current_chunk_lines:
                 chunks.append("\n".join(current_chunk_lines))
-            # Start new chunk with overlap
             chunk_start_time = start - overlap_seconds
             current_chunk_lines = []
 
         current_chunk_lines.append(f"[{start:.1f}] {text}")
 
-    # Don't forget the last chunk
     if current_chunk_lines:
         chunks.append("\n".join(current_chunk_lines))
 
@@ -122,12 +119,10 @@ def extract_memories_from_chunk(client: anthropic.Anthropic, chunk: str) -> list
 
         content = response.content[0].text
 
-        # Parse JSON from response
         try:
             data = json.loads(content)
             return data.get("memories", [])
         except json.JSONDecodeError:
-            # Try to extract JSON from markdown code blocks
             if "```json" in content:
                 json_str = content.split("```json")[1].split("```")[0].strip()
                 data = json.loads(json_str)
@@ -156,7 +151,6 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
     if not memories:
         return []
 
-    # Sort by place_query and timestamp
     sorted_memories = sorted(
         memories, key=lambda m: (m.get("place_query", ""), m.get("timestamp_start", 0))
     )
@@ -194,24 +188,20 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
 
 
 def filter_low_confidence(memories: list[dict]) -> list[dict]:
-    """Remove low confidence memories."""
     return [m for m in memories if m.get("confidence", "low") in ("high", "medium")]
 
 
 def precision_to_meters(precision: str) -> int:
-    """Convert precision string to meters."""
     mapping = {"exact": 50, "street": 200, "neighborhood": 1000, "city": 10000}
     return mapping.get(precision, 200)
 
 
 def save_memories(session, content_id: int, memories: list[dict]):
-    """Save memories and places to database."""
     for mem in memories:
         lat = mem.get("lat")
         lng = mem.get("lng")
         has_coords = lat is not None and lng is not None
 
-        # Insert or get place (with LLM coordinates if available)
         if has_coords:
             place_result = session.execute(
                 text("""
@@ -251,7 +241,6 @@ def save_memories(session, content_id: int, memories: list[dict]):
             # Norway" remain separate places. Normalizing would mean changing this
             # SELECT and idx_places_place_query together - if they ever disagree,
             # place_id comes back None and the memory is silently dropped below.
-            # Place already exists, fetch its id
             existing = session.execute(
                 text("SELECT id FROM places WHERE place_query = :query"),
                 {"query": mem.get("place_query", mem.get("place_name", "Unknown"))},
@@ -262,7 +251,6 @@ def save_memories(session, content_id: int, memories: list[dict]):
             logger.warning(f"Could not get place_id for: {mem.get('place_name')}")
             continue
 
-        # Insert memory
         session.execute(
             text("""
                 INSERT INTO memories (place_id, content_id, timestamp_start, timestamp_end, summary, tags, extraction_confidence)
@@ -281,7 +269,6 @@ def save_memories(session, content_id: int, memories: list[dict]):
 
 
 def extract_all_pending():
-    """Extract memories from all pending transcripts."""
     if not ANTHROPIC_API_KEY:
         logger.error("ANTHROPIC_API_KEY not set")
         return {"extracted": 0, "failed": 0}
@@ -291,7 +278,6 @@ def extract_all_pending():
     failed = 0
 
     with get_session() as session:
-        # Get content with transcripts ready for extraction
         pending = session.execute(
             text(f"SELECT c.id, c.title, t.segments {PENDING_EXTRACTION}")
         ).fetchall()
@@ -319,7 +305,6 @@ def extract_all_pending():
                         logger.error(str(e))
                         return {"extracted": extracted, "failed": failed, "error": "billing"}
 
-                # Merge and filter
                 merged = merge_nearby_memories(all_memories)
                 filtered = filter_low_confidence(merged)
 
@@ -327,10 +312,8 @@ def extract_all_pending():
                     f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering"
                 )
 
-                # Save to database
                 save_memories(session, content_id, filtered)
 
-                # Mark as extracted
                 session.execute(
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),
                     {"id": content_id},

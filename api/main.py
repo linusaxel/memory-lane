@@ -28,11 +28,6 @@ app.add_middleware(
 )
 
 
-# ============================================================================
-# MODELS
-# ============================================================================
-
-
 class Coordinates(BaseModel):
     lat: float
     lng: float
@@ -115,10 +110,6 @@ class PlaceDetail(BaseModel):
     memory_count: int
     tags: list[str]
 
-
-# ============================================================================
-# QUERIES
-# ============================================================================
 
 # The 14 columns every memory-shaped response needs. row_to_memory reads the row
 # by name, so a query is free to append distance, rank or created_at.
@@ -292,11 +283,6 @@ WHERE
 """
 
 
-# ============================================================================
-# HELPERS
-# ============================================================================
-
-
 def row_coordinates(row) -> Coordinates | None:
     """A place with no coordinates is filtered out of most queries, not all."""
     if row.lat is None or row.lng is None:
@@ -305,7 +291,6 @@ def row_coordinates(row) -> Coordinates | None:
 
 
 def row_to_memory(row, include_distance: bool = True) -> Memory:
-    """Convert database row to Memory model."""
     coords = row_coordinates(row)
 
     timestamp_url = row.content_url
@@ -336,10 +321,6 @@ def row_to_memory(row, include_distance: bool = True) -> Memory:
         confidence=row.extraction_confidence or "medium",
     )
 
-
-# ============================================================================
-# ENDPOINTS
-# ============================================================================
 
 PRIVACY_HTML = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
@@ -419,7 +400,6 @@ def get_nearby_memories(
 
         rows = result.fetchall()
 
-        # Get total count
         count_result = session.execute(
             text(COUNT_QUERY), {"lat": lat, "lng": lng, "radius_meters": radius_meters}
         )
@@ -459,7 +439,6 @@ def search_memories(
     Optionally filter by location using lat/lng parameters.
     """
     with get_session() as session:
-        # Location filter provided
         if lat is not None and lng is not None:
             radius_meters = radius_km * 1000
             result = session.execute(
@@ -483,7 +462,6 @@ def search_memories(
             center = None
             radius_km = None
 
-        # Get total count
         count_result = session.execute(text(SEARCH_COUNT_QUERY), {"query": q})
         total = count_result.scalar() or 0
 
@@ -499,7 +477,6 @@ def search_memories(
 
 @app.get("/v1/memories/{memory_id}", response_model=Memory)
 def get_memory(memory_id: int):
-    """Get a single memory by ID."""
     with get_session() as session:
         result = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id})
         row = result.fetchone()
