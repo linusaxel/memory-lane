@@ -58,6 +58,7 @@ storage survives. A new phone starts empty. Making that portable needs identity
 | `src/TabBar.tsx` | three tabs, hand-rolled |
 | `src/Settings.tsx` | the "You" tab |
 | `src/theme.ts` | **every colour and font.** Start here |
+| `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
 

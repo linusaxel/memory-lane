@@ -41,6 +41,7 @@ SELECT
     m.timestamp_start,
     p.name AS place_name,
     p.precision_meters,
+    c.source_name,
     ST_Y(p.coordinates::geometry) AS lat,
     ST_X(p.coordinates::geometry) AS lng,
     (
@@ -78,9 +79,21 @@ def format_happened(happened_at, precision: str | None) -> str | None:
 def credit_line(row) -> str:
     """Never empty. An uncredited card is the one thing this endpoint exists to
     prevent, so fall back through every field that could name a source before
-    admitting we do not know."""
+    admitting we do not know.
+
+    The publisher outranks the episode title. "Tuesdays with Stories" tells a
+    reader who is talking; "Ep 512 - A Sauna Too Far" does not, and a card that
+    leaves the screen is read by people who have no idea what either is.
+    """
     if row.attribution:
         return row.attribution
+
+    source = getattr(row, "source_name", None)
+    if source and row.content_title:
+        return f"{source} — {row.content_title}"
+    if source:
+        return source
+
     if row.content_title:
         return row.content_title
     if row.content_url:

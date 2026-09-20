@@ -139,11 +139,34 @@ Return {"memories": []} if no memories found. An empty list is the right answer
 for a page of architectural description, and is always better than an invention."""
 
 
-USER_PROMPT_TEMPLATE = """Extract memories from this transcript chunk:
+USER_PROMPT_TEMPLATE = """{context}Extract memories from this transcript chunk:
 
 {chunk}
 
 Return only valid JSON."""
+
+# Who is talking, as far as anything knows. A transcript is a wall of unattributed
+# speech, so with no context the model had nobody to name and wrote "the speaker"
+# in over half the corpus. The show and episode title are usually enough to
+# recover the names - "Tuesdays with Stories with Mark Normand and Joe List" puts
+# them in the transcript's own vocabulary.
+SOURCE_CONTEXT_TEMPLATE = """This transcript is from {source}{title}.
+
+Use it to work out who is speaking. If the transcript or this context names the
+people, use their names. If neither does, write the sentence without a subject
+label - never "the speaker", "the host" or "the narrator".
+
+"""
+
+
+def source_context(source_name: str | None, title: str | None) -> str:
+    """The lead-in for a chunk, or nothing when we know nothing about the source."""
+    if not source_name:
+        return ""
+    return SOURCE_CONTEXT_TEMPLATE.format(
+        source=source_name,
+        title=f', episode "{title}"' if title else "",
+    )
 
 
 def chunk_transcript(
@@ -208,14 +231,22 @@ class ModelUnusableError(Exception):
 
 
 def extract_memories_from_chunk(
-    client: anthropic.Anthropic, chunk: str, system_prompt: str = SYSTEM_PROMPT
+    client: anthropic.Anthropic,
+    chunk: str,
+    system_prompt: str = SYSTEM_PROMPT,
+    context: str = "",
 ) -> list[dict]:
     try:
         response = client.messages.create(
             model=EXTRACTION_MODEL,
             max_tokens=2000,
             system=system_prompt,
-            messages=[{"role": "user", "content": USER_PROMPT_TEMPLATE.format(chunk=chunk)}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk),
+                }
+            ],
         )
 
         content = response.content[0].text
@@ -457,13 +488,16 @@ def extract_all_pending():
 
     with get_session() as session:
         pending = session.execute(
-            text(f"SELECT c.id, c.title, t.segments, c.source_type {PENDING_EXTRACTION}")
+            text(
+                "SELECT c.id, c.title, t.segments, c.source_type, c.source_name "
+                f"{PENDING_EXTRACTION}"
+            )
         ).fetchall()
 
         logger.info(f"Found {len(pending)} videos pending extraction")
 
         for row in pending:
-            content_id, title, segments_json, source_type = row
+            content_id, title, segments_json, source_type, source_name = row
             logger.info(f"Extracting memories from: {title or content_id}")
 
             try:
@@ -478,7 +512,10 @@ def extract_all_pending():
                     logger.info(f"  Processing chunk {i + 1}/{len(chunks)}")
                     try:
                         memories = extract_memories_from_chunk(
-                            client, chunk, prompt_for(source_type)
+                            client,
+                            chunk,
+                            prompt_for(source_type),
+                            source_context(source_name, title),
                         )
                         all_memories.extend(memories)
                     except BillingError as e:

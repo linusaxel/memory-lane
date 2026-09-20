@@ -33,6 +33,41 @@ YDL_OPTS = {
 }
 
 
+def channel_metadata(channel_url: str) -> dict:
+    """Who published this. {"name", "url", "icon_url"} - any value may be None.
+
+    A memory reads as an anonymous assertion without it: "somebody got lost in
+    the medina" is a rumour, and "Tuesdays with Stories, 12:04" is a citation.
+    The channel is also the only reliable answer to "who is the speaker?", since
+    transcripts frequently never say.
+
+    The avatar is picked by aspect ratio rather than by position. YouTube
+    returns the banner and the avatar in one `thumbnails` list with no field
+    saying which is which; the banner is ~6:1 and the avatar is square, so the
+    square one is the avatar. Taking the largest, or the last, gets the banner.
+    """
+    if not channel_url.rstrip("/").endswith("/videos"):
+        channel_url = channel_url.rstrip("/") + "/videos"
+
+    # One video is enough to resolve the channel, and asking for zero makes
+    # yt-dlp walk the whole playlist.
+    with YoutubeDL({**YDL_OPTS, "playlistend": 1}) as ydl:
+        info = ydl.extract_info(channel_url, download=False) or {}
+
+    square = [
+        t
+        for t in (info.get("thumbnails") or [])
+        if t.get("width") and t.get("height") and t["width"] == t["height"]
+    ]
+    avatar = max(square, key=lambda t: t["width"]) if square else None
+
+    return {
+        "name": info.get("channel") or info.get("uploader"),
+        "url": info.get("channel_url") or info.get("uploader_url"),
+        "icon_url": avatar["url"] if avatar else None,
+    }
+
+
 def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict]:
     """List a channel's videos, newest first.
 

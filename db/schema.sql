@@ -9,7 +9,13 @@ CREATE TABLE content (
     -- newspaper, registry, oral_history), unlike memories.layer which is
     -- closed. 'video' rows are the only ones with a transcript.
     source_type VARCHAR(20) NOT NULL DEFAULT 'video',
+    -- Who published this, not what it is: the channel, paper or archive. A
+    -- memory without it is an anonymous assertion, and the channel is also the
+    -- only reliable answer to "who is the speaker" when the transcript never
+    -- says. source_url is the channel; memories.source_url is the item.
     source_name VARCHAR(255),
+    source_url VARCHAR(1024),
+    source_icon_url VARCHAR(1024),
     title VARCHAR(512),
     published_at TIMESTAMP,
     transcript_fetched BOOLEAN DEFAULT FALSE,

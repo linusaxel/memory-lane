@@ -5,6 +5,13 @@ const BASE = API_BASE;
 
 export type Coordinates = { lat: number; lng: number };
 
+/** Who published the video this memory came out of. */
+export type Source = {
+  name: string;
+  url: string | null;
+  icon_url: string | null;
+};
+
 export type ContentRef = {
   id: number;
   title: string | null;
@@ -12,6 +19,8 @@ export type ContentRef = {
   timestamp_start: number;
   /** Already a deep link to the right second - open it as-is. */
   timestamp_url: string;
+  /** Null for the handful of videos whose channel the config never names. */
+  source: Source | null;
 };
 
 export type Memory = {

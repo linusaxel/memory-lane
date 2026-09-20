@@ -51,12 +51,26 @@ class Place(BaseModel):
     precision_meters: int
 
 
+class Source(BaseModel):
+    """Who published the thing this memory came out of.
+
+    Not the memory's own attribution (`Memory.attribution`, which credits an
+    archive for an archival item) - this is the channel or publication, and it
+    is what stops a summary reading as the app's own assertion.
+    """
+
+    name: str
+    url: str | None = None
+    icon_url: str | None = None
+
+
 class ContentRef(BaseModel):
     id: int
     title: str | None
     url: str
     timestamp_start: float
     timestamp_url: str
+    source: Source | None = None
 
 
 class Memory(BaseModel):
@@ -168,6 +182,9 @@ MEMORY_COLUMNS = f"""
     c.id as content_id,
     c.title as content_title,
     c.url as content_url,
+    c.source_name,
+    c.source_url as source_channel_url,
+    c.source_icon_url,
     {COORDINATE_IS_UNIQUE}"""
 
 MEMORY_JOIN = """
@@ -380,6 +397,20 @@ WHERE
 """
 
 
+def row_source(row) -> Source | None:
+    """None only when nothing knows who published it - four hand-listed videos
+    from channels the config never names. A name with no link is still worth
+    showing; a link with no name is not."""
+    name = getattr(row, "source_name", None)
+    if not name:
+        return None
+    return Source(
+        name=name,
+        url=getattr(row, "source_channel_url", None),
+        icon_url=getattr(row, "source_icon_url", None),
+    )
+
+
 def row_coordinates(row) -> Coordinates | None:
     """A place with no coordinates is filtered out of most queries, not all."""
     if row.lat is None or row.lng is None:
@@ -480,6 +511,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
             url=row.content_url,
             timestamp_start=row.timestamp_start,
             timestamp_url=timestamp_url,
+            source=row_source(row),
         ),
         tags=row.tags or [],
         confidence=row.extraction_confidence or "medium",

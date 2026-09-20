@@ -57,12 +57,18 @@ def ingest_content(config: dict | None = None):
             platform = source.get("platform", "youtube")
             videos = source.get("videos", [])
 
-            # A `channel:` source discovers its videos instead of listing them.
+            # A `channel:` source discovers its videos instead of listing them,
+            # and is also where the publisher's name, link and avatar come from.
             # Local import so yt_dlp stays off the path for yaml-only runs.
+            channel = {}
             if source.get("channel"):
-                from crawler.yt_crawler import list_channel_videos
+                from crawler.yt_crawler import channel_metadata, list_channel_videos
 
                 videos = videos + list_channel_videos(source["channel"], limit=source.get("limit"))
+                channel = channel_metadata(source["channel"])
+                # The config's name wins: it is what a human chose to call this,
+                # and YouTube's has an exclamation mark in it.
+                source_name = source.get("name") or channel.get("name") or source_name
 
             for video in videos:
                 url = video.get("url", "")
@@ -89,14 +95,22 @@ def ingest_content(config: dict | None = None):
 
                 session.execute(
                     text("""
-                        INSERT INTO content (url, platform, platform_id, source_name, title, published_at)
-                        VALUES (:url, :platform, :platform_id, :source_name, :title, :published_at)
+                        INSERT INTO content (
+                            url, platform, platform_id, source_name, source_url,
+                            source_icon_url, title, published_at
+                        )
+                        VALUES (
+                            :url, :platform, :platform_id, :source_name, :source_url,
+                            :source_icon_url, :title, :published_at
+                        )
                     """),
                     {
                         "url": normalized_url,
                         "platform": platform,
                         "platform_id": video_id,
                         "source_name": source_name,
+                        "source_url": channel.get("url"),
+                        "source_icon_url": channel.get("icon_url"),
                         "title": title,
                         "published_at": video.get("published_at"),
                     },
@@ -106,6 +120,46 @@ def ingest_content(config: dict | None = None):
 
     logger.info(f"Ingestion complete: {inserted} inserted, {skipped} skipped")
     return {"inserted": inserted, "skipped": skipped}
+
+
+def refresh_sources(config: dict | None = None):
+    """Backfill source_url and source_icon_url on rows ingested before they existed.
+
+    Separate from ingest_content because it is the only part that must touch the
+    network for rows that are already present, and because re-running ingest
+    would skip every one of them as existing.
+    """
+    from crawler.yt_crawler import channel_metadata
+
+    if config is None:
+        config = load_config()
+
+    updated = 0
+    with get_session() as session:
+        for source in config.get("sources", []):
+            if not source.get("channel"):
+                continue
+            channel = channel_metadata(source["channel"])
+            if not channel.get("url"):
+                logger.warning(f"No channel metadata for {source['channel']}")
+                continue
+
+            result = session.execute(
+                text("""
+                    UPDATE content
+                    SET source_url = :url, source_icon_url = :icon
+                    WHERE source_name = :name
+                """),
+                {
+                    "url": channel["url"],
+                    "icon": channel.get("icon_url"),
+                    "name": source.get("name") or channel.get("name"),
+                },
+            )
+            logger.info(f"{source.get('name')}: {result.rowcount} rows")
+            updated += result.rowcount
+
+    return {"updated": updated}
 
 
 def ingest_records(records, source_name, source_type="archive", platform="text"):
@@ -188,5 +242,18 @@ def load_records(path):
 
 
 if __name__ == "__main__":
+    import argparse
+
     logging.basicConfig(level=logging.INFO)
-    ingest_content()
+    parser = argparse.ArgumentParser(description="Load content from config/content.yaml.")
+    parser.add_argument(
+        "--refresh-sources",
+        action="store_true",
+        help="only backfill publisher name, link and avatar on rows already ingested",
+    )
+    args = parser.parse_args()
+
+    if args.refresh_sources:
+        refresh_sources()
+    else:
+        ingest_content()

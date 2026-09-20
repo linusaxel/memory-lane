@@ -116,6 +116,19 @@ matches the pins drawn.
 
 ## F2 · Read one memory and go to its source — **Implemented**
 
+**Who said this.** Every unlocked memory ends with the channel that published
+it: avatar, name, episode title, tappable through to YouTube. Without it a
+summary reads as the app's own assertion, and the app was not there.
+
+It is also the answer to a question the summaries kept raising and never
+answering. Over half of them open with *"the speaker"* — and one of them reads
+"The speaker performed at **Joe List's** comedy showcase", where Joe List is one
+of the two hosts. Nothing on screen said who anybody was. The channel says.
+
+The extraction prompt now receives the same two facts, so it should stop needing
+the label at all: see `source_context()` in `pipeline/extract.py`. Until a run
+happens, the app carries the attribution the summaries lack.
+
 **Who:** someone who sees a pin near a place they know.
 
 1. Tap a pin → sheet slides up.

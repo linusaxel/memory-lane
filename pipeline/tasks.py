@@ -22,6 +22,7 @@ from pipeline.extract import (
     merge_nearby_memories,
     prompt_for,
     save_memories,
+    source_context,
 )
 from pipeline.queue import (
     QUEUE_AGGREGATE,
@@ -94,6 +95,22 @@ def _source_type(redis, content_id: int) -> str:
     if raw is None:
         return "video"
     return raw.decode() if isinstance(raw, bytes) else str(raw)
+
+
+def _source_and_title(content_id: int) -> tuple[str | None, str | None]:
+    """Who published this and which episode, for the prompt's context line.
+
+    Read from the database rather than the Redis hash: the hash would need both
+    fields written at enqueue time and would then be stale for anything already
+    queued, while these two columns are always right and this runs once per
+    chunk against a primary key.
+    """
+    with get_session() as session:
+        row = session.execute(
+            text("SELECT source_name, title FROM content WHERE id = :id"),
+            {"id": content_id},
+        ).fetchone()
+    return (row.source_name, row.title) if row else (None, None)
 
 
 def task_enqueue_chunks(content_id: int):
@@ -202,7 +219,13 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
     # is the one thing third-party material must not get. Defaults to video so a
     # hash written before this field existed still picks the old prompt.
     source_type = _source_type(redis, content_id)
-    memories = extract_memories_from_chunk(client, chunk_text, prompt_for(source_type))
+    # Same context the sequential path builds, from the same two fields.
+    memories = extract_memories_from_chunk(
+        client,
+        chunk_text,
+        prompt_for(source_type),
+        source_context(*_source_and_title(content_id)),
+    )
 
     if memories:
         redis.hset(f"extraction:{content_id}:memories", str(chunk_index), json.dumps(memories))

@@ -14,6 +14,7 @@ import {
 
 import type { Coordinates, LocatedMemory } from './api.ts';
 import Padlock from './Padlock.tsx';
+import SourceLine from './SourceLine.tsx';
 import { metersBetween } from './region.ts';
 import { color, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
@@ -217,10 +218,14 @@ export default function MemorySheet({
                   </View>
                 )}
 
-                {memory.content?.title && (
-                  <Text style={styles.source} numberOfLines={2}>
-                    {memory.content.title}
-                  </Text>
+                {memory.content?.source ? (
+                  <SourceLine source={memory.content.source} title={memory.content.title} />
+                ) : (
+                  memory.content?.title && (
+                    <Text style={styles.source} numberOfLines={2}>
+                      {memory.content.title}
+                    </Text>
+                  )
                 )}
               </Animated.View>
             </ScrollView>

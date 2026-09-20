@@ -32,6 +32,8 @@ class Row:
             contrast_note=None,
             timestamp_start=12.0,
             place_name="Katz's Delicatessen",
+            precision_meters=50,
+            source_name=None,
             content_title="Tuesdays with Stories #500",
             content_url="https://www.youtube.com/watch?v=abc",
         )
@@ -134,3 +136,25 @@ def test_only_youtube_gets_a_time_offset():
 def test_an_archival_source_url_is_linked_untouched():
     html = render_card(Row(source_url="https://stadsarkiv.dk/item/9", timestamp_start=42.0))
     assert 'href="https://stadsarkiv.dk/item/9"' in html
+
+
+def test_the_publisher_outranks_the_episode_title():
+    """A card that leaves the screen is read by people who know neither, and
+    "Tuesdays with Stories" says who is talking where an episode title does not."""
+    row = Row(source_name="Tuesdays with Stories", content_title="Ep 512 - A Sauna Too Far")
+    assert credit_line(row) == "Tuesdays with Stories — Ep 512 - A Sauna Too Far"
+
+
+def test_the_publisher_alone_is_enough():
+    assert credit_line(Row(source_name="Tuesdays with Stories", content_title=None)) == (
+        "Tuesdays with Stories"
+    )
+
+
+def test_an_archive_attribution_still_outranks_the_publisher():
+    row = Row(attribution="Museum of Copenhagen", source_name="Tuesdays with Stories")
+    assert credit_line(row) == "Museum of Copenhagen"
+
+
+def test_a_row_with_no_publisher_falls_through_as_before():
+    assert credit_line(Row(source_name=None, content_title="Ep 3")) == "Ep 3"
