@@ -433,7 +433,6 @@ tasks:
     depends_on: [W3-12]
     state: doing
     attempts: 1
-    attempts: 0
     commit: null
     note: |
       Borderline: iOS SIMULATOR builds need no signing identity and no Apple account, so
@@ -448,6 +447,13 @@ tasks:
       Watch button opens YouTube at the right second.
       Android CANNOT be verified locally - no SDK, no adb. It is covered by W3-09's
       manifest assertions and then by the first EAS build.
+      ATTEMPT 1 (2026-09-20, commit aab8d65 unparked this): FAILED, not on our code.
+      xcodebuild: 'Unable to find a destination matching the provided destination
+      specifier ... iOS 26.5 is not installed.' Xcode 26.6 is installed but only the
+      iOS 18.3 runtime is present, and Xcode 26 will not build against it. The human
+      must install the iOS 26.x simulator runtime (Xcode > Settings > Components)
+      before re-running. mobile/ios/ in the worktree is a stale prebuild - rm -rf it
+      first. Nothing in the app code is implicated.
 
   - id: W3-14
     goal: "Production iOS .ipa and Android .aab built by EAS"
@@ -503,6 +509,143 @@ tasks:
       If this is a PERSONAL (non-organization) Play account, production access is gated
       behind CLOSED TESTING WITH 12 TESTERS FOR 14 CONTINUOUS DAYS, no matter how
       finished the app is. Start that the day step 6 of W3-14 produces an .aab.
+
+  # -- W4 -- historical layer, Copenhagen (Phase 1 of TODO.md) ---------------
+  # TODO.md at the repo root is the roadmap and the source of truth. These are
+  # its Phase 1 items made executable. If the two disagree, TODO.md wins.
+
+  - id: W4-00
+    goal: "Choose the first historical source (arkiv.dk / Mediestream / setlist.fm).
+      W4-03 ships a source-agnostic path and a hand-loaded fixture, but W4-04..W4-06
+      cannot be finished against a fixture - they need a real corpus."
+    verify: "MANUAL"
+    touches: [TODO.md]
+    state: blocked
+    blocked_on: human
+    gate: NEEDS_DECISION
+    attempts: 0
+    commit: null
+    note: |
+      The brief ranks arkiv.dk / Koebenhavns Stadsarkiv first, but it has no public API,
+      so it means scraping and unclear reuse terms. setlist.fm is ranked third yet is a
+      documented REST API, dense across a city, and the strongest contrast material we
+      have (a 400-cap room that is now a bank lobby). Mediestream sits between them.
+      Deviating from the brief's stated priority order needs a human decision, and the
+      reuse terms for arkiv.dk and Mediestream are unknown - confirm we may quote at all
+      before ingesting either. Recorded in TODO.md -> Open questions.
+
+  - id: W4-01
+    goal: "Schema carries layer, event date, per-memory attribution and contrast score:
+      memories.layer (historical|friend|stranger, NOT NULL default historical),
+      memories.happened_at + happened_precision, memories.attribution + source_url,
+      memories.contrast_score + contrast_note, content.source_type. Applies clean to an
+      empty DB and migrates the live one without changing the memory count."
+    verify: "venv/bin/python -m pytest -q tests/test_schema_layers.py"
+    touches: [db/schema.sql, db/migrations/, tests/test_schema_layers.py]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Additive only - reuse the existing four tables, no new entity model. Follow
+      001_places_unique.sql: memories.place_id is ON DELETE CASCADE, so any row-deleting
+      migration must guard with NOT EXISTS. Live DB is 224 memories / 194 places."
+
+  - id: W4-02
+    goal: "Semantic place dedup: normalise place_query (casefold, strip venue-type
+      stopwords) and collapse places whose coordinates fall within their combined
+      precision_meters. 'Oslo Norway' and 'comedy club Oslo Norway' become one place."
+    verify: "venv/bin/python -m pytest -q tests/test_extract_places.py"
+    touches: [pipeline/extract.py, db/migrations/, tests/test_extract_places.py]
+    depends_on: [W4-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "001_places_unique.sql fixed EXACT duplicates only. This is the remainder, and
+      it is a prerequisite for contrast scoring and map clustering, not a nicety. No
+      embeddings until the normalise-and-radius pass measurably falls short."
+
+  - id: W4-03
+    goal: "A source-agnostic ingestion entry point beside ingest_content() that takes
+      {text, source_url, attribution, happened_at, address?}, writes content with
+      source_type != 'video', bypasses transcripts entirely, and reuses save_memories()
+      unchanged. Ships with one hand-loaded Copenhagen fixture."
+    verify: "venv/bin/python -m pytest -q tests/test_ingest_text.py"
+    touches: [pipeline/ingest.py, tests/test_ingest_text.py, tests/fixtures/]
+    depends_on: [W4-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "ingest_content() today warns and skips any platform != youtube. Do not widen
+      that loop - add a second entry point, so the YouTube path keeps its 10 DB-backed
+      tests. The concrete source adapter is W4-00 and is NOT part of this task."
+
+  - id: W4-04
+    goal: "A second extraction prompt for archival text: emits happened_at, and rejects
+      static description ('constructed in 1902') and Wikipedia-grade fact as hard as the
+      current prompt rejects hypotheticals. Same JSON contract, same tag vocabulary."
+    verify: "venv/bin/python -m pytest -q tests/test_extract_historical.py"
+    touches: [pipeline/extract.py, tests/test_extract_historical.py]
+    depends_on: [W4-03]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "SYSTEM_PROMPT is tuned for personal anecdote (WHO / WHAT HAPPENED / THE VIBE)
+      and is wrong for third-party material. Use FakeAnthropic - this task must not spend
+      credits. Quality against a real API is W1-09, a human gate."
+
+  - id: W4-05
+    goal: "Contrast scoring: the extractor emits `then` (what stood there) plus a 0-1
+      contrast_score and a one-line contrast_note, scored ONCE at extraction and stored.
+      A jazz club that is now a bank lobby outranks a cathedral's founding date."
+    verify: "venv/bin/python -m pytest -q tests/test_contrast.py"
+    touches: [pipeline/extract.py, tests/test_contrast.py]
+    depends_on: [W4-04]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Never re-extract - extraction is a one-time cost per place, amortized across
+      everyone who stands there. Present-day place identity is assumed to come from
+      OSM/Overpass (free, no key) as an enrichment pass; if that is noisy the score stays
+      LLM-only and TODO.md gets updated to say so."
+
+  - id: W4-06
+    goal: "/v1/memories/nearby gains a layer filter, orders by contrast_score DESC then
+      distance ASC within the radius, and meta.total respects active filters."
+    verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
+    touches: [api/main.py, tests/test_api_nearby.py]
+    depends_on: [W4-05]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "meta.total is wrong on three endpoints today - the count queries ignore active
+      filters and /v1/places/nearby returns page length. Fix it here rather than leaving
+      a fourth caller of a known-wrong number."
+
+  - id: W4-07
+    goal: "GET /v1/memories/{id}/card renders one server-side card. Place name and
+      attribution always visible, legible at thumbnail size, correct in light and dark.
+      One template consumed by the app sheet, the Phase 2 widget and any pasted link."
+    verify: "venv/bin/python -m pytest -q tests/test_card.py"
+    touches: [api/main.py, tests/test_card.py]
+    depends_on: [W4-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Geo-gated content cannot spread through feeds - it is invisible to anyone not
+      standing there - so screenshots are the only distribution channel. Rendering server
+      side means a client cannot strip the attribution the legal posture depends on."
+
+  - id: W4-08
+    goal: "A behavioural test of /v1/memories/nearby: radius boundary, layer filter, and
+      contrast ordering, against real PostGIS."
+    verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
+    touches: [tests/test_api_nearby.py]
+    depends_on: [W4-06]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "tests/test_api_sql.py proves every SQL constant is valid SQL; nothing asserts
+      what the endpoint actually returns. It is the single endpoint mobile/src/api.ts
+      calls, and it has no behavioural coverage at all."
 
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."

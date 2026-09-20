@@ -1,16 +1,26 @@
-# LOOP STATE — FINAL. All buildable work is complete.
+# LOOP STATE — W0–W3 complete. A new roadmap (W4) is landing.
 
 ```
-tick:     12 (final)
+tick:     12 (last autonomous tick)
 updated:  2026-09-20
 branch:   loop/autopilot   (~20 commits ahead of main, NEVER PUSHED)
-gate:     GREEN — 103 tests, ~3s
-status:   TERMINATED — 28 done, 5 parked on human gates, 0 buildable remaining
+gate:     GREEN
+status:   33 tasks - 28 done, 4 parked on human gates, 1 doing (W3-13)
 ```
 
-The loop stopped itself because every remaining task needs something it is
-forbidden to do: spend money, deploy, run a cloud build, or log into a store
-account. **Nothing below is blocked on code.**
+**This file said TERMINATED. That was wrong on two counts and is corrected here.**
+
+1. W3-13 was unparked by commit `aab8d65` and is `state: doing`, so the loop no
+   longer self-terminates at STEP 2 — it would pick W3-13 up. Its one attempt
+   failed on a missing iOS 26.5 simulator runtime, not on our code; the details
+   are now recorded in its `note`. In practice it is a human gate like the rest.
+2. The W0–W3 milestone is finished, but the project is not. **`TODO.md` at the
+   repo root is now the roadmap and the source of truth** — historical / friend
+   / stranger layers, Copenhagen launch, contrast scoring. Phase 1 arrives here
+   as W4-xx tasks. This file stays the loop's orientation doc; it does not
+   compete with TODO.md.
+
+Everything below still holds: the W0–W3 human checklist is real and unchanged.
 
 ## What works right now
 
@@ -32,8 +42,12 @@ cd mobile && npx expo start               # the app
 
 ### 1. W1-09 · `API_CREDITS` — check extraction quality (~$0.10)
 
+**There is no `--limit` flag.** `python -m pipeline.extract` runs
+`extract_all_pending()` and bills every pending video (25 of them). To spend a
+few cents instead, push one video through the queue path:
 ```bash
-source venv/bin/activate && python -m pipeline.extract --limit 1
+source venv/bin/activate
+python -m pipeline.enqueue --video <content_id>   # then --status <content_id>
 ```
 Then eyeball the result:
 ```sql
@@ -46,7 +60,8 @@ pastrami"), not generic ("they visited a deli"). If they are flat, tune
 
 **While you are in there:** the model IDs are a generation stale —
 `claude-sonnet-4-20250514` → `claude-sonnet-5` and `claude-haiku-3-20240307` →
-`claude-haiku-4-5` (`.env.example`, `extract.py:19`, `tasks.py:36-37`). Also
+`claude-haiku-4-5`. CLASSIFIER_MODEL is now fixed; EXTRACTION_MODEL is still the
+deprecated ID. Both live in `pipeline/config.py` now, not in the modules. Also
 add `cache_control` to the system prompt, which is resent for every chunk.
 
 ### 2. W2-08 · `DEPLOY` — Railway (~$5/mo)
