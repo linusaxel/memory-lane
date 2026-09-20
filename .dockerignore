@@ -1,0 +1,27 @@
+# Build context hygiene: venv/ alone is ~300MB
+venv/
+venv.broken-py314/
+.venv/
+.git/
+.github/
+.idea/
+.vscode/
+.claude/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Not needed to serve the API
+docs/
+examples/
+tests/
+mobile/
+loop/
+transcripts/
+*.log
+*.md
+
+# Never ship secrets
+.env
