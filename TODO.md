@@ -248,10 +248,13 @@ on them. Full detail in `loop/STATE.md`.
       resent for every chunk with no `cache_control`.
 - [ ] **`DEPLOY`** — Railway, ~$5/mo. Not Fly: Fly's managed Postgres has no
       PostGIS. **Also unblocks Phase 2**, which needs a public HTTPS origin.
-- [ ] **`W3-13`** — look at the app in the iOS Simulator. Free, ~5 min, but
-      currently failing on a missing iOS 26.5 simulator runtime (Xcode 26.6 is
-      installed, only the 18.3 runtime is present). Install the runtime and
-      `rm -rf mobile/ios` first — it is a stale prebuild.
+- [ ] **`W3-13`** — look at the app in the iOS Simulator. Free, ~5 min. The
+      old blocker is gone: the iOS 26.5 runtime is now installed and a simulator
+      is booted. **Partially observed, not done.** The app has been run in Expo
+      Go, which exercises the JS layer — map, pins, sheet, fetch — but Expo Go
+      shows *its own* permission-prompt copy, not ours, and exercises no native
+      manifest. Closing this needs a real build:
+      `cd mobile && rm -rf ios && npx expo run:ios`.
 - [ ] **`EAS_BUILD`** — three `PLACEHOLDER` tripwires to replace first; the
       bundle id is irreversible once submitted.
 - [ ] **`STORE_ACCOUNT`** — Apple $99/yr, Play $25. If the Play account is

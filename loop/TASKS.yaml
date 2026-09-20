@@ -448,12 +448,23 @@ tasks:
       Android CANNOT be verified locally - no SDK, no adb. It is covered by W3-09's
       manifest assertions and then by the first EAS build.
       ATTEMPT 1 (2026-09-20, commit aab8d65 unparked this): FAILED, not on our code.
-      xcodebuild: 'Unable to find a destination matching the provided destination
-      specifier ... iOS 26.5 is not installed.' Xcode 26.6 is installed but only the
-      iOS 18.3 runtime is present, and Xcode 26 will not build against it. The human
-      must install the iOS 26.x simulator runtime (Xcode > Settings > Components)
-      before re-running. mobile/ios/ in the worktree is a stale prebuild - rm -rf it
-      first. Nothing in the app code is implicated.
+      xcodebuild could not find a destination - iOS 26.5 was not installed, only the
+      18.3 runtime, and Xcode 26 will not build against it.
+      STATUS 2026-09-20, later: that blocker is GONE. `xcrun simctl list runtimes` now
+      shows iOS 26.5 (23F77) installed, and an iPhone 16 Pro Max (iOS 18.3) is booted.
+      PARTIALLY OBSERVED, NOT DONE. A parallel session reports running the app on that
+      simulator, but `xcrun simctl listapps booted` shows only host.exp.Exponent
+      (Expo Go) - com.PLACEHOLDER.memorylane is NOT installed. So the app ran in Expo
+      Go, not as a native build, and that cannot close this task:
+        - the permission prompt shown is Expo Go's own Info.plist string, NOT the copy
+          in app.json that W3-07 asserts. The one thing this task most needs to confirm
+          is the one thing Expo Go cannot show.
+        - no native manifest is exercised: bundle identifier, blockedPermissions, the
+          Android package, the Google Maps key. All still offline assertions only.
+      What Expo Go DID plausibly verify: the map renders, pins appear, the sheet opens,
+      the fetch against a local API works. Treat that as the JS layer passing.
+      To actually close this: `cd mobile && rm -rf ios && EXPO_PUBLIC_API_URL=... npx
+      expo run:ios`, which produces a real binary with our Info.plist.
 
   - id: W3-14
     goal: "Production iOS .ipa and Android .aab built by EAS"
