@@ -1,9 +1,9 @@
-/** Memories this device has earned.
+/** What this device remembers between launches.
  *
- * The server re-locks you the moment you walk away, which is correct of the
- * server and wrong of the product: re-locking something somebody stood in the
- * rain for punishes them for leaving. So the unlocked copy lives on the device,
- * and the map merges it over whatever the API returns.
+ * Memories it has earned, mostly. The server re-locks you the moment you walk
+ * away, which is correct of the server and wrong of the product: re-locking
+ * something somebody stood in the rain for punishes them for leaving. So the
+ * unlocked copy lives here, and the map merges it over whatever the API returns.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { LocatedMemory } from './api.ts';
 
 const KEY = 'memorylane.unlocked.v1';
+const PRIMER_KEY = 'memorylane.primer-dismissed.v1';
 
 /** The unlock time is what orders the collection. Nothing else records it:
  *  the server has no idea who unlocked what, and that is the point. */
@@ -46,4 +47,26 @@ export async function rememberUnlocked(
     // Ignored on purpose; see above.
   }
   return next;
+}
+
+/** Whether they have already waved the location primer away.
+ *
+ * Re-asking on every launch is how an app teaches people to dismiss without
+ * reading, and the second ask is worth less than the first. "Turn on location"
+ * stays on the map for whenever they change their mind.
+ */
+export async function primerWasDismissed(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(PRIMER_KEY)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export async function rememberPrimerDismissed(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(PRIMER_KEY, '1');
+  } catch {
+    // Being asked once more is a smaller harm than a crash on a full disk.
+  }
 }

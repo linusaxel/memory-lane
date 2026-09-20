@@ -12,8 +12,7 @@ import { Marker } from 'react-native-maps';
 import type { MemoryGroup } from './cluster.ts';
 import { groupLabel } from './cluster.ts';
 import Padlock from './Padlock.tsx';
-
-export type Reach = 'open' | 'locked' | 'unlockable';
+import type { Reach } from './reach.ts';
 
 const STATE_LABEL: Record<Reach, string> = {
   open: 'Open',

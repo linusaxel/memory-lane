@@ -6,11 +6,19 @@ import { StatusBar } from 'expo-status-bar';
 
 import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from './src/api.ts';
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
-import { metersBetween, regionToRadiusKm, type Region } from './src/region.ts';
-import { inUnlockOrder, loadUnlocked, rememberUnlocked, type Unlocked } from './src/unlocked.ts';
+import { nearestLocked, reachOf } from './src/reach.ts';
+import { regionToRadiusKm, type Region } from './src/region.ts';
+import {
+  inUnlockOrder,
+  loadUnlocked,
+  primerWasDismissed,
+  rememberPrimerDismissed,
+  rememberUnlocked,
+  type Unlocked,
+} from './src/unlocked.ts';
 import Collection from './src/Collection.tsx';
 import LocationPrimer from './src/LocationPrimer.tsx';
-import MemoryMarker, { type Reach } from './src/MemoryMarker.tsx';
+import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import ReachBanner from './src/ReachBanner.tsx';
 
@@ -27,9 +35,6 @@ const FALLBACK_REGION: Region = {
 };
 
 const DEBOUNCE_MS = 400;
-
-/** Only used if a memory somehow arrives without the server's radius. */
-const FALLBACK_RADIUS_M = 150;
 
 /** Separate, because "nothing here" and "we could not ask" must not look alike. */
 type Status = 'loading' | 'ready' | 'failed';
@@ -156,6 +161,9 @@ export default function App() {
     loadUnlocked().then((stored) => {
       if (mounted.current) setUnlocked(stored);
     });
+    primerWasDismissed().then((dismissed) => {
+      if (mounted.current && dismissed) setPrimerDismissed(true);
+    });
   }, []);
 
   const onRegionChangeComplete = useCallback(
@@ -179,36 +187,13 @@ export default function App() {
     [openAt, unlocked],
   );
 
-  const reachOf = useCallback(
-    (group: MemoryGroup): Reach => {
-      const locked = group.memories.filter((memory) => memory.locked);
-      if (locked.length === 0) return 'open';
-      if (!position) return 'locked';
-      const away = metersBetween(position.lat, position.lng, group.lat, group.lng);
-      return away <= (locked[0].unlock_radius_meters ?? FALLBACK_RADIUS_M) ? 'unlockable' : 'locked';
-    },
-    [position],
-  );
-
   const withinReach = useMemo(
-    () => groups.filter((group) => reachOf(group) === 'unlockable'),
-    [groups, reachOf],
+    () => groups.filter((group) => reachOf(group, position) === 'unlockable'),
+    [groups, position],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
 
-  /** The closest thing still locked, so a map of padlocks answers "where do I
-   *  go" rather than only "you cannot read this". */
-  const nearestLocked = useMemo(() => {
-    if (!position || withinReach.length > 0) return null;
-    const locked = groups.filter((group) => reachOf(group) === 'locked');
-    if (locked.length === 0) return null;
-    return locked
-      .map((group) => ({
-        group,
-        meters: metersBetween(position.lat, position.lng, group.lat, group.lng),
-      }))
-      .reduce((closest, next) => (next.meters < closest.meters ? next : closest));
-  }, [groups, position, reachOf, withinReach]);
+  const nearest = useMemo(() => nearestLocked(groups, position), [groups, position]);
 
   const openGroup = (group: MemoryGroup) => {
     setOpenAt(group.memories);
@@ -268,7 +253,7 @@ export default function App() {
           <MemoryMarker
             key={group.key}
             group={group}
-            reach={reachOf(group)}
+            reach={reachOf(group, position)}
             onPress={() => openGroup(group)}
           />
         ))}
@@ -286,12 +271,8 @@ export default function App() {
           onPress={() => openGroup(withinReach[0])}
         />
       )}
-      {!showPrimer && withinReach.length === 0 && nearestLocked && (
-        <ReachBanner
-          count={null}
-          meters={nearestLocked.meters}
-          onPress={() => openGroup(nearestLocked.group)}
-        />
+      {!showPrimer && withinReach.length === 0 && nearest && (
+        <ReachBanner count={null} meters={nearest.meters} onPress={() => openGroup(nearest.group)} />
       )}
 
       {showPrimer ? (
@@ -304,7 +285,10 @@ export default function App() {
             }
             goToMyLocation().catch(() => false);
           }}
-          onDismiss={() => setPrimerDismissed(true)}
+          onDismiss={() => {
+            setPrimerDismissed(true);
+            rememberPrimerDismissed();
+          }}
         />
       ) : status === 'failed' ? (
         <Pressable style={styles.locate} onPress={() => load(region)}>
