@@ -98,9 +98,9 @@ tasks:
       PENDING for retry; only the three permanent exceptions set transcript_failed=TRUE"
     verify: "venv/bin/python -m pytest -q tests/test_transcripts.py"
     touches: [pipeline/transcripts.py, tests/test_transcripts.py]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 522498e
     note: "ROOT CAUSE: the bare `except Exception` at transcripts.py:48-50 returns None,
       identical to 'no captions exist', so the caller at :107-112 permanently black-holes
       the video. One network blip = lost forever. Delete that handler, let transients
@@ -113,9 +113,9 @@ tasks:
     verify: "grep -q 'channel' docs/02-ingest.md && grep -q 'channel' CLAUDE.md"
     touches: [CLAUDE.md, docs/02-ingest.md, docs/01-setup.md]
     depends_on: [W1-05]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: f426766
     note: null
 
   - id: W1-08
@@ -123,9 +123,9 @@ tasks:
     verify: "venv/bin/python -m pipeline.run_all --skip-extract"
     touches: []
     depends_on: [W1-05, W1-06]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: f426766
     note: "--skip-extract already exists at run_all.py:139 and is what keeps Stage 3
       (the only Anthropic caller) out of the loop entirely. Needs Docker db up."
 
@@ -506,6 +506,7 @@ tasks:
       finished the app is. Start that the day step 6 of W3-14 produces an .aab.
 
 inbox:
+  - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
   # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`
   # or deletes it. This is the ONLY legal outlet for scope creep.
   - "places has no cross-video dedup; /v1/places/nearby can return near-duplicate pins for the same real place"
