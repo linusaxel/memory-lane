@@ -36,9 +36,9 @@ tasks:
     goal: "yt-dlp declared in requirements.txt under a '# Crawler' heading and importable"
     verify: "venv/bin/python -c 'import yt_dlp; print(yt_dlp.version.__version__)'"
     touches: [requirements.txt]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 4a36a4b
     note: "Baseline measured 2026-09-20: the existing HTML regex returns 0 videos for
       every channel tested (@TheMountainDispatch 404s, @veritasium 302s, @mkbhd 0 ids).
       The scraper is not brittle, it is dead. yt-dlp has ZERO hard deps (verified on PyPI)."
