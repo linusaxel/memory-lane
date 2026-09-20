@@ -30,6 +30,8 @@ type Props = {
   onUnlock: (memory: LocatedMemory) => void;
   unlocking: boolean;
   unlockError: string | null;
+  /** Absent when the sheet is already over the map. */
+  onShowOnMap?: (memory: LocatedMemory) => void;
 };
 
 /** Only used if a memory somehow arrives without the server's radius. */
@@ -67,6 +69,7 @@ export default function MemorySheet({
   onUnlock,
   unlocking,
   unlockError,
+  onShowOnMap,
 }: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
@@ -259,6 +262,18 @@ export default function MemorySheet({
                 </Pressable>
               </View>
             )}
+            {/* Opened from the collection, the sheet is a page in a list and
+                the place is a name. This is the only route back to where it
+                actually is. */}
+            {onShowOnMap && (
+              <Pressable
+                style={styles.secondary}
+                accessibilityRole="button"
+                onPress={() => onShowOnMap(memory)}
+              >
+                <Text style={styles.secondaryText}>Show on map</Text>
+              </Pressable>
+            )}
             {!locked && memory.content && (
               <Pressable
                 style={styles.watch}
@@ -353,16 +368,32 @@ const styles = StyleSheet.create({
     color: color.ink,
   },
   linkFailed: { fontFamily: font.mono, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
+  secondary: {
+    borderWidth: 1,
+    borderColor: color.rule,
+    paddingVertical: 15,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  secondaryText: {
+    fontFamily: font.monoBold,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: color.inkSoft,
+  },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   pagerText: {
     ...label,
     minWidth: 110,
     textAlign: 'center',
   },
+  // 44, not 40: this is the control that reaches the other 22 memories under a
+  // stacked pin, and it was below the minimum target size.
   step: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: color.rule,
     alignItems: 'center',

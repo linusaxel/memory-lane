@@ -94,7 +94,10 @@ const DISTANT = 28;
 const REACHABLE = 44;
 
 const styles = StyleSheet.create({
-  lockWrap: { alignItems: 'center', justifyContent: 'center', padding: 7 },
+  // The padding is the tap target, not decoration: a 28px badge is 28px of
+  // hittable pin, and Apple's floor is 44. The wrap brings it to 46, which also
+  // makes the stacked pins downtown separable by thumb rather than by luck.
+  lockWrap: { alignItems: 'center', justifyContent: 'center', padding: 9 },
   // A soft glow so the pin is findable before you can read its shape.
   // A literal rather than a palette entry: this is a translucent wash and the
   // seal's dark value is lighter, so one alpha over both reads about the same.

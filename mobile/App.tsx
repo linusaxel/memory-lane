@@ -10,6 +10,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import MapView, { Circle } from 'react-native-maps';
+import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -324,6 +325,10 @@ export default function App() {
     FALLBACK_RADIUS_M;
 
   const openGroup = (group: MemoryGroup) => {
+    // A pin is a small target on a moving map, and a tap that lands has to feel
+    // different from one that misses. The heavier taps are reserved for the
+    // unlock, so this is the lightest one there is.
+    Haptics.selectionAsync().catch(() => {});
     setOpenAt(group.memories);
     setOpenIndex(0);
     setUnlockError(null);
@@ -530,6 +535,25 @@ export default function App() {
         <TabBar tab={tab} unlockedCount={collected.length} onSelect={setTab} />
 
         <MemorySheet
+          // Only offered when the sheet was opened from the collection: over
+          // the map you are already looking at the answer.
+          onShowOnMap={
+            tab === 'collection'
+              ? (memory) => {
+                  const next: Region = {
+                    latitude: memory.place.coordinates.lat,
+                    longitude: memory.place.coordinates.lng,
+                    latitudeDelta: LOCATED_DELTA,
+                    longitudeDelta: LOCATED_DELTA,
+                  };
+                  setOpenAt([]);
+                  setTab('map');
+                  setRegion(next);
+                  if (mapReady.current) mapRef.current?.animateToRegion(next, 600);
+                  else pendingRegion.current = next;
+                }
+              : undefined
+          }
           memories={openMemories}
           index={openIndex}
           onIndex={setOpenIndex}

@@ -40,7 +40,8 @@ free number. F3, F4 and F5 are still proposed and sit at the bottom.
 | F15 | Reread what you unlocked | Implemented |
 | F16 | Read on the train home | Implemented |
 | F17 | Understand why you cannot read something | Implemented |
-| F18 | Stand somewhere with nothing in it | Implemented, thin |
+| F18 | Stand somewhere with nothing in it | Implemented |
+| F19 | Somewhere else entirely | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Proposed |
 | F5 | Contribute a memory | Proposed |
@@ -431,7 +432,10 @@ product is about.
 1. The **Unlocked** tab carries a count. It is the only number in the app that
    goes up because you went outside.
 2. Newest first, as catalogue entries: place, the opening of the summary, when.
-3. Tapping one opens the full sheet.
+3. Tapping one opens the full sheet, which here carries **Show on map** —
+   opened from a list, the place is a name, and this is the only route back to
+   where it actually is. Over the map the button is absent, because there you
+   are already looking at the answer.
 
 Without this the reward for standing somewhere in the rain is one read, after
 which the memory is buried under whichever pin you happened to be near and
@@ -469,15 +473,40 @@ is too late.
 3. Location state, with the route to Settings.
 4. That nothing is synced and there is no account.
 
-## F18 · Stand somewhere with nothing in it — **Implemented, and thin**
+## F18 · Stand somewhere with nothing in it — **Implemented**
 
 The banner reads "No memories here yet" and the map is otherwise normal. It no
-longer looks like a failure, which was the bug.
+longer looks like a failure, which was the bug. At street zoom the fetch is only
+~700m, so this is easy to reach — panning two neighbourhoods over does it.
 
-It is still thin as a *product* answer: it does not suggest zooming out or
-widening the radius, and at street zoom the fetch is only ~700m, so an empty
-screen is easy to reach outside New York. Doing nothing is defensible until
-there is a corpus worth widening into — see open question 2.
+## F19 · Be somewhere else entirely — **Implemented**
+
+**Who:** anybody not in New York, which is almost everybody. The corpus is one
+comedy podcast's touring history.
+
+1. The map comes up empty and stays empty however far you pan.
+2. Instead of the banner alone, a card names the nearest place that is not
+   empty: *"The closest memories are in New York. 64 of them, 6,189 km away.
+   You still have to stand there to read one."*
+3. **Show me New York** flies the map there, wide enough to take in the metro
+   area rather than one pin.
+
+Looking is not unlocking, and the card says so. You can see that the thing
+exists; you still cannot read any of it from here. That distinction is the
+product, and an empty-state card is exactly where it would be easiest to
+accidentally abandon it.
+
+**This outranks the location primer.** Asking for permission to unlock memories
+that are not here is the wrong first impression, and "walk within 150 m of a
+pin" is a promise about pins that do not exist. The primer gets its turn once
+there is something on the map.
+
+**Failure:** `/v1/stats` is unreachable, so there are no hotspots to name. The
+card renders nothing at all and the banner is back to saying "No memories here
+yet" — the same dead end as before, which is the right floor.
+
+**Done when:** the app opened in Copenhagen explains itself instead of looking
+broken.
 
 ---
 
