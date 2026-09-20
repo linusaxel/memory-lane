@@ -113,3 +113,24 @@ def test_card_is_self_contained_and_scheme_aware():
     assert "prefers-color-scheme:dark" in html
     assert "<link" not in html and "<script" not in html, "must render with no asset pipeline"
     assert 'name="viewport"' in html
+
+
+# -- linking the source ------------------------------------------------------
+
+
+def test_timestamp_zero_is_a_real_offset_not_a_missing_value():
+    """0.0 is the start of the video. A truthiness check dropped it."""
+    html = render_card(Row(timestamp_start=0.0))
+    assert 't=0"' in html
+
+
+def test_only_youtube_gets_a_time_offset():
+    """?t= on an arbitrary host is a guess about someone else's URL scheme."""
+    html = render_card(Row(content_url="https://archive.example/doc/12", timestamp_start=99.0))
+    assert "t=99" not in html
+    assert "https://archive.example/doc/12" in html
+
+
+def test_an_archival_source_url_is_linked_untouched():
+    html = render_card(Row(source_url="https://stadsarkiv.dk/item/9", timestamp_start=42.0))
+    assert 'href="https://stadsarkiv.dk/item/9"' in html

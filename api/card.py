@@ -74,9 +74,17 @@ def credit_line(row) -> str:
 
 
 def source_href(row) -> str | None:
+    """An archival source_url is a document and gets linked as-is. Only a video
+    takes a ?t= offset, and only YouTube is known to honour one - the same rule
+    row_to_memory applies in api/main.py."""
     if row.source_url:
         return row.source_url
-    if row.content_url and row.timestamp_start:
+    if not row.content_url:
+        return None
+    is_youtube = "youtube.com" in row.content_url or "youtu.be" in row.content_url
+    # `is not None`, not truthiness: timestamp_start of 0.0 is the start of the
+    # video, not a missing value.
+    if is_youtube and row.timestamp_start is not None:
         sep = "&" if "?" in row.content_url else "?"
         return f"{row.content_url}{sep}t={int(row.timestamp_start)}"
     return row.content_url
