@@ -23,6 +23,8 @@ PARAMS = {
     "limit": 20,
     "offset": 0,
     "min_confidence": "medium",
+    # None means "every layer", which is the unfiltered shape these assert on.
+    "layer": None,
     "tags": ["food"],
     "query": "coffee",
     "memory_id": 1,

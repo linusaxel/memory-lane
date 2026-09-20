@@ -1,6 +1,7 @@
 """FastAPI application for Memory Lane API."""
 
 import os
+from datetime import date
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy import text
 
+from api.card import router as card_router
 from pipeline.db import get_session
 
 app = FastAPI(
@@ -26,6 +28,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(card_router)
 
 
 class Coordinates(BaseModel):
@@ -56,6 +60,12 @@ class Memory(BaseModel):
     content: ContentRef
     tags: list[str]
     confidence: str
+    layer: str = "historical"
+    happened_at: date | None = None
+    attribution: str | None = None
+    source_url: str | None = None
+    contrast_score: float | None = None
+    contrast_note: str | None = None
 
 
 class NearbyMeta(BaseModel):
@@ -120,6 +130,12 @@ MEMORY_COLUMNS = """
     m.timestamp_end,
     m.tags,
     m.extraction_confidence,
+    m.layer,
+    m.happened_at,
+    m.attribution,
+    m.source_url,
+    m.contrast_score,
+    m.contrast_note,
     p.id as place_id,
     p.name as place_name,
     p.precision_meters,
@@ -153,6 +169,17 @@ PLACE_TAGS = """COALESCE(
 CONFIDENCE_FILTER = """(:min_confidence = 'low' OR m.extraction_confidence IN ('medium', 'high'))
     AND (:min_confidence != 'high' OR m.extraction_confidence = 'high')"""
 
+# A no-op when :layer is NULL, so one query serves filtered and unfiltered rather
+# than doubling the variants again.
+LAYER_FILTER = "(CAST(:layer AS varchar) IS NULL OR m.layer = :layer)"
+
+# Contrast first: the point of the product is the gap between the memory and what
+# you are looking at now, not which pin is nearest. NULLS LAST is load-bearing -
+# Postgres sorts NULL FIRST under DESC, and every memory extracted before contrast
+# scoring existed has none, so without it the unscored ones outrank every scored
+# one and the ranking is exactly inverted.
+CONTRAST_ORDER = "ORDER BY m.contrast_score DESC NULLS LAST, distance_meters ASC"
+
 NEARBY_MEMORIES_QUERY = f"""
 SELECT {MEMORY_COLUMNS},
     {DISTANCE}
@@ -160,8 +187,9 @@ SELECT {MEMORY_COLUMNS},
 WHERE
     p.coordinates IS NOT NULL
     AND {WITHIN}
+    AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
-ORDER BY distance_meters ASC
+{CONTRAST_ORDER}
 LIMIT :limit OFFSET :offset
 """
 
@@ -173,8 +201,9 @@ WHERE
     p.coordinates IS NOT NULL
     AND {WITHIN}
     AND m.tags && CAST(:tags AS varchar[])
+    AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
-ORDER BY distance_meters ASC
+{CONTRAST_ORDER}
 LIMIT :limit OFFSET :offset
 """
 
@@ -187,6 +216,7 @@ JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
     AND {WITHIN}
+    AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
 """
 
@@ -198,6 +228,7 @@ WHERE
     p.coordinates IS NOT NULL
     AND {WITHIN}
     AND m.tags && CAST(:tags AS varchar[])
+    AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
 """
 
@@ -353,6 +384,12 @@ def row_to_memory(row, include_distance: bool = True) -> Memory:
         ),
         tags=row.tags or [],
         confidence=row.extraction_confidence or "medium",
+        layer=getattr(row, "layer", None) or "historical",
+        happened_at=getattr(row, "happened_at", None),
+        attribution=getattr(row, "attribution", None),
+        source_url=getattr(row, "source_url", None),
+        contrast_score=getattr(row, "contrast_score", None),
+        contrast_note=getattr(row, "contrast_note", None),
     )
 
 
@@ -408,6 +445,11 @@ def get_nearby_memories(
     limit: int = Query(20, ge=1, le=100, description="Max results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     tags: str | None = Query(None, description="Comma-separated tags to filter"),
+    layer: str | None = Query(
+        None,
+        pattern="^(historical|friend|stranger)$",
+        description="Restrict to one content layer. Omit for all.",
+    ),
     min_confidence: str = Query(
         "medium", pattern="^(low|medium|high)$", description="Minimum confidence"
     ),
@@ -423,6 +465,7 @@ def get_nearby_memories(
             "limit": limit,
             "offset": offset,
             "min_confidence": min_confidence,
+            "layer": layer,
         }
 
         if tags:

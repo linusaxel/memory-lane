@@ -16,7 +16,9 @@ import api.main as m
 
 pytestmark = pytest.mark.db
 
-CENTER = {"lat": 40.7484, "lng": -73.9857, "radius_meters": 50000.0}
+# layer is bound by every nearby query since W4-06; None means "all layers", so
+# these assertions are unchanged by it.
+CENTER = {"lat": 40.7484, "lng": -73.9857, "radius_meters": 50000.0, "layer": None}
 
 
 def _seed(session):
