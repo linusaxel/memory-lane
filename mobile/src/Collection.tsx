@@ -53,7 +53,12 @@ export default function Collection({ visible, memories, onOpen, onClose }: Props
           keyExtractor={(memory) => String(memory.id)}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <Pressable style={styles.row} onPress={() => onOpen(item)} accessibilityRole="button">
+            <Pressable
+              style={styles.row}
+              onPress={() => onOpen(item)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.place.name}, unlocked ${formatWhen(item.unlocked_at)}`}
+            >
               <Text style={styles.place} numberOfLines={1}>
                 {item.place.name}
               </Text>

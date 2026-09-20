@@ -15,6 +15,12 @@ import Padlock from './Padlock.tsx';
 
 export type Reach = 'open' | 'locked' | 'unlockable';
 
+const STATE_LABEL: Record<Reach, string> = {
+  open: 'Open',
+  locked: 'Locked, too far to open',
+  unlockable: 'Locked, within reach',
+};
+
 type Props = {
   group: MemoryGroup;
   reach: Reach;
@@ -32,6 +38,9 @@ export default function MemoryMarker({ group, reach, onPress }: Props) {
       key={`${group.key}:${reach}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
       title={groupLabel(group)}
+      // The callout title says where; only the colour says whether you can read
+      // it, and colour is not available to everyone.
+      accessibilityLabel={`${groupLabel(group)}. ${STATE_LABEL[reach]}.`}
       tracksViewChanges={false}
       onPress={onPress}
     >
@@ -99,7 +108,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   open: { backgroundColor: '#18181b' },
-  distant: { backgroundColor: '#a1a1aa', width: DISTANT, height: DISTANT, borderRadius: DISTANT / 2 },
+  distant: { backgroundColor: '#71717a', width: DISTANT, height: DISTANT, borderRadius: DISTANT / 2 },
   ring: {
     width: REACHABLE,
     height: REACHABLE,

@@ -14,6 +14,7 @@ MapView (full bleed)
 ├─ Marker per coordinate      tap -> MemorySheet.  Four states, see Markers
 ├─ banner  "N memories here"  top centre, non-interactive
 ├─ "N within reach"           amber, breathing, tap -> the nearest unlockable
+│    or "Nearest locked · 412 m"   muted and still, when none is in reach
 ├─ "N unlocked"               bottom left -> Collection
 ├─ "Near me"                  bottom centre, recentres on GPS
 └─ LocationPrimer             bottom card, only until permission is settled
@@ -26,7 +27,8 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ padlock                        ├─ summary  17/26 - the hero, no images
   ├─ distance         44/700        ├─ tags     pills
   ├─ "Get within 150 m"             ├─ source video title  italic, muted
-  └─ or, in reach: the ring         └─ "Watch at 12:04"  red, YouTube at the second
+  ├─ "Walk there"     outlined      └─ "Watch at 12:04"  red, YouTube at the second
+  └─ or, in reach: the ring
 
 Collection (pageSheet modal)
 └─ what this device has unlocked, newest first
@@ -67,6 +69,7 @@ convention and reviewing eyes.
 | `#dc2626` | the watch action only. It reads as "video", and matches the map pins. Do not reuse it for generic emphasis. |
 | `#15803d` | high confidence only |
 | `#f59e0b` | the unlock only — the ring, and the pin for a memory in reach |
+| `#71717a` | a locked pin out of reach. Not `#a1a1aa`: white on that is 2.3:1, under the 3:1 a graphical object needs |
 | `#fde68a` | the filling disc inside the ring |
 | `#b45309` | the glyph inside the ring. Readable on both the empty and the filled state, which a white glyph is not |
 
@@ -195,7 +198,7 @@ unreadable only by tapping it:
 |---|---|
 | default red pin | never gated, one memory — a shared centroid, open to everyone |
 | dark badge `#18181b` | never gated, several |
-| grey disc `#a1a1aa` with a padlock | locked, and you are not near enough |
+| grey disc `#71717a` with a padlock | locked, and you are not near enough |
 | amber **ring** `#f59e0b` with a halo | locked, and you are inside the radius |
 
 **The reachable pin is a ring and not a disc**, and that is load-bearing. The
@@ -228,6 +231,27 @@ for **Open Settings**, which is the only route back.
 
 Position is then *watched*, not read once (`watchPositionAsync`, 25m interval,
 foreground only). Walking into range has to change the map by itself.
+
+## Two links that can fail
+
+`Linking.openURL` rejects when nothing on the device can handle the link — no
+browser, no maps app, a managed device. Both the watch link and "Walk there" go
+through one helper in `MemorySheet` that catches it and says so. A control that
+silently does nothing is the failure people blame on themselves.
+
+## Accessibility
+
+The unlock is a *hold*, which is the easiest gesture to make exclusionary, so
+this is not a polish pass:
+
+- The control has a role, a label, and a hint naming the gesture, and VoiceOver's
+  plain activation opens it. That covers screen-reader users and not every motor
+  impairment — the `ponytail:` marker in the file names the gap.
+- Markers carry an `accessibilityLabel` with their state. The callout title says
+  *where*; only the colour says whether you can read it, and colour is not
+  available to everyone.
+- Every state that colour distinguishes is also written: "locked", "within
+  reach", "Nearest locked memory".
 
 ## The unlock control
 
