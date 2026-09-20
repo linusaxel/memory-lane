@@ -518,8 +518,9 @@ returns nothing is dead, and a friend layer on an empty map returns nothing.
 - [ ] **3.5** Rate limit the write path. Nothing caps how many memories one
       device can file, or how much it can upload. The brief asks for a hard cap
       on user-submitted ingestion and there is none; a loop fills the disk.
-- [ ] **3.6** **A dev seed, so the unlock can be exercised at all.** Today it
-      cannot be, and setting the Simulator's location does not fix it.
+- [x] **3.6** **A dev seed, so the unlock can be exercised at all.**
+      `pipeline/seed_dev.py`; `--clear` removes it. Before this it could not be,
+      and setting the Simulator's location did not fix it.
 
       **Why it is broken.** The documented dev coordinate `40.7484,-73.9857`
       sits ~1.2km from the Duffy Square stack, the densest thing in the corpus —
@@ -564,7 +565,7 @@ returns nothing is dead, and a friend layer on an empty map returns nothing.
       — a 1×1 proves nothing about layout. The recording is macOS `say` piped
       through `afconvert` to real AAC, so the player has something that plays;
       there is no ffmpeg here. Skip the audio where those are absent.
-- [ ] **3.7** `EXPO_PUBLIC_DEV_LOCATION`, read only under `__DEV__`, so the
+- [x] **3.7** `EXPO_PUBLIC_DEV_LOCATION`, read only under `__DEV__`, so the
       Simulator's location stops mattering and a physical device can be told
       where it is too. `remember()` in `mobile/App.tsx` is the single chokepoint
       every position flows through, so the override goes there and

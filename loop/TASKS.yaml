@@ -776,9 +776,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_seed_dev.py"
     touches: [pipeline/seed_dev.py, tests/test_seed_dev.py, mobile/UI.md]
     depends_on: [P3-01]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 11e4280
     note: |
       Today the unlock cannot be exercised at all, and the Simulator is not why.
       The documented dev coordinate 40.7484,-73.9857 is ~1.2km from the Duffy
@@ -821,9 +821,9 @@ tasks:
     verify: "cd mobile && npm run typecheck"
     touches: [mobile/App.tsx, mobile/src/useDevLocation.ts, mobile/.env.example]
     depends_on: [P3-06]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 11e4280
     note: |
       remember() in mobile/App.tsx is the single chokepoint every position flows
       through, so the override belongs there; skip watchPositionAsync when it is
