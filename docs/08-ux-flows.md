@@ -114,9 +114,11 @@ other distribution channel (see *Design rules* in `TODO.md`).
    It should feel like a lock turning.
 4. The memory reveals: summary, tags, source, the watch link — animated once,
    because that arrival is the only payoff the product has.
-5. It stays unlocked, and it joins a collection the person can reread later.
-   Re-locking something they earned is a punishment for leaving, and one read
-   and then burial under a pin is barely better.
+5. It stays unlocked, and it joins the **Unlocked** tab. Re-locking something
+   they earned is a punishment for leaving, and one read and then burial under
+   a pin is barely better.
+6. That tab works with no network and no position: it renders from what the
+   device stored, so a memory you walked to is readable on the train home.
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — the bottom button reads "Turn on location" instead of "Near me" — rather than
@@ -167,6 +169,10 @@ server re-measures before it hands anything over.
 
 The position is self-reported, so this stops `curl`, not a determined spoofer.
 Attestation needs accounts — Phase 3.
+
+**"Forever" is a device promise.** The server does not know who unlocked what
+and is not going to, so the collection lives in the app's storage. A new phone
+starts empty. Making it portable needs identity, which is the same Phase 3.
 
 The client can still be generous with the animation. It just cannot be the
 thing deciding what you are allowed to read.

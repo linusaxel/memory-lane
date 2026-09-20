@@ -253,6 +253,9 @@ generalises 3.3, which scoped server-side proximity unlock to the friend layer
       measured from the person and never from the map centre.
 - [x] **1.5e Unlocks persist.** On the device, in `mobile/src/unlocked.ts`:
       the server re-locks you when you walk away, and the product must not.
+      Readable from the **Unlocked** tab with no network and no position.
+      "Forever" is a device promise — a new phone starts empty, and making it
+      portable needs accounts.
 - [x] **1.5f DECIDE the radius.** Option 3: only a coordinate no other place
       shares is gated, at 150m. That locks 83 of 216 memories across 74 places
       and leaves the centroid stacks open, because locking those would ask
