@@ -569,15 +569,32 @@ tasks:
     goal: "Semantic place dedup: normalise place_query (casefold, strip venue-type
       stopwords) and collapse places whose coordinates fall within their combined
       precision_meters. 'Oslo Norway' and 'comedy club Oslo Norway' become one place."
-    verify: "venv/bin/python -m pytest -q tests/test_extract_places.py"
-    touches: [pipeline/extract.py, db/migrations/, tests/test_extract_places.py]
+    verify: "venv/bin/python -m pytest -q tests/test_dedup.py"
+    touches: [pipeline/dedup.py, tests/test_dedup.py]
     depends_on: [W4-01]
-    state: todo
-    attempts: 0
+    state: blocked
+    blocked_on: human
+    gate: NEEDS_DECISION
+    attempts: 1
     commit: null
-    note: "001_places_unique.sql fixed EXACT duplicates only. This is the remainder, and
-      it is a prerequisite for contrast scoring and map clustering, not a nicety. No
-      embeddings until the normalise-and-radius pass measurably falls short."
+    note: |
+      Tool shipped (pipeline/dedup.py, 10 tests), auto-merge withheld. The goal says
+      "collapse", and I will not claim that on a rule I measured as wrong a third of
+      the time - a bad merge destroys memories and is invisible afterwards.
+      Both premises in the goal failed against live data:
+        1. The two Gotham Comedy Club rows are 1.8km apart while both claim 50m
+           precision, so a coordinate-proximity rule never fires. The model disagrees
+           with itself about where a venue is.
+        2. Distinctiveness-by-rarity cannot separate a frequently-named VENUE from a
+           location. "Comedy Store" recurs constantly in this corpus, so `store` is
+           classified a location and stripped, leaving "sunset boulevard" - which the
+           Andaz hotel on the same street shares. Not tunable; the premise is wrong.
+      Measured on 194 places: naive subset 148 merges, +frequency 39, +city-level and
+      chain guards 25, still ~1/3 wrong. --apply has NOT been run on the live DB.
+      DECISION NEEDED: have extraction emit structured place fields (venue, locality,
+      region) so dedup is an exact match instead of a string heuristic - a prompt and
+      schema change in W4-04 - or accept a human review pass over the 25 proposals.
+      See TODO.md 1.2.
 
   - id: W4-03
     goal: "A source-agnostic ingestion entry point beside ingest_content() that takes

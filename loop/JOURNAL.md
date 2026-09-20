@@ -17,3 +17,4 @@
 2026-09-20T13:02Z t12 W3-12 done  commit=b183d97 gate=GREEN expo export: iOS+Android bundles 1.5MB each, no Metro errors. 28 done / 5 parked / 0 remaining -> TERMINATE
 2026-09-20T13:20Z cleanup  test_loop_is_not_on_main moved out of pytest into ml-tick STEP 5. It asserted a property of the environment, not the code, so it would have gone RED forever once this branch merged to main.
 2026-09-20T14:05Z t13 W4-01 done  commit=722fd68 gate=GREEN layer/happened_at/attribution/contrast columns + 002_layers.sql; applied to live DB twice, 224 memories intact; drift guard mutation-checked
+2026-09-20T14:35Z t14 W4-02 blocked commit=null gate=GREEN dedup tool shipped, auto-merge withheld: coords 1.8km apart on one venue kill the proximity rule, and "Comedy Store" recurring makes frequency call a venue a location; 148->39->25 merges, ~1/3 still wrong; needs structured place fields from extraction

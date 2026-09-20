@@ -183,14 +183,45 @@ card is the one worth screenshotting.
         DB twice, 224 memories before and after. `tests/test_schema_layers.py`
         guards schema.sql/migration drift and was mutation-checked to confirm it
         actually fails.
-- [ ] **1.2 Semantic place dedup.** Normalise `place_query` (casefold, strip
-      venue-type stopwords) and collapse places whose coordinates fall within
-      their combined `precision_meters`. Ground truth to fix: the two *Gotham
-      Comedy Club* rows must become one. Follow the pattern
-      `001_places_unique.sql` already established: merge coordinates onto the
-      keeper first, repoint `memories.place_id`, then delete orphans guarded by
+- [~] **1.2 Semantic place dedup.** *Tool shipped, auto-merge deliberately
+      withheld — `pipeline/dedup.py`, W4-02 is `blocked / NEEDS_DECISION`.*
+
+      Two premises in the original plan turned out to be wrong, both measured
+      against live data rather than argued:
+
+      1. **Coordinates cannot be the signal.** The two *Gotham Comedy Club* rows
+         sit **1.8km apart** while both claim 50m precision. "Collapse places
+         whose coordinates fall within their combined `precision_meters`" would
+         never have fired. The model disagrees with itself about where a venue
+         is, so names are the reliable signal and distance is only a sanity
+         bound.
+      2. **Frequency cannot separate a venue from a location.** The rule needs
+         to know which tokens name a place and which name an area, and the cheap
+         way is "rare tokens are names, common tokens are locations". In a comedy
+         corpus the *Comedy Store* recurs constantly, so `store` is classified a
+         location and stripped — leaving `sunset boulevard`, which the Andaz
+         hotel on the same street also has. The two then look like one venue.
+         This is not tunable; it is the premise failing.
+
+      Successive rules, measured on the 194-place corpus: naive token subset
+      proposes **148** merges (absurd — it absorbs *"New Orleans Louisiana"* into
+      the first venue it meets); adding frequency-based distinctiveness gives
+      **39**; adding a city-level guard and a chain guard gives **25**, of which
+      roughly a third are still wrong. Good enough to hand a human 25 pairs
+      instead of 18,721 comparisons; not good enough to run unattended, and
+      `--apply` has **not** been run against the live database.
+
+      **Recommended fix, needs a decision:** stop parsing one `place_query`
+      blob. Have extraction emit structured fields — venue name, locality,
+      region — so dedup is an exact match on venue+locality instead of a string
+      heuristic. That is a prompt and schema change in 1.4, not a better
+      regex. Alternatively D.3 (place-level vs memory-level pins) may reduce how
+      much this matters.
+
+      Merge mechanics, when it is unblocked, follow `001_places_unique.sql`:
+      repoint `memories.place_id` first, then delete orphans guarded by
       `NOT EXISTS` — `memories.place_id` is `ON DELETE CASCADE` and an unguarded
-      delete eats memory rows. No embeddings until this measurably falls short.
+      delete eats memory rows.
 - [ ] **1.3 Source-agnostic ingestion.** A second entry point beside
       `ingest_content()` taking already-fetched records
       `{text, source_url, attribution, happened_at, address?}`, writing `content`
