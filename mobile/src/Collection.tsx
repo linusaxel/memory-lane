@@ -13,6 +13,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Padlock from './Padlock.tsx';
+import { color, font, label } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
 
 type Props = {
@@ -46,7 +47,7 @@ export default function Collection({ memories, onOpen }: Props) {
 
       {memories.length === 0 ? (
         <View style={styles.empty}>
-          <Padlock size={40} color="#e4e4e7" />
+          <Padlock size={40} color={color.rule} />
           <Text style={styles.emptyText}>
             Memories open when you stand where they happened. Whatever you open stays here.
           </Text>
@@ -83,14 +84,21 @@ export default function Collection({ memories, onOpen }: Props) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#fff' },
-  title: { fontSize: 30, fontWeight: '700', color: '#18181b', letterSpacing: -0.6, paddingHorizontal: 24 },
-  subtitle: { fontSize: 14, color: '#71717a', paddingHorizontal: 24, paddingTop: 4 },
-  list: { padding: 24, gap: 22 },
-  row: { gap: 4 },
-  place: { fontSize: 17, fontWeight: '600', color: '#18181b' },
-  summary: { fontSize: 15, lineHeight: 22, color: '#52525b' },
-  when: { fontSize: 12, color: '#a1a1aa' },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 48, gap: 16 },
-  emptyText: { fontSize: 15, lineHeight: 23, color: '#a1a1aa', textAlign: 'center' },
+  screen: { flex: 1, backgroundColor: color.paper },
+  title: { fontFamily: font.display, fontSize: 34, color: color.ink, paddingHorizontal: 24 },
+  subtitle: { ...label, paddingHorizontal: 24, paddingTop: 8 },
+  list: { padding: 24, paddingTop: 26, gap: 26 },
+  // A ruled entry, like a catalogue card. No nested card, no shadow.
+  row: { gap: 6, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 16 },
+  place: { fontFamily: font.displaySemi, fontSize: 19, lineHeight: 26, color: color.ink },
+  summary: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
+  when: { ...label, fontSize: 10, marginTop: 2 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 48, gap: 18 },
+  emptyText: {
+    fontFamily: font.prose,
+    fontSize: 16,
+    lineHeight: 26,
+    color: color.inkFaint,
+    textAlign: 'center',
+  },
 });

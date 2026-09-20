@@ -15,7 +15,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text } from 'react-native';
 
-import Glass from './Glass.tsx';
+import { color, font } from './theme.ts';
 
 type Props = {
   /** Null when nothing is in reach: then `meters` carries the nearest lock. */
@@ -65,9 +65,9 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
         { transform: [{ scale: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] },
       ]}
     >
-      {/* Amber stays solid: it is the one thing in the app you are meant to
-          act on, and text on glass loses the contrast to say so. The muted
-          version is chrome, so it gets the glass. */}
+      {/* Both are solid paper. Glass went in and came straight back out: it is
+          on every list of tells for a generated interface, and over a street
+          map it either cannot be read or is not glass. */}
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
@@ -75,44 +75,32 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
           reachable ? `${label(count, meters)}. Open to unlock.` : label(count, meters)
         }
       >
-        {reachable ? (
-          <Text style={[styles.pill, styles.text]}>{label(count, meters)}</Text>
-        ) : (
-          <Glass style={styles.distant} radius={20}>
-            <Text style={styles.distantText}>{label(count, meters)}</Text>
-          </Glass>
-        )}
+        <Text style={[styles.pill, reachable ? styles.text : styles.distantText]}>
+          {label(count, meters)}
+        </Text>
       </Pressable>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', top: 108, alignSelf: 'center' },
+  wrap: { position: 'absolute', top: 106, alignSelf: 'center' },
   pill: {
-    backgroundColor: '#f59e0b',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    shadowColor: '#b45309',
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 4,
+    overflow: 'hidden',
+    fontFamily: font.monoBold,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
-  distant: {
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  text: { color: '#fff', fontSize: 14, fontWeight: '700', overflow: 'hidden' },
+  // Stamp ink on paper. The only thing in the app wearing this colour.
+  text: { backgroundColor: color.seal, color: color.paper },
   distantText: {
-    color: '#52525b',
-    fontSize: 14,
-    fontWeight: '600',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+    backgroundColor: color.paper,
+    color: color.inkFaint,
+    borderWidth: 1,
+    borderColor: color.rule,
   },
 });

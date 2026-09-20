@@ -13,6 +13,7 @@ import {
 import * as Haptics from 'expo-haptics';
 
 import Padlock from './Padlock.tsx';
+import { color, font } from './theme.ts';
 
 /** Long enough to feel like a lock turning, short enough not to be a chore. */
 const HOLD_MS = 900;
@@ -78,7 +79,7 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
           {/* The same padlock the map pins use, so the ring reads as the thing
               that opens them rather than as a record button. Amber-700 stays
               readable on both the white rest state and the filled one. */}
-          <Padlock size={27} color="#b45309" />
+          <Padlock size={27} color={color.sealDeep} />
         </View>
       </Pressable>
       <Text style={styles.caption}>{busy ? 'Unlocking…' : 'Hold to unlock'}</Text>
@@ -89,14 +90,14 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
 const RING = 84;
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 10, paddingVertical: 8 },
+  wrap: { alignItems: 'center', gap: 12, paddingVertical: 8 },
   ring: {
     width: RING,
     height: RING,
     borderRadius: RING / 2,
     borderWidth: 3,
-    borderColor: '#f59e0b',
-    backgroundColor: '#fff',
+    borderColor: color.seal,
+    backgroundColor: color.paper,
     alignItems: 'center',
     justifyContent: 'center',
     // Clips the growing disc to the circle; without it the fill is a square.
@@ -109,7 +110,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: RING / 2,
-    backgroundColor: '#fde68a',
+    backgroundColor: color.sealSoft,
   },
-  caption: { fontSize: 13, color: '#71717a' },
+  caption: {
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    color: color.inkFaint,
+  },
 });

@@ -13,6 +13,8 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { color, font } from './theme.ts';
+
 type Props = {
   /** True once the system has refused for good; only Settings can undo that. */
   blocked: boolean;
@@ -45,27 +47,41 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 34,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 22,
-    gap: 6,
+    bottom: 26,
+    backgroundColor: color.paper,
+    borderWidth: 1,
+    borderColor: color.rule,
+    borderRadius: 6,
+    padding: 24,
+    gap: 8,
     shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
     elevation: 6,
   },
-  title: { fontSize: 20, fontWeight: '700', color: '#18181b', letterSpacing: -0.4 },
-  body: { fontSize: 15, lineHeight: 22, color: '#52525b' },
+  title: { fontFamily: font.display, fontSize: 23, lineHeight: 30, color: color.ink },
+  body: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   allow: {
-    marginTop: 12,
-    backgroundColor: '#18181b',
-    paddingVertical: 15,
-    borderRadius: 12,
+    marginTop: 14,
+    backgroundColor: color.ink,
+    paddingVertical: 16,
+    borderRadius: 4,
     alignItems: 'center',
   },
-  allowText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  dismiss: { paddingVertical: 10, alignItems: 'center' },
-  dismissText: { color: '#71717a', fontSize: 15 },
+  allowText: {
+    color: color.paper,
+    fontFamily: font.monoBold,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  dismiss: { paddingVertical: 12, alignItems: 'center' },
+  dismissText: {
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    color: color.inkFaint,
+  },
 });

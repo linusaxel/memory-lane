@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_BASE } from './api.ts';
 import Padlock from './Padlock.tsx';
+import { color, font, label } from './theme.ts';
 
 type Props = {
   unlockedCount: number;
@@ -51,7 +52,7 @@ export default function Settings({
 
       <Section title="How unlocking works">
         <Row>
-          <Padlock size={17} color="#a1a1aa" />
+          <Padlock size={17} color={color.faded} />
           <Text style={styles.rowText}>
             Memories filed at a real address stay shut until you are within{' '}
             {Math.round(radiusMeters)} m of them.
@@ -120,35 +121,40 @@ function Row({ children }: { children: React.ReactNode }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#fff' },
-  body: { paddingHorizontal: 24, paddingBottom: 40, gap: 6 },
-  title: { fontSize: 30, fontWeight: '700', color: '#18181b', letterSpacing: -0.6 },
-  stats: { flexDirection: 'row', gap: 32, marginTop: 20 },
-  stat: { flexDirection: 'row', alignItems: 'baseline', gap: 7 },
-  statValue: { fontSize: 40, fontWeight: '700', color: '#18181b', letterSpacing: -1.2 },
-  statLabel: { fontSize: 15, color: '#71717a' },
-  statsNote: { fontSize: 14, color: '#a1a1aa', marginTop: 6 },
-  section: { marginTop: 34, gap: 10 },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: '#a1a1aa',
-  },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  rowText: { flex: 1, fontSize: 15, lineHeight: 23, color: '#3f3f46' },
-  note: { fontSize: 14, lineHeight: 22, color: '#a1a1aa' },
+  screen: { flex: 1, backgroundColor: color.paper },
+  body: { paddingHorizontal: 24, paddingBottom: 72, gap: 6 },
+  title: { fontFamily: font.display, fontSize: 34, color: color.ink },
+  stats: { flexDirection: 'row', gap: 36, marginTop: 24 },
+  stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  statValue: { fontFamily: font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
+  statLabel: { ...label, fontSize: 10 },
+  statsNote: { fontFamily: font.prose, fontSize: 15, color: color.inkFaint, marginTop: 10 },
+  section: { marginTop: 38, gap: 12, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
+  sectionTitle: { ...label },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  rowText: { flex: 1, fontFamily: font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
+  note: { fontFamily: font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   action: {
     alignSelf: 'flex-start',
-    marginTop: 4,
-    borderWidth: 1.5,
-    borderColor: '#e4e4e7',
-    paddingVertical: 11,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: color.ink,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 4,
   },
-  actionText: { fontSize: 15, fontWeight: '600', color: '#3f3f46' },
+  actionText: {
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: color.ink,
+  },
   link: { alignSelf: 'flex-start' },
-  linkText: { fontSize: 15, color: '#3f3f46', textDecorationLine: 'underline' },
+  linkText: {
+    fontFamily: font.monoMedium,
+    fontSize: 13,
+    color: color.ink,
+    textDecorationLine: 'underline',
+  },
 });

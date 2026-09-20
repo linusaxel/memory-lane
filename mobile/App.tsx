@@ -11,6 +11,17 @@ import {
 import MapView from 'react-native-maps';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
+import { useFonts } from 'expo-font';
+import {
+  Fraunces_400Regular,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+} from '@expo-google-fonts/fraunces';
+import {
+  IBMPlexMono_400Regular,
+  IBMPlexMono_500Medium,
+  IBMPlexMono_600SemiBold,
+} from '@expo-google-fonts/ibm-plex-mono';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from './src/api.ts';
@@ -27,8 +38,8 @@ import {
   type Unlocked,
 } from './src/unlocked.ts';
 import Collection from './src/Collection.tsx';
-import Glass from './src/Glass.tsx';
 import Settings from './src/Settings.tsx';
+import { color, font } from './src/theme.ts';
 import LocationPrimer from './src/LocationPrimer.tsx';
 import TabBar, { type Tab } from './src/TabBar.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
@@ -56,6 +67,17 @@ type Status = 'loading' | 'ready' | 'failed';
 type Permission = 'unknown' | 'granted' | 'denied' | 'blocked';
 
 export default function App() {
+  // Two families carry the whole design, so there is no sensible half-loaded
+  // state - the splash stays up the few hundred ms this takes.
+  const [fontsReady] = useFonts({
+    Fraunces_400Regular,
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    IBMPlexMono_400Regular,
+    IBMPlexMono_500Medium,
+    IBMPlexMono_600SemiBold,
+  });
+
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
   const [memories, setMemories] = useState<LocatedMemory[]>([]);
   // What was tapped is a point, not a memory: the sheet pages through it.
@@ -261,6 +283,8 @@ export default function App() {
 
   const showPrimer = permission !== 'granted' && !primerDismissed;
 
+  if (!fontsReady) return null;
+
   return (
     <SafeAreaProvider>
       <View style={styles.container}>
@@ -291,12 +315,10 @@ export default function App() {
             ))}
           </MapView>
 
-          <Glass style={styles.banner}>
-            <View style={styles.bannerRow} pointerEvents="none">
-              <Text style={styles.bannerText}>{bannerText}</Text>
-              {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
-            </View>
-          </Glass>
+          <View style={styles.banner} pointerEvents="none">
+            <Text style={styles.bannerText}>{bannerText}</Text>
+            {status === 'loading' && <ActivityIndicator size="small" color={color.inkFaint} />}
+          </View>
 
           {!showPrimer && withinReach.length > 0 && (
             <ReachBanner
@@ -388,42 +410,52 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: color.paper },
   screen: { flex: 1 },
   // display:none rather than unmounting: the map keeps its region and its pins.
   hidden: { display: 'none' },
+  // A paper tab, ruled rather than shadowed. Editorial layouts use rules and
+  // weight for hierarchy; the floating translucent card is the thing every
+  // generated interface reaches for first.
   banner: {
     position: 'absolute',
     top: 64,
     alignSelf: 'center',
-    borderRadius: 22,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 3,
-  },
-  bannerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 11,
+    backgroundColor: color.paper,
+    borderWidth: 1,
+    borderColor: color.rule,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 4,
   },
-  bannerText: { fontSize: 14, color: '#3f3f46', fontWeight: '600' },
+  bannerText: {
+    fontFamily: font.monoMedium,
+    fontSize: 12,
+    letterSpacing: 0.3,
+    color: color.inkSoft,
+  },
   locate: {
     position: 'absolute',
     bottom: 44,
     alignSelf: 'center',
-    backgroundColor: '#18181b',
-    paddingHorizontal: 24,
+    backgroundColor: color.ink,
+    paddingHorizontal: 26,
     paddingVertical: 14,
-    borderRadius: 26,
+    borderRadius: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
   },
-  locateText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  locateText: {
+    color: color.paper,
+    fontFamily: font.monoBold,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
 });

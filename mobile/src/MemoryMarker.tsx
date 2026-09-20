@@ -12,6 +12,7 @@ import { Marker } from 'react-native-maps';
 import type { MemoryGroup } from './cluster.ts';
 import { groupLabel } from './cluster.ts';
 import Padlock from './Padlock.tsx';
+import { color, font } from './theme.ts';
 import type { Reach } from './reach.ts';
 
 const STATE_LABEL: Record<Reach, string> = {
@@ -68,7 +69,7 @@ function Lock({ count, reachable }: { count: number; reachable: boolean }) {
           {count > 1 ? (
             <Text style={styles.count}>{count}</Text>
           ) : (
-            <Padlock size={DISTANT * 0.34} color="#fff" />
+            <Padlock size={DISTANT * 0.34} color={color.paper} />
           )}
         </View>
       </View>
@@ -82,7 +83,7 @@ function Lock({ count, reachable }: { count: number; reachable: boolean }) {
         {count > 1 ? (
           <Text style={styles.count}>{count}</Text>
         ) : (
-          <Padlock size={10} color="#fff" />
+          <Padlock size={10} color={color.paper} />
         )}
       </View>
     </View>
@@ -95,26 +96,31 @@ const REACHABLE = 44;
 const styles = StyleSheet.create({
   lockWrap: { alignItems: 'center', justifyContent: 'center', padding: 7 },
   // A soft glow so the pin is findable before you can read its shape.
-  halo: { borderRadius: 40, backgroundColor: 'rgba(245,158,11,0.22)' },
+  halo: { borderRadius: 40, backgroundColor: 'rgba(192,70,43,0.16)' },
   badge: {
     minWidth: 26,
     height: 26,
     paddingHorizontal: 6,
     borderRadius: 13,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: color.paper,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  open: { backgroundColor: '#18181b' },
-  distant: { backgroundColor: '#71717a', width: DISTANT, height: DISTANT, borderRadius: DISTANT / 2 },
+  open: { backgroundColor: color.ink },
+  distant: {
+    backgroundColor: color.faded,
+    width: DISTANT,
+    height: DISTANT,
+    borderRadius: DISTANT / 2,
+  },
   ring: {
     width: REACHABLE,
     height: REACHABLE,
     borderRadius: REACHABLE / 2,
     borderWidth: 5,
-    borderColor: '#f59e0b',
-    backgroundColor: '#fff',
+    borderColor: color.seal,
+    backgroundColor: color.paper,
   },
   // Offset to the corner, because the middle is where the blue dot lands.
   tag: {
@@ -125,11 +131,11 @@ const styles = StyleSheet.create({
     height: 20,
     paddingHorizontal: 5,
     borderRadius: 10,
-    backgroundColor: '#b45309',
+    backgroundColor: color.sealDeep,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: color.paper,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  count: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  count: { color: color.paper, fontFamily: font.monoBold, fontSize: 11 },
 });

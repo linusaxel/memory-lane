@@ -8,6 +8,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { color, font } from './theme.ts';
+
 export type Tab = 'map' | 'collection' | 'you';
 
 type Props = {
@@ -70,22 +72,29 @@ function Item({
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.12)',
-    paddingTop: 12,
+    backgroundColor: color.paper,
+    borderTopWidth: 1,
+    borderTopColor: color.rule,
+    paddingTop: 14,
   },
-  item: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-  label: { fontSize: 15, fontWeight: '600', color: '#a1a1aa' },
-  active: { color: '#18181b' },
+  item: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  label: {
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: color.inkFaint,
+  },
+  active: { color: color.ink },
   badge: {
-    minWidth: 21,
+    minWidth: 20,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 11,
-    backgroundColor: '#f4f4f5',
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: color.rule,
   },
-  badgeActive: { backgroundColor: '#18181b' },
-  badgeText: { fontSize: 12, fontWeight: '700', color: '#a1a1aa', textAlign: 'center' },
-  badgeTextActive: { color: '#fff' },
+  badgeActive: { backgroundColor: color.ink, borderColor: color.ink },
+  badgeText: { fontFamily: font.monoBold, fontSize: 10, color: color.inkFaint, textAlign: 'center' },
+  badgeTextActive: { color: color.paper },
 });
