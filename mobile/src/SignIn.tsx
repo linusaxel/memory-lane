@@ -46,6 +46,59 @@ const GOOGLE = {
 
 const PROVIDER_NAME = { google: 'Google', apple: 'Apple' } as const;
 
+/** True only when this build could actually complete a Google sign-in. */
+const GOOGLE_CONFIGURED = !!(
+  GOOGLE.iosClientId ||
+  GOOGLE.androidClientId ||
+  GOOGLE.webClientId
+);
+
+type ButtonProps = {
+  device: string | null;
+  onProfile: (next: Profile) => void;
+  onError: (message: string | null) => void;
+  onBusy: (busy: boolean) => void;
+};
+
+/**
+ * Its own component because the hook throws outright with no client id -
+ * "Client Id property `iosClientId` must be defined" - and a hook cannot be
+ * called conditionally. Hiding the button was not enough; the whole thing has
+ * to not be rendered, which is what GOOGLE_CONFIGURED decides below.
+ */
+function GoogleButton({ device, onProfile, onError, onBusy }: ButtonProps) {
+  const [, response, prompt] = Google.useIdTokenAuthRequest(GOOGLE);
+
+  // The flow finishes in a browser and comes back through `response` rather
+  // than by resolving the prompt, so the exchange has to live in an effect.
+  useEffect(() => {
+    if (response?.type !== 'success' || !device) return;
+    const idToken = response.params?.id_token;
+    if (!idToken) {
+      onError('Google did not return a sign-in token.');
+      return;
+    }
+    onBusy(true);
+    signIn('google', device, idToken)
+      .then(onProfile)
+      .catch(() => onError('Could not finish signing in.'))
+      .finally(() => onBusy(false));
+  }, [response, device, onProfile, onError, onBusy]);
+
+  return (
+    <Pressable
+      style={styles.action}
+      accessibilityRole="button"
+      onPress={() => {
+        onError(null);
+        prompt().catch(() => onError('Could not open Google sign-in.'));
+      }}
+    >
+      <Text style={styles.actionText}>Continue with Google</Text>
+    </Pressable>
+  );
+}
+
 type Props = {
   device: string | null;
   profile: Profile | null;
@@ -57,36 +110,12 @@ export default function SignIn({ device, profile, onProfile }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [appleAvailable, setAppleAvailable] = useState(false);
 
-  const [, googleResponse, promptGoogle] = Google.useIdTokenAuthRequest(GOOGLE);
-  const googleConfigured = !!(
-    GOOGLE.iosClientId ||
-    GOOGLE.androidClientId ||
-    GOOGLE.webClientId
-  );
-
   useEffect(() => {
     // iOS-only, and false on a simulator without an iCloud account signed in,
     // so it is asked rather than inferred from the platform.
     if (Platform.OS !== 'ios') return;
     AppleAuthentication.isAvailableAsync().then(setAppleAvailable).catch(() => {});
   }, []);
-
-  // The Google flow finishes in a browser and comes back through this response
-  // rather than by resolving the prompt, so the exchange has to live in an
-  // effect. `id_token` is what useIdTokenAuthRequest asked for.
-  useEffect(() => {
-    if (googleResponse?.type !== 'success' || !device) return;
-    const idToken = googleResponse.params?.id_token;
-    if (!idToken) {
-      setError('Google did not return a sign-in token.');
-      return;
-    }
-    setBusy(true);
-    signIn('google', device, idToken)
-      .then(onProfile)
-      .catch(() => setError('Could not finish signing in.'))
-      .finally(() => setBusy(false));
-  }, [googleResponse, device, onProfile]);
 
   const withApple = async () => {
     if (!device) return;
@@ -180,20 +209,16 @@ export default function SignIn({ device, profile, onProfile }: Props) {
         />
       )}
 
-      {googleConfigured && (
-        <Pressable
-          style={styles.action}
-          accessibilityRole="button"
-          onPress={() => {
-            setError(null);
-            promptGoogle().catch(() => setError('Could not open Google sign-in.'));
-          }}
-        >
-          <Text style={styles.actionText}>Continue with Google</Text>
-        </Pressable>
+      {GOOGLE_CONFIGURED && (
+        <GoogleButton
+          device={device}
+          onProfile={onProfile}
+          onError={setError}
+          onBusy={setBusy}
+        />
       )}
 
-      {!appleAvailable && !googleConfigured && (
+      {!appleAvailable && !GOOGLE_CONFIGURED && (
         <Text style={styles.note}>Sign-in is not available in this build.</Text>
       )}
 
