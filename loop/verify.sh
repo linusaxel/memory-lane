@@ -27,7 +27,13 @@ fi
 # --- 1. does anything even import ------------------------------------------
 $PY -m compileall -q crawler pipeline api tests >/dev/null 2>&1 || { echo "GATE=RED syntax error"; exit 1; }
 
-# --- 2. database, if any test needs it -------------------------------------
+# --- 2. style, so nobody has to guess it -----------------------------------
+# ~50ms on 2.2k lines. A missing ruff is INFRA, matching the pytest guard above.
+$PY -m ruff --version >/dev/null 2>&1 || { echo "GATE=INFRA ruff missing - run: uv pip install --python venv/bin/python -r requirements-dev.txt"; exit 2; }
+$PY -m ruff check . >/dev/null || { echo "GATE=RED ruff check"; FAIL=1; }
+$PY -m ruff format --check . >/dev/null || { echo "GATE=RED not formatted - run: venv/bin/python -m ruff format ."; FAIL=1; }
+
+# --- 3. database, if any test needs it -------------------------------------
 # Only pay the Docker cost when a test is actually marked `db`.
 if $PY -m pytest --collect-only -q -m db 2>/dev/null | grep -q '::'; then
   docker info >/dev/null 2>&1 || { echo "GATE=INFRA Docker is not running - a human must start Docker Desktop"; exit 2; }
@@ -40,13 +46,13 @@ if $PY -m pytest --collect-only -q -m db 2>/dev/null | grep -q '::'; then
     || { echo "GATE=INFRA db never became ready"; exit 2; }
 fi
 
-# --- 3. the suite ----------------------------------------------------------
+# --- 4. the suite ----------------------------------------------------------
 # -m "not credits and not live": never spends money, never needs the network.
 $PY -m pytest -q -m "not credits and not live" || FAIL=1
 
-# --- 4. the app, once it exists --------------------------------------------
+# --- 5. the app, once it exists --------------------------------------------
 if [ -f mobile/tsconfig.json ]; then
-  ( cd mobile && npx --no-install tsc --noEmit ) || FAIL=1
+  ( cd mobile && npm run --silent typecheck ) || FAIL=1
   for t in mobile/src/*.test.ts; do
     [ -e "$t" ] || continue
     ( cd mobile && node --test "src/$(basename "$t")" ) || FAIL=1
