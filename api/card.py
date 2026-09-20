@@ -9,11 +9,18 @@ means the credit ships welded to the content.
 Design constraints live in mobile/UI.md; the ones that bind here are that place
 name and attribution stay legible at thumbnail size, and that the card is
 correct in both colour schemes.
+
+This route is gated like every other one that can emit a summary. It was not,
+for a while: /v1/memories/{id}/card rendered a locked memory in full, and since
+ids are sequential the whole corpus was one loop away. F7's rule - "a client-side
+gate is not a gate" - is about exactly this, and the card was the side door,
+because it does not go through row_to_memory and had to be remembered separately.
+It is remembered now, and tests/test_api_unlock.py holds it to it.
 """
 
 from html import escape
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from sqlalchemy import text
 
@@ -33,6 +40,14 @@ SELECT
     m.contrast_note,
     m.timestamp_start,
     p.name AS place_name,
+    p.precision_meters,
+    ST_Y(p.coordinates::geometry) AS lat,
+    ST_X(p.coordinates::geometry) AS lng,
+    (
+        SELECT COUNT(*) = 1 FROM places p2
+        WHERE ST_SnapToGrid(p2.coordinates::geometry, 0.0001)
+            = ST_SnapToGrid(p.coordinates::geometry, 0.0001)
+    ) AS coordinate_is_unique,
     c.title AS content_title,
     c.url AS content_url
 FROM memories m
@@ -154,13 +169,58 @@ def render_card(row) -> str:
 </body></html>"""
 
 
+def render_locked_card(row, radius_meters: int) -> str:
+    """The same card with its middle withheld. Deliberately still a card: the
+    credit line survives, because attribution is the point of rendering this
+    server-side and is no less owed for a memory you have not earned yet."""
+    place = escape(row.place_name or "Unknown place")
+    credit = escape(credit_line(row))
+
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{place} - Memory Lane</title>
+<meta name="color-scheme" content="light dark">
+<style>{CARD_CSS}</style>
+</head><body>
+<article class="card">
+  <span class="layer">locked</span>
+  <h1 class="place">{place}</h1>
+  <p class="summary">Something happened here. Stand within {radius_meters} m of it
+    to read it.</p>
+  <p class="credit">{credit}</p>
+</article>
+</body></html>"""
+
+
 @router.get("/v1/memories/{memory_id}/card", response_class=HTMLResponse)
-def memory_card(memory_id: int):
-    """One memory, rendered. See the module docstring for why this is not JSON."""
+def memory_card(
+    memory_id: int,
+    at_lat: float | None = Query(
+        None, ge=-90, le=90, description="Where you actually are; unlocks this card if near"
+    ),
+    at_lng: float | None = Query(
+        None, ge=-180, le=180, description="Where you actually are; unlocks this card if near"
+    ),
+):
+    """One memory, rendered. See the module docstring for why this is not JSON.
+
+    A gated memory renders as a locked card - place and invitation, no summary -
+    unless a position inside the radius is supplied. The embed relies on that:
+    "there is a memory here, go and stand in it" is a perfectly good thing for
+    somebody else's tourism page to say, and is the only thing it may say.
+    """
+    # Imported here rather than at module scope: api.main imports this router,
+    # so a top-level import would be a cycle.
+    from api.main import UNLOCK_RADIUS_METERS, is_locked, viewer_position
+
     with get_session() as session:
         row = session.execute(text(CARD_QUERY), {"memory_id": memory_id}).fetchone()
 
     if row is None:
         raise HTTPException(status_code=404, detail="Memory not found")
+
+    if is_locked(row, viewer_position(at_lat, at_lng)):
+        return HTMLResponse(render_locked_card(row, UNLOCK_RADIUS_METERS))
 
     return HTMLResponse(render_card(row))

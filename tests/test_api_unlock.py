@@ -15,6 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
+import api.card as card
 import api.main as m
 
 pytestmark = pytest.mark.db
@@ -33,6 +34,10 @@ def client(db_session, monkeypatch):
         yield db_session
 
     monkeypatch.setattr(m, "get_session", _session)
+    # card.py binds get_session at import, so patching api.main alone leaves the
+    # card route talking to the real database - which looks like a passing gate
+    # test and is actually a 404.
+    monkeypatch.setattr(card, "get_session", _session)
     return TestClient(m.app)
 
 
@@ -154,3 +159,31 @@ def test_the_place_sample_is_not_a_side_door(client, one_memory):
     place = client.get(f"/v1/places/nearby?lat={LAT}&lng={LNG}").json()["places"][0]
     assert place["sample_memory"] is None
     assert place["name"] == "Vega", "the place itself is not a secret"
+
+
+def test_the_card_is_not_a_side_door(client, one_memory):
+    """The widest hole the gate ever had: /card renders a summary as HTML and
+    does not go through row_to_memory, so it had to be gated separately - and
+    for a while was not. Memory ids are sequential, so one loop read everything.
+    """
+    locked = client.get(f"/v1/memories/{one_memory}/card").text
+    assert "amp caught fire" not in locked
+    assert "Stand within" in locked, "a locked card still says what to do about it"
+    assert "Vega" in locked, "and still names the place, and still credits it"
+
+    unlocked = client.get(f"/v1/memories/{one_memory}/card?at_lat={LAT}&at_lng={LNG}").text
+    assert "amp caught fire" in unlocked
+
+
+def test_a_centroid_card_is_readable_by_anyone(client, db_session):
+    """Same rule as everywhere else: a coordinate several places share is the
+    model saying "somewhere in this city", and gating it would ask for a walk to
+    a fiction. The embed shows these to strangers on purpose."""
+    first = _place(db_session, "Gotham Comedy Club", LAT, LNG)
+    _place(db_session, "Times Square", LAT, LNG)
+    memory = _memory(
+        db_session, first, "a heckler got the better of him", "https://e.invalid/ccccccccccc"
+    )
+    db_session.commit()
+
+    assert "heckler" in client.get(f"/v1/memories/{memory}/card").text

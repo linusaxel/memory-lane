@@ -153,9 +153,26 @@ content is one `curl` away and the mechanic is theatre.
 So a locked memory ships **place name, coordinates and distance, and nothing
 else** — no summary, no tags, no source. The redaction lives in
 `row_to_memory`, not in an endpoint, because gating `/v1/memories/nearby` alone
-leaves two side doors: `/v1/memories/search` reaches the same rows, and
-`/v1/places/nearby` carries a verbatim summary as `sample_memory`. Both are
-gated, and `tests/test_api_unlock.py` asserts it.
+leaves side doors: `/v1/memories/search` reaches the same rows, and
+`/v1/places/nearby` carries a verbatim summary as `sample_memory`.
+
+The widest one was **`/v1/memories/{id}/card`**, and it stayed open after the
+rest were closed. It renders a summary as HTML and does not go through
+`row_to_memory`, so it had to be remembered separately and was not — and since
+memory ids are sequential, one loop read the corpus. It is gated now: a gated
+memory renders a **locked card**, which keeps the place name and the credit line
+and replaces the summary with what to do about it. The credit survives because
+attribution is the reason the card is server-rendered at all, and is no less
+owed for a memory nobody has earned yet.
+
+That shape is also what the embed wants. "There is a memory here, go and stand
+in it" is a fine thing for somebody else's tourism page to say, and is now the
+only thing it can say about a gated one.
+
+Every one of these is asserted in `tests/test_api_unlock.py`. The lesson is
+structural: any route that can emit a summary and does not route through
+`row_to_memory` is a hole by default, so there should be as few of those as
+possible.
 
 **The list endpoints never unlock anything.** `/v1/memories/nearby` returns a
 gated memory locked however close you are standing, and takes no position at

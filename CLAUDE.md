@@ -191,6 +191,10 @@ Only memories you are standing near are readable. The gate is in `row_to_memory`
 by the same code — `/v1/memories/search` and `/v1/places/nearby`'s
 `sample_memory` reach the same rows and would otherwise be side doors.
 
+`api/card.py` renders HTML and cannot use `row_to_memory`, so it gates itself —
+if you add another route that emits a summary, it is a hole until you do the
+same.
+
 Only a coordinate no other place shares is gated. 111 of 186 placed memories sit
 on city centroids the model emitted when it did not know the address, and
 locking those would ask somebody to walk to a fiction. Full reasoning in
