@@ -120,8 +120,9 @@ class PlaceDetail(BaseModel):
 # QUERIES
 # ============================================================================
 
-NEARBY_MEMORIES_QUERY = """
-SELECT
+# The 14 columns every memory-shaped response needs. row_to_memory reads the row
+# by name, so a query is free to append distance, rank or created_at.
+MEMORY_COLUMNS = """
     m.id,
     m.summary,
     m.timestamp_start,
@@ -133,149 +134,105 @@ SELECT
     p.precision_meters,
     ST_Y(p.coordinates::geometry) as lat,
     ST_X(p.coordinates::geometry) as lng,
-    ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters,
     c.id as content_id,
     c.title as content_title,
-    c.url as content_url
+    c.url as content_url"""
+
+MEMORY_JOIN = """
 FROM memories m
 JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
+JOIN content c ON m.content_id = c.id"""
+
+DISTANCE = "ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters"
+WITHIN = "ST_DWithin(p.coordinates, ST_MakePoint(:lng, :lat)::geography, :radius_meters)"
+
+# ponytail: the tsvector spans two tables, so no expression index can serve it and
+# every search is a sequential scan. Denormalize a search column onto memories if
+# the corpus ever outgrows it.
+SEARCH_VECTOR = "to_tsvector('english', m.summary || ' ' || p.name)"
+SEARCH_MATCH = f"{SEARCH_VECTOR} @@ plainto_tsquery('english', :query)"
+SEARCH_RANK = f"ts_rank({SEARCH_VECTOR}, plainto_tsquery('english', :query)) as rank"
+
+# Tags aggregated across every memory at a place.
+PLACE_TAGS = """COALESCE(
+        (SELECT array_agg(DISTINCT t) FROM memories m2, unnest(m2.tags) t WHERE m2.place_id = p.id),
+        ARRAY[]::varchar[]
+    ) as tags"""
+
+CONFIDENCE_FILTER = """(:min_confidence = 'low' OR m.extraction_confidence IN ('medium', 'high'))
+    AND (:min_confidence != 'high' OR m.extraction_confidence = 'high')"""
+
+NEARBY_MEMORIES_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    {DISTANCE}
+{MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
-    AND ST_DWithin(
-        p.coordinates,
-        ST_MakePoint(:lng, :lat)::geography,
-        :radius_meters
-    )
-    AND (:min_confidence = 'low' OR m.extraction_confidence IN ('medium', 'high'))
-    AND (:min_confidence != 'high' OR m.extraction_confidence = 'high')
+    AND {WITHIN}
+    AND {CONFIDENCE_FILTER}
 ORDER BY distance_meters ASC
 LIMIT :limit OFFSET :offset
 """
 
-NEARBY_MEMORIES_WITH_TAGS_QUERY = """
-SELECT
-    m.id,
-    m.summary,
-    m.timestamp_start,
-    m.timestamp_end,
-    m.tags,
-    m.extraction_confidence,
-    p.id as place_id,
-    p.name as place_name,
-    p.precision_meters,
-    ST_Y(p.coordinates::geometry) as lat,
-    ST_X(p.coordinates::geometry) as lng,
-    ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters,
-    c.id as content_id,
-    c.title as content_title,
-    c.url as content_url
-FROM memories m
-JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
+NEARBY_MEMORIES_WITH_TAGS_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    {DISTANCE}
+{MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
-    AND ST_DWithin(
-        p.coordinates,
-        ST_MakePoint(:lng, :lat)::geography,
-        :radius_meters
-    )
+    AND {WITHIN}
     AND m.tags && CAST(:tags AS varchar[])
-    AND (:min_confidence = 'low' OR m.extraction_confidence IN ('medium', 'high'))
-    AND (:min_confidence != 'high' OR m.extraction_confidence = 'high')
+    AND {CONFIDENCE_FILTER}
 ORDER BY distance_meters ASC
 LIMIT :limit OFFSET :offset
 """
 
-COUNT_QUERY = """
+COUNT_QUERY = f"""
 SELECT COUNT(*)
 FROM memories m
 JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
-    AND ST_DWithin(
-        p.coordinates,
-        ST_MakePoint(:lng, :lat)::geography,
-        :radius_meters
-    )
+    AND {WITHIN}
 """
 
-NEARBY_PLACES_QUERY = """
+NEARBY_PLACES_QUERY = f"""
 SELECT
     p.id,
     p.name,
     p.precision_meters,
     ST_Y(p.coordinates::geometry) as lat,
     ST_X(p.coordinates::geometry) as lng,
-    ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters,
+    {DISTANCE},
     COUNT(m.id) as memory_count,
-    COALESCE(
-        (SELECT array_agg(DISTINCT t) FROM memories m2, unnest(m2.tags) t WHERE m2.place_id = p.id),
-        ARRAY[]::varchar[]
-    ) as tags,
+    {PLACE_TAGS},
     (SELECT summary FROM memories WHERE place_id = p.id ORDER BY id LIMIT 1) as sample_memory
 FROM places p
 JOIN memories m ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
-    AND ST_DWithin(
-        p.coordinates,
-        ST_MakePoint(:lng, :lat)::geography,
-        :radius_meters
-    )
+    AND {WITHIN}
 GROUP BY p.id, p.name, p.precision_meters, p.coordinates
 ORDER BY distance_meters ASC
 LIMIT :limit OFFSET :offset
 """
 
-SINGLE_MEMORY_QUERY = """
-SELECT
-    m.id,
-    m.summary,
-    m.timestamp_start,
-    m.timestamp_end,
-    m.tags,
-    m.extraction_confidence,
-    m.created_at,
-    p.id as place_id,
-    p.name as place_name,
-    p.precision_meters,
-    ST_Y(p.coordinates::geometry) as lat,
-    ST_X(p.coordinates::geometry) as lng,
-    c.id as content_id,
-    c.title as content_title,
-    c.url as content_url
-FROM memories m
-JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
+SINGLE_MEMORY_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    m.created_at
+{MEMORY_JOIN}
 WHERE m.id = :memory_id
 """
 
-PLACE_MEMORIES_QUERY = """
-SELECT
-    m.id,
-    m.summary,
-    m.timestamp_start,
-    m.timestamp_end,
-    m.tags,
-    m.extraction_confidence,
-    p.id as place_id,
-    p.name as place_name,
-    p.precision_meters,
-    ST_Y(p.coordinates::geometry) as lat,
-    ST_X(p.coordinates::geometry) as lng,
-    c.id as content_id,
-    c.title as content_title,
-    c.url as content_url
-FROM memories m
-JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
+PLACE_MEMORIES_QUERY = f"""
+SELECT {MEMORY_COLUMNS}
+{MEMORY_JOIN}
 WHERE p.id = :place_id
 ORDER BY m.created_at DESC
 LIMIT :limit OFFSET :offset
 """
 
-SINGLE_PLACE_QUERY = """
+SINGLE_PLACE_QUERY = f"""
 SELECT
     p.id,
     p.name,
@@ -286,113 +243,52 @@ SELECT
     ST_X(p.coordinates::geometry) as lng,
     p.created_at,
     COUNT(m.id) as memory_count,
-    COALESCE(
-        (SELECT array_agg(DISTINCT t) FROM memories m2, unnest(m2.tags) t WHERE m2.place_id = p.id),
-        ARRAY[]::varchar[]
-    ) as tags
+    {PLACE_TAGS}
 FROM places p
 LEFT JOIN memories m ON m.place_id = p.id
 WHERE p.id = :place_id
 GROUP BY p.id, p.name, p.place_query, p.precision_meters, p.geocode_status, p.coordinates, p.created_at
 """
 
-CONTENT_MEMORIES_QUERY = """
-SELECT
-    m.id,
-    m.summary,
-    m.timestamp_start,
-    m.timestamp_end,
-    m.tags,
-    m.extraction_confidence,
-    p.id as place_id,
-    p.name as place_name,
-    p.precision_meters,
-    ST_Y(p.coordinates::geometry) as lat,
-    ST_X(p.coordinates::geometry) as lng,
-    c.id as content_id,
-    c.title as content_title,
-    c.url as content_url
-FROM memories m
-JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
+CONTENT_MEMORIES_QUERY = f"""
+SELECT {MEMORY_COLUMNS}
+{MEMORY_JOIN}
 WHERE c.id = :content_id
 ORDER BY m.timestamp_start ASC
 LIMIT :limit OFFSET :offset
 """
 
-SEARCH_MEMORIES_QUERY = """
-SELECT
-    m.id,
-    m.summary,
-    m.timestamp_start,
-    m.timestamp_end,
-    m.tags,
-    m.extraction_confidence,
-    p.id as place_id,
-    p.name as place_name,
-    p.precision_meters,
-    ST_Y(p.coordinates::geometry) as lat,
-    ST_X(p.coordinates::geometry) as lng,
-    c.id as content_id,
-    c.title as content_title,
-    c.url as content_url,
-    ts_rank(
-        to_tsvector('english', m.summary || ' ' || p.name),
-        plainto_tsquery('english', :query)
-    ) as rank
-FROM memories m
-JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
+SEARCH_MEMORIES_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    {SEARCH_RANK}
+{MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
-    AND to_tsvector('english', m.summary || ' ' || p.name) @@ plainto_tsquery('english', :query)
+    AND {SEARCH_MATCH}
 ORDER BY rank DESC
 LIMIT :limit OFFSET :offset
 """
 
-SEARCH_MEMORIES_WITH_LOCATION_QUERY = """
-SELECT
-    m.id,
-    m.summary,
-    m.timestamp_start,
-    m.timestamp_end,
-    m.tags,
-    m.extraction_confidence,
-    p.id as place_id,
-    p.name as place_name,
-    p.precision_meters,
-    ST_Y(p.coordinates::geometry) as lat,
-    ST_X(p.coordinates::geometry) as lng,
-    ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters,
-    c.id as content_id,
-    c.title as content_title,
-    c.url as content_url,
-    ts_rank(
-        to_tsvector('english', m.summary || ' ' || p.name),
-        plainto_tsquery('english', :query)
-    ) as rank
-FROM memories m
-JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
+SEARCH_MEMORIES_WITH_LOCATION_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    {DISTANCE},
+    {SEARCH_RANK}
+{MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
-    AND to_tsvector('english', m.summary || ' ' || p.name) @@ plainto_tsquery('english', :query)
-    AND ST_DWithin(
-        p.coordinates,
-        ST_MakePoint(:lng, :lat)::geography,
-        :radius_meters
-    )
+    AND {SEARCH_MATCH}
+    AND {WITHIN}
 ORDER BY rank DESC, distance_meters ASC
 LIMIT :limit OFFSET :offset
 """
 
-SEARCH_COUNT_QUERY = """
+SEARCH_COUNT_QUERY = f"""
 SELECT COUNT(*)
 FROM memories m
 JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
-    AND to_tsvector('english', m.summary || ' ' || p.name) @@ plainto_tsquery('english', :query)
+    AND {SEARCH_MATCH}
 """
 
 
@@ -401,11 +297,16 @@ WHERE
 # ============================================================================
 
 
+def row_coordinates(row) -> Coordinates | None:
+    """A place with no coordinates is filtered out of most queries, not all."""
+    if row.lat is None or row.lng is None:
+        return None
+    return Coordinates(lat=row.lat, lng=row.lng)
+
+
 def row_to_memory(row, include_distance: bool = True) -> Memory:
     """Convert database row to Memory model."""
-    coords = None
-    if row.lat is not None and row.lng is not None:
-        coords = Coordinates(lat=row.lat, lng=row.lng)
+    coords = row_coordinates(row)
 
     timestamp_url = row.content_url
     if "youtube.com" in row.content_url or "youtu.be" in row.content_url:
@@ -635,9 +536,7 @@ def get_nearby_places(
 
     places = []
     for row in rows:
-        coords = None
-        if row.lat is not None and row.lng is not None:
-            coords = Coordinates(lat=row.lat, lng=row.lng)
+        coords = row_coordinates(row)
 
         places.append(
             PlaceWithCount(
@@ -673,9 +572,7 @@ def get_place(place_id: int):
     if not row:
         raise HTTPException(status_code=404, detail="Place not found")
 
-    coords = None
-    if row.lat is not None and row.lng is not None:
-        coords = Coordinates(lat=row.lat, lng=row.lng)
+    coords = row_coordinates(row)
 
     return PlaceDetail(
         id=row.id,
