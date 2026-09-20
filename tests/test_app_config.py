@@ -28,6 +28,7 @@ def eas():
 
 # -- iOS ---------------------------------------------------------------------
 
+
 def test_ipad_support_is_off(expo):
     """supportsTablet: true would demand a full extra set of iPad screenshots."""
     assert expo["ios"]["supportsTablet"] is False
@@ -49,6 +50,7 @@ def test_location_permission_string_is_specific(expo):
 
 # -- Android -----------------------------------------------------------------
 
+
 def test_background_location_is_never_requested(expo):
     """ACCESS_BACKGROUND_LOCATION triggers Play's background-location
     declaration form plus a screencast review - weeks of latency for a feature
@@ -58,11 +60,14 @@ def test_background_location_is_never_requested(expo):
 
 def test_android_permissions_are_an_explicit_allowlist(expo):
     assert set(expo["android"]["permissions"]) == {
-        "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "INTERNET",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "INTERNET",
     }
 
 
 # -- both --------------------------------------------------------------------
+
 
 def test_bundle_ids_match_each_other(expo):
     assert expo["ios"]["bundleIdentifier"] == expo["android"]["package"]
@@ -84,6 +89,7 @@ def test_placeholders_are_still_flagged(expo, eas):
 
 
 # -- EAS ---------------------------------------------------------------------
+
 
 def test_eas_owns_build_numbers(eas):
     """Remote versioning + autoIncrement means no hand-bumping before resubmit."""

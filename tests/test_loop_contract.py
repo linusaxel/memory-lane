@@ -52,6 +52,7 @@ def _target_exists(token: str) -> bool:
 
 # -- structural invariants ---------------------------------------------------
 
+
 def test_ids_are_unique():
     ids = [t["id"] for t in TASKS]
     assert len(ids) == len(set(ids)), "duplicate task ids"
@@ -79,11 +80,13 @@ def test_no_task_is_done_before_its_dependencies():
     by_id = {t["id"]: t for t in TASKS}
     for t in DONE:
         for dep in t.get("depends_on") or []:
-            assert by_id[dep]["state"] == "done", \
+            assert by_id[dep]["state"] == "done", (
                 f"{t['id']} is done but its dependency {dep} is {by_id[dep]['state']}"
+            )
 
 
 # -- the part that actually stops false progress -----------------------------
+
 
 @pytest.mark.parametrize("t", DONE, ids=lambda t: t["id"])
 def test_done_task_is_actually_proven(t):
@@ -95,14 +98,16 @@ def test_done_task_is_actually_proven(t):
     # 2. anything it points at must STILL EXIST. Deleting or renaming the test
     #    to get to green fails right here.
     for token in _verify_targets(t["verify"]):
-        assert _target_exists(token), \
+        assert _target_exists(token), (
             f"{tid} is done but points at {token!r}, which no longer exists"
+        )
 
     # 3. a real commit, not a story about one
     sha = t.get("commit")
     assert sha, f"{tid} is done with no commit recorded"
-    found = subprocess.run(["git", "cat-file", "-e", f"{sha}^{{commit}}"],
-                           cwd=ROOT, capture_output=True)
+    found = subprocess.run(
+        ["git", "cat-file", "-e", f"{sha}^{{commit}}"], cwd=ROOT, capture_output=True
+    )
     assert found.returncode == 0, f"{tid} records commit {sha} which does not exist"
 
 
@@ -116,6 +121,7 @@ def test_blocked_task_tells_the_human_what_to_do(t):
 
 
 # -- scope fence -------------------------------------------------------------
+
 
 def test_inbox_is_not_executable():
     """Ideas live in inbox as plain strings. If one grows a `verify`, someone is

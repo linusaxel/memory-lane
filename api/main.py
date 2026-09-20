@@ -14,7 +14,7 @@ from pipeline.db import get_session
 app = FastAPI(
     title="Memory Lane API",
     description="Query location-based memories from video content",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # CORS for web clients
@@ -32,6 +32,7 @@ app.add_middleware(
 # ============================================================================
 # MODELS
 # ============================================================================
+
 
 class Coordinates(BaseModel):
     lat: float
@@ -400,6 +401,7 @@ WHERE
 # HELPERS
 # ============================================================================
 
+
 def row_to_memory(row, include_distance: bool = True) -> Memory:
     """Convert database row to Memory model."""
     coords = None
@@ -418,18 +420,20 @@ def row_to_memory(row, include_distance: bool = True) -> Memory:
             id=row.place_id,
             name=row.place_name,
             coordinates=coords,
-            precision_meters=row.precision_meters
+            precision_meters=row.precision_meters,
         ),
-        distance_meters=row.distance_meters if include_distance and hasattr(row, 'distance_meters') else None,
+        distance_meters=row.distance_meters
+        if include_distance and hasattr(row, "distance_meters")
+        else None,
         content=ContentRef(
             id=row.content_id,
             title=row.content_title,
             url=row.content_url,
             timestamp_start=row.timestamp_start,
-            timestamp_url=timestamp_url
+            timestamp_url=timestamp_url,
         ),
         tags=row.tags or [],
-        confidence=row.extraction_confidence or "medium"
+        confidence=row.extraction_confidence or "medium",
     )
 
 
@@ -489,7 +493,9 @@ def get_nearby_memories(
     limit: int = Query(20, ge=1, le=100, description="Max results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     tags: Optional[str] = Query(None, description="Comma-separated tags to filter"),
-    min_confidence: str = Query("medium", pattern="^(low|medium|high)$", description="Minimum confidence")
+    min_confidence: str = Query(
+        "medium", pattern="^(low|medium|high)$", description="Minimum confidence"
+    ),
 ):
     """Find memories near a location."""
     radius_meters = radius_km * 1000
@@ -501,7 +507,7 @@ def get_nearby_memories(
             "radius_meters": radius_meters,
             "limit": limit,
             "offset": offset,
-            "min_confidence": min_confidence
+            "min_confidence": min_confidence,
         }
 
         if tags:
@@ -515,8 +521,7 @@ def get_nearby_memories(
 
         # Get total count
         count_result = session.execute(
-            text(COUNT_QUERY),
-            {"lat": lat, "lng": lng, "radius_meters": radius_meters}
+            text(COUNT_QUERY), {"lat": lat, "lng": lng, "radius_meters": radius_meters}
         )
         total = count_result.scalar() or 0
 
@@ -529,17 +534,23 @@ def get_nearby_memories(
             limit=limit,
             offset=offset,
             center=Coordinates(lat=lat, lng=lng),
-            radius_km=radius_km
-        )
+            radius_km=radius_km,
+        ),
     )
 
 
 @app.get("/v1/memories/search", response_model=SearchResponse)
 def search_memories(
     q: str = Query(..., min_length=2, description="Search query"),
-    lat: Optional[float] = Query(None, ge=-90, le=90, description="Optional latitude for location filter"),
-    lng: Optional[float] = Query(None, ge=-180, le=180, description="Optional longitude for location filter"),
-    radius_km: float = Query(50, ge=0.1, le=500, description="Search radius in km (if location provided)"),
+    lat: Optional[float] = Query(
+        None, ge=-90, le=90, description="Optional latitude for location filter"
+    ),
+    lng: Optional[float] = Query(
+        None, ge=-180, le=180, description="Optional longitude for location filter"
+    ),
+    radius_km: float = Query(
+        50, ge=0.1, le=500, description="Search radius in km (if location provided)"
+    ),
     limit: int = Query(20, ge=1, le=100, description="Max results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
 ):
@@ -559,25 +570,21 @@ def search_memories(
                     "lng": lng,
                     "radius_meters": radius_meters,
                     "limit": limit,
-                    "offset": offset
-                }
+                    "offset": offset,
+                },
             )
             rows = result.fetchall()
             center = Coordinates(lat=lat, lng=lng)
         else:
             result = session.execute(
-                text(SEARCH_MEMORIES_QUERY),
-                {"query": q, "limit": limit, "offset": offset}
+                text(SEARCH_MEMORIES_QUERY), {"query": q, "limit": limit, "offset": offset}
             )
             rows = result.fetchall()
             center = None
             radius_km = None
 
         # Get total count
-        count_result = session.execute(
-            text(SEARCH_COUNT_QUERY),
-            {"query": q}
-        )
+        count_result = session.execute(text(SEARCH_COUNT_QUERY), {"query": q})
         total = count_result.scalar() or 0
 
     memories = [row_to_memory(row, include_distance=(lat is not None)) for row in rows]
@@ -585,13 +592,8 @@ def search_memories(
     return SearchResponse(
         memories=memories,
         meta=SearchMeta(
-            total=total,
-            limit=limit,
-            offset=offset,
-            query=q,
-            center=center,
-            radius_km=radius_km
-        )
+            total=total, limit=limit, offset=offset, query=q, center=center, radius_km=radius_km
+        ),
     )
 
 
@@ -599,10 +601,7 @@ def search_memories(
 def get_memory(memory_id: int):
     """Get a single memory by ID."""
     with get_session() as session:
-        result = session.execute(
-            text(SINGLE_MEMORY_QUERY),
-            {"memory_id": memory_id}
-        )
+        result = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id})
         row = result.fetchone()
 
     if not row:
@@ -630,8 +629,8 @@ def get_nearby_places(
                 "lng": lng,
                 "radius_meters": radius_meters,
                 "limit": limit,
-                "offset": offset
-            }
+                "offset": offset,
+            },
         )
         rows = result.fetchall()
 
@@ -641,15 +640,17 @@ def get_nearby_places(
         if row.lat is not None and row.lng is not None:
             coords = Coordinates(lat=row.lat, lng=row.lng)
 
-        places.append(PlaceWithCount(
-            id=row.id,
-            name=row.name,
-            coordinates=coords,
-            distance_meters=row.distance_meters,
-            memory_count=row.memory_count,
-            tags=row.tags or [],
-            sample_memory=row.sample_memory
-        ))
+        places.append(
+            PlaceWithCount(
+                id=row.id,
+                name=row.name,
+                coordinates=coords,
+                distance_meters=row.distance_meters,
+                memory_count=row.memory_count,
+                tags=row.tags or [],
+                sample_memory=row.sample_memory,
+            )
+        )
 
     return PlacesResponse(
         places=places,
@@ -658,8 +659,8 @@ def get_nearby_places(
             limit=limit,
             offset=offset,
             center=Coordinates(lat=lat, lng=lng),
-            radius_km=radius_km
-        )
+            radius_km=radius_km,
+        ),
     )
 
 
@@ -667,10 +668,7 @@ def get_nearby_places(
 def get_place(place_id: int):
     """Get details for a specific place."""
     with get_session() as session:
-        result = session.execute(
-            text(SINGLE_PLACE_QUERY),
-            {"place_id": place_id}
-        )
+        result = session.execute(text(SINGLE_PLACE_QUERY), {"place_id": place_id})
         row = result.fetchone()
 
     if not row:
@@ -688,21 +686,18 @@ def get_place(place_id: int):
         precision_meters=row.precision_meters,
         geocode_status=row.geocode_status,
         memory_count=row.memory_count,
-        tags=row.tags or []
+        tags=row.tags or [],
     )
 
 
 @app.get("/v1/places/{place_id}/memories", response_model=list[Memory])
 def get_place_memories(
-    place_id: int,
-    limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0)
+    place_id: int, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)
 ):
     """Get all memories for a specific place."""
     with get_session() as session:
         result = session.execute(
-            text(PLACE_MEMORIES_QUERY),
-            {"place_id": place_id, "limit": limit, "offset": offset}
+            text(PLACE_MEMORIES_QUERY), {"place_id": place_id, "limit": limit, "offset": offset}
         )
         rows = result.fetchall()
 
@@ -714,15 +709,13 @@ def get_place_memories(
 
 @app.get("/v1/content/{content_id}/memories", response_model=list[Memory])
 def get_content_memories(
-    content_id: int,
-    limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0)
+    content_id: int, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)
 ):
     """Get all memories extracted from a specific video/content."""
     with get_session() as session:
         result = session.execute(
             text(CONTENT_MEMORIES_QUERY),
-            {"content_id": content_id, "limit": limit, "offset": offset}
+            {"content_id": content_id, "limit": limit, "offset": offset},
         )
         rows = result.fetchall()
 
@@ -737,16 +730,21 @@ def get_stats():
     """Get database statistics."""
     with get_session() as session:
         memories_count = session.execute(text("SELECT COUNT(*) FROM memories")).scalar()
-        places_count = session.execute(text("SELECT COUNT(*) FROM places WHERE coordinates IS NOT NULL")).scalar()
-        content_count = session.execute(text("SELECT COUNT(*) FROM content WHERE memories_extracted = TRUE")).scalar()
+        places_count = session.execute(
+            text("SELECT COUNT(*) FROM places WHERE coordinates IS NOT NULL")
+        ).scalar()
+        content_count = session.execute(
+            text("SELECT COUNT(*) FROM content WHERE memories_extracted = TRUE")
+        ).scalar()
 
     return {
         "memories": memories_count,
         "places_with_coordinates": places_count,
-        "processed_videos": content_count
+        "processed_videos": content_count,
     }
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

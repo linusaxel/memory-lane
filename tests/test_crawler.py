@@ -45,12 +45,15 @@ def fake_ydl(monkeypatch):
 
 # -- the entry -> dict mapping ----------------------------------------------
 
+
 def test_url_is_built_from_the_id_not_the_entry_url(fake_ydl):
     """yt-dlp's flat `url` field is not always a canonical watch URL, and
     pipeline.ingest dedups on the exact normalized URL."""
-    fake_ydl.info = {"entries": [
-        {"id": "dQw4w9WgXcQ", "title": "T", "url": "https://youtu.be/SOMETHING_ELSE"},
-    ]}
+    fake_ydl.info = {
+        "entries": [
+            {"id": "dQw4w9WgXcQ", "title": "T", "url": "https://youtu.be/SOMETHING_ELSE"},
+        ]
+    }
     got = yt_crawler.list_channel_videos("https://www.youtube.com/@x")
     assert got[0]["url"] == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
@@ -77,11 +80,13 @@ def test_missing_timestamp_is_none_not_an_error(fake_ydl):
 
 
 def test_entry_without_an_id_is_dropped(fake_ydl):
-    fake_ydl.info = {"entries": [
-        {"id": "d" * 11, "title": "keep"},
-        {"title": "no id - drop me"},
-        None,
-    ]}
+    fake_ydl.info = {
+        "entries": [
+            {"id": "d" * 11, "title": "keep"},
+            {"title": "no id - drop me"},
+            None,
+        ]
+    }
     got = yt_crawler.list_channel_videos("https://www.youtube.com/@x")
     assert [v["title"] for v in got] == ["keep"]
 
@@ -92,6 +97,7 @@ def test_no_entries_key_is_not_a_crash(fake_ydl):
 
 
 # -- how we call yt-dlp ------------------------------------------------------
+
 
 def test_videos_tab_is_appended_exactly_once(fake_ydl):
     yt_crawler.list_channel_videos("https://www.youtube.com/@x")
@@ -126,18 +132,23 @@ def test_extraction_stays_flat_and_bounded(fake_ydl):
 
 # -- what must NOT come back --------------------------------------------------
 
+
 def test_transcript_handling_is_gone():
     """Transcripts are pipeline/transcripts.py's job. Duplicating them here is
     what made this module dead weight, and the .txt files it wrote were read by
     nothing. If any of these reappear, the module is drifting back."""
-    for gone in ("fetch_transcript", "save_transcript_txt",
-                 "crawl_channel_transcripts", "extract_video_id"):
+    for gone in (
+        "fetch_transcript",
+        "save_transcript_txt",
+        "crawl_channel_transcripts",
+        "extract_video_id",
+    ):
         assert not hasattr(yt_crawler, gone), f"{gone} should have been deleted"
 
 
 def test_crawler_does_not_import_pipeline():
     """pipeline.ingest imports crawler (W1-04). The reverse would be a cycle."""
-    source = (yt_crawler.__file__)
+    source = yt_crawler.__file__
     with open(source) as f:
         text = f.read()
     assert "import pipeline" not in text and "from pipeline" not in text

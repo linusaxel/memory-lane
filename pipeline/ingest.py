@@ -64,9 +64,8 @@ def ingest_content(config: dict | None = None):
             # Local import so yt_dlp stays off the path for yaml-only runs.
             if source.get("channel"):
                 from crawler.yt_crawler import list_channel_videos
-                videos = videos + list_channel_videos(
-                    source["channel"], limit=source.get("limit")
-                )
+
+                videos = videos + list_channel_videos(source["channel"], limit=source.get("limit"))
 
             for video in videos:
                 url = video.get("url", "")
@@ -84,8 +83,7 @@ def ingest_content(config: dict | None = None):
 
                 # Check if already exists (idempotent)
                 existing = session.execute(
-                    text("SELECT id FROM content WHERE url = :url"),
-                    {"url": normalized_url}
+                    text("SELECT id FROM content WHERE url = :url"), {"url": normalized_url}
                 ).fetchone()
 
                 if existing:
@@ -106,7 +104,7 @@ def ingest_content(config: dict | None = None):
                         "source_name": source_name,
                         "title": title,
                         "published_at": video.get("published_at"),
-                    }
+                    },
                 )
                 logger.info(f"Inserted: {normalized_url}")
                 inserted += 1

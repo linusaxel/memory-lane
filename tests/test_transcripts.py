@@ -31,6 +31,7 @@ def _api_raising(exc):
     class _Api:
         def fetch(self, video_id, languages=None):
             raise exc
+
     return lambda: _Api()
 
 
@@ -38,16 +39,22 @@ def _api_returning(segments):
     class _Api:
         def fetch(self, video_id, languages=None):
             return _Fetched(segments)
+
     return lambda: _Api()
 
 
 # -- permanent: these genuinely mean "no captions, ever" ---------------------
 
-@pytest.mark.parametrize("exc", [
-    TranscriptsDisabled("v"),
-    VideoUnavailable("v"),
-    NoTranscriptFound("v", ["en"], {}),
-], ids=["disabled", "unavailable", "not_found"])
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        TranscriptsDisabled("v"),
+        VideoUnavailable("v"),
+        NoTranscriptFound("v", ["en"], {}),
+    ],
+    ids=["disabled", "unavailable", "not_found"],
+)
 def test_permanent_failures_return_none(monkeypatch, exc):
     monkeypatch.setattr(transcripts, "YouTubeTranscriptApi", _api_raising(exc))
     assert transcripts.fetch_transcript("vvvvvvvvvvv") is None
@@ -55,11 +62,16 @@ def test_permanent_failures_return_none(monkeypatch, exc):
 
 # -- transient: these must NOT be mistaken for "no captions" -----------------
 
-@pytest.mark.parametrize("exc", [
-    TimeoutError("read timed out"),
-    ConnectionError("connection reset by peer"),
-    RuntimeError("blocked: too many requests from this IP"),
-], ids=["timeout", "connection_reset", "ip_block"])
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        TimeoutError("read timed out"),
+        ConnectionError("connection reset by peer"),
+        RuntimeError("blocked: too many requests from this IP"),
+    ],
+    ids=["timeout", "connection_reset", "ip_block"],
+)
 def test_transient_failures_propagate(monkeypatch, exc):
     """THE REGRESSION GUARD.
 
@@ -81,6 +93,7 @@ def test_fetch_transcript_has_no_bare_except():
     catches broadly precisely so it can leave the row pending.
     """
     import inspect
+
     source = inspect.getsource(transcripts.fetch_transcript)
     assert "except Exception" not in source, (
         "a bare `except Exception` here makes a network blip look identical to "
@@ -89,6 +102,7 @@ def test_fetch_transcript_has_no_bare_except():
 
 
 # -- the success path --------------------------------------------------------
+
 
 def test_segments_are_joined_into_full_text(monkeypatch):
     segments = [

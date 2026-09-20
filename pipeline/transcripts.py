@@ -106,13 +106,13 @@ def fetch_pending_transcripts():
                         "segments": json.dumps(result["segments"]),
                         "full_text": result["full_text"],
                         "language": result["language"],
-                    }
+                    },
                 )
 
                 # Mark content as fetched
                 session.execute(
                     text("UPDATE content SET transcript_fetched = TRUE WHERE id = :id"),
-                    {"id": content_id}
+                    {"id": content_id},
                 )
 
                 logger.info(f"Stored transcript: {len(result['segments'])} segments")
@@ -121,7 +121,7 @@ def fetch_pending_transcripts():
                 # Mark as failed
                 session.execute(
                     text("UPDATE content SET transcript_failed = TRUE WHERE id = :id"),
-                    {"id": content_id}
+                    {"id": content_id},
                 )
                 failed += 1
 

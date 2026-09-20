@@ -1,0 +1,16 @@
+# Ruff only. Deliberately no [project] table: without a build backend
+# `pip install -e .` starts failing and the repo becomes half a package for no
+# reason. Deliberately no [tool.pytest.ini_options] either: pytest.ini wins, and
+# a second pytest config is either dead or confusing.
+[tool.ruff]
+line-length = 100
+# *.md: ruff >=0.16 formats Python blocks embedded in Markdown. The code samples
+# in docs/ are prose, not compiled artifacts; leave them to the writer.
+extend-exclude = ["venv", "venv.broken-py314", "mobile", "*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# E501 is unsatisfiable here: every overlong line lives inside a string literal
+# (the extraction prompt, the privacy-page CSS, SQL) that no formatter can split.
+# `ruff format` owns line length; a rule that can never pass just breeds noqa.
+ignore = ["E501"]

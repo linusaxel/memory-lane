@@ -59,7 +59,7 @@ def update_place_coordinates(place_id: int, lat: float, lng: float, status: str 
                     geocoded_at = CURRENT_TIMESTAMP
                 WHERE id = :id
             """),
-            {"id": place_id, "lat": lat, "lng": lng, "status": status}
+            {"id": place_id, "lat": lat, "lng": lng, "status": status},
         )
         logger.info(f"Updated place {place_id} with coordinates ({lat}, {lng})")
 

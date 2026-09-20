@@ -62,9 +62,7 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
         response = client.messages.create(
             model=CLASSIFIER_MODEL,
             max_tokens=100,
-            messages=[
-                {"role": "user", "content": f"{CLASSIFIER_PROMPT}\n\nTranscript:\n{chunk}"}
-            ]
+            messages=[{"role": "user", "content": f"{CLASSIFIER_PROMPT}\n\nTranscript:\n{chunk}"}],
         )
         content = response.content[0].text
         try:
@@ -87,6 +85,7 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
 # RQ TASKS
 # ============================================================================
 
+
 def task_enqueue_chunks(content_id: int):
     """
     Task: Fetch transcript and enqueue each chunk for classification.
@@ -102,7 +101,7 @@ def task_enqueue_chunks(content_id: int):
                 JOIN transcripts t ON c.id = t.content_id
                 WHERE c.id = :id
             """),
-            {"id": content_id}
+            {"id": content_id},
         ).fetchone()
 
         if not row:
@@ -119,13 +118,16 @@ def task_enqueue_chunks(content_id: int):
 
     # Initialize progress tracking in Redis
     redis = get_redis()
-    redis.hset(f"extraction:{content_id}", mapping={
-        "total_chunks": total_chunks,
-        "classified": 0,
-        "has_memories": 0,
-        "extracted": 0,
-        "status": "classifying"
-    })
+    redis.hset(
+        f"extraction:{content_id}",
+        mapping={
+            "total_chunks": total_chunks,
+            "classified": 0,
+            "has_memories": 0,
+            "extracted": 0,
+            "status": "classifying",
+        },
+    )
 
     # Enqueue each chunk for classification
     classify_queue = get_queue(QUEUE_CLASSIFY)
@@ -136,18 +138,13 @@ def task_enqueue_chunks(content_id: int):
             chunk_index=i,
             total_chunks=total_chunks,
             chunk_text=chunk,
-            job_timeout="5m"
+            job_timeout="5m",
         )
 
     return {"content_id": content_id, "chunks_enqueued": total_chunks}
 
 
-def task_classify_chunk(
-    content_id: int,
-    chunk_index: int,
-    total_chunks: int,
-    chunk_text: str
-):
+def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, chunk_text: str):
     """
     Task: Use Haiku to classify if chunk has memories.
     If yes, enqueue for full extraction.
@@ -170,7 +167,7 @@ def task_classify_chunk(
             chunk_index=chunk_index,
             total_chunks=total_chunks,
             chunk_text=chunk_text,
-            job_timeout="5m"
+            job_timeout="5m",
         )
     else:
         # No memories, just mark as done
@@ -180,12 +177,7 @@ def task_classify_chunk(
     return {"content_id": content_id, "chunk_index": chunk_index, "has_memories": has_memories}
 
 
-def task_extract_chunk(
-    content_id: int,
-    chunk_index: int,
-    total_chunks: int,
-    chunk_text: str
-):
+def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chunk_text: str):
     """
     Task: Extract memories from chunk using Sonnet.
     Store results in Redis, check if all chunks done.
@@ -199,11 +191,7 @@ def task_extract_chunk(
 
     # Store memories for this chunk
     if memories:
-        redis.hset(
-            f"extraction:{content_id}:memories",
-            str(chunk_index),
-            json.dumps(memories)
-        )
+        redis.hset(f"extraction:{content_id}:memories", str(chunk_index), json.dumps(memories))
 
     redis.hincrby(f"extraction:{content_id}", "extracted", 1)
 
@@ -222,11 +210,7 @@ def _check_extraction_complete(content_id: int, total_chunks: int):
     if extracted >= total_chunks:
         logger.info(f"[content:{content_id}] All chunks processed, triggering aggregation")
         aggregate_queue = get_queue(QUEUE_AGGREGATE)
-        aggregate_queue.enqueue(
-            task_aggregate_memories,
-            content_id=content_id,
-            job_timeout="5m"
-        )
+        aggregate_queue.enqueue(task_aggregate_memories, content_id=content_id, job_timeout="5m")
 
 
 def task_aggregate_memories(content_id: int):
@@ -259,15 +243,13 @@ def task_aggregate_memories(content_id: int):
         save_memories(session, content_id, filtered)
 
         session.execute(
-            text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),
-            {"id": content_id}
+            text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": content_id}
         )
 
     # Update Redis status
-    redis.hset(f"extraction:{content_id}", mapping={
-        "status": "completed",
-        "total_memories": len(filtered)
-    })
+    redis.hset(
+        f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}
+    )
 
     # Cleanup memory data (keep stats)
     redis.delete(f"extraction:{content_id}:memories")
@@ -281,12 +263,11 @@ def task_aggregate_memories(content_id: int):
 # BATCH OPERATIONS
 # ============================================================================
 
+
 def enqueue_all_pending():
     """Enqueue all videos that have transcripts but no extraction."""
     with get_session() as session:
-        pending = session.execute(
-            text(f"SELECT c.id, c.title {PENDING_EXTRACTION}")
-        ).fetchall()
+        pending = session.execute(text(f"SELECT c.id, c.title {PENDING_EXTRACTION}")).fetchall()
 
     logger.info(f"Found {len(pending)} videos pending extraction")
 

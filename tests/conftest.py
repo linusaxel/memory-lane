@@ -21,7 +21,9 @@ TEST_DB = "memorylane_test"
 def _psql(db, sql):
     return subprocess.run(
         ["docker", "compose", "exec", "-T", "db", "psql", "-U", "memorylane", "-d", db, "-c", sql],
-        cwd=ROOT, capture_output=True, text=True,
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
     )
 
 
@@ -36,7 +38,10 @@ def db_url():
     schema = (ROOT / "db" / "schema.sql").read_text()
     loaded = subprocess.run(
         ["docker", "compose", "exec", "-T", "db", "psql", "-U", "memorylane", "-d", TEST_DB],
-        cwd=ROOT, input=schema, capture_output=True, text=True,
+        cwd=ROOT,
+        input=schema,
+        capture_output=True,
+        text=True,
     )
     if loaded.returncode != 0:
         pytest.fail(f"could not load schema: {loaded.stderr}")
@@ -53,7 +58,9 @@ def db_session(db_url):
 
     engine = create_engine(db_url)
     with engine.connect() as conn:
-        conn.execute(text("TRUNCATE content, transcripts, places, memories RESTART IDENTITY CASCADE"))
+        conn.execute(
+            text("TRUNCATE content, transcripts, places, memories RESTART IDENTITY CASCADE")
+        )
         conn.commit()
 
     session = sessionmaker(bind=engine)()
@@ -68,4 +75,5 @@ def db_session(db_url):
 @pytest.fixture
 def fake_anthropic():
     from tests.fakes import FakeAnthropic
+
     return FakeAnthropic()

@@ -9,7 +9,9 @@ from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://memorylane:memorylane@localhost:5432/memorylane")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql://memorylane:memorylane@localhost:5432/memorylane"
+)
 
 # Convert to psycopg3 dialect if using default postgresql://
 if DATABASE_URL.startswith("postgresql://"):

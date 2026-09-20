@@ -6,31 +6,18 @@ import logging
 from pipeline.tasks import enqueue_all_pending, task_enqueue_chunks, get_extraction_status
 from pipeline.queue import get_queue, QUEUE_CLASSIFY
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Enqueue videos for memory extraction")
+    parser.add_argument("--all", action="store_true", help="Enqueue all pending videos")
     parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Enqueue all pending videos"
+        "--video", type=int, metavar="ID", help="Enqueue a specific video by content ID"
     )
     parser.add_argument(
-        "--video",
-        type=int,
-        metavar="ID",
-        help="Enqueue a specific video by content ID"
-    )
-    parser.add_argument(
-        "--status",
-        type=int,
-        metavar="ID",
-        help="Check extraction status for a video"
+        "--status", type=int, metavar="ID", help="Check extraction status for a video"
     )
 
     args = parser.parse_args()

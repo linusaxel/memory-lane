@@ -63,11 +63,13 @@ def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict
         # feed (newest 15 only). published_at is nullable - revisit if dates
         # become load-bearing.
         ts = entry.get("timestamp") or entry.get("release_timestamp")
-        videos.append({
-            "url": f"https://www.youtube.com/watch?v={video_id}",
-            "title": entry.get("title"),
-            "published_at": datetime.fromtimestamp(ts, timezone.utc) if ts else None,
-        })
+        videos.append(
+            {
+                "url": f"https://www.youtube.com/watch?v={video_id}",
+                "title": entry.get("title"),
+                "published_at": datetime.fromtimestamp(ts, timezone.utc) if ts else None,
+            }
+        )
 
     logger.info(f"Found {len(videos)} videos on {channel_url}")
     return videos
@@ -75,10 +77,14 @@ def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="List a YouTube channel's videos.")
-    parser.add_argument("--channel", required=True,
-                        help="Channel URL or @handle page, e.g. https://www.youtube.com/@someone")
-    parser.add_argument("--limit", type=int, default=None,
-                        help="Stop after N videos (newest first)")
+    parser.add_argument(
+        "--channel",
+        required=True,
+        help="Channel URL or @handle page, e.g. https://www.youtube.com/@someone",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=None, help="Stop after N videos (newest first)"
+    )
     args = parser.parse_args()
 
     for video in list_channel_videos(args.channel, limit=args.limit):

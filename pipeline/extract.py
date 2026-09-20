@@ -62,7 +62,9 @@ USER_PROMPT_TEMPLATE = """Extract memories from this transcript chunk:
 Return only valid JSON."""
 
 
-def chunk_transcript(segments: list, chunk_minutes: int = 4, overlap_seconds: int = 30) -> list[str]:
+def chunk_transcript(
+    segments: list, chunk_minutes: int = 4, overlap_seconds: int = 30
+) -> list[str]:
     """Split transcript segments into overlapping time-based chunks with timestamp markers."""
     if not segments:
         return []
@@ -106,6 +108,7 @@ WHERE c.memories_extracted = FALSE
 
 class BillingError(Exception):
     """Raised when API call fails due to billing issues."""
+
     pass
 
 
@@ -116,7 +119,7 @@ def extract_memories_from_chunk(client: anthropic.Anthropic, chunk: str) -> list
             model=EXTRACTION_MODEL,
             max_tokens=2000,
             system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": USER_PROMPT_TEMPLATE.format(chunk=chunk)}]
+            messages=[{"role": "user", "content": USER_PROMPT_TEMPLATE.format(chunk=chunk)}],
         )
 
         content = response.content[0].text
@@ -140,7 +143,9 @@ def extract_memories_from_chunk(client: anthropic.Anthropic, chunk: str) -> list
 
     except anthropic.BadRequestError as e:
         if "credit balance" in str(e).lower():
-            raise BillingError("API credit balance too low. Please add credits at console.anthropic.com")
+            raise BillingError(
+                "API credit balance too low. Please add credits at console.anthropic.com"
+            )
         logger.error(f"Error calling Claude API: {e}")
         return []
     except Exception as e:
@@ -154,7 +159,9 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
         return []
 
     # Sort by place_query and timestamp
-    sorted_memories = sorted(memories, key=lambda m: (m.get("place_query", ""), m.get("timestamp_start", 0)))
+    sorted_memories = sorted(
+        memories, key=lambda m: (m.get("place_query", ""), m.get("timestamp_start", 0))
+    )
 
     merged = []
     current = None
@@ -171,7 +178,7 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
             # Merge: extend time range, combine summaries, dedupe tags
             current["timestamp_end"] = max(
                 current.get("timestamp_end", current.get("timestamp_start", 0)),
-                mem.get("timestamp_start", 0)
+                mem.get("timestamp_start", 0),
             )
             if mem.get("summary") and mem["summary"] not in current.get("summary", ""):
                 current["summary"] = current.get("summary", "") + " " + mem["summary"]
@@ -221,7 +228,7 @@ def save_memories(session, content_id: int, memories: list[dict]):
                     "precision": precision_to_meters(mem.get("location_precision", "street")),
                     "lat": lat,
                     "lng": lng,
-                }
+                },
             )
         else:
             place_result = session.execute(
@@ -235,7 +242,7 @@ def save_memories(session, content_id: int, memories: list[dict]):
                     "name": mem.get("place_name", "Unknown"),
                     "query": mem.get("place_query", mem.get("place_name", "Unknown")),
                     "precision": precision_to_meters(mem.get("location_precision", "street")),
-                }
+                },
             )
         row = place_result.fetchone()
 
@@ -245,7 +252,7 @@ def save_memories(session, content_id: int, memories: list[dict]):
             # Place already exists, fetch its id
             existing = session.execute(
                 text("SELECT id FROM places WHERE place_query = :query"),
-                {"query": mem.get("place_query", mem.get("place_name", "Unknown"))}
+                {"query": mem.get("place_query", mem.get("place_name", "Unknown"))},
             ).fetchone()
             place_id = existing[0] if existing else None
 
@@ -267,7 +274,7 @@ def save_memories(session, content_id: int, memories: list[dict]):
                 "summary": mem.get("summary", ""),
                 "tags": mem.get("tags", []),
                 "confidence": mem.get("confidence", "medium"),
-            }
+            },
         )
 
 
@@ -294,7 +301,9 @@ def extract_all_pending():
             logger.info(f"Extracting memories from: {title or content_id}")
 
             try:
-                segments = segments_json if isinstance(segments_json, list) else json.loads(segments_json)
+                segments = (
+                    segments_json if isinstance(segments_json, list) else json.loads(segments_json)
+                )
                 chunks = chunk_transcript(segments, CHUNK_MINUTES, CHUNK_OVERLAP_SECONDS)
                 logger.info(f"  Split into {len(chunks)} chunks")
 
@@ -312,7 +321,9 @@ def extract_all_pending():
                 merged = merge_nearby_memories(all_memories)
                 filtered = filter_low_confidence(merged)
 
-                logger.info(f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering")
+                logger.info(
+                    f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering"
+                )
 
                 # Save to database
                 save_memories(session, content_id, filtered)
@@ -320,7 +331,7 @@ def extract_all_pending():
                 # Mark as extracted
                 session.execute(
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),
-                    {"id": content_id}
+                    {"id": content_id},
                 )
                 extracted += 1
 
@@ -328,7 +339,7 @@ def extract_all_pending():
                 logger.error(f"  Extraction failed: {e}")
                 session.execute(
                     text("UPDATE content SET extraction_failed = TRUE WHERE id = :id"),
-                    {"id": content_id}
+                    {"id": content_id},
                 )
                 failed += 1
 

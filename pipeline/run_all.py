@@ -12,9 +12,7 @@ import sys
 import time
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S"
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
 )
 logger = logging.getLogger(__name__)
 
@@ -72,6 +70,7 @@ def run_pipeline(skip_ingest=False, skip_transcripts=False, skip_extract=False, 
         else:
             try:
                 from pipeline.ingest import ingest_content
+
                 results["ingest"] = ingest_content()
             except Exception as e:
                 logger.error(f"Ingest failed: {e}")
@@ -89,6 +88,7 @@ def run_pipeline(skip_ingest=False, skip_transcripts=False, skip_extract=False, 
         else:
             try:
                 from pipeline.transcripts import fetch_pending_transcripts
+
                 results["transcripts"] = fetch_pending_transcripts()
             except Exception as e:
                 logger.error(f"Transcript fetch failed: {e}")
@@ -106,6 +106,7 @@ def run_pipeline(skip_ingest=False, skip_transcripts=False, skip_extract=False, 
         else:
             try:
                 from pipeline.extract import extract_all_pending
+
                 result = extract_all_pending()
                 results["extract"] = result
                 if result.get("error") == "billing":
@@ -131,13 +132,21 @@ Examples:
   python -m pipeline.run_all --dry-run          # Preview without running
   python -m pipeline.run_all --skip-ingest      # Skip ingest, run transcripts + extract
   python -m pipeline.run_all --extract-only     # Only run extraction
-        """
+        """,
     )
-    parser.add_argument("--dry-run", action="store_true", help="Show what would run without executing")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Show what would run without executing"
+    )
     parser.add_argument("--skip-ingest", action="store_true", help="Skip the ingest stage")
-    parser.add_argument("--skip-transcripts", action="store_true", help="Skip the transcripts stage")
+    parser.add_argument(
+        "--skip-transcripts", action="store_true", help="Skip the transcripts stage"
+    )
     parser.add_argument("--skip-extract", action="store_true", help="Skip the extraction stage")
-    parser.add_argument("--extract-only", action="store_true", help="Only run extraction (skip ingest and transcripts)")
+    parser.add_argument(
+        "--extract-only",
+        action="store_true",
+        help="Only run extraction (skip ingest and transcripts)",
+    )
 
     args = parser.parse_args()
 
@@ -154,7 +163,7 @@ Examples:
         skip_ingest=args.skip_ingest,
         skip_transcripts=args.skip_transcripts,
         skip_extract=args.skip_extract,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
     )
 
     success = print_summary(results)
