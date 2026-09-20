@@ -138,6 +138,32 @@ Pure viewport maths goes in `src/region.ts` with a `node --test` case beside it;
 the gate runs `mobile/src/*.test.ts`. Component behaviour is currently untested
 and there is no RN test runner installed — do not add one without asking.
 
+## States
+
+The map has four, and they must stay visually distinct — the bug this replaced
+was that "nothing here" and "we could not ask" rendered identically:
+
+| State | Banner | Button |
+|---|---|---|
+| loading | "Finding memories…" + spinner | Near me |
+| ready, n>0 | "N memories here" | Near me |
+| ready, n=0 | "No memories here yet" | Near me |
+| failed | "Can't reach Memory Lane" | Try again |
+
+A failed refresh keeps the last good pins. Requests time out after
+`REQUEST_TIMEOUT_MS` (8s) in `src/api.ts`; `fetch` has no default timeout and a
+hung request is what produced the original bug.
+
+## Markers
+
+One marker is a *coordinate*, not a memory and not a place. 111 of 186 placed
+memories sit on 34 coordinates, so a marker routinely stands for several
+memories at several venues. A group of more than one carries a count badge, and
+the sheet pages through it with "1 of 23 here".
+
+Group in `src/cluster.ts`, never in the component — it is pure and unit-tested,
+and the Times Square centroid is one of the test cases.
+
 ## Flows
 
 Documented flows live in `docs/08-ux-flows.md`. Build toward those, and when a

@@ -30,16 +30,24 @@ how you know it worked. Keep them concrete enough to test against.
 5. Panning or zooming refetches, debounced 400ms, radius derived from the
    viewport and clamped to 0.1–100km.
 
-**Failure:** if the request *rejects*, the banner becomes "Could not reach
-Memory Lane" and the map stays interactive with the last good pins.
+**Three outcomes, three different things said.** They used to be two, and the
+app could not tell you which one you were looking at:
 
-But if the request *hangs* — wrong host, dropped network — nothing rejects.
-`fetchNearby` takes an `AbortSignal` and `App.tsx` never passes one, so there is
-no timeout: the banner sits on "0 memories here" with a spinner forever, which
-reads as "this area is empty" rather than "this is broken". Observed live, not
-theoretical. Fixing it means passing a signal with a deadline, and is the same
-work as **0.4 Design the empty state** in `TODO.md` — genuinely empty and
-unreachable must not look identical.
+| State | Banner | Button |
+|---|---|---|
+| loading, nothing yet | "Finding memories…" + spinner | Near me |
+| ready, results | "N memories here" | Near me |
+| ready, none | "No memories here yet" | Near me |
+| failed | "Can't reach Memory Lane" | **Try again** |
+
+A request that *hangs* used to be the bad case: `fetch` has no default timeout,
+so an unreachable host sat on "0 memories here" with a spinner indefinitely and
+the error path never fired. There is now an 8s timeout
+(`REQUEST_TIMEOUT_MS` in `src/api.ts`).
+
+A failed refresh keeps the last good pins on screen — they are still true of the
+place, and a map that empties itself on a dropped request looks like the area
+went blank rather than the network.
 
 **Done when:** a pin appears within ~1s of the map settling, and the count
 matches the pins drawn.
@@ -60,6 +68,30 @@ currently handled.
 
 **Done when:** the video opens at the right second and returning preserves the
 map position.
+
+---
+
+## F6 · Many memories at one point — **Implemented**
+
+Not an edge case. The extraction model emits a city centroid when it does not
+know an address, so **111 of 186 placed memories sit on 34 coordinates** — one
+point in Times Square carries 23 memories across 14 venues.
+
+1. Memories are grouped by rounded coordinate (4dp, ~11m — tighter than the 50m
+   the model calls "exact"), so repeated emissions of one centroid collapse and
+   genuinely distinct addresses stay apart.
+2. A group of one draws the normal pin. A group of more draws a count badge, so
+   a stack is countable before it is tapped.
+3. Tapping opens the sheet at the first memory with "1 of 23 here" and ‹ ›
+   controls.
+
+Grouped by coordinate, not by place id: one venue appears under several place
+rows *and* several venues appear under one coordinate, so the coordinate is what
+the eye sees and what the tap target should follow.
+
+**This is mitigation, not a fix.** The underlying problem is that the
+coordinates are wrong — see the centroid section in `TODO.md`. Clustering makes
+23 stacked memories reachable; it does not put them at the right addresses.
 
 ---
 
@@ -86,14 +118,6 @@ readable.
 Nothing in the app writes today; the API is read-only. Needs auth, moderation
 and an abuse story before the UI matters.
 
-### F6 · Many memories at one point — **Proposed**
-
-Already reachable: one place can hold six memories (Gotham Comedy Club does),
-and near-duplicate places still produce separate pins at nearly the same spot.
-Today the sheet shows one memory and overlapping pins are hard to tap. Needs
-clustering, or a place-level sheet listing its memories.
-
----
 
 ## Open questions
 
@@ -101,10 +125,21 @@ Answer these and the proposed flows can be written properly.
 
 1. **Layers: filter or stack?** One at a time, or several with distinct pin
    styles?
-2. **What does a person see with zero memories nearby?** The realistic
-   Copenhagen case before the historical corpus lands. Empty map, a nudge to
-   zoom out, or auto-widen the radius?
+2. ~~**What does a person see with zero memories nearby?**~~ **Partly settled.**
+   It says "No memories here yet" and no longer looks like a failure, which was
+   the bug. Still open as a *product* question: should an empty area nudge the
+   person to zoom out, or auto-widen the radius? Doing nothing is defensible
+   until there is a corpus worth widening into.
 3. **Is contribution in v1 at all**, or is v1 read-only?
-4. **Does a pin represent a place or a memory?** Today it is a memory, so one
-   place with six memories is six overlapping pins. Place-level pins would fix
-   F6 but change what tapping means.
+4. ~~**Does a pin represent a place or a memory?**~~ **Answered by
+   implementation: a pin is a *point*.** Neither of the original options
+   survived contact with the data — grouping by place id does not work, because
+   one venue spans several place rows and several venues share one coordinate.
+   A marker is now a coordinate, and the sheet pages through whatever is under
+   it. If the coordinates are ever fixed, this can be revisited; while 60% of
+   them are centroids, the point is the only honest unit.
+5. **Does the app sheet render the card, or duplicate it?** `GET
+   /v1/memories/{id}/card` exists and is meant to have three consumers. The
+   sheet is currently a native re-implementation of the same content. Using the
+   card in a WebView would make attribution un-strippable in the app too, at the
+   cost of native feel and offline rendering.

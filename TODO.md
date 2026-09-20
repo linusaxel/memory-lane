@@ -214,13 +214,19 @@ Open, and blocking a clean Phase 1:
       represent a place or a memory?** Today it is a memory, so Gotham Comedy
       Club is six overlapping pins at one address. Place-level pins fix that but
       change what tapping means, and the answer shapes the layer UI in 1.x.
-- [ ] **D.4 Design the empty state, and make it distinguishable from failure.**
-      Confirmed live: `fetchNearby` accepts an `AbortSignal`, `App.tsx` never
-      passes one, so an unreachable API hangs instead of rejecting and the
-      banner shows "0 memories here" with a spinner indefinitely. The error path
-      that exists never fires. The realistic Copenhagen case before the
-      historical corpus lands is zero memories nearby — and right now that looks
-      identical to the app being broken.
+- [x] **D.4 Empty state is distinguishable from failure.** Was: `fetchNearby`
+      accepted an `AbortSignal` that `App.tsx` never passed, so with no fetch
+      timeout an unreachable API hung and the banner sat on "0 memories here"
+      with a spinner forever — the error path never fired. Now an 8s timeout
+      plus three states: "Finding memories…", "No memories here yet", and
+      "Can't reach Memory Lane" with a Try again button. A failed refresh keeps
+      the last good pins. Verified on the simulator in all four conditions,
+      including Copenhagen, which correctly reads empty rather than broken.
+- [x] **D.6 Stacked pins are reachable.** 23 memories at the Times Square
+      centroid drew as one marker that opened an arbitrary one of them.
+      `mobile/src/cluster.ts` groups by rounded coordinate, the marker shows a
+      count, and the sheet pages through the stack. Mitigation, not a fix — the
+      coordinates are still wrong; see the centroid section above.
 - [ ] **D.5 Write F3 properly** once the historical source is chosen (W4-00).
       F3 is the product; it should not be specified by whatever the ingestion
       happens to produce.
@@ -356,11 +362,26 @@ contrast one rather than the nearest, and the card is worth screenshotting.
 First revenue surface. Same corpus, different rendering. Tourism boards,
 audio-guide companies, city archives.
 
-- [ ] **2.1** One `<script>` snippet + an `/embed` route. MapLibre over free
-      tiles; no Google Maps key on the web side.
-- [ ] **2.2** Reads the same `/v1/memories/nearby` and renders the Phase 1 card.
-      If the widget needs a different shape, change the card, not the data.
-- [ ] **2.3** Per-customer `CORS_ORIGINS` and a per-embed key. This is the first
+- [x] **2.1** `api/embed.py`. `/embed.js` is the paste-in snippet; it writes an
+      `<iframe>` pointing at `/embed` and resolves the URL against its own
+      `script.src`, so a customer pastes one tag and configures nothing. An
+      iframe rather than DOM injection: their CSS cannot reach our map, ours
+      cannot reach their article, and their CSP gets one origin to allow.
+      **Leaflet, not MapLibre** — raster tiles need no style JSON and no vector
+      tile provider, which is one fewer paid dependency before there is a
+      customer. No Google Maps key on the web side either way.
+- [x] **2.2** Reads `/v1/memories/nearby` and points the card iframe at
+      `/v1/memories/{id}/card`, so the embed renders **no card of its own** —
+      the credit cannot be dropped by the page hosting it, which is the reason
+      the card is server-rendered at all. It opens the first result on load:
+      that list is in contrast order, so the best card is the one a screenshot
+      catches.
+- [ ] **2.3** Per-customer `CORS_ORIGINS` and a per-embed key. **Blocked in
+      practice on `DEPLOY`** — there is no public origin to allow yet.
+      Also open: `TILE_URL` points at OpenStreetMap's public tiles, which their
+      usage policy forbids for a customer's traffic. Swap for a paid or
+      self-hosted tile source before anyone embeds this for real; it is one
+      constant in `api/embed.py`. This is the first
       thing in the product with a customer attached, so it is also the first
       thing that needs a usage bound.
 - [ ] **2.4** Settle the 8 consumerless endpoints: whatever the widget does not
