@@ -104,16 +104,19 @@ other distribution channel (see *Design rules* in `TODO.md`).
 
 **Who:** someone looking at a map with pins they cannot read yet.
 
-1. Every memory in view draws a pin. A **locked** pin shows the place name and
-   the distance — enough to decide whether to walk there — and nothing else.
-2. Walking inside the unlock radius changes the pin's appearance and the sheet
-   offers an unlock control.
-3. The unlock is a deliberate physical act, not a tap: press and hold while a
-   ring fills, with haptics through the hold and a heavier one on completion.
+1. Every memory in view draws a pin. A **locked** pin is a grey padlock and
+   carries the place name and the distance — enough to decide whether to walk
+   there — and nothing else.
+2. Walking inside the unlock radius turns that pin into an amber ring, and the
+   map says so in words: "1 memory within reach", which opens the sheet.
+3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
+   while a ring fills, light haptic going in and a heavier one on completion.
    It should feel like a lock turning.
-4. The memory reveals: summary, tags, source, the watch link.
-5. It stays unlocked. Re-locking something the person has earned is a punishment
-   for leaving.
+4. The memory reveals: summary, tags, source, the watch link — animated once,
+   because that arrival is the only payoff the product has.
+5. It stays unlocked, and it joins a collection the person can reread later.
+   Re-locking something they earned is a punishment for leaving, and one read
+   and then burial under a pin is barely better.
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — the bottom button reads "Turn on location" instead of "Near me" — rather than
@@ -125,8 +128,14 @@ different parameters, precisely so that panning to a city cannot open it.
 in between. The sheet says "Not close enough yet", because a control that
 appears to do nothing is the worse outcome.
 
+**Failure:** location was never granted. The app primes rather than firing the
+system dialog at mount — a cold dialog is one tap from a permanent no — and the
+primer explains the mechanic, because "memories unlock where they happened" is
+both the ask and the pitch. A hard refusal offers Settings.
+
 **Done when:** standing at a place reveals its memory and standing a street away
-does not.
+does not. *Verified in the simulator:* memory 38 reads locked from the API and
+open on the device across relaunches, which is the whole loop.
 
 ### The gate is server-side
 

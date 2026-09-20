@@ -76,7 +76,10 @@ python -m api.main
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
 | `config/content.yaml` | Content sources to process |
 | `mobile/App.tsx` | The map screen: pins, banner, "Near me" |
-| `mobile/src/MemorySheet.tsx` | The memory detail sheet |
+| `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
+| `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
+| `mobile/src/MemoryMarker.tsx` | A coordinate's four states on the map |
+| `mobile/src/unlocked.ts` | What this device has earned. On-device only; there are no accounts |
 | `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
 | **`mobile/UI.md`** | **Read before touching the app.** Tokens, load-bearing rules, how to see it running |
 | **`docs/08-ux-flows.md`** | **What the user does.** Implemented + proposed flows |

@@ -7,22 +7,39 @@ Read this before changing anything under `mobile/src/` or `App.tsx`.
 
 ## The app today
 
-One screen, one modal.
+One screen, three modals.
 
 ```
 MapView (full bleed)
-├─ Marker per memory          tap -> MemorySheet
+├─ Marker per coordinate      tap -> MemorySheet.  Four states, see Markers
 ├─ banner  "N memories here"  top centre, non-interactive
-└─ "Near me"                  bottom centre, recentres on GPS
+├─ "N within reach"           amber, breathing, tap -> the nearest unlockable
+├─ "N unlocked"               bottom left -> Collection
+├─ "Near me"                  bottom centre, recentres on GPS
+└─ LocationPrimer             bottom card, only until permission is settled
 
-MemorySheet (pageSheet modal)
-├─ place name                 26/700
-├─ distance · confidence      13/regular, green when high
-├─ summary                    17/26 - the hero; there are no images
-├─ tags                       pills
-├─ source video title         italic, muted
-└─ "Watch at 12:04"           red, deep-links YouTube at the second
+MemorySheet (pageSheet modal) - two compositions, not one with holes in it
+
+  locked                            open
+  ├─ place name       26/700        ├─ place name       26/700
+  ├─ "locked"         13, muted     ├─ distance · confidence
+  ├─ padlock                        ├─ summary  17/26 - the hero, no images
+  ├─ distance         44/700        ├─ tags     pills
+  ├─ "Get within 150 m"             ├─ source video title  italic, muted
+  └─ or, in reach: the ring         └─ "Watch at 12:04"  red, YouTube at the second
+
+Collection (pageSheet modal)
+└─ what this device has unlocked, newest first
 ```
+
+| File | What it owns |
+|---|---|
+| `src/Padlock.tsx` | the one symbol, at any size, in any colour |
+| `src/MemoryMarker.tsx` | a coordinate's four states on the map |
+| `src/UnlockButton.tsx` | the hold, the ring, the haptics |
+| `src/ReachBanner.tsx` | the only thing on the map that animates |
+| `src/LocationPrimer.tsx` | asking before the system does |
+| `src/Collection.tsx` | what the walking was for |
 
 ## Tokens
 
@@ -176,13 +193,41 @@ unreadable only by tapping it:
 
 | Pin | Meaning |
 |---|---|
-| default red pin (or dark count badge) | never gated — a shared centroid, open to everyone |
-| grey badge `#a1a1aa` | locked, and you are not near enough |
-| amber badge `#f59e0b` | locked, and you are inside the radius — go press it |
+| default red pin | never gated, one memory — a shared centroid, open to everyone |
+| dark badge `#18181b` | never gated, several |
+| grey disc `#a1a1aa` with a padlock | locked, and you are not near enough |
+| amber **ring** `#f59e0b` with a halo | locked, and you are inside the radius |
+
+**The reachable pin is a ring and not a disc**, and that is load-bearing. The
+pin you can open is by definition the pin you are standing on, so the blue user
+location dot lands exactly on top of it — a disc disappears underneath, count
+and all. The dot sits inside the ring instead, the count moves to a corner tag,
+and the shape matches the ring in the sheet so the map and the control read as
+the same object.
+
+**Nothing on a marker animates.** Animating a custom marker's children is a
+known flicker source in react-native-maps. Markers set `tracksViewChanges={false}`
+for the frame cost and are keyed `` `${group.key}:${reach}` ``, so they repaint
+exactly when their state changes and never otherwise. The one moving thing is
+`ReachBanner`, which is not a marker.
 
 A group is locked if any memory in it is. `reachOf()` in `App.tsx` measures from
 the *person*, never from the map centre — panning to another city must not make
 its pins look reachable.
+
+## Asking for location
+
+Never `requestForegroundPermissionsAsync` on mount. That fires a system dialog
+with no context, and one tap makes it permanent — it is the pattern every guide
+names as the mistake, and the reported gap is roughly 30% opt-in cold against
+65% after a primer. `LocationPrimer` explains the mechanic first, over a map
+already showing real pins (rule 1), and only then hands over to the system.
+`getForegroundPermissionsAsync` runs first so somebody who already said yes is
+never asked twice, and a hard refusal (`canAskAgain === false`) swaps the button
+for **Open Settings**, which is the only route back.
+
+Position is then *watched*, not read once (`watchPositionAsync`, 25m interval,
+foreground only). Walking into range has to change the map by itself.
 
 ## The unlock control
 
