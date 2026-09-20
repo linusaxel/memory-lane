@@ -430,8 +430,8 @@ hung request is what produced the original bug.
 
 ## Markers
 
-One marker is a *coordinate*, not a memory and not a place. 111 of 186 placed
-memories sit on 34 coordinates, so a marker routinely stands for several
+One marker is a *coordinate*, not a memory and not a place. 121 of 215 placed
+memories sit on 28 shared coordinates, so a marker routinely stands for several
 memories at several venues. A group of more than one carries a count badge, and
 the sheet pages through it with "1 of 23 here".
 

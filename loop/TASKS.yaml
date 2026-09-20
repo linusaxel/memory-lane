@@ -770,6 +770,70 @@ tasks:
       NOT exercisable end to end yet: needs real OAuth client ids and a
       development build, because neither button works in Expo Go.
 
+  - id: P3-06
+    goal: "A dev seed at FALLBACK_REGION so the proximity unlock can be exercised
+      on every restart, without setting the Simulator's location by hand."
+    verify: "venv/bin/python -m pytest -q tests/test_seed_dev.py"
+    touches: [pipeline/seed_dev.py, tests/test_seed_dev.py, mobile/UI.md]
+    depends_on: [P3-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: |
+      Today the unlock cannot be exercised at all, and the Simulator is not why.
+      The documented dev coordinate 40.7484,-73.9857 is ~1.2km from the Duffy
+      Square stack, and that stack - like the other three big ones, ~46 memories
+      between them - is deliberately UNGATED: they are model-guessed centroids
+      and F7 refuses to make anybody walk to a fiction. The 83 gated memories are
+      by construction the scattered ones. So the sheet reads "4.6 km" under "Get
+      within 150 m" and no amount of simctl fixes it.
+
+      Seed at FALLBACK_REGION (mobile/App.tsx) - already the no-permission map
+      centre and already the coordinate every doc names, so three paths converge
+      on one pair. Parity-test it against App.tsx the way the tag list is tested.
+
+      Use pipeline.extract.save_memories(session, content_id, [dicts], layer=...):
+      no network, no API key, writes places and memories including tag cleaning.
+      Idempotent on content.url = memorylane://dev-seed and places marked
+      place_query LIKE 'dev-seed:%'. --clear removes them and stops.
+
+      Six memories, one per branch: unlockable ~40m, locked ~400m, open (shares a
+      grid cell with a second place), stacked, submitted (user_id set), and one
+      with media.
+
+      TWO TRAPS.
+      1. is_gated is true when user_id IS NOT NULL *or* no other place shares the
+         0.0001 degree grid cell - ~11m of latitude, ~8m of longitude at 40.7N.
+         Distinct gated coordinates need >= ~0.0002 degrees apart, and must miss
+         the existing 34 stacks.
+      2. "Stacked but still gated" is ONE place with THREE memories. The app
+         groups pins by coordinate; the gate counts places. Three places at one
+         point would stack the pin and silently ungate all three.
+
+      Media with no new dependency: the photo is a PNG built with zlib+struct at
+      the 4:3 aspect MemoryMedia renders (a 1x1 proves nothing about layout); the
+      recording is macOS `say` piped through `afconvert` to AAC, since there is
+      no ffmpeg. Skip audio where those are absent.
+
+  - id: P3-07
+    goal: "EXPO_PUBLIC_DEV_LOCATION under __DEV__, so the Simulator's location
+      stops mattering and a physical device can be told where it is."
+    verify: "cd mobile && npm run typecheck"
+    touches: [mobile/App.tsx, mobile/src/useDevLocation.ts, mobile/.env.example]
+    depends_on: [P3-06]
+    state: todo
+    attempts: 0
+    commit: null
+    note: |
+      remember() in mobile/App.tsx is the single chokepoint every position flows
+      through, so the override belongs there; skip watchPositionAsync when it is
+      set. There is no __DEV__ anywhere in mobile/ today.
+
+      This weakens nothing. The position is already self-reported - see
+      docs/10-decisions.md#the-position-is-self-reported - so the override makes
+      lying convenient locally, not possible. It must still be behind __DEV__ so
+      it cannot reach a release bundle.
+
   - id: P3-05
     goal: "Rate limit the write path. Nothing caps how many memories one device can
       file or how much it can upload."

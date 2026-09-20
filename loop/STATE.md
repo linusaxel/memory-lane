@@ -3,7 +3,7 @@
 ```
 updated:  2026-09-20 (interactive session, not a loop tick)
 branch:   loop/autopilot   — pushed, and main is at the same commit
-gate:     GREEN, 359 tests
+gate:     GREEN, 398 tests
 status:   W0–W3, Phase 1.5 (proximity unlock) and Phase 3.1–3.3 (submissions and
           sign-in) are in. Remaining work is TODO.md and the human gates below.
 ```
@@ -16,9 +16,15 @@ status:   W0–W3, Phase 1.5 (proximity unlock) and Phase 3.1–3.3 (submissions
 - **Google and Apple sign-in**, so a collection survives a new phone. No
   passwords and no session tokens: the device id stays the only credential and
   signing in binds `devices.user_id`;
-- a tidy-up sweep that split `api/main.py` into eight modules, moved the design
-  reasoning into `docs/10-decisions.md`, deleted what nothing called, and put
-  the gate on GitHub Actions.
+- a tidy-up sweep that split `api/main.py` into eight modules (1784 lines → 69),
+  moved the design reasoning into `docs/10-decisions.md`, deleted what nothing
+  called, and put the gate on GitHub Actions;
+- **one tag vocabulary** instead of two: the app offered `sport`, the corpus
+  stored `sports`, and `m.tags && …` is exact-string, so that chip matched
+  nothing. `pipeline/tags.py` is the list, both write paths filter against it,
+  and a test holds the app's copy equal to the server's;
+- the palette actually applied (`65a222a`): press states on 28 controls, the
+  card off the Tailwind zinc ramp, and two contrast pairs that missed AA.
 
 **`TODO.md` is the roadmap and the source of truth.** This file is the loop's
 orientation doc and does not compete with it. Where they disagree, TODO.md wins
@@ -29,14 +35,14 @@ and this file is stale.
 ```bash
 docker compose up -d --build              # API + PostGIS
 ./api/test_api.sh http://localhost:8080   # 11 checks
-./loop/verify.sh                          # 359 tests, GREEN
+./loop/verify.sh                          # 398 tests, GREEN
 cd mobile && npx expo start               # the app
 ```
 
 - **Crawler**: `@TuesdayswithStories` auto-discovered, 25 videos ingested,
   25 transcripts fetched, 0 failed. Baseline before this work: **0 videos**.
 - **Database**: 224 memories across 176 places, after the unique index merged 30
-  exact duplicates and `pipeline/dedup.py` merged 18 more by review. 83 memories
+  exact duplicates and `pipeline/dedup.py` merged 18 more by review. 94 memories
   are gated by the unlock radius; the rest sit on shared city centroids and stay
   open. See F7. Ten tables now — submissions brought `users`, `media` and
   `reports`, sign-in brought `identities`.
@@ -97,15 +103,19 @@ primer and the reach circle. Screenshots were reviewed rather than filed, and
 `mobile/UI.md` carries the recipe. Kept below because the recipe is still how
 you do it.
 
-Simulator builds need no Apple account and no signing.
-```bash
-docker compose up -d --build api
-cd mobile && EXPO_PUBLIC_API_URL=http://localhost:8080 npx expo run:ios
-xcrun simctl location booted set 40.7484,-73.9857    # Manhattan, where the data is
-```
+Simulator builds need no Apple account and no signing. **The recipe lives in
+`mobile/UI.md` → "Verifying a UI change"** — this file used to keep a second
+copy that had drifted (`expo run:ios` instead of `expo start --ios`, and missing
+the `simctl privacy … grant` without which the permission dialog covers the
+first screen). One copy now.
+
 Confirm: the permission prompt shows our copy, pins render, the sheet opens,
-and "Watch at 12:43" opens YouTube at the right second. Take three screenshots
-at 6.9" (`xcrun simctl io booted screenshot`) — map, sheet, near-me.
+and "Watch at 12:43" opens YouTube at the right second.
+
+**Setting the location is not enough to reach a memory**, and that is a data
+problem rather than a Simulator one — every dense point in the corpus is a
+model-guessed centroid and therefore deliberately ungated, while the 83 gated
+memories are scattered. TODO 3.6 is the dev seed that fixes it.
 
 *Android cannot be checked locally* — no SDK, no adb. It is covered by the
 manifest assertions and then by the first EAS build.

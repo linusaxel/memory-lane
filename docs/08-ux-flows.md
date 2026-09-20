@@ -153,7 +153,7 @@ map position.
 ## F6 · Many memories at one point — **Implemented**
 
 Not an edge case. The extraction model emits a city centroid when it does not
-know an address, so **111 of 186 placed memories sit on 34 coordinates** — one
+know an address, so **121 of 215 placed memories sit on 28 shared coordinates** — one
 point in Times Square carries 23 memories across 14 venues.
 
 1. Memories are grouped by rounded coordinate (4dp, ~11m — tighter than the 50m
@@ -280,7 +280,7 @@ thing deciding what you are allowed to read.
 ### The radius fights the data
 
 This is the part to decide before building, and it is unusual: **the
-coordinates are wrong**. 111 of 186 placed memories sit on 34 city centroids,
+coordinates are wrong**. 121 of 215 placed memories sit on 28 shared centroids,
 and the two Gotham Comedy Club rows are 2km apart while both claim 50m
 precision.
 
@@ -302,9 +302,13 @@ would ask somebody to walk to a fiction. The other two options were: gate on
 principle, still blocked on a re-run), or one generous ~250m radius for
 everything (ships, but dumps midtown in a clump).
 
-Against the live corpus that gates **83 memories across 74 places** and leaves
-133 centroid-stacked ones open — a locked set with real weight that shrinks the
+Against the live corpus that gates **94 memories across 76 places** and leaves
+121 centroid-stacked ones open — a locked set with real weight that shrinks the
 moment the coordinates improve, with no behaviour to change when they do.
+
+It also means the gated memories are, by construction, the *scattered* ones. No
+round-number coordinate is near any of them, which is why the unlock cannot be
+exercised from a Simulator without the dev seed in TODO 3.6.
 
 The radius is **150m**, not the 50m the model calls exact. Urban GPS drifts tens
 of metres, and a gate that will not open while you are standing on the spot is a

@@ -18,7 +18,7 @@ Code points here by anchor: `# see docs/10-decisions.md#the-gate`.
 
 `api/main.py` `COORDINATE_IS_UNIQUE`, and `api/card.py` keeps a copy.
 
-111 of 186 placed memories sit on 34 city-centroid points — coordinates the
+121 of 215 placed memories sit on 28 shared city-centroid points — coordinates the
 model emitted when the transcript never said the address. A memory filed 2 km
 from where it happened cannot be gated on standing there, so gating those would
 ask somebody to walk to a fiction. Only a coordinate no other place shares is

@@ -42,8 +42,10 @@ the code disagreed, the code won and it is called out below.
 ### The data
 
 59 content rows: 29 extracted, 25 pending extraction, 4 transcript-failed.
-224 memories across 176 places (194 before the 1.2 merge), 168 with
-coordinates. 143 high confidence, 81 medium.
+224 memories across 176 places (194 before the 1.2 merge). 168 of those places
+have coordinates, carrying 215 memories. 143 high confidence, 81 medium.
+**Measured 2026-09-20**, not carried forward — the figures below had drifted
+into four different denominators.
 
 **All of it is a US comedy podcast.** Density is Manhattan, New Orleans and LA.
 **Zero places within 20km of Copenhagen.** This corpus stays as end-to-end test
@@ -85,7 +87,8 @@ Found while building W4-02; every figure below re-verified independently
 against the live database. This is the largest single problem in the corpus and
 it reshapes several Phase 1 items.
 
-**111 of 186 placed places — 60% — sit on just 34 distinct coordinate points.**
+**92 of the 168 placed places sit on just 28 shared coordinate points**, and
+121 of the 215 placed memories are on them.
 
 | Point | Places | Memories | What it actually is |
 |---|---|---|---|
@@ -277,7 +280,7 @@ generalises 3.3, which scoped server-side proximity unlock to the friend layer
       keyed on the keychain device id, so clearing the app's data no longer
       undoes the walking. A new phone still starts empty.
 - [x] **1.5f DECIDE the radius.** Option 3: only a coordinate no other place
-      shares is gated, at 150m. That locks 83 of 216 memories across 74 places
+      shares is gated, at 150m. That locks 94 of 215 placed memories across 76 places
       and leaves the centroid stacks open, because locking those would ask
       somebody to walk to a fiction. Full reasoning in F7.
 
@@ -515,6 +518,62 @@ returns nothing is dead, and a friend layer on an empty map returns nothing.
 - [ ] **3.5** Rate limit the write path. Nothing caps how many memories one
       device can file, or how much it can upload. The brief asks for a hard cap
       on user-submitted ingestion and there is none; a loop fills the disk.
+- [ ] **3.6** **A dev seed, so the unlock can be exercised at all.** Today it
+      cannot be, and setting the Simulator's location does not fix it.
+
+      **Why it is broken.** The documented dev coordinate `40.7484,-73.9857`
+      sits ~1.2km from the Duffy Square stack, the densest thing in the corpus —
+      and that stack, like the other three big ones (~46 memories between them),
+      is *deliberately* ungated, because they are model-guessed centroids and F7
+      refuses to make anybody walk to a fiction. The 94 memories that are gated
+      are by construction the scattered ones, on coordinates no other place
+      shares, which is to say never near a round-number coordinate. So the sheet
+      says "4.6 km" under "Get within 150 m" and there is nothing to be done
+      about it from the Simulator.
+
+      **Where to seed.** At `FALLBACK_REGION` — `mobile/App.tsx`, the same
+      `40.7484,-73.9857` — which is already the no-permission map centre and
+      already the coordinate every doc says to set. Three paths converge on one
+      pair and there is no fourth place to write a coordinate down. Guard it
+      with a parity test that reads the constant out of `App.tsx`, like the tag
+      vocabulary test does.
+
+      **How.** `pipeline/seed_dev.py` calling
+      `pipeline.extract.save_memories(session, content_id, [dicts], layer=...)`
+      — no network, no API key, and it writes `places` and `memories` correctly
+      including tag cleaning — plus one `INSERT INTO content`. Idempotent on a
+      fixed `content.url` of `memorylane://dev-seed` and places marked
+      `place_query LIKE 'dev-seed:%'`; `--clear` removes both and stops.
+
+      **What.** Six memories, one per branch the app can render: unlockable at
+      ~40m; locked but walkable at ~400m; open-to-everyone by sharing a grid
+      cell with a second place; stacked; submitted (`user_id` set, for the
+      byline and the Report control); and one with a photo and a recording.
+
+      **Two traps.** `is_gated` is true when `user_id IS NOT NULL` *or* no other
+      place shares the 0.0001° grid cell — which is ~11m of latitude and ~8m of
+      longitude at 40.7°N, so distinct gated coordinates need ≥ ~0.0002° of
+      separation and must miss the existing 34 stacks. And *stacked but still
+      gated* is *one place with three memories*: the app groups pins by
+      coordinate while the gate counts places, so three places at one point
+      would stack the pin and silently ungate all three. `save_memories` does
+      `ON CONFLICT (place_query)`, so one place is the same `place_query` thrice.
+
+      **Media with no new dependency.** The photo is a PNG written with `zlib` +
+      `struct` at a few hundred pixels and the 4:3 aspect `MemoryMedia` renders
+      — a 1×1 proves nothing about layout. The recording is macOS `say` piped
+      through `afconvert` to real AAC, so the player has something that plays;
+      there is no ffmpeg here. Skip the audio where those are absent.
+- [ ] **3.7** `EXPO_PUBLIC_DEV_LOCATION`, read only under `__DEV__`, so the
+      Simulator's location stops mattering and a physical device can be told
+      where it is too. `remember()` in `mobile/App.tsx` is the single chokepoint
+      every position flows through, so the override goes there and
+      `watchPositionAsync` is skipped when it is set. There is no `__DEV__`
+      anywhere in `mobile/` today.
+
+      It weakens nothing: the position is already self-reported — see
+      `docs/10-decisions.md#the-position-is-self-reported` — so this makes lying
+      convenient locally, not possible.
 - [ ] Same neighborhood only. No second city.
 
 ---
