@@ -9,6 +9,8 @@ rq>=1.16.0
 # API
 fastapi>=0.109.0
 uvicorn>=0.27.0
+# Multipart bodies: photo and audio uploads (POST /v1/media)
+python-multipart>=0.0.9
 pydantic>=2.0.0
 
 # LLM (also handles geocoding)

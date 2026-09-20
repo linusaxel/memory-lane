@@ -1,10 +1,11 @@
 """FastAPI application for Memory Lane API."""
 
 import os
+import uuid
 from datetime import date
 from math import asin, cos, radians, sin, sqrt
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -12,6 +13,7 @@ from sqlalchemy import text
 
 from api.card import router as card_router
 from api.embed import router as embed_router
+from api.media import MEDIA_DIR, MEDIA_URL_PREFIX, NoSniff, media_url, save_upload
 from pipeline.db import get_session
 
 app = FastAPI(
@@ -33,10 +35,26 @@ app.add_middleware(
 app.include_router(card_router)
 app.include_router(embed_router)
 
+# Uploaded photos and recordings, straight off the disk. Not a CDN and not
+# object storage: one volume is the whole feature until somebody is paying for
+# bandwidth.
+# ponytail: swap NoSniff for an S3 bucket + signed URLs when this box stops
+# being the only one.
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+app.mount(MEDIA_URL_PREFIX, NoSniff(directory=MEDIA_DIR), name="media")
+
 # How close you have to stand to read a memory. 150m and not 50m because urban
 # GPS drifts tens of metres, and a gate that will not open while you are
 # standing on the spot is a bug the person blames on themselves.
 UNLOCK_RADIUS_METERS = int(os.getenv("UNLOCK_RADIUS_METERS", "150"))
+
+# How many different people have to report a submission before it stops being
+# served. Low, because the corpus is small and a wrongly hidden memory is
+# recoverable while a libel left up for a week is not. The row survives either
+# way - `hidden` is a flag, not a delete.
+# ponytail: no appeal, no reinstatement, no queue for a human to look at.
+# REPORT_THRESHOLD is the whole moderation system until there is a moderator.
+REPORT_THRESHOLD = int(os.getenv("REPORT_THRESHOLD", "3"))
 
 
 class Coordinates(BaseModel):
@@ -49,6 +67,32 @@ class Place(BaseModel):
     name: str
     coordinates: Coordinates | None = None
     precision_meters: int
+
+
+class Author(BaseModel):
+    """Who filed this, when a person did rather than a transcript.
+
+    Shown even while the memory is locked: "somebody stood here and wrote this
+    down" is part of what makes it worth walking to, and it gives away nothing
+    the summary was protecting.
+    """
+
+    id: str
+    name: str
+
+
+class MediaItem(BaseModel):
+    """A photo or a recording hanging off a memory.
+
+    Withheld entirely while locked - a photograph of the place is the memory as
+    much as the text is. `media_count` still travels, because knowing there is a
+    picture waiting is the pull, not the leak.
+    """
+
+    id: int
+    kind: str
+    url: str
+    duration_seconds: float | None = None
 
 
 class Source(BaseModel):
@@ -80,6 +124,12 @@ class Memory(BaseModel):
     distance_meters: float | None = None
     # Absent on a locked memory: the source is part of what standing there buys.
     content: ContentRef | None = None
+    # Null for everything extracted from a video; set for what people file.
+    author: Author | None = None
+    # Empty while locked. media_count is not, so a locked card can say what is
+    # waiting without handing any of it over.
+    media: list[MediaItem] = []
+    media_count: int = 0
     tags: list[str]
     confidence: str
     locked: bool = False
@@ -153,14 +203,40 @@ class PlaceDetail(BaseModel):
 # are. 0.0001 degrees is ~11m, the same grid the app clusters on.
 # ponytail: a correlated scan of ~200 places per row. Materialize it onto
 # places if the corpus ever reaches the tens of thousands.
+#
+# Places holding a submission do not count. Each submission mints its own place
+# row at the submitter's GPS position, so without this exclusion filing a memory
+# outside Katz's would put a second place in that grid cell and silently unlock
+# every memory already there - a gate anybody could open by posting next to it.
+# A submitted memory is gated on its own terms instead (see is_gated): the person
+# was standing there, so the coordinate is real by construction.
+#
+# NOT EXISTS over a user memory, rather than EXISTS over an extracted one: a
+# place with no memories at all still counts, which is what it did before this.
 COORDINATE_IS_UNIQUE = """(
         SELECT COUNT(*) = 1 FROM places p2
         WHERE ST_SnapToGrid(p2.coordinates::geometry, 0.0001)
             = ST_SnapToGrid(p.coordinates::geometry, 0.0001)
+          AND NOT EXISTS (
+              SELECT 1 FROM memories m2 WHERE m2.place_id = p2.id AND m2.user_id IS NOT NULL
+          )
     ) as coordinate_is_unique"""
 
 # The 14 columns every memory-shaped response needs. row_to_memory reads the row
 # by name, so a query is free to append distance, rank or created_at.
+# Everything attached to this memory, in one round trip rather than one query
+# per memory. json_agg returns SQL NULL for no rows, hence the COALESCE - a null
+# here would make every media-less memory need a guard downstream.
+# ponytail: a correlated subquery per row, like COORDINATE_IS_UNIQUE above.
+# Fine at this size; a LEFT JOIN LATERAL if a page of 100 ever gets slow.
+MEMORY_MEDIA = """COALESCE((
+        SELECT json_agg(json_build_object(
+                   'id', md.id, 'kind', md.kind, 'path', md.path,
+                   'duration_seconds', md.duration_seconds
+               ) ORDER BY md.id)
+        FROM media md WHERE md.memory_id = m.id
+    ), '[]'::json) as media"""
+
 MEMORY_COLUMNS = f"""
     m.id,
     m.summary,
@@ -185,12 +261,23 @@ MEMORY_COLUMNS = f"""
     c.source_name,
     c.source_url as source_channel_url,
     c.source_icon_url,
+    m.user_id,
+    au.display_name as author_name,
+    {MEMORY_MEDIA},
     {COORDINATE_IS_UNIQUE}"""
 
+# content is LEFT because a submitted memory has none, and users is LEFT because
+# an extracted one has no author. Aliased `au` and not `u`: DEVICE_UNLOCKS_QUERY
+# already owns `u` for the unlocks table.
 MEMORY_JOIN = """
 FROM memories m
 JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id"""
+LEFT JOIN content c ON m.content_id = c.id
+LEFT JOIN users au ON m.user_id = au.id"""
+
+# Honoured by every query below that can emit a summary, including the counts.
+# A takedown that only covers the endpoint somebody complained about is not one.
+VISIBLE = "NOT m.hidden"
 
 DISTANCE = "ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters"
 WITHIN = "ST_DWithin(p.coordinates, ST_MakePoint(:lng, :lat)::geography, :radius_meters)"
@@ -210,7 +297,8 @@ SEARCH_RANK = f"ts_rank({SEARCH_VECTOR}, plainto_tsquery('english', :query)) as 
 
 # Tags aggregated across every memory at a place.
 PLACE_TAGS = """COALESCE(
-        (SELECT array_agg(DISTINCT t) FROM memories m2, unnest(m2.tags) t WHERE m2.place_id = p.id),
+        (SELECT array_agg(DISTINCT t) FROM memories m2, unnest(m2.tags) t
+         WHERE m2.place_id = p.id AND NOT m2.hidden),
         ARRAY[]::varchar[]
     ) as tags"""
 
@@ -234,6 +322,7 @@ SELECT {MEMORY_COLUMNS},
 {MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {WITHIN}
     AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
@@ -247,6 +336,7 @@ SELECT {MEMORY_COLUMNS},
 {MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {WITHIN}
     AND m.tags && CAST(:tags AS varchar[])
     AND {LAYER_FILTER}
@@ -263,6 +353,7 @@ FROM memories m
 JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {WITHIN}
     AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
@@ -274,6 +365,7 @@ FROM memories m
 JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {WITHIN}
     AND m.tags && CAST(:tags AS varchar[])
     AND {LAYER_FILTER}
@@ -291,11 +383,15 @@ SELECT
     COUNT(m.id) as memory_count,
     {PLACE_TAGS},
     {COORDINATE_IS_UNIQUE},
-    (SELECT summary FROM memories WHERE place_id = p.id ORDER BY id LIMIT 1) as sample_memory
+    (
+        SELECT summary FROM memories
+        WHERE place_id = p.id AND NOT hidden ORDER BY id LIMIT 1
+    ) as sample_memory
 FROM places p
 JOIN memories m ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {WITHIN}
 GROUP BY p.id, p.name, p.precision_meters, p.coordinates
 ORDER BY distance_meters ASC
@@ -306,13 +402,13 @@ SINGLE_MEMORY_QUERY = f"""
 SELECT {MEMORY_COLUMNS},
     m.created_at
 {MEMORY_JOIN}
-WHERE m.id = :memory_id
+WHERE m.id = :memory_id AND {VISIBLE}
 """
 
 PLACE_MEMORIES_QUERY = f"""
 SELECT {MEMORY_COLUMNS}
 {MEMORY_JOIN}
-WHERE p.id = :place_id
+WHERE p.id = :place_id AND {VISIBLE}
 ORDER BY m.created_at DESC
 LIMIT :limit OFFSET :offset
 """
@@ -338,7 +434,7 @@ GROUP BY p.id, p.name, p.place_query, p.precision_meters, p.geocode_status, p.co
 CONTENT_MEMORIES_QUERY = f"""
 SELECT {MEMORY_COLUMNS}
 {MEMORY_JOIN}
-WHERE c.id = :content_id
+WHERE c.id = :content_id AND {VISIBLE}
 ORDER BY m.timestamp_start ASC
 LIMIT :limit OFFSET :offset
 """
@@ -349,6 +445,7 @@ SELECT {MEMORY_COLUMNS},
 {MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {SEARCH_MATCH}
 ORDER BY rank DESC
 LIMIT :limit OFFSET :offset
@@ -361,6 +458,7 @@ SELECT {MEMORY_COLUMNS},
 {MEMORY_JOIN}
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {SEARCH_MATCH}
     AND {WITHIN}
 ORDER BY rank DESC, distance_meters ASC
@@ -373,6 +471,7 @@ FROM memories m
 JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {SEARCH_MATCH}
 """
 
@@ -382,6 +481,7 @@ FROM memories m
 JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {SEARCH_MATCH}
     AND {WITHIN}
 """
@@ -394,7 +494,7 @@ SELECT {MEMORY_COLUMNS},
     u.unlocked_at
 {MEMORY_JOIN}
 JOIN unlocks u ON u.memory_id = m.id
-WHERE u.device_id = CAST(:device_id AS uuid)
+WHERE u.device_id = CAST(:device_id AS uuid) AND {VISIBLE}
 ORDER BY u.unlocked_at DESC
 LIMIT :limit
 """
@@ -418,7 +518,7 @@ WITH clustered AS (
         ST_ClusterDBSCAN(p.coordinates::geometry, eps := 0.5, minpoints := 1) OVER () AS cluster_id
     FROM memories m
     JOIN places p ON m.place_id = p.id
-    WHERE p.coordinates IS NOT NULL
+    WHERE p.coordinates IS NOT NULL AND NOT m.hidden
 )
 SELECT
     ST_Y(ST_Centroid(ST_Collect(geom))) AS lat,
@@ -438,6 +538,7 @@ FROM places p
 JOIN memories m ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
+    AND {VISIBLE}
     AND {WITHIN}
 """
 
@@ -480,10 +581,18 @@ def meters_between(a: Coordinates, b: Coordinates) -> float:
 def is_gated(row) -> bool:
     """Whether this memory is worth making somebody walk to.
 
-    Only a trustworthy coordinate qualifies - see COORDINATE_IS_UNIQUE. A place
-    with no coordinates has nowhere to walk to.
+    Two ways to qualify. An extracted memory needs a trustworthy coordinate -
+    see COORDINATE_IS_UNIQUE, and most do not have one. A submitted memory
+    always has one: it was filed from the phone of somebody standing there, so
+    there is no centroid problem to protect anyone from.
+
+    Either way a place with no coordinates has nowhere to walk to.
     """
-    return bool(getattr(row, "coordinate_is_unique", False)) and row_coordinates(row) is not None
+    if row_coordinates(row) is None:
+        return False
+    return getattr(row, "user_id", None) is not None or bool(
+        getattr(row, "coordinate_is_unique", False)
+    )
 
 
 def is_locked(row, at: Coordinates | None) -> bool:
@@ -506,9 +615,34 @@ def is_locked(row, at: Coordinates | None) -> bool:
     return at is None or coords is None or meters_between(at, coords) > UNLOCK_RADIUS_METERS
 
 
+def row_author(row) -> Author | None:
+    """A submission with no display name is still somebody. "Anonymous" is the
+    honest rendering of a blank one, and it is decided here rather than in the
+    app so the card and the API cannot disagree about it."""
+    user_id = getattr(row, "user_id", None)
+    if user_id is None:
+        return None
+    return Author(id=str(user_id), name=getattr(row, "author_name", None) or "Anonymous")
+
+
+def row_media(row) -> list[MediaItem]:
+    """json_agg gives back a list of dicts; the URL is built here so the stored
+    path stays a path and the client never has to know where media lives."""
+    return [
+        MediaItem(
+            id=item["id"],
+            kind=item["kind"],
+            url=media_url(item["path"]),
+            duration_seconds=item.get("duration_seconds"),
+        )
+        for item in (getattr(row, "media", None) or [])
+    ]
+
+
 def locked_memory(row, coords: Coordinates | None, distance_meters: float | None) -> Memory:
-    """Where it is and how far away, and nothing else - enough to decide whether
-    to walk there, which is the only decision a locked memory has to support."""
+    """Where it is, how far away, who filed it and how much is waiting - enough
+    to decide whether to walk there, which is the only decision a locked memory
+    has to support. The photo itself stays behind the gate with the text."""
     return Memory(
         id=row.id,
         summary="",
@@ -523,6 +657,8 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         tags=[],
         confidence=row.extraction_confidence or "medium",
         layer=getattr(row, "layer", None) or "historical",
+        author=row_author(row),
+        media_count=len(getattr(row, "media", None) or []),
         locked=True,
         unlock_radius_meters=UNLOCK_RADIUS_METERS,
     )
@@ -535,10 +671,25 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
     if is_locked(row, at):
         return locked_memory(row, coords, distance)
 
-    timestamp_url = row.content_url
-    if "youtube.com" in row.content_url or "youtu.be" in row.content_url:
-        separator = "&" if "?" in row.content_url else "?"
-        timestamp_url = f"{row.content_url}{separator}t={int(row.timestamp_start)}"
+    # None for a submitted memory: it came from a person, not a recording, and
+    # there is nothing to link out to. `author` is what carries the credit there.
+    content = None
+    if getattr(row, "content_id", None) is not None:
+        started = row.timestamp_start or 0
+        timestamp_url = row.content_url
+        if "youtube.com" in row.content_url or "youtu.be" in row.content_url:
+            separator = "&" if "?" in row.content_url else "?"
+            timestamp_url = f"{row.content_url}{separator}t={int(started)}"
+        content = ContentRef(
+            id=row.content_id,
+            title=row.content_title,
+            url=row.content_url,
+            timestamp_start=started,
+            timestamp_url=timestamp_url,
+            source=row_source(row),
+        )
+
+    media = row_media(row)
 
     return Memory(
         id=row.id,
@@ -550,14 +701,10 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
             precision_meters=row.precision_meters,
         ),
         distance_meters=distance,
-        content=ContentRef(
-            id=row.content_id,
-            title=row.content_title,
-            url=row.content_url,
-            timestamp_start=row.timestamp_start,
-            timestamp_url=timestamp_url,
-            source=row_source(row),
-        ),
+        content=content,
+        author=row_author(row),
+        media=media,
+        media_count=len(media),
         tags=row.tags or [],
         confidence=row.extraction_confidence or "medium",
         layer=getattr(row, "layer", None) or "historical",
@@ -919,6 +1066,9 @@ class Stats(BaseModel):
     hotspots: list[Hotspot]
 
 
+DEVICE_PATTERN = r"^[0-9a-fA-F-]{36}$"
+
+
 class UnlockRequest(BaseModel):
     """Everything an unlock needs, and nothing that identifies a person.
 
@@ -926,13 +1076,25 @@ class UnlockRequest(BaseModel):
     so it never hands an identifier to a client that did not already have it.
     """
 
-    device: str = Field(pattern=r"^[0-9a-fA-F-]{36}$")
+    device: str = Field(pattern=DEVICE_PATTERN)
     lat: float = Field(ge=-90, le=90)
     lng: float = Field(ge=-180, le=180)
 
 
 class UnlocksResponse(BaseModel):
     memories: list[Memory]
+
+
+def touch_device(session, device: str) -> None:
+    """Every write path needs the device row to exist first, and every one of
+    them also wants last_seen moved. Three callers, one statement."""
+    session.execute(
+        text("""
+            INSERT INTO devices (id, last_seen) VALUES (CAST(:id AS uuid), CURRENT_TIMESTAMP)
+            ON CONFLICT (id) DO UPDATE SET last_seen = CURRENT_TIMESTAMP
+        """),
+        {"id": device},
+    )
 
 
 @app.post("/v1/memories/{memory_id}/unlock", response_model=Memory)
@@ -958,13 +1120,7 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
                 memory.distance_meters = meters_between(at, memory.place.coordinates)
             return memory
 
-        session.execute(
-            text("""
-                INSERT INTO devices (id, last_seen) VALUES (CAST(:id AS uuid), CURRENT_TIMESTAMP)
-                ON CONFLICT (id) DO UPDATE SET last_seen = CURRENT_TIMESTAMP
-            """),
-            {"id": body.device},
-        )
+        touch_device(session, body.device)
         session.execute(
             text("""
                 INSERT INTO unlocks (device_id, memory_id)
@@ -979,7 +1135,7 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
 
 @app.get("/v1/unlocks", response_model=UnlocksResponse)
 def get_unlocks(
-    device: str = Query(..., pattern=r"^[0-9a-fA-F-]{36}$"),
+    device: str = Query(..., pattern=DEVICE_PATTERN),
     limit: int = Query(200, ge=1, le=500),
 ):
     """What this device has earned.
@@ -1036,6 +1192,388 @@ def get_stats(
             if r.label
         ],
     )
+
+
+# ---------------------------------------------------------------------------
+# Writing. Everything above this line reads a corpus somebody else produced.
+#
+# There is still no account. A user is a display name and a uuid, claimed by a
+# device the same way its unlocks are, and the device id is the only credential
+# there is - so this authenticates nobody and is not pretending to. What it does
+# buy is a stable name to sign a submission with, a row for Google/Apple sign-in
+# to attach to later, and a subject for a report to be about.
+#
+# ponytail: the device id is a bearer token in the request body. Anyone who has
+# yours can post as you. That is the same threat model as the unlock's
+# self-reported position, and it is what OAuth replaces.
+# ---------------------------------------------------------------------------
+
+# A submitted memory mints its own place. Not reusing one by name: two people
+# filing at the same cafe would otherwise fight over whose spelling of it wins,
+# and the map groups by coordinate anyway, so they land under one pin regardless.
+PLACE_INSERT = """
+INSERT INTO places (name, place_query, coordinates, precision_meters, geocode_status)
+VALUES (
+    :name, :place_query,
+    ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+    :precision_meters, 'user'
+)
+RETURNING id
+"""
+
+SUBMISSION_INSERT = """
+INSERT INTO memories (
+    place_id, content_id, timestamp_start, summary, tags,
+    extraction_confidence, layer, happened_at, happened_precision, user_id
+)
+VALUES (
+    :place_id, NULL, NULL, :summary, CAST(:tags AS varchar[]),
+    'high', 'stranger', :happened_at, :happened_precision, CAST(:user_id AS uuid)
+)
+RETURNING id
+"""
+
+# Only this device's own uploads, and only ones not already spoken for. Both
+# halves matter: ids are sequential, so without the device check a submission
+# could adopt the photo somebody else uploaded a second earlier.
+MEDIA_ATTACH = """
+UPDATE media SET memory_id = :memory_id
+WHERE id = ANY(CAST(:ids AS integer[]))
+  AND device_id = CAST(:device AS uuid)
+  AND memory_id IS NULL
+"""
+
+# What a person is allowed to say about where they were. Free text would be a
+# tag soup of one-offs within a week; this is the set the corpus already uses.
+SUBMISSION_TAGS = [
+    "food",
+    "drink",
+    "music",
+    "art",
+    "history",
+    "nature",
+    "sport",
+    "nightlife",
+    "work",
+    "family",
+    "strange",
+]
+
+# A phone's GPS is good to a few tens of metres in the open and worse between
+# buildings. Claiming better would be the same lie the extraction prompt was
+# rewritten to stop telling.
+SUBMITTED_PRECISION_METERS = 25
+
+
+class Profile(BaseModel):
+    """What this device is, to the extent it is anybody.
+
+    user_id is null until the person does something that needs one - the first
+    submission, or naming themselves. Reading the profile does not create one.
+    """
+
+    user_id: str | None = None
+    display_name: str | None = None
+    submitted: int = 0
+    unlocked: int = 0
+
+
+class ProfileRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+    # Blank clears it back to Anonymous, which has to be possible: a name is the
+    # one thing here that other people see.
+    display_name: str = Field(max_length=60)
+
+
+class SubmissionRequest(BaseModel):
+    """One memory, filed by the person who was standing there.
+
+    lat/lng is both where they are and where the memory goes - one coordinate,
+    because two would only ever be used to file something somewhere else.
+    """
+
+    device: str = Field(pattern=DEVICE_PATTERN)
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+    place_name: str = Field(min_length=1, max_length=200)
+    # Ten characters is not a quality bar, it is a fat-finger bar.
+    summary: str = Field(min_length=10, max_length=2000)
+    tags: list[str] = Field(default_factory=list, max_length=8)
+    happened_at: date | None = None
+    happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
+    media_ids: list[int] = Field(default_factory=list, max_length=6)
+    # Sent with the submission rather than requiring a separate profile call, so
+    # signing your first memory is one request.
+    display_name: str | None = Field(None, max_length=60)
+
+
+class ReportRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+    reason: str | None = Field(None, max_length=40)
+
+
+class ReportResponse(BaseModel):
+    reports: int
+    hidden: bool
+
+
+def user_for_device(session, device: str) -> str:
+    """The user this device acts as, creating one the first time it needs to.
+
+    Created lazily and never on a read: a device that only ever walks around
+    unlocking things should not leave a user row behind.
+    """
+    touch_device(session, device)
+    existing = session.execute(
+        text("SELECT user_id FROM devices WHERE id = CAST(:id AS uuid)"), {"id": device}
+    ).scalar()
+    if existing is not None:
+        return str(existing)
+
+    fresh = str(uuid.uuid4())
+    session.execute(text("INSERT INTO users (id) VALUES (CAST(:id AS uuid))"), {"id": fresh})
+    session.execute(
+        text("UPDATE devices SET user_id = CAST(:user AS uuid) WHERE id = CAST(:id AS uuid)"),
+        {"user": fresh, "id": device},
+    )
+    return fresh
+
+
+def set_display_name(session, user_id: str, name: str | None) -> None:
+    """Separate from user_for_device because None is two different answers.
+
+    A submission that carries no name is saying nothing about it and must leave
+    the existing one alone; a PUT with a blank one is saying "stop calling me
+    that", and clearing it has to be possible - the name is the one thing here
+    other people see.
+    """
+    session.execute(
+        text("UPDATE users SET display_name = :name WHERE id = CAST(:id AS uuid)"),
+        {"name": name, "id": user_id},
+    )
+
+
+def clean_name(raw: str | None) -> str | None:
+    """Blank and whitespace are the same thing as not being named."""
+    name = (raw or "").strip()
+    return name or None
+
+
+def clean_tags(raw: list[str]) -> list[str]:
+    """Lowercased, deduplicated, and only from the known set.
+
+    Dropping an unknown tag rather than rejecting the submission: the tags are a
+    filing convenience and losing one is not worth losing the memory.
+    """
+    seen = []
+    for tag in raw:
+        normalized = tag.strip().lower()
+        if normalized in SUBMISSION_TAGS and normalized not in seen:
+            seen.append(normalized)
+    return seen
+
+
+@app.get("/v1/me", response_model=Profile)
+def get_profile(device: str = Query(..., pattern=DEVICE_PATTERN)):
+    """Who this device is and what it has done. Creates nothing."""
+    with get_session() as session:
+        row = session.execute(
+            text("""
+                SELECT u.id, u.display_name,
+                    (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id) AS submitted
+                FROM devices d JOIN users u ON d.user_id = u.id
+                WHERE d.id = CAST(:id AS uuid)
+            """),
+            {"id": device},
+        ).fetchone()
+        unlocked = session.execute(
+            text("SELECT COUNT(*) FROM unlocks WHERE device_id = CAST(:id AS uuid)"),
+            {"id": device},
+        ).scalar()
+
+    if not row:
+        return Profile(unlocked=unlocked or 0)
+    return Profile(
+        user_id=str(row.id),
+        display_name=row.display_name,
+        submitted=row.submitted,
+        unlocked=unlocked or 0,
+    )
+
+
+@app.put("/v1/me", response_model=Profile)
+def set_profile(body: ProfileRequest):
+    """Name yourself, or stop being named. This is the one call that creates a
+    user without a submission attached, because choosing the name before writing
+    the memory is the order people do it in."""
+    with get_session() as session:
+        user_id = user_for_device(session, body.device)
+        set_display_name(session, user_id, clean_name(body.display_name))
+        submitted = session.execute(
+            text("SELECT COUNT(*) FROM memories WHERE user_id = CAST(:id AS uuid)"),
+            {"id": user_id},
+        ).scalar()
+        unlocked = session.execute(
+            text("SELECT COUNT(*) FROM unlocks WHERE device_id = CAST(:id AS uuid)"),
+            {"id": body.device},
+        ).scalar()
+
+    return Profile(
+        user_id=user_id,
+        display_name=clean_name(body.display_name),
+        submitted=submitted or 0,
+        unlocked=unlocked or 0,
+    )
+
+
+@app.post("/v1/media", response_model=MediaItem, status_code=201)
+async def upload_media(
+    # Annotation-only, which is how FastAPI recognises an upload; File(...) in a
+    # default is the same thing and ruff's B008 rejects it.
+    file: UploadFile,
+    device: str = Form(..., pattern=DEVICE_PATTERN),
+    duration_seconds: float | None = Form(None, ge=0, le=600),
+):
+    """Take one photo or recording and hold it until a submission claims it.
+
+    Separate from the submission itself because a phone uploads a 4 MB photo
+    while the person is still typing, and because a failed upload should cost
+    the text nothing. api/media.py does the deciding about what a file may be.
+    """
+    path, kind, mime, size = await save_upload(file)
+
+    with get_session() as session:
+        touch_device(session, device)
+        media_id = session.execute(
+            text("""
+                INSERT INTO media (device_id, kind, path, mime, bytes, duration_seconds)
+                VALUES (CAST(:device AS uuid), :kind, :path, :mime, :bytes, :duration)
+                RETURNING id
+            """),
+            {
+                "device": device,
+                "kind": kind,
+                "path": path,
+                "mime": mime,
+                "bytes": size,
+                # Only meaningful for audio, and only the client knows it - the
+                # server does not decode the file to find out.
+                "duration": duration_seconds if kind == "audio" else None,
+            },
+        ).scalar()
+
+    return MediaItem(
+        id=media_id,
+        kind=kind,
+        url=media_url(path),
+        duration_seconds=duration_seconds if kind == "audio" else None,
+    )
+
+
+@app.post("/v1/memories", response_model=Memory, status_code=201)
+def submit_memory(body: SubmissionRequest):
+    """File a memory of where you are standing.
+
+    It lands in the `stranger` layer, gated like everything else with a real
+    coordinate - including for the person who wrote it, which is why the unlock
+    is recorded here too. Filing something is standing there, so re-locking it
+    the moment they walk away would be absurd.
+    """
+    tags = clean_tags(body.tags)
+    # A date with no stated precision is a full date, which is what a phone's
+    # date picker produces; the field exists for the 1978 case.
+    precision = body.happened_precision or ("day" if body.happened_at else None)
+
+    with get_session() as session:
+        user_id = user_for_device(session, body.device)
+        if body.display_name is not None:
+            set_display_name(session, user_id, clean_name(body.display_name))
+
+        place_id = session.execute(
+            text(PLACE_INSERT),
+            {
+                "name": body.place_name.strip(),
+                "place_query": f"user:{uuid.uuid4()}",
+                "lat": body.lat,
+                "lng": body.lng,
+                "precision_meters": SUBMITTED_PRECISION_METERS,
+            },
+        ).scalar()
+
+        memory_id = session.execute(
+            text(SUBMISSION_INSERT),
+            {
+                "place_id": place_id,
+                "summary": body.summary.strip(),
+                "tags": tags,
+                "happened_at": body.happened_at,
+                "happened_precision": precision,
+                "user_id": user_id,
+            },
+        ).scalar()
+
+        if body.media_ids:
+            attached = session.execute(
+                text(MEDIA_ATTACH),
+                {"memory_id": memory_id, "ids": body.media_ids, "device": body.device},
+            ).rowcount
+            if attached != len(set(body.media_ids)):
+                # Silently posting a memory without the photograph somebody
+                # chose is worse than refusing: they would never know.
+                raise HTTPException(
+                    status_code=400, detail="Some attachments are unknown or already used"
+                )
+
+        session.execute(
+            text("""
+                INSERT INTO unlocks (device_id, memory_id)
+                VALUES (CAST(:device AS uuid), :memory_id)
+                ON CONFLICT (device_id, memory_id) DO NOTHING
+            """),
+            {"device": body.device, "memory_id": memory_id},
+        )
+
+        row = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id}).fetchone()
+
+    return row_to_memory(row, Coordinates(lat=body.lat, lng=body.lng), include_distance=False)
+
+
+@app.post("/v1/memories/{memory_id}/report", response_model=ReportResponse)
+def report_memory(memory_id: int, body: ReportRequest):
+    """Say this should not be here.
+
+    One report per device, counted rather than acted on individually, and at
+    REPORT_THRESHOLD the memory stops being served by every endpoint at once.
+    The row stays: a takedown that destroys the evidence makes the next dispute
+    unanswerable.
+    """
+    with get_session() as session:
+        exists = session.execute(
+            text("SELECT 1 FROM memories WHERE id = :id"), {"id": memory_id}
+        ).scalar()
+        if not exists:
+            raise HTTPException(status_code=404, detail="Memory not found")
+
+        touch_device(session, body.device)
+        session.execute(
+            text("""
+                INSERT INTO reports (memory_id, device_id, reason)
+                VALUES (:memory_id, CAST(:device AS uuid), :reason)
+                ON CONFLICT (memory_id, device_id) DO NOTHING
+            """),
+            {"memory_id": memory_id, "device": body.device, "reason": body.reason},
+        )
+        count = session.execute(
+            text("SELECT COUNT(*) FROM reports WHERE memory_id = :id"), {"id": memory_id}
+        ).scalar()
+
+        hidden = count >= REPORT_THRESHOLD
+        if hidden:
+            session.execute(
+                text("UPDATE memories SET hidden = TRUE WHERE id = :id"), {"id": memory_id}
+            )
+
+    return ReportResponse(reports=count, hidden=hidden)
 
 
 if __name__ == "__main__":

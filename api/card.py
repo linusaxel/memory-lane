@@ -44,17 +44,31 @@ SELECT
     c.source_name,
     ST_Y(p.coordinates::geometry) AS lat,
     ST_X(p.coordinates::geometry) AS lng,
+    -- Kept identical to api/main.py's COORDINATE_IS_UNIQUE, including the
+    -- exclusion of user-submitted places. is_locked() is shared between the two
+    -- and would disagree with itself if these drifted.
     (
         SELECT COUNT(*) = 1 FROM places p2
         WHERE ST_SnapToGrid(p2.coordinates::geometry, 0.0001)
             = ST_SnapToGrid(p.coordinates::geometry, 0.0001)
+          AND NOT EXISTS (
+              SELECT 1 FROM memories m2 WHERE m2.place_id = p2.id AND m2.user_id IS NOT NULL
+          )
     ) AS coordinate_is_unique,
+    m.user_id,
+    au.display_name AS author_name,
+    (
+        SELECT md.path FROM media md
+        WHERE md.memory_id = m.id AND md.kind = 'photo'
+        ORDER BY md.id LIMIT 1
+    ) AS photo_path,
     c.title AS content_title,
     c.url AS content_url
 FROM memories m
 JOIN places p ON m.place_id = p.id
-JOIN content c ON m.content_id = c.id
-WHERE m.id = :memory_id
+LEFT JOIN content c ON m.content_id = c.id
+LEFT JOIN users au ON m.user_id = au.id
+WHERE m.id = :memory_id AND NOT m.hidden
 """
 
 
@@ -96,6 +110,13 @@ def credit_line(row) -> str:
 
     if row.content_title:
         return row.content_title
+
+    # A submitted memory has no content row at all, so the person who filed it
+    # is the credit. Below the archive's attribution and the publisher, because
+    # those are claims about provenance and this is a signature.
+    if getattr(row, "user_id", None) is not None:
+        return getattr(row, "author_name", None) or "Anonymous"
+
     if row.content_url:
         return row.content_url
     return "Source unknown"
@@ -144,6 +165,9 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .credit{margin-top:4px;padding-top:14px;border-top:1px solid var(--rule);
   font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px}
 .credit a{color:inherit}
+/* A submitted memory usually is the photograph. Sized by aspect rather than a
+   fixed height so a portrait phone shot is not cropped to a letterbox. */
+.photo{width:100%;border-radius:6px;display:block;max-height:60vh;object-fit:cover}
 .layer{display:inline-block;font-size:11px;text-transform:uppercase;
   letter-spacing:.08em;color:var(--muted)}
 @media (max-width:360px){.card{padding:18px 16px}.summary{font-size:16px}}
@@ -158,6 +182,16 @@ def render_card(row) -> str:
     href = source_href(row)
 
     when_html = f'<p class="when">{escape(when)}</p>' if when else ""
+    # Imported here for the same cycle reason as the route below; api.media has
+    # no dependency on this module, but keeping both imports in one place is
+    # less surprising than one at the top and one inside a function.
+    photo_path = getattr(row, "photo_path", None)
+    photo_html = ""
+    if photo_path:
+        from api.media import media_url
+
+        photo_html = f'<img class="photo" src="{escape(media_url(photo_path), quote=True)}" alt="">'
+
     contrast_html = (
         f'<p class="contrast">{escape(row.contrast_note)}</p>' if row.contrast_note else ""
     )
@@ -175,6 +209,7 @@ def render_card(row) -> str:
   <span class="layer">{escape(row.layer or "historical")}</span>
   <h1 class="place">{place}</h1>
   {when_html}
+  {photo_html}
   <p class="summary">{summary}</p>
   {contrast_html}
   <p class="credit">{credit_html}</p>

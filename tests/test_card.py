@@ -34,6 +34,9 @@ class Row:
             place_name="Katz's Delicatessen",
             precision_meters=50,
             source_name=None,
+            user_id=None,
+            author_name=None,
+            photo_path=None,
             content_title="Tuesdays with Stories #500",
             content_url="https://www.youtube.com/watch?v=abc",
         )
@@ -158,3 +161,38 @@ def test_an_archive_attribution_still_outranks_the_publisher():
 
 def test_a_row_with_no_publisher_falls_through_as_before():
     assert credit_line(Row(source_name=None, content_title="Ep 3")) == "Ep 3"
+
+
+# -- memories people filed themselves -----------------------------------------
+
+
+def test_a_submission_is_credited_to_whoever_filed_it():
+    """No content row at all, so the fallback chain runs off the end of
+    everything it used to rely on. The signature is the credit."""
+    row = Row(user_id="9f0c", author_name="Lise", content_title=None, content_url=None)
+    assert credit_line(row) == "Lise"
+    assert "Lise" in render_card(row)
+
+
+def test_an_unnamed_submitter_is_anonymous_not_unknown():
+    """ "Source unknown" is what we say when nobody knows. Somebody knows here -
+    they just did not put their name to it."""
+    row = Row(user_id="9f0c", author_name=None, content_title=None, content_url=None)
+    assert credit_line(row) == "Anonymous"
+
+
+def test_an_archive_attribution_still_outranks_the_person():
+    row = Row(attribution="Museum of Copenhagen", user_id="9f0c", author_name="Lise")
+    assert credit_line(row) == "Museum of Copenhagen"
+
+
+def test_a_photo_is_part_of_the_card():
+    """A submitted memory usually is the photograph, and the card is the thing
+    that gets pasted into a chat."""
+    html = render_card(Row(user_id="9f0c", photo_path="abc123.jpg"))
+    assert 'src="/media/abc123.jpg"' in html
+    assert 'class="photo"' in html
+
+
+def test_no_photo_renders_no_image():
+    assert "<img" not in render_card(Row())

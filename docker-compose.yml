@@ -22,6 +22,11 @@ services:
       - "8080:8000"
     environment:
       DATABASE_URL: postgresql://memorylane:memorylane@db:5432/memorylane
+      MEDIA_DIR: /data/media
+    volumes:
+      # Uploaded photos and recordings. Without this they live in the container
+      # and a rebuild deletes everybody's submissions.
+      - media_data:/data/media
     depends_on:
       db:
         condition: service_healthy
@@ -39,5 +44,6 @@ services:
       retries: 5
 
 volumes:
+  media_data:
   postgres_data:
   redis_data:

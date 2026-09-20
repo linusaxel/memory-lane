@@ -32,3 +32,5 @@ Thumbs.db
 # Project specific
 transcripts/
 *.log
+# Uploaded photos and recordings when running outside Docker.
+media/
