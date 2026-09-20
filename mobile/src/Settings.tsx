@@ -1,13 +1,14 @@
-/** The third tab. No account, so it is about the walking, not the person.
+/** The third tab. Still no sign-in, but no longer nobody.
  *
- * There is nothing to log into and nothing synced, which makes this tab two
- * honest jobs: say what this device has done, and be the one place that
- * explains the rule the whole app is built on. Every app with a proximity gate
- * needs somewhere to answer "why can I not read this", and burying that in a
- * sheet that only appears when you are already frustrated is too late.
+ * Three jobs: say what this device has done, hold the one thing about the
+ * person that other people see - the name their submissions are signed with -
+ * and be the place that explains the rule the whole app is built on. Every app
+ * with a proximity gate needs somewhere to answer "why can I not read this",
+ * and burying that in a sheet that only appears when you are already frustrated
+ * is too late.
  */
 
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_BASE } from './api.ts';
@@ -17,6 +18,11 @@ import { color, font, label } from './theme.ts';
 type Props = {
   unlockedCount: number;
   placeCount: number;
+  submittedCount: number;
+  /** Empty means Anonymous. Saved as it is typed, so there is no Save button
+   *  to forget to press. */
+  displayName: string;
+  onDisplayName: (next: string) => void;
   radiusMeters: number;
   /** 'granted' | 'denied' | 'blocked' | 'unknown', mirrored from App. */
   permission: string;
@@ -26,6 +32,9 @@ type Props = {
 export default function Settings({
   unlockedCount,
   placeCount,
+  submittedCount,
+  displayName,
+  onDisplayName,
   radiusMeters,
   permission,
   onRequestLocation,
@@ -43,12 +52,30 @@ export default function Settings({
       <View style={styles.stats}>
         <Stat value={unlockedCount} label={unlockedCount === 1 ? 'memory' : 'memories'} />
         <Stat value={placeCount} label={placeCount === 1 ? 'place' : 'places'} />
+        {submittedCount > 0 && <Stat value={submittedCount} label="filed" />}
       </View>
       <Text style={styles.statsNote}>
         {unlockedCount === 0
           ? 'Nothing unlocked yet.'
           : 'Everything you opened by being there. Yours to reread.'}
       </Text>
+
+      <Section title="Your name">
+        <Text style={styles.note}>
+          What your own memories are signed with, and the only thing here anybody else sees. Leave
+          it blank to post as Anonymous.
+        </Text>
+        <TextInput
+          style={styles.input}
+          value={displayName}
+          onChangeText={onDisplayName}
+          placeholder="Anonymous"
+          placeholderTextColor={color.inkFaint}
+          maxLength={60}
+          autoCapitalize="words"
+          accessibilityLabel="The name your memories are signed with"
+        />
+      </Section>
 
       <Section title="How unlocking works">
         <Row>
@@ -90,8 +117,8 @@ export default function Settings({
           <Text style={styles.linkText}>Privacy policy</Text>
         </Pressable>
         <Text style={styles.note}>
-          No account, no sign-in, nothing synced. Your unlocked memories live on this device, which
-          also means a new phone starts empty.
+          No sign-in yet. Your collection and anything you file are tied to this installation, not
+          to you - so a new phone starts empty.
         </Text>
       </Section>
     </ScrollView>
@@ -149,6 +176,17 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: color.ink,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: color.rule,
+    borderRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontFamily: font.prose,
+    fontSize: 17,
+    color: color.ink,
+    backgroundColor: color.paperRaised,
   },
   link: { alignSelf: 'flex-start' },
   linkText: {

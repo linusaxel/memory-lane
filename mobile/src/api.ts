@@ -23,6 +23,22 @@ export type ContentRef = {
   source: Source | null;
 };
 
+/** Who filed a memory, when a person did rather than a transcript. */
+export type Author = {
+  id: string;
+  /** Never empty: the server renders an unnamed submitter "Anonymous". */
+  name: string;
+};
+
+/** A photo or a recording hanging off a memory. */
+export type MediaItem = {
+  id: number;
+  kind: 'photo' | 'audio';
+  /** Server-relative. Join it to API_BASE before handing it to <Image>. */
+  url: string;
+  duration_seconds: number | null;
+};
+
 export type Memory = {
   id: number;
   /** Empty string while locked. The server never sends it until you are there. */
@@ -45,7 +61,19 @@ export type Memory = {
    */
   locked: boolean;
   unlock_radius_meters: number | null;
+  /** Null for everything extracted from a video. */
+  author: Author | null;
+  /** Empty while locked. media_count is not - a locked card is allowed to say
+   *  there is a photograph waiting, which is the pull rather than the leak. */
+  media: MediaItem[];
+  media_count: number;
 };
+
+/** Media urls come back server-relative so the host can change without a
+ *  release. Nothing else in the app needs to know where uploads live. */
+export function mediaUrl(item: MediaItem): string {
+  return `${BASE}${item.url}`;
+}
 
 /** A memory whose place has real coordinates - safe to drop on a map. */
 export type LocatedMemory = Memory & { place: Memory['place'] & { coordinates: Coordinates } };
@@ -183,4 +211,109 @@ export async function fetchHotspots(signal?: AbortSignal): Promise<Hotspot[]> {
     signal,
   );
   return body.hotspots ?? [];
+}
+
+// --- writing -----------------------------------------------------------------
+
+/** What this device is, to the extent it is anybody. */
+export type Profile = {
+  user_id: string | null;
+  display_name: string | null;
+  submitted: number;
+  unlocked: number;
+};
+
+export type Draft = {
+  place_name: string;
+  summary: string;
+  tags: string[];
+  /** ISO date, or null when the person did not say when. */
+  happened_at: string | null;
+  happened_precision: 'day' | 'year' | null;
+  media_ids: number[];
+  display_name: string | null;
+};
+
+/**
+ * The tags a submission may carry. The server drops anything not on this list,
+ * so the app offers exactly these rather than letting somebody type a tag that
+ * silently vanishes.
+ */
+export const SUBMISSION_TAGS = [
+  'food',
+  'drink',
+  'music',
+  'art',
+  'history',
+  'nature',
+  'sport',
+  'nightlife',
+  'work',
+  'family',
+  'strange',
+] as const;
+
+export async function fetchProfile(device: string, signal?: AbortSignal): Promise<Profile> {
+  return get<Profile>('/v1/me', new URLSearchParams({ device }), signal);
+}
+
+export async function saveDisplayName(device: string, displayName: string): Promise<Profile> {
+  const res = await fetch(`${BASE}/v1/me`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device, display_name: displayName }),
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as Profile;
+}
+
+/**
+ * Send one photo or recording ahead of the memory it belongs to.
+ *
+ * Separate from the submission so a 4 MB photo uploads while the person is
+ * still typing, and so a failed upload costs the text nothing. The timeout is
+ * the request helper's 8s everywhere else in this file and deliberately not
+ * here: an upload over a phone connection legitimately takes longer than a
+ * query, and aborting it would make the feature unusable on the move.
+ */
+export async function uploadMedia(
+  device: string,
+  uri: string,
+  mime: string,
+  durationSeconds?: number,
+): Promise<MediaItem> {
+  const form = new FormData();
+  form.append('device', device);
+  // The server generates the stored name; this one only decides the multipart
+  // part's filename, which nothing downstream trusts.
+  form.append('file', { uri, name: uri.split('/').pop() ?? 'upload', type: mime } as never);
+  if (durationSeconds != null) form.append('duration_seconds', String(Math.round(durationSeconds)));
+
+  const res = await fetch(`${BASE}/v1/media`, { method: 'POST', body: form });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as MediaItem;
+}
+
+/**
+ * File a memory of where you are standing.
+ *
+ * One coordinate, because it is both where the person is and where the memory
+ * goes. It comes back unlocked - filing something is standing there - and the
+ * server has already recorded the unlock, so it belongs straight in the
+ * collection.
+ */
+export async function submitMemory(
+  device: string,
+  at: Coordinates,
+  draft: Draft,
+): Promise<LocatedMemory> {
+  const memory = await post<Memory>('/v1/memories', { device, ...at, ...draft });
+  if (!hasCoordinates(memory)) throw new Error('Submitted memory came back without a place');
+  return memory;
+}
+
+/** Say this should not be here. Enough different devices and it stops being
+ *  served to anybody. */
+export async function reportMemory(id: number, device: string, reason?: string): Promise<void> {
+  await post(`/v1/memories/${id}/report`, { device, reason: reason ?? null });
 }

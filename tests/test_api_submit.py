@@ -417,3 +417,23 @@ def test_one_device_cannot_report_three_times(client):
 
 def test_reporting_something_that_does_not_exist_is_a_404(client):
     assert client.post("/v1/memories/424242/report", json={"device": device()}).status_code == 404
+
+
+def test_media_is_served_with_sniffing_switched_off(client):
+    """The extension decides the Content-Type, and this is what stops a browser
+    overruling it. Tested through the real mount because the header is added by
+    the StaticFiles subclass, not by anything the upload path touches.
+
+    m.MEDIA_DIR, not media.MEDIA_DIR: the mount captured the directory at import
+    and the fixture's tmp_path redirect only reaches the upload.
+    """
+    m.MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+    served = m.MEDIA_DIR / "nosniff-probe.png"
+    served.write_bytes(PNG)
+    try:
+        response = client.get("/media/nosniff-probe.png")
+        assert response.status_code == 200
+        assert response.headers["x-content-type-options"] == "nosniff"
+        assert response.headers["content-type"] == "image/png"
+    finally:
+        served.unlink(missing_ok=True)

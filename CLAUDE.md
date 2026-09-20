@@ -71,7 +71,8 @@ python -m api.main
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
-| `api/main.py` | FastAPI server for location-based memory queries |
+| `api/main.py` | FastAPI server for location-based memory queries, **and the write endpoints** |
+| `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |
@@ -81,7 +82,9 @@ python -m api.main
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
 | `mobile/src/MemoryMarker.tsx` | A coordinate's four states on the map |
-| `mobile/src/unlocked.ts` | What this device has earned. On-device only; there are no accounts |
+| `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
+| `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
+| `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
 | **`mobile/UI.md`** | **Read before touching the app.** Tokens, load-bearing rules, how to see it running |
 | **`docs/08-ux-flows.md`** | **What the user does.** Implemented + proposed flows |
@@ -93,15 +96,24 @@ python -m api.main
 content       → Source videos (url, platform_id, publisher, status flags)
 transcripts   → JSONB segments with timestamps
 places        → Locations with PostGIS coordinates
-memories      → Extracted experiences linking content to places
-devices       → An installation's self-issued UUID. Not a user
+memories      → Experiences pinned to places. content_id OR user_id, never both
+devices       → An installation's self-issued UUID. Not a person
+users         → A display name and an id. Not an account either — yet
 unlocks       → (device, memory) — who has earned what
+media         → Photos and recordings attached to a submitted memory
+reports       → (memory, device) — what makes public submissions defensible
 ```
 
-**There are no users.** `devices` is an opaque UUID the app generates for itself
-and keeps in the keychain; the server never issues one. That is enough to make a
-collection durable and to give a future sign-in something to attach to, and not
-enough to identify anybody. Real accounts are Phase 3.
+**There is still no sign-in.** `devices` is an opaque UUID the app generates for
+itself and keeps in the keychain; the server never issues one. A `users` row is
+a display name to sign a submission with, created the first time a device needs
+one, and the device id is the only credential — it travels in the request body,
+so anybody holding yours can post as you. That is the same threat model as the
+unlock's self-reported position.
+
+Google/Apple sign-in attaches to `users` rather than replacing it: the table
+already has its own id, and `devices.user_id` is the join that becomes
+many-to-one when a person has two phones.
 
 What survives what, because this is the question that matters and the answer is
 not uniform:
@@ -141,6 +153,8 @@ Optional (with defaults):
 - `CHUNK_OVERLAP_SECONDS` = 30
 - `CORS_ORIGINS` = `*` (comma-separated; the only lockdown knob for a public API)
 - `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
+- `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)
+- `REPORT_THRESHOLD` = 3 (distinct devices needed to hide a submission)
 
 ## Architecture Notes
 
@@ -193,6 +207,17 @@ FastAPI server with PostGIS proximity queries:
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
+- `POST /v1/memories` `{device, lat, lng, place_name, summary, tags, ...}` -
+  **file your own memory.** One coordinate: it is both where you are and where
+  the memory goes. Lands in the `stranger` layer, gated like everything else,
+  and records the unlock for the person who filed it
+- `POST /v1/media` (multipart: `device`, `file`, optional `duration_seconds`) -
+  a photo or a recording, held until a submission claims it. `api/media.py`
+  decides what a file may be; see **Uploads** below
+- `POST /v1/memories/{id}/report` `{device, reason}` - REPORT_THRESHOLD distinct
+  devices and the memory stops being served by every endpoint
+- `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
+  submission is signed with. The GET creates nothing
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
 - `GET /v1/places/{id}` - Get single place details
 - `GET /v1/places/{id}/memories` - Get all memories for a place
@@ -206,6 +231,16 @@ Test the API:
 ./api/test_api.sh http://host:port   # Test custom URL
 ```
 
+### Uploads
+Three things never come from the client: the filename, the extension, and the
+claim about what the bytes are. The extension is looked up from `ALLOWED` by the
+declared type, the declared type has to match the file's first bytes, and the
+stored name is a fresh uuid. Files are served by `NoSniff`, a `StaticFiles`
+subclass that sets `X-Content-Type-Options`, because the extension is what
+decides the Content-Type on the way back out and "HTML that says it is a PNG" is
+the whole attack. `MEDIA_DIR` is a named volume in `docker-compose.yml`; without
+it a rebuild deletes everybody's submissions.
+
 ### Proximity unlock
 Only memories you are standing near are readable. The gate is in `row_to_memory`
 (`api/main.py`), not in an endpoint, so every memory-shaped response is redacted
@@ -216,10 +251,19 @@ by the same code — `/v1/memories/search` and `/v1/places/nearby`'s
 if you add another route that emits a summary, it is a hole until you do the
 same.
 
-Only a coordinate no other place shares is gated. 111 of 186 placed memories sit
-on city centroids the model emitted when it did not know the address, and
-locking those would ask somebody to walk to a fiction. Full reasoning in
-`docs/08-ux-flows.md` F7; assertions in `tests/test_api_unlock.py`.
+An extracted memory is gated only when no other place shares its coordinate. 111
+of 186 placed memories sit on city centroids the model emitted when it did not
+know the address, and locking those would ask somebody to walk to a fiction.
+
+A **submitted** memory is always gated: it was filed from the phone of somebody
+standing there, so there is no centroid problem to protect anyone from. The
+other half of that rule is load-bearing — each submission mints its own place
+row, so `COORDINATE_IS_UNIQUE` excludes places carrying one. Without that,
+filing a memory outside Katz's puts a second place in the grid cell and unlocks
+Katz's for everybody. A gate anybody could open by posting next to it.
+
+Full reasoning in `docs/08-ux-flows.md` F7 and F5; assertions in
+`tests/test_api_unlock.py` and `tests/test_api_submit.py`.
 
 ### Memory Quality
 The summary is the product: somebody standing on the spot, on a phone, outdoors.
@@ -301,4 +345,6 @@ ORDER BY m.id DESC LIMIT 10;
       "comedy club Oslo Norway" still make separate places.
 - [ ] Clustering nearby memories on map view
 - [x] Full-text search across memory summaries
+- [x] User-submitted memories, with photo and audio
+- [ ] Google/Apple sign-in, so a collection survives a new phone
 - [ ] Rate limiting / authentication for API

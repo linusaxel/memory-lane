@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import type { Coordinates, LocatedMemory } from './api.ts';
+import MemoryMedia from './MemoryMedia.tsx';
 import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
 import { metersBetween } from './region.ts';
@@ -32,6 +33,11 @@ type Props = {
   unlockError: string | null;
   /** Absent when the sheet is already over the map. */
   onShowOnMap?: (memory: LocatedMemory) => void;
+  /** Absent for extracted memories: there is nobody to report a podcast to. */
+  onReport?: (memory: LocatedMemory) => void;
+  /** Already reported by this device, so the control says so instead of
+   *  pretending a second press does anything. */
+  reported?: boolean;
 };
 
 /** Only used if a memory somehow arrives without the server's radius. */
@@ -70,6 +76,8 @@ export default function MemorySheet({
   unlocking,
   unlockError,
   onShowOnMap,
+  onReport,
+  reported,
 }: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
@@ -183,6 +191,15 @@ export default function MemorySheet({
                       ? 'Turn on location to unlock memories by standing near them.'
                       : `Get within ${Math.round(radius)} m and you can open it.`}
                   </Text>
+                  {/* Knowing a photograph is waiting is the pull. Handing it
+                      over would be the leak, so only the count travels. */}
+                  {memory.media_count > 0 && (
+                    <Text style={styles.waiting}>
+                      {memory.media_count === 1
+                        ? '1 attachment waiting'
+                        : `${memory.media_count} attachments waiting`}
+                    </Text>
+                  )}
                   {/* Knowing it is 412m away and having no idea which way is
                       most of a dead end. The distance is the ask; this is the
                       answer. */}
@@ -206,10 +223,13 @@ export default function MemorySheet({
             </View>
           ) : (
             <ScrollView contentContainerStyle={styles.body}>
-              {/* No images exist anywhere in the schema, so the summary carries
-                  the whole sheet - it gets the typographic weight. */}
+              {/* The summary carries the sheet when nothing is attached, which
+                  is every extracted memory; a submission usually brings a
+                  photograph and the weight shifts to it. */}
               <Animated.View style={revealed}>
                 <Text style={styles.summary}>{memory.summary}</Text>
+
+                <MemoryMedia media={memory.media} />
 
                 {memory.tags?.length > 0 && (
                   <View style={styles.tags}>
@@ -221,7 +241,15 @@ export default function MemorySheet({
                   </View>
                 )}
 
-                {memory.content?.source ? (
+                {/* A memory somebody filed has no channel to credit - the
+                    person is the credit, and the app must not leave it off any
+                    more than the server would. */}
+                {memory.author ? (
+                  <View style={styles.byline}>
+                    <Text style={styles.bylineLabel}>Filed by</Text>
+                    <Text style={styles.bylineName}>{memory.author.name}</Text>
+                  </View>
+                ) : memory.content?.source ? (
                   <SourceLine source={memory.content.source} title={memory.content.title} />
                 ) : (
                   memory.content?.title && (
@@ -229,6 +257,19 @@ export default function MemorySheet({
                       {memory.content.title}
                     </Text>
                   )
+                )}
+
+                {!locked && onReport && (
+                  <Pressable
+                    style={styles.report}
+                    accessibilityRole="button"
+                    disabled={reported}
+                    onPress={() => onReport(memory)}
+                  >
+                    <Text style={styles.reportText}>
+                      {reported ? 'Reported' : 'Report this memory'}
+                    </Text>
+                  </Pressable>
                 )}
               </Animated.View>
             </ScrollView>
@@ -335,6 +376,20 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     overflow: 'hidden',
   },
+  waiting: { ...label, color: color.seal },
+  byline: {
+    marginTop: 26,
+    paddingTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: color.rule,
+    gap: 2,
+  },
+  bylineLabel: { ...label, fontSize: 9 },
+  bylineName: { fontFamily: font.displaySemi, fontSize: 16, color: color.ink },
+  // Quiet on purpose. It has to be findable and must not be the thing the eye
+  // lands on under somebody's story.
+  report: { marginTop: 28, alignSelf: 'flex-start', paddingVertical: 8 },
+  reportText: { ...label, fontSize: 9, color: color.inkFaint },
   source: {
     fontFamily: font.mono,
     fontSize: 12,

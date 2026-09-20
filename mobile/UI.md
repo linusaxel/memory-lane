@@ -7,7 +7,7 @@ Read this before changing anything under `mobile/src/` or `App.tsx`.
 
 ## The app today
 
-One screen, three modals.
+One screen, four modals.
 
 ```
 MapView (full bleed)
@@ -15,6 +15,7 @@ MapView (full bleed)
 ├─ banner  "N memories here"  top centre, non-interactive
 ├─ "N within reach"           seal red, breathing, tap -> the nearest unlockable
 │    or "Nearest locked · 412 m"   muted and still, when none is in reach
+├─ "+ Add"                    top right, opens Submit. See "Writing"
 ├─ "Near me"                  bottom centre, recentres on GPS
 └─ LocationPrimer             bottom card, only until permission is settled
 
@@ -23,29 +24,37 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700
   ├─ "locked"         13, muted     ├─ distance · confidence
-  ├─ padlock                        ├─ summary  17/26 - the hero, no images
-  ├─ distance         44/700        ├─ tags     pills
-  ├─ "Get within 150 m"             ├─ source video title  italic, muted
-  ├─ "Walk there"     outlined      └─ "Watch at 12:04"  red, YouTube at the second
-  └─ or, in reach: the ring
+  ├─ padlock                        ├─ summary  17/26 - the hero
+  ├─ distance         44/700        ├─ photo / recording   if it has any
+  ├─ "Get within 150 m"             ├─ tags     pills
+  ├─ "1 attachment waiting"         ├─ "Filed by X", or the channel and avatar
+  ├─ "Walk there"     outlined      ├─ "Report this memory"  submissions only
+  └─ or, in reach: the ring         └─ "Watch at 12:04"  red, YouTube at the second
+
+  The locked side says how many attachments are waiting and never which. A
+  photograph of the place is the memory as much as the text is.
+
+Submit (pageSheet modal, from "+ Add") - see Writing
 
 Collection (the second tab)
 └─ what this device has unlocked, newest first; a row opens the sheet
 
 Settings (the third tab, "You")
-├─ what this device has unlocked, as a number
+├─ unlocked / places / filed, as numbers
+├─ your name                what submissions are signed with. Blank = Anonymous
 ├─ how unlocking works      the one place that answers "why can't I read this"
 ├─ location state + action
-└─ privacy policy, and the fact that nothing is synced
+└─ privacy policy, and the fact that there is no sign-in yet
 
 TabBar
 └─ Map | Unlocked (N) | You
 ```
 
-**Unlocked memories are readable forever, and that is a device promise, not a
-server one.** There are no accounts, so "forever" means as long as the app's
-storage survives. A new phone starts empty. Making that portable needs identity
-— Phase 3.
+**Unlocked memories are readable forever, and the server now holds the copy that
+makes that true.** The local store is a cache; `GET /v1/unlocks` keyed on the
+keychain device id is what survives the app's data being cleared. A new phone
+still starts empty — that is the gap Google/Apple sign-in closes, and the only
+thing it is for.
 
 | File | What it owns |
 |---|---|
@@ -219,6 +228,28 @@ Each of these exists because something broke or would have been rejected.
     viewport that never exists. Move the camera; let it report back.
     The one exception is the denied-permission path, which never moves the
     camera and so must load by hand.
+
+## Writing
+
+`Submit.tsx` is the only screen in the app that writes, and three of its rules
+are not preferences:
+
+- **It files where you are.** One coordinate, straight from the GPS, used as
+  both "where I am" and "where this goes". There is no map picker and there is
+  not going to be one - a memory you can pin from your sofa is a pin, and the
+  whole product is the difference. With no position the sheet does not open; the
+  press asks for location instead.
+- **Attachments upload while you type**, not on Post. A phone photo is 4 MB and
+  the wait belongs in the part where somebody is composing. Post stays disabled
+  while an upload is in flight, and a failed one shows as failed rather than
+  disappearing.
+- **Tags are a closed list** (`SUBMISSION_TAGS`, mirrored from the API). The
+  server drops anything not on it, so a free-text field would silently eat what
+  somebody typed. Change it in both places or it is a lie in one of them.
+
+A submission comes back already unlocked and its sheet opens over the map. The
+modal closing is not a confirmation, and it is also the first sight of what a
+stranger will find at that spot.
 
 ## Copy
 
@@ -406,3 +437,5 @@ completed hold can still come back refused when GPS has drifted. Say so —
 
 Documented flows live in `docs/08-ux-flows.md`. Build toward those, and when a
 flow changes, change that file in the same commit.
+
+Writing is F5 (file a memory), F20 (report one) and F21 (be somebody).

@@ -734,8 +734,23 @@ linked to you &mdash; an unlock records which memory was opened and when, never 
 you were standing.</p>
 
 <h2>Accounts</h2>
-<p>There are none. We do not ask for your name, email, or phone number, and we do not
+<p>There is no sign-in. We do not ask for your email or phone number, and we do not
 collect advertising identifiers.</p>
+<p>If you post a memory you may give a display name. It is optional, it is shown publicly
+under what you post, it is whatever you type, and you can change or clear it at any time.
+It is not verified and is not linked to anything else about you.</p>
+
+<h2>What you post</h2>
+<p>A memory you file is public. Its text, tags, the place name you give it and the
+coordinates you were standing at are shown to anyone who comes to that spot, alongside
+the display name you chose or &ldquo;Anonymous&rdquo;. Do not post anything you would
+not want a stranger standing there to read.</p>
+<p>Photos and recordings you attach are stored on our servers and shown with the memory.
+We strip nothing from them beyond re-encoding photos for size, so do not attach a file
+whose contents you would not publish.</p>
+<p>Anyone can report a memory. Enough reports and it stops being shown to anybody; the
+record of it is kept so a dispute can be answered. To have something you posted removed,
+open an issue on the project repository.</p>
 
 <h2>Your unlocked memories</h2>
 <p>To keep the memories you unlock, your copy of the app generates a random identifier
@@ -746,6 +761,11 @@ losing its local data.</p>
 phone, your advertising identifier, or any other app, and it tells us nothing except
 that one installation of Memory Lane unlocked a particular memory. Deleting the app
 discards it, and the collection it refers to becomes unreachable.</p>
+
+<h2>Camera, photos and microphone</h2>
+<p>Used only when you choose to attach something to a memory you are posting, and only
+for that. Nothing is captured in the background and nothing is uploaded that you did not
+attach.</p>
 
 <h2>What we do keep</h2>
 <p>Our servers keep standard technical request logs (timestamp, coarse IP, endpoint)

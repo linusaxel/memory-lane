@@ -18,7 +18,7 @@ how you know it worked. Keep them concrete enough to test against.
 **Numbers are stable.** F1–F7 are referenced from `mobile/UI.md`, `CLAUDE.md`,
 `TODO.md` and from comments in the code, so they are not renumbered when new
 flows are added, even where that leaves the order untidy. New flows get the next
-free number. F3, F4 and F5 are still proposed and sit at the bottom.
+free number. F3 and F4 are still proposed and sit at the bottom.
 
 ---
 
@@ -42,13 +42,15 @@ free number. F3, F4 and F5 are still proposed and sit at the bottom.
 | F17 | Understand why you cannot read something | Implemented |
 | F18 | Stand somewhere with nothing in it | Implemented |
 | F19 | Somewhere else entirely | Implemented |
+| F5 | File a memory of your own | Implemented |
+| F20 | Report something that should not be here | Implemented |
+| F21 | Be somebody | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Proposed |
-| F5 | Contribute a memory | Proposed |
 
-**Not flows, and deliberately absent:** there is no sign-in, no onboarding
-carousel, no settings anybody has to change, no search in the app, no sharing,
-and no notifications. Each of those is a thing a user does *not* do, and the
+**Not flows, and deliberately absent:** there is no sign-in *yet* (Google and
+Apple are next, and nothing else), no onboarding carousel, no settings anybody
+has to change, no search in the app, no sharing, and no notifications. Each of those is a thing a user does *not* do, and the
 list is worth as much as the one above — if one of them appears, it should be
 because a flow needed it, not because apps have them.
 
@@ -510,6 +512,117 @@ broken.
 
 ---
 
+## F5 · File a memory of your own — **Implemented**
+
+**Who:** somebody standing somewhere something happened to them.
+**Trigger:** the **+ Add** control, top right of the map.
+
+1. The press checks for a position first. Without one it asks for location and
+   stops — there is nothing to file *at*.
+2. A full-height sheet opens. The first thing on it is not a field: it is the
+   coordinate, and the sentence "other people will have to come here to read
+   it".
+3. Place name, then what happened. The Post control stays dim until both are
+   real — ten characters of summary, which is a fat-finger bar and not a quality
+   bar, and the same one the API enforces.
+4. **When**: Today, or Earlier and a year. *ponytail: a year, not a date. A full
+   picker is another dependency for a field most submissions leave on Today.*
+5. **Tags** from a closed list. The server drops anything not on it, so a
+   free-text field would silently eat what somebody typed.
+6. **Photos** from the camera or the library, up to four, and one **recording**
+   up to three minutes. Each one uploads the moment it is taken, so the wait is
+   spent composing rather than watching a spinner after Post — and a failed
+   upload costs the text nothing.
+7. **Signed** with a name, remembered between submissions. Blank is Anonymous
+   and stays a real option.
+8. Post. The memory comes back already unlocked and its sheet opens on top of
+   the map: the modal closing is not a confirmation, and this is also the first
+   sight of what anybody else will find here.
+
+### It files where you are, and nowhere else
+
+There is no map picker, and that is not a missing feature. A memory you can pin
+from your sofa is a pin; the entire product is the difference between those. One
+coordinate goes to the server and it is both "where I am" and "where this goes",
+so there is no pair of numbers that can disagree.
+
+*ponytail: the position is self-reported, so this stops a casual post from the
+sofa, not a determined one. Same ceiling as the unlock, and the same fix —
+attestation needs real accounts.*
+
+### It locks like everything else
+
+A submission is gated the moment it exists, including for the person who wrote
+it — so the unlock is recorded at insert time. Filing something *is* standing
+there, and re-locking it the moment they walk away would be absurd.
+
+The subtle half is the other direction. Each submission mints its own place row
+at the submitter's GPS position, and F7's gate opens anything whose coordinate
+another place shares. Without excluding submitted places from that count, filing
+a memory outside Katz's would unlock Katz's for everybody — a gate anybody could
+open by posting next to it. `tests/test_api_submit.py` holds it to that.
+
+**What can go wrong:** no location (the form will not open); an upload fails
+(the attachment shows as failed and Post waits rather than dropping it); the
+post fails (the text stays on screen, nothing is lost).
+
+**Done when:** somebody can stand somewhere, say what happened, and find it
+waiting the next time they walk past — and so can a stranger who comes to the
+same spot.
+
+---
+
+## F20 · Report something that should not be here — **Implemented**
+
+**Who:** anybody reading a memory a stranger filed.
+**Trigger:** "Report this memory", under the byline on an open memory.
+
+1. One quiet press. No dialog, no reason picker, no confirmation step — the
+   control simply changes to "Reported".
+2. Three different devices reporting the same memory takes it out of every
+   endpoint at once: the map, the search, the counts, the card, and the
+   collection of the person who filed it.
+
+Only offered on memories a person filed. There is nobody to report a podcast
+to, and putting the control on all 224 extracted memories would make it read as
+general feedback rather than as a takedown.
+
+The row survives. `hidden` is a flag and not a delete, because a takedown that
+destroys the evidence makes the next dispute unanswerable.
+
+*ponytail: no appeal, no reinstatement, no queue for a human to look at. The
+threshold is the whole moderation system until there is a moderator.*
+
+**Done when:** something that should not be on the map can be taken off it by
+the people who found it, without waiting for us.
+
+---
+
+## F21 · Be somebody — **Implemented**
+
+**Who:** anybody who has filed something, or is about to.
+**Trigger:** the You tab, or the Signed field at the bottom of the submit sheet.
+
+1. A name, saved as it is typed. No Save button to forget to press.
+2. It appears under every memory they file, as "Filed by —".
+3. Blank is Anonymous, and clearing it has to keep working: the name is the one
+   thing here other people see.
+4. The You tab gains a third figure once there is one — how many they have
+   filed, beside how many they unlocked and in how many places.
+
+There is no sign-in behind this. A `users` row is a display name and an id, and
+the device claims it the way it already claims its unlocks. That is enough to
+sign a submission and to give Google/Apple sign-in something to attach to, and
+not enough to identify anybody.
+
+**What can go wrong:** the same person on a second phone is a second stranger.
+That is the gap sign-in closes and nothing else does.
+
+**Done when:** a memory on the map has somebody's name under it and that name is
+theirs to change.
+
+---
+
 ## Proposed
 
 Not built. Each needs a decision before it can be specified properly — see
@@ -528,10 +641,9 @@ this a segmented control, a filter sheet, or layers stacked at once with
 different pin colours? At a dense location this decides whether the map is
 readable.
 
-### F5 · Contribute a memory — **Proposed** (Phases 3, 4)
-
-Nothing in the app writes today; the API is read-only. Needs auth, moderation
-and an abuse story before the UI matters.
+Now more urgent than it was: `stranger` stopped being a hypothetical layer the
+moment F5 shipped, and a dense location can hold a podcast anecdote and
+somebody's own photograph at equal weight with no way to choose between them.
 
 
 ## Open questions
@@ -545,7 +657,13 @@ Answer these and the proposed flows can be written properly.
    the bug. Still open as a *product* question: should an empty area nudge the
    person to zoom out, or auto-widen the radius? Doing nothing is defensible
    until there is a corpus worth widening into.
-3. **Is contribution in v1 at all**, or is v1 read-only?
+3. ~~**Is contribution in v1 at all**, or is v1 read-only?~~ **Answered: it is
+   in.** F5 ships it, and the two things the old note said blocked it —
+   moderation and an abuse story — turned out to be one report endpoint and a
+   threshold rather than a project. Auth was the third, and it turned out not to
+   be a blocker at all: a display name claimed by a device is enough to sign a
+   memory. Real sign-in (Google and Apple, nothing else) is next, and it makes a
+   collection survive a new phone rather than making contribution possible.
 4. ~~**Does a pin represent a place or a memory?**~~ **Answered by
    implementation: a pin is a *point*.** Neither of the original options
    survived contact with the data — grouping by place id does not work, because

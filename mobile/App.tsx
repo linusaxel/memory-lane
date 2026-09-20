@@ -29,7 +29,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   fetchHotspots,
   fetchNearby,
+  fetchProfile,
   fetchUnlocked,
+  reportMemory,
+  saveDisplayName,
   unlockMemory,
   type Coordinates,
   type Hotspot,
@@ -52,6 +55,7 @@ import Collection from './src/Collection.tsx';
 import { deviceId } from './src/device.ts';
 import Elsewhere from './src/Elsewhere.tsx';
 import Settings from './src/Settings.tsx';
+import Submit from './src/Submit.tsx';
 import { color, font } from './src/theme.ts';
 import LocationPrimer from './src/LocationPrimer.tsx';
 import TabBar, { type Tab } from './src/TabBar.tsx';
@@ -117,6 +121,16 @@ export default function App() {
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  // Resolved once at launch. Held in state rather than awaited at each call
+  // site because the submit form needs it synchronously to decide whether it
+  // can open at all.
+  const [device, setDevice] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(0);
+  // Reported by this device already. Local only - the server counts devices,
+  // and this stops the control offering a second press that does nothing.
+  const [reported, setReported] = useState<Set<number>>(new Set());
   // Only the handful of values the palette cannot carry need this: the map's
   // own appearance, and the two rgba literals a MapView Circle insists on.
   const scheme = useColorScheme();
@@ -274,8 +288,19 @@ export default function App() {
     // renders immediately - this is what makes it survive the local copy being
     // cleared, and it is allowed to be slow or to fail entirely.
     deviceId()
-      .then((id) => fetchUnlocked(id))
-      .then(async (earned) => {
+      .then(async (id) => {
+        if (!mounted.current) return;
+        setDevice(id);
+        // Both are allowed to be slow or to fail entirely: the local copy has
+        // already rendered, and nothing here blocks the map.
+        fetchProfile(id)
+          .then((profile) => {
+            if (!mounted.current) return;
+            setDisplayName(profile.display_name ?? '');
+            setSubmitted(profile.submitted);
+          })
+          .catch(() => {});
+        const earned = await fetchUnlocked(id);
         if (!mounted.current || earned.length === 0) return;
         setUnlocked(await mergeUnlocked(earned));
       })
@@ -360,6 +385,44 @@ export default function App() {
     [unlocked],
   );
 
+  const posted = useCallback(
+    async (memory: LocatedMemory) => {
+      // Already unlocked by the server - filing something is standing there -
+      // so it goes straight into the collection.
+      setUnlocked(await rememberUnlocked(unlocked, memory));
+      setSubmitted((count) => count + 1);
+      // Show them what they filed. The modal closing is not a confirmation,
+      // and this is also the first sight of what anybody else will find here.
+      setOpenAt([memory]);
+      setOpenIndex(0);
+      // The new pin is not in `memories` until the map asks again, and the
+      // viewport has not changed, so the same-question guard has to be cleared
+      // or nothing would appear until the person panned.
+      lastFetched.current = null;
+      load(region);
+    },
+    [load, region, unlocked],
+  );
+
+  const report = useCallback(
+    async (memory: LocatedMemory) => {
+      if (!device) return;
+      // Optimistic: a report that silently did nothing is worse than one that
+      // says it landed and did not. It is idempotent per device either way.
+      setReported((current) => new Set(current).add(memory.id));
+      reportMemory(memory.id, device).catch(() => {});
+    },
+    [device],
+  );
+
+  const rename = useCallback(
+    (next: string) => {
+      setDisplayName(next);
+      if (device) saveDisplayName(device, next).catch(() => {});
+    },
+    [device],
+  );
+
   const bannerText =
     status === 'failed'
       ? "Can't reach Memory Lane"
@@ -436,6 +499,26 @@ export default function App() {
             <Text style={styles.bannerText}>{bannerText}</Text>
             {status === 'loading' && <ActivityIndicator size="small" color={color.inkFaint} />}
           </View>
+
+          {/* Top right, because every other overlay on this screen lives at the
+              bottom and this one must never be the thing covering the unlock.
+              Shown even with no position: standing somewhere empty is the best
+              moment to file the first memory there, and the press asks for
+              location rather than hiding the possibility. */}
+          {!showPrimer && (
+            <Pressable
+              style={styles.add}
+              accessibilityRole="button"
+              accessibilityLabel="Add a memory here"
+              onPress={async () => {
+                if (!positionRef.current && !(await goToMyLocation().catch(() => false))) return;
+                Haptics.selectionAsync().catch(() => {});
+                setSubmitOpen(true);
+              }}
+            >
+              <Text style={styles.addText}>+ Add</Text>
+            </Pressable>
+          )}
 
           {!showPrimer && withinReach.length > 0 && (
             <ReachBanner
@@ -520,6 +603,9 @@ export default function App() {
           <Settings
             unlockedCount={collected.length}
             placeCount={placesUnlocked}
+            submittedCount={submitted}
+            displayName={displayName}
+            onDisplayName={rename}
             radiusMeters={radiusMeters}
             permission={permission}
             onRequestLocation={() => {
@@ -554,6 +640,11 @@ export default function App() {
                 }
               : undefined
           }
+          // Only what a person filed. There is nobody to report a podcast to,
+          // and offering it on all 224 extracted memories would make the
+          // control read as general feedback rather than a takedown.
+          onReport={openMemories[openIndex]?.author ? report : undefined}
+          reported={reported.has(openMemories[openIndex]?.id ?? -1)}
           memories={openMemories}
           index={openIndex}
           onIndex={setOpenIndex}
@@ -562,6 +653,16 @@ export default function App() {
           onUnlock={unlock}
           unlocking={unlocking}
           unlockError={unlockError}
+        />
+
+        <Submit
+          visible={submitOpen}
+          position={position}
+          device={device}
+          displayName={displayName}
+          onDisplayName={rename}
+          onClose={() => setSubmitOpen(false)}
+          onPosted={posted}
         />
       </View>
     </SafeAreaProvider>
@@ -595,6 +696,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.3,
     color: color.inkSoft,
+  },
+  // Paper and a rule, like the banner it sits beside - the seal belongs to the
+  // unlock and writing is not that.
+  add: {
+    position: 'absolute',
+    // Level with the banner, which sits at the same top and is the only other
+    // thing up here.
+    top: 64,
+    right: 18,
+    backgroundColor: color.paper,
+    borderWidth: 1,
+    borderColor: color.rule,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 4,
+  },
+  addText: {
+    fontFamily: font.monoBold,
+    fontSize: 11,
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+    color: color.ink,
   },
   locate: {
     position: 'absolute',

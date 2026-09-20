@@ -52,7 +52,20 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Memory Lane records your voice when you say a memory out loud at a place."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Memory Lane attaches photos you choose to memories you file at a place.",
+          "cameraPermission": "Memory Lane uses the camera for photos you attach to a memory you file here."
+        }
+      ]
     ]
   }
 }

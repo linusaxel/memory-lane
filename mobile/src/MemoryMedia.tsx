@@ -1,0 +1,128 @@
+/** What somebody attached to a memory they filed.
+ *
+ * Only ever rendered for an open memory. A photograph of the place is the
+ * memory as much as the text is, so it stays behind the gate with the summary -
+ * the sheet decides that, and this component never sees a locked one.
+ *
+ * The audio control is deliberately not a scrubber. It is a forty-second
+ * recording made on a phone in the street, listened to on a phone in the
+ * street; a progress bar and a seek handle would be more interface than
+ * content.
+ */
+
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+
+import { mediaUrl, type MediaItem } from './api.ts';
+import { color, font, label } from './theme.ts';
+
+function clock(value: number): string {
+  const total = Math.max(0, Math.round(value));
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+function Recording({ item }: { item: MediaItem }) {
+  const player = useAudioPlayer(mediaUrl(item));
+  const status = useAudioPlayerStatus(player);
+  // Falls back to what the phone measured at recording time: duration is not
+  // known until the remote file has loaded, and "0:00" under a play button
+  // reads as a broken clip.
+  const length = status.duration || item.duration_seconds || 0;
+
+  return (
+    <Pressable
+      style={styles.audio}
+      accessibilityRole="button"
+      accessibilityLabel={status.playing ? 'Pause the recording' : 'Play the recording'}
+      onPress={() => {
+        if (status.playing) {
+          player.pause();
+          return;
+        }
+        // Replaying from the end has to start over, or the second press looks
+        // like nothing happened.
+        if (status.didJustFinish || status.currentTime >= length) player.seekTo(0);
+        player.play();
+      }}
+    >
+      <View style={styles.glyph}>
+        {status.playing ? (
+          <View style={styles.pause}>
+            <View style={styles.bar} />
+            <View style={styles.bar} />
+          </View>
+        ) : (
+          <View style={styles.play} />
+        )}
+      </View>
+      <View style={styles.audioText}>
+        <Text style={styles.audioLabel}>In their voice</Text>
+        <Text style={styles.audioTime}>
+          {status.playing ? `${clock(status.currentTime)} / ${clock(length)}` : clock(length)}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+export default function MemoryMedia({ media }: { media: MediaItem[] }) {
+  if (media.length === 0) return null;
+
+  const photos = media.filter((item) => item.kind === 'photo');
+  const sounds = media.filter((item) => item.kind === 'audio');
+
+  return (
+    <View style={styles.wrap}>
+      {photos.map((photo) => (
+        // Fixed aspect rather than a measured one: react-native cannot know a
+        // remote image's size before it loads, and a block that resizes under
+        // the reader is worse than one that crops.
+        <Image key={photo.id} source={{ uri: mediaUrl(photo) }} style={styles.photo} />
+      ))}
+      {sounds.map((sound) => (
+        <Recording key={sound.id} item={sound} />
+      ))}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { gap: 12, marginTop: 22 },
+  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: 4, backgroundColor: color.rule },
+  audio: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 1,
+    borderColor: color.rule,
+    borderRadius: 4,
+    padding: 14,
+    backgroundColor: color.paperRaised,
+  },
+  glyph: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: color.seal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // A triangle out of borders, so there is no icon font and no svg for one shape.
+  play: {
+    width: 0,
+    height: 0,
+    marginLeft: 4,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftWidth: 13,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: color.seal,
+  },
+  pause: { flexDirection: 'row', gap: 4 },
+  bar: { width: 4, height: 16, backgroundColor: color.seal },
+  audioText: { gap: 2 },
+  audioLabel: { ...label, fontSize: 9 },
+  audioTime: { fontFamily: font.monoMedium, fontSize: 14, color: color.ink },
+});

@@ -22,6 +22,9 @@ function memory(id: number, name: string, lat: number, lng: number): LocatedMemo
     confidence: 'high',
     locked: false,
     unlock_radius_meters: null,
+    author: null,
+    media: [],
+    media_count: 0,
   } as LocatedMemory;
 }
 

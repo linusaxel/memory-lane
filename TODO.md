@@ -269,7 +269,9 @@ generalises 3.3, which scoped server-side proximity unlock to the friend layer
       the server re-locks you when you walk away, and the product must not.
       Readable from the **Unlocked** tab with no network and no position.
       "Forever" is a device promise — a new phone starts empty, and making it
-      portable needs accounts.
+      portable needs accounts. **Superseded:** unlocks are on the server now,
+      keyed on the keychain device id, so clearing the app's data no longer
+      undoes the walking. A new phone still starts empty.
 - [x] **1.5f DECIDE the radius.** Option 3: only a coordinate no other place
       shares is gated, at 150m. That locks 83 of 216 memories across 74 places
       and leaves the centroid stacks open, because locking those would ask
@@ -282,7 +284,8 @@ Left for when the coordinates improve:
       coordinates; `precision_meters` is the direct measure, and nothing has
       re-run since W4-04 changed the prompt.
 - [ ] **The position is self-reported.** This stops `curl`, not a determined
-      spoofer. Attestation needs accounts — Phase 3, alongside 3.3.
+      spoofer. Attestation needs accounts — Phase 3, alongside 3.3. It now cuts
+      both ways: a submission is also filed at a position nobody verified.
 
 ---
 
@@ -485,14 +488,26 @@ audio-guide companies, city archives.
 The retention bet. Only after the map has content — a proximity app that
 returns nothing is dead, and a friend layer on an empty map returns nothing.
 
-- [ ] **3.1** Identity. The first time this product needs accounts at all.
-- [ ] **3.2** Write path for user-created memories, with the brief's hard cap on
-      user-submitted ingestion enforced server-side.
-- [ ] **3.3** Proximity unlock enforced **server-side** — a friend memory outside
-      the radius is never serialized, never sent, not merely hidden. A
-      client-side gate is not a gate.
-- [ ] **3.4** Rendering separation. Friend content takes precedence wherever it
-      exists and never renders at equal weight with historical cards in one feed.
+- [~] **3.1** Identity. Half done, and the half that was actually blocking.
+      `users` is a display name and a uuid, claimed by a device; that is enough
+      to sign a submission and to be the subject of a report. **Next: Google and
+      Apple sign-in, and nothing else** — no passwords, no email, no magic
+      links. It attaches to `users` rather than replacing it, and what it buys
+      is a collection that survives a new phone.
+- [x] **3.2** Write path for user-created memories. `POST /v1/memories` plus
+      `POST /v1/media` for a photo or a recording; `mobile/src/Submit.tsx` is
+      the screen. Files where you are standing and nowhere else. No ingestion
+      cap yet — see below.
+- [x] **3.3** Proximity unlock enforced **server-side**, including for
+      submissions: a memory somebody filed is gated the moment it exists,
+      because their phone was at the coordinate. Never serialized, never sent.
+- [ ] **3.4** Rendering separation. Friend and stranger content takes precedence
+      wherever it exists and never renders at equal weight with historical cards
+      in one feed. **Now urgent** — `stranger` stopped being hypothetical with
+      3.2, and a dense point can hold both with no way to choose. See F4.
+- [ ] **3.5** Rate limit the write path. Nothing caps how many memories one
+      device can file, or how much it can upload. The brief asks for a hard cap
+      on user-submitted ingestion and there is none; a loop fills the disk.
 - [ ] Same neighborhood only. No second city.
 
 ---
@@ -571,7 +586,10 @@ on them. Full detail in `loop/STATE.md`.
   present-day place identity. Working assumption is OSM/Overpass; unvalidated.
 - **Which Copenhagen neighborhood?** "Saturate one neighborhood completely"
   needs a boundary drawn before density can be measured.
-- **Identity system for Phase 3.** Nothing in the codebase has auth today.
+- ~~**Identity system for Phase 3.**~~ **Decided: OAuth only, Google and Apple.**
+      No passwords to store, reset or leak, and Apple sign-in is required by
+      App Store review once any third-party sign-in exists. Not built yet;
+      `users` is the table it attaches to.
 - **Does the podcast corpus eventually get pruned?** It stays for now as test
   data. It is US comedy anecdote in a product about Copenhagen history, and at
   some point it stops being useful and starts being noise.
