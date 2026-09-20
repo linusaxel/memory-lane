@@ -59,6 +59,27 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- How a person proves they are the same person on a new phone. Google and
+-- Apple only: no passwords to store, reset or leak, and Apple is required by
+-- App Store review once any other third-party sign-in exists.
+--
+-- No session tokens anywhere. The device id stays the only credential; signing
+-- in binds devices.user_id, so a second phone is a second device on one user.
+CREATE TABLE identities (
+    provider VARCHAR(10) NOT NULL CHECK (provider IN ('google', 'apple')),
+    -- The provider's stable id for the account. Not an email, and not to be
+    -- treated as one.
+    subject VARCHAR(255) NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    -- Recorded, never used to match. Linking two identities because they share
+    -- an address is the classic account takeover.
+    email VARCHAR(320),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (provider, subject)
+);
+
+CREATE INDEX idx_identities_user ON identities(user_id);
+
 CREATE TABLE memories (
     id SERIAL PRIMARY KEY,
     place_id INTEGER NOT NULL REFERENCES places(id) ON DELETE CASCADE,

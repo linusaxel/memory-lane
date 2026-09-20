@@ -11,8 +11,9 @@
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { API_BASE } from './api.ts';
+import { API_BASE, type Profile } from './api.ts';
 import Padlock from './Padlock.tsx';
+import SignIn from './SignIn.tsx';
 import { color, font, label } from './theme.ts';
 
 type Props = {
@@ -23,6 +24,9 @@ type Props = {
    *  to forget to press. */
   displayName: string;
   onDisplayName: (next: string) => void;
+  device: string | null;
+  profile: Profile | null;
+  onProfile: (next: Profile) => void;
   radiusMeters: number;
   /** 'granted' | 'denied' | 'blocked' | 'unknown', mirrored from App. */
   permission: string;
@@ -35,6 +39,9 @@ export default function Settings({
   submittedCount,
   displayName,
   onDisplayName,
+  device,
+  profile,
+  onProfile,
   radiusMeters,
   permission,
   onRequestLocation,
@@ -77,6 +84,10 @@ export default function Settings({
         />
       </Section>
 
+      <Section title="Account">
+        <SignIn device={device} profile={profile} onProfile={onProfile} />
+      </Section>
+
       <Section title="How unlocking works">
         <Row>
           <Padlock size={17} color={color.faded} />
@@ -117,8 +128,8 @@ export default function Settings({
           <Text style={styles.linkText}>Privacy policy</Text>
         </Pressable>
         <Text style={styles.note}>
-          No sign-in yet. Your collection and anything you file are tied to this installation, not
-          to you - so a new phone starts empty.
+          Signed out, your collection is tied to this installation rather than to you. Signing in
+          with Google or Apple is the only thing that changes that.
         </Text>
       </Section>
     </ScrollView>

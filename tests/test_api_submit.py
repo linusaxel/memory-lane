@@ -19,13 +19,10 @@ included, not just the one somebody complained about.
 
 import pathlib
 import uuid
-from contextlib import contextmanager
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-import api.card as card
 import api.main as m
 import api.media as media
 
@@ -50,24 +47,9 @@ def device() -> str:
 
 
 @pytest.fixture
-def client(db_session, monkeypatch, tmp_path):
-    @contextmanager
-    def _session():
-        # Rolls back like pipeline.db.get_session does. Without it a refused
-        # submission would leave its half-written rows behind in the test and
-        # nowhere else, which is the wrong way round for a fixture.
-        try:
-            yield db_session
-        except Exception:
-            db_session.rollback()
-            raise
-
-    monkeypatch.setattr(m, "get_session", _session)
-    monkeypatch.setattr(card, "get_session", _session)
-    # Uploads must not land in the repo. MEDIA_DIR is read at call time, so this
-    # is enough - the mount in api.main is never exercised by these tests.
-    monkeypatch.setattr(media, "MEDIA_DIR", tmp_path)
-    return TestClient(m.app)
+def client(api_client):
+    """conftest's, under the shorter name every test here already uses."""
+    return api_client
 
 
 def submission(**overrides) -> dict:
@@ -255,7 +237,13 @@ def test_reading_a_profile_creates_nobody(client, db_session):
     """A device that only walks around unlocking things should not leave a user
     row behind, so the read has to be a read."""
     empty = client.get(f"/v1/me?device={device()}").json()
-    assert empty == {"user_id": None, "display_name": None, "submitted": 0, "unlocked": 0}
+    assert empty == {
+        "user_id": None,
+        "display_name": None,
+        "submitted": 0,
+        "unlocked": 0,
+        "providers": [],
+    }
     assert db_session.execute(text("SELECT COUNT(*) FROM users")).scalar() == 0
 
 

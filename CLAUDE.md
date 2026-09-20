@@ -73,6 +73,7 @@ python -m api.main
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `api/main.py` | FastAPI server for location-based memory queries, **and the write endpoints** |
 | `api/media.py` | What an upload is allowed to be, and where it lands |
+| `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |
@@ -84,6 +85,7 @@ python -m api.main
 | `mobile/src/MemoryMarker.tsx` | A coordinate's four states on the map |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
+| `mobile/src/SignIn.tsx` | Google and Apple buttons. Neither works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
 | **`mobile/UI.md`** | **Read before touching the app.** Tokens, load-bearing rules, how to see it running |
@@ -99,21 +101,36 @@ places        → Locations with PostGIS coordinates
 memories      → Experiences pinned to places. content_id OR user_id, never both
 devices       → An installation's self-issued UUID. Not a person
 users         → A display name and an id. Not an account either — yet
+identities    → (google|apple, subject) → user. How a person proves it is them
 unlocks       → (device, memory) — who has earned what
 media         → Photos and recordings attached to a submitted memory
 reports       → (memory, device) — what makes public submissions defensible
 ```
 
-**There is still no sign-in.** `devices` is an opaque UUID the app generates for
-itself and keeps in the keychain; the server never issues one. A `users` row is
-a display name to sign a submission with, created the first time a device needs
-one, and the device id is the only credential — it travels in the request body,
-so anybody holding yours can post as you. That is the same threat model as the
-unlock's self-reported position.
+**There are no session tokens anywhere, signed in or not.** `devices` is an
+opaque UUID the app generates for itself and keeps in the keychain; the server
+never issues one, and it is the only credential — it travels in the request
+body, so anybody holding yours can act as you. Same threat model as the unlock's
+self-reported position.
 
-Google/Apple sign-in attaches to `users` rather than replacing it: the table
-already has its own id, and `devices.user_id` is the join that becomes
-many-to-one when a person has two phones.
+Signing in does not change that. Google and Apple hand the app an **ID token**;
+the server verifies it (`api/auth.py`) and binds `devices.user_id`. Every
+endpoint keeps working unchanged, and a second phone becomes a second device on
+one user — which is the whole of what sign-in buys, and why nothing else needed
+inventing to get it.
+
+Google and Apple **only**. No passwords: nothing to store, reset, rotate or
+leak, and no reset-email flow. Apple is required by App Store review as soon as
+any other third-party sign-in exists on iOS, so it is not a preference either.
+
+Two rules in that code are load-bearing and easy to get wrong:
+
+- **Audience is checked.** A valid Google token issued to somebody else's app is
+  still a valid Google token. With `GOOGLE_CLIENT_IDS`/`APPLE_CLIENT_IDS` unset
+  there is nothing to check against, so `/v1/auth/*` answers **503** rather than
+  verifying against nothing.
+- **Emails never link accounts.** `identities.email` is recorded and never
+  matched on. An address can be reassigned, and Apple's may be a relay.
 
 What survives what, because this is the question that matters and the answer is
 not uniform:
@@ -155,6 +172,8 @@ Optional (with defaults):
 - `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
 - `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)
 - `REPORT_THRESHOLD` = 3 (distinct devices needed to hide a submission)
+- `GOOGLE_CLIENT_IDS`, `APPLE_CLIENT_IDS` = empty (comma-separated audience
+  whitelists. Empty means sign-in is off and `/v1/auth/*` answers 503)
 
 ## Architecture Notes
 
@@ -217,7 +236,14 @@ FastAPI server with PostGIS proximity queries:
 - `POST /v1/memories/{id}/report` `{device, reason}` - REPORT_THRESHOLD distinct
   devices and the memory stops being served by every endpoint
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
-  submission is signed with. The GET creates nothing
+  submission is signed with, plus which sign-ins are attached. The GET creates
+  nothing
+- `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
+  display_name?}` - verify a provider ID token and bind this device to that
+  account. `display_name` is for Apple, which gives the name to the client once
+  and never again
+- `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
+  there is no token to revoke
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
 - `GET /v1/places/{id}` - Get single place details
 - `GET /v1/places/{id}/memories` - Get all memories for a place
@@ -346,5 +372,5 @@ ORDER BY m.id DESC LIMIT 10;
 - [ ] Clustering nearby memories on map view
 - [x] Full-text search across memory summaries
 - [x] User-submitted memories, with photo and audio
-- [ ] Google/Apple sign-in, so a collection survives a new phone
+- [x] Google/Apple sign-in, so a collection survives a new phone
 - [ ] Rate limiting / authentication for API

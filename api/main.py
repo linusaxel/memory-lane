@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
+from api.auth import apple_identity, google_identity
 from api.card import router as card_router
 from api.embed import router as embed_router
 from api.media import MEDIA_DIR, MEDIA_URL_PREFIX, NoSniff, media_url, save_upload
@@ -486,18 +487,48 @@ WHERE
     AND {WITHIN}
 """
 
-# One device's collection, newest first. Joined through MEMORY_COLUMNS so an
+# Every device this one shares an account with, and itself.
+#
+# Unlocks are recorded against a device, which was right while a device was all
+# there was. Signed in, the collection has to follow the person - otherwise a
+# new phone starts empty, which is the only thing sign-in exists to fix. The
+# `d.id = :device_id` arm is what keeps it working before anybody signs in, and
+# after signing out.
+MY_DEVICES = """(
+    SELECT d.id FROM devices d
+    WHERE d.id = CAST(:device_id AS uuid)
+       OR (
+           d.user_id IS NOT NULL
+           AND d.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid))
+       )
+)"""
+
+# One person's collection, newest first. Joined through MEMORY_COLUMNS so an
 # unlocked memory serializes exactly like a nearby one - the app should not have
 # to know which endpoint a memory arrived from.
+#
+# MIN(unlocked_at), because two of somebody's phones can both have earned the
+# same memory and the first time is the one that counts. Without the grouping it
+# would also appear twice.
 DEVICE_UNLOCKS_QUERY = f"""
+WITH earned AS (
+    SELECT memory_id, MIN(unlocked_at) AS unlocked_at
+    FROM unlocks
+    WHERE device_id IN {MY_DEVICES}
+    GROUP BY memory_id
+)
 SELECT {MEMORY_COLUMNS},
-    u.unlocked_at
+    earned.unlocked_at
 {MEMORY_JOIN}
-JOIN unlocks u ON u.memory_id = m.id
-WHERE u.device_id = CAST(:device_id AS uuid) AND {VISIBLE}
-ORDER BY u.unlocked_at DESC
+JOIN earned ON earned.memory_id = m.id
+WHERE {VISIBLE}
+ORDER BY earned.unlocked_at DESC
 LIMIT :limit
 """
+
+UNLOCK_COUNT_QUERY = (
+    f"SELECT COUNT(DISTINCT memory_id) FROM unlocks WHERE device_id IN {MY_DEVICES}"
+)
 
 # Where the corpus actually is, for somebody standing where it is not. The app
 # is a map of nothing outside New York, and "No memories here yet" is true and
@@ -734,8 +765,16 @@ linked to you &mdash; an unlock records which memory was opened and when, never 
 you were standing.</p>
 
 <h2>Accounts</h2>
-<p>There is no sign-in. We do not ask for your email or phone number, and we do not
-collect advertising identifiers.</p>
+<p>You can use Memory Lane without signing in, and nothing in it is behind a sign-in.
+We never ask for a password, because we do not have any to store.</p>
+<p>If you do sign in, it is with Google or Apple. They tell us an identifier for your
+account with them and, if you allow it, an email address; we store both so that your
+collection can follow you to a new phone. We receive nothing else &mdash; no contacts,
+no calendar, no profile, no access to anything in your Google or Apple account &mdash;
+and we never post anywhere on your behalf. Apple's Hide My Email gives us a relay
+address instead of your real one, and that works fine here. You can sign out at any
+time, which unlinks the device and deletes nothing.</p>
+<p>We do not collect advertising identifiers.</p>
 <p>If you post a memory you may give a display name. It is optional, it is shown publicly
 under what you post, it is whatever you type, and you can change or clear it at any time.
 It is not verified and is not linked to anything else about you.</p>
@@ -1296,6 +1335,9 @@ class Profile(BaseModel):
     display_name: str | None = None
     submitted: int = 0
     unlocked: int = 0
+    # Which sign-ins are attached, oldest first. Empty means this device is
+    # still only a device: everything works, but a new phone starts empty.
+    providers: list[str] = []
 
 
 class ProfileRequest(BaseModel):
@@ -1393,32 +1435,42 @@ def clean_tags(raw: list[str]) -> list[str]:
     return seen
 
 
-@app.get("/v1/me", response_model=Profile)
-def get_profile(device: str = Query(..., pattern=DEVICE_PATTERN)):
-    """Who this device is and what it has done. Creates nothing."""
-    with get_session() as session:
-        row = session.execute(
-            text("""
-                SELECT u.id, u.display_name,
-                    (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id) AS submitted
-                FROM devices d JOIN users u ON d.user_id = u.id
-                WHERE d.id = CAST(:id AS uuid)
-            """),
-            {"id": device},
-        ).fetchone()
-        unlocked = session.execute(
-            text("SELECT COUNT(*) FROM unlocks WHERE device_id = CAST(:id AS uuid)"),
-            {"id": device},
-        ).scalar()
+def profile_of(session, device: str) -> Profile:
+    """Who this device is, read once and shared by every endpoint that has just
+    changed it. Creates nothing."""
+    row = session.execute(
+        text("""
+            SELECT u.id, u.display_name,
+                (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id) AS submitted,
+                COALESCE(
+                    (SELECT array_agg(i.provider ORDER BY i.created_at)
+                     FROM identities i WHERE i.user_id = u.id),
+                    ARRAY[]::varchar[]
+                ) AS providers
+            FROM devices d JOIN users u ON d.user_id = u.id
+            WHERE d.id = CAST(:device_id AS uuid)
+        """),
+        {"device_id": device},
+    ).fetchone()
+    unlocked = session.execute(text(UNLOCK_COUNT_QUERY), {"device_id": device}).scalar() or 0
 
     if not row:
-        return Profile(unlocked=unlocked or 0)
+        return Profile(unlocked=unlocked)
     return Profile(
         user_id=str(row.id),
         display_name=row.display_name,
         submitted=row.submitted,
-        unlocked=unlocked or 0,
+        unlocked=unlocked,
+        providers=list(row.providers),
     )
+
+
+@app.get("/v1/me", response_model=Profile)
+def get_profile(device: str = Query(..., pattern=DEVICE_PATTERN)):
+    """Who this device is and what it has done. Creates nothing - a device that
+    only walks around unlocking things leaves no user row behind."""
+    with get_session() as session:
+        return profile_of(session, device)
 
 
 @app.put("/v1/me", response_model=Profile)
@@ -1429,21 +1481,7 @@ def set_profile(body: ProfileRequest):
     with get_session() as session:
         user_id = user_for_device(session, body.device)
         set_display_name(session, user_id, clean_name(body.display_name))
-        submitted = session.execute(
-            text("SELECT COUNT(*) FROM memories WHERE user_id = CAST(:id AS uuid)"),
-            {"id": user_id},
-        ).scalar()
-        unlocked = session.execute(
-            text("SELECT COUNT(*) FROM unlocks WHERE device_id = CAST(:id AS uuid)"),
-            {"id": body.device},
-        ).scalar()
-
-    return Profile(
-        user_id=user_id,
-        display_name=clean_name(body.display_name),
-        submitted=submitted or 0,
-        unlocked=unlocked or 0,
-    )
+        return profile_of(session, body.device)
 
 
 @app.post("/v1/media", response_model=MediaItem, status_code=201)
@@ -1594,6 +1632,150 @@ def report_memory(memory_id: int, body: ReportRequest):
             )
 
     return ReportResponse(reports=count, hidden=hidden)
+
+
+# ---------------------------------------------------------------------------
+# Signing in. Google and Apple, and nothing else.
+#
+# No passwords, so nothing to store, reset, rotate or leak, and no reset-email
+# flow to build. Apple is not a preference: App Store review requires Sign in
+# with Apple as soon as any other third-party sign-in exists on iOS.
+#
+# There is still no session token. The device id the app already sends stays the
+# only credential; signing in binds devices.user_id, so every endpoint above
+# keeps working unchanged and a second phone becomes a second device on one
+# user. That is the whole of what sign-in buys - a collection that survives a
+# new phone - and nothing else needed inventing to get it.
+#
+# api/auth.py holds the token verification and the reasons.
+# ---------------------------------------------------------------------------
+
+
+class DeviceRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+
+
+class SignInRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+    # The provider's ID token. Not an access token: the app does the
+    # interactive part and the server only decides whether this is real.
+    id_token: str = Field(min_length=20, max_length=8192)
+    # Apple hands the person's name to the client on the very first
+    # authorization and never again, so it has to travel separately or be lost.
+    display_name: str | None = Field(None, max_length=60)
+
+
+def absorb(session, old_user: str, new_user: str) -> None:
+    """Fold a device's anonymous user into the account it just signed into.
+
+    Somebody who files a memory and then signs in expects it to come with them.
+    Only ever an *anonymous* user: one with its own identity is a real account
+    and merging two of those is a decision nobody here is in a position to make,
+    so the device simply switches and both accounts keep what is theirs.
+    """
+    if old_user == new_user:
+        return
+    has_identity = session.execute(
+        text("SELECT 1 FROM identities WHERE user_id = CAST(:id AS uuid) LIMIT 1"),
+        {"id": old_user},
+    ).scalar()
+    if has_identity:
+        return
+
+    session.execute(
+        text("UPDATE memories SET user_id = CAST(:new AS uuid) WHERE user_id = CAST(:old AS uuid)"),
+        {"new": new_user, "old": old_user},
+    )
+    session.execute(
+        text("UPDATE devices SET user_id = CAST(:new AS uuid) WHERE user_id = CAST(:old AS uuid)"),
+        {"new": new_user, "old": old_user},
+    )
+    session.execute(text("DELETE FROM users WHERE id = CAST(:id AS uuid)"), {"id": old_user})
+
+
+def sign_in(session, device: str, provider: str, subject: str, email, name) -> Profile:
+    """Bind this device to the account behind a verified identity.
+
+    Three cases, and the middle one is the one worth reading twice:
+
+      new identity, no user     create a user and attach the identity
+      new identity, has a user  attach it to the user this device already is,
+                                which is how a name and any memories filed
+                                before signing in survive the transition
+      known identity            point the device at that user, and absorb the
+                                anonymous one it was using
+    """
+    touch_device(session, device)
+    known = session.execute(
+        text("SELECT user_id FROM identities WHERE provider = :p AND subject = :s"),
+        {"p": provider, "s": subject},
+    ).scalar()
+    current = session.execute(
+        text("SELECT user_id FROM devices WHERE id = CAST(:id AS uuid)"), {"id": device}
+    ).scalar()
+
+    if known is None:
+        user_id = str(current) if current else user_for_device(session, device)
+        session.execute(
+            text("""
+                INSERT INTO identities (provider, subject, user_id, email)
+                VALUES (:p, :s, CAST(:user AS uuid), :email)
+            """),
+            {"p": provider, "s": subject, "user": user_id, "email": email},
+        )
+    else:
+        user_id = str(known)
+        if current:
+            absorb(session, str(current), user_id)
+
+    session.execute(
+        text("UPDATE devices SET user_id = CAST(:user AS uuid) WHERE id = CAST(:id AS uuid)"),
+        {"user": user_id, "id": device},
+    )
+
+    # Never overwrites. The name is the one thing here other people see, and
+    # somebody who chose "Bo" does not want Google renaming them.
+    chosen = clean_name(name)
+    if chosen:
+        session.execute(
+            text("""
+                UPDATE users SET display_name = :name
+                WHERE id = CAST(:id AS uuid) AND display_name IS NULL
+            """),
+            {"name": chosen, "id": user_id},
+        )
+
+    return profile_of(session, device)
+
+
+@app.post("/v1/auth/google", response_model=Profile)
+def sign_in_with_google(body: SignInRequest):
+    subject, email, name = google_identity(body.id_token)
+    with get_session() as session:
+        return sign_in(session, body.device, "google", subject, email, body.display_name or name)
+
+
+@app.post("/v1/auth/apple", response_model=Profile)
+def sign_in_with_apple(body: SignInRequest):
+    subject, email = apple_identity(body.id_token)
+    with get_session() as session:
+        return sign_in(session, body.device, "apple", subject, email, body.display_name)
+
+
+@app.post("/v1/auth/signout", response_model=Profile)
+def sign_out(body: DeviceRequest):
+    """Unlink this device from the account. Nothing is deleted.
+
+    Unlocks were recorded against the device and stay readable on it; memories
+    filed under the account stay with the account. Signing back in reattaches
+    both. There is no token to revoke, because there was never one issued.
+    """
+    with get_session() as session:
+        session.execute(
+            text("UPDATE devices SET user_id = NULL WHERE id = CAST(:id AS uuid)"),
+            {"id": body.device},
+        )
+        return profile_of(session, body.device)
 
 
 if __name__ == "__main__":

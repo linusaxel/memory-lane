@@ -37,6 +37,7 @@ import {
   type Coordinates,
   type Hotspot,
   type LocatedMemory,
+  type Profile,
 } from './src/api.ts';
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
@@ -126,8 +127,8 @@ export default function App() {
   // can open at all.
   const [device, setDevice] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState('');
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(0);
   // Reported by this device already. Local only - the server counts devices,
   // and this stops the control offering a second press that does nothing.
   const [reported, setReported] = useState<Set<number>>(new Set());
@@ -294,10 +295,10 @@ export default function App() {
         // Both are allowed to be slow or to fail entirely: the local copy has
         // already rendered, and nothing here blocks the map.
         fetchProfile(id)
-          .then((profile) => {
+          .then((who) => {
             if (!mounted.current) return;
-            setDisplayName(profile.display_name ?? '');
-            setSubmitted(profile.submitted);
+            setProfile(who);
+            setDisplayName(who.display_name ?? '');
           })
           .catch(() => {});
         const earned = await fetchUnlocked(id);
@@ -390,7 +391,7 @@ export default function App() {
       // Already unlocked by the server - filing something is standing there -
       // so it goes straight into the collection.
       setUnlocked(await rememberUnlocked(unlocked, memory));
-      setSubmitted((count) => count + 1);
+      setProfile((who) => (who ? { ...who, submitted: who.submitted + 1 } : who));
       // Show them what they filed. The modal closing is not a confirmation,
       // and this is also the first sight of what anybody else will find here.
       setOpenAt([memory]);
@@ -411,6 +412,24 @@ export default function App() {
       // says it landed and did not. It is idempotent per device either way.
       setReported((current) => new Set(current).add(memory.id));
       reportMemory(memory.id, device).catch(() => {});
+    },
+    [device],
+  );
+
+  /** Signing in or out changes whose collection this is - the server answers
+   *  /v1/unlocks for every device on the account - so it is refetched rather
+   *  than left showing what this handset happened to have earned. */
+  const accountChanged = useCallback(
+    (who: Profile) => {
+      setProfile(who);
+      setDisplayName(who.display_name ?? '');
+      if (!device) return;
+      fetchUnlocked(device)
+        .then(async (earned) => {
+          if (!mounted.current || earned.length === 0) return;
+          setUnlocked(await mergeUnlocked(earned));
+        })
+        .catch(() => {});
     },
     [device],
   );
@@ -603,9 +622,12 @@ export default function App() {
           <Settings
             unlockedCount={collected.length}
             placeCount={placesUnlocked}
-            submittedCount={submitted}
+            submittedCount={profile?.submitted ?? 0}
             displayName={displayName}
             onDisplayName={rename}
+            device={device}
+            profile={profile}
+            onProfile={accountChanged}
             radiusMeters={radiusMeters}
             permission={permission}
             onRequestLocation={() => {

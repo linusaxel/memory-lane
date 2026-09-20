@@ -42,6 +42,7 @@ Collection (the second tab)
 Settings (the third tab, "You")
 ├─ unlocked / places / filed, as numbers
 ├─ your name                what submissions are signed with. Blank = Anonymous
+├─ account                  Apple / Google. Never a wall; see SignIn.tsx
 ├─ how unlocking works      the one place that answers "why can't I read this"
 ├─ location state + action
 └─ privacy policy, and the fact that there is no sign-in yet
@@ -51,10 +52,13 @@ TabBar
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
-makes that true.** The local store is a cache; `GET /v1/unlocks` keyed on the
-keychain device id is what survives the app's data being cleared. A new phone
-still starts empty — that is the gap Google/Apple sign-in closes, and the only
-thing it is for.
+makes that true.** The local store is a cache; `GET /v1/unlocks` is what survives
+the app's data being cleared. Signed out it is keyed on the keychain device id;
+signed in, on every device of that account — which is the entire point of
+sign-in and the only thing its copy is allowed to promise.
+
+**Sign-in is never a gate.** Nothing in the app is behind it. A proximity app
+that asks who you are before it shows you anything has the order wrong.
 
 | File | What it owns |
 |---|---|
@@ -439,3 +443,5 @@ Documented flows live in `docs/08-ux-flows.md`. Build toward those, and when a
 flow changes, change that file in the same commit.
 
 Writing is F5 (file a memory), F20 (report one) and F21 (be somebody).
+Sign-in is F22, and it is Google and Apple only — see `src/SignIn.tsx` for why,
+and for why neither button works in Expo Go.

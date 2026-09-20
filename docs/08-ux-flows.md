@@ -45,11 +45,12 @@ free number. F3 and F4 are still proposed and sit at the bottom.
 | F5 | File a memory of your own | Implemented |
 | F20 | Report something that should not be here | Implemented |
 | F21 | Be somebody | Implemented |
+| F22 | Keep your collection on a new phone | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Proposed |
 
-**Not flows, and deliberately absent:** there is no sign-in *yet* (Google and
-Apple are next, and nothing else), no onboarding carousel, no settings anybody
+**Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
+and nothing is behind it — no onboarding carousel, no settings anybody
 has to change, no search in the app, no sharing, and no notifications. Each of those is a thing a user does *not* do, and the
 list is worth as much as the one above — if one of them appears, it should be
 because a flow needed it, not because apps have them.
@@ -620,6 +621,59 @@ That is the gap sign-in closes and nothing else does.
 
 **Done when:** a memory on the map has somebody's name under it and that name is
 theirs to change.
+
+---
+
+## F22 · Keep your collection on a new phone — **Implemented**
+
+**Who:** somebody who has unlocked things and then changed handset, or wiped
+one.
+**Trigger:** You → Account. Never a wall, never a prompt on launch.
+
+1. Two buttons: Apple's own control, and Continue with Google. Nothing else —
+   no email field, no password, no magic link.
+2. The provider's sheet, then back. The app sends the ID token it was given and
+   is told who that makes it.
+3. Everything filed or unlocked on this phone while signed out comes with them.
+   Filing first and signing in later is the normal order and losing the memory
+   in between would be the version of this nobody forgives.
+4. On the new phone: sign in, and the collection is there.
+
+### Why it is not a gate
+
+Nothing in the app is behind it. A proximity app that asks who you are before it
+shows you anything has the order wrong, and the copy on the screen says only
+what signing in is actually for: a new phone that does not start empty.
+
+### Why only Google and Apple
+
+No passwords means nothing to store, reset, rotate or leak, and no reset-email
+flow to build. Apple is not a preference: App Store review requires Sign in with
+Apple as soon as any other third-party sign-in exists on iOS. Both usually end
+up on one account, which is why `identities` is a table and not two columns.
+
+### What the server does with it
+
+Verifies the signature, the **audience** and the issuer, then binds the device
+to a user. No session token is issued in either direction — the device id it
+already sends stays the only credential, so a second phone is simply a second
+device on one person and every other endpoint is unchanged.
+
+Signing out unlinks the device and deletes nothing. What was earned on the
+handset stays readable on the handset; what was filed stays with the account and
+comes back on the next sign-in.
+
+**What can go wrong:** signing into an account that already exists, from a phone
+that had already filed something — the anonymous local user is folded in.
+Signing into a *different* real account switches the device and merges nothing;
+two accounts that each have a sign-in are not ours to join together.
+
+**Neither button works in Expo Go.** Apple needs the entitlement and Google
+needs the app's own URL scheme, so seeing this flow at all needs a development
+build and real client ids.
+
+**Done when:** somebody can hand their old phone in and still have everything
+they walked for.
 
 ---
 

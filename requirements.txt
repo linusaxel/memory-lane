@@ -11,6 +11,10 @@ fastapi>=0.109.0
 uvicorn>=0.27.0
 # Multipart bodies: photo and audio uploads (POST /v1/media)
 python-multipart>=0.0.9
+
+# Verifying Google and Apple ID tokens. [crypto] is not optional - without it
+# PyJWT cannot do RS256 and every sign-in fails at import of the algorithm.
+pyjwt[crypto]>=2.8.0
 pydantic>=2.0.0
 
 # LLM (also handles geocoding)

@@ -46,3 +46,13 @@ def test_privacy_page_covers_the_three_new_permissions():
     body = client.get("/privacy").text.lower()
     for permission in ("camera", "photos", "microphone"):
         assert permission in body
+
+
+def test_privacy_page_says_what_signing_in_hands_over():
+    """Sign-in means a third party tells us something about somebody. What that
+    is, and what it emphatically is not, has to be on the page."""
+    body = client.get("/privacy").text.lower()
+    assert "google" in body and "apple" in body
+    assert "email" in body
+    assert "password" in body, "that we never ask for one is the point"
+    assert "sign out" in body

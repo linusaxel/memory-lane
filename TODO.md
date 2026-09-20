@@ -488,12 +488,14 @@ audio-guide companies, city archives.
 The retention bet. Only after the map has content — a proximity app that
 returns nothing is dead, and a friend layer on an empty map returns nothing.
 
-- [~] **3.1** Identity. Half done, and the half that was actually blocking.
-      `users` is a display name and a uuid, claimed by a device; that is enough
-      to sign a submission and to be the subject of a report. **Next: Google and
-      Apple sign-in, and nothing else** — no passwords, no email, no magic
-      links. It attaches to `users` rather than replacing it, and what it buys
-      is a collection that survives a new phone.
+- [x] **3.1** Identity. `users` is a display name and a uuid claimed by a
+      device; `identities` is Google and Apple sign-in on top of it. No
+      passwords, no session tokens — the device id stays the only credential and
+      signing in binds `devices.user_id`, so a second phone is a second device
+      on one person. `api/auth.py` verifies signature, audience and issuer, and
+      answers 503 rather than verifying against nothing when unconfigured.
+      **Not exercisable yet:** needs real client ids and a development build —
+      neither button works in Expo Go.
 - [x] **3.2** Write path for user-created memories. `POST /v1/memories` plus
       `POST /v1/media` for a photo or a recording; `mobile/src/Submit.tsx` is
       the screen. Files where you are standing and nowhere else. No ingestion
@@ -586,10 +588,11 @@ on them. Full detail in `loop/STATE.md`.
   present-day place identity. Working assumption is OSM/Overpass; unvalidated.
 - **Which Copenhagen neighborhood?** "Saturate one neighborhood completely"
   needs a boundary drawn before density can be measured.
-- ~~**Identity system for Phase 3.**~~ **Decided: OAuth only, Google and Apple.**
-      No passwords to store, reset or leak, and Apple sign-in is required by
-      App Store review once any third-party sign-in exists. Not built yet;
-      `users` is the table it attaches to.
+- ~~**Identity system for Phase 3.**~~ **Decided and built: OAuth only, Google
+      and Apple.** No passwords to store, reset or leak, and Apple is required by
+      App Store review once any third-party sign-in exists. What is left is
+      operational, not a decision: register the OAuth clients, fill
+      `GOOGLE_CLIENT_IDS` / `APPLE_CLIENT_IDS`, and make a development build.
 - **Does the podcast corpus eventually get pruned?** It stays for now as test
   data. It is US comedy anecdote in a product about Copenhagen history, and at
   some point it stops being useful and starts being noise.

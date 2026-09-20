@@ -221,6 +221,9 @@ export type Profile = {
   display_name: string | null;
   submitted: number;
   unlocked: number;
+  /** Which sign-ins are attached, oldest first. Empty means this is still just
+   *  a device: everything works, but a new phone would start empty. */
+  providers: ('google' | 'apple')[];
 };
 
 export type Draft = {
@@ -316,4 +319,36 @@ export async function submitMemory(
  *  served to anybody. */
 export async function reportMemory(id: number, device: string, reason?: string): Promise<void> {
   await post(`/v1/memories/${id}/report`, { device, reason: reason ?? null });
+}
+
+// --- signing in ---------------------------------------------------------------
+
+/**
+ * Hand a provider's ID token to the server and find out who that makes us.
+ *
+ * There is no session token in either direction. The device id stays the only
+ * credential the app ever sends; this binds the device to an account, so every
+ * other call keeps working exactly as it did and a second phone becomes a
+ * second device on the same person.
+ *
+ * `displayName` exists for Apple, which gives the name to the client on the
+ * very first authorization and never again - so if it is not sent now it is
+ * gone.
+ */
+export async function signIn(
+  provider: 'google' | 'apple',
+  device: string,
+  idToken: string,
+  displayName?: string | null,
+): Promise<Profile> {
+  return post<Profile>(`/v1/auth/${provider}`, {
+    device,
+    id_token: idToken,
+    display_name: displayName ?? null,
+  });
+}
+
+/** Unlink this device. Nothing is deleted, and there is no token to revoke. */
+export async function signOut(device: string): Promise<Profile> {
+  return post<Profile>('/v1/auth/signout', { device });
 }
