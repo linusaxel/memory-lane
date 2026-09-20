@@ -1,0 +1,54 @@
+# The gate, on every push. It was only ever run by whoever remembered to.
+#
+# loop/verify.sh is already tri-state and that maps onto CI exactly: 0 pass,
+# 1 fail, 2 the environment is wrong. A 2 here means this workflow is broken,
+# not the code, so it is reported as such rather than as a red build.
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      # verify.sh expects venv/ and drives Postgres through `docker compose`,
+      # which is what the runner has anyway.
+      - name: Build the venv the gate looks for
+        run: |
+          python -m venv venv
+          venv/bin/pip install --quiet -r requirements.txt -r requirements-dev.txt
+
+      - name: Install the app's dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Start Postgres
+        run: |
+          docker compose up -d db
+          for _ in $(seq 1 60); do
+            docker compose exec -T db pg_isready -U memorylane -q && break
+            sleep 1
+          done
+
+      - name: Gate
+        run: |
+          ./loop/verify.sh
+          status=$?
+          if [ $status -eq 2 ]; then
+            echo "::error::GATE=INFRA - the workflow environment is wrong, not the code"
+          fi
+          exit $status

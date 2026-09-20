@@ -34,3 +34,7 @@ transcripts/
 *.log
 # Uploaded photos and recordings when running outside Docker.
 media/
+
+# The Python 3.14 venv whose pyexpat is broken. Ignored today only because it
+# happens to carry its own .gitignore.
+venv.broken-py314/

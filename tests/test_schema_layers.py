@@ -109,16 +109,8 @@ def test_content_defaults_to_video(db_session):
     assert source_type == "video"
 
 
-def test_the_migration_agrees_with_the_schema(db_session, db_url):
-    """Fresh databases get these columns from schema.sql, existing ones from the
-    migration. If the two drift, a deploy differs from a laptop and nothing says so.
-
-    db_session built this database from schema.sql, so replaying the migration on
-    top must be a no-op.
-    """
-    before = _columns(db_session, "memories") | _columns(db_session, "content")
-
-    replay = subprocess.run(
+def _replay(migration: pathlib.Path, db_url: str):
+    return subprocess.run(
         [
             "docker",
             "compose",
@@ -134,12 +126,60 @@ def test_the_migration_agrees_with_the_schema(db_session, db_url):
             "ON_ERROR_STOP=1",
         ],
         cwd=ROOT,
-        input=MIGRATION.read_text(),
+        input=migration.read_text(),
         capture_output=True,
         text=True,
     )
-    assert replay.returncode == 0, replay.stderr
+
+
+def _shape(session):
+    """Every table and column in the public schema."""
+    rows = session.execute(
+        text("""
+            SELECT table_name, column_name FROM information_schema.columns
+            WHERE table_schema = 'public'
+        """)
+    ).fetchall()
+    return {(r[0], r[1]) for r in rows}
+
+
+# 001 is excluded: it is a one-time data merge whose `CREATE UNIQUE INDEX` is
+# bare, so replaying it on a database that already has the index is an error
+# rather than a no-op. Its schema half is asserted separately below.
+REPLAYABLE = sorted(
+    m for m in (ROOT / "db" / "migrations").glob("*.sql") if not m.name.startswith("001")
+)
+
+
+@pytest.mark.parametrize("migration", REPLAYABLE, ids=lambda m: m.stem)
+def test_every_migration_agrees_with_the_schema(migration, db_session, db_url):
+    """Fresh databases get their shape from schema.sql, existing ones from the
+    migrations. If the two drift, a deploy differs from a laptop and nothing
+    says so until something behaves differently in production.
+
+    db_session built this database from schema.sql, so replaying any migration
+    on top of it must change nothing. Parametrized rather than written once for
+    002, because the argument applies to every migration and 003 through 007
+    went unguarded - including the two that added six tables.
+    """
+    before = _shape(db_session)
+
+    replay = _replay(migration, db_url)
+    assert replay.returncode == 0, f"{migration.name} does not replay: {replay.stderr}"
 
     db_session.commit()
-    after = _columns(db_session, "memories") | _columns(db_session, "content")
-    assert after == before, f"migration added columns schema.sql lacks: {after - before}"
+    after = _shape(db_session)
+    assert after == before, (
+        f"{migration.name} changes a database built from schema.sql.\n"
+        f"only in the migration: {sorted(after - before)}\n"
+        f"only in schema.sql:    {sorted(before - after)}"
+    )
+
+
+def test_the_places_unique_index_is_in_the_schema_too(db_session):
+    """001's half that is not replayable. Without this index the ON CONFLICT in
+    save_memories is a silent no-op and every memory mints a duplicate place."""
+    found = db_session.execute(
+        text("SELECT indexname FROM pg_indexes WHERE tablename = 'places'")
+    ).fetchall()
+    assert "idx_places_place_query" in {r[0] for r in found}

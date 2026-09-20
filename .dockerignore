@@ -10,18 +10,20 @@ venv.broken-py314/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
 # Not needed to serve the API
 docs/
-examples/
 tests/
 mobile/
 loop/
 transcripts/
 *.log
 *.md
+# Local uploads. MEDIA_DIR is a volume in the container.
+media/
 
 # Never ship secrets
 .env

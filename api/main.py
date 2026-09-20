@@ -48,7 +48,13 @@ app.include_router(read_router)
 app.include_router(write_router)
 app.include_router(accounts_router)
 app.include_router(card_router)
-app.include_router(embed_router)
+
+# api/embed.py ships OpenStreetMap's public tiles, whose usage policy this would
+# violate on a real host - its own comment says "DO NOT put this embed on a
+# public host until this line changes". That guard was a comment while
+# railway.json deploys this app unconditionally, so it is a switch now.
+if os.getenv("ENABLE_EMBED", "1") != "0":
+    app.include_router(embed_router)
 
 
 @app.get("/")
