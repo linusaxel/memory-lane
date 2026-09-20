@@ -1,20 +1,156 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+
+import { fetchNearby, type LocatedMemory } from './src/api.ts';
+import { regionToRadiusKm, type Region } from './src/region.ts';
+import MemorySheet from './src/MemorySheet.tsx';
+
+/**
+ * Where to look when we have no location permission. A blank grey map is a
+ * store-review rejection, and reviewers routinely tap Deny - so this points at
+ * Manhattan, where the seeded content actually is.
+ */
+const FALLBACK_REGION: Region = {
+  latitude: 40.7484,
+  longitude: -73.9857,
+  latitudeDelta: 0.09,
+  longitudeDelta: 0.09,
+};
+
+const DEBOUNCE_MS = 400;
 
 export default function App() {
+  const [region, setRegion] = useState<Region>(FALLBACK_REGION);
+  const [memories, setMemories] = useState<LocatedMemory[]>([]);
+  const [selected, setSelected] = useState<LocatedMemory | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const mapRef = useRef<MapView>(null);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const load = useCallback(async (r: Region) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Last-write-wins is fine at one request per pan.
+      const found = await fetchNearby(r.latitude, r.longitude, regionToRadiusKm(r));
+      setMemories(found);
+    } catch {
+      setError('Could not reach Memory Lane');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const goToMyLocation = useCallback(async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return false;
+
+    const pos = await Location.getCurrentPositionAsync({});
+    const next: Region = {
+      latitude: pos.coords.latitude,
+      longitude: pos.coords.longitude,
+      latitudeDelta: 0.09,
+      longitudeDelta: 0.09,
+    };
+    mapRef.current?.animateToRegion(next, 600);
+    setRegion(next);
+    load(next);
+    return true;
+  }, [load]);
+
+  useEffect(() => {
+    (async () => {
+      const centred = await goToMyLocation().catch(() => false);
+      // Permission denied, or location unavailable: show the fallback region
+      // rather than an empty map.
+      if (!centred) load(FALLBACK_REGION);
+    })();
+  }, [goToMyLocation, load]);
+
+  const onRegionChangeComplete = useCallback(
+    (r: Region) => {
+      setRegion(r);
+      if (debounce.current) clearTimeout(debounce.current);
+      debounce.current = setTimeout(() => load(r), DEBOUNCE_MS);
+    },
+    [load],
+  );
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
+
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFill}
+        initialRegion={FALLBACK_REGION}
+        showsUserLocation
+        onRegionChangeComplete={onRegionChangeComplete}
+      >
+        {memories.map((m) => (
+          <Marker
+            key={m.id}
+            coordinate={{ latitude: m.place.coordinates.lat, longitude: m.place.coordinates.lng }}
+            title={m.place.name}
+            onPress={() => setSelected(m)}
+          />
+        ))}
+      </MapView>
+
+      <View style={styles.banner} pointerEvents="none">
+        <Text style={styles.bannerText}>
+          {error ?? `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} here`}
+        </Text>
+        {loading && <ActivityIndicator size="small" color="#71717a" />}
+      </View>
+
+      <Pressable style={styles.locate} onPress={goToMyLocation}>
+        <Text style={styles.locateText}>Near me</Text>
+      </Pressable>
+
+      <MemorySheet memory={selected} onClose={() => setSelected(null)} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
+  container: { flex: 1 },
+  banner: {
+    position: 'absolute',
+    top: 64,
+    alignSelf: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.94)',
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
+  bannerText: { fontSize: 14, color: '#3f3f46', fontWeight: '500' },
+  locate: {
+    position: 'absolute',
+    bottom: 44,
+    alignSelf: 'center',
+    backgroundColor: '#18181b',
+    paddingHorizontal: 22,
+    paddingVertical: 13,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  locateText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });
