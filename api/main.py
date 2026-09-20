@@ -116,13 +116,6 @@ class PlaceDetail(BaseModel):
     tags: list[str]
 
 
-class ContentSummary(BaseModel):
-    id: int
-    title: Optional[str]
-    url: str
-    memory_count: int
-
-
 # ============================================================================
 # QUERIES
 # ============================================================================

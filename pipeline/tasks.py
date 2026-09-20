@@ -315,14 +315,6 @@ def task_aggregate_memories(content_id: int):
     return {"content_id": content_id, "memories_saved": len(filtered)}
 
 
-def task_process_video(content_id: int):
-    """
-    Convenience task: Start the full pipeline for a video.
-    Assumes transcript is already fetched.
-    """
-    return task_enqueue_chunks(content_id)
-
-
 # ============================================================================
 # BATCH OPERATIONS
 # ============================================================================
