@@ -5,6 +5,10 @@ CREATE TABLE content (
     url VARCHAR(1024) UNIQUE NOT NULL,
     platform VARCHAR(50) NOT NULL,
     platform_id VARCHAR(255),
+    -- Not CHECKed: the set grows with every source we ingest (archive,
+    -- newspaper, registry, oral_history), unlike memories.layer which is
+    -- closed. 'video' rows are the only ones with a transcript.
+    source_type VARCHAR(20) NOT NULL DEFAULT 'video',
     source_name VARCHAR(255),
     title VARCHAR(512),
     published_at TIMESTAMP,
@@ -46,7 +50,34 @@ CREATE TABLE memories (
     summary TEXT NOT NULL,
     tags VARCHAR(50)[],
     extraction_confidence VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Which of the three content layers this belongs to. The layers render
+    -- differently and must never appear at equal weight in one feed: friend
+    -- memories are intimate and ephemeral, historical cards public and
+    -- permanent. CHECKed because the set is closed and the product rules
+    -- depend on it; a typo here silently hides content.
+    layer VARCHAR(20) NOT NULL DEFAULT 'historical'
+        CHECK (layer IN ('historical', 'friend', 'stranger')),
+
+    -- WHEN it happened, as opposed to timestamp_start, which is where it sits
+    -- in a video. A 1978 gig needs somewhere to record 1978. Null when the
+    -- source does not say; precision records how much of the date to trust.
+    happened_at DATE,
+    happened_precision VARCHAR(10)
+        CHECK (happened_precision IN ('day', 'month', 'year', 'decade')),
+
+    -- Per-memory credit and a deep link back to the source. Not derivable from
+    -- the content join: one archive record can carry its own attribution, and
+    -- the card must show it even when pasted into a group chat.
+    attribution TEXT,
+    source_url TEXT,
+
+    -- The gap between this memory and what the user is looking at now. Scored
+    -- once at extraction and never recomputed - extraction is a one-time cost
+    -- per place, amortized across everyone who stands there.
+    contrast_score REAL,
+    contrast_note TEXT
 );
 
 -- Indexes
