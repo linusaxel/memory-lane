@@ -1,11 +1,11 @@
 # LOOP STATE — rewritten every tick. Trust this file over your instincts.
 
 ```
-tick:     1
+tick:     2
 updated:  2026-09-20
-branch:   loop/autopilot   (3 commits ahead of main, NEVER PUSHED)
-gate:     GREEN — 18 passed in 0.06s
-head:     4a36a4b "W1-01: declare yt-dlp for channel discovery"
+branch:   loop/autopilot   (5 commits ahead of main, NEVER PUSHED)
+gate:     GREEN — 31 passed in 0.15s
+head:     099a12c "W1-02: rewrite the crawler as pure discovery"
 ```
 
 ## What this project is
@@ -16,32 +16,23 @@ FastAPI → (soon) an Expo map app. See `CLAUDE.md` only if a task's `touches:` 
 
 ## Where I am
 
-**LAST DONE: W1-01** — `yt-dlp>=2026.8.19` declared in `requirements.txt` and installed
-(resolved to 2026.08.19). Verify passes.
+**LAST DONE: W1-02** — `crawler/yt_crawler.py` is now pure discovery: 139 lines down to
+85, one public function `list_channel_videos()`, 12 offline tests green.
 
-**NEXT TASK: W1-02** — rewrite `crawler/yt_crawler.py` as pure discovery.
+**NEXT TASK: W1-03** — prove discovery works against a real channel (the `live` test).
 
-**NEXT CONCRETE ACTION:** write `tests/test_crawler.py` first. It must fake `YoutubeDL`
-(no network — the live check is W1-03, which is marked `live` and deselected by the gate)
-and assert the entry→dict mapping:
+**NEXT CONCRETE ACTION:** add a test to `tests/test_crawler.py` marked
+`@pytest.mark.live` that calls `list_channel_videos()` against a real, busy channel and
+asserts (a) it returns **well over 30** videos — the number that proves the old
+single-page truncation is gone, against a measured baseline of **0** — and (b) every id
+in the returned URLs matches `^[A-Za-z0-9_-]{11}$`.
 
-- URL is built from `entry["id"]`, not from `entry["url"]`
-- `timestamp` → timezone-aware `datetime`; missing timestamp → `None`
-- an entry with no `id` is dropped
-- `limit` is forwarded to yt-dlp as `playlistend`
-- `/videos` is appended exactly once (`.../@x/videos` must not become `/videos/videos`)
+Run it with `venv/bin/python -m pytest -q -m live tests/test_crawler.py`. It needs
+network but costs nothing. It is marked `live` so the gate keeps deselecting it — do not
+remove that marker, and do not put a network call in an unmarked test.
 
-Then rewrite the module to satisfy it. **Most of this task is deletion**: remove
-`fetch_transcript`, `save_transcript_txt`, `crawl_channel_transcripts`, the hardcoded
-`__main__` channel, and `extract_video_id`. Keep one public function
-`list_channel_videos(channel_url, limit) -> [{url, title, published_at}]` plus an
-argparse `__main__`. Use `extract_flat: "in_playlist"` so it stays metadata-only.
-
-Two constraints that are easy to get wrong:
-- `crawler` must **not** import `pipeline` — W1-04 makes `pipeline.ingest` import
-  `crawler`, and the cycle would bite.
-- `pipeline/ingest.py:extract_youtube_id` (line 18) becomes the repo's **only** video-id
-  parser. Do not write a second one.
+**Pick a channel that still exists.** `@TheMountainDispatch` (the old hardcoded one)
+returns 404. Verify the handle resolves before asserting against it.
 
 ## Do not redo — already done, leave alone
 
@@ -49,6 +40,9 @@ Two constraints that are easy to get wrong:
   `tests/test_harness.py`, `tests/conftest.py`, `tests/fakes.py`,
   `.claude/commands/ml-tick.md`). Commit `b7fc77b`.
 - **W1-01** yt-dlp declared + installed. Commit `4a36a4b`. Do not re-install it.
+- **W1-02** crawler rewritten as discovery-only. Commit `099a12c`. The deletions are
+  deliberate and `tests/test_crawler.py::test_transcript_handling_is_gone` guards them —
+  if you find yourself re-adding transcript code here, stop and read that test.
 - **The venv was rebuilt on Python 3.12.12** and every dependency reinstalled. Do not
   "fix" it again — see *Rejected approaches*.
 
@@ -86,9 +80,9 @@ Full instructions live in each task's `note:` in `loop/TASKS.yaml`.
 
 ```
 W0 harness    1/1  done
-W1 crawler    1/9   — 7 todo, 1 parked (API_CREDITS)
+W1 crawler    2/9   — 6 todo, 1 parked (API_CREDITS)
 W2 backend    0/8   — 7 todo, 1 parked (DEPLOY)
 W3 app        0/15  — 12 todo, 3 parked
               ----
-              2/33 done, 5 parked, 26 to build
+              3/33 done, 5 parked, 25 to build
 ```

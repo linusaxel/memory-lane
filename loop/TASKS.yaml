@@ -50,9 +50,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_crawler.py"
     touches: [crawler/, tests/test_crawler.py]
     depends_on: [W1-01]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 099a12c
     note: "Deletion is most of this task. extract_video_id's last-path-segment fallback
       (old line 34) silently returned garbage - pipeline/ingest.py:extract_youtube_id
       validates 11 chars and becomes the repo's ONLY id parser. crawler must NOT import
