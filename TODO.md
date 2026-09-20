@@ -222,13 +222,27 @@ card is the one worth screenshotting.
       repoint `memories.place_id` first, then delete orphans guarded by
       `NOT EXISTS` — `memories.place_id` is `ON DELETE CASCADE` and an unguarded
       delete eats memory rows.
-- [ ] **1.3 Source-agnostic ingestion.** A second entry point beside
-      `ingest_content()` taking already-fetched records
-      `{text, source_url, attribution, happened_at, address?}`, writing `content`
-      with `source_type != 'video'` and bypassing `transcripts` entirely.
-      Reuses `save_memories()` unchanged. **The concrete source adapter is not
-      chosen yet** — see Open questions. Ship the path plus one hand-loaded
-      Copenhagen fixture so 1.4–1.8 are unblocked.
+- [x] **1.3 Source-agnostic ingestion.** `ingest_records()` in
+      `pipeline/ingest.py` — a second entry point beside `ingest_content()`
+      taking already-fetched records `{source_url, text, title?, happened_at?}`
+      and writing `content` with `source_type != 'video'`. Callers fetch; this
+      only writes. `source_url` becomes `content.url`, so the UNIQUE constraint
+      there makes re-ingesting a no-op exactly as it does for videos.
+
+      **Deviation from this plan, deliberate:** it does *not* bypass
+      `transcripts` as written above. The body is stored as one transcript
+      segment at `t=0`, which reads oddly for a newspaper clipping but means
+      `chunk_transcript`, extraction and `save_memories` all work unchanged on a
+      source with no timings. The alternative — a `content.body` column — needs
+      a branch in the core extraction query for no gain. `transcripts` is really
+      "source text, timings optional"; rename it if a source ever arrives that
+      it genuinely cannot hold.
+
+      The fixture is `tests/fixtures/copenhagen_synthetic.yaml`, invented and
+      deliberately **not** in `config/`: once extracted, a memory row carries no
+      marker saying it was made up, and invented history is the one thing this
+      product must not ship. **The concrete source adapter is still not chosen**
+      — see Open questions.
 - [ ] **1.4 A second extraction prompt, for archival text.** The existing
       `SYSTEM_PROMPT` is tuned for personal anecdote ("WHO / WHAT HAPPENED /
       THE VIBE") and is wrong for third-party material. The historical prompt

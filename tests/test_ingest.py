@@ -7,7 +7,6 @@ would prove neither. loop/verify.sh starts the db service when it sees these.
 No network: list_channel_videos is faked. No Anthropic: ingest never calls it.
 """
 
-from contextlib import contextmanager
 from datetime import UTC, datetime
 
 import pytest
@@ -16,18 +15,6 @@ from sqlalchemy import text
 from pipeline import ingest
 
 pytestmark = pytest.mark.db
-
-
-@pytest.fixture
-def ingest_into(db_session, monkeypatch):
-    """Point ingest_content() at the ephemeral test database."""
-
-    @contextmanager
-    def _session():
-        yield db_session
-
-    monkeypatch.setattr(ingest, "get_session", _session)
-    return db_session
 
 
 @pytest.fixture

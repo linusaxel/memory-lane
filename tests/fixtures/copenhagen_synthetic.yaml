@@ -1,0 +1,33 @@
+# SYNTHETIC. Not archive material, not history, not true.
+#
+# Invented text that has the SHAPE of an archive record so the text ingestion
+# path and the historical extraction prompt can be exercised before a real
+# source is chosen (W4-00 is blocked on that decision).
+#
+# It lives in tests/ and not config/ on purpose. Nothing here should ever be
+# ingested into the live database: once extracted, a memory row carries no mark
+# saying it was made up, and invented history is exactly what this product must
+# not ship. The source_name below is deliberately shouty for the same reason.
+source_name: "SYNTHETIC FIXTURE - NOT REAL HISTORY"
+source_type: fixture
+platform: text
+records:
+  - source_url: "https://example.invalid/synthetic/1"
+    title: "Synthetic record 1"
+    happened_at: "1978-06-17"
+    text: >
+      On a summer evening in 1978 a touring band played a room above a bicycle
+      shop on this corner, to a crowd of perhaps four hundred. The building now
+      holds a bank branch. The stage stood where the cash machines are.
+  - source_url: "https://example.invalid/synthetic/2"
+    title: "Synthetic record 2"
+    happened_at: "1931-03-02"
+    text: >
+      The bakery on this square closed in 1931 after the ovens cracked during a
+      cold snap. Neighbours queued in the street for the last morning's bread.
+      A pharmacy took the premises the following year.
+  - source_url: "https://example.invalid/synthetic/3"
+    title: "Synthetic record 3 - should yield nothing"
+    text: >
+      This building was constructed in 1902 in the national romantic style and
+      is four storeys tall with a tiled roof. It is a fine example of the period.

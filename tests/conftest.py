@@ -72,6 +72,27 @@ def db_session(db_url):
 
 
 @pytest.fixture
+def ingest_into(db_session, monkeypatch):
+    """Point pipeline.ingest at the ephemeral test database.
+
+    Not optional. The ingest functions open their own session through
+    pipeline.db, which reads DATABASE_URL and therefore points at the real
+    database - a db-marked test that forgets this writes to production and
+    passes while doing it. Shared from here so there is one copy to get right.
+    """
+    from contextlib import contextmanager
+
+    from pipeline import ingest
+
+    @contextmanager
+    def _session():
+        yield db_session
+
+    monkeypatch.setattr(ingest, "get_session", _session)
+    return db_session
+
+
+@pytest.fixture
 def fake_anthropic():
     from tests.fakes import FakeAnthropic
 
