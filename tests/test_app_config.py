@@ -73,10 +73,19 @@ def test_bundle_ids_match_each_other(expo):
     assert expo["ios"]["bundleIdentifier"] == expo["android"]["package"]
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="W3-14: bundle id, Maps key and prod URL are still PLACEHOLDER. "
+    "strict=True means this test goes RED the moment they are resolved, which "
+    "is the point - that is when the naming decision became irreversible and "
+    "this test must be updated.",
+)
 def test_placeholders_are_still_flagged(expo, eas):
-    """Deliberate tripwires. When these stop being PLACEHOLDER the human has
-    made the irreversible naming decision - which is exactly when this test
-    should be updated, not before."""
+    """A tripwire that cannot trip is decoration.
+
+    The previous version ended in `assert isinstance(unresolved, list)`, which
+    is true whatever happens. Now it asserts what it means - nothing is left
+    unresolved - and xfail(strict) carries the fact that today it is not."""
     unresolved = []
     if "PLACEHOLDER" in expo["ios"]["bundleIdentifier"]:
         unresolved.append("bundleIdentifier")
@@ -84,8 +93,7 @@ def test_placeholders_are_still_flagged(expo, eas):
         unresolved.append("googleMaps.apiKey")
     if "PLACEHOLDER" in eas["build"]["production"]["env"]["EXPO_PUBLIC_API_URL"]:
         unresolved.append("EXPO_PUBLIC_API_URL")
-    # Not a failure - a record of what W3-14 must resolve before building.
-    assert isinstance(unresolved, list)
+    assert unresolved == [], f"still PLACEHOLDER: {', '.join(unresolved)}"
 
 
 # -- EAS ---------------------------------------------------------------------

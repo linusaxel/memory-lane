@@ -113,7 +113,7 @@ Required: `ANTHROPIC_API_KEY`
 Optional (with defaults):
 - `DATABASE_URL` = postgresql://memorylane:memorylane@localhost:5432/memorylane
 - `REDIS_URL` = redis://localhost:6379/0
-- `EXTRACTION_MODEL` = claude-sonnet-4-20250514
+- `EXTRACTION_MODEL` = claude-sonnet-5
 - `CLASSIFIER_MODEL` = claude-haiku-4-5 (for pre-filtering chunks)
 - `CHUNK_MINUTES` = 4
 - `CHUNK_OVERLAP_SECONDS` = 30

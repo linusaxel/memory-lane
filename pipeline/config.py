@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-4-20250514")
+EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-5")
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-4-5")
 CHUNK_MINUTES = int(os.getenv("CHUNK_MINUTES", "4"))
 CHUNK_OVERLAP_SECONDS = int(os.getenv("CHUNK_OVERLAP_SECONDS", "30"))

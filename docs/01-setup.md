@@ -22,7 +22,7 @@ pip install -r requirements.txt
 |----------|----------|-------------|
 | `DATABASE_URL` | No | PostgreSQL connection string (default: local Docker) |
 | `ANTHROPIC_API_KEY` | Yes | Claude API key |
-| `EXTRACTION_MODEL` | No | Claude model (default: claude-sonnet-4-20250514) |
+| `EXTRACTION_MODEL` | No | Claude model (default: claude-sonnet-5) |
 | `CHUNK_MINUTES` | No | Transcript chunk size (default: 4) |
 | `CHUNK_OVERLAP_SECONDS` | No | Chunk overlap (default: 30) |
 

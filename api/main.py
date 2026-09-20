@@ -178,6 +178,8 @@ ORDER BY distance_meters ASC
 LIMIT :limit OFFSET :offset
 """
 
+# A count that does not mirror its result query's WHERE is a wrong meta.total
+# and broken pagination. Keep these two in step with the queries above.
 COUNT_QUERY = f"""
 SELECT COUNT(*)
 FROM memories m
@@ -185,6 +187,18 @@ JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
     AND {WITHIN}
+    AND {CONFIDENCE_FILTER}
+"""
+
+COUNT_WITH_TAGS_QUERY = f"""
+SELECT COUNT(*)
+FROM memories m
+JOIN places p ON m.place_id = p.id
+WHERE
+    p.coordinates IS NOT NULL
+    AND {WITHIN}
+    AND m.tags && CAST(:tags AS varchar[])
+    AND {CONFIDENCE_FILTER}
 """
 
 NEARBY_PLACES_QUERY = f"""
@@ -280,6 +294,26 @@ JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
     AND {SEARCH_MATCH}
+"""
+
+SEARCH_COUNT_WITH_LOCATION_QUERY = f"""
+SELECT COUNT(*)
+FROM memories m
+JOIN places p ON m.place_id = p.id
+WHERE
+    p.coordinates IS NOT NULL
+    AND {SEARCH_MATCH}
+    AND {WITHIN}
+"""
+
+# places/nearby is grouped, so its total is the number of GROUPS, not rows.
+PLACES_COUNT_QUERY = f"""
+SELECT COUNT(DISTINCT p.id)
+FROM places p
+JOIN memories m ON m.place_id = p.id
+WHERE
+    p.coordinates IS NOT NULL
+    AND {WITHIN}
 """
 
 
@@ -392,18 +426,17 @@ def get_nearby_memories(
         }
 
         if tags:
-            tag_list = [t.strip() for t in tags.split(",")]
-            params["tags"] = tag_list
+            params["tags"] = [t.strip() for t in tags.split(",")]
             result = session.execute(text(NEARBY_MEMORIES_WITH_TAGS_QUERY), params)
+            count_sql = COUNT_WITH_TAGS_QUERY
         else:
             result = session.execute(text(NEARBY_MEMORIES_QUERY), params)
+            count_sql = COUNT_QUERY
 
         rows = result.fetchall()
 
-        count_result = session.execute(
-            text(COUNT_QUERY), {"lat": lat, "lng": lng, "radius_meters": radius_meters}
-        )
-        total = count_result.scalar() or 0
+        # Same params as the result query: the count has to see the same filters.
+        total = session.execute(text(count_sql), params).scalar() or 0
 
     memories = [row_to_memory(row) for row in rows]
 
@@ -462,8 +495,16 @@ def search_memories(
             center = None
             radius_km = None
 
-        count_result = session.execute(text(SEARCH_COUNT_QUERY), {"query": q})
-        total = count_result.scalar() or 0
+        if center is not None:
+            total = (
+                session.execute(
+                    text(SEARCH_COUNT_WITH_LOCATION_QUERY),
+                    {"query": q, "lat": lat, "lng": lng, "radius_meters": radius_meters},
+                ).scalar()
+                or 0
+            )
+        else:
+            total = session.execute(text(SEARCH_COUNT_QUERY), {"query": q}).scalar() or 0
 
     memories = [row_to_memory(row, include_distance=(lat is not None)) for row in rows]
 
@@ -511,6 +552,16 @@ def get_nearby_places(
         )
         rows = result.fetchall()
 
+        # len(places) is the page size, not the result size - it made every
+        # page look like the last one.
+        total = (
+            session.execute(
+                text(PLACES_COUNT_QUERY),
+                {"lat": lat, "lng": lng, "radius_meters": radius_meters},
+            ).scalar()
+            or 0
+        )
+
     places = []
     for row in rows:
         coords = row_coordinates(row)
@@ -530,7 +581,7 @@ def get_nearby_places(
     return PlacesResponse(
         places=places,
         meta=NearbyMeta(
-            total=len(places),
+            total=total,
             limit=limit,
             offset=offset,
             center=Coordinates(lat=lat, lng=lng),
