@@ -264,9 +264,10 @@ server re-measures before it hands anything over.
 The position is self-reported, so this stops `curl`, not a determined spoofer.
 Attestation needs accounts — Phase 3.
 
-**"Forever" is a device promise.** The server does not know who unlocked what
-and is not going to, so the collection lives in the app's storage. A new phone
-starts empty. Making it portable needs identity, which is the same Phase 3.
+**"Forever" is a device promise.** Unlocks are recorded server-side, but against
+an opaque UUID the app generates for itself and keeps in the keychain — there
+are no accounts, so a new phone starts empty. Making it portable needs identity,
+which is the same Phase 3.
 
 The client can still be generous with the animation. It just cannot be the
 thing deciding what you are allowed to read.
@@ -444,9 +445,16 @@ They sort last and simply do not say when, rather than reading "Invalid Date".
 The collection renders entirely from device storage. No network, no position, no
 server. An unlocked memory is readable on the way home, in a tunnel, forever.
 
-**"Forever" is a device promise.** There are no accounts, so a new phone starts
-empty. Making it portable needs identity — Phase 3. This is written down here
-because it is the kind of thing that is only discovered at the worst moment.
+**The local copy is not the only copy any more.** An unlock is recorded against
+this installation's UUID, so clearing the app's data no longer undoes the
+walking. The local copy is what renders at launch and what works in a tunnel;
+the server's arrives behind it and is merged in, with the local `unlocked_at`
+winning because that is the moment the thing was actually earned.
+
+**"Forever" is still a device promise.** There are no accounts, so a new phone
+starts empty. Making it portable needs identity — Phase 3. This is written down
+here because it is the kind of thing that is only discovered at the worst
+moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
