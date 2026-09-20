@@ -9,10 +9,11 @@
  * is a remote image and may not load; the name never depends on it.
  */
 
+import { useState } from 'react';
 import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Source } from './api.ts';
-import { color, font, label } from './theme.ts';
+import { color, dim, font, label } from './theme.ts';
 
 type Props = {
   source: Source;
@@ -21,10 +22,19 @@ type Props = {
 };
 
 export default function SourceLine({ source, title }: Props) {
+  // A channel avatar is decoration; if it will not load, fall back to the same
+  // empty circle a channel without one gets rather than a grey disc that looks
+  // like it is still loading.
+  const [iconFailed, setIconFailed] = useState(false);
+
   const body = (
     <View style={styles.row}>
-      {source.icon_url ? (
-        <Image source={{ uri: source.icon_url }} style={styles.avatar} />
+      {source.icon_url && !iconFailed ? (
+        <Image
+          source={{ uri: source.icon_url }}
+          style={styles.avatar}
+          onError={() => setIconFailed(true)}
+        />
       ) : (
         <View style={[styles.avatar, styles.avatarEmpty]} />
       )}
@@ -46,6 +56,7 @@ export default function SourceLine({ source, title }: Props) {
 
   return (
     <Pressable
+      style={dim()}
       onPress={() => Linking.openURL(source.url!).catch(() => {})}
       accessibilityRole="link"
       accessibilityLabel={`From ${source.name} on YouTube`}

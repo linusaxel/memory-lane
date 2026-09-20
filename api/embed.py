@@ -49,9 +49,16 @@ EMBED_HTML = """<!doctype html>
 <title>Memory Lane</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {{ color-scheme: light dark; }}
-  html, body {{ margin: 0; height: 100%%; font-family: system-ui, sans-serif; }}
+  /* Typography only. `Canvas` and `color-scheme` stay: this widget lives in
+     other people's pages and adapting to the host is the right behaviour -
+     the card inside the panel carries the full palette. */
+  html, body {{
+    margin: 0; height: 100%%;
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }}
   #map {{ position: absolute; inset: 0; }}
   #card {{
     position: absolute; inset: auto 0 0 0; max-height: 60%%; overflow: auto;
@@ -70,7 +77,10 @@ EMBED_HTML = """<!doctype html>
     text-align: center; pointer-events: none;
   }}
   #empty[data-show] {{ display: grid; }}
-  #empty p {{ background: Canvas; padding: .6rem 1rem; border-radius: 999px; margin: 0; }}
+  #empty p {{
+    background: Canvas; padding: .6rem 1rem; border-radius: 4px; margin: 0;
+    font-family: Fraunces, Georgia, "Times New Roman", serif; font-size: 1rem;
+  }}
 </style>
 </head><body>
 <div id="map"></div>

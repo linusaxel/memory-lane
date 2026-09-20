@@ -55,7 +55,7 @@ import {
   type MediaItem,
 } from './api.ts';
 import { duration } from './format.ts';
-import { color, font, input, label } from './theme.ts';
+import { color, dim, font, input, label } from './theme.ts';
 
 /** Matches the server's own floor. Ten characters is not a quality bar, it is a
  *  fat-finger bar, and the button has to agree with the API about it. */
@@ -277,11 +277,11 @@ export default function Submit({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.bar}>
-          <Pressable onPress={onClose} accessibilityRole="button" hitSlop={10}>
+          <Pressable style={dim()} onPress={onClose} accessibilityRole="button" hitSlop={10}>
             <Text style={styles.barAction}>Cancel</Text>
           </Pressable>
           <Text style={styles.barTitle}>Add a memory</Text>
-          <Pressable onPress={post} disabled={!ready} accessibilityRole="button" hitSlop={10}>
+          <Pressable style={dim()} onPress={post} disabled={!ready} accessibilityRole="button" hitSlop={10}>
             <Text style={[styles.barAction, styles.post, !ready && styles.disabled]}>
               {posting ? 'Posting…' : 'Post'}
             </Text>
@@ -380,6 +380,7 @@ export default function Submit({
               {photos.map((photo) => (
                 <Pressable
                   key={photo.uri}
+                  style={dim()}
                   onPress={() =>
                     setAttachments((current) => current.filter((a) => a.uri !== photo.uri))
                   }
@@ -467,7 +468,7 @@ function Chip({ label: text, on, onPress }: { label: string; on: boolean; onPres
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: on }}
-      style={[styles.chip, on && styles.chipOn]}
+      style={dim([styles.chip, on && styles.chipOn])}
     >
       <Text style={[styles.chipText, on && styles.chipTextOn]}>{text}</Text>
     </Pressable>
@@ -476,7 +477,7 @@ function Chip({ label: text, on, onPress }: { label: string; on: boolean; onPres
 
 function Secondary({ label: text, onPress }: { label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={styles.secondary}>
+    <Pressable onPress={onPress} accessibilityRole="button" style={dim(styles.secondary)}>
       <Text style={styles.secondaryText}>{text}</Text>
     </Pressable>
   );

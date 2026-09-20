@@ -10,12 +10,13 @@
  * content.
  */
 
+import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { mediaUrl, type MediaItem } from './api.ts';
 import { duration } from './format.ts';
-import { color, font, label } from './theme.ts';
+import { color, dim, font, label } from './theme.ts';
 
 function Recording({ item }: { item: MediaItem }) {
   const player = useAudioPlayer(mediaUrl(item));
@@ -27,7 +28,7 @@ function Recording({ item }: { item: MediaItem }) {
 
   return (
     <Pressable
-      style={styles.audio}
+      style={dim(styles.audio)}
       accessibilityRole="button"
       accessibilityLabel={status.playing ? 'Pause the recording' : 'Play the recording'}
       onPress={() => {
@@ -66,15 +67,30 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
 
   const photos = media.filter((item) => item.kind === 'photo');
   const sounds = media.filter((item) => item.kind === 'audio');
+  const [failed, setFailed] = useState<MediaItem['id'][]>([]);
 
   return (
     <View style={styles.wrap}>
-      {photos.map((photo) => (
+      {photos.map((photo) =>
         // Fixed aspect rather than a measured one: react-native cannot know a
         // remote image's size before it loads, and a block that resizes under
         // the reader is worse than one that crops.
-        <Image key={photo.id} source={{ uri: mediaUrl(photo) }} style={styles.photo} />
-      ))}
+        failed.includes(photo.id) ? (
+          // Without this a dead URL is an empty rule-coloured rectangle for
+          // ever, which reads as a load that never finishes rather than as a
+          // photograph that is gone.
+          <View key={photo.id} style={[styles.photo, styles.photoGone]}>
+            <Text style={styles.goneText}>Photograph unavailable</Text>
+          </View>
+        ) : (
+          <Image
+            key={photo.id}
+            source={{ uri: mediaUrl(photo) }}
+            style={styles.photo}
+            onError={() => setFailed((current) => [...current, photo.id])}
+          />
+        ),
+      )}
       {sounds.map((sound) => (
         <Recording key={sound.id} item={sound} />
       ))}
@@ -85,6 +101,8 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
 const styles = StyleSheet.create({
   wrap: { gap: 12, marginTop: 22 },
   photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: 4, backgroundColor: color.rule },
+  photoGone: { alignItems: 'center', justifyContent: 'center' },
+  goneText: { ...label, fontSize: 9, color: color.inkSoft },
   audio: {
     flexDirection: 'row',
     alignItems: 'center',

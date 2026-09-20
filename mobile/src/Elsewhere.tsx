@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Coordinates, Hotspot } from './api.ts';
 import { distance } from './format.ts';
 import { metersBetween } from './region.ts';
-import { buttonText, color, font, label } from './theme.ts';
+import { buttonText, color, dim, font, label } from './theme.ts';
 
 type Props = {
   hotspots: Hotspot[];
@@ -50,7 +50,7 @@ export default function Elsewhere({ hotspots, from, onGo }: Props) {
         {nearest.memories} of them, {distanceLabel(from, nearest)}. You still have to stand there
         to read one.
       </Text>
-      <Pressable style={styles.go} onPress={() => onGo(nearest)} accessibilityRole="button">
+      <Pressable style={dim(styles.go)} onPress={() => onGo(nearest)} accessibilityRole="button">
         <Text style={styles.goText}>Show me {nearest.label}</Text>
       </Pressable>
     </View>

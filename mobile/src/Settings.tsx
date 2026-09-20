@@ -13,7 +13,7 @@ import { API_BASE, type Profile } from './api.ts';
 import Padlock from './Padlock.tsx';
 import SignIn from './SignIn.tsx';
 import type { Permission } from './types.ts';
-import { buttonText, color, font, input, label } from './theme.ts';
+import { buttonText, color, dim, font, input, label } from './theme.ts';
 
 type Props = {
   unlockedCount: number;
@@ -23,6 +23,9 @@ type Props = {
    *  to forget to press. */
   displayName: string;
   onDisplayName: (next: string) => void;
+  /** Set when the last save did not land. The field keeps the typed value
+   *  either way, so without this the name looks saved and is not. */
+  nameError: string | null;
   device: string | null;
   profile: Profile | null;
   onProfile: (next: Profile) => void;
@@ -37,6 +40,7 @@ export default function Settings({
   submittedCount,
   displayName,
   onDisplayName,
+  nameError,
   device,
   profile,
   onProfile,
@@ -80,6 +84,7 @@ export default function Settings({
           autoCapitalize="words"
           accessibilityLabel="The name your memories are signed with"
         />
+        {nameError && <Text style={styles.saveFailed}>{nameError}</Text>}
       </Section>
 
       <Section title="Account">
@@ -110,7 +115,7 @@ export default function Settings({
             ? 'On. Used to work out which memories are in reach, and never stored.'
             : 'Off. Nothing can unlock without it.'}
         </Text>
-        <Pressable style={styles.action} onPress={onRequestLocation} accessibilityRole="button">
+        <Pressable style={dim(styles.action)} onPress={onRequestLocation} accessibilityRole="button">
           <Text style={styles.actionText}>
             {granted ? 'Manage in Settings' : 'Turn on location'}
           </Text>
@@ -119,7 +124,7 @@ export default function Settings({
 
       <Section title="About">
         <Pressable
-          style={styles.link}
+          style={dim(styles.link)}
           accessibilityRole="link"
           onPress={() => Linking.openURL(`${API_BASE}/privacy`).catch(() => {})}
         >
@@ -183,6 +188,10 @@ const styles = StyleSheet.create({
   input: {
     ...input,
   },
+  // Seal, matching Submit's error line. The accent is spoken for by the unlock
+  // everywhere else; an error that failed to save is the one other thing the
+  // app says in red, and splitting that across two treatments would be worse.
+  saveFailed: { fontFamily: font.mono, fontSize: 13, lineHeight: 20, color: color.seal },
   link: { alignSelf: 'flex-start' },
   linkText: {
     fontFamily: font.monoMedium,

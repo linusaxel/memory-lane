@@ -11,6 +11,7 @@ injection boundary whatever wrote the text.
 """
 
 import datetime
+import re
 
 import pytest
 
@@ -114,9 +115,16 @@ def test_no_date_renders_no_date_line():
 
 
 def test_card_is_self_contained_and_scheme_aware():
+    """No asset pipeline behind this: it renders inside an iframe, a WebView and
+    a link preview. One stylesheet is allowed and only for the two faces, which
+    is why the CSS keeps stacks that stand on their own - a preview bot fetches
+    no fonts at all. Everything else still has to be inline."""
     html = render_card(Row())
     assert "prefers-color-scheme:dark" in html
-    assert "<link" not in html and "<script" not in html, "must render with no asset pipeline"
+    assert "<script" not in html, "nothing here should need scripting"
+    links = re.findall(r"<link[^>]*>", html)
+    assert len(links) == 1, f"one stylesheet, got {len(links)}: {links}"
+    assert 'href="https://fonts.googleapis.com/' in links[0], links[0]
     assert 'name="viewport"' in html
 
 

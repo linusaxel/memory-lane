@@ -27,7 +27,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 
 import { signIn, signOut, type Profile } from './api.ts';
-import { color, font, label } from './theme.ts';
+import { color, dim, font, label } from './theme.ts';
 
 // Closes the browser tab the moment the redirect comes back. Without it the
 // person is left staring at a finished Google page wondering what to tap.
@@ -87,7 +87,7 @@ function GoogleButton({ device, onProfile, onError, onBusy }: ButtonProps) {
 
   return (
     <Pressable
-      style={styles.action}
+      style={dim(styles.action)}
       accessibilityRole="button"
       onPress={() => {
         onError(null);
@@ -181,7 +181,7 @@ export default function SignIn({ device, profile, onProfile }: Props) {
             onPress={withApple}
           />
         )}
-        <Pressable style={styles.action} onPress={leave} accessibilityRole="button">
+        <Pressable style={dim(styles.action)} onPress={leave} accessibilityRole="button">
           <Text style={styles.actionText}>Sign out</Text>
         </Pressable>
         {busy && <ActivityIndicator size="small" color={color.inkFaint} />}

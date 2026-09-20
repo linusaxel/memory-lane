@@ -14,27 +14,37 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Padlock from './Padlock.tsx';
 import { when } from './format.ts';
-import { color, font, label } from './theme.ts';
+import { color, dim, font, label } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
 
 type Props = {
   memories: UnlockedMemory[];
+  /** False until the local store has been read. Without it this screen says
+   *  "Nothing yet." to somebody with a full collection for the frame before the
+   *  disk answers - the same "nothing here" / "we could not ask" collision
+   *  `Status` exists to prevent on the map. It is one boolean and not a
+   *  `Status` because `loadUnlocked` cannot fail: it returns {} instead. */
+  ready: boolean;
   onOpen: (memory: UnlockedMemory) => void;
 };
 
-export default function Collection({ memories, onOpen }: Props) {
+export default function Collection({ memories, ready, onOpen }: Props) {
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 14 }]}>
       <Text style={styles.title}>Unlocked</Text>
       <Text style={styles.subtitle}>
-        {memories.length === 0
-          ? 'Nothing yet.'
-          : `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} you walked to`}
+        {!ready
+          ? ''
+          : memories.length === 0
+            ? 'Nothing yet.'
+            : `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} you walked to`}
       </Text>
 
-      {memories.length === 0 ? (
+      {/* No spinner: this is a disk read that resolves in a frame, and a
+          spinner that flashes is worse than a beat of nothing. */}
+      {!ready ? null : memories.length === 0 ? (
         <View style={styles.empty}>
           <Padlock size={40} color={color.rule} />
           <Text style={styles.emptyText}>
@@ -48,7 +58,7 @@ export default function Collection({ memories, onOpen }: Props) {
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <Pressable
-              style={styles.row}
+              style={dim(styles.row)}
               onPress={() => onOpen(item)}
               accessibilityRole="button"
               accessibilityLabel={[item.place.name, when(item.unlocked_at) && `unlocked ${when(item.unlocked_at)}`]

@@ -56,7 +56,7 @@ import { deviceId } from './src/device.ts';
 import Elsewhere from './src/Elsewhere.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
-import { buttonText, color, font, label } from './src/theme.ts';
+import { buttonText, color, dim, font, label } from './src/theme.ts';
 import LocationPrimer from './src/LocationPrimer.tsx';
 import TabBar, { type Tab } from './src/TabBar.tsx';
 import { useNearby } from './src/useNearby.ts';
@@ -112,6 +112,10 @@ export default function App() {
   const [permission, setPermission] = useState<Permission>('unknown');
   const [primerDismissed, setPrimerDismissed] = useState(false);
   const [unlocked, setUnlocked] = useState<Unlocked>({});
+  // Whether the local store has answered yet. Until it has, the collection must
+  // not claim to be empty - see Collection's `ready`.
+  const [collectionReady, setCollectionReady] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
@@ -249,7 +253,9 @@ export default function App() {
 
   useEffect(() => {
     loadUnlocked().then((stored) => {
-      if (mounted.current) setUnlocked(stored);
+      if (!mounted.current) return;
+      setUnlocked(stored);
+      setCollectionReady(true);
     });
 
     // The device's collection, from the server. The local copy loads first and
@@ -395,7 +401,14 @@ export default function App() {
   const rename = useCallback(
     (next: string) => {
       setDisplayName(next);
-      if (device) saveDisplayName(device, next).catch(() => {});
+      if (!device) return;
+      // Saved as it is typed, so a failure is not fatal - the next keystroke
+      // retries. But it cannot be silent: the server holds the name submissions
+      // are signed with, so a save that never lands means posting as Anonymous
+      // while the field on screen says otherwise.
+      saveDisplayName(device, next)
+        .then(() => setNameError(null))
+        .catch(() => setNameError('Could not save your name. Keep typing to try again.'));
     },
     [device],
   );
@@ -478,7 +491,7 @@ export default function App() {
               location rather than hiding the possibility. */}
           {!showPrimer && (
             <Pressable
-              style={styles.add}
+              style={dim(styles.add)}
               accessibilityRole="button"
               accessibilityLabel="Add a memory here"
               onPress={async () => {
@@ -545,11 +558,27 @@ export default function App() {
               }}
             />
           ) : nothingHere ? null : status === 'failed' ? (
-            <Pressable style={styles.locate} onPress={() => load(region)}>
+            <Pressable
+              style={dim(styles.locate)}
+              accessibilityRole="button"
+              accessibilityLabel="Try again"
+              accessibilityHint="Looks for memories here once more"
+              onPress={() => load(region)}
+            >
               <Text style={styles.locateText}>Try again</Text>
             </Pressable>
           ) : (
-            <Pressable style={styles.locate} onPress={goToMyLocation}>
+            <Pressable
+              style={dim(styles.locate)}
+              accessibilityRole="button"
+              // The label follows the words, because the two states do two
+              // different things - one recentres, the other asks the system.
+              accessibilityLabel={position ? 'Near me' : 'Turn on location'}
+              accessibilityHint={
+                position ? 'Centres the map on where you are' : 'Asks for permission to use your location'
+              }
+              onPress={goToMyLocation}
+            >
               {/* Without location nothing can ever unlock, so the button says so
                   rather than leaving a map of pins that never open. */}
               <Text style={styles.locateText}>{position ? 'Near me' : 'Turn on location'}</Text>
@@ -560,6 +589,7 @@ export default function App() {
         <View style={[styles.screen, tab !== 'collection' && styles.hidden]}>
           <Collection
             memories={collected}
+            ready={collectionReady}
             onOpen={(memory) => {
               // One memory, not its point: the collection is a list of things
               // you earned, and a stack of strangers at the same coordinate is
@@ -577,6 +607,7 @@ export default function App() {
             submittedCount={profile?.submitted ?? 0}
             displayName={displayName}
             onDisplayName={rename}
+            nameError={nameError}
             device={device}
             profile={profile}
             onProfile={accountChanged}

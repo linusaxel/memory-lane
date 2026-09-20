@@ -8,7 +8,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { color, font, label as themeLabel } from './theme.ts';
+import { color, dim, font, label as themeLabel } from './theme.ts';
 
 export type Tab = 'map' | 'collection' | 'you';
 
@@ -53,7 +53,7 @@ function Item({
 }) {
   return (
     <Pressable
-      style={styles.item}
+      style={dim(styles.item)}
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}

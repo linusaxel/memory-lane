@@ -131,14 +131,26 @@ def source_href(row) -> str | None:
 
 # Inline, because the card has to render standalone inside an iframe, a
 # WebView and a link preview with no asset pipeline behind it.
+FONT_HREF = (
+    "https://fonts.googleapis.com/css2?"
+    "family=Fraunces:opsz,wght@9..144,400;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+)
+
+# The palette is mobile/src/theme.ts, copied by hand because there are eleven
+# values and no build step between TypeScript and Python. tests/test_palette.py
+# fails if the two drift. Why these colours at all: docs/09-visual-design.md.
 CARD_CSS = """
-:root{--bg:#fff;--fg:#18181b;--muted:#71717a;--rule:#e4e4e7;--accent:#dc2626}
+:root{--bg:#f7f4ee;--fg:#1c1917;--muted:#776e64;--rule:#e0d9cc;--accent:#c0462b}
 @media (prefers-color-scheme:dark){
-  :root{--bg:#18181b;--fg:#fafafa;--muted:#a1a1aa;--rule:#3f3f46;--accent:#f87171}
+  :root{--bg:#161412;--fg:#f2ede4;--muted:#9a9086;--rule:#332e27;--accent:#e2603f}
 }
 *{box-sizing:border-box}
+/* Fraunces and IBM Plex Mono, with stacks that hold on their own: a link
+   preview bot fetches no fonts, and a card that collapses to Times is worse
+   than one that was never restyled. `muted` is `faded`, not `inkFaint` - this
+   sets 12px in it and inkFaint is 3.4:1 on paper. */
 body{margin:0;background:var(--bg);color:var(--fg);
-  font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font:400 16px/1.5 Fraunces,Georgia,"Times New Roman",serif;
   -webkit-font-smoothing:antialiased}
 /* Hugs its content rather than filling the viewport: this same markup is an
    iframe in the embed widget and a link preview, where 100vh is a page of
@@ -146,21 +158,29 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .card{max-width:34rem;margin:0 auto;padding:28px 24px;display:flex;
   flex-direction:column;gap:14px}
 /* clamp() so the place name survives being scaled down to a thumbnail */
-.place{font-size:clamp(22px,5.5vw,30px);font-weight:700;letter-spacing:-.02em;
-  line-height:1.15;margin:0}
-.when{font-size:14px;color:var(--muted);margin:0}
-.summary{font-size:17px;line-height:1.6;margin:0}
-.contrast{margin:0;padding-left:12px;border-left:3px solid var(--accent);
-  font-size:15px;color:var(--muted)}
+.place{font-size:clamp(22px,5.5vw,30px);font-weight:700;line-height:1.2;margin:0}
+.when{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;color:var(--muted);margin:0}
+/* 19/31, the same size the app's sheet gives it, because it is the same
+   sentence and it is the reason anybody opened this. */
+.summary{font-size:19px;line-height:31px;margin:0}
+/* A rule above, not a coloured bar down the left: elevation here is a hairline,
+   and a left-border accent is the card tell this palette exists to avoid. */
+.contrast{margin:0;padding-top:14px;border-top:1px solid var(--rule);
+  font-size:16px;line-height:25px;color:var(--muted)}
 .credit{margin-top:4px;padding-top:14px;border-top:1px solid var(--rule);
-  font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px}
-.credit a{color:inherit}
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;line-height:19px;color:var(--muted);display:flex;
+  flex-wrap:wrap;gap:6px}
+.credit a{color:var(--accent)}
 /* A submitted memory usually is the photograph. Sized by aspect rather than a
    fixed height so a portrait phone shot is not cropped to a letterbox. */
-.photo{width:100%;border-radius:6px;display:block;max-height:60vh;object-fit:cover}
-.layer{display:inline-block;font-size:11px;text-transform:uppercase;
-  letter-spacing:.08em;color:var(--muted)}
-@media (max-width:360px){.card{padding:18px 16px}.summary{font-size:16px}}
+.photo{width:100%;border-radius:4px;display:block;max-height:60vh;object-fit:cover}
+.layer{display:inline-block;
+  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11px;font-weight:500;text-transform:uppercase;
+  letter-spacing:1.1px;color:var(--muted)}
+@media (max-width:360px){.card{padding:18px 16px}.summary{font-size:17px;line-height:28px}}
 """
 
 
@@ -188,6 +208,7 @@ def render_card(row) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{place} - Memory Lane</title>
 <meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="{FONT_HREF}">
 <style>{CARD_CSS}</style>
 </head><body>
 <article class="card">
@@ -214,6 +235,7 @@ def render_locked_card(row, radius_meters: int) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{place} - Memory Lane</title>
 <meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="{FONT_HREF}">
 <style>{CARD_CSS}</style>
 </head><body>
 <article class="card">

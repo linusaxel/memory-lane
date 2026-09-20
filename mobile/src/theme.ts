@@ -8,7 +8,13 @@
  *  refactor. A real gap, logged in mobile/UI.md.
  */
 
-import { DynamicColorIOS, Platform } from 'react-native';
+import {
+  DynamicColorIOS,
+  Platform,
+  type PressableStateCallbackType,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 /** Light and dark, resolved by the platform. Android gets the light value. */
 const dual = (light: string, dark: string) =>
@@ -22,7 +28,12 @@ export const color = {
   paperRaised: dual('#FFFDF9', '#201D19'),
   ink: dual('#1C1917', '#F2EDE4'),
   inkSoft: dual('#4A443D', '#BDB5A8'),
-  inkFaint: dual('#8A837A', '#8A8276'),
+  /** Labels and captions, and so the colour the 9-11px label voice is set in.
+   *  Both values moved for contrast: #8A837A was 3.4:1 on paper, and #8A8276
+   *  was 4.8:1 on paper but only 4.4:1 on paperRaised, which is where inputs
+   *  and the audio row put it. 4.7:1 and 4.8:1 now, on both grounds.
+   *  tests/test_palette.py holds every pair to 4.5:1 in both themes. */
+  inkFaint: dual('#746D65', '#908979'),
   /** Hairlines and dividers. Editorial layouts rule; they do not shadow. */
   rule: dual('#E0D9CC', '#332E27'),
 
@@ -41,6 +52,12 @@ export const color = {
   /** Out of reach: the same padlock, faded. Dark enough to hold against the
    *  parchment map, and lighter in the dark where a dark pin vanishes. */
   faded: dual('#776E64', '#9A9086'),
+
+  /** The wash behind a reachable pin, so it is findable before its shape is.
+   *  Deliberately not a pair: it is a translucent seal over a map, and the
+   *  seal's dark value is lighter, so one alpha reads about the same over
+   *  either. It lives here rather than inline so a palette change reaches it. */
+  halo: 'rgba(192,70,43,0.16)',
 };
 
 /** Two families and no more. Fraunces tells the stories, IBM Plex Mono is the
@@ -87,3 +104,21 @@ export const input = {
   color: color.ink,
   backgroundColor: color.paperRaised,
 };
+
+/** Every Pressable in the app dims while it is held.
+ *
+ *  It is one helper rather than a `pressed &&` in twenty-eight StyleSheets for
+ *  the same reason `label` is one object: the value drifts the moment it is
+ *  copied. Use it as `style={dim(styles.thing)}`.
+ *
+ *  Two things deliberately do not use it. A marker never changes outside its
+ *  four states - `tracksViewChanges` is off and animating a marker's children
+ *  flickers in react-native-maps. And the unlock ring's fill *is* its press
+ *  feedback; dimming it would fight the one thing it exists to show.
+ */
+export const dim =
+  (base?: StyleProp<ViewStyle>) =>
+  ({ pressed }: PressableStateCallbackType): StyleProp<ViewStyle> => [
+    base,
+    pressed && { opacity: 0.55 },
+  ];

@@ -19,7 +19,7 @@ import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration } from './format.ts';
 import { metersBetween } from './region.ts';
-import { buttonText, color, font, label } from './theme.ts';
+import { buttonText, color, dim, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
 
 type Props = {
@@ -195,7 +195,7 @@ export default function MemorySheet({
                       most of a dead end. The distance is the ask; this is the
                       answer. */}
                   <Pressable
-                    style={styles.walk}
+                    style={dim(styles.walk)}
                     accessibilityRole="button"
                     onPress={() =>
                       open(
@@ -252,7 +252,7 @@ export default function MemorySheet({
 
                 {!locked && onReport && (
                   <Pressable
-                    style={styles.report}
+                    style={dim(styles.report)}
                     accessibilityRole="button"
                     disabled={reported}
                     onPress={() => onReport(memory)}
@@ -274,7 +274,7 @@ export default function MemorySheet({
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Previous memory here"
-                  style={[styles.step, index === 0 && styles.stepOff]}
+                  style={dim([styles.step, index === 0 && styles.stepOff])}
                   disabled={index === 0}
                   onPress={() => onIndex(index - 1)}
                 >
@@ -286,7 +286,7 @@ export default function MemorySheet({
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Next memory here"
-                  style={[styles.step, index === memories.length - 1 && styles.stepOff]}
+                  style={dim([styles.step, index === memories.length - 1 && styles.stepOff])}
                   disabled={index === memories.length - 1}
                   onPress={() => onIndex(index + 1)}
                 >
@@ -299,7 +299,7 @@ export default function MemorySheet({
                 actually is. */}
             {onShowOnMap && (
               <Pressable
-                style={styles.secondary}
+                style={dim(styles.secondary)}
                 accessibilityRole="button"
                 onPress={() => onShowOnMap(memory)}
               >
@@ -308,7 +308,12 @@ export default function MemorySheet({
             )}
             {!locked && memory.content && (
               <Pressable
-                style={styles.watch}
+                style={dim(styles.watch)}
+                accessibilityRole="button"
+                // Says where it goes, not what it reads. "Watch at 12:04" out of
+                // context is a time of day.
+                accessibilityLabel={`Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`}
+                accessibilityHint="Opens the source video at that second"
                 // timestamp_url already points at the right second.
                 onPress={() =>
                   open(memory.content!.timestamp_url, 'Nothing here can open that video.')
@@ -320,7 +325,12 @@ export default function MemorySheet({
               </Pressable>
             )}
             {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
-            <Pressable style={styles.close} onPress={onClose}>
+            <Pressable
+              style={dim(styles.close)}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              onPress={onClose}
+            >
               <Text style={styles.closeText}>Close</Text>
             </Pressable>
           </View>

@@ -13,7 +13,7 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { buttonText, color, font, label } from './theme.ts';
+import { buttonText, color, dim, font, label } from './theme.ts';
 
 type Props = {
   /** True once the system has refused for good; only Settings can undo that. */
@@ -32,10 +32,10 @@ export default function LocationPrimer({ blocked, onAllow, onDismiss }: Props) {
           : 'Walk within 150 m of a pin and you can open it. Until then you can see where the memories are, but not what they say.'}
       </Text>
 
-      <Pressable style={styles.allow} onPress={onAllow} accessibilityRole="button">
+      <Pressable style={dim(styles.allow)} onPress={onAllow} accessibilityRole="button">
         <Text style={styles.allowText}>{blocked ? 'Open Settings' : 'Turn on location'}</Text>
       </Pressable>
-      <Pressable style={styles.dismiss} onPress={onDismiss} accessibilityRole="button">
+      <Pressable style={dim(styles.dismiss)} onPress={onDismiss} accessibilityRole="button">
         <Text style={styles.dismissText}>Just show me the map</Text>
       </Pressable>
     </View>

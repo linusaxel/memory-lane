@@ -299,9 +299,27 @@ never restyled.
 Replace the contrast note's left border with a hairline above it in `rule`,
 which is how the rest of the product separates things.
 
-## Why this is written down rather than done
+## Done, and what holds it in place
 
-The app and the card are two codebases' worth of context apart, and the card has
-no visual test — the same reason it drifted in the first place. Doing it is a
-contained change to `CARD_CSS` and the embed's `font-family`; the argument above
-is the part that would otherwise have to be had again.
+`CARD_CSS` carries the five variables and both faces; the embed took the
+typography and kept `Canvas` and `color-scheme: light dark`, because it lives in
+other people's pages and adapting to the host is right for a widget — the card
+inside its panel is what carries the palette.
+
+Two things were worth learning in the doing.
+
+**The card's own test forbade the font link.** `test_card.py` asserted
+`"<link" not in html` under the banner "must render with no asset pipeline",
+which is the right rule expressed as a proxy that had since become too strict. It
+now permits exactly one stylesheet and only from `fonts.googleapis.com`, and
+still fails on a script or a second link. The stacks behind the two faces are
+real, because a link-preview bot fetches no fonts at all and a card that
+collapses to Times is worse than one that was never restyled.
+
+**The palette is copied by hand and now has a guard.** There is no build step
+between `mobile/src/theme.ts` and Python, and eleven values do not justify
+building one. `tests/test_palette.py` reads the hexes straight out of `theme.ts`
+and fails if the card drifts from them — and, in the same pass, holds every
+text-on-ground pair to 4.5:1 in both themes. It caught a second contrast failure
+nobody had measured: `inkFaint` cleared AA on `paper` in the dark and missed it
+on `paperRaised`, which is where the inputs sit.

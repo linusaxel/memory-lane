@@ -177,11 +177,11 @@ other platform.
 **The map is muted on purpose.** `mutedStandard` on iOS, a style array on
 Android, points of interest off. The app has one subject and it is the pins.
 
-Except that the POI half has never actually applied: `App.tsx` passes
-`showsPointsOfInterests`, with one `s` too many, and react-native-maps ignores a
-prop it does not know. `mutedStandard` has been doing that work alone. Fixing
-the spelling will visibly change the map, so it is a change to look at rather
-than to land blind.
+**`showsPointsOfInterests` is spelled correctly.** The plural is
+react-native-maps' own name for the prop, all the way down to `AIRMap.mm`, which
+then sets Apple's singular `showsPointsOfInterest` on the `MKMapView`. It reads
+like a typo, tsc will confirm the plural, and "correcting" it silently turns POI
+suppression off — the library drops a prop it does not know. Left alone.
 
 ## Spacing, radii and the two shadows
 
@@ -230,29 +230,34 @@ rule you have not written yet:
 
 ## Contrast, measured
 
-Checked against the grounds each colour is actually used on, in both themes.
-Most pairs pass comfortably; two facts are worth knowing before you reach for a
-token.
+Every pair below is a real one — the token on the left is set as text, or as a
+mark that carries meaning, on the ground to its right — and every one clears
+WCAG AA in **both** themes. `tests/test_palette.py` reads these values straight
+out of `theme.ts` and fails if any pair drops under 4.5:1, so this table cannot
+quietly go stale.
 
 | Pair | Light | Dark |
 |---|---|---|
-| `ink` on `paper` | 15.4:1 | 14.2:1 |
-| `inkSoft` on `paper` | 8.8:1 | 8.5:1 |
-| **`inkFaint` on `paper`** | **3.4:1** | 4.9:1 |
-| `faded` on `paper` | 4.6:1 | 6.0:1 |
-| `paper` on `seal` | 4.6:1 | 5.3:1 |
-| `paper` on `faded` | 4.6:1 | — |
-| `sealDeep` on `paper` / on `sealSoft` | 7.4:1 / 6.1:1 | — |
+| `ink` on `paper` | 15.9:1 | 15.8:1 |
+| `inkSoft` on `paper` | 8.8:1 | 9.0:1 |
+| `inkFaint` on `paper` | 4.6:1 | 5.3:1 |
+| `inkFaint` on `paperRaised` | 5.0:1 | 4.8:1 |
+| `faded` on `paper` | 4.6:1 | 5.9:1 |
+| `paper` on `seal` | 4.6:1 | 5.2:1 |
+| `paper` on `faded` | 4.6:1 | 5.9:1 |
+| `sealDeep` on `paper` | 7.4:1 | 9.4:1 |
+| `sealDeep` on `sealSoft` | 6.0:1 | 6.9:1 |
 
-**`inkFaint` misses AA in light**, at 3.4:1, and it carries the label voice —
-which is set at 9 to 11px, where the floor matters most. It passes in dark
-(4.9:1), so this is a light-mode-only failure and easy to miss on a phone at
-night, which is when this app is used.
+**`inkFaint` moved in both themes to get here**, and the way it failed is worth
+keeping. The light value was `#8A837A` — 3.4:1, well under AA, on the colour
+that carries the 9–11px label voice. The dark value was `#8A8276`, which cleared
+AA on `paper` at 4.8:1 and missed it on `paperRaised` at 4.4:1 — and
+`paperRaised` is where the text inputs and the audio row sit.
 
-It is the shipped value and it stays that way until somebody decides otherwise.
-Where a label has to pass, **use `faded`**: 4.6:1 light and 6.0:1 dark, the same
-warm family, and it already exists. It is not a new colour, it is the one next
-to it.
+Neither was going to be caught by eye. A light-mode-only failure is invisible to
+anyone reviewing an app built to be used outdoors at night, and the second one
+only appeared on one of two grounds. That is the argument for the test rather
+than for a careful look.
 
 ## Zoom, and the reach circle
 

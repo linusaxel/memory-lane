@@ -16,7 +16,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text } from 'react-native';
 
 import { distance } from './format.ts';
-import { color, font } from './theme.ts';
+import { color, dim, font } from './theme.ts';
 
 type Props = {
   /** Null when nothing is in reach: then `meters` carries the nearest lock. */
@@ -70,6 +70,7 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
           on every list of tells for a generated interface, and over a street
           map it either cannot be read or is not glass. */}
       <Pressable
+        style={dim()}
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={
