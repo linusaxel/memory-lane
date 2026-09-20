@@ -129,6 +129,16 @@ export default function App() {
   // that calls it would re-run and re-centre the map underneath them.
   const positionRef = useRef<Coordinates | null>(null);
   const watcher = useRef<Location.LocationSubscription | null>(null);
+  // Where the map should go as soon as it can. The effects below run before the
+  // first render that has a MapView in it - the app renders null until the
+  // fonts load - so the initial recentre used to fire into nothing and leave
+  // everybody at the 10km fallback zoom.
+  //
+  // Readiness is tracked rather than inferred from the ref: the ref is set the
+  // moment MapView renders, and animateToRegion before onMapReady is accepted
+  // and then discarded, which looks exactly like the bug it was meant to fix.
+  const pendingRegion = useRef<Region | null>(null);
+  const mapReady = useRef(false);
   // The last viewport that actually came back with data. Only successes are
   // recorded, so "Try again" after a failure is never mistaken for a repeat.
   const lastFetched = useRef<Region | null>(null);
@@ -212,7 +222,11 @@ export default function App() {
     // screen, so the region it settles on covers noticeably more ground. Asking
     // eagerly meant two requests for one press, the first of them for a
     // viewport that never actually exists.
-    mapRef.current?.animateToRegion(next, 600);
+    if (mapReady.current) {
+      mapRef.current?.animateToRegion(next, 600);
+    } else {
+      pendingRegion.current = next;
+    }
     setRegion(next);
     return true;
   }, [remember, watchPosition]);
@@ -379,6 +393,13 @@ export default function App() {
             customMapStyle={MUTED_ANDROID_STYLE}
             showsPointsOfInterests={false}
             onRegionChangeComplete={onRegionChangeComplete}
+            onMapReady={() => {
+              mapReady.current = true;
+              const pending = pendingRegion.current;
+              if (!pending) return;
+              pendingRegion.current = null;
+              mapRef.current?.animateToRegion(pending, 600);
+            }}
           >
             {/* Once, around the person, at the server's radius - never around
                 each pin, which would be fifteen overlapping circles and no
