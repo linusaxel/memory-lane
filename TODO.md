@@ -133,9 +133,9 @@ reading it spends its afternoon re-fixing solved problems, and the one entry
 that was outright false would have sent it hunting a ruff bug that does not
 exist. Verify before trusting, and strike entries when you fix them.
 
-- [~] **Semantic place duplicates.** Tool shipped, merge withheld — see 1.2.
-      *Gotham Comedy Club New York City* (6 memories) and *Gotham Comedy Club
-      Chelsea New York City* (1) are still one venue on two pins.
+- [x] **Semantic place duplicates** — 18 of 25 proposals reviewed and applied,
+      194 places → 176, memories unchanged at 224. Gotham Comedy Club is one pin
+      with 7 memories. The 7 rejected pairs and the reasoning are in 1.2.
 - [ ] **Search is a sequential scan by construction**, and the obvious fix is
       not one. `to_tsvector(m.summary || ' ' || p.name)` spans two tables so no
       expression index can serve it — but rewriting it as
@@ -336,10 +336,36 @@ card is the one worth screenshotting.
       instead of 18,721 comparisons; not good enough to run unattended, and
       `--apply` has **not** been run against the live database.
 
-      **Recommended fix, needs a decision:** stop parsing one `place_query`
-      blob. Have extraction emit structured fields — venue name, locality,
-      region — so dedup is an exact match on venue+locality instead of a string
-      heuristic. That is a prompt and schema change in 1.4, not a better
+      **Merged 2026-09-20, by review rather than by rule.** `--only` was added
+      so a human verdict can be executed: it takes `keeper:loser` pairs and
+      refuses anything the current run did not propose, so the flag cannot be
+      used to merge two rows the tool never suggested. 18 of the 25 were
+      accepted; **194 places → 176, memories unchanged at 224, 0 orphans**, and
+      6 keepers were flagged `geocode_status = 'conflict'` where the two rows'
+      coordinates disagreed by more than 100m.
+
+      The 7 rejected, which is the useful half — none of them is a tuning
+      problem:
+
+      | Proposal | Why not |
+      |---|---|
+      | bar French Quarter ← upscale restaurant French Quarter | two venues on one block |
+      | Manhattan apartment building ← Manhattan apartment | generic; two stories, plausibly two apartments |
+      | Irvine California ← Irvine California comedy club | a city and a venue inside it are different granularities |
+      | New Jersey residential area ← airport gate boarding area | unrelated; the matcher simply failed |
+      | Barry Park City Hudson River ← Hudson River New York City | a park is not the river |
+      | Andaz West Hollywood ← Comedy Store Sunset Boulevard | the documented failure: two venues, one street |
+      | Halifax comedy venue ← Lobster Pier 7 Halifax | two venues, one city |
+
+      Four of the seven are the same shape: **two real venues that share a
+      street or a neighbourhood**. No amount of token weighting separates those,
+      because the distinguishing token is exactly the one the heuristic treats
+      as rare-and-therefore-the-name.
+
+      **Recommended fix, still needs a decision:** stop parsing one
+      `place_query` blob. Have extraction emit structured fields — venue name,
+      locality, region — so dedup is an exact match on venue+locality instead of
+      a string heuristic. That is a prompt and schema change, not a better
       regex. Alternatively D.3 (place-level vs memory-level pins) may reduce how
       much this matters.
 

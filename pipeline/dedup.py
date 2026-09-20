@@ -25,6 +25,13 @@ reference cannot do.
 Deliberately conservative: a wrong merge destroys data and is invisible
 afterwards, while a missed merge is a duplicate pin somebody can see. Running
 this module prints proposals and changes nothing; `--apply` performs them.
+
+About a quarter of the proposals are wrong, and not in a way more tuning fixes -
+the failures are things like a bar and a restaurant on the same block, or the
+Andaz and the Comedy Store on the same stretch of Sunset. So `--apply` alone is
+the wrong tool: it is all 25 or none. `--only` takes the pairs a human accepted
+and refuses anything that is not in the current proposal set, which keeps the
+review honest - you cannot use this to merge two rows it never suggested.
 """
 
 import argparse
@@ -219,9 +226,44 @@ def apply(session, merges):
     return applied
 
 
+def parse_only(spec: str, merges):
+    """`--only 108:211,10:113` -> the subset of `merges` a human signed off.
+
+    Every pair must be one this run proposed, in the same direction. Anything
+    else is a typo or a stale list from a previous run against different data,
+    and merging on either would be exactly the invisible data loss the rest of
+    this module is arranged to avoid.
+    """
+    wanted = set()
+    for pair in spec.split(","):
+        pair = pair.strip()
+        if not pair:
+            continue
+        try:
+            keep, drop = (int(x) for x in pair.split(":"))
+        except ValueError:
+            raise SystemExit(f"--only: expected keeper:loser, got {pair!r}") from None
+        wanted.add((keep, drop))
+
+    proposed = {(k["id"], v["id"]): (k, v) for k, v in merges}
+    unknown = wanted - set(proposed)
+    if unknown:
+        raise SystemExit(
+            "--only: not proposed by this run: "
+            + ", ".join(f"{k}:{v}" for k, v in sorted(unknown))
+            + "\nRe-read the proposals; the data may have changed since the review."
+        )
+    return [proposed[pair] for pair in sorted(wanted)]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="perform the merges")
+    parser.add_argument(
+        "--only",
+        metavar="KEEP:DROP,...",
+        help="apply just these reviewed pairs, instead of every proposal",
+    )
     args = parser.parse_args()
 
     with get_session() as session:
@@ -236,8 +278,12 @@ def main():
             print()
 
         print(f"{len(places)} places, {len(merges)} merges proposed")
+
+        chosen = parse_only(args.only, merges) if args.only else merges
+        if args.only:
+            print(f"{len(chosen)} of them selected by --only")
         if args.apply:
-            print(f"{apply(session, merges)} places merged")
+            print(f"{apply(session, chosen)} places merged")
         else:
             print("nothing changed - pass --apply to perform them")
 
