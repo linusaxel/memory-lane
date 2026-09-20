@@ -8,6 +8,22 @@ Quick reference for AI agents working on this codebase.
 
 Pipeline: `Content URLs → Transcripts → LLM Extraction (with coords) → Query API`
 
+## Before you finish: run the gate
+
+```bash
+./loop/verify.sh     # 0 GREEN | 1 RED (fix it) | 2 INFRA (needs a human)
+```
+
+It runs compileall, ruff check + format --check, pytest, and the app's
+typecheck. If it reports RED because of formatting:
+
+```bash
+venv/bin/python -m ruff format .
+```
+
+Style is not a matter of taste here - `pyproject.toml` decides and the gate
+enforces. Don't hand-align anything.
+
 ## Quick Start
 
 ```bash
@@ -52,9 +68,12 @@ python -m api.main
 | `pipeline/queue.py` | Redis/RQ queue setup |
 | `pipeline/geocode.py` | Utility to check geocoding stats (coords come from LLM) |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
+| `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `api/main.py` | FastAPI server for location-based memory queries |
 | `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
+| `db/migrations/` | One-off SQL for databases that already exist |
+| `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
 | `config/content.yaml` | Content sources to process |
 
 ## Database Tables
@@ -93,6 +112,7 @@ Optional (with defaults):
 - `CLASSIFIER_MODEL` = claude-haiku-4-5 (for pre-filtering chunks)
 - `CHUNK_MINUTES` = 4
 - `CHUNK_OVERLAP_SECONDS` = 30
+- `CORS_ORIGINS` = `*` (comma-separated; the only lockdown knob for a public API)
 
 ## Architecture Notes
 
@@ -178,7 +198,10 @@ ORDER BY m.id DESC LIMIT 10;
 
 ## Testing Tips
 
-- Use `--limit 1` patterns when testing to conserve API credits
+- **There is no `--limit` flag.** `python -m pipeline.extract` runs
+  `extract_all_pending()` and bills every pending video. To spend a few cents
+  instead, extract one video through the queue path:
+  `python -m pipeline.enqueue --video <content_id>` (then `--status <id>`).
 - The extraction prompt is in `extract.py:SYSTEM_PROMPT` - tweak for better results
 - Check `geocode_status` column: 'llm' means coordinates from extraction, 'pending' means missing
 
@@ -187,7 +210,9 @@ ORDER BY m.id DESC LIMIT 10;
 - [x] `api/main.py` - FastAPI endpoint for proximity queries
 - [x] `api/test_api.sh` - API test script
 - [x] `pipeline/run_all.py` - Run full pipeline in one command
-- [ ] Deduplication across videos (same place mentioned in multiple videos)
+- [x] Deduplication across videos - *exact* `place_query` match only
+      (unique index + `ON CONFLICT`). Near-duplicates like "Oslo Norway" vs
+      "comedy club Oslo Norway" still make separate places.
 - [ ] Clustering nearby memories on map view
 - [x] Full-text search across memory summaries
 - [ ] Rate limiting / authentication for API

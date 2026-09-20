@@ -22,14 +22,16 @@ A memory is something that **happened** at a **specific physical location**.
 ## Pipeline Stages
 
 ```
-Content URLs → Transcripts → LLM Extraction → Geocoding → Query API
+Content URLs → Transcripts → LLM Extraction (with coords) → Query API
 ```
 
 1. **Ingest** - Load content URLs from configuration
 2. **Transcripts** - Fetch video transcripts with timestamps
-3. **Extract** - LLM processes transcripts to identify memories
-4. **Geocode** - Resolve place names to coordinates
-5. **API** - Serve nearby memories by lat/lng query
+3. **Extract** - LLM identifies memories *and emits lat/lng directly*
+4. **API** - Serve nearby memories by lat/lng query
+
+There is no separate geocoding stage. Claude returns coordinates as part of
+extraction; `pipeline/geocode.py` only reports on what it produced.
 
 ## Data Model
 

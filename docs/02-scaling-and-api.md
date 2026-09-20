@@ -1,5 +1,13 @@
 # Scaling Architecture & API Design
 
+> **Status: design notes, not a description of the code.** Written before the
+> API existed. Parts of it shipped — the two-stage Haiku/Sonnet queue in
+> `pipeline/tasks.py` and the `/v1/memories/*` endpoints. Parts never did: the
+> transcript-layer queue, the distributed rate limiter, the retry decorator and
+> the dead-letter queue. The inline code samples are sketches and have drifted
+> from the real files; treat `api/main.py`, `pipeline/tasks.py` and CLAUDE.md as
+> the source of truth, and this file as the reasoning behind them.
+
 ## Target Scale
 
 **Reasonable scale definition:**
@@ -182,7 +190,8 @@ if attempts_exhausted:
 
 RESTful API for querying memories by geographic proximity.
 
-**Base URL:** `https://api.memorylane.dev/v1`
+**Base URL:** `http://localhost:8080/v1` locally. Nothing is deployed yet;
+the hostname below is illustrative.
 
 ### Endpoints
 
@@ -442,7 +451,7 @@ def row_to_memory(row) -> Memory:
 
 - [ ] Clustering: Group nearby memories on map view
 - [ ] Bounding box queries: `GET /memories/bbox?sw_lat=...&ne_lng=...`
-- [ ] Full-text search: `GET /memories/search?q=pastrami`
+- [x] Full-text search: `GET /v1/memories/search?q=pastrami` (shipped)
 - [ ] User favorites/collections
 - [ ] WebSocket for real-time updates when near a memory
 
@@ -453,7 +462,7 @@ def row_to_memory(row) -> Memory:
 | Component | Current | Scaled |
 |-----------|---------|--------|
 | Extraction throughput | ~20 memories/min | ~500+ memories/min |
-| Processing model | Sequential | Parallel workers + queues |
-| Failure handling | Manual rerun | Auto-retry + DLQ |
-| API | None | FastAPI + PostGIS |
+| Processing model | Both available: sequential and RQ workers | Parallel workers + queues |
+| Failure handling | Manual rerun (no DLQ; not built) | Auto-retry + DLQ |
+| API | FastAPI + PostGIS, containerized | same, horizontally scaled |
 | Latency (API) | N/A | p95 < 200ms |

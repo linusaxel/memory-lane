@@ -32,9 +32,11 @@ For each memory, the LLM extracts:
 | Field | Description |
 |-------|-------------|
 | `place_name` | Human-readable name (e.g., "Cafe de Flore, Paris") |
-| `place_query` | Search string for geocoding (e.g., "Cafe de Flore Saint-Germain Paris France") |
+| `place_query` | Dedup key and search string (e.g., "Cafe de Flore Saint-Germain Paris France"). A unique index makes this the identity of a place. |
+| `lat` | Latitude, estimated by the model. A memory without coordinates is filtered out of every API query. |
+| `lng` | Longitude, same. |
 | `timestamp_start` | When place is first mentioned (from [timestamp] markers) |
-| `summary` | 2-3 sentences in third person describing what happened |
+| `summary` | 2-4 sentences capturing the story - who, what happened, the vibe. Conversational, not a summary in the report sense. |
 | `tags` | 1-5 categories: food, travel, history, culture, adventure, romance, nightlife, nature, art, music, sports, business, personal |
 | `location_precision` | exact (~50m), street (~200m), neighborhood (~1km), city (~10km) |
 | `confidence` | high, medium, or low |
@@ -59,6 +61,8 @@ Memories for the same place within 60 seconds are merged:
     {
       "place_name": "Fuunji Ramen, Shibuya",
       "place_query": "Fuunji ramen Shibuya Tokyo Japan",
+      "lat": 35.6894,
+      "lng": 139.7005,
       "timestamp_start": 248.2,
       "summary": "The host describes finding a tiny ramen shop...",
       "tags": ["food", "travel"],

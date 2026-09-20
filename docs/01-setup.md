@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Docker and Docker Compose
-- Python 3.11+ (tested with 3.14)
+- Python 3.12 (**not** 3.14: its pyexpat is broken and breaks pip; the Dockerfile pins 3.12 for the same reason)
 - Anthropic API key
 
 ## Python Environment
