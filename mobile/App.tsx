@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -40,25 +40,42 @@ export default function App() {
 
   const mapRef = useRef<MapView>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestRequest = useRef(0);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mounted.current = false;
+      if (debounce.current) clearTimeout(debounce.current);
+    };
+  }, []);
 
   const load = useCallback(async (r: Region) => {
+    // Responses can land out of order: a slow request for the region you just
+    // left resolves after a fast one for the region you are looking at, and
+    // overwrites it - including stamping 'failed' over a newer success. Only
+    // the most recent request is allowed to write.
+    const request = ++latestRequest.current;
+    const isStale = () => !mounted.current || request !== latestRequest.current;
+
     setStatus('loading');
     try {
-      // Last-write-wins is fine at one request per pan.
       const found = await fetchNearby(r.latitude, r.longitude, regionToRadiusKm(r));
+      if (isStale()) return;
       setMemories(found);
       setStatus('ready');
     } catch {
-      // Keep the last good pins on screen. They are still true of the place,
-      // and a map that empties itself on a dropped request looks like the area
-      // went blank rather than the network.
+      if (isStale()) return;
+      // Keep the last good pins. They are still true of the place, and a map
+      // that empties itself on a dropped request looks like the area went
+      // blank rather than the network.
       setStatus('failed');
     }
   }, []);
 
   const goToMyLocation = useCallback(async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') return false;
+    const { status: permission } = await Location.requestForegroundPermissionsAsync();
+    if (permission !== 'granted') return false;
 
     const pos = await Location.getCurrentPositionAsync({});
     const next: Region = {
@@ -91,7 +108,7 @@ export default function App() {
     [load],
   );
 
-  const groups = groupByLocation(memories);
+  const groups = useMemo(() => groupByLocation(memories), [memories]);
 
   const openGroup = (group: MemoryGroup) => {
     setOpenAt(group.memories);

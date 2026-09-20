@@ -173,6 +173,18 @@ class BillingError(Exception):
     pass
 
 
+class ModelUnusableError(Exception):
+    """The configured model cannot be called at all: wrong ID, bad or revoked key.
+
+    Distinct from a transient API error because it will fail identically on
+    every chunk of every video. Swallowing it returns zero memories per chunk,
+    which the caller cannot tell from a chunk that genuinely had none - so it
+    marks the video extracted and moves on, quietly burning the whole backlog.
+    """
+
+    pass
+
+
 def extract_memories_from_chunk(
     client: anthropic.Anthropic, chunk: str, system_prompt: str = SYSTEM_PROMPT
 ) -> list[dict]:
@@ -209,6 +221,12 @@ def extract_memories_from_chunk(
             ) from e
         logger.error(f"Error calling Claude API: {e}")
         return []
+    except (
+        anthropic.NotFoundError,
+        anthropic.AuthenticationError,
+        anthropic.PermissionDeniedError,
+    ) as e:
+        raise ModelUnusableError(f"EXTRACTION_MODEL={EXTRACTION_MODEL!r} is not usable: {e}") from e
     except Exception as e:
         logger.error(f"Error calling Claude API: {e}")
         return []
@@ -445,6 +463,9 @@ def extract_all_pending():
                     except BillingError as e:
                         logger.error(str(e))
                         return {"extracted": extracted, "failed": failed, "error": "billing"}
+                    except ModelUnusableError as e:
+                        logger.error(str(e))
+                        return {"extracted": extracted, "failed": failed, "error": "model"}
 
                 merged = merge_nearby_memories(all_memories)
                 filtered = filter_low_confidence(merged)
