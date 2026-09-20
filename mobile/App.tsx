@@ -50,11 +50,13 @@ export default function App() {
   // load() must not be rebuilt every time the person moves, or the mount effect
   // that calls it would re-run and re-centre the map underneath them.
   const positionRef = useRef<Coordinates | null>(null);
+  const watcher = useRef<Location.LocationSubscription | null>(null);
 
   useEffect(() => {
     return () => {
       mounted.current = false;
       if (debounce.current) clearTimeout(debounce.current);
+      watcher.current?.remove();
     };
   }, []);
 
@@ -68,12 +70,7 @@ export default function App() {
 
     setStatus('loading');
     try {
-      const found = await fetchNearby(
-        r.latitude,
-        r.longitude,
-        regionToRadiusKm(r),
-        positionRef.current,
-      );
+      const found = await fetchNearby(r.latitude, r.longitude, regionToRadiusKm(r));
       if (isStale()) return;
       setMemories(found);
       setStatus('ready');
@@ -86,13 +83,31 @@ export default function App() {
     }
   }, []);
 
+  const remember = useCallback((pos: Location.LocationObject) => {
+    positionRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    if (mounted.current) setPosition(positionRef.current);
+  }, []);
+
+  /** Walking into range has to change the map by itself. A position read once
+   *  at launch means a pin only turns unlockable if you happen to press
+   *  "Near me" while standing on it, which is the opposite of the mechanic. */
+  const watchPosition = useCallback(async () => {
+    if (watcher.current) return;
+    watcher.current = await Location.watchPositionAsync(
+      // The radius is 150m, so a finer interval spends battery to tell us
+      // nothing. Foreground only - see rule 2 in UI.md.
+      { accuracy: Location.Accuracy.Balanced, distanceInterval: 25 },
+      remember,
+    );
+  }, [remember]);
+
   const goToMyLocation = useCallback(async () => {
     const { status: permission } = await Location.requestForegroundPermissionsAsync();
     if (permission !== 'granted') return false;
 
     const pos = await Location.getCurrentPositionAsync({});
-    positionRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    setPosition(positionRef.current);
+    remember(pos);
+    watchPosition();
     const next: Region = {
       latitude: pos.coords.latitude,
       longitude: pos.coords.longitude,
@@ -103,7 +118,7 @@ export default function App() {
     setRegion(next);
     load(next);
     return true;
-  }, [load]);
+  }, [load, remember, watchPosition]);
 
   useEffect(() => {
     (async () => {

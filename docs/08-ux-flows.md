@@ -141,17 +141,20 @@ leaves two side doors: `/v1/memories/search` reaches the same rows, and
 `/v1/places/nearby` carries a verbatim summary as `sample_memory`. Both are
 gated, and `tests/test_api_unlock.py` asserts it.
 
-Two parameters, deliberately:
+**The list endpoints never unlock anything.** `/v1/memories/nearby` returns a
+gated memory locked however close you are standing, and takes no position at
+all. The single unlock is `GET /v1/memories/{id}?at_lat=&at_lng=`, which returns
+the full memory only when that position is inside the radius and otherwise
+reports the distance, so the app can say how much further to walk.
 
-| | |
-|---|---|
-| `lat` / `lng` | where you are **looking**. Chooses the rows. |
-| `at_lat` / `at_lng` | where you are **standing**. Decides what you may read. |
+This was wrong the first time and worth stating plainly: if the map unlocks by
+being stood on, the pin opens itself, there is nothing to press, and the
+mechanic is a proximity query with extra steps. Walking into range *offers* the
+unlock. The person performs it.
 
-Omit the second pair and every gated memory comes back locked. The unlock read
-is `GET /v1/memories/{id}?at_lat=&at_lng=`, which returns the full memory only
-when that position is inside the radius, and otherwise reports the distance so
-the app can say how much further to walk.
+Reachability is therefore a client-side judgement — the app measures its own GPS
+against the pin to decide which control to show — and that is fine, because the
+server re-measures before it hands anything over.
 
 The position is self-reported, so this stops `curl`, not a determined spoofer.
 Attestation needs accounts — Phase 3.
@@ -192,6 +195,11 @@ The radius is **150m**, not the 50m the model calls exact. Urban GPS drifts tens
 of metres, and a gate that will not open while you are standing on the spot is a
 bug the person blames on themselves. `UNLOCK_RADIUS_METERS` in the API
 environment if that turns out wrong in the street.
+
+The app keeps the position live with `watchPositionAsync` (25m interval,
+foreground only). Reading it once at launch means a pin turns unlockable only if
+you happen to press "Near me" while standing on it, which is the opposite of the
+mechanic.
 
 
 ## Proposed

@@ -395,23 +395,33 @@ def meters_between(a: Coordinates, b: Coordinates) -> float:
     return 2 * 6_371_000 * asin(sqrt(h))
 
 
+def is_gated(row) -> bool:
+    """Whether this memory is worth making somebody walk to.
+
+    Only a trustworthy coordinate qualifies - see COORDINATE_IS_UNIQUE. A place
+    with no coordinates has nowhere to walk to.
+    """
+    return bool(getattr(row, "coordinate_is_unique", False)) and row_coordinates(row) is not None
+
+
 def is_locked(row, at: Coordinates | None) -> bool:
     """A client-side gate is not a gate. The summary does not leave the server
-    until the caller is standing near the place, so every memory-shaped response
-    goes through here rather than the one endpoint the app happens to call.
+    until the caller asks for this one memory from inside the radius, so every
+    memory-shaped response goes through here rather than the one endpoint the
+    app happens to call.
 
-    Only a trustworthy coordinate is gated - see COORDINATE_IS_UNIQUE. Having no
-    position is not the same as being nearby.
+    `at` is only ever supplied by the single-memory read. The list endpoints
+    hand out nothing readable however close you are standing: walking into range
+    must *offer* the unlock, not perform it, or there is no moment to press and
+    the whole mechanic is a proximity query with extra steps.
 
     ponytail: the position is self-reported, so this stops curl, not a
     determined spoofer. Attestation needs accounts - Phase 3.
     """
-    if not getattr(row, "coordinate_is_unique", False):
+    if not is_gated(row):
         return False
     coords = row_coordinates(row)
-    if coords is None:
-        return False
-    return at is None or meters_between(at, coords) > UNLOCK_RADIUS_METERS
+    return at is None or coords is None or meters_between(at, coords) > UNLOCK_RADIUS_METERS
 
 
 def locked_memory(row, coords: Coordinates | None, distance_meters: float | None) -> Memory:
@@ -536,18 +546,12 @@ def get_nearby_memories(
     min_confidence: str = Query(
         "medium", pattern="^(low|medium|high)$", description="Minimum confidence"
     ),
-    at_lat: float | None = Query(
-        None, ge=-90, le=90, description="Where you actually are; unlocks memories within reach"
-    ),
-    at_lng: float | None = Query(
-        None, ge=-180, le=180, description="Where you actually are; unlocks memories within reach"
-    ),
 ):
     """Find memories near a location.
 
-    lat/lng is where you are *looking*; at_lat/at_lng is where you are *standing*.
-    They are different on purpose - panning the map to another city must not
-    unlock it. Omit the second pair and every gated memory comes back locked.
+    Gated memories always come back locked, however close you are standing.
+    Unlocking is one deliberate act against /v1/memories/{id}, not a side effect
+    of the map happening to be pointed at you.
     """
     radius_meters = radius_km * 1000
 
@@ -575,8 +579,7 @@ def get_nearby_memories(
         # Same params as the result query: the count has to see the same filters.
         total = session.execute(text(count_sql), params).scalar() or 0
 
-    at = viewer_position(at_lat, at_lng)
-    memories = [row_to_memory(row, at) for row in rows]
+    memories = [row_to_memory(row) for row in rows]
 
     return NearbyResponse(
         memories=memories,
@@ -644,8 +647,7 @@ def search_memories(
         else:
             total = session.execute(text(SEARCH_COUNT_QUERY), {"query": q}).scalar() or 0
 
-    at = viewer_position(lat, lng)
-    memories = [row_to_memory(row, at, include_distance=(lat is not None)) for row in rows]
+    memories = [row_to_memory(row, include_distance=(lat is not None)) for row in rows]
 
     return SearchResponse(
         memories=memories,
@@ -690,12 +692,6 @@ def get_nearby_places(
     radius_km: float = Query(10, ge=0.1, le=100, description="Search radius in km"),
     limit: int = Query(20, ge=1, le=100, description="Max results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
-    at_lat: float | None = Query(
-        None, ge=-90, le=90, description="Where you actually are; unlocks places within reach"
-    ),
-    at_lng: float | None = Query(
-        None, ge=-180, le=180, description="Where you actually are; unlocks places within reach"
-    ),
 ):
     """Get places with memory counts near a location."""
     radius_meters = radius_km * 1000
@@ -723,7 +719,6 @@ def get_nearby_places(
             or 0
         )
 
-    at = viewer_position(at_lat, at_lng)
     places = []
     for row in rows:
         coords = row_coordinates(row)
@@ -738,7 +733,7 @@ def get_nearby_places(
                 tags=row.tags or [],
                 # Verbatim summary: the same thing /v1/memories/nearby gates, so
                 # it gates here too or the gate has a side door.
-                sample_memory=None if is_locked(row, at) else row.sample_memory,
+                sample_memory=None if is_gated(row) else row.sample_memory,
             )
         )
 

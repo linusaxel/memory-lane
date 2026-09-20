@@ -79,7 +79,7 @@ def _nearby(client, **params):
     return client.get(f"/v1/memories/nearby?{query}").json()["memories"][0]
 
 
-def test_without_a_position_nothing_readable_is_served(client, one_memory):
+def test_the_map_never_serves_a_summary(client, one_memory):
     mem = _nearby(client)
 
     assert mem["locked"] is True
@@ -98,18 +98,11 @@ def test_a_locked_memory_still_says_where_to_walk(client, one_memory):
     assert mem["unlock_radius_meters"] == m.UNLOCK_RADIUS_METERS
 
 
-def test_standing_there_unlocks_it(client, one_memory):
+def test_the_map_does_not_unlock_by_being_stood_on(client, one_memory):
+    """Walking into range offers the unlock; it must not perform it. Otherwise
+    the pin opens itself, there is no moment to press, and the mechanic is a
+    proximity query with extra steps."""
     mem = _nearby(client, at_lat=LAT, at_lng=LNG)
-
-    assert mem["locked"] is False
-    assert mem["summary"] == "the night the amp caught fire"
-    assert mem["content"]["url"].startswith("https://")
-
-
-def test_standing_a_kilometre_away_does_not(client, one_memory):
-    """The map can be pointed anywhere; only the body unlocks. Panning to a city
-    you are not in must not read it out to you."""
-    mem = _nearby(client, at_lat=FAR_LAT, at_lng=LNG)
 
     assert mem["locked"] is True
     assert mem["summary"] == ""
@@ -129,7 +122,7 @@ def test_a_shared_coordinate_is_never_locked(client, db_session):
     assert mem["summary"] == "a heckler got the better of him"
 
 
-def test_the_single_memory_read_is_the_unlock(client, one_memory):
+def test_the_single_memory_read_is_the_only_unlock(client, one_memory):
     locked = client.get(f"/v1/memories/{one_memory}").json()
     assert locked["locked"] is True and locked["summary"] == ""
 
@@ -156,11 +149,8 @@ def test_search_is_not_a_side_door(client, one_memory):
 
 
 def test_the_place_sample_is_not_a_side_door(client, one_memory):
-    """/v1/places/nearby carries a verbatim summary as sample_memory."""
-    locked = client.get(f"/v1/places/nearby?lat={LAT}&lng={LNG}").json()["places"][0]
-    assert locked["sample_memory"] is None
-
-    unlocked = client.get(
-        f"/v1/places/nearby?lat={LAT}&lng={LNG}&at_lat={LAT}&at_lng={LNG}"
-    ).json()["places"][0]
-    assert unlocked["sample_memory"] == "the night the amp caught fire"
+    """/v1/places/nearby carries a verbatim summary as sample_memory, and there
+    is no unlock read for a place - so a gated one never ships it."""
+    place = client.get(f"/v1/places/nearby?lat={LAT}&lng={LNG}").json()["places"][0]
+    assert place["sample_memory"] is None
+    assert place["name"] == "Vega", "the place itself is not a secret"

@@ -70,31 +70,20 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
   }
 }
 
-/** Where the person is standing, which is not where the map is pointed. */
-function standing(at: Coordinates | null, params: URLSearchParams): URLSearchParams {
-  if (at) {
-    params.set('at_lat', String(at.lat));
-    params.set('at_lng', String(at.lng));
-  }
-  return params;
-}
-
 export async function fetchNearby(
   lat: number,
   lng: number,
   radiusKm: number,
-  at: Coordinates | null,
   signal?: AbortSignal,
 ): Promise<LocatedMemory[]> {
-  const params = standing(
-    at,
-    new URLSearchParams({
-      lat: String(lat),
-      lng: String(lng),
-      radius_km: String(radiusKm),
-      limit: '100',
-    }),
-  );
+  // No position goes with this: the map never unlocks anything, however close
+  // you are standing. Only unlockMemory does, and only when asked.
+  const params = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+    radius_km: String(radiusKm),
+    limit: '100',
+  });
 
   const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
   // The null-coordinate filter is the trust boundary: places.coordinates is
@@ -109,6 +98,9 @@ export async function fetchNearby(
  * comes back still locked is a refusal, not a success.
  */
 export async function unlockMemory(id: number, at: Coordinates): Promise<LocatedMemory | null> {
-  const memory = await get<Memory>(`/v1/memories/${id}`, standing(at, new URLSearchParams()));
+  const memory = await get<Memory>(
+    `/v1/memories/${id}`,
+    new URLSearchParams({ at_lat: String(at.lat), at_lng: String(at.lng) }),
+  );
   return !memory.locked && hasCoordinates(memory) ? memory : null;
 }

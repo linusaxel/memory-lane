@@ -164,9 +164,8 @@ cd mobile && npx expo start --ios                # see it (UI.md has the recipe)
 ### API (`api/main.py`)
 FastAPI server with PostGIS proximity queries:
 - `GET /v1/memories/nearby?lat=X&lng=Y&radius_km=10&tags=food,travel&min_confidence=medium` - Find memories near location (tags and confidence optional)
-  - **`at_lat`/`at_lng` is where you are *standing*; `lat`/`lng` is where you are *looking*.**
-    Without the first pair every gated memory comes back with no summary, tags or
-    source. See "Proximity unlock" below.
+  - Gated memories always come back locked here, with no summary, tags or source.
+    This endpoint never unlocks. See "Proximity unlock" below.
 - `GET /v1/memories/search?q=coffee&lat=X&lng=Y&radius_km=50` - Full-text search across summaries and place names (location optional)
 - `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory. This is the unlock read
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
