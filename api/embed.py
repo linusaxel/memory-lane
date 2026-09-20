@@ -28,9 +28,14 @@ from fastapi.responses import HTMLResponse, Response
 router = APIRouter()
 
 # ponytail: OSM's public tiles are fine for a demo and NOT fine for a customer's
-# traffic - their usage policy forbids it. Swap in a paid or self-hosted tile URL
-# before anyone embeds this for real. Kept as one constant so that is a one-line
-# change.
+# traffic - the OSMF usage policy forbids it and they can block without notice.
+# DO NOT put this embed on a public host until this line changes.
+#
+# Reviewed 2026-09-20 and deliberately left alone: the embed has no users, and
+# tiles are not its blocker - there is no public API host for the iframe to
+# point at. Providers compared in docs/09-visual-design.md; Stadia Maps is one
+# URL and a key, Protomaps is ~$3/mo of object storage. Both are a one-line
+# change here, which is the whole reason this is a constant.
 TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 

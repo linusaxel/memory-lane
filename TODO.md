@@ -401,6 +401,15 @@ contrast one rather than the nearest, and the card is worth screenshotting.
 First revenue surface. Same corpus, different rendering. Tourism boards,
 audio-guide companies, city archives.
 
+- [ ] **2.0 Tiles, before this is public.** `api/embed.py` serves OSM's public
+      tiles, which the OSMF policy forbids for this and which they can block
+      without notice. Not fixed yet on purpose — the embed has no users and no
+      public API host, so tiles are step four of a four-step problem. Options
+      compared in `docs/09-visual-design.md`: Stadia Maps (one URL + a key, free
+      tier, $20/mo per 1M credits) or Protomaps/PMTiles (~$3/mo on R2, no
+      vendor). `TILE_URL` is one constant so either is a one-line change.
+      **Blocks deploying the embed anywhere public.**
+
 - [x] **2.1** `api/embed.py`. `/embed.js` is the paste-in snippet; it writes an
       `<iframe>` pointing at `/embed` and resolves the URL against its own
       `script.src`, so a customer pastes one tag and configures nothing. An
