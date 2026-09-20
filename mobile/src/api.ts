@@ -39,6 +39,9 @@ export type MediaItem = {
   duration_seconds: number | null;
 };
 
+/** Fixed by a CHECK constraint in db/migrations/002_layers.sql. */
+export type Layer = 'historical' | 'friend' | 'stranger';
+
 export type Memory = {
   id: number;
   /** Empty string while locked. The server never sends it until you are there. */
@@ -55,6 +58,10 @@ export type Memory = {
   tags: string[];
   /** Only 'high' and 'medium' ever reach the database; 'low' is filtered at extraction. */
   confidence: string;
+  /** What kind of memory this is, and so what shape its pin takes. `historical`
+   *  is everything the pipeline extracted, `stranger` everything filed from a
+   *  phone. `friend` has no writer yet. See F4 in docs/08-ux-flows.md. */
+  layer: Layer;
   /**
    * The server decided this, not the app. Hiding a summary the API already
    * sent would be theatre - see F7 in docs/08-ux-flows.md.

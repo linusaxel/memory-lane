@@ -118,9 +118,12 @@ Four consequences:
    memory and what is here now" cannot be computed for a point that is not where
    the memory happened. A jazz club that is now a bank lobby is the whole product;
    a jazz club pinned to Times Square is noise.
-4. **Clustering is mandatory, not polish.** Neither answer to D.3 helps when 14
-   places share a point — place-level pins turn 14 stacked memory-pins into 14
-   stacked place-pins. Without clustering, Times Square is one unreadable dot.
+4. ~~**Clustering is mandatory, not polish.**~~ **Done.** `groupByLocation`
+   collapses a shared coordinate, and `precisionFor` loosens the grid with the
+   zoom so Times Square is one countable cluster rather than 34 stacked dots.
+   Past `CLUSTER_SPAN_M` a tap zooms instead of opening a sheet. This does not
+   fix D.3 — the coordinates are still centroids — it only stops them being
+   unreadable.
 
 Reproduce: `SELECT ST_AsText(coordinates), count(*) FROM places WHERE coordinates
 IS NOT NULL GROUP BY 1 HAVING count(*) > 1 ORDER BY 2 DESC;`

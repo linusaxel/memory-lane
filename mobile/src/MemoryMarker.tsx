@@ -1,22 +1,32 @@
-/** What a coordinate looks like on the map, in its four states.
+/** What a coordinate looks like on the map, in its five states.
+ *
+ * Two axes compose here and nowhere else. The *ink state* is your relationship
+ * to the coordinate - nothing to earn, too far, nearly there, openable now,
+ * already earned - and the *shape* is which layer it belongs to. A pin is a
+ * stamp impression: walking the city presses them, and a pressed one stays
+ * pressed. See mobile/UI.md for the ladder and docs/08-ux-flows.md F4 for why
+ * layers are stacked by shape rather than chosen from a filter.
  *
  * No animation lives in here. Animating a custom marker's children is a known
  * source of flicker in react-native-maps, and a pin that strobes while you walk
  * past it is worse than a pin that simply changes. The pulse belongs in the
- * banner, which is not a marker.
+ * banner, which is not a marker; the stamp belongs in the sheet, which is not
+ * one either.
  */
 
-import { StyleSheet, Text, View } from 'react-native';
+import { type ColorValue, StyleSheet, Text, View } from 'react-native';
 import { Marker } from 'react-native-maps';
 
 import type { MemoryGroup } from './cluster.ts';
-import { groupLabel } from './cluster.ts';
+import { groupLabel, layerOf } from './cluster.ts';
 import Padlock from './Padlock.tsx';
 import { color, font } from './theme.ts';
 import type { Reach } from './reach.ts';
 
 const STATE_LABEL: Record<Reach, string> = {
-  open: 'Open',
+  plain: 'Open',
+  stamped: 'Unlocked, in your collection',
+  warm: 'Locked, a short walk away',
   locked: 'Locked, too far to open',
   unlockable: 'Locked, within reach',
 };
@@ -29,14 +39,19 @@ type Props = {
 
 export default function MemoryMarker({ group, reach, onPress }: Props) {
   const count = group.memories.length;
+  const card = layerOf(group) === 'stranger';
 
   return (
     <Marker
       // The reach is part of the key on purpose. tracksViewChanges is off for
       // the frame cost, so the marker only repaints when React gives it a new
       // identity - which is exactly when its state changed.
-      key={`${group.key}:${reach}`}
+      key={`${group.key}:${reach}:${card ? 'card' : 'round'}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
+      // Put the middle of the pin on the point it names. iOS centres a custom
+      // view already; Android defaults to bottom-centre whatever you draw, so
+      // without this every pin hangs its own height above its coordinate.
+      anchor={{ x: 0.5, y: 0.5 }}
       title={groupLabel(group)}
       // The callout title says where; only the colour says whether you can read
       // it, and colour is not available to everyone.
@@ -44,62 +59,114 @@ export default function MemoryMarker({ group, reach, onPress }: Props) {
       tracksViewChanges={false}
       onPress={onPress}
     >
-      {reach === 'open' ? (
-        count > 1 && (
-          <View style={[styles.badge, styles.open]}>
-            <Text style={styles.count}>{count}</Text>
-          </View>
-        )
-      ) : (
-        <Lock count={count} reachable={reach === 'unlockable'} />
-      )}
+      <Pin reach={reach} count={count} card={card} />
     </Marker>
   );
 }
 
-function Lock({ count, reachable }: { count: number; reachable: boolean }) {
-  // Out of reach: a solid grey disc. In reach: a ring the blue location dot
-  // sits *inside*, which is the only shape that survives being stood on - and
-  // the pin you are standing on is the pin that matters. It also echoes the
-  // ring in the sheet, so the map and the control are visibly the same object.
-  if (!reachable) {
+function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolean }) {
+  // In reach: a ring, not a disc. The pin you can open is by definition the pin
+  // you are standing on, so the blue location dot lands dead centre - a disc
+  // disappears underneath it, count and all. It also echoes the hold ring in
+  // the sheet, so the map and the control are visibly the same object.
+  if (reach === 'unlockable') {
     return (
-      <View style={styles.lockWrap}>
-        <View style={[styles.badge, styles.distant]}>
-          {count > 1 ? (
-            <Text style={styles.count}>{count}</Text>
-          ) : (
-            <Padlock size={DISTANT * 0.34} color={color.paper} />
-          )}
-        </View>
+      <View style={[styles.wrap, styles.halo]}>
+        <View style={[styles.ring, card && styles.ringCard]} />
+        {card && <View style={styles.fold} />}
+        <Tag background={color.sealDeep} count={count} />
       </View>
     );
   }
 
-  return (
-    <View style={[styles.lockWrap, styles.halo]}>
-      <View style={styles.ring} />
-      <View style={styles.tag}>
-        {count > 1 ? (
+  // Nothing to earn here. The smallest mark on the map, because a coordinate
+  // with nothing behind a gate is context rather than an invitation.
+  if (reach === 'plain') {
+    return count > 1 ? (
+      <View style={styles.wrap}>
+        <View style={[styles.badge, styles.inked, card && styles.square]}>
           <Text style={styles.count}>{count}</Text>
+        </View>
+      </View>
+    ) : (
+      <View style={[styles.wrap, styles.wrapDot]}>
+        <View style={[styles.dot, card && styles.dotSquare]} />
+      </View>
+    );
+  }
+
+  // Earned. The impression is the whole point: it says you stood here, and it
+  // stays said. A ring inside the disc, because the ring is the thing you held
+  // to open it - the pin keeps a small copy. Nothing else looks like this.
+  if (reach === 'stamped') {
+    return (
+      <View style={styles.wrap}>
+        <View style={[styles.disc, styles.inked, card && styles.discCard]}>
+          <View style={[styles.impression, card && styles.impressionCard]} />
+        </View>
+        {card && <View style={styles.fold} />}
+        {count > 1 && <Tag background={color.ink} count={count} />}
+      </View>
+    );
+  }
+
+  // Locked, near or far. Same disc, two weights: faded is out of reach, and an
+  // ink outline on paper is close enough to be worth the walk. Ink and not
+  // seal, because seal means openable now and a red pin you cannot open is an
+  // invitation that refuses you - see F11.
+  const warm = reach === 'warm';
+  return (
+    <View style={styles.wrap}>
+      <View style={[styles.disc, warm ? styles.warm : styles.distant, card && styles.discCard]}>
+        {count > 1 ? (
+          <Text style={[styles.count, warm && styles.countWarm]}>{count}</Text>
         ) : (
-          <Padlock size={10} color={color.paper} />
+          <Padlock size={DISC * 0.34} color={warm ? color.ink : color.paper} />
         )}
       </View>
+      {card && <View style={styles.fold} />}
     </View>
   );
 }
 
-const DISTANT = 28;
-const REACHABLE = 44;
+/** A count that will not fit in the face goes to the corner, because the middle
+ *  is where the blue location dot lands. */
+function Tag({ background, count }: { background: ColorValue; count: number }) {
+  if (count <= 1) return null;
+  return (
+    <View style={[styles.tag, { backgroundColor: background }]}>
+      <Text style={styles.count}>{count}</Text>
+    </View>
+  );
+}
+
+const DOT = 18;
+const DISC = 28;
+const RING = 44;
+/** Big enough to read as a turned page at 28px, small enough to leave a face. */
+const FOLD = 9;
 
 const styles = StyleSheet.create({
-  // The padding is the tap target, not decoration: a 28px badge is 28px of
+  // The padding is the tap target, not decoration: a 28px disc is 28px of
   // hittable pin, and Apple's floor is 44. The wrap brings it to 46, which also
   // makes the stacked pins downtown separable by thumb rather than by luck.
-  lockWrap: { alignItems: 'center', justifyContent: 'center', padding: 9 },
+  wrap: { alignItems: 'center', justifyContent: 'center', padding: 9 },
+  // The dot is smaller, so it needs more around it to clear the same floor.
+  wrapDot: { padding: 14 },
   // A soft glow so the pin is findable before you can read its shape.
   halo: { borderRadius: 40, backgroundColor: color.halo },
+
+  dot: {
+    width: DOT,
+    height: DOT,
+    borderRadius: DOT / 2,
+    borderWidth: 2,
+    borderColor: color.paper,
+    backgroundColor: color.ink,
+  },
+  // No fold at this size - it would eat the face. The corners carry it alone.
+  dotSquare: { borderRadius: 2 },
+
   badge: {
     minWidth: 26,
     height: 26,
@@ -110,22 +177,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  open: { backgroundColor: color.ink },
-  distant: {
-    backgroundColor: color.faded,
-    width: DISTANT,
-    height: DISTANT,
-    borderRadius: DISTANT / 2,
+  square: { borderRadius: 3 },
+
+  disc: {
+    width: DISC,
+    height: DISC,
+    borderRadius: DISC / 2,
+    borderWidth: 2,
+    borderColor: color.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  discCard: { borderRadius: 3 },
+
+  inked: { backgroundColor: color.ink },
+  distant: { backgroundColor: color.faded },
+  warm: { backgroundColor: color.paper, borderColor: color.ink },
+  /** The mark the stamp leaves. Paper on ink is the same pair as the count, so
+   *  it carries the contrast the rest of the pin already proved. Only a stamped
+   *  pin has one. */
+  impression: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: color.paper,
+  },
+  impressionCard: { borderRadius: 2 },
+
   ring: {
-    width: REACHABLE,
-    height: REACHABLE,
-    borderRadius: REACHABLE / 2,
+    width: RING,
+    height: RING,
+    borderRadius: RING / 2,
     borderWidth: 5,
     borderColor: color.seal,
     backgroundColor: color.paper,
   },
-  // Offset to the corner, because the middle is where the blue dot lands.
+  ringCard: { borderRadius: 4 },
+
+  /** A turned-down corner, drawn with the border triangle trick because there
+   *  is no SVG in this app. Opaque on purpose: a real notch needs clipping, and
+   *  a transparent wedge over a street map reads as a rendering fault. */
+  fold: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    width: 0,
+    height: 0,
+    borderTopWidth: FOLD,
+    borderTopColor: color.paper,
+    borderLeftWidth: FOLD,
+    borderLeftColor: 'transparent',
+  },
+
   tag: {
     position: 'absolute',
     top: 0,
@@ -134,11 +238,12 @@ const styles = StyleSheet.create({
     height: 20,
     paddingHorizontal: 5,
     borderRadius: 10,
-    backgroundColor: color.sealDeep,
     borderWidth: 2,
     borderColor: color.paper,
     alignItems: 'center',
     justifyContent: 'center',
   },
   count: { color: color.paper, fontFamily: font.monoBold, fontSize: 11 },
+  // On the one face that is paper rather than ink.
+  countWarm: { color: color.ink },
 });

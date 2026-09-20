@@ -40,6 +40,10 @@ type Props = {
   /** Already reported by this device, so the control says so instead of
    *  pretending a second press does anything. */
   reported?: boolean;
+  /** This device walked here and opened it. Not the same as "unlocked": most of
+   *  this corpus sits on city centroids and was never gated, and a stamp on one
+   *  of those would claim a walk that never happened. */
+  earned?: boolean;
 };
 
 function formatDistance(meters: number | null): string | null {
@@ -69,6 +73,7 @@ export default function MemorySheet({
   onShowOnMap,
   onReport,
   reported,
+  earned,
 }: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
@@ -121,6 +126,14 @@ export default function MemorySheet({
   const revealed = {
     opacity: reveal,
     transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
+
+  // The same value, read as a press rather than a rise: the wax comes down onto
+  // the page. This is the only place the stamp is allowed to move - the pin on
+  // the map carries it afterwards, and markers do not animate.
+  const pressed = {
+    opacity: reveal,
+    transform: [{ scale: reveal.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }],
   };
 
   return (
@@ -217,6 +230,12 @@ export default function MemorySheet({
               {/* The summary carries the sheet when nothing is attached, which
                   is every extracted memory; a submission usually brings a
                   photograph and the weight shifts to it. */}
+              {earned && (
+                <Animated.View style={[styles.stamp, pressed]}>
+                  <View style={styles.stampMark} />
+                </Animated.View>
+              )}
+
               <Animated.View style={revealed}>
                 <Text style={styles.summary}>{memory.summary}</Text>
 
@@ -363,6 +382,16 @@ const styles = StyleSheet.create({
     lineHeight: 25,
     color: color.inkSoft,
     textAlign: 'center',
+  },
+  // The impression, on the page this time: the same ring the pin wears once
+  // this is earned, inked the other way round because the ground is paper.
+  stamp: { alignSelf: 'flex-start', marginBottom: 18 },
+  stampMark: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: color.ink,
   },
   summary: { fontFamily: font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },

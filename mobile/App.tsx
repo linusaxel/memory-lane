@@ -38,7 +38,7 @@ import {
   type LocatedMemory,
   type Profile,
 } from './src/api.ts';
-import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
+import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
@@ -290,19 +290,41 @@ export default function App() {
     () => memories.map((memory) => unlocked[memory.id] ?? memory),
     [memories, unlocked],
   );
-  const groups = useMemo(() => groupByLocation(shown), [shown]);
+  // Ids, not memories: reachOf only asks whether this device walked to it, and
+  // a Set keeps that an O(1) question inside three passes over every group.
+  const earned = useMemo(() => new Set(Object.keys(unlocked).map(Number)), [unlocked]);
+  // Banded, so panning inside one zoom level does not regroup: `region` changes
+  // on every gesture, ahead of the fetch debounce.
+  const precision = precisionFor(region.latitudeDelta);
+  const groups = useMemo(() => groupByLocation(shown, precision), [shown, precision]);
   const openMemories = useMemo(
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
   );
 
   const withinReach = useMemo(
-    () => groups.filter((group) => reachOf(group, position) === 'unlockable'),
-    [groups, position],
+    () => groups.filter((group) => reachOf(group, position, earned) === 'unlockable'),
+    [groups, position, earned],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
 
-  const nearest = useMemo(() => nearestLocked(groups, position), [groups, position]);
+  const nearest = useMemo(
+    () => nearestLocked(groups, position, earned),
+    [groups, position, earned],
+  );
+
+  // Walking into range is the moment the app is for, and until now it happened
+  // in silence. The transition, not the state: withinReach gets a new array
+  // identity on every 25m position update, and its length changes on 1 -> 2.
+  // Light, because the heavier taps belong to the unlock itself.
+  const inReach = withinReach.length > 0;
+  const wasInReach = useRef(false);
+  useEffect(() => {
+    if (inReach && !wasInReach.current) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
+    wasInReach.current = inReach;
+  }, [inReach]);
 
   const placesUnlocked = useMemo(
     () => new Set(collected.map((memory) => memory.place.id)).size,
@@ -324,6 +346,21 @@ export default function App() {
     setOpenAt(group.memories);
     setOpenIndex(0);
     setUnlockError(null);
+  };
+
+  // A wide group is several places the grid merged because the map is zoomed
+  // out, not several memories sharing a doorway. Opening a sheet on it would
+  // page through venues miles apart, so it splits instead. No load() here:
+  // landing fires onRegionChangeComplete, which is what fetches.
+  const zoomTo = (group: MemoryGroup) => {
+    Haptics.selectionAsync().catch(() => {});
+    const span = (group.spanMeters * 3) / 111_000;
+    flyTo({
+      latitude: group.lat,
+      longitude: group.lng,
+      latitudeDelta: Math.max(span, LOCATED_DELTA),
+      longitudeDelta: Math.max(span, LOCATED_DELTA),
+    });
   };
 
   const unlock = useCallback(
@@ -473,8 +510,10 @@ export default function App() {
               <MemoryMarker
                 key={group.key}
                 group={group}
-                reach={reachOf(group, position)}
-                onPress={() => openGroup(group)}
+                reach={reachOf(group, position, earned)}
+                onPress={() =>
+                  group.spanMeters > CLUSTER_SPAN_M ? zoomTo(group) : openGroup(group)
+                }
               />
             ))}
           </MapView>
@@ -626,6 +665,7 @@ export default function App() {
         <TabBar tab={tab} unlockedCount={collected.length} onSelect={setTab} />
 
         <MemorySheet
+          earned={!!openMemories[openIndex] && earned.has(openMemories[openIndex].id)}
           // Only offered when the sheet was opened from the collection: over
           // the map you are already looking at the answer.
           onShowOnMap={

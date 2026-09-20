@@ -6,14 +6,21 @@
  * network in it.
  */
 
-import type { Coordinates } from './api.ts';
+import type { Coordinates, LocatedMemory } from './api.ts';
 import type { MemoryGroup } from './cluster.ts';
 import { metersBetween } from './region.ts';
 
-export type Reach = 'open' | 'locked' | 'unlockable';
+/** The ink ladder, from nothing-to-earn to earned. `plain` and `stamped` are
+ *  both unlocked; only the local store knows which one was walked for. */
+export type Reach = 'plain' | 'stamped' | 'warm' | 'locked' | 'unlockable';
 
 /** Only used if a memory somehow arrives without the server's radius. */
 export const FALLBACK_RADIUS_M = 150;
+
+/** How much past the gate still reads as "nearly". Three radii is a few
+ *  minutes' walk at the 150m gate, which is the distance at which turning
+ *  around is still a decision rather than a trek. */
+export const WARM_MULTIPLIER = 3;
 
 /**
  * Past this, "the nearest locked memory is 6,181 km away" is not a hint, it is
@@ -23,15 +30,43 @@ export const FALLBACK_RADIUS_M = 150;
  */
 export const HINT_RANGE_M = 30_000;
 
-export function reachOf(group: MemoryGroup, position: Coordinates | null): Reach {
+/** To the closest one, not to the group's point. The group's point is a rounded
+ *  coordinate, and at anything looser than street precision it can sit
+ *  kilometres from every memory filed under it. */
+function metersToNearest(position: Coordinates, memories: LocatedMemory[]): number {
+  let best = Infinity;
+  for (const memory of memories) {
+    const away = metersBetween(
+      position.lat,
+      position.lng,
+      memory.place.coordinates.lat,
+      memory.place.coordinates.lng,
+    );
+    if (away < best) best = away;
+  }
+  return best;
+}
+
+/** `earned` is what this device has already unlocked. Without it `stamped` and
+ *  `plain` are the same string: /v1/memories/nearby never takes a position, so
+ *  it reports both as unlocked and only the local store can tell them apart. */
+export function reachOf(
+  group: MemoryGroup,
+  position: Coordinates | null,
+  earned: ReadonlySet<number>,
+): Reach {
   const locked = group.memories.filter((memory) => memory.locked);
-  // A group is open only when nothing in it is locked. One locked memory under
-  // a marker still means that marker hides something.
-  if (locked.length === 0) return 'open';
+  // A group is unlocked only when nothing in it is locked. One locked memory
+  // under a marker still means that marker hides something.
+  if (locked.length === 0) {
+    return group.memories.some((memory) => earned.has(memory.id)) ? 'stamped' : 'plain';
+  }
   if (!position) return 'locked';
 
-  const away = metersBetween(position.lat, position.lng, group.lat, group.lng);
-  return away <= (locked[0].unlock_radius_meters ?? FALLBACK_RADIUS_M) ? 'unlockable' : 'locked';
+  const radius = locked[0].unlock_radius_meters ?? FALLBACK_RADIUS_M;
+  const away = metersToNearest(position, locked);
+  if (away <= radius) return 'unlockable';
+  return away <= radius * WARM_MULTIPLIER ? 'warm' : 'locked';
 }
 
 /** The closest thing still shut, so a map of padlocks can answer "where do I
@@ -40,16 +75,22 @@ export function reachOf(group: MemoryGroup, position: Coordinates | null): Reach
 export function nearestLocked(
   groups: MemoryGroup[],
   position: Coordinates | null,
+  earned: ReadonlySet<number>,
 ): { group: MemoryGroup; meters: number } | null {
   if (!position) return null;
 
   let best: { group: MemoryGroup; meters: number } | null = null;
   for (const group of groups) {
-    const reach = reachOf(group, position);
+    const reach = reachOf(group, position, earned);
     if (reach === 'unlockable') return null;
-    if (reach === 'open') continue;
+    // Neither is somewhere to walk to, and a stamped pin counted as the nearest
+    // lock would read "Nearest locked - 40 m" about something already read.
+    if (reach === 'plain' || reach === 'stamped') continue;
 
-    const meters = metersBetween(position.lat, position.lng, group.lat, group.lng);
+    const meters = metersToNearest(
+      position,
+      group.memories.filter((memory) => memory.locked),
+    );
     if (!best || meters < best.meters) best = { group, meters };
   }
   return best && best.meters <= HINT_RANGE_M ? best : null;

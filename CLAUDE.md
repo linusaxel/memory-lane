@@ -89,7 +89,7 @@ python -m api.main
 | `mobile/App.tsx` | The map screen: pins, banner, "Near me" |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
-| `mobile/src/MemoryMarker.tsx` | A coordinate's four states on the map |
+| `mobile/src/MemoryMarker.tsx` | A coordinate's five states, and its layer's shape |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/SignIn.tsx` | Google and Apple buttons. Neither works in Expo Go |
@@ -378,7 +378,7 @@ ORDER BY m.id DESC LIMIT 10;
 - [x] Deduplication across videos - *exact* `place_query` match only
       (unique index + `ON CONFLICT`). Near-duplicates like "Oslo Norway" vs
       "comedy club Oslo Norway" still make separate places.
-- [ ] Clustering nearby memories on map view
+- [x] Clustering nearby memories on map view - zoom-banded grid in `cluster.ts`
 - [x] Full-text search across memory summaries
 - [x] User-submitted memories, with photo and audio
 - [x] Google/Apple sign-in, so a collection survives a new phone

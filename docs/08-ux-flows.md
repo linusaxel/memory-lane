@@ -18,7 +18,7 @@ how you know it worked. Keep them concrete enough to test against.
 **Numbers are stable.** F1–F7 are referenced from `mobile/UI.md`, `CLAUDE.md`,
 `TODO.md` and from comments in the code, so they are not renumbered when new
 flows are added, even where that leaves the order untidy. New flows get the next
-free number. F3 and F4 are still proposed and sit at the bottom.
+free number. F3 is still proposed and sits at the bottom.
 
 ---
 
@@ -47,7 +47,7 @@ free number. F3 and F4 are still proposed and sit at the bottom.
 | F21 | Be somebody | Implemented |
 | F22 | Keep your collection on a new phone | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
-| F4 | Switch between layers | Proposed |
+| F4 | Switch between layers | Implemented |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
@@ -690,24 +690,32 @@ The core of the product brief: stand in a Copenhagen street, learn what
 happened there. Blocked on choosing the historical source, and on deciding
 whether it is a separate map layer, a filter, or a second pin style.
 
-### F4 · Switch between historical, friend and stranger layers — **Proposed** (Phases 1, 3, 4)
+### F4 · Switch between historical, friend and stranger layers — **Answered: stacked, by shape**
 
-Once memories carry a `layer`, the map needs a way to choose. Unanswered: is
-this a segmented control, a filter sheet, or layers stacked at once with
-different pin colours? At a dense location this decides whether the map is
-readable.
+Not a segmented control and not a filter sheet. Layers are drawn at once and
+told apart by the pin's **shape**: `historical` is round, `stranger` is a card
+with a turned-down corner, `friend` is reserved and falls back to round until it
+has a writer. `layerOf()` in `mobile/src/cluster.ts`, tested there.
 
-Now more urgent than it was: `stranger` stopped being a hypothetical layer the
-moment F5 shipped, and a dense location can hold a podcast anecdote and
-somebody's own photograph at equal weight with no way to choose between them.
+Three reasons this beat a chooser. A filter is a control the map does not
+otherwise need, and every overlay on this screen competes with the unlock. A
+filter also answers the wrong question: nobody standing somewhere wants *fewer*
+of the memories that are there, they want to know which kind each one is — and
+shape says that without a tap. And colour was not available to say it, because
+the palette has one accent and it already means *openable*, so the distinction
+had to be carried by form.
+
+The honest limit: a group whose memories span both layers draws round rather
+than claiming the stack, and the sheet pager is what shows the mix. That is the
+same compromise the point-not-place decision already made (open question 4).
 
 
 ## Open questions
 
 Answer these and the proposed flows can be written properly.
 
-1. **Layers: filter or stack?** One at a time, or several with distinct pin
-   styles?
+1. ~~**Layers: filter or stack?**~~ **Answered: stacked, with distinct pin
+   shapes** — not colours, because the one accent is spoken for. See F4.
 2. ~~**What does a person see with zero memories nearby?**~~ **Partly settled.**
    It says "No memories here yet" and no longer looks like a failure, which was
    the bug. Still open as a *product* question: should an empty area nudge the

@@ -276,3 +276,42 @@ extraction costs money, so there is one chance to tell whether a prompt change
 helped. `python -m pipeline.quality` prints the same four numbers before and
 after. Every check was found by reading the corpus, not imagined; none is a hard
 failure, they are a direction. The baseline is in `CLAUDE.md`.
+
+### Markers are anchored explicitly, because the two platforms disagree
+
+`react-native-maps` gives a custom marker view a different anchor on each
+platform. iOS centres it on the coordinate (a marker with children stops being
+an `MKMarkerAnnotationView`, whose balloon tip is what sits on the point);
+Android calls `setAnchor(0.5f, 1.0f)` unconditionally and hangs the view above
+it. With a 46px tap-target wrap that was roughly 70 m of apparent offset at
+street zoom on Android — so the reach ring, whose whole job is to be the thing
+you are standing inside, was not centred on the person.
+
+`anchor={{ x: 0.5, y: 0.5 }}` on every marker. It is one prop, it is correct on
+both, and it has to stay: the bug is invisible on the simulator anybody is
+likely to be testing on.
+
+### Reach is measured to the memory, not to the pin
+
+`cluster.ts` draws a group on a *rounded* coordinate. At the 4dp street grid
+that is within ~8 m of its members and measuring to it was harmless. It stopped
+being harmless when the grid started following the zoom: at 1dp a group's point
+can sit kilometres from everything under it, and `reachOf` would then either
+offer an unlock for something 5 km away — which the server refuses, so the
+button fails in the person's hand — or hide the mechanic while they stand on it.
+
+`reachOf` and `nearestLocked` both measure to the nearest *locked member*. It is
+the same haversine count and it is correct at any precision.
+
+### A tap on a wide group zooms instead of opening
+
+Once the grid loosens, a group is two different things wearing one pin: several
+memories sharing a doorway, or several places the zoom merged. The sheet pager
+says "1 of 23 here", which is true of the first and a lie about the second.
+`spanMeters` tells them apart — the furthest member from the drawn point, zero
+at a genuine shared centroid — and past `CLUSTER_SPAN_M` the tap flies the
+camera in rather than opening anything.
+
+No `load()` alongside that `flyTo`: landing fires `onRegionChangeComplete`,
+which is what fetches. Doing both is two requests for one action, the first of
+them for a viewport that never exists.
