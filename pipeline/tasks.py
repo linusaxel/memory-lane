@@ -18,7 +18,9 @@ from pipeline.extract import (
     chunk_transcript,
     extract_memories_from_chunk,
     filter_low_confidence,
+    layer_for,
     merge_nearby_memories,
+    prompt_for,
     save_memories,
 )
 from pipeline.queue import (
@@ -86,6 +88,15 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
         return True
 
 
+def _source_type(redis, content_id: int) -> str:
+    """Redis hands back bytes, and a hash written before source_type existed has
+    no such field. Both roads lead to 'video', which is what the corpus is."""
+    raw = redis.hget(f"extraction:{content_id}", "source_type")
+    if raw is None:
+        return "video"
+    return raw.decode() if isinstance(raw, bytes) else str(raw)
+
+
 def task_enqueue_chunks(content_id: int):
     """
     Task: Fetch transcript and enqueue each chunk for classification.
@@ -96,7 +107,7 @@ def task_enqueue_chunks(content_id: int):
     with get_session() as session:
         row = session.execute(
             text("""
-                SELECT c.title, t.segments
+                SELECT c.title, t.segments, c.source_type
                 FROM content c
                 JOIN transcripts t ON c.id = t.content_id
                 WHERE c.id = :id
@@ -108,7 +119,7 @@ def task_enqueue_chunks(content_id: int):
             logger.error(f"[content:{content_id}] No transcript found")
             return {"error": "no_transcript"}
 
-        title, segments_json = row
+        title, segments_json, source_type = row
         segments = segments_json if isinstance(segments_json, list) else json.loads(segments_json)
 
     chunks = chunk_transcript(segments, CHUNK_MINUTES, CHUNK_OVERLAP_SECONDS)
@@ -125,6 +136,11 @@ def task_enqueue_chunks(content_id: int):
             "has_memories": 0,
             "extracted": 0,
             "status": "classifying",
+            # The later tasks need this to pick a prompt and a layer. It lives
+            # here because this hash is already this extraction's state, and
+            # task_classify_chunk would otherwise have to forward a value it
+            # never reads.
+            "source_type": source_type or "video",
         },
     )
 
@@ -181,15 +197,13 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
     logger.info(f"[content:{content_id}] Extracting chunk {chunk_index + 1}/{total_chunks}")
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    # ponytail: always the personal prompt. This path predates prompt_for() and
-    # has no source_type to hand, so archival content run through the queue would
-    # be asked for WHO and THE VIBE - an invitation to invent, which is the one
-    # thing third-party material must not get. Harmless today because redis and rq
-    # are not installed so nothing reaches here; thread source_type down from
-    # task_enqueue_chunks before using this path for anything but video.
-    memories = extract_memories_from_chunk(client, chunk_text)
-
     redis = get_redis()
+
+    # Archival text asked for WHO and THE VIBE is an invitation to invent, which
+    # is the one thing third-party material must not get. Defaults to video so a
+    # hash written before this field existed still picks the old prompt.
+    source_type = _source_type(redis, content_id)
+    memories = extract_memories_from_chunk(client, chunk_text, prompt_for(source_type))
 
     if memories:
         redis.hset(f"extraction:{content_id}:memories", str(chunk_index), json.dumps(memories))
@@ -237,7 +251,7 @@ def task_aggregate_memories(content_id: int):
     logger.info(f"[content:{content_id}] After merge: {len(merged)}, after filter: {len(filtered)}")
 
     with get_session() as session:
-        save_memories(session, content_id, filtered)
+        save_memories(session, content_id, filtered, layer_for(_source_type(redis, content_id)))
 
         session.execute(
             text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": content_id}
