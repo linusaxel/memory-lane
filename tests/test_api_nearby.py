@@ -14,7 +14,7 @@ still returns plausible-looking results.
 import pytest
 from sqlalchemy import text
 
-import api.main as m
+import api.gate as gate
 
 pytestmark = pytest.mark.db
 
@@ -27,7 +27,7 @@ def _nothing_is_gated(monkeypatch):
     """These tests assert the radius, the ordering and the fields. The proximity
     gate is asserted in test_api_unlock.py; here nothing is gated, so a redacted
     summary cannot masquerade as a wrong-order bug."""
-    monkeypatch.setattr(m, "is_gated", lambda row: False)
+    monkeypatch.setattr(gate, "is_gated", lambda row: False)
 
 
 @pytest.fixture

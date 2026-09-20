@@ -14,7 +14,7 @@ coordinate no other place shares is treated as real enough to lock.
 import pytest
 from sqlalchemy import text
 
-import api.main as m
+import api.gate as gate
 
 pytestmark = pytest.mark.db
 
@@ -87,7 +87,7 @@ def test_a_locked_memory_still_says_where_to_walk(client, one_memory):
     assert mem["place"]["name"] == "Vega"
     assert mem["place"]["coordinates"] == {"lat": pytest.approx(LAT), "lng": pytest.approx(LNG)}
     assert mem["distance_meters"] is not None
-    assert mem["unlock_radius_meters"] == m.UNLOCK_RADIUS_METERS
+    assert mem["unlock_radius_meters"] == gate.UNLOCK_RADIUS_METERS
 
 
 def test_the_map_does_not_unlock_by_being_stood_on(client, one_memory):

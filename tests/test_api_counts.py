@@ -12,7 +12,7 @@ TestClient, because the bug was in the SQL, not the plumbing.
 import pytest
 from sqlalchemy import text
 
-import api.main as m
+import api.queries as queries
 
 pytestmark = pytest.mark.db
 
@@ -62,42 +62,42 @@ def _rows(session, sql, params):
 def test_nearby_total_matches_rows_at_every_confidence(db_session, min_confidence):
     _seed(db_session)
     params = {**CENTER, "min_confidence": min_confidence}
-    rows = _rows(db_session, m.NEARBY_MEMORIES_QUERY, params)
-    total = db_session.execute(text(m.COUNT_QUERY), params).scalar()
+    rows = _rows(db_session, queries.NEARBY_MEMORIES_QUERY, params)
+    total = db_session.execute(text(queries.COUNT_QUERY), params).scalar()
     assert total == rows
 
 
 def test_nearby_total_respects_tags(db_session):
     _seed(db_session)
     params = {**CENTER, "min_confidence": "low", "tags": ["comedy"]}
-    rows = _rows(db_session, m.NEARBY_MEMORIES_WITH_TAGS_QUERY, params)
-    total = db_session.execute(text(m.COUNT_WITH_TAGS_QUERY), params).scalar()
+    rows = _rows(db_session, queries.NEARBY_MEMORIES_WITH_TAGS_QUERY, params)
+    total = db_session.execute(text(queries.COUNT_WITH_TAGS_QUERY), params).scalar()
     assert total == rows
     # and the tag filter must actually exclude something, or this proves nothing
-    unfiltered = db_session.execute(text(m.COUNT_QUERY), {**CENTER, "min_confidence": "low"})
+    unfiltered = db_session.execute(text(queries.COUNT_QUERY), {**CENTER, "min_confidence": "low"})
     assert total < unfiltered.scalar()
 
 
 def test_search_total_respects_location(db_session):
     _seed(db_session)
     near = {"query": "memory", **CENTER}
-    rows = _rows(db_session, m.SEARCH_MEMORIES_WITH_LOCATION_QUERY, near)
-    total = db_session.execute(text(m.SEARCH_COUNT_WITH_LOCATION_QUERY), near).scalar()
+    rows = _rows(db_session, queries.SEARCH_MEMORIES_WITH_LOCATION_QUERY, near)
+    total = db_session.execute(text(queries.SEARCH_COUNT_WITH_LOCATION_QUERY), near).scalar()
     assert total == rows
 
-    everywhere = db_session.execute(text(m.SEARCH_COUNT_QUERY), {"query": "memory"}).scalar()
+    everywhere = db_session.execute(text(queries.SEARCH_COUNT_QUERY), {"query": "memory"}).scalar()
     assert everywhere > total, "the far-away memory should be outside the radius"
 
 
 def test_places_total_counts_places_not_page_rows(db_session):
     _seed(db_session)
-    rows = _rows(db_session, m.NEARBY_PLACES_QUERY, CENTER)
-    total = db_session.execute(text(m.PLACES_COUNT_QUERY), CENTER).scalar()
+    rows = _rows(db_session, queries.NEARBY_PLACES_QUERY, CENTER)
+    total = db_session.execute(text(queries.PLACES_COUNT_QUERY), CENTER).scalar()
     assert total == rows
 
     # one page of one must still report the full total
     page = db_session.execute(
-        text(m.NEARBY_PLACES_QUERY), {**CENTER, "limit": 1, "offset": 0}
+        text(queries.NEARBY_PLACES_QUERY), {**CENTER, "limit": 1, "offset": 0}
     ).fetchall()
     assert len(page) == 1
     assert total > 1

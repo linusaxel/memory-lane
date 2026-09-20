@@ -9,7 +9,7 @@ cross-field matching that any future index work would have to give up.
 import pytest
 from sqlalchemy import text
 
-import api.main as m
+import api.gate as gate
 
 pytestmark = pytest.mark.db
 
@@ -18,7 +18,7 @@ pytestmark = pytest.mark.db
 def client(api_client, monkeypatch):
     # Search reaches the same rows as the map, so it is gated too. These tests
     # are about matching, not about the gate - test_api_unlock.py owns that.
-    monkeypatch.setattr(m, "is_gated", lambda row: False)
+    monkeypatch.setattr(gate, "is_gated", lambda row: False)
     return api_client
 
 

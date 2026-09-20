@@ -1,4 +1,4 @@
-"""Every query constant in api.main must be valid SQL against the real schema.
+"""Every query constant in api.queries must be valid SQL against the real schema.
 
 Nothing else in the suite executes these strings - the API tests use TestClient
 without a database - so a typo in a query reaches production untouched. That
@@ -12,7 +12,7 @@ against the empty ephemeral DB and stays fast.
 import pytest
 from sqlalchemy import text
 
-import api.main as m
+import api.queries as m
 
 pytestmark = pytest.mark.db
 

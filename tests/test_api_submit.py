@@ -25,6 +25,7 @@ from sqlalchemy import text
 
 import api.main as m
 import api.media as media
+import api.write as write
 
 pytestmark = pytest.mark.db
 
@@ -365,7 +366,7 @@ def test_enough_reports_hide_it_everywhere(client, db_session):
     memory = submit(client)
     mid = memory["id"]
 
-    for _ in range(m.REPORT_THRESHOLD - 1):
+    for _ in range(write.REPORT_THRESHOLD - 1):
         assert (
             client.post(f"/v1/memories/{mid}/report", json={"device": device()}).json()["hidden"]
             is False
@@ -389,7 +390,7 @@ def test_enough_reports_hide_it_everywhere(client, db_session):
 def test_it_leaves_the_collection_of_the_person_who_filed_it(client):
     dev = device()
     memory = submit(client, device=dev)
-    for _ in range(m.REPORT_THRESHOLD):
+    for _ in range(write.REPORT_THRESHOLD):
         client.post(f"/v1/memories/{memory['id']}/report", json={"device": device()})
     assert client.get(f"/v1/unlocks?device={dev}").json()["memories"] == []
 
@@ -398,7 +399,7 @@ def test_one_device_cannot_report_three_times(client):
     """The threshold counts people, not presses."""
     memory = submit(client)
     dev = device()
-    for _ in range(m.REPORT_THRESHOLD + 2):
+    for _ in range(write.REPORT_THRESHOLD + 2):
         last = client.post(f"/v1/memories/{memory['id']}/report", json={"device": dev}).json()
     assert last == {"reports": 1, "hidden": False}
 

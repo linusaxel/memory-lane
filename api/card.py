@@ -12,6 +12,8 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from sqlalchemy import text
 
+from api.gate import UNLOCK_RADIUS_METERS, is_locked, viewer_position
+from api.media import media_url
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -170,14 +172,9 @@ def render_card(row) -> str:
     href = source_href(row)
 
     when_html = f'<p class="when">{escape(when)}</p>' if when else ""
-    # Imported here for the same cycle reason as the route below; api.media has
-    # no dependency on this module, but keeping both imports in one place is
-    # less surprising than one at the top and one inside a function.
     photo_path = getattr(row, "photo_path", None)
     photo_html = ""
     if photo_path:
-        from api.media import media_url
-
         photo_html = f'<img class="photo" src="{escape(media_url(photo_path), quote=True)}" alt="">'
 
     contrast_html = (
@@ -246,10 +243,6 @@ def memory_card(
     "there is a memory here, go and stand in it" is a perfectly good thing for
     somebody else's tourism page to say, and is the only thing it may say.
     """
-    # Imported here rather than at module scope: api.main imports this router,
-    # so a top-level import would be a cycle.
-    from api.main import UNLOCK_RADIUS_METERS, is_locked, viewer_position
-
     with get_session() as session:
         row = session.execute(text(CARD_QUERY), {"memory_id": memory_id}).fetchone()
 

@@ -64,7 +64,7 @@ pass "GET /v1/memories/nearby?min_confidence=high - Found $COUNT high-confidence
 
 # Single memory (find first valid ID)
 echo -e "\n[6] Single Memory"
-FIRST_ID=$(curl -s "$BASE_URL/v1/memories/nearby?lat=40.7128&lng=-74.0060&radius_km=100&limit=1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['memories'][7]['id'] if d.get('memories') else '')" 2>/dev/null)
+FIRST_ID=$(curl -s "$BASE_URL/v1/memories/nearby?lat=40.7128&lng=-74.0060&radius_km=100&limit=1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['memories'][0]['id'] if d.get('memories') else '')" 2>/dev/null)
 if [ -n "$FIRST_ID" ]; then
     RESP=$(curl -s "$BASE_URL/v1/memories/$FIRST_ID")
     if echo "$RESP" | grep -q '"summary"'; then
@@ -77,7 +77,7 @@ else
 fi
 
 # Memory not found (404)
-echo -e "\n[8] Memory Not Found (404)"
+echo -e "\n[7] Memory Not Found (404)"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/v1/memories/999999")
 if [ "$HTTP_CODE" = "404" ]; then
     pass "GET /v1/memories/999999 - Returns 404"
@@ -86,7 +86,7 @@ else
 fi
 
 # Nearby places
-echo -e "\n[9] Nearby Places (NYC)"
+echo -e "\n[8] Nearby Places (NYC)"
 RESP=$(curl -s "$BASE_URL/v1/places/nearby?lat=40.7128&lng=-74.0060&radius_km=50")
 COUNT=$(echo "$RESP" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('places',[])))" 2>/dev/null)
 if [ "$COUNT" -gt 0 ] 2>/dev/null; then
@@ -96,7 +96,7 @@ else
 fi
 
 # OpenAPI docs
-echo -e "\n[10] OpenAPI Docs"
+echo -e "\n[9] OpenAPI Docs"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/docs")
 if [ "$HTTP_CODE" = "200" ]; then
     pass "GET /docs - Swagger UI available"
@@ -105,7 +105,7 @@ else
 fi
 
 # Full-text search
-echo -e "\n[11] Full-Text Search"
+echo -e "\n[10] Full-Text Search"
 RESP=$(curl -s "$BASE_URL/v1/memories/search?q=comedy")
 COUNT=$(echo "$RESP" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('memories',[])))" 2>/dev/null)
 if [ "$COUNT" -gt 0 ] 2>/dev/null; then
@@ -115,7 +115,7 @@ else
 fi
 
 # Full-text search with location
-echo -e "\n[12] Full-Text Search with Location Filter"
+echo -e "\n[11] Full-Text Search with Location Filter"
 RESP=$(curl -s "$BASE_URL/v1/memories/search?q=comedy&lat=40.7128&lng=-74.0060&radius_km=100")
 COUNT=$(echo "$RESP" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get('memories',[])))" 2>/dev/null)
 if [ "$COUNT" -gt 0 ] 2>/dev/null; then

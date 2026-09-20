@@ -84,7 +84,7 @@ def test_the_served_policy_covers_it_too():
     """api/main.py serves the HTML twin, and it is the copy that actually ships
     to a phone - store/privacy.md is what a human pastes into App Store Connect.
     Both have to say the same things or one of them is a lie."""
-    assert missing((ROOT / "api" / "main.py").read_text()) == []
+    assert missing((ROOT / "api" / "privacy.py").read_text()) == []
 
 
 def test_the_policy_no_longer_claims_there_are_no_accounts():
