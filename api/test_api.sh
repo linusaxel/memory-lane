@@ -2,7 +2,7 @@
 # API Test Script for Memory Lane
 # Usage: ./api/test_api.sh [base_url]
 
-BASE_URL="${1:-http://localhost:8000}"
+BASE_URL="${1:-http://localhost:8080}"
 
 echo "Testing Memory Lane API at $BASE_URL"
 echo "========================================"

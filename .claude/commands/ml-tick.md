@@ -76,6 +76,12 @@ is how you catch task 12 breaking what task 3 built.
 
 1. Stage **only the paths in this task's `touches:`**, plus `loop/`. Name them
    explicitly — never stage the whole tree, so a stray file can never ride along.
+   Before you commit, confirm you are not on `main`:
+
+   ```bash
+   [ "$(git branch --show-current)" != main ] || { echo "the loop must never commit on main"; exit 1; }
+   ```
+
    Then commit as `<task-id>: <what changed>`. Commit on any tick that changed a file,
    even work-in-progress. **Never push.**
 2. Update the task in `TASKS.yaml`: `state`, `attempts`, `commit` (the real SHA), `note`.

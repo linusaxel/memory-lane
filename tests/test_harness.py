@@ -2,7 +2,6 @@
 
 import os
 import pathlib
-import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -31,10 +30,3 @@ def test_fake_anthropic_never_touches_the_network():
     assert resp.content[0].type == "text"
     assert "Katz" in resp.content[0].text
     assert len(fake.messages.calls) == 1
-
-
-def test_loop_is_not_on_main():
-    """The loop commits to its own branch so nothing reaches main unreviewed."""
-    branch = subprocess.run(["git", "branch", "--show-current"],
-                            cwd=ROOT, capture_output=True, text=True).stdout.strip()
-    assert branch != "main", "the loop must never commit on main"

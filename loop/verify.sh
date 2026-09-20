@@ -18,6 +18,12 @@ PY=venv/bin/python
 [ -x "$PY" ] || { echo "GATE=INFRA venv missing - run: uv venv --python 3.12 venv"; exit 2; }
 $PY -c 'import pytest' 2>/dev/null || { echo "GATE=INFRA pytest missing - run: uv pip install --python venv/bin/python -r requirements-dev.txt"; exit 2; }
 
+# The mobile toolchain is checked HERE, not next to the tsc step below: an exit 2
+# down there would mask a RED that pytest had already set. INFRA is decided first.
+if [ -f mobile/tsconfig.json ] && [ ! -d mobile/node_modules ]; then
+  echo "GATE=INFRA mobile/node_modules missing - run: (cd mobile && npm ci)"; exit 2
+fi
+
 # --- 1. does anything even import ------------------------------------------
 $PY -m compileall -q crawler pipeline api tests >/dev/null 2>&1 || { echo "GATE=RED syntax error"; exit 1; }
 
