@@ -657,13 +657,25 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_contrast.py"
     touches: [pipeline/extract.py, tests/test_contrast.py]
     depends_on: [W4-04]
-    state: todo
-    attempts: 0
-    commit: null
-    note: "Never re-extract - extraction is a one-time cost per place, amortized across
-      everyone who stands there. Present-day place identity is assumed to come from
-      OSM/Overpass (free, no key) as an enrichment pass; if that is noisy the score stays
-      LLM-only and TODO.md gets updated to say so."
+    state: done
+    attempts: 1
+    commit: 730b786
+    note: |
+      0-1 contrast_score with a banded rubric, plus a one-line contrast_note naming both
+      sides of the gap. The prompt says "Fame is not contrast" and uses the cathedral as
+      the worked LOW-scoring example, since importance is exactly what it must not rank
+      by. `then` got no column - contrast_note carries both sides, so W4-01's schema
+      stands.
+      The OSM/Overpass enrichment pass is deliberately NOT built. It presupposes the
+      coordinates point at the place, and 60% of placed places sit on a city centroid,
+      so it would confidently describe the wrong corner. Score is LLM-only, from the
+      source text. Recorded in TODO.md 1.5 as a decision rather than left as this note's
+      original assumption.
+      Scores clamp to [0,1]; anything unparseable becomes NULL. Ordering depends on this
+      column, so a stray "high" or a 7 must not become a rank, and bool is rejected
+      explicitly so True does not become 1.0.
+      FOUND WHILE TESTING: Postgres sorts NULL FIRST under DESC, so the 224 unscored
+      memories would outrank every scored one. W4-06 must use NULLS LAST.
 
   - id: W4-06
     goal: "/v1/memories/nearby gains a layer filter, orders by contrast_score DESC then
