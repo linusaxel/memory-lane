@@ -70,26 +70,51 @@ Tailwind value or the system font, that is the generic look coming back — see
 [`docs/09-visual-design.md`](../docs/09-visual-design.md) part 5 for why this
 palette exists at all.
 
+**Every colour is a light/dark pair**, resolved by the platform. An app you use
+outdoors at night, walking to a comedy club, cannot be light-only.
+
+`DynamicColorIOS` is why dark mode is one file and not eleven: it returns a
+colour the platform resolves at draw time, so `StyleSheet.create` at module
+scope keeps working and no component needs a hook or a context. It is iOS-only —
+**Android takes the light value** until somebody does the theme-context
+refactor. That is a real gap, not a shrug; it is just not worth eleven files
+while the app is iOS-first.
+
+Two traps, both hit:
+
+- `app.json` must say `"userInterfaceStyle": "automatic"`. It said `"light"`,
+  which pins `useColorScheme()` to light forever and makes a correct dark
+  palette look like dead code.
+- A MapView `Circle` takes a real colour, not a platform-resolved one, so the
+  reach circle branches on `useColorScheme()` by hand. Same for the map's own
+  `userInterfaceStyle` and the `StatusBar`, which is `"auto"` — hardcoding it is
+  how an app gets black glyphs on a black background.
+
+**Dark is not the light palette inverted.** Paper becomes a warm near-black
+rather than a grey, the seal *lightens* so it still reads as the one thing you
+can act on, and `faded` lightens too — a locked pin has to survive a dark map,
+where the light-mode value disappeared entirely.
+
 **Ink and paper.** The app is an archive of anecdotes pinned to coordinates, so
 it is built to look like a field guide rather than a dashboard.
 
 | Token | Hex | Used for |
 |---|---|---|
-| `paper` | `#F7F4EE` | every surface. Not white, and close to the muted map underneath |
-| `paperRaised` | `#FFFDF9` | the rare surface that must lift off the paper |
-| `ink` | `#1C1917` | primary text, solid buttons |
-| `inkSoft` | `#4A443D` | secondary prose |
-| `inkFaint` | `#8A837A` | labels, captions |
-| `rule` | `#E0D9CC` | hairlines. Rules do the work shadows used to |
-| `faded` | `#776E64` | a locked pin out of reach. Dark enough to survive the parchment map |
+| `paper` | `#F7F4EE` / `#161412` | every surface. Not white, and close to the muted map underneath |
+| `paperRaised` | `#FFFDF9` / `#201D19` | the rare surface that must lift off the paper |
+| `ink` | `#1C1917` / `#F2EDE4` | primary text, solid buttons |
+| `inkSoft` | `#4A443D` / `#BDB5A8` | secondary prose |
+| `inkFaint` | `#8A837A` / `#8A8276` | labels, captions |
+| `rule` | `#E0D9CC` / `#332E27` | hairlines. Rules do the work shadows used to |
+| `faded` | `#776E64` / `#9A9086` | a locked pin out of reach. Dark enough for parchment, light enough for a dark map |
 
 **One accent, and it means one thing.**
 
 | Token | Hex | Meaning |
 |---|---|---|
-| `seal` | `#C0462B` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
-| `sealSoft` | `#F0D9CE` | the ring filling during a hold |
-| `sealDeep` | `#8F2F1B` | the padlock inside the ring, the count tag on a reachable pin |
+| `seal` | `#C0462B` / `#E2603F` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
+| `sealSoft` | `#F0D9CE` / `#4A2418` | the ring filling during a hold |
+| `sealDeep` | `#8F2F1B` / `#F2A88F` | the padlock inside the ring, the count tag on a reachable pin |
 
 The watch button is **ink**, not red. It was YouTube red back when the map pins
 were red too; that stopped being true, and the accent is spoken for.

@@ -5,11 +5,13 @@
  * padlock does neither: it is always yellow and always its own design.
  */
 
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ColorValue } from 'react-native';
 
 type Props = {
   size: number;
-  color: string;
+  /** ColorValue, not string: the palette's entries are dynamic on iOS and the
+   *  platform resolves them at draw time. */
+  color: ColorValue;
 };
 
 export default function Padlock({ size, color }: Props) {

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useColorScheme,
 } from 'react-native';
 import MapView, { Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -112,6 +113,9 @@ export default function App() {
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  // Only the handful of values the palette cannot carry need this: the map's
+  // own appearance, and the two rgba literals a MapView Circle insists on.
+  const scheme = useColorScheme();
   const [tab, setTab] = useState<Tab>('map');
 
   const mapRef = useRef<MapView>(null);
@@ -339,7 +343,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <View style={styles.container}>
-        <StatusBar style="dark" />
+        {/* "auto" rather than "dark": the bar has to invert with everything
+            else, and hardcoding it is how an app ends up with black glyphs on a
+            black background at night. */}
+        <StatusBar style="auto" />
 
         {/* Both tabs stay mounted. Unmounting the map means refetching, losing
             the viewport and re-animating to GPS every time somebody glances at
@@ -352,6 +359,9 @@ export default function App() {
             showsUserLocation={permission === 'granted'}
             // See src/mapStyle.ts: the map is a backdrop, not a competitor.
             mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+            // Apple Maps follows the system on its own, but only if it is not
+            // told otherwise; naming it here keeps the default explicit.
+            userInterfaceStyle={scheme === 'dark' ? 'dark' : 'light'}
             customMapStyle={MUTED_ANDROID_STYLE}
             showsPointsOfInterests={false}
             onRegionChangeComplete={onRegionChangeComplete}
@@ -364,8 +374,11 @@ export default function App() {
                 center={{ latitude: position.lat, longitude: position.lng }}
                 radius={radiusMeters}
                 strokeWidth={1.5}
-                strokeColor="rgba(192,70,43,0.55)"
-                fillColor="rgba(192,70,43,0.07)"
+                // Not from the palette: a Circle takes a real colour, not a
+                // platform-resolved one, and the seal needs more presence on a
+                // dark map than on parchment.
+                strokeColor={scheme === 'dark' ? 'rgba(226,96,63,0.7)' : 'rgba(192,70,43,0.55)'}
+                fillColor={scheme === 'dark' ? 'rgba(226,96,63,0.12)' : 'rgba(192,70,43,0.07)'}
               />
             )}
 

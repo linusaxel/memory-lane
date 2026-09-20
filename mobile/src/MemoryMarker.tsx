@@ -96,6 +96,8 @@ const REACHABLE = 44;
 const styles = StyleSheet.create({
   lockWrap: { alignItems: 'center', justifyContent: 'center', padding: 7 },
   // A soft glow so the pin is findable before you can read its shape.
+  // A literal rather than a palette entry: this is a translucent wash and the
+  // seal's dark value is lighter, so one alpha over both reads about the same.
   halo: { borderRadius: 40, backgroundColor: 'rgba(192,70,43,0.16)' },
   badge: {
     minWidth: 26,

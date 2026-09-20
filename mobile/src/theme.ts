@@ -13,31 +13,60 @@
  * passport stamp, not the SaaS dashboard. So: paper rather than white, ink
  * rather than grey, a serif for the storytelling and a mono for the
  * instrument readings.
+ *
+ * ## Dark mode
+ *
+ * Every colour is a pair, resolved by the system rather than by us. An app you
+ * use outdoors, at night, walking to a comedy club, cannot be light-only.
+ *
+ * `DynamicColorIOS` is why this is one file and not eleven. It returns a colour
+ * the platform resolves at draw time, so `StyleSheet.create` at module scope
+ * keeps working, every component keeps importing a plain `color.ink`, and a
+ * change of appearance repaints without a re-render or a context. The cost is
+ * that it is iOS-only: Android takes the light value until somebody does the
+ * theme-context refactor, and that is a real gap rather than a shrug - it is
+ * just not worth eleven files and a hook while the app is iOS-first.
+ *
+ * Dark is not the light palette inverted. Paper becomes a warm near-black
+ * rather than grey, the seal lightens so it still reads as the one thing you
+ * can act on, and `faded` goes *lighter* - a locked pin has to survive a dark
+ * map, where the light-mode value disappeared.
  */
+
+import { DynamicColorIOS, Platform } from 'react-native';
+
+/** Light and dark, resolved by the platform. Android gets the light value. */
+const dual = (light: string, dark: string) =>
+  Platform.OS === 'ios' ? DynamicColorIOS({ light, dark }) : light;
 
 export const color = {
   /** Warm paper. Not #fff, and not a zinc. It also sits close to the muted
    *  Apple map underneath, so the sheets feel cut from the same sheet. */
-  paper: '#F7F4EE',
+  paper: dual('#F7F4EE', '#161412'),
   /** One step up for surfaces that need to lift off the paper. */
-  paperRaised: '#FFFDF9',
-  ink: '#1C1917',
-  inkSoft: '#4A443D',
-  inkFaint: '#8A837A',
+  paperRaised: dual('#FFFDF9', '#201D19'),
+  ink: dual('#1C1917', '#F2EDE4'),
+  inkSoft: dual('#4A443D', '#BDB5A8'),
+  inkFaint: dual('#8A837A', '#8A8276'),
   /** Hairlines and dividers. Editorial layouts rule; they do not shadow. */
-  rule: '#E0D9CC',
+  rule: dual('#E0D9CC', '#332E27'),
 
   /** The one accent: stamp ink. Everything openable is this colour and nothing
    *  else is. Deliberately not amber-500 - that is the default the research
-   *  names. */
-  seal: '#C0462B',
-  sealSoft: '#F0D9CE',
-  sealDeep: '#8F2F1B',
+   *  names. It lightens in the dark so it still reads as the one thing to act
+   *  on rather than as a dried bloodstain. */
+  seal: dual('#C0462B', '#E2603F'),
+  /** The ring filling during a hold. */
+  sealSoft: dual('#F0D9CE', '#4A2418'),
+  /** The padlock inside the ring, which sits on paper at rest and on sealSoft
+   *  when full - so it has to hold against both. */
+  sealDeep: dual('#8F2F1B', '#F2A88F'),
 
-  /** Out of reach: the same padlock, faded, as if the stamp never landed. Dark
-   *  enough to hold its own against the parchment map - the first attempt was
-   *  #A9A199 and the pins disappeared into the streets. */
-  faded: '#776E64',
+  /** Out of reach: the same padlock, faded, as if the stamp never landed.
+   *  Dark enough to hold its own against the parchment map - the first attempt
+   *  was #A9A199 and the pins disappeared into the streets. It goes the other
+   *  way in the dark, where the map is near-black and a dark pin vanishes. */
+  faded: dual('#776E64', '#9A9086'),
 };
 
 /** Two families and no more. Fraunces is an old-style serif with its wonk left
