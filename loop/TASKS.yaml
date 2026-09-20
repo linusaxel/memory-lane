@@ -63,9 +63,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q -m live tests/test_crawler.py"
     touches: [crawler/, tests/test_crawler.py]
     depends_on: [W1-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: 2b2f5c5
     note: "MARKED live - NOT run by the gate. Run it explicitly for this task only.
       It needs network but costs no money."
 

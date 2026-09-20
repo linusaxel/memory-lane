@@ -1,11 +1,11 @@
 # LOOP STATE — rewritten every tick. Trust this file over your instincts.
 
 ```
-tick:     2
+tick:     3
 updated:  2026-09-20
-branch:   loop/autopilot   (5 commits ahead of main, NEVER PUSHED)
-gate:     GREEN — 31 passed in 0.15s
-head:     099a12c "W1-02: rewrite the crawler as pure discovery"
+branch:   loop/autopilot   (7 commits ahead of main, NEVER PUSHED)
+gate:     GREEN — 32 passed, 2 deselected (live) in 0.15s
+head:     2b2f5c5 "W1-03: prove channel discovery against a real channel"
 ```
 
 ## What this project is
@@ -16,23 +16,36 @@ FastAPI → (soon) an Expo map app. See `CLAUDE.md` only if a task's `touches:` 
 
 ## Where I am
 
-**LAST DONE: W1-02** — `crawler/yt_crawler.py` is now pure discovery: 139 lines down to
-85, one public function `list_channel_videos()`, 12 offline tests green.
+**LAST DONE: W1-03** — discovery proven against a real channel. Measured: 150 requested
+from `@veritasium`, **150 returned**, every id an 11-char match, every title populated.
+Baseline before the rewrite was **zero**. The crawler now genuinely works.
 
-**NEXT TASK: W1-03** — prove discovery works against a real channel (the `live` test).
+**NEXT TASK: W1-04** — wire discovery into the existing ingest stage.
 
-**NEXT CONCRETE ACTION:** add a test to `tests/test_crawler.py` marked
-`@pytest.mark.live` that calls `list_channel_videos()` against a real, busy channel and
-asserts (a) it returns **well over 30** videos — the number that proves the old
-single-page truncation is gone, against a measured baseline of **0** — and (b) every id
-in the returned URLs matches `^[A-Za-z0-9_-]{11}$`.
+**NEXT CONCRETE ACTION:** write `tests/test_ingest.py`, then make two small edits to
+`pipeline/ingest.py`:
 
-Run it with `venv/bin/python -m pytest -q -m live tests/test_crawler.py`. It needs
-network but costs nothing. It is marked `live` so the gate keeps deselecting it — do not
-remove that marker, and do not put a network call in an unmarked test.
+1. Inside the existing `for source in sources:` loop, right after
+   `videos = source.get("videos", [])` (around line 56), add:
+   ```python
+   if source.get("channel"):
+       from crawler.yt_crawler import list_channel_videos
+       videos = videos + list_channel_videos(source["channel"], limit=source.get("limit"))
+   ```
+   The import is local on purpose so `yt_dlp` stays off the import path for
+   yaml-only runs.
+2. Add `published_at` to the INSERT at ~line 85 (the column already exists in
+   `db/schema.sql` and is unused) with `"published_at": video.get("published_at")`
+   in the params dict. YAML-sourced videos pass `None`, exactly as today.
 
-**Pick a channel that still exists.** `@TheMountainDispatch` (the old hardcoded one)
-returns 404. Verify the handle resolves before asserting against it.
+**Reuse, do not rewrite.** The dedup `SELECT id FROM content WHERE url = :url`
+(line ~73) and the INSERT (line ~85) already exist and already make this idempotent —
+including a video that appears in both `videos:` and `channel:`, because the SELECT sees
+uncommitted inserts in the same transaction. `pipeline/run_all.py` needs **no change at
+all**: discovery rides the existing Stage 1.
+
+Keep the test offline — fake `list_channel_videos`, do not hit the network. Anything
+needing a real DB must be marked `@pytest.mark.db`.
 
 ## Do not redo — already done, leave alone
 
@@ -43,6 +56,8 @@ returns 404. Verify the handle resolves before asserting against it.
 - **W1-02** crawler rewritten as discovery-only. Commit `099a12c`. The deletions are
   deliberate and `tests/test_crawler.py::test_transcript_handling_is_gone` guards them —
   if you find yourself re-adding transcript code here, stop and read that test.
+- **W1-03** live discovery tests. Commit `2b2f5c5`. They are marked `live` so the gate
+  deselects them; that is deliberate, do not "fix" it by removing the marker.
 - **The venv was rebuilt on Python 3.12.12** and every dependency reinstalled. Do not
   "fix" it again — see *Rejected approaches*.
 
@@ -80,9 +95,9 @@ Full instructions live in each task's `note:` in `loop/TASKS.yaml`.
 
 ```
 W0 harness    1/1  done
-W1 crawler    2/9   — 6 todo, 1 parked (API_CREDITS)
+W1 crawler    3/9   — 5 todo, 1 parked (API_CREDITS)
 W2 backend    0/8   — 7 todo, 1 parked (DEPLOY)
 W3 app        0/15  — 12 todo, 3 parked
               ----
-              3/33 done, 5 parked, 25 to build
+              4/33 done, 5 parked, 24 to build
 ```
