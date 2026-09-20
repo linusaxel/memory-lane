@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 
 import { fetchNearby, type LocatedMemory } from './src/api.ts';
+import { groupByLocation, groupLabel, type MemoryGroup } from './src/cluster.ts';
 import { regionToRadiusKm, type Region } from './src/region.ts';
 import MemorySheet from './src/MemorySheet.tsx';
 
@@ -22,27 +23,36 @@ const FALLBACK_REGION: Region = {
 
 const DEBOUNCE_MS = 400;
 
+/**
+ * "Nothing here" and "we could not ask" look identical if both render as an
+ * absence, and the second one is the app being broken. They get separate states
+ * so they can say different things.
+ */
+type Status = 'loading' | 'ready' | 'failed';
+
 export default function App() {
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
   const [memories, setMemories] = useState<LocatedMemory[]>([]);
-  const [selected, setSelected] = useState<LocatedMemory | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // What was tapped is a point, not a memory: the sheet pages through it.
+  const [openAt, setOpenAt] = useState<LocatedMemory[]>([]);
+  const [openIndex, setOpenIndex] = useState(0);
+  const [status, setStatus] = useState<Status>('loading');
 
   const mapRef = useRef<MapView>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = useCallback(async (r: Region) => {
-    setLoading(true);
-    setError(null);
+    setStatus('loading');
     try {
       // Last-write-wins is fine at one request per pan.
       const found = await fetchNearby(r.latitude, r.longitude, regionToRadiusKm(r));
       setMemories(found);
+      setStatus('ready');
     } catch {
-      setError('Could not reach Memory Lane');
-    } finally {
-      setLoading(false);
+      // Keep the last good pins on screen. They are still true of the place,
+      // and a map that empties itself on a dropped request looks like the area
+      // went blank rather than the network.
+      setStatus('failed');
     }
   }, []);
 
@@ -81,6 +91,22 @@ export default function App() {
     [load],
   );
 
+  const groups = groupByLocation(memories);
+
+  const openGroup = (group: MemoryGroup) => {
+    setOpenAt(group.memories);
+    setOpenIndex(0);
+  };
+
+  const bannerText =
+    status === 'failed'
+      ? "Can't reach Memory Lane"
+      : status === 'loading' && memories.length === 0
+        ? 'Finding memories\u2026'
+        : memories.length === 0
+          ? 'No memories here yet'
+          : `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} here`;
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
@@ -92,28 +118,43 @@ export default function App() {
         showsUserLocation
         onRegionChangeComplete={onRegionChangeComplete}
       >
-        {memories.map((m) => (
+        {groups.map((group) => (
           <Marker
-            key={m.id}
-            coordinate={{ latitude: m.place.coordinates.lat, longitude: m.place.coordinates.lng }}
-            title={m.place.name}
-            onPress={() => setSelected(m)}
-          />
+            key={group.key}
+            coordinate={{ latitude: group.lat, longitude: group.lng }}
+            title={groupLabel(group)}
+            onPress={() => openGroup(group)}
+          >
+            {group.memories.length > 1 && (
+              <View style={styles.cluster}>
+                <Text style={styles.clusterText}>{group.memories.length}</Text>
+              </View>
+            )}
+          </Marker>
         ))}
       </MapView>
 
       <View style={styles.banner} pointerEvents="none">
-        <Text style={styles.bannerText}>
-          {error ?? `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} here`}
-        </Text>
-        {loading && <ActivityIndicator size="small" color="#71717a" />}
+        <Text style={styles.bannerText}>{bannerText}</Text>
+        {status === 'loading' && <ActivityIndicator size="small" color="#71717a" />}
       </View>
 
-      <Pressable style={styles.locate} onPress={goToMyLocation}>
-        <Text style={styles.locateText}>Near me</Text>
-      </Pressable>
+      {status === 'failed' ? (
+        <Pressable style={styles.locate} onPress={() => load(region)}>
+          <Text style={styles.locateText}>Try again</Text>
+        </Pressable>
+      ) : (
+        <Pressable style={styles.locate} onPress={goToMyLocation}>
+          <Text style={styles.locateText}>Near me</Text>
+        </Pressable>
+      )}
 
-      <MemorySheet memory={selected} onClose={() => setSelected(null)} />
+      <MemorySheet
+        memories={openAt}
+        index={openIndex}
+        onIndex={setOpenIndex}
+        onClose={() => setOpenAt([])}
+      />
     </View>
   );
 }
@@ -153,4 +194,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   locateText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  // Sits on the default pin so a stack is countable before it is tapped.
+  cluster: {
+    minWidth: 26,
+    height: 26,
+    paddingHorizontal: 6,
+    borderRadius: 13,
+    backgroundColor: '#18181b',
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clusterText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });

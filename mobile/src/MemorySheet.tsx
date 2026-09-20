@@ -11,7 +11,10 @@ import {
 import type { LocatedMemory } from './api.ts';
 
 type Props = {
-  memory: LocatedMemory | null;
+  /** Everything at the tapped point. One marker can hide a dozen memories. */
+  memories: LocatedMemory[];
+  index: number;
+  onIndex: (next: number) => void;
   onClose: () => void;
 };
 
@@ -31,7 +34,10 @@ function formatTimestamp(seconds: number): string {
   return `${h > 0 ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
 }
 
-export default function MemorySheet({ memory, onClose }: Props) {
+export default function MemorySheet({ memories, index, onIndex, onClose }: Props) {
+  const memory = memories[index] ?? null;
+  const many = memories.length > 1;
+
   return (
     <Modal
       visible={!!memory}
@@ -80,6 +86,33 @@ export default function MemorySheet({ memory, onClose }: Props) {
           </ScrollView>
 
           <View style={styles.actions}>
+            {/* Without this, every memory but the first at a stacked point is
+                unreachable - and 60% of this corpus sits on a shared point. */}
+            {many && (
+              <View style={styles.pager}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Previous memory here"
+                  style={[styles.step, index === 0 && styles.stepOff]}
+                  disabled={index === 0}
+                  onPress={() => onIndex(index - 1)}
+                >
+                  <Text style={styles.stepText}>‹</Text>
+                </Pressable>
+                <Text style={styles.pagerText}>
+                  {index + 1} of {memories.length} here
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Next memory here"
+                  style={[styles.step, index === memories.length - 1 && styles.stepOff]}
+                  disabled={index === memories.length - 1}
+                  onPress={() => onIndex(index + 1)}
+                >
+                  <Text style={styles.stepText}>›</Text>
+                </Pressable>
+              </View>
+            )}
             <Pressable
               style={styles.watch}
               // timestamp_url already points at the right second.
@@ -123,6 +156,18 @@ const styles = StyleSheet.create({
   actions: { padding: 20, gap: 10, borderTopWidth: 1, borderTopColor: '#f4f4f5' },
   watch: { backgroundColor: '#dc2626', paddingVertical: 15, borderRadius: 12, alignItems: 'center' },
   watchText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
+  pagerText: { fontSize: 13, color: '#71717a', minWidth: 96, textAlign: 'center' },
+  step: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f4f4f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepOff: { opacity: 0.35 },
+  stepText: { fontSize: 22, color: '#3f3f46', lineHeight: 26 },
   close: { paddingVertical: 12, alignItems: 'center' },
   closeText: { color: '#71717a', fontSize: 15 },
 });

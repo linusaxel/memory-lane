@@ -35,6 +35,13 @@ function hasCoordinates(m: Memory): m is LocatedMemory {
   return !!c && Number.isFinite(c.lat) && Number.isFinite(c.lng);
 }
 
+/**
+ * A hung request is worse than a failed one: it renders as "0 memories here"
+ * forever, so an unreachable server is indistinguishable from an empty area.
+ * fetch has no default timeout, so this is the only thing that ends the wait.
+ */
+export const REQUEST_TIMEOUT_MS = 8000;
+
 export async function fetchNearby(
   lat: number,
   lng: number,
@@ -48,14 +55,26 @@ export async function fetchNearby(
     limit: '100',
   });
 
-  const res = await fetch(`${BASE}/v1/memories/nearby?${params}`, { signal });
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  // AbortSignal.timeout and AbortSignal.any are not reliably present on Hermes,
+  // so the timer is wired by hand and the caller's signal is forwarded onto it.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const forwardAbort = () => controller.abort();
+  signal?.addEventListener('abort', forwardAbort);
 
-  const body = (await res.json()) as { memories?: Memory[] };
-  // `meta.total` is unreliable on this endpoint (its count query ignores the
-  // active filters), so it is deliberately ignored.
-  //
-  // The null-coordinate filter is the trust boundary: places.coordinates is
-  // nullable in the schema and a null-coordinate marker crashes react-native-maps.
-  return (body.memories ?? []).filter(hasCoordinates);
+  try {
+    const res = await fetch(`${BASE}/v1/memories/nearby?${params}`, {
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`API ${res.status}`);
+
+    const body = (await res.json()) as { memories?: Memory[] };
+    // The null-coordinate filter is the trust boundary: places.coordinates is
+    // nullable in the schema and a null-coordinate marker crashes
+    // react-native-maps.
+    return (body.memories ?? []).filter(hasCoordinates);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', forwardAbort);
+  }
 }
