@@ -243,20 +243,29 @@ Full flow in `docs/08-ux-flows.md` F7; button spec in `mobile/UI.md`. This
 generalises 3.3, which scoped server-side proximity unlock to the friend layer
 — the rule there (*a client-side gate is not a gate*) now governs every layer.
 
-- [ ] **1.5a Server-side gate.** `/v1/memories/nearby` omits summary, tags and
-      source for memories outside the unlock radius. Place name, coordinates and
-      distance still ship, because the person needs to know where to walk.
-- [ ] **1.5b Unlock read.** Full memory returned only for a supplied position
-      inside the radius.
-- [ ] **1.5c The control.** Press-and-hold with a filling ring and haptics, per
-      `mobile/UI.md`. Operable without a hold for accessibility.
-- [ ] **1.5d Locked pins read as locked** on the map, not only in the sheet.
-- [ ] **1.5e Unlocks persist** across launches.
-- [ ] **1.5f DECIDE the radius.** Blocking the rest, and not tunable around:
-      111 of 186 memories sit on 34 centroids, so 50m unlocks nothing and 1km
-      dumps 23 at once. Three options written up in F7; option 3 (gate only
-      trustworthy coordinates) is the honest one and shrinks the locked set
-      until the corpus improves.
+- [x] **1.5a Server-side gate.** The redaction is in `row_to_memory`, so
+      search and `/v1/places/nearby`'s `sample_memory` are gated too — gating
+      only the endpoint the app calls would have left two side doors.
+- [x] **1.5b Unlock read.** `GET /v1/memories/{id}?at_lat=&at_lng=`. A refusal
+      reports the distance, so the app can say how much further to walk.
+- [x] **1.5c The control.** `mobile/src/UnlockButton.tsx`.
+- [x] **1.5d Locked pins read as locked.** Grey out of reach, amber in reach,
+      measured from the person and never from the map centre.
+- [x] **1.5e Unlocks persist.** On the device, in `mobile/src/unlocked.ts`:
+      the server re-locks you when you walk away, and the product must not.
+- [x] **1.5f DECIDE the radius.** Option 3: only a coordinate no other place
+      shares is gated, at 150m. That locks 83 of 216 memories across 74 places
+      and leaves the centroid stacks open, because locking those would ask
+      somebody to walk to a fiction. Full reasoning in F7.
+
+Left for when the coordinates improve:
+
+- [ ] **Re-gate on `precision_meters`** once extraction tells the truth about
+      it (option 1 in F7). The uniqueness rule is a proxy for trustworthy
+      coordinates; `precision_meters` is the direct measure, and nothing has
+      re-run since W4-04 changed the prompt.
+- [ ] **The position is self-reported.** This stops `curl`, not a determined
+      spoofer. Attestation needs accounts — Phase 3, alongside 3.3.
 
 ---
 

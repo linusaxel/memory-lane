@@ -49,6 +49,9 @@ convention and reviewing eyes.
 |-----|---------|
 | `#dc2626` | the watch action only. It reads as "video", and matches the map pins. Do not reuse it for generic emphasis. |
 | `#15803d` | high confidence only |
+| `#f59e0b` | the unlock only — the ring, and the pin for a memory in reach |
+| `#fde68a` | the filling disc inside the ring |
+| `#b45309` | the glyph inside the ring. Readable on both the empty and the filled state, which a white glyph is not |
 
 **Type scale**: 26/700 (place), 17/26 (summary), 16/600 (primary button),
 15 (close, button), 14/500 (banner), 13 (meta, source), 12 (tag).
@@ -150,6 +153,10 @@ was that "nothing here" and "we could not ask" rendered identically:
 | ready, n=0 | "No memories here yet" | Near me |
 | failed | "Can't reach Memory Lane" | Try again |
 
+With no location permission the button reads **"Turn on location"** instead of
+"Near me", in every one of those states. Nothing can unlock without a position,
+and a map of pins that never open with no explanation is the worse bug.
+
 A failed refresh keeps the last good pins. Requests time out after
 `REQUEST_TIMEOUT_MS` (8s) in `src/api.ts`; `fetch` has no default timeout and a
 hung request is what produced the original bug.
@@ -164,9 +171,22 @@ the sheet pages through it with "1 of 23 here".
 Group in `src/cluster.ts`, never in the component — it is pure and unit-tested,
 and the Times Square centroid is one of the test cases.
 
+A marker also carries its lock state, because otherwise you learn a pin is
+unreadable only by tapping it:
+
+| Pin | Meaning |
+|---|---|
+| default red pin (or dark count badge) | never gated — a shared centroid, open to everyone |
+| grey badge `#a1a1aa` | locked, and you are not near enough |
+| amber badge `#f59e0b` | locked, and you are inside the radius — go press it |
+
+A group is locked if any memory in it is. `reachOf()` in `App.tsx` measures from
+the *person*, never from the map centre — panning to another city must not make
+its pins look reachable.
+
 ## The unlock control
 
-The one place in this app allowed to be playful. Everything else is a quiet
+`src/UnlockButton.tsx`. The one place in this app allowed to be playful. Everything else is a quiet
 map; this is the moment the product is *about*, so it gets the animation
 budget. Spec, so it does not get re-invented per screen:
 
@@ -188,7 +208,14 @@ Accessibility is not optional here, and a hold gesture is the easy thing to get
 wrong: the control needs `accessibilityRole="button"`, a label that states the
 gesture, and it must remain operable by a plain activation for anyone who cannot
 hold. A gate nobody with a motor impairment can open is a gate on the wrong
-people.
+people. As built, `onPress` unlocks directly when a screen reader is on, which
+covers VoiceOver and not every motor impairment — the `ponytail:` marker in the
+file names the gap.
+
+**The button never decides anything.** It asks
+`GET /v1/memories/{id}?at_lat=&at_lng=` and the server re-measures, so a
+completed hold can still come back refused when GPS has drifted. Say so —
+"Not close enough yet" — rather than leaving a control that looks broken.
 
 ## Flows
 

@@ -118,6 +118,7 @@ Optional (with defaults):
 - `CHUNK_MINUTES` = 4
 - `CHUNK_OVERLAP_SECONDS` = 30
 - `CORS_ORIGINS` = `*` (comma-separated; the only lockdown knob for a public API)
+- `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
 
 ## Architecture Notes
 
@@ -163,8 +164,11 @@ cd mobile && npx expo start --ios                # see it (UI.md has the recipe)
 ### API (`api/main.py`)
 FastAPI server with PostGIS proximity queries:
 - `GET /v1/memories/nearby?lat=X&lng=Y&radius_km=10&tags=food,travel&min_confidence=medium` - Find memories near location (tags and confidence optional)
+  - **`at_lat`/`at_lng` is where you are *standing*; `lat`/`lng` is where you are *looking*.**
+    Without the first pair every gated memory comes back with no summary, tags or
+    source. See "Proximity unlock" below.
 - `GET /v1/memories/search?q=coffee&lat=X&lng=Y&radius_km=50` - Full-text search across summaries and place names (location optional)
-- `GET /v1/memories/{id}` - Get single memory
+- `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory. This is the unlock read
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
 - `GET /v1/places/{id}` - Get single place details
 - `GET /v1/places/{id}/memories` - Get all memories for a place
@@ -177,6 +181,17 @@ Test the API:
 ./api/test_api.sh                    # Test local server
 ./api/test_api.sh http://host:port   # Test custom URL
 ```
+
+### Proximity unlock
+Only memories you are standing near are readable. The gate is in `row_to_memory`
+(`api/main.py`), not in an endpoint, so every memory-shaped response is redacted
+by the same code — `/v1/memories/search` and `/v1/places/nearby`'s
+`sample_memory` reach the same rows and would otherwise be side doors.
+
+Only a coordinate no other place shares is gated. 111 of 186 placed memories sit
+on city centroids the model emitted when it did not know the address, and
+locking those would ask somebody to walk to a fiction. Full reasoning in
+`docs/08-ux-flows.md` F7; assertions in `tests/test_api_unlock.py`.
 
 ### Memory Quality
 Summaries should be vivid and personal, not generic. The prompt instructs Claude to include:

@@ -95,7 +95,7 @@ coordinates are wrong — see the centroid section in `TODO.md`. Clustering make
 
 ---
 
-## F7 · Unlock a memory by standing near it — **Proposed**
+## F7 · Unlock a memory by standing near it — **Implemented**
 
 The core mechanic, not a feature. A memory you can read from your sofa is a
 blog post; a memory you have to walk to is a reason to leave the house. This
@@ -115,10 +115,15 @@ other distribution channel (see *Design rules* in `TODO.md`).
 5. It stays unlocked. Re-locking something the person has earned is a punishment
    for leaving.
 
-**Failure:** location permission denied. Nothing can unlock, so the app must say
-that rather than showing a map of permanently locked pins. Denied permission
-falls back to Manhattan today; that fallback cannot also be an unlock position,
-or the gate is decorative.
+**Failure:** location permission denied. Nothing can unlock, so the app says so
+— the bottom button reads "Turn on location" instead of "Near me" — rather than
+showing a map of permanently locked pins. The Manhattan fallback is a *viewport*
+and never an unlock position: the map centre and the person's position are two
+different parameters, precisely so that panning to a city cannot open it.
+
+**Failure:** the hold completes and the server still refuses, because GPS moved
+in between. The sheet says "Not close enough yet", because a control that
+appears to do nothing is the worse outcome.
 
 **Done when:** standing at a place reveals its memory and standing a street away
 does not.
@@ -129,10 +134,27 @@ does not.
 is not a gate*. If the API sends the summary and the client hides it, the
 content is one `curl` away and the mechanic is theatre.
 
-So: `/v1/memories/nearby` returns locked memories **without their summary,
-tags or source**. Place name, coordinates and distance only. A separate
-`POST`-free unlock read (`GET /v1/memories/{id}?lat=&lng=`) returns the full
-memory only when the supplied position is inside the radius.
+So a locked memory ships **place name, coordinates and distance, and nothing
+else** — no summary, no tags, no source. The redaction lives in
+`row_to_memory`, not in an endpoint, because gating `/v1/memories/nearby` alone
+leaves two side doors: `/v1/memories/search` reaches the same rows, and
+`/v1/places/nearby` carries a verbatim summary as `sample_memory`. Both are
+gated, and `tests/test_api_unlock.py` asserts it.
+
+Two parameters, deliberately:
+
+| | |
+|---|---|
+| `lat` / `lng` | where you are **looking**. Chooses the rows. |
+| `at_lat` / `at_lng` | where you are **standing**. Decides what you may read. |
+
+Omit the second pair and every gated memory comes back locked. The unlock read
+is `GET /v1/memories/{id}?at_lat=&at_lng=`, which returns the full memory only
+when that position is inside the radius, and otherwise reports the distance so
+the app can say how much further to walk.
+
+The position is self-reported, so this stops `curl`, not a determined spoofer.
+Attestation needs accounts — Phase 3.
 
 The client can still be generous with the animation. It just cannot be the
 thing deciding what you are allowed to read.
@@ -152,16 +174,24 @@ Consequences, neither avoidable by tuning:
   enter midtown, which is not a game, it is a dump.
 
 `precision_meters` cannot rescue this either — 35 of the stacked centroid
-places claim 50m. Options, in order of honesty:
+places claim 50m.
 
-1. **Gate on `precision_meters`, once it is trustworthy.** Unlock radius =
-   `max(50, precision_meters)`. Correct in principle, and blocked on extraction
-   telling the truth about precision (W4-04 changed the prompt; nothing has
-   re-run).
-2. **One generous radius now** (~250m) and accept that centroid memories unlock
-   in a clump. Ships today, feels wrong in midtown.
-3. **Only gate memories whose coordinates are trustworthy**, and leave the rest
-   open. Honest, and it makes the locked set small until the corpus improves.
+**Decided: option 3 — only gate memories whose coordinates are trustworthy.**
+A coordinate no other place shares is treated as real; a coordinate several
+places share is the model saying "somewhere in this city", and locking that
+would ask somebody to walk to a fiction. The other two options were: gate on
+`precision_meters` once extraction tells the truth about it (correct in
+principle, still blocked on a re-run), or one generous ~250m radius for
+everything (ships, but dumps midtown in a clump).
+
+Against the live corpus that gates **83 memories across 74 places** and leaves
+133 centroid-stacked ones open — a locked set with real weight that shrinks the
+moment the coordinates improve, with no behaviour to change when they do.
+
+The radius is **150m**, not the 50m the model calls exact. Urban GPS drifts tens
+of metres, and a gate that will not open while you are standing on the spot is a
+bug the person blames on themselves. `UNLOCK_RADIUS_METERS` in the API
+environment if that turns out wrong in the street.
 
 
 ## Proposed
