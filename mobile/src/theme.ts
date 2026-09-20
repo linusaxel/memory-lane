@@ -63,3 +63,27 @@ export const label = {
   textTransform: 'uppercase' as const,
   color: color.inkFaint,
 };
+
+/** The text inside a button, filled or outlined. One step up from `label` in
+ *  size and tracking, because it is the thing being pressed. Pair with
+ *  `color: color.paper` on ink, `color.ink` on an outline. */
+export const buttonText = {
+  fontFamily: font.monoBold,
+  fontSize: 12,
+  letterSpacing: 1.2,
+  textTransform: 'uppercase' as const,
+};
+
+/** A text field. The display-name input renders twice - You and Submit - and
+ *  they must not drift. */
+export const input = {
+  borderWidth: 1,
+  borderColor: color.rule,
+  borderRadius: 4,
+  paddingHorizontal: 14,
+  paddingVertical: 12,
+  fontFamily: font.prose,
+  fontSize: 17,
+  color: color.ink,
+  backgroundColor: color.paperRaised,
+};

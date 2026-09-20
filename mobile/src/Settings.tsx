@@ -12,7 +12,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_BASE, type Profile } from './api.ts';
 import Padlock from './Padlock.tsx';
 import SignIn from './SignIn.tsx';
-import { color, font, label } from './theme.ts';
+import type { Permission } from './types.ts';
+import { buttonText, color, font, input, label } from './theme.ts';
 
 type Props = {
   unlockedCount: number;
@@ -26,8 +27,7 @@ type Props = {
   profile: Profile | null;
   onProfile: (next: Profile) => void;
   radiusMeters: number;
-  /** 'granted' | 'denied' | 'blocked' | 'unknown', mirrored from App. */
-  permission: string;
+  permission: Permission;
   onRequestLocation: () => void;
 };
 
@@ -179,23 +179,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     borderRadius: 4,
   },
-  actionText: {
-    fontFamily: font.monoBold,
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: color.ink,
-  },
+  actionText: { ...buttonText, fontSize: 11, color: color.ink },
   input: {
-    borderWidth: 1,
-    borderColor: color.rule,
-    borderRadius: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontFamily: font.prose,
-    fontSize: 17,
-    color: color.ink,
-    backgroundColor: color.paperRaised,
+    ...input,
   },
   link: { alignSelf: 'flex-start' },
   linkText: {

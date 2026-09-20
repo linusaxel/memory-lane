@@ -28,7 +28,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
   fetchStats,
-  fetchNearby,
   fetchProfile,
   fetchUnlocked,
   reportMemory,
@@ -42,7 +41,7 @@ import {
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
-import { isSameQuery, regionToRadiusKm, type Region } from './src/region.ts';
+import type { Region } from './src/region.ts';
 import {
   inUnlockOrder,
   loadUnlocked,
@@ -57,9 +56,12 @@ import { deviceId } from './src/device.ts';
 import Elsewhere from './src/Elsewhere.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
-import { color, font } from './src/theme.ts';
+import { buttonText, color, font, label } from './src/theme.ts';
 import LocationPrimer from './src/LocationPrimer.tsx';
 import TabBar, { type Tab } from './src/TabBar.tsx';
+import { useNearby } from './src/useNearby.ts';
+import type { Permission, Status } from './src/types.ts';
+import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import ReachBanner from './src/ReachBanner.tsx';
@@ -89,14 +91,6 @@ const FALLBACK_REGION: Region = {
  */
 const LOCATED_DELTA = 0.01;
 
-const DEBOUNCE_MS = 400;
-
-/** Separate, because "nothing here" and "we could not ask" must not look alike. */
-type Status = 'loading' | 'ready' | 'failed';
-
-/** 'blocked' is the one that cannot be fixed by asking again - only Settings. */
-type Permission = 'unknown' | 'granted' | 'denied' | 'blocked';
-
 export default function App() {
   // Two families carry the whole design, so there is no sensible half-loaded
   // state - the splash stays up the few hundred ms this takes.
@@ -109,12 +103,11 @@ export default function App() {
     IBMPlexMono_600SemiBold,
   });
 
-  const [region, setRegion] = useState<Region>(FALLBACK_REGION);
-  const [memories, setMemories] = useState<LocatedMemory[]>([]);
+  const { region, setRegion, memories, status, load, reload, onRegionChangeComplete } =
+    useNearby(FALLBACK_REGION);
   // What was tapped is a point, not a memory: the sheet pages through it.
   const [openAt, setOpenAt] = useState<LocatedMemory[]>([]);
   const [openIndex, setOpenIndex] = useState(0);
-  const [status, setStatus] = useState<Status>('loading');
   const [position, setPosition] = useState<Coordinates | null>(null);
   const [permission, setPermission] = useState<Permission>('unknown');
   const [primerDismissed, setPrimerDismissed] = useState(false);
@@ -140,27 +133,12 @@ export default function App() {
   const scheme = useColorScheme();
   const [tab, setTab] = useState<Tab>('map');
 
-  const mapRef = useRef<MapView>(null);
-  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestRequest = useRef(0);
+  const { mapRef, flyTo, onMapReady } = useMapCamera();
   const mounted = useRef(true);
   // load() must not be rebuilt every time the person moves, or the mount effect
   // that calls it would re-run and re-centre the map underneath them.
   const positionRef = useRef<Coordinates | null>(null);
   const watcher = useRef<Location.LocationSubscription | null>(null);
-  // Where the map should go as soon as it can. The effects below run before the
-  // first render that has a MapView in it - the app renders null until the
-  // fonts load - so the initial recentre used to fire into nothing and leave
-  // everybody at the 10km fallback zoom.
-  //
-  // Readiness is tracked rather than inferred from the ref: the ref is set the
-  // moment MapView renders, and animateToRegion before onMapReady is accepted
-  // and then discarded, which looks exactly like the bug it was meant to fix.
-  const pendingRegion = useRef<Region | null>(null);
-  const mapReady = useRef(false);
-  // The last viewport that actually came back with data. Only successes are
-  // recorded, so "Try again" after a failure is never mistaken for a repeat.
-  const lastFetched = useRef<Region | null>(null);
 
   useEffect(() => {
     // Set back to true on every run, not just initialised once: a Fast Refresh
@@ -169,40 +147,8 @@ export default function App() {
     mounted.current = true;
     return () => {
       mounted.current = false;
-      if (debounce.current) clearTimeout(debounce.current);
       watcher.current?.remove();
     };
-  }, []);
-
-  const load = useCallback(async (r: Region) => {
-    // Asking the same question twice. animateToRegion fires
-    // onRegionChangeComplete when it lands, and a programmatic move looks
-    // exactly like a pan from there - so recentring fetched once eagerly and
-    // again a second later. The guard lives here rather than at that callback
-    // because every caller routes through load, including "Try again".
-    if (isSameQuery(lastFetched.current, r)) return;
-
-    // Responses can land out of order: a slow request for the region you just
-    // left resolves after a fast one for the region you are looking at, and
-    // overwrites it - including stamping 'failed' over a newer success. Only
-    // the most recent request is allowed to write.
-    const request = ++latestRequest.current;
-    const isStale = () => !mounted.current || request !== latestRequest.current;
-
-    setStatus('loading');
-    try {
-      const found = await fetchNearby(r.latitude, r.longitude, regionToRadiusKm(r));
-      if (isStale()) return;
-      lastFetched.current = r;
-      setMemories(found);
-      setStatus('ready');
-    } catch {
-      if (isStale()) return;
-      // Keep the last good pins. They are still true of the place, and a map
-      // that empties itself on a dropped request looks like the area went
-      // blank rather than the network.
-      setStatus('failed');
-    }
   }, []);
 
   const remember = useCallback((pos: Location.LocationObject) => {
@@ -215,12 +161,19 @@ export default function App() {
    *  "Near me" while standing on it, which is the opposite of the mechanic. */
   const watchPosition = useCallback(async () => {
     if (watcher.current) return;
-    watcher.current = await Location.watchPositionAsync(
-      // The radius is 150m, so a finer interval spends battery to tell us
-      // nothing. Foreground only - see rule 2 in UI.md.
-      { accuracy: Location.Accuracy.Balanced, distanceInterval: 25 },
-      remember,
-    );
+    try {
+      watcher.current = await Location.watchPositionAsync(
+        // The radius is 150m, so a finer interval spends battery to tell us
+        // nothing. Foreground only - see rule 2 in UI.md.
+        { accuracy: Location.Accuracy.Balanced, distanceInterval: 25 },
+        remember,
+      );
+    } catch {
+      // Best effort. Without a watch the pins stop turning unlockable as you
+      // walk, which is worse but not broken - and every caller fires this
+      // without awaiting it, so a rejection here would surface as nothing but
+      // a red box.
+    }
   }, [remember]);
 
   const goToMyLocation = useCallback(async () => {
@@ -231,7 +184,16 @@ export default function App() {
     }
     setPermission('granted');
 
-    const pos = await Location.getCurrentPositionAsync({});
+    // Permission granted is not the same as having a fix. Indoors, in airplane
+    // mode, or on a simulator with no location set, this rejects - and the
+    // "Near me" button calls it straight from onPress, so an unhandled
+    // rejection was the whole error handling.
+    let pos;
+    try {
+      pos = await Location.getCurrentPositionAsync({});
+    } catch {
+      return false;
+    }
     remember(pos);
     watchPosition();
     const next: Region = {
@@ -245,14 +207,10 @@ export default function App() {
     // screen, so the region it settles on covers noticeably more ground. Asking
     // eagerly meant two requests for one press, the first of them for a
     // viewport that never actually exists.
-    if (mapReady.current) {
-      mapRef.current?.animateToRegion(next, 600);
-    } else {
-      pendingRegion.current = next;
-    }
+    flyTo(next);
     setRegion(next);
     return true;
-  }, [remember, watchPosition]);
+  }, [flyTo, remember, watchPosition]);
 
   useEffect(() => {
     (async () => {
@@ -319,15 +277,6 @@ export default function App() {
       if (mounted.current && dismissed) setPrimerDismissed(true);
     });
   }, []);
-
-  const onRegionChangeComplete = useCallback(
-    (r: Region) => {
-      setRegion(r);
-      if (debounce.current) clearTimeout(debounce.current);
-      debounce.current = setTimeout(() => load(r), DEBOUNCE_MS);
-    },
-    [load],
-  );
 
   // What the device has earned wins over what the server is willing to say now:
   // walking away must not take a memory back.
@@ -408,12 +357,10 @@ export default function App() {
       setOpenAt([memory]);
       setOpenIndex(0);
       // The new pin is not in `memories` until the map asks again, and the
-      // viewport has not changed, so the same-question guard has to be cleared
-      // or nothing would appear until the person panned.
-      lastFetched.current = null;
-      load(region);
+      // viewport has not changed - so this has to be a reload, not a load.
+      reload(region);
     },
-    [load, region, unlocked],
+    [region, reload, unlocked],
   );
 
   const report = useCallback(
@@ -491,13 +438,7 @@ export default function App() {
             customMapStyle={MUTED_ANDROID_STYLE}
             showsPointsOfInterests={false}
             onRegionChangeComplete={onRegionChangeComplete}
-            onMapReady={() => {
-              mapReady.current = true;
-              const pending = pendingRegion.current;
-              if (!pending) return;
-              pendingRegion.current = null;
-              mapRef.current?.animateToRegion(pending, 600);
-            }}
+            onMapReady={onMapReady}
           >
             {/* Once, around the person, at the server's radius - never around
                 each pin, which would be fifteen overlapping circles and no
@@ -582,7 +523,7 @@ export default function App() {
                   latitudeDelta: 0.12,
                   longitudeDelta: 0.12,
                 };
-                mapRef.current?.animateToRegion(next, 900);
+                flyTo(next, 900);
                 setRegion(next);
               }}
             />
@@ -668,8 +609,7 @@ export default function App() {
                   setOpenAt([]);
                   setTab('map');
                   setRegion(next);
-                  if (mapReady.current) mapRef.current?.animateToRegion(next, 600);
-                  else pendingRegion.current = next;
+                  flyTo(next);
                 }
               : undefined
           }
@@ -745,13 +685,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: 4,
   },
-  addText: {
-    fontFamily: font.monoBold,
-    fontSize: 11,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    color: color.ink,
-  },
+  addText: { ...label, color: color.ink },
   locate: {
     position: 'absolute',
     bottom: 44,
@@ -766,11 +700,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 5,
   },
-  locateText: {
-    color: color.paper,
-    fontFamily: font.monoBold,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
+  locateText: { ...buttonText, color: color.paper },
 });

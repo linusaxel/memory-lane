@@ -13,7 +13,7 @@ import {
 import * as Haptics from 'expo-haptics';
 
 import Padlock from './Padlock.tsx';
-import { color, font } from './theme.ts';
+import { color, font, label } from './theme.ts';
 
 /** Long enough to feel like a lock turning, short enough not to be a chore. */
 const HOLD_MS = 900;
@@ -112,11 +112,5 @@ const styles = StyleSheet.create({
     borderRadius: RING / 2,
     backgroundColor: color.sealSoft,
   },
-  caption: {
-    fontFamily: font.monoBold,
-    fontSize: 11,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    color: color.inkFaint,
-  },
+  caption: { ...label },
 });

@@ -19,7 +19,7 @@ import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration } from './format.ts';
 import { metersBetween } from './region.ts';
-import { color, font, label } from './theme.ts';
+import { buttonText, color, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
 
 type Props = {
@@ -391,13 +391,7 @@ const styles = StyleSheet.create({
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ink, not red. The seal is the unlock and nothing else gets to wear it.
   watch: { backgroundColor: color.ink, paddingVertical: 16, borderRadius: 4, alignItems: 'center' },
-  watchText: {
-    color: color.paper,
-    fontFamily: font.monoBold,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
+  watchText: { ...buttonText, color: color.paper },
   walk: {
     marginTop: 8,
     borderWidth: 1,
@@ -406,13 +400,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     borderRadius: 4,
   },
-  walkText: {
-    fontFamily: font.monoBold,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: color.ink,
-  },
+  walkText: { ...buttonText, color: color.ink },
   linkFailed: { fontFamily: font.mono, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: {
     borderWidth: 1,
@@ -421,13 +409,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignItems: 'center',
   },
-  secondaryText: {
-    fontFamily: font.monoBold,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: color.inkSoft,
-  },
+  secondaryText: { ...buttonText, color: color.inkSoft },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   pagerText: {
     ...label,

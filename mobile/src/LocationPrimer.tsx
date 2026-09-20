@@ -13,7 +13,7 @@
 
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { color, font } from './theme.ts';
+import { buttonText, color, font, label } from './theme.ts';
 
 type Props = {
   /** True once the system has refused for good; only Settings can undo that. */
@@ -69,19 +69,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignItems: 'center',
   },
-  allowText: {
-    color: color.paper,
-    fontFamily: font.monoBold,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
+  allowText: { ...buttonText, color: color.paper },
   dismiss: { paddingVertical: 12, alignItems: 'center' },
-  dismissText: {
-    fontFamily: font.monoBold,
-    fontSize: 11,
-    letterSpacing: 1.1,
-    textTransform: 'uppercase',
-    color: color.inkFaint,
-  },
+  dismissText: { ...label },
 });

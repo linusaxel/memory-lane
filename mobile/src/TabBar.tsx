@@ -8,7 +8,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { color, font } from './theme.ts';
+import { color, font, label as themeLabel } from './theme.ts';
 
 export type Tab = 'map' | 'collection' | 'you';
 
@@ -78,13 +78,7 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   item: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  label: {
-    fontFamily: font.monoBold,
-    fontSize: 11,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: color.inkFaint,
-  },
+  label: { ...themeLabel, letterSpacing: 1.2 },
   active: { color: color.ink },
   badge: {
     minWidth: 20,

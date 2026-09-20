@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Coordinates, Hotspot } from './api.ts';
 import { distance } from './format.ts';
 import { metersBetween } from './region.ts';
-import { color, font, label } from './theme.ts';
+import { buttonText, color, font, label } from './theme.ts';
 
 type Props = {
   hotspots: Hotspot[];
@@ -85,11 +85,5 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignItems: 'center',
   },
-  goText: {
-    color: color.paper,
-    fontFamily: font.monoBold,
-    fontSize: 12,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-  },
+  goText: { ...buttonText, color: color.paper },
 });

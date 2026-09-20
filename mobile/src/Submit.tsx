@@ -55,7 +55,7 @@ import {
   type MediaItem,
 } from './api.ts';
 import { duration } from './format.ts';
-import { color, font, label } from './theme.ts';
+import { color, font, input, label } from './theme.ts';
 
 /** Matches the server's own floor. Ten characters is not a quality bar, it is a
  *  fat-finger bar, and the button has to agree with the API about it. */
@@ -517,15 +517,7 @@ const styles = StyleSheet.create({
   field: { gap: 10 },
   fieldLabel: { ...label, color: color.inkSoft },
   input: {
-    borderWidth: 1,
-    borderColor: color.rule,
-    borderRadius: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontFamily: font.prose,
-    fontSize: 17,
-    color: color.ink,
-    backgroundColor: color.paperRaised,
+    ...input,
   },
   prose: { minHeight: 130, lineHeight: 26 },
   counter: { ...label, fontSize: 9, textAlign: 'right' },
