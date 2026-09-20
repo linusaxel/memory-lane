@@ -1,11 +1,11 @@
 # LOOP STATE — rewritten every tick. Trust this file over your instincts.
 
 ```
-tick:     3
+tick:     4
 updated:  2026-09-20
-branch:   loop/autopilot   (7 commits ahead of main, NEVER PUSHED)
-gate:     GREEN — 32 passed, 2 deselected (live) in 0.15s
-head:     2b2f5c5 "W1-03: prove channel discovery against a real channel"
+branch:   loop/autopilot   (9 commits ahead of main, NEVER PUSHED)
+gate:     GREEN — 43 passed, 2 deselected (live) in 2.6s (~4s wall, incl. Docker db)
+head:     d79700c "W1-04: a channel: source feeds the existing ingest stage"
 ```
 
 ## What this project is
@@ -16,36 +16,32 @@ FastAPI → (soon) an Expo map app. See `CLAUDE.md` only if a task's `touches:` 
 
 ## Where I am
 
-**LAST DONE: W1-03** — discovery proven against a real channel. Measured: 150 requested
-from `@veritasium`, **150 returned**, every id an 11-char match, every title populated.
-Baseline before the rewrite was **zero**. The crawler now genuinely works.
+**LAST DONE: W1-04** — a `channel:` source now discovers videos and inserts them through
+the existing ingest path. `pipeline/run_all.py` needed **no change**. 10 tests against a
+real PostGIS database.
 
-**NEXT TASK: W1-04** — wire discovery into the existing ingest stage.
+**NEXT TASK: W1-05** — declare a real channel source in `config/content.yaml`.
 
-**NEXT CONCRETE ACTION:** write `tests/test_ingest.py`, then make two small edits to
-`pipeline/ingest.py`:
+**NEXT CONCRETE ACTION:** append a source to `config/content.yaml`:
 
-1. Inside the existing `for source in sources:` loop, right after
-   `videos = source.get("videos", [])` (around line 56), add:
-   ```python
-   if source.get("channel"):
-       from crawler.yt_crawler import list_channel_videos
-       videos = videos + list_channel_videos(source["channel"], limit=source.get("limit"))
-   ```
-   The import is local on purpose so `yt_dlp` stays off the import path for
-   yaml-only runs.
-2. Add `published_at` to the INSERT at ~line 85 (the column already exists in
-   `db/schema.sql` and is unused) with `"published_at": video.get("published_at")`
-   in the params dict. YAML-sourced videos pass `None`, exactly as today.
+```yaml
+  - name: "<channel name>"
+    platform: youtube
+    channel: "https://www.youtube.com/@<handle>"
+    limit: 25
+```
 
-**Reuse, do not rewrite.** The dedup `SELECT id FROM content WHERE url = :url`
-(line ~73) and the INSERT (line ~85) already exist and already make this idempotent —
-including a video that appears in both `videos:` and `channel:`, because the SELECT sees
-uncommitted inserts in the same transaction. `pipeline/run_all.py` needs **no change at
-all**: discovery rides the existing Stage 1.
+Then verify with the task's command. **The handle must actually resolve** —
+`@TheMountainDispatch`, the channel the old crawler hardcoded, returns 404. A known-good
+handle is `@veritasium` (used by the live tests), but prefer a channel whose videos suit
+this project: Memory Lane wants **location-rich storytelling** (travel, food, city
+history), not science explainers. `config/content.yaml` currently holds
+"Tuesdays with Stories"; a comedy/story podcast channel is a better fit than @veritasium.
 
-Keep the test offline — fake `list_channel_videos`, do not hit the network. Anything
-needing a real DB must be marked `@pytest.mark.db`.
+Keep `limit: 25` so the first real crawl is bounded. Removing the key ingests everything.
+
+**Do not run extraction.** Ingest and transcripts are free; `pipeline/extract.py` spends
+Anthropic credits and is parked as W1-09 for a human.
 
 ## Do not redo — already done, leave alone
 
@@ -58,6 +54,9 @@ needing a real DB must be marked `@pytest.mark.db`.
   if you find yourself re-adding transcript code here, stop and read that test.
 - **W1-03** live discovery tests. Commit `2b2f5c5`. They are marked `live` so the gate
   deselects them; that is deliberate, do not "fix" it by removing the marker.
+- **W1-04** channel→ingest wiring. Commit `d79700c`. `ingest_content(config=None)` is
+  backwards compatible and both existing callers still pass no argument. Do not add a
+  separate crawl stage or a second dedup — Stage 1 already does it.
 - **The venv was rebuilt on Python 3.12.12** and every dependency reinstalled. Do not
   "fix" it again — see *Rejected approaches*.
 
@@ -75,6 +74,9 @@ needing a real DB must be marked `@pytest.mark.db`.
   `python:3.12-slim` Docker target in W2-02). The broken one sits at `venv.broken-py314/`
   (76MB, a human may delete it). Install with
   `uv pip install --python venv/bin/python ...` — **never** `venv/bin/pip`.
+- **A second dedup or a new crawl stage.** The `SELECT id FROM content WHERE url = :url`
+  in ingest already makes discovery idempotent, including a video that appears both in
+  `videos:` and on the channel. Adding another would be two sources of truth.
 - **Shelling out to `pytest --collect-only` from inside a test** (first draft of
   `test_loop_contract.py`). The child re-imports the module and spawns another child —
   a fork bomb. It now reads the file instead, which proves the same thing.
@@ -95,9 +97,9 @@ Full instructions live in each task's `note:` in `loop/TASKS.yaml`.
 
 ```
 W0 harness    1/1  done
-W1 crawler    3/9   — 5 todo, 1 parked (API_CREDITS)
+W1 crawler    4/9   — 4 todo, 1 parked (API_CREDITS)
 W2 backend    0/8   — 7 todo, 1 parked (DEPLOY)
 W3 app        0/15  — 12 todo, 3 parked
               ----
-              4/33 done, 5 parked, 24 to build
+              5/33 done, 5 parked, 23 to build
 ```

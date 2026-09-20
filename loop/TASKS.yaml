@@ -75,9 +75,9 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_ingest.py"
     touches: [pipeline/ingest.py, tests/test_ingest.py]
     depends_on: [W1-02]
-    state: todo
-    attempts: 0
-    commit: null
+    state: done
+    attempts: 1
+    commit: d79700c
     note: "Reuse, do not rewrite: the dedup SELECT at ingest.py:73 and the INSERT at :85
       already exist. Add published_at to that INSERT (the column exists in schema.sql and
       is unused). pipeline/run_all.py needs NO change - discovery rides Stage 1.
