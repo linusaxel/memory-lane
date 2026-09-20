@@ -27,7 +27,7 @@ tasks:
     touches: [loop/, tests/, requirements-dev.txt, .claude/commands/]
     state: done
     attempts: 1
-    commit: BOOTSTRAP_SHA
+    commit: b7fc77b
     note: "Written by hand during bootstrap. The loop did not author its own contract."
 
   # -- W1 -- crawler ---------------------------------------------------------
