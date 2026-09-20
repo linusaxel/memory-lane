@@ -75,6 +75,11 @@ python -m api.main
 | `db/migrations/` | One-off SQL for databases that already exist |
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
 | `config/content.yaml` | Content sources to process |
+| `mobile/App.tsx` | The map screen: pins, banner, "Near me" |
+| `mobile/src/MemorySheet.tsx` | The memory detail sheet |
+| `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
+| **`mobile/UI.md`** | **Read before touching the app.** Tokens, load-bearing rules, how to see it running |
+| **`docs/08-ux-flows.md`** | **What the user does.** Implemented + proposed flows |
 
 ## Database Tables
 
@@ -141,6 +146,18 @@ python -m pipeline.worker
 
 # Check status
 python -m pipeline.enqueue --status <content_id>
+```
+
+### Mobile app (`mobile/`)
+Expo + react-native-maps. One map screen, one detail sheet, one endpoint
+(`/v1/memories/nearby`). Before changing it read **`mobile/UI.md`** for the
+design tokens and the constraints that are load-bearing (blank maps fail store
+review, foreground-only location, 400ms debounce, radius-only API), and
+**`docs/08-ux-flows.md`** for the flows it has to satisfy.
+
+```bash
+cd mobile && npm run typecheck                   # also run by the gate
+cd mobile && npx expo start --ios                # see it (UI.md has the recipe)
 ```
 
 ### API (`api/main.py`)

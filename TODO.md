@@ -112,6 +112,50 @@ Docker build layers, and two pipeline-stage headings. Nothing to refactor.
 
 ---
 
+## Design questions — cross-cutting, sequencing NOT ratified
+
+**Provenance:** seeded 2026-09-20 by the cleanup session, which proposed running
+this *before* Phase 1 as a "Phase 0". The findings below are real and stay. The
+reordering does not stand on an agent's say-so — the brief reserves build-order
+changes for the user, and Phase 1 remains the approved next phase. Raised in
+Open questions; until it is answered, treat these as cross-cutting items to
+resolve *during* Phase 1, not a gate in front of it.
+
+**The argument for doing them early, which is a good one:** every phase changes
+what a person sees, and the repo had no written UI guidance at all — no tokens,
+no flows, no note that a blank map fails store review. Phases 1, 3 and 4 each
+add a *layer*, and nobody has decided how a layer is chosen on the map.
+
+Seeded 2026-09-20:
+
+- [x] **D.1 `mobile/UI.md`** — the tokens already in the code (zinc neutrals,
+      `#dc2626` for the watch action only), the seven load-bearing rules, and a
+      working recipe for seeing the app on a booted simulator with the location
+      pre-granted. Linked from CLAUDE.md and README.
+- [x] **D.2 `docs/08-ux-flows.md`** — F1 (discover nearby) and F2 (read a
+      memory, open its source) documented as-built. F3–F6 stubbed as Proposed
+      against the phases they belong to.
+
+Open, and blocking a clean Phase 1:
+
+- [ ] **D.3 Answer the four open questions** at the bottom of
+      `docs/08-ux-flows.md`. The one that blocks the most: **does a pin
+      represent a place or a memory?** Today it is a memory, so Gotham Comedy
+      Club is six overlapping pins at one address. Place-level pins fix that but
+      change what tapping means, and the answer shapes the layer UI in 1.x.
+- [ ] **D.4 Design the empty state, and make it distinguishable from failure.**
+      Confirmed live: `fetchNearby` accepts an `AbortSignal`, `App.tsx` never
+      passes one, so an unreachable API hangs instead of rejecting and the
+      banner shows "0 memories here" with a spinner indefinitely. The error path
+      that exists never fires. The realistic Copenhagen case before the
+      historical corpus lands is zero memories nearby — and right now that looks
+      identical to the app being broken.
+- [ ] **0.5 Write F3 properly** once the historical source is chosen (W4-00).
+      F3 is the product; it should not be specified by whatever the ingestion
+      happens to produce.
+
+---
+
 ## Phase 1 — Historical layer, one neighborhood
 
 Copenhagen. Non-video ingestion, contrast scoring, proximity query, card design.
@@ -266,6 +310,14 @@ on them. Full detail in `loop/STATE.md`.
 
 ## Open questions
 
+- **Should the design questions run before Phase 1?** The cleanup session
+  proposed it as a "Phase 0" and makes a fair case: three backends behind an
+  undesigned surface gets you three backends and no product. But the brief
+  reserves build-order changes, so this is the user's call, not an agent's.
+  Unanswered, Phase 1 proceeds and the design items ride alongside it.
+- **Does a pin represent a place or a memory?** Today a memory, so Gotham Comedy
+  Club is six overlapping pins at one address. Place-level pins fix that but
+  change what tapping means. Shapes both W4-02 and the layer UI.
 - **Which historical source first?** Deliberately undecided. The brief's
   priority order puts arkiv.dk / Københavns Stadsarkiv at #1, but it has no
   public API and would mean scraping; setlist.fm at #3 is a documented REST API

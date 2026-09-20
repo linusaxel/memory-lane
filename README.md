@@ -49,5 +49,7 @@ See **[CLAUDE.md](CLAUDE.md)** for a quick reference guide optimized for AI codi
 | [03-transcripts.md](docs/03-transcripts.md) | Transcript fetching and failure handling |
 | [04-extract.md](docs/04-extract.md) | The extraction prompt and its output contract |
 | [07-testing.md](docs/07-testing.md) | What the suite covers and how to run it |
+| [08-ux-flows.md](docs/08-ux-flows.md) | What a person actually does, start to finish |
+| [mobile/UI.md](mobile/UI.md) | Design tokens and app constraints |
 
 The API's endpoint list lives in [CLAUDE.md](CLAUDE.md#api-apimainpy).
