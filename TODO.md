@@ -162,7 +162,7 @@ Copenhagen. Non-video ingestion, contrast scoring, proximity query, card design.
 The goal is a map that is never empty in one neighborhood, ranked so the top
 card is the one worth screenshotting.
 
-- [ ] **1.1 Schema, additive.** Reuse the existing four tables; no new entity
+- [x] **1.1 Schema, additive.** Reuse the existing four tables; no new entity
       model. `db/schema.sql` plus a migration under `db/migrations/`.
       - `memories.layer` — `historical | friend | stranger`, NOT NULL, default
         `historical`. Backfill the podcast rows.
@@ -174,8 +174,10 @@ card is the one worth screenshotting.
       - `memories.contrast_score` REAL + `memories.contrast_note` TEXT.
       - `content.source_type` — `video | archive | newspaper | registry | …`, so
         the transcript flags stop being load-bearing for non-video rows.
-      - Verify: schema applies clean to an empty DB *and* migrates the live one
-        without changing `SELECT count(*) FROM memories` (currently 224).
+      - Done in `722fd68`: `db/migrations/002_layers.sql`, applied to the live
+        DB twice, 224 memories before and after. `tests/test_schema_layers.py`
+        guards schema.sql/migration drift and was mutation-checked to confirm it
+        actually fails.
 - [ ] **1.2 Semantic place dedup.** Normalise `place_query` (casefold, strip
       venue-type stopwords) and collapse places whose coordinates fall within
       their combined `precision_meters`. Ground truth to fix: the two *Gotham

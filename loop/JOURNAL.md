@@ -16,3 +16,4 @@
 2026-09-20T12:58Z t11 W3-07..11 done commit=b183d97 gate=GREEN app.json/eas.json store config; prebuild verified BOTH manifests offline (no Android SDK); blockedPermissions strips SYSTEM_ALERT_WINDOW+storage; icon alpha guard; store copy
 2026-09-20T13:02Z t12 W3-12 done  commit=b183d97 gate=GREEN expo export: iOS+Android bundles 1.5MB each, no Metro errors. 28 done / 5 parked / 0 remaining -> TERMINATE
 2026-09-20T13:20Z cleanup  test_loop_is_not_on_main moved out of pytest into ml-tick STEP 5. It asserted a property of the environment, not the code, so it would have gone RED forever once this branch merged to main.
+2026-09-20T14:05Z t13 W4-01 done  commit=722fd68 gate=GREEN layer/happened_at/attribution/contrast columns + 002_layers.sql; applied to live DB twice, 224 memories intact; drift guard mutation-checked

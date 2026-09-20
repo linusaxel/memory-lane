@@ -553,12 +553,17 @@ tasks:
       empty DB and migrates the live one without changing the memory count."
     verify: "venv/bin/python -m pytest -q tests/test_schema_layers.py"
     touches: [db/schema.sql, db/migrations/, tests/test_schema_layers.py]
-    state: todo
-    attempts: 0
-    commit: null
-    note: "Additive only - reuse the existing four tables, no new entity model. Follow
-      001_places_unique.sql: memories.place_id is ON DELETE CASCADE, so any row-deleting
-      migration must guard with NOT EXISTS. Live DB is 224 memories / 194 places."
+    state: done
+    attempts: 1
+    commit: 722fd68
+    note: "Additive only - no new entity model. layer is CHECKed (closed set, the
+      rendering rules depend on it); content.source_type is not (grows per source).
+      happened_at deliberately separate from timestamp_start: a 1978 gig can sit at
+      second 0 of a 2024 recording. Migration is re-runnable - ADD COLUMN IF NOT EXISTS
+      carries no constraint when the column exists, so CHECKs are dropped and re-added.
+      Applied to the live DB twice, 224 memories before and after. The drift guard in
+      the test was mutation-checked: it fails when the migration gains a column
+      schema.sql lacks."
 
   - id: W4-02
     goal: "Semantic place dedup: normalise place_query (casefold, strip venue-type
