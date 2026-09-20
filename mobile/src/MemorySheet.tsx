@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import type { Coordinates, LocatedMemory } from './api.ts';
+import Padlock from './Padlock.tsx';
 import { metersBetween } from './region.ts';
 import UnlockButton from './UnlockButton.tsx';
 
@@ -28,7 +29,7 @@ type Props = {
   unlockError: string | null;
 };
 
-/** Default only for a server that somehow sent no radius; it always does. */
+/** Only used if a memory somehow arrives without the server's radius. */
 const FALLBACK_RADIUS_M = 150;
 
 function formatDistance(meters: number | null): string | null {
@@ -73,6 +74,7 @@ export default function MemorySheet({
       : null;
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
+  const locked = !!memory?.locked;
 
   // The reveal is the payoff. Swapping the text in place would throw away the
   // only moment the product has - so the content arrives, once, on the frame
@@ -82,9 +84,8 @@ export default function MemorySheet({
 
   useEffect(() => {
     if (!memory) return;
-    const now = `${memory.id}:${memory.locked}`;
     const justOpened = seen.current === `${memory.id}:true` && !memory.locked;
-    seen.current = now;
+    seen.current = `${memory.id}:${memory.locked}`;
     if (!justOpened) return;
 
     reveal.setValue(0);
@@ -115,36 +116,58 @@ export default function MemorySheet({
             <View style={styles.grabber} />
           </View>
 
-          <ScrollView contentContainerStyle={styles.body}>
+          <View style={styles.heading}>
             <Text style={styles.place}>{memory.place.name}</Text>
-
             <View style={styles.metaRow}>
-              {formatDistance(fromHere ?? memory.distance_meters) && (
-                <Text style={[styles.meta, withinReach && memory.locked && styles.reachable]}>
+              {(!locked || withinReach) && formatDistance(fromHere ?? memory.distance_meters) && (
+                <Text style={[styles.meta, withinReach && locked && styles.reachable]}>
                   {formatDistance(fromHere ?? memory.distance_meters)}
                 </Text>
               )}
-              {memory.locked && (
+              {locked ? (
                 <Text style={[styles.meta, withinReach ? styles.reachable : styles.sealed]}>
                   {withinReach ? 'within reach' : 'locked'}
                 </Text>
-              )}
-              {!memory.locked && memory.confidence === 'high' && (
-                <Text style={[styles.meta, styles.confident]}>high confidence</Text>
+              ) : (
+                memory.confidence === 'high' && (
+                  <Text style={[styles.meta, styles.confident]}>high confidence</Text>
+                )
               )}
             </View>
+          </View>
 
-            {/* No images exist anywhere in the schema, so the summary carries
-                the whole sheet - it gets the typographic weight. */}
-            {memory.locked ? (
-              <Text style={styles.locked}>
-                {position == null
-                  ? 'This memory is locked. Turn on location to unlock it by standing here.'
-                  : withinReach
-                    ? 'You are close enough. Hold the ring to unlock it.'
-                    : `This memory is locked. Come within ${Math.round(radius)} m of it to read it.`}
-              </Text>
-            ) : (
+          {/* Two different screens, not one screen with the middle deleted. A
+              locked memory has nothing to scroll, so it gets a centred
+              composition; an open one is a story and gets the reading column. */}
+          {locked ? (
+            <View style={styles.gate}>
+              {withinReach ? (
+                <>
+                  <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
+                  <Text style={styles.gateNote}>
+                    {unlockError ?? 'You are standing close enough to open this one.'}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Padlock size={34} color="#d4d4d8" />
+                  <Text style={styles.gateFigure}>
+                    {position == null
+                      ? '—'
+                      : formatDistance(fromHere)?.replace(' away', '')}
+                  </Text>
+                  <Text style={styles.gateNote}>
+                    {position == null
+                      ? 'Turn on location to unlock memories by standing near them.'
+                      : `Get within ${Math.round(radius)} m and you can open it.`}
+                  </Text>
+                </>
+              )}
+            </View>
+          ) : (
+            <ScrollView contentContainerStyle={styles.body}>
+              {/* No images exist anywhere in the schema, so the summary carries
+                  the whole sheet - it gets the typographic weight. */}
               <Animated.View style={revealed}>
                 <Text style={styles.summary}>{memory.summary}</Text>
 
@@ -164,8 +187,8 @@ export default function MemorySheet({
                   </Text>
                 )}
               </Animated.View>
-            )}
-          </ScrollView>
+            </ScrollView>
+          )}
 
           <View style={styles.actions}>
             {/* Without this, every memory but the first at a stacked point is
@@ -195,31 +218,16 @@ export default function MemorySheet({
                 </Pressable>
               </View>
             )}
-            {memory.locked ? (
-              withinReach ? (
-                <>
-                  <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
-                  {unlockError && <Text style={styles.away}>{unlockError}</Text>}
-                </>
-              ) : (
-                <Text style={styles.away}>
-                  {position == null
-                    ? 'Location is off'
-                    : `${formatDistance(fromHere)} \u2014 too far to unlock`}
+            {!locked && memory.content && (
+              <Pressable
+                style={styles.watch}
+                // timestamp_url already points at the right second.
+                onPress={() => Linking.openURL(memory.content!.timestamp_url)}
+              >
+                <Text style={styles.watchText}>
+                  Watch at {formatTimestamp(memory.content.timestamp_start)}
                 </Text>
-              )
-            ) : (
-              memory.content && (
-                <Pressable
-                  style={styles.watch}
-                  // timestamp_url already points at the right second.
-                  onPress={() => Linking.openURL(memory.content!.timestamp_url)}
-                >
-                  <Text style={styles.watchText}>
-                    Watch at {formatTimestamp(memory.content.timestamp_start)}
-                  </Text>
-                </Pressable>
-              )
+              </Pressable>
             )}
             <Pressable style={styles.close} onPress={onClose}>
               <Text style={styles.closeText}>Close</Text>
@@ -235,16 +243,19 @@ const styles = StyleSheet.create({
   sheet: { flex: 1, backgroundColor: '#fff' },
   grabberRow: { alignItems: 'center', paddingTop: 10 },
   grabber: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#d4d4d8' },
-  body: { padding: 24, paddingBottom: 12 },
+  heading: { paddingHorizontal: 24, paddingTop: 24 },
+  body: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 12 },
   place: { fontSize: 26, fontWeight: '700', color: '#18181b', letterSpacing: -0.5 },
   metaRow: { flexDirection: 'row', gap: 12, marginTop: 6 },
   meta: { fontSize: 13, color: '#71717a' },
   confident: { color: '#15803d' },
   reachable: { color: '#b45309', fontWeight: '600' },
   sealed: { color: '#a1a1aa' },
-  summary: { fontSize: 17, lineHeight: 26, color: '#27272a', marginTop: 20 },
-  locked: { fontSize: 17, lineHeight: 26, color: '#71717a', marginTop: 20, fontStyle: 'italic' },
-  away: { fontSize: 14, color: '#a1a1aa', textAlign: 'center', paddingVertical: 15 },
+  // The locked half owns the empty space instead of leaving it lying around.
+  gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 14 },
+  gateFigure: { fontSize: 44, fontWeight: '700', color: '#18181b', letterSpacing: -1 },
+  gateNote: { fontSize: 15, lineHeight: 22, color: '#71717a', textAlign: 'center' },
+  summary: { fontSize: 17, lineHeight: 26, color: '#27272a' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 22 },
   tag: {
     fontSize: 12,

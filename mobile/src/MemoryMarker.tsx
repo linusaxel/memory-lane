@@ -11,6 +11,7 @@ import { Marker } from 'react-native-maps';
 
 import type { MemoryGroup } from './cluster.ts';
 import { groupLabel } from './cluster.ts';
+import Padlock from './Padlock.tsx';
 
 export type Reach = 'open' | 'locked' | 'unlockable';
 
@@ -36,7 +37,7 @@ export default function MemoryMarker({ group, reach, onPress }: Props) {
     >
       {reach === 'open' ? (
         count > 1 && (
-          <View style={styles.badge}>
+          <View style={[styles.badge, styles.open]}>
             <Text style={styles.count}>{count}</Text>
           </View>
         )
@@ -47,29 +48,34 @@ export default function MemoryMarker({ group, reach, onPress }: Props) {
   );
 }
 
-/** A padlock, drawn rather than set in an emoji font: the shackle has to read
- *  at 30px and the body has to take the state colour, which an emoji will not. */
 function Lock({ count, reachable }: { count: number; reachable: boolean }) {
-  const size = reachable ? REACHABLE : DISTANT;
-  const tint = reachable ? '#f59e0b' : '#a1a1aa';
+  // Out of reach: a solid grey disc. In reach: a ring the blue location dot
+  // sits *inside*, which is the only shape that survives being stood on - and
+  // the pin you are standing on is the pin that matters. It also echoes the
+  // ring in the sheet, so the map and the control are visibly the same object.
+  if (!reachable) {
+    return (
+      <View style={styles.lockWrap}>
+        <View style={[styles.badge, styles.distant]}>
+          {count > 1 ? (
+            <Text style={styles.count}>{count}</Text>
+          ) : (
+            <Padlock size={DISTANT * 0.34} color="#fff" />
+          )}
+        </View>
+      </View>
+    );
+  }
 
   return (
-    // The one you can open has to survive being covered by the blue location
-    // dot, because the pin you are standing on is the pin that matters.
-    <View style={[styles.lockWrap, reachable && styles.halo]}>
-      <View
-        style={[
-          styles.shackle,
-          { borderColor: tint, width: size * 0.42, height: size * 0.3, top: size * 0.06 },
-        ]}
-      />
-      <View
-        style={[
-          styles.badge,
-          { backgroundColor: tint, width: size, height: size, borderRadius: size / 2 },
-        ]}
-      >
-        <Text style={[styles.count, reachable && styles.countBig]}>{count > 1 ? count : ''}</Text>
+    <View style={[styles.lockWrap, styles.halo]}>
+      <View style={styles.ring} />
+      <View style={styles.tag}>
+        {count > 1 ? (
+          <Text style={styles.count}>{count}</Text>
+        ) : (
+          <Padlock size={10} color="#fff" />
+        )}
       </View>
     </View>
   );
@@ -79,29 +85,43 @@ const DISTANT = 28;
 const REACHABLE = 44;
 
 const styles = StyleSheet.create({
-  lockWrap: { alignItems: 'center', justifyContent: 'flex-end', padding: 6 },
-  // A soft ring the user-location dot cannot hide behind.
-  halo: {
-    borderRadius: 34,
-    backgroundColor: 'rgba(245,158,11,0.22)',
-  },
-  shackle: {
-    borderWidth: 3,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 999,
-    borderTopRightRadius: 999,
-  },
+  lockWrap: { alignItems: 'center', justifyContent: 'center', padding: 7 },
+  // A soft glow so the pin is findable before you can read its shape.
+  halo: { borderRadius: 40, backgroundColor: 'rgba(245,158,11,0.22)' },
   badge: {
     minWidth: 26,
     height: 26,
     paddingHorizontal: 6,
     borderRadius: 13,
-    backgroundColor: '#18181b',
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  open: { backgroundColor: '#18181b' },
+  distant: { backgroundColor: '#a1a1aa', width: DISTANT, height: DISTANT, borderRadius: DISTANT / 2 },
+  ring: {
+    width: REACHABLE,
+    height: REACHABLE,
+    borderRadius: REACHABLE / 2,
+    borderWidth: 5,
+    borderColor: '#f59e0b',
+    backgroundColor: '#fff',
+  },
+  // Offset to the corner, because the middle is where the blue dot lands.
+  tag: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    borderRadius: 10,
+    backgroundColor: '#b45309',
     borderWidth: 2,
     borderColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
   count: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  countBig: { fontSize: 15 },
 });

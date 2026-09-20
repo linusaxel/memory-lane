@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
+import Padlock from './Padlock.tsx';
+
 /** Long enough to feel like a lock turning, short enough not to be a chore. */
 const HOLD_MS = 900;
 
@@ -73,7 +75,10 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
       >
         <View style={styles.ring}>
           <Animated.View style={[styles.fill, { transform: [{ scale: fill }] }]} />
-          <Text style={styles.glyph}>{busy ? '···' : '●'}</Text>
+          {/* The same padlock the map pins use, so the ring reads as the thing
+              that opens them rather than as a record button. Amber-700 stays
+              readable on both the white rest state and the filled one. */}
+          <Padlock size={27} color="#b45309" />
         </View>
       </Pressable>
       <Text style={styles.caption}>{busy ? 'Unlocking…' : 'Hold to unlock'}</Text>
@@ -106,8 +111,5 @@ const styles = StyleSheet.create({
     borderRadius: RING / 2,
     backgroundColor: '#fde68a',
   },
-  // Amber-700 stays readable on both the white rest state and the filled one,
-  // which a white glyph would not.
-  glyph: { fontSize: 26, color: '#b45309', fontWeight: '700' },
   caption: { fontSize: 13, color: '#71717a' },
 });
