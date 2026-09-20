@@ -42,7 +42,6 @@ CREATE TABLE places (
     coordinates GEOGRAPHY(POINT, 4326),
     precision_meters INTEGER DEFAULT 200,
     geocode_status VARCHAR(20) DEFAULT 'pending',
-    geocode_response JSONB,
     geocoded_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -187,6 +186,8 @@ CREATE TABLE reports (
 
 CREATE INDEX idx_memories_place ON memories(place_id);
 CREATE INDEX idx_memories_user ON memories(user_id);
+-- MY_DEVICES runs on every /v1/unlocks and every /v1/me.
+CREATE INDEX idx_devices_user ON devices(user_id);
 CREATE INDEX idx_memories_content ON memories(content_id);
 CREATE INDEX idx_places_coordinates ON places USING GIST(coordinates);
 -- The ON CONFLICT (place_query) in pipeline/extract.py needs this to fire. Without

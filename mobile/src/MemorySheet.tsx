@@ -16,6 +16,7 @@ import type { Coordinates, LocatedMemory } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
 import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
+import { FALLBACK_RADIUS_M } from './reach.ts';
 import { metersBetween } from './region.ts';
 import { color, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
@@ -39,9 +40,6 @@ type Props = {
    *  pretending a second press does anything. */
   reported?: boolean;
 };
-
-/** Only used if a memory somehow arrives without the server's radius. */
-const FALLBACK_RADIUS_M = 150;
 
 function formatDistance(meters: number | null): string | null {
   if (meters == null) return null;

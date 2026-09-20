@@ -177,17 +177,6 @@ class PlacesResponse(BaseModel):
     meta: NearbyMeta
 
 
-class PlaceDetail(BaseModel):
-    id: int
-    name: str
-    place_query: str
-    coordinates: Coordinates | None = None
-    precision_meters: int
-    geocode_status: str
-    memory_count: int
-    tags: list[str]
-
-
 # Whether this coordinate belongs to this place alone, which is what decides
 # whether a memory is worth walking to. The NOT EXISTS is what stops a
 # submission unlocking its neighbours. Both rules and the reasons:
@@ -372,40 +361,6 @@ SELECT {MEMORY_COLUMNS},
     m.created_at
 {MEMORY_JOIN}
 WHERE m.id = :memory_id AND {VISIBLE}
-"""
-
-PLACE_MEMORIES_QUERY = f"""
-SELECT {MEMORY_COLUMNS}
-{MEMORY_JOIN}
-WHERE p.id = :place_id AND {VISIBLE}
-ORDER BY m.created_at DESC
-LIMIT :limit OFFSET :offset
-"""
-
-SINGLE_PLACE_QUERY = f"""
-SELECT
-    p.id,
-    p.name,
-    p.place_query,
-    p.precision_meters,
-    p.geocode_status,
-    ST_Y(p.coordinates::geometry) as lat,
-    ST_X(p.coordinates::geometry) as lng,
-    p.created_at,
-    COUNT(m.id) as memory_count,
-    {PLACE_TAGS}
-FROM places p
-LEFT JOIN memories m ON m.place_id = p.id
-WHERE p.id = :place_id
-GROUP BY p.id, p.name, p.place_query, p.precision_meters, p.geocode_status, p.coordinates, p.created_at
-"""
-
-CONTENT_MEMORIES_QUERY = f"""
-SELECT {MEMORY_COLUMNS}
-{MEMORY_JOIN}
-WHERE c.id = :content_id AND {VISIBLE}
-ORDER BY m.timestamp_start ASC
-LIMIT :limit OFFSET :offset
 """
 
 SEARCH_MEMORIES_QUERY = f"""
@@ -1000,65 +955,6 @@ def get_nearby_places(
             radius_km=radius_km,
         ),
     )
-
-
-@app.get("/v1/places/{place_id}", response_model=PlaceDetail)
-def get_place(place_id: int):
-    """Get details for a specific place."""
-    with get_session() as session:
-        result = session.execute(text(SINGLE_PLACE_QUERY), {"place_id": place_id})
-        row = result.fetchone()
-
-    if not row:
-        raise HTTPException(status_code=404, detail="Place not found")
-
-    coords = row_coordinates(row)
-
-    return PlaceDetail(
-        id=row.id,
-        name=row.name,
-        place_query=row.place_query,
-        coordinates=coords,
-        precision_meters=row.precision_meters,
-        geocode_status=row.geocode_status,
-        memory_count=row.memory_count,
-        tags=row.tags or [],
-    )
-
-
-@app.get("/v1/places/{place_id}/memories", response_model=list[Memory])
-def get_place_memories(
-    place_id: int, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)
-):
-    """Get all memories for a specific place."""
-    with get_session() as session:
-        result = session.execute(
-            text(PLACE_MEMORIES_QUERY), {"place_id": place_id, "limit": limit, "offset": offset}
-        )
-        rows = result.fetchall()
-
-    if not rows:
-        raise HTTPException(status_code=404, detail="Place not found or has no memories")
-
-    return [row_to_memory(row, include_distance=False) for row in rows]
-
-
-@app.get("/v1/content/{content_id}/memories", response_model=list[Memory])
-def get_content_memories(
-    content_id: int, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)
-):
-    """Get all memories extracted from a specific video/content."""
-    with get_session() as session:
-        result = session.execute(
-            text(CONTENT_MEMORIES_QUERY),
-            {"content_id": content_id, "limit": limit, "offset": offset},
-        )
-        rows = result.fetchall()
-
-    if not rows:
-        raise HTTPException(status_code=404, detail="Content not found or has no memories")
-
-    return [row_to_memory(row, include_distance=False) for row in rows]
 
 
 class Hotspot(BaseModel):

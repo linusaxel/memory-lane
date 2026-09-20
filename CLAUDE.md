@@ -66,7 +66,6 @@ python -m api.main
 | `pipeline/worker.py` | RQ worker entry point for scaled extraction |
 | `pipeline/enqueue.py` | CLI to queue videos for parallel processing |
 | `pipeline/queue.py` | Redis/RQ queue setup |
-| `pipeline/geocode.py` | Utility to check geocoding stats (coords come from LLM) |
 | `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
@@ -149,6 +148,10 @@ SELECT transcript_fetched, memories_extracted, COUNT(*) FROM content GROUP BY 1,
 -- See extracted memories with coordinates
 SELECT m.summary, p.name, ST_AsText(p.coordinates)
 FROM memories m JOIN places p ON m.place_id = p.id;
+
+-- Places the extractor could not place. `pipeline/geocode.py` used to print
+-- this and geocoded nothing; it was deleted.
+SELECT geocode_status, COUNT(*) FROM places GROUP BY 1;
 
 -- Find nearby memories (within 10km of a point)
 SELECT m.summary, p.name, ST_Distance(p.coordinates, ST_MakePoint(-73.9857, 40.7484)::geography) as dist_m
@@ -245,9 +248,6 @@ FastAPI server with PostGIS proximity queries:
 - `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
   there is no token to revoke
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
-- `GET /v1/places/{id}` - Get single place details
-- `GET /v1/places/{id}/memories` - Get all memories for a place
-- `GET /v1/content/{id}/memories` - Get all memories from a video
 - `GET /v1/stats` - Database statistics
 - `GET /docs` - Swagger UI
 

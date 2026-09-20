@@ -31,7 +31,7 @@ Content URLs → Transcripts → LLM Extraction (with coords) → Query API
 4. **API** - Serve nearby memories by lat/lng query
 
 There is no separate geocoding stage. Claude returns coordinates as part of
-extraction; `pipeline/geocode.py` only reports on what it produced.
+extraction; there is no geocoding step and no geocoding API.
 
 ## Data Model
 

@@ -75,7 +75,6 @@ Stores geographic locations.
 | coordinates | GEOGRAPHY | PostGIS point |
 | precision_meters | INTEGER | Location precision |
 | geocode_status | VARCHAR(20) | pending/success/failed |
-| geocode_response | JSONB | Raw API response |
 
 #### `memories` table
 Stores extracted memories.
@@ -111,12 +110,9 @@ memory-lane/
 │   ├── ingest.py           # Load content from config
 │   ├── transcripts.py      # Fetch YouTube transcripts
 │   ├── extract.py          # LLM memory extraction (includes geocoding)
-│   ├── geocode.py          # Geocoding utilities (stats, manual fixes)
 │   └── run_all.py          # Run full pipeline
 ├── api/
 │   └── main.py             # FastAPI query endpoint
-├── examples/
-│   └── content.yaml        # Example content configuration
 └── tests/
 ```
 
@@ -139,8 +135,8 @@ python -m pipeline.ingest       # Load content URLs from config
 python -m pipeline.transcripts  # Fetch YouTube transcripts
 python -m pipeline.extract      # Extract memories with coordinates
 
-# Check geocoding status (optional - coordinates come from LLM)
-python -m pipeline.geocode
+# Score the summaries - run before and after any prompt change
+python -m pipeline.quality
 
 # Or run all stages
 python -m pipeline.run_all
