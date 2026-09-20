@@ -16,11 +16,23 @@ Read content URLs from `config/content.yaml` and insert them into the `content` 
 sources:
   - name: "Channel Name"
     platform: youtube
+
+    # Optional: auto-discover the channel's videos (via yt-dlp).
+    # Title and publish date come back with each video.
+    channel: "https://www.youtube.com/@handle"
+    limit: 25                 # omit to ingest the entire channel
+
+    # Optional: hand-listed videos. Can be combined with `channel:` -
+    # both lists are merged and deduped on the normalized URL.
     videos:
       - url: "https://www.youtube.com/watch?v=VIDEO_ID"
         title: "Optional Title Override"
       - url: "https://www.youtube.com/watch?v=ANOTHER_ID"
 ```
+
+A source needs `channel:`, `videos:`, or both. Re-running ingest is idempotent:
+already-known URLs are skipped, so discovering a channel repeatedly only ever
+inserts what is new.
 
 ## Supported Platforms
 

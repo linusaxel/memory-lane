@@ -103,7 +103,7 @@ memory-lane/
 ├── config/
 │   └── content.yaml        # Content sources to process
 ├── crawler/
-│   └── yt_crawler.py       # YouTube channel scraper utility
+│   └── yt_crawler.py       # YouTube channel discovery (yt-dlp)
 ├── db/
 │   └── schema.sql          # Database schema (auto-applied on first run)
 ├── pipeline/
