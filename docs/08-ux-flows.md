@@ -15,6 +15,65 @@ Visual conventions, tokens and the store-review constraints are in
 Each flow states: who, the trigger, the numbered path, what can go wrong, and
 how you know it worked. Keep them concrete enough to test against.
 
+**Numbers are stable.** F1–F7 are referenced from `mobile/UI.md`, `CLAUDE.md`,
+`TODO.md` and from comments in the code, so they are not renumbered when new
+flows are added, even where that leaves the order untidy. New flows get the next
+free number. F3, F4 and F5 are still proposed and sit at the bottom.
+
+---
+
+## Index
+
+| | | |
+|---|---|---|
+| F1 | Discover memories near me | Implemented |
+| F2 | Read one memory and go to its source | Implemented |
+| F6 | Many memories at one point | Implemented |
+| F7 | Unlock a memory by standing near it | Implemented |
+| F8 | Be asked for location | Implemented |
+| F9 | Use the app without location | Implemented |
+| F10 | Lose the network | Implemented |
+| F11 | Find the nearest locked memory | Implemented |
+| F12 | Walk there | Implemented |
+| F13 | Walk into range | Implemented |
+| F14 | Be refused an unlock | Implemented |
+| F15 | Reread what you unlocked | Implemented |
+| F16 | Read on the train home | Implemented |
+| F17 | Understand why you cannot read something | Implemented |
+| F18 | Stand somewhere with nothing in it | Implemented, thin |
+| F3 | Arrive somewhere and find its history | Proposed |
+| F4 | Switch between layers | Proposed |
+| F5 | Contribute a memory | Proposed |
+
+**Not flows, and deliberately absent:** there is no sign-in, no onboarding
+carousel, no settings anybody has to change, no search in the app, no sharing,
+and no notifications. Each of those is a thing a user does *not* do, and the
+list is worth as much as the one above — if one of them appears, it should be
+because a flow needed it, not because apps have them.
+
+---
+
+## The spine
+
+Everything below is one of three sessions. If a flow does not belong to one of
+these, it is probably not a flow.
+
+**Session one — "what is this?"** Land on a map of padlocks (F1), get asked for
+location in a way that explains the mechanic (F8), and either grant it and see
+your reach drawn (F7) or decline and browse a city you are not in (F9). Nothing
+is readable yet, and that is the pitch, not a failure.
+
+**Session two — the first unlock.** Something is in reach, or the map tells you
+how far the nearest one is (F11) and hands you walking directions (F12). You
+arrive, the pin turns (F13), you hold the ring (F7), and a memory arrives (F7).
+This is the entire product; every other flow exists to get somebody here or to
+make it worth having got here.
+
+**Session three — coming back.** The collection has things in it (F15), it works
+on the train home with no signal (F16), and the map has memories you can already
+read as well as ones you cannot. The You tab is where "why can't I read this"
+gets answered before it becomes a complaint (F17).
+
 ---
 
 ## F1 · Discover memories near me — **Implemented**
@@ -238,6 +297,168 @@ foreground only). Reading it once at launch means a pin turns unlockable only if
 you happen to press "Near me" while standing on it, which is the opposite of the
 mechanic.
 
+
+## F8 · Be asked for location — **Implemented**
+
+**Who:** somebody on their first launch, who has not been asked yet.
+
+1. The map is already up and populated behind a card. Nothing has been asked.
+2. The card says what the app does — *"Memories unlock where they happened"* —
+   and what location is for, before the system dialog exists.
+3. **"Turn on location"** hands over to iOS. **"Just show me the map"** dismisses
+   it for good.
+4. Granted → F7. Declined → F9.
+
+The app never calls `requestForegroundPermissions` on mount. A cold system
+dialog is one tap from a permanent no, and the reported gap is roughly 30%
+opt-in against 65% after a primer — but the better reason is that "memories
+unlock where they happened" is simultaneously the ask and the pitch, and there
+is nowhere better to say it.
+
+Somebody who already granted it is never asked again: `getForegroundPermissions`
+runs first, silently. The dismissal is persisted, because re-asking every launch
+is how an app teaches people to dismiss without reading.
+
+**Failure:** already hard-denied (`canAskAgain === false`). The button becomes
+**Open Settings**, which is the only route back.
+
+**Done when:** a first launch shows a map with pins and no system dialog, and
+the second launch of somebody who declined does not nag.
+
+## F9 · Use the app without location — **Implemented**
+
+**Who:** somebody who said no, or is indoors with location off.
+
+1. The map stays on Manhattan, zoomed out, with pins.
+2. Gated memories are all locked, and the sheet says so plainly rather than
+   showing a distance it cannot know.
+3. The bottom button reads **"Turn on location"** rather than "Near me", in
+   every state.
+4. No reach circle is drawn, because there is no reach.
+
+This is a real mode, not an error. You can browse where the memories are,
+read every centroid-placed one, and decide whether the app is worth granting
+anything to. What you cannot do is open the gated ones, and the app says that
+in words rather than showing pins that never respond.
+
+**Done when:** nothing about this state looks broken, and nothing about it
+pretends you can unlock.
+
+## F10 · Lose the network — **Implemented**
+
+1. A request that fails leaves **the last good pins on screen**. A map that
+   empties itself on a dropped request looks like the area went blank rather
+   than the connection.
+2. The banner says "Can't reach Memory Lane" and the button becomes **Try again**.
+3. Requests time out after 8s (`REQUEST_TIMEOUT_MS`). `fetch` has no default
+   timeout, and a hung request rendering as "0 memories here" forever was the
+   original bug.
+4. Already-unlocked memories are unaffected — see F16.
+
+**Failure within the failure:** a retry at the same viewport used to be skipped
+by the fetch dedupe. Only *successful* fetches are recorded, so it is not.
+
+## F11 · Find the nearest locked memory — **Implemented**
+
+**Who:** somebody looking at padlocks, none of them in reach.
+
+1. Where the "N within reach" pill would be, a muted one reads
+   **"Nearest locked memory · 412 m"**.
+2. Tapping it opens that memory's sheet, which offers F12.
+
+It does not breathe and it is not seal red. "Walk 400 m" is information; only
+something you can actually open is an invitation. A map of padlocks that answers
+only "you cannot read this" and never "so where do I go" is half a mechanic.
+
+## F12 · Walk there — **Implemented**
+
+1. An out-of-reach memory's sheet shows the distance as a figure and a
+   **"Walk there"** button.
+2. It hands the coordinate to whatever maps app the phone has, with walking
+   directions — Apple Maps on iOS, Google Maps elsewhere.
+
+**Failure:** no maps app at all. `Linking.openURL` rejects and the sheet says
+"No maps app to open directions in" rather than appearing to do nothing.
+
+## F13 · Walk into range — **Implemented**
+
+**Who:** somebody who took the directions.
+
+1. Position is *watched*, not read once (`watchPositionAsync`, 25m). Walking
+   into range changes the map by itself — a position read at launch would mean a
+   pin only turns unlockable if you happen to press "Near me" while standing on
+   it, which is the opposite of the mechanic.
+2. The pin becomes a seal-red ring with a halo, and the reach circle now contains
+   it.
+3. The pill turns seal red, reads "1 memory within reach", and breathes.
+
+**This is the moment the app is for**, and the reason nothing else on the map
+moves.
+
+**Done when:** walking 400m with the app open changes the map without any
+interaction at all.
+
+## F14 · Be refused an unlock — **Implemented**
+
+**Who:** somebody who completed the hold and did not get a memory.
+
+1. The ring fills, the heavier haptic fires, the request goes.
+2. The server re-measures and says no, because GPS drifted between the press and
+   the request.
+3. The sheet says **"Not close enough yet — try a few steps nearer."**
+
+The client decides which control to *show*; the server decides what may be
+*read*, and those can disagree by a few metres. Silence here would read as a
+broken button, which is the worst possible outcome for the one control the
+product is about.
+
+## F15 · Reread what you unlocked — **Implemented**
+
+1. The **Unlocked** tab carries a count. It is the only number in the app that
+   goes up because you went outside.
+2. Newest first, as catalogue entries: place, the opening of the summary, when.
+3. Tapping one opens the full sheet.
+
+Without this the reward for standing somewhere in the rain is one read, after
+which the memory is buried under whichever pin you happened to be near and
+findable only by going back.
+
+**Edge:** memories unlocked before the app recorded timestamps have no date.
+They sort last and simply do not say when, rather than reading "Invalid Date".
+
+## F16 · Read on the train home — **Implemented**
+
+The collection renders entirely from device storage. No network, no position, no
+server. An unlocked memory is readable on the way home, in a tunnel, forever.
+
+**"Forever" is a device promise.** There are no accounts, so a new phone starts
+empty. Making it portable needs identity — Phase 3. This is written down here
+because it is the kind of thing that is only discovered at the worst moment.
+
+## F17 · Understand why you cannot read something — **Implemented**
+
+The **You** tab exists because every proximity-gated app needs somewhere to
+answer that, and answering it only inside the sheet that provoked the question
+is too late.
+
+1. What this device has done: memories unlocked, places visited.
+2. **How unlocking works** — the radius, that the *server* withholds the text,
+   and that city-centroid memories are open to everyone because asking somebody
+   to walk to a guess would be a lie.
+3. Location state, with the route to Settings.
+4. That nothing is synced and there is no account.
+
+## F18 · Stand somewhere with nothing in it — **Implemented, and thin**
+
+The banner reads "No memories here yet" and the map is otherwise normal. It no
+longer looks like a failure, which was the bug.
+
+It is still thin as a *product* answer: it does not suggest zooming out or
+widening the radius, and at street zoom the fetch is only ~700m, so an empty
+screen is easy to reach outside New York. Doing nothing is defensible until
+there is a corpus worth widening into — see open question 2.
+
+---
 
 ## Proposed
 
