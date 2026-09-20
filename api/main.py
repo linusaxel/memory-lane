@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 
 from api.card import router as card_router
+from api.embed import router as embed_router
 from pipeline.db import get_session
 
 app = FastAPI(
@@ -30,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(card_router)
+app.include_router(embed_router)
 
 
 class Coordinates(BaseModel):
