@@ -95,6 +95,75 @@ coordinates are wrong — see the centroid section in `TODO.md`. Clustering make
 
 ---
 
+## F7 · Unlock a memory by standing near it — **Proposed**
+
+The core mechanic, not a feature. A memory you can read from your sofa is a
+blog post; a memory you have to walk to is a reason to leave the house. This
+is also what makes the card worth screenshotting — geo-gated content has no
+other distribution channel (see *Design rules* in `TODO.md`).
+
+**Who:** someone looking at a map with pins they cannot read yet.
+
+1. Every memory in view draws a pin. A **locked** pin shows the place name and
+   the distance — enough to decide whether to walk there — and nothing else.
+2. Walking inside the unlock radius changes the pin's appearance and the sheet
+   offers an unlock control.
+3. The unlock is a deliberate physical act, not a tap: press and hold while a
+   ring fills, with haptics through the hold and a heavier one on completion.
+   It should feel like a lock turning.
+4. The memory reveals: summary, tags, source, the watch link.
+5. It stays unlocked. Re-locking something the person has earned is a punishment
+   for leaving.
+
+**Failure:** location permission denied. Nothing can unlock, so the app must say
+that rather than showing a map of permanently locked pins. Denied permission
+falls back to Manhattan today; that fallback cannot also be an unlock position,
+or the gate is decorative.
+
+**Done when:** standing at a place reveals its memory and standing a street away
+does not.
+
+### The gate is server-side
+
+`TODO.md` 3.3 already states the rule and it applies here: *a client-side gate
+is not a gate*. If the API sends the summary and the client hides it, the
+content is one `curl` away and the mechanic is theatre.
+
+So: `/v1/memories/nearby` returns locked memories **without their summary,
+tags or source**. Place name, coordinates and distance only. A separate
+`POST`-free unlock read (`GET /v1/memories/{id}?lat=&lng=`) returns the full
+memory only when the supplied position is inside the radius.
+
+The client can still be generous with the animation. It just cannot be the
+thing deciding what you are allowed to read.
+
+### The radius fights the data
+
+This is the part to decide before building, and it is unusual: **the
+coordinates are wrong**. 111 of 186 placed memories sit on 34 city centroids,
+and the two Gotham Comedy Club rows are 2km apart while both claim 50m
+precision.
+
+Consequences, neither avoidable by tuning:
+
+- A tight radius (50m) unlocks almost nothing. Standing at the real Gotham
+  Comedy Club does not unlock the memory filed 2km away at Times Square.
+- A loose radius (1km) unlocks 23 unrelated memories at once the moment you
+  enter midtown, which is not a game, it is a dump.
+
+`precision_meters` cannot rescue this either — 35 of the stacked centroid
+places claim 50m. Options, in order of honesty:
+
+1. **Gate on `precision_meters`, once it is trustworthy.** Unlock radius =
+   `max(50, precision_meters)`. Correct in principle, and blocked on extraction
+   telling the truth about precision (W4-04 changed the prompt; nothing has
+   re-run).
+2. **One generous radius now** (~250m) and accept that centroid memories unlock
+   in a clump. Ships today, feels wrong in midtown.
+3. **Only gate memories whose coordinates are trustworthy**, and leave the rest
+   open. Honest, and it makes the locked set small until the corpus improves.
+
+
 ## Proposed
 
 Not built. Each needs a decision before it can be specified properly — see

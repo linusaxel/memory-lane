@@ -233,6 +233,33 @@ Open, and blocking a clean Phase 1:
 
 ---
 
+## Phase 1.5 — Proximity unlock
+
+Asked for directly by the user, 2026-09-20: *"we need a unlock memory mechanism
+- only nearby memories should be viewable. the unlock button should be pretty
+and should be fun to press, like a game almost."*
+
+Full flow in `docs/08-ux-flows.md` F7; button spec in `mobile/UI.md`. This
+generalises 3.3, which scoped server-side proximity unlock to the friend layer
+— the rule there (*a client-side gate is not a gate*) now governs every layer.
+
+- [ ] **1.5a Server-side gate.** `/v1/memories/nearby` omits summary, tags and
+      source for memories outside the unlock radius. Place name, coordinates and
+      distance still ship, because the person needs to know where to walk.
+- [ ] **1.5b Unlock read.** Full memory returned only for a supplied position
+      inside the radius.
+- [ ] **1.5c The control.** Press-and-hold with a filling ring and haptics, per
+      `mobile/UI.md`. Operable without a hold for accessibility.
+- [ ] **1.5d Locked pins read as locked** on the map, not only in the sheet.
+- [ ] **1.5e Unlocks persist** across launches.
+- [ ] **1.5f DECIDE the radius.** Blocking the rest, and not tunable around:
+      111 of 186 memories sit on 34 centroids, so 50m unlocks nothing and 1km
+      dumps 23 at once. Three options written up in F7; option 3 (gate only
+      trustworthy coordinates) is the honest one and shrinks the locked set
+      until the corpus improves.
+
+---
+
 ## Phase 1 — Historical layer, one neighborhood
 
 Copenhagen. Non-video ingestion, contrast scoring, proximity query, card design.

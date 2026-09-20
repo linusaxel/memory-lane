@@ -164,6 +164,32 @@ the sheet pages through it with "1 of 23 here".
 Group in `src/cluster.ts`, never in the component — it is pure and unit-tested,
 and the Times Square centroid is one of the test cases.
 
+## The unlock control
+
+The one place in this app allowed to be playful. Everything else is a quiet
+map; this is the moment the product is *about*, so it gets the animation
+budget. Spec, so it does not get re-invented per screen:
+
+- **Press and hold, not tap.** ~900ms. A tap is a click; a hold is a lock
+  turning. It also makes an accidental unlock almost impossible, which matters
+  because unlocking is irreversible.
+- **A ring fills around the button** over the hold, driven by
+  `Animated.timing` with `useNativeDriver`. Releasing early springs it back —
+  visibly, so the person understands they let go rather than that it failed.
+- **Haptics carry the feel**: `ImpactFeedbackStyle.Light` on press-in, a
+  `Medium` at completion. Never on release-cancel, which would read as a
+  reward for failing.
+- **Locked and unlockable look different on the map**, not just in the sheet.
+  If you have to open a pin to learn you cannot read it, the map is not doing
+  its job.
+- **Never lock something already unlocked.** Re-locking punishes leaving.
+
+Accessibility is not optional here, and a hold gesture is the easy thing to get
+wrong: the control needs `accessibilityRole="button"`, a label that states the
+gesture, and it must remain operable by a plain activation for anyone who cannot
+hold. A gate nobody with a motor impairment can open is a gate on the wrong
+people.
+
 ## Flows
 
 Documented flows live in `docs/08-ux-flows.md`. Build toward those, and when a
