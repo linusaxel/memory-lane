@@ -23,11 +23,7 @@ const FALLBACK_REGION: Region = {
 
 const DEBOUNCE_MS = 400;
 
-/**
- * "Nothing here" and "we could not ask" look identical if both render as an
- * absence, and the second one is the app being broken. They get separate states
- * so they can say different things.
- */
+/** Separate, because "nothing here" and "we could not ask" must not look alike. */
 type Status = 'loading' | 'ready' | 'failed';
 
 export default function App() {

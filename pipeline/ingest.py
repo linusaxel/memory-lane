@@ -16,7 +16,6 @@ CONFIG_PATH = Path(__file__).parent.parent / "config" / "content.yaml"
 
 
 def extract_youtube_id(url: str) -> str | None:
-    """Extract YouTube video ID from various URL formats."""
     patterns = [
         r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)([a-zA-Z0-9_-]{11})",
     ]

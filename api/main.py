@@ -19,7 +19,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS for web clients
 app.add_middleware(
     CORSMiddleware,
     # A wildcard origin with credentials is rejected by browsers anyway, and the

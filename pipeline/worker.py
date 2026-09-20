@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 def run_worker(queues: list[str] = None):
     if queues is None:
-        # Default: listen to all extraction queues (priority order)
         queues = [QUEUE_AGGREGATE, QUEUE_EXTRACT, QUEUE_CLASSIFY]
 
     logger.info(f"Starting worker for queues: {queues}")
@@ -28,6 +27,5 @@ def run_worker(queues: list[str] = None):
 
 
 if __name__ == "__main__":
-    # Allow specifying queues via CLI args
     queues = sys.argv[1:] if len(sys.argv) > 1 else None
     run_worker(queues)

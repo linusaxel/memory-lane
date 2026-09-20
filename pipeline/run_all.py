@@ -58,7 +58,6 @@ def print_summary(results: dict):
 
 
 def run_pipeline(skip_ingest=False, skip_transcripts=False, skip_extract=False, dry_run=False):
-    """Run the full pipeline with optional stage skipping."""
     results = {}
     start_time = time.time()
 

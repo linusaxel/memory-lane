@@ -33,7 +33,6 @@ from pipeline.queue import (
 
 logger = logging.getLogger(__name__)
 
-# Haiku classifier prompt - quick check if chunk has location memories
 CLASSIFIER_PROMPT = """Analyze this transcript chunk and determine if it contains any LOCATION-BASED MEMORIES.
 
 A location-based memory is when someone describes a PERSONAL EXPERIENCE at a SPECIFIC PHYSICAL PLACE.
@@ -218,7 +217,6 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
 
 
 def _check_extraction_complete(content_id: int, total_chunks: int):
-    """Check if all chunks are processed, trigger aggregation if so."""
     redis = get_redis()
     extracted = int(redis.hget(f"extraction:{content_id}", "extracted") or 0)
 
@@ -261,7 +259,6 @@ def task_aggregate_memories(content_id: int):
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}
     )
 
-    # Cleanup memory data (keep stats)
     redis.delete(f"extraction:{content_id}:memories")
 
     logger.info(f"[content:{content_id}] Extraction complete: {len(filtered)} memories saved")
@@ -286,7 +283,6 @@ def enqueue_all_pending():
 
 
 def get_extraction_status(content_id: int) -> dict:
-    """Get current extraction status for a video."""
     redis = get_redis()
     status = redis.hgetall(f"extraction:{content_id}")
 

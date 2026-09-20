@@ -1,15 +1,8 @@
 /** Group memories that share a map point.
  *
- * Not a nicety. The extraction model emits a city centroid whenever it does not
- * know an address, so 111 of 186 placed memories sit on 34 coordinates - one
- * point in Times Square carries fourteen unrelated venues. Drawn one marker per
- * memory, that is a single dot that hands you an arbitrary one of the fourteen
- * when tapped, and thirteen memories the map never admits exist.
- *
- * Grouping is by rounded coordinate rather than by place id, because the same
- * venue also appears under several place rows and several venues appear under
- * one coordinate. The coordinate is what the eye sees, so it is what the tap
- * target should follow.
+ * By coordinate, not place id: one venue spans several place rows and several
+ * venues share one coordinate, so the coordinate is what the eye sees. See F6
+ * in docs/08-ux-flows.md for why 60% of this corpus needs it.
  */
 
 import type { LocatedMemory } from './api.ts';
@@ -22,11 +15,7 @@ export type MemoryGroup = {
   memories: LocatedMemory[];
 };
 
-/**
- * 4 decimal places is ~11m at the equator - tighter than the 50m the model
- * calls "exact", so genuinely distinct addresses stay separate while repeated
- * emissions of one centroid collapse.
- */
+/** ~11m at the equator: tighter than the 50m the model calls "exact". */
 const PRECISION = 4;
 
 function roundTo(value: number, places: number): number {
@@ -54,7 +43,7 @@ export function groupByLocation(memories: LocatedMemory[]): MemoryGroup[] {
   return [...groups.values()].sort((a, b) => a.memories.length - b.memories.length);
 }
 
-/** What the marker says. A bare pin cannot show that it hides thirteen others. */
+/** What the marker says. A bare pin cannot show what it hides. */
 export function groupLabel(group: MemoryGroup): string {
   if (group.memories.length === 1) return group.memories[0].place.name;
   const names = new Set(group.memories.map((m) => m.place.name));

@@ -54,12 +54,10 @@ def fetch_transcript(video_id: str) -> dict | None:
 
 
 def fetch_pending_transcripts():
-    """Fetch transcripts for all pending content."""
     fetched = 0
     failed = 0
 
     with get_session() as session:
-        # Get pending content
         pending = session.execute(
             text("""
                 SELECT id, platform_id, title
@@ -89,7 +87,6 @@ def fetch_pending_transcripts():
                 continue
 
             if result:
-                # Insert transcript
                 session.execute(
                     text("""
                         INSERT INTO transcripts (content_id, segments, full_text, language)
@@ -108,7 +105,6 @@ def fetch_pending_transcripts():
                     },
                 )
 
-                # Mark content as fetched
                 session.execute(
                     text("UPDATE content SET transcript_fetched = TRUE WHERE id = :id"),
                     {"id": content_id},
@@ -117,7 +113,6 @@ def fetch_pending_transcripts():
                 logger.info(f"Stored transcript: {len(result['segments'])} segments")
                 fetched += 1
             else:
-                # Mark as failed
                 session.execute(
                     text("UPDATE content SET transcript_failed = TRUE WHERE id = :id"),
                     {"id": content_id},

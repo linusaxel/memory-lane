@@ -23,7 +23,6 @@ SessionLocal = sessionmaker(bind=engine)
 
 @contextmanager
 def get_session():
-    """Provide a transactional scope around a series of operations."""
     session = SessionLocal()
     try:
         yield session

@@ -188,7 +188,6 @@ class ModelUnusableError(Exception):
 def extract_memories_from_chunk(
     client: anthropic.Anthropic, chunk: str, system_prompt: str = SYSTEM_PROMPT
 ) -> list[dict]:
-    """Send chunk to Claude and extract memories."""
     try:
         response = client.messages.create(
             model=EXTRACTION_MODEL,
