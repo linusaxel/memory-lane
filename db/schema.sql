@@ -53,6 +53,12 @@ CREATE TABLE memories (
 CREATE INDEX idx_memories_place ON memories(place_id);
 CREATE INDEX idx_memories_content ON memories(content_id);
 CREATE INDEX idx_places_coordinates ON places USING GIST(coordinates);
+-- The ON CONFLICT (place_query) in pipeline/extract.py needs this to fire. Without
+-- it the clause is a silent no-op and every memory mints a duplicate place. Keep it
+-- on the bare column: extract.py's fallback SELECT matches on place_query exactly,
+-- and an expression index it cannot match means place_id comes back NULL and the
+-- memory is dropped. Existing databases: db/migrations/001_places_unique.sql.
+CREATE UNIQUE INDEX idx_places_place_query ON places(place_query);
 CREATE INDEX idx_places_geocode_status ON places(geocode_status);
 CREATE INDEX idx_content_platform ON content(platform);
 CREATE INDEX idx_content_pending_transcript ON content(transcript_fetched) WHERE transcript_fetched = FALSE AND transcript_failed = FALSE;

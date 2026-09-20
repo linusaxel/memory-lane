@@ -217,7 +217,7 @@ def save_memories(session, content_id: int, memories: list[dict]):
                 text("""
                     INSERT INTO places (name, place_query, precision_meters, coordinates, geocode_status)
                     VALUES (:name, :query, :precision, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 'llm')
-                    ON CONFLICT DO NOTHING
+                    ON CONFLICT (place_query) DO NOTHING
                     RETURNING id
                 """),
                 {
@@ -233,7 +233,7 @@ def save_memories(session, content_id: int, memories: list[dict]):
                 text("""
                     INSERT INTO places (name, place_query, precision_meters)
                     VALUES (:name, :query, :precision)
-                    ON CONFLICT DO NOTHING
+                    ON CONFLICT (place_query) DO NOTHING
                     RETURNING id
                 """),
                 {
@@ -247,6 +247,10 @@ def save_memories(session, content_id: int, memories: list[dict]):
         if row:
             place_id = row[0]
         else:
+            # ponytail: exact-string dedup only. "Oslo Norway" and "comedy club Oslo
+            # Norway" remain separate places. Normalizing would mean changing this
+            # SELECT and idx_places_place_query together - if they ever disagree,
+            # place_id comes back None and the memory is silently dropped below.
             # Place already exists, fetch its id
             existing = session.execute(
                 text("SELECT id FROM places WHERE place_query = :query"),
