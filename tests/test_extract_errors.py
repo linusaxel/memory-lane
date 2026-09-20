@@ -80,3 +80,48 @@ def test_unparseable_output_is_an_empty_chunk_not_a_crash():
         messages = _Messages()
 
     assert extract_memories_from_chunk(_Client(), "a chunk") == []
+
+
+# -- the classifier has the same three classes of failure ---------------------
+
+
+def _billing_error():
+    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    return anthropic.BadRequestError(
+        "Your credit balance is too low to access the Anthropic API.",
+        response=httpx.Response(400, request=request),
+        body=None,
+    )
+
+
+def test_the_classifier_stops_on_an_empty_balance():
+    """Observed on a real run: the classifier failed open on a billing 400, so
+    all 22 chunks were reported classified, all 22 were enqueued for extraction,
+    and all 22 hit the same wall. An empty balance is not transient."""
+    from pipeline.tasks import classify_chunk
+
+    with pytest.raises(BillingError):
+        classify_chunk(_client_raising(_billing_error()), "a chunk")
+
+
+def test_the_classifier_still_fails_open_on_a_transient_error():
+    """Over-extracting one chunk beats dropping it."""
+    from pipeline.tasks import classify_chunk
+
+    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    assert classify_chunk(_client_raising(anthropic.APIConnectionError(request=request)), "x")
+
+
+def test_the_billing_match_is_on_the_wording_the_api_actually_uses():
+    """The API reports an empty balance as a 400 with the reason in the message
+    rather than as its own class, so this is a string match. Pinned, because a
+    near-miss turns a hard stop back into a fail-open and nothing else notices."""
+    from pipeline.extract import is_billing_error
+
+    assert is_billing_error(_billing_error())
+
+    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    other_400 = anthropic.BadRequestError(
+        "max_tokens is too large", response=httpx.Response(400, request=request), body=None
+    )
+    assert not is_billing_error(other_400)

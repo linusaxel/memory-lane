@@ -66,6 +66,37 @@ For each memory, extract:
        was built in 1909."
   Good: "Mark did three sold-out nights at this 1909 theatre, joking that the
         marquee had survived prohibition, the depression, and now his act."
+
+<examples>
+Every one of these is taken from a real run and is the mistake, not a
+hypothetical. Match the "good" column.
+
+<example>
+  <bad>The speaker performed at Joe List's downtown comedy showcase called
+       'Sesh' - described as the best show in North America.</bad>
+  <good>Mark played Joe's downtown showcase, Sesh, and called it the best room
+        in North America.</good>
+  <why>"The speaker" names nobody, and Joe List is the other host - the context
+       above the transcript says so. "Described as" reports the recording.</why>
+</example>
+
+<example>
+  <bad>The speaker is performing at Falls View Casino in Niagara on the 14th,
+       making a joke about Marilyn Monroe.</bad>
+  <good></good>
+  <why>Nothing happened there. A tour date names a real venue and reads like an
+       event, and is worthless to somebody standing outside it. Return nothing.</why>
+</example>
+
+<example>
+  <bad>The speaker mentioned seeing dolphins in the East River last week,
+       connecting it to why sharks might be in the area - presumably following
+       the dolphins as prey.</bad>
+  <good>Dolphins turned up in the East River, which finally explained the
+        sharks.</good>
+  <why>Half of that was the summariser thinking aloud. Say what happened.</why>
+</example>
+</examples>
 - tags: 1-5 from: food, travel, history, culture, adventure, romance, nightlife, nature, art, music, sports, business, personal
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
   BE HONEST ABOUT THIS. If you are returning the coordinates of a city because you
@@ -73,6 +104,14 @@ For each memory, extract:
   building or street address. A wrong "exact" is worse than an honest "city": it
   puts a pin on the wrong doorstep and claims 50m accuracy while doing it.
 - confidence: high (clear location + definite event), medium (somewhat vague), low (uncertain)
+
+<uncertainty>
+An empty list is a correct and common answer. Most of a conversation is not
+about a place. If you are unsure whether something happened, or where, or to
+whom, leave it out - a missing memory costs nothing, and an invented one is
+indistinguishable from a real one once it is a row in the database and a pin on
+a map somebody walked to.
+</uncertainty>
 
 Return JSON: {"memories": [...]}
 Return {"memories": []} if no memories found."""
@@ -218,6 +257,17 @@ class BillingError(Exception):
     pass
 
 
+def is_billing_error(e: Exception) -> bool:
+    """An empty balance, which no retry and no other chunk will get past.
+
+    The API reports it as a 400 with the reason in the message rather than as
+    its own class, so this is a string match - narrow, and asserted in
+    tests/test_extract_errors.py so a wording change fails loudly rather than
+    silently turning a hard stop back into a fail-open.
+    """
+    return isinstance(e, anthropic.BadRequestError) and "credit balance" in str(e).lower()
+
+
 class ModelUnusableError(Exception):
     """The configured model cannot be called at all: wrong ID, bad or revoked key.
 
@@ -240,7 +290,14 @@ def extract_memories_from_chunk(
         response = client.messages.create(
             model=EXTRACTION_MODEL,
             max_tokens=2000,
-            system=system_prompt,
+            # The system prompt is ~1.2k tokens and is resent for every chunk -
+            # 22 chunks a video, 55 videos. Cached reads cost 10% of input and a
+            # write costs 1.25x, so this pays for itself on the second chunk.
+            # The variable part (context + chunk) is in the message, after this,
+            # which is the order caching requires.
+            system=[
+                {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}
+            ],
             messages=[
                 {
                     "role": "user",
@@ -267,7 +324,7 @@ def extract_memories_from_chunk(
             return []
 
     except anthropic.BadRequestError as e:
-        if "credit balance" in str(e).lower():
+        if is_billing_error(e):
             raise BillingError(
                 "API credit balance too low. Please add credits at console.anthropic.com"
             ) from e

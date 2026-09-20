@@ -89,17 +89,30 @@ def test_both_prompts_forbid_claiming_accuracy_they_do_not_have(prompt):
     assert "claims 50m accuracy" in prompt
 
 
+def _system_text(fake):
+    """The system prompt is sent as one cacheable block, not a bare string.
+
+    Identity, not equality: these tests exist to prove the *chosen* prompt is
+    the one that travels, and two prompts that happen to match would pass an
+    equality check while the wrong object was being sent.
+    """
+    system = fake.messages.calls[0]["system"]
+    assert isinstance(system, list) and len(system) == 1, "one cached block"
+    assert system[0]["cache_control"] == {"type": "ephemeral"}, "still cached"
+    return system[0]["text"]
+
+
 def test_the_chosen_prompt_is_the_one_actually_sent():
     """Selecting a prompt is worthless if the call ignores it."""
     fake = FakeAnthropic([ARCHIVE_MEMORY])
     extract_memories_from_chunk(fake, "some archive text", HISTORICAL_SYSTEM_PROMPT)
-    assert fake.messages.calls[0]["system"] is HISTORICAL_SYSTEM_PROMPT
+    assert _system_text(fake) is HISTORICAL_SYSTEM_PROMPT
 
 
 def test_the_default_prompt_is_still_the_personal_one():
     fake = FakeAnthropic()
     extract_memories_from_chunk(fake, "some transcript")
-    assert fake.messages.calls[0]["system"] is SYSTEM_PROMPT
+    assert _system_text(fake) is SYSTEM_PROMPT
 
 
 @pytest.mark.parametrize(

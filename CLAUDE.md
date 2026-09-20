@@ -222,8 +222,13 @@ guessing, and all four now addressed in `SYSTEM_PROMPT`:
 | over 70 words | 32% | a summary of the conversation, not of what happened |
 
 The prompt now bans the labels outright, rejects upcoming shows as hard as it
-rejects hypotheticals, and asks for 2–3 sentences. **None of it has been run
-against real credits**, so the numbers above are still the current state.
+rejects hypotheticals, asks for 2–3 sentences, and carries three worked examples
+taken from the corpus's own failures. It is structured with XML tags, gives
+explicit permission to return nothing, and is sent as a cached block — it is
+~1.2k tokens resent for every chunk, and a cached read costs 10% of input.
+
+**None of it has been run against real credits** (the account balance is empty),
+so the numbers above are still the current state.
 
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps

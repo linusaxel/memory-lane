@@ -59,3 +59,42 @@ def test_length_is_counted_in_words_not_characters():
 
 def test_a_clean_corpus_reports_all_zeroes():
     assert set(counts(GOOD, GOOD).values()) == {0}
+
+
+# -- the prompt itself, since the corpus cannot be re-extracted for free ------
+
+
+def test_the_prompt_carries_the_corpus_failures_as_examples():
+    """Examples outperform rules, and these are taken from real output rather
+    than invented - the Joe List one is the case that proves "the speaker" had
+    a name available the whole time."""
+    from pipeline.extract import SYSTEM_PROMPT
+
+    assert "<examples>" in SYSTEM_PROMPT
+    assert "Joe List" in SYSTEM_PROMPT, "the worked case for the anonymous label"
+    assert "Falls View Casino" in SYSTEM_PROMPT, "the worked case for a tour date"
+
+
+def test_the_prompt_permits_returning_nothing():
+    """Explicit permission to decline reduces invention, and an invented memory
+    is indistinguishable from a real one once somebody has walked to it."""
+    from pipeline.extract import SYSTEM_PROMPT
+
+    assert "<uncertainty>" in SYSTEM_PROMPT
+    assert "An empty list is a correct and common answer" in SYSTEM_PROMPT
+
+
+def test_the_source_context_names_the_show_and_the_episode():
+    from pipeline.extract import source_context
+
+    context = source_context("Tuesdays with Stories", "Ottomans Piglet #666 w/ Mark Normand")
+    assert "Tuesdays with Stories" in context
+    assert "Mark Normand" in context, "the episode title is usually where the names are"
+    assert 'never "the speaker"' in context
+
+
+def test_no_source_means_no_context_rather_than_an_empty_claim():
+    """Better to say nothing than to tell the model the show is called None."""
+    from pipeline.extract import source_context
+
+    assert source_context(None, "an episode") == ""

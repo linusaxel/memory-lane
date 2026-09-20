@@ -15,9 +15,11 @@ from pipeline.config import (
 from pipeline.db import get_session
 from pipeline.extract import (
     PENDING_EXTRACTION,
+    BillingError,
     chunk_transcript,
     extract_memories_from_chunk,
     filter_low_confidence,
+    is_billing_error,
     layer_for,
     merge_nearby_memories,
     prompt_for,
@@ -82,6 +84,14 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
         # pre-filter silently disabled and every chunk billed to Sonnet.
         raise RuntimeError(f"CLASSIFIER_MODEL={CLASSIFIER_MODEL!r} is not usable: {e}") from e
     except Exception as e:
+        # An empty balance is not transient. Observed on a real run: all 22
+        # chunks "classified" as having memories, all 22 were enqueued for
+        # extraction, and all 22 then hit the same wall - with a status page
+        # reporting 22 successful classifications that never happened.
+        if is_billing_error(e):
+            raise BillingError(
+                "API credit balance too low. Please add credits at console.anthropic.com"
+            ) from e
         # Transient (429, 5xx, connection): over-extracting one chunk beats
         # dropping it, so keep failing open.
         logger.warning(f"Classifier error, assuming has memories: {e}")

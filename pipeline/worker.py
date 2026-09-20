@@ -1,7 +1,32 @@
-"""RQ Worker entry point for memory extraction."""
+"""RQ Worker entry point for memory extraction.
+
+**On macOS this needs OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES in the
+environment**, which the re-exec below arranges rather than leaving to whoever
+runs it.
+
+RQ forks a work horse per job, and a forked child that touches the Objective-C
+runtime aborts: "may have been in progress in another thread when fork() was
+called ... Crashing instead." Every job dies on signal 6, the queues drain into
+nothing, and the worker log looks busy while achieving zero - which is a good
+part of why the parallel path sat recorded as "untested locally".
+
+Setting the variable from Python is too late: the runtime reads it before any
+of this module runs. Measured - os.environ.setdefault here still produced 22
+crashes out of 22 jobs. So the process replaces itself with one that has it.
+"""
+
+import os
+import sys
+
+# Before every other import, because the point is to get out of this process
+# before anything initializes the runtime we are trying to appease.
+if sys.platform == "darwin" and os.environ.get("OBJC_DISABLE_INITIALIZE_FORK_SAFETY") != "YES":
+    os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
+    # -m, not sys.argv[0]: running the file directly puts pipeline/ on sys.path
+    # instead of the repo root, and every `from pipeline...` import then fails.
+    os.execvp(sys.executable, [sys.executable, "-m", "pipeline.worker", *sys.argv[1:]])
 
 import logging
-import sys
 
 from rq import Worker
 
