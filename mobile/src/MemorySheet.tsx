@@ -1,4 +1,7 @@
+import { useEffect, useRef } from 'react';
 import {
+  Animated,
+  Easing,
   Linking,
   Modal,
   Pressable,
@@ -71,6 +74,33 @@ export default function MemorySheet({
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
 
+  // The reveal is the payoff. Swapping the text in place would throw away the
+  // only moment the product has - so the content arrives, once, on the frame
+  // after a memory stops being locked.
+  const reveal = useRef(new Animated.Value(1)).current;
+  const seen = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!memory) return;
+    const now = `${memory.id}:${memory.locked}`;
+    const justOpened = seen.current === `${memory.id}:true` && !memory.locked;
+    seen.current = now;
+    if (!justOpened) return;
+
+    reveal.setValue(0);
+    Animated.timing(reveal, {
+      toValue: 1,
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [memory, reveal]);
+
+  const revealed = {
+    opacity: reveal,
+    transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
+
   return (
     <Modal
       visible={!!memory}
@@ -90,9 +120,16 @@ export default function MemorySheet({
 
             <View style={styles.metaRow}>
               {formatDistance(fromHere ?? memory.distance_meters) && (
-                <Text style={styles.meta}>{formatDistance(fromHere ?? memory.distance_meters)}</Text>
+                <Text style={[styles.meta, withinReach && memory.locked && styles.reachable]}>
+                  {formatDistance(fromHere ?? memory.distance_meters)}
+                </Text>
               )}
-              {memory.confidence === 'high' && (
+              {memory.locked && (
+                <Text style={[styles.meta, withinReach ? styles.reachable : styles.sealed]}>
+                  {withinReach ? 'within reach' : 'locked'}
+                </Text>
+              )}
+              {!memory.locked && memory.confidence === 'high' && (
                 <Text style={[styles.meta, styles.confident]}>high confidence</Text>
               )}
             </View>
@@ -108,23 +145,25 @@ export default function MemorySheet({
                     : `This memory is locked. Come within ${Math.round(radius)} m of it to read it.`}
               </Text>
             ) : (
-              <Text style={styles.summary}>{memory.summary}</Text>
-            )}
+              <Animated.View style={revealed}>
+                <Text style={styles.summary}>{memory.summary}</Text>
 
-            {memory.tags?.length > 0 && (
-              <View style={styles.tags}>
-                {memory.tags.map((tag) => (
-                  <Text key={tag} style={styles.tag}>
-                    {tag}
+                {memory.tags?.length > 0 && (
+                  <View style={styles.tags}>
+                    {memory.tags.map((tag) => (
+                      <Text key={tag} style={styles.tag}>
+                        {tag}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
+                {memory.content?.title && (
+                  <Text style={styles.source} numberOfLines={2}>
+                    {memory.content.title}
                   </Text>
-                ))}
-              </View>
-            )}
-
-            {memory.content?.title && (
-              <Text style={styles.source} numberOfLines={2}>
-                {memory.content.title}
-              </Text>
+                )}
+              </Animated.View>
             )}
           </ScrollView>
 
@@ -201,6 +240,8 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', gap: 12, marginTop: 6 },
   meta: { fontSize: 13, color: '#71717a' },
   confident: { color: '#15803d' },
+  reachable: { color: '#b45309', fontWeight: '600' },
+  sealed: { color: '#a1a1aa' },
   summary: { fontSize: 17, lineHeight: 26, color: '#27272a', marginTop: 20 },
   locked: { fontSize: 17, lineHeight: 26, color: '#71717a', marginTop: 20, fontStyle: 'italic' },
   away: { fontSize: 14, color: '#a1a1aa', textAlign: 'center', paddingVertical: 15 },

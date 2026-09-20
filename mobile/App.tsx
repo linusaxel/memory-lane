@@ -7,7 +7,8 @@ import { StatusBar } from 'expo-status-bar';
 import { fetchNearby, unlockMemory, type Coordinates, type LocatedMemory } from './src/api.ts';
 import { groupByLocation, type MemoryGroup } from './src/cluster.ts';
 import { metersBetween, regionToRadiusKm, type Region } from './src/region.ts';
-import { loadUnlocked, rememberUnlocked, type Unlocked } from './src/unlocked.ts';
+import { inUnlockOrder, loadUnlocked, rememberUnlocked, type Unlocked } from './src/unlocked.ts';
+import Collection from './src/Collection.tsx';
 import LocationPrimer from './src/LocationPrimer.tsx';
 import MemoryMarker, { type Reach } from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
@@ -49,6 +50,7 @@ export default function App() {
   const [unlocked, setUnlocked] = useState<Unlocked>({});
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [showCollection, setShowCollection] = useState(false);
 
   const mapRef = useRef<MapView>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,6 +194,7 @@ export default function App() {
     () => groups.filter((group) => reachOf(group) === 'unlockable'),
     [groups, reachOf],
   );
+  const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
 
   const openGroup = (group: MemoryGroup) => {
     setOpenAt(group.memories);
@@ -290,6 +293,30 @@ export default function App() {
         </Pressable>
       )}
 
+      {collected.length > 0 && !showPrimer && (
+        <Pressable
+          style={styles.collection}
+          onPress={() => setShowCollection(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`${collected.length} unlocked memories`}
+        >
+          <Text style={styles.collectionText}>{collected.length} unlocked</Text>
+        </Pressable>
+      )}
+
+      <Collection
+        visible={showCollection}
+        memories={collected}
+        onOpen={(memory) => {
+          // One memory, not its point: the collection is a list of things you
+          // earned, and a stack of strangers at the same coordinate is not that.
+          setShowCollection(false);
+          setOpenAt([memory]);
+          setOpenIndex(0);
+        }}
+        onClose={() => setShowCollection(false)}
+      />
+
       <MemorySheet
         memories={openMemories}
         index={openIndex}
@@ -339,4 +366,20 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   locateText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  // Bottom left, out of the way of "Near me": a tally, not a call to action.
+  collection: {
+    position: 'absolute',
+    bottom: 50,
+    left: 20,
+    backgroundColor: 'rgba(255,255,255,0.94)',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  collectionText: { fontSize: 13, color: '#3f3f46', fontWeight: '600' },
 });

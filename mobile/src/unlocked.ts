@@ -12,7 +12,16 @@ import type { LocatedMemory } from './api.ts';
 
 const KEY = 'memorylane.unlocked.v1';
 
-export type Unlocked = Record<number, LocatedMemory>;
+/** The unlock time is what orders the collection. Nothing else records it:
+ *  the server has no idea who unlocked what, and that is the point. */
+export type UnlockedMemory = LocatedMemory & { unlocked_at: number };
+
+export type Unlocked = Record<number, UnlockedMemory>;
+
+/** Newest first: what you just earned is what you want to see. */
+export function inUnlockOrder(unlocked: Unlocked): UnlockedMemory[] {
+  return Object.values(unlocked).sort((a, b) => (b.unlocked_at ?? 0) - (a.unlocked_at ?? 0));
+}
 
 export async function loadUnlocked(): Promise<Unlocked> {
   try {
@@ -30,7 +39,7 @@ export async function rememberUnlocked(
   current: Unlocked,
   memory: LocatedMemory,
 ): Promise<Unlocked> {
-  const next = { ...current, [memory.id]: memory };
+  const next = { ...current, [memory.id]: { ...memory, unlocked_at: Date.now() } };
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify(next));
   } catch {
