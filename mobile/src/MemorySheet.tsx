@@ -8,7 +8,9 @@ import {
   View,
 } from 'react-native';
 
-import type { LocatedMemory } from './api.ts';
+import type { Coordinates, LocatedMemory } from './api.ts';
+import { metersBetween } from './region.ts';
+import UnlockButton from './UnlockButton.tsx';
 
 type Props = {
   /** Everything at the tapped point. One marker can hide a dozen memories. */
@@ -16,7 +18,15 @@ type Props = {
   index: number;
   onIndex: (next: number) => void;
   onClose: () => void;
+  /** Where the person is standing, or null if they said no to location. */
+  position: Coordinates | null;
+  onUnlock: (memory: LocatedMemory) => void;
+  unlocking: boolean;
+  unlockError: string | null;
 };
+
+/** Default only for a server that somehow sent no radius; it always does. */
+const FALLBACK_RADIUS_M = 150;
 
 function formatDistance(meters: number | null): string | null {
   if (meters == null) return null;
@@ -34,9 +44,32 @@ function formatTimestamp(seconds: number): string {
   return `${h > 0 ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
 }
 
-export default function MemorySheet({ memories, index, onIndex, onClose }: Props) {
+export default function MemorySheet({
+  memories,
+  index,
+  onIndex,
+  onClose,
+  position,
+  onUnlock,
+  unlocking,
+  unlockError,
+}: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
+
+  // distance_meters is measured from the map centre, which is not where the
+  // person is. Only their own distance decides whether the gate can open.
+  const fromHere =
+    memory && position
+      ? metersBetween(
+          position.lat,
+          position.lng,
+          memory.place.coordinates.lat,
+          memory.place.coordinates.lng,
+        )
+      : null;
+  const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
+  const withinReach = fromHere != null && fromHere <= radius;
 
   return (
     <Modal
@@ -56,8 +89,8 @@ export default function MemorySheet({ memories, index, onIndex, onClose }: Props
             <Text style={styles.place}>{memory.place.name}</Text>
 
             <View style={styles.metaRow}>
-              {formatDistance(memory.distance_meters) && (
-                <Text style={styles.meta}>{formatDistance(memory.distance_meters)}</Text>
+              {formatDistance(fromHere ?? memory.distance_meters) && (
+                <Text style={styles.meta}>{formatDistance(fromHere ?? memory.distance_meters)}</Text>
               )}
               {memory.confidence === 'high' && (
                 <Text style={[styles.meta, styles.confident]}>high confidence</Text>
@@ -66,7 +99,17 @@ export default function MemorySheet({ memories, index, onIndex, onClose }: Props
 
             {/* No images exist anywhere in the schema, so the summary carries
                 the whole sheet - it gets the typographic weight. */}
-            <Text style={styles.summary}>{memory.summary}</Text>
+            {memory.locked ? (
+              <Text style={styles.locked}>
+                {position == null
+                  ? 'This memory is locked. Turn on location to unlock it by standing here.'
+                  : withinReach
+                    ? 'You are close enough. Hold the ring to unlock it.'
+                    : `This memory is locked. Come within ${Math.round(radius)} m of it to read it.`}
+              </Text>
+            ) : (
+              <Text style={styles.summary}>{memory.summary}</Text>
+            )}
 
             {memory.tags?.length > 0 && (
               <View style={styles.tags}>
@@ -78,7 +121,7 @@ export default function MemorySheet({ memories, index, onIndex, onClose }: Props
               </View>
             )}
 
-            {memory.content.title && (
+            {memory.content?.title && (
               <Text style={styles.source} numberOfLines={2}>
                 {memory.content.title}
               </Text>
@@ -113,15 +156,32 @@ export default function MemorySheet({ memories, index, onIndex, onClose }: Props
                 </Pressable>
               </View>
             )}
-            <Pressable
-              style={styles.watch}
-              // timestamp_url already points at the right second.
-              onPress={() => Linking.openURL(memory.content.timestamp_url)}
-            >
-              <Text style={styles.watchText}>
-                Watch at {formatTimestamp(memory.content.timestamp_start)}
-              </Text>
-            </Pressable>
+            {memory.locked ? (
+              withinReach ? (
+                <>
+                  <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
+                  {unlockError && <Text style={styles.away}>{unlockError}</Text>}
+                </>
+              ) : (
+                <Text style={styles.away}>
+                  {position == null
+                    ? 'Location is off'
+                    : `${formatDistance(fromHere)} \u2014 too far to unlock`}
+                </Text>
+              )
+            ) : (
+              memory.content && (
+                <Pressable
+                  style={styles.watch}
+                  // timestamp_url already points at the right second.
+                  onPress={() => Linking.openURL(memory.content!.timestamp_url)}
+                >
+                  <Text style={styles.watchText}>
+                    Watch at {formatTimestamp(memory.content.timestamp_start)}
+                  </Text>
+                </Pressable>
+              )
+            )}
             <Pressable style={styles.close} onPress={onClose}>
               <Text style={styles.closeText}>Close</Text>
             </Pressable>
@@ -142,6 +202,8 @@ const styles = StyleSheet.create({
   meta: { fontSize: 13, color: '#71717a' },
   confident: { color: '#15803d' },
   summary: { fontSize: 17, lineHeight: 26, color: '#27272a', marginTop: 20 },
+  locked: { fontSize: 17, lineHeight: 26, color: '#71717a', marginTop: 20, fontStyle: 'italic' },
+  away: { fontSize: 14, color: '#a1a1aa', textAlign: 'center', paddingVertical: 15 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 22 },
   tag: {
     fontSize: 12,

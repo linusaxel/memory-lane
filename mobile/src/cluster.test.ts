@@ -13,6 +13,8 @@ function memory(id: number, name: string, lat: number, lng: number): LocatedMemo
     content: { id: 1, title: null, url: 'https://x', timestamp_start: 0, timestamp_url: 'https://x' },
     tags: [],
     confidence: 'high',
+    locked: false,
+    unlock_radius_meters: null,
   } as LocatedMemory;
 }
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { MAX_RADIUS_KM, MIN_RADIUS_KM, regionToRadiusKm } from './region.ts';
+import { MAX_RADIUS_KM, MIN_RADIUS_KM, metersBetween, regionToRadiusKm } from './region.ts';
 
 test('a city-sized viewport asks for a few kilometres', () => {
   const km = regionToRadiusKm({
@@ -32,4 +32,21 @@ test('a degenerate zero-size viewport still asks for a valid radius', () => {
     longitudeDelta: 0,
   });
   assert.equal(km, MIN_RADIUS_KM);
+});
+
+test('a point is no distance from itself', () => {
+  assert.equal(metersBetween(55.6759, 12.5655, 55.6759, 12.5655), 0);
+});
+
+test('a tenth of a degree of latitude is about eleven kilometres', () => {
+  // The unlock radius is 150m, so a wrong constant or a degrees/radians slip
+  // has to be visible at this scale or the gate opens from the next street.
+  const away = metersBetween(55.6759, 12.5655, 55.7759, 12.5655);
+  assert.ok(Math.abs(away - 11119) < 20, `expected ~11119m, got ${away}`);
+});
+
+test('longitude shrinks with latitude', () => {
+  const atEquator = metersBetween(0, 0, 0, 1);
+  const upNorth = metersBetween(60, 0, 60, 1);
+  assert.ok(upNorth < atEquator / 1.9, 'a degree of longitude halves by 60N');
 });

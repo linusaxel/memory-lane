@@ -33,3 +33,16 @@ export function regionToRadiusKm(region: Region): number {
   if (!Number.isFinite(radiusKm)) return MIN_RADIUS_KM;
   return Math.min(MAX_RADIUS_KM, Math.max(MIN_RADIUS_KM, radiusKm));
 }
+
+/** Great-circle metres between two points. The unlock gate is server-side; this
+ *  is only how the map decides which pin looks reachable. */
+export function metersBetween(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const lat1 = toRad(aLat);
+  const lat2 = toRad(bLat);
+  const dLat = lat2 - lat1;
+  const dLng = toRad(bLng - aLng);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(h));
+}

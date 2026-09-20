@@ -4,8 +4,18 @@ const BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 
 export type Coordinates = { lat: number; lng: number };
 
+export type ContentRef = {
+  id: number;
+  title: string | null;
+  url: string;
+  timestamp_start: number;
+  /** Already a deep link to the right second - open it as-is. */
+  timestamp_url: string;
+};
+
 export type Memory = {
   id: number;
+  /** Empty string while locked. The server never sends it until you are there. */
   summary: string;
   place: {
     id: number;
@@ -14,17 +24,17 @@ export type Memory = {
     precision_meters: number;
   };
   distance_meters: number | null;
-  content: {
-    id: number;
-    title: string | null;
-    url: string;
-    timestamp_start: number;
-    /** Already a deep link to the right second - open it as-is. */
-    timestamp_url: string;
-  };
+  /** Null while locked: the source is part of what standing there buys. */
+  content: ContentRef | null;
   tags: string[];
   /** Only 'high' and 'medium' ever reach the database; 'low' is filtered at extraction. */
   confidence: string;
+  /**
+   * The server decided this, not the app. Hiding a summary the API already
+   * sent would be theatre - see F7 in docs/08-ux-flows.md.
+   */
+  locked: boolean;
+  unlock_radius_meters: number | null;
 };
 
 /** A memory whose place has real coordinates - safe to drop on a map. */
@@ -42,19 +52,7 @@ function hasCoordinates(m: Memory): m is LocatedMemory {
  */
 export const REQUEST_TIMEOUT_MS = 8000;
 
-export async function fetchNearby(
-  lat: number,
-  lng: number,
-  radiusKm: number,
-  signal?: AbortSignal,
-): Promise<LocatedMemory[]> {
-  const params = new URLSearchParams({
-    lat: String(lat),
-    lng: String(lng),
-    radius_km: String(radiusKm),
-    limit: '100',
-  });
-
+async function get<T>(path: string, params: URLSearchParams, signal?: AbortSignal): Promise<T> {
   // AbortSignal.timeout and AbortSignal.any are not reliably present on Hermes,
   // so the timer is wired by hand and the caller's signal is forwarded onto it.
   const controller = new AbortController();
@@ -63,18 +61,54 @@ export async function fetchNearby(
   signal?.addEventListener('abort', forwardAbort);
 
   try {
-    const res = await fetch(`${BASE}/v1/memories/nearby?${params}`, {
-      signal: controller.signal,
-    });
+    const res = await fetch(`${BASE}${path}?${params}`, { signal: controller.signal });
     if (!res.ok) throw new Error(`API ${res.status}`);
-
-    const body = (await res.json()) as { memories?: Memory[] };
-    // The null-coordinate filter is the trust boundary: places.coordinates is
-    // nullable in the schema and a null-coordinate marker crashes
-    // react-native-maps.
-    return (body.memories ?? []).filter(hasCoordinates);
+    return (await res.json()) as T;
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', forwardAbort);
   }
+}
+
+/** Where the person is standing, which is not where the map is pointed. */
+function standing(at: Coordinates | null, params: URLSearchParams): URLSearchParams {
+  if (at) {
+    params.set('at_lat', String(at.lat));
+    params.set('at_lng', String(at.lng));
+  }
+  return params;
+}
+
+export async function fetchNearby(
+  lat: number,
+  lng: number,
+  radiusKm: number,
+  at: Coordinates | null,
+  signal?: AbortSignal,
+): Promise<LocatedMemory[]> {
+  const params = standing(
+    at,
+    new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+      radius_km: String(radiusKm),
+      limit: '100',
+    }),
+  );
+
+  const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
+  // The null-coordinate filter is the trust boundary: places.coordinates is
+  // nullable in the schema and a null-coordinate marker crashes
+  // react-native-maps.
+  return (body.memories ?? []).filter(hasCoordinates);
+}
+
+/**
+ * Ask the server to open one memory. It re-checks the distance itself and can
+ * still say no - GPS moves between the press and the request - so a result that
+ * comes back still locked is a refusal, not a success.
+ */
+export async function unlockMemory(id: number, at: Coordinates): Promise<LocatedMemory | null> {
+  const memory = await get<Memory>(`/v1/memories/${id}`, standing(at, new URLSearchParams()));
+  return !memory.locked && hasCoordinates(memory) ? memory : null;
 }
