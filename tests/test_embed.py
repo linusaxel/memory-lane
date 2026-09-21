@@ -91,3 +91,39 @@ def test_an_empty_result_says_so_rather_than_looking_broken():
     reads as a bug, and it is the realistic case today."""
     assert "No memories recorded here yet" in EMBED_HTML
     assert "catch(function" in EMBED_HTML, "a failed fetch must reach the same message"
+
+
+def test_the_template_does_not_leak_its_own_escaping():
+    """EMBED_HTML is a `.format()` template, and `%%` is `%`-formatting's escape,
+    not `.format()`'s. Four rules shipped as `height: 100%%` - invalid, silently
+    dropped by every browser, and the reason the widget did not fill its frame.
+
+    Asserted on the served document rather than the constant, because the whole
+    failure was the gap between what the source looks like and what comes out.
+    """
+    body = client.get("/embed").text
+
+    assert "%%" not in body, "a doubled percent reached the page; the CSS is being dropped"
+    assert "height: 100%;" in body
+    assert "max-height: 60%;" in body
+    assert "translateY(100%)" in body
+
+
+def test_the_map_is_given_a_size_to_draw_into():
+    """Leaflet measures its container. A map div with no height renders a grey
+    box, which is the one thing a customer's page must never show."""
+    body = client.get("/embed").text
+
+    assert "#map {" in body
+    assert "position: absolute; inset: 0;" in body
+    assert "html, body {" in body
+
+
+def test_the_card_never_covers_the_map_credit():
+    """Leaflet's panes are z-index 400 and its controls 800, so the sheet has to
+    land between them. Covering "Leaflet | (c) OpenStreetMap" is a licence
+    problem on somebody else's page, not a visual preference - same rule as
+    number 7 in mobile/UI.md."""
+    body = client.get("/embed").text
+
+    assert "z-index: 600;" in body

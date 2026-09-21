@@ -1205,6 +1205,38 @@ tasks:
       strings and a title unfurled as `Katz&#x27;s Delicatessen`, literally.
       preview_tags takes raw text and escapes once.
 
+  - id: P2-07
+    goal: "The embed's CSS actually reaches the browser: four percentage rules
+      were being served invalid."
+    verify: "venv/bin/python -m pytest -q tests/test_embed.py"
+    touches: [api/embed.py, tests/test_embed.py]
+    depends_on: [P2-06]
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      EMBED_HTML is a `.format()` template and somebody wrote `%%` in it, which
+      is `%`-formatting's escape, not `.format()`'s. So `height: 100%%`,
+      `max-height: 60%%`, `translateY(100%%)` and `width: 100%%` went to the
+      browser verbatim - invalid, silently dropped, no error anywhere. The
+      widget did not fill its frame and the card panel was a stub. Every test
+      passed throughout, because they all assert on markup and the bug was in
+      what CSS the markup carried.
+
+      The regression test asserts on the SERVED document, not the constant. The
+      whole failure was the gap between what the source looks like and what
+      comes out of it, and a test reading the constant would have had the same
+      blind spot.
+
+      Also made the card's z-index deliberate at 600. Leaflet panes are 400 and
+      its controls 800, so the sheet lands between them and the OpenStreetMap
+      credit stays visible over it - a licence condition on somebody else's
+      page, the same rule as number 7 in mobile/UI.md. It was already doing this
+      by falling through to `auto`; saying it out loud stops the next person
+      "fixing" the overlap by raising the card. The credit does read as part of
+      the card, which is marked ponytail: the real fix is a flex column with
+      map.invalidateSize() on toggle, worth doing when there is a customer.
+
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
   - "the embed's layout is wrong in a browser: the map does not fill its box, the card iframe keeps the panel mostly empty, and Leaflet's OSM attribution renders inside the card panel rather than over the map. Separate from P2-00 (tiles) and blocks nothing while the embed has no host"

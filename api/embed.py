@@ -56,17 +56,28 @@ EMBED_HTML = """<!doctype html>
      other people's pages and adapting to the host is the right behaviour -
      the card inside the panel carries the full palette. */
   html, body {{
-    margin: 0; height: 100%%;
+    margin: 0; height: 100%;
     font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }}
   #map {{ position: absolute; inset: 0; }}
+  /* z-index 600 is deliberate and is the attribution rule, not a stacking
+     accident. Leaflet puts its panes at 400 and its controls at 800, so this
+     sits above the tiles and markers and *below* the "Leaflet | (c) OpenStreetMap"
+     credit - which has to stay visible whatever is on top of the map. It was
+     already behaving this way by falling through to `auto`; saying it out loud
+     stops the next person "fixing" the overlap by raising the card.
+     ponytail: the credit then reads as part of the card, because the sheet
+     covers the map's own bottom edge. The real fix is a flex column - map
+     above, card below, map.invalidateSize() on toggle - which is worth doing
+     the day the embed has a customer and not before. */
   #card {{
-    position: absolute; inset: auto 0 0 0; max-height: 60%%; overflow: auto;
+    position: absolute; inset: auto 0 0 0; max-height: 60%; overflow: auto;
+    z-index: 600;
     background: Canvas; border-top: 1px solid rgba(128,128,128,.4);
-    transform: translateY(100%%); transition: transform .18s ease-out;
+    transform: translateY(100%); transition: transform .18s ease-out;
   }}
   #card[data-open] {{ transform: none; }}
-  #card iframe {{ width: 100%%; border: 0; display: block; min-height: 220px; }}
+  #card iframe {{ width: 100%; border: 0; display: block; min-height: 220px; }}
   #close {{
     position: sticky; top: 0; float: right; margin: .4rem; border: 0;
     background: transparent; font-size: 1.4rem; line-height: 1; cursor: pointer;
