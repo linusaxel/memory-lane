@@ -891,12 +891,37 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_api_stranger.py"
     touches: [api/queries.py, tests/test_api_stranger.py, docs/08-ux-flows.md]
     depends_on: [P3-04]
-    state: todo
+    state: blocked
+    blocked_on: human
+    gate: NEEDS_DECISION
     attempts: 0
     commit: null
-    note: "Phase 4.1/4.2. Read-time, in the VISIBLE predicate every query already
-      shares, for the same reason the gate lives in row_to_memory: a sweeper that
-      deletes is a second mechanism that can be behind."
+    note: |
+      Parked without an attempt, because building it would break a promise that
+      already shipped. Phase 4.1/4.2 were written before 3.2 existed, and 3.2
+      answered the same question differently: a submission lands in the
+      `stranger` layer and is PERMANENT. F5 files it into the person's
+      collection, and 1.5e calls that collection a promise ("the server
+      re-locks you when you walk away, and the product must not").
+
+      Expiring stranger memories at seven days would delete, from the author's
+      own collection, the thing they walked somewhere to write. That is not a
+      tuning parameter; it is the opposite product.
+
+      The three ways out, all a human's call:
+      1. Decay only the `friend` layer - consistent with the decided rule that
+         friend content is ephemeral. Nothing writes that layer today, so it is
+         code for a feature with no writer. YAGNI until 3.x has one.
+      2. A second entity, a `note` that is not a memory: no collection, no
+         unlock, decays. Honest, and the largest thing on the roadmap.
+      3. Declare 4.1/4.2 superseded by 3.2 and delete them. Defensible: the
+         stranger layer exists, people can write to it, and the density problem
+         Phase 4 was invented to solve is solved by the same rows.
+
+      4.3 (moderation from day one) is separately half-done: the report path
+      and REPORT_THRESHOLD shipped with 3.2. What is missing is the pre-publish
+      classifier, which spends credits on every submission - API_CREDITS, and
+      not obviously worth it while three reports hide a memory in minutes.
 
   - id: P5-01
     goal: "Anniversary resurfacing: /v1/memories/nearby surfaces a memory whose
@@ -915,12 +940,23 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_export.py"
     touches: [pipeline/export.py, tests/test_export.py]
     depends_on: []
-    state: todo
-    attempts: 0
-    commit: null
-    note: "Phase 2.5. A CLI, not an endpoint - there is no customer and no public
-      host, and an unauthenticated bulk route on a public API is the whole thing
-      the legal posture forbids."
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      A CLI, not an endpoint: there is no customer and no public host, and an
+      unauthenticated bulk route is the thing the legal posture forbids.
+
+      Three rules live in the module, not in the caller: snippets (180 chars or
+      the first sentence, cut at a word and always marked), historical only, and
+      no row exported without BOTH an attribution and a link.
+
+      source_href is imported from api/card.py rather than copied - the one
+      pipeline -> api edge in the tree, taken deliberately, because two
+      implementations of the attribution link is the drift that gets us sued.
+
+      PUBLIC_BASE_URL has no default. An export full of localhost links is worse
+      than one with none, because it looks like it works.
 
   - id: P2-00
     goal: "Stop serving OSM's public tiles from api/embed.py before the embed is

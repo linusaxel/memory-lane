@@ -485,9 +485,17 @@ audio-guide companies, city archives.
 - [x] **2.4** Settle the consumerless endpoints. Three deleted; `/v1/memories/search`
       and `/v1/places/nearby` stay — search is the one the widget would want and
       both are tested.
-- [ ] **2.5** Delivered-corpus export for a customer who wants the data rather
-      than the embed. Never the raw extracted corpus — snippets, attribution and
-      deep links only.
+- [x] **2.5** Delivered-corpus export. `pipeline/export.py`, a CLI and not an
+      endpoint — there is no customer and no public host, and an
+      unauthenticated bulk route is the one thing the legal posture forbids.
+      Three rules are enforced in the module rather than left to the caller:
+      **snippets** (180 chars or the first sentence, always marked when cut),
+      **historical only** (a memory somebody filed is theirs, and nothing in the
+      submit flow consents to selling it), and **no row without both an
+      attribution and a link** — a row that cannot say where it came from is not
+      ours to hand over. The deep link is imported from `api/card.py` rather
+      than reimplemented, because two copies of the attribution link is the
+      drift this posture cannot afford.
 
 ---
 
