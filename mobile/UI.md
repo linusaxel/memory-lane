@@ -297,9 +297,22 @@ Each of these exists because something broke or would have been rejected.
    permission is denied, because store reviewers routinely tap Deny and an empty
    map is a rejection. Any new view needs the same treatment: an empty state
    that still shows something real.
-2. **Location is foreground-only.** `ACCESS_BACKGROUND_LOCATION` is explicitly
-   blocked in `app.json` and asserted by `tests/test_app_config.py`. Requesting
-   background location will fail the suite and the store review.
+2. **Location is foreground-only, on both platforms.** `ACCESS_BACKGROUND_LOCATION`
+   is blocked in `app.json`; on iOS the three keys expo-location injects by
+   default — `NSLocationAlwaysAndWhenInUseUsageDescription`,
+   `NSLocationAlwaysUsageDescription` and `NSMotionUsageDescription` — are each
+   set to `false` in the plugin's options, which deletes them from the
+   Info.plist. Both halves are asserted by `tests/test_app_config.py`.
+
+   **The iOS half was missing until the first native build.** `app.json` set
+   only the when-in-use string, and the plugin filled the other three with its
+   own boilerplate ("Allow MemoryLane to access your location"), so the built
+   app declared always-on location and motion for features it does not have. A
+   purpose string is what review reads as intent. Nothing caught it because the
+   Android side *was* handled, which made the pair look done — and because the
+   test read `app.json` rather than the generated plist. If you add a config
+   plugin, check what it put in the manifest:
+   `plutil -convert xml1 -o - ios/MemoryLane/Info.plist`.
 3. **Debounce map-driven fetches** (currently 400ms). Panning fires
    `onRegionChangeComplete` continuously; without it you DoS your own API.
 4. **The API is radius-only.** `regionToRadiusKm()` circumscribes the viewport
@@ -397,8 +410,38 @@ xcrun simctl io booted screenshot /tmp/app.png
 
 If the dialog still appears, terminate and relaunch — the grant applies at
 launch: `xcrun simctl terminate booted host.exp.Exponent` then re-open the
-`exp://` URL. Scripted taps are not available; `osascript` has no assistive
-access here, so anything past the first screen needs a human hand.
+`exp://` URL.
+
+**There is still no way to script a tap** — `idb` is not installed and
+`osascript` has no assistive access — but the sheet no longer needs one.
+`EXPO_PUBLIC_DEV_OPEN_MEMORY` opens one memory on launch, so every state the
+sheet can render is reachable from a script:
+
+```bash
+python -m pipeline.seed_dev                      # prints the id of each state
+EXPO_PUBLIC_DEV_OPEN_MEMORY=265 REACT_NATIVE_PACKAGER_HOSTNAME=localhost   npx expo start --dev-client                    # restart Metro; ids bake in
+xcrun simctl launch booted com.PLACEHOLDER.memorylane
+xcrun simctl io booted screenshot /tmp/sealed.png
+```
+
+What still needs a hand: pressing the unlock ring, and anything reached by
+scrolling. To see an *unlocked* submission without holding the ring, record the
+unlock server-side for the app's own device — the id is in the API access log,
+`docker compose logs api | grep -oE 'device=[0-9a-f-]{36}'` — and relaunch.
+
+**For the real build, not Expo Go**, which is what `W3-13` is about: Expo Go
+shows its own permission copy and no native manifest.
+
+```bash
+cd mobile && npx expo run:ios     # builds, installs, launches, then exits
+```
+
+It bakes the LAN IP into the launch URL and exits with Metro, so start Metro
+yourself afterwards with `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` and
+`xcrun simctl launch` — the dev client remembers the last URL it loaded. Do not
+re-open the `com.PLACEHOLDER.memorylane://` URL by hand: the "Open in Memory
+Lane?" system alert it raises cannot be dismissed without a tap and sits over
+every screenshot until the simulator is rebooted.
 
 **Use `localhost` for the simulator, a LAN IP only for a physical phone.** Expo
 bakes `EXPO_PUBLIC_API_URL` in at dev-server start, so if you pass your LAN IP

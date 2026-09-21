@@ -443,8 +443,24 @@ tasks:
     attempts: 1
     commit: null
     note: |
+      PERFORMED 2026-09-21. Still `blocked`, and deliberately: verify is MANUAL,
+      and test_done_task_is_actually_proven reserves `done` for machine-checked
+      proof. A screenshot is not an exit code. That rule is right and is not
+      being bent for the one task it was written about. W3-16 carries the part
+      that is testable; this entry stays as the record.
+
+      What was seen, on a real build - iPhone 16 Pro, iOS 18.3, Xcode 26.6,
+      `npx expo run:ios`, NOT Expo Go: our own permission primer; the pinned
+      credit strip with a byline; the same strip with a SourceLine; and the
+      sealed composition refusing at 128m, inside the 150m radius.
+
+      It earned its keep. expo-location was injecting three purpose strings the
+      app has no business declaring - always-and-when-in-use, always, and motion
+      - in its own boilerplate copy. Only the built Info.plist showed it. Fixed
+      in app.json, asserted in tests/test_app_config.py.
+
       Borderline: iOS SIMULATOR builds need no signing identity and no Apple account, so
-      the loop technically could run this. It is parked because it opens a GUI, takes
+      the loop technically could run this. It was parked because it opens a GUI, takes
       several minutes, and needs a human to LOOK at the screen - the whole point is
       visual confirmation, which no exit code provides.
       Human runs:
@@ -1073,6 +1089,47 @@ tasks:
 
       SUBMISSION_INSERT gained a bind, which broke pipeline/seed_dev.py - fixed
       in the same commit because this change is what broke it.
+
+  - id: W3-16
+    goal: "Make the memory sheet reachable without a finger, and stop shipping
+      purpose strings the app does not use."
+    verify: "venv/bin/python -m pytest -q tests/test_app_config.py tests/test_seed_dev.py"
+    touches: [mobile/app.json, mobile/src/devOpen.ts, mobile/App.tsx, mobile/.env.example,
+      mobile/UI.md, pipeline/seed_dev.py, tests/test_app_config.py, tests/test_seed_dev.py]
+    depends_on: [P5-02]
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      The testable half of W3-13, which cannot be `done` because its verify is
+      MANUAL.
+
+      THE DEFECT. app.json set only locationWhenInUsePermission, and
+      expo-location's plugin fills NSLocationAlwaysAndWhenInUseUsageDescription,
+      NSLocationAlwaysUsageDescription and NSMotionUsageDescription with its own
+      boilerplate unless each is explicitly `false` (applyPermissions in
+      @expo/config-plugins deletes the key on false). So the built app declared
+      always-on location and motion, in copy reading "Allow MemoryLane to access
+      your location", for features it does not have. A purpose string is what
+      App Store review reads as intent, so this contradicted UI.md rule 2 - and
+      the Android side being handled is exactly what made the pair look done.
+      The test asserts app.json, not the plist, because ios/ is a gitignored
+      prebuild artifact; verified against the generated plist by hand.
+
+      THE AFFORDANCE. There is no tap automation for this simulator - idb is not
+      installed, osascript has no assistive access - so every change to the
+      sheet had been verified by tsc and nothing else. EXPO_PUBLIC_DEV_OPEN_MEMORY
+      opens one memory on launch, under __DEV__ only, modelled on devLocation.ts.
+      Fires once through a useRef so closing the sheet by hand does not spring it
+      open again. Fifteen lines, and every future sheet state is screenshottable.
+
+      THE SEED. A seventh dev-seed memory, sealed five years out and planted at
+      ~128m - INSIDE the unlock radius on purpose, because a time capsule 400m
+      away demonstrates nothing the padlock at `walk` does not already. Its
+      offset was checked against P3-06's grid-cell trap and the existing
+      test_no_two_gated_seeds_share_a_grid_cell covers it; the new test asserts
+      it through row_to_memory rather than off the column, because the ordering
+      of the two gates inside is_locked is the thing that matters.
 
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."

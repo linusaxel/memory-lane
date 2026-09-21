@@ -21,6 +21,7 @@ those and nothing else.
 """
 
 import argparse
+import datetime
 import pathlib
 import struct
 import subprocess
@@ -59,6 +60,7 @@ OFFSETS = {
     "stack": (-0.0004, -0.0013),  # ~120m - one place, three memories
     "centroid": (0.0006, -0.0013),  # ~130m - two places, so neither is gated
     "filed": (-0.0005, 0.0010),  # ~100m - submitted, with a photo and a voice
+    "sealed": (0.0006, 0.0013),  # ~129m - a time capsule: in reach and still shut
 }
 
 
@@ -331,6 +333,47 @@ def filed_by_a_person(session) -> tuple[int, list[str]]:
     return memory_id, made
 
 
+def sealed_until_a_date(session) -> int:
+    """A time capsule, deliberately planted *inside* the unlock radius.
+
+    ~129m, so it is the one seed that proves what F23 is actually about:
+    standing close enough does not open it. A sealed memory 400m away would
+    demonstrate nothing the padlock at `walk` does not already.
+
+    Reuses SEED_USER, so it also needs no new device or user row - and a
+    submission is always gated, which keeps this independent of whatever its
+    neighbours do.
+    """
+    lat, lng = at("sealed")
+    place_id = session.execute(
+        text(PLACE_INSERT),
+        {
+            "name": "A letter to whoever is here later, dev seed",
+            "place_query": f"{PLACE_PREFIX}sealed",
+            "lat": lat,
+            "lng": lng,
+            "precision_meters": 25,
+        },
+    ).scalar()
+    return session.execute(
+        text(SUBMISSION_INSERT),
+        {
+            "place_id": place_id,
+            "summary": "You are standing where I stood. By the time this opens the "
+            "bench will probably be gone, and that is rather the point of it.",
+            "tags": ["strange"],
+            "happened_at": None,
+            "happened_precision": None,
+            # Computed, never a literal: a hard-coded date rots into the past
+            # and the seed then silently stops demonstrating a seal at all.
+            # A day offset rather than .replace(year=...), which raises on 29
+            # February - the seed has to run on any day of the year.
+            "opens_at": datetime.date.today() + datetime.timedelta(days=365 * 5),
+            "user_id": SEED_USER,
+        },
+    ).scalar()
+
+
 # -- the two commands --------------------------------------------------------
 
 
@@ -368,8 +411,14 @@ def seed(session) -> dict:
     save_memories(session, content_id, extracted())
     centroid_twin(session)
     filed_id, media = filed_by_a_person(session)
+    sealed_id = sealed_until_a_date(session)
 
-    return {"content_id": content_id, "filed_id": filed_id, "media": media}
+    return {
+        "content_id": content_id,
+        "filed_id": filed_id,
+        "sealed_id": sealed_id,
+        "media": media,
+    }
 
 
 def main() -> None:
@@ -393,6 +442,7 @@ def main() -> None:
         print(f"  {key:9} {lat},{lng}  {metres:>4.0f}m")
     print()
     print("  in reach now: reach, stack, filed     locked: walk     open to all: centroid")
+    print("  sealed until a date, in reach and still shut: sealed")
     print()
     print("point the Simulator at it:")
     print(f"  xcrun simctl location booted set {LAT},{LNG}")

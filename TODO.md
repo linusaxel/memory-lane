@@ -697,13 +697,27 @@ on them. Full detail in `loop/STATE.md`.
       resent for every chunk with no `cache_control`.
 - [ ] **`DEPLOY`** — Railway, ~$5/mo. Not Fly: Fly's managed Postgres has no
       PostGIS. **Also unblocks Phase 2**, which needs a public HTTPS origin.
-- [ ] **`W3-13`** — look at the app in the iOS Simulator. Free, ~5 min. The
-      old blocker is gone: the iOS 26.5 runtime is now installed and a simulator
-      is booted. **Partially observed, not done.** The app has been run in Expo
-      Go, which exercises the JS layer — map, pins, sheet, fetch — but Expo Go
-      shows *its own* permission-prompt copy, not ours, and exercises no native
-      manifest. Closing this needs a real build:
-      `cd mobile && rm -rf ios && npx expo run:ios`.
+- [x] **`W3-13`** — **done 2026-09-21, natively.** `npx expo run:ios` built,
+      installed and launched the real app on an iPhone 16 Pro, and four states
+      were screenshotted: our own permission primer (not Expo Go's), the pinned
+      credit strip with a byline, the same strip with a `SourceLine`, and the
+      sealed composition refusing to open at 128m — inside the unlock radius,
+      which is the whole of what F23 claims.
+
+      **It found a real defect that only a native build could.** See the iOS
+      half of rule 2 in `mobile/UI.md`: expo-location was injecting always-on
+      location and motion purpose strings, in its own boilerplate, into an app
+      that asks for neither. Fixed and tested.
+
+      Two things came out of making it repeatable, and both stay:
+      `EXPO_PUBLIC_DEV_OPEN_MEMORY` opens one memory's sheet on launch (there is
+      no tap automation on this simulator, so until now every sheet change was
+      verified by `tsc` and nothing else), and the dev seed grew a sealed
+      memory so F23 has something to render.
+
+      The task itself stays `blocked` in `loop/TASKS.yaml` on purpose: its
+      `verify` is `MANUAL`, and the contract reserves `done` for machine-checked
+      proof. A screenshot is not an exit code. `W3-16` carries what is testable.
 - [ ] **`EAS_BUILD`** — three `PLACEHOLDER` tripwires to replace first; the
       bundle id is irreversible once submitted.
 - [ ] **`STORE_ACCOUNT`** — Apple $99/yr, Play $25. If the Play account is

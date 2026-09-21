@@ -49,7 +49,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Memory Lane uses your location to show travel memories recorded near you."
+          "locationWhenInUsePermission": "Memory Lane uses your location to show travel memories recorded near you.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": false
         }
       ],
       "expo-font",

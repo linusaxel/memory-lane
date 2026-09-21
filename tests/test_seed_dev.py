@@ -14,13 +14,15 @@ are easy to get backwards in a way nothing would notice:
 
 import pathlib
 import re
+from datetime import date
 
 import pytest
 from sqlalchemy import text
 
 import pipeline.seed_dev as seed_dev
-from api.gate import UNLOCK_RADIUS_METERS, meters_between
+from api.gate import UNLOCK_RADIUS_METERS, meters_between, row_to_memory
 from api.models import Coordinates
+from api.queries import SINGLE_MEMORY_QUERY
 from pipeline.seed_dev import LAT, LNG, PLACE_PREFIX, at, clear, seed
 
 pytestmark = pytest.mark.db
@@ -129,6 +131,42 @@ def test_one_is_filed_by_a_person_and_carries_media(seeded):
     # The audio needs macOS `say` + `afconvert`; where they are missing the seed
     # skips it rather than writing something that will not play.
     assert kinds in (["photo"], ["audio", "photo"])
+
+
+def test_one_is_sealed_shut_while_you_are_standing_on_it(seeded):
+    """The seed F23 needs, and the reason it is planted *inside* the radius.
+
+    A time capsule 400m away demonstrates nothing the padlock at `walk` does
+    not already. This one is ~128m off, which is close enough to unlock
+    anything else in the seed - and it stays shut anyway, which is the entire
+    claim the time lock makes.
+
+    Asserted through row_to_memory rather than off the column, because the
+    column is not the feature: the ordering of the two gates inside is_locked
+    is, and only the real path exercises it.
+    """
+    place = by_query(seeded)["sealed"]
+    here = Coordinates(lat=LAT, lng=LNG)
+    away = meters_between(here, Coordinates(lat=place.lat, lng=place.lng))
+    assert away < UNLOCK_RADIUS_METERS, "being in reach is the whole point of it"
+
+    row = seeded.execute(
+        text(SINGLE_MEMORY_QUERY),
+        {
+            "memory_id": seeded.execute(
+                text(
+                    "SELECT m.id FROM memories m JOIN places p ON p.id = m.place_id "
+                    "WHERE p.place_query = :q"
+                ),
+                {"q": f"{PLACE_PREFIX}sealed"},
+            ).scalar()
+        },
+    ).fetchone()
+
+    memory = row_to_memory(row, here)
+    assert memory.locked is True, "standing there must not open a time capsule"
+    assert memory.summary == ""
+    assert memory.opens_at > date.today(), "a seal that has passed is not a seal"
 
 
 def test_no_two_gated_seeds_share_a_grid_cell(seeded):

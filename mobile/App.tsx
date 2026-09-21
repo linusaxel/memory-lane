@@ -40,6 +40,7 @@ import {
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
+import { devOpenMemory } from './src/devOpen.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
@@ -317,6 +318,21 @@ export default function App() {
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
   );
+
+  // EXPO_PUBLIC_DEV_OPEN_MEMORY, under __DEV__ only. See src/devOpen.ts: there
+  // is no way to script a tap on this simulator, so without it the sheet cannot
+  // be looked at by anything but a person. Fires once - closing it by hand must
+  // not spring it open again on the next render.
+  const devOpened = useRef(false);
+  useEffect(() => {
+    const id = devOpenMemory();
+    if (id == null || devOpened.current) return;
+    const wanted = shown.find((memory) => memory.id === id);
+    if (!wanted) return;
+    devOpened.current = true;
+    setOpenAt([wanted]);
+    setOpenIndex(0);
+  }, [shown]);
 
   const withinReach = useMemo(
     () => groups.filter((group) => reachOf(group, position, earned) === 'unlockable'),

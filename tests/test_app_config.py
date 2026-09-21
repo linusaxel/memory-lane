@@ -48,6 +48,37 @@ def test_location_permission_string_is_specific(expo):
     assert len(text) > 40, "too vague for review"
 
 
+def test_ios_never_declares_always_on_location(expo):
+    """The iOS half of "location is foreground-only", and it was missing.
+
+    Found on the first native build: `app.json` sets only the when-in-use
+    string, but expo-location's config plugin injects
+    NSLocationAlwaysAndWhenInUseUsageDescription, NSLocationAlwaysUsageDescription
+    and NSMotionUsageDescription with its own boilerplate unless each is
+    explicitly `false`. The built Info.plist therefore declared always-on
+    location and motion for an app that asks for neither, in copy that read
+    "Allow MemoryLane to access your location".
+
+    Two separate problems. A declared purpose string is what App Store review
+    reads as intent, so it contradicts rule 2 in mobile/UI.md - and
+    ACCESS_BACKGROUND_LOCATION being blocked on Android made the pair look
+    handled when only one side was. `false` deletes the key outright; see
+    applyPermissions in @expo/config-plugins.
+
+    Asserted on app.json rather than the generated plist because ios/ is a
+    gitignored prebuild artifact and is not there on a fresh clone.
+    """
+    options = next(
+        entry[1]
+        for entry in expo["plugins"]
+        if isinstance(entry, list) and entry[0] == "expo-location"
+    )
+    assert options["locationAlwaysAndWhenInUsePermission"] is False
+    assert options["locationAlwaysPermission"] is False
+    assert options["motionUsagePermission"] is False
+    assert options["locationWhenInUsePermission"].startswith("Memory Lane")
+
+
 # -- Android -----------------------------------------------------------------
 
 
