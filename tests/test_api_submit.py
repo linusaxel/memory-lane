@@ -511,3 +511,39 @@ def test_the_extractor_is_held_to_the_same_list():
     for prompt in (SYSTEM_PROMPT, HISTORICAL_SYSTEM_PROMPT):
         assert ", ".join(TAGS) in prompt
     assert extract_clean(["Sport", "sports", "food", "food", "nonsense"]) == ["sport", "food"]
+
+
+def test_an_upload_refused_after_it_was_written_leaves_nothing_behind(client, monkeypatch):
+    """The refusal that happens *after* the bytes are on the disk.
+
+    The cheap check runs before `save_upload` and costs nothing to fail. The
+    one this covers is the second: by the time it runs the file exists, and
+    the only reason it runs at all is that a concurrent upload from the same
+    device can spend the allowance in between. Which is simulated here, since
+    two real uploads racing is not reproducible in a test.
+
+    An orphan from this path is invisible - referenced by no row, in no query -
+    so nothing would ever notice it but the disk.
+    """
+    from fastapi import HTTPException
+
+    import api.media
+    import api.write
+
+    before = sorted(api.media.MEDIA_DIR.iterdir()) if api.media.MEDIA_DIR.exists() else []
+
+    seen = {"checks": 0}
+
+    def spent_between_the_two_checks(used, limit, what):
+        seen["checks"] += 1
+        if seen["checks"] >= 2:
+            raise HTTPException(status_code=429, detail="Daily upload limit reached.")
+
+    monkeypatch.setattr(api.write, "refuse_over_quota", spent_between_the_two_checks)
+
+    response = upload(client, device())
+    assert response.status_code == 429, response.text
+    assert seen["checks"] == 2, "the second check never ran, so the race is still open"
+
+    after = sorted(api.media.MEDIA_DIR.iterdir()) if api.media.MEDIA_DIR.exists() else []
+    assert after == before, f"a refused upload left {set(after) - set(before)} behind"

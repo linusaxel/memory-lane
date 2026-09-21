@@ -12,6 +12,7 @@ from sqlalchemy import text
 
 from api.accounts import clean_name, set_display_name, touch_device, user_for_device
 from api.gate import meters_between, row_to_memory
+import api.media
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
@@ -158,25 +159,51 @@ async def upload_media(
 
     path, kind, mime, size = await save_upload(file)
 
-    with get_session() as session:
-        touch_device(session, device)
-        media_id = session.execute(
-            text("""
-                INSERT INTO media (device_id, kind, path, mime, bytes, duration_seconds)
-                VALUES (CAST(:device AS uuid), :kind, :path, :mime, :bytes, :duration)
-                RETURNING id
-            """),
-            {
-                "device": device,
-                "kind": kind,
-                "path": path,
-                "mime": mime,
-                "bytes": size,
-                # Only meaningful for audio, and only the client knows it - the
-                # server does not decode the file to find out.
-                "duration": duration_seconds if kind == "audio" else None,
-            },
-        ).scalar()
+    # From here the bytes are on the disk, so every way out of this block has
+    # to take them with it.
+    try:
+        with get_session() as session:
+            # This is also the lock. touch_device is an ON CONFLICT DO UPDATE,
+            # which holds the device row for the rest of the transaction, so
+            # the count below cannot be overtaken by this device's other
+            # uploads - and takes no lock against anybody else's.
+            touch_device(session, device)
+
+            # Asked again, because the check before the write is a read in a
+            # transaction that has already ended. Concurrent uploads all passed
+            # it, and each of them then wrote a file: the allowance is 64MB and
+            # a rush of fifty puts a gigabyte on the disk before a single row
+            # exists to be counted. The cheap check stays for the ordinary
+            # refusal; this one is the one that is true.
+            spent = session.execute(text(SPENT_TODAY), {"device": device}).scalar()
+            refuse_over_quota(spent, DAILY_UPLOAD_BYTES, "upload")
+
+            media_id = session.execute(
+                text("""
+                    INSERT INTO media (device_id, kind, path, mime, bytes, duration_seconds)
+                    VALUES (CAST(:device AS uuid), :kind, :path, :mime, :bytes, :duration)
+                    RETURNING id
+                """),
+                {
+                    "device": device,
+                    "kind": kind,
+                    "path": path,
+                    "mime": mime,
+                    "bytes": size,
+                    # Only meaningful for audio, and only the client knows it -
+                    # the server does not decode the file to find out.
+                    "duration": duration_seconds if kind == "audio" else None,
+                },
+            ).scalar()
+    except Exception:
+        # A refusal or a failed insert both leave a file nothing will ever
+        # reference. Orphans here are invisible: they cost disk for ever and
+        # appear in no query.
+        # Read off the module rather than bound at import: the tests point
+        # MEDIA_DIR at a tmp_path, and a stale binding would delete nothing
+        # while looking like it had.
+        (api.media.MEDIA_DIR / path).unlink(missing_ok=True)
+        raise
 
     return MediaItem(
         id=media_id,
