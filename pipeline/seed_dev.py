@@ -287,6 +287,7 @@ def filed_by_a_person(session) -> tuple[int, list[str]]:
             "tags": ["personal", "strange"],
             "happened_at": None,
             "happened_precision": None,
+            "opens_at": None,
             "user_id": SEED_USER,
         },
     ).scalar()

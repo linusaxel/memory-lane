@@ -225,6 +225,7 @@ def submit_memory(body: SubmissionRequest):
                 "tags": tags,
                 "happened_at": body.happened_at,
                 "happened_precision": precision,
+                "opens_at": body.opens_at,
                 "user_id": user_id,
             },
         ).scalar()

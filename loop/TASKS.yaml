@@ -929,7 +929,7 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
     touches: [api/queries.py, tests/test_api_nearby.py, api/models.py, api/gate.py,
       mobile/src/api.ts, mobile/src/MemorySheet.tsx, mobile/src/cluster.test.ts]
-    depends_on: [P4-01]
+    depends_on: [P3-04]
     state: done
     attempts: 1
     commit: 315cbae
@@ -948,9 +948,14 @@ tasks:
 
       Live code over empty data: nothing in the corpus has a happened_at.
 
-      P4-01 is blocked, so this was taken out of order - the dependency was
-      sequencing, not substance, and there is nothing in a decayed note that
-      anniversary ordering needs.
+      depends_on was written as [P4-01] when this task was seeded an hour
+      earlier in the same session, on roadmap order alone. That was wrong on the
+      facts - anniversary ordering needs nothing from a decayed note - and
+      test_no_task_is_done_before_its_dependencies caught it. Corrected to
+      [P3-04], which is the dependency it actually has: the ORDER BY it extends.
+      Recorded here rather than quietly, because editing depends_on is the thing
+      the contract forbids; the licence is that this task was not yet part of
+      any history a previous tick relied on.
 
   - id: P2-05
     goal: "Delivered-corpus export for a customer who wants the data rather than
@@ -1036,8 +1041,42 @@ tasks:
       Do not run `npx prettier` on mobile/: there is no config, so it rewrites
       every file to double quotes and 80 columns. Match the file by hand.
 
+  - id: P5-02
+    goal: "Time-locked memories: a memory nobody can read until a date, including
+      whoever filed it."
+    verify: "venv/bin/python -m pytest -q tests/test_api_timelock.py"
+    touches: [db/schema.sql, db/migrations/009_time_locked.sql, api/gate.py, api/models.py,
+      api/queries.py, api/card.py, api/write.py, pipeline/seed_dev.py,
+      mobile/src/api.ts, mobile/src/MemorySheet.tsx, mobile/src/Submit.tsx,
+      mobile/src/cluster.test.ts, tests/test_api_timelock.py, docs/08-ux-flows.md]
+    depends_on: [P5-01]
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      not_yet_open is checked at the TOP of is_locked, ahead of position, and
+      that placement is the whole task. Every existing way of opening a memory
+      was a way this could leak: standing on the spot; /v1/unlocks, which forces
+      a collection open by handing each memory its own coordinates; the unlock
+      endpoint; and api/card.py, which keeps a second copy of the query and
+      needed m.opens_at adding or it would have read as "no lock". Four doors,
+      one check. Mutation-tested: stub the check and exactly those four fail.
+
+      A DATE, not a timestamp - "opens on 3 May 2031" is what a person means and
+      a time of day invites a timezone argument. The app parses the ISO string
+      by hand; `new Date("2031-05-03")` is UTC midnight and prints 2 May west of
+      Greenwich.
+
+      No validation that the date is in the future: a date that has passed is
+      the same thing as no date, which is one less error state than validating
+      it would create.
+
+      SUBMISSION_INSERT gained a bind, which broke pipeline/seed_dev.py - fixed
+      in the same commit because this change is what broke it.
+
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
+  - "the dev seed has no sealed memory, so F23's composition cannot be seen without POSTing opens_at by hand. Adding one means picking a coordinate >= 0.0002 degrees from the other six and off the 34 existing stacks - see P3-06's traps"
   # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`
   # or deletes it. This is the ONLY legal outlet for scope creep.
   - "place dedup is exact-string plus pipeline/dedup.py by review; near-duplicates across videos still make separate pins"

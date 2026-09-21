@@ -96,6 +96,9 @@ class Memory(BaseModel):
     # like media_count: it is a reason to walk over, and it gives away nothing
     # the pin did not already.
     anniversary: bool = False
+    # Set only while a memory is time-locked, and then on the locked shape too:
+    # "you cannot read this yet" is unbearable without "until when".
+    opens_at: date | None = None
 
 
 class NearbyMeta(BaseModel):
@@ -217,6 +220,10 @@ class SubmissionRequest(BaseModel):
     tags: list[str] = Field(default_factory=list, max_length=8)
     happened_at: date | None = None
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
+    # A time capsule: nobody reads it before this date, the author included.
+    # Not validated as future-dated - a date that has passed simply opens, which
+    # is the same thing as not sending one and needs no special case.
+    opens_at: date | None = None
     media_ids: list[int] = Field(default_factory=list, max_length=6)
     # Sent with the submission rather than requiring a separate profile call, so
     # signing your first memory is one request.

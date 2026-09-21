@@ -100,6 +100,8 @@ export default function Submit({
   const [tags, setTags] = useState<string[]>([]);
   const [year, setYear] = useState('');
   const [when, setWhen] = useState<'today' | 'earlier'>('today');
+  const [sealYear, setSealYear] = useState('');
+  const [seal, setSeal] = useState<'now' | 'later'>('now');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +132,8 @@ export default function Submit({
     setTags([]);
     setYear('');
     setWhen('today');
+    setSealYear('');
+    setSeal('now');
     setAttachments([]);
     setError(null);
   }, [visible]);
@@ -249,6 +253,12 @@ export default function Submit({
             ? `${trimmedYear}-01-01`
             : null,
       happened_precision: when === 'today' ? 'day' : /^\d{4}$/.test(trimmedYear) ? 'year' : null,
+      // 1 January of the year, like happened_at: a seal is a promise about a
+      // year, and asking somebody to pick a day for 2041 is a picker nobody
+      // needs. A year already past is simply not a seal - the server treats a
+      // date that has come as no date at all.
+      opens_at:
+        seal === 'later' && /^\d{4}$/.test(sealYear.trim()) ? `${sealYear.trim()}-01-01` : null,
       media_ids: attachments.flatMap((a) => (a.item ? [a.item.id] : [])),
       display_name: displayName.trim() || null,
     };
@@ -352,6 +362,27 @@ export default function Submit({
             </View>
             {/* ponytail: a year, not a date. A full picker is another
                 dependency for a field most submissions leave on Today. */}
+          </Field>
+
+          <Field label="Who can read it">
+            <View style={styles.row}>
+              <Chip label="Anyone here" on={seal === 'now'} onPress={() => setSeal('now')} />
+              <Chip label="Nobody until" on={seal === 'later'} onPress={() => setSeal('later')} />
+              {seal === 'later' && (
+                <TextInput
+                  style={[styles.input, styles.year]}
+                  value={sealYear}
+                  onChangeText={(next) => setSealYear(next.replace(/[^0-9]/g, '').slice(0, 4))}
+                  placeholder="2041"
+                  placeholderTextColor={color.inkFaint}
+                  keyboardType="number-pad"
+                  accessibilityLabel="Year this memory opens"
+                />
+              )}
+            </View>
+            {/* Including you. A time capsule that its author can read is a
+                draft, and the gate is deliberately checked before the one that
+                opens a memory for the person who filed it. */}
           </Field>
 
           <Field label="Tags">

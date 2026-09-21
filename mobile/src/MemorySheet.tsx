@@ -50,6 +50,31 @@ function formatDistance(meters: number | null): string | null {
   return meters == null ? null : distance(meters, { suffix: 'away' });
 }
 
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/** "3 May 2031", the same wording api/card.py renders.
+ *
+ *  Parsed by hand rather than through `new Date(iso)`, which reads a bare ISO
+ *  date as UTC midnight and then prints the day before it anywhere west of
+ *  Greenwich. A seal that says the wrong day is a seal nobody trusts. */
+function formatSealDate(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  return `${day} ${MONTHS[month - 1]} ${year}`;
+}
+
 /** Walking directions to a coordinate, in whatever maps app the phone has. */
 function walkingDirectionsUrl(lat: number, lng: number): string {
   return Platform.OS === 'ios'
@@ -101,6 +126,11 @@ export default function MemorySheet({
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
+  // A different refusal, and the app must not confuse them: walking to a time
+  // capsule does nothing, so it never gets the unlock control or the word
+  // "within reach". The server sends the date only while it still means
+  // something, so this is false the moment it opens.
+  const sealed = !!memory?.opens_at;
 
   // The reveal is the payoff. Swapping the text in place would throw away the
   // only moment the product has - so the content arrives, once, on the frame
@@ -154,7 +184,7 @@ export default function MemorySheet({
             <Text style={styles.place}>{memory.place.name}</Text>
             <View style={styles.metaRow}>
               {(!locked || withinReach) && formatDistance(fromHere ?? memory.distance_meters) && (
-                <Text style={[styles.meta, withinReach && locked && styles.reachable]}>
+                <Text style={[styles.meta, withinReach && locked && !sealed && styles.reachable]}>
                   {formatDistance(fromHere ?? memory.distance_meters)}
                 </Text>
               )}
@@ -162,8 +192,8 @@ export default function MemorySheet({
                   accent - the seal means openable and nothing else gets it. */}
               {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
               {locked ? (
-                <Text style={[styles.meta, withinReach ? styles.reachable : styles.sealed]}>
-                  {withinReach ? 'within reach' : 'locked'}
+                <Text style={[styles.meta, withinReach && !sealed ? styles.reachable : styles.sealed]}>
+                  {sealed ? 'sealed' : withinReach ? 'within reach' : 'locked'}
                 </Text>
               ) : (
                 memory.confidence === 'high' && (
@@ -178,7 +208,17 @@ export default function MemorySheet({
               composition; an open one is a story and gets the reading column. */}
           {locked ? (
             <View style={styles.gate}>
-              {withinReach ? (
+              {sealed ? (
+                <>
+                  <Padlock size={34} color={color.faded} />
+                  <Text style={[styles.gateFigure, styles.sealDate]}>
+                    {formatSealDate(memory.opens_at!)}
+                  </Text>
+                  <Text style={styles.gateNote}>
+                    Sealed until then. Standing here does not open it any sooner.
+                  </Text>
+                </>
+              ) : withinReach ? (
                 <>
                   <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
                   <Text style={styles.gateNote}>
@@ -392,6 +432,8 @@ const styles = StyleSheet.create({
   sealed: { color: color.inkFaint },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
   gateFigure: { fontFamily: font.display, fontSize: 52, color: color.ink, letterSpacing: -1 },
+  // A date is not a number. 52px fits "412 m" and wraps "3 May 2031".
+  sealDate: { fontSize: 34, letterSpacing: 0, textAlign: 'center' },
   gateNote: {
     fontFamily: font.prose,
     fontSize: 16,

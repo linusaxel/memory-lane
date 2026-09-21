@@ -46,6 +46,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F20 | Report something that should not be here | Implemented |
 | F21 | Be somebody | Implemented |
 | F22 | Keep your collection on a new phone | Implemented |
+| F23 | Seal a memory until a date | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Implemented |
 
@@ -680,6 +681,47 @@ build and real client ids.
 
 **Done when:** somebody can hand their old phone in and still have everything
 they walked for.
+
+---
+
+## F23 · Seal a memory until a date — **Implemented**
+
+**Who:** somebody filing a memory they do not want read yet.
+**Trigger:** the submit sheet, "Who can read it" → *Nobody until* + a year.
+
+1. They file it exactly as any other memory: same screen, same coordinate, same
+   photo and recording.
+2. It is on the map immediately, as a pin like any other. Something is here;
+   that much is the point.
+3. Tapping it gives the locked composition with a different figure — the date,
+   not the distance — and "Sealed until then. Standing here does not open it
+   any sooner."
+4. On the day, it becomes an ordinary gated memory: readable by whoever is
+   standing there, including its author, who is in the same position as
+   everybody else and has to walk back.
+
+**Including the author, from the moment it is filed.** That is the whole
+feature, and it is the part the code had to be shaped around: the submit path
+deliberately records an unlock for the person filing — because filing something
+*is* standing there — and `/v1/unlocks` deliberately forces every memory in a
+collection open by handing it its own coordinates. Both of those are correct and
+both would have opened a time capsule, so `not_yet_open` is checked at the top
+of `is_locked`, ahead of position, rather than anywhere either of them could
+route around.
+
+**A year, not a date**, for the same reason `happened_at` takes one: a picker is
+a dependency, and "2041" is what a person means. A year already gone is not a
+seal — the server treats a date that has come as no date at all, so there is no
+error state and nothing to validate.
+
+**What can go wrong:** the date is the server's, and the server's clock is the
+only authority. There is no notification when it opens, because there are no
+notifications; the memory simply stops refusing. Somebody who seals a memory and
+never goes back never reads it, which is a property of the product and not a
+bug — it is the same walk everything else asks for.
+
+**Done when:** a memory filed with a seal reads as sealed to its own author on
+its own coordinate, and its card says the date instead of a distance.
 
 ---
 

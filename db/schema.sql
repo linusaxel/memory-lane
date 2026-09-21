@@ -119,6 +119,12 @@ CREATE TABLE memories (
     contrast_score REAL,
     contrast_note TEXT,
 
+    -- A memory nobody may read until this date, including whoever filed it.
+    -- Null for everything that opens on arrival, which is almost everything.
+    -- Enforced in api/gate.py ahead of the proximity check, so standing on the
+    -- spot does not open it and neither does having it in your collection.
+    opens_at DATE,
+
     -- Who filed it, when a person did. Null for everything extracted.
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
 

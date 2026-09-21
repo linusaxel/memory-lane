@@ -33,6 +33,7 @@ function memory(
     media: [],
     media_count: 0,
     anniversary: false,
+    opens_at: null,
   } as LocatedMemory;
 }
 

@@ -79,6 +79,10 @@ export type Memory = {
    *  server sorts these to the top, which is the whole of "resurfacing": there
    *  are no notifications in this product. */
   anniversary: boolean;
+  /** ISO date, and set only while the memory is still sealed. A time lock is a
+   *  different refusal from the proximity one: standing here does not open it,
+   *  so the sheet must not offer the unlock. Null once the date has passed. */
+  opens_at: string | null;
 };
 
 /** Media urls come back server-relative so the host can change without a
@@ -241,6 +245,8 @@ export type Draft = {
   /** ISO date, or null when the person did not say when. */
   happened_at: string | null;
   happened_precision: 'day' | 'year' | null;
+  /** ISO date. Nobody reads it before then, the author included. */
+  opens_at: string | null;
   media_ids: number[];
   display_name: string | null;
 };

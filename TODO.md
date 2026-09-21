@@ -631,7 +631,24 @@ people create rather than consume.
       **Nothing in the corpus has a `happened_at` yet**, so this is live code
       over empty data until an extraction run happens (API_CREDITS) or somebody
       files a submission with a date.
-- [ ] **5.2** Time-locked memories.
+- [x] **5.2** Time-locked memories. `memories.opens_at` (DATE,
+      `009_time_locked.sql`), `not_yet_open` at the **top** of `is_locked`, and
+      "Who can read it → Nobody until <year>" on the submit sheet. Full flow in
+      `docs/08-ux-flows.md` F23.
+
+      The gate is checked ahead of position because every existing way of
+      opening a memory is a way this could have leaked: standing on the spot,
+      the collection (which forces a memory open by handing it its own
+      coordinates), the unlock endpoint, and the card (which keeps its own copy
+      of the query and needed the column adding). Four doors, one check, and a
+      fifth inherits it. `tests/test_api_timelock.py` walks all four, and the
+      check was mutation-tested — remove it and exactly those four fail.
+
+      A DATE and not a timestamp: "opens on 3 May 2031" is what a person means,
+      and a time of day would invite a timezone argument nobody needs. The app
+      parses the ISO string by hand rather than through `new Date`, which reads
+      a bare date as UTC midnight and prints the day before it west of
+      Greenwich.
 
 ---
 

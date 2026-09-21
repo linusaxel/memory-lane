@@ -60,6 +60,7 @@ MEMORY_COLUMNS = f"""
     m.source_url,
     m.contrast_score,
     m.contrast_note,
+    m.opens_at,
     {ANNIVERSARY},
     p.id as place_id,
     p.name as place_name,
@@ -351,11 +352,12 @@ RETURNING id
 SUBMISSION_INSERT = """
 INSERT INTO memories (
     place_id, content_id, timestamp_start, summary, tags,
-    extraction_confidence, layer, happened_at, happened_precision, user_id
+    extraction_confidence, layer, happened_at, happened_precision, opens_at, user_id
 )
 VALUES (
     :place_id, NULL, NULL, :summary, CAST(:tags AS varchar[]),
-    'high', 'stranger', :happened_at, :happened_precision, CAST(:user_id AS uuid)
+    'high', 'stranger', :happened_at, :happened_precision, :opens_at,
+    CAST(:user_id AS uuid)
 )
 RETURNING id
 """
