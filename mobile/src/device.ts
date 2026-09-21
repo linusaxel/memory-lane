@@ -24,6 +24,16 @@ import * as SecureStore from 'expo-secure-store';
 const KEY = 'memorylane.device-id.v1';
 
 let cached: string | null = null;
+/** The first call's promise, so a second caller waits for it rather than
+ *  racing it. Without this two callers that both arrive before the keychain
+ *  answers each find nothing, each mint a UUID, and each write it: one wins
+ *  the store and the other has already been handed a different id. The
+ *  collection then splits across two identities, invisibly and permanently -
+ *  unlocks recorded under one, read back under the other.
+ *
+ *  Only reachable on a cold start, because everything after the first call is
+ *  served from `cached`. That is exactly when both callers here run. */
+let inFlight: Promise<string> | null = null;
 
 async function readStored(): Promise<string | null> {
   try {
@@ -54,9 +64,7 @@ async function write(id: string): Promise<void> {
   }
 }
 
-export async function deviceId(): Promise<string> {
-  if (cached) return cached;
-
+async function resolveId(): Promise<string> {
   const stored = await readStored();
   if (stored) {
     cached = stored;
@@ -67,4 +75,14 @@ export async function deviceId(): Promise<string> {
   cached = fresh;
   await write(fresh);
   return fresh;
+}
+
+export function deviceId(): Promise<string> {
+  if (cached) return Promise.resolve(cached);
+  // Started once; every caller until it settles gets the same promise, and so
+  // the same id.
+  inFlight ??= resolveId().finally(() => {
+    inFlight = null;
+  });
+  return inFlight;
 }
