@@ -140,6 +140,7 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         media_count=len(getattr(row, "media", None) or []),
         locked=True,
         unlock_radius_meters=UNLOCK_RADIUS_METERS,
+        anniversary=bool(getattr(row, "anniversary", False)),
     )
 
 
@@ -196,4 +197,5 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         source_url=getattr(row, "source_url", None),
         contrast_score=getattr(row, "contrast_score", None),
         contrast_note=getattr(row, "contrast_note", None),
+        anniversary=bool(getattr(row, "anniversary", False)),
     )

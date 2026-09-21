@@ -927,12 +927,30 @@ tasks:
     goal: "Anniversary resurfacing: /v1/memories/nearby surfaces a memory whose
       happened_at shares today's day-and-month, ahead of the rest."
     verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
-    touches: [api/queries.py, tests/test_api_nearby.py]
+    touches: [api/queries.py, tests/test_api_nearby.py, api/models.py, api/gate.py,
+      mobile/src/api.ts, mobile/src/MemorySheet.tsx, mobile/src/cluster.test.ts]
     depends_on: [P4-01]
-    state: todo
-    attempts: 0
-    commit: null
-    note: "Phase 5.1. happened_at exists and nothing reads it."
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      Sorted above contrast, below layer. The ordering IS the feature: there are
+      no notifications in this product, so a date can only surface something by
+      putting it at the top of the list somebody is already looking at.
+
+      Day-and-month via to_char, so it fires every year. A 29 February memory
+      resurfaces only on a leap day - marked ponytail, and nudging it to the
+      28th is a product decision nobody has made.
+
+      The flag rides on locked memories too, like media_count: a reason to walk
+      over, giving away nothing the pin did not. "on this day" in the sheet's
+      meta row with no accent, because the seal means openable.
+
+      Live code over empty data: nothing in the corpus has a happened_at.
+
+      P4-01 is blocked, so this was taken out of order - the dependency was
+      sequencing, not substance, and there is nothing in a decayed note that
+      anniversary ordering needs.
 
   - id: P2-05
     goal: "Delivered-corpus export for a customer who wants the data rather than

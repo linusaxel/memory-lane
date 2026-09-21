@@ -158,6 +158,9 @@ export default function MemorySheet({
                   {formatDistance(fromHere ?? memory.distance_meters)}
                 </Text>
               )}
+              {/* The server already sorted it to the top; this says why. No
+                  accent - the seal means openable and nothing else gets it. */}
+              {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
               {locked ? (
                 <Text style={[styles.meta, withinReach ? styles.reachable : styles.sealed]}>
                   {withinReach ? 'within reach' : 'locked'}

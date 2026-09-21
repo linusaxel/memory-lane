@@ -619,7 +619,18 @@ people create rather than consume.
 
 ## Phase 5 — Retention mechanics
 
-- [ ] **5.1** Anniversary resurfacing.
+- [x] **5.1** Anniversary resurfacing. `ANNIVERSARY` in `api/queries.py` marks
+      a memory whose `happened_at` shares today's day-and-month, and it sorts
+      above contrast and below layer. That ordering *is* the feature: there are
+      no notifications in this product, so the only way a date can surface
+      anything is by putting it at the top of the list somebody is already
+      looking at. The flag travels on locked memories too, like `media_count` —
+      it is a reason to walk over and gives away nothing the pin did not. The
+      sheet says "on this day" in the meta row, with no accent, because the
+      seal means openable and nothing else gets it.
+      **Nothing in the corpus has a `happened_at` yet**, so this is live code
+      over empty data until an extraction run happens (API_CREDITS) or somebody
+      files a submission with a date.
 - [ ] **5.2** Time-locked memories.
 
 ---

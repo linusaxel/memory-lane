@@ -32,6 +32,7 @@ function memory(
     author: null,
     media: [],
     media_count: 0,
+    anniversary: false,
   } as LocatedMemory;
 }
 

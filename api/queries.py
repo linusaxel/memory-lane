@@ -35,6 +35,16 @@ MEMORY_MEDIA = """COALESCE((
         FROM media md WHERE md.memory_id = m.id
     ), '[]'::json) as media"""
 
+# Something happened here on today's date. Day-and-month, so it fires every year
+# rather than once. Carried on every memory-shaped row rather than filtered on,
+# because it is a reason to look and never a reason to hide anything.
+# ponytail: a 29 February memory resurfaces only on a leap day. Nudging it to
+# the 28th is a product decision nobody has made.
+ANNIVERSARY = """(
+        m.happened_at IS NOT NULL
+        AND to_char(m.happened_at, 'MM-DD') = to_char(CURRENT_DATE, 'MM-DD')
+    ) as anniversary"""
+
 # Every column a memory-shaped response needs. row_to_memory reads the row by
 # name, so a query is free to append distance, rank or unlocked_at.
 MEMORY_COLUMNS = f"""
@@ -50,6 +60,7 @@ MEMORY_COLUMNS = f"""
     m.source_url,
     m.contrast_score,
     m.contrast_note,
+    {ANNIVERSARY},
     p.id as place_id,
     p.name as place_name,
     p.precision_meters,
@@ -110,7 +121,14 @@ LAYER_ORDER = "CASE m.layer WHEN 'friend' THEN 0 WHEN 'stranger' THEN 1 ELSE 2 E
 # Contrast next, not distance: the gap between the memory and what you are
 # looking at now is the product. NULLS LAST is load-bearing and inverts the
 # whole ranking if dropped - docs/10-decisions.md#nulls-last-is-load-bearing.
-CONTRAST_ORDER = f"ORDER BY {LAYER_ORDER}, m.contrast_score DESC NULLS LAST, distance_meters ASC"
+# An anniversary outranks contrast and is outranked by layer. It is the whole of
+# what "resurfacing" means here: there are no notifications in this product, so
+# the only way a date can surface anything is by sorting it to the top of the
+# list somebody is already looking at.
+CONTRAST_ORDER = (
+    f"ORDER BY {LAYER_ORDER}, anniversary DESC, "
+    "m.contrast_score DESC NULLS LAST, distance_meters ASC"
+)
 
 NEARBY_MEMORIES_QUERY = f"""
 SELECT {MEMORY_COLUMNS},

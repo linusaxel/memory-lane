@@ -74,6 +74,11 @@ export type Memory = {
    *  there is a photograph waiting, which is the pull rather than the leak. */
   media: MediaItem[];
   media_count: number;
+  /** Something happened here on today's date. Set on locked memories too — it
+   *  is a reason to walk over and gives away nothing the pin did not. The
+   *  server sorts these to the top, which is the whole of "resurfacing": there
+   *  are no notifications in this product. */
+  anniversary: boolean;
 };
 
 /** Media urls come back server-relative so the host can change without a

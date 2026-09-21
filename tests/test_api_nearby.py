@@ -11,6 +11,8 @@ scoring has none, so a missing NULLS LAST inverts the feature completely and
 still returns plausible-looking results.
 """
 
+from datetime import date, timedelta
+
 import pytest
 from sqlalchemy import text
 
@@ -163,6 +165,49 @@ def test_a_layer_filter_returns_only_that_layer(client, db_session):
 
     everything = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()
     assert everything["meta"]["total"] == 2, "omitting layer means every layer"
+
+
+def test_something_that_happened_today_comes_back_up(client, db_session):
+    """Phase 5.1. There are no notifications in this product, so the only way a
+    date can surface anything is by sorting it to the top of the list somebody
+    is already looking at - which means it has to beat contrast."""
+    place = _place(db_session, "Vega", LAT, LNG)
+    content = _content(db_session, "https://example.invalid/ggggggggggg")
+    _memory(db_session, place, content, "a much better story", contrast_score=0.95)
+    _memory(
+        db_session,
+        place,
+        content,
+        "thirty years ago today",
+        contrast_score=0.1,
+        happened_at=date.today().replace(year=date.today().year - 30),
+    )
+    db_session.commit()
+
+    body = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()
+    assert [mem["summary"] for mem in body["memories"]] == [
+        "thirty years ago today",
+        "a much better story",
+    ]
+    assert body["memories"][0]["anniversary"] is True
+    assert body["memories"][1]["anniversary"] is False
+
+
+def test_the_same_date_in_another_year_is_not_an_anniversary(client, db_session):
+    """Day-and-month, not the whole date: a memory of today is today's news."""
+    place = _place(db_session, "Vega", LAT, LNG)
+    content = _content(db_session, "https://example.invalid/hhhhhhhhhhh")
+    _memory(
+        db_session,
+        place,
+        content,
+        "yesterday",
+        happened_at=date.today() - timedelta(days=1),
+    )
+    db_session.commit()
+
+    body = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()
+    assert body["memories"][0]["anniversary"] is False
 
 
 def test_an_unknown_layer_is_rejected_not_silently_ignored(client):

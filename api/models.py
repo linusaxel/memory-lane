@@ -92,6 +92,10 @@ class Memory(BaseModel):
     source_url: str | None = None
     contrast_score: float | None = None
     contrast_note: str | None = None
+    # Something happened here on today's date. Travels on a locked memory too,
+    # like media_count: it is a reason to walk over, and it gives away nothing
+    # the pin did not already.
+    anniversary: bool = False
 
 
 class NearbyMeta(BaseModel):
