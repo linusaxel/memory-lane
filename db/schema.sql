@@ -205,6 +205,10 @@ CREATE INDEX idx_memories_user ON memories(user_id);
 CREATE INDEX idx_devices_user ON devices(user_id);
 CREATE INDEX idx_memories_content ON memories(content_id);
 CREATE INDEX idx_places_coordinates ON places USING GIST(coordinates);
+-- The gate's uniqueness question, which is asked once per row returned and
+-- scanned every place in the table without this. See db/migrations/011 for the
+-- measurement; the expression must match api/queries.py's exactly.
+CREATE INDEX idx_places_grid ON places (ST_SnapToGrid(coordinates::geometry, 0.0001));
 -- The ON CONFLICT (place_query) in pipeline/extract.py needs this to fire. Without
 -- it the clause is a silent no-op and every memory mints a duplicate place. Keep it
 -- on the bare column: extract.py's fallback SELECT matches on place_query exactly,

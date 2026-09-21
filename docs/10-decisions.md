@@ -80,6 +80,23 @@ or a renamed place answers to its old name for ever — which is worse than the
 scan was. Renames come from `pipeline/dedup.py` in reviewed batches, so that
 is a handful of rows at a time.
 
+### The gate's uniqueness question is indexed, and it is the hot path
+
+`COORDINATE_IS_UNIQUE` decides whether a memory is gated at all, by asking
+whether any other place shares its snapped grid cell. It compares
+`ST_SnapToGrid(...)` on both sides, which nothing could serve, so Postgres
+scanned every place in the table - once per row returned.
+
+Measured on 50,000 memories across 20,000 places, `/v1/memories/nearby` at a
+10km radius: **338 ms before, 14 ms after**, with 305 ms of the original in
+that one subplan. `/v1/places/nearby` went 265 ms to 9 ms. The app refires
+`nearby` on every pan, so this was the single slowest thing in the product.
+
+The index must match the query's expression exactly, argument form included -
+`ST_SnapToGrid(geom, size)` and `ST_SnapToGrid(geom, 0, 0, size, size)` are the
+same answer and different expressions, and only the matching one is used. The
+test asserts the planner reaches for it rather than that the index exists.
+
 ### `/v1/stats` is cached for five minutes
 
 Four unbounded counts and `ST_ClusterDBSCAN(...) OVER ()` — one partition, so
