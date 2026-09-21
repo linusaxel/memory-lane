@@ -3,7 +3,7 @@
 ```
 updated:  2026-09-21
 branch:   loop/autopilot   — NOT pushed. `main` is behind by this session's commits.
-gate:     GREEN, 450 tests
+gate:     GREEN, 453 tests
 status:   TASKS.yaml has no `todo` and no `doing` left. Eight items are parked,
           each on a named gate, each with the exact command a human would run.
 ```
@@ -22,6 +22,7 @@ and this file is stale.
 | `6826298` | **P1-09** the credit is pinned out of the ScrollView, so a screenshot keeps the attribution |
 | `315cbae` | **P5-01** anniversary resurfacing: `happened_at` matching today's day-and-month sorts above contrast |
 | `9642dba` | **P5-02** time-locked memories. `not_yet_open` at the top of `is_locked`, ahead of position |
+| `ed86332` | **W3-16** the first *native* build. Found expo-location declaring always-on location and motion; added `EXPO_PUBLIC_DEV_OPEN_MEMORY` and a sealed dev seed |
 
 Plus a TODO.md accuracy pass: four bullets were still claiming work that had
 shipped, which is the failure that file explicitly warns about.
@@ -43,26 +44,20 @@ gate the loop is forbidden to open — money, an account, a push, or a product
 decision that is not an agent's to make. Written for somebody with no memory of
 this session, cheapest first:
 
-1. **`W3-13`, free, ~5 minutes.** `cd mobile && rm -rf ios && npx expo run:ios`.
-   Expo Go has exercised the JS layer, but it shows *its own* permission copy
-   and no native manifest. Two things shipped this session that nobody has
-   looked at: the pinned credit strip (`mobile/UI.md` rule 11) and the sealed
-   composition (F23). `EXPO_PUBLIC_DEV_LOCATION` means the Simulator's location
-   no longer has to be set by hand.
-2. **`P4-01`, free, needs a decision.** Read the note on that task. Phase 4 was
+1. **`P4-01`, free, needs a decision.** Read the note on that task. Phase 4 was
    written before user submissions existed and 3.2 answered the same question
    differently; three ways out are laid out there and all three are defensible.
-3. **`W4-02` / semantic dedup, free, needs a decision.** The recommendation is
+2. **`W4-02` / semantic dedup, free, needs a decision.** The recommendation is
    in TODO.md 1.2: have extraction emit venue / locality / region as separate
    fields instead of one `place_query` blob. That is a prompt and schema change.
-4. **`API_CREDITS`.** The extraction path has never run against a real API; every
+3. **`API_CREDITS`.** The extraction path has never run against a real API; every
    test uses `FakeAnthropic`. `python -m pipeline.enqueue --video <content_id>`
    then `--status <id>` spends cents rather than the whole corpus — there is
    **no `--limit` flag** and `python -m pipeline.extract` bills every pending
    video. Eyeball 20 summaries against the four failure modes in CLAUDE.md.
-5. **`DEPLOY`.** Railway, ~$5/mo. Not Fly — its managed Postgres has no PostGIS.
+4. **`DEPLOY`.** Railway, ~$5/mo. Not Fly — its managed Postgres has no PostGIS.
    Unblocks `P2-00` (tiles) and 2.3 (per-customer CORS and an embed key).
-6. **`EAS_BUILD`**, then **`STORE_ACCOUNT`**. Three `PLACEHOLDER` tripwires go
+5. **`EAS_BUILD`**, then **`STORE_ACCOUNT`**. Three `PLACEHOLDER` tripwires go
    first; the bundle id is irreversible once submitted. If the Play account is
    personal rather than an organization, production access is gated behind
    closed testing with 12 testers for 14 continuous days — start that the day
@@ -77,9 +72,15 @@ this session, cheapest first:
 | `P4-01` | NEEDS_DECISION | decide what a stranger note *is*, now that 3.2 shipped a permanent one |
 | `P2-00` | DEPLOY | a tile account. Stadia key, or Protomaps on R2. `TILE_URL` is one constant |
 | `D-05` | NEEDS_DECISION | choose the historical source (arkiv.dk scraping vs setlist.fm's REST API), and confirm reuse terms |
-| `W3-13` | — | `npx expo run:ios`, free, five minutes |
 | `EAS_BUILD` | EAS_BUILD | replace the three PLACEHOLDERs, then build |
 | `STORE_ACCOUNT` | STORE_ACCOUNT | Apple $99/yr, Play $25 |
+
+**`W3-13` is discharged, not parked.** It was performed on 2026-09-21 against a
+real `npx expo run:ios` build and four states were screenshotted. It stays
+`blocked` in `TASKS.yaml` only because its `verify` is `MANUAL` and the contract
+reserves `done` for machine-checked proof — a screenshot is not an exit code,
+and that rule is not worth bending for the one task it was written about.
+`W3-16` carries everything from it that a test can hold.
 
 ## Do not redo
 
@@ -107,3 +108,8 @@ this session, cheapest first:
   224 memories with no caller.
 - **`npx prettier` on `mobile/`** — there is no config, so it rewrites every
   file to double quotes at 80 columns. Match the file by hand.
+- **Opening the `com.PLACEHOLDER.memorylane://` URL by hand** to point the dev
+  client at Metro. It raises an "Open in Memory Lane?" system alert that cannot
+  be dismissed without a tap, and it then sits over every screenshot until the
+  simulator is rebooted. Start Metro with `REACT_NATIVE_PACKAGER_HOSTNAME=localhost`
+  and use `xcrun simctl launch`; the dev client remembers the last URL.
