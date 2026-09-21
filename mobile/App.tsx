@@ -344,16 +344,21 @@ export default function App() {
   // is no way to script a tap on this simulator, so without it the sheet cannot
   // be looked at by anything but a person. Fires once - closing it by hand must
   // not spring it open again on the next render.
+  //
+  // Opens the whole GROUP and pages to the memory, which is what a tap does. A
+  // first version opened the one memory and quietly hid the pager, so the
+  // three-deep stack screenshotted as a single: the affordance has to reproduce
+  // the tap or it is a second code path that can disagree with the product.
   const devOpened = useRef(false);
   useEffect(() => {
     const id = devOpenMemory();
     if (id == null || devOpened.current) return;
-    const wanted = shown.find((memory) => memory.id === id);
-    if (!wanted) return;
+    const group = groups.find((g) => g.memories.some((memory) => memory.id === id));
+    if (!group) return;
     devOpened.current = true;
-    setOpenAt([wanted]);
-    setOpenIndex(0);
-  }, [shown]);
+    setOpenAt(group.memories);
+    setOpenIndex(group.memories.findIndex((memory) => memory.id === id));
+  }, [groups]);
 
   const withinReach = useMemo(
     () => groups.filter((group) => reachOf(group, position, earned) === 'unlockable'),
