@@ -118,6 +118,21 @@ Postgres sorts NULL *first* under `DESC`. Every memory extracted before contrast
 scoring existed has no score, so without `NULLS LAST` the unscored ones outrank
 every scored one and the ranking is exactly inverted.
 
+### Hotspots cluster places, not memories
+
+DBSCAN was fed one point per memory, so a place with fifty memories handed it
+fifty identical points - and it is the one query here whose cost is
+superlinear in its input. Clustering places and summing their counts afterwards
+gives the same hotspots for a ninth of the work: measured on 50,000 memories
+across 20,000 places, 10.9s became 1.2s with the same four areas and the same
+totals.
+
+Two things move slightly, both toward the question being asked. The centroid is
+the centre of the places in a cluster rather than one dragged toward the
+busiest venue in it, and the label is the modal trailing name-component across
+places rather than across memories. "The closest memories are in New York" is a
+question about an area.
+
 ### Hotspots use DBSCAN, not a rounded grid
 
 0.5 degrees is roughly a metro area. A grid splits any city that straddles a cell
