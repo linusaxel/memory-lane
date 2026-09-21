@@ -314,8 +314,14 @@ def report_memory(memory_id: int, body: ReportRequest):
     unanswerable.
     """
     with get_session() as session:
+        # FOR UPDATE, so the count below is not read past a report that has
+        # been inserted and not yet committed. Two people reporting the same
+        # memory at once would otherwise each see two reports where there are
+        # three, and neither would hide it - the threshold would be reached and
+        # nothing would happen until somebody reported it a fourth time. It
+        # locks one memory against its own reports and nothing else.
         exists = session.execute(
-            text("SELECT 1 FROM memories WHERE id = :id"), {"id": memory_id}
+            text("SELECT 1 FROM memories WHERE id = :id FOR UPDATE"), {"id": memory_id}
         ).scalar()
         if not exists:
             raise HTTPException(status_code=404, detail="Memory not found")

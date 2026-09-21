@@ -260,3 +260,23 @@ def test_stats_says_the_radius_too(client):
     """The only source when there is nothing on the map at all, which is exactly
     when the circle is still drawn around the person."""
     assert client.get("/v1/stats").json()["unlock_radius_meters"] == gate.UNLOCK_RADIUS_METERS
+
+
+def test_the_app_falls_back_to_the_radius_the_server_actually_uses():
+    """mobile/src/reach.ts carries its own copy of the unlock radius, for the
+    case where a memory arrives without the server's. A copy that drifts is
+    an app drawing a reach circle the server will not honour - the same class
+    of bug the palette and the tag vocabulary are already pinned against."""
+    import pathlib
+    import re
+
+    reach_ts = (
+        pathlib.Path(__file__).resolve().parents[1] / "mobile" / "src" / "reach.ts"
+    ).read_text()
+    match = re.search(r"FALLBACK_RADIUS_M\s*=\s*(\d+)", reach_ts)
+    assert match, "mobile/src/reach.ts no longer declares FALLBACK_RADIUS_M"
+
+    assert int(match.group(1)) == gate.UNLOCK_RADIUS_METERS, (
+        f"the app falls back to {match.group(1)}m and the server gates at "
+        f"{gate.UNLOCK_RADIUS_METERS}m"
+    )
