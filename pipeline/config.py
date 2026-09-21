@@ -49,4 +49,9 @@ MAX_CONCURRENCY = DB_POOL_SIZE + DB_MAX_OVERFLOW
 # by a wide margin is /v1/stats' DBSCAN, measured at 1.3s on 50,000 memories
 # (`python -m pipeline.perf`). If that ever approaches this number the answer
 # is to precompute hotspots, not to raise it.
+#
+# It binds the pipeline as well as the API, because they share the engine in
+# pipeline/db.py. Nothing there comes close today - the inserts are per row -
+# but a bulk job that legitimately needs longer should raise this for its own
+# process rather than have the API carry its ceiling.
 DB_STATEMENT_TIMEOUT_MS = int(os.getenv("DB_STATEMENT_TIMEOUT_MS", "30000"))
