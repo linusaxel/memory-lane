@@ -9,8 +9,15 @@
  * **It files where you are, and nowhere else.** One coordinate, taken from the
  * GPS, used as both "where you are" and "where this goes". There is no map
  * picker, and that is not a missing feature: a memory you can pin from your
- * sofa is a pin, and the whole product is built on the difference. With no
- * position the form does not open.
+ * sofa is a pin, and the whole product is built on the difference.
+ *
+ * With no position it cannot be posted - `ready` requires one - but it does
+ * open while the GPS is still warming up, and says so. It refuses to open
+ * only when location was denied, where the primer explains the refusal
+ * properly. The distinction is whose time is being wasted: somebody who has
+ * said no should not type a memory they will not be allowed to file, and
+ * somebody waiting three seconds for a fix should not meet a button that
+ * does nothing.
  *
  * **Attachments upload while you type.** A photo goes up the moment it is
  * picked rather than on Post, so the wait is spent composing instead of

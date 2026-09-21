@@ -592,7 +592,20 @@ export default function App() {
               accessibilityRole="button"
               accessibilityLabel="Add a memory here"
               onPress={async () => {
-                if (!positionRef.current && !(await goToMyLocation().catch(() => false))) return;
+                if (!positionRef.current && !(await goToMyLocation().catch(() => false))) {
+                  // Never nothing. This press used to return silently when a
+                  // position could not be had, which is a dead tap on the one
+                  // control that writes - and the commonest reason is a
+                  // permission the primer exists to explain, including the
+                  // blocked case where it offers Settings instead.
+                  if (permission !== 'granted') {
+                    setPrimerDismissed(false);
+                    return;
+                  }
+                  // Allowed, but no fix yet. The sheet says "Waiting for your
+                  // location" and holds Post until one arrives, which beats a
+                  // button that does nothing while the GPS warms up.
+                }
                 Haptics.selectionAsync().catch(() => {});
                 setSubmitOpen(true);
               }}
