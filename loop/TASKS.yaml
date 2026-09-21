@@ -870,7 +870,7 @@ tasks:
     depends_on: [P3-01]
     state: done
     attempts: 1
-    commit: 70e5ad0
+    commit: e59a227
     note: |
       LAYER_ORDER leads CONTRAST_ORDER: friend 0, stranger 1, historical 2. The
       sheet pager inherits it for free - the pager is the API's order, and
