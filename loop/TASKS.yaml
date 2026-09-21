@@ -942,7 +942,7 @@ tasks:
     depends_on: []
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 10a0624
     note: |
       A CLI, not an endpoint: there is no customer and no public host, and an
       unauthenticated bulk route is the thing the legal posture forbids.
