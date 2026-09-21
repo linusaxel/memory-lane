@@ -1169,8 +1169,45 @@ tasks:
       previous screenshot's screen is still open and the knob looks broken.
       /tmp/screen.sh retries the terminate and polls launchctl.
 
+  - id: P2-06
+    goal: "The card survives being the thing that travels: centred when opened on
+      its own, and it unfurls with something when pasted."
+    verify: "venv/bin/python -m pytest -q tests/test_card.py"
+    touches: [api/card.py, tests/test_card.py]
+    depends_on: [P2-05]
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      Looked at in a browser for the first time. It was a postage stamp pinned
+      to the top of an empty screen - and a screenshot of this card is the only
+      distribution channel geo-gated content has, so 80% whitespace is the
+      product's shopfront.
+
+      Centred, but only when there is room. The existing comment was right that
+      it must not stretch: the same markup is an iframe in the embed, where a
+      card stretched to 100vh strands the credit at the bottom. `justify-content:
+      safe center` is the whole trick - past the viewport height it degrades to
+      start-aligned rather than clipping the top of a long card off a screen no
+      scroll can reach. Flex, not grid: grid broke the horizontal centring that
+      `margin:0 auto` had been doing, which the first attempt shipped and the
+      browser caught.
+
+      OPEN GRAPH, and it is a gate rather than decoration. A crawler has no
+      position, so EVERY unfurl in every chat window is the *locked* card and the
+      description is the refusal - "something happened here, stand within 150 m"
+      - which is the pitch anyway. A summary reaching those tags would hand the
+      corpus to anyone who pasted a URL, so it is asserted. No og:image for the
+      same reason: the photograph is behind the same gate, so the only card with
+      one to offer is the one a crawler can never fetch.
+
+      The first version double-escaped - it was handed the body's already-escaped
+      strings and a title unfurled as `Katz&#x27;s Delicatessen`, literally.
+      preview_tags takes raw text and escapes once.
+
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
+  - "the embed's layout is wrong in a browser: the map does not fill its box, the card iframe keeps the panel mostly empty, and Leaflet's OSM attribution renders inside the card panel rather than over the map. Separate from P2-00 (tiles) and blocks nothing while the embed has no host"
   - "the dev seed has no sealed memory, so F23's composition cannot be seen without POSTing opens_at by hand. Adding one means picking a coordinate >= 0.0002 degrees from the other six and off the 34 existing stacks - see P3-06's traps"
   # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`
   # or deletes it. This is the ONLY legal outlet for scope creep.

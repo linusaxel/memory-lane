@@ -156,10 +156,18 @@ CARD_CSS = """
 body{margin:0;background:var(--bg);color:var(--fg);
   font:400 16px/1.5 Fraunces,Georgia,"Times New Roman",serif;
   -webkit-font-smoothing:antialiased}
-/* Hugs its content rather than filling the viewport: this same markup is an
-   iframe in the embed widget and a link preview, where 100vh is a page of
-   whitespace with a credit stranded at the bottom. */
-.card{max-width:34rem;margin:0 auto;padding:28px 24px;display:flex;
+/* The card hugs its content and never stretches: this same markup is an iframe
+   in the embed widget, where a card stretched to 100vh is a credit stranded at
+   the bottom of a page of whitespace.
+   Centred *only when there is room*, which is the standalone case - a pasted
+   link opened in a browser used to be a postage stamp pinned to the top of an
+   empty screen, and a screenshot of it is the product's one distribution
+   channel. `safe center` is the whole trick: past the viewport height it
+   degrades to start-aligned rather than clipping the top of a long card off
+   the screen where no scroll can reach it. */
+body{min-height:100svh;display:flex;flex-direction:column;
+  justify-content:center;justify-content:safe center}
+.card{max-width:34rem;width:100%;margin-inline:auto;padding:28px 24px;display:flex;
   flex-direction:column;gap:14px}
 /* clamp() so the place name survives being scaled down to a thumbnail */
 .place{font-size:clamp(22px,5.5vw,30px);font-weight:700;line-height:1.2;margin:0}
@@ -188,6 +196,35 @@ body{margin:0;background:var(--bg);color:var(--fg);
 """
 
 
+def preview_tags(place: str, description: str) -> str:
+    """What a pasted link looks like in a chat window.
+
+    **Every preview is the locked card**, and that is correct rather than a
+    limitation: a crawler has no position, so `is_locked` withholds the summary
+    from it exactly as it would from a person standing somewhere else. The
+    description a link unfurls with is therefore the refusal - "something
+    happened here, stand within 150 m of it" - which is the pitch anyway.
+
+    No `og:image`. The photograph is behind the same gate, so the only card that
+    has one to offer is the one a crawler can never fetch.
+
+    Takes RAW text and escapes it here, once. Passing the body's already-escaped
+    strings in was the first version and it double-escaped: a title rendered as
+    `Katz&#x27;s Delicatessen`, literally, in every unfurl.
+    """
+    tags = {
+        "og:title": place,
+        "og:description": description,
+        "og:type": "article",
+        "og:site_name": "Memory Lane",
+        "twitter:card": "summary",
+    }
+    return "\n".join(
+        f'<meta property="{key}" content="{escape(value, quote=True)}">'
+        for key, value in tags.items()
+    )
+
+
 def render_card(row) -> str:
     place = escape(row.place_name or "Unknown place")
     summary = escape(row.summary or "")
@@ -212,6 +249,7 @@ def render_card(row) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{place} - Memory Lane</title>
 <meta name="color-scheme" content="light dark">
+{preview_tags(row.place_name or "Unknown place", row.summary or "")}
 <link rel="stylesheet" href="{FONT_HREF}">
 <style>{CARD_CSS}</style>
 </head><body>
@@ -249,6 +287,7 @@ def render_locked_card(row, radius_meters: int) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{place} - Memory Lane</title>
 <meta name="color-scheme" content="light dark">
+{preview_tags(row.place_name or "Unknown place", withheld)}
 <link rel="stylesheet" href="{FONT_HREF}">
 <style>{CARD_CSS}</style>
 </head><body>

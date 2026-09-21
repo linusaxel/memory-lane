@@ -15,7 +15,7 @@ import re
 
 import pytest
 
-from api.card import credit_line, format_happened, render_card
+from api.card import credit_line, format_happened, render_card, render_locked_card
 
 
 class Row:
@@ -38,6 +38,7 @@ class Row:
             user_id=None,
             author_name=None,
             photo_path=None,
+            opens_at=None,
             content_title="Tuesdays with Stories #500",
             content_url="https://www.youtube.com/watch?v=abc",
         )
@@ -204,3 +205,44 @@ def test_a_photo_is_part_of_the_card():
 
 def test_no_photo_renders_no_image():
     assert "<img" not in render_card(Row())
+
+
+# -- what a pasted link unfurls into ------------------------------------------
+
+
+def test_a_link_preview_of_a_locked_card_gives_nothing_away():
+    """The one that matters. A crawler has no position, so every unfurl in every
+    chat window is the *locked* card - which means these tags are a gate, not
+    decoration, and a summary reaching them would leak the corpus to anyone who
+    pasted a URL."""
+    html = render_locked_card(Row(), 150)
+
+    assert "pastrami" not in html
+    assert 'property="og:description" content="Something happened here.' in html
+    assert 'property="og:title" content="Katz&#x27;s Delicatessen"' in html
+
+
+def test_a_sealed_card_previews_its_date_and_not_a_walk():
+    html = render_locked_card(Row(opens_at=datetime.date(2031, 5, 3)), 150)
+
+    assert "It opens on 3 May 2031" in html
+    assert "Stand within" not in html
+    assert "pastrami" not in html
+
+
+def test_an_open_card_previews_the_summary_it_is_already_showing():
+    """Only reachable with a position, so there is nothing here the page itself
+    is not already displaying to the same caller."""
+    html = render_card(Row())
+
+    assert 'property="og:description" content="They argued about pastrami' in html
+    assert 'property="og:site_name" content="Memory Lane"' in html
+
+
+def test_preview_text_cannot_break_out_of_the_attribute():
+    """Same injection boundary as the body, one quote away from being worse:
+    model output going into an HTML attribute rather than between tags."""
+    html = render_card(Row(place_name='" onload="alert(1)', summary="</title><script>"))
+
+    assert 'onload="alert(1)"' not in html
+    assert "<script>" not in html
