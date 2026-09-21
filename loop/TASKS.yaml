@@ -932,7 +932,7 @@ tasks:
     depends_on: [P4-01]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 315cbae
     note: |
       Sorted above contrast, below layer. The ordering IS the feature: there are
       no notifications in this product, so a date can only surface something by

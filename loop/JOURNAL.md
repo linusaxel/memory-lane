@@ -30,3 +30,4 @@
 2026-09-21T14:30Z t21 P2-05 done  commit=10a0624 gate=GREEN delivered-corpus export CLI: snippets, historical only, no row without attribution AND link; source_href imported from api/card.py not copied
 2026-09-21T14:30Z t21 P4-01 blocked commit=null gate=NEEDS_DECISION stranger-note decay would delete, from its author's own collection, the thing they walked somewhere to write; 4.1/4.2 predate 3.2 and 3.2 answered them differently. Three ways out in the task note
 2026-09-21T14:35Z t22 P1-09 done  commit=6826298 gate=GREEN credit pinned out of the ScrollView so a screenshot keeps the attribution; UI.md rule 11. HAZARD: npx prettier has no config in mobile/ and rewrote both files to 80col double quotes - reverted, edit by hand
+2026-09-21T14:39Z t23 P5-01 done  commit=315cbae gate=GREEN anniversary flag + ordering above contrast below layer; 'on this day' in the sheet; taken out of order because P4-01's block is sequencing not substance
