@@ -842,7 +842,7 @@ tasks:
     depends_on: [P3-01]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 7210834
     note: |
       20 memories and 64 MB of upload per rolling day, DAILY_MEMORY_LIMIT and
       DAILY_UPLOAD_BYTES. Counted per USER, not per device, so a second phone on
@@ -856,6 +856,106 @@ tasks:
       Ceiling named in the code: the byte check runs before the body is read, so
       the last accepted upload can cross the cap by up to one file. Bounding it
       exactly means writing the file first, which is the thing being avoided.
+
+  # -- Phase 3/4/5 -- repopulated 2026-09-21 from TODO.md, which is the roadmap.
+  # Everything above this line shipped. These are the remaining buildable items;
+  # the ones that need money, an account or a human decision are `blocked` with
+  # the gate named, so a tick skips them without re-deciding.
+
+  - id: P3-04
+    goal: "Layer precedence in one feed: friend, then stranger, then historical,
+      ahead of contrast. Never equal weight - it is a core design rule, not polish."
+    verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
+    touches: [api/queries.py, tests/test_api_nearby.py, docs/08-ux-flows.md]
+    depends_on: [P3-01]
+    state: done
+    attempts: 1
+    commit: 70e5ad0
+    note: |
+      LAYER_ORDER leads CONTRAST_ORDER: friend 0, stranger 1, historical 2. The
+      sheet pager inherits it for free - the pager is the API's order, and
+      cluster.ts preserves it within a group.
+
+      Ahead of contrast rather than beside it: "never at equal weight" is a core
+      rule and a tiebreak is equal weight with extra steps. Contrast still
+      decides within a layer, and that is asserted the other way round so the
+      test cannot pass on layer order alone.
+
+      /v1/memories/search deliberately left on rank. Somebody who typed a word
+      asked for that word; one point is one feed, a result set is not.
+
+  - id: P4-01
+    goal: "Stranger notes decay. A submitted note is served for STRANGER_TTL_DAYS
+      and then stops being served, enforced at read time so an expired note cannot
+      leak through any endpoint."
+    verify: "venv/bin/python -m pytest -q tests/test_api_stranger.py"
+    touches: [api/queries.py, tests/test_api_stranger.py, docs/08-ux-flows.md]
+    depends_on: [P3-04]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Phase 4.1/4.2. Read-time, in the VISIBLE predicate every query already
+      shares, for the same reason the gate lives in row_to_memory: a sweeper that
+      deletes is a second mechanism that can be behind."
+
+  - id: P5-01
+    goal: "Anniversary resurfacing: /v1/memories/nearby surfaces a memory whose
+      happened_at shares today's day-and-month, ahead of the rest."
+    verify: "venv/bin/python -m pytest -q tests/test_api_nearby.py"
+    touches: [api/queries.py, tests/test_api_nearby.py]
+    depends_on: [P4-01]
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Phase 5.1. happened_at exists and nothing reads it."
+
+  - id: P2-05
+    goal: "Delivered-corpus export for a customer who wants the data rather than
+      the embed: snippets, attribution and deep links, never the raw corpus."
+    verify: "venv/bin/python -m pytest -q tests/test_export.py"
+    touches: [pipeline/export.py, tests/test_export.py]
+    depends_on: []
+    state: todo
+    attempts: 0
+    commit: null
+    note: "Phase 2.5. A CLI, not an endpoint - there is no customer and no public
+      host, and an unauthenticated bulk route on a public API is the whole thing
+      the legal posture forbids."
+
+  - id: P2-00
+    goal: "Stop serving OSM's public tiles from api/embed.py before the embed is
+      public."
+    verify: "MANUAL"
+    touches: [api/embed.py]
+    depends_on: []
+    state: blocked
+    blocked_on: human
+    gate: DEPLOY
+    attempts: 0
+    commit: null
+    note: |
+      Both options cost money and need an account, which the loop may not open.
+      Stadia Maps: sign up, take the key, set TILE_URL to
+      https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=KEY
+      (free tier, then $20/mo per 1M credits). Or Protomaps/PMTiles on Cloudflare
+      R2, ~$3/mo and no vendor. TILE_URL is one constant either way, so this is a
+      one-line change once the account exists. Blocks nothing until DEPLOY.
+
+  - id: D-05
+    goal: "Write F3 properly: arrive somewhere and find its history."
+    verify: "MANUAL"
+    touches: [docs/08-ux-flows.md]
+    depends_on: [W4-00]
+    state: blocked
+    blocked_on: human
+    gate: NEEDS_DECISION
+    attempts: 0
+    commit: null
+    note: "F3 is the product and must not be specified by whatever the ingestion
+      happens to produce. W4-00 - which historical source - is the decision, and
+      it is a human's: arkiv.dk has no API and would mean scraping, setlist.fm is
+      a documented REST API with dense Copenhagen coverage. Reuse terms for
+      arkiv.dk and Mediestream are also unconfirmed."
 
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."

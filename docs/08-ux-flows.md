@@ -713,6 +713,22 @@ The honest limit: a group whose memories span both layers draws round rather
 than claiming the stack, and the sheet pager is what shows the mix. That is the
 same compromise the point-not-place decision already made (open question 4).
 
+**The list half, added 2026-09-21.** Shape told the layers apart on the map and
+the feed underneath was still flat: `/v1/memories/nearby` ordered by contrast
+alone, so a well-scored podcast anecdote sorted ahead of a note somebody left
+standing at the same point. `LAYER_ORDER` in `api/queries.py` now leads the
+ORDER BY — friend, then stranger, then historical — ahead of contrast, and the
+sheet pager inherits it because the pager is the API's order.
+
+Ahead of contrast rather than beside it, because *never at equal weight* is a
+core rule and a tiebreak is equal weight with extra steps. Contrast still
+decides everything within a layer, which is where it was always doing the work:
+asserted both ways in `tests/test_api_nearby.py`.
+
+`/v1/memories/search` is deliberately left on rank. Somebody who typed a word
+asked for that word, and layer precedence there would answer a question nobody
+put. One point is one feed; a search result set is not.
+
 
 ## Open questions
 

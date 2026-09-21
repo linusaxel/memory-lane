@@ -100,10 +100,17 @@ CONFIDENCE_FILTER = """(:min_confidence = 'low' OR m.extraction_confidence IN ('
 # A no-op when :layer is NULL, so one query serves filtered and unfiltered.
 LAYER_FILTER = "(CAST(:layer AS varchar) IS NULL OR m.layer = :layer)"
 
-# Contrast first, not distance: the gap between the memory and what you are
+# Layer before everything else. Friend and stranger content is somebody who was
+# standing here; historical is the archive. They must never sort as peers -
+# docs/08-ux-flows.md F4. It goes ahead of contrast rather than beside it,
+# because a podcast anecdote with a good contrast score would otherwise bury the
+# note a person left at the same point, and one point is one feed.
+LAYER_ORDER = "CASE m.layer WHEN 'friend' THEN 0 WHEN 'stranger' THEN 1 ELSE 2 END"
+
+# Contrast next, not distance: the gap between the memory and what you are
 # looking at now is the product. NULLS LAST is load-bearing and inverts the
 # whole ranking if dropped - docs/10-decisions.md#nulls-last-is-load-bearing.
-CONTRAST_ORDER = "ORDER BY m.contrast_score DESC NULLS LAST, distance_meters ASC"
+CONTRAST_ORDER = f"ORDER BY {LAYER_ORDER}, m.contrast_score DESC NULLS LAST, distance_meters ASC"
 
 NEARBY_MEMORIES_QUERY = f"""
 SELECT {MEMORY_COLUMNS},

@@ -25,3 +25,5 @@
 2026-09-20T15:55Z t17 hazard -      commit=null gate=GREEN ruff format / IDE watcher rewrites single-line tuple except into python2 syntax in this repo; caught by compileall every time, nothing landed; workaround = exploded tuple w/ trailing comma
 2026-09-20T16:15Z t18 W4-06 done  commit=c4c60be gate=GREEN layer filter (422 on unknown) + contrast_score DESC NULLS LAST; response carries the card fields; rebased onto peer b3a9189
 2026-09-20T16:15Z t18 W4-08 done  commit=c4c60be gate=GREEN first behavioural coverage of /v1/memories/nearby; NULLS LAST assertion mutation-checked
+2026-09-21T14:19Z t19 P3-05 done  commit=7210834 gate=GREEN write path capped: 20 memories + 64MB/day per USER not per device; quota check in its own txn so a refusal rolls nothing back; mutation-checked
+2026-09-21T14:24Z t20 P3-04 done  commit=70e5ad0 gate=GREEN layer precedence leads the nearby ORDER BY (friend/stranger/historical) ahead of contrast; sheet pager inherits it; search left on rank

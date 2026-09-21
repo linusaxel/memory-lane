@@ -511,10 +511,15 @@ returns nothing is dead, and a friend layer on an empty map returns nothing.
 - [x] **3.3** Proximity unlock enforced **server-side**, including for
       submissions: a memory somebody filed is gated the moment it exists,
       because their phone was at the coordinate. Never serialized, never sent.
-- [ ] **3.4** Rendering separation. Friend and stranger content takes precedence
-      wherever it exists and never renders at equal weight with historical cards
-      in one feed. **Now urgent** — `stranger` stopped being hypothetical with
-      3.2, and a dense point can hold both with no way to choose. See F4.
+- [x] **3.4** Rendering separation, both halves. The *map* half was F4's pin
+      shapes (`layerOf` in `cluster.ts`); the *list* half was still flat —
+      `/v1/memories/nearby` ordered by contrast alone, so a well-scored podcast
+      anecdote sorted ahead of a note somebody left at the same point.
+      `LAYER_ORDER` now leads the ORDER BY: friend, stranger, historical, ahead
+      of contrast, and the sheet pager inherits it because the pager is the
+      API's order. Contrast still decides within a layer, asserted both ways.
+      `/v1/memories/search` stays on rank — somebody who typed a word asked for
+      that word.
 - [x] **3.5** Rate limit the write path. 20 memories and 64 MB of upload per
       rolling day (`DAILY_MEMORY_LIMIT`, `DAILY_UPLOAD_BYTES`), counted per
       **user** rather than per device so a second phone on one account is not a
