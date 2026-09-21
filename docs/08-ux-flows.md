@@ -714,6 +714,13 @@ a dependency, and "2041" is what a person means. A year already gone is not a
 seal — the server treats a date that has come as no date at all, so there is no
 error state and nothing to validate.
 
+**On the map it is grey, not amber.** Found by looking at it: `reachOf` filtered
+on `memory.locked` and then measured distance, so a seal 128 m away came back
+`unlockable`. The pin wore the openable ring, the banner counted it among
+"3 memories within reach", and because `nearestLocked` gives up the moment
+anything is unlockable, a nearby seal could hide the walk hint for a pin that
+really was reachable. `isSealed` now excludes it from all three at once.
+
 **What can go wrong:** the date is the server's, and the server's clock is the
 only authority. There is no notification when it opens, because there are no
 notifications; the memory simply stops refusing. Somebody who seals a memory and

@@ -30,6 +30,21 @@ export const WARM_MULTIPLIER = 3;
  */
 export const HINT_RANGE_M = 30_000;
 
+/** Shut by a date rather than by distance, so no amount of walking opens it.
+ *
+ *  The distinction has to exist here and not only in the sheet, because three
+ *  separate things ask "can this be opened from where I am standing": the pin's
+ *  colour, the within-reach banner's count, and the walk hint. A sealed memory
+ *  answered yes to all three - it is `locked`, and it was 128m away. The pin
+ *  wore the seal colour, the banner counted it, and because `nearestLocked`
+ *  returns null the moment anything is `unlockable`, one sealed memory could
+ *  also suppress the hint pointing at a pin somebody genuinely could walk to.
+ *
+ *  See F23 in docs/08-ux-flows.md. */
+export function isSealed(memory: LocatedMemory): boolean {
+  return memory.opens_at != null;
+}
+
 /** To the closest one, not to the group's point. The group's point is a rounded
  *  coordinate, and at anything looser than street precision it can sit
  *  kilometres from every memory filed under it. */
@@ -61,10 +76,17 @@ export function reachOf(
   if (locked.length === 0) {
     return group.memories.some((memory) => earned.has(memory.id)) ? 'stamped' : 'plain';
   }
-  if (!position) return 'locked';
 
-  const radius = locked[0].unlock_radius_meters ?? FALLBACK_RADIUS_M;
-  const away = metersToNearest(position, locked);
+  // Distance only has an opinion about the ones distance can open. A group with
+  // nothing but sealed memories under it stays `locked`: shut, and honest about
+  // it, rather than amber for a walk that would achieve nothing.
+  // ponytail: a seal could earn its own mark on the map instead of borrowing
+  // the out-of-reach one. Grey is true today and costs no new visual language.
+  const walkable = locked.filter((memory) => !isSealed(memory));
+  if (walkable.length === 0 || !position) return 'locked';
+
+  const radius = walkable[0].unlock_radius_meters ?? FALLBACK_RADIUS_M;
+  const away = metersToNearest(position, walkable);
   if (away <= radius) return 'unlockable';
   return away <= radius * WARM_MULTIPLIER ? 'warm' : 'locked';
 }
@@ -87,10 +109,12 @@ export function nearestLocked(
     // lock would read "Nearest locked - 40 m" about something already read.
     if (reach === 'plain' || reach === 'stamped') continue;
 
-    const meters = metersToNearest(
-      position,
-      group.memories.filter((memory) => memory.locked),
-    );
+    // Same rule as above: a date is not a distance, so a sealed memory is not
+    // somewhere to walk to and must not be offered as one.
+    const walkable = group.memories.filter((memory) => memory.locked && !isSealed(memory));
+    if (walkable.length === 0) continue;
+
+    const meters = metersToNearest(position, walkable);
     if (!best || meters < best.meters) best = { group, meters };
   }
   return best && best.meters <= HINT_RANGE_M ? best : null;

@@ -337,8 +337,12 @@ Each of these exists because something broke or would have been rejected.
     covers noticeably more ground. Moving the camera and calling `load()` in the
     same breath is two requests for one action, the first of them for a
     viewport that never exists. Move the camera; let it report back.
-    The one exception is the denied-permission path, which never moves the
-    camera and so must load by hand.
+    Two exceptions, both in code rather than in your head: the
+    denied-permission path never moves the camera and so must load by hand, and
+    `useMapCamera` reports a flight itself when the map does not — a long
+    `animateToRegion` never lands audibly, so anything that flies you to
+    another city needs the hook, not a `load()` of your own. See
+    `docs/10-decisions.md#the-app`.
 11. **The credit never scrolls.** Place name above the scroll, credit pinned
     below it, story in between. Geo-gated content cannot be shared by linking
     to it — you had to be there — so a screenshot is the only way it travels,
@@ -412,8 +416,13 @@ If the dialog still appears, terminate and relaunch — the grant applies at
 launch: `xcrun simctl terminate booted host.exp.Exponent` then re-open the
 `exp://` URL.
 
-**There is still no way to script a tap** — `idb` is not installed and
-`osascript` has no assistive access — but the sheet no longer needs one.
+**Taps can be scripted now.** `./e2e/run.sh` drives the real app through the
+flows in `docs/08-ux-flows.md` — including walking into range and holding the
+unlock ring — and `--record` leaves an mp4. It seeds its own throwaway
+database, so it does not disturb the corpus. Read `e2e/README.md` before
+writing a flow; four of its rules are not guessable.
+
+For a single screenshot the recipe below is still shorter than a flow.
 `EXPO_PUBLIC_DEV_OPEN_MEMORY` opens one memory on launch, so every state the
 sheet can render is reachable from a script:
 
@@ -424,10 +433,9 @@ xcrun simctl launch booted com.PLACEHOLDER.memorylane
 xcrun simctl io booted screenshot /tmp/sealed.png
 ```
 
-What still needs a hand: pressing the unlock ring, and anything reached by
-scrolling. To see an *unlocked* submission without holding the ring, record the
-unlock server-side for the app's own device — the id is in the API access log,
-`docker compose logs api | grep -oE 'device=[0-9a-f-]{36}'` — and relaunch.
+What this recipe still cannot do by hand: press the unlock ring, or reach
+anything below the fold. Both are what `./e2e/run.sh` is for — `f7` holds the
+ring and `f5` fills in and posts the whole submit sheet.
 
 **For the real build, not Expo Go**, which is what `W3-13` is about: Expo Go
 shows its own permission copy and no native manifest.
@@ -535,7 +543,19 @@ StyleSheet. `WARM_MULTIPLIER = 3` and the radius is always the server's.
 | `stamped` | you walked here and opened it | disc 28, radius 14, border 2; impression 14, radius 7, border 2 | fill `ink`, edge + impression `paper`, count tag `ink` |
 | `warm` | locked, inside 3x the radius | disc 28, radius 14, border 2; padlock 9.52 | fill `paper`, edge + padlock + count `ink` |
 | `locked` | locked, further than that | disc 28, radius 14, border 2; padlock 9.52 | fill `faded`, edge + padlock `paper` |
-| `unlockable` | locked, inside the radius | ring 44, radius 22, border 5; tag min-w 20, h 20, radius 10, border 2 | edge `seal`, fill `paper`, tag `sealDeep`, wash `halo` |
+| `unlockable` | locked, inside the radius **and openable by walking** | ring 44, radius 22, border 5; tag min-w 20, h 20, radius 10, border 2 | edge `seal`, fill `paper`, tag `sealDeep`, wash `halo` |
+
+**A seal is not a distance, and the ladder does not apply to one.** A
+time-locked memory (F23) is `locked` at every distance, so it draws `locked`
+wherever you stand. `isSealed` in `src/reach.ts` is the one predicate; it is
+checked there rather than in the component because three separate things ask
+"can this be opened from here" — the pin's ink state, the within-reach banner's
+count, and the walk hint — and a seal answered yes to all three. It was `locked`
+and it was 128 m away, so the pin wore the seal ring, the banner counted it, and
+`nearestLocked` (which returns null the moment anything is `unlockable`) could
+suppress the hint pointing at a pin somebody genuinely could reach. Grey is not
+a perfect reading of "shut until 2031" — but it is true, and it needs no new
+visual language. Marked `ponytail:` in `reach.ts` if it ever earns its own mark.
 
 The card shape swaps the radius only — 2 on the dot, 3 on the badge and disc, 4
 on the ring — and adds a 9px fold at the face's top right corner. The fold is

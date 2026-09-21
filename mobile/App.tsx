@@ -40,7 +40,7 @@ import {
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
-import { devOpenMemory } from './src/devOpen.ts';
+import { devOpenMemory, devOpenScreen, devOpenTab } from './src/devOpen.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
@@ -105,8 +105,15 @@ export default function App() {
     IBMPlexMono_600SemiBold,
   });
 
-  const { region, setRegion, memories, status, load, reload, onRegionChangeComplete } =
-    useNearby(FALLBACK_REGION);
+  const {
+    region,
+    setRegion,
+    memories,
+    status,
+    load,
+    reload,
+    onRegionChangeComplete: onMapSettled,
+  } = useNearby(FALLBACK_REGION);
   // What was tapped is a point, not a memory: the sheet pages through it.
   const [openAt, setOpenAt] = useState<LocatedMemory[]>([]);
   const [openIndex, setOpenIndex] = useState(0);
@@ -139,7 +146,10 @@ export default function App() {
   const scheme = useColorScheme();
   const [tab, setTab] = useState<Tab>('map');
 
-  const { mapRef, flyTo, onMapReady } = useMapCamera();
+  // Region reports go through the camera, not straight from the map: a move
+  // replayed from onMapReady never reports itself and the map still announces
+  // where it was born. See src/useMapCamera.ts.
+  const { mapRef, flyTo, onMapReady, onRegionChangeComplete } = useMapCamera(onMapSettled);
   const mounted = useRef(true);
   // load() must not be rebuilt every time the person moves, or the mount effect
   // that calls it would re-run and re-centre the map underneath them.
@@ -223,11 +233,12 @@ export default function App() {
       latitudeDelta: LOCATED_DELTA,
       longitudeDelta: LOCATED_DELTA,
     };
-    // No load() here. animateToRegion fires onRegionChangeComplete when it
-    // lands, and it does not land on `next` - the map fits the deltas to the
-    // screen, so the region it settles on covers noticeably more ground. Asking
-    // eagerly meant two requests for one press, the first of them for a
-    // viewport that never actually exists.
+    // No load() here. A landing reports itself, and it does not land on
+    // `next` - the map fits the deltas to the screen, so the region it settles
+    // on covers noticeably more ground. Asking eagerly meant two requests for
+    // one press, the first of them for a viewport that never actually exists.
+    // When the map says nothing - which is what a long flight does - flyTo is
+    // what notices. See src/useMapCamera.ts.
     flyTo(next);
     setRegion(next);
     return true;
@@ -318,6 +329,16 @@ export default function App() {
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
   );
+
+  // EXPO_PUBLIC_DEV_OPEN_SCREEN, under __DEV__ only. The submit sheet is three
+  // taps in and there are no taps, so without this it could only be read as
+  // source. Mount-only: it sets where you land, not where you stay.
+  useEffect(() => {
+    const screen = devOpenScreen();
+    if (!screen) return;
+    setTab(devOpenTab(screen));
+    setSubmitOpen(screen === 'submit');
+  }, []);
 
   // EXPO_PUBLIC_DEV_OPEN_MEMORY, under __DEV__ only. See src/devOpen.ts: there
   // is no way to script a tap on this simulator, so without it the sheet cannot

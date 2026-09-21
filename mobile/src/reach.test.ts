@@ -38,6 +38,14 @@ function group(
   };
 }
 
+/** Seal every memory in a group: shut by a date, not by distance. */
+function seal(g: MemoryGroup): MemoryGroup {
+  for (const memory of g.memories) {
+    (memory as { opens_at: string | null }).opens_at = '2099-01-01';
+  }
+  return g;
+}
+
 /** ~0.0009 degrees of latitude is ~100m; ~0.0027 is ~300m; ~0.009 is ~1km. */
 const NEAR: [number, number] = [HERE.lat + 0.0009, HERE.lng];
 const MIDDLE: [number, number] = [HERE.lat + 0.0027, HERE.lng];
@@ -69,6 +77,39 @@ test('something still locked outranks something already earned', () => {
 
 test('one locked memory under a marker locks the marker', () => {
   assert.equal(reachOf(group(...NEAR, [false, true]), HERE, NONE), 'unlockable');
+});
+
+test('standing on a sealed memory does not make it unlockable', () => {
+  // The bug this exists for: a seal is `locked` and it was 128m away, so the
+  // pin wore the seal colour and the banner counted it - for something no walk
+  // will ever open.
+  assert.equal(reachOf(seal(group(...NEAR, [true])), HERE, NONE), 'locked');
+});
+
+test('a sealed memory is not warm either', () => {
+  assert.equal(reachOf(seal(group(...MIDDLE, [true])), HERE, NONE), 'locked');
+});
+
+test('a walkable memory under the same marker still counts', () => {
+  // Only the seal is exempt. A marker holding one of each is an invitation,
+  // because one of the two really can be opened from here.
+  const g = group(...NEAR, [true, true]);
+  (g.memories[0] as { opens_at: string | null }).opens_at = '2099-01-01';
+  assert.equal(reachOf(g, HERE, NONE), 'unlockable');
+});
+
+test('a seal is never the nearest thing to walk to', () => {
+  // And, worse than merely being offered: nearestLocked returns null the moment
+  // anything is `unlockable`, so a nearby seal used to hide the hint pointing
+  // at a pin somebody genuinely could reach.
+  const sealed = seal(group(...NEAR, [true]));
+  const real = group(...MIDDLE, [true]);
+  const hint = nearestLocked([sealed, real], HERE, NONE);
+  assert.equal(hint?.group.key, real.key);
+});
+
+test('a map of nothing but seals offers no walk at all', () => {
+  assert.equal(nearestLocked([seal(group(...MIDDLE, [true]))], HERE, NONE), null);
 });
 
 test('no position is not the same as being near', () => {

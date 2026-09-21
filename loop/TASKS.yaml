@@ -1131,6 +1131,44 @@ tasks:
       it through row_to_memory rather than off the column, because the ordering
       of the two gates inside is_locked is the thing that matters.
 
+  - id: W3-17
+    goal: "A sealed memory must not look openable: not the pin, not the
+      within-reach count, not the walk hint."
+    verify: "cd mobile && npm run typecheck && npx tsx --test src/reach.test.ts"
+    touches: [mobile/src/reach.ts, mobile/src/reach.test.ts, mobile/src/devOpen.ts,
+      mobile/App.tsx, mobile/.env.example, mobile/UI.md, docs/08-ux-flows.md]
+    depends_on: [W3-16]
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      Found by looking at the map, which is the second defect the native build
+      has turned up and the reason W3-13 was worth doing.
+
+      reachOf filtered on memory.locked and then measured distance, so the
+      sealed dev seed at 128m came back `unlockable`. Three lies from one
+      predicate: the pin wore the seal ring ("come and open this"), the banner
+      counted it in "4 memories within reach", and nearestLocked - which returns
+      null the moment anything is unlockable - could suppress the walk hint for
+      a pin somebody genuinely could reach.
+
+      One fix in the one place all three route through: isSealed in reach.ts,
+      and distance now only has an opinion about memories distance can open. A
+      group of nothing but seals stays `locked`, which is honest - shut - rather
+      than amber for a walk that achieves nothing. Mutation-checked: restore the
+      old filter and exactly the three new tests fail.
+
+      Also here because it is what made the looking possible:
+      EXPO_PUBLIC_DEV_OPEN_SCREEN (map|collection|you|submit). The submit sheet
+      is three taps in, so the seal control shipped in P5-02 had never been
+      rendered at all; it turned out fine, but that was luck.
+
+      TRAP for the next tick, now in UI.md: `xcrun simctl terminate` can fail
+      silently, and `launch` then merely foregrounds the running app. Fast
+      Refresh applies the new bundle while component state survives, so the
+      previous screenshot's screen is still open and the knob looks broken.
+      /tmp/screen.sh retries the terminate and polls launchctl.
+
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
   - "the dev seed has no sealed memory, so F23's composition cannot be seen without POSTing opens_at by hand. Adding one means picking a coordinate >= 0.0002 degrees from the other six and off the 34 existing stacks - see P3-06's traps"
