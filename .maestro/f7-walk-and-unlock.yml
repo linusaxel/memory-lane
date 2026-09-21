@@ -1,0 +1,87 @@
+# F11 Find the nearest locked memory -> F12 Walk there -> F13 Walk into range
+# -> F7 Unlock by standing near it. docs/08-ux-flows.md
+#
+# This is the product. Everything else exists to get somebody here.
+#
+# Coordinates come from pipeline/seed_dev.py and tests/test_seed_dev.py fails if
+# they drift. The start is ~307m south of the `reach` memory: far enough that
+# nothing is unlockable, close enough that reachOf calls it `warm` (the 150m
+# gate x WARM_MULTIPLIER 3) so the sheet offers a walk rather than a shrug.
+#
+# TWO THINGS TO KNOW BEFORE EDITING THIS FILE.
+#  1. Maestro matches text as a FULL-STRING regex, not a substring. "Walk
+#     there" matches only a label that is exactly that; anything else needs .*
+#  2. A marker's label is `${groupLabel}. ${STATE_LABEL[reach]}.` and it comes
+#     from the MKAnnotation's `title` - not from `accessibilityLabel`, which
+#     iOS ignores on a Marker. Tapping a pin therefore means naming its state
+#     as well as its place, and the pin turning is directly assertable.
+
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: 40.7460
+    longitude: -73.9857
+
+- launchApp:
+    clearState: true
+    permissions:
+      # iOS takes always/inuse/never/unset here, not allow. `inuse` is also the
+      # only honest value: the app is foreground-only and app.json blocks
+      # ACCESS_BACKGROUND_LOCATION (UI.md rule 2).
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000
+
+# The pill needs a position as well as pins, and the button only says "Near
+# me" once there is one. Waiting on it first means a slow fix reads as a slow
+# fix rather than as a missing pill.
+- extendedWaitUntil:
+    visible: "Near me"
+    timeout: 40000
+
+# F11: a map of padlocks answers "where do I go", not only "you cannot read
+# this". The pill sits where the reach pill will be, and names a distance.
+- extendedWaitUntil:
+    visible: "Nearest locked memory · \\d+ m"
+    timeout: 40000
+
+# F17 + F12: why it will not open, and what to do about it.
+- extendedWaitUntil:
+    visible: "The bench outside, dev seed. Locked, a short walk away."
+    timeout: 40000
+- tapOn: "The bench outside, dev seed. Locked, a short walk away."
+- assertVisible: "Get within 150 m and you can open it."
+- assertVisible: "Walk there"
+- tapOn: "Close"
+
+# F13: ~30 seconds of walking. Nothing is tapped for the whole of it - the pin
+# turns, the reach circle catches up and the pill changes its mind on its own.
+- travel:
+    points:
+      - "40.7460,-73.9857"
+      - "40.74876,-73.9857"
+    speed: 10
+
+- extendedWaitUntil:
+    visible: ".*within reach.*"
+    timeout: 45000
+# The pin itself turned, not just the banner.
+- extendedWaitUntil:
+    visible: "The bench outside, dev seed. Locked, within reach."
+    timeout: 40000
+
+# F7: the hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
+# animation callback fires while the finger is still down, so the press
+# completes the unlock rather than cancelling it.
+- tapOn: "The bench outside, dev seed. Locked, within reach."
+- assertVisible: "You are standing close enough to open this one."
+- assertVisible: "Hold to unlock"
+- longPressOn: "Unlock this memory"
+
+# The memory arrives.
+- extendedWaitUntil:
+    visible: ".*pretzel cart.*"
+    timeout: 30000
+- assertNotVisible: "Hold to unlock"

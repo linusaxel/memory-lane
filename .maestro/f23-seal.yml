@@ -1,0 +1,45 @@
+# F23 Seal a memory until a date. docs/08-ux-flows.md
+#
+# A time lock is a different refusal from the proximity gate, and the point is
+# that standing in the right place does not answer it. The seeded `sealed`
+# memory sits at ~129m - inside the 150m radius on purpose, so the only reason
+# it stays shut is the date.
+#
+# api/gate.py checks not_yet_open() before is_locked() looks at position at
+# all, which is why this holds even for the person who filed it.
+
+appId: ${APP_ID}
+---
+# Standing on the sealed memory itself (pipeline/seed_dev.py `sealed`).
+- setLocation:
+    latitude: 40.749
+    longitude: -73.9844
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000
+
+# Close enough that other things here are openable - so the refusal below is
+# about the date and not about where we are standing.
+- extendedWaitUntil:
+    visible: ".*within reach.*"
+    timeout: 30000
+
+# And the seal is not one of them. Standing on it, it still wears the
+# out-of-reach mark and is left out of the count, because distance is not the
+# question it is answering - see isSealed in mobile/src/reach.ts. A pin is
+# named for its state as well as its place, so this is directly assertable.
+- extendedWaitUntil:
+    visible: "A letter to whoever is here later, dev seed. Locked, too far to open."
+    timeout: 40000
+- tapOn: "A letter to whoever is here later, dev seed. Locked, too far to open."
+- assertVisible: "Sealed until then. Standing here does not open it any sooner."
+
+# No ring, not a disabled one. A time lock is not a thing you can try harder at.
+- assertNotVisible: "Hold to unlock"
+- assertNotVisible: "You are standing close enough to open this one."

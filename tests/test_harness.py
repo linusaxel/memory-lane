@@ -12,6 +12,16 @@ def test_gate_is_executable():
     assert os.access(gate, os.X_OK), "loop/verify.sh is not executable"
 
 
+def test_e2e_runner_is_executable():
+    """The simulator run is not part of the gate - no iOS simulator exists on
+    the CI runner, and it takes minutes rather than the gate's seconds. What
+    the gate can still say is that the entry point has not rotted."""
+    runner = ROOT / "e2e" / "run.sh"
+    assert runner.exists(), "e2e/run.sh is missing"
+    assert os.access(runner, os.X_OK), "e2e/run.sh is not executable"
+    assert sorted((ROOT / ".maestro").glob("*.yml")), "no flows in .maestro/"
+
+
 def test_state_files_exist():
     for name in ("TASKS.yaml", "STATE.md", "JOURNAL.md", "verify.sh"):
         assert (ROOT / "loop" / name).exists(), f"loop/{name} is missing"

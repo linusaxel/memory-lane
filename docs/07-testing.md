@@ -72,3 +72,39 @@ docker compose up -d --build
 
 This one is data-dependent: it expects a seeded database and reports failures
 against an empty one. It is not part of the gate.
+
+## Watching the flows, on a simulator
+
+The gate answers "is each rule right". It cannot answer "does the product
+work", because the one mechanic everything is built around — walk into range,
+hold the ring, a memory arrives — needs a map, a moving position and a finger.
+
+`./e2e/run.sh` supplies all three. Maestro drives the native app on an iOS
+simulator against a throwaway `memorylane_e2e` database seeded by
+`pipeline/seed_dev.py`; `--record` leaves an mp4. Flows live in `.maestro/`,
+one per id in `docs/08-ux-flows.md`. Full instructions, and the four
+non-obvious rules for writing a flow, are in `e2e/README.md`.
+
+Three layers, and only two of them run in CI:
+
+| | Where | In the gate | Answers |
+|---|---|---|---|
+| Rules | `tests/test_api_*.py` | yes | is each rule right |
+| Flows, headless | `tests/test_flows.py` | yes | do the rules compose into a journey |
+| Flows, watchable | `.maestro/*.yml` | **no** | does the product work |
+
+The simulator layer is deliberately outside `loop/verify.sh`: the gate's budget
+is under a minute, and `ubuntu-latest` has no iOS simulator. What the gate does
+keep is `tests/test_flows.py` — the headless twin of the same six journeys — so
+a red Maestro flow can be attributed. If `test_flows.py` is green, the API is
+fine and the app moved.
+
+It also keeps a parity check. The YAML hardcodes coordinates and place names
+that live in `pipeline/seed_dev.py`, and when they drift nothing errors — the
+simulator just shows an empty map, which reads as "the app is broken".
+`test_maestro_flows_still_point_at_the_seed` fails instead.
+
+The first run of this suite found two crashes-or-worse in the app — a Fabric
+mounting crash in react-native-maps and an F19 that never rendered at all.
+Both are fixed; `e2e/README.md` keeps the diagnosis, because the second one is
+the kind of thing that comes back.

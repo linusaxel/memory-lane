@@ -38,3 +38,6 @@ media/
 # The Python 3.14 venv whose pyexpat is broken. Ignored today only because it
 # happens to carry its own .gitignore.
 venv.broken-py314/
+
+# Simulator run artifacts: mp4s and service logs.
+e2e/out/

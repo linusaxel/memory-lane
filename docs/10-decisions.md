@@ -176,6 +176,33 @@ It is also discarded silently if it fires before `onMapReady`, which looks
 exactly like the bug it was meant to fix. Readiness is tracked in a ref rather
 than inferred from `mapRef.current`, which is set earlier.
 
+### A long `animateToRegion` never reports back at all
+
+The paragraph above is true of short flights and false of long ones. Fly 40 m
+and the map settles and calls `onRegionChangeComplete`; fly 6,000 km and it
+never does. Measured on one build, from `[CAM]` traces of the same code path:
+reported at 40 m, silent at 6,000 km.
+
+Two flows died on it, and both looked like something else. Opening the app far
+from `FALLBACK_REGION` fetched the fallback once and then nothing, so somebody
+in Copenhagen read Manhattan's memory count over their own city and F19's card
+never appeared at all — the map was visibly in the right place, which is what
+made it look like a data problem. And F19's own "Show me New York" is a long
+jump by definition, so it moved the camera and left the pins behind.
+
+`useMapCamera` therefore watches a flight instead of trusting it. The map's own
+report wins when it comes, because it knows the region it fitted to the screen
+and we do not; if nothing arrives by the time the flight is over, the hook
+reports the destination itself. While a flight is in the air a report about
+somewhere else is the map describing where it used to be — the region it was
+born at, announced after we flew away — and is dropped, or it would fetch the
+wrong pins *and* win by being the later request.
+
+The guard against eager fetching still holds for every move the map does
+report, which is nearly all of them. `.maestro/f19-elsewhere.yml` is what fails
+if this regresses; there is no unit test, because the behaviour being relied on
+is the native map's.
+
 ### The font gate makes effects run before the map exists
 
 The app renders `null` until the two font families load, so a mount effect's

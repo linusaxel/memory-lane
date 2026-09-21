@@ -1,0 +1,32 @@
+# F19 Be somewhere else entirely. docs/08-ux-flows.md
+#
+# "No memories here yet" is honest and it is a dead end. From Copenhagen the
+# map has nothing to say unless it says where the memories actually are.
+
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: 55.6759
+    longitude: 12.5655
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "No memories here yet"
+    timeout: 40000
+
+# The card outranks the location primer, and names a real place with a count
+# and a distance rather than apologising.
+- assertVisible: "Nothing here"
+- assertVisible: "The closest memories are in .*"
+- assertVisible: ".* of them, .*\\. You still have to stand there to read one\\."
+
+- tapOn: "Show me .*"
+
+# Looking is not unlocking: the map travels, the gate does not move.
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000

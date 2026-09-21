@@ -16,7 +16,7 @@
 
 import type { ReactNode } from 'react';
 import { type ColorValue, StyleSheet, Text, View } from 'react-native';
-import { Marker } from 'react-native-maps';
+import { Callout, Marker } from 'react-native-maps';
 
 import type { MemoryGroup } from './cluster.ts';
 import { groupLabel, layerOf } from './cluster.ts';
@@ -53,14 +53,29 @@ export default function MemoryMarker({ group, reach, onPress }: Props) {
       // view already; Android defaults to bottom-centre whatever you draw, so
       // without this every pin hangs its own height above its coordinate.
       anchor={{ x: 0.5, y: 0.5 }}
-      title={groupLabel(group)}
-      // The callout title says where; only the colour says whether you can read
-      // it, and colour is not available to everyone.
-      accessibilityLabel={`${groupLabel(group)}. ${STATE_LABEL[reach]}.`}
+      // `title` and nothing else, because on iOS it is the only one of these
+      // that anybody hears. A Marker's accessibility comes from its
+      // MKAnnotation: `accessibilityLabel` is dropped on the floor (set it
+      // alone and VoiceOver announces MapKit's default, "Map pin") and
+      // `subtitle` never reaches the label either. Colour is what says
+      // whether a pin can be opened and colour is not available to everyone,
+      // so the state has to ride along with the name.
+      title={`${groupLabel(group)}. ${STATE_LABEL[reach]}.`}
       tracksViewChanges={false}
       onPress={onPress}
     >
       <Pin reach={reach} count={count} card={card} />
+      {/* An empty tooltip callout, which is how you say "no callout" while
+          keeping a title. Setting `title` makes MapKit offer its own bubble:
+          system font on a white rounded rect, at odds with everything in
+          theme.ts, truncated to "…" by the state we just put in there, and -
+          because the sheet is what a tap actually opens - still sitting on the
+          map after the sheet is dismissed. `tooltip` replaces the bubble
+          chrome with nothing and this view supplies no content, so the
+          annotation keeps its label and draws nothing. */}
+      <Callout tooltip>
+        <View />
+      </Callout>
     </Marker>
   );
 }

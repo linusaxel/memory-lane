@@ -1,0 +1,40 @@
+# F1 Discover memories near me + F8 Be asked for location.
+# docs/08-ux-flows.md
+#
+# The point of the first two screens is that neither of them is blank and
+# neither of them is a system dialog. Pins are already drawn before anybody is
+# asked for anything (UI.md rule 1: a blank grey map fails store review), and
+# the ask is our own card, not iOS's.
+
+appId: ${APP_ID}
+---
+# A phone always has a position, even before it is allowed to share it.
+# Without this the simulator has no fix at all, getCurrentPositionAsync never
+# returns one, and the button correctly stays on "Turn on location".
+- setLocation:
+    latitude: 40.7484
+    longitude: -73.9857
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: unset
+
+# F1: the map has answered before we have asked for anything.
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000
+
+# F8: our card, over a populated map. Never a cold system dialog.
+- assertVisible: "Memories unlock where they happened"
+- assertVisible: "Turn on location"
+- assertVisible: "Just show me the map"
+
+- tapOn: "Turn on location"
+- tapOn:
+    text: "Allow While Using App"
+    optional: true
+
+# Permission granted: the primer is gone and the button has changed its mind.
+- assertNotVisible: "Memories unlock where they happened"
+- assertVisible: "Near me"

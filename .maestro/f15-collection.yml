@@ -1,0 +1,56 @@
+# F15 Reread what you unlocked. docs/08-ux-flows.md
+#
+# Unlocking is meant to be permanent. This earns one memory and then proves it
+# outlives the sheet, the tab and the process.
+#
+# The other half of F15's neighbour F16 - that the collection also renders with
+# no network at all - is not scripted: bringing the API down mid-flow is
+# machinery Maestro cannot reach. See e2e/README.md for the one-line way to
+# watch it by hand.
+
+appId: ${APP_ID}
+---
+# Standing on the `reach` memory (pipeline/seed_dev.py).
+- setLocation:
+    latitude: 40.74876
+    longitude: -73.9857
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000
+
+# A pin is named for its state as well as its place, so this waits for the
+# state to settle rather than assuming it already has.
+- extendedWaitUntil:
+    visible: "The bench outside, dev seed. Locked, within reach."
+    timeout: 40000
+- tapOn: "The bench outside, dev seed. Locked, within reach."
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*pretzel cart.*"
+    timeout: 30000
+- tapOn: "Close"
+
+# The tab keeps a count, so its label is "Unlocked, 1" once there is one.
+- tapOn: "Unlocked.*"
+- assertVisible: ".*The bench outside, dev seed.*"
+
+# A collection row opens the same sheet, which here offers the way back.
+- tapOn: ".*The bench outside, dev seed.*"
+- assertVisible: ".*pretzel cart.*"
+- assertVisible: "Show on map"
+- tapOn: "Show on map"
+- assertVisible: "\\d+ memories here"
+
+# Still there after the process dies. No clearState this time - that is the
+# whole assertion.
+- launchApp
+- tapOn: "Unlocked.*"
+- extendedWaitUntil:
+    visible: ".*The bench outside, dev seed.*"
+    timeout: 30000
