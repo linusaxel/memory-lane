@@ -797,8 +797,20 @@ Answer these and the proposed flows can be written properly.
    A marker is now a coordinate, and the sheet pages through whatever is under
    it. If the coordinates are ever fixed, this can be revisited; while 60% of
    them are centroids, the point is the only honest unit.
-5. **Does the app sheet render the card, or duplicate it?** `GET
-   /v1/memories/{id}/card` exists and is meant to have three consumers. The
-   sheet is currently a native re-implementation of the same content. Using the
-   card in a WebView would make attribution un-strippable in the app too, at the
-   cost of native feel and offline rendering.
+5. ~~**Does the app sheet render the card, or duplicate it?**~~ **Answered: it
+   duplicates it, and keeps doing so.** Three things the WebView version cannot
+   do, none of which was obvious when the question was written:
+
+   - **F16 works with no network.** Reading on the train home is a flow, and an
+     iframe is a fetch. A collection that goes blank underground is not one.
+   - **The unlock is the product and it is native.** The ring, the haptics, the
+     stamp pressing down onto the page — F7 is animation on a `Animated.Value`,
+     and a WebView is a rectangle you cannot reach into.
+   - **The attribution argument has been met natively.** That was the only real
+     case for the WebView, and the credit is now a pinned strip the story
+     cannot scroll past (rule 11 in `mobile/UI.md`), with `tests/test_palette.py`
+     holding the two renderings to one palette.
+
+   The card keeps its three consumers where the client is *not* ours: the embed,
+   a pasted link, and anything else that would otherwise drop the credit. That
+   is what server-rendering it was for.

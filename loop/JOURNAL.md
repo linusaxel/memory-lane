@@ -32,3 +32,4 @@
 2026-09-21T14:35Z t22 P1-09 done  commit=6826298 gate=GREEN credit pinned out of the ScrollView so a screenshot keeps the attribution; UI.md rule 11. HAZARD: npx prettier has no config in mobile/ and rewrote both files to 80col double quotes - reverted, edit by hand
 2026-09-21T14:39Z t23 P5-01 done  commit=315cbae gate=GREEN anniversary flag + ordering above contrast below layer; 'on this day' in the sheet; taken out of order because P4-01's block is sequencing not substance
 2026-09-21T14:49Z t24 P5-02 done  commit=9642dba gate=GREEN time-locked memories; not_yet_open ahead of position closes four doors incl /v1/unlocks and the card's own query copy; mutation-tested; F23
+2026-09-21T14:53Z t25 doc-pass done commit=PENDING gate=GREEN TODO.md accuracy sweep (4 stale bullets), open question 5 answered (the sheet duplicates the card and keeps doing so), D.3 closed, Phase 4 reframed against 3.2. No todo or doing left in TASKS.yaml -> TERMINATE

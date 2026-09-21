@@ -63,9 +63,12 @@ Docker build layers, and two pipeline-stage headings. Nothing to refactor.
       added in `722fd68` (W4-01). Columns only: nothing reads or writes them yet.
 - [x] **Non-video ingestion** — `ingest_records()` in `0c9d699` (W4-03).
       Still no real source behind it; the adapter choice is W4-00, blocked.
-- [ ] **Contrast scoring** — every query still orders by `distance ASC`. There
-      is a column now but nothing fills it, and no source of "what is at this
-      place now" to compute it from.
+- [x] **Contrast scoring** — done in 1.5 (`730b786`) and ordered on in 1.6
+      (`c4c60be`). This bullet went on saying "every query still orders by
+      `distance ASC`" after it stopped being true, which is the exact failure
+      the *Known defects* section below warns about. The remaining gap is not
+      the score but what feeds it: there is still no source of "what is at this
+      place now", so the score is LLM-only, from the source text.
 - [x] **Screenshot-native cards.** The web card was done in the palette pass
       (`docs/09-visual-design.md`); the app sheet was the half still open, and
       the defect was structural rather than cosmetic: the place name sat above
@@ -76,7 +79,11 @@ Docker build layers, and two pipeline-stage headings. Nothing to refactor.
       actions (`styles.credit`), it owns the single hairline the three variants
       used to each carry, and it is skipped when there is nothing to credit.
       Rule 11 in `mobile/UI.md`.
-- [ ] Embeddable widget, auth, rate limiting, ingestion cost caps.
+- [x] Embeddable widget (2.1/2.2 — tiles still parked on `DEPLOY`), auth (3.1,
+      Google and Apple), rate limiting and ingestion cost caps (3.5 — 20
+      memories and 64 MB per person per day). Four things on one line, all four
+      shipped; the only piece still open is the tile source, which needs an
+      account rather than an afternoon.
 
 ### Where the brief's "known v1 shape" is wrong
 
@@ -238,11 +245,16 @@ Seeded 2026-09-20:
 
 Open, and blocking a clean Phase 1:
 
-- [ ] **D.3 Answer the four open questions** at the bottom of
-      `docs/08-ux-flows.md`. The one that blocks the most: **does a pin
-      represent a place or a memory?** Today it is a memory, so Gotham Comedy
-      Club is six overlapping pins at one address. Place-level pins fix that but
-      change what tapping means, and the answer shapes the layer UI in 1.x.
+- [x] **D.3 Answer the four open questions** at the bottom of
+      `docs/08-ux-flows.md`. All five are answered now, four of them by
+      implementation rather than by argument: layers stack and are told apart by
+      pin shape (F4); an empty area says so and no longer looks like a failure;
+      contribution is in v1 (F5); **a pin is a *point*, not a place and not a
+      memory** — neither original option survived the data, because one venue
+      spans several place rows and several venues share one coordinate; and the
+      app sheet duplicates the card rather than embedding it, because F16 has to
+      work with no network, the unlock is native animation, and the attribution
+      argument was met by the pinned credit strip instead.
 - [x] **D.4 Empty state is distinguishable from failure.** Was: `fetchNearby`
       accepted an `AbortSignal` that `App.tsx` never passed, so with no fetch
       timeout an unreachable API hung and the banner sat on "0 memories here"
@@ -601,7 +613,9 @@ returns nothing is dead, and a friend layer on an empty map returns nothing.
       It weakens nothing: the position is already self-reported — see
       `docs/10-decisions.md#the-position-is-self-reported` — so this makes lying
       convenient locally, not possible.
-- [ ] Same neighborhood only. No second city.
+- [ ] Same neighborhood only. No second city. *Not a task — a standing rule,
+      left unticked on purpose. It is only satisfiable by not doing something,
+      and it stops being true the day somebody adds a source outside Copenhagen.*
 
 ---
 
@@ -610,10 +624,26 @@ returns nothing is dead, and a friend layer on an empty map returns nothing.
 Density fix for the friend layer's sparsity, and the only layer that makes
 people create rather than consume.
 
-- [ ] **4.1** One note per place, visible to the next visitor only.
-- [ ] **4.2** ~7-day decay, enforced at read time so an expired note cannot leak.
-- [ ] **4.3** Moderation from day one, not bolted on: a pre-publish classifier
-      pass and a report path that works before the first note exists.
+**Read 3.2 before this section.** Phase 4 was written before user submissions
+existed, and 3.2 answered the same question differently: a submission lands in
+the `stranger` layer and is **permanent**. That is not a tuning difference. 4.1
+and 4.2 are parked on it rather than attempted — see `P4-01` in
+`loop/TASKS.yaml` for the three ways out and why each is a person's call, not an
+agent's.
+
+- [ ] **4.1** One note per place, visible to the next visitor only. **Parked:**
+      the stranger layer already exists and its rows are kept, not consumed.
+- [ ] **4.2** ~7-day decay, enforced at read time so an expired note cannot
+      leak. **Parked:** expiring a stranger memory would delete, from its
+      author's own collection, the thing they walked somewhere to write — and
+      1.5e calls that collection a promise. The read-time half of the design is
+      right and survives whichever way the product question is answered.
+- [~] **4.3** Moderation from day one, not bolted on. **Half shipped with 3.2:**
+      the report path exists, works before anything is posted, and hides a
+      memory from every endpoint at `REPORT_THRESHOLD` distinct devices. The
+      pre-publish classifier is the missing half, and it spends credits on every
+      submission — `API_CREDITS`, and not obviously worth it while three reports
+      take something down in minutes.
 
 ---
 
