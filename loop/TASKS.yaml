@@ -993,6 +993,31 @@ tasks:
       a documented REST API with dense Copenhagen coverage. Reuse terms for
       arkiv.dk and Mediestream are also unconfirmed."
 
+  - id: P1-09
+    goal: "The app sheet survives as a screenshot: place name and credit both in
+      frame however long the story is."
+    verify: "cd mobile && npm run typecheck"
+    touches: [mobile/src/MemorySheet.tsx, mobile/src/SourceLine.tsx, mobile/UI.md]
+    depends_on: [P3-04]
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      Structural, not cosmetic. The place name was fixed above the ScrollView
+      and the credit was inside it, so any story long enough to scroll pushed
+      the attribution out of frame - and a screenshot is the only way geo-gated
+      content travels, so that lost the distribution channel and the legal
+      posture in one. The credit is now a pinned strip between the scroll and
+      the actions; it carries the one hairline, so SourceLine, the byline and
+      the bare title each gave up their own; and it is skipped entirely when
+      there is nothing to credit. Rule 11 in mobile/UI.md.
+
+      NOT eyeballed on a simulator - W3-13 is still parked on a human. tsc is
+      the only check this has, which is what UI work in this repo gets.
+
+      Do not run `npx prettier` on mobile/: there is no config, so it rewrites
+      every file to double quotes and 80 columns. Match the file by hand.
+
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
   # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`

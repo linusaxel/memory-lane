@@ -66,8 +66,16 @@ Docker build layers, and two pipeline-stage headings. Nothing to refactor.
 - [ ] **Contrast scoring** — every query still orders by `distance ASC`. There
       is a column now but nothing fills it, and no source of "what is at this
       place now" to compute it from.
-- [ ] **Screenshot-native cards** — the app sheet is functional, not designed to
-      survive as a screenshot.
+- [x] **Screenshot-native cards.** The web card was done in the palette pass
+      (`docs/09-visual-design.md`); the app sheet was the half still open, and
+      the defect was structural rather than cosmetic: the place name sat above
+      the scroll and the credit sat *inside* it, so any story long enough to
+      scroll pushed the attribution out of frame. A screenshot is the only way
+      geo-gated content travels, so that lost both the distribution channel and
+      the legal posture at once. The credit is now a pinned strip above the
+      actions (`styles.credit`), it owns the single hairline the three variants
+      used to each carry, and it is skipped when there is nothing to credit.
+      Rule 11 in `mobile/UI.md`.
 - [ ] Embeddable widget, auth, rate limiting, ingestion cost caps.
 
 ### Where the brief's "known v1 shape" is wrong

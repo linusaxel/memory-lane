@@ -69,15 +69,9 @@ export default function SourceLine({ source, title }: Props) {
 const AVATAR = 40;
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 26,
-    paddingTop: 18,
-    borderTopWidth: 1,
-    borderTopColor: color.rule,
-  },
+  // No separator of its own: it sits in MemorySheet's pinned credit strip,
+  // which carries the one hairline for all three credit variants.
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
   avatarEmpty: { borderWidth: 1, borderColor: color.rule },
   text: { flex: 1, gap: 1 },

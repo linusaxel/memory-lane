@@ -226,63 +226,76 @@ export default function MemorySheet({
               )}
             </View>
           ) : (
-            <ScrollView contentContainerStyle={styles.body}>
-              {/* The summary carries the sheet when nothing is attached, which
-                  is every extracted memory; a submission usually brings a
-                  photograph and the weight shifts to it. */}
-              {earned && (
-                <Animated.View style={[styles.stamp, pressed]}>
-                  <View style={styles.stampMark} />
+            <>
+              <ScrollView contentContainerStyle={styles.body}>
+                {/* The summary carries the sheet when nothing is attached, which
+                    is every extracted memory; a submission usually brings a
+                    photograph and the weight shifts to it. */}
+                {earned && (
+                  <Animated.View style={[styles.stamp, pressed]}>
+                    <View style={styles.stampMark} />
+                  </Animated.View>
+                )}
+
+                <Animated.View style={revealed}>
+                  <Text style={styles.summary}>{memory.summary}</Text>
+
+                  <MemoryMedia media={memory.media} />
+
+                  {memory.tags?.length > 0 && (
+                    <View style={styles.tags}>
+                      {memory.tags.map((tag) => (
+                        <Text key={tag} style={styles.tag}>
+                          {tag}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+
+                  {!locked && onReport && (
+                    <Pressable
+                      style={dim(styles.report)}
+                      accessibilityRole="button"
+                      disabled={reported}
+                      onPress={() => onReport(memory)}
+                    >
+                      <Text style={styles.reportText}>
+                        {reported ? 'Reported' : 'Report this memory'}
+                      </Text>
+                    </Pressable>
+                  )}
+                </Animated.View>
+              </ScrollView>
+
+              {/* Pinned, not scrolled. A screenshot is the only way geo-gated
+                  content travels - you cannot share it by linking to it,
+                  because you had to be there - and until now a long story
+                  pushed the credit off the bottom of the frame. The place name
+                  was already fixed above the scroll; this is the other half of
+                  the same rule, and it is the legal posture as much as the
+                  design one. The three variants gave up their own top rules to
+                  the strip, which now carries the one hairline - so the strip
+                  is skipped entirely when there is nothing to credit, rather
+                  than leaving a stray rule above the buttons. */}
+              {(memory.author || memory.content?.source || memory.content?.title) && (
+                <Animated.View style={[styles.credit, revealed]}>
+                  {memory.author ? (
+                    <View style={styles.byline}>
+                      <Text style={styles.bylineLabel}>Filed by</Text>
+                      <Text style={styles.bylineName}>{memory.author.name}</Text>
+                    </View>
+                  ) : memory.content?.source ? (
+                    <SourceLine source={memory.content.source} title={memory.content.title} />
+                  ) : (
+                    memory.content?.title && (
+                      <Text style={styles.source} numberOfLines={2}>
+                        {memory.content.title}
+                      </Text>
+                    )
+                  )}
                 </Animated.View>
               )}
-
-              <Animated.View style={revealed}>
-                <Text style={styles.summary}>{memory.summary}</Text>
-
-                <MemoryMedia media={memory.media} />
-
-                {memory.tags?.length > 0 && (
-                  <View style={styles.tags}>
-                    {memory.tags.map((tag) => (
-                      <Text key={tag} style={styles.tag}>
-                        {tag}
-                      </Text>
-                    ))}
-                  </View>
-                )}
-
-                {/* A memory somebody filed has no channel to credit - the
-                    person is the credit, and the app must not leave it off any
-                    more than the server would. */}
-                {memory.author ? (
-                  <View style={styles.byline}>
-                    <Text style={styles.bylineLabel}>Filed by</Text>
-                    <Text style={styles.bylineName}>{memory.author.name}</Text>
-                  </View>
-                ) : memory.content?.source ? (
-                  <SourceLine source={memory.content.source} title={memory.content.title} />
-                ) : (
-                  memory.content?.title && (
-                    <Text style={styles.source} numberOfLines={2}>
-                      {memory.content.title}
-                    </Text>
-                  )
-                )}
-
-                {!locked && onReport && (
-                  <Pressable
-                    style={dim(styles.report)}
-                    accessibilityRole="button"
-                    disabled={reported}
-                    onPress={() => onReport(memory)}
-                  >
-                    <Text style={styles.reportText}>
-                      {reported ? 'Reported' : 'Report this memory'}
-                    </Text>
-                  </Pressable>
-                )}
-              </Animated.View>
-            </ScrollView>
+            </>
           )}
 
           <View style={styles.actions}>
@@ -407,26 +420,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   waiting: { ...label, color: color.seal },
-  byline: {
-    marginTop: 26,
-    paddingTop: 18,
+  // The strip carries the hairline now, so the three credit variants are just
+  // their lines. Pinned above the actions, it is in every screenshot.
+  credit: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 4,
     borderTopWidth: 1,
     borderTopColor: color.rule,
-    gap: 2,
   },
+  byline: { gap: 2 },
   bylineLabel: { ...label, fontSize: 9 },
   bylineName: { fontFamily: font.displaySemi, fontSize: 16, color: color.ink },
   // Quiet on purpose. It has to be findable and must not be the thing the eye
   // lands on under somebody's story.
   report: { marginTop: 28, alignSelf: 'flex-start', paddingVertical: 8 },
   reportText: { ...label, fontSize: 9, color: color.inkFaint },
-  source: {
-    fontFamily: font.mono,
-    fontSize: 12,
-    lineHeight: 19,
-    color: color.inkFaint,
-    marginTop: 26,
-  },
+  source: { fontFamily: font.mono, fontSize: 12, lineHeight: 19, color: color.inkFaint },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ink, not red. The seal is the unlock and nothing else gets to wear it.
   watch: { backgroundColor: color.ink, paddingVertical: 16, borderRadius: 4, alignItems: 'center' },

@@ -326,6 +326,14 @@ Each of these exists because something broke or would have been rejected.
     viewport that never exists. Move the camera; let it report back.
     The one exception is the denied-permission path, which never moves the
     camera and so must load by hand.
+11. **The credit never scrolls.** Place name above the scroll, credit pinned
+    below it, story in between. Geo-gated content cannot be shared by linking
+    to it — you had to be there — so a screenshot is the only way it travels,
+    and a screenshot that has lost the attribution is both a broken
+    distribution channel and a broken legal posture. `styles.credit` in
+    `MemorySheet.tsx` is that strip; it carries the one hairline, so the three
+    credit variants inside it have none of their own. Anything new that can
+    appear under a summary goes *in* the scroll, not between the two.
 
 ## Writing
 
