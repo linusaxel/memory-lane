@@ -10,9 +10,9 @@ import uuid
 from fastapi import APIRouter, Form, HTTPException, UploadFile
 from sqlalchemy import text
 
+import api.media
 from api.accounts import clean_name, set_display_name, touch_device, user_for_device
 from api.gate import meters_between, row_to_memory
-import api.media
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
