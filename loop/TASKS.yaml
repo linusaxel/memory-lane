@@ -1099,7 +1099,7 @@ tasks:
     depends_on: [P5-02]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: ed86332
     note: |
       The testable half of W3-13, which cannot be `done` because its verify is
       MANUAL.
