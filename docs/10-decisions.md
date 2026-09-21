@@ -331,6 +331,18 @@ request after eight (`REQUEST_TIMEOUT_MS`), so a connection handed over at
 thirty seconds is handed to nobody — it just holds the slot for a client that
 has gone. `tests/test_db_pool.py` keeps the two in that order.
 
+### One statement cannot run for ever
+
+Nothing bounded a query. One pathological statement holding a connection is
+survivable; thirty of them is the pool, and the way to discover that is for it
+to happen at three in the morning.
+
+`statement_timeout` is set on the connection rather than per query, so it
+covers the queries nobody thought of as slow. Thirty seconds is a safety net,
+not a policy — the slowest thing here by a wide margin is `/v1/stats`' DBSCAN
+at about 1.3s on 50,000 memories (`python -m pipeline.perf`). If that ever
+approaches this number the answer is to precompute hotspots, not to raise it.
+
 ### The server has one clock, and it is UTC
 
 `not_yet_open` asked Python for today's date, which is the host's local one.

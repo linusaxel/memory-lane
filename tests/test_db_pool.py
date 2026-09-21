@@ -83,3 +83,39 @@ def test_every_knob_is_an_environment_variable(knob):
     tuned on the host that actually has the load."""
     assert knob in (ROOT / "pipeline" / "config.py").read_text()
     assert f'os.getenv("{knob}"' in (ROOT / "pipeline" / "config.py").read_text()
+
+
+def test_a_single_statement_cannot_run_for_ever(db_session):
+    """One pathological query holding a connection is survivable; thirty of
+    them is the whole pool, and the way to discover that is for it to happen.
+
+    Asserted on a live connection rather than on the config, because the
+    setting travels in connect_args and a typo there is silent."""
+    from sqlalchemy import text
+
+    from pipeline.config import DB_STATEMENT_TIMEOUT_MS
+    from pipeline.db import engine
+
+    with engine.connect() as conn:
+        setting = conn.execute(text("SHOW statement_timeout")).scalar()
+
+    assert setting not in ("0", "0ms"), "no statement timeout is set on the connection"
+
+    # Postgres reports it in its own units; normalise to milliseconds.
+    units = {"ms": 1, "s": 1000, "min": 60_000}
+    for suffix, factor in sorted(units.items(), key=lambda kv: -len(kv[0])):
+        if setting.endswith(suffix):
+            assert int(setting[: -len(suffix)]) * factor == DB_STATEMENT_TIMEOUT_MS
+            break
+    else:
+        assert int(setting) == DB_STATEMENT_TIMEOUT_MS
+
+
+def test_the_statement_timeout_is_well_clear_of_the_slowest_query():
+    """The slowest thing measured is /v1/stats' DBSCAN at ~1.3s on 50k
+    memories (python -m pipeline.perf). A timeout near that turns a safety net
+    into an outage; a timeout far above it bounds a runaway without policing
+    anything real."""
+    from pipeline.config import DB_STATEMENT_TIMEOUT_MS
+
+    assert DB_STATEMENT_TIMEOUT_MS >= 10_000

@@ -40,3 +40,13 @@ DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "5"))
 
 #: Concurrent requests one process will run. Never more than the pool can serve.
 MAX_CONCURRENCY = DB_POOL_SIZE + DB_MAX_OVERFLOW
+
+# A ceiling on any single statement, so one pathological query cannot hold a
+# connection indefinitely. With a pool of thirty, thirty stuck queries are a
+# total outage, and the way to find out is for it to happen.
+#
+# Thirty seconds is a safety net rather than a policy: the slowest thing here
+# by a wide margin is /v1/stats' DBSCAN, measured at 1.3s on 50,000 memories
+# (`python -m pipeline.perf`). If that ever approaches this number the answer
+# is to precompute hotspots, not to raise it.
+DB_STATEMENT_TIMEOUT_MS = int(os.getenv("DB_STATEMENT_TIMEOUT_MS", "30000"))

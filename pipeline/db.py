@@ -27,6 +27,10 @@ engine = create_engine(
     pool_size=config.DB_POOL_SIZE,
     max_overflow=config.DB_MAX_OVERFLOW,
     pool_timeout=config.DB_POOL_TIMEOUT,
+    # Set on the connection rather than per query, so it covers everything -
+    # including the queries nobody thought of as slow. See
+    # DB_STATEMENT_TIMEOUT_MS.
+    connect_args={"options": f"-c statement_timeout={config.DB_STATEMENT_TIMEOUT_MS}"},
 )
 SessionLocal = sessionmaker(bind=engine)
 
