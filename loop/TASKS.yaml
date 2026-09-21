@@ -1177,7 +1177,7 @@ tasks:
     depends_on: [P2-05]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 0b21881
     note: |
       Looked at in a browser for the first time. It was a postage stamp pinned
       to the top of an empty screen - and a screenshot of this card is the only
