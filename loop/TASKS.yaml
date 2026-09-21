@@ -1213,7 +1213,7 @@ tasks:
     depends_on: [P2-06]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 35d68da
     note: |
       EMBED_HTML is a `.format()` template and somebody wrote `%%` in it, which
       is `%`-formatting's escape, not `.format()`'s. So `height: 100%%`,
