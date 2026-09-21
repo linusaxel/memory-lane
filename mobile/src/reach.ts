@@ -91,6 +91,20 @@ export function reachOf(
   return away <= radius * WARM_MULTIPLIER ? 'warm' : 'locked';
 }
 
+/** How much of the walk is behind you, 0 to 1, for the ring on the sheet.
+ *
+ *  Full at the radius, because that is where the thing opens. Empty at three
+ *  radii, reusing WARM_MULTIPLIER rather than inventing a second idea of
+ *  "nearly" - it is already the distance at which a pin stops being too far
+ *  and starts being worth walking to, and the two should agree. */
+export function approachOf(meters: number | null, radius: number): number {
+  if (meters == null || radius <= 0) return 0;
+  const far = radius * WARM_MULTIPLIER;
+  if (meters >= far) return 0;
+  if (meters <= radius) return 1;
+  return (far - meters) / (far - radius);
+}
+
 /** The closest thing still shut, so a map of padlocks can answer "where do I
  *  go" and not only "you cannot read this". Null when something is already in
  *  reach, because then there is nothing to walk to. */

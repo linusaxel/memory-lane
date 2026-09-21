@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import type { LocatedMemory } from './api.ts';
 import type { MemoryGroup } from './cluster.ts';
-import { nearestLocked, reachOf } from './reach.ts';
+import { approachOf, nearestLocked, reachOf } from './reach.ts';
 
 const HERE = { lat: 55.6759, lng: 12.5655 };
 
@@ -172,4 +172,31 @@ test('a lock on another continent is not a hint', () => {
 test('a lock at the edge of a long day out still counts', () => {
   const nearEdge = group(HERE.lat + 0.2, HERE.lng, [true]); // ~22km
   assert.ok(nearestLocked([nearEdge], HERE, NONE));
+});
+
+test('the approach ring is full the moment the gate can open', () => {
+  assert.equal(approachOf(150, 150), 1);
+  assert.equal(approachOf(20, 150), 1);
+  assert.equal(approachOf(0, 150), 1);
+});
+
+test('the approach ring is empty until the walk is worth starting', () => {
+  // Three radii is where a pin stops being "too far" and starts being "a
+  // short walk away", so the ring should have nothing in it until then.
+  assert.equal(approachOf(450, 150), 0);
+  assert.equal(approachOf(6000, 150), 0);
+});
+
+test('the approach ring rises over the walk in', () => {
+  const half = approachOf(300, 150);
+  assert.ok(half > 0.49 && half < 0.51, `expected about half, got ${half}`);
+  assert.ok(approachOf(200, 150) > half, 'closer must read as fuller');
+  assert.ok(approachOf(400, 150) < half, 'further must read as emptier');
+});
+
+test('no position is no progress, not full progress', () => {
+  // The figure underneath renders an em dash in this case; a ring showing
+  // itself full because it divided by nothing would be a lie about the gate.
+  assert.equal(approachOf(null, 150), 0);
+  assert.equal(approachOf(100, 0), 0);
 });

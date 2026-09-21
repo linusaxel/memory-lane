@@ -14,6 +14,7 @@ import {
 
 import type { Coordinates, LocatedMemory } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
+import Approach from './Approach.tsx';
 import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
@@ -227,7 +228,7 @@ export default function MemorySheet({
                 </>
               ) : (
                 <>
-                  <Padlock size={34} color={color.faded} />
+                  <Approach meters={fromHere} radius={radius} />
                   <Text style={styles.gateFigure}>
                     {position == null
                       ? '—'

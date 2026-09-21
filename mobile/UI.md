@@ -698,6 +698,16 @@ budget. Spec, so it does not get re-invented per screen:
 - **A refusal resets the ring.** Success unmounts the control — the sheet
   swaps to its open composition — so `busy` falling back to false is always a
   no, and a ring left full beside an error reads as "it worked".
+- **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the
+  same 84px circle with a rim that thickens inward as you close — empty at
+  three radii (`WARM_MULTIPLIER`, so the sheet and the pin agree about
+  "nearly"), complete at the radius. Arriving swaps it for the control, and
+  the ring you were filling is the ring you now hold. Two rules hold it
+  together: it is never seal, because seal means openable and this cannot be
+  opened from here; and it fills a **rim** and not the middle, because the
+  middle belongs to the hold — an approach that filled the centre would make
+  arriving look like the ring draining just as you got there. `approachOf` is
+  in `reach.ts` with the rest of the distance logic, and is unit-tested.
 - **Locked and unlockable look different on the map**, not just in the sheet.
   If you have to open a pin to learn you cannot read it, the map is not doing
   its job.
