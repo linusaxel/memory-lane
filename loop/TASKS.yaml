@@ -1140,7 +1140,7 @@ tasks:
     depends_on: [W3-16]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 8a53385
     note: |
       Found by looking at the map, which is the second defect the native build
       has turned up and the reason W3-13 was worth doing.
