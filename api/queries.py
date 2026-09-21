@@ -40,9 +40,14 @@ MEMORY_MEDIA = """COALESCE((
 # because it is a reason to look and never a reason to hide anything.
 # ponytail: a 29 February memory resurfaces only on a leap day. Nudging it to
 # the 28th is a product decision nobody has made.
+# UTC explicitly, not CURRENT_DATE. CURRENT_DATE is whatever timezone the
+# cluster happens to be set to, which is one deployment setting away from
+# disagreeing with api.gate.today() - and the two together decide whether a
+# memory is shut and whether it is "on this day". See api/gate.py#today.
 ANNIVERSARY = """(
         m.happened_at IS NOT NULL
-        AND to_char(m.happened_at, 'MM-DD') = to_char(CURRENT_DATE, 'MM-DD')
+        AND to_char(m.happened_at, 'MM-DD')
+            = to_char((now() AT TIME ZONE 'utc')::date, 'MM-DD')
     ) as anniversary"""
 
 # Every column a memory-shaped response needs. row_to_memory reads the row by

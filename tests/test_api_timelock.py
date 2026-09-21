@@ -13,18 +13,20 @@ Four doors, one check. It lives at the top of `is_locked`, before position is
 considered at all, so a fifth door inherits it for free.
 """
 
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import text
+
+from api.gate import today
 
 pytestmark = pytest.mark.db
 
 # Rådhuspladsen.
 LAT, LNG = 55.6759, 12.5655
 
-SOON = date.today() + timedelta(days=1)
-PASSED = date.today() - timedelta(days=1)
+SOON = today() + timedelta(days=1)
+PASSED = today() - timedelta(days=1)
 
 
 @pytest.fixture

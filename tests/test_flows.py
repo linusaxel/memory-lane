@@ -16,12 +16,13 @@ the two layers cannot disagree about what "the bench outside" means.
 
 import pathlib
 import re
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import text
 
 import pipeline.seed_dev as seed_dev
+from api.gate import today
 from pipeline.seed_dev import at, seed
 
 pytestmark = pytest.mark.db
@@ -204,7 +205,7 @@ def test_f23_a_seal_does_not_care_where_you_are_standing(seeded, db_session):
             "lng": lng,
             "place_name": "A note for later",
             "summary": "Filed sealed, by somebody standing on the spot.",
-            "opens_at": str(date.today() + timedelta(days=365)),
+            "opens_at": str(today() + timedelta(days=365)),
         },
     )
     assert mine.status_code == 201

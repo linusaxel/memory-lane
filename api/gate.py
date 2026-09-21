@@ -10,7 +10,7 @@ Rules and reasoning: docs/10-decisions.md#the-gate.
 """
 
 import os
-from datetime import date
+from datetime import UTC, date, datetime
 from math import asin, cos, radians, sin, sqrt
 
 from api.media import media_url
@@ -75,6 +75,27 @@ def is_gated(row) -> bool:
     )
 
 
+def today() -> date:
+    """The server's one opinion of what day it is, in UTC.
+
+    There were two. This function used `date.today()`, which is the host's
+    local date, while `ANNIVERSARY` in api/queries.py asked the database for
+    CURRENT_DATE, which is the database's. On a laptop in CEST against a
+    container in UTC those disagree for two hours every night - long enough
+    that a time capsule could be open while "on this day" still thought it was
+    yesterday, and long enough to fail a test at 00:04 with no code changed.
+
+    UTC rather than either machine's local time, because neither machine's
+    local time means anything to the person holding the phone. A viewer's own
+    date is the honest answer to "on this day" and the server cannot know it;
+    picking one clock at least makes the two rules agree with each other. If
+    that is ever worth fixing properly the client has to send its date.
+
+    tests/test_clock.py holds the two halves together.
+    """
+    return datetime.now(UTC).date()
+
+
 def not_yet_open(row) -> bool:
     """A time capsule that has not come due.
 
@@ -86,7 +107,7 @@ def not_yet_open(row) -> bool:
     endpoint, which records having walked there.
     """
     opens = getattr(row, "opens_at", None)
-    return opens is not None and opens > date.today()
+    return opens is not None and opens > today()
 
 
 def is_locked(row, at: Coordinates | None) -> bool:

@@ -14,13 +14,12 @@ are easy to get backwards in a way nothing would notice:
 
 import pathlib
 import re
-from datetime import date
 
 import pytest
 from sqlalchemy import text
 
 import pipeline.seed_dev as seed_dev
-from api.gate import UNLOCK_RADIUS_METERS, meters_between, row_to_memory
+from api.gate import UNLOCK_RADIUS_METERS, meters_between, row_to_memory, today
 from api.models import Coordinates
 from api.queries import SINGLE_MEMORY_QUERY
 from pipeline.seed_dev import LAT, LNG, PLACE_PREFIX, at, clear, seed
@@ -166,7 +165,7 @@ def test_one_is_sealed_shut_while_you_are_standing_on_it(seeded):
     memory = row_to_memory(row, here)
     assert memory.locked is True, "standing there must not open a time capsule"
     assert memory.summary == ""
-    assert memory.opens_at > date.today(), "a seal that has passed is not a seal"
+    assert memory.opens_at > today(), "a seal that has passed is not a seal"
 
 
 def test_no_two_gated_seeds_share_a_grid_cell(seeded):

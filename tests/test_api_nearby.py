@@ -11,12 +11,13 @@ scoring has none, so a missing NULLS LAST inverts the feature completely and
 still returns plausible-looking results.
 """
 
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import text
 
 import api.gate as gate
+from api.gate import today
 
 pytestmark = pytest.mark.db
 
@@ -180,7 +181,7 @@ def test_something_that_happened_today_comes_back_up(client, db_session):
         content,
         "thirty years ago today",
         contrast_score=0.1,
-        happened_at=date.today().replace(year=date.today().year - 30),
+        happened_at=today().replace(year=today().year - 30),
     )
     db_session.commit()
 
@@ -202,7 +203,7 @@ def test_the_same_date_in_another_year_is_not_an_anniversary(client, db_session)
         place,
         content,
         "yesterday",
-        happened_at=date.today() - timedelta(days=1),
+        happened_at=today() - timedelta(days=1),
     )
     db_session.commit()
 

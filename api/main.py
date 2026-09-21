@@ -12,7 +12,9 @@ api/embed.py     the embeddable map
 """
 
 import os
+from contextlib import asynccontextmanager
 
+import anyio.to_thread
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,11 +25,32 @@ from api.media import MEDIA_DIR, MEDIA_URL_PREFIX, NoSniff
 from api.privacy import router as privacy_router
 from api.read import router as read_router
 from api.write import router as write_router
+from pipeline.config import MAX_CONCURRENCY
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Run no more requests at once than the database can serve.
+
+    Every endpoint here but one is a `def`, which FastAPI hands to anyio's
+    thread pool - forty threads by default - and each one holds a session for
+    the length of its body. The pool tops out at MAX_CONCURRENCY connections,
+    so the ten threads past that would each occupy a thread *and* block on a
+    connection, which is the same queue as before with a thread stapled to it.
+
+    Capping the thread pool moves the waiting one step earlier, where it costs
+    a slot in an event loop rather than a whole OS thread, and it means the two
+    numbers cannot drift apart the next time somebody tunes one of them.
+    """
+    anyio.to_thread.current_default_thread_limiter().total_tokens = MAX_CONCURRENCY
+    yield
+
 
 app = FastAPI(
     title="Memory Lane API",
     description="Query location-based memories from video content",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
