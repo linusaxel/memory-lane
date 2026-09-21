@@ -169,9 +169,11 @@ CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
 -- a thin thing in text alone.
 CREATE TABLE media (
     id SERIAL PRIMARY KEY,
-    -- Null between the upload and the submission it belongs to.
-    -- ponytail: nothing sweeps the orphans of an abandoned submission. Add a
-    -- reaper when the disk starts mattering.
+    -- Null between the upload and the submission it belongs to, and for ever
+    -- if nobody ever posts it. `python -m pipeline.sweep` is the reaper;
+    -- ponytail: it is run by hand, because there is no scheduler here to hang
+    -- it on. Until something calls it, an abandoned upload still costs disk -
+    -- it is just now a command away rather than a rewrite away.
     memory_id INTEGER REFERENCES memories(id) ON DELETE CASCADE,
     -- Who uploaded it, so a submission cannot attach somebody else's file.
     device_id UUID REFERENCES devices(id) ON DELETE SET NULL,

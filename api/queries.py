@@ -11,9 +11,14 @@ tests/test_api_sql.py EXPLAINs every *_QUERY in here against the real schema.
 # Whether this coordinate belongs to this place alone, which is what decides
 # whether a memory is worth walking to. The NOT EXISTS is what stops a
 # submission unlocking its neighbours. Both rules and the reasons:
-# docs/10-decisions.md#the-gate. api/card.py keeps a copy - change both.
-# ponytail: a correlated scan of ~200 places per row. Materialize it onto
-# places if the corpus ever reaches the tens of thousands.
+# docs/10-decisions.md#the-gate. api/card.py interpolates this same constant,
+# so there is one copy.
+#
+# Indexed by idx_places_grid, and it has to stay written exactly this way to
+# stay indexed - ST_SnapToGrid(geom, size) and ST_SnapToGrid(geom, 0, 0, size,
+# size) are the same answer and different expressions. Unindexed this scanned
+# every place once per row returned: 305ms of a 338ms /v1/memories/nearby at
+# 50k memories. `python -m pipeline.perf` is how to check that again.
 COORDINATE_IS_UNIQUE = """(
         SELECT COUNT(*) = 1 FROM places p2
         WHERE ST_SnapToGrid(p2.coordinates::geometry, 0.0001)
@@ -98,9 +103,6 @@ VISIBLE = "NOT m.hidden"
 DISTANCE = "ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters"
 WITHIN = "ST_DWithin(p.coordinates, ST_MakePoint(:lng, :lat)::geography, :radius_meters)"
 
-# ponytail: spans two tables, so no index can serve it and every search is a
-# sequential scan. The obvious OR fix does not work - measured. See
-# docs/10-decisions.md#search-is-a-sequential-scan-on-purpose.
 # A stored column, not an expression. The expression it replaced spanned two
 # tables - m.summary with p.name - so no index could cover it and every search
 # was a sequential scan of the corpus. It holds exactly the same concatenation,
