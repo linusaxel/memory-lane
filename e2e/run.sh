@@ -40,7 +40,22 @@ for arg in "$@"; do
   esac
 done
 
-say()   { printf '\n\033[1m%s\033[0m\n' "$*"; }
+STARTED=$(date +%s)
+LAST=$STARTED
+
+# Every phase prints what it cost. You cannot speed up a loop you cannot see,
+# and this one is run dozens of times an hour while iterating.
+say() {
+  local now took
+  now=$(date +%s)
+  took=$((now - LAST))
+  LAST=$now
+  if [ "$took" -gt 0 ]; then
+    printf '\n\033[1m%s\033[0m \033[2m(+%ss)\033[0m\n' "$*" "$took"
+  else
+    printf '\n\033[1m%s\033[0m\n' "$*"
+  fi
+}
 infra() { printf '\033[33mINFRA\033[0m %s\n' "$*" >&2; exit 2; }
 
 # ---------------------------------------------------------------- preflight
@@ -249,6 +264,7 @@ fi
 FAIL=0
 for flow in "${SELECTED[@]}"; do
   name=$(basename "$flow" .yml)
+  flow_started=$(date +%s)
   printf '\n\033[1m  ▸ %s\033[0m\n' "$name"
   reset_database
   # launchApp's own relaunch has been seen to no-op under the load of a screen
@@ -276,6 +292,8 @@ for flow in "${SELECTED[@]}"; do
   fi
 
   "$MAESTRO" test --device "$DEVICE" --env APP_ID="$APP_ID" "$flow" || FAIL=1
+  printf '\033[2m     %ss\033[0m\n' "$(( $(date +%s) - flow_started ))"
+  LAST=$(date +%s)
 
   if [ -n "$REC_PID" ]; then
     kill -INT "$REC_PID" 2>/dev/null
@@ -285,9 +303,10 @@ for flow in "${SELECTED[@]}"; do
   fi
 done
 
+TOTAL=$(( $(date +%s) - STARTED ))
 if [ "$FAIL" = 0 ]; then
-  printf '\n\033[32mE2E=PASS\033[0m  %s flow(s)\n' "${#SELECTED[@]}"
+  printf '\n\033[32mE2E=PASS\033[0m  %s flow(s) in %ss\n' "${#SELECTED[@]}" "$TOTAL"
 else
-  printf '\n\033[31mE2E=FAIL\033[0m  see %s\n' "$LOGS"
+  printf '\n\033[31mE2E=FAIL\033[0m  %s flow(s) in %ss - see %s\n' "${#SELECTED[@]}" "$TOTAL" "$LOGS"
 fi
 exit "$FAIL"

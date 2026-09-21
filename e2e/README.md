@@ -42,6 +42,23 @@ device id survives - which is correct (see the survival table in `CLAUDE.md`)
 and means one flow's unlocks are still the server's truth in the next one.
 Dropping the database is what makes each flow start as a stranger.
 
+## It is only slow when you are doing something else
+
+Every phase prints what it cost, and the suite prints a total, because the
+numbers are surprising. A clean run is around five minutes: most flows take
+20-40s and `f15-collection` takes about 50.
+
+That same suite took **twenty minutes** while a pytest run, a ruff pass and a
+docker command were sharing the machine - and `f15` alone went from 50s to 956.
+The simulator, Metro and the XCTest runner all lose badly under CPU contention,
+and they lose unevenly, so the result looks like one flow has become
+pathological rather than like the machine being busy.
+
+If a run looks inexplicably slow, the first question is what else is running.
+Start the suite and leave the machine alone; it is faster in wall-clock terms
+than working in parallel and then re-running it because the timings made no
+sense.
+
 ## The three layers
 
 | | Where | Runs in CI | Answers |

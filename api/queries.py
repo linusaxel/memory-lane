@@ -101,7 +101,13 @@ WITHIN = "ST_DWithin(p.coordinates, ST_MakePoint(:lng, :lat)::geography, :radius
 # ponytail: spans two tables, so no index can serve it and every search is a
 # sequential scan. The obvious OR fix does not work - measured. See
 # docs/10-decisions.md#search-is-a-sequential-scan-on-purpose.
-SEARCH_VECTOR = "to_tsvector('english', m.summary || ' ' || p.name)"
+# A stored column, not an expression. The expression it replaced spanned two
+# tables - m.summary with p.name - so no index could cover it and every search
+# was a sequential scan of the corpus. It holds exactly the same concatenation,
+# maintained by triggers on both tables, so search still matches queries whose
+# words straddle the summary and the place name. db/migrations/010 has the
+# reasoning and the cost.
+SEARCH_VECTOR = "m.search_vector"
 SEARCH_MATCH = f"{SEARCH_VECTOR} @@ plainto_tsquery('english', :query)"
 SEARCH_RANK = f"ts_rank({SEARCH_VECTOR}, plainto_tsquery('english', :query)) as rank"
 

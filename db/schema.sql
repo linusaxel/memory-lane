@@ -131,7 +131,15 @@ CREATE TABLE memories (
     -- Set when enough people report it. A column rather than a delete: a
     -- takedown that destroys the evidence makes the next dispute
     -- unanswerable. Every query that can emit a summary honours it.
-    hidden BOOLEAN NOT NULL DEFAULT FALSE
+    hidden BOOLEAN NOT NULL DEFAULT FALSE,
+
+    -- The searchable text of this memory AND the name of the place it is
+    -- filed at, stored rather than computed. An expression spanning two
+    -- tables cannot be indexed, so search was a sequential scan over the
+    -- whole corpus; splitting the predicate per table would have indexed it
+    -- and quietly stopped matching queries whose words straddle the two.
+    -- Maintained by triggers on both tables - see db/migrations/010.
+    search_vector tsvector
 );
 
 -- Who has earned what. No accounts: a device claims an opaque UUID it generated
@@ -191,6 +199,7 @@ CREATE TABLE reports (
 );
 
 CREATE INDEX idx_memories_place ON memories(place_id);
+CREATE INDEX idx_memories_search ON memories USING GIN (search_vector);
 CREATE INDEX idx_memories_user ON memories(user_id);
 -- MY_DEVICES runs on every /v1/unlocks and every /v1/me.
 CREATE INDEX idx_devices_user ON devices(user_id);
@@ -220,3 +229,51 @@ CREATE TRIGGER content_updated_at
     BEFORE UPDATE ON content
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at();
+
+-- Search. One definition of a memory's searchable text, used by the trigger
+-- that maintains it and by db/migrations/010's backfill. See that file for why
+-- this is a stored column rather than an expression index.
+CREATE OR REPLACE FUNCTION memory_search_vector(summary TEXT, place_name TEXT)
+RETURNS tsvector
+LANGUAGE sql
+IMMUTABLE
+AS $$
+    SELECT to_tsvector('english', summary || ' ' || COALESCE(place_name, ''))
+$$;
+
+CREATE OR REPLACE FUNCTION memories_refresh_search_vector()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.search_vector := memory_search_vector(
+        NEW.summary,
+        (SELECT name FROM places WHERE id = NEW.place_id)
+    );
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER memories_search_vector_trg
+    BEFORE INSERT OR UPDATE OF summary, place_id ON memories
+    FOR EACH ROW
+    EXECUTE FUNCTION memories_refresh_search_vector();
+
+-- Without this half, a renamed place answers to its old name for ever.
+CREATE OR REPLACE FUNCTION places_refresh_memory_search_vectors()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE memories
+    SET search_vector = memory_search_vector(summary, NEW.name)
+    WHERE place_id = NEW.id;
+    RETURN NULL;
+END;
+$$;
+
+CREATE TRIGGER places_search_vector_trg
+    AFTER UPDATE OF name ON places
+    FOR EACH ROW
+    WHEN (OLD.name IS DISTINCT FROM NEW.name)
+    EXECUTE FUNCTION places_refresh_memory_search_vectors();
