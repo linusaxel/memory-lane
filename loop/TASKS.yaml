@@ -1246,4 +1246,3 @@ inbox:
   - "place dedup is exact-string plus pipeline/dedup.py by review; near-duplicates across videos still make separate pins"
   - "the submission tag list and the extractor's tag list are different vocabularies: the app offers sport, the corpus stores sports, and 5 of 11 offered tags match zero memories. Needs a data migration plus a prompt change"
   - "api/test_api.sh is not run by the gate and was the only caller of three endpoints, which is how they went unnoticed as dead"
-  - "/v1/memories/search has no usable index: to_tsvector(m.summary || ' ' || p.name) spans two tables so NO expression index can serve it; needs the predicate split into an OR before indexing"

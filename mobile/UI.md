@@ -360,8 +360,12 @@ are not preferences:
 - **It files where you are.** One coordinate, straight from the GPS, used as
   both "where I am" and "where this goes". There is no map picker and there is
   not going to be one - a memory you can pin from your sofa is a pin, and the
-  whole product is the difference. With no position the sheet does not open; the
-  press asks for location instead.
+  whole product is the difference. Declining location keeps the sheet shut and
+  brings back the primer, which is the screen that explains why; location
+  allowed but no fix yet opens it and says "Waiting for your location", because
+  a button that does nothing for the three seconds a GPS takes is worse than
+  one that tells you what it is waiting for. `ready` requires a position either
+  way, so neither path can file from a sofa.
 - **Attachments upload while you type**, not on Post. A phone photo is 4 MB and
   the wait belongs in the part where somebody is composing. Post stays disabled
   while an upload is in flight, and a failed one shows as failed rather than
@@ -371,6 +375,27 @@ are not preferences:
   vocabulary, so a free-text field would silently eat what somebody typed.
   `tests/test_api_submit.py` holds the app's copy equal to the server's - this
   used to be a convention and the two had already drifted.
+
+Three things about the shape of it:
+
+- **The story leads.** "What happened?" is the first field. Somebody opens this
+  because something happened to them, not because they wanted to name a bench.
+- **The rule under the header is the progress.** It fills as the two required
+  fields land and turns seal when the thing can be posted - the same promise
+  the unlock ring makes, and it costs a line rather than adding one. Under it,
+  one hint, and only ever the next thing to do: "Say what happened here", then
+  "Name the place", then "Ready to file". A greyed-out Post that does not say
+  why is a dead end on the only screen that writes.
+- **Every chip answers being touched** - `selectionAsync` and a spring, skipped
+  on mount so the sheet does not flinch as it opens. The tick is the map's
+  selection one, not the unlock's: this is picking, not earning, and it must
+  not borrow that weight.
+
+Anything the sheet offers has to be something Post can honour. Choosing
+"Nobody until" and leaving the year blank used to file a memory anybody
+standing there could read - the person said who may read it and was quietly
+overruled - so the seal is computed once, by `sealOpensAt`, and both the draft
+and the button read that one answer.
 
 A submission comes back already unlocked and its sheet opens over the map. The
 modal closing is not a confirmation, and it is also the first sight of what a

@@ -4,6 +4,9 @@ The list endpoints never pass a position to `row_to_memory`: walking into range
 must *offer* the unlock, not perform it, or there is no moment to press.
 """
 
+import os
+import time
+
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import text
 
@@ -289,6 +292,30 @@ def get_unlocks(
     )
 
 
+# How long an answer to /v1/stats is allowed to be old.
+#
+# That endpoint is four unbounded counts and a DBSCAN over every placed memory
+# in the corpus - ST_ClusterDBSCAN(...) OVER () is one partition, so there is
+# no index to help and no filter to shrink it. It also happens to be the
+# endpoint every phone calls when the map comes back empty, which is most of
+# the planet, so the cheapest way to make the corpus look big is to stand
+# somewhere it is not.
+#
+# None of its answers change between pipeline runs. Caching them is not a
+# micro-optimisation, it is the difference between a query whose cost grows
+# with the corpus running once per request and running once per window.
+STATS_TTL_SECONDS = int(os.getenv("STATS_TTL_SECONDS", "300"))
+
+#: {hotspot count: (monotonic seconds, answer)}. Keyed because the count is a
+#: query parameter, and small because it is bounded at 21 values.
+_stats_cache: dict[int, tuple[float, Stats]] = {}
+
+
+def reset_stats_cache() -> None:
+    """Tests share a process and would otherwise read each other's answers."""
+    _stats_cache.clear()
+
+
 @router.get("/v1/stats", response_model=Stats)
 def get_stats(
     hotspots: int = Query(5, ge=0, le=20, description="How many of the busiest areas to name"),
@@ -298,7 +325,14 @@ def get_stats(
     The second part is not a statistic, it is the answer to an empty map. The
     corpus is one comedy podcast's touring history, so it is New York and then a
     long tail - and somebody opening this in Copenhagen sees nothing at all.
+
+    Served from a short-lived cache; see STATS_TTL_SECONDS for why.
     """
+    now = time.monotonic()
+    cached = _stats_cache.get(hotspots)
+    if cached is not None and now - cached[0] < STATS_TTL_SECONDS:
+        return cached[1]
+
     with get_session() as session:
         memories_count = session.execute(text("SELECT COUNT(*) FROM memories")).scalar()
         places_count = session.execute(
@@ -313,7 +347,7 @@ def get_stats(
             else []
         )
 
-    return Stats(
+    stats = Stats(
         memories=memories_count,
         unlock_radius_meters=UNLOCK_RADIUS_METERS,
         places_with_coordinates=places_count,
@@ -326,3 +360,8 @@ def get_stats(
             if r.label
         ],
     )
+    # Last write wins. Two threads can compute this at once and the loser has
+    # simply done some work twice, which is cheaper than holding a lock across
+    # a query this long.
+    _stats_cache[hotspots] = (now, stats)
+    return stats

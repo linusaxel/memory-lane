@@ -58,16 +58,42 @@ the fix and needs more than accounts. Logged in `TODO.md`.
 
 ## Queries
 
-### Search is a sequential scan, on purpose
+### Search is a stored vector, so it can use an index
 
-`SEARCH_VECTOR` spans two tables (`m.summary || ' ' || p.name`), so no expression
-index can serve it.
+It was a sequential scan on purpose for a long time, and the reasoning was
+sound: `SEARCH_VECTOR` spanned two tables (`m.summary || ' ' || p.name`), and
+no expression index can serve an expression like that. Splitting it into
+`to_tsvector(m.summary) @@ q OR to_tsvector(p.name) @@ q` indexes cleanly and
+silently changes what search *means* — a query whose words straddle the two
+fields ("cellar heckler", where the Comedy Cellar is the place and the heckler
+is in the summary) matches the joined vector and neither half of the OR.
+`tests/test_api_search.py` pins that behaviour and says so.
 
-Splitting it into `to_tsvector(m.summary) @@ q OR to_tsvector(p.name) @@ q` looks
-like the fix and is not: an OR across two tables still cannot use either index,
-because a row can qualify from the other side. Measured against the live
-database — the planner keeps scanning. The two designs that would work are in
-`TODO.md`; both cost more than a 224-memory corpus is worth.
+So the concatenation is materialised rather than recomputed: the same text, on
+the row, GIN-indexed, kept true by triggers on both tables
+(`db/migrations/010`). Search means exactly what it meant before, and the plan
+uses `idx_memories_search`.
+
+The cost is a trigger on each side. The one that is easy to forget is the
+second: a place rename has to rewrite the vector of every memory filed there,
+or a renamed place answers to its old name for ever — which is worse than the
+scan was. Renames come from `pipeline/dedup.py` in reviewed batches, so that
+is a handful of rows at a time.
+
+### `/v1/stats` is cached for five minutes
+
+Four unbounded counts and `ST_ClusterDBSCAN(...) OVER ()` — one partition, so
+no index helps and no filter shrinks it — over every placed memory in the
+corpus. It is also the endpoint every phone calls when the map comes back
+empty, which is the normal experience anywhere the corpus does not reach. The
+cheapest way to make the server work hardest is to stand somewhere it has
+nothing.
+
+None of its answers change between pipeline runs, so they are held for
+`STATS_TTL_SECONDS`. In-process and per hotspot count, because the count is a
+query parameter. Two threads can compute it at once and the loser has simply
+done the work twice, which is cheaper than holding a lock across a query that
+long. Tests share a process, so `api_client` clears it.
 
 ### `NULLS LAST` in `CONTRAST_ORDER` is load-bearing
 
@@ -116,6 +142,25 @@ the next dispute unanswerable. There is no appeal, no reinstatement and no queue
 for a human — that is the ceiling, and it is fine until there is a moderator.
 
 ---
+
+### A quota checked before the write is not a quota
+
+Both allowances — twenty submissions and 64MB of uploads a day — read a count
+in one transaction and wrote in another. Anybody can win that race by not
+waiting: fire twenty requests at once, all twenty read the same count, all
+twenty are allowed. That defeats the control exactly when it matters, because
+the only person it exists to stop is the one doing it deliberately.
+
+The cheap check stays, because it is what refuses the ordinary case without
+taking a lock at all. The write transaction then asks again under a lock: the
+user row for submissions, and for uploads the device row that `touch_device`
+was already locking with its `ON CONFLICT DO UPDATE` — the serialisation was
+there, the count was simply on the wrong side of it.
+
+Uploads have a second half. The bytes are on the disk before the authoritative
+check can run, so every way out of that block deletes them, a failed insert
+included. Orphans there are invisible: referenced by no row, returned by no
+query, costing disk for ever.
 
 ## Identity
 
@@ -236,6 +281,38 @@ transient, and over-processing one chunk is the cheaper mistake.
 ---
 
 ## Serving
+
+### The pool is sized to the server, and the server to the pool
+
+FastAPI runs a `def` handler on anyio's thread pool — forty threads by default,
+and every endpoint here but one is a `def` — while SQLAlchemy was left on its
+own defaults of five connections plus ten overflow. Twenty-five of those
+threads could be parked on a pool that cannot grow, each holding an OS thread
+in order to wait.
+
+The pool is sized explicitly now, and a lifespan hook narrows the thread pool
+to the same ceiling, so the queueing happens before a thread is taken rather
+than after. One number, `MAX_CONCURRENCY`, so they cannot drift apart.
+
+The wait for a connection is five seconds, not thirty. The app gives up on any
+request after eight (`REQUEST_TIMEOUT_MS`), so a connection handed over at
+thirty seconds is handed to nobody — it just holds the slot for a client that
+has gone. `tests/test_db_pool.py` keeps the two in that order.
+
+### The server has one clock, and it is UTC
+
+`not_yet_open` asked Python for today's date, which is the host's local one.
+`ANNIVERSARY` asked the database for `CURRENT_DATE`, which is the cluster's. A
+CEST laptop against a UTC container disagreed for two hours every night — and
+those two rules decide whether a memory is shut and whether it is "on this
+day", so for two hours a night the app could hold both opinions at once. It is
+also how two tests that had passed for weeks failed at 00:04 with nothing
+changed but the clock.
+
+Both are UTC, and the SQL says so explicitly rather than inheriting whatever
+the cluster is set to. Neither machine's local time meant anything to the
+person holding the phone anyway — a viewer's own date is the honest answer to
+"on this day", and getting it right would mean the client sending its date.
 
 ### The card is rendered on the server
 

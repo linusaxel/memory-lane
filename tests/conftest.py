@@ -177,4 +177,11 @@ def api_client(db_session, monkeypatch, tmp_path):
     assert patched, "no api module exposes get_session - did the import path move?"
 
     monkeypatch.setattr(api.media, "MEDIA_DIR", tmp_path)
+
+    # /v1/stats answers from a process-wide cache, and these tests share a
+    # process - without this one test reads the corpus another one seeded.
+    import api.read
+
+    api.read.reset_stats_cache()
+
     return TestClient(api.main.app)
