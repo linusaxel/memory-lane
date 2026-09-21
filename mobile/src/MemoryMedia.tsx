@@ -63,11 +63,22 @@ function Recording({ item }: { item: MediaItem }) {
 }
 
 export default function MemoryMedia({ media }: { media: MediaItem[] }) {
+  // Above the early return, and it has to stay there. React counts hooks per
+  // render, so a `useState` reached only when there is media makes this
+  // component call one hook on some renders and none on others - and the
+  // second one throws "rendered more hooks than during the previous render"
+  // and takes the sheet down with it.
+  //
+  // It is reachable, not theoretical. The sheet pages through every memory at
+  // one point without remounting, two submissions filed ten metres apart
+  // group onto one pin, and only one of them need carry a photograph: page
+  // from it to the other and the count changes underneath the same instance.
+  const [failed, setFailed] = useState<MediaItem['id'][]>([]);
+
   if (media.length === 0) return null;
 
   const photos = media.filter((item) => item.kind === 'photo');
   const sounds = media.filter((item) => item.kind === 'audio');
-  const [failed, setFailed] = useState<MediaItem['id'][]>([]);
 
   return (
     <View style={styles.wrap}>

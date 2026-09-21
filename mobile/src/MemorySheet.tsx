@@ -154,6 +154,17 @@ export default function MemorySheet({
     }).start();
   }, [memory, reveal]);
 
+  /** Knowing a photograph is waiting is the pull. Handing it over would be the
+   *  leak, so only the count travels. */
+  const waiting =
+    memory && memory.media_count > 0 ? (
+      <Text style={styles.waiting}>
+        {memory.media_count === 1
+          ? '1 attachment waiting'
+          : `${memory.media_count} attachments waiting`}
+      </Text>
+    ) : null;
+
   const revealed = {
     opacity: reveal,
     transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
@@ -225,6 +236,13 @@ export default function MemorySheet({
                   <Text style={styles.gateNote}>
                     {unlockError ?? 'You are standing close enough to open this one.'}
                   </Text>
+                  {/* The pull belongs here most of all. It was shown only to
+                      people too far away to act on it, and withheld from the
+                      one person who is about to hold the ring - so the second
+                      before the hold, which is the whole of the suspense, said
+                      less than the minute before the walk. Still only the
+                      count: handing the photograph over is the leak. */}
+                  {waiting}
                 </>
               ) : (
                 <>
@@ -239,15 +257,7 @@ export default function MemorySheet({
                       ? 'Turn on location to unlock memories by standing near them.'
                       : `Get within ${Math.round(radius)} m and you can open it.`}
                   </Text>
-                  {/* Knowing a photograph is waiting is the pull. Handing it
-                      over would be the leak, so only the count travels. */}
-                  {memory.media_count > 0 && (
-                    <Text style={styles.waiting}>
-                      {memory.media_count === 1
-                        ? '1 attachment waiting'
-                        : `${memory.media_count} attachments waiting`}
-                    </Text>
-                  )}
+                  {waiting}
                   {/* Knowing it is 412m away and having no idea which way is
                       most of a dead end. The distance is the ask; this is the
                       answer. */}

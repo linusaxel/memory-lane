@@ -62,7 +62,7 @@ import {
   type LocatedMemory,
   type MediaItem,
 } from './api.ts';
-import { duration } from './format.ts';
+import { duration, sealOpensAt } from './format.ts';
 import { color, dim, font, input, label } from './theme.ts';
 
 /** Matches the server's own floor. Ten characters is not a quality bar, it is a
@@ -151,7 +151,13 @@ export default function Submit({
   const uploading = attachments.some((a) => !a.item && !a.failed);
   const named = placeName.trim().length > 0;
   const told = summary.trim().length >= MIN_SUMMARY;
-  const ready = !!position && !!device && named && told && !uploading && !posting;
+  // The one answer, used by the button and by the draft, so they cannot
+  // disagree about whether this memory is sealed - which is how "Nobody until"
+  // with an empty year used to post something anybody could read.
+  const opensAt = seal === 'later' ? sealOpensAt(sealYear) : null;
+  const willSeal = seal !== 'later' || opensAt !== null;
+  const ready =
+    !!position && !!device && named && told && willSeal && !uploading && !posting;
 
   /** One line, and only ever the next thing to do. A list of everything
    *  outstanding is a list somebody has to read; this is an instruction. */
@@ -160,7 +166,9 @@ export default function Submit({
     : !told
       ? 'Say what happened here'
       : !named
-        ? 'Name the place'
+      ? 'Name the place'
+      : !willSeal
+        ? 'A seal needs a year still to come'
         : uploading
           ? 'Finishing an upload'
           : posting
@@ -290,8 +298,7 @@ export default function Submit({
       // year, and asking somebody to pick a day for 2041 is a picker nobody
       // needs. A year already past is simply not a seal - the server treats a
       // date that has come as no date at all.
-      opens_at:
-        seal === 'later' && /^\d{4}$/.test(sealYear.trim()) ? `${sealYear.trim()}-01-01` : null,
+      opens_at: opensAt,
       media_ids: attachments.flatMap((a) => (a.item ? [a.item.id] : [])),
       display_name: displayName.trim() || null,
     };
