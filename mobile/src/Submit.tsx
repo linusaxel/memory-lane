@@ -23,6 +23,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -141,13 +142,38 @@ export default function Submit({
   const photos = attachments.filter((a) => a.kind === 'photo');
   const sound = attachments.find((a) => a.kind === 'audio');
   const uploading = attachments.some((a) => !a.item && !a.failed);
-  const ready =
-    !!position &&
-    !!device &&
-    placeName.trim().length > 0 &&
-    summary.trim().length >= MIN_SUMMARY &&
-    !uploading &&
-    !posting;
+  const named = placeName.trim().length > 0;
+  const told = summary.trim().length >= MIN_SUMMARY;
+  const ready = !!position && !!device && named && told && !uploading && !posting;
+
+  /** One line, and only ever the next thing to do. A list of everything
+   *  outstanding is a list somebody has to read; this is an instruction. */
+  const hint = !position
+    ? 'Waiting for your location'
+    : !told
+      ? 'Say what happened here'
+      : !named
+        ? 'Name the place'
+        : uploading
+          ? 'Finishing an upload'
+          : posting
+            ? 'Filing it…'
+            : 'Ready to file';
+
+  const progress = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(progress, {
+      toValue: (told ? 0.5 : 0) + (named ? 0.5 : 0),
+      speed: 12,
+      bounciness: 6,
+      useNativeDriver: true,
+    }).start();
+  }, [named, told, progress]);
+
+  // scaleX and not width: width cannot go on the native driver, and this sits
+  // directly above a text field, which is the worst place in the app to hand
+  // work back to the JS thread.
+  const filling = { transform: [{ scaleX: progress }] };
 
   /** Adds the attachment optimistically, then swaps in the server's copy. The
    *  uri is the identity throughout - ids do not exist yet at insert time. */
@@ -298,6 +324,17 @@ export default function Submit({
           </Pressable>
         </View>
 
+        {/* The rule under the header, doing a second job rather than gaining a
+            neighbour: it fills as the two required fields land and turns seal
+            when the thing can be posted. Same promise the unlock ring makes,
+            and it costs a line rather than adding one. */}
+        <View style={styles.track}>
+          <Animated.View style={[styles.fill, ready && styles.fillReady, filling]} />
+        </View>
+        {/* What is still missing, said once, close enough to the greyed-out
+            Post to be read as the reason for it. */}
+        <Text style={[styles.hint, ready && styles.hintReady]}>{hint}</Text>
+
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           {/* Not decoration. It is the one thing that makes this different from
               posting anywhere else, and it has to be visible while typing. */}
@@ -313,18 +350,6 @@ export default function Submit({
               it.
             </Text>
           </View>
-
-          <Field label="What is this place called?">
-            <TextInput
-              style={styles.input}
-              value={placeName}
-              onChangeText={setPlaceName}
-              placeholder="The bench by the harbour"
-              placeholderTextColor={color.inkFaint}
-              maxLength={200}
-              returnKeyType="next"
-            />
-          </Field>
 
           <Field label="What happened?">
             <TextInput
@@ -342,6 +367,18 @@ export default function Submit({
                 ? `${MIN_SUMMARY - summary.trim().length} more characters`
                 : `${summary.length} / 2000`}
             </Text>
+          </Field>
+
+          <Field label="What is this place called?">
+            <TextInput
+              style={styles.input}
+              value={placeName}
+              onChangeText={setPlaceName}
+              placeholder="The bench by the harbour"
+              placeholderTextColor={color.inkFaint}
+              maxLength={200}
+              returnKeyType="next"
+            />
           </Field>
 
           <Field label="When">
@@ -493,22 +530,54 @@ function Field({ label: name, children }: { label: string; children: React.React
   );
 }
 
+/** A chip that answers being touched.
+ *
+ *  Twenty-odd of these carry every choice on this screen except the two text
+ *  fields, and a control that only changes colour reads as a label somebody
+ *  recoloured. The tick is `selectionAsync`, the same one the map uses when a
+ *  pin opens: this is picking, not confirming, and it must not borrow the
+ *  weight of the unlock. */
 function Chip({ label: text, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  const pop = useRef(new Animated.Value(1)).current;
+  const first = useRef(true);
+
+  useEffect(() => {
+    // Not on mount, or every chip on the screen flinches when the sheet opens.
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    pop.setValue(on ? 0.88 : 1.06);
+    Animated.spring(pop, { toValue: 1, speed: 20, bounciness: 12, useNativeDriver: true }).start();
+  }, [on, pop]);
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        Haptics.selectionAsync().catch(() => {});
+        onPress();
+      }}
       accessibilityRole="button"
       accessibilityState={{ selected: on }}
-      style={dim([styles.chip, on && styles.chipOn])}
+      style={dim()}
     >
-      <Text style={[styles.chipText, on && styles.chipTextOn]}>{text}</Text>
+      <Animated.View style={[styles.chip, on && styles.chipOn, { transform: [{ scale: pop }] }]}>
+        <Text style={[styles.chipText, on && styles.chipTextOn]}>{text}</Text>
+      </Animated.View>
     </Pressable>
   );
 }
 
 function Secondary({ label: text, onPress }: { label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={dim(styles.secondary)}>
+    <Pressable
+      onPress={() => {
+        Haptics.selectionAsync().catch(() => {});
+        onPress();
+      }}
+      accessibilityRole="button"
+      style={dim(styles.secondary)}
+    >
       <Text style={styles.secondaryText}>{text}</Text>
     </Pressable>
   );
@@ -525,13 +594,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: color.rule,
   },
   barTitle: { fontFamily: font.displaySemi, fontSize: 17, color: color.ink },
   barAction: { ...label, color: color.inkFaint },
   post: { color: color.seal },
   disabled: { opacity: 0.35 },
+
+  // Full bleed, because it replaces the header's bottom rule rather than
+  // sitting under it.
+  track: { height: 2, backgroundColor: color.rule, overflow: 'hidden' },
+  fill: {
+    height: 2,
+    backgroundColor: color.inkFaint,
+    // Grows from the left rather than from the middle, which is what scaleX
+    // does by default and reads as a bar sliding open.
+    transformOrigin: 'left',
+  },
+  fillReady: { backgroundColor: color.seal },
+  hint: { ...label, fontSize: 9, color: color.inkFaint, paddingHorizontal: 20, paddingTop: 12 },
+  hintReady: { color: color.seal },
   body: { padding: 20, paddingBottom: 56, gap: 26 },
 
   here: {

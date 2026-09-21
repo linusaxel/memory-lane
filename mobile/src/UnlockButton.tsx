@@ -1,4 +1,27 @@
-/** The one playful control in the app. See "The unlock control" in UI.md. */
+/** The one playful control in the app. See "The unlock control" in UI.md.
+ *
+ * The hold is the only suspense the product has, so it is built as one: a
+ * press that is answered instantly, a rise that is honest about how far along
+ * it is, and a last quarter that visibly and audibly strains before it gives.
+ *
+ * Two things are deliberate and easy to undo by accident.
+ *
+ * **The fill is linear.** A progress indicator that eases is a progress
+ * indicator that lies, and this one is a promise about when you may let go.
+ * Everything that builds - the haptic tempo, the strain ring, the padlock
+ * swelling - is layered *over* a truthful bar rather than baked into it.
+ *
+ * **The lock is allowed to finish opening.** The shackle springs out of the
+ * body on its own pivot, and the request is held back the ~240ms that takes.
+ * That is a deliberate delay and the only one in the app: the haptic and the
+ * flare have already fired, so nothing reads as slow, and a success that
+ * arrives sooner would swap the sheet out from under the one animation the
+ * product exists to show. Against a local API the round trip is ~20ms, so
+ * without the wait the lock never visibly opens at all.
+ *
+ * The payoff proper is still not here: it is the wax stamp coming down in
+ * MemorySheet, which this hands off to.
+ */
 
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -18,6 +41,28 @@ import { color, font, label } from './theme.ts';
 /** Long enough to feel like a lock turning, short enough not to be a chore. */
 const HOLD_MS = 900;
 
+/** How long the shackle is given to clear the body before the request goes
+ *  out and the sheet is allowed to swap. Roughly where the spring has settled;
+ *  longer is noticeable, shorter and the lock is cut off mid-swing. */
+const SNAP_MS = 240;
+
+/** Ticks under the thumb while the ring fills, because 900ms of silence is a
+ *  long time to wonder whether a control is working.
+ *
+ *  The gaps close - 340, 250, 190, 110 - and the taps sharpen, so the hold
+ *  accelerates in the hand while the ring rises steadily in the eye. That
+ *  mismatch is the whole trick: anticipation comes from the tempo, and the
+ *  ring stays honest about how much longer you have to wait. */
+const TICKS: { at: number; style: Haptics.ImpactFeedbackStyle }[] = [
+  { at: 340, style: Haptics.ImpactFeedbackStyle.Soft },
+  { at: 590, style: Haptics.ImpactFeedbackStyle.Light },
+  { at: 780, style: Haptics.ImpactFeedbackStyle.Rigid },
+];
+
+/** Where the ring starts straining. Matches the last tick, so the thing you
+ *  feel and the thing you see arrive together. */
+const STRAIN_FROM = TICKS[2].at / HOLD_MS;
+
 type Props = {
   onUnlock: () => void;
   busy?: boolean;
@@ -25,7 +70,10 @@ type Props = {
 
 export default function UnlockButton({ onUnlock, busy = false }: Props) {
   const fill = useRef(new Animated.Value(0)).current;
+  const burst = useRef(new Animated.Value(0)).current;
+  const sprung = useRef(new Animated.Value(0)).current;
   const holding = useRef(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [assistive, setAssistive] = useState(false);
 
   useEffect(() => {
@@ -34,10 +82,38 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
     return () => sub.remove();
   }, []);
 
+  const clearTicks = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
+
+  useEffect(() => clearTicks, []);
+
+  // A refusal leaves this mounted with a full ring, which reads as "it worked"
+  // next to an error saying it did not. Success unmounts us instead - the
+  // sheet swaps to its open composition - so busy falling is always a no.
+  const wasBusy = useRef(false);
+  useEffect(() => {
+    if (wasBusy.current && !busy) {
+      burst.setValue(0);
+      sprung.setValue(0);
+      Animated.spring(fill, { toValue: 0, speed: 14, useNativeDriver: true }).start();
+    }
+    wasBusy.current = busy;
+  }, [busy, fill, burst, sprung]);
+
   const start = () => {
     if (busy) return;
     holding.current = true;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+
+    clearTicks();
+    timers.current = TICKS.map(({ at, style }) =>
+      setTimeout(() => {
+        if (holding.current) Haptics.impactAsync(style).catch(() => {});
+      }, at),
+    );
+
     Animated.timing(fill, {
       toValue: 1,
       duration: HOLD_MS,
@@ -46,17 +122,72 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
     }).start(({ finished }) => {
       if (!finished || !holding.current) return;
       holding.current = false;
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      onUnlock();
+      clearTicks();
+      // Success, not another impact: a three-part pattern is the one signature
+      // in the app that means a thing was earned, and nothing else uses it.
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      Animated.parallel([
+        Animated.timing(burst, {
+          toValue: 1,
+          duration: 420,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        // Tension and friction rather than a duration: a shackle is a sprung
+        // piece of steel, and it should overshoot and settle rather than
+        // arrive. High tension, low friction - metal, not rubber.
+        Animated.spring(sprung, {
+          toValue: 1,
+          tension: 170,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      timers.current.push(setTimeout(onUnlock, SNAP_MS));
     });
   };
 
   const cancel = () => {
     if (!holding.current) return;
     holding.current = false;
+    clearTicks();
     // Springs back where it was, visibly. Letting go early has to read as "you
     // let go", not as "it refused you" - and no haptic, which would reward it.
     Animated.spring(fill, { toValue: 0, speed: 14, useNativeDriver: true }).start();
+  };
+
+  // Everything below is transform and opacity only, because those are the two
+  // things useNativeDriver can carry. A colour that animates would put this
+  // whole control back on the JS thread for the 900ms it most needs to be
+  // smooth.
+  const rising = { transform: [{ scale: fill.interpolate(RISE) }] };
+
+  const straining = {
+    opacity: fill.interpolate(STRAIN),
+    transform: [{ scale: fill.interpolate(STRAIN_SCALE) }],
+  };
+
+  const flare = {
+    opacity: burst.interpolate({ inputRange: [0, 1], outputRange: [0.55, 0] }),
+    transform: [{ scale: burst.interpolate({ inputRange: [0, 1], outputRange: [1, 1.75] }) }],
+  };
+
+  // The body swells as it is worked, then recoils once as the shackle leaves
+  // it. Out and back, because a body that stays tilted reads as broken.
+  const working = {
+    transform: [
+      { scale: Animated.add(fill.interpolate(SWELL), burst.interpolate(GIVE)) },
+      { rotate: sprung.interpolate(RECOIL) },
+    ],
+  };
+
+  // Up and out, hinged on the leg that stays in the body. Both happen at once
+  // and the rotation is what makes it a lock rather than a lid.
+  const shackle = {
+    transform: [
+      { translateY: sprung.interpolate({ inputRange: [0, 1], outputRange: [0, -7] }) },
+      { rotate: sprung.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '38deg'] }) },
+    ],
   };
 
   return (
@@ -74,12 +205,20 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
         // A "tap to unlock" accessibility setting is the next rung if asked for.
         onPress={assistive ? onUnlock : undefined}
       >
+        {/* Outside the clipped ring, or it would be trimmed to nothing. */}
+        <Animated.View pointerEvents="none" style={[styles.flare, flare]} />
+
         <View style={styles.ring}>
-          <Animated.View style={[styles.fill, { transform: [{ scale: fill }] }]} />
+          <Animated.View style={[styles.fill, rising]} />
+          {/* The last quarter. An inner ring brightening and closing in is the
+              lock about to turn, and it arrives with the third haptic. */}
+          <Animated.View pointerEvents="none" style={[styles.strain, straining]} />
           {/* The same padlock the map pins use, so the ring reads as the thing
               that opens them rather than as a record button. Amber-700 stays
               readable on both the white rest state and the filled one. */}
-          <Padlock size={27} color={color.sealDeep} />
+          <Animated.View style={working}>
+            <Padlock size={27} color={color.sealDeep} shackleStyle={shackle} />
+          </Animated.View>
         </View>
       </Pressable>
       <Text style={styles.caption}>{busy ? 'Unlocking…' : 'Hold to unlock'}</Text>
@@ -88,6 +227,15 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
 }
 
 const RING = 84;
+
+/** Not from zero: the press has to be answered in the same frame it happens,
+ *  and a disc growing from nothing reads as lag. */
+const RISE = { inputRange: [0, 1], outputRange: [0.14, 1] };
+const STRAIN = { inputRange: [0, STRAIN_FROM, 1], outputRange: [0, 0, 1] };
+const STRAIN_SCALE = { inputRange: [0, STRAIN_FROM, 1], outputRange: [1, 1, 0.9] };
+const SWELL = { inputRange: [0, 1], outputRange: [1, 1.12] };
+const RECOIL = { inputRange: [0, 0.4, 1], outputRange: ['0deg', '3deg', '0deg'] };
+const GIVE = { inputRange: [0, 0.35, 1], outputRange: [0, 0.22, 0] };
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: 12, paddingVertical: 8 },
@@ -111,6 +259,26 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: RING / 2,
     backgroundColor: color.sealSoft,
+  },
+  strain: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    right: 4,
+    bottom: 4,
+    borderRadius: RING / 2,
+    borderWidth: 2,
+    borderColor: color.seal,
+  },
+  flare: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: RING,
+    height: RING,
+    borderRadius: RING / 2,
+    borderWidth: 3,
+    borderColor: color.seal,
   },
   caption: { ...label },
 });

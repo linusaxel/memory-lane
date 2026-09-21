@@ -151,7 +151,14 @@ echo "     seeded $DB"
 
 # ---------------------------------------------------------------- api
 
+# Free the port first, exactly as the Metro step does. Skipping this is not a
+# tidy-up detail: an API left behind by --keep goes on answering on :8090 with
+# ITS database, the health check below is satisfied by the impostor, and the
+# run seeds a fresh database that nothing ever reads. The symptom is an app
+# that looks broken - a memory 300m away rendering as already collected -
+# which costs an afternoon before anybody suspects the port.
 say "2/5  api on :$API_PORT"
+kill_port "$API_PORT"
 DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" \
   venv/bin/python -m uvicorn api.main:app --port "$API_PORT" > "$LOGS/api.log" 2>&1 &
 API_PID=$!
@@ -249,6 +256,16 @@ for flow in "${SELECTED[@]}"; do
   # and failing on its first assertion. Killing it first makes every flow a
   # cold start.
   xcrun simctl terminate "$DEVICE" "$APP_ID" >/dev/null 2>&1
+
+  # And clearing its storage by hand, because `launchApp: clearState: true`
+  # does not reliably take AsyncStorage with it. Caught by f7: the collection
+  # from an earlier flow survived, so a memory that should have been a padlock
+  # 300m away rendered as one already in the collection, and the flow failed
+  # describing a bug that was not there. The keychain is deliberately left
+  # alone - a device id survives cleared app data on a real phone too, and the
+  # fresh database makes it a stranger anyway.
+  DATA=$(xcrun simctl get_app_container "$DEVICE" "$APP_ID" data 2>/dev/null)
+  [ -n "$DATA" ] && rm -rf "$DATA/Library/Application Support/$APP_ID/RCTAsyncLocalStorage_V1"
 
   if [ "$RECORD" = 1 ]; then
     rm -f "$OUT/$name.mp4"

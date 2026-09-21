@@ -668,13 +668,36 @@ budget. Spec, so it does not get re-invented per screen:
 - **A ring fills around the button** over the hold, driven by
   `Animated.timing` with `useNativeDriver`. Releasing early springs it back —
   visibly, so the person understands they let go rather than that it failed.
-- **Haptics carry the feel**: `ImpactFeedbackStyle.Light` on press-in, a
-  `Medium` at completion. Never on release-cancel, which would read as a
-  reward for failing. One more `Light` fires in `App.tsx` the moment the
-  reachable set goes empty to non-empty — walking into range is the moment the
-  app is for, and it used to happen in silence. The transition, not the state:
+- **The fill is linear, and stays linear.** It is a promise about when you may
+  let go, and an eased progress bar is a progress bar that lies. Everything
+  that builds is layered over it rather than baked into it, which is the only
+  way to have both suspense and an honest instrument.
+- **Haptics carry the feel, and they accelerate.** `Light` on press-in, then
+  `Soft` at 340ms, `Light` at 590ms and `Rigid` at 780ms — gaps closing, taps
+  sharpening — and `notificationAsync(Success)` at the end. 900ms of silence
+  is a long time to wonder whether a control is working, and the closing
+  tempo is where the anticipation comes from while the ring stays truthful.
+  `Success` is reserved: it is the one pattern in the app that means a thing
+  was earned. Never on release-cancel, which would read as a reward for
+  failing. One more `Light` fires in `App.tsx` the moment the reachable set
+  goes empty to non-empty — walking into range is the moment the app is for,
+  and it used to happen in silence. The transition, not the state:
   `withinReach` gets a new array identity every 25 m, so the effect keys on a
   boolean and a ref, not on the array or its length.
+- **The last quarter strains.** An inner ring fades up and closes in from 78%,
+  arriving with the third tick, and the padlock swells as it is worked. Both
+  are interpolations of the same value the fill uses, so they cost one
+  animation and cannot drift out of sync with it.
+- **The burst plays over the request, not after it.** A completed hold fires
+  the unlock and the flare in the same frame, so the round trip happens behind
+  something worth watching. The payoff proper is not here — it is the wax
+  stamp coming down in `MemorySheet`, and this hands off to it.
+- **Transform and opacity only.** Those are what `useNativeDriver` can carry;
+  an animated colour puts the whole control back on the JS thread for the
+  900ms it most needs to be smooth.
+- **A refusal resets the ring.** Success unmounts the control — the sheet
+  swaps to its open composition — so `busy` falling back to false is always a
+  no, and a ring left full beside an error reads as "it worked".
 - **Locked and unlockable look different on the map**, not just in the sheet.
   If you have to open a pin to learn you cannot read it, the map is not doing
   its job.

@@ -81,7 +81,12 @@ Four things that cost an afternoon each to discover.
 3. **iOS location permission takes `always`/`inuse`/`never`/`unset`, not
    `allow`.** `inuse` is also the only honest value - the app is
    foreground-only and `app.json` blocks background location.
-4. **Always `setLocation` before `launchApp`.** A simulator with no fix at all
+4. **`clearState: true` does not clear AsyncStorage.** It is not enough on
+   its own, so `e2e/run.sh` deletes `RCTAsyncLocalStorage_V1` before every
+   flow. Without that, one flow's collection survives into the next and a
+   padlock 300m away renders as a memory already earned - a failure that
+   reads exactly like an app bug and is not one.
+5. **Always `setLocation` before `launchApp`.** A simulator with no fix at all
    makes `getCurrentPositionAsync` hang, and the app correctly sits on "Turn on
    location" forever, which looks like a bug in your flow.
 
