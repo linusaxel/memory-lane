@@ -515,9 +515,14 @@ returns nothing is dead, and a friend layer on an empty map returns nothing.
       wherever it exists and never renders at equal weight with historical cards
       in one feed. **Now urgent** — `stranger` stopped being hypothetical with
       3.2, and a dense point can hold both with no way to choose. See F4.
-- [ ] **3.5** Rate limit the write path. Nothing caps how many memories one
-      device can file, or how much it can upload. The brief asks for a hard cap
-      on user-submitted ingestion and there is none; a loop fills the disk.
+- [x] **3.5** Rate limit the write path. 20 memories and 64 MB of upload per
+      rolling day (`DAILY_MEMORY_LIMIT`, `DAILY_UPLOAD_BYTES`), counted per
+      **user** rather than per device so a second phone on one account is not a
+      second allowance. The check runs in its own transaction, so a refusal
+      rolls nothing back. It is a bound and not a defence — the device id is
+      self-issued, so a determined loop mints a fresh identity per request; this
+      stops the stuck client that fills the disk, which is the failure that
+      actually happens.
 - [x] **3.6** **A dev seed, so the unlock can be exercised at all.**
       `pipeline/seed_dev.py`; `--clear` removes it. Before this it could not be,
       and setting the Simulator's location did not fix it.

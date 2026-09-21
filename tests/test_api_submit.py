@@ -412,6 +412,56 @@ def test_reporting_something_that_does_not_exist_is_a_404(client):
     assert client.post("/v1/memories/424242/report", json={"device": device()}).status_code == 404
 
 
+# -- the cap ------------------------------------------------------------------
+
+
+def test_one_person_cannot_file_forever(client, monkeypatch):
+    """A loop with a device id is the failure this cap exists for."""
+    monkeypatch.setattr(write, "DAILY_MEMORIES", 2)
+    dev = device()
+    submit(client, device=dev)
+    submit(client, device=dev)
+
+    refused = client.post("/v1/memories", json=submission(device=dev))
+    assert refused.status_code == 429
+    # Refused before anything was written: no orphan place row for a memory
+    # that does not exist.
+    assert (
+        client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&radius_km=1").json()["meta"]["total"]
+        == 2
+    )
+
+    # Somebody else's allowance is their own.
+    submit(client, device=device())
+
+
+def test_the_cap_follows_the_person_not_the_phone(client, db_session, monkeypatch):
+    """A second phone on one account is a second device, not a second
+    allowance - which is why the count is on the user and not the device."""
+    monkeypatch.setattr(write, "DAILY_MEMORIES", 1)
+    first, second = device(), device()
+    submit(client, device=first)
+
+    user_id = db_session.execute(
+        text("SELECT user_id FROM devices WHERE id = CAST(:d AS uuid)"), {"d": first}
+    ).scalar()
+    # What POST /v1/auth/google does once both phones prove the same account.
+    db_session.execute(
+        text("INSERT INTO devices (id, user_id) VALUES (CAST(:d AS uuid), :u)"),
+        {"d": second, "u": user_id},
+    )
+
+    assert client.post("/v1/memories", json=submission(device=second)).status_code == 429
+
+
+def test_uploads_stop_when_the_day_is_spent(client, monkeypatch):
+    monkeypatch.setattr(write, "DAILY_UPLOAD_BYTES", len(PNG))
+    dev = device()
+    assert upload(client, dev).status_code == 201
+    assert upload(client, dev).status_code == 429
+    assert upload(client, device()).status_code == 201
+
+
 def test_media_is_served_with_sniffing_switched_off(client):
     """The extension decides the Content-Type, and this is what stops a browser
     overruling it. Tested through the real mount because the header is added by

@@ -57,6 +57,44 @@ SUBMISSION_TAGS = [
 # A phone's GPS in a street, honestly stated rather than flattered.
 SUBMITTED_PRECISION_METERS = 25
 
+# The hard cap the brief asks for on user-submitted ingestion. It is not a
+# defence against a determined attacker - the device id is self-issued, so a
+# loop can mint a fresh identity per request - it is the bound that stops a
+# retry loop or a stuck client from filling the disk, which is the failure that
+# actually happens. Counted per person rather than per device, so a second
+# phone on one account does not double the allowance.
+# ponytail: a COUNT over a rolling day, two extra queries on the write path.
+# A token bucket if this ever needs to be per-minute rather than per-day.
+DAILY_MEMORIES = int(os.getenv("DAILY_MEMORY_LIMIT", "20"))
+DAILY_UPLOAD_BYTES = int(os.getenv("DAILY_UPLOAD_BYTES", str(64 * 1024 * 1024)))
+
+SPENT_TODAY = """
+    SELECT COALESCE(SUM(bytes), 0) FROM media
+    WHERE device_id = CAST(:device AS uuid)
+      AND created_at > LOCALTIMESTAMP - INTERVAL '1 day'
+"""
+
+FILED_TODAY = """
+    SELECT COUNT(*) FROM memories
+    WHERE user_id = :user_id
+      AND created_at > LOCALTIMESTAMP - INTERVAL '1 day'
+"""
+
+
+def refuse_over_quota(used: int, limit: int, what: str) -> None:
+    """Refuse once the allowance is gone, and say when it comes back.
+
+    Checked before the write rather than after, so the row or the file that
+    would breach the cap is never created. The last accepted upload may still
+    cross the byte limit by up to one file - bounding it exactly would mean
+    reading the body to find its size, which is the disk write we are avoiding.
+    """
+    if used >= limit:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Daily {what} limit reached. Try again tomorrow.",
+        )
+
 
 @router.post("/v1/memories/{memory_id}/unlock", response_model=Memory)
 def unlock_memory(memory_id: int, body: UnlockRequest):
@@ -108,6 +146,10 @@ async def upload_media(
     while the person is still typing, and because a failed upload should cost
     the text nothing. api/media.py does the deciding about what a file may be.
     """
+    with get_session() as session:
+        spent = session.execute(text(SPENT_TODAY), {"device": device}).scalar()
+    refuse_over_quota(spent, DAILY_UPLOAD_BYTES, "upload")
+
     path, kind, mime, size = await save_upload(file)
 
     with get_session() as session:
@@ -152,8 +194,15 @@ def submit_memory(body: SubmissionRequest):
     # date picker produces; the field exists for the 1978 case.
     precision = body.happened_precision or ("day" if body.happened_at else None)
 
+    # Its own transaction, so a refusal rolls nothing back and holds no write
+    # lock. user_for_device is idempotent, so claiming the user here costs the
+    # block below nothing.
     with get_session() as session:
         user_id = user_for_device(session, body.device)
+        filed = session.execute(text(FILED_TODAY), {"user_id": user_id}).scalar()
+    refuse_over_quota(filed, DAILY_MEMORIES, "submission")
+
+    with get_session() as session:
         if body.display_name is not None:
             set_display_name(session, user_id, clean_name(body.display_name))
 

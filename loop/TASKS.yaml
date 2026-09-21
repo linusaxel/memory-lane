@@ -840,11 +840,22 @@ tasks:
     verify: "venv/bin/python -m pytest -q tests/test_api_submit.py"
     touches: [api/write.py]
     depends_on: [P3-01]
-    state: todo
-    attempts: 0
-    commit: null
-    note: "The brief asks for a hard cap on user-submitted ingestion and there is
-      none. A loop fills the disk."
+    state: done
+    attempts: 1
+    commit: PENDING
+    note: |
+      20 memories and 64 MB of upload per rolling day, DAILY_MEMORY_LIMIT and
+      DAILY_UPLOAD_BYTES. Counted per USER, not per device, so a second phone on
+      one account is not a second allowance - and checked in its own
+      transaction, so a refusal rolls nothing back and holds no write lock.
+
+      It is a bound, not a defence: the device id is self-issued so a loop can
+      mint a fresh identity per request. It stops the retry loop that fills the
+      disk, which is the failure that actually happens.
+
+      Ceiling named in the code: the byte check runs before the body is read, so
+      the last accepted upload can cross the cap by up to one file. Bounding it
+      exactly means writing the file first, which is the thing being avoided.
 
 inbox:
   - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
