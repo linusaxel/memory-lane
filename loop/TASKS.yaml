@@ -1001,7 +1001,7 @@ tasks:
     depends_on: [P3-04]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 6826298
     note: |
       Structural, not cosmetic. The place name was fixed above the ScrollView
       and the credit was inside it, so any story long enough to scroll pushed

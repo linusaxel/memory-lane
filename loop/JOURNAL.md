@@ -29,3 +29,4 @@
 2026-09-21T14:24Z t20 P3-04 done  commit=e59a227 gate=GREEN layer precedence leads the nearby ORDER BY (friend/stranger/historical) ahead of contrast; sheet pager inherits it; search left on rank
 2026-09-21T14:30Z t21 P2-05 done  commit=10a0624 gate=GREEN delivered-corpus export CLI: snippets, historical only, no row without attribution AND link; source_href imported from api/card.py not copied
 2026-09-21T14:30Z t21 P4-01 blocked commit=null gate=NEEDS_DECISION stranger-note decay would delete, from its author's own collection, the thing they walked somewhere to write; 4.1/4.2 predate 3.2 and 3.2 answered them differently. Three ways out in the task note
+2026-09-21T14:35Z t22 P1-09 done  commit=6826298 gate=GREEN credit pinned out of the ScrollView so a screenshot keeps the attribution; UI.md rule 11. HAZARD: npx prettier has no config in mobile/ and rewrote both files to 80col double quotes - reverted, edit by hand
