@@ -234,7 +234,14 @@ const RISE = { inputRange: [0, 1], outputRange: [0.14, 1] };
 const STRAIN = { inputRange: [0, STRAIN_FROM, 1], outputRange: [0, 0, 1] };
 const STRAIN_SCALE = { inputRange: [0, STRAIN_FROM, 1], outputRange: [1, 1, 0.9] };
 const SWELL = { inputRange: [0, 1], outputRange: [1, 1.12] };
-const RECOIL = { inputRange: [0, 0.4, 1], outputRange: ['0deg', '3deg', '0deg'] };
+// Clamped, because `sprung` is a spring and overshoots past 1. Unclamped, the
+// body would keep rotating along the last segment's slope and tip a degree the
+// wrong way at the exact moment it is supposed to have settled.
+const RECOIL = {
+  inputRange: [0, 0.4, 1],
+  outputRange: ['0deg', '3deg', '0deg'],
+  extrapolate: 'clamp' as const,
+};
 const GIVE = { inputRange: [0, 0.35, 1], outputRange: [0, 0.22, 0] };
 
 const styles = StyleSheet.create({

@@ -14,11 +14,12 @@ from sqlalchemy import text
 
 from api.gate import UNLOCK_RADIUS_METERS, is_locked, not_yet_open, viewer_position
 from api.media import media_url
+from api.queries import COORDINATE_IS_UNIQUE
 from pipeline.db import get_session
 
 router = APIRouter()
 
-CARD_QUERY = """
+CARD_QUERY = f"""
 SELECT
     m.id,
     m.summary,
@@ -38,17 +39,12 @@ SELECT
     c.source_name,
     ST_Y(p.coordinates::geometry) AS lat,
     ST_X(p.coordinates::geometry) AS lng,
-    -- Kept identical to api/main.py's COORDINATE_IS_UNIQUE, including the
-    -- exclusion of user-submitted places. is_locked() is shared between the two
-    -- and would disagree with itself if these drifted.
-    (
-        SELECT COUNT(*) = 1 FROM places p2
-        WHERE ST_SnapToGrid(p2.coordinates::geometry, 0.0001)
-            = ST_SnapToGrid(p.coordinates::geometry, 0.0001)
-          AND NOT EXISTS (
-              SELECT 1 FROM memories m2 WHERE m2.place_id = p2.id AND m2.user_id IS NOT NULL
-          )
-    ) AS coordinate_is_unique,
+    -- The same expression the API uses, not a copy of it. is_locked() is
+    -- shared between the two and would disagree with itself if these drifted,
+    -- the comment saying so pointed at a file the constant had already moved
+    -- out of, and there is now a third reason: idx_places_grid only serves
+    -- this expression written exactly this way.
+    {COORDINATE_IS_UNIQUE},
     m.user_id,
     au.display_name AS author_name,
     (

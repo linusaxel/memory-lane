@@ -45,8 +45,11 @@ Dropping the database is what makes each flow start as a stranger.
 ## It is only slow when you are doing something else
 
 Every phase prints what it cost, and the suite prints a total, because the
-numbers are surprising. A clean run is around five minutes: most flows take
-20-40s and `f15-collection` takes about 50.
+numbers are surprising. A clean run is **211s**, measured with nothing else
+using the machine:
+
+    f1-discover 25s · f15-collection 53s · f19-elsewhere 23s
+    f23-seal 25s · f5-file-a-memory 37s · f7-walk-and-unlock 40s
 
 That same suite took **twenty minutes** while a pytest run, a ruff pass and a
 docker command were sharing the machine - and `f15` alone went from 50s to 956.
