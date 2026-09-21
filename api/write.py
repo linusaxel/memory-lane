@@ -74,6 +74,12 @@ SPENT_TODAY = """
       AND created_at > LOCALTIMESTAMP - INTERVAL '1 day'
 """
 
+# Serialises one user's submissions against each other, and nobody else's.
+# FOR UPDATE and not an advisory lock: the row already exists by this point
+# (user_for_device is idempotent and ran above), and a row lock is released by
+# the transaction ending however it ends.
+LOCK_USER = "SELECT id FROM users WHERE id = :user_id FOR UPDATE"
+
 FILED_TODAY = """
     SELECT COUNT(*) FROM memories
     WHERE user_id = :user_id
@@ -203,6 +209,21 @@ def submit_memory(body: SubmissionRequest):
     refuse_over_quota(filed, DAILY_MEMORIES, "submission")
 
     with get_session() as session:
+        # And again, now that a row lock makes the answer hold still.
+        #
+        # The check above is a read in one transaction and the insert is a
+        # write in another, which is a race anybody can win by not waiting:
+        # fire twenty requests at once and all twenty see the same count and
+        # all twenty are allowed. That defeats the limit exactly when it
+        # matters, since the limit exists for the person doing it on purpose.
+        #
+        # Locking the user row serialises one person's submissions and nobody
+        # else's. The cheap check stays because it is what refuses the ordinary
+        # case without taking a lock at all - this one only has to be right.
+        session.execute(text(LOCK_USER), {"user_id": user_id})
+        filed = session.execute(text(FILED_TODAY), {"user_id": user_id}).scalar()
+        refuse_over_quota(filed, DAILY_MEMORIES, "submission")
+
         if body.display_name is not None:
             set_display_name(session, user_id, clean_name(body.display_name))
 
