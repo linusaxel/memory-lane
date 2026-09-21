@@ -1052,7 +1052,7 @@ tasks:
     depends_on: [P5-01]
     state: done
     attempts: 1
-    commit: PENDING
+    commit: 9642dba
     note: |
       not_yet_open is checked at the TOP of is_locked, ahead of position, and
       that placement is the whole task. Every existing way of opening a memory
