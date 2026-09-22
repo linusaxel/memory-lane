@@ -204,17 +204,32 @@ export async function fetchUnlocked(
   return (body.memories ?? []).filter(hasCoordinates);
 }
 
-/** Everything this account has filed, newest first - including a sealed one
- *  (shown shut, seal included) and a reported one (shown, flagged `hidden`).
- *  The one screen that manages your own memories cannot let either vanish
- *  from it silently. */
-export async function fetchMine(device: string, signal?: AbortSignal): Promise<LocatedMemory[]> {
-  const body = await get<{ memories?: Memory[] }>(
+/** One page of what this account has filed, newest first - including a sealed
+ *  one (shown shut, seal included) and a reported one (shown, flagged
+ *  `hidden`). The one screen that manages your own memories cannot let either
+ *  vanish from it silently.
+ *
+ *  `total` is the server's count of everything filed, not just this page -
+ *  the caller compares it against how many rows it has loaded to know
+ *  whether there's a next page to ask for. */
+export type MinePage = { memories: LocatedMemory[]; total: number };
+
+export const MINE_PAGE_SIZE = 100;
+
+export async function fetchMine(
+  device: string,
+  offset = 0,
+  signal?: AbortSignal,
+): Promise<MinePage> {
+  const body = await get<{ memories?: Memory[]; meta?: { total?: number } }>(
     '/v1/me/memories',
-    new URLSearchParams({ device }),
+    new URLSearchParams({ device, limit: String(MINE_PAGE_SIZE), offset: String(offset) }),
     signal,
   );
-  return (body.memories ?? []).filter(hasCoordinates);
+  return {
+    memories: (body.memories ?? []).filter(hasCoordinates),
+    total: body.meta?.total ?? 0,
+  };
 }
 
 /** Where the corpus actually is, for a map that has nothing on it. */

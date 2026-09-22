@@ -4,13 +4,25 @@
  * away, which is correct of the server and wrong of the product: re-locking
  * something somebody stood in the rain for punishes them for leaving. So the
  * unlocked copy lives here, and the map merges it over whatever the API returns.
+ *
+ * Stored one memory per key, not as a single growing blob: recording one more
+ * unlock used to mean rewriting everything this device had ever earned, an
+ * O(n) disk write that got slower the longer the collection got. INDEX_KEY
+ * holds only the ids, cheap to rewrite, and each memory lives under its own
+ * ITEM_PREFIX key - a normal unlock or edit touches exactly one item key and,
+ * usually, nothing else.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { LocatedMemory } from './api.ts';
 
-const KEY = 'memorylane.unlocked.v1';
+/** Pre-migration layout: everything ever earned, as one JSON object under one
+ *  key. Read once, the first launch after this update, then dropped - see
+ *  migrateFromBlob. */
+const BLOB_KEY = 'memorylane.unlocked.v1';
+const INDEX_KEY = 'memorylane.unlocked.index.v1';
+const ITEM_PREFIX = 'memorylane.unlocked.item.';
 const PRIMER_KEY = 'memorylane.primer-dismissed.v1';
 
 /** Recorded locally because the server's copy carries the date but the local
@@ -24,14 +36,78 @@ export function inUnlockOrder(unlocked: Unlocked): UnlockedMemory[] {
   return Object.values(unlocked).sort((a, b) => (b.unlocked_at ?? 0) - (a.unlocked_at ?? 0));
 }
 
+async function readIndex(): Promise<number[]> {
+  try {
+    const raw = await AsyncStorage.getItem(INDEX_KEY);
+    return raw ? (JSON.parse(raw) as number[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeIndex(ids: number[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(INDEX_KEY, JSON.stringify(ids));
+  } catch {
+    // Same bargain as every write below: in memory now, gone next launch.
+  }
+}
+
+async function readItems(ids: number[]): Promise<Unlocked> {
+  if (ids.length === 0) return {};
+  const pairs = await AsyncStorage.multiGet(ids.map((id) => ITEM_PREFIX + id));
+  const out: Unlocked = {};
+  for (const [key, raw] of pairs) {
+    if (!raw) continue;
+    try {
+      out[Number(key.slice(ITEM_PREFIX.length))] = JSON.parse(raw) as UnlockedMemory;
+    } catch {
+      // One corrupt item is dropped, not fatal to the rest of the collection.
+    }
+  }
+  return out;
+}
+
+/** One-time move off BLOB_KEY: every entry gets its own item key plus a fresh
+ *  index, then the blob is removed. Nothing reads BLOB_KEY again once this
+ *  succeeds - a failure partway leaves it in place, so the next launch just
+ *  tries the migration again. */
+async function migrateFromBlob(): Promise<Unlocked> {
+  let raw: string | null;
+  try {
+    raw = await AsyncStorage.getItem(BLOB_KEY);
+  } catch {
+    return {};
+  }
+  if (!raw) return {};
+
+  let blob: Unlocked;
+  try {
+    blob = JSON.parse(raw) as Unlocked;
+  } catch {
+    return {};
+  }
+
+  const ids = Object.keys(blob).map(Number);
+  try {
+    await AsyncStorage.multiSet(ids.map((id) => [ITEM_PREFIX + id, JSON.stringify(blob[id])]));
+    await writeIndex(ids);
+    await AsyncStorage.removeItem(BLOB_KEY);
+  } catch {
+    // Left mid-migration on purpose; see above.
+  }
+  return blob;
+}
+
 export async function loadUnlocked(): Promise<Unlocked> {
   try {
-    const raw = await AsyncStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Unlocked) : {};
+    const raw = await AsyncStorage.getItem(INDEX_KEY);
+    if (raw !== null) return await readItems(JSON.parse(raw) as number[]);
   } catch {
     // A cold start with unreadable storage is an empty map, not a crash.
     return {};
   }
+  return migrateFromBlob();
 }
 
 /** Returns the new map even if the write fails - losing the unlock you just
@@ -40,9 +116,13 @@ export async function rememberUnlocked(
   current: Unlocked,
   memory: LocatedMemory,
 ): Promise<Unlocked> {
-  const next = { ...current, [memory.id]: { ...memory, unlocked_at: Date.now() } };
+  const item: UnlockedMemory = { ...memory, unlocked_at: Date.now() };
+  const next = { ...current, [memory.id]: item };
   try {
-    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+    await AsyncStorage.setItem(ITEM_PREFIX + memory.id, JSON.stringify(item));
+    // The index only needs a rewrite when this id is new to it - an unlock
+    // already on the index is just a bigger item write, not a bigger one.
+    if (!(memory.id in current)) await writeIndex([...(await readIndex()), memory.id]);
   } catch {
     // Ignored on purpose; see above.
   }
@@ -75,18 +155,18 @@ export async function rememberPrimerDismissed(): Promise<void> {
  *  disturbing when it was earned. `rememberUnlocked` resets `unlocked_at` to
  *  now on every call, which is correct for a fresh unlock and wrong here: it
  *  would bump an edited memory to the top of the Unlocked tab as if it had
- *  just been earned again. */
+ *  just been earned again. Never touches the index - the id was already on it
+ *  the moment it entered `current`. */
 export async function updateUnlocked(
   current: Unlocked,
   memory: LocatedMemory,
 ): Promise<Unlocked> {
   const existing = current[memory.id];
-  const next = {
-    ...current,
-    [memory.id]: { ...memory, unlocked_at: existing?.unlocked_at ?? Date.now() },
-  };
+  const item: UnlockedMemory = { ...memory, unlocked_at: existing?.unlocked_at ?? Date.now() };
+  const next = { ...current, [memory.id]: item };
   try {
-    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+    await AsyncStorage.setItem(ITEM_PREFIX + memory.id, JSON.stringify(item));
+    if (!existing) await writeIndex([...(await readIndex()), memory.id]);
   } catch {
     // Same bargain as rememberUnlocked: in memory now, gone next launch.
   }
@@ -98,7 +178,8 @@ export async function forgetUnlocked(current: Unlocked, id: number): Promise<Unl
   const next = { ...current };
   delete next[id];
   try {
-    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+    await AsyncStorage.removeItem(ITEM_PREFIX + id);
+    await writeIndex((await readIndex()).filter((existing) => existing !== id));
   } catch {
     // Same bargain as rememberUnlocked.
   }
@@ -107,9 +188,10 @@ export async function forgetUnlocked(current: Unlocked, id: number): Promise<Unl
 
 /** Fold the server's copy of the collection into this device's.
  *
- * Read-modify-write against storage rather than against React state, because
- * this runs at launch alongside loadUnlocked and the two would otherwise race
- * to overwrite each other.
+ * Every memory here lives under its own key, so this can run at launch
+ * alongside loadUnlocked without the two racing to overwrite each other the
+ * way two competing writes of one blob would - they touch disjoint keys, or
+ * write the same id to the same value.
  *
  * Local wins on conflict: it has an unlocked_at from the moment it was earned,
  * and the server's row may have been written by a retry. Neither copy is ever
@@ -118,15 +200,24 @@ export async function forgetUnlocked(current: Unlocked, id: number): Promise<Unl
 export async function mergeUnlocked(fromServer: LocatedMemory[]): Promise<Unlocked> {
   const current = await loadUnlocked();
   const merged: Unlocked = { ...current };
+  const newIds: number[] = [];
+  const writes: [string, string][] = [];
 
   for (const memory of fromServer) {
-    if (!merged[memory.id]) merged[memory.id] = { ...memory, unlocked_at: Date.now() };
+    if (merged[memory.id]) continue;
+    const item: UnlockedMemory = { ...memory, unlocked_at: Date.now() };
+    merged[memory.id] = item;
+    newIds.push(memory.id);
+    writes.push([ITEM_PREFIX + memory.id, JSON.stringify(item)]);
   }
 
-  try {
-    await AsyncStorage.setItem(KEY, JSON.stringify(merged));
-  } catch {
-    // Same bargain as rememberUnlocked: in memory now, gone next launch.
+  if (writes.length > 0) {
+    try {
+      await AsyncStorage.multiSet(writes);
+      await writeIndex([...(await readIndex()), ...newIds]);
+    } catch {
+      // Same bargain as rememberUnlocked: in memory now, gone next launch.
+    }
   }
   return merged;
 }

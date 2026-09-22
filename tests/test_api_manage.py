@@ -48,6 +48,27 @@ def test_an_unrelated_device_sees_nothing(client):
     assert client.get(f"/v1/me/memories?device={device()}").json()["memories"] == []
 
 
+def test_offset_pages_past_the_limit_instead_of_dropping_the_rest(client):
+    """The mobile My memories subtab pages through this rather than being
+    capped at whatever `limit` the server answers with in one call. Ordering
+    across submissions this close together is not itself under test here -
+    MY_MEMORIES_QUERY only sorts by created_at, no tiebreaker - so this checks
+    the two pages together cover everything exactly once, not their order."""
+    dev = device()
+    ids = {submit(client, device=dev)["id"] for _ in range(3)}
+
+    page = client.get(f"/v1/me/memories?device={dev}&limit=2").json()
+    assert len(page["memories"]) == 2
+    assert page["meta"] == {"total": 3, "limit": 2, "offset": 0}
+
+    rest = client.get(f"/v1/me/memories?device={dev}&limit=2&offset=2").json()
+    assert len(rest["memories"]) == 1
+    assert rest["meta"]["total"] == 3
+
+    seen = {m["id"] for m in page["memories"]} | {m["id"] for m in rest["memories"]}
+    assert seen == ids
+
+
 def test_the_list_shows_a_sealed_memory_shut(client):
     """Even to the person who filed it - not_yet_open is checked before the
     proximity trick that forces everything else in this list open."""

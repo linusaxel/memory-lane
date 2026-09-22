@@ -23,6 +23,8 @@ from api.models import (
     Coordinates,
     Hotspot,
     Memory,
+    MyMemoriesMeta,
+    MyMemoriesResponse,
     NearbyMeta,
     NearbyResponse,
     PlacesResponse,
@@ -37,6 +39,7 @@ from api.queries import (
     COUNT_WITH_TAGS_QUERY,
     DEVICE_UNLOCKS_QUERY,
     HOTSPOTS_QUERY,
+    MY_MEMORIES_COUNT_QUERY,
     MY_MEMORIES_QUERY,
     NEARBY_MEMORIES_QUERY,
     NEARBY_MEMORIES_WITH_TAGS_QUERY,
@@ -293,23 +296,29 @@ def get_unlocks(
     )
 
 
-@router.get("/v1/me/memories", response_model=UnlocksResponse)
+@router.get("/v1/me/memories", response_model=MyMemoriesResponse)
 def get_my_memories(
     device: str = Query(..., pattern=DEVICE_PATTERN),
     limit: int = Query(200, ge=1, le=500),
+    offset: int = Query(0, ge=0, description="Pagination offset"),
 ):
     """Everything this account has filed, newest first - including memories
     reported by others (hidden) and memories still sealed. Neither is a reason
     to hide a memory from the one screen that manages it; row_to_memory still
     renders a sealed one as shut, seal included, the author included.
+
+    Paginated like /v1/memories/nearby - a filer past `limit` gets more by
+    asking again with a higher `offset`, not by being silently cut off.
     """
     with get_session() as session:
         rows = session.execute(
-            text(MY_MEMORIES_QUERY), {"device": device, "limit": limit}
+            text(MY_MEMORIES_QUERY), {"device": device, "limit": limit, "offset": offset}
         ).fetchall()
+        total = session.execute(text(MY_MEMORIES_COUNT_QUERY), {"device": device}).scalar()
 
-    return UnlocksResponse(
-        memories=[row_to_memory(row, row_coordinates(row), include_distance=False) for row in rows]
+    return MyMemoriesResponse(
+        memories=[row_to_memory(row, row_coordinates(row), include_distance=False) for row in rows],
+        meta=MyMemoriesMeta(total=total, limit=limit, offset=offset),
     )
 
 

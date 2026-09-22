@@ -243,6 +243,13 @@ SELECT {MEMORY_COLUMNS},
 WHERE m.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
 ORDER BY m.created_at DESC
 LIMIT :limit
+OFFSET :offset
+"""
+
+MY_MEMORIES_COUNT_QUERY = """
+SELECT COUNT(*)
+FROM memories m
+WHERE m.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
 """
 
 # Same shape as SINGLE_MEMORY_QUERY, minus VISIBLE and plus the ownership

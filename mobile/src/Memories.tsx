@@ -15,21 +15,27 @@
  * the server, because it has to show two things the local cache was never
  * told about: a memory still sealed (shut, seal included) and one enough
  * people reported (flagged, not dropped).
+ *
+ * Both subtabs render through one `FlatList`: a row only costs a mount once
+ * it scrolls into view, so this holds up past the hundreds a `ScrollView` +
+ * `.map()` started struggling with. My memories also pages - the server caps
+ * a single answer at `MINE_PAGE_SIZE`, so scrolling near the bottom asks for
+ * the next page instead of silently stopping at the cap.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fetchMine, type LocatedMemory } from './api.ts';
+import { fetchMine, MINE_PAGE_SIZE, type LocatedMemory } from './api.ts';
 import Padlock from './Padlock.tsx';
 import { when } from './format.ts';
 import { color, dim, font, label } from './theme.ts';
@@ -68,13 +74,16 @@ export default function Memories({
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<'unlocked' | 'mine'>('unlocked');
   const [mine, setMine] = useState<LocatedMemory[]>([]);
+  const [mineTotal, setMineTotal] = useState(0);
   const [mineStatus, setMineStatus] = useState<MineStatus>('loading');
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
     if (!device) return Promise.resolve();
-    return fetchMine(device).then((rows) => {
-      setMine(rows);
+    return fetchMine(device).then((page) => {
+      setMine(page.memories);
+      setMineTotal(page.total);
       setMineStatus('ready');
     });
   }, [device]);
@@ -102,10 +111,91 @@ export default function Memories({
       .then(() => setRefreshing(false));
   }, [load]);
 
+  // The server hands back MINE_PAGE_SIZE rows at a time. Scrolling near the
+  // bottom of what's loaded asks for the next page; mineTotal (from that same
+  // response) says when to stop asking.
+  const loadMore = useCallback(() => {
+    if (!device || loadingMore || mineStatus !== 'ready' || mine.length >= mineTotal) return;
+    setLoadingMore(true);
+    fetchMine(device, mine.length)
+      .then((page) => {
+        setMine((current) => [...current, ...page.memories]);
+        setMineTotal(page.total);
+      })
+      .catch(() => {
+        // A failed page-two stays retryable: scrolling away and back triggers
+        // onEndReached again, same as a failed pull-to-refresh stays retryable.
+      })
+      .finally(() => setLoadingMore(false));
+  }, [device, loadingMore, mineStatus, mine.length, mineTotal]);
+
+  const unlockedNote = !unlockedReady
+    ? ''
+    : unlocked.length === 0
+      ? 'Nothing yet.'
+      : `${unlocked.length} ${unlocked.length === 1 ? 'memory' : 'memories'} you walked to`;
+
+  const mineNote =
+    mineStatus !== 'ready' || mine.length === 0
+      ? ''
+      : mine.length === mineTotal
+        ? `${mineTotal} ${mineTotal === 1 ? 'memory' : 'memories'} you filed`
+        : `${mine.length} of ${mineTotal} you filed, so far`;
+
+  const data: LocatedMemory[] = section === 'unlocked' ? unlocked : mine;
+
   return (
-    <ScrollView
+    <FlatList<LocatedMemory>
       style={styles.screen}
       contentContainerStyle={[styles.body, { paddingTop: insets.top + 14 }]}
+      data={data}
+      keyExtractor={(item) => String(item.id)}
+      renderItem={({ item }) =>
+        section === 'unlocked' ? (
+          <Row
+            place={item.place.name}
+            summary={item.summary}
+            meta={when((item as UnlockedMemory).unlocked_at) ?? undefined}
+            onPress={() => onOpenUnlocked(item as UnlockedMemory)}
+          />
+        ) : (
+          <Row
+            place={item.place.name}
+            summary={item.locked ? `Sealed until ${item.opens_at?.slice(0, 4)}` : item.summary}
+            badge={item.hidden ? 'Reported' : undefined}
+            onPress={() => onOpenMine(item)}
+          />
+        )
+      }
+      ListHeaderComponent={
+        <>
+          <Text style={styles.title}>Memories</Text>
+          <Switcher section={section} onSelect={setSection} />
+          <Header note={section === 'unlocked' ? unlockedNote : mineNote} />
+        </>
+      }
+      ListEmptyComponent={
+        section === 'unlocked' ? (
+          // No spinner: this is a disk read that resolves in a frame, and a
+          // spinner that flashes is worse than a beat of nothing.
+          !unlockedReady ? null : (
+            <Empty text="Memories open when you stand where they happened. Whatever you open stays here." />
+          )
+        ) : mineStatus === 'loading' ? (
+          <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+        ) : mineStatus === 'failed' ? (
+          <Empty text="Can't reach Memory Lane right now." />
+        ) : (
+          <Empty text="Nothing filed yet." />
+        )
+      }
+      ListFooterComponent={
+        section === 'mine' && loadingMore ? (
+          <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+        ) : null
+      }
+      onEndReached={section === 'mine' ? loadMore : undefined}
+      onEndReachedThreshold={0.5}
       refreshControl={
         section === 'mine' ? (
           <RefreshControl
@@ -117,65 +207,7 @@ export default function Memories({
           />
         ) : undefined
       }
-    >
-      <Text style={styles.title}>Memories</Text>
-
-      <Switcher section={section} onSelect={setSection} />
-
-      {section === 'unlocked' ? (
-        <Section
-          note={
-            !unlockedReady
-              ? ''
-              : unlocked.length === 0
-                ? 'Nothing yet.'
-                : `${unlocked.length} ${unlocked.length === 1 ? 'memory' : 'memories'} you walked to`
-          }
-        >
-          {/* No spinner: this is a disk read that resolves in a frame, and a
-              spinner that flashes is worse than a beat of nothing. */}
-          {!unlockedReady ? null : unlocked.length === 0 ? (
-            <Empty text="Memories open when you stand where they happened. Whatever you open stays here." />
-          ) : (
-            unlocked.map((item) => (
-              <Row
-                key={item.id}
-                place={item.place.name}
-                summary={item.summary}
-                meta={when(item.unlocked_at) ?? undefined}
-                onPress={() => onOpenUnlocked(item)}
-              />
-            ))
-          )}
-        </Section>
-      ) : (
-        <Section
-          note={
-            mineStatus === 'ready' && mine.length > 0
-              ? `${mine.length} ${mine.length === 1 ? 'memory' : 'memories'} you filed`
-              : ''
-          }
-        >
-          {mineStatus === 'loading' ? (
-            <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-          ) : mineStatus === 'failed' ? (
-            <Empty text="Can't reach Memory Lane right now." />
-          ) : mine.length === 0 ? (
-            <Empty text="Nothing filed yet." />
-          ) : (
-            mine.map((item) => (
-              <Row
-                key={item.id}
-                place={item.place.name}
-                summary={item.locked ? `Sealed until ${item.opens_at?.slice(0, 4)}` : item.summary}
-                badge={item.hidden ? 'Reported' : undefined}
-                onPress={() => onOpenMine(item)}
-              />
-            ))
-          )}
-        </Section>
-      )}
-    </ScrollView>
+    />
   );
 }
 
@@ -216,11 +248,10 @@ function SwitcherItem({
   );
 }
 
-function Section({ note, children }: { note: string; children: React.ReactNode }) {
+function Header({ note }: { note: string }) {
   return (
-    <View style={styles.section}>
+    <View style={[styles.header, !!note && styles.headerWithNote]}>
       {!!note && <Text style={styles.sectionNote}>{note}</Text>}
-      {children}
     </View>
   );
 }
@@ -276,24 +307,24 @@ const styles = StyleSheet.create({
   switcherLabelActive: { color: color.ink },
   switcherRule: { height: 2, backgroundColor: 'transparent' },
   switcherRuleActive: { backgroundColor: color.ink },
-  section: {
+  header: {
     marginTop: 30,
-    gap: 12,
     paddingHorizontal: 24,
     borderTopWidth: 1,
     borderTopColor: color.rule,
     paddingTop: 18,
   },
+  headerWithNote: { marginBottom: 12 },
   sectionNote: { fontFamily: font.prose, fontSize: 15, color: color.inkFaint },
   // A ruled entry, like a catalogue card. No nested card, no shadow - the
   // same row both sections used before the merge.
-  row: { gap: 6, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 16 },
+  row: { gap: 6, paddingHorizontal: 24, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 16 },
   place: { fontFamily: font.displaySemi, fontSize: 19, lineHeight: 26, color: color.ink },
   summary: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   when: { ...label, fontSize: 10, marginTop: 2 },
   badge: { ...label, fontSize: 10, color: color.seal, marginTop: 2 },
   spinner: { marginTop: 12 },
-  empty: { alignItems: 'flex-start', paddingVertical: 12, gap: 14 },
+  empty: { alignItems: 'flex-start', paddingHorizontal: 24, paddingVertical: 12, gap: 14 },
   emptyText: {
     fontFamily: font.prose,
     fontSize: 16,

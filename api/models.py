@@ -189,6 +189,17 @@ class UnlocksResponse(BaseModel):
     memories: list[Memory]
 
 
+class MyMemoriesMeta(BaseModel):
+    total: int
+    limit: int
+    offset: int
+
+
+class MyMemoriesResponse(BaseModel):
+    memories: list[Memory]
+    meta: MyMemoriesMeta
+
+
 class Profile(BaseModel):
     """What this device is, to the extent it is anybody.
 

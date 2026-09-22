@@ -204,27 +204,27 @@ exist. Verify before trusting, and strike entries when you fix them.
       fine; getting a real date needs either a per-video fetch (25 extra
       requests) or the channel RSS feed (newest 15 only). Nothing serves it, so
       it blocks nothing.
-- [ ] **Memories tab has no ceiling.** Noticed 2026-09-22 while splitting
-      `mobile/src/Memories.tsx`'s Unlocked/My memories into subtabs (that split
-      fixed the stacked-scroll problem, not this). Both subtabs still render
-      with `ScrollView` + `.map()` over the full array, not `FlatList` — every
-      row mounts the moment a subtab opens, unvirtualized. Rows are plain text,
-      so this holds up into the hundreds, but it is not built past that.
-      Separately, *My memories* is capped server-side at `api/read.py`'s
-      `/v1/me/memories`, `limit: int = Query(200, ge=1, le=500)` — no
-      pagination, so a filer past 500 silently stops seeing the rest. *Unlocked*
-      has no cap at all: `mobile/src/unlocked.ts` keeps it as one JSON object in
-      `AsyncStorage`, and every unlock rewrites the entire blob — an O(n) disk
-      write that gets slower as the collection grows, independent of what's on
-      screen. Nobody is near either limit today; worth `FlatList` plus real
-      pagination (or an unlock cache that isn't one growing blob) before anyone
-      is.
-
 #### Struck on audit — fixed, do not re-fix
 
 - [x] **`meta.total` was wrong** on three endpoints. Fixed: `COUNT_WITH_TAGS_QUERY`,
       `SEARCH_COUNT_WITH_LOCATION_QUERY` and `PLACES_COUNT_QUERY` now mirror
       their result queries, and `tests/test_api_nearby.py` asserts it.
+
+- [x] **Memories tab had no ceiling.** Filed 2026-09-22 while splitting
+      `mobile/src/Memories.tsx`'s Unlocked/My memories into subtabs; fixed the
+      same day. Both subtabs now render through one `FlatList` instead of
+      `ScrollView` + `.map()`, so a row only mounts once it scrolls into view.
+      `/v1/me/memories` now takes `offset` alongside `limit` and answers with
+      `meta.total` (mirroring `/v1/memories/nearby`'s shape), and the My
+      memories subtab pages through it on `onEndReached` instead of stopping
+      at whatever the first `limit` returned —
+      `test_offset_pages_past_the_limit_instead_of_dropping_the_rest` covers
+      it. `mobile/src/unlocked.ts` no longer keeps the collection as one
+      growing JSON blob: each memory lives under its own `AsyncStorage` key,
+      indexed by a small id list, so a normal unlock or edit writes one item
+      key instead of rewriting everything ever earned; a one-time migration
+      moves an existing install off the old blob key. Verified with
+      `./e2e/run.sh f24` and `./loop/verify.sh`.
 - [x] **No behavioural test of `/v1/memories/nearby`.** `tests/test_api_nearby.py`
       covers radius, contrast ordering, NULLS LAST, layer filtering and the card
       fields.
