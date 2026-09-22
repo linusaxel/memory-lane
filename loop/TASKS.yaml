@@ -1237,12 +1237,14 @@ tasks:
       the card, which is marked ponytail: the real fix is a flex column with
       map.invalidateSize() on toggle, worth doing when there is a customer.
 
-inbox:
-  - "published_at is still NULL in practice: yt-dlp extract_flat returns timestamp=None for @TuesdayswithStories (verified t6). The INSERT path works and handles None safely, but real dates need either a per-video fetch (25 extra requests) or the channel RSS feed (newest 15 only). Nothing in the API serves published_at today, so this is not blocking."
-  - "the embed's layout is wrong in a browser: the map does not fill its box, the card iframe keeps the panel mostly empty, and Leaflet's OSM attribution renders inside the card panel rather than over the map. Separate from P2-00 (tiles) and blocks nothing while the embed has no host"
-  - "the dev seed has no sealed memory, so F23's composition cannot be seen without POSTing opens_at by hand. Adding one means picking a coordinate >= 0.0002 degrees from the other six and off the 34 existing stacks - see P3-06's traps"
+inbox: []
   # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`
   # or deletes it. This is the ONLY legal outlet for scope creep.
-  - "place dedup is exact-string plus pipeline/dedup.py by review; near-duplicates across videos still make separate pins"
-  - "the submission tag list and the extractor's tag list are different vocabularies: the app offers sport, the corpus stores sports, and 5 of 11 offered tags match zero memories. Needs a data migration plus a prompt change"
-  - "api/test_api.sh is not run by the gate and was the only caller of three endpoints, which is how they went unnoticed as dead"
+  #
+  # Cleaned 2026-09-22: six entries removed. Three were resolved and stale -
+  # published_at's fetch-options detail moved to TODO.md's existing bullet, the
+  # embed layout bug was fixed by P2-06/P2-07, the sealed dev-seed memory landed
+  # in W3-16. Three more duplicated a TODO.md entry with no new information -
+  # dedup (1.2), the tag vocabulary (Open questions, now Settled), and
+  # api/test_api.sh (Open questions). TODO.md is the source of truth; an idea
+  # that already has a home there does not also need one here.

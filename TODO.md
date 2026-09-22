@@ -178,13 +178,32 @@ exist. Verify before trusting, and strike entries when you fix them.
       calls this endpoint. `tests/test_api_search.py` came out of the attempt
       and is worth keeping either way — it pins the cross-field matching that
       both designs above would change.
+
+      **Partially addressed, 2026-09-22.** `SEARCH_MEMORIES_QUERY` was joining
+      `content`/`users` before the `LIMIT`, building a full page of wide rows to
+      throw almost all of them away after the sort. A CTE now ranks a page of
+      ids first and joins only for the survivors — 245ms→59ms measured at
+      200k rows (`pipeline/perf.py`). This does not touch the seq-scan-for-
+      ranking problem above; `ts_rank` still has to visit every matching row,
+      which is what the two designs above actually fix. It just stopped paying
+      the join cost for rows the scan was about to discard.
+
+      **And still no client calls this endpoint, on purpose.** Traced this
+      session: the search endpoint's `row_to_memory` call passes no viewer
+      position, so it structurally cannot unlock anything, and the only
+      memories it *could* surface unlocked are the vaguest, centroid-placed
+      ones — the 121 of 215 the gate already treats as untrustworthy. Building
+      search UI on top of it would be a feature that returns the corpus's worst
+      data. See *Decided* below.
 - [x] **Endpoints with no consumer.** Settled by deletion: `/v1/places/{id}`,
       `/v1/places/{id}/memories` and `/v1/content/{id}/memories` had no app
       caller and no pytest, and were reached only by `api/test_api.sh` — which
       the gate never runs. The app now calls ten of the fourteen that remain.
 - [ ] **`published_at` is always NULL** — yt-dlp flat extraction returns no
-      timestamp for this channel (59 of 59 rows). Nothing serves it, so it
-      blocks nothing.
+      timestamp for this channel (59 of 59 rows). The INSERT path handles NULL
+      fine; getting a real date needs either a per-video fetch (25 extra
+      requests) or the channel RSS feed (newest 15 only). Nothing serves it, so
+      it blocks nothing.
 
 #### Struck on audit — fixed, do not re-fix
 
@@ -786,6 +805,10 @@ Copied so they survive context resets.
   the thing rather than narrating what happened there)
 - Unmarked sponsored placement
 - Generic Wikipedia-grade facts as primary content
+- **A search UI.** Asked and answered 2026-09-22: the only way a user should
+  unlock a memory is by walking there. `/v1/memories/search` stays as a typed,
+  tested endpoint with no client — see the *Known defects* entry above for why
+  building a search screen on it would surface the corpus's worst rows.
 
 **Design rules that are core, not polish:**
 - **Contrast scoring** decides whether the product is interesting or wallpaper.
