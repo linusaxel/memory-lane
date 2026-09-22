@@ -510,6 +510,17 @@ export default function App() {
         const opened = await unlockMemory(memory.id, at, await deviceId());
         if (!mounted.current) return;
         if (opened) {
+          // This was the last not-yet-earned stop of a started route: the same
+          // success haptic UnlockButton fires for one memory
+          // (src/UnlockButton.tsx:105-107), once more - an affirmation on the
+          // unlock that already happened, not a new mechanic.
+          if (
+            routeStarted &&
+            nextRouteStop?.id === memory.id &&
+            routeShown.every((stop) => stop.id === memory.id || earned.has(stop.id))
+          ) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+          }
           setUnlocked(await rememberUnlocked(unlocked, opened));
         } else {
           // The server re-measures, and GPS moves between the press and the
@@ -522,7 +533,7 @@ export default function App() {
         if (mounted.current) setUnlocking(false);
       }
     },
-    [unlocked],
+    [unlocked, routeStarted, nextRouteStop, routeShown, earned],
   );
 
   const posted = useCallback(

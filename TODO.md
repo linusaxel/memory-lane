@@ -857,12 +857,13 @@ or silently overridden.
       tapping again re-centres on the new next stop. Once every stop is
       earned it reverts to the summary label and re-fits the whole route, the
       old behaviour, as a small completion view.
-- [ ] **Route-complete moment.** A single subtle animation/haptic when the
-      last stop of today's route unlocks — reusing the unlock haptic already
-      in `mobile/src/UnlockButton.tsx` rather than inventing a new one. Keep it
-      to an affirmation on the thing that already happened (an unlock), not a
-      new mechanic — see the streak/notification conflict below for where this
-      line is.
+- [x] **Route-complete moment.** Done: `App.tsx`'s `unlock()` fires
+      `UnlockButton`'s own success haptic
+      (`Haptics.notificationAsync(...Success)`) a second time when the memory
+      it just confirmed was the last not-yet-earned stop of a started route -
+      same signature, no new mechanic, composes with the start-route
+      affordance's `routeStarted`/`nextRouteStop` (commit `1daec1e`) rather
+      than tracking route progress a second way.
 - [ ] **Configurable route distance.** `ROUTE_RADIUS_METERS`/`ROUTE_SIZE`
       (`pipeline/config.py`) are process-wide env defaults today. Cheapest
       real increment: accept an optional radius on
