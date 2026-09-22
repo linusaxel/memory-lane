@@ -173,6 +173,14 @@ wrongly hidden memory is recoverable while a libel left up for a week is not.
 the next dispute unanswerable. There is no appeal, no reinstatement and no queue
 for a human — that is the ceiling, and it is fine until there is a moderator.
 
+### A report count needs a lock too
+
+Two people reporting the same memory at once would each read the count before
+either insert commits, so both would see two reports where there are three -
+the threshold reached and nothing done until a fourth report happened to land.
+`SELECT ... FOR UPDATE` on the memory row serialises one memory's own reports
+against each other; it takes no lock against anybody else's.
+
 ---
 
 ### A quota checked before the write is not a quota
@@ -337,6 +345,15 @@ Nothing bounded a query. One pathological statement holding a connection is
 survivable; thirty of them is the pool, and the way to discover that is for it
 to happen at three in the morning.
 
+Thirty seconds is a safety net, not a policy — the slowest thing here by a wide
+margin is `/v1/stats`' DBSCAN, measured at 1.3s on 50,000 memories
+(`python -m pipeline.perf`). If that ever approaches the ceiling the answer is
+to precompute hotspots, not to raise it. It binds the pipeline as well as the
+API, since both share the engine in `pipeline/db.py` — nothing there comes
+close today, the inserts are per row, but a bulk job that legitimately needs
+longer should raise this for its own process rather than have the API carry
+its ceiling.
+
 `statement_timeout` is set on the connection rather than per query, so it
 covers the queries nobody thought of as slow. Thirty seconds is a safety net,
 not a policy — the slowest thing here by a wide margin is `/v1/stats`' DBSCAN
@@ -410,6 +427,17 @@ pins on a tourism page, so the first card has to be the one worth reading.
 ---
 
 ## Pipeline, continued
+
+### One tag vocabulary, not two
+
+The extractor's prompt listed thirteen tags, `api/write.py` offered eleven for
+submissions, and they overlapped on six — so the app's `sport` chip matched
+none of the four memories stored as `sports`, and `m.tags && …` is an
+exact-string overlap. `pipeline/tags.py` is now the one list both writers
+filter against, which also makes the prompt's list binding: the model had been
+emitting `comedy`, `entertainment`, `celebrity` and others off its own menu,
+because nothing checked. `sports` was renamed to the singular `sport` in place
+(`db/migrations/008_one_tag_vocabulary.sql`).
 
 ### Place dedup matches on names, not coordinates
 

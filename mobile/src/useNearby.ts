@@ -34,11 +34,9 @@ export function useNearby(initialRegion: Region) {
   }, []);
 
   const load = useCallback(async (r: Region) => {
-    // Asking the same question twice. animateToRegion fires
-    // onRegionChangeComplete when it lands, and a programmatic move looks
-    // exactly like a pan from there - so recentring fetched once eagerly and
-    // again a second later. The guard lives here because every caller routes
-    // through load, including "Try again".
+    // isSameQuery (region.ts) is what makes this safe to call eagerly - the
+    // guard lives here because every caller routes through load, including
+    // "Try again".
     if (isSameQuery(lastFetched.current, r)) return;
 
     // Responses can land out of order: a slow request for the region you just

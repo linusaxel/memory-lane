@@ -1,27 +1,4 @@
-/** The one playful control in the app. See "The unlock control" in UI.md.
- *
- * The hold is the only suspense the product has, so it is built as one: a
- * press that is answered instantly, a rise that is honest about how far along
- * it is, and a last quarter that visibly and audibly strains before it gives.
- *
- * Two things are deliberate and easy to undo by accident.
- *
- * **The fill is linear.** A progress indicator that eases is a progress
- * indicator that lies, and this one is a promise about when you may let go.
- * Everything that builds - the haptic tempo, the strain ring, the padlock
- * swelling - is layered *over* a truthful bar rather than baked into it.
- *
- * **The lock is allowed to finish opening.** The shackle springs out of the
- * body on its own pivot, and the request is held back the ~240ms that takes.
- * That is a deliberate delay and the only one in the app: the haptic and the
- * flare have already fired, so nothing reads as slow, and a success that
- * arrives sooner would swap the sheet out from under the one animation the
- * product exists to show. Against a local API the round trip is ~20ms, so
- * without the wait the lock never visibly opens at all.
- *
- * The payoff proper is still not here: it is the wax stamp coming down in
- * MemorySheet, which this hands off to.
- */
+/** The one playful control in the app - spec in "The unlock control", UI.md. */
 
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -43,7 +20,9 @@ const HOLD_MS = 900;
 
 /** How long the shackle is given to clear the body before the request goes
  *  out and the sheet is allowed to swap. Roughly where the spring has settled;
- *  longer is noticeable, shorter and the lock is cut off mid-swing. */
+ *  longer is noticeable, shorter and the lock is cut off mid-swing. Against a
+ *  local API the round trip is ~20ms - without this wait the lock never
+ *  visibly opens at all. */
 const SNAP_MS = 240;
 
 /** Ticks under the thumb while the ring fills, because 900ms of silence is a

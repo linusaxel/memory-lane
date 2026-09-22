@@ -166,18 +166,10 @@ async def upload_media(
     # to take them with it.
     try:
         with get_session() as session:
-            # This is also the lock. touch_device is an ON CONFLICT DO UPDATE,
-            # which holds the device row for the rest of the transaction, so
-            # the count below cannot be overtaken by this device's other
-            # uploads - and takes no lock against anybody else's.
+            # touch_device's ON CONFLICT DO UPDATE is the lock this device's
+            # other uploads serialise against. Re-checked under it - see
+            # docs/10-decisions.md#a-quota-checked-before-the-write-is-not-a-quota.
             touch_device(session, device)
-
-            # Asked again, because the check before the write is a read in a
-            # transaction that has already ended. Concurrent uploads all passed
-            # it, and each of them then wrote a file: the allowance is 64MB and
-            # a rush of fifty puts a gigabyte on the disk before a single row
-            # exists to be counted. The cheap check stays for the ordinary
-            # refusal; this one is the one that is true.
             spent = session.execute(text(SPENT_TODAY), {"device": device}).scalar()
             refuse_over_quota(spent, DAILY_UPLOAD_BYTES, "upload")
 
@@ -239,17 +231,9 @@ def submit_memory(body: SubmissionRequest):
     refuse_over_quota(filed, DAILY_MEMORIES, "submission")
 
     with get_session() as session:
-        # And again, now that a row lock makes the answer hold still.
-        #
-        # The check above is a read in one transaction and the insert is a
-        # write in another, which is a race anybody can win by not waiting:
-        # fire twenty requests at once and all twenty see the same count and
-        # all twenty are allowed. That defeats the limit exactly when it
-        # matters, since the limit exists for the person doing it on purpose.
-        #
-        # Locking the user row serialises one person's submissions and nobody
-        # else's. The cheap check stays because it is what refuses the ordinary
-        # case without taking a lock at all - this one only has to be right.
+        # LOCK_USER serialises one person's submissions, so this recheck is
+        # the one that's true - see
+        # docs/10-decisions.md#a-quota-checked-before-the-write-is-not-a-quota.
         session.execute(text(LOCK_USER), {"user_id": user_id})
         filed = session.execute(text(FILED_TODAY), {"user_id": user_id}).scalar()
         refuse_over_quota(filed, DAILY_MEMORIES, "submission")
@@ -317,12 +301,7 @@ def report_memory(memory_id: int, body: ReportRequest):
     unanswerable.
     """
     with get_session() as session:
-        # FOR UPDATE, so the count below is not read past a report that has
-        # been inserted and not yet committed. Two people reporting the same
-        # memory at once would otherwise each see two reports where there are
-        # three, and neither would hide it - the threshold would be reached and
-        # nothing would happen until somebody reported it a fourth time. It
-        # locks one memory against its own reports and nothing else.
+        # See docs/10-decisions.md#a-report-count-needs-a-lock-too.
         exists = session.execute(
             text("SELECT 1 FROM memories WHERE id = :id FOR UPDATE"), {"id": memory_id}
         ).scalar()

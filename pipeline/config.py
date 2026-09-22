@@ -18,22 +18,8 @@ CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-4-5")
 CHUNK_MINUTES = int(os.getenv("CHUNK_MINUTES", "4"))
 CHUNK_OVERLAP_SECONDS = int(os.getenv("CHUNK_OVERLAP_SECONDS", "30"))
 
-# How many database connections one API process may hold, and how long a
-# request may wait for one.
-#
-# The defaults are not arbitrary. FastAPI runs a `def` handler - which is all
-# but one of ours - on anyio's thread pool, forty threads wide by default, and
-# every handler opens a session for its whole body. SQLAlchemy's own default
-# pool is five connections plus ten overflow, so twenty-five of those forty
-# threads could be parked on a pool that cannot grow, each holding a thread it
-# cannot use. api/main.py narrows the thread pool to this ceiling for exactly
-# that reason: queueing before a thread is taken is cheaper than queueing
-# after, and it keeps the two numbers from drifting apart.
-#
-# The wait is short on purpose. The app gives up on any request after 8s
-# (REQUEST_TIMEOUT_MS in mobile/src/api.ts), so a connection handed over at
-# 30s is handed to nobody - it just holds the slot open for a client that has
-# already gone. tests/test_db_pool.py keeps the two in that order.
+# Sized so the connection pool and anyio's thread pool cannot drift apart -
+# docs/10-decisions.md#the-pool-is-sized-to-the-server-and-the-server-to-the-pool.
 DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "10"))
 DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "20"))
 DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "5"))
@@ -41,17 +27,5 @@ DB_POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "5"))
 #: Concurrent requests one process will run. Never more than the pool can serve.
 MAX_CONCURRENCY = DB_POOL_SIZE + DB_MAX_OVERFLOW
 
-# A ceiling on any single statement, so one pathological query cannot hold a
-# connection indefinitely. With a pool of thirty, thirty stuck queries are a
-# total outage, and the way to find out is for it to happen.
-#
-# Thirty seconds is a safety net rather than a policy: the slowest thing here
-# by a wide margin is /v1/stats' DBSCAN, measured at 1.3s on 50,000 memories
-# (`python -m pipeline.perf`). If that ever approaches this number the answer
-# is to precompute hotspots, not to raise it.
-#
-# It binds the pipeline as well as the API, because they share the engine in
-# pipeline/db.py. Nothing there comes close today - the inserts are per row -
-# but a bulk job that legitimately needs longer should raise this for its own
-# process rather than have the API carry its ceiling.
+# A ceiling on any single statement - docs/10-decisions.md#one-statement-cannot-run-for-ever.
 DB_STATEMENT_TIMEOUT_MS = int(os.getenv("DB_STATEMENT_TIMEOUT_MS", "30000"))

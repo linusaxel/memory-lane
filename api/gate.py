@@ -20,8 +20,6 @@ from api.models import Author, ContentRef, Coordinates, MediaItem, Memory, Place
 # docs/10-decisions.md#150-m-not-50-m.
 UNLOCK_RADIUS_METERS = int(os.getenv("UNLOCK_RADIUS_METERS", "150"))
 
-# ponytail: this threshold is the whole moderation system - no appeal, no
-
 
 def row_source(row) -> Source | None:
     """None for every submission - they have no content row - and for the four

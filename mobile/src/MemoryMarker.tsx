@@ -1,18 +1,6 @@
-/** What a coordinate looks like on the map, in its five states.
- *
- * Two axes compose here and nowhere else. The *ink state* is your relationship
- * to the coordinate - nothing to earn, too far, nearly there, openable now,
- * already earned - and the *shape* is which layer it belongs to. A pin is a
- * stamp impression: walking the city presses them, and a pressed one stays
- * pressed. See mobile/UI.md for the ladder and docs/08-ux-flows.md F4 for why
- * layers are stacked by shape rather than chosen from a filter.
- *
- * No animation lives in here. Animating a custom marker's children is a known
- * source of flicker in react-native-maps, and a pin that strobes while you walk
- * past it is worse than a pin that simply changes. The pulse belongs in the
- * banner, which is not a marker; the stamp belongs in the sheet, which is not
- * one either.
- */
+/** What a coordinate looks like on the map, in its five states - see "The ink
+ *  ladder" in mobile/UI.md, and docs/08-ux-flows.md F4 for why layers are
+ *  stacked by shape rather than chosen from a filter. */
 
 import type { ReactNode } from 'react';
 import { type ColorValue, StyleSheet, Text, View } from 'react-native';

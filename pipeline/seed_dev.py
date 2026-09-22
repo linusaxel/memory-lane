@@ -175,9 +175,6 @@ def centroid_twin(session) -> None:
     )
 
 
-# -- media -------------------------------------------------------------------
-
-
 def png(width: int, height: int) -> bytes:
     """A real PNG, written by hand rather than adding Pillow for one image.
 
@@ -372,9 +369,6 @@ def sealed_until_a_date(session) -> int:
             "user_id": SEED_USER,
         },
     ).scalar()
-
-
-# -- the two commands --------------------------------------------------------
 
 
 def clear(session) -> int:

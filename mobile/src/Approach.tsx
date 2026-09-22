@@ -1,29 +1,5 @@
-/** How close you are, as the ring you are going to hold.
- *
- * The out-of-reach sheet used to be a grey padlock over a number. The number
- * changes as you walk - `watchPositionAsync` reports every 25m - but a number
- * changing is not felt, and walking is the one thing this product asks of
- * anybody. So the same circle the unlock control uses fills as you close on
- * it, and when it is full it *is* that control: cross the radius and the
- * composition swaps, the ring you were filling is the ring you now hold.
- *
- * It is deliberately not seal. Seal means openable and nothing else in the
- * app wears it (UI.md, Tokens), so an approach that borrowed it would be
- * promising something it cannot deliver from here.
- *
- * And it thickens a rim rather than filling the middle, which is not a
- * decorative choice. The middle belongs to the hold: the unlock ring's disc
- * rises from the centre. If the approach filled the centre too, then arriving
- * - the best moment in the product - would swap a full circle for an almost
- * empty one and read as the ring draining just as you got there. A rim
- * closing inward leaves the centre empty for the thing that comes next, and
- * it echoes the strain ring the hold uses in its own last quarter.
- *
- * Empty at three radii, because that is already the app's idea of nearly -
- * `WARM_MULTIPLIER` in reach.ts, the distance at which a pin turns from
- * too-far to worth-walking. Past it there is nothing to show and the figure
- * underneath says it better.
- */
+/** How close you are, as the ring you are going to hold - see "The walk in is
+ *  the same ring" under "The unlock control" in UI.md. */
 
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';

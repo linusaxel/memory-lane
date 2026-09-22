@@ -1,16 +1,5 @@
-"""The tag vocabulary, in one place.
-
-There were two. The extractor's prompt listed thirteen, `api/write.py` offered
-eleven for submissions, and they overlapped on six - so the app's `sport` chip
-matched none of the four memories stored as `sports`, and `m.tags && …` is an
-exact-string overlap. Five of the eleven offered tags matched nothing at all.
-
-Both writers filter against this list now, which also makes the prompt's list
-binding: the model was emitting `comedy`, `entertainment`, `celebrity`,
-`theater` and `festival` off its own menu, because nothing checked.
-
-Singular throughout, like every other tag - `sports` was the odd one out and
-db/migrations/008_one_tag_vocabulary.sql renames it in place.
+"""The tag vocabulary, in one place. Both writers filter against this list -
+see docs/10-decisions.md#one-tag-vocabulary-not-two.
 """
 
 # Ordered roughly by how often the corpus uses them, because the prompt reads
