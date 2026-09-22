@@ -10,6 +10,13 @@ Pipeline: `Content URLs → Transcripts → LLM Extraction (with coords) → Que
 
 ## Before you finish: run the gate
 
+Two things verify this project and they answer different questions. The gate
+says the rules are right; `./e2e/run.sh` says the product works, by driving the
+real app on a simulator. The gate is the one you must not leave red.
+
+One trap worth knowing: `./loop/verify.sh | tail` reports `tail`'s exit status,
+not the gate's. Check `$?` on the gate itself, or a red gate reads as green.
+
 ```bash
 ./loop/verify.sh     # 0 GREEN | 1 RED (fix it) | 2 INFRA (needs a human)
 ```
@@ -73,6 +80,8 @@ python -m api.main
 | `pipeline/seed_dev.py` | **Memories you can walk to.** The real corpus has none near any dev coordinate |
 | `pipeline/tags.py` | The one tag vocabulary. Both write paths filter against it |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
+| `pipeline/perf.py` | **Time the read path on a corpus this size isn't.** Run before and after touching `api/queries.py` |
+| `pipeline/sweep.py` | Reap uploads no submission ever claimed. Describes unless `--apply` |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `api/main.py` | The app: CORS, the media mount, and the router includes. 60 lines |
@@ -87,6 +96,9 @@ python -m api.main
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
+| `e2e/run.sh` | **Watch the flows happen.** Drives the real app on a simulator; `--record` leaves an mp4 |
+| `.maestro/` | One flow per id in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
+| `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |

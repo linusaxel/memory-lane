@@ -64,8 +64,11 @@ SUBMITTED_PRECISION_METERS = 25
 # retry loop or a stuck client from filling the disk, which is the failure that
 # actually happens. Counted per person rather than per device, so a second
 # phone on one account does not double the allowance.
-# ponytail: a COUNT over a rolling day, two extra queries on the write path.
-# A token bucket if this ever needs to be per-minute rather than per-day.
+# ponytail: a COUNT over a rolling day, and since the check has to happen again
+# under a lock to survive concurrent requests, three extra queries on the write
+# path rather than two. A token bucket if this ever needs to be per-minute
+# rather than per-day; the lock is what a bucket would have to replace, not
+# just the counting.
 DAILY_MEMORIES = int(os.getenv("DAILY_MEMORY_LIMIT", "20"))
 DAILY_UPLOAD_BYTES = int(os.getenv("DAILY_UPLOAD_BYTES", str(64 * 1024 * 1024)))
 
