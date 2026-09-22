@@ -38,7 +38,13 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
   const breath = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!reachable) return;
+    // Stopping a loop leaves the value wherever the last frame put it, so a
+    // banner that stops being reachable mid-breath would stay 2% too big for
+    // the rest of the session.
+    if (!reachable) {
+      breath.setValue(0);
+      return;
+    }
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(breath, {
