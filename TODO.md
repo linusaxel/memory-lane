@@ -808,6 +808,126 @@ on them. Full detail in `loop/STATE.md`.
 
 ---
 
+## Ideas — founder brainstorm, unvetted
+
+Seeded 2026-09-22 from a founder brainstorm dump, elaborated into small,
+buildable increments. **Unvetted** — none of this has been through the
+audit/measurement process the rest of this file uses. Three items conflict
+with rules already marked *Decided* below; flagged inline rather than dropped
+or silently overridden.
+
+- [ ] **Static logo mark.** A winding pathway with a wind gust worked into the
+      line. One SVG, used as the app icon and splash image — no animation, no
+      variants. Must read as a mark, not an illustration, at 40×40 (the
+      Settings-row / favicon size). Keep it inside the decided palette
+      (`docs/09-visual-design.md`) — ink line on parchment, not a new color
+      language.
+- [ ] **Animated startup logo.** Once the mark exists: a single one-shot
+      draw-on animation (`react-native-svg` + `Animated`, both already
+      dependencies) while the splash screen holds, capped at ~800ms so it
+      never becomes a loading screen people wait through.
+- [ ] **⚠️ Conflicts with a decided rule.** "Stardew Valley cozy, warm and
+      green" app-wide aesthetic. `docs/09-visual-design.md` already settled on
+      a muted-parchment, editorial palette after explicitly trying and
+      rejecting a warm/soft-UI direction (neomorphism, dark themes — see its
+      "What was rejected" section) and `mobile/UI.md` has the token table built
+      on that decision. Adopting a cozy/green direction means re-opening that
+      decision, not adding a todo under it. Needs an explicit call: keep the
+      decided palette, or reopen `docs/09-visual-design.md` and re-derive
+      `mobile/UI.md`'s tokens from scratch.
+      - Parked, not built: a separate "urban/city" theme variant. Speculative
+        second theme before the first one has a second neighborhood
+        (Copenhagen) — YAGNI until Phase 1 ships.
+- [ ] **Route polyline on the map.** `mobile/src/route.ts` already computes
+      today's ordered stops; the map does not draw the path between them.
+      `react-native-maps`'s `Polyline` component (already a dependency, no new
+      library) drawn through the route's stops in order, styled to match the
+      decided muted map (thin, low-opacity line — see rule 1 in
+      `docs/09-visual-design.md`, the map must stay quiet under the pins).
+- [ ] **Start-route affordance.** Today's route is fetched and shown; there's
+      no explicit "start" moment. Smallest version: a button on the route
+      view that does nothing server-side (the route is already computed and
+      stored per device per day) — it only switches the screen into
+      "in-progress" UI state, e.g. highlighting the next unvisited stop.
+- [ ] **Route-complete moment.** A single subtle animation/haptic when the
+      last stop of today's route unlocks — reusing the unlock haptic already
+      in `mobile/src/UnlockButton.tsx` rather than inventing a new one. Keep it
+      to an affirmation on the thing that already happened (an unlock), not a
+      new mechanic — see the streak/notification conflict below for where this
+      line is.
+- [ ] **Configurable route distance.** `ROUTE_RADIUS_METERS`/`ROUTE_SIZE`
+      (`pipeline/config.py`) are process-wide env defaults today. Cheapest
+      real increment: accept an optional radius on
+      `GET /v1/routes/today` and store it with the day's route row, instead of
+      adding a settings screen. A UI control can point at that parameter
+      later; skip building the screen until the API supports the choice.
+      - Parked: weighting a route toward "more nature" / "more historical" /
+        "more friends' memories". Meaningless until a route has more than one
+        layer with real density to choose between (today only the historical
+        podcast corpus and dev-seed data exist) — revisit alongside Phase 3/4
+        density work.
+- [ ] **⚠️ Conflicts with a decided rule, and duplicates existing fields.**
+      "Memories should only contain picture / date / description / link to
+      source." The schema already carries less than the brainstorm assumes on
+      the display side (the card is one template, `api/card.py`, already
+      minimal — see 1.7) but the *data* model — `layer`, `tags`,
+      `contrast_score`, moderation (`hidden`, `reports`) — is called out under
+      "Decided — do not revisit" as **core, not polish**. Reducing the model to
+      four fields would mean dropping layer separation and contrast ranking,
+      the two things that section says decide whether the product is
+      interesting at all. If the actual complaint is that a *specific* card
+      or screen shows more than picture/date/description/link, name which one
+      — that's a display fix, not a schema change.
+- [ ] **Mass-sourcing candidates.** x/Twitter, Reddit, free books/literature —
+      these are candidate answers to the existing open question "Which
+      historical source first?" (`TODO.md` Open questions, above), not a new
+      question. Added there as options alongside arkiv.dk/Mediestream/
+      setlist.fm rather than duplicated here. Same caveat already written for
+      that question applies to each: check reuse/ToS terms before ingesting
+      (Reddit and X both meter or restrict API access; free-literature sources
+      like Project Gutenberg have no per-venue coordinates, so a source
+      contributing to *this* product still needs a place attached to each
+      excerpt).
+- [ ] **Onboarding stays minimal — verify, don't build.** Sign-up is already
+      about as small as this gets: no forms, no passwords — a device id is
+      minted locally and Google/Apple sign-in (3.1) is optional, only needed
+      to survive a new phone. The one real onboarding moment is the location
+      permission primer (`docs/08-ux-flows.md` F8/F9,
+      `mobile/UI.md` "Asking for location"), already built and reasoned about.
+      Nothing to add here unless a specific step in that flow is the
+      complaint — name it and it becomes a normal bug, not a todo.
+- [ ] **Heart/favorite a memory.** One `memory_hearts(memory_id, device_id)`
+      table (favoring a join table over a counter column so a device can't
+      inflate a count by re-hearting) plus `POST /v1/memories/{id}/heart` and
+      a count on the read shape. Cheapest real version: display the count,
+      change nothing about ordering — `contrast_score`/`layer` stay the sort
+      keys (Decided, above). Only revisit using heart count as a ranking
+      signal once there's enough traffic for it to mean anything.
+- [ ] **⚠️ Conflicts with a decided rule.** Subscription monetization.
+      "Decided — do not revisit" already rules out a consumer subscription
+      as a non-goal (converts at 1–3%) and states revenue comes from the
+      historical-layer B2B surface (Phase 2's embeddable map / delivered
+      corpora to tourism boards etc.) — the social/friend layer is expected to
+      earn nothing for years. A subscription model is a reversal of that call,
+      not an addition to it. Needs an explicit decision, not a todo, if the
+      direction is changing.
+- [ ] **⚠️ Conflicts with a decided rule.** Daily streak + proximity push
+      notification. `docs/11-memory-types.md` and the Phase 5 reasoning in
+      `TODO.md` (5.1) are explicit: *"no notifications, no streaks, no
+      gamification chrome anywhere in this product"* — anniversary
+      resurfacing was deliberately built as a list-ordering trick specifically
+      **because** the product has no notification channel at all. A proximity
+      push additionally needs background location, which
+      `mobile/UI.md` documents as a load-bearing constraint this app
+      deliberately avoids (foreground-only). Both ideas need that decision
+      reopened before either is buildable, not a todo under it.
+- [ ] **Tab bar delimiters.** `mobile/App.tsx`'s bottom tabs need a clearer
+      visual separator between them. Small, contained styling change — no
+      conflict, no new dependency; do it as a normal UI pass against the
+      decided tokens in `mobile/UI.md`.
+
+---
+
 ## Decided — do not revisit
 
 Copied so they survive context resets.
