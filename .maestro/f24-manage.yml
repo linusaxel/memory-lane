@@ -70,8 +70,10 @@ appId: ${APP_ID}
     timeout: 40000
 
 # The My memories row opens the same sheet as editing: fields come back
-# exactly as filed.
-- tapOn: "The step by the ferry landing"
+# exactly as filed. My memories rows now carry a live distance alongside the
+# place name in their accessibility label (Memories.tsx's Row), same reason
+# Unlocked's row above needed the wildcard - so this tap does too.
+- tapOn: ".*The step by the ferry landing.*"
 - assertVisible: "Edit memory"
 - assertVisible: "The step by the ferry landing"
 - assertVisible: ".*ferry horn.*"
@@ -96,13 +98,14 @@ appId: ${APP_ID}
 
 # Back on the Memories tab - onSaved closes the editor the same way onPosted
 # does, and App.tsx's mineVersion bump means My memories has already
-# refetched without the tab being left and reopened.
+# refetched without the tab being left and reopened. Wildcarded for the same
+# distance-in-the-label reason as the tap above.
 - extendedWaitUntil:
-    visible: "The jetty by the ferry landing"
+    visible: ".*The jetty by the ferry landing.*"
     timeout: 40000
 - assertNotVisible: "The step by the ferry landing"
 
-- tapOn: "The jetty by the ferry landing"
+- tapOn: ".*The jetty by the ferry landing.*"
 - assertVisible: "Edit memory"
 - assertVisible: "The jetty by the ferry landing"
 - assertVisible: ".*ferry horn.*"

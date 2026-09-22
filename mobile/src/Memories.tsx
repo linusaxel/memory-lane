@@ -35,9 +35,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fetchMine, MINE_PAGE_SIZE, type LocatedMemory } from './api.ts';
+import { fetchMine, MINE_PAGE_SIZE, type Coordinates, type LocatedMemory } from './api.ts';
 import Padlock from './Padlock.tsx';
-import { when } from './format.ts';
+import { distance, when } from './format.ts';
+import { metersBetween } from './region.ts';
 import { color, dim, font, label } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
 
@@ -58,6 +59,10 @@ type Props = {
    *  would go on showing what was filed until the tab was left and reopened. */
   refreshKey: number;
   onOpenMine: (memory: LocatedMemory) => void;
+  /** Where the person is standing, or null if they said no to location - the
+   *  same source MemorySheet.tsx reads for its own distance. Rows show
+   *  nothing in that slot rather than a stale figure when this is null. */
+  position: Coordinates | null;
 };
 
 type MineStatus = 'loading' | 'ready' | 'failed';
@@ -70,6 +75,7 @@ export default function Memories({
   focused,
   refreshKey,
   onOpenMine,
+  position,
 }: Props) {
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<'unlocked' | 'mine'>('unlocked');
@@ -144,6 +150,13 @@ export default function Memories({
 
   const data: LocatedMemory[] = section === 'unlocked' ? unlocked : mine;
 
+  // Live, not stored: neither /v1/unlocks nor /v1/me/memories ever carries a
+  // meaningful distance_meters (both force it null server-side), so this is
+  // computed the same way MemorySheet.tsx computes its own - from wherever the
+  // device is right now, not from anything the row itself remembers.
+  const distanceTo = (item: LocatedMemory) =>
+    position ? distance(metersBetween(position.lat, position.lng, item.place.coordinates.lat, item.place.coordinates.lng)) : undefined;
+
   return (
     <FlatList<LocatedMemory>
       style={styles.screen}
@@ -155,6 +168,7 @@ export default function Memories({
           <Row
             place={item.place.name}
             summary={item.summary}
+            distance={distanceTo(item)}
             meta={when((item as UnlockedMemory).unlocked_at) ?? undefined}
             onPress={() => onOpenUnlocked(item as UnlockedMemory)}
           />
@@ -162,6 +176,7 @@ export default function Memories({
           <Row
             place={item.place.name}
             summary={item.locked ? `Sealed until ${item.opens_at?.slice(0, 4)}` : item.summary}
+            distance={distanceTo(item)}
             badge={item.hidden ? 'Reported' : undefined}
             onPress={() => onOpenMine(item)}
           />
@@ -259,12 +274,14 @@ function Header({ note }: { note: string }) {
 function Row({
   place,
   summary,
+  distance,
   meta,
   badge,
   onPress,
 }: {
   place: string;
   summary: string;
+  distance?: string;
   meta?: string;
   badge?: string;
   onPress: () => void;
@@ -274,7 +291,7 @@ function Row({
       style={dim(styles.row)}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={[place, meta].filter(Boolean).join(', ')}
+      accessibilityLabel={[place, distance, meta].filter(Boolean).join(', ')}
     >
       <Text style={styles.place} numberOfLines={1}>
         {place}
@@ -282,7 +299,12 @@ function Row({
       <Text style={styles.summary} numberOfLines={2}>
         {summary}
       </Text>
-      {meta && <Text style={styles.when}>{meta}</Text>}
+      {(distance || meta) && (
+        <View style={styles.metaRow}>
+          {distance && <Text style={styles.when}>{distance}</Text>}
+          {meta && <Text style={styles.when}>{meta}</Text>}
+        </View>
+      )}
       {badge && <Text style={styles.badge}>{badge}</Text>}
     </Pressable>
   );
@@ -321,6 +343,7 @@ const styles = StyleSheet.create({
   row: { gap: 6, paddingHorizontal: 24, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 16 },
   place: { fontFamily: font.displaySemi, fontSize: 19, lineHeight: 26, color: color.ink },
   summary: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
+  metaRow: { flexDirection: 'row', gap: 10 },
   when: { ...label, fontSize: 10, marginTop: 2 },
   badge: { ...label, fontSize: 10, color: color.seal, marginTop: 2 },
   spinner: { marginTop: 12 },

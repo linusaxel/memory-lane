@@ -30,7 +30,6 @@ import {
   fetchStats,
   fetchProfile,
   fetchUnlocked,
-  reportMemory,
   saveDisplayName,
   unlockMemory,
   type Coordinates,
@@ -146,9 +145,6 @@ export default function App() {
   // Bumped after a post, a save or a delete so Memories' "My memories" section
   // refetches without the tab having to be left and come back to.
   const [mineVersion, setMineVersion] = useState(0);
-  // Reported by this device already. Local only - the server counts devices,
-  // and this stops the control offering a second press that does nothing.
-  const [reported, setReported] = useState<Set<number>>(new Set());
   // Only the handful of values the palette cannot carry need this: the map's
   // own appearance, and the two rgba literals a MapView Circle insists on.
   const scheme = useColorScheme();
@@ -481,17 +477,6 @@ export default function App() {
     [region, reload, unlocked],
   );
 
-  const report = useCallback(
-    async (memory: LocatedMemory) => {
-      if (!device) return;
-      // Optimistic: a report that silently did nothing is worse than one that
-      // says it landed and did not. It is idempotent per device either way.
-      setReported((current) => new Set(current).add(memory.id));
-      reportMemory(memory.id, device).catch(() => {});
-    },
-    [device],
-  );
-
   /** Opens Submit as an editor rather than a blank form - the Memories tab
    *  and the map sheet both lead here. */
   const openEditor = useCallback((memory: LocatedMemory) => {
@@ -762,6 +747,7 @@ export default function App() {
             focused={tab === 'collection'}
             refreshKey={mineVersion}
             onOpenMine={openEditor}
+            position={position}
           />
         </View>
 
@@ -810,10 +796,6 @@ export default function App() {
                 }
               : undefined
           }
-          // Only what a person filed, and not your own - there is nobody to
-          // report a podcast to, and reporting yourself is not a real control.
-          onReport={openMemories[openIndex]?.author && !mine ? report : undefined}
-          reported={reported.has(openMemories[openIndex]?.id ?? -1)}
           // Only your own, and only while it is open - a sealed one shows the
           // locked composition instead, which has nowhere to put this.
           onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}

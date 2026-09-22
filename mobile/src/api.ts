@@ -394,12 +394,6 @@ export async function deleteMemory(device: string, id: number): Promise<void> {
   if (!res.ok) throw new Error(`API ${res.status}`);
 }
 
-/** Say this should not be here. Enough different devices and it stops being
- *  served to anybody. */
-export async function reportMemory(id: number, device: string, reason?: string): Promise<void> {
-  await post(`/v1/memories/${id}/report`, { device, reason: reason ?? null });
-}
-
 // --- signing in ---------------------------------------------------------------
 
 /**

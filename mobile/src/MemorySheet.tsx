@@ -36,15 +36,9 @@ type Props = {
   unlockError: string | null;
   /** Absent when the sheet is already over the map. */
   onShowOnMap?: (memory: LocatedMemory) => void;
-  /** Absent for extracted memories, and for your own: there is nobody to
-   *  report a podcast to, and reporting yourself is not a real control. */
-  onReport?: (memory: LocatedMemory) => void;
-  /** Already reported by this device, so the control says so instead of
-   *  pretending a second press does anything. */
-  reported?: boolean;
   /** Present only for a memory this account filed, and only while it is open -
    *  a sealed one shows the locked composition instead, which has no room for
-   *  this. Mutually exclusive with onReport: you cannot report yourself. */
+   *  this. */
   onEdit?: (memory: LocatedMemory) => void;
   /** This device walked here and opened it. Not the same as "unlocked": most of
    *  this corpus sits on city centroids and was never gated, and a stamp on one
@@ -102,8 +96,6 @@ export default function MemorySheet({
   unlocking,
   unlockError,
   onShowOnMap,
-  onReport,
-  reported,
   onEdit,
   earned,
 }: Props) {
@@ -209,14 +201,10 @@ export default function MemorySheet({
               {/* The server already sorted it to the top; this says why. No
                   accent - the seal means openable and nothing else gets it. */}
               {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
-              {locked ? (
+              {locked && (
                 <Text style={[styles.meta, withinReach && !sealed ? styles.reachable : styles.sealed]}>
                   {sealed ? 'sealed' : withinReach ? 'within reach' : 'locked'}
                 </Text>
-              ) : (
-                memory.confidence === 'high' && (
-                  <Text style={[styles.meta, styles.confident]}>high confidence</Text>
-                )
               )}
             </View>
           </View>
@@ -312,7 +300,7 @@ export default function MemorySheet({
                     </View>
                   )}
 
-                  {!locked && onEdit ? (
+                  {!locked && onEdit && (
                     <Pressable
                       style={dim(styles.report)}
                       accessibilityRole="button"
@@ -320,20 +308,6 @@ export default function MemorySheet({
                     >
                       <Text style={styles.reportText}>Edit this memory</Text>
                     </Pressable>
-                  ) : (
-                    !locked &&
-                    onReport && (
-                      <Pressable
-                        style={dim(styles.report)}
-                        accessibilityRole="button"
-                        disabled={reported}
-                        onPress={() => onReport(memory)}
-                      >
-                        <Text style={styles.reportText}>
-                          {reported ? 'Reported' : 'Report this memory'}
-                        </Text>
-                      </Pressable>
-                    )
                   )}
                 </Animated.View>
               </ScrollView>
@@ -467,7 +441,6 @@ const styles = StyleSheet.create({
   // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', gap: 14, marginTop: 10 },
   meta: { ...label },
-  confident: { color: color.confident },
   reachable: { color: color.seal },
   sealed: { color: color.inkFaint },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },

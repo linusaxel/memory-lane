@@ -43,7 +43,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F18 | Stand somewhere with nothing in it | Implemented |
 | F19 | Somewhere else entirely | Implemented |
 | F5 | File a memory of your own | Implemented |
-| F20 | Report something that should not be here | Implemented |
+| F20 | Report something that should not be here | Removed from the app |
 | F21 | Be somebody | Implemented |
 | F22 | Keep your collection on a new phone | Implemented |
 | F23 | Seal a memory until a date | Implemented |
@@ -138,7 +138,7 @@ happens, the app carries the attribution the summaries lack.
 **Who:** someone who sees a pin near a place they know.
 
 1. Tap a pin → sheet slides up.
-2. Place name, distance, confidence.
+2. Place name, distance.
 3. The summary is the point of the screen — a story about what happened there.
 4. Tags; the source video title.
 5. "Watch at 12:04" → opens YouTube at that exact second.
@@ -581,29 +581,21 @@ same spot.
 
 ---
 
-## F20 · Report something that should not be here — **Implemented**
+## F20 · Report something that should not be here — **Removed from the app**
 
-**Who:** anybody reading a memory a stranger filed.
-**Trigger:** "Report this memory", under the byline on an open memory.
+The "Report this memory" button was pulled from `MemorySheet.tsx` - the app
+has no in-app moderation entry point right now. The mechanism it drove is
+still there and still works, just unreachable from a phone:
 
-1. One quiet press. No dialog, no reason picker, no confirmation step — the
-   control simply changes to "Reported".
-2. Three different devices reporting the same memory takes it out of every
-   endpoint at once: the map, the search, the counts, the card, and the
-   collection of the person who filed it.
-
-Only offered on memories a person filed. There is nobody to report a podcast
-to, and putting the control on all 224 extracted memories would make it read as
-general feedback rather than as a takedown.
-
-The row survives. `hidden` is a flag and not a delete, because a takedown that
-destroys the evidence makes the next dispute unanswerable.
-
-*ponytail: no appeal, no reinstatement, no queue for a human to look at. The
-threshold is the whole moderation system until there is a moderator.*
-
-**Done when:** something that should not be on the map can be taken off it by
-the people who found it, without waiting for us.
+`POST /v1/memories/{id}/report` (`api/write.py`) still takes a report from
+`{device, reason}`, and three distinct devices reporting the same memory still
+takes it out of every endpoint at once - the map, the search, the counts, the
+card, and the collection of the person who filed it. `REPORT_THRESHOLD` and
+the `hidden` flag (a flag, not a delete - a takedown that destroys the
+evidence makes the next dispute unanswerable) are unchanged in
+`tests/test_api_manage.py`/`tests/test_api_submit.py`. Reintroducing a trigger
+for it in the app is a matter of wiring a control back up to that endpoint,
+not rebuilding anything.
 
 ---
 

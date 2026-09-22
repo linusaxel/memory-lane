@@ -46,9 +46,6 @@ export const color = {
    *  when full - so it has to hold against both. */
   sealDeep: dual('#8F2F1B', '#F2A88F'),
 
-  /** High confidence, on an open memory. The one green in the app. */
-  confident: dual('#5C7A4A', '#93B07C'),
-
   /** Out of reach: the same padlock, faded. Dark enough to hold against the
    *  parchment map, and lighter in the dark where a dark pin vanishes. */
   faded: dual('#776E64', '#9A9086'),

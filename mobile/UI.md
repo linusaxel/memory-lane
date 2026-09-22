@@ -23,12 +23,12 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700
-  ├─ "locked"         13, muted     ├─ distance · confidence
+  ├─ "locked"         13, muted     ├─ distance
   ├─ padlock                        ├─ summary  17/26 - the hero
   ├─ distance         44/700        ├─ photo / recording   if it has any
   ├─ "Get within 150 m"             ├─ tags     pills
   ├─ "1 attachment waiting"         ├─ "Filed by X", or the channel and avatar
-  ├─ "Walk there"     outlined      ├─ "Report this memory"  submissions only
+  ├─ "Walk there"     outlined      ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 
   The locked side says how many attachments are waiting and never which. A
