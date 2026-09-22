@@ -10,8 +10,16 @@
  * people reported (flagged, not dropped).
  */
 
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchMine, type LocatedMemory } from './api.ts';
@@ -53,29 +61,52 @@ export default function Memories({
   const insets = useSafeAreaInsets();
   const [mine, setMine] = useState<LocatedMemory[]>([]);
   const [mineStatus, setMineStatus] = useState<MineStatus>('loading');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(() => {
+    if (!device) return Promise.resolve();
+    return fetchMine(device).then((rows) => {
+      setMine(rows);
+      setMineStatus('ready');
+    });
+  }, [device]);
 
   useEffect(() => {
     if (!focused || !device) return;
     let cancelled = false;
     setMineStatus('loading');
-    fetchMine(device)
-      .then((rows) => {
-        if (cancelled) return;
-        setMine(rows);
-        setMineStatus('ready');
-      })
-      .catch(() => {
-        if (!cancelled) setMineStatus('failed');
-      });
+    load().catch(() => {
+      if (!cancelled) setMineStatus('failed');
+    });
     return () => {
       cancelled = true;
     };
-  }, [focused, device, refreshKey]);
+  }, [focused, device, refreshKey, load]);
+
+  // A pull down asks again without disturbing what's already on screen: a
+  // failed pull leaves `mine`/`mineStatus` alone rather than swapping a
+  // populated list for the "can't reach" empty state, same as a failed map
+  // refresh keeps the last good pins (UI.md).
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    load()
+      .catch(() => {})
+      .then(() => setRefreshing(false));
+  }, [load]);
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={[styles.body, { paddingTop: insets.top + 14 }]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={color.inkFaint}
+          colors={[color.inkFaint]}
+          progressBackgroundColor={color.paper}
+        />
+      }
     >
       <Text style={styles.title}>Memories</Text>
 
