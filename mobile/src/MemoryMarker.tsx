@@ -80,7 +80,9 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
         {card && <View style={styles.fold} />}
         <Tag background={color.sealDeep}>
           {count > 1 ? (
-            <Text style={styles.count}>{count}</Text>
+            <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
+              {count}
+            </Text>
           ) : (
             <Padlock size={10} color={color.paper} />
           )}
@@ -95,7 +97,9 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
     return count > 1 ? (
       <View style={styles.wrap}>
         <View style={[styles.badge, styles.inked, card && styles.square]}>
-          <Text style={styles.count}>{count}</Text>
+          <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
+            {count}
+          </Text>
         </View>
       </View>
     ) : (
@@ -117,7 +121,9 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
         {card && <View style={styles.fold} />}
         {count > 1 && (
           <Tag background={color.ink}>
-            <Text style={styles.count}>{count}</Text>
+            <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
+              {count}
+            </Text>
           </Tag>
         )}
       </View>
@@ -133,7 +139,12 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
     <View style={styles.wrap}>
       <View style={[styles.disc, warm ? styles.warm : styles.distant, card && styles.discCard]}>
         {count > 1 ? (
-          <Text style={[styles.count, warm && styles.countWarm]}>{count}</Text>
+          <Text
+            style={[styles.count, warm && styles.countWarm]}
+            maxFontSizeMultiplier={MARKER_FONT_SCALE}
+          >
+            {count}
+          </Text>
         ) : (
           <Padlock size={DISC * 0.34} color={warm ? color.ink : color.paper} />
         )}
@@ -156,6 +167,14 @@ const DISC = 28;
 const RING = 44;
 /** Big enough to read as a turned page at 28px, small enough to leave a face. */
 const FOLD = 9;
+
+/** The count sits in fixed, non-clipping circles as small as 20px - there is
+ *  no room in there for the OS's largest accessibility text sizes, which can
+ *  scale a font past 3x. 1.3 keeps the count within the accessibility-props
+ *  floor research recommends (below ~1.2 meaningfully hurts low-vision
+ *  readers) while still bounding the overflow to something the pin survives,
+ *  rather than the unbounded default. */
+const MARKER_FONT_SCALE = 1.3;
 
 const styles = StyleSheet.create({
   // The padding is the tap target, not decoration: a 28px disc is 28px of
