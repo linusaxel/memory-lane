@@ -12,8 +12,8 @@
  * marker's children flickers in react-native-maps.
  */
 
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, Text } from 'react-native';
 
 import { distance } from './format.ts';
 import { color, dim, font } from './theme.ts';
@@ -36,12 +36,19 @@ function label(count: number | null, meters: number | null): string {
 export default function ReachBanner({ count, meters, onPress }: Props) {
   const reachable = count != null;
   const breath = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     // Stopping a loop leaves the value wherever the last frame put it, so a
-    // banner that stops being reachable mid-breath would stay 2% too big for
-    // the rest of the session.
-    if (!reachable) {
+    // banner that stops being reachable - or has Reduce Motion turned on -
+    // mid-breath would stay 2% too big for the rest of the session.
+    if (!reachable || reduceMotion) {
       breath.setValue(0);
       return;
     }
@@ -63,7 +70,7 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
     );
     loop.start();
     return () => loop.stop();
-  }, [breath, reachable]);
+  }, [breath, reachable, reduceMotion]);
 
   return (
     <Animated.View
