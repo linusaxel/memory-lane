@@ -383,6 +383,16 @@ UNLOCK_COUNT_QUERY = (
     f"SELECT COUNT(DISTINCT memory_id) FROM unlocks WHERE device_id IN {MY_DEVICES}"
 )
 
+# The distinct calendar days this account has earned something, newest first.
+# api.accounts.current_streak turns this into a number - no stored counter, so
+# there is nothing to keep in sync when an unlock lands on a new device.
+STREAK_DAYS_QUERY = f"""
+    SELECT DISTINCT unlocked_at::date AS d
+    FROM unlocks
+    WHERE device_id IN {MY_DEVICES}
+    ORDER BY d DESC
+"""
+
 # Today's route candidates: nearby, not already earned, and actually worth the
 # walk. Three predicates that exist nowhere else in this file:
 #   - not already unlocked - the inverse of DEVICE_UNLOCKS_QUERY's `earned` CTE,

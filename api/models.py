@@ -232,6 +232,10 @@ class Profile(BaseModel):
     display_name: str | None = None
     submitted: int = 0
     unlocked: int = 0
+    # Consecutive days, ending today or yesterday, with at least one unlock -
+    # computed from `unlocks` on every read, not stored. See
+    # api.accounts.current_streak.
+    streak: int = 0
     # Which sign-ins are attached, oldest first. Empty means this device is
     # still only a device: everything works, but a new phone starts empty.
     providers: list[str] = []

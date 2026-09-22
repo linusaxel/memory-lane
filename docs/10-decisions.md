@@ -548,9 +548,9 @@ number the next time the app is opened, the same way "3 memories within reach"
 already does.
 
 **Reopened 2026-09-22** (`TODO.md`'s "Ideas — founder brainstorm" section): a
-streak counter and a geofenced proximity notification are now planned. Neither
-changes this section's reasoning about the *route-complete* moment
-specifically — that stays a silent pill update, reusing the existing unlock
-haptic rather than a push — but the blanket "no notifications at all" is no
-longer true of the plan, only of the code until the proximity notification is
-built.
+streak counter has since shipped (F27) and a geofenced proximity notification
+is still planned. Neither changes this section's reasoning about the
+*route-complete* moment specifically — that stays a silent pill update,
+reusing the existing unlock haptic rather than a push — but the blanket "no
+notifications at all" is no longer true of the plan, only of the code until
+the proximity notification is built.

@@ -869,6 +869,35 @@ relaunching the app, and a locked memory shows no heart control at all.
 
 ---
 
+## F27 · Keep a streak — **Implemented**
+
+**Who:** someone who unlocks or files something most days.
+**Trigger:** none - it is a number on the "You" tab, not a moment.
+
+1. No counter is stored. `api.accounts.current_streak` reads the distinct
+   calendar days this account (this device, or every device on the same
+   account) has an `unlocks` row, and counts back from today for as long as
+   the days are consecutive.
+2. Filing a memory records its own unlock (F5), and finishing today's route
+   (F25) means unlocking its last stop - both extend the streak the same way
+   an ordinary unlock does, with no separate tracking.
+3. Unlocking nothing yesterday *and* nothing today breaks it back to zero; not
+   having unlocked yet *today* does not, since the day is not over.
+4. Shown in `Settings.tsx`'s stat row, next to memories/places/filed, and only
+   once it is above zero - same convention as the "filed" stat.
+
+**Not a notification.** Nothing is pushed when a streak would break; it is a
+truer number the next time the app is opened, same as F25's route pill. This
+is the streak half of the founder-brainstorm's "streak + proximity
+notification, reopened" resolution - the geofenced proximity notification is
+the other half and is not built (see `TODO.md`).
+
+**Done when:** unlocking on consecutive days increases the number on the "You"
+tab, a skipped day resets it, and it reads zero for a device that has never
+unlocked anything.
+
+---
+
 ## Proposed
 
 Not built. Each needs a decision before it can be specified properly — see

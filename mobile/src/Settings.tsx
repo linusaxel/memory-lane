@@ -62,6 +62,7 @@ export default function Settings({
         <Stat value={unlockedCount} label={unlockedCount === 1 ? 'memory' : 'memories'} />
         <Stat value={placeCount} label={placeCount === 1 ? 'place' : 'places'} />
         {submittedCount > 0 && <Stat value={submittedCount} label="filed" />}
+        {!!profile?.streak && <Stat value={profile.streak} label="day streak" />}
       </View>
       <Text style={styles.statsNote}>
         {unlockedCount === 0

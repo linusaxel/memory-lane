@@ -932,10 +932,14 @@ or silently overridden.
       streaks, no gamification chrome" rule and `mobile/UI.md`'s
       foreground-only location constraint. **Decision:** build both. Cheapest
       real path for each, so this doesn't become a backend-infra project:
-      - **Streak:** one counter server-side (e.g. `users.streak_count` +
-        `users.streak_date`), incremented when a device's unlock/route-complete
-        date is one day after the last one, reset otherwise. No push needed —
-        surfaced as a number in the app, same as the anniversary flag today.
+      - [x] **Streak.** Done, and cheaper than planned: no stored counter,
+        so there is no `users.streak_count`/`streak_date` to keep in sync
+        across a device's siblings. `api.accounts.current_streak` counts the
+        distinct calendar days `unlocks` has a row for this account, back
+        from today, stopping at the first gap. Filing a memory or finishing a
+        route already write an unlock, so both extend it for free. Surfaced
+        in `Settings.tsx`'s stat row once above zero, same convention as
+        "filed". See F27, `docs/08-ux-flows.md`.
       - **Proximity notification:** use on-device geofencing
         (`expo-location`'s `startGeofencingAsync`) firing a **local**
         notification, not a server push — no APNs/FCM registration, no push

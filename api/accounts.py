@@ -5,16 +5,35 @@ and signing in binds devices.user_id. docs/10-decisions.md#identity.
 """
 
 import uuid
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Query
 from sqlalchemy import text
 
 from api.auth import apple_identity, google_identity
 from api.models import DEVICE_PATTERN, DeviceRequest, Profile, ProfileRequest, SignInRequest
-from api.queries import UNLOCK_COUNT_QUERY
+from api.queries import STREAK_DAYS_QUERY, UNLOCK_COUNT_QUERY
 from pipeline.db import get_session
 
 router = APIRouter()
+
+
+def current_streak(days: list[date], today: date) -> int:
+    """Consecutive calendar days, newest first, ending today or yesterday.
+
+    A gap anywhere older breaks it; a day skipped entirely (nothing unlocked
+    yesterday or today) means the streak is over, not merely paused.
+    """
+    if not days or days[0] < today - timedelta(days=1):
+        return 0
+    count = 0
+    expected = days[0]
+    for d in days:
+        if d != expected:
+            break
+        count += 1
+        expected -= timedelta(days=1)
+    return count
 
 
 def touch_device(session, device: str) -> None:
@@ -89,14 +108,19 @@ def profile_of(session, device: str) -> Profile:
         {"device_id": device},
     ).fetchone()
     unlocked = session.execute(text(UNLOCK_COUNT_QUERY), {"device_id": device}).scalar() or 0
+    streak_days = [
+        r.d for r in session.execute(text(STREAK_DAYS_QUERY), {"device_id": device}).fetchall()
+    ]
+    streak = current_streak(streak_days, date.today())
 
     if not row:
-        return Profile(unlocked=unlocked)
+        return Profile(unlocked=unlocked, streak=streak)
     return Profile(
         user_id=str(row.id),
         display_name=row.display_name,
         submitted=row.submitted,
         unlocked=unlocked,
+        streak=streak,
         providers=list(row.providers),
     )
 
