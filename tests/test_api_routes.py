@@ -99,6 +99,27 @@ def test_a_route_is_stable_within_the_day(client, db_session):
     assert second["meta"]["route_date"] == first["meta"]["route_date"]
 
 
+def test_radius_meters_defaults_to_the_server_default(client, db_session):
+    _offset(db_session, 1)
+    db_session.commit()
+
+    route = _route(client, lat=LAT, lng=LNG).json()
+    assert route["meta"]["radius_meters"] == 4000
+
+
+def test_an_explicit_radius_is_honoured_and_then_stable(client, db_session):
+    _offset(db_session, 1)
+    db_session.commit()
+
+    first = _route(client, lat=LAT, lng=LNG, radius_meters=1000).json()
+    assert first["meta"]["radius_meters"] == 1000
+
+    # A later call with a different radius must not reroute or restate it -
+    # the route, and the radius that produced it, are fixed for the day.
+    second = _route(client, lat=LAT, lng=LNG, radius_meters=9000).json()
+    assert second["meta"]["radius_meters"] == 1000
+
+
 def test_lat_lng_are_required_to_start_a_route(client, db_session):
     _offset(db_session, 1)
     db_session.commit()

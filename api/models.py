@@ -194,6 +194,10 @@ class RouteMeta(BaseModel):
     # The route's true size, which can be short of ROUTE_SIZE in a sparse area -
     # same honesty as NearbyMeta.total rather than padding or refusing.
     size: int
+    # What radius this route was actually searched within - the caller's
+    # request on the day's first call, or ROUTE_RADIUS_METERS if it did not
+    # supply one. Read back from the stored row on every later call.
+    radius_meters: int
 
 
 class RouteResponse(BaseModel):

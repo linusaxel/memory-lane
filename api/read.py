@@ -365,15 +365,20 @@ def _walking_order(picks: list, anchor: Coordinates) -> list:
 
 
 ROUTE_LOOKUP = """
-    SELECT memory_ids FROM daily_routes
+    SELECT memory_ids, radius_meters FROM daily_routes
     WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date
 """
 
 ROUTE_INSERT = """
-    INSERT INTO daily_routes (device_id, route_date, memory_ids)
-    VALUES (CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]))
+    INSERT INTO daily_routes (device_id, route_date, memory_ids, radius_meters)
+    VALUES (CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :radius_meters)
     ON CONFLICT (device_id, route_date) DO NOTHING
 """
+
+# 500m is about the shortest walk that can still separate distinct stops;
+# 20km is already a long day's outing, well past what "a route" implies.
+ROUTE_RADIUS_MIN_METERS = 500
+ROUTE_RADIUS_MAX_METERS = 20_000
 
 
 @router.get("/v1/routes/today", response_model=RouteResponse)
@@ -385,13 +390,20 @@ def get_todays_route(
     lng: float | None = Query(
         None, ge=-180, le=180, description="Required only to start today's route"
     ),
+    radius_meters: int | None = Query(
+        None,
+        ge=ROUTE_RADIUS_MIN_METERS,
+        le=ROUTE_RADIUS_MAX_METERS,
+        description="Required only to start today's route; defaults to ROUTE_RADIUS_METERS",
+    ),
 ):
     """A fixed set of nearby, not-yet-earned stops for today, mixing layers.
 
     Computed once per device per calendar day and stored, so a relaunch sees
     the same route rather than a fresh roll of the dice - there is no stored
-    home location anywhere in this schema, so lat/lng only matter on the day's
-    first call, which is the only one with anywhere to anchor a route on.
+    home location anywhere in this schema, so lat/lng/radius_meters only
+    matter on the day's first call, which is the only one with anywhere to
+    anchor a route on.
     """
     route_date = gate.today()
 
@@ -405,13 +417,14 @@ def get_todays_route(
                 raise HTTPException(
                     status_code=400, detail="lat/lng are required to start today's route"
                 )
+            search_radius = radius_meters if radius_meters is not None else ROUTE_RADIUS_METERS
 
             candidates = session.execute(
                 text(ROUTE_CANDIDATES_QUERY),
                 {
                     "lat": lat,
                     "lng": lng,
-                    "radius_meters": ROUTE_RADIUS_METERS,
+                    "radius_meters": search_radius,
                     "today": route_date,
                     "device_id": device,
                     "limit": 4 * ROUTE_SIZE,
@@ -426,7 +439,12 @@ def get_todays_route(
             touch_device(session, device)
             session.execute(
                 text(ROUTE_INSERT),
-                {"device": device, "route_date": route_date, "ids": memory_ids},
+                {
+                    "device": device,
+                    "route_date": route_date,
+                    "ids": memory_ids,
+                    "radius_meters": search_radius,
+                },
             )
             # Somebody else's first call this second may have won the race -
             # read back whichever array actually landed.
@@ -446,7 +464,10 @@ def get_todays_route(
     memories = [by_id[i] for i in memory_ids if i in by_id]
 
     return RouteResponse(
-        memories=memories, meta=RouteMeta(route_date=route_date, size=len(memory_ids))
+        memories=memories,
+        meta=RouteMeta(
+            route_date=route_date, size=len(memory_ids), radius_meters=row.radius_meters
+        ),
     )
 
 

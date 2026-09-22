@@ -864,12 +864,13 @@ or silently overridden.
       same signature, no new mechanic, composes with the start-route
       affordance's `routeStarted`/`nextRouteStop` (commit `1daec1e`) rather
       than tracking route progress a second way.
-- [ ] **Configurable route distance.** `ROUTE_RADIUS_METERS`/`ROUTE_SIZE`
-      (`pipeline/config.py`) are process-wide env defaults today. Cheapest
-      real increment: accept an optional radius on
-      `GET /v1/routes/today` and store it with the day's route row, instead of
-      adding a settings screen. A UI control can point at that parameter
-      later; skip building the screen until the API supports the choice.
+- [x] **Configurable route distance.** Done: `GET /v1/routes/today` takes an
+      optional `radius_meters` (500-20,000, `ROUTE_RADIUS_METERS`'s default
+      when omitted), used only on the day's first call and stored on the
+      `daily_routes` row (`db/migrations/014_route_radius.sql`) alongside the
+      picked stops, so a later call in the same day sees the radius that
+      actually produced the route rather than whatever it asks for next. No
+      settings screen - a UI control can point at the param later.
       - Parked: weighting a route toward "more nature" / "more historical" /
         "more friends' memories". Meaningless until a route has more than one
         layer with real density to choose between (today only the historical
