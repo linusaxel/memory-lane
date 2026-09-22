@@ -204,6 +204,21 @@ exist. Verify before trusting, and strike entries when you fix them.
       fine; getting a real date needs either a per-video fetch (25 extra
       requests) or the channel RSS feed (newest 15 only). Nothing serves it, so
       it blocks nothing.
+- [ ] **Memories tab has no ceiling.** Noticed 2026-09-22 while splitting
+      `mobile/src/Memories.tsx`'s Unlocked/My memories into subtabs (that split
+      fixed the stacked-scroll problem, not this). Both subtabs still render
+      with `ScrollView` + `.map()` over the full array, not `FlatList` — every
+      row mounts the moment a subtab opens, unvirtualized. Rows are plain text,
+      so this holds up into the hundreds, but it is not built past that.
+      Separately, *My memories* is capped server-side at `api/read.py`'s
+      `/v1/me/memories`, `limit: int = Query(200, ge=1, le=500)` — no
+      pagination, so a filer past 500 silently stops seeing the rest. *Unlocked*
+      has no cap at all: `mobile/src/unlocked.ts` keeps it as one JSON object in
+      `AsyncStorage`, and every unlock rewrites the entire blob — an O(n) disk
+      write that gets slower as the collection grows, independent of what's on
+      screen. Nobody is near either limit today; worth `FlatList` plus real
+      pagination (or an unlock cache that isn't one growing blob) before anyone
+      is.
 
 #### Struck on audit — fixed, do not re-fix
 
