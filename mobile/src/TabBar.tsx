@@ -27,6 +27,7 @@ export default function TabBar({ tab, unlockedCount, onSelect }: Props) {
     // Apple Maps attribution, which rule 7 does not allow.
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       <Item label="Map" active={tab === 'map'} onPress={() => onSelect('map')} />
+      <View style={styles.divider} />
       <Item
         label="Memories"
         // The count is the point of the badge: it is the only number in the
@@ -35,6 +36,7 @@ export default function TabBar({ tab, unlockedCount, onSelect }: Props) {
         active={tab === 'collection'}
         onPress={() => onSelect('collection')}
       />
+      <View style={styles.divider} />
       <Item label="You" active={tab === 'you'} onPress={() => onSelect('you')} />
     </View>
   );
@@ -78,6 +80,7 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   item: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  divider: { alignSelf: 'center', width: 1, height: 24, backgroundColor: color.rule },
   label: { ...themeLabel, letterSpacing: 1.2 },
   active: { color: color.ink },
   badge: {

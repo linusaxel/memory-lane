@@ -939,10 +939,10 @@ or silently overridden.
       `docs/11-memory-types.md`, `docs/10-decisions.md` and `mobile/UI.md`
       updated to mark the old rule superseded rather than left contradicting
       this.
-- [ ] **Tab bar delimiters.** `mobile/App.tsx`'s bottom tabs need a clearer
-      visual separator between them. Small, contained styling change — no
-      conflict, no new dependency; do it as a normal UI pass against the
-      decided tokens in `mobile/UI.md`.
+- [x] **Tab bar delimiters.** Done: `mobile/src/TabBar.tsx` gets a `color.rule`
+      hairline between each pair of tabs (1×24, centred) — the same token the
+      bar's own top border already uses, so no new colour and no new
+      dependency.
 
 ---
 
