@@ -1,15 +1,13 @@
 # F24 Manage what you filed. docs/08-ux-flows.md
 #
 # Files one memory, then finds it again the way the author does: the
-# Memories tab's "My memories" section, not the map. Confirms the section
+# Memories tab's "My memories" subtab, not the map. Confirms the subtab
 # shows what was filed, that opening a row hands back the same text, and that
 # a change made there survives closing the editor and coming back.
 #
-# Filing something unlocks it too, so the same place name lands in both of
-# Memories' sections. That does not make the two rows ambiguous: Unlocked's
-# copy carries "<name>, <when>" as its full accessibility text (Row's `meta`),
-# and text matching here is a full-string regex - see e2e/README.md - so a
-# bare "<name>" only ever matches the My memories row.
+# Filing something unlocks it too, so the same place name lands on both of
+# Memories' subtabs - checked below right after filing, on Unlocked (the
+# default subtab) before switching to My memories.
 
 appId: ${APP_ID}
 ---
@@ -51,9 +49,22 @@ appId: ${APP_ID}
 - assertVisible: "Unlocked"
 - assertVisible: "My memories"
 
+# Filing unlocked it too, so it sits on Unlocked - the default subtab - as
+# soon as that unlock is written back to the local cache. `rememberUnlocked`
+# is awaited, not synchronous, so this still needs a wait, not a bare assert.
+# Unlocked's row carries "<name>, <when>" as its full accessibility text
+# (Row's `meta`), and text matching here is a full-string regex, so the name
+# alone needs the wildcard - unlike the bare match used for the My memories
+# row further down, which has no `meta` to trail it.
+- extendedWaitUntil:
+    visible: ".*The step by the ferry landing.*"
+    timeout: 40000
+
+- tapOn: "My memories"
+
 # "My memories" is a server fetch, unlike "Unlocked" - wait for its own note
-# rather than the place name, which is already on screen from the Unlocked
-# copy the moment the tab opens.
+# rather than the place name, which was already on screen a moment ago under
+# Unlocked.
 - extendedWaitUntil:
     visible: ".*you filed.*"
     timeout: 40000

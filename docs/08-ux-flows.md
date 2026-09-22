@@ -737,10 +737,10 @@ its own coordinate, and its card says the date instead of a distance.
 ## F24 · Manage what you filed — **Implemented**
 
 **Who:** somebody who has filed at least one memory.
-**Trigger:** the **Memories** tab (renamed from **Unlocked** — F15) → *My
-memories*, the tab's second section, under *Unlocked*. Empty until something
-is filed, same as *Unlocked* is empty until something is walked to — neither
-section hides itself; an empty one just says so.
+**Trigger:** the **Memories** tab (renamed from **Unlocked** — F15) → the *My
+memories* subtab, next to *Unlocked* behind a segmented control. Empty until
+something is filed, same as *Unlocked* is empty until something is walked to
+— neither subtab hides itself; an empty one just says so.
 
 1. A list, newest first: place name, and either the summary or, for a sealed
    one, "Sealed until" the year — shut, seal included, same as the map pin.
@@ -757,12 +757,17 @@ section hides itself; an empty one just says so.
    everywhere else — and removes the row, its media and its place outright,
    not the hidden flag a report uses.
 
-**A memory you file can sit in both sections at once, and that is correct.**
+**A memory you file can sit in both subtabs at once, and that is correct.**
 Filing unlocks it (F5), so it belongs in *Unlocked* on the same terms as
-anything you walked to; it is also yours, so it belongs in *My memories*. Nothing
-reconciles the two - they answer different questions about the same row.
+anything you walked to; it is also yours, so it belongs in *My memories*.
+Nothing reconciles the two - they answer different questions about the same
+row. These were stacked sections on one scroll until this became a
+two-hundred-memory app: at that size, each list pushing the other further
+down the screen cost more than a tap to switch, so the subtabs replaced the
+stack. Seeing a memory in both still costs a tab switch instead of a scroll,
+but it's one or the other now, not neither.
 
-**Always the server's list, never the local cache, for its own section.**
+**Always the server's list, never the local cache, for its own subtab.**
 Unlike *Unlocked*, *My memories* has to show two things the offline unlock
 cache was never told about — a memory still sealed, and one enough people
 reported — so `/v1/me/memories` is asked fresh whenever the tab is opened or

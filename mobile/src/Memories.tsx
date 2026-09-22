@@ -1,7 +1,14 @@
-/** The "Memories" tab. Two sections, not two tabs: unlocking and filing are
- *  two different ways of ending up with a memory that is yours, and this is
- *  the one screen that shows both. Replaces what were `Collection.tsx` (the
- *  old "Unlocked" tab) and the modal `Manage` opened from Settings.
+/** The "Memories" tab. Unlocking and filing are two different ways of ending
+ *  up with a memory that is yours, and this is the one screen that shows
+ *  both - as two subtabs behind a segmented control, not stacked on one
+ *  scroll. They used to be stacked; at a handful of memories that read as
+ *  "both, always," but at the hundreds this app is meant to hold, one
+ *  section only pushed the other further down the screen. Replaces what
+ *  were `Collection.tsx` (the old "Unlocked" tab) and the modal `Manage`
+ *  opened from Settings.
+ *
+ * A memory you file still shows up under both - filing unlocks it too - it
+ * now just takes a tab switch to see the second copy instead of a scroll.
  *
  * **Unlocked** is local-first and cannot fail - it is exactly what
  * `unlocked.ts` holds, so it works on a train. **My memories** always asks
@@ -59,6 +66,7 @@ export default function Memories({
   onOpenMine,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const [section, setSection] = useState<'unlocked' | 'mine'>('unlocked');
   const [mine, setMine] = useState<LocatedMemory[]>([]);
   const [mineStatus, setMineStatus] = useState<MineStatus>('loading');
   const [refreshing, setRefreshing] = useState(false);
@@ -99,86 +107,118 @@ export default function Memories({
       style={styles.screen}
       contentContainerStyle={[styles.body, { paddingTop: insets.top + 14 }]}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={color.inkFaint}
-          colors={[color.inkFaint]}
-          progressBackgroundColor={color.paper}
-        />
+        section === 'mine' ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={color.inkFaint}
+            colors={[color.inkFaint]}
+            progressBackgroundColor={color.paper}
+          />
+        ) : undefined
       }
     >
       <Text style={styles.title}>Memories</Text>
 
-      <Section
-        title="Unlocked"
-        note={
-          !unlockedReady
-            ? ''
-            : unlocked.length === 0
-              ? 'Nothing yet.'
-              : `${unlocked.length} ${unlocked.length === 1 ? 'memory' : 'memories'} you walked to`
-        }
-      >
-        {/* No spinner: this is a disk read that resolves in a frame, and a
-            spinner that flashes is worse than a beat of nothing. */}
-        {!unlockedReady ? null : unlocked.length === 0 ? (
-          <Empty text="Memories open when you stand where they happened. Whatever you open stays here." />
-        ) : (
-          unlocked.map((item) => (
-            <Row
-              key={item.id}
-              place={item.place.name}
-              summary={item.summary}
-              meta={when(item.unlocked_at) ?? undefined}
-              onPress={() => onOpenUnlocked(item)}
-            />
-          ))
-        )}
-      </Section>
+      <Switcher section={section} onSelect={setSection} />
 
-      <Section
-        title="My memories"
-        note={
-          mineStatus === 'ready' && mine.length > 0
-            ? `${mine.length} ${mine.length === 1 ? 'memory' : 'memories'} you filed`
-            : ''
-        }
-      >
-        {mineStatus === 'loading' ? (
-          <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-        ) : mineStatus === 'failed' ? (
-          <Empty text="Can't reach Memory Lane right now." />
-        ) : mine.length === 0 ? (
-          <Empty text="Nothing filed yet." />
-        ) : (
-          mine.map((item) => (
-            <Row
-              key={item.id}
-              place={item.place.name}
-              summary={item.locked ? `Sealed until ${item.opens_at?.slice(0, 4)}` : item.summary}
-              badge={item.hidden ? 'Reported' : undefined}
-              onPress={() => onOpenMine(item)}
-            />
-          ))
-        )}
-      </Section>
+      {section === 'unlocked' ? (
+        <Section
+          note={
+            !unlockedReady
+              ? ''
+              : unlocked.length === 0
+                ? 'Nothing yet.'
+                : `${unlocked.length} ${unlocked.length === 1 ? 'memory' : 'memories'} you walked to`
+          }
+        >
+          {/* No spinner: this is a disk read that resolves in a frame, and a
+              spinner that flashes is worse than a beat of nothing. */}
+          {!unlockedReady ? null : unlocked.length === 0 ? (
+            <Empty text="Memories open when you stand where they happened. Whatever you open stays here." />
+          ) : (
+            unlocked.map((item) => (
+              <Row
+                key={item.id}
+                place={item.place.name}
+                summary={item.summary}
+                meta={when(item.unlocked_at) ?? undefined}
+                onPress={() => onOpenUnlocked(item)}
+              />
+            ))
+          )}
+        </Section>
+      ) : (
+        <Section
+          note={
+            mineStatus === 'ready' && mine.length > 0
+              ? `${mine.length} ${mine.length === 1 ? 'memory' : 'memories'} you filed`
+              : ''
+          }
+        >
+          {mineStatus === 'loading' ? (
+            <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+          ) : mineStatus === 'failed' ? (
+            <Empty text="Can't reach Memory Lane right now." />
+          ) : mine.length === 0 ? (
+            <Empty text="Nothing filed yet." />
+          ) : (
+            mine.map((item) => (
+              <Row
+                key={item.id}
+                place={item.place.name}
+                summary={item.locked ? `Sealed until ${item.opens_at?.slice(0, 4)}` : item.summary}
+                badge={item.hidden ? 'Reported' : undefined}
+                onPress={() => onOpenMine(item)}
+              />
+            ))
+          )}
+        </Section>
+      )}
     </ScrollView>
   );
 }
 
-function Section({
-  title,
-  note,
-  children,
+function Switcher({
+  section,
+  onSelect,
 }: {
-  title: string;
-  note: string;
-  children: React.ReactNode;
+  section: 'unlocked' | 'mine';
+  onSelect: (section: 'unlocked' | 'mine') => void;
 }) {
   return (
+    <View style={styles.switcher}>
+      <SwitcherItem label="Unlocked" active={section === 'unlocked'} onPress={() => onSelect('unlocked')} />
+      <SwitcherItem label="My memories" active={section === 'mine'} onPress={() => onSelect('mine')} />
+    </View>
+  );
+}
+
+function SwitcherItem({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={dim(styles.switcherItem)}
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+    >
+      <Text style={[styles.switcherLabel, active && styles.switcherLabelActive]}>{label}</Text>
+      <View style={[styles.switcherRule, active && styles.switcherRuleActive]} />
+    </Pressable>
+  );
+}
+
+function Section({ note, children }: { note: string; children: React.ReactNode }) {
+  return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
       {!!note && <Text style={styles.sectionNote}>{note}</Text>}
       {children}
     </View>
@@ -230,6 +270,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingBottom: 72 },
   title: { fontFamily: font.display, fontSize: 34, color: color.ink, paddingHorizontal: 24 },
+  switcher: { flexDirection: 'row', marginTop: 22, paddingHorizontal: 24, gap: 24 },
+  switcherItem: { gap: 8 },
+  switcherLabel: { ...label, color: color.inkFaint },
+  switcherLabelActive: { color: color.ink },
+  switcherRule: { height: 2, backgroundColor: 'transparent' },
+  switcherRuleActive: { backgroundColor: color.ink },
   section: {
     marginTop: 30,
     gap: 12,
@@ -238,7 +284,6 @@ const styles = StyleSheet.create({
     borderTopColor: color.rule,
     paddingTop: 18,
   },
-  sectionTitle: { ...label },
   sectionNote: { fontFamily: font.prose, fontSize: 15, color: color.inkFaint },
   // A ruled entry, like a catalogue card. No nested card, no shadow - the
   // same row both sections used before the merge.
