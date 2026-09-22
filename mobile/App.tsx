@@ -32,6 +32,7 @@ import {
   fetchProfile,
   fetchTodaysRoute,
   fetchUnlocked,
+  heartMemory,
   saveDisplayName,
   unlockMemory,
   type Coordinates,
@@ -42,6 +43,7 @@ import {
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
 import { devOpenMemory, devOpenScreen, devOpenTab } from './src/devOpen.ts';
+import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
@@ -131,6 +133,9 @@ export default function App() {
   const [permission, setPermission] = useState<Permission>('unknown');
   const [primerDismissed, setPrimerDismissed] = useState(false);
   const [unlocked, setUnlocked] = useState<Unlocked>({});
+  // Local convenience only, for a heart button that starts filled on
+  // relaunch - the server's memory_hearts row is the durable fact.
+  const [hearted, setHearted] = useState<Set<number>>(new Set());
   // Whether the local store has answered yet. Until it has, the collection must
   // not claim to be empty - see Memories' `unlockedReady`.
   const [collectionReady, setCollectionReady] = useState(false);
@@ -307,6 +312,9 @@ export default function App() {
       if (!mounted.current) return;
       setUnlocked(stored);
       setCollectionReady(true);
+    });
+    loadHearted().then((stored) => {
+      if (mounted.current) setHearted(stored);
     });
 
     // The device's collection, from the server. The local copy loads first and
@@ -534,6 +542,31 @@ export default function App() {
       }
     },
     [unlocked, routeStarted, nextRouteStop, routeShown, earned],
+  );
+
+  const heart = useCallback(
+    async (memory: LocatedMemory) => {
+      try {
+        const count = await heartMemory(memory.id, await deviceId());
+        if (!mounted.current) return;
+        setHearted(await rememberHearted(hearted, memory.id));
+        // openMemories prefers unlocked[id] over openAt's own snapshot, so a
+        // memory already in the collection needs patching there too or the
+        // sheet would keep showing the stale count.
+        setOpenAt((current) =>
+          current.map((m) => (m.id === memory.id ? { ...m, heart_count: count } : m)),
+        );
+        if (unlocked[memory.id]) {
+          setUnlocked(
+            await updateUnlocked(unlocked, { ...unlocked[memory.id], heart_count: count }),
+          );
+        }
+      } catch {
+        // Silent: a heart is a passive nicety, not a gated outcome the app
+        // has to explain a failure for the way unlock's error message does.
+      }
+    },
+    [hearted, unlocked],
   );
 
   const posted = useCallback(
@@ -964,6 +997,8 @@ export default function App() {
           onUnlock={unlock}
           unlocking={unlocking}
           unlockError={unlockError}
+          onHeart={heart}
+          hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
         />
 
         <Submit

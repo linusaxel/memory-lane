@@ -31,6 +31,7 @@ function memory(
     author: null,
     media: [],
     media_count: 0,
+    heart_count: 0,
     anniversary: false,
     happened_at: null,
     opens_at: null,

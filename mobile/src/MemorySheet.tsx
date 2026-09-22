@@ -15,6 +15,7 @@ import {
 import type { Coordinates, LocatedMemory } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
+import HeartGlyph from './HeartGlyph.tsx';
 import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
@@ -44,6 +45,13 @@ type Props = {
    *  this corpus sits on city centroids and was never gated, and a stamp on one
    *  of those would claim a walk that never happened. */
   earned?: boolean;
+  /** Say this one mattered. Absent while locked - there is nothing to react
+   *  to yet, and the server never sees a heart request the client didn't ask
+   *  for. */
+  onHeart?: (memory: LocatedMemory) => void;
+  /** This device already hearted it, one-way and permanent - the glyph fills
+   *  and stays filled. */
+  hearted?: boolean;
 };
 
 function formatDistance(meters: number | null): string | null {
@@ -93,6 +101,8 @@ export default function MemorySheet({
   onClose,
   position,
   onUnlock,
+  onHeart,
+  hearted,
   unlocking,
   unlockError,
   onShowOnMap,
@@ -371,6 +381,21 @@ export default function MemorySheet({
                 </Pressable>
               </View>
             )}
+            {!locked && onHeart && (
+              <Pressable
+                style={dim(styles.heart)}
+                accessibilityRole="button"
+                accessibilityLabel={hearted ? 'Hearted' : 'Heart this memory'}
+                onPress={() => onHeart(memory)}
+              >
+                <HeartGlyph size={18} color={color.inkSoft} filled={hearted} />
+                {memory.heart_count > 0 && (
+                  <Text style={styles.heartText}>
+                    {memory.heart_count === 1 ? '1 heart' : `${memory.heart_count} hearts`}
+                  </Text>
+                )}
+              </Pressable>
+            )}
             {/* Opened from the collection, the sheet is a page in a list and
                 the place is a name. This is the only route back to where it
                 actually is. */}
@@ -517,6 +542,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryText: { ...buttonText, color: color.inkSoft },
+  heart: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, paddingVertical: 8 },
+  heartText: { ...label, color: color.inkSoft },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   pagerText: {
     ...label,

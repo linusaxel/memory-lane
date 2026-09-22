@@ -906,13 +906,18 @@ or silently overridden.
       `mobile/UI.md` "Asking for location"), already built and reasoned about.
       Nothing to add here unless a specific step in that flow is the
       complaint — name it and it becomes a normal bug, not a todo.
-- [ ] **Heart/favorite a memory.** One `memory_hearts(memory_id, device_id)`
-      table (favoring a join table over a counter column so a device can't
-      inflate a count by re-hearting) plus `POST /v1/memories/{id}/heart` and
-      a count on the read shape. Cheapest real version: display the count,
-      change nothing about ordering — `contrast_score`/`layer` stay the sort
-      keys (Decided, above). Only revisit using heart count as a ranking
-      signal once there's enough traffic for it to mean anything.
+- [x] **Heart/favorite a memory.** Done: `memory_hearts(memory_id, device_id)`
+      (`db/migrations/015_memory_hearts.sql`), a join table rather than a
+      counter column so a device can't inflate a count by re-hearting.
+      `POST /v1/memories/{id}/heart` (`api/write.py`) is one-way like unlocks
+      and reports — no un-hearting, no DELETE. `heart_count` threads through
+      `MEMORY_COLUMNS` into every memory-shaped read, locked included, same
+      as `media_count`/`anniversary`. Mobile: a heart control in
+      `MemorySheet.tsx`'s action bar, shown only once a memory is open, with
+      a local `hearted.ts` cache so the glyph starts filled on relaunch.
+      Ordering unchanged — `contrast_score`/`layer` stay the sort keys
+      (Decided, above); heart count as a ranking signal is still a later
+      decision, not this one.
 - [ ] **Resolved 2026-09-22: subscription is a second track, not a
       replacement.** Was flagged against the Non-goal ruling out consumer
       subscription. **Decision:** both are monetization goals — B2B

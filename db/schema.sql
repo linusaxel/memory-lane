@@ -166,6 +166,20 @@ CREATE TABLE unlocks (
 
 CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
 
+-- Say this one mattered. One-way like unlocks: no un-hearting. A join table
+-- rather than a counter column on memories, so one device can't inflate a
+-- count by re-hearting. See db/migrations/015_memory_hearts.sql.
+CREATE TABLE memory_hearts (
+    device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    memory_id INTEGER NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    hearted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (device_id, memory_id)
+);
+
+-- Every read here is "count for this memory," never "this device's hearts" -
+-- the opposite of idx_unlocks_device above.
+CREATE INDEX idx_memory_hearts_memory ON memory_hearts(memory_id);
+
 -- Today's route: a fixed set of nearby, not-yet-earned stops, computed once
 -- per device per calendar day and stored so a relaunch sees the same route
 -- rather than a fresh roll of the dice. The first calendar-day-keyed table

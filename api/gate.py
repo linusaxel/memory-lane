@@ -207,6 +207,7 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         layer=getattr(row, "layer", None) or "historical",
         author=row_author(row),
         media_count=len(getattr(row, "media", None) or []),
+        heart_count=getattr(row, "heart_count", 0),
         locked=True,
         unlock_radius_meters=UNLOCK_RADIUS_METERS,
         anniversary=bool(getattr(row, "anniversary", False)),
@@ -254,6 +255,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         author=row_author(row),
         media=media,
         media_count=len(media),
+        heart_count=getattr(row, "heart_count", 0),
         tags=row.tags or [],
         # Set on open memories too, not just locked ones: the app needs the
         # radius to draw the reach circle, and a viewport with nothing locked in

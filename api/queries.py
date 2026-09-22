@@ -43,6 +43,12 @@ MEMORY_MEDIA = """COALESCE((
         FROM media md WHERE md.memory_id = m.id
     ), '[]'::json) as media"""
 
+# COUNT never returns SQL NULL, so no COALESCE needed the way MEMORY_MEDIA
+# above needs one for json_agg.
+MEMORY_HEART_COUNT = """(
+        SELECT COUNT(*) FROM memory_hearts mh WHERE mh.memory_id = m.id
+    ) as heart_count"""
+
 # Something happened here on today's date. Day-and-month, so it fires every year
 # rather than once. Carried on every memory-shaped row rather than filtered on,
 # because it is a reason to look and never a reason to hide anything.
@@ -88,6 +94,7 @@ MEMORY_COLUMNS = f"""
     m.user_id,
     au.display_name as author_name,
     {MEMORY_MEDIA},
+    {MEMORY_HEART_COUNT},
     {COORDINATE_IS_UNIQUE}"""
 
 # Both LEFT: a submitted memory has no content, an extracted one has no author.

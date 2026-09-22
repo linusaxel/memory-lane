@@ -86,6 +86,9 @@ class Memory(BaseModel):
     # waiting without handing any of it over.
     media: list[MediaItem] = []
     media_count: int = 0
+    # Set on a locked memory too, like media_count and anniversary: a count is
+    # a passive signal, not the content the gate protects.
+    heart_count: int = 0
     tags: list[str]
     confidence: str
     locked: bool = False
@@ -295,6 +298,10 @@ class ReportRequest(BaseModel):
 class ReportResponse(BaseModel):
     reports: int
     hidden: bool
+
+
+class HeartResponse(BaseModel):
+    heart_count: int
 
 
 class DeviceRequest(BaseModel):

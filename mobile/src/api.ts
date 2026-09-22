@@ -76,6 +76,9 @@ export type Memory = {
    *  there is a photograph waiting, which is the pull rather than the leak. */
   media: MediaItem[];
   media_count: number;
+  /** Set on a locked memory too, like media_count and anniversary - a count
+   *  is a passive signal, not the content the gate protects. */
+  heart_count: number;
   /** Something happened here on today's date. Set on locked memories too — it
    *  is a reason to walk over and gives away nothing the pin did not. The
    *  server sorts these to the top, which is the whole of "resurfacing": there
@@ -187,6 +190,14 @@ export async function unlockMemory(
     lng: at.lng,
   });
   return !memory.locked && hasCoordinates(memory) ? memory : null;
+}
+
+/** Say this one mattered. One-way: there is no way to un-heart, and hearting
+ *  twice from the same device is a harmless no-op that leaves the count
+ *  unchanged. No position - unlike unlock, hearting isn't gated by proximity. */
+export async function heartMemory(id: number, device: string): Promise<number> {
+  const res = await post<{ heart_count: number }>(`/v1/memories/${id}/heart`, { device });
+  return res.heart_count;
 }
 
 /** Everything this device - and anything signed in alongside it - has earned.

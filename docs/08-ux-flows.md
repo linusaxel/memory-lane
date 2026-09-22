@@ -51,6 +51,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Implemented |
 | F25 | Walk today's route | Implemented |
+| F26 | Heart a memory | Implemented |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
@@ -832,6 +833,39 @@ control on this screen already does.
 first time it asks with a position, sees the identical stops on a relaunch
 the same day, and watches the pill's count and the map's badges track each
 unlock exactly as F7 already does.
+
+---
+
+## F26 · Heart a memory — **Implemented**
+
+**Who:** someone reading a memory they have already unlocked.
+**Trigger:** tapping the heart control in the sheet's action bar.
+
+1. The heart control only appears once a memory is open, never on a locked
+   one - there is nothing to react to yet, and F7's gate has already decided
+   who gets to see this far. No proximity check of its own: standing here
+   again is not required, only having read it once already.
+2. A tap records the heart server-side and fills the glyph. The count next to
+   it - shown only once it is above zero - goes up by one.
+3. It is one-way: tapping an already-hearted memory again is a harmless
+   no-op, same count, same filled glyph. There is no way to un-heart.
+4. The filled state survives a relaunch on this device (cached locally,
+   `mobile/src/hearted.ts`), and the count survives everywhere - it is part
+   of the memory itself, sent even while locked, the same as `media_count`
+   and the anniversary flag.
+
+**Not a rating.** `docs/11-memory-types.md` rules out a star or a thumbs-up -
+this is a count of "this mattered to someone," never a score, and it does not
+change how anything sorts. `TODO.md`'s founder-brainstorm entry is explicit
+that using it as a ranking signal is a later decision, not this one.
+
+**Failure:** the request fails (no network, server unreachable). Silent -
+unlike F7's refusal, there is no gate outcome to explain, so the button
+simply does not fill and nothing is lost by tapping it again later.
+
+**Done when:** hearting an open memory fills the glyph and bumps the count
+immediately, the state survives closing and reopening the sheet and
+relaunching the app, and a locked memory shows no heart control at all.
 
 ---
 

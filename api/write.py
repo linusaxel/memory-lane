@@ -17,6 +17,8 @@ from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
     Coordinates,
+    DeviceRequest,
+    HeartResponse,
     MediaItem,
     Memory,
     MemoryEditRequest,
@@ -298,6 +300,37 @@ def submit_memory(body: SubmissionRequest):
         row = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id}).fetchone()
 
     return row_to_memory(row, Coordinates(lat=body.lat, lng=body.lng), include_distance=False)
+
+
+@router.post("/v1/memories/{memory_id}/heart", response_model=HeartResponse)
+def heart_memory(memory_id: int, body: DeviceRequest):
+    """Say this one mattered. One heart per device, and it does not come back off.
+
+    No position: unlike unlock, hearting isn't gated by standing there again -
+    only rendered by the app once a memory is already unlocked. Same shape as
+    report_memory below: an existence check, an idempotent insert, a count.
+    """
+    with get_session() as session:
+        exists = session.execute(
+            text("SELECT 1 FROM memories WHERE id = :id FOR UPDATE"), {"id": memory_id}
+        ).scalar()
+        if not exists:
+            raise HTTPException(status_code=404, detail="Memory not found")
+
+        touch_device(session, body.device)
+        session.execute(
+            text("""
+                INSERT INTO memory_hearts (memory_id, device_id)
+                VALUES (:memory_id, CAST(:device AS uuid))
+                ON CONFLICT (device_id, memory_id) DO NOTHING
+            """),
+            {"memory_id": memory_id, "device": body.device},
+        )
+        count = session.execute(
+            text("SELECT COUNT(*) FROM memory_hearts WHERE memory_id = :id"), {"id": memory_id}
+        ).scalar()
+
+    return HeartResponse(heart_count=count)
 
 
 @router.post("/v1/memories/{memory_id}/report", response_model=ReportResponse)
