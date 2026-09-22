@@ -63,9 +63,13 @@ class Source(BaseModel):
 class ContentRef(BaseModel):
     id: int
     title: str | None
+    # Already resolved by api.gate.source_link: an archival document, or a video
+    # deep-linked to its second. There is no second URL to choose between.
     url: str
-    timestamp_start: float
-    timestamp_url: str
+    # Seconds into the recording, and None when the source is not one. The app
+    # labels the link with it, so a missing offset is the difference between
+    # "Watch at 12:04" and an invented "Watch at 0:00".
+    timestamp_start: float | None = None
     source: Source | None = None
 
 

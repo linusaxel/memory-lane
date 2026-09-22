@@ -358,6 +358,33 @@ the cluster is set to. Neither machine's local time meant anything to the
 person holding the phone anyway — a viewer's own date is the honest answer to
 "on this day", and getting it right would mean the client sending its date.
 
+### An offset only exists when the source is a recording
+
+`memories.timestamp_start` is seconds into a recording. That is meaningful for
+a YouTube transcript and meaningless for a newspaper, a registry or a memory
+somebody filed standing on the spot — and `content.source_type` is deliberately
+open precisely so those can arrive.
+
+Three places used to manufacture the number anyway. `pipeline/extract.py`
+defaulted it to `0`, though `HISTORICAL_SYSTEM_PROMPT` never asks for it;
+`ContentRef.timestamp_start` was a required float, so NULL could not be
+expressed; and `row_to_memory` wrote `row.timestamp_start or 0` to satisfy it.
+The app then rendered **"Watch at 0:00"** for anything with a content row. The
+corpus was all video, so it was a lie nobody had been told yet.
+
+The offset is optional now, and its absence is the signal: no offset, no time in
+the label, and the button offers the source rather than a moment in it.
+
+`api.gate.source_link` is the single rule — an archival `source_url` is a
+document and is linked untouched, only a video takes a `?t=` offset, and only
+YouTube is known to honour one. `api/card.py` had that rule right and the API
+had its own diverged copy; the card's docstring claimed they matched. Now they
+do, because there is one of them. Asserted in `tests/test_source_link.py`, which
+is the half that had nothing — all 33 card tests pass with the rule broken.
+
+`timestamp_end` went with it: written only when two mentions merged, read by
+nothing, selected on every memory query.
+
 ### The card is rendered on the server
 
 One template, three consumers: the app sheet, the embed widget, and any pasted

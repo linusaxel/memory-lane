@@ -21,7 +21,6 @@ function memory(
       title: null,
       url: 'https://x',
       timestamp_start: 0,
-      timestamp_url: 'https://x',
       source: null,
     },
     tags: [],

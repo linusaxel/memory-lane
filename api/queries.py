@@ -61,7 +61,6 @@ MEMORY_COLUMNS = f"""
     m.id,
     m.summary,
     m.timestamp_start,
-    m.timestamp_end,
     m.tags,
     m.extraction_confidence,
     m.layer,

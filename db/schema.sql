@@ -83,10 +83,11 @@ CREATE TABLE memories (
     id SERIAL PRIMARY KEY,
     place_id INTEGER NOT NULL REFERENCES places(id) ON DELETE CASCADE,
     content_id INTEGER REFERENCES content(id) ON DELETE CASCADE,
-    -- Both null for a memory somebody filed themselves: it came from a person
-    -- standing there, not from an offset into a recording.
+    -- Seconds into the recording. Null for a memory somebody filed themselves
+    -- (it came from a person standing there, not from an offset) and null for
+    -- an archival source, which has no recording to be an offset into.
+    -- api.gate.source_link decides what that means for a link.
     timestamp_start REAL,
-    timestamp_end REAL,
     summary TEXT NOT NULL,
     tags VARCHAR(50)[],
     extraction_confidence VARCHAR(20),

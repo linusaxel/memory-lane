@@ -29,7 +29,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ "Get within 150 m"             ├─ tags     pills
   ├─ "1 attachment waiting"         ├─ "Filed by X", or the channel and avatar
   ├─ "Walk there"     outlined      ├─ "Report this memory"  submissions only
-  └─ or, in reach: the ring         └─ "Watch at 12:04"  red, YouTube at the second
+  └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 
   The locked side says how many attachments are waiting and never which. A
   photograph of the place is the memory as much as the text is.
@@ -320,8 +320,10 @@ Each of these exists because something broke or would have been rejected.
    endpoint.
 5. **A memory with no coordinates cannot be drawn.** The API filters those out;
    do not assume `coordinates` is always present on types that allow null.
-6. **`timestamp_url` is already correct.** It points at the right second. Never
-   rebuild a YouTube URL by hand.
+6. **`content.url` is already resolved.** The server points it at the document,
+   or at the video's right second. Never rebuild a YouTube URL by hand.
+   `content.timestamp_start` is null when the source is not a recording, and the
+   button says "Open the source" instead of naming a second that does not exist.
 7. **Never cover the map attribution.** The Apple Maps logo and Legal link in
    the bottom-left corner are a condition of using the map and have to stay
    visible and tappable. A floating tally in that corner is what made this a

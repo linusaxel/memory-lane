@@ -159,6 +159,36 @@ def row_media(row) -> list[MediaItem]:
     ]
 
 
+def source_link(row) -> tuple[str | None, float | None]:
+    """Where a memory's source opens, and how far into it - when "into" means
+    anything at all.
+
+    An offset is seconds into a recording, so it exists only when the source is
+    one. An archival source_url is a document and gets linked as-is; only a
+    video takes a ?t= offset, and only YouTube is known to honour one.
+
+    `is not None`, not truthiness: a timestamp_start of 0.0 is the start of the
+    video, not a missing value. Everything that emits a source link reads this,
+    so the card and the API cannot disagree about it - they did, and the card
+    was the one that was right.
+    """
+    source_url = getattr(row, "source_url", None)
+    if source_url:
+        return source_url, None
+
+    content_url = getattr(row, "content_url", None)
+    if not content_url:
+        return None, None
+
+    started = getattr(row, "timestamp_start", None)
+    is_youtube = "youtube.com" in content_url or "youtu.be" in content_url
+    if not (is_youtube and started is not None):
+        return content_url, None
+
+    separator = "&" if "?" in content_url else "?"
+    return f"{content_url}{separator}t={int(started)}", started
+
+
 def locked_memory(row, coords: Coordinates | None, distance_meters: float | None) -> Memory:
     """Where it is, how far away, who filed it and how much is waiting - enough
     to decide whether to walk there, which is the only decision a locked memory
@@ -200,17 +230,12 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
     # there is nothing to link out to. `author` is what carries the credit there.
     content = None
     if getattr(row, "content_id", None) is not None:
-        started = row.timestamp_start or 0
-        timestamp_url = row.content_url
-        if "youtube.com" in row.content_url or "youtu.be" in row.content_url:
-            separator = "&" if "?" in row.content_url else "?"
-            timestamp_url = f"{row.content_url}{separator}t={int(started)}"
+        href, started = source_link(row)
         content = ContentRef(
             id=row.content_id,
             title=row.content_title,
-            url=row.content_url,
+            url=href or row.content_url,
             timestamp_start=started,
-            timestamp_url=timestamp_url,
             source=row_source(row),
         )
 

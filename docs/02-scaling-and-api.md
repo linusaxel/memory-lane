@@ -236,9 +236,8 @@ curl "https://api.memorylane.dev/v1/memories/nearby?lat=40.7484&lng=-73.9857&rad
       "content": {
         "id": 7,
         "title": "NYC Food Tour - Best Delis",
-        "url": "https://youtube.com/watch?v=abc123",
-        "timestamp_start": 847.5,
-        "timestamp_url": "https://youtube.com/watch?v=abc123&t=847"
+        "url": "https://youtube.com/watch?v=abc123&t=847",
+        "timestamp_start": 847.5
       },
       "tags": ["food", "culture"],
       "confidence": "high"
@@ -306,7 +305,6 @@ SELECT
     m.id,
     m.summary,
     m.timestamp_start,
-    m.timestamp_end,
     m.tags,
     m.extraction_confidence,
     p.id as place_id,
@@ -431,9 +429,10 @@ def row_to_memory(row) -> Memory:
         content=ContentRef(
             id=row.content_id,
             title=row.content_title,
-            url=row.content_url,
-            timestamp_start=row.timestamp_start,
-            timestamp_url=f"{row.content_url}&t={int(row.timestamp_start)}"
+            # api.gate.source_link resolves both, and returns no offset when
+            # the source is not a recording.
+            url=href,
+            timestamp_start=offset,
         ),
         tags=row.tags or [],
         confidence=row.extraction_confidence

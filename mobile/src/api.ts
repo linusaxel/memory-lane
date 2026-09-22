@@ -15,10 +15,12 @@ export type Source = {
 export type ContentRef = {
   id: number;
   title: string | null;
+  /** Already resolved by the server - a document, or a video at the right
+   *  second. Open it as-is; never rebuild a YouTube URL by hand. */
   url: string;
-  timestamp_start: number;
-  /** Already a deep link to the right second - open it as-is. */
-  timestamp_url: string;
+  /** Seconds into the recording, and null when the source is not one. It is
+   *  the label on the link, not the link. */
+  timestamp_start: number | null;
   /** Null for the handful of videos whose channel the config never names. */
   source: Source | null;
 };

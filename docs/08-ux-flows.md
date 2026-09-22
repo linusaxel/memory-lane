@@ -143,8 +143,8 @@ happens, the app carries the attribution the summaries lack.
 5. "Watch at 12:04" → opens YouTube at that exact second.
 6. Close, or Android back → returns to the map, viewport unchanged.
 
-**Failure:** no YouTube app and no browser → `Linking.openURL` rejects. Not
-currently handled.
+**Failure:** no YouTube app and no browser → `Linking.openURL` rejects, and the
+sheet says so in place of the link rather than doing nothing.
 
 **Done when:** the video opens at the right second and returning preserves the
 map position.

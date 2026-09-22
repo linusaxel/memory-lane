@@ -398,15 +398,27 @@ export default function MemorySheet({
                 accessibilityRole="button"
                 // Says where it goes, not what it reads. "Watch at 12:04" out of
                 // context is a time of day.
-                accessibilityLabel={`Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`}
-                accessibilityHint="Opens the source video at that second"
-                // timestamp_url already points at the right second.
-                onPress={() =>
-                  open(memory.content!.timestamp_url, 'Nothing here can open that video.')
+                accessibilityLabel={
+                  memory.content.timestamp_start === null
+                    ? 'Open the source'
+                    : `Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`
                 }
+                accessibilityHint={
+                  memory.content.timestamp_start === null
+                    ? 'Opens the source this memory came from'
+                    : 'Opens the source video at that second'
+                }
+                // url is already resolved - a document, or the video at the
+                // right second.
+                onPress={() => open(memory.content!.url, 'Nothing here can open that source.')}
               >
                 <Text style={styles.watchText}>
-                  Watch at {formatTimestamp(memory.content.timestamp_start)}
+                  {/* An offset only exists when the source is a recording. An
+                      archival document has none, and "Watch at 0:00" against a
+                      newspaper is a time the source never had. */}
+                  {memory.content.timestamp_start === null
+                    ? 'Open the source'
+                    : `Watch at ${formatTimestamp(memory.content.timestamp_start)}`}
                 </Text>
               </Pressable>
             )}

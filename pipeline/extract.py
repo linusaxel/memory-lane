@@ -369,10 +369,6 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
         time_diff = abs(mem.get("timestamp_start", 0) - current.get("timestamp_start", 0))
 
         if same_place and time_diff <= threshold_seconds:
-            current["timestamp_end"] = max(
-                current.get("timestamp_end", current.get("timestamp_start", 0)),
-                mem.get("timestamp_start", 0),
-            )
             if mem.get("summary") and mem["summary"] not in current.get("summary", ""):
                 current["summary"] = current.get("summary", "") + " " + mem["summary"]
             current_tags = set(current.get("tags", []))
@@ -511,12 +507,12 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
         session.execute(
             text("""
                 INSERT INTO memories (
-                    place_id, content_id, timestamp_start, timestamp_end, summary, tags,
+                    place_id, content_id, timestamp_start, summary, tags,
                     extraction_confidence, layer, happened_at, happened_precision,
                     attribution, source_url, contrast_score, contrast_note
                 )
                 VALUES (
-                    :place_id, :content_id, :ts_start, :ts_end, :summary, :tags,
+                    :place_id, :content_id, :ts_start, :summary, :tags,
                     :confidence, :layer, CAST(:happened_at AS DATE), :happened_precision,
                     :attribution, :source_url, :contrast_score, :contrast_note
                 )
@@ -524,8 +520,10 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
             {
                 "place_id": place_id,
                 "content_id": content_id,
-                "ts_start": mem.get("timestamp_start", 0),
-                "ts_end": mem.get("timestamp_end"),
+                # No default: the historical prompt never asks for an offset,
+                # and a 0 here would be a fabricated second zero rather than a
+                # missing one. api.gate.source_link reads the difference.
+                "ts_start": mem.get("timestamp_start"),
                 "summary": mem.get("summary", ""),
                 # Filtered here and not trusted from the model: it emitted
                 # five tags that were never on its own menu.

@@ -117,8 +117,7 @@ Stores extracted memories.
 | id | SERIAL | Primary key |
 | place_id | INTEGER | FK to places |
 | content_id | INTEGER | FK to content |
-| timestamp_start | REAL | Start time in video |
-| timestamp_end | REAL | End time in video |
+| timestamp_start | REAL | Seconds into the recording. NULL for a submission and for any source that is not a recording |
 | summary | TEXT | Memory description |
 | tags | VARCHAR(50)[] | Category tags |
 | extraction_confidence | VARCHAR(20) | high/medium/low |
