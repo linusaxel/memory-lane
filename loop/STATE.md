@@ -1,4 +1,4 @@
-# LOOP STATE — every TASKS.yaml task is done or parked; the founder brainstorm has one more built item.
+# LOOP STATE — every TASKS.yaml task is done or parked; working the founder brainstorm list.
 
 ```
 updated:  2026-09-22
@@ -19,6 +19,7 @@ wins and this file is stale.
 | | |
 |---|---|
 | `caba568` | **Animated startup logo** (TODO.md brainstorm list). `mobile/src/StartupLogo.tsx` draws the logo-mark on via `strokeDashoffset`, 750ms, while `App.tsx` now holds the native splash (`SplashScreen.preventAutoHideAsync`, which nothing called before this) through font loading and the animation, then `hideAsync`s. Also fixed a stale TODO.md checkbox: the route-polyline brainstorm item was already shipped in `ba61806` and had never been checked off. |
+| `6584fdb` | **Tab bar delimiters** (TODO.md brainstorm list). `mobile/src/TabBar.tsx` gets a `color.rule` hairline (1×24, centred) between each pair of tabs — the same token the bar's own top border already uses. |
 
 Prior session (not journaled at the time, visible only in git log): `27ddff9`
 static logo mark (icon/splash/favicon rasterized from `mobile/assets/logo-mark.svg`),
@@ -42,25 +43,23 @@ cd mobile && npx expo start               # the app
 below, unchanged from last session). TODO.md's "Ideas — founder brainstorm,
 unvetted" section (line ~811) still has real unbuilt items, cheapest first:
 
-1. **Tab bar delimiters.** Small, contained styling change against
-   `mobile/UI.md`'s existing tokens. No conflict, no new dependency, no
-   decision needed — the least loaded pick for a solo tick.
-2. **Start-route affordance.** A button on the route view that only flips
+1. **Start-route affordance.** A button on the route view that only flips
    local UI state (the route is already computed and stored server-side) to
-   highlight the next unvisited stop. No server change.
-3. **Route-complete moment.** One haptic/animation on the last stop's
+   highlight the next unvisited stop. No server change. Now the least loaded
+   pick — tab bar delimiters and the animated startup logo are both done.
+2. **Route-complete moment.** One haptic/animation on the last stop's
    unlock, reusing `mobile/src/UnlockButton.tsx`'s existing haptic rather
    than inventing a new mechanic.
-4. **Configurable route distance.** Accept an optional radius on
+3. **Configurable route distance.** Accept an optional radius on
    `GET /v1/routes/today` and store it with the day's route row instead of
    `ROUTE_RADIUS_METERS` staying a process-wide env default. Backend +
-   migration, bigger than 1-3.
-5. **Heart/favorite a memory.** New `memory_hearts` join table (not a
+   migration, bigger than 1-2.
+4. **Heart/favorite a memory.** New `memory_hearts` join table (not a
    counter column, so a device can't inflate by re-hearting),
    `POST /v1/memories/{id}/heart`, a count on the read shape. Ordering stays
    on `contrast_score`/`layer` — do not use heart count as a ranking signal
    yet.
-6. **Streak + proximity notification.** Both resolved "build both" in
+5. **Streak + proximity notification.** Both resolved "build both" in
    TODO.md, but this is the biggest item on the list: a streak counter is
    small, but the proximity notification needs on-device geofencing AND
    flipping `mobile/UI.md` rule 2 (`ACCESS_BACKGROUND_LOCATION`, currently
@@ -70,16 +69,16 @@ unvetted" section (line ~811) still has real unbuilt items, cheapest first:
 
 TASKS.yaml's own next actions (unchanged, still true):
 
-7. **`P4-01`, free, needs a decision** — read the note on that task; three
+6. **`P4-01`, free, needs a decision** — read the note on that task; three
    defensible ways out, Phase 4 vs. 3.2's permanent stranger note.
-8. **`W4-02` / semantic dedup, free, needs a decision** — TODO.md 1.2:
+7. **`W4-02` / semantic dedup, free, needs a decision** — TODO.md 1.2:
    structured venue/locality/region fields vs. a human review pass.
-9. **`API_CREDITS`** — the extraction path has never run against a real
+8. **`API_CREDITS`** — the extraction path has never run against a real
    API. `python -m pipeline.enqueue --video <content_id>` then `--status
    <id>`, no `--limit` flag on the bulk path.
-10. **`DEPLOY`** — Railway, ~$5/mo, not Fly (no PostGIS on its managed
-    Postgres). Unblocks `P2-00` and 2.3.
-11. **`EAS_BUILD`**, then **`STORE_ACCOUNT`** — three `PLACEHOLDER`
+9. **`DEPLOY`** — Railway, ~$5/mo, not Fly (no PostGIS on its managed
+   Postgres). Unblocks `P2-00` and 2.3.
+10. **`EAS_BUILD`**, then **`STORE_ACCOUNT`** — three `PLACEHOLDER`
     tripwires first; bundle id is irreversible once submitted.
 
 ## Parked, and what each one needs
@@ -104,8 +103,8 @@ git history / prior STATE.md revisions for the full record; it stays
   palette, cross-video place dedup, the proximity unlock, submissions with photo
   and audio, Google/Apple sign-in, the dev seed, rate limiting, the corpus
   export, the pinned credit, anniversaries and time locks, the route polyline,
-  the static logo mark, the animated startup logo** are all in. TODO.md
-  carries the commit for each.
+  the static logo mark, the animated startup logo, the tab bar delimiters**
+  are all in. TODO.md carries the commit for each.
 - **The `ruff format` corruption was never ruff.** Traced to an editor watching
   the directory. `compileall` catches it every time and nothing ever landed.
 - **The OSM/Overpass enrichment pass for contrast** is deliberately not built:
