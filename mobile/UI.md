@@ -314,6 +314,15 @@ Each of these exists because something broke or would have been rejected.
    test read `app.json` rather than the generated plist. If you add a config
    plugin, check what it put in the manifest:
    `plutil -convert xml1 -o - ios/MemoryLane/Info.plist`.
+
+   **Reopened 2026-09-22** (`TODO.md`'s "Ideas — founder brainstorm" section):
+   a geofenced proximity notification is now planned, which needs background
+   location. This rule still describes today's code exactly — nothing has
+   flipped `ACCESS_BACKGROUND_LOCATION` or the iOS purpose strings yet. When it
+   does, update this rule, the App Store privacy disclosure, and
+   `tests/test_app_config.py`'s assertion together — that test currently
+   passes *because* this is false, and a change here without a matching test
+   change would be exactly the drift rule 2 exists to catch.
 3. **Debounce map-driven fetches** (currently 400ms). Panning fires
    `onRegionChangeComplete` continuously; without it you DoS your own API.
 4. **The API is radius-only.** `regionToRadiusKm()` circumscribes the viewport

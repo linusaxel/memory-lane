@@ -541,7 +541,16 @@ citywide itinerary, it was one device's walk.
 ### No notification when a route completes
 
 F25 ends its list of stops the same way F23 ends a seal: nothing is pushed at
-anyone. This product has no notifications at all — see F1's "deliberately
-absent" list in `docs/08-ux-flows.md` — and a route was not going to be the
-first feature to need one invented. The pill just says a truer number the next
-time the app is opened, the same way "3 memories within reach" already does.
+anyone, as of today's code. This product had no notifications at all — see
+F1's "deliberately absent" list in `docs/08-ux-flows.md` — and a route was not
+going to be the first feature to need one invented. The pill just says a truer
+number the next time the app is opened, the same way "3 memories within reach"
+already does.
+
+**Reopened 2026-09-22** (`TODO.md`'s "Ideas — founder brainstorm" section): a
+streak counter and a geofenced proximity notification are now planned. Neither
+changes this section's reasoning about the *route-complete* moment
+specifically — that stays a silent pill update, reusing the existing unlock
+haptic rather than a push — but the blanket "no notifications at all" is no
+longer true of the plan, only of the code until the proximity notification is
+built.

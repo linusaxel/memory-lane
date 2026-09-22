@@ -169,8 +169,13 @@ first tried on:
   specifically so nothing in the app, pins included, reads as a generated
   default.
 
-And a related restraint that isn't visual: **no notifications, no streaks, no
-gamification chrome anywhere in this product** (`docs/08-ux-flows.md`'s
-"deliberately absent" list under F1, and F23's "no notification when it
-opens"). A route, a badge, a count — all of it renders only when the app is
-open, never pushed.
+And a related restraint that isn't visual, **reopened 2026-09-22** (see
+`TODO.md`'s "Ideas — founder brainstorm" section): this product used to have
+no notifications, no streaks and no gamification chrome anywhere
+(`docs/08-ux-flows.md`'s "deliberately absent" list under F1, and F23's "no
+notification when it opens" — both still describe the code as it stands
+today). A streak counter and a geofenced proximity notification are now
+planned; neither is built yet. Once they land, F1's "deliberately absent" list
+and F23 need updating to stop contradicting this, and this restraint no longer
+holds as a blanket rule — a route, a badge, a count still render silently
+where nothing was decided to push, but a proximity nudge is now allowed to.

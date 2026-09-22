@@ -826,15 +826,17 @@ or silently overridden.
       draw-on animation (`react-native-svg` + `Animated`, both already
       dependencies) while the splash screen holds, capped at ~800ms so it
       never becomes a loading screen people wait through.
-- [ ] **⚠️ Conflicts with a decided rule.** "Stardew Valley cozy, warm and
-      green" app-wide aesthetic. `docs/09-visual-design.md` already settled on
-      a muted-parchment, editorial palette after explicitly trying and
-      rejecting a warm/soft-UI direction (neomorphism, dark themes — see its
-      "What was rejected" section) and `mobile/UI.md` has the token table built
-      on that decision. Adopting a cozy/green direction means re-opening that
-      decision, not adding a todo under it. Needs an explicit call: keep the
-      decided palette, or reopen `docs/09-visual-design.md` and re-derive
-      `mobile/UI.md`'s tokens from scratch.
+- [ ] **Resolved 2026-09-22: warm accent, not a reskin.** Was flagged as
+      conflicting with `docs/09-visual-design.md`'s decided muted-parchment
+      palette. **Decision:** hybrid, not a reversal — the map-legibility and
+      contrast work behind that palette solves real problems (rule 1's map
+      pop, accessibility contrast) and stays. The "cozy, peaceful walk"
+      feeling moves into the *accent* only: replace `seal` red with a warm
+      moss/ochre tone (re-run the same contrast measurement `mobile/UI.md`
+      already did for `seal`), and let the logo/splash carry the warmth. No
+      change to the map style, card layout, or type system. If this doesn't
+      read as warm enough once built, revisit — but don't reopen the whole
+      palette to find out.
       - Parked, not built: a separate "urban/city" theme variant. Speculative
         second theme before the first one has a second neighborhood
         (Copenhagen) — YAGNI until Phase 1 ships.
@@ -903,24 +905,36 @@ or silently overridden.
       change nothing about ordering — `contrast_score`/`layer` stay the sort
       keys (Decided, above). Only revisit using heart count as a ranking
       signal once there's enough traffic for it to mean anything.
-- [ ] **⚠️ Conflicts with a decided rule.** Subscription monetization.
-      "Decided — do not revisit" already rules out a consumer subscription
-      as a non-goal (converts at 1–3%) and states revenue comes from the
-      historical-layer B2B surface (Phase 2's embeddable map / delivered
-      corpora to tourism boards etc.) — the social/friend layer is expected to
-      earn nothing for years. A subscription model is a reversal of that call,
-      not an addition to it. Needs an explicit decision, not a todo, if the
-      direction is changing.
-- [ ] **⚠️ Conflicts with a decided rule.** Daily streak + proximity push
-      notification. `docs/11-memory-types.md` and the Phase 5 reasoning in
-      `TODO.md` (5.1) are explicit: *"no notifications, no streaks, no
-      gamification chrome anywhere in this product"* — anniversary
-      resurfacing was deliberately built as a list-ordering trick specifically
-      **because** the product has no notification channel at all. A proximity
-      push additionally needs background location, which
-      `mobile/UI.md` documents as a load-bearing constraint this app
-      deliberately avoids (foreground-only). Both ideas need that decision
-      reopened before either is buildable, not a todo under it.
+- [ ] **Resolved 2026-09-22: subscription is a second track, not a
+      replacement.** Was flagged against the Non-goal ruling out consumer
+      subscription. **Decision:** both are monetization goals — B2B
+      (historical-layer embeds/corpora) stays the near-term plan Phase 2
+      builds toward; a consumer subscription is added as a later goal once
+      there's a userbase worth charging, not a reason to re-scope Phase 2.
+      Non-goals list updated below. No build work implied yet — there is no
+      userbase and no priced feature to gate; revisit once Phase 3 has real
+      usage to look at.
+- [ ] **Resolved 2026-09-22: streak + proximity notification, reopened.**
+      Was flagged against `docs/11-memory-types.md`'s "no notifications, no
+      streaks, no gamification chrome" rule and `mobile/UI.md`'s
+      foreground-only location constraint. **Decision:** build both. Cheapest
+      real path for each, so this doesn't become a backend-infra project:
+      - **Streak:** one counter server-side (e.g. `users.streak_count` +
+        `users.streak_date`), incremented when a device's unlock/route-complete
+        date is one day after the last one, reset otherwise. No push needed —
+        surfaced as a number in the app, same as the anniversary flag today.
+      - **Proximity notification:** use on-device geofencing
+        (`expo-location`'s `startGeofencingAsync`) firing a **local**
+        notification, not a server push — no APNs/FCM registration, no push
+        server to build. Still requires flipping `mobile/UI.md` rule 2
+        (`ACCESS_BACKGROUND_LOCATION`, the iOS `NSLocationAlways…` /
+        `NSMotionUsageDescription` strings currently forced to `false`), which
+        is a real App Store privacy-review change, not just a UI toggle —
+        budget for it accordingly, and update the App Store privacy
+        disclosure alongside the code change.
+      `docs/11-memory-types.md`, `docs/10-decisions.md` and `mobile/UI.md`
+      updated to mark the old rule superseded rather than left contradicting
+      this.
 - [ ] **Tab bar delimiters.** `mobile/App.tsx`'s bottom tabs need a clearer
       visual separator between them. Small, contained styling change — no
       conflict, no new dependency; do it as a normal UI pass against the
@@ -933,7 +947,9 @@ or silently overridden.
 Copied so they survive context resets.
 
 **Non-goals — do not build:**
-- Consumer subscription (converts at 1–3% on social apps)
+- ~~Consumer subscription (converts at 1–3% on social apps)~~ **Reopened
+  2026-09-22:** now a second monetization track, later and secondary to B2B —
+  see "Ideas — founder brainstorm" above and "Monetization context" below.
 - Ad product (needs millions of DAU)
 - Multi-city launch
 - Personal video archives as a source (GPS is already in EXIF, and people film
@@ -959,10 +975,14 @@ Copied so they survive context resets.
 - **Legal posture** — snippets, attribution, deep links to the source at the
   right timestamp. Behave like a search engine. Never sell the raw corpus.
 
-**Monetization context** (not a build target): revenue comes from the historical
-layer — embeddable maps and delivered corpora for tourism boards, audio-guide
-companies, city archives. The social layer earns nothing for years, if ever.
-Local business seeded memories are a later option and must be clearly marked.
+**Monetization context** (not a build target): near-term revenue comes from the
+historical layer — embeddable maps and delivered corpora for tourism boards,
+audio-guide companies, city archives. **Reopened 2026-09-22:** a consumer
+subscription is now a legitimate second track, once there's a userbase — it
+does not replace or delay the B2B plan, which stays what Phase 2 builds toward.
+The social layer earns nothing on its own for years, if ever, independent of
+whether it later carries a subscription. Local business seeded memories are a
+later option and must be clearly marked.
 
 **Decisions taken 2026-09-20:**
 - TODO.md is the roadmap; `loop/TASKS.yaml` stays the executable contract and is
