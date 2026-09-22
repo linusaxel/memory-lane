@@ -16,6 +16,7 @@ MapView (full bleed)
 ├─ "N within reach"           seal red, breathing, tap -> the nearest unlockable
 │    or "Nearest locked · 412 m"   muted and still, when none is in reach
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
+├─ "Today's route · N of 5"   bottom centre, above Near me, only once one exists
 ├─ "Near me"                  bottom centre, recentres on GPS
 └─ LocationPrimer             bottom card, only until permission is settled
 
@@ -611,10 +612,18 @@ earned and never-gated memories identically.
 
 **Shape is the layer**, which is how F4 gets answered without new chrome:
 `historical` is round, `stranger` is a card — square corners and a turned-down
-top right, drawn with the border-triangle trick because there is no SVG here.
+top right, drawn with the border-triangle trick rather than the SVG that tag
+glyphs use elsewhere on the pin, because a shape this simple needs no library.
 The fold is opaque on purpose; a real notch needs clipping, and a transparent
 wedge over a street map reads as a rendering fault. A mixed group falls back to
 round rather than claiming the stack for one layer.
+
+**The corner slot holds one thing at a time, in priority order:** today's
+route position (F25) beats a count, which beats a padlock, which beats the
+dominant tag's glyph (`mobile/src/tagGlyph.tsx`) — only a handful of tags have
+one yet. None of this touches the ink ladder or the layer shape above; it only
+decides what goes in the one slot neither of those already filled. Full
+reasoning for what a tag and a layer are: `docs/11-memory-types.md`.
 
 **Anchor every marker `{ x: 0.5, y: 0.5 }`.** iOS centres a custom view on the
 coordinate already, but Android defaults to bottom-centre whatever you draw, so

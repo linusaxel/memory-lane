@@ -166,6 +166,21 @@ CREATE TABLE unlocks (
 
 CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
 
+-- Today's route: a fixed set of nearby, not-yet-earned stops, computed once
+-- per device per calendar day and stored so a relaunch sees the same route
+-- rather than a fresh roll of the dice. The first calendar-day-keyed table
+-- here - SPENT_TODAY/FILED_TODAY (api/write.py) are rolling 24h windows, not
+-- stored rows, which cannot give a route the stability a reopen needs.
+-- memory_ids is an array, not a child table: it preserves stop order natively
+-- for at most a handful of ids. See db/migrations/013_daily_routes.sql.
+CREATE TABLE daily_routes (
+    device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    route_date DATE NOT NULL,
+    memory_ids INTEGER[] NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (device_id, route_date)
+);
+
 -- A photo or a recording attached to a submitted memory. A memory of a place is
 -- a thin thing in text alone.
 CREATE TABLE media (

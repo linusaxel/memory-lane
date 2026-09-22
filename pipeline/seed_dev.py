@@ -61,6 +61,7 @@ OFFSETS = {
     "centroid": (0.0006, -0.0013),  # ~130m - two places, so neither is gated
     "filed": (-0.0005, 0.0010),  # ~100m - submitted, with a photo and a voice
     "sealed": (0.0006, 0.0013),  # ~129m - a time capsule: in reach and still shut
+    "nightspot": (0.0018, -0.0004),  # ~203m - a second submission, to mix layers with
 }
 
 
@@ -371,6 +372,39 @@ def sealed_until_a_date(session) -> int:
     ).scalar()
 
 
+def a_second_submission(session) -> int:
+    """A second stranger-layer memory, ~200m out - locked, and tagged unlike
+    the first one. `filed` alone gave the seed exactly one submission, which
+    is enough to demonstrate the layer but not enough to demonstrate mixing
+    them, which anything choosing across both layers (a route, a tag glyph
+    on a submission) needs at least two of to show.
+    """
+    lat, lng = at("nightspot")
+    place_id = session.execute(
+        text(PLACE_INSERT),
+        {
+            "name": "Where the night went long, dev seed",
+            "place_query": f"{PLACE_PREFIX}nightspot",
+            "lat": lat,
+            "lng": lng,
+            "precision_meters": 25,
+        },
+    ).scalar()
+    return session.execute(
+        text(SUBMISSION_INSERT),
+        {
+            "place_id": place_id,
+            "summary": "Somebody put the jukebox on shuffle at midnight and refused "
+            "to explain the last three songs it picked.",
+            "tags": ["drink", "nightlife"],
+            "happened_at": None,
+            "happened_precision": None,
+            "opens_at": None,
+            "user_id": SEED_USER,
+        },
+    ).scalar()
+
+
 def clear(session) -> int:
     """Remove exactly what seed() wrote.
 
@@ -406,11 +440,13 @@ def seed(session) -> dict:
     centroid_twin(session)
     filed_id, media = filed_by_a_person(session)
     sealed_id = sealed_until_a_date(session)
+    nightspot_id = a_second_submission(session)
 
     return {
         "content_id": content_id,
         "filed_id": filed_id,
         "sealed_id": sealed_id,
+        "nightspot_id": nightspot_id,
         "media": media,
     }
 
@@ -435,7 +471,9 @@ def main() -> None:
         metres = meters_between(here, Coordinates(lat=lat, lng=lng))
         print(f"  {key:9} {lat},{lng}  {metres:>4.0f}m")
     print()
-    print("  in reach now: reach, stack, filed     locked: walk     open to all: centroid")
+    print(
+        "  in reach now: reach, stack, filed     locked: walk, nightspot     open to all: centroid"
+    )
     print("  sealed until a date, in reach and still shut: sealed")
     print()
     print("point the Simulator at it:")

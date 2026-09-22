@@ -262,6 +262,44 @@ export async function fetchStats(signal?: AbortSignal): Promise<Stats> {
   };
 }
 
+/** Today's fixed set of nearby, not-yet-earned stops. */
+export type TodaysRoute = {
+  memories: LocatedMemory[];
+  /** ISO date. Compared against the local calendar day to decide whether a
+   *  cached copy (mobile/src/route.ts) is still today's. */
+  route_date: string;
+  /** The route's true size - can be short of the usual handful in a sparse
+   *  area, same honesty as every other list's meta.total. */
+  size: number;
+};
+
+/**
+ * Computed once per device per calendar day and stored server-side, so a
+ * relaunch sees the same route rather than a fresh roll. `at` is required
+ * only to start the day's first route - there is no stored home location
+ * anywhere in this API - and is ignored on every later call the same day.
+ */
+export async function fetchTodaysRoute(
+  device: string,
+  at: Coordinates | null,
+  signal?: AbortSignal,
+): Promise<TodaysRoute> {
+  const params = new URLSearchParams({ device });
+  if (at) {
+    params.set('lat', String(at.lat));
+    params.set('lng', String(at.lng));
+  }
+  const body = await get<{
+    memories?: Memory[];
+    meta?: { route_date?: string; size?: number };
+  }>('/v1/routes/today', params, signal);
+  return {
+    memories: (body.memories ?? []).filter(hasCoordinates),
+    route_date: body.meta?.route_date ?? '',
+    size: body.meta?.size ?? 0,
+  };
+}
+
 // --- writing -----------------------------------------------------------------
 
 /** What this device is, to the extent it is anybody. */

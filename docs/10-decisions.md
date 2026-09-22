@@ -518,3 +518,30 @@ camera in rather than opening anything.
 No `load()` alongside that `flyTo`: landing fires `onRegionChangeComplete`,
 which is what fetches. Doing both is two requests for one action, the first of
 them for a viewport that never exists.
+
+## Routes
+
+### A route is anchored on where you were, not a stored home
+
+`daily_routes` is the first calendar-day-keyed table in this schema — see
+`db/migrations/013_daily_routes.sql` — and it needed something to draw a route
+*from*. The obvious answer, a saved home address, does not exist anywhere in
+this product and was not worth inventing: `devices` and `users` already hold
+the least this app can get away with (docs/10-decisions.md#identity), and a
+home location is exactly the kind of fact a route feature could ask for
+without needing at all.
+
+So the anchor is whatever position the device reports on the day's *first*
+request — the one moment it is guaranteed to have anywhere honest to stand on
+— and every later request that day is answered from the stored array, lat/lng
+ignored. Two people opening the app from opposite ends of a city get two
+different routes on the same day, which is correct: the route was never a
+citywide itinerary, it was one device's walk.
+
+### No notification when a route completes
+
+F25 ends its list of stops the same way F23 ends a seal: nothing is pushed at
+anyone. This product has no notifications at all — see F1's "deliberately
+absent" list in `docs/08-ux-flows.md` — and a route was not going to be the
+first feature to need one invented. The pill just says a truer number the next
+time the app is opened, the same way "3 memories within reach" already does.

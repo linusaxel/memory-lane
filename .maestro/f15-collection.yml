@@ -7,6 +7,12 @@
 # no network at all - is not scripted: bringing the API down mid-flow is
 # machinery Maestro cannot reach. See e2e/README.md for the one-line way to
 # watch it by hand.
+#
+# F25's daily route is always-on, not something this flow opts into - any
+# device with a position gets one on launch, and standing exactly on `reach`
+# makes it stop 1 of that route. The marker's title carries a "Stop 1 of 5."
+# prefix it would not carry if F25 did not exist -
+# `.maestro/f7-walk-and-unlock.yml` has the fuller version of this note.
 
 appId: ${APP_ID}
 ---
@@ -27,9 +33,9 @@ appId: ${APP_ID}
 # A pin is named for its state as well as its place, so this waits for the
 # state to settle rather than assuming it already has.
 - extendedWaitUntil:
-    visible: "The bench outside, dev seed. Locked, within reach."
+    visible: "Stop 1 of 5. The bench outside, dev seed. Locked, within reach."
     timeout: 40000
-- tapOn: "The bench outside, dev seed. Locked, within reach."
+- tapOn: "Stop 1 of 5. The bench outside, dev seed. Locked, within reach."
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
     visible: ".*pretzel cart.*"

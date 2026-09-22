@@ -1,7 +1,12 @@
-"""Reading the corpus. Nothing here writes, and nothing here unlocks.
+"""Reading the corpus. Nothing here unlocks.
 
 The list endpoints never pass a position to `row_to_memory`: walking into range
 must *offer* the unlock, not perform it, or there is no moment to press.
+
+One exception to the "nothing here writes" this file used to be able to claim:
+GET /v1/routes/today stores a route the first time a device asks for one each
+day, so the same relaunch sees the same route rather than a fresh roll. It
+still never records an unlock - that stays write.py's alone.
 """
 
 import os
@@ -11,6 +16,7 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import text
 
 from api import gate
+from api.accounts import touch_device
 from api.gate import (
     UNLOCK_RADIUS_METERS,
     meters_between,
@@ -29,6 +35,8 @@ from api.models import (
     NearbyResponse,
     PlacesResponse,
     PlaceWithCount,
+    RouteMeta,
+    RouteResponse,
     SearchMeta,
     SearchResponse,
     Stats,
@@ -45,6 +53,8 @@ from api.queries import (
     NEARBY_MEMORIES_WITH_TAGS_QUERY,
     NEARBY_PLACES_QUERY,
     PLACES_COUNT_QUERY,
+    ROUTE_CANDIDATES_QUERY,
+    ROUTE_QUERY,
     SEARCH_COUNT_QUERY,
     SEARCH_COUNT_WITH_LOCATION_QUERY,
     SEARCH_MEMORIES_QUERY,
@@ -54,6 +64,11 @@ from api.queries import (
 from pipeline.db import get_session
 
 router = APIRouter()
+
+# 5 stops. 4000m is about a 45-50 minute round trip on foot - wide enough to
+# find that many outside a dense corpus without turning a walk into a commute.
+ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
+ROUTE_RADIUS_METERS = int(os.getenv("ROUTE_RADIUS_METERS", "4000"))
 
 
 @router.get("/v1/memories/nearby", response_model=NearbyResponse)
@@ -293,6 +308,145 @@ def get_unlocks(
     # row_to_memory would lock these again - it has no idea they were earned.
     return UnlocksResponse(
         memories=[row_to_memory(row, row_coordinates(row), include_distance=False) for row in rows]
+    )
+
+
+def _one_per_place(candidates: list) -> list:
+    """The map groups pins by coordinate, not by memory - `stack` in
+    pipeline/seed_dev.py is three memories on one place. Two of them picked as
+    separate route stops would be one pin asked to show two different numbers,
+    which is not renderable. Keeping the first (nearest, since the query is
+    already distance-ordered) per `place_id` makes a route stop a place, the
+    same unit the pin already is."""
+    seen: set[int] = set()
+    out = []
+    for row in candidates:
+        if row.place_id in seen:
+            continue
+        seen.add(row.place_id)
+        out.append(row)
+    return out
+
+
+def _mix_layers(candidates: list, size: int) -> list:
+    """Alternate stranger/other, both already distance-ascending from
+    ROUTE_CANDIDATES_QUERY, so a route reads as more than one kind of stop.
+    Falls through to whichever list still has items once the other runs dry,
+    rather than coming up short when only one layer is well-stocked nearby."""
+    stranger = [r for r in candidates if r.layer == "stranger"]
+    other = [r for r in candidates if r.layer != "stranger"]
+    picked, i, j, turn = [], 0, 0, 0
+    while len(picked) < size and (i < len(stranger) or j < len(other)):
+        lst = stranger if turn == 0 else other
+        idx = i if turn == 0 else j
+        if idx < len(lst):
+            picked.append(lst[idx])
+            if turn == 0:
+                i += 1
+            else:
+                j += 1
+        turn = 1 - turn
+    return picked
+
+
+def _walking_order(picks: list, anchor: Coordinates) -> list:
+    """Greedy nearest-neighbor from the anchor over the (already small) picks.
+    ponytail: O(n^2), fine at n<=ROUTE_SIZE; a real heuristic only if that ever
+    grows past a handful."""
+    remaining = list(picks)
+    ordered = []
+    here = anchor
+    while remaining:
+        nxt = min(remaining, key=lambda r: meters_between(here, Coordinates(lat=r.lat, lng=r.lng)))
+        ordered.append(nxt)
+        remaining.remove(nxt)
+        here = Coordinates(lat=nxt.lat, lng=nxt.lng)
+    return ordered
+
+
+ROUTE_LOOKUP = """
+    SELECT memory_ids FROM daily_routes
+    WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date
+"""
+
+ROUTE_INSERT = """
+    INSERT INTO daily_routes (device_id, route_date, memory_ids)
+    VALUES (CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]))
+    ON CONFLICT (device_id, route_date) DO NOTHING
+"""
+
+
+@router.get("/v1/routes/today", response_model=RouteResponse)
+def get_todays_route(
+    device: str = Query(..., pattern=DEVICE_PATTERN),
+    lat: float | None = Query(
+        None, ge=-90, le=90, description="Required only to start today's route"
+    ),
+    lng: float | None = Query(
+        None, ge=-180, le=180, description="Required only to start today's route"
+    ),
+):
+    """A fixed set of nearby, not-yet-earned stops for today, mixing layers.
+
+    Computed once per device per calendar day and stored, so a relaunch sees
+    the same route rather than a fresh roll of the dice - there is no stored
+    home location anywhere in this schema, so lat/lng only matter on the day's
+    first call, which is the only one with anywhere to anchor a route on.
+    """
+    route_date = gate.today()
+
+    with get_session() as session:
+        row = session.execute(
+            text(ROUTE_LOOKUP), {"device": device, "route_date": route_date}
+        ).fetchone()
+
+        if row is None:
+            if lat is None or lng is None:
+                raise HTTPException(
+                    status_code=400, detail="lat/lng are required to start today's route"
+                )
+
+            candidates = session.execute(
+                text(ROUTE_CANDIDATES_QUERY),
+                {
+                    "lat": lat,
+                    "lng": lng,
+                    "radius_meters": ROUTE_RADIUS_METERS,
+                    "today": route_date,
+                    "device_id": device,
+                    "limit": 4 * ROUTE_SIZE,
+                },
+            ).fetchall()
+
+            picked = _walking_order(
+                _mix_layers(_one_per_place(candidates), ROUTE_SIZE), Coordinates(lat=lat, lng=lng)
+            )
+            memory_ids = [r.id for r in picked]
+
+            touch_device(session, device)
+            session.execute(
+                text(ROUTE_INSERT),
+                {"device": device, "route_date": route_date, "ids": memory_ids},
+            )
+            # Somebody else's first call this second may have won the race -
+            # read back whichever array actually landed.
+            row = session.execute(
+                text(ROUTE_LOOKUP), {"device": device, "route_date": route_date}
+            ).fetchone()
+
+        memory_ids = list(row.memory_ids)
+        rows = (
+            session.execute(text(ROUTE_QUERY), {"ids": memory_ids}).fetchall() if memory_ids else []
+        )
+
+    # No position: these are freshly discovered, unwalked stops, and rendering
+    # them locked is the point - the same rule every other list endpoint here
+    # follows for exactly this reason.
+    by_id = {r.id: row_to_memory(r) for r in rows}
+    memories = [by_id[i] for i in memory_ids if i in by_id]
+
+    return RouteResponse(
+        memories=memories, meta=RouteMeta(route_date=route_date, size=len(memory_ids))
     )
 
 

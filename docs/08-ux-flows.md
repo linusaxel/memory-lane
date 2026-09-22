@@ -50,6 +50,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F24 | Manage what you filed | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Implemented |
+| F25 | Walk today's route | Implemented |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
@@ -777,6 +778,60 @@ list and pressing Save (423, same message as trying to open one early).
 **Done when:** somebody can find every memory they have filed in one place,
 fix a typo without re-filing, and take one down — and none of that touches
 anyone else's collection or the local unlock cache.
+
+---
+
+## F25 · Walk today's route — **Implemented**
+
+**Who:** somebody opening the app with nothing particular to unlock.
+**Trigger:** launching the app with a device id and a first position, once a
+calendar day.
+
+1. The first time a device asks that day, the server picks up to five nearby,
+   not-yet-earned memories, mixing historical and stranger layers, and stores
+   the choice — a relaunch the same day sees exactly the same walk, not a
+   fresh roll.
+2. A pill appears above "Near me": "Today's route · 0 of 5 unlocked." Tapping
+   it fits the map to the route's stops.
+3. Each stop draws its ordinary pin — locked, warm or unlockable, exactly as
+   F7 already renders it — with its position in today's route (1–5) in the
+   badge slot instead of a count or a tag. A faint dashed line connects the
+   stops in a walkable order, drawn once from wherever the device stood at
+   the day's first ask.
+4. Walking into range and unlocking a stop is F7, unchanged. The badge and
+   its share of the line drop away the moment it is earned, and the pill's
+   count moves.
+
+**Not a new mechanic — the same one, five times.** A route stop is nothing
+but an ordinary gated memory with one extra fact attached to it, its position
+in today's list. The unlock is F7's, the padlock is F7's, the sheet is F7's.
+The only things this flow adds are the picking and the pill.
+
+**Anchored on where the device was, not on a home it never gave.** There is
+no stored location anywhere in this schema besides a device's own reported
+position at the moment it asks for something, so the day's first request is
+the only one with anywhere honest to draw a route from. Every later request
+that day, wherever it comes from, gets back the same array — see
+`docs/10-decisions.md` § Routes.
+
+**No notification when it is ready, and none when it is finished.** This
+product does not have any — F1's "deliberately absent" list, and F23 makes
+exactly the same call about a seal opening. The route is there when the app
+is opened and stays there; nothing is pushed at anyone.
+
+**A sparse area gets an honestly shorter route, not a padded one.** Fewer
+than five walkable memories nearby means a route of two or three, and the
+pill says so — "0 of 2" rather than pretending a fifth stop exists.
+
+**What can go wrong:** fewer than five candidates nearby — the pill reports
+the true count, same honesty as an empty map (open question 2). No device id
+or no position yet — no pill, the same wait every other position-dependent
+control on this screen already does.
+
+**Done when:** a fresh device gets a stable route of up to five stops the
+first time it asks with a position, sees the identical stops on a relaunch
+the same day, and watches the pill's count and the map's badges track each
+unlock exactly as F7 already does.
 
 ---
 

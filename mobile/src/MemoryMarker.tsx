@@ -9,6 +9,7 @@ import { Callout, Marker } from 'react-native-maps';
 import type { MemoryGroup } from './cluster.ts';
 import { groupLabel, layerOf } from './cluster.ts';
 import Padlock from './Padlock.tsx';
+import TagGlyph from './tagGlyph.tsx';
 import { color, font } from './theme.ts';
 import type { Reach } from './reach.ts';
 
@@ -24,18 +25,33 @@ type Props = {
   group: MemoryGroup;
   reach: Reach;
   onPress: () => void;
+  /** 1-based position in today's route, or null when this pin is not one of
+   *  today's stops. Route candidates are always gated, so this never applies
+   *  to a `plain` group. */
+  routePosition?: number | null;
+  routeSize?: number;
 };
 
-export default function MemoryMarker({ group, reach, onPress }: Props) {
+export default function MemoryMarker({
+  group,
+  reach,
+  onPress,
+  routePosition = null,
+  routeSize = 0,
+}: Props) {
   const count = group.memories.length;
   const card = layerOf(group) === 'stranger';
+  // The dominant tag: whatever the group's first memory carries first. Only a
+  // handful of tags have art (see tagGlyph.tsx); the rest render nothing.
+  const tag = group.memories[0]?.tags[0] ?? null;
 
   return (
     <Marker
-      // The reach is part of the key on purpose. tracksViewChanges is off for
-      // the frame cost, so the marker only repaints when React gives it a new
-      // identity - which is exactly when its state changed.
-      key={`${group.key}:${reach}:${card ? 'card' : 'round'}`}
+      // The reach and the route position are part of the key on purpose.
+      // tracksViewChanges is off for the frame cost, so the marker only
+      // repaints when React gives it a new identity - which is exactly when
+      // its state changed.
+      key={`${group.key}:${reach}:${card ? 'card' : 'round'}:${routePosition ?? ''}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
       // Put the middle of the pin on the point it names. iOS centres a custom
       // view already; Android defaults to bottom-centre whatever you draw, so
@@ -48,11 +64,17 @@ export default function MemoryMarker({ group, reach, onPress }: Props) {
       // `subtitle` never reaches the label either. Colour is what says
       // whether a pin can be opened and colour is not available to everyone,
       // so the state has to ride along with the name.
-      title={`${groupLabel(group)}. ${STATE_LABEL[reach]}.`}
+      title={[
+        routePosition ? `Stop ${routePosition} of ${routeSize}.` : null,
+        `${groupLabel(group)}. ${STATE_LABEL[reach]}.`,
+        tag ? `Tagged ${tag}.` : null,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       tracksViewChanges={false}
       onPress={onPress}
     >
-      <Pin reach={reach} count={count} card={card} />
+      <Pin reach={reach} count={count} card={card} routePosition={routePosition} tag={tag} />
       {/* An empty tooltip callout, which is how you say "no callout" while
           keeping a title. Setting `title` makes MapKit offer its own bubble:
           system font on a white rounded rect, at odds with everything in
@@ -68,7 +90,33 @@ export default function MemoryMarker({ group, reach, onPress }: Props) {
   );
 }
 
-function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolean }) {
+type PinProps = {
+  reach: Reach;
+  count: number;
+  card: boolean;
+  routePosition: number | null;
+  tag: string | null;
+};
+
+// A pin's one badge slot, across every branch, shows at most one of: today's
+// route position (most urgent - it is why you opened the app), how many
+// memories are stacked here, the padlock saying something is shut, or the
+// dominant tag's glyph - in that order. `stamped` is the one branch with no
+// padlock to compete with a glyph, so it is the only branch that needs all
+// four options weighed; the gated branches below decide padlock-vs-glyph
+// inline, since a padlock always wins there.
+// ponytail: a route candidate is one memory's id, so a *stack* that happens to
+// contain one shows the route number for the whole stack. Rare (it needs a
+// stack AND one of its members picked for today's route) and harmless - the
+// sheet still pages through every memory underneath correctly.
+function stampedMark(routePosition: number | null, count: number, tag: string | null) {
+  if (routePosition) return { kind: 'text' as const, value: String(routePosition) };
+  if (count > 1) return { kind: 'text' as const, value: String(count) };
+  if (tag) return { kind: 'tag' as const, value: tag };
+  return null;
+}
+
+function Pin({ reach, count, card, routePosition, tag }: PinProps) {
   // In reach: a ring, not a disc. The pin you can open is by definition the pin
   // you are standing on, so the blue location dot lands dead centre - a disc
   // disappears underneath it, count and all. It also echoes the hold ring in
@@ -79,9 +127,9 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
         <View style={[styles.ring, card && styles.ringCard]} />
         {card && <View style={styles.fold} />}
         <Tag background={color.sealDeep}>
-          {count > 1 ? (
+          {routePosition || count > 1 ? (
             <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
-              {count}
+              {routePosition || count}
             </Text>
           ) : (
             <Padlock size={10} color={color.paper} />
@@ -92,19 +140,29 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
   }
 
   // Nothing to earn here. The smallest mark on the map, because a coordinate
-  // with nothing behind a gate is context rather than an invitation.
+  // with nothing behind a gate is context rather than an invitation. Never a
+  // route stop - route candidates are always gated - so the only thing that
+  // can fill its one free slot is a tag glyph.
   if (reach === 'plain') {
-    return count > 1 ? (
-      <View style={styles.wrap}>
-        <View style={[styles.badge, styles.inked, card && styles.square]}>
-          <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
-            {count}
-          </Text>
+    if (count > 1) {
+      return (
+        <View style={styles.wrap}>
+          <View style={[styles.badge, styles.inked, card && styles.square]}>
+            <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
+              {count}
+            </Text>
+          </View>
         </View>
-      </View>
-    ) : (
+      );
+    }
+    return (
       <View style={[styles.wrap, styles.wrapDot]}>
         <View style={[styles.dot, card && styles.dotSquare]} />
+        {tag && (
+          <Tag background={color.paper}>
+            <TagGlyph tag={tag} size={11} color={color.inkFaint} />
+          </Tag>
+        )}
       </View>
     );
   }
@@ -113,17 +171,23 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
   // stays said. A ring inside the disc, because the ring is the thing you held
   // to open it - the pin keeps a small copy. Nothing else looks like this.
   if (reach === 'stamped') {
+    const mark = stampedMark(routePosition, count, tag);
     return (
       <View style={styles.wrap}>
         <View style={[styles.disc, styles.inked, card && styles.discCard]}>
           <View style={[styles.impression, card && styles.impressionCard]} />
         </View>
         {card && <View style={styles.fold} />}
-        {count > 1 && (
+        {mark?.kind === 'text' && (
           <Tag background={color.ink}>
             <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
-              {count}
+              {mark.value}
             </Text>
+          </Tag>
+        )}
+        {mark?.kind === 'tag' && (
+          <Tag background={color.paper}>
+            <TagGlyph tag={mark.value} size={10} color={color.ink} />
           </Tag>
         )}
       </View>
@@ -133,17 +197,19 @@ function Pin({ reach, count, card }: { reach: Reach; count: number; card: boolea
   // Locked, near or far. Same disc, two weights: faded is out of reach, and an
   // ink outline on paper is close enough to be worth the walk. Ink and not
   // seal, because seal means openable now and a red pin you cannot open is an
-  // invitation that refuses you - see F11.
+  // invitation that refuses you - see F11. The padlock still wins over a tag
+  // glyph here: there is only one face, and "this is shut" outranks "this is
+  // about food".
   const warm = reach === 'warm';
   return (
     <View style={styles.wrap}>
       <View style={[styles.disc, warm ? styles.warm : styles.distant, card && styles.discCard]}>
-        {count > 1 ? (
+        {routePosition || count > 1 ? (
           <Text
             style={[styles.count, warm && styles.countWarm]}
             maxFontSizeMultiplier={MARKER_FONT_SCALE}
           >
-            {count}
+            {routePosition || count}
           </Text>
         ) : (
           <Padlock size={DISC * 0.34} color={warm ? color.ink : color.paper} />
@@ -245,9 +311,10 @@ const styles = StyleSheet.create({
   },
   ringCard: { borderRadius: 4 },
 
-  /** A turned-down corner, drawn with the border triangle trick because there
-   *  is no SVG in this app. Opaque on purpose: a real notch needs clipping, and
-   *  a transparent wedge over a street map reads as a rendering fault. */
+  /** A turned-down corner, drawn with the border triangle trick rather than
+   *  the SVG that tag glyphs now use elsewhere on this pin - a shape this
+   *  simple needs no library. Opaque on purpose: a real notch needs clipping,
+   *  and a transparent wedge over a street map reads as a rendering fault. */
   fold: {
     position: 'absolute',
     top: 9,

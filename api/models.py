@@ -189,6 +189,20 @@ class UnlocksResponse(BaseModel):
     memories: list[Memory]
 
 
+class RouteMeta(BaseModel):
+    route_date: date
+    # The route's true size, which can be short of ROUTE_SIZE in a sparse area -
+    # same honesty as NearbyMeta.total rather than padding or refusing.
+    size: int
+
+
+class RouteResponse(BaseModel):
+    # Stop order is the list index - a route never has more than a handful of
+    # entries, and nothing else in this API represents order any other way.
+    memories: list[Memory]
+    meta: RouteMeta
+
+
 class MyMemoriesMeta(BaseModel):
     total: int
     limit: int

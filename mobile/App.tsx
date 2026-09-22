@@ -9,7 +9,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import MapView, { Circle } from 'react-native-maps';
+import MapView, { Circle, Polyline } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
@@ -29,6 +29,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   fetchStats,
   fetchProfile,
+  fetchTodaysRoute,
   fetchUnlocked,
   saveDisplayName,
   unlockMemory,
@@ -43,6 +44,7 @@ import { devOpenMemory, devOpenScreen, devOpenTab } from './src/devOpen.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
+import { loadRoute, saveRoute } from './src/route.ts';
 import {
   forgetUnlocked,
   inUnlockOrder,
@@ -129,6 +131,12 @@ export default function App() {
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
+  // Today's guided walk: nearby, not-yet-earned, computed once server-side.
+  // routeSize is the route's true size (can be short in a sparse area); it is
+  // not `route.length`, because a stop the local cache lost or the server
+  // pruned still counted toward "today" when the route was made.
+  const [route, setRoute] = useState<LocatedMemory[]>([]);
+  const [routeSize, setRouteSize] = useState(0);
   // What the server says the gate radius is. Only /v1/stats can answer when
   // there is nothing on the map, and the circle is drawn either way.
   const [serverRadius, setServerRadius] = useState<number | null>(null);
@@ -316,6 +324,30 @@ export default function App() {
     });
   }, []);
 
+  // Today's route, fetched once a device id and a first position both exist -
+  // whichever arrives second. Guarded by a ref rather than an empty dep array:
+  // `position` is unavailable at mount and this has to wait for it, but must
+  // not refetch on every one of the watcher's later updates.
+  const routeFetched = useRef(false);
+  useEffect(() => {
+    if (!device || !position || routeFetched.current) return;
+    routeFetched.current = true;
+
+    const today = new Date().toISOString().slice(0, 10);
+    loadRoute(today).then((cached) => {
+      if (cached && mounted.current) setRoute(cached);
+    });
+
+    fetchTodaysRoute(device, position)
+      .then((fetched) => {
+        if (!mounted.current) return;
+        setRoute(fetched.memories);
+        setRouteSize(fetched.size);
+        saveRoute({ route_date: fetched.route_date, memories: fetched.memories });
+      })
+      .catch(() => {});
+  }, [device, position]);
+
   // What the device has earned wins over what the server is willing to say now:
   // walking away must not take a memory back.
   const shown = useMemo(
@@ -325,6 +357,23 @@ export default function App() {
   // Ids, not memories: reachOf only asks whether this device walked to it, and
   // a Set keeps that an O(1) question inside three passes over every group.
   const earned = useMemo(() => new Set(Object.keys(unlocked).map(Number)), [unlocked]);
+  // Same overlay `shown` applies to the viewport's memories, so a route stop
+  // reads as earned the moment it is, without waiting on a refetch of either.
+  const routeShown = useMemo(
+    () => route.map((memory) => unlocked[memory.id] ?? memory),
+    [route, unlocked],
+  );
+  // 1-based position in today's route, by memory id - a group's badge looks
+  // itself up here rather than the route ever knowing about groups.
+  const routePositionById = useMemo(() => {
+    const map = new Map<number, number>();
+    routeShown.forEach((memory, i) => map.set(memory.id, i + 1));
+    return map;
+  }, [routeShown]);
+  const routeUnlockedCount = useMemo(
+    () => routeShown.filter((memory) => earned.has(memory.id)).length,
+    [routeShown, earned],
+  );
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
@@ -600,16 +649,43 @@ export default function App() {
               />
             )}
 
-            {groups.map((group) => (
-              <MemoryMarker
-                key={group.key}
-                group={group}
-                reach={reachOf(group, position, earned)}
-                onPress={() =>
-                  group.spanMeters > CLUSTER_SPAN_M ? zoomTo(group) : openGroup(group)
-                }
+            {/* A suggestion, not an unlock state - never the seal colour. */}
+            {routeShown.length > 1 && (
+              <Polyline
+                coordinates={routeShown.map((memory) => ({
+                  latitude: memory.place.coordinates.lat,
+                  longitude: memory.place.coordinates.lng,
+                }))}
+                strokeWidth={2}
+                strokeColor={scheme === 'dark' ? 'rgba(189,181,168,0.55)' : 'rgba(74,68,61,0.4)'}
+                lineDashPattern={[6, 6]}
               />
-            ))}
+            )}
+
+            {groups.map((group) => {
+              // The first of a group's memories that is also a route stop -
+              // a mixed stack shows the route's number for the whole stack.
+              let routePosition: number | null = null;
+              for (const memory of group.memories) {
+                const at = routePositionById.get(memory.id);
+                if (at) {
+                  routePosition = at;
+                  break;
+                }
+              }
+              return (
+                <MemoryMarker
+                  key={group.key}
+                  group={group}
+                  reach={reachOf(group, position, earned)}
+                  routePosition={routePosition}
+                  routeSize={routeSize}
+                  onPress={() =>
+                    group.spanMeters > CLUSTER_SPAN_M ? zoomTo(group) : openGroup(group)
+                  }
+                />
+              );
+            })}
           </MapView>
 
           <View style={styles.banner} pointerEvents="none">
@@ -686,6 +762,30 @@ export default function App() {
                 setRegion(next);
               }}
             />
+          )}
+
+          {/* Above "Near me", in the same bottom slot every other floating
+              control here shares - never a second region of the screen. */}
+          {!showPrimer && !nothingHere && route.length > 0 && (
+            <Pressable
+              style={dim(styles.route)}
+              accessibilityRole="button"
+              accessibilityLabel={`Today's route · ${routeUnlockedCount} of ${routeSize} unlocked.`}
+              accessibilityHint="Shows today's stops on the map"
+              onPress={() =>
+                mapRef.current?.fitToCoordinates(
+                  routeShown.map((memory) => ({
+                    latitude: memory.place.coordinates.lat,
+                    longitude: memory.place.coordinates.lng,
+                  })),
+                  { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
+                )
+              }
+            >
+              <Text style={styles.routeText}>
+                Today's route · {routeUnlockedCount} of {routeSize} unlocked
+              </Text>
+            </Pressable>
           )}
 
           {showPrimer && !nothingHere ? (
@@ -888,4 +988,29 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   locateText: { ...buttonText, color: color.paper },
+  // Directly above "Near me", sharing its shadow token - UI.md's rule is that
+  // only two shadows exist in this app, and this is the same kind of small
+  // solid control as the one it sits on.
+  route: {
+    position: 'absolute',
+    bottom: 100,
+    alignSelf: 'center',
+    backgroundColor: color.paper,
+    borderWidth: 1,
+    borderColor: color.rule,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
+  },
+  routeText: {
+    fontFamily: font.monoMedium,
+    fontSize: 12,
+    letterSpacing: 0.3,
+    color: color.inkSoft,
+  },
 });

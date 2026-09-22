@@ -264,6 +264,9 @@ def test_maestro_flows_still_point_at_the_seed():
             )
 
         for name in re.findall(r"([A-Z][^\"\n]*?, dev seed)", text_):
-            assert name in seeded_names, (
+            # endswith, not equality: F25's marker titles carry a "Stop N of 5."
+            # prefix ahead of the place name (mobile/src/MemoryMarker.tsx), so
+            # the seeded name is a suffix of what the flow actually taps on.
+            assert any(name.endswith(seeded) for seeded in seeded_names), (
                 f"{flow.name} names {name!r}, which the seed does not plant"
             )

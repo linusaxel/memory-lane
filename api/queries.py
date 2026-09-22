@@ -19,14 +19,17 @@ tests/test_api_sql.py EXPLAINs every *_QUERY in here against the real schema.
 # size) are the same answer and different expressions. Unindexed this scanned
 # every place once per row returned: 305ms of a 338ms /v1/memories/nearby at
 # 50k memories. `python -m pipeline.perf` is how to check that again.
-COORDINATE_IS_UNIQUE = """(
+# The bare boolean, for reuse inside a WHERE - an aliased column expression
+# (below) is not legal there. ROUTE_CANDIDATES_QUERY is the one other caller.
+COORDINATE_IS_UNIQUE_EXPR = """(
         SELECT COUNT(*) = 1 FROM places p2
         WHERE ST_SnapToGrid(p2.coordinates::geometry, 0.0001)
             = ST_SnapToGrid(p.coordinates::geometry, 0.0001)
           AND NOT EXISTS (
               SELECT 1 FROM memories m2 WHERE m2.place_id = p2.id AND m2.user_id IS NOT NULL
           )
-    ) as coordinate_is_unique"""
+    )"""
+COORDINATE_IS_UNIQUE = f"{COORDINATE_IS_UNIQUE_EXPR} as coordinate_is_unique"
 
 # COALESCE because json_agg returns SQL NULL for no rows, and a null here would
 # make every media-less memory need a guard downstream.
@@ -372,6 +375,47 @@ LIMIT :limit
 UNLOCK_COUNT_QUERY = (
     f"SELECT COUNT(DISTINCT memory_id) FROM unlocks WHERE device_id IN {MY_DEVICES}"
 )
+
+# Today's route candidates: nearby, not already earned, and actually worth the
+# walk. Three predicates that exist nowhere else in this file:
+#   - not already unlocked - the inverse of DEVICE_UNLOCKS_QUERY's `earned` CTE,
+#     over the same MY_DEVICES so a second phone on one account sees the same
+#     route rather than re-discovering what its sibling already earned.
+#   - only walk-to-unlock memories - a centroid a route sent you to would open
+#     the moment you arrived, which is not a stop, it is scenery.
+#   - not time-locked - :today is api.gate.today(), not CURRENT_DATE, for the
+#     same UTC-vs-cluster-timezone reason ANNIVERSARY avoids it above.
+# Ordered by distance and not CONTRAST_ORDER on purpose: a route is where to
+# walk next, not a feed to rank.
+ROUTE_CANDIDATES_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    {DISTANCE}
+{MEMORY_JOIN}
+WHERE
+    p.coordinates IS NOT NULL
+    AND {VISIBLE}
+    AND {WITHIN}
+    AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
+    AND (m.opens_at IS NULL OR m.opens_at <= CAST(:today AS date))
+    AND NOT EXISTS (
+        SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
+    )
+ORDER BY distance_meters ASC
+LIMIT :limit
+"""
+
+# Today's route, rendered. No DISTANCE here - lat/lng are only ever supplied
+# on the day's first call, and a stop's distance from wherever the phone is
+# right now is exactly what reach.ts already computes client-side from GPS.
+# array_position keeps the read in the order the route was stored in, the same
+# way the array itself preserves it on write - no join table needed either
+# direction for at most a handful of stops.
+ROUTE_QUERY = f"""
+SELECT {MEMORY_COLUMNS}
+{MEMORY_JOIN}
+WHERE m.id = ANY(CAST(:ids AS integer[]))
+ORDER BY array_position(CAST(:ids AS integer[]), m.id)
+"""
 
 # Where the corpus actually is, for somebody standing where it is not.
 # DBSCAN and not a grid, and how the label is picked:

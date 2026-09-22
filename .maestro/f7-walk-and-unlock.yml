@@ -8,13 +8,21 @@
 # nothing is unlockable, close enough that reachOf calls it `warm` (the 150m
 # gate x WARM_MULTIPLIER 3) so the sheet offers a walk rather than a shrug.
 #
-# TWO THINGS TO KNOW BEFORE EDITING THIS FILE.
+# THREE THINGS TO KNOW BEFORE EDITING THIS FILE.
 #  1. Maestro matches text as a FULL-STRING regex, not a substring. "Walk
 #     there" matches only a label that is exactly that; anything else needs .*
 #  2. A marker's label is `${groupLabel}. ${STATE_LABEL[reach]}.` and it comes
 #     from the MKAnnotation's `title` - not from `accessibilityLabel`, which
 #     iOS ignores on a Marker. Tapping a pin therefore means naming its state
 #     as well as its place, and the pin turning is directly assertable.
+#  3. F25's daily route is always-on, not something this flow opts into - any
+#     device with a position gets one on launch. From this flow's start,
+#     `reach` is stop 2 of the route the fresh seed always produces (F25's own
+#     flow starts nearer `reach` and gets stop 1 instead), so its title carries
+#     a "Stop 2 of 5." prefix it would not carry if F25 did not exist. This is
+#     the same kind of seed-derived fact every other hardcoded string here
+#     already is - `tests/test_api_routes.py` is what actually pins the
+#     selection and ordering rules down; this file just has to agree with them.
 
 appId: ${APP_ID}
 ---
@@ -49,9 +57,9 @@ appId: ${APP_ID}
 
 # F17 + F12: why it will not open, and what to do about it.
 - extendedWaitUntil:
-    visible: "The bench outside, dev seed. Locked, a short walk away."
+    visible: "Stop 2 of 5. The bench outside, dev seed. Locked, a short walk away."
     timeout: 40000
-- tapOn: "The bench outside, dev seed. Locked, a short walk away."
+- tapOn: "Stop 2 of 5. The bench outside, dev seed. Locked, a short walk away."
 - assertVisible: "Get within 150 m and you can open it."
 - assertVisible: "Walk there"
 - tapOn: "Close"
@@ -69,13 +77,13 @@ appId: ${APP_ID}
     timeout: 45000
 # The pin itself turned, not just the banner.
 - extendedWaitUntil:
-    visible: "The bench outside, dev seed. Locked, within reach."
+    visible: "Stop 2 of 5. The bench outside, dev seed. Locked, within reach."
     timeout: 40000
 
 # F7: the hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
 # animation callback fires while the finger is still down, so the press
 # completes the unlock rather than cancelling it.
-- tapOn: "The bench outside, dev seed. Locked, within reach."
+- tapOn: "Stop 2 of 5. The bench outside, dev seed. Locked, within reach."
 - assertVisible: "You are standing close enough to open this one."
 - assertVisible: "Hold to unlock"
 - longPressOn: "Unlock this memory"

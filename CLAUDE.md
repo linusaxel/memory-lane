@@ -107,7 +107,9 @@ python -m api.main
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
 | `mobile/src/MemoryMarker.tsx` | A coordinate's five states, and its layer's shape |
+| `mobile/src/tagGlyph.tsx` | The one glyph per tag, for the ones that have one yet |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
+| `mobile/src/route.ts` | What this device's daily walk looks like. Cached, server-authoritative, resets at midnight |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/SignIn.tsx` | Google and Apple buttons. Neither works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
@@ -116,6 +118,7 @@ python -m api.main
 | **`docs/08-ux-flows.md`** | **What the user does.** Implemented + proposed flows |
 | **`docs/10-decisions.md`** | **Why the code is shaped this way.** Read before "fixing" something odd |
 | `docs/09-visual-design.md` | Why the app looks the way it does, what was rejected, and why the web card does not match it yet |
+| `docs/11-memory-types.md` | What a memory is and isn't, layer vs. tag vs. confidence, and the pin guardrails to check before decorating one further |
 
 ## Database Tables
 
@@ -201,6 +204,8 @@ Optional (with defaults):
 - `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
 - `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)
 - `REPORT_THRESHOLD` = 3 (distinct devices needed to hide a submission)
+- `ROUTE_SIZE` = 5, `ROUTE_RADIUS_METERS` = 4000 (today's route: how many stops,
+  and how far out to look for them)
 - `GOOGLE_CLIENT_IDS`, `APPLE_CLIENT_IDS` = empty (comma-separated audience
   whitelists. Empty means sign-in is off and `/v1/auth/*` answers 503)
 
@@ -255,6 +260,9 @@ FastAPI server with PostGIS proximity queries:
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
+- `GET /v1/routes/today?device=UUID&lat=X&lng=Y` - today's five stops, computed
+  once and stored per device per day; `lat`/`lng` only matter on the day's
+  first call. The one GET that writes - see `api/read.py`'s docstring
 - `POST /v1/memories` `{device, lat, lng, place_name, summary, tags, ...}` -
   **file your own memory.** One coordinate: it is both where you are and where
   the memory goes. Lands in the `stranger` layer, gated like everything else,
@@ -399,4 +407,5 @@ ORDER BY m.id DESC LIMIT 10;
 - [x] Full-text search across memory summaries
 - [x] User-submitted memories, with photo and audio
 - [x] Google/Apple sign-in, so a collection survives a new phone
+- [x] A daily guided route - F25, `GET /v1/routes/today`
 - [ ] Rate limiting / authentication for API
