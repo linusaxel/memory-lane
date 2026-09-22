@@ -45,17 +45,19 @@ import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
 import {
+  forgetUnlocked,
   inUnlockOrder,
   loadUnlocked,
   mergeUnlocked,
   primerWasDismissed,
   rememberPrimerDismissed,
   rememberUnlocked,
+  updateUnlocked,
   type Unlocked,
 } from './src/unlocked.ts';
-import Collection from './src/Collection.tsx';
 import { deviceId } from './src/device.ts';
 import Elsewhere from './src/Elsewhere.tsx';
+import Memories from './src/Memories.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
 import { buttonText, color, dim, font, label } from './src/theme.ts';
@@ -122,7 +124,7 @@ export default function App() {
   const [primerDismissed, setPrimerDismissed] = useState(false);
   const [unlocked, setUnlocked] = useState<Unlocked>({});
   // Whether the local store has answered yet. Until it has, the collection must
-  // not claim to be empty - see Collection's `ready`.
+  // not claim to be empty - see Memories' `unlockedReady`.
   const [collectionReady, setCollectionReady] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
@@ -138,6 +140,12 @@ export default function App() {
   const [displayName, setDisplayName] = useState('');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
+  // Set to open Submit as an editor for this memory instead of a blank form.
+  // Null means Submit is either closed or filing something new.
+  const [editingMemory, setEditingMemory] = useState<LocatedMemory | null>(null);
+  // Bumped after a post, a save or a delete so Memories' "My memories" section
+  // refetches without the tab having to be left and come back to.
+  const [mineVersion, setMineVersion] = useState(0);
   // Reported by this device already. Local only - the server counts devices,
   // and this stops the control offering a second press that does nothing.
   const [reported, setReported] = useState<Set<number>>(new Set());
@@ -329,6 +337,14 @@ export default function App() {
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
   );
+  // Both sides have to be a real id: an extracted memory's author is null and
+  // a signed-out profile's user_id is undefined, and undefined === undefined
+  // would otherwise call every extracted memory yours before the profile has
+  // even loaded.
+  const mine =
+    !!openMemories[openIndex]?.author?.id &&
+    !!profile?.user_id &&
+    openMemories[openIndex].author?.id === profile.user_id;
 
   // EXPO_PUBLIC_DEV_OPEN_SCREEN, under __DEV__ only. The submit sheet is three
   // taps in and there are no taps, so without this it could only be read as
@@ -453,6 +469,7 @@ export default function App() {
       // so it goes straight into the collection.
       setUnlocked(await rememberUnlocked(unlocked, memory));
       setProfile((who) => (who ? { ...who, submitted: who.submitted + 1 } : who));
+      setMineVersion((v) => v + 1);
       // Show them what they filed. The modal closing is not a confirmation,
       // and this is also the first sight of what anybody else will find here.
       setOpenAt([memory]);
@@ -473,6 +490,40 @@ export default function App() {
       reportMemory(memory.id, device).catch(() => {});
     },
     [device],
+  );
+
+  /** Opens Submit as an editor rather than a blank form - the Memories tab
+   *  and the map sheet both lead here. */
+  const openEditor = useCallback((memory: LocatedMemory) => {
+    setEditingMemory(memory);
+    setSubmitOpen(true);
+  }, []);
+
+  const saved = useCallback(
+    async (memory: LocatedMemory) => {
+      setUnlocked(await updateUnlocked(unlocked, memory));
+      setMineVersion((v) => v + 1);
+      // The sheet, if it is the one open on this memory, should show what was
+      // just saved rather than the words it had when it opened.
+      setOpenAt((current) => current.map((m) => (m.id === memory.id ? memory : m)));
+    },
+    [unlocked],
+  );
+
+  const deleted = useCallback(
+    async (id: number) => {
+      setUnlocked(await forgetUnlocked(unlocked, id));
+      setProfile((who) => (who ? { ...who, submitted: Math.max(0, who.submitted - 1) } : who));
+      setMineVersion((v) => v + 1);
+      // Closes the sheet outright rather than trying to keep a stack's other
+      // members in view - simpler, and the editor that led here only ever
+      // opened on one memory at a time regardless of what it was stacked with.
+      setOpenAt([]);
+      // The pin is gone from the corpus, not just from the local cache - the
+      // viewport has not changed, so nothing else would ever ask again.
+      reload(region);
+    },
+    [unlocked, region, reload],
   );
 
   /** Signing in or out changes whose collection this is - the server answers
@@ -697,16 +748,20 @@ export default function App() {
         </View>
 
         <View style={[styles.screen, tab !== 'collection' && styles.hidden]}>
-          <Collection
-            memories={collected}
-            ready={collectionReady}
-            onOpen={(memory) => {
+          <Memories
+            unlocked={collected}
+            unlockedReady={collectionReady}
+            onOpenUnlocked={(memory) => {
               // One memory, not its point: the collection is a list of things
               // you earned, and a stack of strangers at the same coordinate is
               // not that.
               setOpenAt([memory]);
               setOpenIndex(0);
             }}
+            device={device}
+            focused={tab === 'collection'}
+            refreshKey={mineVersion}
+            onOpenMine={openEditor}
           />
         </View>
 
@@ -755,11 +810,13 @@ export default function App() {
                 }
               : undefined
           }
-          // Only what a person filed. There is nobody to report a podcast to,
-          // and offering it on all 224 extracted memories would make the
-          // control read as general feedback rather than a takedown.
-          onReport={openMemories[openIndex]?.author ? report : undefined}
+          // Only what a person filed, and not your own - there is nobody to
+          // report a podcast to, and reporting yourself is not a real control.
+          onReport={openMemories[openIndex]?.author && !mine ? report : undefined}
           reported={reported.has(openMemories[openIndex]?.id ?? -1)}
+          // Only your own, and only while it is open - a sealed one shows the
+          // locked composition instead, which has nowhere to put this.
+          onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}
           memories={openMemories}
           index={openIndex}
           onIndex={setOpenIndex}
@@ -776,8 +833,14 @@ export default function App() {
           device={device}
           displayName={displayName}
           onDisplayName={rename}
-          onClose={() => setSubmitOpen(false)}
+          editing={editingMemory}
+          onClose={() => {
+            setSubmitOpen(false);
+            setEditingMemory(null);
+          }}
           onPosted={posted}
+          onSaved={saved}
+          onDeleted={deleted}
         />
       </View>
     </SafeAreaProvider>

@@ -47,6 +47,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F21 | Be somebody | Implemented |
 | F22 | Keep your collection on a new phone | Implemented |
 | F23 | Seal a memory until a date | Implemented |
+| F24 | Manage what you filed | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Implemented |
 
@@ -438,8 +439,9 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. The **Unlocked** tab carries a count. It is the only number in the app that
-   goes up because you went outside.
+1. The **Memories** tab carries a count, badged on the tab itself. It is the
+   only number in the app that goes up because you went outside. The tab's
+   *Unlocked* section is this flow; its *My memories* section is F24.
 2. Newest first, as catalogue entries: place, the opening of the summary, when.
 3. Tapping one opens the full sheet, which here carries **Show on map** —
    opened from a list, the place is a name, and this is the only route back to
@@ -729,6 +731,55 @@ bug — it is the same walk everything else asks for.
 
 **Done when:** a memory filed with a seal reads as sealed to its own author on
 its own coordinate, and its card says the date instead of a distance.
+
+---
+
+## F24 · Manage what you filed — **Implemented**
+
+**Who:** somebody who has filed at least one memory.
+**Trigger:** the **Memories** tab (renamed from **Unlocked** — F15) → *My
+memories*, the tab's second section, under *Unlocked*. Empty until something
+is filed, same as *Unlocked* is empty until something is walked to — neither
+section hides itself; an empty one just says so.
+
+1. A list, newest first: place name, and either the summary or, for a sealed
+   one, "Sealed until" the year — shut, seal included, same as the map pin.
+   A row reported by others carries a **Reported** badge instead of vanishing,
+   because this is the one screen an author cannot have something disappear
+   from without a reason.
+2. Tapping a row opens the submit sheet in editor mode: every field prefilled
+   from the memory, **Post** relabelled **Save**, and no map, coordinate field
+   or seal picker — the pin does not move, and an already-open memory has
+   nothing to recover a past seal date from.
+3. **Save** changes place name, summary, tags, when, and photos/recording in
+   place. **Delete** takes a second, differently-worded press before it
+   commits — the same two-step this app uses in place of a system alert
+   everywhere else — and removes the row, its media and its place outright,
+   not the hidden flag a report uses.
+
+**A memory you file can sit in both sections at once, and that is correct.**
+Filing unlocks it (F5), so it belongs in *Unlocked* on the same terms as
+anything you walked to; it is also yours, so it belongs in *My memories*. Nothing
+reconciles the two - they answer different questions about the same row.
+
+**Always the server's list, never the local cache, for its own section.**
+Unlike *Unlocked*, *My memories* has to show two things the offline unlock
+cache was never told about — a memory still sealed, and one enough people
+reported — so `/v1/me/memories` is asked fresh whenever the tab is opened or
+a save or delete lands, rather than reading `AsyncStorage`.
+
+**A sealed memory refuses to edit, not just to open.** F23 says nobody may read
+one early, its author included; showing the current text to change it would be
+exactly that read. The server checks the seal before ownership does any good,
+the same order `is_locked` already uses, and answers 423.
+
+**What can go wrong:** the list fails to load (the sheet says so rather than
+showing stale rows); a save lands on a memory that sealed between opening the
+list and pressing Save (423, same message as trying to open one early).
+
+**Done when:** somebody can find every memory they have filed in one place,
+fix a typo without re-filing, and take one down — and none of that touches
+anyone else's collection or the local unlock cache.
 
 ---
 

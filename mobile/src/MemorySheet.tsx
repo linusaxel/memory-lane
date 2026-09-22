@@ -36,11 +36,16 @@ type Props = {
   unlockError: string | null;
   /** Absent when the sheet is already over the map. */
   onShowOnMap?: (memory: LocatedMemory) => void;
-  /** Absent for extracted memories: there is nobody to report a podcast to. */
+  /** Absent for extracted memories, and for your own: there is nobody to
+   *  report a podcast to, and reporting yourself is not a real control. */
   onReport?: (memory: LocatedMemory) => void;
   /** Already reported by this device, so the control says so instead of
    *  pretending a second press does anything. */
   reported?: boolean;
+  /** Present only for a memory this account filed, and only while it is open -
+   *  a sealed one shows the locked composition instead, which has no room for
+   *  this. Mutually exclusive with onReport: you cannot report yourself. */
+  onEdit?: (memory: LocatedMemory) => void;
   /** This device walked here and opened it. Not the same as "unlocked": most of
    *  this corpus sits on city centroids and was never gated, and a stamp on one
    *  of those would claim a walk that never happened. */
@@ -99,6 +104,7 @@ export default function MemorySheet({
   onShowOnMap,
   onReport,
   reported,
+  onEdit,
   earned,
 }: Props) {
   const memory = memories[index] ?? null;
@@ -306,17 +312,28 @@ export default function MemorySheet({
                     </View>
                   )}
 
-                  {!locked && onReport && (
+                  {!locked && onEdit ? (
                     <Pressable
                       style={dim(styles.report)}
                       accessibilityRole="button"
-                      disabled={reported}
-                      onPress={() => onReport(memory)}
+                      onPress={() => onEdit(memory)}
                     >
-                      <Text style={styles.reportText}>
-                        {reported ? 'Reported' : 'Report this memory'}
-                      </Text>
+                      <Text style={styles.reportText}>Edit this memory</Text>
                     </Pressable>
+                  ) : (
+                    !locked &&
+                    onReport && (
+                      <Pressable
+                        style={dim(styles.report)}
+                        accessibilityRole="button"
+                        disabled={reported}
+                        onPress={() => onReport(memory)}
+                      >
+                        <Text style={styles.reportText}>
+                          {reported ? 'Reported' : 'Report this memory'}
+                        </Text>
+                      </Pressable>
+                    )
                   )}
                 </Animated.View>
               </ScrollView>

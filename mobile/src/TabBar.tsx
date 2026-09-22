@@ -28,9 +28,9 @@ export default function TabBar({ tab, unlockedCount, onSelect }: Props) {
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       <Item label="Map" active={tab === 'map'} onPress={() => onSelect('map')} />
       <Item
-        label="Unlocked"
-        // The count is the point of the tab: it is the only number in the app
-        // that goes up because you went outside.
+        label="Memories"
+        // The count is the point of the badge: it is the only number in the
+        // app that goes up because you went outside.
         badge={unlockedCount}
         active={tab === 'collection'}
         onPress={() => onSelect('collection')}

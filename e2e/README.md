@@ -173,5 +173,6 @@ By hand, in about ten seconds:
 lsof -ti:8090 | xargs kill       # the API goes away
 ```
 
-The map turns to "Can't reach Memory Lane" and offers "Try again"; the Unlocked
-tab still reads the memory, from the device.
+The map turns to "Can't reach Memory Lane" and offers "Try again"; the Memories
+tab's *Unlocked* section still reads the memory, from the device - *My
+memories*, being a server fetch, would not.

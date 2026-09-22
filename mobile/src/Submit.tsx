@@ -1,4 +1,6 @@
-/** The only screen in the app that writes - spec in "Writing", UI.md. */
+/** The only screen in the app that writes, or edits, or deletes - spec in
+ *  "Writing", UI.md. Doubles as the editor for a memory you already filed:
+ *  `editing` prefills every field from it and Post becomes Save. */
 
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -27,11 +29,13 @@ import {
 
 import {
   SUBMISSION_TAGS,
+  deleteMemory,
   mediaUrl,
   submitMemory,
+  updateMemory,
   uploadMedia,
   type Coordinates,
-  type Draft,
+  type EditDraft,
   type LocatedMemory,
   type MediaItem,
 } from './api.ts';
@@ -47,7 +51,8 @@ const MAX_RECORDING_SECONDS = 180;
 
 type Props = {
   visible: boolean;
-  /** Where the person is. Null means the form cannot open - see the header. */
+  /** Where the person is. Null means the form cannot open - see the header.
+   *  Ignored while editing: the pin does not move after it is filed. */
   position: Coordinates | null;
   device: string | null;
   /** Remembered between submissions so nobody retypes their name every time. */
@@ -55,6 +60,12 @@ type Props = {
   onDisplayName: (next: string) => void;
   onClose: () => void;
   onPosted: (memory: LocatedMemory) => void;
+  /** Set to open this screen as an editor for a memory already filed, instead
+   *  of a blank submission. Only ever a memory this account owns and can
+   *  currently read - the server refuses to edit a sealed one regardless. */
+  editing?: LocatedMemory | null;
+  onSaved?: (memory: LocatedMemory) => void;
+  onDeleted?: (id: number) => void;
 };
 
 /** An attachment on its way up, or up. `id` arrives when the server has it. */
@@ -75,7 +86,11 @@ export default function Submit({
   onDisplayName,
   onClose,
   onPosted,
+  editing,
+  onSaved,
+  onDeleted,
 }: Props) {
+  const isEditing = !!editing;
   const [placeName, setPlaceName] = useState('');
   const [summary, setSummary] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -86,6 +101,12 @@ export default function Submit({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Two-step rather than a native Alert: this app never uses a system dialog,
+  // and a second, differently-worded press is enough friction for something
+  // reversible only by refiling the memory from scratch.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recording = useAudioRecorderState(recorder);
@@ -100,6 +121,7 @@ export default function Submit({
     mounted.current = true;
     return () => {
       mounted.current = false;
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
     };
   }, []);
 
@@ -117,7 +139,38 @@ export default function Submit({
     setSeal('now');
     setAttachments([]);
     setError(null);
+    setConfirmingDelete(false);
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
   }, [visible]);
+
+  // Prefills from the memory being edited. Only ever runs on a memory the
+  // server has already agreed is both owned by this account and currently
+  // readable - a still-sealed one never reaches this screen, so there is no
+  // "who can read it" state to recover: editing never re-seals something
+  // already open, it can only leave it as it is.
+  useEffect(() => {
+    if (!visible || !editing) return;
+    setPlaceName(editing.place.name);
+    setSummary(editing.summary);
+    setTags(editing.tags);
+    if (editing.happened_at) {
+      setWhen('earlier');
+      setYear(editing.happened_at.slice(0, 4));
+    } else {
+      setWhen('today');
+      setYear('');
+    }
+    setAttachments(
+      editing.media.map((item) => ({
+        uri: mediaUrl(item),
+        kind: item.kind,
+        seconds: item.duration_seconds ?? undefined,
+        item,
+      })),
+    );
+    // Keyed on the id, not the object: App.tsx hands this a fresh reference
+    // on every render, and re-running on that would fight anything typed.
+  }, [visible, editing?.id]);
 
   const photos = attachments.filter((a) => a.kind === 'photo');
   const sound = attachments.find((a) => a.kind === 'audio');
@@ -126,15 +179,16 @@ export default function Submit({
   const told = summary.trim().length >= MIN_SUMMARY;
   // The one answer, used by the button and by the draft, so they cannot
   // disagree about whether this memory is sealed - which is how "Nobody until"
-  // with an empty year used to post something anybody could read.
-  const opensAt = seal === 'later' ? sealOpensAt(sealYear) : null;
-  const willSeal = seal !== 'later' || opensAt !== null;
+  // with an empty year used to post something anybody could read. Not asked
+  // at all while editing - see the "Who can read it" Field below.
+  const opensAt = !isEditing && seal === 'later' ? sealOpensAt(sealYear) : null;
+  const willSeal = isEditing || seal !== 'later' || opensAt !== null;
   const ready =
-    !!position && !!device && named && told && willSeal && !uploading && !posting;
+    (isEditing || !!position) && !!device && named && told && willSeal && !uploading && !posting;
 
   /** One line, and only ever the next thing to do. A list of everything
    *  outstanding is a list somebody has to read; this is an instruction. */
-  const hint = !position
+  const hint = !isEditing && !position
     ? 'Waiting for your location'
     : !told
       ? 'Say what happened here'
@@ -145,8 +199,12 @@ export default function Submit({
         : uploading
           ? 'Finishing an upload'
           : posting
-            ? 'Filing it…'
-            : 'Ready to file';
+            ? isEditing
+              ? 'Saving…'
+              : 'Filing it…'
+            : isEditing
+              ? 'Ready to save'
+              : 'Ready to file';
 
   const progress = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -251,12 +309,12 @@ export default function Submit({
   }, [recording.isRecording, recording.durationMillis]);
 
   const post = async () => {
-    if (!position || !device) return;
+    if (!device || (!isEditing && !position)) return;
     setPosting(true);
     setError(null);
 
     const trimmedYear = year.trim();
-    const draft: Draft = {
+    const editDraft: EditDraft = {
       place_name: placeName.trim(),
       summary: summary.trim(),
       tags,
@@ -270,21 +328,66 @@ export default function Submit({
       // 1 January of the year, like happened_at: a seal is a promise about a
       // year, and asking somebody to pick a day for 2041 is a picker nobody
       // needs. A year already past is simply not a seal - the server treats a
-      // date that has come as no date at all.
+      // date that has come as no date at all. Always null while editing: an
+      // already-open memory is never offered a seal to go back behind.
       opens_at: opensAt,
       media_ids: attachments.flatMap((a) => (a.item ? [a.item.id] : [])),
-      display_name: displayName.trim() || null,
     };
 
     try {
-      const memory = await submitMemory(device, position, draft);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      onPosted(memory);
+      if (editing) {
+        const memory = await updateMemory(device, editing.id, editDraft);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        onSaved?.(memory);
+      } else {
+        const memory = await submitMemory(device, position!, {
+          ...editDraft,
+          display_name: displayName.trim() || null,
+        });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        onPosted(memory);
+      }
       onClose();
-    } catch {
-      if (mounted.current) setError('Could not post that. Try again in a moment.');
+    } catch (err) {
+      if (!mounted.current) return;
+      setError(
+        err instanceof Error && err.message === 'sealed'
+          ? 'This memory is sealed and cannot be edited.'
+          : isEditing
+            ? 'Could not save that. Try again in a moment.'
+            : 'Could not post that. Try again in a moment.',
+      );
     } finally {
       if (mounted.current) setPosting(false);
+    }
+  };
+
+  const pressDelete = () => {
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      confirmTimer.current = setTimeout(() => setConfirmingDelete(false), 3000);
+      return;
+    }
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    deleteThis();
+  };
+
+  const deleteThis = async () => {
+    if (!device || !editing) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteMemory(device, editing.id);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      onDeleted?.(editing.id);
+      onClose();
+    } catch {
+      if (mounted.current) setError('Could not delete that. Try again in a moment.');
+    } finally {
+      if (mounted.current) {
+        setDeleting(false);
+        setConfirmingDelete(false);
+      }
     }
   };
 
@@ -303,10 +406,10 @@ export default function Submit({
           <Pressable style={dim()} onPress={onClose} accessibilityRole="button" hitSlop={10}>
             <Text style={styles.barAction}>Cancel</Text>
           </Pressable>
-          <Text style={styles.barTitle}>Add a memory</Text>
+          <Text style={styles.barTitle}>{isEditing ? 'Edit memory' : 'Add a memory'}</Text>
           <Pressable style={dim()} onPress={post} disabled={!ready} accessibilityRole="button" hitSlop={10}>
             <Text style={[styles.barAction, styles.post, !ready && styles.disabled]}>
-              {posting ? 'Posting…' : 'Post'}
+              {posting ? (isEditing ? 'Saving…' : 'Posting…') : isEditing ? 'Save' : 'Post'}
             </Text>
           </Pressable>
         </View>
@@ -328,13 +431,16 @@ export default function Submit({
           <View style={styles.here}>
             <Text style={styles.hereLabel}>Filed at</Text>
             <Text style={styles.hereValue}>
-              {position
-                ? `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`
-                : 'Waiting for your location'}
+              {editing
+                ? `${editing.place.coordinates.lat.toFixed(5)}, ${editing.place.coordinates.lng.toFixed(5)}`
+                : position
+                  ? `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`
+                  : 'Waiting for your location'}
             </Text>
             <Text style={styles.hereNote}>
-              A memory goes where you are standing. Other people will have to come here to read
-              it.
+              {isEditing
+                ? 'Where this was filed. It does not move - a memory goes where you were standing.'
+                : 'A memory goes where you are standing. Other people will have to come here to read it.'}
             </Text>
           </View>
 
@@ -388,26 +494,32 @@ export default function Submit({
                 dependency for a field most submissions leave on Today. */}
           </Field>
 
-          <Field label="Who can read it">
-            <View style={styles.row}>
-              <Chip label="Anyone here" on={seal === 'now'} onPress={() => setSeal('now')} />
-              <Chip label="Nobody until" on={seal === 'later'} onPress={() => setSeal('later')} />
-              {seal === 'later' && (
-                <TextInput
-                  style={[styles.input, styles.year]}
-                  value={sealYear}
-                  onChangeText={(next) => setSealYear(next.replace(/[^0-9]/g, '').slice(0, 4))}
-                  placeholder="2041"
-                  placeholderTextColor={color.inkFaint}
-                  keyboardType="number-pad"
-                  accessibilityLabel="Year this memory opens"
-                />
-              )}
-            </View>
-            {/* Including you. A time capsule that its author can read is a
-                draft, and the gate is deliberately checked before the one that
-                opens a memory for the person who filed it. */}
-          </Field>
+          {/* Not offered while editing: an already-open memory has nothing to
+              recover a past seal date from - see row_to_memory - so there is
+              no honest prefill, and re-sealing something already public is
+              not this screen's job. */}
+          {!isEditing && (
+            <Field label="Who can read it">
+              <View style={styles.row}>
+                <Chip label="Anyone here" on={seal === 'now'} onPress={() => setSeal('now')} />
+                <Chip label="Nobody until" on={seal === 'later'} onPress={() => setSeal('later')} />
+                {seal === 'later' && (
+                  <TextInput
+                    style={[styles.input, styles.year]}
+                    value={sealYear}
+                    onChangeText={(next) => setSealYear(next.replace(/[^0-9]/g, '').slice(0, 4))}
+                    placeholder="2041"
+                    placeholderTextColor={color.inkFaint}
+                    keyboardType="number-pad"
+                    accessibilityLabel="Year this memory opens"
+                  />
+                )}
+              </View>
+              {/* Including you. A time capsule that its author can read is a
+                  draft, and the gate is deliberately checked before the one that
+                  opens a memory for the person who filed it. */}
+            </Field>
+          )}
 
           <Field label="Tags">
             <View style={styles.row}>
@@ -489,19 +601,41 @@ export default function Submit({
             )}
           </Field>
 
-          <Field label="Signed">
-            <TextInput
-              style={styles.input}
-              value={displayName}
-              onChangeText={onDisplayName}
-              placeholder="Anonymous"
-              placeholderTextColor={color.inkFaint}
-              maxLength={60}
-              autoCapitalize="words"
-            />
-          </Field>
+          {/* Not shown while editing: the signature is a profile-wide setting
+              (Settings, PUT /v1/me), not a per-memory one - this field would
+              be a second place to set the same name. */}
+          {!isEditing && (
+            <Field label="Signed">
+              <TextInput
+                style={styles.input}
+                value={displayName}
+                onChangeText={onDisplayName}
+                placeholder="Anonymous"
+                placeholderTextColor={color.inkFaint}
+                maxLength={60}
+                autoCapitalize="words"
+              />
+            </Field>
+          )}
 
           {error && <Text style={styles.error}>{error}</Text>}
+
+          {isEditing && (
+            <Pressable
+              style={dim(styles.delete)}
+              onPress={pressDelete}
+              disabled={deleting}
+              accessibilityRole="button"
+            >
+              <Text style={styles.deleteText}>
+                {deleting
+                  ? 'Deleting…'
+                  : confirmingDelete
+                    ? 'Tap again to delete'
+                    : 'Delete this memory'}
+              </Text>
+            </Pressable>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
@@ -665,4 +799,18 @@ const styles = StyleSheet.create({
   recorded: { fontFamily: font.monoMedium, fontSize: 14, color: color.ink },
 
   error: { fontFamily: font.mono, fontSize: 13, color: color.seal, textAlign: 'center' },
+
+  // Same shape as `secondary`, in the app's one red - the accent everywhere
+  // else means "openable"; here, like Settings' saveFailed line, it is the
+  // other thing this app says in red.
+  delete: {
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: color.seal,
+    borderRadius: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 12,
+  },
+  deleteText: { ...label, fontSize: 10, color: color.seal },
 });

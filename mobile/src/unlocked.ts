@@ -71,6 +71,40 @@ export async function rememberPrimerDismissed(): Promise<void> {
   }
 }
 
+/** Refresh a memory already in the collection - an edit, typically - without
+ *  disturbing when it was earned. `rememberUnlocked` resets `unlocked_at` to
+ *  now on every call, which is correct for a fresh unlock and wrong here: it
+ *  would bump an edited memory to the top of the Unlocked tab as if it had
+ *  just been earned again. */
+export async function updateUnlocked(
+  current: Unlocked,
+  memory: LocatedMemory,
+): Promise<Unlocked> {
+  const existing = current[memory.id];
+  const next = {
+    ...current,
+    [memory.id]: { ...memory, unlocked_at: existing?.unlocked_at ?? Date.now() },
+  };
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+    // Same bargain as rememberUnlocked: in memory now, gone next launch.
+  }
+  return next;
+}
+
+/** Drop one entry, for after its author deletes it. */
+export async function forgetUnlocked(current: Unlocked, id: number): Promise<Unlocked> {
+  const next = { ...current };
+  delete next[id];
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+    // Same bargain as rememberUnlocked.
+  }
+  return next;
+}
+
 /** Fold the server's copy of the collection into this device's.
  *
  * Read-modify-write against storage rather than against React state, because

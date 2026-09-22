@@ -81,10 +81,17 @@ export type Memory = {
    *  server sorts these to the top, which is the whole of "resurfacing": there
    *  are no notifications in this product. */
   anniversary: boolean;
+  /** ISO date, or null when the source did not say. The server has never sent
+   *  the precision that goes with it - see api/models.py's Memory - so the
+   *  edit form can only recover a year, not whether it was exact to the day. */
+  happened_at: string | null;
   /** ISO date, and set only while the memory is still sealed. A time lock is a
    *  different refusal from the proximity one: standing here does not open it,
    *  so the sheet must not offer the unlock. Null once the date has passed. */
   opens_at: string | null;
+  /** Set once enough people report it. Only ever true from /v1/me/memories -
+   *  every other endpoint drops a hidden memory instead of flagging it. */
+  hidden: boolean;
 };
 
 /** Media urls come back server-relative so the host can change without a
@@ -191,6 +198,19 @@ export async function fetchUnlocked(
 ): Promise<LocatedMemory[]> {
   const body = await get<{ memories?: Memory[] }>(
     '/v1/unlocks',
+    new URLSearchParams({ device }),
+    signal,
+  );
+  return (body.memories ?? []).filter(hasCoordinates);
+}
+
+/** Everything this account has filed, newest first - including a sealed one
+ *  (shown shut, seal included) and a reported one (shown, flagged `hidden`).
+ *  The one screen that manages your own memories cannot let either vanish
+ *  from it silently. */
+export async function fetchMine(device: string, signal?: AbortSignal): Promise<LocatedMemory[]> {
+  const body = await get<{ memories?: Memory[] }>(
+    '/v1/me/memories',
     new URLSearchParams({ device }),
     signal,
   );
@@ -323,6 +343,40 @@ export async function submitMemory(
   const memory = await post<Memory>('/v1/memories', { device, ...at, ...draft });
   if (!hasCoordinates(memory)) throw new Error('Submitted memory came back without a place');
   return memory;
+}
+
+/** Everything a submission carries except where it was filed and who it is
+ *  signed with - the position never moves, and the name is `PUT /v1/me`'s job. */
+export type EditDraft = Omit<Draft, 'display_name'>;
+
+/** Change what you filed. Refused with a `sealed` error while the memory is
+ *  still sealed - F23 says nobody may read one early to edit it, the author
+ *  included, and the server enforces that rather than trusting the app to
+ *  simply not ask. */
+export async function updateMemory(
+  device: string,
+  id: number,
+  draft: EditDraft,
+): Promise<LocatedMemory> {
+  const res = await fetch(`${BASE}/v1/memories/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device, ...draft }),
+  });
+  if (res.status === 423) throw new Error('sealed');
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const memory = (await res.json()) as Memory;
+  if (!hasCoordinates(memory)) throw new Error('Edited memory came back without a place');
+  return memory;
+}
+
+/** Take down something you filed. A real delete - the row, its media files and
+ *  its self-minted place are gone, not just hidden the way a report is. */
+export async function deleteMemory(device: string, id: number): Promise<void> {
+  const res = await fetch(`${BASE}/v1/memories/${id}?${new URLSearchParams({ device })}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
 }
 
 /** Say this should not be here. Enough different devices and it stops being

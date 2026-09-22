@@ -37,6 +37,7 @@ from api.queries import (
     COUNT_WITH_TAGS_QUERY,
     DEVICE_UNLOCKS_QUERY,
     HOTSPOTS_QUERY,
+    MY_MEMORIES_QUERY,
     NEARBY_MEMORIES_QUERY,
     NEARBY_MEMORIES_WITH_TAGS_QUERY,
     NEARBY_PLACES_QUERY,
@@ -287,6 +288,26 @@ def get_unlocks(
         ).fetchall()
 
     # row_to_memory would lock these again - it has no idea they were earned.
+    return UnlocksResponse(
+        memories=[row_to_memory(row, row_coordinates(row), include_distance=False) for row in rows]
+    )
+
+
+@router.get("/v1/me/memories", response_model=UnlocksResponse)
+def get_my_memories(
+    device: str = Query(..., pattern=DEVICE_PATTERN),
+    limit: int = Query(200, ge=1, le=500),
+):
+    """Everything this account has filed, newest first - including memories
+    reported by others (hidden) and memories still sealed. Neither is a reason
+    to hide a memory from the one screen that manages it; row_to_memory still
+    renders a sealed one as shut, seal included, the author included.
+    """
+    with get_session() as session:
+        rows = session.execute(
+            text(MY_MEMORIES_QUERY), {"device": device, "limit": limit}
+        ).fetchall()
+
     return UnlocksResponse(
         memories=[row_to_memory(row, row_coordinates(row), include_distance=False) for row in rows]
     )

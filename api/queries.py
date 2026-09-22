@@ -232,6 +232,39 @@ SELECT {MEMORY_COLUMNS},
 WHERE m.id = :memory_id AND {VISIBLE}
 """
 
+# Author-facing only, so VISIBLE is deliberately absent: a reported memory
+# must stay on the one screen that explains its own moderation state, or it
+# just vanishes with no explanation to the person who filed it.
+MY_MEMORIES_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    m.created_at,
+    m.hidden
+{MEMORY_JOIN}
+WHERE m.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
+ORDER BY m.created_at DESC
+LIMIT :limit
+"""
+
+# Same shape as SINGLE_MEMORY_QUERY, minus VISIBLE and plus the ownership
+# check baked into the WHERE - an edit or delete of somebody else's memory, or
+# one that no longer exists, is the same 404 as a look-up for a bad id.
+OWNED_MEMORY_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    m.hidden
+{MEMORY_JOIN}
+WHERE m.id = :memory_id
+  AND m.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
+"""
+
+# Only ever removes attachments the memory already owns - the caller has
+# already proved it owns the memory by the time this runs.
+MEDIA_DETACH_QUERY = """
+DELETE FROM media
+WHERE id = ANY(CAST(:ids AS integer[]))
+  AND memory_id = :memory_id
+RETURNING path
+"""
+
 # Both search queries rank a page out of `memories` first and fetch the columns
 # afterwards. Ranking cannot use an index - ts_rank has to be evaluated on every
 # row the tsquery matches - so a common word matches the whole corpus, and
@@ -422,6 +455,17 @@ UPDATE media SET memory_id = :memory_id
 WHERE id = ANY(CAST(:ids AS integer[]))
   AND device_id = CAST(:device AS uuid)
   AND memory_id IS NULL
+"""
+
+# A submission's place is 1:1 with it and never shared - see PLACE_INSERT's
+# place_query - so once its one memory is gone the place is just clutter.
+# `place_query LIKE 'user:%'` is the same prefix PLACE_INSERT writes, and it
+# is what stops this from ever touching an extraction-owned place.
+DELETE_ORPHAN_SUBMITTED_PLACE = """
+DELETE FROM places
+WHERE id = :place_id
+  AND place_query LIKE 'user:%'
+  AND NOT EXISTS (SELECT 1 FROM memories WHERE place_id = :place_id)
 """
 
 # Closed list: free text would be a tag soup of one-offs within a week.

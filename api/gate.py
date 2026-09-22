@@ -214,6 +214,7 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         # app would have to work out for itself that it no longer means
         # anything.
         opens_at=getattr(row, "opens_at", None) if not_yet_open(row) else None,
+        hidden=bool(getattr(row, "hidden", False)),
     )
 
 
@@ -266,4 +267,5 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         contrast_score=getattr(row, "contrast_score", None),
         contrast_note=getattr(row, "contrast_note", None),
         anniversary=bool(getattr(row, "anniversary", False)),
+        hidden=bool(getattr(row, "hidden", False)),
     )

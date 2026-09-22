@@ -36,8 +36,10 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn: "Close"
 
-# The tab keeps a count, so its label is "Unlocked, 1" once there is one.
-- tapOn: "Unlocked.*"
+# The tab keeps a count, so its accessibility label is "Memories, 1" once
+# there is one - the visible text stays "Memories" either way.
+- tapOn: "Memories.*"
+- assertVisible: "Unlocked"
 - assertVisible: ".*The bench outside, dev seed.*"
 
 # A collection row opens the same sheet, which here offers the way back.
@@ -50,7 +52,7 @@ appId: ${APP_ID}
 # Still there after the process dies. No clearState this time - that is the
 # whole assertion.
 - launchApp
-- tapOn: "Unlocked.*"
+- tapOn: "Memories.*"
 - extendedWaitUntil:
     visible: ".*The bench outside, dev seed.*"
     timeout: 30000

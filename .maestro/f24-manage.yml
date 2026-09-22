@@ -1,0 +1,107 @@
+# F24 Manage what you filed. docs/08-ux-flows.md
+#
+# Files one memory, then finds it again the way the author does: the
+# Memories tab's "My memories" section, not the map. Confirms the section
+# shows what was filed, that opening a row hands back the same text, and that
+# a change made there survives closing the editor and coming back.
+#
+# Filing something unlocks it too, so the same place name lands in both of
+# Memories' sections. That does not make the two rows ambiguous: Unlocked's
+# copy carries "<name>, <when>" as its full accessibility text (Row's `meta`),
+# and text matching here is a full-string regex - see e2e/README.md - so a
+# bare "<name>" only ever matches the My memories row.
+
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: 40.7484
+    longitude: -73.9857
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000
+
+# File one memory, same steps as f5-file-a-memory.yml, with text this flow can
+# look for again once it is sitting in a list.
+- tapOn: "Add a memory here"
+- assertVisible: "Add a memory"
+
+- tapOn: "The bench by the harbour"
+- inputText: "The step by the ferry landing"
+
+- tapOn: "We sat here until it got light and nobody wanted to say so."
+- inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after."
+- tapOn: "Add a memory"
+
+- tapOn: "food"
+- tapOn: "Post"
+
+- extendedWaitUntil:
+    visible: ".*ferry horn.*"
+    timeout: 40000
+- assertVisible: "The step by the ferry landing"
+- tapOn: "Close"
+
+- tapOn: "Memories.*"
+- assertVisible: "Unlocked"
+- assertVisible: "My memories"
+
+# "My memories" is a server fetch, unlike "Unlocked" - wait for its own note
+# rather than the place name, which is already on screen from the Unlocked
+# copy the moment the tab opens.
+- extendedWaitUntil:
+    visible: ".*you filed.*"
+    timeout: 40000
+
+# The My memories row opens the same sheet as editing: fields come back
+# exactly as filed.
+- tapOn: "The step by the ferry landing"
+- assertVisible: "Edit memory"
+- assertVisible: "The step by the ferry landing"
+- assertVisible: ".*ferry horn.*"
+
+# Change the place name and save. Post becomes Save while editing - same
+# button, relabelled - and tapping the bar title dismisses the keyboard, the
+# same idiom the filing steps above used on "Add a memory". Both fields
+# asserted above sit above the fold, so nothing here has scrolled yet.
+#
+# A tap on this text places the cursor where it lands, not at the end, and
+# eraseText only deletes backward from there - iOS 26's edit menu has no
+# Select All to fall back on (Cut/Copy/Paste/Replace/AutoFill/Look
+# Up/Translate/Share, checked on-device). Tapping this exact string lands
+# the cursor right before its last word every time, so erasing 60 clears
+# everything before "landing" and leaves "landing" itself untouched - typed
+# text is the new prefix, not the whole name, and the untouched word finishes it.
+- tapOn: "The step by the ferry landing"
+- eraseText: 60
+- inputText: "The jetty by the ferry "
+- tapOn: "Edit memory"
+- tapOn: "Save"
+
+# Back on the Memories tab - onSaved closes the editor the same way onPosted
+# does, and App.tsx's mineVersion bump means My memories has already
+# refetched without the tab being left and reopened.
+- extendedWaitUntil:
+    visible: "The jetty by the ferry landing"
+    timeout: 40000
+- assertNotVisible: "The step by the ferry landing"
+
+- tapOn: "The jetty by the ferry landing"
+- assertVisible: "Edit memory"
+- assertVisible: "The jetty by the ferry landing"
+- assertVisible: ".*ferry horn.*"
+
+# Delete this memory sits below the fold - scrollUntilVisible rather than
+# assertVisible's own search, which swipes from the top and can read as the
+# pageSheet's own pull-to-dismiss gesture. Cancel lives in the fixed bar, not
+# the ScrollView, so it stays reachable at whatever scroll position this ends on.
+- scrollUntilVisible:
+    element: "Delete this memory"
+    direction: DOWN
+- tapOn: "Cancel"
+- assertVisible: "My memories"

@@ -103,6 +103,10 @@ class Memory(BaseModel):
     # Set only while a memory is time-locked, and then on the locked shape too:
     # "you cannot read this yet" is unbearable without "until when".
     opens_at: date | None = None
+    # Set when enough people reported it. Only ever populated for the author's
+    # own management view - every other query filters hidden rows out instead
+    # of serving them with a flag.
+    hidden: bool = False
 
 
 class NearbyMeta(BaseModel):
@@ -232,6 +236,26 @@ class SubmissionRequest(BaseModel):
     # Sent with the submission rather than requiring a separate profile call, so
     # signing your first memory is one request.
     display_name: str | None = Field(None, max_length=60)
+
+
+class MemoryEditRequest(BaseModel):
+    """Changing a memory after it was filed. Everything a submission carries
+    except lat/lng and display_name.
+
+    No position: the pin is where you stood when you filed it, and there is no
+    map picker anywhere in this app to move it to. No display_name: that is a
+    profile-level setting PUT /v1/me already owns.
+    """
+
+    device: str = Field(pattern=DEVICE_PATTERN)
+    place_name: str = Field(min_length=1, max_length=200)
+    summary: str = Field(min_length=10, max_length=2000)
+    tags: list[str] = Field(default_factory=list, max_length=8)
+    happened_at: date | None = None
+    happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
+    opens_at: date | None = None
+    # The final desired set, like SubmissionRequest.media_ids - not a diff.
+    media_ids: list[int] = Field(default_factory=list, max_length=6)
 
 
 class ReportRequest(BaseModel):
