@@ -824,10 +824,13 @@ or silently overridden.
       Expo-template colors that contradicted the decided palette while
       touching this config: `android.adaptiveIcon.backgroundColor` and
       `primaryColor`.
-- [ ] **Animated startup logo.** Once the mark exists: a single one-shot
-      draw-on animation (`react-native-svg` + `Animated`, both already
-      dependencies) while the splash screen holds, capped at ~800ms so it
-      never becomes a loading screen people wait through.
+- [x] **Animated startup logo.** Done: `mobile/src/StartupLogo.tsx` draws the
+      three logo-mark paths on once via `strokeDashoffset` (750ms, JS driver),
+      shown while `App.tsx` holds the native splash
+      (`SplashScreen.preventAutoHideAsync`) through font loading and the
+      animation, then hands off with `hideAsync`. No native splash-hold call
+      existed before this — the "while the splash screen holds" premise
+      needed it added, not just the animation.
 - [ ] **Resolved 2026-09-22: warm accent, not a reskin.** Was flagged as
       conflicting with `docs/09-visual-design.md`'s decided muted-parchment
       palette. **Decision:** hybrid, not a reversal — the map-legibility and
@@ -842,12 +845,11 @@ or silently overridden.
       - Parked, not built: a separate "urban/city" theme variant. Speculative
         second theme before the first one has a second neighborhood
         (Copenhagen) — YAGNI until Phase 1 ships.
-- [ ] **Route polyline on the map.** `mobile/src/route.ts` already computes
-      today's ordered stops; the map does not draw the path between them.
-      `react-native-maps`'s `Polyline` component (already a dependency, no new
-      library) drawn through the route's stops in order, styled to match the
-      decided muted map (thin, low-opacity line — see rule 1 in
-      `docs/09-visual-design.md`, the map must stay quiet under the pins).
+- [x] **Route polyline on the map.** Stale checkbox — already shipped in
+      commit `ba61806` alongside the daily route itself: `App.tsx`'s
+      `Polyline` through `routeShown`'s stops, dashed and low-opacity to stay
+      quiet under the pins. Found while picking the next item off this list;
+      corrected rather than left claiming open work that was already done.
 - [ ] **Start-route affordance.** Today's route is fetched and shown; there's
       no explicit "start" moment. Smallest version: a button on the route
       view that does nothing server-side (the route is already computed and

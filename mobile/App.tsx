@@ -12,6 +12,7 @@ import {
 import MapView, { Circle, Polyline } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import {
@@ -70,6 +71,11 @@ import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import ReachBanner from './src/ReachBanner.tsx';
+import StartupLogo from './src/StartupLogo.tsx';
+
+// Held until StartupLogo's draw-on finishes, so the native splash and the JS
+// animation hand off with no gap and no double-flash.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /**
  * Where to look when we have no location permission. A blank grey map is a
@@ -107,6 +113,7 @@ export default function App() {
     IBMPlexMono_500Medium,
     IBMPlexMono_600SemiBold,
   });
+  const [logoDone, setLogoDone] = useState(false);
 
   const {
     region,
@@ -605,6 +612,17 @@ export default function App() {
   const showPrimer = permission !== 'granted' && !primerDismissed;
 
   if (!fontsReady) return null;
+
+  if (!logoDone) {
+    return (
+      <StartupLogo
+        onDone={() => {
+          setLogoDone(true);
+          SplashScreen.hideAsync();
+        }}
+      />
+    );
+  }
 
   return (
     <SafeAreaProvider>
