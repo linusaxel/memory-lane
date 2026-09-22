@@ -16,6 +16,7 @@
     "expo-image-picker": "~57.0.19",
     "expo-location": "~57.0.19",
     "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "expo-web-browser": "~57.0.3",
     "react": "^19.3.0",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
+    "sharp": "^0.35.4",
     "typescript": "^7.0.2"
   },
   "scripts": {

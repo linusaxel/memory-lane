@@ -17,7 +17,7 @@
     "android": {
       "package": "com.PLACEHOLDER.memorylane",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F7F4EE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -44,7 +44,7 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "memorylane",
-    "primaryColor": "#18181b",
+    "primaryColor": "#1C1917",
     "plugins": [
       [
         "expo-location",
@@ -71,7 +71,19 @@
         }
       ],
       "expo-web-browser",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F4EE",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#161412"
+          }
+        }
+      ]
     ]
   }
 }

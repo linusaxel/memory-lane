@@ -816,12 +816,14 @@ audit/measurement process the rest of this file uses. Three items conflict
 with rules already marked *Decided* below; flagged inline rather than dropped
 or silently overridden.
 
-- [ ] **Static logo mark.** A winding pathway with a wind gust worked into the
-      line. One SVG, used as the app icon and splash image — no animation, no
-      variants. Must read as a mark, not an illustration, at 40×40 (the
-      Settings-row / favicon size). Keep it inside the decided palette
-      (`docs/09-visual-design.md`) — ink line on parchment, not a new color
-      language.
+- [x] **Static logo mark.** Done: `mobile/assets/logo-mark.svg` (winding path
+      + wind-gust accent, ink on paper) rasterized by
+      `mobile/scripts/generate-app-icons.mjs` into the app icon, light/dark
+      splash (new `expo-splash-screen` config plugin — none existed before),
+      Android adaptive-icon layers, and favicon. Also fixed two leftover
+      Expo-template colors that contradicted the decided palette while
+      touching this config: `android.adaptiveIcon.backgroundColor` and
+      `primaryColor`.
 - [ ] **Animated startup logo.** Once the mark exists: a single one-shot
       draw-on animation (`react-native-svg` + `Animated`, both already
       dependencies) while the splash screen holds, capped at ~800ms so it
