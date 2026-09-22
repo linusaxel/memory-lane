@@ -1,9 +1,9 @@
 # LOOP STATE — every TASKS.yaml task is done or parked; working the founder brainstorm list.
 
 ```
-updated:  2026-09-22
+updated:  2026-09-23
 branch:   loop/autopilot   — NOT pushed. `main` is behind by this session's commits.
-gate:     GREEN, 547 pytest + 63 node tests
+gate:     GREEN, 568 pytest + 63 node tests
 status:   TASKS.yaml has no `todo` and no `doing` left (unchanged from
           2026-09-21). This tick's work came from TODO.md's untracked
           "Ideas — founder brainstorm, unvetted" list instead, per explicit
@@ -18,67 +18,67 @@ wins and this file is stale.
 
 | | |
 |---|---|
-| `caba568` | **Animated startup logo** (TODO.md brainstorm list). `mobile/src/StartupLogo.tsx` draws the logo-mark on via `strokeDashoffset`, 750ms, while `App.tsx` now holds the native splash (`SplashScreen.preventAutoHideAsync`, which nothing called before this) through font loading and the animation, then `hideAsync`s. Also fixed a stale TODO.md checkbox: the route-polyline brainstorm item was already shipped in `ba61806` and had never been checked off. |
-| `6584fdb` | **Tab bar delimiters** (TODO.md brainstorm list). `mobile/src/TabBar.tsx` gets a `color.rule` hairline (1×24, centred) between each pair of tabs — the same token the bar's own top border already uses. |
-| `1daec1e` | **Start-route affordance** (TODO.md brainstorm list). `App.tsx`'s existing route pill gets a local `routeStarted` flag (nothing server-side): tapping it flies to the nearest not-yet-earned stop and the label switches to "Next: {place}"; complete, it falls back to the old fit-to-all summary. |
-| `a0b5caa` | **Route-complete moment** (TODO.md brainstorm list). `App.tsx`'s `unlock()` fires `UnlockButton`'s own success haptic a second time when the just-confirmed memory was the route's last not-yet-earned stop - same signature, no new mechanic. |
-| `e52e956` | **Configurable route distance** (TODO.md brainstorm list). `GET /v1/routes/today` takes an optional `radius_meters` (500-20,000), used only on the day's first call, stored on `daily_routes` (`db/migrations/014_route_radius.sql`, applied to the local db) and echoed in `RouteMeta.radius_meters` on every later call that day. No mobile UI yet, by design. |
+| `caba568` | **Animated startup logo** (TODO.md brainstorm list). |
+| `6584fdb` | **Tab bar delimiters** (TODO.md brainstorm list). |
+| `1daec1e` | **Start-route affordance** (TODO.md brainstorm list). |
+| `a0b5caa` | **Route-complete moment** (TODO.md brainstorm list). |
+| `e52e956` | **Configurable route distance** (TODO.md brainstorm list). |
+| `eb6060b` | **Heart/favorite a memory** (TODO.md brainstorm list). `memory_hearts` join table, `POST /v1/memories/{id}/heart`, `heart_count` on every read. Landed with no journal line and a stale STATE.md at the time (a prior tick's session ended mid-STEP-5) — backfilled at the start of the next tick; gate was re-verified green before any new work started. If a future tick finds another gap like this, do the same: confirm the commit's tests still pass, backfill JOURNAL.md with the real commit SHA and date, then continue. |
+| `d316427` | **Streak counter** (TODO.md brainstorm list, streak half of "streak + proximity notification"). `api.accounts.current_streak` reads distinct calendar days from `unlocks` (via the existing `MY_DEVICES` account grouping) and counts back from today to the first gap — **no new column**, cheaper than TODO.md's own `users.streak_count`/`streak_date` suggestion and nothing to desync across a signed-in account's devices. `Profile.streak`, shown in `Settings.tsx`'s stat row once above zero. F27 in `docs/08-ux-flows.md`; `docs/10-decisions.md`/`docs/11-memory-types.md` updated from "planned" to "shipped" for this half. |
 
 Prior session (not journaled at the time, visible only in git log): `27ddff9`
-static logo mark (icon/splash/favicon rasterized from `mobile/assets/logo-mark.svg`),
-`f9f7fbb`/`94c9dbc` seeded the brainstorm list itself and resolved three
-flagged conflicts (warm accent, subscription-as-second-track, streak+geofence
-notification — all now "Resolved 2026-09-22" in TODO.md).
+static logo mark, `f9f7fbb`/`94c9dbc` seeded the brainstorm list itself and
+resolved three flagged conflicts (warm accent, subscription-as-second-track,
+streak+geofence notification — all "Resolved 2026-09-22" in TODO.md).
 
 ## What works right now
 
 ```bash
 docker compose up -d --build              # API + PostGIS
 ./api/test_api.sh http://localhost:8080   # 11 checks
-./loop/verify.sh                          # 547 pytest + 63 node tests, GREEN
+./loop/verify.sh                          # 568 pytest + 63 node tests, GREEN
 python -m pipeline.seed_dev               # memories you can actually reach
 cd mobile && npx expo start               # the app
 ```
 
 ## The next concrete action
 
-**Two open backlogs, not one.** TASKS.yaml is exhausted (see the parked table
-below, unchanged from last session). TODO.md's "Ideas — founder brainstorm,
-unvetted" section (line ~811) still has real unbuilt items, cheapest first:
+**The founder-brainstorm list is down to one open item.** Every other line in
+TODO.md's "Ideas — founder brainstorm, unvetted" section (line ~811) is now
+either `[x]` done, a Resolved/decision note with no code of its own, or a
+pointer at an existing open question. Re-scan the section head to tail before
+trusting this, in case a human edited it in the meantime — but as of this
+tick, the one real remaining line is:
 
-1. **Heart/favorite a memory.** New `memory_hearts` join table (not a
-   counter column, so a device can't inflate by re-hearting),
-   `POST /v1/memories/{id}/heart`, a count on the read shape. Ordering stays
-   on `contrast_score`/`layer` — do not use heart count as a ranking signal
-   yet. Now the least loaded remaining pick.
-2. **Streak + proximity notification.** Both resolved "build both" in
-   TODO.md, but this is the biggest item on the list: a streak counter is
-   small, but the proximity notification needs on-device geofencing AND
-   flipping `mobile/UI.md` rule 2 (`ACCESS_BACKGROUND_LOCATION`, currently
-   forced `false`) — a real App Store privacy-review change, not a toggle.
-   Worth splitting into two ticks (streak first, geofencing separately) if
-   picked up.
+1. **Proximity notification (the other half of "streak + proximity
+   notification, reopened").** On-device geofencing (`expo-location`'s
+   `startGeofencingAsync`) firing a **local** notification when a walkable
+   memory comes into range — no APNs/FCM, no push server. This is the bigger
+   half: it requires flipping `mobile/UI.md` rule 2
+   (`ACCESS_BACKGROUND_LOCATION`, the iOS `NSLocationAlways…`/
+   `NSMotionUsageDescription` strings, currently forced `false`) — a real App
+   Store privacy-review change, not a toggle, and `mobile/UI.md` itself needs
+   its rule-2 text updated once this lands, not just the app config. Not a
+   hard-limit gate on its own (no store account or build touched to write the
+   code), but big enough that a tick attempting it should expect to spend the
+   whole tick on the permission plumbing alone and land the actual
+   notification logic in a follow-up, rather than trying both at once.
+   Also update `docs/08-ux-flows.md` F1's "deliberately absent" list and F23
+   once it ships — both currently still say "no notifications", correctly,
+   until this lands.
 
-After those three, TODO.md's founder-brainstorm section (line ~811) is
-exhausted - every remaining line there is either checked off, a Resolved/
-decision note with no code of its own, or a pointer at an existing open
-question (mass-sourcing candidates -> the historical-source decision,
-onboarding -> "nothing to add unless a specific step is the complaint").
-The next tick to reach that point should re-scan the section head to tail
-rather than trust this list, in case a human edited it in the meantime.
+After that, TASKS.yaml's own next actions (unchanged, still true):
 
-TASKS.yaml's own next actions (unchanged, still true):
-
-3. **`P4-01`, free, needs a decision** — read the note on that task; three
+2. **`P4-01`, free, needs a decision** — read the note on that task; three
    defensible ways out, Phase 4 vs. 3.2's permanent stranger note.
-4. **`W4-02` / semantic dedup, free, needs a decision** — TODO.md 1.2:
+3. **`W4-02` / semantic dedup, free, needs a decision** — TODO.md 1.2:
    structured venue/locality/region fields vs. a human review pass.
-5. **`API_CREDITS`** — the extraction path has never run against a real
+4. **`API_CREDITS`** — the extraction path has never run against a real
    API. `python -m pipeline.enqueue --video <content_id>` then `--status
    <id>`, no `--limit` flag on the bulk path.
-6. **`DEPLOY`** — Railway, ~$5/mo, not Fly (no PostGIS on its managed
+5. **`DEPLOY`** — Railway, ~$5/mo, not Fly (no PostGIS on its managed
    Postgres). Unblocks `P2-00` and 2.3.
-7. **`EAS_BUILD`**, then **`STORE_ACCOUNT`** — three `PLACEHOLDER`
+6. **`EAS_BUILD`**, then **`STORE_ACCOUNT`** — three `PLACEHOLDER`
    tripwires first; bundle id is irreversible once submitted.
 
 ## Parked, and what each one needs
@@ -105,7 +105,17 @@ git history / prior STATE.md revisions for the full record; it stays
   export, the pinned credit, anniversaries and time locks, the route polyline,
   the static logo mark, the animated startup logo, the tab bar delimiters,
   the start-route affordance, the route-complete haptic, the configurable
-  route distance** are all in. TODO.md carries the commit for each.
+  route distance, hearting a memory, the streak counter** are all in. TODO.md
+  carries the commit for each.
+- **The streak is computed, not stored.** `api.accounts.current_streak(days,
+  today)` is a pure function over `unlocks.unlocked_at::date` fetched via
+  `STREAK_DAYS_QUERY` (api/queries.py) through the existing `MY_DEVICES`
+  account grouping. Do not add a `streak_count`/`streak_date` column — that
+  was TODO.md's own first idea and was deliberately not built, because it
+  would need incrementing at every unlock call site and would drift the
+  moment a second device on the same account unlocks something. If this ever
+  gets too slow to compute on read (it will not at this corpus size), the
+  fix is an index on `unlocks(device_id, unlocked_at)`, not a stored counter.
 - **`daily_routes.radius_meters` exists on both the local dev db (migration
   014 applied) and `db/schema.sql`.** A fresh test db already has it; do not
   re-run 014 against the dev db a second time (it is idempotent - `ADD
@@ -143,3 +153,6 @@ git history / prior STATE.md revisions for the full record; it stays
   (220, longer than any of the three paths). Exact timing is not worth an
   extra native round trip for a 750ms one-shot; revisit only if the draw-on
   visibly stalls near the end on a real device.
+- **A stored `streak_count`/`streak_date` counter** (TODO.md's own original
+  brainstorm suggestion) — rejected in favor of computing the streak from
+  `unlocks` on read. See "Do not redo" above for the reasoning.
