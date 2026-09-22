@@ -144,6 +144,10 @@ export default function App() {
   // pruned still counted toward "today" when the route was made.
   const [route, setRoute] = useState<LocatedMemory[]>([]);
   const [routeSize, setRouteSize] = useState(0);
+  // Nothing server-side hangs off this - the route already exists the moment
+  // it is fetched. It only switches the pill from "here is today's route" to
+  // "here is where to go next".
+  const [routeStarted, setRouteStarted] = useState(false);
   // What the server says the gate radius is. Only /v1/stats can answer when
   // there is nothing on the map, and the circle is drawn either way.
   const [serverRadius, setServerRadius] = useState<number | null>(null);
@@ -379,6 +383,12 @@ export default function App() {
   }, [routeShown]);
   const routeUnlockedCount = useMemo(
     () => routeShown.filter((memory) => earned.has(memory.id)).length,
+    [routeShown, earned],
+  );
+  // In route order, so "next" always means the nearest one not yet earned -
+  // not the nearest one geographically.
+  const nextRouteStop = useMemo(
+    () => routeShown.find((memory) => !earned.has(memory.id)),
     [routeShown, earned],
   );
   // Banded, so panning inside one zoom level does not regroup: `region` changes
@@ -788,20 +798,38 @@ export default function App() {
             <Pressable
               style={dim(styles.route)}
               accessibilityRole="button"
-              accessibilityLabel={`Today's route · ${routeUnlockedCount} of ${routeSize} unlocked.`}
-              accessibilityHint="Shows today's stops on the map"
-              onPress={() =>
-                mapRef.current?.fitToCoordinates(
-                  routeShown.map((memory) => ({
-                    latitude: memory.place.coordinates.lat,
-                    longitude: memory.place.coordinates.lng,
-                  })),
-                  { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
-                )
+              accessibilityLabel={
+                routeStarted && nextRouteStop
+                  ? `Next stop: ${nextRouteStop.place.name}.`
+                  : `Today's route · ${routeUnlockedCount} of ${routeSize} unlocked.`
               }
+              accessibilityHint={
+                routeStarted ? 'Centers the map on the next stop' : "Starts today's route"
+              }
+              onPress={() => {
+                setRouteStarted(true);
+                if (nextRouteStop) {
+                  flyTo({
+                    latitude: nextRouteStop.place.coordinates.lat,
+                    longitude: nextRouteStop.place.coordinates.lng,
+                    latitudeDelta: LOCATED_DELTA,
+                    longitudeDelta: LOCATED_DELTA,
+                  });
+                } else {
+                  mapRef.current?.fitToCoordinates(
+                    routeShown.map((memory) => ({
+                      latitude: memory.place.coordinates.lat,
+                      longitude: memory.place.coordinates.lng,
+                    })),
+                    { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
+                  );
+                }
+              }}
             >
               <Text style={styles.routeText}>
-                Today's route · {routeUnlockedCount} of {routeSize} unlocked
+                {routeStarted && nextRouteStop
+                  ? `Next: ${nextRouteStop.place.name}`
+                  : `Today's route · ${routeUnlockedCount} of ${routeSize} unlocked`}
               </Text>
             </Pressable>
           )}

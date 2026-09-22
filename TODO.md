@@ -850,11 +850,13 @@ or silently overridden.
       `Polyline` through `routeShown`'s stops, dashed and low-opacity to stay
       quiet under the pins. Found while picking the next item off this list;
       corrected rather than left claiming open work that was already done.
-- [ ] **Start-route affordance.** Today's route is fetched and shown; there's
-      no explicit "start" moment. Smallest version: a button on the route
-      view that does nothing server-side (the route is already computed and
-      stored per device per day) — it only switches the screen into
-      "in-progress" UI state, e.g. highlighting the next unvisited stop.
+- [x] **Start-route affordance.** Done: the existing route pill in `App.tsx`
+      now has two states, purely local (`routeStarted`, nothing server-side).
+      Tapping it the first time flies the camera to the nearest not-yet-earned
+      stop in route order and flips the pill's label to "Next: {place}";
+      tapping again re-centres on the new next stop. Once every stop is
+      earned it reverts to the summary label and re-fits the whole route, the
+      old behaviour, as a small completion view.
 - [ ] **Route-complete moment.** A single subtle animation/haptic when the
       last stop of today's route unlocks — reusing the unlock haptic already
       in `mobile/src/UnlockButton.tsx` rather than inventing a new one. Keep it
