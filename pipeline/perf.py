@@ -22,22 +22,27 @@ obvious at 50,000:
     query to 14ms.
   * ST_ClusterDBSCAN was fed one point per memory rather than per place, and
     took eleven seconds.
+  * search joined `content` and `users` before its LIMIT, so a common word
+    built a wide row for every match and discarded all but twenty. Ranking the
+    page first took 245ms to 59ms at 200k rows.
 
-Neither was a guess. Both came out of EXPLAIN (ANALYZE) on this data.
+None was a guess. All three came out of EXPLAIN (ANALYZE) on this data.
 
-Where it stands at 50,000 memories across 20,000 places, after both:
+Where it stands at 50,000 memories across 20,000 places, after all three:
 
-    nearby, 10km                 10.7 ms
-    nearby count                  5.4 ms
-    places nearby                 8.2 ms
-    single memory (unlock)        1.2 ms
-    search, common word          60.5 ms
-    search, rare word             4.3 ms
-    hotspots (DBSCAN)          1286.3 ms   (cached; see STATS_TTL_SECONDS)
+    nearby, 10km                 11.0 ms
+    nearby count                  5.1 ms
+    places nearby                 7.7 ms
+    single memory (unlock)        1.0 ms
+    search, common word          20.5 ms
+    search, rare word             3.8 ms
+    hotspots (DBSCAN)          1269.5 ms   (cached; see STATS_TTL_SECONDS)
 
-A common word matching every row is search's worst case and is what 60ms buys.
-Hotspots is the only one still measured in seconds, which is why /v1/stats
-does not recompute it per request.
+Run it at --rows 200000 too. Everything above grows sub-linearly except search,
+which cannot: ts_rank has no index and has to be evaluated on every row the
+tsquery matches, so a word the whole corpus contains is its worst case by
+construction. Hotspots is flat in memories and linear in places, which is the
+shape the DBSCAN fix bought.
 """
 
 import argparse
@@ -196,14 +201,14 @@ def main() -> None:
             print(f"  {name:24} {best_of(conn, sql, params, runs):8.1f} ms")
     engine.dispose()
 
-    print(
-        "\nEXPLAIN anything surprising before changing it:\n"
-        f"  docker compose exec db psql -U memorylane -d {DB}"
-    )
-    if not args.keep:
-        psql("memorylane", "-c", f"DROP DATABASE IF EXISTS {DB} WITH (FORCE)")
+    if args.keep:
+        print(
+            "\nEXPLAIN anything surprising before changing it:\n"
+            f"  docker compose exec db psql -U memorylane -d {DB}"
+        )
     else:
-        print(f"  ({DB} left behind; --keep)")
+        psql("memorylane", "-c", f"DROP DATABASE IF EXISTS {DB} WITH (FORCE)")
+        print("\nSomething surprising? Re-run with --keep and EXPLAIN it.")
 
 
 if __name__ == "__main__":

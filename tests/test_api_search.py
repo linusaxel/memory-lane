@@ -23,7 +23,9 @@ def client(api_client, monkeypatch):
 
 
 @pytest.fixture
-def corpus(db_session):
+def seed(db_session):
+    """One memory at one place, per call. Each test picks its own corpus, and
+    the counts above are pinned, so nothing may be added to somebody else's."""
     content = db_session.execute(
         text(
             "INSERT INTO content (url, platform, platform_id, source_type) "
@@ -32,16 +34,14 @@ def corpus(db_session):
         )
     ).scalar()
 
-    def place(name, lat):
-        return db_session.execute(
+    def add(name, lat, summary):
+        place_id = db_session.execute(
             text(
                 "INSERT INTO places (name, place_query, coordinates, precision_meters) "
                 "VALUES (:n, :n, ST_MakePoint(12.5655, :lat)::geography, 50) RETURNING id"
             ),
             {"n": name, "lat": lat},
         ).scalar()
-
-    def memory(place_id, summary):
         db_session.execute(
             text(
                 "INSERT INTO memories (place_id, content_id, timestamp_start, summary, "
@@ -50,8 +50,13 @@ def corpus(db_session):
             {"p": place_id, "c": content, "s": summary},
         )
 
-    memory(place("Vega", 55.6759), "the night the amp caught fire")
-    memory(place("Comedy Cellar", 55.6760), "a heckler ruined the night")
+    return add
+
+
+@pytest.fixture
+def corpus(db_session, seed):
+    seed("Vega", 55.6759, "the night the amp caught fire")
+    seed("Comedy Cellar", 55.6760, "a heckler ruined the night")
     db_session.commit()
 
 
@@ -95,3 +100,20 @@ def test_words_split_across_the_two_fields_still_match(client, corpus):
     that an index can serve has to be per-table, and per-table cannot match a
     query whose words are split across the two."""
     assert _search(client, "cellar heckler") == ["Comedy Cellar"]
+
+
+def test_the_better_match_comes_first(client, db_session, seed):
+    """Search sorts by ts_rank, and nothing asserted that until now - every
+    other test here reads the result set sorted by name.
+
+    It is the one thing the query exists to do, and the reason both search
+    queries rank a page before they fetch its columns (api/queries.py
+    SEARCH_PAGE). A rewrite that ranks correctly but orders the outer select by
+    something else passes every other test in this file.
+    """
+    seed("Deli", 55.6761, "a long story about a bagel, a dog and one pretzel at the end")
+    seed("Bodega", 55.6762, "pretzel after pretzel after pretzel")
+    db_session.commit()
+
+    body = client.get("/v1/memories/search?q=pretzel").json()
+    assert [mem["place"]["name"] for mem in body["memories"]] == ["Bodega", "Deli"]

@@ -233,30 +233,49 @@ SELECT {MEMORY_COLUMNS},
 WHERE m.id = :memory_id AND {VISIBLE}
 """
 
+# Both search queries rank a page out of `memories` first and fetch the columns
+# afterwards. Ranking cannot use an index - ts_rank has to be evaluated on every
+# row the tsquery matches - so a common word matches the whole corpus, and
+# joining `content` and `users` before the LIMIT built 200,000 wide rows to
+# throw 199,980 of them away. Measured by `python -m pipeline.perf --rows
+# 200000`: 245ms before, 59ms after, same twenty rows. The join to `places`
+# stays inside, because `coordinates IS NOT NULL` decides which rows are
+# eligible and so has to run before the LIMIT, not after it.
+SEARCH_PAGE = f"""
+    SELECT m.id, {SEARCH_RANK}
+    FROM memories m
+    JOIN places p ON m.place_id = p.id
+    WHERE
+        p.coordinates IS NOT NULL
+        AND {VISIBLE}
+        AND {SEARCH_MATCH}"""
+
 SEARCH_MEMORIES_QUERY = f"""
+WITH page AS (
+{SEARCH_PAGE}
+    ORDER BY rank DESC
+    LIMIT :limit OFFSET :offset
+)
 SELECT {MEMORY_COLUMNS},
-    {SEARCH_RANK}
+    page.rank
 {MEMORY_JOIN}
-WHERE
-    p.coordinates IS NOT NULL
-    AND {VISIBLE}
-    AND {SEARCH_MATCH}
-ORDER BY rank DESC
-LIMIT :limit OFFSET :offset
+JOIN page ON page.id = m.id
+ORDER BY page.rank DESC
 """
 
 SEARCH_MEMORIES_WITH_LOCATION_QUERY = f"""
+WITH page AS (
+{SEARCH_PAGE}
+        AND {WITHIN}
+    ORDER BY rank DESC, ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) ASC
+    LIMIT :limit OFFSET :offset
+)
 SELECT {MEMORY_COLUMNS},
     {DISTANCE},
-    {SEARCH_RANK}
+    page.rank
 {MEMORY_JOIN}
-WHERE
-    p.coordinates IS NOT NULL
-    AND {VISIBLE}
-    AND {SEARCH_MATCH}
-    AND {WITHIN}
-ORDER BY rank DESC, distance_meters ASC
-LIMIT :limit OFFSET :offset
+JOIN page ON page.id = m.id
+ORDER BY page.rank DESC, distance_meters ASC
 """
 
 SEARCH_COUNT_QUERY = f"""
