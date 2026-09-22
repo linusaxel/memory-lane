@@ -23,6 +23,9 @@ DB_URL="postgresql://memorylane:memorylane@localhost:5432/$DB"
 API_PORT=8090
 METRO_PORT=8081
 OUT="$ROOT/e2e/out"
+# Long enough for the slowest flow on a busy machine (f15 has taken 86s under
+# load), short enough that a wedged driver is noticed rather than waited on.
+FLOW_TIMEOUT=${E2E_FLOW_TIMEOUT:-300}
 LOGS="$OUT/logs"
 
 RECORD=0
@@ -99,6 +102,11 @@ xcrun simctl bootstatus "$DEVICE" -b >/dev/null 2>&1 || xcrun simctl boot "$DEVI
 open -a Simulator --args -CurrentDeviceUDID "$DEVICE" 2>/dev/null
 
 mkdir -p "$LOGS"
+
+# A recording interrupted mid-write leaves a partial behind under its own
+# sandbox name, and it is the size of however long it ran - one killed run left
+# 210MB. They are never picked up again, so they go at the start of the next.
+rm -f "$OUT"/*.sb-* 2>/dev/null
 
 # ---------------------------------------------------------------- teardown
 
@@ -291,7 +299,32 @@ for flow in "${SELECTED[@]}"; do
     sleep 2
   fi
 
-  "$MAESTRO" test --device "$DEVICE" --env APP_ID="$APP_ID" "$flow" || FAIL=1
+  # Under a watchdog, because a wedged driver does not fail - it stops.
+  #
+  # After a long session Maestro's XCTest driver can start answering
+  # "Request for viewHierarchy failed, code: 500" and then `maestro test`
+  # simply never returns. Three runs died that way tonight, each hanging until
+  # something noticed, which is the worst possible shape for a feedback loop:
+  # no result, no error, and no end. A flow that has not finished in
+  # FLOW_TIMEOUT is not going to.
+  #
+  # macOS ships no `timeout`, hence the poll.
+  "$MAESTRO" test --device "$DEVICE" --env APP_ID="$APP_ID" "$flow" &
+  maestro_pid=$!
+  waited=0
+  while kill -0 "$maestro_pid" 2>/dev/null; do
+    if [ "$waited" -ge "$FLOW_TIMEOUT" ]; then
+      printf '\033[31m     giving up after %ss - the driver stopped answering\033[0m\n' "$FLOW_TIMEOUT"
+      printf '\033[2m     see "When the driver wedges" in e2e/README.md\033[0m\n'
+      kill -9 "$maestro_pid" 2>/dev/null
+      pkill -f "xcodebuild test-without-building" 2>/dev/null
+      FAIL=1
+      break
+    fi
+    sleep 2
+    waited=$((waited + 2))
+  done
+  wait "$maestro_pid" 2>/dev/null || FAIL=1
   printf '\033[2m     %ss\033[0m\n' "$(( $(date +%s) - flow_started ))"
   LAST=$(date +%s)
 

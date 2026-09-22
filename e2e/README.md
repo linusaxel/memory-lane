@@ -62,6 +62,28 @@ Start the suite and leave the machine alone; it is faster in wall-clock terms
 than working in parallel and then re-running it because the timings made no
 sense.
 
+## When the driver wedges
+
+After a long session - dozens of runs - Maestro's XCTest driver can stop
+answering and take the run with it:
+
+    Assert that "…" is not visible...
+    Exception in thread "main" UnknownFailure(errorResponse=Request for
+    viewHierarchy failed, code: 500, body: )
+
+`maestro test` then hangs rather than exiting, so the run never finishes and
+nothing says why. It is the driver, not the app and not the flow: the same
+flow passes immediately afterwards.
+
+    pkill -f maestro.cli; pkill -f "xcodebuild test-without-building"
+    xcrun simctl shutdown booted && xcrun simctl boot <udid>
+
+Then run again. If a run was killed mid-flight it may also have left its
+database behind, since the teardown never ran:
+
+    docker compose exec db psql -U memorylane -d memorylane \
+      -c "SELECT datname FROM pg_database WHERE datname LIKE 'memorylane_e2e%'"
+
 ## The three layers
 
 | | Where | Runs in CI | Answers |
