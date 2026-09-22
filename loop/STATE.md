@@ -22,6 +22,7 @@ wins and this file is stale.
 | `6584fdb` | **Tab bar delimiters** (TODO.md brainstorm list). `mobile/src/TabBar.tsx` gets a `color.rule` hairline (1×24, centred) between each pair of tabs — the same token the bar's own top border already uses. |
 | `1daec1e` | **Start-route affordance** (TODO.md brainstorm list). `App.tsx`'s existing route pill gets a local `routeStarted` flag (nothing server-side): tapping it flies to the nearest not-yet-earned stop and the label switches to "Next: {place}"; complete, it falls back to the old fit-to-all summary. |
 | `a0b5caa` | **Route-complete moment** (TODO.md brainstorm list). `App.tsx`'s `unlock()` fires `UnlockButton`'s own success haptic a second time when the just-confirmed memory was the route's last not-yet-earned stop - same signature, no new mechanic. |
+| `e52e956` | **Configurable route distance** (TODO.md brainstorm list). `GET /v1/routes/today` takes an optional `radius_meters` (500-20,000), used only on the day's first call, stored on `daily_routes` (`db/migrations/014_route_radius.sql`, applied to the local db) and echoed in `RouteMeta.radius_meters` on every later call that day. No mobile UI yet, by design. |
 
 Prior session (not journaled at the time, visible only in git log): `27ddff9`
 static logo mark (icon/splash/favicon rasterized from `mobile/assets/logo-mark.svg`),
@@ -45,18 +46,12 @@ cd mobile && npx expo start               # the app
 below, unchanged from last session). TODO.md's "Ideas — founder brainstorm,
 unvetted" section (line ~811) still has real unbuilt items, cheapest first:
 
-1. **Configurable route distance.** Accept an optional radius on
-   `GET /v1/routes/today` and store it with the day's route row instead of
-   `ROUTE_RADIUS_METERS` staying a process-wide env default. Now the least
-   loaded pick — everything smaller/purely-local on the list is done.
-   Backend (`api/`) + migration, first item on this list that is not
-   mobile-only.
-2. **Heart/favorite a memory.** New `memory_hearts` join table (not a
+1. **Heart/favorite a memory.** New `memory_hearts` join table (not a
    counter column, so a device can't inflate by re-hearting),
    `POST /v1/memories/{id}/heart`, a count on the read shape. Ordering stays
    on `contrast_score`/`layer` — do not use heart count as a ranking signal
-   yet.
-3. **Streak + proximity notification.** Both resolved "build both" in
+   yet. Now the least loaded remaining pick.
+2. **Streak + proximity notification.** Both resolved "build both" in
    TODO.md, but this is the biggest item on the list: a streak counter is
    small, but the proximity notification needs on-device geofencing AND
    flipping `mobile/UI.md` rule 2 (`ACCESS_BACKGROUND_LOCATION`, currently
@@ -74,16 +69,16 @@ rather than trust this list, in case a human edited it in the meantime.
 
 TASKS.yaml's own next actions (unchanged, still true):
 
-4. **`P4-01`, free, needs a decision** — read the note on that task; three
+3. **`P4-01`, free, needs a decision** — read the note on that task; three
    defensible ways out, Phase 4 vs. 3.2's permanent stranger note.
-5. **`W4-02` / semantic dedup, free, needs a decision** — TODO.md 1.2:
+4. **`W4-02` / semantic dedup, free, needs a decision** — TODO.md 1.2:
    structured venue/locality/region fields vs. a human review pass.
-6. **`API_CREDITS`** — the extraction path has never run against a real
+5. **`API_CREDITS`** — the extraction path has never run against a real
    API. `python -m pipeline.enqueue --video <content_id>` then `--status
    <id>`, no `--limit` flag on the bulk path.
-7. **`DEPLOY`** — Railway, ~$5/mo, not Fly (no PostGIS on its managed
+6. **`DEPLOY`** — Railway, ~$5/mo, not Fly (no PostGIS on its managed
    Postgres). Unblocks `P2-00` and 2.3.
-8. **`EAS_BUILD`**, then **`STORE_ACCOUNT`** — three `PLACEHOLDER`
+7. **`EAS_BUILD`**, then **`STORE_ACCOUNT`** — three `PLACEHOLDER`
    tripwires first; bundle id is irreversible once submitted.
 
 ## Parked, and what each one needs
@@ -109,8 +104,12 @@ git history / prior STATE.md revisions for the full record; it stays
   and audio, Google/Apple sign-in, the dev seed, rate limiting, the corpus
   export, the pinned credit, anniversaries and time locks, the route polyline,
   the static logo mark, the animated startup logo, the tab bar delimiters,
-  the start-route affordance, the route-complete haptic** are all in.
-  TODO.md carries the commit for each.
+  the start-route affordance, the route-complete haptic, the configurable
+  route distance** are all in. TODO.md carries the commit for each.
+- **`daily_routes.radius_meters` exists on both the local dev db (migration
+  014 applied) and `db/schema.sql`.** A fresh test db already has it; do not
+  re-run 014 against the dev db a second time (it is idempotent - `ADD
+  COLUMN IF NOT EXISTS` - but there is nothing to gain by repeating it).
 - **`Haptics.notificationAsync(NotificationFeedbackType.Success)` now fires
   from two places** (`UnlockButton.tsx` on a completed hold,
   `App.tsx:unlock()` when that unlock also completes a started route) -
