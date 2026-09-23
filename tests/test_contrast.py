@@ -19,8 +19,9 @@ from sqlalchemy import text
 from pipeline.extract import HISTORICAL_SYSTEM_PROMPT, _contrast_score, save_memories
 
 HIGH_CONTRAST = {
-    "place_name": "Vega, Vesterbro",
-    "place_query": "Vega Enghavevej Vesterbro Copenhagen Denmark",
+    "venue": "Vega",
+    "locality": "Copenhagen",
+    "region": "Denmark",
     "lat": 55.6668,
     "lng": 12.5379,
     "summary": "A touring band played the upstairs room in June 1978 to about four hundred people.",
@@ -108,8 +109,7 @@ def test_unscored_memories_sort_last_not_first(db_session):
     ).scalar()
     unscored = {
         **{k: v for k, v in HIGH_CONTRAST.items() if not k.startswith("contrast")},
-        "place_query": "Somewhere Else Copenhagen Denmark",
-        "place_name": "Somewhere Else",
+        "venue": "Somewhere Else",
     }
     save_memories(db_session, content_id, [HIGH_CONTRAST, unscored])
 

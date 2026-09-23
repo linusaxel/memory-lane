@@ -462,6 +462,21 @@ what a bare city reference cannot do.
 Deliberately conservative. A wrong merge destroys data and is invisible
 afterwards.
 
+**2026-09-23 follow-up (W4-02):** the token heuristic above has a ceiling it
+cannot climb past — four of the seven merges it got wrong on live data are two
+*real* venues sharing a street or neighbourhood ("Andaz West Hollywood" vs.
+"Comedy Store Sunset Boulevard"), which no amount of token weighting
+separates, because both names are equally "distinctive" and equally close
+together. The actual fix: extraction now emits `venue`/`locality`/`region` as
+structured fields (`pipeline/extract.py`'s prompts), and `save_memories` keys
+its `ON CONFLICT` on an exact, case-folded match of `(venue, locality)`
+(`idx_places_venue_locality`, `db/migrations/016_structured_place_fields.sql`)
+instead of parsing one `place_query` string. New rows self-dedup at insert
+time and never reach `pipeline/dedup.py`. That module is unchanged and still
+runs — it is the only thing that can clean up the places written *before*
+this migration (`venue`/`locality` NULL there), which are not being
+re-extracted since that costs API credits. See `TODO.md` 1.2.
+
 ### Channel discovery uses yt-dlp, not a scrape
 
 As of 2026-09-20 a regex over `"videoId":"..."` in the channel HTML returns zero

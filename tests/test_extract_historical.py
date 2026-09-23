@@ -31,8 +31,9 @@ from pipeline.extract import (
 from tests.fakes import FakeAnthropic
 
 ARCHIVE_MEMORY = {
-    "place_name": "Vega, Vesterbro",
-    "place_query": "Vega Enghavevej Vesterbro Copenhagen Denmark",
+    "venue": "Vega",
+    "locality": "Copenhagen",
+    "region": "Denmark",
     "lat": 55.6668,
     "lng": 12.5379,
     "summary": "A touring band played the upstairs room in June 1978 to about four hundred people.",

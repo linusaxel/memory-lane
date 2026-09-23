@@ -39,6 +39,14 @@ CREATE TABLE places (
     id SERIAL PRIMARY KEY,
     name VARCHAR(512) NOT NULL,
     place_query VARCHAR(512) NOT NULL,
+    -- Structured identity, W4-02. Nullable: rows written before this existed,
+    -- and any place_query synthesized by api/write.py for a human submission,
+    -- have none. save_memories keys the ON CONFLICT on these when present,
+    -- falling back to place_query only when they are not. See
+    -- idx_places_venue_locality below.
+    venue VARCHAR(255),
+    locality VARCHAR(255),
+    region VARCHAR(255),
     coordinates GEOGRAPHY(POINT, 4326),
     precision_meters INTEGER DEFAULT 200,
     geocode_status VARCHAR(20) DEFAULT 'pending',
@@ -252,6 +260,15 @@ CREATE INDEX idx_places_grid ON places (ST_SnapToGrid(coordinates::geometry, 0.0
 -- and an expression index it cannot match means place_id comes back NULL and the
 -- memory is dropped. Existing databases: db/migrations/001_places_unique.sql.
 CREATE UNIQUE INDEX idx_places_place_query ON places(place_query);
+-- Structured-field identity, W4-02: an exact match on venue+locality once
+-- extraction supplies them, so two mentions of the same real place collide at
+-- insert time instead of needing pipeline/dedup.py's string heuristic, which
+-- cannot tell two venues on the same street apart. Partial: legacy rows have
+-- NULL in both columns and never match here. See
+-- db/migrations/016_structured_place_fields.sql.
+CREATE UNIQUE INDEX idx_places_venue_locality
+    ON places (lower(btrim(venue)), lower(btrim(locality)))
+    WHERE venue IS NOT NULL AND locality IS NOT NULL;
 CREATE INDEX idx_places_geocode_status ON places(geocode_status);
 CREATE INDEX idx_content_platform ON content(platform);
 CREATE INDEX idx_content_pending_transcript ON content(transcript_fetched) WHERE transcript_fetched = FALSE AND transcript_failed = FALSE;

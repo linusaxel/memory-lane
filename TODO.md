@@ -372,8 +372,9 @@ card is the one worth screenshotting.
         DB twice, 224 memories before and after. `tests/test_schema_layers.py`
         guards schema.sql/migration drift and was mutation-checked to confirm it
         actually fails.
-- [~] **1.2 Semantic place dedup.** *Tool shipped, auto-merge deliberately
-      withheld — `pipeline/dedup.py`, W4-02 is `blocked / NEEDS_DECISION`.*
+- [x] **1.2 Semantic place dedup.** *Decided 2026-09-23: structured extraction
+      fields. `pipeline/dedup.py`'s string heuristic (below) stays exactly as
+      shipped, serving only places written before this change.*
 
       Two premises in the original plan turned out to be wrong, both measured
       against live data rather than argued:
@@ -426,17 +427,22 @@ card is the one worth screenshotting.
       because the distinguishing token is exactly the one the heuristic treats
       as rare-and-therefore-the-name.
 
-      **Recommended fix, still needs a decision:** stop parsing one
-      `place_query` blob. Have extraction emit structured fields — venue name,
-      locality, region — so dedup is an exact match on venue+locality instead of
-      a string heuristic. That is a prompt and schema change, not a better
-      regex. Alternatively D.3 (place-level vs memory-level pins) may reduce how
-      much this matters.
+      **Shipped 2026-09-23:** extraction now emits `venue`/`locality`/`region`
+      instead of one `place_query` blob (`pipeline/extract.py`'s prompts), and
+      `save_memories` keys its `ON CONFLICT` on an exact, case-folded match of
+      `(venue, locality)` — `idx_places_venue_locality`,
+      `db/migrations/016_structured_place_fields.sql`. New rows self-dedup at
+      insert time; `pipeline/dedup.py` is unchanged and still serves the places
+      written before this migration (not re-extracted — that costs API
+      credits). `merge_nearby_memories` (in-process, pre-`save_memories`) was
+      repointed at the same key since it also read `place_query`. See
+      `docs/10-decisions.md`'s "Place dedup matches on names, not coordinates"
+      2026-09-23 follow-up, and `loop/TASKS.yaml`'s W4-02.
 
-      Merge mechanics, when it is unblocked, follow `001_places_unique.sql`:
-      repoint `memories.place_id` first, then delete orphans guarded by
-      `NOT EXISTS` — `memories.place_id` is `ON DELETE CASCADE` and an unguarded
-      delete eats memory rows.
+      Merge mechanics for `pipeline/dedup.py`'s legacy path are unchanged, and
+      still follow `001_places_unique.sql`: repoint `memories.place_id` first,
+      then delete orphans guarded by `NOT EXISTS` — `memories.place_id` is
+      `ON DELETE CASCADE` and an unguarded delete eats memory rows.
 - [x] **1.3 Source-agnostic ingestion.** `ingest_records()` in
       `pipeline/ingest.py` — a second entry point beside `ingest_content()`
       taking already-fetched records `{source_url, text, title?, happened_at?}`

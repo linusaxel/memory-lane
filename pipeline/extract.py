@@ -39,8 +39,36 @@ Does NOT qualify:
   there. If the only thing anchoring the place is an upcoming show, return nothing.
 
 For each memory, extract:
-- place_name: Human-readable name (e.g., "Cafe de Flore, Paris")
-- place_query: Search string for geocoding (e.g., "Cafe de Flore Saint-Germain Paris France")
+- venue: The proper name of the specific place - the business, building, park
+  or landmark, exactly as you would say it to someone standing nearby. Not a
+  description ("a bar", "the venue") and not the whole address. Two different
+  venues on the same street must get different venue names even when nothing
+  else about them differs - this is the field a duplicate check keys on, so it
+  cannot mean "the neighborhood" or "the block".
+- locality: The city or town the venue is in. Always this level - never a
+  neighborhood, borough or street, even when the transcript names one and even
+  when that is how you would say it in everyday speech. "Chelsea, Manhattan"
+  becomes locality "New York City", not "Chelsea": consistency here matters
+  more than specificity, because it is the second half of the same duplicate
+  check, and the same venue mentioned twice must produce the same locality
+  both times.
+- region: State/province and/or country, whichever a mapmaker would need to
+  find the locality unambiguously ("California, USA" for West Hollywood,
+  "Denmark" for Copenhagen - no state needed there). Null only if you
+  genuinely do not know.
+
+<example>
+  <venue>Andaz West Hollywood</venue>
+  <locality>West Hollywood</locality>
+  <region>California, USA</region>
+  <why>The hotel's own name happens to contain "West Hollywood" - that text is
+       part of the venue, not the locality. The Comedy Store sits two blocks
+       away on the same street, in the same locality. Sharing a locality is
+       normal and expected; venue is the only field allowed to tell them
+       apart, so guess a real, specific venue name even when unsure, rather
+       than leaving it blank because two candidates are close together.</why>
+</example>
+
 - lat: Latitude estimate (decimal degrees, e.g., 48.8566)
 - lng: Longitude estimate (decimal degrees, e.g., 2.3522)
 - timestamp_start: When place is first mentioned (from [timestamp] markers in input)
@@ -143,8 +171,27 @@ no invented emotions, no invented names, no "you can just picture it". Say what
 happened, where, and when, and let the fact carry it.
 
 For each memory, extract:
-- place_name: Human-readable name ("Vega, Vesterbro")
-- place_query: Search string for geocoding ("Vega Enghavevej Vesterbro Copenhagen Denmark")
+- venue: The proper name of the specific place - the business, building, park
+  or landmark. Not a description and not the whole address. This is the field
+  a duplicate check keys on, so two different venues must get different names
+  even when they are close together.
+- locality: The city or town the venue is in. Always this level - never a
+  neighborhood or street, even when the source names one. Consistency matters
+  more than specificity: the same venue named in two different records must
+  produce the same locality both times.
+- region: State/province and/or country, whichever disambiguates the
+  locality. Null only if genuinely unknown.
+
+<example>
+  <venue>Vega</venue>
+  <locality>Copenhagen</locality>
+  <region>Denmark</region>
+  <why>Vesterbro, the neighborhood the source names, is not the locality -
+       Copenhagen is. Keeping locality at the city level is what lets a second
+       archive record naming the same room years later collide with this one
+       instead of minting a new place.</why>
+</example>
+
 - lat / lng: Decimal degrees
 - happened_at: ISO date of the EVENT - "1978-06-17", "1978-06", or "1978". Null if
   the text gives no date. This is when it happened, not when it was written about.
@@ -348,13 +395,25 @@ def extract_memories_from_chunk(
         return []
 
 
+def _venue_locality_key(mem: dict) -> tuple[str, str]:
+    return (
+        (mem.get("venue") or "").strip().lower(),
+        (mem.get("locality") or "").strip().lower(),
+    )
+
+
 def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -> list[dict]:
-    """Merge memories for the same place within threshold_seconds."""
+    """Merge memories for the same place within threshold_seconds.
+
+    Keyed on (venue, locality), W4-02 - the model no longer returns
+    place_query. Folded the same way save_memories folds it, so a chunk
+    boundary that capitalizes a name differently still merges.
+    """
     if not memories:
         return []
 
     sorted_memories = sorted(
-        memories, key=lambda m: (m.get("place_query", ""), m.get("timestamp_start", 0))
+        memories, key=lambda m: (_venue_locality_key(m), m.get("timestamp_start", 0))
     )
 
     merged = []
@@ -365,7 +424,7 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
             current = mem.copy()
             continue
 
-        same_place = current.get("place_query", "").lower() == mem.get("place_query", "").lower()
+        same_place = _venue_locality_key(current) == _venue_locality_key(mem)
         time_diff = abs(mem.get("timestamp_start", 0) - current.get("timestamp_start", 0))
 
         if same_place and time_diff <= threshold_seconds:
@@ -407,6 +466,31 @@ def layer_for(source_type: str | None) -> str:
 def precision_to_meters(precision: str) -> int:
     mapping = {"exact": 50, "street": 200, "neighborhood": 1000, "city": 10000}
     return mapping.get(precision, 200)
+
+
+def _place_name(venue: str | None, locality: str | None) -> str:
+    """Display string for places.name. Derived, not asked for: this is what
+    used to let place_name and place_query disagree with each other."""
+    if venue and locality:
+        return f"{venue}, {locality}"
+    return venue or locality or "Unknown"
+
+
+def _place_query(
+    venue: str | None,
+    locality: str | None,
+    region: str | None,
+    legacy_query: str | None,
+    legacy_name: str | None,
+) -> str:
+    """place_query is NOT NULL and UNIQUE for every writer of this table,
+    including api/write.py's human submissions - it cannot disappear. Derived
+    from the structured fields when they exist; falls back to whatever the
+    caller supplied before W4-02 for anything that still looks like that."""
+    parts = [p for p in (venue, locality, region) if p]
+    if parts:
+        return ", ".join(parts)
+    return legacy_query or legacy_name or "Unknown"
 
 
 def _happened_at(mem: dict):
@@ -455,53 +539,73 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
         lng = mem.get("lng")
         has_coords = lat is not None and lng is not None
 
+        venue = (mem.get("venue") or "").strip() or None
+        locality = (mem.get("locality") or "").strip() or None
+        region = (mem.get("region") or "").strip() or None
+        structured = bool(venue and locality)
+
+        params = {
+            "name": _place_name(venue, locality)
+            if structured
+            else mem.get("place_name", "Unknown"),
+            "query": _place_query(
+                venue, locality, region, mem.get("place_query"), mem.get("place_name")
+            ),
+            "venue": venue,
+            "locality": locality,
+            "region": region,
+            "precision": precision_to_meters(mem.get("location_precision", "street")),
+            "lat": lat,
+            "lng": lng,
+        }
+
+        if structured:
+            conflict_target = (
+                "(lower(btrim(venue)), lower(btrim(locality))) "
+                "WHERE venue IS NOT NULL AND locality IS NOT NULL"
+            )
+            fallback_sql = text(
+                "SELECT id FROM places WHERE lower(btrim(venue)) = lower(btrim(:venue)) "
+                "AND lower(btrim(locality)) = lower(btrim(:locality))"
+            )
+        else:
+            # ponytail: exact-string dedup only, unchanged from before W4-02.
+            # Rows missing venue/locality (a caller that never adopted the
+            # structured prompt) fall back to place_query - "Oslo Norway" and
+            # "comedy club Oslo Norway" remain separate places here.
+            conflict_target = "(place_query)"
+            fallback_sql = text("SELECT id FROM places WHERE place_query = :query")
+
         if has_coords:
             place_result = session.execute(
-                text("""
-                    INSERT INTO places (name, place_query, precision_meters, coordinates, geocode_status)
-                    VALUES (:name, :query, :precision, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 'llm')
-                    ON CONFLICT (place_query) DO NOTHING
+                text(f"""
+                    INSERT INTO places (name, place_query, venue, locality, region, precision_meters, coordinates, geocode_status)
+                    VALUES (:name, :query, :venue, :locality, :region, :precision, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 'llm')
+                    ON CONFLICT {conflict_target} DO NOTHING
                     RETURNING id
                 """),
-                {
-                    "name": mem.get("place_name", "Unknown"),
-                    "query": mem.get("place_query", mem.get("place_name", "Unknown")),
-                    "precision": precision_to_meters(mem.get("location_precision", "street")),
-                    "lat": lat,
-                    "lng": lng,
-                },
+                params,
             )
         else:
             place_result = session.execute(
-                text("""
-                    INSERT INTO places (name, place_query, precision_meters)
-                    VALUES (:name, :query, :precision)
-                    ON CONFLICT (place_query) DO NOTHING
+                text(f"""
+                    INSERT INTO places (name, place_query, venue, locality, region, precision_meters)
+                    VALUES (:name, :query, :venue, :locality, :region, :precision)
+                    ON CONFLICT {conflict_target} DO NOTHING
                     RETURNING id
                 """),
-                {
-                    "name": mem.get("place_name", "Unknown"),
-                    "query": mem.get("place_query", mem.get("place_name", "Unknown")),
-                    "precision": precision_to_meters(mem.get("location_precision", "street")),
-                },
+                params,
             )
         row = place_result.fetchone()
 
         if row:
             place_id = row[0]
         else:
-            # ponytail: exact-string dedup only. "Oslo Norway" and "comedy club Oslo
-            # Norway" remain separate places. Normalizing would mean changing this
-            # SELECT and idx_places_place_query together - if they ever disagree,
-            # place_id comes back None and the memory is silently dropped below.
-            existing = session.execute(
-                text("SELECT id FROM places WHERE place_query = :query"),
-                {"query": mem.get("place_query", mem.get("place_name", "Unknown"))},
-            ).fetchone()
+            existing = session.execute(fallback_sql, params).fetchone()
             place_id = existing[0] if existing else None
 
         if not place_id:
-            logger.warning(f"Could not get place_id for: {mem.get('place_name')}")
+            logger.warning(f"Could not get place_id for: {venue or mem.get('place_name')}")
             continue
 
         session.execute(

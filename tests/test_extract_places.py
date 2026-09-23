@@ -12,7 +12,7 @@ IS the constraint; a mock would prove nothing about it.
 import pytest
 from sqlalchemy import text
 
-from pipeline.extract import save_memories
+from pipeline.extract import merge_nearby_memories, save_memories
 
 pytestmark = pytest.mark.db
 
@@ -90,3 +90,81 @@ def test_a_place_without_coordinates_also_dedups(db_session):
 
     places, memories = _counts(db_session)
     assert (places, memories) == (1, 2)
+
+
+def _structured(summary, venue="Katz's Delicatessen", locality="New York", **kw):
+    mem = _memory(summary, **kw)
+    mem.pop("place_name", None)
+    mem.pop("place_query", None)
+    mem["venue"] = venue
+    mem["locality"] = locality
+    return mem
+
+
+def test_same_venue_different_incidental_text_is_one_row(db_session):
+    """The under-merge case pipeline/dedup.py's string heuristic used to exist
+    for: the same real venue, described with different free text, now collides
+    at insert time instead of needing a human-reviewed batch job afterwards."""
+    content_id = _content(db_session)
+    save_memories(db_session, content_id, [_structured("first visit")])
+    save_memories(
+        db_session,
+        content_id,
+        [_structured("second visit", venue="katz's delicatessen", locality="new york")],
+    )
+
+    places, memories = _counts(db_session)
+    assert (places, memories) == (1, 2)
+
+
+def test_two_venues_sharing_a_locality_stay_separate(db_session):
+    """The documented failure pipeline/dedup.py's heuristic cannot fix: two
+    real venues on the same street. Andaz/Comedy Store, Sunset Boulevard -
+    TODO.md 1.2."""
+    content_id = _content(db_session)
+    save_memories(
+        db_session,
+        content_id,
+        [
+            _structured("hotel", venue="Andaz West Hollywood", locality="West Hollywood"),
+            _structured("comedy set", venue="Comedy Store", locality="West Hollywood"),
+        ],
+    )
+    places, memories = _counts(db_session)
+    assert (places, memories) == (2, 2)
+
+
+def test_merge_nearby_keys_on_venue_and_locality():
+    a = {
+        "venue": "Vega",
+        "locality": "Copenhagen",
+        "timestamp_start": 10.0,
+        "summary": "s1",
+        "tags": ["music"],
+    }
+    b = {
+        "venue": "vega",
+        "locality": "copenhagen",
+        "timestamp_start": 40.0,
+        "summary": "s2",
+        "tags": ["history"],
+    }
+    merged = merge_nearby_memories([a, b])
+    assert len(merged) == 1
+    assert set(merged[0]["tags"]) == {"music", "history"}
+
+
+def test_merge_nearby_does_not_merge_different_venues_same_locality():
+    a = {
+        "venue": "Andaz West Hollywood",
+        "locality": "West Hollywood",
+        "timestamp_start": 10.0,
+        "summary": "s1",
+    }
+    b = {
+        "venue": "Comedy Store",
+        "locality": "West Hollywood",
+        "timestamp_start": 15.0,
+        "summary": "s2",
+    }
+    assert len(merge_nearby_memories([a, b])) == 2

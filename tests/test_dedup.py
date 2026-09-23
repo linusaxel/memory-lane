@@ -107,9 +107,11 @@ def test_a_frequent_venue_is_misread_as_a_location():
     - leaving 'sunset boulevard', which the Andaz hotel on the same street also
     has. The two then look like one venue.
 
-    Asserting the wrong answer on purpose, so the day it changes, this says so.
-    The fix is structured place fields out of extraction, not a better string
-    rule. See TODO.md 1.2.
+    Asserting the wrong answer on purpose. W4-02 shipped the real fix as an
+    exact match on venue+locality at insert time (pipeline/extract.py's
+    save_memories), not a rewrite of this heuristic - dedup.py is retained
+    only to serve places written before that migration, so this input is
+    expected to produce this wrong answer permanently. See TODO.md 1.2.
     """
     store_is_common = frozenset({"store", "west", "hollywood"})
     assert same_place(
@@ -118,7 +120,7 @@ def test_a_frequent_venue_is_misread_as_a_location():
         store_is_common,
         (34.0900, -118.3850),
         (34.0905, -118.3855),
-    ), "if this now fails, the heuristic improved - re-check TODO.md 1.2"
+    ), "dedup.py is unchanged by W4-02 by design - see this test's docstring"
 
 
 def test_the_estimator_calls_recurring_tokens_common():

@@ -41,8 +41,9 @@ class FakeAnthropic:
         if payload is None:
             payload = [
                 {
-                    "place_name": "Katz's Delicatessen",
-                    "place_query": "Katz's Delicatessen, New York",
+                    "venue": "Katz's Delicatessen",
+                    "locality": "New York",
+                    "region": "New York, USA",
                     "lat": 40.7223,
                     "lng": -73.9874,
                     "summary": "Mark and Joe argued about pastrami for twenty minutes.",

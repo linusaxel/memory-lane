@@ -590,22 +590,55 @@ tasks:
       schema.sql lacks."
 
   - id: W4-02
-    goal: "Semantic place dedup: normalise place_query (casefold, strip venue-type
-      stopwords) and collapse places whose coordinates fall within their combined
-      precision_meters. 'Oslo Norway' and 'comedy club Oslo Norway' become one place."
-    verify: "venv/bin/python -m pytest -q tests/test_dedup.py"
-    touches: [pipeline/dedup.py, tests/test_dedup.py]
+    goal: "Semantic place dedup: extraction emits structured venue/locality/region
+      fields and save_memories keys its ON CONFLICT on an exact, case-folded
+      match of (venue, locality) instead of parsing one place_query string.
+      'Oslo Norway' and 'comedy club Oslo Norway' become one place because
+      structure, not string luck, says so."
+    verify: "venv/bin/python -m pytest -q tests/test_dedup.py tests/test_extract_places.py tests/test_extract_historical.py tests/test_contrast.py"
+    touches: [pipeline/extract.py, pipeline/dedup.py, db/schema.sql,
+      db/migrations/016_structured_place_fields.sql, tests/test_dedup.py,
+      tests/test_extract_places.py, tests/test_extract_historical.py,
+      tests/test_contrast.py, tests/fakes.py]
     depends_on: [W4-01]
-    state: blocked
-    blocked_on: human
-    gate: NEEDS_DECISION
-    attempts: 1
-    commit: null
+    state: done
+    attempts: 2
+    commit: PENDING
     note: |
-      Tool shipped (pipeline/dedup.py, 10 tests), auto-merge withheld. The goal says
-      "collapse", and I will not claim that on a rule I measured as wrong a third of
-      the time - a bad merge destroys memories and is invisible afterwards.
-      Both premises in the goal failed against live data:
+      DECIDED 2026-09-23 (human): structured extraction fields, not a human review
+      pass over the 25 pending merges. Both premises of the original string
+      heuristic failed against live data (see prior note, kept below), and 4 of
+      the 7 merges it got wrong are the same shape - two real venues sharing a
+      street or neighbourhood, which no token weighting can separate because
+      both names are equally "distinctive" and equally close together.
+      Shipped: pipeline/extract.py's SYSTEM_PROMPT and HISTORICAL_SYSTEM_PROMPT
+      now ask for venue/locality/region instead of place_name/place_query (never
+      asked for again - both are derived server-side in save_memories, so the
+      model can no longer make a display string disagree with the identity
+      fields, which was the root of the original bug). db/migrations/016 adds
+      the three nullable columns plus a partial UNIQUE index on
+      lower(btrim(venue)), lower(btrim(locality)) WHERE both NOT NULL -
+      legacy rows keep NULL there and never collide with it. save_memories
+      branches its INSERT ... ON CONFLICT on whether both fields are present;
+      falls back to the original place_query-keyed path otherwise (place_query
+      itself is unchanged and NOT NULL/UNIQUE still - api/write.py's human
+      submissions mint their own place_query and must not be disturbed).
+      merge_nearby_memories (not in this task's original touches:, but silently
+      broken by the prompt change - it also keyed on place_query, so every
+      memory's key would have collapsed to "" and over-merged) is repointed at
+      the same (venue, locality) key.
+      pipeline/dedup.py is UNCHANGED by design: it already ran once against the
+      live corpus (18/25 proposals applied 2026-09-20), that data is not being
+      re-extracted (costs API credits, out of scope), and it remains the only
+      thing that can clean up places written before this migration. New rows
+      self-dedup at insert time and never reach it.
+      Full reasoning: TODO.md 1.2, docs/10-decisions.md's "Place dedup matches
+      on names, not coordinates" 2026-09-23 follow-up.
+      --- prior note (string-heuristic tool, retained for context) ---
+      Tool shipped (pipeline/dedup.py, 10 tests), auto-merge withheld. The goal
+      said "collapse", and that was not claimed on a rule measured wrong a third
+      of the time - a bad merge destroys memories and is invisible afterwards.
+      Both premises in the original goal failed against live data:
         1. The two Gotham Comedy Club rows are 1.8km apart while both claim 50m
            precision, so a coordinate-proximity rule never fires. The model disagrees
            with itself about where a venue is.
@@ -615,10 +648,6 @@ tasks:
            Andaz hotel on the same street shares. Not tunable; the premise is wrong.
       Measured on 194 places: naive subset 148 merges, +frequency 39, +city-level and
       chain guards 25, still ~1/3 wrong. --apply has NOT been run on the live DB.
-      DECISION NEEDED: have extraction emit structured place fields (venue, locality,
-      region) so dedup is an exact match instead of a string heuristic - a prompt and
-      schema change in W4-04 - or accept a human review pass over the 25 proposals.
-      See TODO.md 1.2.
 
   - id: W4-03
     goal: "A source-agnostic ingestion entry point beside ingest_content() that takes
