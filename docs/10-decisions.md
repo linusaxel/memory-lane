@@ -318,6 +318,12 @@ every chunk forever — that exact bug once reported 22 fictional classification
 because the handler was blanket fail-open. A 429, a 5xx or a connection error is
 transient, and over-processing one chunk is the cheaper mistake.
 
+But only after the job's retries are spent. Failing open on the first 429 turned
+a throttled Haiku into every chunk billed to Sonnet, which then throttles too:
+the two models have separate rate limits, and failing open joined them. So a
+transient error raises and RQ retries the classify job on its own queue, and
+only the last attempt fails open.
+
 ---
 
 ## Serving

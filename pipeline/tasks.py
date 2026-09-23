@@ -4,7 +4,7 @@ import json
 import logging
 
 import anthropic
-from rq import Retry
+from rq import Retry, get_current_job
 from sqlalchemy import text
 
 from pipeline.config import (
@@ -17,10 +17,12 @@ from pipeline.db import get_session
 from pipeline.extract import (
     PENDING_EXTRACTION,
     BillingError,
+    TransientAPIError,
     chunk_transcript,
     extract_chunk_stored,
     filter_low_confidence,
     is_billing_error,
+    is_transient,
     layer_for,
     merge_nearby_memories,
     prompt_for,
@@ -63,14 +65,21 @@ CLASSIFIER_SCHEMA = {
 
 
 FAIL_OPEN = "fail-open: "
+# Same schedule as the extract retry. A throttled Haiku backs off on its own
+# queue instead of failing open and sending every chunk to Sonnet.
+RETRY = Retry(max=3, interval=[30, 120, 600])
 
 
-def classify_chunk(client: anthropic.Anthropic, chunk: str) -> tuple[bool, str]:
+def classify_chunk(
+    client: anthropic.Anthropic, chunk: str, last_attempt: bool = True
+) -> tuple[bool, str]:
     """Use Haiku to quickly determine if chunk likely contains memories.
 
     Returns the verdict and the model's reason. A verdict the model did not
-    give - a cut-off reply, a transient error - is True with a reason starting
-    FAIL_OPEN, so nothing auditing the classifier mistakes it for a judgement.
+    give - a cut-off reply, a transient error on the last attempt - is True with
+    a reason starting FAIL_OPEN, so nothing auditing the classifier mistakes it
+    for a judgement. A transient error before the last attempt raises
+    TransientAPIError so the job is retried.
     """
     try:
         response = client.messages.create(
@@ -103,6 +112,8 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> tuple[bool, str]:
             raise BillingError(
                 "API credit balance too low. Please add credits at console.anthropic.com"
             ) from e
+        if is_transient(e) and not last_attempt:
+            raise TransientAPIError(str(e)) from e
         logger.warning(f"Classifier error, assuming has memories: {e}")
         return True, f"{FAIL_OPEN}{e}"
 
@@ -215,6 +226,7 @@ def task_enqueue_chunks(content_id: int):
             total_chunks=total_chunks,
             chunk_text=chunk,
             job_timeout="5m",
+            retry=RETRY,
         )
 
     return {"content_id": content_id, "chunks_enqueued": total_chunks}
@@ -228,7 +240,10 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
     logger.info(f"[content:{content_id}] Classifying chunk {chunk_index + 1}/{total_chunks}")
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    has_memories, reason = classify_chunk(client, chunk_text)
+    job = get_current_job()
+    has_memories, reason = classify_chunk(
+        client, chunk_text, last_attempt=not (job and job.retries_left)
+    )
     with get_session() as session:
         record_verdict(session, content_id, chunk_index, has_memories, reason, chunk_text)
 
@@ -247,7 +262,7 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
             job_timeout="5m",
             # extract_memories_from_chunk raises TransientAPIError rather than
             # report an empty chunk; without a retry the video never aggregates.
-            retry=Retry(max=3, interval=[30, 120, 600]),
+            retry=RETRY,
         )
     else:
         redis.hincrby(f"extraction:{content_id}", "extracted", 1)

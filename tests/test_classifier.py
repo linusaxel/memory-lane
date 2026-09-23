@@ -12,6 +12,7 @@ import anthropic
 import httpx
 import pytest
 
+from pipeline.extract import TransientAPIError
 from pipeline.tasks import classify_chunk
 
 
@@ -41,10 +42,13 @@ def test_an_unusable_model_is_not_swallowed(exc_cls):
         classify_chunk(_raising(_api_error(exc_cls)), "a chunk")
 
 
-def test_a_transient_error_still_fails_open():
-    """Over-extracting one chunk beats dropping it."""
+def test_a_transient_error_retries_then_fails_open():
+    """A throttled Haiku must not pass every chunk to Sonnet, but once the
+    retries are spent over-extracting one chunk still beats dropping it."""
     request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
     transient = anthropic.APIConnectionError(request=request)
+    with pytest.raises(TransientAPIError):
+        classify_chunk(_raising(transient), "a chunk", last_attempt=False)
     assert classify_chunk(_raising(transient), "a chunk")[0] is True
 
 

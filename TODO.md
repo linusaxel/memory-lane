@@ -1125,11 +1125,18 @@ daemon) have no analogue here and are left out.
       `TRANSCRIPT_PROXY` becomes a `GenericProxyConfig`;
       `TRANSCRIPT_DELAY_SECONDS` (1.5) is the mean of a uniform jitter between
       fetches. The old `ponytail:` note is gone with the problem it named.
-- [ ] **One rate-limit bucket per external service.** YouTube transcripts,
+- [x] **One rate-limit bucket per external service.** YouTube transcripts,
       yt-dlp, Anthropic extract and Anthropic classify each get their own
       limit: set the Anthropic client's `max_retries` explicitly and give each
       RQ queue its own worker concurrency, so a throttled classifier cannot
-      stall extraction.
+      stall extraction. **Done 2026-09-23:** the actual coupling was the
+      classifier failing open on a 429, which billed every chunk to Sonnet. It
+      now raises, and the classify job retries on its own queue (same schedule
+      as extract); only the last attempt fails open. Per-queue concurrency
+      already worked (`python -m pipeline.worker classify`), now documented.
+      `max_retries` left at the SDK default of 2: RQ's retries sit on top.
+      Transcripts already have their own delay (the IP-block item); yt-dlp
+      is one listing per channel.
 - [ ] **Incremental channel re-crawl, tiered.** Re-list a channel and stop at
       the first `platform_id` already in `content`; check recently active
       channels often ("warm") and dormant ones rarely ("cold"). Today ingest

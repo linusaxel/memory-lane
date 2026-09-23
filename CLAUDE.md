@@ -244,6 +244,10 @@ Run multiple workers for parallel processing:
 # Terminal 1-N: Start workers
 python -m pipeline.worker
 
+# Or size each queue on its own: Haiku and Sonnet have separate rate limits
+python -m pipeline.worker classify   # x2
+python -m pipeline.worker extract aggregate   # x4
+
 # Check status
 python -m pipeline.enqueue --status <content_id>
 ```
