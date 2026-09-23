@@ -6,6 +6,7 @@ import {
   MIN_RADIUS_KM,
   isSameQuery,
   metersBetween,
+  pathMeters,
   regionToRadiusKm,
 } from './region.ts';
 
@@ -86,4 +87,13 @@ test('zooming without moving asks a new question', () => {
 test('nothing fetched yet is never the same question', () => {
   const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
   assert.equal(isSameQuery(null, here), false);
+});
+
+test('a path is the sum of its legs, and a single point walks nowhere', () => {
+  const a = { lat: 40.746, lng: -73.9857 };
+  const b = { lat: 40.747, lng: -73.9857 };
+  const c = { lat: 40.748, lng: -73.9857 };
+  const leg = metersBetween(a.lat, a.lng, b.lat, b.lng);
+  assert.ok(Math.abs(pathMeters([a, b, c]) - 2 * leg) < 0.5);
+  assert.equal(pathMeters([a]), 0);
 });

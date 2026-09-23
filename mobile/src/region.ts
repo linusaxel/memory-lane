@@ -47,6 +47,16 @@ export function metersBetween(aLat: number, aLng: number, bLat: number, bLng: nu
   return 2 * 6371000 * Math.asin(Math.sqrt(h));
 }
 
+/** Straight-line metres along a path, leg by leg. What is left of today's
+ *  route; not a walking distance, there is no street routing behind it. */
+export function pathMeters(points: { lat: number; lng: number }[]): number {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    total += metersBetween(points[i - 1].lat, points[i - 1].lng, points[i].lat, points[i].lng);
+  }
+  return total;
+}
+
 /** Would these two viewports ask the API the same question?
  *
  * `animateToRegion` fires `onRegionChangeComplete` when it lands, and a

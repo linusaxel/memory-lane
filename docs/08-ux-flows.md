@@ -799,16 +799,23 @@ calendar day.
    not-yet-earned memories, mixing historical and stranger layers, and stores
    the choice — a relaunch the same day sees exactly the same walk, not a
    fresh roll.
-2. A pill appears above "Near me": "Today's route · 0 of 5 unlocked." Tapping
-   it fits the map to the route's stops.
+2. A pill appears above "Near me": "Today's route · 0 of 5 · 2.4 km" — the
+   straight-line distance still to walk, from where you stand through every
+   stop not yet earned, in order. Straight-line and said plainly as a
+   distance, never as minutes: there is no street routing to back a time.
+   Tapping it once starts the route and flies to the next stop; after that the
+   pill reads "Next: <place> · 350 m".
 3. Each stop draws its ordinary pin — locked, warm or unlockable, exactly as
    F7 already renders it — with its position in today's route (1–5) in the
-   badge slot instead of a count or a tag. A faint dashed line connects the
-   stops in a walkable order, drawn once from wherever the device stood at
-   the day's first ask.
+   badge slot instead of a count or a tag. A faint dashed line runs from you
+   to the next stop and on through the rest, in the order picked from
+   wherever the device stood at the day's first ask.
 4. Walking into range and unlocking a stop is F7, unchanged. The badge and
-   its share of the line drop away the moment it is earned, and the pill's
-   count moves.
+   its share of the line drop away the moment it is earned, the numbers on
+   the rest do not shift, and the pill's count and distance move.
+5. The last stop earned, the pill reads "Route walked · 5 of 5" and a tap fits
+   the map to the whole walk. No confetti — the success haptic on that final
+   unlock is the whole celebration.
 
 **Not a new mechanic — the same one, five times.** A route stop is nothing
 but an ordinary gated memory with one extra fact attached to it, its position
@@ -832,9 +839,14 @@ than five walkable memories nearby means a route of two or three, and the
 pill says so — "0 of 2" rather than pretending a fifth stop exists.
 
 **What can go wrong:** fewer than five candidates nearby — the pill reports
-the true count, same honesty as an empty map (open question 2). No device id
-or no position yet — no pill, the same wait every other position-dependent
-control on this screen already does.
+the true count, same honesty as an empty map (open question 2). None at all
+— the map has memories but nothing walkable is left (all earned, or all on
+ambiguous centroids): the slot reads "No walk nearby today", not tappable.
+An empty route is **not stored**, so opening the app somewhere stocked later
+the same day still gets one; a map with no memories at all keeps its own
+empty state and shows no route line. No device id or no position yet — no
+pill, the same wait every other position-dependent control on this screen
+already does.
 
 **Done when:** a fresh device gets a stable route of up to five stops the
 first time it asks with a position, sees the identical stops on a relaunch

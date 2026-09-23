@@ -169,6 +169,19 @@ def test_a_sparse_area_returns_fewer_than_five_without_erroring(client, db_sessi
     assert len(route["memories"]) == 2
 
 
+def test_an_empty_route_is_not_stored_for_the_day(client, db_session):
+    """Opening the app somewhere empty must not cost the rest of the day's walk."""
+    _offset(db_session, 1)
+    db_session.commit()
+
+    empty = _route(client, lat=LAT + 1, lng=LNG).json()
+    assert empty["meta"]["size"] == 0
+    assert empty["memories"] == []
+
+    stocked = _route(client, lat=LAT, lng=LNG).json()
+    assert stocked["meta"]["size"] == 1
+
+
 def test_an_ambiguous_centroid_is_never_a_route_stop(client, db_session):
     """Two places on one point is the model saying 'somewhere in this city' -
     a route sending someone there would open on arrival, which is not a stop,

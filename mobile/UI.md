@@ -16,7 +16,9 @@ MapView (full bleed)
 ├─ "N within reach"           seal ochre, breathing, tap -> the nearest unlockable
 │    or "Nearest locked · 412 m"   muted and still, when none is in reach
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
-├─ "Today's route · N of 5"   bottom centre, above Near me, only once one exists
+├─ "Today's route · N of 5 · 2.4 km"   bottom centre, above Near me, once fetched;
+│    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
+│    "No walk nearby today" (not tappable) when there is nothing to walk to
 ├─ "Near me"                  bottom centre, recentres on GPS
 └─ LocationPrimer             bottom card, only until permission is settled
 

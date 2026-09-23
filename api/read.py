@@ -435,6 +435,13 @@ def get_todays_route(
                 _mix_layers(_one_per_place(candidates), ROUTE_SIZE), Coordinates(lat=lat, lng=lng)
             )
             memory_ids = [r.id for r in picked]
+            # An empty route is not stored: stored, it would pin the whole day
+            # to "nothing here" even after the device reaches somewhere stocked.
+            if not memory_ids:
+                return RouteResponse(
+                    memories=[],
+                    meta=RouteMeta(route_date=route_date, size=0, radius_meters=search_radius),
+                )
 
             touch_device(session, device)
             session.execute(

@@ -47,7 +47,7 @@ import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
-import type { Region } from './src/region.ts';
+import { metersBetween, pathMeters, type Region } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { loadRoute, saveRoute } from './src/route.ts';
 import {
@@ -66,6 +66,7 @@ import Elsewhere from './src/Elsewhere.tsx';
 import Memories from './src/Memories.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
+import { distance } from './src/format.ts';
 import { buttonText, color, dim, font, label } from './src/theme.ts';
 import LocationPrimer from './src/LocationPrimer.tsx';
 import TabBar, { type Tab } from './src/TabBar.tsx';
@@ -151,9 +152,10 @@ export default function App() {
   // Today's guided walk: nearby, not-yet-earned, computed once server-side.
   // routeSize is the route's true size (can be short in a sparse area); it is
   // not `route.length`, because a stop the local cache lost or the server
-  // pruned still counted toward "today" when the route was made.
+  // pruned still counted toward "today" when the route was made. Null until
+  // the server has answered: a fetched 0 is "no walk nearby today".
   const [route, setRoute] = useState<LocatedMemory[]>([]);
-  const [routeSize, setRouteSize] = useState(0);
+  const [routeSize, setRouteSize] = useState<number | null>(null);
   // Nothing server-side hangs off this - the route already exists the moment
   // it is fetched. It only switches the pill from "here is today's route" to
   // "here is where to go next".
@@ -406,12 +408,15 @@ export default function App() {
     if (!next) stopWatching().catch(() => {});
   }, []);
   // 1-based position in today's route, by memory id - a group's badge looks
-  // itself up here rather than the route ever knowing about groups.
+  // itself up here rather than the route ever knowing about groups. Earned
+  // stops drop out, and the rest keep their numbers.
   const routePositionById = useMemo(() => {
     const map = new Map<number, number>();
-    routeShown.forEach((memory, i) => map.set(memory.id, i + 1));
+    routeShown.forEach((memory, i) => {
+      if (!earned.has(memory.id)) map.set(memory.id, i + 1);
+    });
     return map;
-  }, [routeShown]);
+  }, [routeShown, earned]);
   const routeUnlockedCount = useMemo(
     () => routeShown.filter((memory) => earned.has(memory.id)).length,
     [routeShown, earned],
@@ -422,6 +427,33 @@ export default function App() {
     () => routeShown.find((memory) => !earned.has(memory.id)),
     [routeShown, earned],
   );
+  // What is left to walk: from the person, through every unearned stop in
+  // order. The line and the pill's distance are both this one path.
+  const routePath = useMemo(() => {
+    const stops = routeShown
+      .filter((memory) => !earned.has(memory.id))
+      .map((memory) => memory.place.coordinates);
+    return position && stops.length > 0 ? [position, ...stops] : stops;
+  }, [routeShown, earned, position]);
+  const routeDone = route.length > 0 && !nextRouteStop;
+  const routeTotal = routeSize ?? route.length;
+  const toNextStop =
+    position && nextRouteStop
+      ? metersBetween(
+          position.lat,
+          position.lng,
+          nextRouteStop.place.coordinates.lat,
+          nextRouteStop.place.coordinates.lng,
+        )
+      : null;
+  const routeLeft = position ? pathMeters(routePath) : null;
+  const routeLabel = routeDone
+    ? `Route walked · ${routeUnlockedCount} of ${routeTotal}`
+    : routeStarted && nextRouteStop
+      ? `Next: ${nextRouteStop.place.name}` +
+        (toNextStop === null ? '' : ` · ${distance(toNextStop)}`)
+      : `Today's route · ${routeUnlockedCount} of ${routeTotal}` +
+        (routeLeft === null ? '' : ` · ${distance(routeLeft)}`);
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
@@ -745,12 +777,9 @@ export default function App() {
             )}
 
             {/* A suggestion, not an unlock state - never the seal colour. */}
-            {routeShown.length > 1 && (
+            {routePath.length > 1 && (
               <Polyline
-                coordinates={routeShown.map((memory) => ({
-                  latitude: memory.place.coordinates.lat,
-                  longitude: memory.place.coordinates.lng,
-                }))}
+                coordinates={routePath.map((at) => ({ latitude: at.lat, longitude: at.lng }))}
                 strokeWidth={2}
                 strokeColor={scheme === 'dark' ? 'rgba(189,181,168,0.55)' : 'rgba(74,68,61,0.4)'}
                 lineDashPattern={[6, 6]}
@@ -774,7 +803,7 @@ export default function App() {
                   group={group}
                   reach={reachOf(group, position, earned)}
                   routePosition={routePosition}
-                  routeSize={routeSize}
+                  routeSize={routeTotal}
                   onPress={() =>
                     group.spanMeters > CLUSTER_SPAN_M ? zoomTo(group) : openGroup(group)
                   }
@@ -866,12 +895,18 @@ export default function App() {
               style={dim(styles.route)}
               accessibilityRole="button"
               accessibilityLabel={
-                routeStarted && nextRouteStop
-                  ? `Next stop: ${nextRouteStop.place.name}.`
-                  : `Today's route · ${routeUnlockedCount} of ${routeSize} unlocked.`
+                routeDone
+                  ? `Route walked · ${routeUnlockedCount} of ${routeTotal} unlocked.`
+                  : routeStarted && nextRouteStop
+                    ? `Next stop: ${nextRouteStop.place.name}.`
+                    : `Today's route · ${routeUnlockedCount} of ${routeTotal} unlocked.`
               }
               accessibilityHint={
-                routeStarted ? 'Centers the map on the next stop' : "Starts today's route"
+                routeDone
+                  ? 'Shows the whole route'
+                  : routeStarted
+                    ? 'Centers the map on the next stop'
+                    : "Starts today's route"
               }
               onPress={() => {
                 setRouteStarted(true);
@@ -893,12 +928,13 @@ export default function App() {
                 }
               }}
             >
-              <Text style={styles.routeText}>
-                {routeStarted && nextRouteStop
-                  ? `Next: ${nextRouteStop.place.name}`
-                  : `Today's route · ${routeUnlockedCount} of ${routeSize} unlocked`}
-              </Text>
+              <Text style={styles.routeText}>{routeLabel}</Text>
             </Pressable>
+          )}
+          {!showPrimer && !nothingHere && routeSize === 0 && (
+            <View style={styles.route} pointerEvents="none">
+              <Text style={styles.routeText}>No walk nearby today</Text>
+            </View>
           )}
 
           {showPrimer && !nothingHere ? (
