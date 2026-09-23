@@ -11,6 +11,7 @@ still never records an unlock - that stays write.py's alone.
 
 import itertools
 import os
+import random
 import time
 
 from fastapi import APIRouter, HTTPException, Query
@@ -329,25 +330,64 @@ def _one_per_place(candidates: list) -> list:
     return out
 
 
-def _mix_layers(candidates: list, size: int) -> list:
-    """Alternate stranger/other, both already distance-ascending from
-    ROUTE_CANDIDATES_QUERY, so a route reads as more than one kind of stop.
-    Falls through to whichever list still has items once the other runs dry,
-    rather than coming up short when only one layer is well-stocked nearby."""
-    stranger = [r for r in candidates if r.layer == "stranger"]
-    other = [r for r in candidates if r.layer != "stranger"]
-    picked, i, j, turn = [], 0, 0, 0
-    while len(picked) < size and (i < len(stranger) or j < len(other)):
-        lst = stranger if turn == 0 else other
-        idx = i if turn == 0 else j
-        if idx < len(lst):
-            picked.append(lst[idx])
-            if turn == 0:
-                i += 1
-            else:
-                j += 1
-        turn = 1 - turn
-    return picked
+# Rounds of drop-and-reinsert after the first greedy walk. Twenty candidates,
+# so this is a few milliseconds.
+ROUTE_SHAKES = 50
+
+
+def _choose_stops(candidates: list, size: int, anchor: Coordinates, seed: str) -> list:
+    """The `size` stops that make the shortest walk from the anchor, not the
+    `size` nearest: a stop 300m behind you no longer beats a tight cluster 500m
+    ahead. Cheapest insertion builds a walk, then ROUTE_SHAKES rounds drop one
+    or two stops at random and reinsert the cheapest, keeping whichever walk is
+    shorter (iterated local search). Seeded, so one device on one day always
+    gets the same answer.
+
+    Each of stranger/other is guaranteed min(available, size // 2) stops, which
+    is what the strict alternation before this gave, and still never comes up
+    short when one layer runs dry.
+    ponytail: every stop is worth the same, so this only minimises metres
+    (TODO.md, "Give stops a prize")."""
+    points = [anchor] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates]
+    d = [[meters_between(a, b) for b in points] for a in points]
+    nodes = range(1, len(points))
+    size = min(size, len(candidates))
+    stranger = {i: candidates[i - 1].layer == "stranger" for i in nodes}
+    quota = {k: min(sum(v == k for v in stranger.values()), size // 2) for k in (True, False)}
+
+    def fits(walk, c):
+        after = [stranger[i] for i in walk] + [stranger[c]]
+        missing = sum(max(0, q - after.count(k)) for k, q in quota.items())
+        return missing <= size - len(after)
+
+    def cost(walk, c, at):
+        prev = walk[at - 1] if at else 0
+        if at == len(walk):
+            return d[prev][c]
+        return d[prev][c] + d[c][walk[at]] - d[prev][walk[at]]
+
+    def fill(walk):
+        while len(walk) < size:
+            _, c, at = min(
+                (cost(walk, c, at), c, at)
+                for c in nodes
+                if c not in walk and fits(walk, c)
+                for at in range(len(walk) + 1)
+            )
+            walk.insert(at, c)
+        return walk
+
+    def length(walk):
+        return sum(d[a][b] for a, b in itertools.pairwise([0, *walk]))
+
+    rng = random.Random(seed)
+    best = fill([])
+    for _ in range(ROUTE_SHAKES if size else 0):
+        drop = set(rng.sample(best, rng.randint(1, min(2, size))))
+        trial = fill([i for i in best if i not in drop])
+        if length(trial) < length(best):
+            best = trial
+    return [candidates[i - 1] for i in best]
 
 
 # 8! is 40,320 orderings - still cheaper than the SQL round trip before it.
@@ -449,8 +489,12 @@ def get_todays_route(
                 },
             ).fetchall()
 
+            anchor = Coordinates(lat=lat, lng=lng)
             picked = _walking_order(
-                _mix_layers(_one_per_place(candidates), ROUTE_SIZE), Coordinates(lat=lat, lng=lng)
+                _choose_stops(
+                    _one_per_place(candidates), ROUTE_SIZE, anchor, f"{device}:{route_date}"
+                ),
+                anchor,
             )
             memory_ids = [r.id for r in picked]
             # An empty route is not stored: stored, it would pin the whole day

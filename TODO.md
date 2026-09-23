@@ -1190,7 +1190,11 @@ flagged ⚠️ inline, not overridden.
       `min(itertools.permutations(...))` over path length from the anchor.
       [Held–Karp](https://en.wikipedia.org/wiki/Held%E2%80%93Karp_algorithm) ·
       [Johnson & McGeoch, TSP local search](https://www.cs.ubc.ca/~hutter/previous-earg/EmpAlgReadingGroup/TSP-JohMcg97.pdf)
-- [ ] **Choose stops for the walk, not for being nearby.** Today a stop 300 m
+- [x] **Choose stops for the walk, not for being nearby.** Done 2026-09-23:
+      `_choose_stops` is cheapest insertion plus 50 seeded drop-and-reinsert
+      rounds, ~2 ms on 20 candidates. It replaces `_mix_layers`; each layer is
+      guaranteed min(available, size // 2) stops. Prizes are still uniform, so
+      it only minimises metres (`tests/test_route_order.py`). Today a stop 300 m
       *behind* you beats a tight cluster 500 m ahead. Choosing and ordering are
       one problem. The practical, well-proven heuristic is **ILS**: insert the
       stop with the best prize per metre until the budget is full, then shake
