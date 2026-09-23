@@ -1349,7 +1349,20 @@ flagged ⚠️ inline, not overridden.
 
 #### Mock data and measuring
 
-- [ ] **A dense, randomised map, so the route is tested and not staged.**
+- [x] **A dense, randomised map, so the route is tested and not staged.**
+      Done 2026-09-24: `seed_dev --dense N --seed S` samples
+      `pipeline/midtown_ways.json` (3,319 points OSRM-snapped once by
+      `--snap-pool`, one per grid cell); `pipeline/route_bench.py` measures.
+      Look-around still previews the hand-placed seed: every e2e flow shares
+      one database, so the dense map needs its own area or DB first.
+      **Measured** (300 memories, seed 1, 150 runs): every walk found 5 stops,
+      but **76% have a spur** (retraced p50 32 m, p95 129 m), the walk uses a
+      median **28% of the budget** (15% at 6 km: the ranking prefers the
+      shortest walk once 5 stops fit, so a long slider still gets a tiny
+      loop), and a plan takes **~1 s** p50 (7 `/route` calls per cleanup
+      round). So `ROUTE_CLEANUPS` does not reach the bar, and the next step
+      is the choice itself: prefer loops (penalise retraced street in the
+      score) and aim the walk at the budget, not under it.
       Raised 2026-09-24. The dev seed is five stops placed by hand as one clean
       loop (`pipeline/seed_dev.py`), which proves the flow and the street
       walking but games the algorithm: with five candidates there is nothing

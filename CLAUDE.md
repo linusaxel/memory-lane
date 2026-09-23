@@ -57,6 +57,7 @@ python -m pipeline.worker              # Start worker (run multiple in separate 
 
 # Seed memories you can actually reach (the real corpus has none nearby)
 python -m pipeline.seed_dev          # --clear removes them
+python -m pipeline.seed_dev --dense 300 --seed 1   # plus a full map for the route to choose from
 
 # Start API server
 python -m api.main
@@ -83,6 +84,7 @@ python -m api.main
 | `pipeline/tags.py` | The one tag vocabulary. Both write paths filter against it |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/perf.py` | **Time the read path on a corpus this size isn't.** Run before and after touching `api/queries.py` |
+| `pipeline/route_bench.py` | **How the route does on a full map.** Spurs, stops, walk vs budget, ms, over `seed_dev --dense`. Needs `ROUTING_URL` |
 | `pipeline/sweep.py` | Reap uploads no submission ever claimed. Describes unless `--apply` |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |

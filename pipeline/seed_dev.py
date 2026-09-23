@@ -2,6 +2,7 @@
 
     python -m pipeline.seed_dev            # plant them
     python -m pipeline.seed_dev --clear    # take them away
+    python -m pipeline.seed_dev --dense 300 --seed 1   # plus a full map to route over
 
 The corpus cannot demonstrate its own mechanic. Every dense point in it is a
 model-guessed centroid and therefore deliberately ungated (F7), and the memories
@@ -22,7 +23,9 @@ those and nothing else.
 
 import argparse
 import datetime
+import json
 import pathlib
+import random
 import struct
 import subprocess
 import tempfile
@@ -36,6 +39,7 @@ from api.models import Coordinates
 from api.queries import PLACE_INSERT, SUBMISSION_INSERT
 from pipeline.db import get_session
 from pipeline.extract import save_memories
+from pipeline.tags import TAGS
 
 # mobile/App.tsx FALLBACK_REGION. tests/test_seed_dev.py fails if they drift:
 # the whole point is that the app's no-permission map, the documented simctl
@@ -412,6 +416,99 @@ def a_second_submission(session) -> int:
     ).scalar()
 
 
+# Walkable points over Midtown, each already snapped to a way by OSRM `nearest`
+# and each in its own 0.0001-degree cell, so --dense stays offline. Written by
+# --snap-pool against a running sidecar; re-run it only to change the area.
+POOL = pathlib.Path(__file__).with_name("midtown_ways.json")
+POOL_BOX = (0.007, 0.009)  # half-height, half-width in degrees: ~1.5km square
+
+
+def cell(lat: float, lng: float) -> tuple[int, int]:
+    """The snapped grid cell COORDINATE_IS_UNIQUE compares on."""
+    return round(lat / 0.0001), round(lng / 0.0001)
+
+
+def snap_pool(tries: int = 4000) -> list[list[float]]:
+    from api.streets import _osrm
+
+    rng = random.Random(0)
+    taken = {cell(*at(k)) for k in OFFSETS}
+    pool = []
+    for _ in range(tries):
+        here = Coordinates(
+            lat=LAT + rng.uniform(-POOL_BOX[0], POOL_BOX[0]),
+            lng=LNG + rng.uniform(-POOL_BOX[1], POOL_BOX[1]),
+        )
+        lng, lat = _osrm("nearest", [here], "number=1")["waypoints"][0]["location"]
+        lat, lng = round(lat, 6), round(lng, 6)
+        if cell(lat, lng) not in taken:
+            taken.add(cell(lat, lng))
+            pool.append([lat, lng])
+    return pool
+
+
+def dense(session, n: int, seed: int) -> int:
+    """`n` memories from POOL, chosen and dressed by `random.Random(seed)`: a
+    map full enough that a route has to choose its five. A third are
+    submissions, the rest extracted; tags and contrast_score at random."""
+    rng = random.Random(seed)
+    points = rng.sample(json.loads(POOL.read_text()), n)
+    content_id = session.execute(
+        text("SELECT id FROM content WHERE url = :u"), {"u": DEV_SEED_URL}
+    ).scalar()
+    for i, (lat, lng) in enumerate(points):
+        name = f"Dense {i}, dev seed"
+        summary = f"Seeded memory {i} of {n}, placed at random on a walkable street."
+        tags = rng.sample(TAGS, rng.randint(1, 2))
+        if rng.random() < 1 / 3:
+            place_id = session.execute(
+                text(PLACE_INSERT),
+                {
+                    "name": name,
+                    "place_query": f"{PLACE_PREFIX}dense-{i}",
+                    "lat": lat,
+                    "lng": lng,
+                    "precision_meters": 25,
+                },
+            ).scalar()
+            session.execute(
+                text(SUBMISSION_INSERT),
+                {
+                    "place_id": place_id,
+                    "summary": summary,
+                    "tags": tags,
+                    "happened_at": None,
+                    "happened_precision": None,
+                    "opens_at": None,
+                    "user_id": SEED_USER,
+                },
+            )
+        else:
+            save_memories(
+                session,
+                content_id,
+                [
+                    memory(
+                        "reach",
+                        name,
+                        summary,
+                        tags,
+                        lat=lat,
+                        lng=lng,
+                        place_query=f"{PLACE_PREFIX}dense-{i}",
+                    )
+                ],
+            )
+        session.execute(
+            text("""
+                UPDATE memories SET contrast_score = :c WHERE place_id =
+                    (SELECT id FROM places WHERE place_query = :q)
+            """),
+            {"c": round(rng.random(), 2), "q": f"{PLACE_PREFIX}dense-{i}"},
+        )
+    return n
+
+
 def clear(session) -> int:
     """Remove exactly what seed() wrote.
 
@@ -461,13 +558,26 @@ def seed(session) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--clear", action="store_true", help="remove the seed and stop")
+    parser.add_argument("--dense", type=int, metavar="N", help="also plant N random memories")
+    parser.add_argument("--seed", type=int, default=1, help="which random N (with --dense)")
+    parser.add_argument(
+        "--snap-pool", action="store_true", help=f"rewrite {POOL.name} (needs ROUTING_URL)"
+    )
     args = parser.parse_args()
+
+    if args.snap_pool:
+        pool = snap_pool()
+        POOL.write_text(json.dumps(pool, separators=(",", ":")) + "\n")
+        print(f"wrote {len(pool)} walkable points to {POOL}")
+        return
 
     with get_session() as session:
         if args.clear:
             print(f"removed {clear(session)} seeded places and everything hanging off them")
             return
         made = seed(session)
+        if args.dense:
+            print(f"planted {dense(session, args.dense, args.seed)} dense memories")
 
     print(f"seeded at {LAT},{LNG} — {', '.join(made['media'])}")
     here = Coordinates(lat=LAT, lng=LNG)

@@ -225,3 +225,26 @@ def test_every_offset_is_documented():
     for key in seed_dev.OFFSETS:
         lat, lng = at(key)
         assert lat != LAT or lng != LNG, f"{key} is on top of the origin"
+
+
+def test_the_dense_map_is_random_repeatable_and_each_pin_gated(seeded):
+    """--dense N --seed S: N places, the same ones for the same S, no two in one
+    snapped cell (that would ungate both), and --clear takes them all."""
+
+    def dense_places():
+        return sorted(
+            (r.lat, r.lng, r.in_cell) for q, r in by_query(seeded).items() if q.startswith("dense-")
+        )
+
+    seed_dev.dense(seeded, 40, 7)
+    first = dense_places()
+    assert len(first) == 40
+    assert all(in_cell == 1 for _, _, in_cell in first)
+
+    clear(seeded)
+    seed(seeded)
+    seed_dev.dense(seeded, 40, 7)
+    assert dense_places() == first
+
+    clear(seeded)
+    assert not rows(seeded)
