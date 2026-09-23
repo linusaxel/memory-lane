@@ -11,13 +11,14 @@ One screen, four modals.
 
 ```
 MapView (full bleed)
-├─ Marker per coordinate      tap -> MemorySheet.  Five states, see Markers
+├─ Marker per coordinate      tap -> MemorySheet.  One pin, see Markers
 ├─ banner  "N memories here"  top centre, non-interactive
 ├─ "N within reach"           seal ochre, breathing, tap -> the nearest unlockable
-│    or "Nearest locked · 412 m"   muted and still, when none is in reach
+│    or "Nearest locked · 412 m"   muted and still. Only on a day with no route
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
 ├─ "Today's route · N of 5 · 2.4 km"   bottom centre, above Near me, once fetched;
 │    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
+│    "You're at stop N · open it" seal and breathing while standing at any stop,
 │    "No walk nearby today" (not tappable) when there is nothing to walk to
 ├─ "Near me"                  bottom centre, recentres on GPS
 └─ LocationPrimer             bottom card, only until permission is settled
@@ -581,7 +582,8 @@ paging through venues miles apart is not "1 of 23 here", it is a lie.
 
 Every coordinate draws the same pin: a 24px `ink` disc, 2px `paper` edge, an
 8px `paper` eye in the middle. It changes for one reason only — **it can be
-opened from where you stand** — and then it grows to 32px in `seal`, eye 12px,
+opened from where you stand**, and on a route day only if it is one of the
+route's stops (F25) — and then it grows to 32px in `seal`, eye 12px,
 over a `halo` wash. That is the whole visual language. Simplified 2026-09-23
 from five ink states, a round-or-folded-card shape per layer and a ranked
 corner slot of padlock and tag glyph: it was a legend nobody should need.

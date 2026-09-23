@@ -33,8 +33,9 @@ function label(count: number | null, meters: number | null): string {
   return `Nearest locked memory \u00b7 ${away}`;
 }
 
-export default function ReachBanner({ count, meters, onPress }: Props) {
-  const reachable = count != null;
+/** The breath, as a transform. Shared with the route pill, which is where the
+ *  same moment lands when there is a route to be on. */
+export function useBreath(active: boolean) {
   const breath = useRef(new Animated.Value(0)).current;
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -48,7 +49,7 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
     // Stopping a loop leaves the value wherever the last frame put it, so a
     // banner that stops being reachable - or has Reduce Motion turned on -
     // mid-breath would stay 2% too big for the rest of the session.
-    if (!reachable || reduceMotion) {
+    if (!active || reduceMotion) {
       breath.setValue(0);
       return;
     }
@@ -70,15 +71,17 @@ export default function ReachBanner({ count, meters, onPress }: Props) {
     );
     loop.start();
     return () => loop.stop();
-  }, [breath, reachable, reduceMotion]);
+  }, [breath, active, reduceMotion]);
+
+  return { transform: [{ scale: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] };
+}
+
+export default function ReachBanner({ count, meters, onPress }: Props) {
+  const reachable = count != null;
+  const breath = useBreath(reachable);
 
   return (
-    <Animated.View
-      style={[
-        styles.wrap,
-        { transform: [{ scale: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] },
-      ]}
-    >
+    <Animated.View style={[styles.wrap, breath]}>
       {/* Both are solid paper. Glass went in and came straight back out: it is
           on every list of tells for a generated interface, and over a street
           map it either cannot be read or is not glass. */}

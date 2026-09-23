@@ -76,9 +76,9 @@ appId: ${APP_ID}
     speed: 10
 
 - extendedWaitUntil:
-    visible: ".*within reach.*"
+    visible: "You're at stop \\d: .*Open to unlock\\."
     timeout: 45000
-# The pin itself turned, not just the banner.
+# The pin itself turned, not just the pill.
 - extendedWaitUntil:
     visible: "Stop 2 of 5. The bench outside, dev seed. Locked, within reach."
     timeout: 40000

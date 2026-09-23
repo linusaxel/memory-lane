@@ -69,9 +69,10 @@ appId: ${APP_ID}
     timeout: 40000
 
 # Close enough that other things here are openable - so the refusal below is
-# about the date and not about where we are standing.
+# about the date and not about where we are standing. Asserted on a pin's
+# title: on a route day the reach banner gives way to the route pill.
 - extendedWaitUntil:
-    visible: ".*within reach.*"
+    visible: ".*Locked, within reach\\."
     timeout: 30000
 
 # And the seal is not one of them. Standing on it, it still wears the

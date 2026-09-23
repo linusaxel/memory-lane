@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Linking,
   Platform,
   Pressable,
@@ -75,7 +76,7 @@ import type { Permission, Status } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
-import ReachBanner from './src/ReachBanner.tsx';
+import ReachBanner, { useBreath } from './src/ReachBanner.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
 // Held until StartupLogo's draw-on finishes, so the native splash and the JS
@@ -512,11 +513,30 @@ export default function App() {
     [groups, position, earned],
   );
 
+  // The route stop you are standing at, lowest number first. The order is a
+  // suggestion: take another way round and whichever stop you reach is the one
+  // to open.
+  const stopHere = useMemo(() => {
+    let best: { group: MemoryGroup; position: number; name: string } | null = null;
+    for (const group of withinReach) {
+      for (const memory of group.memories) {
+        const at = routePositionById.get(memory.id);
+        if (at && (!best || at < best.position)) {
+          best = { group, position: at, name: memory.place.name };
+        }
+      }
+    }
+    return best;
+  }, [withinReach, routePositionById]);
+  const onRoute = route.length > 0;
+  const pillBreath = useBreath(stopHere !== null);
+
   // Walking into range is the moment the app is for, and until now it happened
   // in silence. The transition, not the state: withinReach gets a new array
   // identity on every 25m position update, and its length changes on 1 -> 2.
-  // Light, because the heavier taps belong to the unlock itself.
-  const inReach = withinReach.length > 0;
+  // Light, because the heavier taps belong to the unlock itself. On a route
+  // day the moment is reaching a stop, not any memory.
+  const inReach = onRoute ? stopHere !== null : withinReach.length > 0;
   const wasInReach = useRef(false);
   useEffect(() => {
     if (inReach && !wasInReach.current) {
@@ -797,11 +817,13 @@ export default function App() {
                   break;
                 }
               }
+              const reach = reachOf(group, position, earned);
               return (
                 <MemoryMarker
                   key={group.key}
                   group={group}
-                  reach={reachOf(group, position, earned)}
+                  reach={reach}
+                  lit={reach === 'unlockable' && (routePosition !== null || !onRoute)}
                   routePosition={routePosition}
                   routeSize={routeTotal}
                   onPress={() =>
@@ -850,14 +872,15 @@ export default function App() {
             </Pressable>
           )}
 
-          {!showPrimer && withinReach.length > 0 && (
+          {/* Only on a day with no route. With one, the route pill says it. */}
+          {!showPrimer && !onRoute && withinReach.length > 0 && (
             <ReachBanner
               count={withinReach.length}
               meters={null}
               onPress={() => openGroup(withinReach[0])}
             />
           )}
-          {!showPrimer && withinReach.length === 0 && nearest && (
+          {!showPrimer && !onRoute && withinReach.length === 0 && nearest && (
             <ReachBanner
               count={null}
               meters={nearest.meters}
@@ -890,7 +913,24 @@ export default function App() {
 
           {/* Above "Near me", in the same bottom slot every other floating
               control here shares - never a second region of the screen. */}
-          {!showPrimer && !nothingHere && route.length > 0 && (
+          {!showPrimer && !nothingHere && onRoute && stopHere && (
+            <Animated.View style={[styles.routeAt, pillBreath]}>
+              <Pressable
+                style={dim()}
+                accessibilityRole="button"
+                accessibilityLabel={`You're at stop ${stopHere.position}: ${stopHere.name}. Open to unlock.`}
+                onPress={() => {
+                  setRouteStarted(true);
+                  openGroup(stopHere.group);
+                }}
+              >
+                <Text style={styles.routeAtText}>
+                  {`You're at stop ${stopHere.position} · open it`}
+                </Text>
+              </Pressable>
+            </Animated.View>
+          )}
+          {!showPrimer && !nothingHere && onRoute && !stopHere && (
             <Pressable
               style={dim(styles.route)}
               accessibilityRole="button"
@@ -1165,5 +1205,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.3,
     color: color.inkSoft,
+  },
+  // The route pill's one loud moment: the reach banner's seal, in its slot.
+  routeAt: { position: 'absolute', bottom: 100, alignSelf: 'center' },
+  routeAtText: {
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 4,
+    overflow: 'hidden',
+    fontFamily: font.monoBold,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    backgroundColor: color.seal,
+    color: color.paper,
   },
 });

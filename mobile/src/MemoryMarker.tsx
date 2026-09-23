@@ -26,6 +26,9 @@ type Props = {
    *  to a `plain` group. */
   routePosition?: number | null;
   routeSize?: number;
+  /** Whether this pin lights up. The caller decides: on a route day only the
+   *  route's stops do, so an off-route memory stays quiet even in reach. */
+  lit: boolean;
 };
 
 export default function MemoryMarker({
@@ -34,6 +37,7 @@ export default function MemoryMarker({
   onPress,
   routePosition = null,
   routeSize = 0,
+  lit,
 }: Props) {
   const count = group.memories.length;
 
@@ -43,7 +47,7 @@ export default function MemoryMarker({
       // tracksViewChanges is off for the frame cost, so the marker only
       // repaints when React gives it a new identity - which is exactly when
       // its state changed.
-      key={`${group.key}:${reach}:${routePosition ?? ''}`}
+      key={`${group.key}:${reach}:${lit}:${routePosition ?? ''}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
       // Put the middle of the pin on the point it names. iOS centres a custom
       // view already; Android defaults to bottom-centre whatever you draw, so
@@ -65,7 +69,7 @@ export default function MemoryMarker({
       tracksViewChanges={false}
       onPress={onPress}
     >
-      <Pin lit={reach === 'unlockable'} badge={routePosition || (count > 1 ? count : null)} />
+      <Pin lit={lit} badge={routePosition || (count > 1 ? count : null)} />
       {/* An empty tooltip callout, which is how you say "no callout" while
           keeping a title. Setting `title` makes MapKit offer its own bubble:
           system font on a white rounded rect, at odds with everything in

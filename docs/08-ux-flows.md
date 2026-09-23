@@ -805,17 +805,27 @@ calendar day.
    distance, never as minutes: there is no street routing to back a time.
    Tapping it once starts the route and flies to the next stop; after that the
    pill reads "Next: <place> · 350 m".
-3. Each stop draws its ordinary pin — locked, warm or unlockable, exactly as
-   F7 already renders it — with its position in today's route (1–5) in the
-   badge slot instead of a count or a tag. A faint dashed line runs from you
+3. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
+   in today's route (1–5) in the badge. A faint dashed line runs from you
    to the next stop and on through the rest, in the order picked from
    wherever the device stood at the day's first ask.
-4. Walking into range and unlocking a stop is F7, unchanged. The badge and
+4. Reaching a stop lights its pin, and the pill turns seal and breathes:
+   "You're at stop 2 · open it", a tap opens it. Any stop, in any order — the
+   numbers suggest a walk, they do not enforce one, so somebody who goes
+   another way round opens whichever stop they are standing at. Unlocking is
+   F7, unchanged. The badge and
    its share of the line drop away the moment it is earned, the numbers on
    the rest do not shift, and the pill's count and distance move.
 5. The last stop earned, the pill reads "Route walked · 5 of 5" and a tap fits
    the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
+
+**On a route day the route is the only thing that lights up.** A memory off
+the route is still there and still opens if you stand on it and tap it, but
+its pin stays ink and nothing points at it: the reach banner ("3 memories
+within reach", F13) only appears on a day with no route. Otherwise the map
+gave two instructions at once, and the banner's count cheerfully included
+stops out of order and memories that were not on the walk at all.
 
 **Not a new mechanic — the same one, five times.** A route stop is nothing
 but an ordinary gated memory with one extra fact attached to it, its position
