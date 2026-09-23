@@ -282,6 +282,9 @@ export type TodaysRoute = {
   /** The route's true size - can be short of the usual handful in a sparse
    *  area, same honesty as every other list's meta.total. */
   size: number;
+  /** Ends back where the day's walk started. The server never stores that
+   *  start, so the app remembers it (mobile/src/route.ts). */
+  loop: boolean;
 };
 
 /**
@@ -302,12 +305,13 @@ export async function fetchTodaysRoute(
   }
   const body = await get<{
     memories?: Memory[];
-    meta?: { route_date?: string; size?: number };
+    meta?: { route_date?: string; size?: number; loop?: boolean };
   }>('/v1/routes/today', params, signal);
   return {
     memories: (body.memories ?? []).filter(hasCoordinates),
     route_date: body.meta?.route_date ?? '',
     size: body.meta?.size ?? 0,
+    loop: body.meta?.loop ?? false,
   };
 }
 

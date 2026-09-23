@@ -8,11 +8,20 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { LocatedMemory } from './api.ts';
+import type { Coordinates, LocatedMemory } from './api.ts';
 
 const KEY = 'memorylane.route.v1';
 
-type StoredRoute = { route_date: string; memories: LocatedMemory[] };
+/** `start` is where this device stood when it asked for today's route: where a
+ *  loop comes back to. It is kept here and never sent anywhere again - the
+ *  server stores no location (docs/10-decisions.md § Routes). Optional
+ *  because a route cached before loops existed has none. */
+export type StoredRoute = {
+  route_date: string;
+  memories: LocatedMemory[];
+  loop?: boolean;
+  start?: Coordinates;
+};
 
 /** The stored route, or null if there isn't one or it isn't today's.
  *
@@ -21,12 +30,12 @@ type StoredRoute = { route_date: string; memories: LocatedMemory[] };
  *  follows and overwrites it with the server's own route_date, so a clock a
  *  few hours off at midnight costs one wrong instant paint, never a wrong
  *  route. */
-export async function loadRoute(today: string): Promise<LocatedMemory[] | null> {
+export async function loadRoute(today: string): Promise<StoredRoute | null> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
     if (!raw) return null;
     const stored = JSON.parse(raw) as StoredRoute;
-    return stored.route_date === today ? stored.memories : null;
+    return stored.route_date === today ? stored : null;
   } catch {
     return null;
   }

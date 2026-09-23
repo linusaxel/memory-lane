@@ -162,6 +162,8 @@ export default function App() {
   // it is fetched. It only switches the pill from "here is today's route" to
   // "here is where to go next".
   const [routeStarted, setRouteStarted] = useState(false);
+  // Where a loop route comes back to, or null for a one-way one.
+  const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
   // What the server says the gate radius is. Only /v1/stats can answer when
   // there is nothing on the map, and the circle is drawn either way.
   const [serverRadius, setServerRadius] = useState<number | null>(null);
@@ -365,16 +367,29 @@ export default function App() {
     routeFetched.current = true;
 
     const today = new Date().toISOString().slice(0, 10);
-    loadRoute(today).then((cached) => {
-      if (cached && mounted.current) setRoute(cached);
+    const cachedRoute = loadRoute(today);
+    cachedRoute.then((cached) => {
+      if (!cached || !mounted.current) return;
+      setRoute(cached.memories);
+      if (cached.loop && cached.start) setRouteHome(cached.start);
     });
 
     fetchTodaysRoute(device, position)
-      .then((fetched) => {
+      .then(async (fetched) => {
+        // Today's first launch made the route from this position. A relaunch
+        // keeps the one it remembered; with the cache lost, here is the best
+        // guess left.
+        const start = (await cachedRoute)?.start ?? position;
         if (!mounted.current) return;
         setRoute(fetched.memories);
         setRouteSize(fetched.size);
-        saveRoute({ route_date: fetched.route_date, memories: fetched.memories });
+        setRouteHome(fetched.loop ? start : null);
+        saveRoute({
+          route_date: fetched.route_date,
+          memories: fetched.memories,
+          loop: fetched.loop,
+          start,
+        });
       })
       .catch(() => {});
   }, [device, position]);
@@ -430,13 +445,16 @@ export default function App() {
     [routeShown, earned],
   );
   // What is left to walk: from the person, through every unearned stop in
-  // order. The line and the pill's distance are both this one path.
+  // order, and home again on a loop. The line and the pill's distance are both
+  // this one path.
   const routePath = useMemo(() => {
     const stops = routeShown
       .filter((memory) => !earned.has(memory.id))
       .map((memory) => memory.place.coordinates);
-    return position && stops.length > 0 ? [position, ...stops] : stops;
-  }, [routeShown, earned, position]);
+    if (stops.length === 0) return stops;
+    const walk = position ? [position, ...stops] : stops;
+    return routeHome ? [...walk, routeHome] : walk;
+  }, [routeShown, earned, position, routeHome]);
   const routeDone = route.length > 0 && !nextRouteStop;
   const routeTotal = routeSize ?? route.length;
   const toNextStop =

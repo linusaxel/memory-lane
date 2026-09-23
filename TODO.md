@@ -1224,7 +1224,12 @@ flagged ⚠️ inline, not overridden.
       **First step:** check the budget against `haversine × 1.3`. ⚠️ F25 rules
       out showing minutes until street routing backs them; this keeps to that.
       [Boeing 2019, circuity of walk vs drive networks](https://arxiv.org/pdf/1708.00836)
-- [ ] **Loop or one-way, as one flag.** A loop is the same OP with start = end,
+- [x] **Loop or one-way, as one flag.** Done 2026-09-23: `ROUTE_LOOP`, on by
+      default. The leg home counts in choosing, ordering and the budget, and
+      `meta.loop` tells the app. The app keeps the day's first position next
+      to its cached route and draws the line back to it; the server still
+      stores none. The e2e walk now covers all five stops of the loop.
+      A loop is the same OP with start = end,
       and it's the default in tools people already use for walks (Komoot round
       trips; GraphHopper's `algorithm=round_trip` takes a target distance and a
       seed). For a daily walk from wherever you are, a loop is likely the right

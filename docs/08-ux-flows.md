@@ -804,14 +804,17 @@ calendar day.
    fresh roll.
 2. A pill appears above "Near me": "Today's route · 0 of 5 · 2.4 km" — the
    straight-line distance still to walk, from where you stand through every
-   stop not yet earned, in order. Straight-line and said plainly as a
+   stop not yet earned, in order, and back to where the day's walk started:
+   a route is a loop by default (`ROUTE_LOOP`), so the walk home counts. Straight-line and said plainly as a
    distance, never as minutes: there is no street routing to back a time.
    Tapping it once starts the route and flies to the next stop; after that the
    pill reads "Next: <place> · 350 m".
 3. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    in today's route (1–5) in the badge. A line of ink dots runs from you
-   to the next stop and on through the rest, in the order picked from
-   wherever the device stood at the day's first ask. The dots flow toward
+   to the next stop and on through the rest, then home, in the order picked
+   from wherever the device stood at the day's first ask. The server never
+   stores that start; the phone keeps it next to its cached route
+   (`mobile/src/route.ts`). The dots flow toward
    where you are going and the line ebbs slowly (`mobile/src/RouteLine.tsx`;
    iOS only, and still under Reduce Motion).
 4. Reaching a stop lights its pin, and the pill turns seal and breathes:

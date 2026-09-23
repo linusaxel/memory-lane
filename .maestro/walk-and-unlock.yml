@@ -1,5 +1,5 @@
 # F11 Find the nearest locked memory -> F12 Walk there -> F13 Walk into range
-# -> F7 Unlock by standing near it -> F25 walk today's route 1 -> 2 -> 3 -> F15
+# -> F7 Unlock by standing near it -> F25 walk today's loop 1 -> 5 -> F15
 # reread it later. docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
@@ -18,7 +18,7 @@
 #     as well as its place, and the pin turning is directly assertable.
 #  3. F25's daily route is always-on - any device with a position gets one on
 #     launch, anchored where it first asks. The walk below is that route's
-#     first three stops, in order; its titles carry a "Stop N of 5." prefix. `tests/test_api_routes.py` is what pins the
+#     five stops, in order; its titles carry a "Stop N of 5." prefix. `tests/test_api_routes.py` is what pins the
 #     selection and ordering rules down; this file just has to agree with them.
 
 appId: ${APP_ID}
@@ -54,23 +54,26 @@ appId: ${APP_ID}
 
 # F17 + F12: why it will not open, and what to do about it.
 - extendedWaitUntil:
-    visible: "Stop 3 of 5. The bench outside, dev seed. Locked, a short walk away."
+    visible: "Stop 2 of 5. The bench outside, dev seed. Locked, a short walk away."
     timeout: 40000
-- tapOn: "Stop 3 of 5. The bench outside, dev seed. Locked, a short walk away."
+- tapOn: "Stop 2 of 5. The bench outside, dev seed. Locked, a short walk away."
 - assertVisible: "Get within 150 m and you can open it."
 - assertVisible: "Walk there"
 - tapOn: "Close"
 
-# F25 + F13 + F7, three times: walk today's route in order, 1 -> 2 -> 3. From
-# this start the fresh seed's route is (api/read.py, the shortest walk over
-# every ordering from the anchor):
-#   1 Where I was standing  40.7479,-73.9847   the submission
-#   2 The corner            40.748,-73.987     `stack`, three memories on one point
-#   3 The bench outside     40.74876,-73.9857  `reach`
-# Stops sit 130-190m apart, so standing at one the next is sometimes in reach
-# too. The pill names the lowest unearned stop in reach, which is the one this
-# walk has just arrived at. Nothing is tapped while walking - the pin turns and
-# the pill changes its mind on its own.
+# F25 + F13 + F7, five times: walk today's route in order, 1 -> 5. From this
+# start the fresh seed's route is (api/read.py, the shortest loop over every
+# ordering from the anchor and back; a loop and its reverse tie, and sorting
+# the stops first makes it this way round for every device id):
+#   1 Where I was standing        40.7479,-73.9847   the submission
+#   2 The bench outside           40.74876,-73.9857  `reach`
+#   3 Four hundred metres north   40.752,-73.9857    `walk`
+#   4 Where the night went long   40.7502,-73.9861   `nightspot`
+#   5 The corner                  40.748,-73.987     `stack`, three on one point
+# Stops sit 100-350m apart, so standing at one the next is sometimes in reach
+# too, and 2 -> 3 passes within reach of 4. The pill names the lowest unearned
+# stop in reach, which is the one this walk has just arrived at. Nothing is
+# tapped while walking - the pin turns and the pill changes its mind on its own.
 - travel:
     points:
       - "40.7460,-73.9857"
@@ -93,41 +96,76 @@ appId: ${APP_ID}
 - assertNotVisible: "Hold to unlock"
 - tapOn: "Close"
 
-# A stack: the pill opens the sheet on the route's own memory of the three, so
-# the hold earns the stop and not a neighbour of it.
 - travel:
     points:
       - "40.7479,-73.9847"
-      - "40.748,-73.987"
-    speed: 10
-- extendedWaitUntil:
-    visible: "You're at stop 2: The corner, dev seed\\. Open to unlock\\."
-    timeout: 45000
-- tapOn: "You're at stop 2: .*"
-- longPressOn: "Unlock this memory"
-- extendedWaitUntil:
-    visible: ".*taxi that reversed.*"
-    timeout: 30000
-- tapOn: "Close"
-
-- travel:
-    points:
-      - "40.748,-73.987"
       - "40.74876,-73.9857"
     speed: 10
 - extendedWaitUntil:
-    visible: "You're at stop 3: The bench outside, dev seed\\. Open to unlock\\."
+    visible: "You're at stop 2: The bench outside, dev seed\\. Open to unlock\\."
     timeout: 45000
-- tapOn: "You're at stop 3: .*"
+- tapOn: "You're at stop 2: .*"
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
     visible: ".*pretzel cart.*"
     timeout: 30000
 - tapOn: "Close"
 
-# Three earned, stop 4 out of reach from here: the pill points on.
+- travel:
+    points:
+      - "40.74876,-73.9857"
+      - "40.752,-73.9857"
+    speed: 10
+- extendedWaitUntil:
+    visible: "You're at stop 3: Four hundred metres north, dev seed\\. Open to unlock\\."
+    timeout: 45000
+- tapOn: "You're at stop 3: .*"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*piano into the street.*"
+    timeout: 30000
+- tapOn: "Close"
+
+# Three earned, stop 4 ~200m back south and out of reach: the pill points on.
 - extendedWaitUntil:
     visible: "Next stop: Where the night went long, dev seed\\."
+    timeout: 30000
+
+- travel:
+    points:
+      - "40.752,-73.9857"
+      - "40.7502,-73.9861"
+    speed: 10
+- extendedWaitUntil:
+    visible: "You're at stop 4: Where the night went long, dev seed\\. Open to unlock\\."
+    timeout: 45000
+- tapOn: "You're at stop 4: .*"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*jukebox on shuffle.*"
+    timeout: 30000
+- tapOn: "Close"
+
+# A stack: the pill opens the sheet on the route's own memory of the three, so
+# the hold earns the stop and not a neighbour of it - and "Route walked" below
+# only reads 5 of 5 if it did.
+- travel:
+    points:
+      - "40.7502,-73.9861"
+      - "40.748,-73.987"
+    speed: 10
+- extendedWaitUntil:
+    visible: "You're at stop 5: The corner, dev seed\\. Open to unlock\\."
+    timeout: 45000
+- tapOn: "You're at stop 5: .*"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*taxi that reversed.*"
+    timeout: 30000
+- tapOn: "Close"
+
+- extendedWaitUntil:
+    visible: "Route walked · 5 of 5 unlocked\\."
     timeout: 30000
 
 # F15: unlocking is meant to be permanent - it outlives the sheet, the tab and

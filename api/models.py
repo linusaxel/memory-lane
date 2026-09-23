@@ -201,6 +201,10 @@ class RouteMeta(BaseModel):
     # request on the day's first call, or ROUTE_RADIUS_METERS if it did not
     # supply one. Read back from the stored row on every later call.
     radius_meters: int
+    # Whether the walk ends back where it started (ROUTE_LOOP). The start is
+    # not here - the server never stores it - so the app closes the loop on
+    # the position it sent with the day's first call.
+    loop: bool
 
 
 class RouteResponse(BaseModel):

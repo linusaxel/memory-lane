@@ -45,21 +45,21 @@ def test_a_tight_cluster_ahead_beats_one_stop_behind():
     # The three nearest are behind(-4), a(6), b(7): 4 + 10 + 1 = 15 steps.
     # The cluster a, b, c is 6 + 1 + 1 = 8.
     picks = [stop("behind", -4), stop("a", 6), stop("b", 7), stop("c", 8)]
-    assert names(_choose_stops(picks, 3, ANCHOR, "seed", 4000)) == ["a", "b", "c"]
+    assert names(_choose_stops(picks, 3, ANCHOR, "seed", 4000, False)) == ["a", "b", "c"]
 
 
 def test_each_layer_keeps_its_share_even_when_it_costs_metres():
     # The shortest four are all historical; two strangers far out still get in.
     picks = [stop(f"h{i}", i) for i in range(1, 5)]
     picks += [stop("s1", -20, "stranger"), stop("s2", 30, "stranger")]
-    chosen = _choose_stops(picks, 4, ANCHOR, "seed", 20_000)
+    chosen = _choose_stops(picks, 4, ANCHOR, "seed", 20_000, False)
     assert sum(s.layer == "stranger" for s in chosen) == 2
 
 
 def test_the_budget_caps_the_walk_not_the_count():
     # 84m apart in a line: 3 stops is 252m x 1.3 = 328m, a fourth is 437m.
     picks = [stop(f"s{i}", i) for i in range(1, 11)]
-    assert names(_choose_stops(picks, 5, ANCHOR, "seed", 400)) == ["s1", "s2", "s3"]
+    assert names(_choose_stops(picks, 5, ANCHOR, "seed", 400, False)) == ["s1", "s2", "s3"]
 
 
 def test_within_budget_repeatable_and_full_as_the_budget_allows():
@@ -74,11 +74,11 @@ def test_within_budget_repeatable_and_full_as_the_budget_allows():
             )
             for n in range(rng.randint(0, 20))
         ]
-        chosen = _choose_stops(picks, 5, ANCHOR, str(i), 4000)
+        chosen = _choose_stops(picks, 5, ANCHOR, str(i), 4000, False)
         walked = _path_meters(ANCHOR, chosen)
         assert walked * ROUTE_CIRCUITY <= 4000
         assert len(set(map(id, chosen))) == len(chosen) <= 5
-        assert chosen == _choose_stops(picks, 5, ANCHOR, str(i), 4000)
+        assert chosen == _choose_stops(picks, 5, ANCHOR, str(i), 4000, False)
         # Short of five means no leftover could even be tacked onto the end.
         if len(chosen) < 5:
             last = chosen[-1] if chosen else ANCHOR
@@ -86,3 +86,14 @@ def test_within_budget_repeatable_and_full_as_the_budget_allows():
                 if all(c is not s for s in chosen):
                     extra = _path_meters(Coordinates(lat=last.lat, lng=last.lng), [c])
                     assert (walked + extra) * ROUTE_CIRCUITY > 4000
+
+
+def test_a_loop_counts_the_walk_home():
+    # In steps: straight out east (1, 2) is 2 one-way, but 4 home again. East 1
+    # then north 1.1 is 1 + 1.5 = 2.5 one-way, and 3.6 as a loop.
+    north = SimpleNamespace(
+        name="n", lat=ANCHOR.lat + 1.1 * STEP * 84 / 111, lng=ANCHOR.lng, layer="historical"
+    )
+    picks = [stop("e1", 1), stop("e2", 2), north]
+    assert names(_choose_stops(picks, 2, ANCHOR, "seed", 4000, False)) == ["e1", "e2"]
+    assert names(_choose_stops(picks, 2, ANCHOR, "seed", 4000, True)) == ["e1", "n"]

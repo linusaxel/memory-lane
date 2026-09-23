@@ -77,6 +77,10 @@ ROUTE_RADIUS_METERS = int(os.getenv("ROUTE_RADIUS_METERS", "4000"))
 # 2019, https://arxiv.org/abs/1708.00836) and nothing here routes on streets.
 ROUTE_BUDGET_METERS = int(os.getenv("ROUTE_BUDGET_METERS", "4000"))
 ROUTE_CIRCUITY = 1.3
+# A loop ends back where the day's walk started, so its last leg is the walk
+# home, and it is counted when choosing and ordering stops. ROUTE_LOOP=0 makes
+# it one-way. The server never stores that start; the app remembers it.
+ROUTE_LOOP = os.getenv("ROUTE_LOOP", "1") != "0"
 
 
 @router.get("/v1/memories/nearby", response_model=NearbyResponse)
@@ -342,7 +346,7 @@ ROUTE_SHAKES = 50
 
 
 def _choose_stops(
-    candidates: list, size: int, anchor: Coordinates, seed: str, budget_meters: float
+    candidates: list, size: int, anchor: Coordinates, seed: str, budget_meters: float, loop: bool
 ) -> list:
     """Up to `size` stops whose walk from the anchor, times ROUTE_CIRCUITY, fits
     `budget_meters`: as many as fit, then the shortest walk, not the `size`
@@ -371,12 +375,14 @@ def _choose_stops(
 
     def cost(walk, c, at):
         prev = walk[at - 1] if at else 0
-        if at == len(walk):
+        nxt = walk[at] if at < len(walk) else 0 if loop else None
+        if nxt is None:
             return d[prev][c]
-        return d[prev][c] + d[c][walk[at]] - d[prev][walk[at]]
+        return d[prev][c] + d[c][nxt] - d[prev][nxt]
 
     def length(walk):
-        return sum(d[a][b] for a, b in itertools.pairwise([0, *walk]))
+        ends = [0, *walk, 0] if loop and walk else [0, *walk]
+        return sum(d[a][b] for a, b in itertools.pairwise(ends))
 
     reach = budget_meters / ROUTE_CIRCUITY
 
@@ -413,23 +419,28 @@ def _choose_stops(
 EXACT_ORDER_MAX = 8
 
 
-def _path_meters(anchor: Coordinates, stops) -> float:
+def _path_meters(anchor: Coordinates, stops, loop: bool = False) -> float:
     total, here = 0.0, anchor
     for r in stops:
         there = Coordinates(lat=r.lat, lng=r.lng)
         total += meters_between(here, there)
         here = there
-    return total
+    return total + (meters_between(here, anchor) if loop else 0.0)
 
 
-def _walking_order(picks: list, anchor: Coordinates) -> list:
-    """The shortest open walk from the anchor through every pick, by trying
+def _walking_order(picks: list, anchor: Coordinates, loop: bool = False) -> list:
+    """The shortest walk from the anchor through every pick, and back to it
+    when `loop`, by trying
     every ordering. Five stops is 120 of them, and nearest-neighbour - what this
     was - doubles back whenever the closest stop is behind you.
     ponytail: exact up to EXACT_ORDER_MAX, greedy above it; Held-Karp if
     ROUTE_SIZE ever grows that far (TODO.md, "Order the stops exactly")."""
     if len(picks) <= EXACT_ORDER_MAX:
-        return list(min(itertools.permutations(picks), key=lambda p: _path_meters(anchor, p)))
+        # A loop and its reverse are the same length, so which one min() keeps
+        # depends on input order - here, the solver's seeded search. Sorted, it
+        # is the same way round for every device.
+        picks = sorted(picks, key=lambda r: (r.lat, r.lng))
+        return list(min(itertools.permutations(picks), key=lambda p: _path_meters(anchor, p, loop)))
     remaining = list(picks)
     ordered = []
     here = anchor
@@ -516,8 +527,10 @@ def get_todays_route(
                     anchor,
                     f"{device}:{route_date}",
                     ROUTE_BUDGET_METERS,
+                    ROUTE_LOOP,
                 ),
                 anchor,
+                ROUTE_LOOP,
             )
             memory_ids = [r.id for r in picked]
             # An empty route is not stored: stored, it would pin the whole day
@@ -525,7 +538,12 @@ def get_todays_route(
             if not memory_ids:
                 return RouteResponse(
                     memories=[],
-                    meta=RouteMeta(route_date=route_date, size=0, radius_meters=search_radius),
+                    meta=RouteMeta(
+                        route_date=route_date,
+                        size=0,
+                        radius_meters=search_radius,
+                        loop=ROUTE_LOOP,
+                    ),
                 )
 
             touch_device(session, device)
@@ -558,7 +576,10 @@ def get_todays_route(
     return RouteResponse(
         memories=memories,
         meta=RouteMeta(
-            route_date=route_date, size=len(memory_ids), radius_meters=row.radius_meters
+            route_date=route_date,
+            size=len(memory_ids),
+            radius_meters=row.radius_meters,
+            loop=ROUTE_LOOP,
         ),
     )
 
