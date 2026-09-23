@@ -1056,12 +1056,21 @@ daemon) have no analogue here and are left out.
       sample of rejections through `extract_chunk_stored` and reports how many
       held a memory the pipeline keeps. Not run: nothing has been classified
       on this database yet, and it bills.
-- [ ] **A review loop that turns extractions into a golden set.**
+- [x] **A review loop that turns extractions into a golden set.**
       Accept / reject / edit over new memories, same propose → `--only` shape
       as `pipeline/dedup.py`. An edit is a before/after pair, a reject a
       negative, and the edit rate over time is the quality number (the post's
       answer to "how do you know it improved"). `pipeline/quality.py`'s
       regexes stay as the cheap first pass.
+      **Done 2026-09-23:** `python -m pipeline.review` lists unreviewed
+      extracted memories with their `quality.py` flags; `--accept`,
+      `--reject` (also hides it) and `--edit ID "text"` record verdicts in
+      `memory_reviews` (`db/migrations/019_memory_reviews.sql`); `--stats`
+      is the changed-share by extraction month. Reviews are `ON DELETE SET
+      NULL`, so reprocessing a video keeps them, and a re-review keeps the
+      model's original `before`. `tests/test_review.py`. Nothing reviewed yet:
+      the ~50 rows the parked few-shot entry below waits for are a human's
+      afternoon.
 - [ ] **Candidate generation for prompt changes.** `pipeline/quality.py
       --compare` runs two prompt variants over a fixed sample of stored chunks,
       scores both with `quality.report()`, and shows them side by side for a

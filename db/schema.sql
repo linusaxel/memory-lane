@@ -362,3 +362,17 @@ CREATE TRIGGER places_search_vector_trg
     FOR EACH ROW
     WHEN (OLD.name IS DISTINCT FROM NEW.name)
     EXECUTE FUNCTION places_refresh_memory_search_vectors();
+
+-- A person's verdict on an extracted memory: the known-good set, and the edit
+-- rate that says whether a prompt change helped. SET NULL, not CASCADE, so
+-- reprocessing a video keeps the reviews. See pipeline/review.py.
+CREATE TABLE memory_reviews (
+    id SERIAL PRIMARY KEY,
+    memory_id INTEGER UNIQUE REFERENCES memories(id) ON DELETE SET NULL,
+    content_id INTEGER REFERENCES content(id) ON DELETE SET NULL,
+    verdict VARCHAR(10) NOT NULL CHECK (verdict IN ('accept', 'edit', 'reject')),
+    before TEXT NOT NULL,
+    after TEXT,
+    extracted_at TIMESTAMP,
+    reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

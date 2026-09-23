@@ -78,6 +78,7 @@ python -m api.main
 | `pipeline/queue.py` | Redis/RQ queue setup |
 | `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change |
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
+| `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Memories you can walk to.** The real corpus has none near any dev coordinate |
 | `pipeline/tags.py` | The one tag vocabulary. Both write paths filter against it |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
@@ -128,6 +129,7 @@ content       → Source videos (url, platform_id, publisher, status flags)
 transcripts   → JSONB segments with timestamps
 extraction_chunks → Each chunk's raw model reply, keyed on the exact request
 classifier_verdicts → What the Haiku pre-filter decided per chunk, and why
+memory_reviews → A person's accept / edit / reject on an extracted memory. Outlives it
 places        → Locations with PostGIS coordinates
 memories      → Experiences pinned to places. content_id OR user_id, never both
 devices       → An installation's self-issued UUID. Not a person
