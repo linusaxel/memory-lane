@@ -41,11 +41,15 @@ the code disagreed, the code won and it is called out below.
 
 ### The data
 
-59 content rows: 29 extracted, 25 pending extraction, 4 transcript-failed.
-224 memories across 176 places (194 before the 1.2 merge). 168 of those places
-have coordinates, carrying 215 memories. 143 high confidence, 81 medium.
-**Measured 2026-09-20**, not carried forward — the figures below had drifted
-into four different denominators.
+The podcast (`Tuesdays with Stories`): 55 content rows, 224 memories, 215 of
+them placed. Across everything: 60 content rows - 30 extracted, 4
+transcript-failed, 9 episodes pending extraction, and 16 pending clips the video
+filter skips (under `MIN_VIDEO_MINUTES`). 22 clips were extracted before that
+filter existed and probably duplicate their episodes' memories. 185 places, 177
+with coordinates. The other 11 memories are the dev seed (7) and user
+submissions (4). Extracted confidence: 150 high, 81 medium.
+**Measured 2026-09-23**, not carried forward — the figures below had drifted
+into four different denominators once already.
 
 **All of it is a US comedy podcast.** Density is Manhattan, New Orleans and LA.
 **Zero places within 20km of Copenhagen.** This corpus stays as end-to-end test
@@ -732,9 +736,12 @@ on them. Full detail in `loop/STATE.md`.
       against a real API; every test uses `FakeAnthropic`. **There is no
       `--limit` flag** — `python -m pipeline.extract` bills every pending video.
       To spend cents instead: `python -m pipeline.enqueue --video <content_id>`,
-      then `--status <id>`. Eyeball 20 summaries for vividness. While in there,
-      `EXTRACTION_MODEL` is still a deprecated ID and the system prompt is
-      resent for every chunk with no `cache_control`.
+      then `--status <id>`. Eyeball 20 summaries for vividness. The model ID
+      (`claude-sonnet-5`) and prompt caching are already fixed; what has never
+      met the real API is the structured-output schema (`MEMORY_SCHEMA`), so a
+      rejection shows up on the first chunk. Suggested order once funded: one
+      video, `quality --compare` against the old prompt, the 9 pending
+      episodes, `review`, then `classifier_audit`.
 - [ ] **`DEPLOY`** — Railway, ~$5/mo. Not Fly: Fly's managed Postgres has no
       PostGIS. **Also unblocks Phase 2**, which needs a public HTTPS origin.
 - [x] **`W3-13`** — **done 2026-09-21, natively.** `npx expo run:ios` built,
@@ -774,9 +781,9 @@ on them. Full detail in `loop/STATE.md`.
   What is *still* open is narrower: does Phase 1 **wait** on D.3–D.5, or run
   alongside them? Nobody has asked that, and the two are compatible — W4-02
   (semantic dedup) is backend work that D.3 informs but does not block.
-- **Does a pin represent a place or a memory?** Today a memory, so Gotham Comedy
-  Club is six overlapping pins at one address. Place-level pins fix that but
-  change what tapping means. Shapes both W4-02 and the layer UI.
+- ~~**Does a pin represent a place or a memory?**~~ **Answered in D.3:** neither
+  — a pin is a *point*. One venue spans several place rows and several venues
+  share one coordinate, so `cluster.ts` groups by coordinate.
 - **Which historical source first?** Deliberately undecided. The brief's
   priority order puts arkiv.dk / Københavns Stadsarkiv at #1, but it has no
   public API and would mean scraping; setlist.fm at #3 is a documented REST API
@@ -935,7 +942,7 @@ or silently overridden.
       Ordering unchanged — `contrast_score`/`layer` stay the sort keys
       (Decided, above); heart count as a ranking signal is still a later
       decision, not this one.
-- [ ] **Resolved 2026-09-22: subscription is a second track, not a
+- [x] **Resolved 2026-09-22: subscription is a second track, not a
       replacement.** Was flagged against the Non-goal ruling out consumer
       subscription. **Decision:** both are monetization goals — B2B
       (historical-layer embeds/corpora) stays the near-term plan Phase 2
