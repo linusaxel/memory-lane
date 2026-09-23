@@ -993,7 +993,7 @@ daemon) have no analogue here and are left out.
 
 #### Defects found while mapping — do these first
 
-- [ ] **A transient API error silently deletes a chunk, and the video is still
+- [x] **A transient API error silently deletes a chunk, and the video is still
       marked extracted.** `extract_memories_from_chunk` (`pipeline/extract.py`)
       catches every `Exception` and returns `[]`, so a `RateLimitError`, a 529
       Overloaded or a dropped connection is indistinguishable from "this chunk
@@ -1003,11 +1003,17 @@ daemon) have no analogue here and are left out.
       `APIStatusError` propagate so the video stays pending; keep `[]` only for
       an unparseable reply. Check: a stub client raising 529 must leave the
       row pending.
-- [ ] **One crash rolls back a whole run's paid extractions.** `get_session()`
+      **Done 2026-09-23:** `TransientAPIError` (`is_transient`: connection,
+      429, 5xx) is raised instead of `[]`; `extract_all_pending` leaves the
+      video pending and moves on, and the queue path's extract job gets an RQ
+      `Retry` so it still aggregates. `tests/test_extract_errors.py`.
+- [x] **One crash rolls back a whole run's paid extractions.** `get_session()`
       (`pipeline/db.py`) commits once, on exit, and `extract_all_pending` and
       `fetch_pending_transcripts` each run their entire loop inside one
       session. Ctrl-C on video 50 of 55 throws away 49 videos of billed output.
       Commit per video — the post's "progress had to survive partially".
+      **Done 2026-09-23:** both loops commit per row, and a failed video rolls
+      back only itself. `test_a_crash_keeps_the_videos_already_extracted`.
 
 #### LLM output
 

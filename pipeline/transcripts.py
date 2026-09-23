@@ -110,6 +110,7 @@ def fetch_pending_transcripts():
                     {"id": content_id},
                 )
 
+                session.commit()
                 logger.info(f"Stored transcript: {len(result['segments'])} segments")
                 fetched += 1
             else:
@@ -117,6 +118,7 @@ def fetch_pending_transcripts():
                     text("UPDATE content SET transcript_failed = TRUE WHERE id = :id"),
                     {"id": content_id},
                 )
+                session.commit()
                 failed += 1
 
     logger.info(f"Transcript fetch complete: {fetched} fetched, {failed} failed")

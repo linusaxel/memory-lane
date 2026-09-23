@@ -334,6 +334,25 @@ class ModelUnusableError(Exception):
     pass
 
 
+class TransientAPIError(Exception):
+    """A 429, a 5xx or a dropped connection that outlived the SDK's own retries.
+
+    Same trap as ModelUnusableError, one video at a time: returned as [] it is a
+    chunk with no memories, the video is marked extracted, and "never
+    re-extract" makes the gap permanent. Raised, the video stays pending.
+    """
+
+    pass
+
+
+def is_transient(e: Exception) -> bool:
+    if isinstance(e, anthropic.APIConnectionError):
+        return True
+    return isinstance(e, anthropic.APIStatusError) and (
+        e.status_code == 429 or e.status_code >= 500
+    )
+
+
 def extract_memories_from_chunk(
     client: anthropic.Anthropic,
     chunk: str,
@@ -391,6 +410,8 @@ def extract_memories_from_chunk(
     ) as e:
         raise ModelUnusableError(f"EXTRACTION_MODEL={EXTRACTION_MODEL!r} is not usable: {e}") from e
     except Exception as e:
+        if is_transient(e):
+            raise TransientAPIError(str(e)) from e
         logger.error(f"Error calling Claude API: {e}")
         return []
 
@@ -705,14 +726,25 @@ def extract_all_pending():
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),
                     {"id": content_id},
                 )
+                # Per video, not per run: a crash on video 50 must not roll back
+                # the 49 already paid for.
+                session.commit()
                 extracted += 1
+
+            except TransientAPIError as e:
+                # Left pending, not failed: the next run picks it up.
+                logger.warning(f"  Transient API error, will retry next run: {e}")
+                session.rollback()
+                failed += 1
 
             except Exception as e:
                 logger.error(f"  Extraction failed: {e}")
+                session.rollback()
                 session.execute(
                     text("UPDATE content SET extraction_failed = TRUE WHERE id = :id"),
                     {"id": content_id},
                 )
+                session.commit()
                 failed += 1
 
     logger.info(f"Extraction complete: {extracted} extracted, {failed} failed")

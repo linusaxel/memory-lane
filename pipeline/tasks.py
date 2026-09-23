@@ -4,6 +4,7 @@ import json
 import logging
 
 import anthropic
+from rq import Retry
 from sqlalchemy import text
 
 from pipeline.config import (
@@ -200,6 +201,9 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
             total_chunks=total_chunks,
             chunk_text=chunk_text,
             job_timeout="5m",
+            # extract_memories_from_chunk raises TransientAPIError rather than
+            # report an empty chunk; without a retry the video never aggregates.
+            retry=Retry(max=3, interval=[30, 120, 600]),
         )
     else:
         redis.hincrby(f"extraction:{content_id}", "extracted", 1)

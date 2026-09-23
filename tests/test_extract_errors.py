@@ -7,15 +7,26 @@ memories_extracted = TRUE, and moved to the next video. One bad model ID would
 have marked all 25 pending videos successfully extracted with zero memories,
 and nothing would have said so.
 
-Transient failures still return [] on purpose: one lost chunk is cheaper than
-abandoning a run that is otherwise working.
+A transient failure (429, 5xx, dropped connection) has the same shape one video
+at a time: [] marked the video extracted with a hole in it, permanently. It now
+raises TransientAPIError, the run moves on, and the video stays pending.
 """
+
+from contextlib import contextmanager
 
 import anthropic
 import httpx
 import pytest
+from sqlalchemy import text
 
-from pipeline.extract import BillingError, ModelUnusableError, extract_memories_from_chunk
+from pipeline import extract
+from pipeline.extract import (
+    BillingError,
+    ModelUnusableError,
+    TransientAPIError,
+    extract_memories_from_chunk,
+)
+from tests.fakes import FakeAnthropic
 
 
 def _client_raising(exc):
@@ -53,10 +64,95 @@ def test_the_error_names_the_model_so_the_fix_is_obvious():
     assert "EXTRACTION_MODEL=" in str(caught.value)
 
 
-def test_a_transient_error_still_yields_an_empty_chunk():
-    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
-    transient = anthropic.APIConnectionError(request=request)
-    assert extract_memories_from_chunk(_client_raising(transient), "a chunk") == []
+@pytest.mark.parametrize(
+    "exc",
+    [
+        anthropic.APIConnectionError(
+            request=httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        ),
+        _api_error(anthropic.RateLimitError, 429),
+        _api_error(anthropic.InternalServerError, 500),
+        _api_error(anthropic.OverloadedError, 529),
+    ],
+    ids=["connection", "429", "500", "529"],
+)
+def test_a_transient_error_is_not_an_empty_chunk(exc):
+    with pytest.raises(TransientAPIError):
+        extract_memories_from_chunk(_client_raising(exc), "a chunk")
+
+
+class _FailsOnSecondCall:
+    """One video's chunk succeeds, the next call raises `exc`."""
+
+    def __init__(self, exc):
+        self._ok = FakeAnthropic({"memories": FakeAnthropic().messages._payload}).messages
+        self._exc = exc
+        self.messages = self
+
+    def create(self, **kwargs):
+        if self._ok.calls:
+            raise self._exc
+        return self._ok.create(**kwargs)
+
+
+def _two_pending_videos(db_session):
+    for vid in ("aaaaaaaaaaa", "bbbbbbbbbbb"):
+        content_id = db_session.execute(
+            text(
+                "INSERT INTO content (url, platform, platform_id, transcript_fetched) "
+                "VALUES (:url, 'youtube', :vid, TRUE) RETURNING id"
+            ),
+            {"url": f"https://www.youtube.com/watch?v={vid}", "vid": vid},
+        ).scalar()
+        db_session.execute(
+            text(
+                "INSERT INTO transcripts (content_id, segments, full_text) "
+                """VALUES (:id, '[{"start": 0, "text": "hello"}]', 'hello')"""
+            ),
+            {"id": content_id},
+        )
+    db_session.commit()
+
+
+def _run(db_session, monkeypatch, client):
+    @contextmanager
+    def _session():
+        try:
+            yield db_session
+            db_session.commit()
+        except BaseException:
+            db_session.rollback()
+            raise
+
+    monkeypatch.setattr(extract, "get_session", _session)
+    monkeypatch.setattr(extract, "ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr(extract.anthropic, "Anthropic", lambda **_: client)
+    return extract.extract_all_pending()
+
+
+def _states(db_session):
+    return sorted(
+        db_session.execute(
+            text("SELECT memories_extracted, extraction_failed FROM content")
+        ).fetchall()
+    )
+
+
+@pytest.mark.db
+def test_a_transient_error_leaves_the_video_pending_not_failed(db_session, monkeypatch):
+    _two_pending_videos(db_session)
+    _run(db_session, monkeypatch, _FailsOnSecondCall(_api_error(anthropic.OverloadedError, 529)))
+    assert _states(db_session) == [(False, False), (True, False)]
+
+
+@pytest.mark.db
+def test_a_crash_keeps_the_videos_already_extracted(db_session, monkeypatch):
+    """One transaction per run used to throw away every paid-for video."""
+    _two_pending_videos(db_session)
+    with pytest.raises(KeyboardInterrupt):
+        _run(db_session, monkeypatch, _FailsOnSecondCall(KeyboardInterrupt()))
+    assert _states(db_session) == [(False, False), (True, False)]
+    assert db_session.execute(text("SELECT COUNT(*) FROM memories")).scalar() == 1
 
 
 def test_billing_still_raises_its_own_error():
