@@ -1179,7 +1179,9 @@ flagged ⚠️ inline, not overridden.
 
 #### Fix the walk we already have — do these first
 
-- [ ] **Order the stops exactly. Five stops is 120 orderings.** Nearest-neighbour
+- [x] **Order the stops exactly. Five stops is 120 orderings.** Done
+      2026-09-23: `_walking_order` tries every ordering up to 8 stops
+      (`tests/test_route_order.py`); greedy above that. Nearest-neighbour
       is the weakest tour heuristic there is. Trying every ordering of ≤5 stops
       (≤8 is 40,320) costs less than the SQL round trip. Past that, use
       Held–Karp DP, which is exact and practical up to ~15–20 points.

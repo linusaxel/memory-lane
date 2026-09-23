@@ -9,6 +9,7 @@ day, so the same relaunch sees the same route rather than a fresh roll. It
 still never records an unlock - that stays write.py's alone.
 """
 
+import itertools
 import os
 import time
 
@@ -349,10 +350,27 @@ def _mix_layers(candidates: list, size: int) -> list:
     return picked
 
 
+# 8! is 40,320 orderings - still cheaper than the SQL round trip before it.
+EXACT_ORDER_MAX = 8
+
+
+def _path_meters(anchor: Coordinates, stops) -> float:
+    total, here = 0.0, anchor
+    for r in stops:
+        there = Coordinates(lat=r.lat, lng=r.lng)
+        total += meters_between(here, there)
+        here = there
+    return total
+
+
 def _walking_order(picks: list, anchor: Coordinates) -> list:
-    """Greedy nearest-neighbor from the anchor over the (already small) picks.
-    ponytail: O(n^2), fine at n<=ROUTE_SIZE; a real heuristic only if that ever
-    grows past a handful."""
+    """The shortest open walk from the anchor through every pick, by trying
+    every ordering. Five stops is 120 of them, and nearest-neighbour - what this
+    was - doubles back whenever the closest stop is behind you.
+    ponytail: exact up to EXACT_ORDER_MAX, greedy above it; Held-Karp if
+    ROUTE_SIZE ever grows that far (TODO.md, "Order the stops exactly")."""
+    if len(picks) <= EXACT_ORDER_MAX:
+        return list(min(itertools.permutations(picks), key=lambda p: _path_meters(anchor, p)))
     remaining = list(picks)
     ordered = []
     here = anchor

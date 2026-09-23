@@ -54,22 +54,23 @@ appId: ${APP_ID}
 
 # F17 + F12: why it will not open, and what to do about it.
 - extendedWaitUntil:
-    visible: "Stop 2 of 5. The bench outside, dev seed. Locked, a short walk away."
+    visible: "Stop 3 of 5. The bench outside, dev seed. Locked, a short walk away."
     timeout: 40000
-- tapOn: "Stop 2 of 5. The bench outside, dev seed. Locked, a short walk away."
+- tapOn: "Stop 3 of 5. The bench outside, dev seed. Locked, a short walk away."
 - assertVisible: "Get within 150 m and you can open it."
 - assertVisible: "Walk there"
 - tapOn: "Close"
 
 # F25 + F13 + F7, three times: walk today's route in order, 1 -> 2 -> 3. From
-# this start the fresh seed's route is (api/read.py, greedy from the anchor):
+# this start the fresh seed's route is (api/read.py, the shortest walk over
+# every ordering from the anchor):
 #   1 Where I was standing  40.7479,-73.9847   the submission
-#   2 The bench outside     40.74876,-73.9857  `reach`
-#   3 The corner            40.748,-73.987     `stack`, three memories on one point
-# Stops sit ~130m apart, inside one 150m gate, so standing at one the next is
-# often in reach too. The pill names the lowest unearned stop in reach, which is
-# the one this walk has just arrived at. Nothing is tapped while walking - the
-# pin turns and the pill changes its mind on its own.
+#   2 The corner            40.748,-73.987     `stack`, three memories on one point
+#   3 The bench outside     40.74876,-73.9857  `reach`
+# Stops sit 130-190m apart, so standing at one the next is sometimes in reach
+# too. The pill names the lowest unearned stop in reach, which is the one this
+# walk has just arrived at. Nothing is tapped while walking - the pin turns and
+# the pill changes its mind on its own.
 - travel:
     points:
       - "40.7460,-73.9857"
@@ -92,35 +93,35 @@ appId: ${APP_ID}
 - assertNotVisible: "Hold to unlock"
 - tapOn: "Close"
 
-- travel:
-    points:
-      - "40.7479,-73.9847"
-      - "40.74876,-73.9857"
-    speed: 10
-- extendedWaitUntil:
-    visible: "You're at stop 2: The bench outside, dev seed\\. Open to unlock\\."
-    timeout: 45000
-- tapOn: "You're at stop 2: .*"
-- longPressOn: "Unlock this memory"
-- extendedWaitUntil:
-    visible: ".*pretzel cart.*"
-    timeout: 30000
-- tapOn: "Close"
-
 # A stack: the pill opens the sheet on the route's own memory of the three, so
 # the hold earns the stop and not a neighbour of it.
 - travel:
     points:
-      - "40.74876,-73.9857"
+      - "40.7479,-73.9847"
       - "40.748,-73.987"
     speed: 10
 - extendedWaitUntil:
-    visible: "You're at stop 3: The corner, dev seed\\. Open to unlock\\."
+    visible: "You're at stop 2: The corner, dev seed\\. Open to unlock\\."
+    timeout: 45000
+- tapOn: "You're at stop 2: .*"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*taxi that reversed.*"
+    timeout: 30000
+- tapOn: "Close"
+
+- travel:
+    points:
+      - "40.748,-73.987"
+      - "40.74876,-73.9857"
+    speed: 10
+- extendedWaitUntil:
+    visible: "You're at stop 3: The bench outside, dev seed\\. Open to unlock\\."
     timeout: 45000
 - tapOn: "You're at stop 3: .*"
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
-    visible: ".*taxi that reversed.*"
+    visible: ".*pretzel cart.*"
     timeout: 30000
 - tapOn: "Close"
 
