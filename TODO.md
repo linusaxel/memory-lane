@@ -982,6 +982,100 @@ or silently overridden.
 
 ---
 
+## Ideas — from the Ghostpost write-up (2026-09-23)
+
+Sourced from Divya Venn's Ghostpost post-mortem
+(https://divyavenn.com/about/ghostpost): a scraping + LLM pipeline that
+learned from what users skipped and edited. **Unvetted**, but every entry was
+checked against the code, not only the post. Its social-platform-specific
+parts (prompt baking, cookie export, burner-account pools, a CDP desktop
+daemon) have no analogue here and are left out.
+
+#### Defects found while mapping — do these first
+
+- [ ] **A transient API error silently deletes a chunk, and the video is still
+      marked extracted.** `extract_memories_from_chunk` (`pipeline/extract.py`)
+      catches every `Exception` and returns `[]`, so a `RateLimitError`, a 529
+      Overloaded or a dropped connection is indistinguishable from "this chunk
+      has no memories". Both the sequential and the queue path then set
+      `memories_extracted = TRUE`, and *Never re-extract* makes the loss
+      permanent. Fix: let `RateLimitError`, `APIConnectionError` and 5xx
+      `APIStatusError` propagate so the video stays pending; keep `[]` only for
+      an unparseable reply. Check: a stub client raising 529 must leave the
+      row pending.
+- [ ] **One crash rolls back a whole run's paid extractions.** `get_session()`
+      (`pipeline/db.py`) commits once, on exit, and `extract_all_pending` and
+      `fetch_pending_transcripts` each run their entire loop inside one
+      session. Ctrl-C on video 50 of 55 throws away 49 videos of billed output.
+      Commit per video — the post's "progress had to survive partially".
+
+#### LLM output
+
+- [ ] **Keep every chunk's raw model output.** Something like
+      `extraction_chunks(content_id, chunk_index, prompt_hash, model, response)`,
+      written as each chunk returns. The queue path already holds this in
+      Redis and `redis.delete`s it after aggregation (`pipeline/tasks.py`).
+      Kept, it makes re-merging, re-filtering and prompt comparison free, and
+      it is the dataset the next four entries need.
+- [ ] **Structured output instead of `json.loads` + fence stripping**, for the
+      extractor and the Haiku classifier both (tool use with an input schema).
+      Removes the extractor's silent `[]` on malformed JSON and the
+      classifier's "can't parse → assume yes".
+- [ ] **Log the classifier's verdicts** (chunk, has_memories, reason). Today a
+      skipped chunk leaves no trace (`classify_chunk`, `pipeline/tasks.py`), so
+      the pre-filter's false-negative rate is unknowable. Then run the
+      extractor over a small sample of rejected chunks and count what it
+      dropped. The post's lesson: what gets ignored is as informative as what
+      gets used.
+- [ ] **A review loop that turns extractions into a golden set.**
+      Accept / reject / edit over new memories, same propose → `--only` shape
+      as `pipeline/dedup.py`. An edit is a before/after pair, a reject a
+      negative, and the edit rate over time is the quality number (the post's
+      answer to "how do you know it improved"). `pipeline/quality.py`'s
+      regexes stay as the cheap first pass.
+- [ ] **Candidate generation for prompt changes.** `pipeline/quality.py
+      --compare` runs two prompt variants over a fixed sample of stored chunks,
+      scores both with `quality.report()`, and shows them side by side for a
+      human to pick — instead of one-shot prompt edits. Blocked on credits
+      (the balance is empty).
+- [ ] **Parked: retrieve few-shot examples instead of hard-coding three.**
+      Pick examples from the golden set by source type and topic rather than
+      the fixed ones in `SYSTEM_PROMPT`. Not worth it until the review loop
+      has ~50 reviewed rows.
+- [ ] **Revealed-preference report.** `unlocks`, `memory_hearts` and `reports`
+      are already per-memory behavioural signals. A `quality.py --signals` view
+      that checks whether the regex flags predict hearts and reports. Means
+      little before there are real users, but it is one query.
+
+#### Scraping / ingestion
+
+- [ ] **Filter at the video level before fetching a transcript.** The Haiku
+      filter runs per chunk, after the transcript is fetched and chunked.
+      yt-dlp's flat listing (`crawler/yt_crawler.py`) already has title and
+      duration — skip Shorts, trailers and compilations there. Cheap work
+      first, expensive work only for survivors.
+- [ ] **Transcripts: stop on an IP block, and allow a proxy.** The existing
+      `ponytail:` note in `pipeline/transcripts.py` names the ceiling: once
+      YouTube blocks the IP, every run re-hits every pending row. Detect
+      `RequestBlocked`/`IpBlocked` and abort the run, add a small jittered
+      delay between fetches, and an optional `TRANSCRIPT_PROXY` in
+      `pipeline/config.py` (youtube-transcript-api takes a `proxy_config`).
+      The post's rule: don't concentrate traffic on one IP.
+- [ ] **One rate-limit bucket per external service.** YouTube transcripts,
+      yt-dlp, Anthropic extract and Anthropic classify each get their own
+      limit: set the Anthropic client's `max_retries` explicitly and give each
+      RQ queue its own worker concurrency, so a throttled classifier cannot
+      stall extraction.
+- [ ] **Incremental channel re-crawl, tiered.** Re-list a channel and stop at
+      the first `platform_id` already in `content`; check recently active
+      channels often ("warm") and dormant ones rarely ("cold"). Today ingest
+      is manual and re-lists the whole back catalogue.
+- [ ] **`published_at` for survivors only.** Resolves the *Known defects*
+      entry above: once videos are filtered at the video level, the per-video
+      yt-dlp fetch is only paid for videos that will actually be extracted.
+
+---
+
 ## Decided — do not revisit
 
 Copied so they survive context resets.
