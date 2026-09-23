@@ -1,14 +1,21 @@
 # LOOP STATE — every TASKS.yaml task is done or parked; working the founder brainstorm list.
 
 ```
-updated:  2026-09-23
+updated:  2026-09-23 (t38, INFRA)
 branch:   loop/autopilot   — NOT pushed. `main` is behind by this session's commits.
-gate:     GREEN, 568 pytest + 69 node tests
+gate:     INFRA — Docker daemon is down (`docker info` fails: "Cannot connect
+          to the Docker daemon"). Last known-good gate: GREEN, 568 pytest +
+          69 node tests, commit 8eef3f6. No code change this tick - nothing
+          to fix, a human needs to start Docker Desktop.
 status:   TASKS.yaml has no `todo` and no `doing` left (unchanged from
-          2026-09-21). This tick's work came from TODO.md's untracked
-          "Ideas — founder brainstorm, unvetted" list instead, per explicit
-          user direction, not from TASKS.yaml.
+          2026-09-21). The next pick is still TODO.md's untracked
+          "Ideas — founder brainstorm, unvetted" list (see below), unchanged
+          from before this INFRA stop.
 ```
+
+**Everything below this point is unchanged from the last GREEN tick (t37,
+commit `8eef3f6`) — the INFRA stop touched nothing else.** Re-run
+`./loop/verify.sh` once Docker is back before trusting the gate line above.
 
 **`TODO.md` is the roadmap and the source of truth.** This file is the loop's
 orientation doc and does not compete with it. Where they disagree, TODO.md
