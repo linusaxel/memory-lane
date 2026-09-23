@@ -739,8 +739,8 @@ export default function App() {
                 // Not from the palette: a Circle takes a real colour, not a
                 // platform-resolved one, and the seal needs more presence on a
                 // dark map than on parchment.
-                strokeColor={scheme === 'dark' ? 'rgba(226,96,63,0.7)' : 'rgba(192,70,43,0.55)'}
-                fillColor={scheme === 'dark' ? 'rgba(226,96,63,0.12)' : 'rgba(192,70,43,0.07)'}
+                strokeColor={scheme === 'dark' ? 'rgba(217,165,75,0.7)' : 'rgba(138,90,23,0.55)'}
+                fillColor={scheme === 'dark' ? 'rgba(217,165,75,0.12)' : 'rgba(138,90,23,0.07)'}
               />
             )}
 

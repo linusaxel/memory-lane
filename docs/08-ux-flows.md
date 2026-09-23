@@ -197,7 +197,7 @@ other distribution channel (see *Design rules* in `TODO.md`).
    there — and nothing else.
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
-   into a seal-red ring, and the map says so in words: "1 memory within reach",
+   into a seal-coloured ring, and the map says so in words: "1 memory within reach",
    which opens the sheet.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
@@ -398,7 +398,7 @@ by the fetch dedupe. Only *successful* fetches are recorded, so it is not.
    **"Nearest locked memory · 412 m"**.
 2. Tapping it opens that memory's sheet, which offers F12.
 
-It does not breathe and it is not seal red. "Walk 400 m" is information; only
+It does not breathe and it is not seal-coloured. "Walk 400 m" is information; only
 something you can actually open is an invitation. A map of padlocks that answers
 only "you cannot read this" and never "so where do I go" is half a mechanic.
 
@@ -420,9 +420,9 @@ only "you cannot read this" and never "so where do I go" is half a mechanic.
    into range changes the map by itself — a position read at launch would mean a
    pin only turns unlockable if you happen to press "Near me" while standing on
    it, which is the opposite of the mechanic.
-2. The pin becomes a seal-red ring with a halo, and the reach circle now contains
+2. The pin becomes a seal-coloured ring with a halo, and the reach circle now contains
    it.
-3. The pill turns seal red, reads "1 memory within reach", and breathes.
+3. The pill turns seal-coloured, reads "1 memory within reach", and breathes.
 
 **This is the moment the app is for**, and the reason nothing else on the map
 moves.

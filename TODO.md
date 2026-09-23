@@ -831,7 +831,7 @@ or silently overridden.
       animation, then hands off with `hideAsync`. No native splash-hold call
       existed before this — the "while the splash screen holds" premise
       needed it added, not just the animation.
-- [ ] **Resolved 2026-09-22: warm accent, not a reskin.** Was flagged as
+- [x] **Resolved 2026-09-22: warm accent, not a reskin.** Was flagged as
       conflicting with `docs/09-visual-design.md`'s decided muted-parchment
       palette. **Decision:** hybrid, not a reversal — the map-legibility and
       contrast work behind that palette solves real problems (rule 1's map
@@ -842,6 +842,17 @@ or silently overridden.
       change to the map style, card layout, or type system. If this doesn't
       read as warm enough once built, revisit — but don't reopen the whole
       palette to find out.
+      **Done 2026-09-23:** `seal`/`sealSoft`/`sealDeep` (`mobile/src/theme.ts`)
+      moved from a stamp red to a warm ochre ramp, re-measured against the
+      same AA bar `mobile/UI.md` already held `seal` to (every pair holds
+      more margin than the red version did). The two places that cannot read
+      `theme.ts` directly — `api/card.py`'s `--accent` copy and the two
+      hardcoded map-`Circle` colours in `App.tsx` — were updated with it, so
+      `tests/test_palette.py`'s drift check still passes. The logo/splash
+      "carry the warmth" half needed no new work: `mobile/src/StartupLogo.tsx`
+      and the static logo mark are ink-on-paper strokes with no accent color
+      in them at all, so their warmth was always in the mark's shape, not a
+      hue - already shipped in the earlier logo commits.
       - Parked, not built: a separate "urban/city" theme variant. Speculative
         second theme before the first one has a second neighborhood
         (Copenhagen) — YAGNI until Phase 1 ships.

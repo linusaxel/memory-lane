@@ -37,14 +37,15 @@ export const color = {
   /** Hairlines and dividers. Editorial layouts rule; they do not shadow. */
   rule: dual('#E0D9CC', '#332E27'),
 
-  /** The one accent: stamp ink. Everything openable is this colour and nothing
-   *  else is. */
-  seal: dual('#C0462B', '#E2603F'),
+  /** The one accent: stamp ink - a warm ochre, not the stamp red this was
+   *  before 2026-09-23 (TODO.md's "warm accent, not a reskin"). Everything
+   *  openable is this colour and nothing else is. */
+  seal: dual('#8A5A17', '#D9A54B'),
   /** The ring filling during a hold. */
-  sealSoft: dual('#F0D9CE', '#4A2418'),
+  sealSoft: dual('#F0E4C8', '#3D3018'),
   /** The padlock inside the ring, which sits on paper at rest and on sealSoft
    *  when full - so it has to hold against both. */
-  sealDeep: dual('#8F2F1B', '#F2A88F'),
+  sealDeep: dual('#5C3A0E', '#F0C878'),
 
   /** Out of reach: the same padlock, faded. Dark enough to hold against the
    *  parchment map, and lighter in the dark where a dark pin vanishes. */
@@ -54,7 +55,7 @@ export const color = {
    *  Deliberately not a pair: it is a translucent seal over a map, and the
    *  seal's dark value is lighter, so one alpha reads about the same over
    *  either. It lives here rather than inline so a palette change reaches it. */
-  halo: 'rgba(192,70,43,0.16)',
+  halo: 'rgba(138,90,23,0.16)',
 };
 
 /** Two families and no more. Fraunces tells the stories, IBM Plex Mono is the

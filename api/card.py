@@ -129,9 +129,9 @@ FONT_HREF = (
 # values and no build step between TypeScript and Python. tests/test_palette.py
 # fails if the two drift. Why these colours at all: docs/09-visual-design.md.
 CARD_CSS = """
-:root{--bg:#f7f4ee;--fg:#1c1917;--muted:#776e64;--rule:#e0d9cc;--accent:#c0462b}
+:root{--bg:#f7f4ee;--fg:#1c1917;--muted:#776e64;--rule:#e0d9cc;--accent:#8a5a17}
 @media (prefers-color-scheme:dark){
-  :root{--bg:#161412;--fg:#f2ede4;--muted:#9a9086;--rule:#332e27;--accent:#e2603f}
+  :root{--bg:#161412;--fg:#f2ede4;--muted:#9a9086;--rule:#332e27;--accent:#d9a54b}
 }
 *{box-sizing:border-box}
 /* Fraunces and IBM Plex Mono, with stacks that hold on their own: a link

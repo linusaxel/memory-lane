@@ -220,8 +220,10 @@ So:
 - **A mono carries the apparatus.** Distances, counts, labels, tab names. A
   number in a mono reads as a *measurement*; the same number in the body face
   reads as more prose. This is what makes the app feel like an instrument.
-- **One accent: stamp red** `#C0462B`. Everything openable wears it and nothing
-  else does. Deliberately not `amber-500`.
+- **One accent: stamp ink** `#8A5A17` - a warm ochre, moved 2026-09-23 from a
+  stamp red (`TODO.md`'s founder-brainstorm "warm accent, not a reskin";
+  `mobile/UI.md` has the contrast re-measurement). Everything openable wears
+  it and nothing else does. Deliberately not `amber-500`.
 - **Rules and weight, not shadows and cards.** Editorial layouts have always
   done hierarchy this way, and it is the shortest route out of the card tell.
   Shadows survive only on the two things that actually hover over a map.
@@ -285,7 +287,7 @@ The markup does not change. Only the five variables and the two faces do.
 | `--fg` | `ink` `#1C1917` / `#F2EDE4` | |
 | `--muted` | `faded` `#776E64` / `#9A9086` | **not `inkFaint`** — the card sets 13–14px in this colour and `inkFaint` is 3.4:1 on paper. See "Contrast, measured" in `mobile/UI.md` |
 | `--rule` | `rule` `#E0D9CC` / `#332E27` | |
-| `--accent` | `seal` `#C0462B` / `#E2603F` | and on a link only, never on a border-left |
+| `--accent` | `seal` `#8A5A17` / `#D9A54B` | and on a link only, never on a border-left |
 
 Set `.place` in Fraunces 700 at 30/36 and `.summary` in Fraunces 400 at 19/31 —
 the same hero size the app's sheet uses, because it is the same sentence. The

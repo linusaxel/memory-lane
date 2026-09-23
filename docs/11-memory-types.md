@@ -124,9 +124,10 @@ to."*
 
 - **Color / ink state** (`Reach`, `mobile/src/reach.ts:15`): `plain →
   stamped → warm → locked → unlockable`, driven entirely by distance and by
-  what this device has already earned. `seal` red is reserved to mean
-  *openable now, and nothing else, ever* — a route line, a tag glyph, a
-  padlock, none of them may use it.
+  what this device has already earned. `seal` (a warm ochre since
+  2026-09-23, a stamp red before it — `mobile/UI.md` has the recolor) is
+  reserved to mean *openable now, and nothing else, ever* — a route line, a
+  tag glyph, a padlock, none of them may use it.
 - **Shape** (`layerOf()`, `mobile/src/cluster.ts:98-101`): round for
   `historical` (and for `friend`, which has no writer yet), a folded-corner
   square for `stranger`. A group whose memories span both layers falls back
@@ -159,8 +160,14 @@ first tried on:
   opacity for contrast, then removed outright: *"what was left was a
   translucent white pill: the cost of the dependency without the effect."*
 - **`amber-500` (or any generic Tailwind accent) as the unlock color** —
-  named explicitly as an AI-slop tell; `seal` red replaced it and is not
-  reused anywhere else in the app for exactly that reason.
+  named explicitly as an AI-slop tell; a custom, dual light/dark `seal` value
+  replaced it and is not reused anywhere else in the app for exactly that
+  reason. `seal` moved from a stamp red to a warm ochre on 2026-09-23, which
+  happens to sit closer to `amber-500` on a color wheel than the red did —
+  the rejection was never about hue, it was about a generic, unmeasured,
+  single-value Tailwind token standing in for a considered one; `seal`'s two
+  hand-tuned, contrast-checked values (`mobile/UI.md`) are still exactly
+  that considered choice.
 - **Floating white cards with soft shadows everywhere** — kept only for the
   two elements that genuinely hover over the map ("Near me", the location
   primer); a pin is not one of those, and never gets a shadow of its own.

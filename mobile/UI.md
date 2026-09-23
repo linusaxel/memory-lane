@@ -13,7 +13,7 @@ One screen, four modals.
 MapView (full bleed)
 ├─ Marker per coordinate      tap -> MemorySheet.  Five states, see Markers
 ├─ banner  "N memories here"  top centre, non-interactive
-├─ "N within reach"           seal red, breathing, tap -> the nearest unlockable
+├─ "N within reach"           seal ochre, breathing, tap -> the nearest unlockable
 │    or "Nearest locked · 412 m"   muted and still, when none is in reach
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
 ├─ "Today's route · N of 5"   bottom centre, above Near me, only once one exists
@@ -126,12 +126,24 @@ it is built to look like a field guide rather than a dashboard.
 
 | Token | Hex | Meaning |
 |---|---|---|
-| `seal` | `#C0462B` / `#E2603F` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
-| `sealSoft` | `#F0D9CE` / `#4A2418` | the ring filling during a hold |
-| `sealDeep` | `#8F2F1B` / `#F2A88F` | the padlock inside the ring, the count tag on a reachable pin |
+| `seal` | `#8A5A17` / `#D9A54B` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
+| `sealSoft` | `#F0E4C8` / `#3D3018` | the ring filling during a hold |
+| `sealDeep` | `#5C3A0E` / `#F0C878` | the padlock inside the ring, the count tag on a reachable pin |
 
-The watch button is **ink**, not red. It was YouTube red back when the map pins
-were red too; that stopped being true, and the accent is spoken for.
+The watch button is **ink**, not the accent. It was YouTube red back when the
+map pins were red too; that stopped being true, and the accent is spoken for.
+
+**Shipped 2026-09-23: `seal` moved from a stamp red to a warm ochre**
+(`TODO.md`'s founder-brainstorm "warm accent, not a reskin" - hybrid, not a
+reskin of the palette: the map style, card layout and type system are
+untouched, only this one accent moved). `sealSoft`/`sealDeep` moved with it as
+the same ramp, `halo` (below) and the two hardcoded map-`Circle` colours in
+`App.tsx` (which cannot take a `dual()` value - see "Light and dark" above)
+were updated to match, and `api/card.py`'s `--accent` copy was updated
+alongside `theme.ts` so `tests/test_palette.py`'s
+`test_the_card_uses_the_apps_palette` still holds. Every contrast pair below
+was re-measured against the new hex values before this shipped, same
+requirement as before.
 
 ## Type
 
@@ -244,10 +256,10 @@ quietly go stale.
 | `inkFaint` on `paper` | 4.6:1 | 5.3:1 |
 | `inkFaint` on `paperRaised` | 5.0:1 | 4.8:1 |
 | `faded` on `paper` | 4.6:1 | 5.9:1 |
-| `paper` on `seal` | 4.6:1 | 5.2:1 |
+| `paper` on `seal` | 5.4:1 | 8.3:1 |
 | `paper` on `faded` | 4.6:1 | 5.9:1 |
-| `sealDeep` on `paper` | 7.4:1 | 9.4:1 |
-| `sealDeep` on `sealSoft` | 6.0:1 | 6.9:1 |
+| `sealDeep` on `paper` | 9.3:1 | 11.6:1 |
+| `sealDeep` on `sealSoft` | 8.1:1 | 8.1:1 |
 
 **`inkFaint` moved in both themes to get here**, and the way it failed is worth
 keeping. The light value was `#8A837A` — 3.4:1, well under AA, on the colour
@@ -615,7 +627,7 @@ the 28 and 44px faces, 14px around the 18px dot. Both land at 46, which also
 makes the stacked pins downtown separable by thumb rather than by luck.
 
 **`warm` is ink and not seal**, and that is the rule that keeps the accent
-honest. `seal` means *openable now*; a seal-red pin you cannot open is an
+honest. `seal` means *openable now*; a seal-coloured pin you cannot open is an
 invitation that refuses you. F11 says the same thing about the pill: "'Walk
 400 m' is information; only something you can actually open is an invitation."
 The ladder still reads as a gradient because value and weight carry it — faded,
