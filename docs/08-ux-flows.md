@@ -975,26 +975,24 @@ The core of the product brief: stand in a Copenhagen street, learn what
 happened there. Blocked on choosing the historical source, and on deciding
 whether it is a separate map layer, a filter, or a second pin style.
 
-### F4 · Switch between historical, friend and stranger layers — **Answered: stacked, by shape**
+### F4 · Switch between historical, friend and stranger layers — **Answered: all at once, told apart in the sheet**
 
-Not a segmented control and not a filter sheet. Layers are drawn at once and
-told apart by the pin's **shape**: `historical` is round, `stranger` is a card
-with a turned-down corner, `friend` is reserved and falls back to round until it
-has a writer. `layerOf()` in `mobile/src/cluster.ts`, tested there.
+Not a segmented control and not a filter sheet. Layers are drawn at once, as
+the same pin, and the sheet says which kind a memory is — a source to watch, or
+the name of the person who stood there and wrote it.
 
-Three reasons this beat a chooser. A filter is a control the map does not
-otherwise need, and every overlay on this screen competes with the unlock. A
-filter also answers the wrong question: nobody standing somewhere wants *fewer*
-of the memories that are there, they want to know which kind each one is — and
-shape says that without a tap. And colour was not available to say it, because
-the palette has one accent and it already means *openable*, so the distinction
-had to be carried by form.
+Why no chooser: a filter is a control the map does not otherwise need, and
+every overlay on this screen competes with the unlock. It also answers the
+wrong question — nobody standing somewhere wants *fewer* of the memories that
+are there.
 
-The honest limit: a group whose memories span both layers draws round rather
-than claiming the stack, and the sheet pager is what shows the mix. That is the
-same compromise the point-not-place decision already made (open question 4).
+Until 2026-09-23 the pin carried the layer by shape (round for `historical`, a
+folded-corner card for `stranger`), since colour was already spoken for by
+*openable*. It went in the one-pin simplification (`mobile/UI.md`, "One pin"):
+shape plus five ink states plus a tag glyph was a legend to learn before the map
+made sense, and a mixed stack could not honestly wear either shape anyway.
 
-**The list half, added 2026-09-21.** Shape told the layers apart on the map and
+**The list half, added 2026-09-21.** The map drew every layer and
 the feed underneath was still flat: `/v1/memories/nearby` ordered by contrast
 alone, so a well-scored podcast anecdote sorted ahead of a note somebody left
 standing at the same point. `LAYER_ORDER` in `api/queries.py` now leads the

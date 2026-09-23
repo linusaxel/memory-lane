@@ -108,8 +108,7 @@ python -m api.main
 | `mobile/App.tsx` | The map screen: pins, banner, "Near me" |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
-| `mobile/src/MemoryMarker.tsx` | A coordinate's five states, and its layer's shape |
-| `mobile/src/tagGlyph.tsx` | The one glyph per tag, for the ones that have one yet |
+| `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/route.ts` | What this device's daily walk looks like. Cached, server-authoritative, resets at midnight |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |

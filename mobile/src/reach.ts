@@ -10,8 +10,10 @@ import type { Coordinates, LocatedMemory } from './api.ts';
 import type { MemoryGroup } from './cluster.ts';
 import { metersBetween } from './region.ts';
 
-/** The ink ladder, from nothing-to-earn to earned. `plain` and `stamped` are
- *  both unlocked; only the local store knows which one was walked for. */
+/** Where you stand relative to a coordinate, from nothing-to-earn to earned.
+ *  `plain` and `stamped` are both unlocked; only the local store knows which
+ *  one was walked for. The pin only draws `unlockable`; the title, banner and
+ *  walk hint use all five. */
 export type Reach = 'plain' | 'stamped' | 'warm' | 'locked' | 'unlockable';
 
 /** Only used if a memory somehow arrives without the server's radius. */

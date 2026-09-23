@@ -66,7 +66,7 @@ that asks who you are before it shows you anything has the order wrong.
 | File | What it owns |
 |---|---|
 | `src/Padlock.tsx` | the one symbol, at any size, in any colour |
-| `src/MemoryMarker.tsx` | a coordinate's five states, and its layer's shape |
+| `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/ReachBanner.tsx` | the only thing on the map that animates |
 | `src/LocationPrimer.tsx` | asking before the system does |
@@ -577,87 +577,40 @@ they are all drawn on. Zero at a genuine shared centroid, kilometres once the
 grid loosens. Past `CLUSTER_SPAN_M` a tap **zooms instead of opening a sheet** —
 paging through venues miles apart is not "1 of 23 here", it is a lie.
 
-### The ink ladder
+### One pin
 
-A pin is a stamp impression on paper. Two axes compose, and nothing else does:
-the **ink state** is your relationship to the coordinate, the **shape** is which
-layer it belongs to. The state has to be on the pin, because otherwise you learn
-a pin is unreadable only by tapping it.
+Every coordinate draws the same pin: a 24px `ink` disc, 2px `paper` edge, an
+8px `paper` eye in the middle. It changes for one reason only — **it can be
+opened from where you stand** — and then it grows to 32px in `seal`, eye 12px,
+over a `halo` wash. That is the whole visual language. Simplified 2026-09-23
+from five ink states, a round-or-folded-card shape per layer and a ranked
+corner slot of padlock and tag glyph: it was a legend nobody should need.
 
-The walk, at the server's default 150 m gate. Distance is measured from the
-person to the nearest locked memory in the group, so these are real thresholds
-and not map distances:
+| When | Geometry | Tokens |
+|---|---|---|
+| every pin | disc 24, border 2; eye 8 | fill `ink`, edge + eye `paper` |
+| `unlockable`: inside the radius **and openable by walking** | disc 32, border 2; eye 12; wash 46 | fill `seal`, edge + eye `paper`, wash `halo` |
+| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ink` (`sealDeep` on a lit pin), count `paper` |
 
-```
-   over 450m        450 - 150m         inside 150m        after the hold
-    locked     ->      warm      ->     unlockable   ->      stamped
-  faded disc      paper disc,        seal ring 44px      ink disc, ring
-  + padlock       ink edge+lock      + halo + tag        inside. Permanent.
-```
+**The eye is the point.** The pin you can open is the pin you are standing on,
+so the blue location dot lands in the hole rather than disappearing under a
+disc. The badge sits in the corner for the same reason.
 
-Every measurement, because the alternative is six numbers drifting apart in one
-StyleSheet. `WARM_MULTIPLIER = 3` and the radius is always the server's.
+**`seal` means openable now, and nothing else.** A seal-coloured pin you
+cannot open is an invitation that refuses you (F11). Locked near, locked far,
+earned and never gated all draw the same ink pin; the difference is in the
+marker's `title` (VoiceOver and Maestro still hear every state from
+`STATE_LABEL`) and in the sheet. `reachOf` in `src/reach.ts` still computes all
+five, because the banner and the walk hint need them.
 
-| State | When | Geometry | Tokens |
-|---|---|---|---|
-| `plain` (one) | never gated | dot 18px, radius 9, border 2 | fill `ink`, edge `paper` |
-| `plain` (several) | never gated, a stack | badge min-w 26, h 26, radius 13, border 2, pad-x 6 | fill `ink`, edge + count `paper` |
-| `stamped` | you walked here and opened it | disc 28, radius 14, border 2; impression 14, radius 7, border 2 | fill `ink`, edge + impression `paper`, count tag `ink` |
-| `warm` | locked, inside 3x the radius | disc 28, radius 14, border 2; padlock 9.52 | fill `paper`, edge + padlock + count `ink` |
-| `locked` | locked, further than that | disc 28, radius 14, border 2; padlock 9.52 | fill `faded`, edge + padlock `paper` |
-| `unlockable` | locked, inside the radius **and openable by walking** | ring 44, radius 22, border 5; tag min-w 20, h 20, radius 10, border 2 | edge `seal`, fill `paper`, tag `sealDeep`, wash `halo` |
+**A seal is not a distance.** A time-locked memory (F23) is `locked` at every
+distance, so it never lights. `isSealed` in `src/reach.ts` is the one
+predicate, checked there because the pin, the within-reach banner's count and
+the walk hint all ask "can this be opened from here".
 
-**A seal is not a distance, and the ladder does not apply to one.** A
-time-locked memory (F23) is `locked` at every distance, so it draws `locked`
-wherever you stand. `isSealed` in `src/reach.ts` is the one predicate; it is
-checked there rather than in the component because three separate things ask
-"can this be opened from here" — the pin's ink state, the within-reach banner's
-count, and the walk hint — and a seal answered yes to all three. It was `locked`
-and it was 128 m away, so the pin wore the seal ring, the banner counted it, and
-`nearestLocked` (which returns null the moment anything is `unlockable`) could
-suppress the hint pointing at a pin somebody genuinely could reach. Grey is not
-a perfect reading of "shut until 2031" — but it is true, and it needs no new
-visual language. Marked `ponytail:` in `reach.ts` if it ever earns its own mark.
-
-The card shape swaps the radius only — 2 on the dot, 3 on the badge and disc, 4
-on the ring — and adds a 9px fold at the face's top right corner. The fold is
-`paper`, drawn as a border triangle on a 0x0 view.
-
-**The padding is the tap target, not decoration.** A 28px disc is 28px of
-hittable pin and Apple's floor is 44, so every state carries a wrap: 9px around
-the 28 and 44px faces, 14px around the 18px dot. Both land at 46, which also
-makes the stacked pins downtown separable by thumb rather than by luck.
-
-**`warm` is ink and not seal**, and that is the rule that keeps the accent
-honest. `seal` means *openable now*; a seal-coloured pin you cannot open is an
-invitation that refuses you. F11 says the same thing about the pill: "'Walk
-400 m' is information; only something you can actually open is an invitation."
-The ladder still reads as a gradient because value and weight carry it — faded,
-then an ink outline, then a seal ring.
-
-**`stamped` is what the map is for.** Until it existed, a memory you walked to
-and earned drew identically to one that was never gated, so the collection left
-no mark on the map at all. The mark is a ring inside the disc — a small copy of
-the ring you held to open it, `paper` on `ink`, the same pair the count already
-uses. It is permanent: `src/unlocked.ts` is the source of truth and survives
-walking away, a restart and a reinstall. `reachOf` needs the earned set passed
-in to draw it, because `/v1/memories/nearby` never takes a position and reports
-earned and never-gated memories identically.
-
-**Shape is the layer**, which is how F4 gets answered without new chrome:
-`historical` is round, `stranger` is a card — square corners and a turned-down
-top right, drawn with the border-triangle trick rather than the SVG that tag
-glyphs use elsewhere on the pin, because a shape this simple needs no library.
-The fold is opaque on purpose; a real notch needs clipping, and a transparent
-wedge over a street map reads as a rendering fault. A mixed group falls back to
-round rather than claiming the stack for one layer.
-
-**The corner slot holds one thing at a time, in priority order:** today's
-route position (F25) beats a count, which beats a padlock, which beats the
-dominant tag's glyph (`mobile/src/tagGlyph.tsx`) — only a handful of tags have
-one yet. None of this touches the ink ladder or the layer shape above; it only
-decides what goes in the one slot neither of those already filled. Full
-reasoning for what a tag and a layer are: `docs/11-memory-types.md`.
+**The wrap is the tap target, not decoration.** Every pin sits in a 46px box,
+over Apple's 44 floor, which also makes the stacked pins downtown separable by
+thumb rather than by luck.
 
 **Anchor every marker `{ x: 0.5, y: 0.5 }`.** iOS centres a custom view on the
 coordinate already, but Android defaults to bottom-centre whatever you draw, so

@@ -1,6 +1,5 @@
 /** The heart action's own mark: outline when this device hasn't hearted a
- *  memory, filled once it has. Not a case in tagGlyph.tsx - that file's
- *  switch is keyed on the closed tag vocabulary, and a heart isn't a tag.
+ *  memory, filled once it has.
  *
  *  Monochrome like every other glyph here: never `seal`, that accent is
  *  reserved for "openable now".

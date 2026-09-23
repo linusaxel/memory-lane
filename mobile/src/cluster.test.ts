@@ -1,16 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { CLUSTER_SPAN_M, groupByLocation, groupLabel, layerOf, precisionFor } from './cluster.ts';
-import type { Layer, LocatedMemory } from './api.ts';
+import { CLUSTER_SPAN_M, groupByLocation, groupLabel, precisionFor } from './cluster.ts';
+import type { LocatedMemory } from './api.ts';
 
-function memory(
-  id: number,
-  name: string,
-  lat: number,
-  lng: number,
-  layer: Layer = 'historical',
-): LocatedMemory {
+function memory(id: number, name: string, lat: number, lng: number): LocatedMemory {
   return {
     id,
     summary: `memory ${id}`,
@@ -25,7 +19,7 @@ function memory(
     },
     tags: [],
     confidence: 'high',
-    layer,
+    layer: 'historical',
     locked: false,
     unlock_radius_meters: null,
     author: null,
@@ -150,17 +144,4 @@ test('the coarsest grid still separates cities', () => {
     1,
   );
   assert.equal(groups.length, 2);
-});
-
-test('a group wears its layer only when the whole stack agrees', () => {
-  const [mine] = groupByLocation([memory(1, 'My corner', TS_LAT, TS_LNG, 'stranger')]);
-  assert.equal(layerOf(mine), 'stranger');
-
-  // A submission filed outside Katz shares Katz's cell. Claiming the stack for
-  // either layer would be a lie the sheet immediately contradicts.
-  const [mixed] = groupByLocation([
-    memory(1, 'Katz', TS_LAT, TS_LNG),
-    memory(2, 'My corner', TS_LAT, TS_LNG, 'stranger'),
-  ]);
-  assert.equal(layerOf(mixed), 'historical');
 });

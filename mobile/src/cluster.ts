@@ -5,7 +5,7 @@
  * in docs/08-ux-flows.md for why 60% of this corpus needs it.
  */
 
-import type { LocatedMemory, Layer } from './api.ts';
+import type { LocatedMemory } from './api.ts';
 import { metersBetween } from './region.ts';
 
 export type MemoryGroup = {
@@ -90,12 +90,4 @@ export function groupLabel(group: MemoryGroup): string {
   return names.size === 1
     ? `${group.memories[0].place.name} (${group.memories.length})`
     : `${names.size} places here`;
-}
-
-/** Which layer's shape this pin wears. A mixed group falls back to the round
- *  one: a submission can land within 11m of an extracted place, and claiming
- *  the whole stack for one layer would be a lie the sheet then contradicts. */
-export function layerOf(group: MemoryGroup): Layer {
-  const first = group.memories[0].layer;
-  return group.memories.every((memory) => memory.layer === first) ? first : 'historical';
 }
