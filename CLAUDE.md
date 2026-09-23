@@ -214,8 +214,9 @@ Optional (with defaults):
 - `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
 - `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)
 - `REPORT_THRESHOLD` = 3 (distinct devices needed to hide a submission)
-- `ROUTE_SIZE` = 5, `ROUTE_RADIUS_METERS` = 4000 (today's route: how many stops,
-  and how far out to look for them)
+- `ROUTE_SIZE` = 5, `ROUTE_RADIUS_METERS` = 4000, `ROUTE_BUDGET_METERS` = 4000
+  (today's route: how many stops, how far out to look for them, and how far
+  the walk may be, as crow-flies x 1.3)
 - `GOOGLE_CLIENT_IDS`, `APPLE_CLIENT_IDS` = empty (comma-separated audience
   whitelists. Empty means sign-in is off and `/v1/auth/*` answers 503)
 

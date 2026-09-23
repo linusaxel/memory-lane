@@ -71,6 +71,12 @@ router = APIRouter()
 # find that many outside a dense corpus without turning a walk into a commute.
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
 ROUTE_RADIUS_METERS = int(os.getenv("ROUTE_RADIUS_METERS", "4000"))
+# The radius is where stops may come from; this is how far the walk may be. A
+# 4km radius alone can make an 11km route. Checked against crow-flies x
+# ROUTE_CIRCUITY, since a street walk is ~1.2-1.3x the straight line (Boeing
+# 2019, https://arxiv.org/abs/1708.00836) and nothing here routes on streets.
+ROUTE_BUDGET_METERS = int(os.getenv("ROUTE_BUDGET_METERS", "4000"))
+ROUTE_CIRCUITY = 1.3
 
 
 @router.get("/v1/memories/nearby", response_model=NearbyResponse)
@@ -335,9 +341,12 @@ def _one_per_place(candidates: list) -> list:
 ROUTE_SHAKES = 50
 
 
-def _choose_stops(candidates: list, size: int, anchor: Coordinates, seed: str) -> list:
-    """The `size` stops that make the shortest walk from the anchor, not the
-    `size` nearest: a stop 300m behind you no longer beats a tight cluster 500m
+def _choose_stops(
+    candidates: list, size: int, anchor: Coordinates, seed: str, budget_meters: float
+) -> list:
+    """Up to `size` stops whose walk from the anchor, times ROUTE_CIRCUITY, fits
+    `budget_meters`: as many as fit, then the shortest walk, not the `size`
+    nearest: a stop 300m behind you no longer beats a tight cluster 500m
     ahead. Cheapest insertion builds a walk, then ROUTE_SHAKES rounds drop one
     or two stops at random and reinsert the cheapest, keeping whichever walk is
     shorter (iterated local search). Seeded, so one device on one day always
@@ -345,7 +354,7 @@ def _choose_stops(candidates: list, size: int, anchor: Coordinates, seed: str) -
 
     Each of stranger/other is guaranteed min(available, size // 2) stops, which
     is what the strict alternation before this gave, and still never comes up
-    short when one layer runs dry.
+    short when one layer runs dry or is out of budget.
     ponytail: every stop is worth the same, so this only minimises metres
     (TODO.md, "Give stops a prize")."""
     points = [anchor] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates]
@@ -366,26 +375,36 @@ def _choose_stops(candidates: list, size: int, anchor: Coordinates, seed: str) -
             return d[prev][c]
         return d[prev][c] + d[c][walk[at]] - d[prev][walk[at]]
 
-    def fill(walk):
-        while len(walk) < size:
-            _, c, at = min(
-                (cost(walk, c, at), c, at)
-                for c in nodes
-                if c not in walk and fits(walk, c)
-                for at in range(len(walk) + 1)
-            )
-            walk.insert(at, c)
-        return walk
-
     def length(walk):
         return sum(d[a][b] for a, b in itertools.pairwise([0, *walk]))
 
+    reach = budget_meters / ROUTE_CIRCUITY
+
+    def fill(walk):
+        while len(walk) < size:
+            room = reach - length(walk)
+            options = [
+                (cost(walk, c, at), c, at)
+                for c in nodes
+                if c not in walk
+                for at in range(len(walk) + 1)
+            ]
+            options = [o for o in options if o[0] <= room]
+            if not options:
+                break
+            _, c, at = min([o for o in options if fits(walk, o[1])] or options)
+            walk.insert(at, c)
+        return walk
+
+    def score(walk):
+        return (-len(walk), length(walk))
+
     rng = random.Random(seed)
     best = fill([])
-    for _ in range(ROUTE_SHAKES if size else 0):
-        drop = set(rng.sample(best, rng.randint(1, min(2, size))))
+    for _ in range(ROUTE_SHAKES if best else 0):
+        drop = set(rng.sample(best, rng.randint(1, min(2, len(best)))))
         trial = fill([i for i in best if i not in drop])
-        if length(trial) < length(best):
+        if score(trial) < score(best):
             best = trial
     return [candidates[i - 1] for i in best]
 
@@ -492,7 +511,11 @@ def get_todays_route(
             anchor = Coordinates(lat=lat, lng=lng)
             picked = _walking_order(
                 _choose_stops(
-                    _one_per_place(candidates), ROUTE_SIZE, anchor, f"{device}:{route_date}"
+                    _one_per_place(candidates),
+                    ROUTE_SIZE,
+                    anchor,
+                    f"{device}:{route_date}",
+                    ROUTE_BUDGET_METERS,
                 ),
                 anchor,
             )

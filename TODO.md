@@ -1212,7 +1212,11 @@ flagged ⚠️ inline, not overridden.
       [Santini 2019, ALNS](https://santini.in/files/papers/santini-2019.pdf) ·
       [Kobeaga et al. 2018, EA4OP](https://www.sciencedirect.com/science/article/abs/pii/S0305054817302241) ·
       [OR-Tools penalties](https://developers.google.com/optimization/routing/penalties)
-- [ ] **Budget in metres of walk, not a search radius.** `radius_meters` limits
+- [x] **Budget in metres of walk, not a search radius.** Done 2026-09-23:
+      `ROUTE_BUDGET_METERS` (4000) against crow-flies × `ROUTE_CIRCUITY` 1.3.
+      `_choose_stops` takes as many stops as fit, then the shortest walk. The
+      budget beats the layer mix. Server knob only; the length chip is below.
+      `radius_meters` limits
       *where candidates come from*, not *how long the walk is*: a 4 km radius
       can produce an 11 km route. Keep the radius as a prefilter and add
       `budget_meters` as the real constraint. Crow-flies underestimates walking;
