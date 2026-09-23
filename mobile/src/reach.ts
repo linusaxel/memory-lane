@@ -17,7 +17,7 @@ import { metersBetween } from './region.ts';
 export type Reach = 'plain' | 'stamped' | 'warm' | 'locked' | 'unlockable';
 
 /** Only used if a memory somehow arrives without the server's radius. */
-export const FALLBACK_RADIUS_M = 150;
+export const FALLBACK_RADIUS_M = 20;
 
 /** How much past the gate still reads as "nearly". Three radii is a few
  *  minutes' walk at the 150m gate, which is the distance at which turning

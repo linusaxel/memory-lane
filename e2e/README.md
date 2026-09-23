@@ -14,6 +14,11 @@ driving the real app on a simulator while you watch.
 Exit codes follow the gate: **0** pass, **1** a flow failed, **2** the
 environment needs a human.
 
+**It needs the OSRM sidecar** (`./osrm/build.sh` once, then `docker compose
+--profile routing up -d osrm`). The walk is the route OSRM picks, travelled
+along its street shapes, and without streets the app picks a different one.
+`E2E_ROUTING_URL` points it elsewhere.
+
 **Point `--record` at one flow, not at all of them.** Recording is not free and it
 is not stable in bulk: `./e2e/run.sh` on its own passes 6/6 run after run,
 while `./e2e/run.sh --record` fails three of the six - a *different* three each

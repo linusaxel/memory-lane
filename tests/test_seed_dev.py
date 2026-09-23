@@ -77,10 +77,12 @@ def test_the_seed_sits_on_the_app_s_fallback_region():
 # -- each arrangement is what it claims --------------------------------------
 
 
-def test_one_memory_is_close_enough_to_unlock_right_now(seeded):
+def test_one_memory_is_a_few_steps_away(seeded):
+    """Not inside the gate from the dev coordinate any more: that is inside the
+    Empire State Building, and a stop has to be on a street (seed_dev.OFFSETS)."""
     place = by_query(seeded)["reach"]
     away = meters_between(Coordinates(lat=LAT, lng=LNG), Coordinates(lat=place.lat, lng=place.lng))
-    assert away < UNLOCK_RADIUS_METERS, "the point of the seed is something in reach"
+    assert UNLOCK_RADIUS_METERS < away < 200
     assert place.in_cell == 1, "sharing a cell would ungate it"
 
 

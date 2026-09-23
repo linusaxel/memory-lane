@@ -13,6 +13,7 @@ import pytest
 from sqlalchemy import text
 
 from api import read, streets
+from api.models import Coordinates
 
 pytestmark = pytest.mark.db
 
@@ -285,3 +286,54 @@ def test_street_legs_are_stored_stop_to_stop(client, db_session, monkeypatch):
     monkeypatch.setattr(read, "street_legs", lambda stops: None)
     legs = client.get(f"/v1/routes/today?device={DEVICE}").json()["meta"]["legs"]
     assert legs == first["meta"]["legs"]
+
+
+def test_retraced_meters_counts_a_stretch_walked_twice_either_way():
+    a, b, c = (Coordinates(lat=LAT + n * 0.001, lng=LNG) for n in range(3))
+    assert streets.retraced_meters([a, b, c]) == 0
+    # Out to c and back to b: b-c is walked twice.
+    assert round(streets.retraced_meters([a, b, c, b])) == 111
+
+
+def test_a_stop_that_forces_an_out_and_back_is_swapped_for_a_clean_loop(
+    client, db_session, monkeypatch
+):
+    """Stop 2 hangs off the street: reaching it means walking a stub in and the
+    same stub out. With a sixth stop to spare, the walk drops it."""
+    ids = {n: _offset(db_session, n) for n in range(1, 7)}
+    db_session.commit()
+    spur = Coordinates(lat=LAT + 0.002, lng=LNG)
+    stub = Coordinates(lat=LAT + 0.002, lng=LNG + 0.0004)
+
+    def legs(points):
+        out = []
+        for a, b in pairwise(points):
+            if a == spur:
+                out.append([a, stub, b])
+            elif b == spur:
+                out.append([a, stub, b])
+            else:
+                out.append([a, b])
+        return out
+
+    monkeypatch.setattr(read, "street_legs", legs)
+    chosen = [m["id"] for m in _preview(client).json()["memories"]]
+    assert len(chosen) == 5
+    assert ids[2] not in chosen
+
+
+def test_a_stop_too_far_from_any_street_is_never_a_stop(client, db_session, monkeypatch):
+    """The gate is 20m. A pin 40m inside a block can never be stood on from a
+    street, so a street-routed walk does not offer it."""
+    ids = {n: _offset(db_session, n) for n in range(1, 4)}
+    db_session.commit()
+
+    def table(points):
+        d = [[read.meters_between(a, b) * streets.ROUTE_CIRCUITY for b in points] for a in points]
+        # Node 0 is the anchor; the second-nearest candidate is 40m off the street.
+        return d, [0.0] + [40.0 if i == 1 else 5.0 for i in range(len(points) - 1)]
+
+    monkeypatch.setattr(read, "street_table", table)
+    chosen = [m["id"] for m in _preview(client).json()["memories"]]
+    assert ids[2] not in chosen
+    assert {ids[1], ids[3]} <= set(chosen)

@@ -53,15 +53,22 @@ SEED_DEVICE = "5eed0000-0000-4000-8000-00000000d5e1"
 # below is at least 0.0008 degrees from its neighbours except where the sharing
 # is the point.
 #
-# ~40m and ~120m are inside the 150m radius; 400m is not.
+# Every one a route may pick sits within the 20m gate of a walkable way (OSRM
+# `nearest`), or a street-routed walk would drop it: a pin in the middle of the
+# Empire State Building can never be stood on. `sealed` is the exception - it
+# is never a stop - and sits inside the gate of the dev coordinate itself.
+#
+# The five stops are one clean loop round the blocks between 33rd and 35th,
+# 5th Ave and Broadway: walked from the start in .maestro/walk-and-unlock.yml
+# it retraces ~4m of street (api/streets.py, retraced_meters).
 OFFSETS = {
-    "reach": (0.00036, 0.0),  # ~40m  - unlockable right now
-    "walk": (0.0036, 0.0),  # ~400m - locked, and worth walking to
-    "stack": (-0.0004, -0.0013),  # ~120m - one place, three memories
+    "reach": (0.00036, 0.00118),  # ~105m - 5th Ave above 34th
+    "walk": (0.00132, 0.00001),  # ~147m - along 35th, locked and worth walking to
+    "stack": (0.000374, -0.001793),  # ~155m - Broadway at 34th, one place, three memories
     "centroid": (0.0006, -0.0013),  # ~130m - two places, so neither is gated
-    "filed": (-0.0005, 0.0010),  # ~100m - submitted, with a photo and a voice
-    "sealed": (0.0006, 0.0013),  # ~129m - a time capsule: in reach and still shut
-    "nightspot": (0.0018, -0.0004),  # ~203m - a second submission, to mix layers with
+    "filed": (-0.00035, 0.00068),  # ~70m - 5th Ave below 34th, submitted, photo and voice
+    "sealed": (-0.00012, 0.00012),  # ~16m - a time capsule: in reach and still shut
+    "nightspot": (0.002, -0.0015),  # ~260m - 6th Ave at 35th, a second submission
 }
 
 
@@ -107,7 +114,7 @@ def extracted() -> list[dict]:
         ),
         memory(
             "walk",
-            "Four hundred metres north, dev seed",
+            "Along 35th Street, dev seed",
             "The night the power went out on this block and somebody wheeled a "
             "piano into the street. Nobody could agree who it belonged to.",
             ["music", "nightlife"],

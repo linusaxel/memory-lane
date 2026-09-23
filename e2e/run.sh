@@ -182,9 +182,13 @@ echo "     seeded $DB"
 # which costs an afternoon before anybody suspects the port.
 say "2/5  api on :$API_PORT"
 kill_port "$API_PORT"
-# ROUTING_URL empty: walk-and-unlock names its stops in crow-flies order, and
-# street distances can run the same loop the other way round.
-DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL= \
+# Streets, as a person gets them: the flows name stops in the order OSRM walks
+# them and travel along its street shapes, and the 20m gate drops any pin a
+# street cannot reach. Without the sidecar that is a different app.
+ROUTING="${E2E_ROUTING_URL:-http://localhost:5001}"
+curl -fsS -m 3 "$ROUTING/nearest/v1/foot/-73.9857,40.7484" >/dev/null 2>&1 \
+  || infra "no OSRM at $ROUTING - ./osrm/build.sh once, then docker compose --profile routing up -d osrm"
+DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL="$ROUTING" \
   venv/bin/python -m uvicorn api.main:app --port "$API_PORT" > "$LOGS/api.log" 2>&1 &
 API_PID=$!
 for _ in $(seq 30); do

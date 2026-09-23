@@ -19,10 +19,12 @@ import re
 from datetime import timedelta
 
 import pytest
+import yaml
 from sqlalchemy import text
 
 import pipeline.seed_dev as seed_dev
-from api.gate import today
+from api.gate import UNLOCK_RADIUS_METERS, meters_between, today
+from api.models import Coordinates
 from pipeline.seed_dev import at, seed
 
 pytestmark = pytest.mark.db
@@ -32,9 +34,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEVICE = "e2e0e2e0-0000-4000-8000-00000000e2e0"
 OTHER_DEVICE = "e2e0e2e0-0000-4000-8000-00000000beef"
 
-# .maestro/f7-walk-and-unlock.yml starts here: ~307m south of `reach`, which is
-# outside the 150m gate and inside reachOf's `warm` band.
-START = (40.7460, -73.9857)
+# .maestro/walk-and-unlock.yml starts here: the 33rd St pavement, on the seed's
+# loop and outside every stop's 20m gate.
+START = (40.748054, -73.985885)
 
 
 @pytest.fixture
@@ -104,7 +106,7 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     far = read_at(seeded, memory_id, START)
     assert far["locked"] is True
     assert far["summary"] == ""
-    assert far["distance_meters"] > 150
+    assert far["distance_meters"] > UNLOCK_RADIUS_METERS
 
     refused = seeded.post(
         f"/v1/memories/{memory_id}/unlock",
@@ -112,7 +114,7 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     )
     assert refused.status_code == 200
     assert refused.json()["locked"] is True
-    assert refused.json()["distance_meters"] > 150
+    assert refused.json()["distance_meters"] > UNLOCK_RADIUS_METERS
 
     # Nothing was recorded by being refused.
     assert seeded.get("/v1/unlocks", params={"device": DEVICE}).json()["memories"] == []
@@ -220,7 +222,7 @@ def test_f19_somewhere_else_entirely_is_told_where_to_go(seeded):
 
     stats = seeded.get("/v1/stats").json()
     assert stats["hotspots"], "with no hotspot the card cannot render and F19 is a blank map"
-    assert stats["unlock_radius_meters"] == 150
+    assert stats["unlock_radius_meters"] == UNLOCK_RADIUS_METERS
 
 
 def test_maestro_flows_still_point_at_the_seed():
@@ -232,7 +234,7 @@ def test_maestro_flows_still_point_at_the_seed():
     """
     seeded_names = {
         "The bench outside, dev seed",
-        "Four hundred metres north, dev seed",
+        "Along 35th Street, dev seed",
         "The corner, dev seed",
         "Somewhere around here, dev seed",
         "The same rough spot, dev seed",
@@ -259,10 +261,18 @@ def test_maestro_flows_still_point_at_the_seed():
                 f"{flow.name} stands at an unseeded {lat},{lng}"
             )
 
-        for lat, lng in re.findall(r'"(-?\d+\.\d+),\s*(-?\d+\.\d+)"', text_):
-            assert (float(lat), float(lng)) in known, (
-                f"{flow.name} travels to an unseeded {lat},{lng}"
-            )
+        # A travel keeps to the streets, so its turns are not seed points -
+        # but it has to end inside the gate of one, or the stop never opens.
+        steps = [s for doc in yaml.safe_load_all(text_) if isinstance(doc, list) for s in doc]
+        for step in steps:
+            if not isinstance(step, dict) or "travel" not in step:
+                continue
+            lat, lng = map(float, step["travel"]["points"][-1].split(","))
+            end = Coordinates(lat=lat, lng=lng)
+            assert any(
+                meters_between(end, Coordinates(lat=k[0], lng=k[1])) <= UNLOCK_RADIUS_METERS
+                for k in known
+            ), f"{flow.name} travels to {lat},{lng}, inside no seeded stop's gate"
 
         for name in re.findall(r"([A-Z][^\"\n]*?, dev seed)", text_):
             # endswith, not equality: F25's marker titles carry a "Stop N of 5."

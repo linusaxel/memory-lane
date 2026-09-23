@@ -66,7 +66,7 @@ from api.queries import (
     SEARCH_MEMORIES_WITH_LOCATION_QUERY,
     SINGLE_MEMORY_QUERY,
 )
-from api.streets import street_legs, walking_matrix
+from api.streets import retraced_meters, street_legs, street_table
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -468,6 +468,11 @@ ROUTE_INSERT = """
 """
 
 
+# Rounds of "drop one stop and see whether the loop gets cleaner". Each round
+# routes one walk per stop, milliseconds apiece against a local sidecar.
+ROUTE_CLEANUPS = 3
+
+
 def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route_date):
     """The walk this device would get from `at` today: (stops in order,
     stop-to-stop street legs, {out, home} street legs touching `at`). Seeded
@@ -475,7 +480,15 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
     same stops without the client ever naming them.
 
     A loop cannot reach further out than half its length, so that is where
-    candidates come from."""
+    candidates come from. With streets, two more rules:
+
+    - A stop further from any walkable way than the gate can never be stood
+      on, so it is not a stop.
+    - The walk should be a clean loop, not a line with spurs: a stop off the
+      loop is walked to and back the same way. After the solver picks, each
+      stop is dropped in turn and the rest re-picked; the walk that retraces
+      the fewest metres of street, with as many stops, wins. Up to
+      ROUTE_CLEANUPS rounds."""
     candidates = session.execute(
         text(ROUTE_CANDIDATES_QUERY),
         {
@@ -484,30 +497,65 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
             "radius_meters": budget_meters / 2,
             "today": route_date,
             "device_id": device,
-            "limit": 4 * ROUTE_SIZE,
+            # Room to swap a stop out for a cleaner loop.
+            "limit": 8 * ROUTE_SIZE,
         },
     ).fetchall()
     candidates = _one_per_place(candidates)
-    d = walking_matrix([at] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates])
-    order = _walking_order(
-        _choose_stops(
-            candidates, ROUTE_SIZE, d, f"{device}:{route_date}", budget_meters, ROUTE_LOOP
-        ),
-        d,
-        ROUTE_LOOP,
-    )
-    picked = [candidates[i - 1] for i in order]
-    if not picked:
-        return picked, None, None
+    d, snaps = street_table([at] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates])
+    if snaps:
+        keep = [i for i, r in enumerate(candidates) if snaps[i + 1] <= UNLOCK_RADIUS_METERS]
+        candidates = [candidates[i] for i in keep]
+        rows = [0] + [i + 1 for i in keep]
+        d = [[d[a][b] for b in rows] for a in rows]
+    seed = f"{device}:{route_date}"
+
+    def walk(banned: set[int]) -> list[int]:
+        """Stops as nodes into `d`, in walking order, never any in `banned`."""
+        nodes = [i for i in range(1, len(candidates) + 1) if i not in banned]
+        rows = [0, *nodes]
+        dd = [[d[a][b] for b in rows] for a in rows]
+        picks = _choose_stops(
+            [candidates[i - 1] for i in nodes], ROUTE_SIZE, dd, seed, budget_meters, ROUTE_LOOP
+        )
+        return [nodes[i - 1] for i in _walking_order(picks, dd, ROUTE_LOOP)]
+
+    def streets(order: list[int]):
+        stops = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
+        return street_legs([at, *stops, *([at] if ROUTE_LOOP else [])])
+
+    order = walk(set())
+    legs = streets(order) if order else None
+    if legs is None:
+        return [candidates[i - 1] for i in order], None, None
+
+    retraced = retraced_meters([p for leg in legs for p in leg])
+    banned: set[int] = set()
+    for _ in range(ROUTE_CLEANUPS):
+        if retraced < 1:
+            break
+        trials = []
+        for stop in order:
+            trial = walk(banned | {stop})
+            if len(trial) < len(order):
+                continue
+            trial_legs = streets(trial)
+            if trial_legs is not None:
+                cost = retraced_meters([p for leg in trial_legs for p in leg])
+                trials.append((cost, stop, trial, trial_legs))
+        if not trials:
+            break
+        cost, stop, trial, trial_legs = min(trials, key=lambda t: t[0])
+        if cost >= retraced:
+            break
+        retraced, order, legs = cost, trial, trial_legs
+        banned.add(stop)
+
     # One street route through the whole walk, start and home included, split
     # into the stop-to-stop legs (stored) and the two that touch the start
     # (handed to the preview, which stores nothing).
-    stops = [Coordinates(lat=r.lat, lng=r.lng) for r in picked]
-    legs = street_legs([at, *stops, *([at] if ROUTE_LOOP else [])])
-    if legs is None:
-        return picked, None, None
     ends = {"out": legs[0], "home": legs[-1] if ROUTE_LOOP else None}
-    return picked, legs[1 : len(picked)], ends
+    return [candidates[i - 1] for i in order], legs[1 : len(order)], ends
 
 
 def _route_response(route_date, rows, memory_ids, budget_meters, legs, ends=None) -> RouteResponse:

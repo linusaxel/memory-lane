@@ -16,9 +16,9 @@ from math import asin, cos, radians, sin, sqrt
 from api.media import media_url
 from api.models import Author, ContentRef, Coordinates, MediaItem, Memory, Place, Source
 
-# How close you have to stand to read a memory. 150 and not 50: see
-# docs/10-decisions.md#150-m-not-50-m.
-UNLOCK_RADIUS_METERS = int(os.getenv("UNLOCK_RADIUS_METERS", "150"))
+# How close you have to stand to read a memory: on the spot, not down the
+# street. See docs/10-decisions.md#20-m.
+UNLOCK_RADIUS_METERS = int(os.getenv("UNLOCK_RADIUS_METERS", "20"))
 
 
 def row_source(row) -> Source | None:

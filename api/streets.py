@@ -8,6 +8,7 @@ Add one when the sidecar is remote or billed.
 """
 
 import json
+from itertools import pairwise
 from urllib.request import urlopen
 
 from api.gate import meters_between
@@ -29,17 +30,42 @@ def _osrm(service: str, points: list[Coordinates], query: str):
     return body
 
 
-def walking_matrix(points: list[Coordinates]) -> list[list[float]]:
-    """d[i][j], metres on foot from points[i] to points[j]. Not symmetric
-    when streets come back from OSRM."""
+def street_table(points: list[Coordinates]) -> tuple[list[list[float]], list[float] | None]:
+    """(d, snaps): d[i][j] is metres on foot from points[i] to points[j], not
+    symmetric when streets come back from OSRM; snaps[i] is how far points[i]
+    is from the nearest walkable way, or None without streets."""
     if ROUTING_URL and len(points) > 1:
         try:
-            d = _osrm("table", points, "annotations=distance")["distances"]
+            body = _osrm("table", points, "annotations=distance")
+            d = body["distances"]
             if all(cell is not None for row in d for cell in row):
-                return d
+                return d, [source["distance"] for source in body["sources"]]
         except Exception:
             pass
-    return [[meters_between(a, b) * ROUTE_CIRCUITY for b in points] for a in points]
+    return [[meters_between(a, b) * ROUTE_CIRCUITY for b in points] for a in points], None
+
+
+def walking_matrix(points: list[Coordinates]) -> list[list[float]]:
+    """street_table's distances alone."""
+    return street_table(points)[0]
+
+
+def retraced_meters(path: list[Coordinates]) -> float:
+    """Metres of `path` that walk a stretch of street already walked, either
+    way: the out-and-back to a stop that sits off the loop. Street routes
+    reuse the same map nodes, so a retraced segment has the same two ends."""
+    seen: set = set()
+    total = 0.0
+    for a, b in pairwise(path):
+        ka, kb = (round(a.lat, 5), round(a.lng, 5)), (round(b.lat, 5), round(b.lng, 5))
+        if ka == kb:
+            continue
+        key = (ka, kb) if ka < kb else (kb, ka)
+        if key in seen:
+            total += meters_between(a, b)
+        else:
+            seen.add(key)
+    return total
 
 
 def street_legs(stops: list[Coordinates]) -> list[list[Coordinates]] | None:

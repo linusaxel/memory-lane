@@ -313,10 +313,10 @@ It also means the gated memories are, by construction, the *scattered* ones. No
 round-number coordinate is near any of them, which is why the unlock cannot be
 exercised from a Simulator without the dev seed in TODO 3.6.
 
-The radius is **150m**, not the 50m the model calls exact. Urban GPS drifts tens
-of metres, and a gate that will not open while you are standing on the spot is a
-bug the person blames on themselves. `UNLOCK_RADIUS_METERS` in the API
-environment if that turns out wrong in the street.
+The radius is **20m**: you stand at the place, not down the street from it.
+Urban GPS can drift further than that between tall buildings, and that risk is
+accepted (`docs/10-decisions.md#20-m`). `UNLOCK_RADIUS_METERS` in the API
+environment if it turns out wrong in the street.
 
 The app keeps the position live with `watchPositionAsync` (25m interval,
 foreground only). Reading it once at launch means a pin turns unlockable only if

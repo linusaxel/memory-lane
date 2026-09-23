@@ -1349,6 +1349,26 @@ flagged ⚠️ inline, not overridden.
 
 #### Mock data and measuring
 
+- [ ] **A dense, randomised map, so the route is tested and not staged.**
+      Raised 2026-09-24. The dev seed is five stops placed by hand as one clean
+      loop (`pipeline/seed_dev.py`), which proves the flow and the street
+      walking but games the algorithm: with five candidates there is nothing
+      to choose. In the street the map will be full, and the whole job is
+      picking which five make a clean loop. So:
+      (1) `seed_dev --dense N --seed S`: N memories (hundreds) at random over
+      Midtown from a seeded `random.Random`, every one snapped to within the
+      20m gate of a walkable way (OSRM `nearest`, then committed as a JSON
+      fixture so the gate stays offline), random layers, tags and
+      `contrast_score`, all marked `dev-seed:` for `--clear`.
+      (2) Measure the solver over it from many random starts and lengths:
+      retraced metres (`api/streets.py`, `retraced_meters`), stops found,
+      walk vs budget, ms. The bar is "no spur" on a full map, and
+      `ROUTE_CLEANUPS` (drop one stop, re-pick) may well not reach it - then
+      the choice itself has to prefer loops, not only the cleanup.
+      (3) Keep the hand-placed loop for `.maestro/walk-and-unlock.yml`, which
+      needs one known walk to name its stops; point look-around's preview at
+      the dense map instead.
+
 - [ ] **`seed_dev --routes`: scenarios, not a cluster.** Today's seed puts 7
       points within ~400 m. That's enough to render a route (and
       `.maestro/walk-and-unlock.yml` now walks stops 1→2→3 of it), but it

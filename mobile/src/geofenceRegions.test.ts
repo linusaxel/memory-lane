@@ -18,7 +18,7 @@ function memory(opts: {
     id: nextId++,
     locked: opts.locked ?? true,
     opens_at: opts.opens_at ?? null,
-    unlock_radius_meters: opts.radius ?? 150,
+    unlock_radius_meters: opts.radius === undefined ? 20 : opts.radius,
     place: {
       name: opts.name ?? 'Vega',
       coordinates: { lat: opts.lat ?? 55.6759, lng: opts.lng ?? 12.5655 },
@@ -48,20 +48,20 @@ test('iOS refuses more than 20 regions, so watching stops there', () => {
 });
 
 test('a region carries the memory id, its coordinates, and its own radius', () => {
-  const m = memory({ radius: 75, lat: 1, lng: 2 });
+  const m = memory({ radius: 175, lat: 1, lng: 2 });
   assert.deepEqual(regionsFor([m]), [
     {
       identifier: String(m.id),
       latitude: 1,
       longitude: 2,
-      radius: 75,
+      radius: 175,
       notifyOnEnter: true,
       notifyOnExit: false,
     },
   ]);
 });
 
-test('a missing server radius falls back rather than watching an unbounded region', () => {
-  const m = memory({ radius: null });
-  assert.equal(regionsFor([m])[0].radius, 150);
+test('a gate smaller than iOS can watch is watched at the smallest it can', () => {
+  assert.equal(regionsFor([memory({ radius: 20 })])[0].radius, 100);
+  assert.equal(regionsFor([memory({ radius: null })])[0].radius, 100);
 });

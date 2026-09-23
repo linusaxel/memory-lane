@@ -417,7 +417,9 @@ WHERE
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
-ORDER BY distance_meters ASC
+-- A stack's memories share one distance; the id makes which one stands for
+-- the place the same on every call, so a preview and its accept agree.
+ORDER BY distance_meters ASC, m.id ASC
 LIMIT :limit
 """
 

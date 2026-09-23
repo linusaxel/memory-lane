@@ -213,7 +213,7 @@ Optional (with defaults):
   fetch many transcripts, and cloud IPs outright. A block stops the run, rows stay pending)
 - `TRANSCRIPT_DELAY_SECONDS` = 1.5 (mean jittered pause between transcript fetches)
 - `CORS_ORIGINS` = `*` (comma-separated; the only lockdown knob for a public API)
-- `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
+- `UNLOCK_RADIUS_METERS` = 20 (how close you must stand to read a memory)
 - `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)
 - `REPORT_THRESHOLD` = 3 (distinct devices needed to hide a submission)
 - `ROUTE_SIZE` = 5, `ROUTE_LOOP` = 1 (today's route: how many stops, and

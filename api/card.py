@@ -188,7 +188,7 @@ def preview_tags(place: str, description: str) -> str:
     limitation: a crawler has no position, so `is_locked` withholds the summary
     from it exactly as it would from a person standing somewhere else. The
     description a link unfurls with is therefore the refusal - "something
-    happened here, stand within 150 m of it" - which is the pitch anyway.
+    happened here, stand where it happened" - which is the pitch anyway.
 
     No `og:image`. The photograph is behind the same gate, so the only card that
     has one to offer is the one a crawler can never fetch.

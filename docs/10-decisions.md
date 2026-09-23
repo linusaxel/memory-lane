@@ -43,10 +43,20 @@ before submissions existed.
 A submitted memory is gated on its own terms instead: the person was standing
 there, so the coordinate is real by construction.
 
-### 150 m, not 50 m
+### 20 m
 
-Urban GPS drifts tens of metres. A gate that will not open while you are
-standing on the spot is a bug the person blames on themselves.
+Decided 2026-09-24: you should be standing at the place, not down the street
+from it. It was 150 m, on the argument that urban GPS drifts tens of metres and
+a gate that will not open while you stand on the spot is a bug the person
+blames on themselves. That risk is now accepted, not solved: between tall
+buildings a phone can read 20-30 m off, and on those spots the ring will refuse
+somebody who is there. `UNLOCK_RADIUS_METERS` is the knob if the street says so.
+
+Two things follow. A pin further than the gate from any walkable way can never
+be stood on, so with streets a route drops it (`api/read.py`, `_plan_route`).
+And the proximity notification cannot use the gate as its region - iOS does not
+reliably fire under ~100 m - so it watches 100 m and lets the map do the rest
+(`mobile/src/geofenceRegions.ts`).
 
 ### The position is self-reported
 
@@ -613,3 +623,16 @@ start it already holds, so the whole loop follows the streets and the server
 still has no start. Without the sidecar, or with it down, every
 distance is crow-flies × 1.3 and `legs` is null. The route still works, it just
 cuts through buildings.
+
+### A clean loop, not the shortest one
+
+The shortest walk through five stops often visits one down a side street and
+comes back the same way: a line with spurs, drawn twice with the dots flowing
+opposite ways. With a 20 m gate there is no passing a stop at a distance, so
+the fix is choosing different stops. `_plan_route` routes the solver's walk on
+the streets and measures the metres it retraces (`api/streets.py`,
+`retraced_meters`). Then, up to `ROUTE_CLEANUPS` rounds, it drops each stop in
+turn, re-picks, and keeps any walk with as many stops that retraces less. It
+draws from `8 * ROUTE_SIZE` candidates so there is something to swap in. A
+sparse area can still end with a spur; there is nothing cleaner to pick.
+Without streets there is nothing to measure and the solver's walk stands.

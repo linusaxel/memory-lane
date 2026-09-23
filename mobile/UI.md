@@ -39,7 +39,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ "locked"         13, muted     ├─ distance
   ├─ padlock                        ├─ summary  17/26 - the hero
   ├─ distance         44/700        ├─ photo / recording   if it has any
-  ├─ "Get within 150 m"             ├─ tags     pills
+  ├─ "Get within 20 m"              ├─ tags     pills
   ├─ "1 attachment waiting"         ├─ "Filed by X", or the channel and avatar
   ├─ "Walk there"     outlined      ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
@@ -294,8 +294,8 @@ than for a careful look.
 | `FALLBACK_REGION` | `0.09` | 10 km | Before anything is known; its centre is the Midtown planning anchor |
 | `LOCATED_DELTA` | `0.01` | 1.1 km tall | Centred on the person |
 
-Landing on the person at street scale is the whole point: at 10 km a 150 m
-unlock radius is four pixels and the mechanic is invisible, so the app reads as
+Landing on the person at street scale is the whole point: at 10 km a 20 m
+unlock radius is less than a pixel and the mechanic is invisible, so the app reads as
 a map of things you cannot have. At 1.1 km the reach circle is about a quarter
 of the screen and "walk two blocks" is a visible distance.
 

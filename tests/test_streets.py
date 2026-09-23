@@ -39,9 +39,15 @@ def test_no_sidecar_is_crow_flies_and_no_shapes(monkeypatch):
 
 def test_the_sidecar_distances_are_used(osrm):
     reply, asked = osrm
-    reply[0] = {"code": "Ok", "distances": [[0, 120], [130, 0]]}
+    reply[0] = {
+        "code": "Ok",
+        "distances": [[0, 120], [130, 0]],
+        "sources": [{"distance": 3.5}, {"distance": 41.0}],
+    }
     assert streets.walking_matrix([A, B]) == [[0, 120], [130, 0]]
-    assert asked == [
+    # How far each point is from a walkable way: the 20m gate needs it.
+    assert streets.street_table([A, B])[1] == [3.5, 41.0]
+    assert asked == 2 * [
         f"http://osrm/table/v1/foot/{A.lng},{A.lat};{B.lng},{B.lat}?annotations=distance"
     ]
 

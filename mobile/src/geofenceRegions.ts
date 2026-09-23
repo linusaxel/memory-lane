@@ -11,6 +11,11 @@ import { FALLBACK_RADIUS_M, isSealed } from './reach.ts';
  *  ask Android for more than that either. */
 const MAX_REGIONS = 20;
 
+/** iOS does not reliably fire a region smaller than about 100 m, and the gate
+ *  is far smaller than that. The notification says "you are near"; the last
+ *  metres are the map's job. */
+const MIN_RADIUS_M = 100;
+
 export type Region = {
   identifier: string;
   latitude: number;
@@ -31,7 +36,7 @@ export function regionsFor(memories: LocatedMemory[]): Region[] {
     identifier: String(m.id),
     latitude: (m.place.coordinates as Coordinates).lat,
     longitude: (m.place.coordinates as Coordinates).lng,
-    radius: m.unlock_radius_meters ?? FALLBACK_RADIUS_M,
+    radius: Math.max(m.unlock_radius_meters ?? FALLBACK_RADIUS_M, MIN_RADIUS_M),
     notifyOnEnter: true,
     notifyOnExit: false,
   }));

@@ -28,7 +28,7 @@ pip install -r requirements.txt
 | `CHUNK_MINUTES` | No | Transcript chunk size (default: 4) |
 | `CHUNK_OVERLAP_SECONDS` | No | Chunk overlap (default: 30) |
 | `CORS_ORIGINS` | No | Comma-separated origins (default: `*`). The only lockdown knob |
-| `UNLOCK_RADIUS_METERS` | No | How close you must stand to read a memory (default: 150) |
+| `UNLOCK_RADIUS_METERS` | No | How close you must stand to read a memory (default: 20) |
 | `MEDIA_DIR` | No | Where uploads are written (default: `media`; a volume in Docker) |
 | `REPORT_THRESHOLD` | No | Distinct devices needed to hide a submission (default: 3) |
 | `ENABLE_EMBED` | No | Set `0` to withhold `/embed` on a public host |
