@@ -41,3 +41,7 @@ venv.broken-py314/
 
 # Simulator run artifacts: mp4s and service logs.
 e2e/out/
+
+# The OSRM walking graph: downloaded and built by osrm/build.sh.
+osrm/*
+!osrm/build.sh

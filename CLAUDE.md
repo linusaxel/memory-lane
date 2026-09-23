@@ -95,6 +95,7 @@ python -m api.main
 | `api/accounts.py` | `/v1/me` and `/v1/auth/*` |
 | `api/card.py` | The server-rendered card. Gates itself; see below |
 | `api/embed.py` | The embeddable map. Off when `ENABLE_EMBED=0` |
+| `api/streets.py` | Walking metres and street shapes for today's route, from OSRM. Crow-flies × 1.3 without it |
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
@@ -218,6 +219,9 @@ Optional (with defaults):
   `ROUTE_LOOP` = 1 (today's route: how many stops, how far out to look for
   them, how far the walk may be as crow-flies x 1.3, and whether it comes back
   to where it started; `0` is one-way)
+- `ROUTING_URL` = empty (an OSRM `foot` server. Empty or down means
+  crow-flies × 1.3 and straight lines. Local: `./osrm/build.sh` once, then
+  `docker compose --profile routing up -d osrm` and `ROUTING_URL=http://localhost:5001`)
 - `GOOGLE_CLIENT_IDS`, `APPLE_CLIENT_IDS` = empty (comma-separated audience
   whitelists. Empty means sign-in is off and `/v1/auth/*` answers 503)
 

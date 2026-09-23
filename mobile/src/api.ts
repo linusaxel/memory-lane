@@ -285,6 +285,9 @@ export type TodaysRoute = {
   /** Ends back where the day's walk started. The server never stores that
    *  start, so the app remembers it (mobile/src/route.ts). */
   loop: boolean;
+  /** legs[i] is the street shape from stop i to stop i + 1, or null with no
+   *  routing server. Never to or from the start, which is not stored. */
+  legs: Coordinates[][] | null;
 };
 
 /**
@@ -305,13 +308,14 @@ export async function fetchTodaysRoute(
   }
   const body = await get<{
     memories?: Memory[];
-    meta?: { route_date?: string; size?: number; loop?: boolean };
+    meta?: { route_date?: string; size?: number; loop?: boolean; legs?: Coordinates[][] | null };
   }>('/v1/routes/today', params, signal);
   return {
     memories: (body.memories ?? []).filter(hasCoordinates),
     route_date: body.meta?.route_date ?? '',
     size: body.meta?.size ?? 0,
     loop: body.meta?.loop ?? false,
+    legs: body.meta?.legs ?? null,
   };
 }
 

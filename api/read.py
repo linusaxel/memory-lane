@@ -10,6 +10,7 @@ still never records an unlock - that stays write.py's alone.
 """
 
 import itertools
+import json
 import os
 import random
 import time
@@ -63,6 +64,7 @@ from api.queries import (
     SEARCH_MEMORIES_WITH_LOCATION_QUERY,
     SINGLE_MEMORY_QUERY,
 )
+from api.streets import street_legs, walking_matrix
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -72,11 +74,9 @@ router = APIRouter()
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
 ROUTE_RADIUS_METERS = int(os.getenv("ROUTE_RADIUS_METERS", "4000"))
 # The radius is where stops may come from; this is how far the walk may be. A
-# 4km radius alone can make an 11km route. Checked against crow-flies x
-# ROUTE_CIRCUITY, since a street walk is ~1.2-1.3x the straight line (Boeing
-# 2019, https://arxiv.org/abs/1708.00836) and nothing here routes on streets.
+# 4km radius alone can make an 11km route. Checked against walking metres from
+# api/streets.py: streets with ROUTING_URL, crow-flies x ROUTE_CIRCUITY without.
 ROUTE_BUDGET_METERS = int(os.getenv("ROUTE_BUDGET_METERS", "4000"))
-ROUTE_CIRCUITY = 1.3
 # A loop ends back where the day's walk started, so its last leg is the walk
 # home, and it is counted when choosing and ordering stops. ROUTE_LOOP=0 makes
 # it one-way. The server never stores that start; the app remembers it.
@@ -346,24 +346,24 @@ ROUTE_SHAKES = 50
 
 
 def _choose_stops(
-    candidates: list, size: int, anchor: Coordinates, seed: str, budget_meters: float, loop: bool
-) -> list:
-    """Up to `size` stops whose walk from the anchor, times ROUTE_CIRCUITY, fits
-    `budget_meters`: as many as fit, then the shortest walk, not the `size`
-    nearest: a stop 300m behind you no longer beats a tight cluster 500m
-    ahead. Cheapest insertion builds a walk, then ROUTE_SHAKES rounds drop one
-    or two stops at random and reinsert the cheapest, keeping whichever walk is
-    shorter (iterated local search). Seeded, so one device on one day always
-    gets the same answer.
+    candidates: list, size: int, d: list, seed: str, budget_meters: float, loop: bool
+) -> list[int]:
+    """Up to `size` stops whose walk from the anchor fits `budget_meters`: as
+    many as fit, then the shortest walk, not the `size` nearest: a stop 300m
+    behind you no longer beats a tight cluster 500m ahead. Cheapest insertion
+    builds a walk, then ROUTE_SHAKES rounds drop one or two stops at random and
+    reinsert the cheapest, keeping whichever walk is shorter (iterated local
+    search). Seeded, so one device on one day always gets the same answer.
+
+    `d` is walking metres between nodes, node 0 the anchor and node i
+    candidates[i - 1] (api.streets.walking_matrix). Returns nodes, unordered.
 
     Each of stranger/other is guaranteed min(available, size // 2) stops, which
     is what the strict alternation before this gave, and still never comes up
     short when one layer runs dry or is out of budget.
     ponytail: every stop is worth the same, so this only minimises metres
     (TODO.md, "Give stops a prize")."""
-    points = [anchor] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates]
-    d = [[meters_between(a, b) for b in points] for a in points]
-    nodes = range(1, len(points))
+    nodes = range(1, len(candidates) + 1)
     size = min(size, len(candidates))
     stranger = {i: candidates[i - 1].layer == "stranger" for i in nodes}
     quota = {k: min(sum(v == k for v in stranger.values()), size // 2) for k in (True, False)}
@@ -380,15 +380,9 @@ def _choose_stops(
             return d[prev][c]
         return d[prev][c] + d[c][nxt] - d[prev][nxt]
 
-    def length(walk):
-        ends = [0, *walk, 0] if loop and walk else [0, *walk]
-        return sum(d[a][b] for a, b in itertools.pairwise(ends))
-
-    reach = budget_meters / ROUTE_CIRCUITY
-
     def fill(walk):
         while len(walk) < size:
-            room = reach - length(walk)
+            room = budget_meters - _path_meters(walk, d, loop)
             options = [
                 (cost(walk, c, at), c, at)
                 for c in nodes
@@ -403,7 +397,7 @@ def _choose_stops(
         return walk
 
     def score(walk):
-        return (-len(walk), length(walk))
+        return (-len(walk), _path_meters(walk, d, loop))
 
     rng = random.Random(seed)
     best = fill([])
@@ -412,23 +406,20 @@ def _choose_stops(
         trial = fill([i for i in best if i not in drop])
         if score(trial) < score(best):
             best = trial
-    return [candidates[i - 1] for i in best]
+    return best
 
 
 # 8! is 40,320 orderings - still cheaper than the SQL round trip before it.
 EXACT_ORDER_MAX = 8
 
 
-def _path_meters(anchor: Coordinates, stops, loop: bool = False) -> float:
-    total, here = 0.0, anchor
-    for r in stops:
-        there = Coordinates(lat=r.lat, lng=r.lng)
-        total += meters_between(here, there)
-        here = there
-    return total + (meters_between(here, anchor) if loop else 0.0)
+def _path_meters(walk, d: list, loop: bool = False) -> float:
+    """Metres from the anchor (node 0) through `walk`, and back when `loop`."""
+    ends = [0, *walk, 0] if loop and walk else [0, *walk]
+    return sum(d[a][b] for a, b in itertools.pairwise(ends))
 
 
-def _walking_order(picks: list, anchor: Coordinates, loop: bool = False) -> list:
+def _walking_order(picks: list[int], d: list, loop: bool = False) -> list[int]:
     """The shortest walk from the anchor through every pick, and back to it
     when `loop`, by trying
     every ordering. Five stops is 120 of them, and nearest-neighbour - what this
@@ -436,30 +427,33 @@ def _walking_order(picks: list, anchor: Coordinates, loop: bool = False) -> list
     ponytail: exact up to EXACT_ORDER_MAX, greedy above it; Held-Karp if
     ROUTE_SIZE ever grows that far (TODO.md, "Order the stops exactly")."""
     if len(picks) <= EXACT_ORDER_MAX:
-        # A loop and its reverse are the same length, so which one min() keeps
-        # depends on input order - here, the solver's seeded search. Sorted, it
-        # is the same way round for every device.
-        picks = sorted(picks, key=lambda r: (r.lat, r.lng))
-        return list(min(itertools.permutations(picks), key=lambda p: _path_meters(anchor, p, loop)))
+        # A crow-flies loop and its reverse are the same length, so which one
+        # min() keeps depends on input order - here, the solver's seeded
+        # search. Sorted, it is the same way round for every device.
+        return list(
+            min(itertools.permutations(sorted(picks)), key=lambda p: _path_meters(p, d, loop))
+        )
     remaining = list(picks)
     ordered = []
-    here = anchor
+    here = 0
     while remaining:
-        nxt = min(remaining, key=lambda r: meters_between(here, Coordinates(lat=r.lat, lng=r.lng)))
-        ordered.append(nxt)
-        remaining.remove(nxt)
-        here = Coordinates(lat=nxt.lat, lng=nxt.lng)
+        here = min(remaining, key=lambda c: d[here][c])
+        ordered.append(here)
+        remaining.remove(here)
     return ordered
 
 
 ROUTE_LOOKUP = """
-    SELECT memory_ids, radius_meters FROM daily_routes
+    SELECT memory_ids, radius_meters, legs FROM daily_routes
     WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date
 """
 
 ROUTE_INSERT = """
-    INSERT INTO daily_routes (device_id, route_date, memory_ids, radius_meters)
-    VALUES (CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :radius_meters)
+    INSERT INTO daily_routes (device_id, route_date, memory_ids, radius_meters, legs)
+    VALUES (
+        CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :radius_meters,
+        CAST(:legs AS jsonb)
+    )
     ON CONFLICT (device_id, route_date) DO NOTHING
 """
 
@@ -519,19 +513,24 @@ def get_todays_route(
                 },
             ).fetchall()
 
-            anchor = Coordinates(lat=lat, lng=lng)
-            picked = _walking_order(
+            candidates = _one_per_place(candidates)
+            d = walking_matrix(
+                [Coordinates(lat=lat, lng=lng)]
+                + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates]
+            )
+            order = _walking_order(
                 _choose_stops(
-                    _one_per_place(candidates),
+                    candidates,
                     ROUTE_SIZE,
-                    anchor,
+                    d,
                     f"{device}:{route_date}",
                     ROUTE_BUDGET_METERS,
                     ROUTE_LOOP,
                 ),
-                anchor,
+                d,
                 ROUTE_LOOP,
             )
+            picked = [candidates[i - 1] for i in order]
             memory_ids = [r.id for r in picked]
             # An empty route is not stored: stored, it would pin the whole day
             # to "nothing here" even after the device reaches somewhere stocked.
@@ -546,6 +545,7 @@ def get_todays_route(
                     ),
                 )
 
+            legs = street_legs([Coordinates(lat=r.lat, lng=r.lng) for r in picked])
             touch_device(session, device)
             session.execute(
                 text(ROUTE_INSERT),
@@ -554,6 +554,9 @@ def get_todays_route(
                     "route_date": route_date,
                     "ids": memory_ids,
                     "radius_meters": search_radius,
+                    "legs": json.dumps([[c.model_dump() for c in leg] for leg in legs])
+                    if legs
+                    else None,
                 },
             )
             # Somebody else's first call this second may have won the race -
@@ -580,6 +583,9 @@ def get_todays_route(
             size=len(memory_ids),
             radius_meters=row.radius_meters,
             loop=ROUTE_LOOP,
+            # A stop hidden since would shift every leg after it onto the wrong
+            # pair; straight lines are the honest fallback.
+            legs=row.legs if len(memories) == len(memory_ids) else None,
         ),
     )
 

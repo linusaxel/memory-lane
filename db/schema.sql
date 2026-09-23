@@ -228,12 +228,14 @@ CREATE INDEX idx_memory_hearts_memory ON memory_hearts(memory_id);
 -- radius_meters records what the day's route was actually searched within -
 -- the default mirrors api/read.py's ROUTE_RADIUS_METERS default, since a row
 -- predating the optional radius query param used exactly that. See
--- db/migrations/014_route_radius.sql.
+-- db/migrations/014_route_radius.sql. legs is the street shape between
+-- consecutive stops, null without a routing sidecar - see 021_route_legs.sql.
 CREATE TABLE daily_routes (
     device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
     route_date DATE NOT NULL,
     memory_ids INTEGER[] NOT NULL,
     radius_meters INTEGER NOT NULL DEFAULT 4000,
+    legs JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (device_id, route_date)
 );

@@ -164,6 +164,8 @@ export default function App() {
   const [routeStarted, setRouteStarted] = useState(false);
   // Where a loop route comes back to, or null for a one-way one.
   const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
+  // Street shapes between consecutive stops; null draws them straight.
+  const [routeLegs, setRouteLegs] = useState<Coordinates[][] | null>(null);
   // What the server says the gate radius is. Only /v1/stats can answer when
   // there is nothing on the map, and the circle is drawn either way.
   const [serverRadius, setServerRadius] = useState<number | null>(null);
@@ -371,6 +373,7 @@ export default function App() {
     cachedRoute.then((cached) => {
       if (!cached || !mounted.current) return;
       setRoute(cached.memories);
+      setRouteLegs(cached.legs ?? null);
       if (cached.loop && cached.start) setRouteHome(cached.start);
     });
 
@@ -383,11 +386,13 @@ export default function App() {
         if (!mounted.current) return;
         setRoute(fetched.memories);
         setRouteSize(fetched.size);
+        setRouteLegs(fetched.legs);
         setRouteHome(fetched.loop ? start : null);
         saveRoute({
           route_date: fetched.route_date,
           memories: fetched.memories,
           loop: fetched.loop,
+          legs: fetched.legs,
           start,
         });
       })
@@ -446,15 +451,18 @@ export default function App() {
   );
   // What is left to walk: from the person, through every unearned stop in
   // order, and home again on a loop. The line and the pill's distance are both
-  // this one path.
+  // this one path. Between two consecutive stops it follows the street leg
+  // when there is one; to and from the person it is straight.
   const routePath = useMemo(() => {
-    const stops = routeShown
-      .filter((memory) => !earned.has(memory.id))
-      .map((memory) => memory.place.coordinates);
-    if (stops.length === 0) return stops;
-    const walk = position ? [position, ...stops] : stops;
+    const left = routeShown.flatMap((memory, i) => (earned.has(memory.id) ? [] : [i]));
+    if (left.length === 0) return [];
+    const walk: Coordinates[] = position ? [position] : [];
+    left.forEach((i, k) => {
+      const leg = k > 0 && left[k - 1] === i - 1 ? routeLegs?.[i - 1] : undefined;
+      walk.push(...(leg ?? [routeShown[i].place.coordinates]));
+    });
     return routeHome ? [...walk, routeHome] : walk;
-  }, [routeShown, earned, position, routeHome]);
+  }, [routeShown, earned, position, routeHome, routeLegs]);
   const routeDone = route.length > 0 && !nextRouteStop;
   const routeTotal = routeSize ?? route.length;
   const toNextStop =

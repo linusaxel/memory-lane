@@ -576,3 +576,15 @@ reusing the existing unlock haptic rather than a push — the proximity
 notification watches today's route's still-locked stops for a reason to
 interrupt somebody, not the moment the route itself completes, so the two
 never fire for the same reason.
+
+### Street legs stop at the stops
+
+With `ROUTING_URL` set, stops are chosen and ordered on OSRM walking metres
+(`api/streets.py`), and the line follows the streets. The distances from the
+anchor are used for choosing and then dropped. The street *shapes* are stored
+on `daily_routes.legs`, but only from stop to stop: a shape leaving the anchor
+starts at the anchor, and would be the stored home location this section
+refuses, in all but name. So the app draws you → first stop and last stop →
+home straight, as it always did. Without the sidecar, or with it down, every
+distance is crow-flies × 1.3 and `legs` is null. The route still works, it just
+cuts through buildings.

@@ -182,7 +182,9 @@ echo "     seeded $DB"
 # which costs an afternoon before anybody suspects the port.
 say "2/5  api on :$API_PORT"
 kill_port "$API_PORT"
-DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" \
+# ROUTING_URL empty: walk-and-unlock names its stops in crow-flies order, and
+# street distances can run the same loop the other way round.
+DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL= \
   venv/bin/python -m uvicorn api.main:app --port "$API_PORT" > "$LOGS/api.log" 2>&1 &
 API_PID=$!
 for _ in $(seq 30); do

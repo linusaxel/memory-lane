@@ -39,3 +39,7 @@ MAX_CONCURRENCY = DB_POOL_SIZE + DB_MAX_OVERFLOW
 
 # A ceiling on any single statement - docs/10-decisions.md#one-statement-cannot-run-for-ever.
 DB_STATEMENT_TIMEOUT_MS = int(os.getenv("DB_STATEMENT_TIMEOUT_MS", "30000"))
+
+# An OSRM `foot` server (osrm/build.sh) for today's route. Empty means
+# crow-flies - api/streets.py.
+ROUTING_URL = (os.getenv("ROUTING_URL") or "").rstrip("/") or None

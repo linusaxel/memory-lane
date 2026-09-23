@@ -6,9 +6,12 @@ thing that matters is what a device actually receives.
 """
 
 import datetime
+from itertools import pairwise
 
 import pytest
 from sqlalchemy import text
+
+from api import read, streets
 
 pytestmark = pytest.mark.db
 
@@ -242,3 +245,22 @@ def test_route_stops_render_locked(client, db_session):
     route = _route(client, lat=LAT, lng=LNG).json()
     assert route["memories"][0]["locked"] is True
     assert route["memories"][0]["summary"] == ""
+
+
+def test_street_legs_are_stored_stop_to_stop(client, db_session, monkeypatch):
+    for n in range(1, 4):
+        _offset(db_session, n)
+    db_session.commit()
+    monkeypatch.setattr(streets, "ROUTING_URL", None)
+    assert _route(client, lat=LAT, lng=LNG).json()["meta"]["legs"] is None
+
+    db_session.execute(text("DELETE FROM daily_routes"))
+    db_session.commit()
+    monkeypatch.setattr(read, "street_legs", lambda stops: [[a, b] for a, b in pairwise(stops)])
+    first = _route(client, lat=LAT, lng=LNG).json()
+    stops = [m["place"]["coordinates"] for m in first["memories"]]
+    assert first["meta"]["legs"] == [[a, b] for a, b in pairwise(stops)]
+
+    # Read back from the row, not recomputed: the start is in none of them.
+    monkeypatch.setattr(read, "street_legs", lambda stops: None)
+    assert _route(client, lat=LAT, lng=LNG).json()["meta"]["legs"] == first["meta"]["legs"]

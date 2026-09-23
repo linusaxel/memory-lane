@@ -21,6 +21,7 @@ export type StoredRoute = {
   memories: LocatedMemory[];
   loop?: boolean;
   start?: Coordinates;
+  legs?: Coordinates[][] | null;
 };
 
 /** The stored route, or null if there isn't one or it isn't today's.

@@ -47,8 +47,9 @@ export function metersBetween(aLat: number, aLng: number, bLat: number, bLng: nu
   return 2 * 6371000 * Math.asin(Math.sqrt(h));
 }
 
-/** Straight-line metres along a path, leg by leg. What is left of today's
- *  route; not a walking distance, there is no street routing behind it. */
+/** Straight-line metres along a path, point to point. What is left of today's
+ *  route: a walking distance where the path follows a street leg, not where it
+ *  is straight. */
 export function pathMeters(points: { lat: number; lng: number }[]): number {
   let total = 0;
   for (let i = 1; i < points.length; i++) {

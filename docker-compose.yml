@@ -23,6 +23,8 @@ services:
     environment:
       DATABASE_URL: postgresql://memorylane:memorylane@db:5432/memorylane
       MEDIA_DIR: /data/media
+      # Street distances for today's route. Crow-flies when osrm is not up.
+      ROUTING_URL: http://osrm:5000
     volumes:
       # Uploaded photos and recordings. A bind mount rather than a named volume:
       # it survives a rebuild just the same, and it lets the host see the files -
@@ -32,6 +34,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Walking distances and street shapes for today's route (api/streets.py).
+  # Behind a profile: it needs `./osrm/build.sh` first, and plain `up` must not
+  # fail without it. `docker compose --profile routing up -d`.
+  osrm:
+    image: ghcr.io/project-osrm/osrm-backend:v5.27.1
+    profiles: [routing]
+    command: osrm-routed --algorithm mld /data/nyc.osrm
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./osrm:/data
 
   redis:
     image: redis:7-alpine

@@ -1241,8 +1241,14 @@ flagged ⚠️ inline, not overridden.
 
 #### Walking distances instead of crow-flies
 
-- [ ] **Street distances: a circuity factor now, a routing sidecar later.**
-      Lightest option first:
+- [x] **Street distances: a circuity factor now, a routing sidecar later.**
+      Done 2026-09-23: OSRM `foot` (`api/streets.py`, `osrm/build.sh`, the
+      `routing` compose profile). One `/table` feeds choosing and ordering.
+      Stop-to-stop shapes go on `daily_routes.legs`, never the legs touching
+      the start. Crow-flies × 1.3 when `ROUTING_URL` is unset or down. No
+      `(place_id, place_id)` cache yet: a local `/table` is milliseconds.
+      Railway still has no sidecar; that waits on `DEPLOY` (~1.6 GB RAM to
+      build, and the graph ships as files). Lightest option first:
       (a) **pgRouting** inside the PostGIS we already run, via
       `pgr_dijkstraCostMatrix`. No new service, but the import is slow.
       (b) **OSRM** `foot` profile: a `/table` matrix in milliseconds, one

@@ -3,8 +3,10 @@
 import random
 from types import SimpleNamespace
 
+from api.gate import meters_between
 from api.models import Coordinates
-from api.read import ROUTE_CIRCUITY, _choose_stops, _path_meters, _walking_order
+from api.read import _choose_stops, _path_meters, _walking_order
+from api.streets import ROUTE_CIRCUITY, walking_matrix
 
 ANCHOR = Coordinates(lat=40.75, lng=-73.99)
 # ~84m of longitude per 0.001 at this latitude.
@@ -15,11 +17,29 @@ def stop(name, east, layer="historical"):
     return SimpleNamespace(name=name, lat=ANCHOR.lat, lng=ANCHOR.lng + east * STEP, layer=layer)
 
 
+def crow(picks):
+    """Walking metres with no sidecar, node 0 the anchor."""
+    return walking_matrix([ANCHOR] + [Coordinates(lat=p.lat, lng=p.lng) for p in picks])
+
+
+def order(picks, loop=False):
+    return [picks[i - 1] for i in _walking_order(list(range(1, len(picks) + 1)), crow(picks), loop)]
+
+
+def choose(picks, size, seed, budget, loop):
+    return [picks[i - 1] for i in _choose_stops(picks, size, crow(picks), seed, budget, loop)]
+
+
+def walked(picks, stops):
+    nodes = [next(i for i, p in enumerate(picks, 1) if p is s) for s in stops]
+    return _path_meters(nodes, crow(picks))
+
+
 def test_the_nearest_stop_first_is_not_the_shortest_walk():
     # Nearest-neighbour goes east 1, back west 3, then east 6: 10 steps.
     # West 2 first, then straight east through the rest: 8.
-    order = _walking_order([stop("a", 1), stop("b", -2), stop("c", 4)], ANCHOR)
-    assert [s.name for s in order] == ["b", "a", "c"]
+    ordered = order([stop("a", 1), stop("b", -2), stop("c", 4)])
+    assert [s.name for s in ordered] == ["b", "a", "c"]
 
 
 def test_never_longer_than_any_other_ordering():
@@ -31,10 +51,10 @@ def test_never_longer_than_any_other_ordering():
             )
             for _ in range(rng.randint(1, 6))
         ]
-        best = _path_meters(ANCHOR, _walking_order(picks, ANCHOR))
+        best = walked(picks, order(picks))
         shuffled = rng.sample(picks, len(picks))
-        assert best <= _path_meters(ANCHOR, shuffled) + 1e-6
-        assert sorted(map(id, _walking_order(picks, ANCHOR))) == sorted(map(id, picks))
+        assert best <= walked(picks, shuffled) + 1e-6
+        assert sorted(map(id, order(picks))) == sorted(map(id, picks))
 
 
 def names(stops):
@@ -45,21 +65,21 @@ def test_a_tight_cluster_ahead_beats_one_stop_behind():
     # The three nearest are behind(-4), a(6), b(7): 4 + 10 + 1 = 15 steps.
     # The cluster a, b, c is 6 + 1 + 1 = 8.
     picks = [stop("behind", -4), stop("a", 6), stop("b", 7), stop("c", 8)]
-    assert names(_choose_stops(picks, 3, ANCHOR, "seed", 4000, False)) == ["a", "b", "c"]
+    assert names(choose(picks, 3, "seed", 4000, False)) == ["a", "b", "c"]
 
 
 def test_each_layer_keeps_its_share_even_when_it_costs_metres():
     # The shortest four are all historical; two strangers far out still get in.
     picks = [stop(f"h{i}", i) for i in range(1, 5)]
     picks += [stop("s1", -20, "stranger"), stop("s2", 30, "stranger")]
-    chosen = _choose_stops(picks, 4, ANCHOR, "seed", 20_000, False)
+    chosen = choose(picks, 4, "seed", 20_000, False)
     assert sum(s.layer == "stranger" for s in chosen) == 2
 
 
 def test_the_budget_caps_the_walk_not_the_count():
     # 84m apart in a line: 3 stops is 252m x 1.3 = 328m, a fourth is 437m.
     picks = [stop(f"s{i}", i) for i in range(1, 11)]
-    assert names(_choose_stops(picks, 5, ANCHOR, "seed", 400, False)) == ["s1", "s2", "s3"]
+    assert names(choose(picks, 5, "seed", 400, False)) == ["s1", "s2", "s3"]
 
 
 def test_within_budget_repeatable_and_full_as_the_budget_allows():
@@ -74,18 +94,18 @@ def test_within_budget_repeatable_and_full_as_the_budget_allows():
             )
             for n in range(rng.randint(0, 20))
         ]
-        chosen = _choose_stops(picks, 5, ANCHOR, str(i), 4000, False)
-        walked = _path_meters(ANCHOR, chosen)
-        assert walked * ROUTE_CIRCUITY <= 4000
+        chosen = choose(picks, 5, str(i), 4000, False)
+        walk = walked(picks, chosen)
+        assert walk <= 4000
         assert len(set(map(id, chosen))) == len(chosen) <= 5
-        assert chosen == _choose_stops(picks, 5, ANCHOR, str(i), 4000, False)
+        assert chosen == choose(picks, 5, str(i), 4000, False)
         # Short of five means no leftover could even be tacked onto the end.
         if len(chosen) < 5:
             last = chosen[-1] if chosen else ANCHOR
             for c in picks:
                 if all(c is not s for s in chosen):
-                    extra = _path_meters(Coordinates(lat=last.lat, lng=last.lng), [c])
-                    assert (walked + extra) * ROUTE_CIRCUITY > 4000
+                    extra = meters_between(Coordinates(lat=last.lat, lng=last.lng), c)
+                    assert walk + extra * ROUTE_CIRCUITY > 4000
 
 
 def test_a_loop_counts_the_walk_home():
@@ -95,5 +115,5 @@ def test_a_loop_counts_the_walk_home():
         name="n", lat=ANCHOR.lat + 1.1 * STEP * 84 / 111, lng=ANCHOR.lng, layer="historical"
     )
     picks = [stop("e1", 1), stop("e2", 2), north]
-    assert names(_choose_stops(picks, 2, ANCHOR, "seed", 4000, False)) == ["e1", "e2"]
-    assert names(_choose_stops(picks, 2, ANCHOR, "seed", 4000, True)) == ["e1", "n"]
+    assert names(choose(picks, 2, "seed", 4000, False)) == ["e1", "e2"]
+    assert names(choose(picks, 2, "seed", 4000, True)) == ["e1", "n"]

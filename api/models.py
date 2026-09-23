@@ -205,6 +205,10 @@ class RouteMeta(BaseModel):
     # not here - the server never stores it - so the app closes the loop on
     # the position it sent with the day's first call.
     loop: bool
+    # legs[i] is the street shape from stop i to stop i + 1, or null with no
+    # routing sidecar. Never a leg from or back to the start: that would store
+    # the start (docs/10-decisions.md § Routes), so the app draws those straight.
+    legs: list[list[Coordinates]] | None = None
 
 
 class RouteResponse(BaseModel):
