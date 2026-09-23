@@ -3,7 +3,7 @@
 ```
 updated:  2026-09-23
 branch:   loop/autopilot   — NOT pushed. `main` is behind by this session's commits.
-gate:     GREEN, 568 pytest + 63 node tests
+gate:     GREEN, 568 pytest + 69 node tests
 status:   TASKS.yaml has no `todo` and no `doing` left (unchanged from
           2026-09-21). This tick's work came from TODO.md's untracked
           "Ideas — founder brainstorm, unvetted" list instead, per explicit
@@ -18,54 +18,54 @@ wins and this file is stale.
 
 | | |
 |---|---|
-| `caba568` | **Animated startup logo** (TODO.md brainstorm list). |
-| `6584fdb` | **Tab bar delimiters** (TODO.md brainstorm list). |
-| `1daec1e` | **Start-route affordance** (TODO.md brainstorm list). |
-| `a0b5caa` | **Route-complete moment** (TODO.md brainstorm list). |
-| `e52e956` | **Configurable route distance** (TODO.md brainstorm list). |
-| `eb6060b` | **Heart/favorite a memory** (TODO.md brainstorm list). `memory_hearts` join table, `POST /v1/memories/{id}/heart`, `heart_count` on every read. Landed with no journal line and a stale STATE.md at the time (a prior tick's session ended mid-STEP-5) — backfilled at the start of the next tick; gate was re-verified green before any new work started. If a future tick finds another gap like this, do the same: confirm the commit's tests still pass, backfill JOURNAL.md with the real commit SHA and date, then continue. |
-| `d316427` | **Streak counter** (TODO.md brainstorm list, streak half of "streak + proximity notification"). `api.accounts.current_streak` reads distinct calendar days from `unlocks` (via the existing `MY_DEVICES` account grouping) and counts back from today to the first gap — **no new column**, cheaper than TODO.md's own `users.streak_count`/`streak_date` suggestion and nothing to desync across a signed-in account's devices. `Profile.streak`, shown in `Settings.tsx`'s stat row once above zero. F27 in `docs/08-ux-flows.md`; `docs/10-decisions.md`/`docs/11-memory-types.md` updated from "planned" to "shipped" for this half. |
+| `caba568` … `e52e956` | Animated startup logo, tab bar delimiters, start-route affordance, route-complete moment, configurable route distance — see prior STATE.md revisions or JOURNAL.md t30–t34 for detail. |
+| `eb6060b` | **Heart/favorite a memory.** `memory_hearts` join table, `POST /v1/memories/{id}/heart`, `heart_count` on every read. |
+| `d316427` | **Streak counter (F27).** `api.accounts.current_streak` reads distinct calendar days from `unlocks` (via `MY_DEVICES`) and counts back from today — no new column. `Profile.streak`, shown in `Settings.tsx` once above zero. |
+| `f6f8a7b` | **Proximity notification (F28), the other half of "streak + proximity notification".** `mobile/src/geofence.ts` wraps `expo-location`'s `startGeofencingAsync` + `expo-task-manager` to fire a local `expo-notifications` notification when a still-locked, unsealed stop on **today's route** comes into range - not the map's panned viewport. `mobile/src/geofenceRegions.ts` holds the native-free selection logic (locked, not sealed, capped at ~20 regions), unit-tested in `geofenceRegions.test.ts`. **Off by default** - a new "Notify me when a memory is nearby" toggle in `Settings.tsx` (`notifyNearby.ts` persists it) is the only thing that requests background location; nothing else in the app asks for position while it is closed. `app.json` now declares a real `NSLocationAlwaysAndWhenInUseUsageDescription` and `isAndroidBackgroundLocationEnabled: true`; the deprecated iOS Always key and motion permission stay `false`, and `isIosBackgroundLocationEnabled` stays off (geofencing is region monitoring, not continuous tracking - asking for more than the feature needs is exactly what rule 2 exists to catch). Verified offline both ways with `expo prebuild --no-install` (Android manifest gets `ACCESS_BACKGROUND_LOCATION`; iOS Info.plist gets the real Always string and neither of the other two keys), then the generated `ios/`/`android/` dirs were deleted again (gitignored, always regenerable). `tests/test_app_config.py` rewritten to match the new intentional config. Both privacy-policy copies (`api/privacy.py`, `mobile/store/privacy.md`) disclose the new permission, guarded by a new `tests/test_store_copy.py` entry. Docs updated: F28 in `docs/08-ux-flows.md`, `docs/10-decisions.md`/`docs/11-memory-types.md` moved from "planned" to "shipped", `mobile/UI.md` rule 2 rewritten. **Not done:** a real device confirming background delivery end to end, or the human-side App Store Connect / Play Console privacy disclosure updates a new background permission requires before submission. |
 
 Prior session (not journaled at the time, visible only in git log): `27ddff9`
 static logo mark, `f9f7fbb`/`94c9dbc` seeded the brainstorm list itself and
-resolved three flagged conflicts (warm accent, subscription-as-second-track,
-streak+geofence notification — all "Resolved 2026-09-22" in TODO.md).
+resolved three flagged conflicts (subscription-as-second-track, streak+
+geofence notification, and — see below — warm accent, all "Resolved
+2026-09-22" in TODO.md).
 
 ## What works right now
 
 ```bash
 docker compose up -d --build              # API + PostGIS
 ./api/test_api.sh http://localhost:8080   # 11 checks
-./loop/verify.sh                          # 568 pytest + 63 node tests, GREEN
+./loop/verify.sh                          # 568 pytest + 69 node tests, GREEN
 python -m pipeline.seed_dev               # memories you can actually reach
 cd mobile && npx expo start               # the app
 ```
 
 ## The next concrete action
 
-**The founder-brainstorm list is down to one open item.** Every other line in
-TODO.md's "Ideas — founder brainstorm, unvetted" section (line ~811) is now
-either `[x]` done, a Resolved/decision note with no code of its own, or a
-pointer at an existing open question. Re-scan the section head to tail before
-trusting this, in case a human edited it in the meantime — but as of this
-tick, the one real remaining line is:
+**Founder-brainstorm is *not* fully exhausted — a prior tick's summary was
+wrong about this, corrected in JOURNAL.md t37.** Re-scanning TODO.md's
+"Ideas — founder brainstorm, unvetted" section (line ~811) head to tail found
+one real unchecked, buildable item still there:
 
-1. **Proximity notification (the other half of "streak + proximity
-   notification, reopened").** On-device geofencing (`expo-location`'s
-   `startGeofencingAsync`) firing a **local** notification when a walkable
-   memory comes into range — no APNs/FCM, no push server. This is the bigger
-   half: it requires flipping `mobile/UI.md` rule 2
-   (`ACCESS_BACKGROUND_LOCATION`, the iOS `NSLocationAlways…`/
-   `NSMotionUsageDescription` strings, currently forced `false`) — a real App
-   Store privacy-review change, not a toggle, and `mobile/UI.md` itself needs
-   its rule-2 text updated once this lands, not just the app config. Not a
-   hard-limit gate on its own (no store account or build touched to write the
-   code), but big enough that a tick attempting it should expect to spend the
-   whole tick on the permission plumbing alone and land the actual
-   notification logic in a follow-up, rather than trying both at once.
-   Also update `docs/08-ux-flows.md` F1's "deliberately absent" list and F23
-   once it ships — both currently still say "no notifications", correctly,
-   until this lands.
+1. **Warm accent, not a reskin** (`TODO.md`, "Resolved 2026-09-22: warm
+   accent, not a reskin"). Decision already made, nothing to re-litigate:
+   replace `seal` red (`mobile/src/theme.ts`) with a warm moss/ochre tone,
+   re-running the same contrast measurement `mobile/UI.md` already documents
+   for `seal` (it has to clear the same bar against both the map style and
+   both light/dark themes). No change to the map style, card layout, or type
+   system - this is one token and the doc measurement that justifies it.
+   Explicitly parked *within* this same item and not to be picked up: a
+   separate "urban/city" theme variant (YAGNI until Phase 1 has a second
+   neighborhood).
+
+Every other line in that section is either `[x]` done, a Resolved/decision
+note that says no build is implied (subscription-as-second-track), or a
+pointer at an existing open question with no code of its own
+(mass-sourcing candidates → the historical-source question; onboarding →
+"nothing to add unless a specific step is the complaint"; the
+picture/date/description/link item → "name which screen, that's a display
+fix"). Once warm-accent ships, re-scan the section head to tail again before
+trusting that it is empty, the same way this tick had to correct the
+previous one's premature "founder-brainstorm is done" claim.
 
 After that, TASKS.yaml's own next actions (unchanged, still true):
 
@@ -92,6 +92,7 @@ After that, TASKS.yaml's own next actions (unchanged, still true):
 | `D-05` | NEEDS_DECISION | choose the historical source (arkiv.dk scraping vs setlist.fm's REST API), and confirm reuse terms |
 | `EAS_BUILD` | EAS_BUILD | replace the three PLACEHOLDERs, then build |
 | `STORE_ACCOUNT` | STORE_ACCOUNT | Apple $99/yr, Play $25 |
+| *(not a TASKS.yaml row)* proximity notification | human verification | put a build on a real device, walk it into a geofenced stop's radius with the app backgrounded, confirm the local notification actually fires; then update the App Store Connect / Play Console privacy disclosures for the new background-location permission before any submission — code and copy are both ready, this is the one thing the gate cannot check |
 
 **`W3-13` is discharged, not parked.** Unchanged from last session — see
 git history / prior STATE.md revisions for the full record; it stays
@@ -105,17 +106,25 @@ git history / prior STATE.md revisions for the full record; it stays
   export, the pinned credit, anniversaries and time locks, the route polyline,
   the static logo mark, the animated startup logo, the tab bar delimiters,
   the start-route affordance, the route-complete haptic, the configurable
-  route distance, hearting a memory, the streak counter** are all in. TODO.md
-  carries the commit for each.
+  route distance, hearting a memory, the streak counter, the proximity
+  notification (geofencing)** are all in. TODO.md carries the commit for each.
 - **The streak is computed, not stored.** `api.accounts.current_streak(days,
   today)` is a pure function over `unlocks.unlocked_at::date` fetched via
   `STREAK_DAYS_QUERY` (api/queries.py) through the existing `MY_DEVICES`
-  account grouping. Do not add a `streak_count`/`streak_date` column — that
-  was TODO.md's own first idea and was deliberately not built, because it
-  would need incrementing at every unlock call site and would drift the
-  moment a second device on the same account unlocks something. If this ever
-  gets too slow to compute on read (it will not at this corpus size), the
-  fix is an index on `unlocks(device_id, unlocked_at)`, not a stored counter.
+  account grouping. Do not add a `streak_count`/`streak_date` column.
+- **The proximity notification watches today's route, not the map viewport.**
+  `App.tsx` re-registers geofences off `routeShown` (the unlock-overlaid
+  route), not off `memories`/the panned map region - that list is bounded
+  (`ROUTE_SIZE`, well under the OS's ~20-region cap) and does not change
+  every time somebody pans, which a viewport-driven watch would. Don't wire
+  `startWatching` to `memories` or `shown` instead; that was considered and
+  rejected for exactly that reason.
+- **`isIosBackgroundLocationEnabled` stays `false` in `app.json`'s
+  expo-location plugin options.** Geofencing is CoreLocation region
+  monitoring, which wakes the app on its own; it does not need continuous
+  `UIBackgroundModes: ["location"]`. Do not flip this "to be safe" - it would
+  be over-declaring a capability the feature does not use, which is worse
+  for review, not safer.
 - **`daily_routes.radius_meters` exists on both the local dev db (migration
   014 applied) and `db/schema.sql`.** A fresh test db already has it; do not
   re-run 014 against the dev db a second time (it is idempotent - `ADD
@@ -134,6 +143,22 @@ git history / prior STATE.md revisions for the full record; it stays
   scope.** Do not add a second call elsewhere (React docs warn against
   duplicate registration) and do not remove it without also removing
   `StartupLogo`'s `hideAsync()` call, or the splash never hides.
+- **`ios/` and `android/` are gitignored, disposable `expo prebuild` output.**
+  Regenerating them (this tick ran `expo prebuild --platform <p> --no-install`
+  for both, once with `--clean`) is expected and safe - they are rebuilt from
+  `app.json` and the installed plugins every time, never hand-edited. Delete
+  them again after checking a manifest/plist rather than leaving them for git
+  status to trip over.
+- **A stray, long-running `pytest`/`verify.sh` process from an unrelated
+  earlier session can survive between ticks** in this environment and
+  collide with a later tick's own gate run against the same shared Docker
+  Postgres, producing a spurious `RED` ("database system is in recovery
+  mode") that has nothing to do with any code change. If a gate run fails
+  with a Postgres connection/recovery error, check `ps aux | grep -i
+  "verify.sh\|pytest"` for a process with an implausibly long elapsed time
+  (`ps -p <pid> -o pid,etime,command`) before concluding the tree is broken;
+  kill it and rerun. This happened once, in this tick (t37) — the rerun was
+  clean.
 
 ## Rejected approaches — do not retry
 
@@ -149,10 +174,14 @@ git history / prior STATE.md revisions for the full record; it stays
   client at Metro. Start Metro with `REACT_NATIVE_PACKAGER_HOSTNAME=localhost`
   and use `xcrun simctl launch`.
 - **Precise SVG path length via `getTotalLength()` for the startup-logo
-  animation** — skipped in favor of a fixed overshoot `strokeDasharray`
-  (220, longer than any of the three paths). Exact timing is not worth an
-  extra native round trip for a 750ms one-shot; revisit only if the draw-on
-  visibly stalls near the end on a real device.
+  animation** — skipped in favor of a fixed overshoot `strokeDasharray`.
 - **A stored `streak_count`/`streak_date` counter** (TODO.md's own original
   brainstorm suggestion) — rejected in favor of computing the streak from
-  `unlocks` on read. See "Do not redo" above for the reasoning.
+  `unlocks` on read.
+- **Geofencing off the map's viewport list (`memories`/`shown`)** — rejected
+  in favor of today's route (`routeShown`): bounded, already "nearby", and
+  does not thrash on every pan.
+- **`UIBackgroundModes: ["location"]` / `isIosBackgroundLocationEnabled:
+  true`** for the proximity notification — rejected; region monitoring does
+  not need it, and declaring it would be asking iOS review for more than the
+  feature uses.
