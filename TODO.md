@@ -1095,11 +1095,22 @@ daemon) have no analogue here and are left out.
 
 #### Scraping / ingestion
 
-- [ ] **Filter at the video level before fetching a transcript.** The Haiku
+- [x] **Filter at the video level before fetching a transcript.** The Haiku
       filter runs per chunk, after the transcript is fetched and chunked.
       yt-dlp's flat listing (`crawler/yt_crawler.py`) already has title and
       duration — skip Shorts, trailers and compilations there. Cheap work
       first, expensive work only for survivors.
+      **Done 2026-09-23, and the premise was wrong:** `/videos` carries no
+      Shorts. What it does carry is clips — two thirds of the listing, all
+      under 17 minutes, each re-telling a story from an episode that runs
+      60+. `content.duration_seconds` (`db/migrations/020_content_duration.sql`)
+      from the flat listing, and both pending queries skip anything under
+      `MIN_VIDEO_MINUTES` (20); unknown durations are never filtered.
+      `--refresh-sources` backfills it: on the live DB 16 pending clips are now
+      skipped and 10 episodes remain. **22 clips were extracted before this**
+      and their memories likely duplicate their episodes' — not touched; worth
+      a look through `pipeline/review.py` or `pipeline/dedup.py`.
+      `tests/test_video_filter.py`.
 - [ ] **Transcripts: stop on an IP block, and allow a proxy.** The existing
       `ponytail:` note in `pipeline/transcripts.py` names the ceiling: once
       YouTube blocks the IP, every run re-hits every pending row. Detect

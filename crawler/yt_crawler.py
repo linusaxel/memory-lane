@@ -62,7 +62,7 @@ def channel_metadata(channel_url: str) -> dict:
 def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict]:
     """List a channel's videos, newest first.
 
-    Returns [{"url", "title", "published_at"}, ...] shaped for the `videos:`
+    Returns [{"url", "title", "published_at", "duration_seconds"}, ...] shaped for the `videos:`
     entries that pipeline.ingest already knows how to insert.
     """
     if not channel_url.rstrip("/").endswith("/videos"):
@@ -94,6 +94,7 @@ def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict
                 "url": f"https://www.youtube.com/watch?v={video_id}",
                 "title": entry.get("title"),
                 "published_at": datetime.fromtimestamp(ts, UTC) if ts else None,
+                "duration_seconds": entry.get("duration"),
             }
         )
 

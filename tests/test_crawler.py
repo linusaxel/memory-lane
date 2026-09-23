@@ -65,6 +65,13 @@ def test_timestamp_becomes_an_aware_datetime(fake_ydl):
     assert published.tzinfo is not None, "naive datetimes corrupt a TIMESTAMP column"
 
 
+def test_duration_passes_through(fake_ydl):
+    """What pipeline.ingest skips clips on; missing stays None, never 0."""
+    fake_ydl.info = {"entries": [{"id": "a" * 11, "duration": 4452}, {"id": "b" * 11}]}
+    got = yt_crawler.list_channel_videos("https://www.youtube.com/@x")
+    assert [v["duration_seconds"] for v in got] == [4452, None]
+
+
 def test_release_timestamp_is_used_as_a_fallback(fake_ydl):
     fake_ydl.info = {"entries": [{"id": "b" * 11, "release_timestamp": 1700000000}]}
     got = yt_crawler.list_channel_videos("https://www.youtube.com/@x")

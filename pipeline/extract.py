@@ -16,6 +16,7 @@ from pipeline.config import (
 from pipeline.db import get_session
 from pipeline.tags import TAGS
 from pipeline.tags import clean as clean_tags
+from pipeline.transcripts import LONG_ENOUGH
 
 logger = logging.getLogger(__name__)
 
@@ -353,12 +354,15 @@ def chunk_transcript(
     return chunks
 
 
-PENDING_EXTRACTION = """
+# Here as well as before the transcript fetch: a clip's transcript may predate
+# the filter.
+PENDING_EXTRACTION = f"""
 FROM content c
 JOIN transcripts t ON c.id = t.content_id
 WHERE c.memories_extracted = FALSE
   AND c.extraction_failed = FALSE
   AND c.transcript_fetched = TRUE
+  AND {LONG_ENOUGH}
 """
 
 

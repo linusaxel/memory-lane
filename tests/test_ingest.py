@@ -29,6 +29,7 @@ def fake_channel(monkeypatch):
                 "url": "https://www.youtube.com/watch?v=aaaaaaaaaaa",
                 "title": "First crawled video",
                 "published_at": datetime(2026, 1, 2, tzinfo=UTC),
+                "duration_seconds": 4452,
             },
             {
                 "url": "https://www.youtube.com/watch?v=bbbbbbbbbbb",
@@ -93,6 +94,14 @@ def test_published_at_is_populated(ingest_into, fake_channel):
     rows = _rows(ingest_into)
     assert rows[0].published_at == datetime(2026, 1, 2)
     assert rows[1].published_at is None, "a missing date must not become 'now'"
+
+
+def test_duration_is_stored(ingest_into, fake_channel):
+    ingest.ingest_content(CHANNEL_SOURCE)
+    durations = [
+        r[0] for r in ingest_into.execute(text("SELECT duration_seconds FROM content ORDER BY url"))
+    ]
+    assert durations == [4452, None]
 
 
 def test_platform_id_is_the_validated_video_id(ingest_into, fake_channel):

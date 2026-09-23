@@ -11,6 +11,7 @@ from youtube_transcript_api._errors import (
     VideoUnavailable,
 )
 
+from pipeline.config import MIN_VIDEO_MINUTES
 from pipeline.db import get_session
 
 logger = logging.getLogger(__name__)
@@ -53,18 +54,23 @@ def fetch_transcript(video_id: str) -> dict | None:
     # "no captions exist" and the caller would set transcript_failed permanently.
 
 
+# Needs `content` aliased as c. See MIN_VIDEO_MINUTES.
+LONG_ENOUGH = f"(c.duration_seconds IS NULL OR c.duration_seconds >= {MIN_VIDEO_MINUTES * 60})"
+
+
 def fetch_pending_transcripts():
     fetched = 0
     failed = 0
 
     with get_session() as session:
         pending = session.execute(
-            text("""
+            text(f"""
                 SELECT id, platform_id, title
-                FROM content
+                FROM content c
                 WHERE transcript_fetched = FALSE
                   AND transcript_failed = FALSE
                   AND platform = 'youtube'
+                  AND {LONG_ENOUGH}
             """)
         ).fetchall()
 

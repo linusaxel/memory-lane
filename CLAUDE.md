@@ -205,6 +205,8 @@ Optional (with defaults):
 - `CLASSIFIER_MODEL` = claude-haiku-4-5 (for pre-filtering chunks)
 - `CHUNK_MINUTES` = 4
 - `CHUNK_OVERLAP_SECONDS` = 30
+- `MIN_VIDEO_MINUTES` = 20 (shorter videos - clips cut from episodes - are never
+  transcribed or extracted; backfill old rows with `python -m pipeline.ingest --refresh-sources`)
 - `CORS_ORIGINS` = `*` (comma-separated; the only lockdown knob for a public API)
 - `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
 - `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)

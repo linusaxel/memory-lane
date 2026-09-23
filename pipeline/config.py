@@ -17,6 +17,11 @@ EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-5")
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-4-5")
 CHUNK_MINUTES = int(os.getenv("CHUNK_MINUTES", "4"))
 CHUNK_OVERLAP_SECONDS = int(os.getenv("CHUNK_OVERLAP_SECONDS", "30"))
+# Shorter videos are never transcribed or extracted. On the channel this was
+# set against, every clip is under 17 minutes and every episode over 60: a clip
+# re-tells a story from its episode, so extracting it pays twice for a
+# duplicate memory. Unknown durations (hand-listed videos) are never filtered.
+MIN_VIDEO_MINUTES = int(os.getenv("MIN_VIDEO_MINUTES", "20"))
 
 # Sized so the connection pool and anyio's thread pool cannot drift apart -
 # docs/10-decisions.md#the-pool-is-sized-to-the-server-and-the-server-to-the-pool.

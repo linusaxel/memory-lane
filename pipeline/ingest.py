@@ -97,11 +97,11 @@ def ingest_content(config: dict | None = None):
                     text("""
                         INSERT INTO content (
                             url, platform, platform_id, source_name, source_url,
-                            source_icon_url, title, published_at
+                            source_icon_url, title, published_at, duration_seconds
                         )
                         VALUES (
                             :url, :platform, :platform_id, :source_name, :source_url,
-                            :source_icon_url, :title, :published_at
+                            :source_icon_url, :title, :published_at, :duration_seconds
                         )
                     """),
                     {
@@ -113,6 +113,7 @@ def ingest_content(config: dict | None = None):
                         "source_icon_url": channel.get("icon_url"),
                         "title": title,
                         "published_at": video.get("published_at"),
+                        "duration_seconds": video.get("duration_seconds"),
                     },
                 )
                 logger.info(f"Inserted: {normalized_url}")
@@ -123,13 +124,14 @@ def ingest_content(config: dict | None = None):
 
 
 def refresh_sources(config: dict | None = None):
-    """Backfill source_url and source_icon_url on rows ingested before they existed.
+    """Backfill source_url, source_icon_url and duration_seconds on rows
+    ingested before they existed.
 
     Separate from ingest_content because it is the only part that must touch the
     network for rows that are already present, and because re-running ingest
     would skip every one of them as existing.
     """
-    from crawler.yt_crawler import channel_metadata
+    from crawler.yt_crawler import channel_metadata, list_channel_videos
 
     if config is None:
         config = load_config()
@@ -158,6 +160,19 @@ def refresh_sources(config: dict | None = None):
             )
             logger.info(f"{source.get('name')}: {result.rowcount} rows")
             updated += result.rowcount
+
+            # The whole channel, not `limit`: rows ingested months ago have
+            # long since dropped out of the newest N.
+            for video in list_channel_videos(source["channel"]):
+                if video.get("duration_seconds") is None:
+                    continue
+                session.execute(
+                    text("""
+                        UPDATE content SET duration_seconds = :d
+                        WHERE platform_id = :id AND duration_seconds IS NULL
+                    """),
+                    {"d": video["duration_seconds"], "id": extract_youtube_id(video["url"])},
+                )
 
     return {"updated": updated}
 

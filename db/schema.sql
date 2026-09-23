@@ -18,6 +18,9 @@ CREATE TABLE content (
     source_icon_url VARCHAR(1024),
     title VARCHAR(512),
     published_at TIMESTAMP,
+    -- From the channel listing; null for hand-listed videos. Anything shorter
+    -- than MIN_VIDEO_MINUTES is a clip and is never transcribed or extracted.
+    duration_seconds INTEGER,
     transcript_fetched BOOLEAN DEFAULT FALSE,
     transcript_failed BOOLEAN DEFAULT FALSE,
     memories_extracted BOOLEAN DEFAULT FALSE,
