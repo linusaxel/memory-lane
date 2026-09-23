@@ -49,6 +49,19 @@ CREATE TABLE extraction_chunks (
 
 CREATE INDEX idx_extraction_chunks_content ON extraction_chunks(content_id);
 
+-- What the Haiku pre-filter decided about each chunk, and why. A rejection is
+-- otherwise invisible. See pipeline/classifier_audit.py.
+CREATE TABLE classifier_verdicts (
+    content_id INTEGER NOT NULL REFERENCES content(id) ON DELETE CASCADE,
+    chunk_index INTEGER NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    has_memories BOOLEAN NOT NULL,
+    reason TEXT,
+    chunk_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (content_id, chunk_index, model)
+);
+
 CREATE TABLE places (
     id SERIAL PRIMARY KEY,
     name VARCHAR(512) NOT NULL,

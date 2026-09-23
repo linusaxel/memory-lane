@@ -1041,12 +1041,21 @@ daemon) have no analogue here and are left out.
       schema would be rejected on every chunk. **Not yet sent to the real
       API** — the balance is empty — so the first funded run is the schema's
       real test. `tests/test_extract_schema.py`.
-- [ ] **Log the classifier's verdicts** (chunk, has_memories, reason). Today a
+- [x] **Log the classifier's verdicts** (chunk, has_memories, reason). Today a
       skipped chunk leaves no trace (`classify_chunk`, `pipeline/tasks.py`), so
       the pre-filter's false-negative rate is unknowable. Then run the
       extractor over a small sample of rejected chunks and count what it
       dropped. The post's lesson: what gets ignored is as informative as what
       gets used.
+      **Done 2026-09-23:** `classifier_verdicts`
+      (`db/migrations/018_classifier_verdicts.sql`), written by
+      `task_classify_chunk` via `record_verdict`, chunk text included.
+      `classify_chunk` now returns `(verdict, reason)`; a fail-open is
+      `True` with a `fail-open:` reason so it is never read as a judgement.
+      `python -m pipeline.classifier_audit --sample N` re-extracts a stable
+      sample of rejections through `extract_chunk_stored` and reports how many
+      held a memory the pipeline keeps. Not run: nothing has been classified
+      on this database yet, and it bills.
 - [ ] **A review loop that turns extractions into a golden set.**
       Accept / reject / edit over new memories, same propose → `--only` shape
       as `pipeline/dedup.py`. An edit is a before/after pair, a reject a

@@ -28,7 +28,7 @@ def test_the_extractor_sends_the_schema_for_both_prompts():
 
 def test_the_classifier_sends_its_schema():
     fake = FakeAnthropic({"has_memories": False, "reason": "none"})
-    assert classify_chunk(fake, "chunk") is False
+    assert classify_chunk(fake, "chunk") == (False, "none")
     assert fake.messages.calls[0]["output_config"]["format"]["schema"] == CLASSIFIER_SCHEMA
 
 

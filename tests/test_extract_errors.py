@@ -217,7 +217,7 @@ def test_the_classifier_still_fails_open_on_a_transient_error():
     from pipeline.tasks import classify_chunk
 
     request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
-    assert classify_chunk(_client_raising(anthropic.APIConnectionError(request=request)), "x")
+    assert classify_chunk(_client_raising(anthropic.APIConnectionError(request=request)), "x")[0]
 
 
 def test_the_billing_match_is_on_the_wording_the_api_actually_uses():

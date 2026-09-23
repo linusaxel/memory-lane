@@ -62,8 +62,16 @@ CLASSIFIER_SCHEMA = {
 }
 
 
-def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
-    """Use Haiku to quickly determine if chunk likely contains memories."""
+FAIL_OPEN = "fail-open: "
+
+
+def classify_chunk(client: anthropic.Anthropic, chunk: str) -> tuple[bool, str]:
+    """Use Haiku to quickly determine if chunk likely contains memories.
+
+    Returns the verdict and the model's reason. A verdict the model did not
+    give - a cut-off reply, a transient error - is True with a reason starting
+    FAIL_OPEN, so nothing auditing the classifier mistakes it for a judgement.
+    """
     try:
         response = client.messages.create(
             model=CLASSIFIER_MODEL,
@@ -74,16 +82,14 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
         content = response.content[0].text
         try:
             data = json.loads(content)
-            has_memories = data.get("has_memories", False)
-            if has_memories:
-                logger.debug(f"Classifier: HAS memories - {data.get('reason', '')[:50]}")
-            else:
-                logger.debug(f"Classifier: NO memories - {data.get('reason', '')[:50]}")
-            return has_memories
         except json.JSONDecodeError:
             # The schema makes this a max_tokens cut. Assume it might have
             # memories (safer)
-            return True
+            return True, f"{FAIL_OPEN}unparseable reply"
+        has_memories = bool(data.get("has_memories", False))
+        reason = data.get("reason", "")
+        logger.debug(f"Classifier: {'HAS' if has_memories else 'NO'} memories - {reason[:50]}")
+        return has_memories, reason
     except (
         anthropic.NotFoundError,
         anthropic.AuthenticationError,
@@ -98,7 +104,34 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
                 "API credit balance too low. Please add credits at console.anthropic.com"
             ) from e
         logger.warning(f"Classifier error, assuming has memories: {e}")
-        return True
+        return True, f"{FAIL_OPEN}{e}"
+
+
+def record_verdict(
+    session, content_id: int, chunk_index: int, has_memories: bool, reason: str, chunk_text: str
+):
+    """A rejected chunk otherwise leaves no trace, and the pre-filter's misses
+    are unmeasurable. pipeline/classifier_audit.py reads these back."""
+    session.execute(
+        text("""
+            INSERT INTO classifier_verdicts
+                (content_id, chunk_index, model, has_memories, reason, chunk_text)
+            VALUES (:content_id, :chunk_index, :model, :has_memories, :reason, :chunk_text)
+            ON CONFLICT (content_id, chunk_index, model) DO UPDATE SET
+                has_memories = EXCLUDED.has_memories,
+                reason = EXCLUDED.reason,
+                chunk_text = EXCLUDED.chunk_text,
+                created_at = CURRENT_TIMESTAMP
+        """),
+        {
+            "content_id": content_id,
+            "chunk_index": chunk_index,
+            "model": CLASSIFIER_MODEL,
+            "has_memories": has_memories,
+            "reason": reason,
+            "chunk_text": chunk_text,
+        },
+    )
 
 
 def _source_type(redis, content_id: int) -> str:
@@ -195,7 +228,9 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
     logger.info(f"[content:{content_id}] Classifying chunk {chunk_index + 1}/{total_chunks}")
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    has_memories = classify_chunk(client, chunk_text)
+    has_memories, reason = classify_chunk(client, chunk_text)
+    with get_session() as session:
+        record_verdict(session, content_id, chunk_index, has_memories, reason, chunk_text)
 
     redis = get_redis()
     redis.hincrby(f"extraction:{content_id}", "classified", 1)

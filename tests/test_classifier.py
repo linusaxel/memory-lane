@@ -45,7 +45,7 @@ def test_a_transient_error_still_fails_open():
     """Over-extracting one chunk beats dropping it."""
     request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
     transient = anthropic.APIConnectionError(request=request)
-    assert classify_chunk(_raising(transient), "a chunk") is True
+    assert classify_chunk(_raising(transient), "a chunk")[0] is True
 
 
 def test_unparseable_json_still_fails_open():
@@ -59,4 +59,4 @@ def test_unparseable_json_still_fails_open():
     class _Client:
         messages = _Messages()
 
-    assert classify_chunk(_Client(), "a chunk") is True
+    assert classify_chunk(_Client(), "a chunk")[0] is True
