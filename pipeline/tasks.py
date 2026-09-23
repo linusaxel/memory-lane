@@ -18,7 +18,7 @@ from pipeline.extract import (
     PENDING_EXTRACTION,
     BillingError,
     chunk_transcript,
-    extract_memories_from_chunk,
+    extract_chunk_stored,
     filter_low_confidence,
     is_billing_error,
     layer_for,
@@ -227,12 +227,16 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
     # hash written before this field existed still picks the old prompt.
     source_type = _source_type(redis, content_id)
     # Same context the sequential path builds, from the same two fields.
-    memories = extract_memories_from_chunk(
-        client,
-        chunk_text,
-        prompt_for(source_type),
-        source_context(*_source_and_title(content_id)),
-    )
+    with get_session() as session:
+        memories = extract_chunk_stored(
+            session,
+            client,
+            content_id,
+            chunk_index,
+            chunk_text,
+            prompt_for(source_type),
+            source_context(*_source_and_title(content_id)),
+        )
 
     if memories:
         redis.hset(f"extraction:{content_id}:memories", str(chunk_index), json.dumps(memories))

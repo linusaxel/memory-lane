@@ -35,6 +35,20 @@ CREATE TABLE transcripts (
     fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Every chunk's raw model reply, so nothing is paid for twice. See
+-- pipeline/extract.py:extract_chunk_stored.
+CREATE TABLE extraction_chunks (
+    request_hash CHAR(64) PRIMARY KEY,
+    content_id INTEGER NOT NULL REFERENCES content(id) ON DELETE CASCADE,
+    chunk_index INTEGER NOT NULL,
+    prompt_hash CHAR(64) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    response TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_extraction_chunks_content ON extraction_chunks(content_id);
+
 CREATE TABLE places (
     id SERIAL PRIMARY KEY,
     name VARCHAR(512) NOT NULL,

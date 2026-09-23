@@ -125,6 +125,7 @@ python -m api.main
 ```
 content       → Source videos (url, platform_id, publisher, status flags)
 transcripts   → JSONB segments with timestamps
+extraction_chunks → Each chunk's raw model reply, keyed on the exact request
 places        → Locations with PostGIS coordinates
 memories      → Experiences pinned to places. content_id OR user_id, never both
 devices       → An installation's self-issued UUID. Not a person
@@ -376,7 +377,9 @@ so the numbers above are still the current state.
 ```sql
 UPDATE content SET memories_extracted = FALSE, extraction_failed = FALSE WHERE id = X;
 DELETE FROM memories WHERE content_id = X;
--- Then run extract again
+-- Then run extract again. Chunks whose request is unchanged are read back from
+-- extraction_chunks for free; add this to pay for them again:
+-- DELETE FROM extraction_chunks WHERE content_id = X;
 ```
 
 ### Check extraction quality

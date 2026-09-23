@@ -1017,12 +1017,17 @@ daemon) have no analogue here and are left out.
 
 #### LLM output
 
-- [ ] **Keep every chunk's raw model output.** Something like
+- [x] **Keep every chunk's raw model output.** Something like
       `extraction_chunks(content_id, chunk_index, prompt_hash, model, response)`,
       written as each chunk returns. The queue path already holds this in
       Redis and `redis.delete`s it after aggregation (`pipeline/tasks.py`).
       Kept, it makes re-merging, re-filtering and prompt comparison free, and
       it is the dataset the next four entries need.
+      **Done 2026-09-23:** `extraction_chunks` (`db/migrations/017_extraction_chunks.sql`),
+      written by `extract_chunk_stored` on both paths and committed per chunk,
+      keyed on sha256(video, model, system prompt, user message), with
+      `prompt_hash` for grouping by variant. A retried video only pays for the
+      chunk it lost: `test_a_retried_video_only_pays_for_the_chunk_it_lost`.
 - [ ] **Structured output instead of `json.loads` + fence stripping**, for the
       extractor and the Haiku classifier both (tool use with an input schema).
       Removes the extractor's silent `[]` on malformed JSON and the

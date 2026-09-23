@@ -95,23 +95,27 @@ class _FailsOnSecondCall:
         return self._ok.create(**kwargs)
 
 
-def _two_pending_videos(db_session):
-    for vid in ("aaaaaaaaaaa", "bbbbbbbbbbb"):
-        content_id = db_session.execute(
-            text(
-                "INSERT INTO content (url, platform, platform_id, transcript_fetched) "
-                "VALUES (:url, 'youtube', :vid, TRUE) RETURNING id"
-            ),
-            {"url": f"https://www.youtube.com/watch?v={vid}", "vid": vid},
-        ).scalar()
-        db_session.execute(
-            text(
-                "INSERT INTO transcripts (content_id, segments, full_text) "
-                """VALUES (:id, '[{"start": 0, "text": "hello"}]', 'hello')"""
-            ),
-            {"id": content_id},
-        )
+def _pending_video(db_session, vid, segments='[{"start": 0, "text": "hello"}]'):
+    content_id = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id, transcript_fetched) "
+            "VALUES (:url, 'youtube', :vid, TRUE) RETURNING id"
+        ),
+        {"url": f"https://www.youtube.com/watch?v={vid}", "vid": vid},
+    ).scalar()
+    db_session.execute(
+        text(
+            "INSERT INTO transcripts (content_id, segments, full_text) "
+            "VALUES (:id, CAST(:segments AS JSONB), 'x')"
+        ),
+        {"id": content_id, "segments": segments},
+    )
     db_session.commit()
+
+
+def _two_pending_videos(db_session):
+    _pending_video(db_session, "aaaaaaaaaaa")
+    _pending_video(db_session, "bbbbbbbbbbb")
 
 
 def _run(db_session, monkeypatch, client):
@@ -221,3 +225,22 @@ def test_the_billing_match_is_on_the_wording_the_api_actually_uses():
         "max_tokens is too large", response=httpx.Response(400, request=request), body=None
     )
     assert not is_billing_error(other_400)
+
+
+@pytest.mark.db
+def test_a_retried_video_only_pays_for_the_chunk_it_lost(db_session, monkeypatch):
+    """Chunk 1 answered, chunk 2 hit a 529. The rerun must not bill chunk 1 again."""
+    _pending_video(
+        db_session,
+        "ccccccccccc",
+        '[{"start": 0, "text": "first"}, {"start": 600, "text": "second"}]',
+    )
+    _run(db_session, monkeypatch, _FailsOnSecondCall(_api_error(anthropic.OverloadedError, 529)))
+    assert _states(db_session) == [(False, False)]
+
+    rerun = FakeAnthropic({"memories": FakeAnthropic().messages._payload})
+    _run(db_session, monkeypatch, rerun)
+    assert len(rerun.messages.calls) == 1
+    assert "second" in rerun.messages.calls[0]["messages"][0]["content"]
+    assert _states(db_session) == [(True, False)]
+    assert db_session.execute(text("SELECT COUNT(*) FROM extraction_chunks")).scalar() == 2

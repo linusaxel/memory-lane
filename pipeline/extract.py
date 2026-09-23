@@ -1,5 +1,6 @@
 """Extract location-based memories from transcripts using Claude."""
 
+import hashlib
 import json
 import logging
 
@@ -353,12 +354,8 @@ def is_transient(e: Exception) -> bool:
     )
 
 
-def extract_memories_from_chunk(
-    client: anthropic.Anthropic,
-    chunk: str,
-    system_prompt: str = SYSTEM_PROMPT,
-    context: str = "",
-) -> list[dict]:
+def _request(client: anthropic.Anthropic, system_prompt: str, user: str) -> str | None:
+    """The model's raw reply, or None for an error no retry will fix."""
     try:
         response = client.messages.create(
             model=EXTRACTION_MODEL,
@@ -371,30 +368,9 @@ def extract_memories_from_chunk(
             system=[
                 {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}
             ],
-            messages=[
-                {
-                    "role": "user",
-                    "content": USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk),
-                }
-            ],
+            messages=[{"role": "user", "content": user}],
         )
-
-        content = response.content[0].text
-
-        try:
-            data = json.loads(content)
-            return data.get("memories", [])
-        except json.JSONDecodeError:
-            if "```json" in content:
-                json_str = content.split("```json")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-                return data.get("memories", [])
-            elif "```" in content:
-                json_str = content.split("```")[1].split("```")[0].strip()
-                data = json.loads(json_str)
-                return data.get("memories", [])
-            logger.warning(f"Failed to parse JSON from response: {content[:200]}")
-            return []
+        return response.content[0].text
 
     except anthropic.BadRequestError as e:
         if is_billing_error(e):
@@ -402,7 +378,7 @@ def extract_memories_from_chunk(
                 "API credit balance too low. Please add credits at console.anthropic.com"
             ) from e
         logger.error(f"Error calling Claude API: {e}")
-        return []
+        return None
     except (
         anthropic.NotFoundError,
         anthropic.AuthenticationError,
@@ -413,7 +389,79 @@ def extract_memories_from_chunk(
         if is_transient(e):
             raise TransientAPIError(str(e)) from e
         logger.error(f"Error calling Claude API: {e}")
+        return None
+
+
+def parse_memories(content: str) -> list[dict]:
+    try:
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0]
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0]
+        return json.loads(content.strip()).get("memories", [])
+    except Exception:
+        logger.warning(f"Failed to parse JSON from response: {content[:200]}")
         return []
+
+
+def extract_memories_from_chunk(
+    client: anthropic.Anthropic,
+    chunk: str,
+    system_prompt: str = SYSTEM_PROMPT,
+    context: str = "",
+) -> list[dict]:
+    raw = _request(client, system_prompt, USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk))
+    return [] if raw is None else parse_memories(raw)
+
+
+def _sha256(s: str) -> str:
+    return hashlib.sha256(s.encode()).hexdigest()
+
+
+def extract_chunk_stored(
+    session,
+    client: anthropic.Anthropic,
+    content_id: int,
+    chunk_index: int,
+    chunk: str,
+    system_prompt: str = SYSTEM_PROMPT,
+    context: str = "",
+) -> list[dict]:
+    """extract_memories_from_chunk, paid for once per exact request.
+
+    Keyed on video + model + system prompt + user message, so a prompt edit
+    misses and a retry, a re-merge or a crashed run hits. Committed as soon as
+    it lands: the reply is the expensive part and must outlive whatever fails
+    next.
+    """
+    user = USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk)
+    key = _sha256(f"{content_id}\0{EXTRACTION_MODEL}\0{system_prompt}\0{user}")
+
+    raw = session.execute(
+        text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
+    ).scalar()
+    if raw is None:
+        raw = _request(client, system_prompt, user)
+        if raw is None:
+            return []
+        session.execute(
+            text("""
+                INSERT INTO extraction_chunks
+                    (request_hash, content_id, chunk_index, prompt_hash, model, response)
+                VALUES (:k, :content_id, :chunk_index, :prompt_hash, :model, :response)
+                ON CONFLICT (request_hash) DO NOTHING
+            """),
+            {
+                "k": key,
+                "content_id": content_id,
+                "chunk_index": chunk_index,
+                "prompt_hash": _sha256(system_prompt),
+                "model": EXTRACTION_MODEL,
+                "response": raw,
+            },
+        )
+        session.commit()
+    return parse_memories(raw)
 
 
 def _venue_locality_key(mem: dict) -> tuple[str, str]:
@@ -699,8 +747,11 @@ def extract_all_pending():
                 for i, chunk in enumerate(chunks):
                     logger.info(f"  Processing chunk {i + 1}/{len(chunks)}")
                     try:
-                        memories = extract_memories_from_chunk(
+                        memories = extract_chunk_stored(
+                            session,
                             client,
+                            content_id,
+                            i,
                             chunk,
                             prompt_for(source_type),
                             source_context(source_name, title),
