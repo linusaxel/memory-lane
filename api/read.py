@@ -3,10 +3,9 @@
 The list endpoints never pass a position to `row_to_memory`: walking into range
 must *offer* the unlock, not perform it, or there is no moment to press.
 
-One exception to the "nothing here writes" this file used to be able to claim:
-GET /v1/routes/today stores a route the first time a device asks for one each
-day, so the same relaunch sees the same route rather than a fresh roll. It
-still never records an unlock - that stays write.py's alone.
+One exception to "nothing here writes": POST /v1/routes/today stores the walk
+a device accepts, next to the solver and the preview that share it. It never
+records an unlock - that stays write.py's alone.
 """
 
 import itertools
@@ -29,6 +28,8 @@ from api.gate import (
 )
 from api.models import (
     DEVICE_PATTERN,
+    ROUTE_BUDGET_MAX_METERS,
+    ROUTE_BUDGET_MIN_METERS,
     Coordinates,
     Hotspot,
     Memory,
@@ -39,6 +40,7 @@ from api.models import (
     PlacesResponse,
     PlaceWithCount,
     RouteMeta,
+    RouteRequest,
     RouteResponse,
     SearchMeta,
     SearchResponse,
@@ -69,14 +71,7 @@ from pipeline.db import get_session
 
 router = APIRouter()
 
-# 5 stops. 4000m is about a 45-50 minute round trip on foot - wide enough to
-# find that many outside a dense corpus without turning a walk into a commute.
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
-ROUTE_RADIUS_METERS = int(os.getenv("ROUTE_RADIUS_METERS", "4000"))
-# The radius is where stops may come from; this is how far the walk may be. A
-# 4km radius alone can make an 11km route. Checked against walking metres from
-# api/streets.py: streets with ROUTING_URL, crow-flies x ROUTE_CIRCUITY without.
-ROUTE_BUDGET_METERS = int(os.getenv("ROUTE_BUDGET_METERS", "4000"))
 # A loop ends back where the day's walk started, so its last leg is the walk
 # home, and it is counted when choosing and ordering stops. ROUTE_LOOP=0 makes
 # it one-way. The server never stores that start; the app remembers it.
@@ -459,150 +454,165 @@ def _walking_order(picks: list[int], d: list, loop: bool = False) -> list[int]:
 
 
 ROUTE_LOOKUP = """
-    SELECT memory_ids, radius_meters, legs FROM daily_routes
+    SELECT memory_ids, budget_meters, legs FROM daily_routes
     WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date
 """
 
 ROUTE_INSERT = """
-    INSERT INTO daily_routes (device_id, route_date, memory_ids, radius_meters, legs)
+    INSERT INTO daily_routes (device_id, route_date, memory_ids, budget_meters, legs)
     VALUES (
-        CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :radius_meters,
+        CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :budget_meters,
         CAST(:legs AS jsonb)
     )
     ON CONFLICT (device_id, route_date) DO NOTHING
 """
 
-# 500m is about the shortest walk that can still separate distinct stops;
-# 20km is already a long day's outing, well past what "a route" implies.
-ROUTE_RADIUS_MIN_METERS = 500
-ROUTE_RADIUS_MAX_METERS = 20_000
+
+def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route_date):
+    """The walk this device would get from `at` today: (stops in order,
+    stop-to-stop street legs, {out, home} street legs touching `at`). Seeded
+    on device and day, so the preview and the accept that follows it pick the
+    same stops without the client ever naming them.
+
+    A loop cannot reach further out than half its length, so that is where
+    candidates come from."""
+    candidates = session.execute(
+        text(ROUTE_CANDIDATES_QUERY),
+        {
+            "lat": at.lat,
+            "lng": at.lng,
+            "radius_meters": budget_meters / 2,
+            "today": route_date,
+            "device_id": device,
+            "limit": 4 * ROUTE_SIZE,
+        },
+    ).fetchall()
+    candidates = _one_per_place(candidates)
+    d = walking_matrix([at] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates])
+    order = _walking_order(
+        _choose_stops(
+            candidates, ROUTE_SIZE, d, f"{device}:{route_date}", budget_meters, ROUTE_LOOP
+        ),
+        d,
+        ROUTE_LOOP,
+    )
+    picked = [candidates[i - 1] for i in order]
+    if not picked:
+        return picked, None, None
+    # One street route through the whole walk, start and home included, split
+    # into the stop-to-stop legs (stored) and the two that touch the start
+    # (handed to the preview, which stores nothing).
+    stops = [Coordinates(lat=r.lat, lng=r.lng) for r in picked]
+    legs = street_legs([at, *stops, *([at] if ROUTE_LOOP else [])])
+    if legs is None:
+        return picked, None, None
+    ends = {"out": legs[0], "home": legs[-1] if ROUTE_LOOP else None}
+    return picked, legs[1 : len(picked)], ends
 
 
-@router.get("/v1/routes/today", response_model=RouteResponse)
-def get_todays_route(
-    device: str = Query(..., pattern=DEVICE_PATTERN),
-    lat: float | None = Query(
-        None, ge=-90, le=90, description="Required only to start today's route"
-    ),
-    lng: float | None = Query(
-        None, ge=-180, le=180, description="Required only to start today's route"
-    ),
-    radius_meters: int | None = Query(
-        None,
-        ge=ROUTE_RADIUS_MIN_METERS,
-        le=ROUTE_RADIUS_MAX_METERS,
-        description="Required only to start today's route; defaults to ROUTE_RADIUS_METERS",
-    ),
-):
-    """A fixed set of nearby, not-yet-earned stops for today, mixing layers.
-
-    Computed once per device per calendar day and stored, so a relaunch sees
-    the same route rather than a fresh roll of the dice - there is no stored
-    home location anywhere in this schema, so lat/lng/radius_meters only
-    matter on the day's first call, which is the only one with anywhere to
-    anchor a route on.
-    """
-    route_date = gate.today()
-
-    with get_session() as session:
-        row = session.execute(
-            text(ROUTE_LOOKUP), {"device": device, "route_date": route_date}
-        ).fetchone()
-
-        if row is None:
-            if lat is None or lng is None:
-                raise HTTPException(
-                    status_code=400, detail="lat/lng are required to start today's route"
-                )
-            search_radius = radius_meters if radius_meters is not None else ROUTE_RADIUS_METERS
-
-            candidates = session.execute(
-                text(ROUTE_CANDIDATES_QUERY),
-                {
-                    "lat": lat,
-                    "lng": lng,
-                    "radius_meters": search_radius,
-                    "today": route_date,
-                    "device_id": device,
-                    "limit": 4 * ROUTE_SIZE,
-                },
-            ).fetchall()
-
-            candidates = _one_per_place(candidates)
-            d = walking_matrix(
-                [Coordinates(lat=lat, lng=lng)]
-                + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates]
-            )
-            order = _walking_order(
-                _choose_stops(
-                    candidates,
-                    ROUTE_SIZE,
-                    d,
-                    f"{device}:{route_date}",
-                    ROUTE_BUDGET_METERS,
-                    ROUTE_LOOP,
-                ),
-                d,
-                ROUTE_LOOP,
-            )
-            picked = [candidates[i - 1] for i in order]
-            memory_ids = [r.id for r in picked]
-            # An empty route is not stored: stored, it would pin the whole day
-            # to "nothing here" even after the device reaches somewhere stocked.
-            if not memory_ids:
-                return RouteResponse(
-                    memories=[],
-                    meta=RouteMeta(
-                        route_date=route_date,
-                        size=0,
-                        radius_meters=search_radius,
-                        loop=ROUTE_LOOP,
-                    ),
-                )
-
-            legs = street_legs([Coordinates(lat=r.lat, lng=r.lng) for r in picked])
-            touch_device(session, device)
-            session.execute(
-                text(ROUTE_INSERT),
-                {
-                    "device": device,
-                    "route_date": route_date,
-                    "ids": memory_ids,
-                    "radius_meters": search_radius,
-                    "legs": json.dumps([[c.model_dump() for c in leg] for leg in legs])
-                    if legs
-                    else None,
-                },
-            )
-            # Somebody else's first call this second may have won the race -
-            # read back whichever array actually landed.
-            row = session.execute(
-                text(ROUTE_LOOKUP), {"device": device, "route_date": route_date}
-            ).fetchone()
-
-        memory_ids = list(row.memory_ids)
-        rows = (
-            session.execute(text(ROUTE_QUERY), {"ids": memory_ids}).fetchall() if memory_ids else []
-        )
-
-    # No position: these are freshly discovered, unwalked stops, and rendering
-    # them locked is the point - the same rule every other list endpoint here
-    # follows for exactly this reason.
+def _route_response(route_date, rows, memory_ids, budget_meters, legs, ends=None) -> RouteResponse:
+    # No position: these are unwalked stops, and rendering them locked is the
+    # point - the same rule every other list endpoint here follows.
     by_id = {r.id: row_to_memory(r) for r in rows}
     memories = [by_id[i] for i in memory_ids if i in by_id]
-
     return RouteResponse(
         memories=memories,
         meta=RouteMeta(
             route_date=route_date,
             size=len(memory_ids),
-            radius_meters=row.radius_meters,
+            budget_meters=budget_meters,
             loop=ROUTE_LOOP,
             # A stop hidden since would shift every leg after it onto the wrong
             # pair; straight lines are the honest fallback.
-            legs=row.legs if len(memories) == len(memory_ids) else None,
+            legs=legs if len(memories) == len(memory_ids) else None,
+            out_leg=ends and ends["out"],
+            home_leg=ends and ends["home"],
         ),
     )
+
+
+def _legs_json(legs):
+    return [[c.model_dump() for c in leg] for leg in legs] if legs else None
+
+
+@router.get("/v1/routes/preview", response_model=RouteResponse)
+def preview_route(
+    device: str = Query(..., pattern=DEVICE_PATTERN),
+    lat: float = Query(..., ge=-90, le=90),
+    lng: float = Query(..., ge=-180, le=180),
+    budget_meters: int = Query(..., ge=ROUTE_BUDGET_MIN_METERS, le=ROUTE_BUDGET_MAX_METERS),
+):
+    """The walk POST /v1/routes/today would store, stored nowhere. A device that
+    already accepted today's walk still gets a preview; accepting returns the
+    walk it already has."""
+    route_date = gate.today()
+    with get_session() as session:
+        picked, legs, ends = _plan_route(
+            session, device, Coordinates(lat=lat, lng=lng), budget_meters, route_date
+        )
+    return _route_response(
+        route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), ends
+    )
+
+
+@router.post("/v1/routes/today", response_model=RouteResponse)
+def accept_route(body: RouteRequest):
+    """Accept today's walk. One per device per day: the first accept is stored
+    and every later one gets it back, whatever it asked for.
+
+    An empty walk is not stored: stored, it would pin the whole day to
+    "nothing here" even after the device reaches somewhere stocked."""
+    route_date = gate.today()
+    with get_session() as session:
+        row = session.execute(
+            text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
+        ).fetchone()
+        if row is None:
+            picked, legs, _ = _plan_route(
+                session,
+                body.device,
+                Coordinates(lat=body.lat, lng=body.lng),
+                body.budget_meters,
+                route_date,
+            )
+            if not picked:
+                return _route_response(route_date, [], [], body.budget_meters, None)
+            touch_device(session, body.device)
+            session.execute(
+                text(ROUTE_INSERT),
+                {
+                    "device": body.device,
+                    "route_date": route_date,
+                    "ids": [r.id for r in picked],
+                    "budget_meters": body.budget_meters,
+                    "legs": json.dumps(_legs_json(legs)) if legs else None,
+                },
+            )
+            # Somebody else's accept this second may have won the race - read
+            # back whichever array actually landed.
+            row = session.execute(
+                text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
+            ).fetchone()
+        return _stored_route(session, route_date, row)
+
+
+@router.get("/v1/routes/today", response_model=RouteResponse)
+def get_todays_route(device: str = Query(..., pattern=DEVICE_PATTERN)):
+    """Today's accepted walk, or 404 when this device has not accepted one."""
+    route_date = gate.today()
+    with get_session() as session:
+        row = session.execute(
+            text(ROUTE_LOOKUP), {"device": device, "route_date": route_date}
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="No walk accepted today")
+        return _stored_route(session, route_date, row)
+
+
+def _stored_route(session, route_date, row) -> RouteResponse:
+    memory_ids = list(row.memory_ids)
+    rows = session.execute(text(ROUTE_QUERY), {"ids": memory_ids}).fetchall()
+    return _route_response(route_date, rows, memory_ids, row.budget_meters, row.legs)
 
 
 @router.get("/v1/me/memories", response_model=MyMemoriesResponse)

@@ -22,6 +22,10 @@ export type StoredRoute = {
   loop?: boolean;
   start?: Coordinates;
   legs?: Coordinates[][] | null;
+  /** The whole planned walk as drawn, start to home, on the streets when
+   *  there was a routing server. It includes the legs touching the start,
+   *  which is why it lives here and nowhere on the server. */
+  line?: Coordinates[];
 };
 
 /** The stored route, or null if there isn't one or it isn't today's.

@@ -1,0 +1,181 @@
+/** The first thing the app asks: how far today. Then the walk it would be, on
+ *  the map, to accept or change. One walk a day - accepting is final until
+ *  tomorrow, which is why the preview exists at all.
+ *
+ *  The page is also the location primer. "Show me the walk" is a press, so the
+ *  system dialog it may raise has the context the old card over the map gave
+ *  it (UI.md, "Asking for location"). Refused, the walk is planned from
+ *  Midtown and the preview says so - never a dead end (rule 1).
+ */
+
+import Slider from '@react-native-community/slider';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { distance } from './format.ts';
+import { buttonText, color, dim, font, label } from './theme.ts';
+
+export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
+
+type PlanProps = {
+  km: number;
+  onKm: (km: number) => void;
+  onGo: () => void;
+  busy: boolean;
+  error: string | null;
+};
+
+export function Plan({ km, onKm, onGo, busy, error }: PlanProps) {
+  return (
+    <View style={styles.page}>
+      <Text style={styles.title}>How far today?</Text>
+      <Text style={styles.value} accessibilityLiveRegion="polite">{`${km} km`}</Text>
+      <Slider
+        style={styles.slider}
+        minimumValue={WALK_KM.min}
+        maximumValue={WALK_KM.max}
+        step={WALK_KM.step}
+        value={km}
+        onValueChange={onKm}
+        // The native component takes any ColorValue (RNCSliderNativeComponent.ts);
+        // only the published typings say string.
+        minimumTrackTintColor={color.ink as string}
+        maximumTrackTintColor={color.rule as string}
+        thumbTintColor={color.ink as string}
+        accessibilityLabel="Walk length"
+      />
+      <View style={styles.ends}>
+        <Text style={label}>{`${WALK_KM.min} km`}</Text>
+        <Text style={label}>{`${WALK_KM.max} km`}</Text>
+      </View>
+      <Text style={styles.note}>Five memories, looping back to where you start.</Text>
+
+      <Pressable
+        style={dim(styles.primary)}
+        onPress={onGo}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Show me the walk"
+      >
+        {busy ? (
+          <ActivityIndicator color={color.paper} />
+        ) : (
+          <Text style={styles.primaryText}>Show me the walk</Text>
+        )}
+      </Pressable>
+      {error && <Text style={styles.error}>{error}</Text>}
+    </View>
+  );
+}
+
+type PreviewProps = {
+  stops: number;
+  meters: number;
+  loop: boolean;
+  /** Planned from Midtown because there was no position to plan from. */
+  fallback: boolean;
+  busy: boolean;
+  error: string | null;
+  onAccept: () => void;
+  onBack: () => void;
+};
+
+export function Preview({ stops, meters, loop, fallback, busy, error, onAccept, onBack }: PreviewProps) {
+  return (
+    <View style={styles.card}>
+      {stops === 0 ? (
+        <Text style={styles.cardTitle}>No walk that long from here</Text>
+      ) : (
+        <Text style={styles.cardTitle}>
+          {`${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${loop ? ' loop' : ''}`}
+        </Text>
+      )}
+      {fallback && (
+        <Text style={styles.cardBody}>
+          Planning from Midtown. Turn on location to plan from where you are.
+        </Text>
+      )}
+      {stops > 0 && (
+        <Pressable
+          style={dim(styles.primary)}
+          onPress={onAccept}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Accept this walk"
+          accessibilityHint="This is today's walk. It can't be changed until tomorrow."
+        >
+          {busy ? (
+            <ActivityIndicator color={color.paper} />
+          ) : (
+            <Text style={styles.primaryText}>Accept</Text>
+          )}
+        </Pressable>
+      )}
+      <Pressable
+        style={dim(styles.secondary)}
+        onPress={onBack}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Change length"
+      >
+        <Text style={styles.secondaryText}>Change length</Text>
+      </Pressable>
+      {error && <Text style={styles.error}>{error}</Text>}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  page: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: color.paper,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+    gap: 8,
+  },
+  title: { fontFamily: font.display, fontSize: 34, lineHeight: 40, color: color.ink },
+  value: { fontFamily: font.monoBold, fontSize: 30, color: color.ink, marginTop: 16 },
+  slider: { marginTop: 8, height: 40 },
+  ends: { flexDirection: 'row', justifyContent: 'space-between' },
+  note: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft, marginTop: 16 },
+  primary: {
+    marginTop: 14,
+    backgroundColor: color.ink,
+    paddingVertical: 16,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  primaryText: { ...buttonText, color: color.paper },
+  secondary: {
+    borderWidth: 1,
+    borderColor: color.rule,
+    paddingVertical: 14,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  secondaryText: { ...buttonText, color: color.ink },
+  error: { fontFamily: font.prose, fontSize: 14, color: color.inkSoft, textAlign: 'center' },
+  // The primer card's shape and shadow, in its slot: UI.md allows that one.
+  card: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 26,
+    backgroundColor: color.paper,
+    borderWidth: 1,
+    borderColor: color.rule,
+    borderRadius: 6,
+    padding: 24,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.14,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  cardTitle: { fontFamily: font.display, fontSize: 23, lineHeight: 30, color: color.ink },
+  cardBody: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
+});

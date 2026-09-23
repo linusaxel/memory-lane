@@ -26,22 +26,22 @@ free number. F3 is still proposed and sits at the bottom.
 
 | | | |
 |---|---|---|
-| F1 | Discover memories near me | Implemented |
+| F1 | Plan today's walk | Implemented |
 | F2 | Read one memory and go to its source | Implemented |
 | F6 | Many memories at one point | Implemented |
 | F7 | Unlock a memory by standing near it | Implemented |
 | F8 | Be asked for location | Implemented |
 | F9 | Use the app without location | Implemented |
 | F10 | Lose the network | Implemented |
-| F11 | Find the nearest locked memory | Implemented |
+| F11 | Find the nearest locked memory | Removed from the app |
 | F12 | Walk there | Implemented |
 | F13 | Walk into range | Implemented |
 | F14 | Be refused an unlock | Implemented |
 | F15 | Reread what you unlocked | Implemented |
 | F16 | Read on the train home | Implemented |
 | F17 | Understand why you cannot read something | Implemented |
-| F18 | Stand somewhere with nothing in it | Implemented |
-| F19 | Somewhere else entirely | Implemented |
+| F18 | Stand somewhere with nothing in it | Removed from the app |
+| F19 | Somewhere else entirely | Removed from the app |
 | F5 | File a memory of your own | Implemented |
 | F20 | Report something that should not be here | Removed from the app |
 | F21 | Be somebody | Implemented |
@@ -57,7 +57,8 @@ free number. F3 is still proposed and sits at the bottom.
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
-has to change, no search in the app, no sharing, and no push notifications.
+has to change (the walk length is the plan page's one question, asked as part
+of F1, not a setting), no search in the app, no sharing, and no push notifications.
 Each of those is a thing a user does *not* do, and the list is worth as much
 as the one above — if one of them appears, it should be because a flow needed
 it, not because apps have them. The one exception is F28's proximity
@@ -71,14 +72,14 @@ that is allowed to interrupt somebody who is not looking at it.
 Everything below is one of three sessions. If a flow does not belong to one of
 these, it is probably not a flow.
 
-**Session one — "what is this?"** Land on a map of padlocks (F1), get asked for
-location in a way that explains the mechanic (F8), and either grant it and see
-your reach drawn (F7) or decline and browse a city you are not in (F9). Nothing
+**Session one — "what is this?"** Pick how far to walk (F1), get asked for
+location by the button that plans it (F8), see the walk on the map and accept
+it. Decline location and the walk is planned from Midtown instead (F9). Nothing
 is readable yet, and that is the pitch, not a failure.
 
-**Session two — the first unlock.** Something is in reach, or the map tells you
-how far the nearest one is (F11) and hands you walking directions (F12). You
-arrive, the pin turns (F13), you hold the ring (F7), and a memory arrives (F7).
+**Session two — the first unlock.** The route pill says where the next stop is
+(F25), the sheet hands you walking directions (F12). You arrive, the pin turns
+(F13), you hold the ring (F7), and a memory arrives (F7).
 This is the entire product; every other flow exists to get somebody here or to
 make it worth having got here.
 
@@ -89,43 +90,36 @@ gets answered before it becomes a complaint (F17).
 
 ---
 
-## F1 · Discover memories near me — **Implemented**
+## F1 · Plan today's walk — **Implemented**
 
-**Who:** someone who opened the app for the first time, standing somewhere.
+**Who:** someone who opened the app and has not accepted a walk today.
 
-1. App launches, map appears already centred on `FALLBACK_REGION` (Manhattan),
-   zoomed out to ~10km — a preview of where the corpus is.
-2. It primes for location rather than firing the system dialog (see F7).
-   - **Granted** → animates to the person's position over 600ms and zooms in to
-     street scale (~1.1km), with the unlock radius drawn around them. Fetches.
-   - **Denied** → stays on Manhattan, still zoomed out, and fetches there. Never
-     a blank map, and no circle, because nothing can unlock.
-3. Pins drop for every memory with coordinates in the viewport radius.
-4. Banner reads "N memories here".
-5. Panning or zooming refetches, debounced 400ms, radius derived from the
-   viewport and clamped to 0.1–100km.
+1. The first screen is `mobile/src/Plan.tsx`: "How far today?" and one slider,
+   1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`). The map is mounted
+   behind it, not shown.
+2. **Show me the walk** asks for location if it has to (F8), then
+   `GET /v1/routes/preview` with that position and the length in metres. The
+   preview stores nothing.
+3. The preview is the map, fitted to the start and every stop
+   (`fitToCoordinates`), with the stops numbered 1–5 and the loop drawn. A card
+   reads "5 stops · 3.8 km loop", with **Accept** and **Change length**.
+   Preview pins do not open: it is a look, not a walk.
+4. **Accept** is `POST /v1/routes/today` with the same position and length, and
+   lands on the walk (F25). **Change length** goes back to the slider, and
+   nothing was stored, so it costs nothing.
 
-**Three outcomes, three different things said.** They used to be two, and the
-app could not tell you which one you were looking at:
+**Accepting is final for the day.** One walk per device per day, and there is
+no replanning until tomorrow — that is why the preview exists at all. A
+relaunch after accepting skips this page and goes straight to the walk.
 
-| State | Banner | Button |
-|---|---|---|
-| loading, nothing yet | "Finding memories…" + spinner | Near me |
-| ready, results | "N memories here" | Near me |
-| ready, none | "No memories here yet" | Near me |
-| failed | "Can't reach Memory Lane" | **Try again** |
+**What can go wrong:** nothing walkable within that length — the card reads
+"No walk that long from here" and offers only **Change length**. No position
+— the walk is planned from Midtown and the card says so (F9). The server
+unreachable — the page says "Can't reach Memory Lane right now." under the
+button, and a second press retries.
 
-A request that *hangs* used to be the bad case: `fetch` has no default timeout,
-so an unreachable host sat on "0 memories here" with a spinner indefinitely and
-the error path never fired. There is now an 8s timeout
-(`REQUEST_TIMEOUT_MS` in `src/api.ts`).
-
-A failed refresh keeps the last good pins on screen — they are still true of the
-place, and a map that empties itself on a dropped request looks like the area
-went blank rather than the network.
-
-**Done when:** a pin appears within ~1s of the map settling, and the count
-matches the pins drawn.
+**Done when:** a first launch shows the slider and no system dialog, a press
+shows a whole walk on the map, and Accept makes it today's.
 
 ## F2 · Read one memory and go to its source — **Implemented**
 
@@ -192,13 +186,13 @@ other distribution channel (see *Design rules* in `TODO.md`).
 
 **Who:** someone looking at a map with pins they cannot read yet.
 
-1. Every memory in view draws a pin. A **locked** pin is a grey padlock and
+1. Every stop on today's walk draws a pin. A **locked** pin is a grey padlock and
    carries the place name and the distance — enough to decide whether to walk
    there — and nothing else.
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
-   into a seal-coloured ring, and the map says so in words: "1 memory within reach",
-   which opens the sheet.
+   into a seal-coloured ring, and the route pill says so in words: "You're at
+   stop 2 · open it", which opens the sheet.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
    It should feel like a lock turning.
@@ -212,18 +206,18 @@ other distribution channel (see *Design rules* in `TODO.md`).
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — the bottom button reads "Turn on location" instead of "Near me" — rather than
-showing a map of permanently locked pins. The Manhattan fallback is a *viewport*
-and never an unlock position: the map centre and the person's position are two
-different parameters, precisely so that panning to a city cannot open it.
+showing a walk of permanently locked pins. The Midtown fallback is a planning
+anchor and never an unlock position: where a walk starts and where the person
+stands are two different parameters, precisely so that planning from a city
+cannot open it.
 
 **Failure:** the hold completes and the server still refuses, because GPS moved
 in between. The sheet says "Not close enough yet", because a control that
 appears to do nothing is the worse outcome.
 
-**Failure:** location was never granted. The app primes rather than firing the
-system dialog at mount — a cold dialog is one tap from a permanent no — and the
-primer explains the mechanic, because "memories unlock where they happened" is
-both the ask and the pitch. A hard refusal offers Settings.
+**Failure:** location was never granted. The app never fires the system dialog
+at mount — a cold dialog is one tap from a permanent no — and asks from the plan
+page's button instead (F8). A hard refusal offers Settings.
 
 **Done when:** standing at a place reveals its memory and standing a street away
 does not. *Verified in the simulator:* memory 38 reads locked from the API and
@@ -334,76 +328,62 @@ mechanic.
 
 **Who:** somebody on their first launch, who has not been asked yet.
 
-1. The map is already up and populated behind a card. Nothing has been asked.
-2. The card says what the app does — *"Memories unlock where they happened"* —
-   and what location is for, before the system dialog exists.
-3. **"Turn on location"** hands over to iOS. **"Just show me the map"** dismisses
-   it for good.
-4. Granted → F7. Declined → F9.
+1. The plan page is up (F1). Nothing has been asked.
+2. **Show me the walk** is the ask: walks start from where you are, and the
+   page says the walk loops back there. The system dialog comes from that
+   press, never from launch.
+3. Granted → the walk is planned from here. Declined → planned from Midtown
+   (F9).
 
 The app never calls `requestForegroundPermissions` on mount. A cold system
-dialog is one tap from a permanent no, and the reported gap is roughly 30%
-opt-in against 65% after a primer — but the better reason is that "memories
-unlock where they happened" is simultaneously the ask and the pitch, and there
-is nowhere better to say it.
+dialog is one tap from a permanent no; a press with a reason in front of it is
+not cold. There is no primer card any more — the plan page is the context.
 
 Somebody who already granted it is never asked again: `getForegroundPermissions`
-runs first, silently. The dismissal is persisted, because re-asking every launch
-is how an app teaches people to dismiss without reading.
+runs first, silently, and a granted launch starts watching position straight
+away.
 
-**Failure:** already hard-denied (`canAskAgain === false`). The button becomes
-**Open Settings**, which is the only route back.
+**Failure:** already hard-denied (`canAskAgain === false`). The press plans from
+Midtown without a dialog; on the walk, **Turn on location** opens Settings,
+which is the only route back.
 
-**Done when:** a first launch shows a map with pins and no system dialog, and
-the second launch of somebody who declined does not nag.
+**Done when:** a first launch shows the plan page and no system dialog, and a
+press on it is the only thing that can raise one.
 
 ## F9 · Use the app without location — **Implemented**
 
 **Who:** somebody who said no, or is indoors with location off.
 
-1. The map stays on Manhattan, zoomed out, with pins.
+1. The walk is planned from Midtown (`FALLBACK_REGION`), and the preview says
+   "Planning from Midtown. Turn on location to plan from where you are."
 2. Gated memories are all locked, and the sheet says so plainly rather than
    showing a distance it cannot know.
-3. The bottom button reads **"Turn on location"** rather than "Near me", in
-   every state.
+3. The bottom button reads **"Turn on location"** rather than "Near me".
 4. No reach circle is drawn, because there is no reach.
 
-This is a real mode, not an error. You can browse where the memories are,
-read every centroid-placed one, and decide whether the app is worth granting
-anything to. What you cannot do is open the gated ones, and the app says that
-in words rather than showing pins that never respond.
+This is a real mode, not an error, and never a dead end: a reviewer who taps
+Deny still gets a walk on a real map (UI.md rule 1). What you cannot do is open
+its stops, and the app says that in words.
 
 **Done when:** nothing about this state looks broken, and nothing about it
 pretends you can unlock.
 
 ## F10 · Lose the network — **Implemented**
 
-1. A request that fails leaves **the last good pins on screen**. A map that
-   empties itself on a dropped request looks like the area went blank rather
-   than the connection.
-2. The banner says "Can't reach Memory Lane" and the button becomes **Try again**.
+1. Planning or accepting with no connection leaves you where you were, with
+   "Can't reach Memory Lane right now." under the button. A second press
+   retries.
+2. An accepted walk renders from the local copy (`mobile/src/route.ts`) before
+   the server answers, so a relaunch with no signal still shows it.
 3. Requests time out after 8s (`REQUEST_TIMEOUT_MS`). `fetch` has no default
-   timeout, and a hung request rendering as "0 memories here" forever was the
-   original bug.
+   timeout, and a hung request that never fails was the original bug.
 4. Already-unlocked memories are unaffected — see F16.
 
-**Failure within the failure:** a retry at the same viewport used to be skipped
-by the fetch dedupe. Only *successful* fetches are recorded, so it is not.
+## F11 · Find the nearest locked memory — **Removed from the app**
 
-## F11 · Find the nearest locked memory — **Implemented**
-
-**Who:** somebody looking at padlocks, none of them in reach.
-
-1. Where the "N within reach" pill would be, a muted one reads
-   **"Nearest locked memory · 412 m"**.
-2. Tapping it opens that memory's sheet, which offers F12.
-
-Only on a day with no route. With one, the route pill (F25) answers the same
-question with the next stop and its distance.
-
-It does not breathe and it is not seal-coloured. "Walk 400 m" is information; only
-something you can actually open is an invitation. A map of padlocks that answers
-only "you cannot read this" and never "so where do I go" is half a mechanic.
+The "Nearest locked memory · 412 m" pill answered a map of padlocks. The map now
+shows only today's walk, and the route pill (F25) names the next stop and its
+distance.
 
 ## F12 · Walk there — **Implemented**
 
@@ -425,7 +405,8 @@ only "you cannot read this" and never "so where do I go" is half a mechanic.
    it, which is the opposite of the mechanic.
 2. The pin becomes a seal-coloured ring with a halo, and the reach circle now contains
    it.
-3. The pill turns seal-coloured, reads "1 memory within reach", and breathes.
+3. The route pill turns seal-coloured, reads "You're at stop 2 · open it", and
+   breathes (F25).
 
 **This is the moment the app is for**, and the reason nothing else on the map
 moves.
@@ -453,10 +434,8 @@ product is about.
    only number in the app that goes up because you went outside. The tab's
    *Unlocked* section is this flow; its *My memories* section is F24.
 2. Newest first, as catalogue entries: place, the opening of the summary, when.
-3. Tapping one opens the full sheet, which here carries **Show on map** —
-   opened from a list, the place is a name, and this is the only route back to
-   where it actually is. Over the map the button is absent, because there you
-   are already looking at the answer.
+3. Tapping one opens the full sheet. There is no **Show on map**: the map
+   draws only today's walk, so a memory from another day has no pin to fly to.
 
 Without this the reward for standing somewhere in the rain is one read, after
 which the memory is buried under whichever pin you happened to be near and
@@ -494,40 +473,17 @@ is too late.
 4. The name their submissions are signed with, and the sign-in that makes a
    collection survive a new phone. Never a wall — see F22.
 
-## F18 · Stand somewhere with nothing in it — **Implemented**
+## F18 · Stand somewhere with nothing in it — **Removed from the app**
 
-The banner reads "No memories here yet" and the map is otherwise normal. It no
-longer looks like a failure, which was the bug. At street zoom the fetch is only
-~700m, so this is easy to reach — panning two neighbourhoods over does it.
+"No memories here yet" was the nearby map's empty state. There is no nearby map;
+the empty case is the preview's "No walk that long from here" (F1).
 
-## F19 · Be somewhere else entirely — **Implemented**
+## F19 · Be somewhere else entirely — **Removed from the app**
 
-**Who:** anybody not in New York, which is almost everybody. The corpus is one
-comedy podcast's touring history.
-
-1. The map comes up empty and stays empty however far you pan.
-2. Instead of the banner alone, a card names the nearest place that is not
-   empty: *"The closest memories are in New York. 64 of them, 6,189 km away.
-   You still have to stand there to read one."*
-3. **Show me New York** flies the map there, wide enough to take in the metro
-   area rather than one pin.
-
-Looking is not unlocking, and the card says so. You can see that the thing
-exists; you still cannot read any of it from here. That distinction is the
-product, and an empty-state card is exactly where it would be easiest to
-accidentally abandon it.
-
-**This outranks the location primer.** Asking for permission to unlock memories
-that are not here is the wrong first impression, and "walk within 150 m of a
-pin" is a promise about pins that do not exist. The primer gets its turn once
-there is something on the map.
-
-**Failure:** `/v1/stats` is unreachable, so there are no hotspots to name. The
-card renders nothing at all and the banner is back to saying "No memories here
-yet" — the same dead end as before, which is the right floor.
-
-**Done when:** the app opened in Copenhagen explains itself instead of looking
-broken.
+The hotspots card (`Elsewhere`, "Show me New York") pointed an empty map at the
+corpus. With no browsing map there is nothing to point; from Copenhagen the
+preview says "No walk that long from here" (F1). `/v1/stats` still returns
+hotspots for anyone who wants them.
 
 ---
 
@@ -695,9 +651,10 @@ they walked for.
 
 1. They file it exactly as any other memory: same screen, same coordinate, same
    photo and recording.
-2. It is on the map immediately, as a pin like any other. Something is here;
-   that much is the point.
-3. Tapping it gives the locked composition with a different figure — the date,
+2. It is never a route stop (`ROUTE_CANDIDATES_QUERY` skips anything not yet
+   open), and the map draws nothing else, so it is not on the map. Its author
+   finds it in My memories (F24).
+3. Opening it gives the locked composition with a different figure — the date,
    not the distance — and "Sealed until then. Standing here does not open it
    any sooner."
 4. On the day, it becomes an ordinary gated memory: readable by whoever is
@@ -718,18 +675,16 @@ a dependency, and "2041" is what a person means. A year already gone is not a
 seal — the server treats a date that has come as no date at all, so there is no
 error state and nothing to validate.
 
-**On the map it is grey, not amber.** Found by looking at it: `reachOf` filtered
-on `memory.locked` and then measured distance, so a seal 128 m away came back
-`unlockable`. The pin wore the openable ring, the banner counted it among
-"3 memories within reach", and because `nearestLocked` gives up the moment
-anything is unlockable, a nearby seal could hide the walk hint for a pin that
-really was reachable. `isSealed` now excludes it from all three at once.
+**Grey, not amber, wherever it is drawn.** Found when the map still drew every
+memory: `reachOf` filtered on `memory.locked` and then measured distance, so a
+seal 128 m away came back `unlockable`. `isSealed` still excludes it there and
+from F28's watch, though a seal can no longer reach the map.
 
 **What can go wrong:** the date is the server's, and the server's clock is the
 only authority. There is no notification when it opens - a seal is not a
 distance to walk into, so `geofenceRegions.ts`'s `isSealed` filter excludes it
 from F28's proximity notification the same way `reach.ts` excludes it from
-the map's walk hint; the memory simply stops refusing. Somebody who seals a
+reach; the memory simply stops refusing. Somebody who seals a
 memory and never goes back never reads it, which is a property of the product
 and not a bug — it is the same walk everything else asks for.
 
@@ -794,87 +749,71 @@ anyone else's collection or the local unlock cache.
 
 ## F25 · Walk today's route — **Implemented**
 
-**Who:** somebody opening the app with nothing particular to unlock.
-**Trigger:** launching the app with a device id and a first position, once a
-calendar day.
+**Who:** somebody who accepted a walk (F1).
+**Trigger:** Accept on the preview, or any launch later the same day.
 
-1. The first time a device asks that day, the server picks up to five nearby,
-   not-yet-earned memories, mixing historical and stranger layers and
-   preferring higher-contrast ones, and stores
-   the choice — a relaunch the same day sees exactly the same walk, not a
-   fresh roll.
-2. A pill appears above "Near me": "Today's route · 0 of 5 · 2.4 km" — the
-   distance still to walk, from where you stand through every
-   stop not yet earned, in order, and back to where the day's walk started:
-   a route is a loop by default (`ROUTE_LOOP`), so the walk home counts. Along
-   the streets between stops when a routing server is running (`ROUTING_URL`),
-   straight to and from you, and said plainly as a distance, never as minutes:
-   no walking speed backs a time yet.
-   Tapping it once starts the route and flies to the next stop; after that the
-   pill reads "Next: <place> · 350 m".
-3. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
-   in today's route (1–5) in the badge. A line of ink dots runs from you
-   to the next stop and on through the rest, then home, in the order picked
-   from wherever the device stood at the day's first ask. The server never
-   stores that start; the phone keeps it next to its cached route
-   (`mobile/src/route.ts`). Between two stops the line follows the streets;
-   the legs from you and back home are straight, because a street shape from
-   the start would store the start. The dots flow toward
-   where you are going and the line ebbs slowly (`mobile/src/RouteLine.tsx`;
-   iOS only, and still under Reduce Motion).
-4. Reaching a stop lights its pin, and the pill turns seal and breathes:
+1. The accepted walk is up to five not-yet-earned memories, mixing historical
+   and stranger layers and preferring higher-contrast ones, within the length
+   chosen on the slider. Candidates come from within half that length of the
+   start, because a loop cannot reach further. The server stores the choice and
+   the length (`daily_routes.budget_meters`); every relaunch that day sees
+   exactly this walk.
+2. **The map shows the route and nothing else.** Its stops are the only pins;
+   nothing off the route is fetched or drawn, and there is no reach banner and
+   no hotspots card. The tabs, "+ Add" and "Near me" arrive with the walk.
+3. A pill above "Near me": "Today's route · 0 of 5 · 2.4 km" — the distance
+   still to walk, from where you stand through every stop not yet earned, in
+   order, and back to where the walk started: a route is a loop by default
+   (`ROUTE_LOOP`), so the walk home counts. Along the streets between stops
+   when a routing server is running (`ROUTING_URL`), straight from you to the
+   next stop, and said plainly as a distance, never as minutes. Tapping it once starts the
+   route and flies to the next stop; after that the pill reads
+   "Next: <place> · 350 m".
+4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
+   (1–5) in the badge. A line of ink dots runs the planned loop: from the
+   start to stop 1, on through the rest, and home, on the streets all the way
+   when a routing server is running. It is the line the preview drew, fixed
+   for the day, so it does not reshape as you walk. The preview is the only
+   response carrying the two legs that touch the start; the phone keeps them,
+   inside the cached line, next to the start it already keeps
+   (`mobile/src/route.ts`), and the server stores neither. The dots flow from
+   the start round the loop (`mobile/src/RouteLine.tsx`; iOS only, and still
+   under Reduce Motion).
+5. Reaching a stop lights its pin, and the pill turns seal and breathes:
    "You're at stop 2 · open it", a tap opens it. Any stop, in any order — the
-   numbers suggest a walk, they do not enforce one, so somebody who goes
-   another way round opens whichever stop they are standing at. Unlocking is
-   F7, unchanged. The badge and
-   its share of the line drop away the moment it is earned, the numbers on
-   the rest do not shift, and the pill's count and distance move.
-5. The last stop earned, the pill reads "Route walked · 5 of 5" and a tap fits
+   numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
+   The badge and its share of the line drop away the moment it is earned, the
+   numbers on the rest do not shift, and the pill's count and distance move.
+6. The last stop earned, the pill reads "Route walked · 5 of 5" and a tap fits
    the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
-**On a route day the route is the only thing that lights up.** A memory off
-the route is still there and still opens if you stand on it and tap it, but
-its pin stays ink and nothing points at it: the reach banner ("3 memories
-within reach", F13) only appears on a day with no route. Otherwise the map
-gave two instructions at once, and the banner's count cheerfully included
-stops out of order and memories that were not on the walk at all.
+**One walk a day, and it is locked.** `POST /v1/routes/today` stores the first
+accept with `ON CONFLICT DO NOTHING`; a second accept, from anywhere, at any
+length, gets the first walk back. `GET /v1/routes/today` only reads — 404 until
+something is accepted — and is how a relaunch decides between the walk and the
+plan page. No replanning until tomorrow, by decision.
 
-**Not a new mechanic — the same one, five times.** A route stop is nothing
-but an ordinary gated memory with one extra fact attached to it, its position
-in today's list. The unlock is F7's, the padlock is F7's, the sheet is F7's.
-The only things this flow adds are the picking and the pill.
+**Not a new mechanic — the same one, five times.** A route stop is nothing but
+an ordinary gated memory with one extra fact attached, its position in today's
+list. The unlock, the padlock and the sheet are F7's.
 
-**Anchored on where the device was, not on a home it never gave.** There is
-no stored location anywhere in this schema besides a device's own reported
-position at the moment it asks for something, so the day's first request is
-the only one with anywhere honest to draw a route from. Every later request
-that day, wherever it comes from, gets back the same array — see
+**Anchored on where the device was, not on a home it never gave.** The start is
+the position sent with the preview and the accept, and nothing stores it — see
 `docs/10-decisions.md` § Routes.
 
-**No notification when it is ready, and none when it is finished.** This
-product does not have any — F1's "deliberately absent" list, and F23 makes
-exactly the same call about a seal opening. The route is there when the app
-is opened and stays there; nothing is pushed at anyone.
+**No notification when it is ready, and none when it is finished.** F28 is the
+one exception, opt-in, and it watches only this walk's stops.
 
-**A sparse area gets an honestly shorter route, not a padded one.** Fewer
-than five walkable memories nearby means a route of two or three, and the
-pill says so — "0 of 2" rather than pretending a fifth stop exists.
+**A sparse area gets an honestly shorter route, not a padded one.** Fewer than
+five walkable memories within the length means a route of two or three, and
+the card and the pill say so — "0 of 2" rather than pretending a fifth stop
+exists. None at all is F1's "No walk that long from here", and an empty walk is
+never stored.
 
-**What can go wrong:** fewer than five candidates nearby — the pill reports
-the true count, same honesty as an empty map (open question 2). None at all
-— the map has memories but nothing walkable is left (all earned, or all on
-ambiguous centroids): the slot reads "No walk nearby today", not tappable.
-An empty route is **not stored**, so opening the app somewhere stocked later
-the same day still gets one; a map with no memories at all keeps its own
-empty state and shows no route line. No device id or no position yet — no
-pill, the same wait every other position-dependent control on this screen
-already does.
-
-**Done when:** a fresh device gets a stable route of up to five stops the
-first time it asks with a position, sees the identical stops on a relaunch
-the same day, and watches the pill's count and the map's badges track each
-unlock exactly as F7 already does.
+**Done when:** an accepted walk shows exactly its stops and nothing else,
+survives a relaunch the same day unchanged, and the pill's count and the map's
+badges track each unlock exactly as F7 already does.
 
 ---
 
@@ -951,10 +890,9 @@ the app is not open.
    requestBackgroundPermissionsAsync()` - which only runs if foreground
    permission is already granted, and notification permission. Turning it off
    just stops the watch; nothing else about the app changes.
-2. The watch tracks today's route (F25), not the map's panned viewport - a
+2. The watch tracks today's accepted route (F25) - nothing before Accept - a
    bounded, already-nearby list (`ROUTE_SIZE`, well under the ~20-region limit
-   both platforms enforce for background geofences), and one that does not
-   need re-registering every time somebody pans the map. `geofenceRegions.ts`
+   both platforms enforce for background geofences). `geofenceRegions.ts`
    drops anything already unlocked or sealed (F23) from the watch the moment
    the route list itself would.
 3. Crossing into a watched region fires a **local** notification -
@@ -1039,10 +977,10 @@ Answer these and the proposed flows can be written properly.
 1. ~~**Layers: filter or stack?**~~ **Answered: stacked, with distinct pin
    shapes** — not colours, because the one accent is spoken for. See F4.
 2. ~~**What does a person see with zero memories nearby?**~~ **Partly settled.**
-   It says "No memories here yet" and no longer looks like a failure, which was
-   the bug. Still open as a *product* question: should an empty area nudge the
-   person to zoom out, or auto-widen the radius? Doing nothing is defensible
-   until there is a corpus worth widening into.
+   The preview says "No walk that long from here" and offers the slider back
+   (F1). Still open as a *product* question: should it suggest the length that
+   would find something? Doing nothing is defensible until there is a corpus
+   worth widening into.
 3. ~~**Is contribution in v1 at all**, or is v1 read-only?~~ **Answered: it is
    in.** F5 ships it, and the two things the old note said blocked it —
    moderation and an abuse story — turned out to be one report endpoint and a

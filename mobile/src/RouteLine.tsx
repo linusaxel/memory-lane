@@ -1,8 +1,13 @@
-/** Today's route, drawn as a flow: dots that march from you toward the next
- *  stop and on through the rest, the whole line ebbing slowly. Ink, never
- *  seal - it is a suggestion, not an unlock state.
+/** Today's route, drawn as a flow: dots that march from the start through
+ *  stop 1 to the last stop and home, round and round. Ink, never seal - it is
+ *  a suggestion, not an unlock state.
  *
  *  Its own component so the tick re-renders one Polyline and not the screen.
+ *  The phase is the only prop that changes per tick. A fresh coordinates array
+ *  makes react-native-maps rebuild the overlay, which restarts the flow, so
+ *  the coordinates are memoised and the colour is fixed - it used to ebb, and
+ *  that alone repainted the line twenty times a second.
+ *
  *  The phase animates on iOS only (react-native-maps has no lineDashPhase on
  *  Android); there, and under Reduce Motion, it is the same line, still.
  *
@@ -11,7 +16,7 @@
  *  dots fuse into a solid bar.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { Polyline } from 'react-native-maps';
 
@@ -23,8 +28,6 @@ const PERIOD = DOT + GAP;
 /** Points per second the dots travel. Walking pace on screen, not a spinner. */
 const SPEED = 14;
 const TICK_MS = 50;
-/** One slow ebb of the whole line's strength, in milliseconds. */
-const EBB_MS = 2600;
 
 type Props = { path: Coordinates[]; dark: boolean };
 
@@ -48,17 +51,20 @@ export default function RouteLine({ path, dark }: Props) {
     return () => clearInterval(id);
   }, [reduceMotion]);
 
+  const coordinates = useMemo(
+    () => path.map((at) => ({ latitude: at.lat, longitude: at.lng })),
+    [path],
+  );
+
   // A falling phase moves the pattern away from the first coordinate, which is
-  // you: the dots flow toward where you are going.
+  // the start: the dots flow toward stop 1 and on round the loop.
   const phase = PERIOD - ((t / 1000) * SPEED) % PERIOD;
-  const ebb = 0.8 + 0.2 * Math.cos((2 * Math.PI * t) / EBB_MS);
-  const rgb = dark ? '189,181,168' : '74,68,61';
 
   return (
     <Polyline
-      coordinates={path.map((at) => ({ latitude: at.lat, longitude: at.lng }))}
+      coordinates={coordinates}
       strokeWidth={4}
-      strokeColor={`rgba(${rgb},${(0.75 * ebb).toFixed(3)})`}
+      strokeColor={dark ? 'rgba(189,181,168,0.7)' : 'rgba(74,68,61,0.7)'}
       lineCap="round"
       lineDashPattern={[DOT, GAP]}
       lineDashPhase={phase}

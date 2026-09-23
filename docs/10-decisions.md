@@ -524,8 +524,8 @@ can sit kilometres from everything under it, and `reachOf` would then either
 offer an unlock for something 5 km away — which the server refuses, so the
 button fails in the person's hand — or hide the mechanic while they stand on it.
 
-`reachOf` and `nearestLocked` both measure to the nearest *locked member*. It is
-the same haversine count and it is correct at any precision.
+`reachOf` measures to the nearest *locked member*. It is the same haversine
+count and it is correct at any precision.
 
 ### A tap on a wide group zooms instead of opening
 
@@ -552,12 +552,36 @@ the least this app can get away with (docs/10-decisions.md#identity), and a
 home location is exactly the kind of fact a route feature could ask for
 without needing at all.
 
-So the anchor is whatever position the device reports on the day's *first*
-request — the one moment it is guaranteed to have anywhere honest to stand on
-— and every later request that day is answered from the stored array, lat/lng
-ignored. Two people opening the app from opposite ends of a city get two
-different routes on the same day, which is correct: the route was never a
+So the anchor is whatever position the device sends with its preview and its
+accept — the one moment it is guaranteed to have anywhere honest to stand on
+— and nothing stores it. Two people planning from opposite ends of a city get
+two different routes on the same day, which is correct: the route was never a
 citywide itinerary, it was one device's walk.
+
+### Preview, then accept, and the client never names a stop
+
+The app asks how far first (F1). `GET /v1/routes/preview` solves the walk and
+stores nothing; `POST /v1/routes/today` solves it again with the same anchor
+and length and stores it. The two agree because the solver is deterministic:
+seeded on `device:date`, fed the same candidates, the same metres and the same
+budget. So the accept carries no memory ids, and there is nothing from the
+client to validate or trust — a device cannot accept a stop the solver would
+not have picked.
+
+The day is locked by `ON CONFLICT (device_id, route_date) DO NOTHING`: the
+first accept wins, and every later one, at any length and from anywhere, reads
+that row back. One walk a day was the user's call, not a limitation.
+
+`GET /v1/routes/today` used to be the one GET here that wrote — it made the
+route on the day's first call. With an explicit accept there is nothing for it
+to create, so it only reads, and answers 404 until something has been accepted.
+That 404 is how a launch picks the plan page over the walk.
+
+**The search radius is half the length.** A loop cannot reach further out than
+half its length, so `budget_meters / 2` is where candidates come from. It
+replaced two server knobs, `ROUTE_RADIUS_METERS` and `ROUTE_BUDGET_METERS`,
+and migration 022 renamed `daily_routes.radius_meters` to `budget_meters`:
+the length is what the person chose, and the radius follows from it.
 
 ### No notification when a route completes
 
@@ -565,8 +589,7 @@ F25 ends its list of stops the same way F23 ends a seal: nothing is pushed at
 anyone, as of today's code. This product had no notifications at all — see
 F1's "deliberately absent" list in `docs/08-ux-flows.md` — and a route was not
 going to be the first feature to need one invented. The pill just says a truer
-number the next time the app is opened, the same way "3 memories within reach"
-already does.
+number the next time the app is opened.
 
 **Reopened 2026-09-22, both shipped 2026-09-23** (`TODO.md`'s "Ideas —
 founder brainstorm" section): a streak counter (F27) and a geofenced
@@ -584,7 +607,9 @@ With `ROUTING_URL` set, stops are chosen and ordered on OSRM walking metres
 anchor are used for choosing and then dropped. The street *shapes* are stored
 on `daily_routes.legs`, but only from stop to stop: a shape leaving the anchor
 starts at the anchor, and would be the stored home location this section
-refuses, in all but name. So the app draws you → first stop and last stop →
-home straight, as it always did. Without the sidecar, or with it down, every
+refuses, in all but name. The preview, which stores nothing, also returns
+`out_leg` and `home_leg`; the phone keeps them in its cached line beside the
+start it already holds, so the whole loop follows the streets and the server
+still has no start. Without the sidecar, or with it down, every
 distance is crow-flies × 1.3 and `legs` is null. The route still works, it just
 cuts through buildings.

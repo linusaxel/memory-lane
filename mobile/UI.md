@@ -7,21 +7,30 @@ Read this before changing anything under `mobile/src/` or `App.tsx`.
 
 ## The app today
 
-One screen, four modals.
+Three stages, one map, four modals. The stage is plain state in `App.tsx`
+(`'loading' | 'plan' | 'preview' | 'walk'`); the map stays mounted through all
+of them (rule 9).
 
 ```
-MapView (full bleed)
-├─ Marker per coordinate      tap -> MemorySheet.  One pin, see Markers
-├─ banner  "N memories here"  top centre, non-interactive
-├─ "N within reach"           seal ochre, breathing, tap -> the nearest unlockable
-│    or "Nearest locked · 412 m"   muted and still. Only on a day with no route
+Plan (src/Plan.tsx)            opaque page over the mounted map; no tab bar
+├─ "How far today?"            34/700
+├─ "4 km"                      the slider's value, mono 30
+├─ slider                      1-10 km, 0.5 steps (WALK_KM)
+└─ "Show me the walk"          ink button; asks for location, then previews
+
+Preview                         the map, fitted to the start and every stop
+├─ Marker per stop, numbered   not tappable - a look, not a walk
+├─ the loop, drawn             RouteLine from the start and back
+└─ card (Preview)              "5 stops · 3.8 km loop", Accept / Change length;
+     "No walk that long from here"; "Planning from Midtown…" with no position
+
+MapView (the walk, full bleed)  only today's accepted stops, nothing else
+├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
-├─ "Today's route · N of 5 · 2.4 km"   bottom centre, above Near me, once fetched;
+├─ "Today's route · N of 5 · 2.4 km"   bottom centre, above Near me;
 │    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
-│    "You're at stop N · open it" seal and breathing while standing at any stop,
-│    "No walk nearby today" (not tappable) when there is nothing to walk to
-├─ "Near me"                  bottom centre, recentres on GPS
-└─ LocationPrimer             bottom card, only until permission is settled
+│    "You're at stop N · open it" seal and breathing while standing at any stop
+└─ "Near me"                  bottom centre, recentres on GPS
 
 MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
@@ -40,8 +49,9 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
 Submit (pageSheet modal, from "+ Add") - see Writing
 
-Collection (the second tab)
-└─ what this device has unlocked, newest first; a row opens the sheet
+Memories (the second tab, src/Memories.tsx)
+└─ Unlocked: what this device has earned, newest first; a row opens the sheet.
+   My memories: what you filed
 
 Settings (the third tab, "You")
 ├─ unlocked / places / filed, as numbers
@@ -51,8 +61,8 @@ Settings (the third tab, "You")
 ├─ location state + action
 └─ privacy policy, and what signing out does and does not delete
 
-TabBar
-└─ Map | Unlocked (N) | You
+TabBar                         hidden on the map until the walk is accepted
+└─ Map | Memories (N) | You
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -69,9 +79,9 @@ that asks who you are before it shows you anything has the order wrong.
 | `src/Padlock.tsx` | the one symbol, at any size, in any colour |
 | `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
-| `src/ReachBanner.tsx` | the only thing on the map that animates |
-| `src/LocationPrimer.tsx` | asking before the system does |
-| `src/Collection.tsx` | what the walking was for |
+| `src/Plan.tsx` | the plan page and the preview card: how far, then accept |
+| `src/useBreath.ts` | the only thing on the map that animates, the "at a stop" pill |
+| `src/Memories.tsx` | what the walking was for |
 | `src/TabBar.tsx` | three tabs, hand-rolled |
 | `src/Settings.tsx` | the "You" tab |
 | `src/theme.ts` | **every colour and font.** Start here |
@@ -186,7 +196,7 @@ half-loaded state.
 **Elevation is a rule, not a shadow.** Hierarchy comes from hairlines and
 weight, which is how editorial layouts have always done it and is the shortest
 way out of the stacked-card look. The only two things still casting a shadow are
-"Near me" and the location primer, which genuinely hover over a map; both carry
+"Near me" and the preview card, which genuinely hover over a map; both carry
 `shadow*` (iOS) and `elevation` (Android), because setting one looks flat on the
 other platform.
 
@@ -241,7 +251,7 @@ rule you have not written yet:
 
 | | Offset / radius / opacity | Android | On |
 |---|---|---|---|
-| card | `0,8` / 18 / 0.14 | `elevation: 6` | the location primer and the empty-area card |
+| card | `0,8` / 18 / 0.14 | `elevation: 6` | the preview card |
 | locate | `0,6` / 14 / 0.18 | `elevation: 5` | "Near me" — tighter and darker, because it is a small solid shape rather than a sheet of paper |
 
 ## Contrast, measured
@@ -281,7 +291,7 @@ than for a careful look.
 
 | | Delta | Roughly | When |
 |---|---|---|---|
-| `FALLBACK_REGION` | `0.09` | 10 km | No position. A preview of where the corpus is |
+| `FALLBACK_REGION` | `0.09` | 10 km | Before anything is known; its centre is the Midtown planning anchor |
 | `LOCATED_DELTA` | `0.01` | 1.1 km tall | Centred on the person |
 
 Landing on the person at street scale is the whole point: at 10 km a 150 m
@@ -289,30 +299,26 @@ unlock radius is four pixels and the mechanic is invisible, so the app reads as
 a map of things you cannot have. At 1.1 km the reach circle is about a quarter
 of the screen and "walk two blocks" is a visible distance.
 
-The **fallback stays wide on purpose.** With no permission nothing can unlock,
-there is no circle to draw, and the only useful thing the map can say is "here
-is roughly where the memories are". Zooming a browse state into an empty street
-would break rule 1 for no gain.
+The preview ignores both: it fits the map to the start and every stop
+(`fitToCoordinates`), which is the zoom that shows a whole walk.
 
 **The reach circle** is drawn once, around the person, at the server's radius —
 never around each pin, which would be fifteen overlapping circles and no
 information. It is `seal` at low opacity: present, and never competing with the
 pins it is there to qualify. No position, no circle.
 
-A consequence worth knowing: the fetch radius follows the viewport
-(`regionToRadiusKm`), so at this zoom the app asks for ~700 m and the banner
-count is honestly what is near you rather than what is in the county. When
-nothing is in reach the "nearest locked memory" pill is what points further
-out.
+Nothing is fetched by viewport any more: the map draws the walk's stops and
+nothing else, so panning never asks the server anything.
 
 ## Rules that are load-bearing
 
 Each of these exists because something broke or would have been rejected.
 
-1. **Never show a blank grey map.** `FALLBACK_REGION` points at Manhattan when
-   permission is denied, because store reviewers routinely tap Deny and an empty
-   map is a rejection. Any new view needs the same treatment: an empty state
-   that still shows something real.
+1. **Never show a blank grey map, or a dead end.** With permission denied the
+   walk is planned from Midtown (`FALLBACK_REGION`'s centre) and the preview
+   says so, because store reviewers routinely tap Deny and an empty map is a
+   rejection. Any new view needs the same treatment: an empty state that still
+   shows something real.
 2. **Location is foreground-only by default, and background is opt-in, single-purpose,
    and explicit.** `ACCESS_BACKGROUND_LOCATION` is a named line in `app.json`'s
    Android allowlist, not a side effect of some other permission; on iOS
@@ -349,11 +355,11 @@ Each of these exists because something broke or would have been rejected.
    `startUpdatingLocation` in the background would — asking for the stronger
    capability than the feature needs is exactly the kind of over-declaration
    this rule exists to prevent.
-3. **Debounce map-driven fetches** (currently 400ms). Panning fires
-   `onRegionChangeComplete` continuously; without it you DoS your own API.
-4. **The API is radius-only.** `regionToRadiusKm()` circumscribes the viewport
-   and clamps to 0.1–100km; outside that the API returns 422. There is no bbox
-   endpoint.
+3. **Retired: debounce map-driven fetches.** Nothing is fetched by viewport any
+   more; the map draws only today's walk. If a map-driven fetch ever returns,
+   so does the debounce - panning fires `onRegionChangeComplete` continuously.
+4. **Retired: the API is radius-only.** Same reason. `/v1/memories/nearby`
+   still clamps `radius_km` to 0.1–100 for anyone else who calls it.
 5. **A memory with no coordinates cannot be drawn.** The API filters those out;
    do not assume `coordinates` is always present on types that allow null.
 6. **`content.url` is already resolved.** The server points it at the document,
@@ -372,15 +378,10 @@ Each of these exists because something broke or would have been rejected.
 10. **Never fetch alongside `animateToRegion`.** It fires
     `onRegionChangeComplete` when it lands, and it does *not* land on the region
     you gave it — the map fits the deltas to the screen, so the settled viewport
-    covers noticeably more ground. Moving the camera and calling `load()` in the
-    same breath is two requests for one action, the first of them for a
-    viewport that never exists. Move the camera; let it report back.
-    Two exceptions, both in code rather than in your head: the
-    denied-permission path never moves the camera and so must load by hand, and
-    `useMapCamera` reports a flight itself when the map does not — a long
-    `animateToRegion` never lands audibly, so anything that flies you to
-    another city needs the hook, not a `load()` of your own. See
-    `docs/10-decisions.md#the-app`.
+    covers noticeably more ground. Nothing fetches on a move today, but the
+    region `useMapCamera` reports is what pins group by, so move the camera
+    and let it report back; the hook also reports a long flight itself, which
+    never lands audibly. See `docs/10-decisions.md#the-app`.
 11. **The credit never scrolls.** Place name above the scroll, credit pinned
     below it, story in between. Geo-gated content cannot be shared by linking
     to it — you had to be there — so a screenshot is the only way it travels,
@@ -398,9 +399,9 @@ are not preferences:
 - **It files where you are.** One coordinate, straight from the GPS, used as
   both "where I am" and "where this goes". There is no map picker and there is
   not going to be one - a memory you can pin from your sofa is a pin, and the
-  whole product is the difference. Declining location keeps the sheet shut and
-  brings back the primer, which is the screen that explains why; location
-  allowed but no fix yet opens it and says "Waiting for your location", because
+  whole product is the difference. Declining location opens it without a position,
+  and it says "Waiting for your location" and holds Post; location allowed but
+  no fix yet opens it and says "Waiting for your location", because
   a button that does nothing for the three seconds a GPS takes is worse than
   one that tells you what it is waiting for. `ready` requires a position either
   way, so neither path can file from a sofa.
@@ -516,8 +517,8 @@ every screenshot until the simulator is rebooted.
 
 **Use `localhost` for the simulator, a LAN IP only for a physical phone.** Expo
 bakes `EXPO_PUBLIC_API_URL` in at dev-server start, so if you pass your LAN IP
-and then change network, the app silently shows "0 memories here" with no error
-— the map still works, it just cannot reach the API. Restart the dev server
+and then change network, the plan page says "Can't reach Memory Lane right
+now." — the app still works, it just cannot reach the API. Restart the dev server
 rather than debugging the app. Likewise `exp://<stale-ip>:8081` hangs on
 "Opening project"; `exp://localhost:8081` does not.
 
@@ -533,32 +534,30 @@ from any round-number coordinate. `pipeline/seed_dev.py` plants one of every
 state at `FALLBACK_REGION`: one in reach, one 400m away, a stack, an open
 centroid pair, and one filed by a person with a photo and a recording.
 
-The real corpus is a US comedy podcast — from Copenhagen you will correctly see
-an empty map and think you broke something.
+The real corpus is a US comedy podcast — from Copenhagen the preview will
+correctly say "No walk that long from here" and you will think you broke
+something.
 
-Pure viewport maths goes in `src/region.ts` with a `node --test` case beside it;
+Pure map maths goes in `src/region.ts` with a `node --test` case beside it;
 the gate runs `mobile/src/*.test.ts`. Component behaviour is currently untested
 and there is no RN test runner installed — do not add one without asking.
 
 ## States
 
-The map has four, and they must stay visually distinct — the bug this replaced
-was that "nothing here" and "we could not ask" rendered identically:
+The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
 
-| State | Banner | Button |
+| Stage | Shows | Leaves by |
 |---|---|---|
-| loading | "Finding memories…" + spinner | Near me |
-| ready, n>0 | "N memories here" | Near me |
-| ready, n=0 | "No memories here yet" | Near me |
-| failed | "Can't reach Memory Lane" | Try again |
+| loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → plan |
+| plan | "How far today?" and the slider | "Show me the walk" → preview |
+| preview | the walk on the map, the card | Accept → walk; Change length → plan |
+| walk | today's stops, the pill, the tabs | nothing - the day is locked |
 
-With no location permission the button reads **"Turn on location"** instead of
-"Near me", in every one of those states. Nothing can unlock without a position,
-and a map of pins that never open with no explanation is the worse bug.
-
-A failed refresh keeps the last good pins. Requests time out after
-`REQUEST_TIMEOUT_MS` (8s) in `src/api.ts`; `fetch` has no default timeout and a
-hung request is what produced the original bug.
+A failed request on plan or preview leaves you there with "Can't reach Memory
+Lane right now." under the button. With no location permission the walk's button
+reads **"Turn on location"** instead of "Near me": nothing can unlock without a
+position, and a walk of pins that never open with no explanation is the worse
+bug. Requests time out after `REQUEST_TIMEOUT_MS` (8s) in `src/api.ts`.
 
 ## Markers
 
@@ -570,8 +569,8 @@ the sheet pages through it with "1 of 23 here".
 Group in `src/cluster.ts`, never in the component — it is pure and unit-tested,
 and the Times Square centroid is one of the test cases. `precisionFor()` makes
 the grid follow the zoom, in four bands rather than continuously: `region`
-changes on every gesture, ahead of the fetch debounce, so a precision derived
-from the raw delta would regroup every frame.
+changes on every gesture, so a precision derived from the raw delta would
+regroup every frame.
 
 A group carries `spanMeters`, the furthest a memory in it sits from the point
 they are all drawn on. Zero at a genuine shared centroid, kilometres once the
@@ -635,7 +634,7 @@ the same object.
 known flicker source in react-native-maps. Markers set `tracksViewChanges={false}`
 for the frame cost and are keyed `` `${group.key}:${reach}` ``, so they repaint
 exactly when their state changes and never otherwise. The one moving thing is
-`ReachBanner`, which is not a marker.
+the "at a stop" pill (`useBreath`), which is not a marker.
 
 A group is locked if any memory in it is — anything left to open outranks
 anything already earned, because a marker with something behind a gate is an
@@ -651,8 +650,8 @@ measuring to it would say "walk a kilometre" while you stand on the thing.
 Never `requestForegroundPermissionsAsync` on mount. That fires a system dialog
 with no context, and one tap makes it permanent — it is the pattern every guide
 names as the mistake, and the reported gap is roughly 30% opt-in cold against
-65% after a primer. `LocationPrimer` explains the mechanic first, over a map
-already showing real pins (rule 1), and only then hands over to the system.
+65% after a primer. The plan page's "Show me the walk" is the ask: a press
+with a reason, walks start from where you are, and only then the system dialog.
 `getForegroundPermissionsAsync` runs first so somebody who already said yes is
 never asked twice, and a hard refusal (`canAskAgain === false`) swaps the button
 for **Open Settings**, which is the only route back.

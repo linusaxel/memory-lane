@@ -35,8 +35,6 @@ type Props = {
   onUnlock: (memory: LocatedMemory) => void;
   unlocking: boolean;
   unlockError: string | null;
-  /** Absent when the sheet is already over the map. */
-  onShowOnMap?: (memory: LocatedMemory) => void;
   /** Present only for a memory this account filed, and only while it is open -
    *  a sealed one shows the locked composition instead, which has no room for
    *  this. */
@@ -105,7 +103,6 @@ export default function MemorySheet({
   hearted,
   unlocking,
   unlockError,
-  onShowOnMap,
   onEdit,
   earned,
 }: Props) {
@@ -394,18 +391,6 @@ export default function MemorySheet({
                     {memory.heart_count === 1 ? '1 heart' : `${memory.heart_count} hearts`}
                   </Text>
                 )}
-              </Pressable>
-            )}
-            {/* Opened from the collection, the sheet is a page in a list and
-                the place is a name. This is the only route back to where it
-                actually is. */}
-            {onShowOnMap && (
-              <Pressable
-                style={dim(styles.secondary)}
-                accessibilityRole="button"
-                onPress={() => onShowOnMap(memory)}
-              >
-                <Text style={styles.secondaryText}>Show on map</Text>
               </Pressable>
             )}
             {!locked && memory.content && (

@@ -197,18 +197,32 @@ class RouteMeta(BaseModel):
     # The route's true size, which can be short of ROUTE_SIZE in a sparse area -
     # same honesty as NearbyMeta.total rather than padding or refusing.
     size: int
-    # What radius this route was actually searched within - the caller's
-    # request on the day's first call, or ROUTE_RADIUS_METERS if it did not
-    # supply one. Read back from the stored row on every later call.
-    radius_meters: int
+    # How long a walk was asked for - the slider. Read back from the stored row.
+    budget_meters: int
     # Whether the walk ends back where it started (ROUTE_LOOP). The start is
     # not here - the server never stores it - so the app closes the loop on
-    # the position it sent with the day's first call.
+    # the position it planned from.
     loop: bool
     # legs[i] is the street shape from stop i to stop i + 1, or null with no
-    # routing sidecar. Never a leg from or back to the start: that would store
-    # the start (docs/10-decisions.md § Routes), so the app draws those straight.
+    # routing sidecar.
     legs: list[list[Coordinates]] | None = None
+    # The street shapes from the start to stop 1 and from the last stop home.
+    # Preview only: they draw the start, and the server stores no start
+    # (docs/10-decisions.md § Routes). The phone keeps them next to its own.
+    out_leg: list[Coordinates] | None = None
+    home_leg: list[Coordinates] | None = None
+
+
+# 1km still separates five stops in a dense corpus; 10km is a long day's outing.
+ROUTE_BUDGET_MIN_METERS = 1000
+ROUTE_BUDGET_MAX_METERS = 10_000
+
+
+class RouteRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+    budget_meters: int = Field(ge=ROUTE_BUDGET_MIN_METERS, le=ROUTE_BUDGET_MAX_METERS)
 
 
 class RouteResponse(BaseModel):

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   Linking,
   Platform,
@@ -29,17 +28,18 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
-  fetchStats,
+  acceptRoute,
   fetchProfile,
   fetchTodaysRoute,
   fetchUnlocked,
   heartMemory,
+  previewRoute,
   saveDisplayName,
   unlockMemory,
   type Coordinates,
-  type Hotspot,
   type LocatedMemory,
   type Profile,
+  type TodaysRoute,
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
@@ -47,7 +47,7 @@ import { devOpenMemory, devOpenScreen, devOpenTab } from './src/devOpen.ts';
 import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
-import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
+import { FALLBACK_RADIUS_M, reachOf } from './src/reach.ts';
 import { metersBetween, pathMeters, type Region } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { loadRoute, saveRoute } from './src/route.ts';
@@ -56,27 +56,23 @@ import {
   inUnlockOrder,
   loadUnlocked,
   mergeUnlocked,
-  primerWasDismissed,
-  rememberPrimerDismissed,
   rememberUnlocked,
   updateUnlocked,
   type Unlocked,
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
-import Elsewhere from './src/Elsewhere.tsx';
 import Memories from './src/Memories.tsx';
+import { Plan, Preview, WALK_KM } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { buttonText, color, dim, font, label } from './src/theme.ts';
-import LocationPrimer from './src/LocationPrimer.tsx';
 import TabBar, { type Tab } from './src/TabBar.tsx';
-import { useNearby } from './src/useNearby.ts';
-import type { Permission, Status } from './src/types.ts';
+import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
-import ReachBanner, { useBreath } from './src/ReachBanner.tsx';
+import { useBreath } from './src/useBreath.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
@@ -85,13 +81,10 @@ import StartupLogo from './src/StartupLogo.tsx';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /**
- * Where to look when we have no location permission. A blank grey map is a
- * store-review rejection, and reviewers routinely tap Deny - so this points at
- * Manhattan, where the seeded content actually is.
- *
- * Deliberately left wide. With no position nothing can unlock and there is no
- * reach circle to draw, so the only useful thing this state can say is "here is
- * roughly where the memories are".
+ * Where to look, and to plan a walk from, when we have no location permission.
+ * A blank grey map or a dead end is a store-review rejection, and reviewers
+ * routinely tap Deny - so this points at Manhattan, where the seeded content
+ * actually is.
  */
 const FALLBACK_REGION: Region = {
   latitude: 40.7484,
@@ -109,6 +102,47 @@ const FALLBACK_REGION: Region = {
  */
 const LOCATED_DELTA = 0.01;
 
+/** The walk from `from` through every stop not in `skip`, in order, and back to
+ *  `home` on a loop. Between two consecutive stops it follows the street leg
+ *  when there is one, and so do the first and last legs when `ends` has them;
+ *  otherwise straight. The preview's line, the walk's line and the pill's
+ *  distance are all this one path. */
+function pathThrough(
+  from: Coordinates | null,
+  stops: LocatedMemory[],
+  skip: Set<number>,
+  legs: Coordinates[][] | null,
+  home: Coordinates | null,
+  ends?: { out: Coordinates[] | null; home: Coordinates[] | null },
+): Coordinates[] {
+  const left = stops.flatMap((memory, i) => (skip.has(memory.id) ? [] : [i]));
+  if (left.length === 0) return [];
+  const walk: Coordinates[] = [];
+  left.forEach((i, k) => {
+    const leg =
+      k === 0
+        ? from && i === 0
+          ? ends?.out
+          : undefined
+        : left[k - 1] === i - 1
+          ? legs?.[i - 1]
+          : undefined;
+    if (k === 0 && from && !leg) walk.push(from);
+    walk.push(...(leg ?? [stops[i].place.coordinates]));
+  });
+  if (home) {
+    const last = left[left.length - 1] === stops.length - 1;
+    walk.push(...(last && ends?.home ? ends.home : [home]));
+  }
+  return walk;
+}
+
+const NONE = new Set<number>();
+
+/** Plan the walk, preview it, walk it. `loading` is the moment before the
+ *  device knows whether it already accepted today's walk. */
+type Stage = 'loading' | 'plan' | 'preview' | 'walk';
+
 export default function App() {
   // Two families carry the whole design, so there is no sensible half-loaded
   // state - the splash stays up the few hundred ms this takes.
@@ -122,21 +156,22 @@ export default function App() {
   });
   const [logoDone, setLogoDone] = useState(false);
 
-  const {
-    region,
-    setRegion,
-    memories,
-    status,
-    load,
-    reload,
-    onRegionChangeComplete: onMapSettled,
-  } = useNearby(FALLBACK_REGION);
+  // Only for grouping pins at the zoom they are seen at.
+  const [region, setRegion] = useState<Region>(FALLBACK_REGION);
+  const [stage, setStage] = useState<Stage>('loading');
+  const [walkKm, setWalkKm] = useState(WALK_KM.initial);
+  // Where the previewed walk starts, and whether that is Midtown standing in
+  // for a position we could not have.
+  const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
+  const [planFallback, setPlanFallback] = useState(false);
+  const [preview, setPreview] = useState<TodaysRoute | null>(null);
+  const [planBusy, setPlanBusy] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
   // What was tapped is a point, not a memory: the sheet pages through it.
   const [openAt, setOpenAt] = useState<LocatedMemory[]>([]);
   const [openIndex, setOpenIndex] = useState(0);
   const [position, setPosition] = useState<Coordinates | null>(null);
   const [permission, setPermission] = useState<Permission>('unknown');
-  const [primerDismissed, setPrimerDismissed] = useState(false);
   // Off until chosen (notifyNearby.ts). Drives geofence.ts's background watch
   // of today's route, not the map's own viewport list - see the effect below.
   const [notifyNearby, setNotifyNearbyState] = useState(false);
@@ -150,25 +185,21 @@ export default function App() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
-  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
-  // Today's guided walk: nearby, not-yet-earned, computed once server-side.
-  // routeSize is the route's true size (can be short in a sparse area); it is
-  // not `route.length`, because a stop the local cache lost or the server
-  // pruned still counted toward "today" when the route was made. Null until
-  // the server has answered: a fetched 0 is "no walk nearby today".
+  // Today's accepted walk. routeSize is the route's true size (can be short in
+  // a sparse area); it is not `route.length`, because a stop the local cache
+  // lost or the server pruned still counted toward "today" when it was made.
   const [route, setRoute] = useState<LocatedMemory[]>([]);
   const [routeSize, setRouteSize] = useState<number | null>(null);
-  // Nothing server-side hangs off this - the route already exists the moment
-  // it is fetched. It only switches the pill from "here is today's route" to
-  // "here is where to go next".
+  // Nothing server-side hangs off this. It only switches the pill from "here
+  // is today's route" to "here is where to go next".
   const [routeStarted, setRouteStarted] = useState(false);
   // Where a loop route comes back to, or null for a one-way one.
   const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
   // Street shapes between consecutive stops; null draws them straight.
   const [routeLegs, setRouteLegs] = useState<Coordinates[][] | null>(null);
-  // What the server says the gate radius is. Only /v1/stats can answer when
-  // there is nothing on the map, and the circle is drawn either way.
-  const [serverRadius, setServerRadius] = useState<number | null>(null);
+  // The planned walk as drawn, start to home. Fixed for the day, so the line
+  // does not change shape - and restart its flow - every time you move.
+  const [routeLine, setRouteLine] = useState<Coordinates[]>([]);
   // Resolved once at launch. Held in state rather than awaited at each call
   // site because the submit form needs it synchronously to decide whether it
   // can open at all.
@@ -190,10 +221,9 @@ export default function App() {
   // Region reports go through the camera, not straight from the map: a move
   // replayed from onMapReady never reports itself and the map still announces
   // where it was born. See src/useMapCamera.ts.
-  const { mapRef, flyTo, onMapReady, onRegionChangeComplete } = useMapCamera(onMapSettled);
+  const { mapRef, flyTo, onMapReady, onRegionChangeComplete } = useMapCamera(setRegion);
   const mounted = useRef(true);
-  // load() must not be rebuilt every time the person moves, or the mount effect
-  // that calls it would re-run and re-centre the map underneath them.
+  // Read by callbacks that must not be rebuilt every time the person moves.
   const positionRef = useRef<Coordinates | null>(null);
   const watcher = useRef<Location.LocationSubscription | null>(null);
 
@@ -274,51 +304,24 @@ export default function App() {
       latitudeDelta: LOCATED_DELTA,
       longitudeDelta: LOCATED_DELTA,
     };
-    // No load() here. A landing reports itself, and it does not land on
-    // `next` - the map fits the deltas to the screen, so the region it settles
-    // on covers noticeably more ground. Asking eagerly meant two requests for
-    // one press, the first of them for a viewport that never actually exists.
-    // When the map says nothing - which is what a long flight does - flyTo is
-    // what notices. See src/useMapCamera.ts.
     flyTo(next);
-    setRegion(next);
     return true;
   }, [flyTo, setHere, watchPosition]);
 
   useEffect(() => {
     (async () => {
       // Never the system dialog first. Someone who already said yes should not
-      // be asked again, so check silently and only prime a genuine newcomer.
+      // be asked again, so check silently; everyone else is asked by the plan
+      // page's button, which is a press with a reason.
       const existing = await Location.getForegroundPermissionsAsync().catch(() => null);
       if (!mounted.current) return;
-
       if (existing?.granted) {
-        const centred = await goToMyLocation().catch(() => false);
-        // Only this branch loads by hand: nothing moved the camera, so nothing
-        // is going to report a region change.
-        if (!centred) load(FALLBACK_REGION);
+        goToMyLocation().catch(() => false);
         return;
       }
-
       setPermission(existing && !existing.canAskAgain ? 'blocked' : 'denied');
-      // The map is real and populated behind the primer - see rule 1 in UI.md.
-      load(FALLBACK_REGION);
     })();
-  }, [goToMyLocation, load]);
-
-  // Only once the map has actually come up empty. Asking on launch would spend
-  // a request on the common case, where there is something here already.
-  const nothingHere = status === 'ready' && memories.length === 0;
-  useEffect(() => {
-    if (!nothingHere || hotspots.length > 0) return;
-    fetchStats()
-      .then((stats) => {
-        if (!mounted.current) return;
-        setHotspots(stats.hotspots);
-        if (stats.unlock_radius_meters) setServerRadius(stats.unlock_radius_meters);
-      })
-      .catch(() => {});
-  }, [nothingHere, hotspots.length]);
+  }, [goToMyLocation]);
 
   useEffect(() => {
     loadUnlocked().then((stored) => {
@@ -351,68 +354,148 @@ export default function App() {
         setUnlocked(await mergeUnlocked(earned));
       })
       .catch(() => {});
-    primerWasDismissed().then((dismissed) => {
-      if (mounted.current && dismissed) setPrimerDismissed(true);
-    });
     loadNotifyNearby().then((on) => {
       if (mounted.current) setNotifyNearbyState(on);
     });
   }, []);
 
-  // Today's route, fetched once a device id and a first position both exist -
-  // whichever arrives second. Guarded by a ref rather than an empty dep array:
-  // `position` is unavailable at mount and this has to wait for it, but must
-  // not refetch on every one of the watcher's later updates.
-  const routeFetched = useRef(false);
-  useEffect(() => {
-    if (!device || !position || routeFetched.current) return;
-    routeFetched.current = true;
-
-    const today = new Date().toISOString().slice(0, 10);
-    const cachedRoute = loadRoute(today);
-    cachedRoute.then((cached) => {
-      if (!cached || !mounted.current) return;
-      setRoute(cached.memories);
-      setRouteLegs(cached.legs ?? null);
-      if (cached.loop && cached.start) setRouteHome(cached.start);
-    });
-
-    fetchTodaysRoute(device, position)
-      .then(async (fetched) => {
-        // Today's first launch made the route from this position. A relaunch
-        // keeps the one it remembered; with the cache lost, here is the best
-        // guess left.
-        const start = (await cachedRoute)?.start ?? position;
-        if (!mounted.current) return;
-        setRoute(fetched.memories);
-        setRouteSize(fetched.size);
-        setRouteLegs(fetched.legs);
-        setRouteHome(fetched.loop ? start : null);
-        saveRoute({
-          route_date: fetched.route_date,
-          memories: fetched.memories,
-          loop: fetched.loop,
-          legs: fetched.legs,
-          start,
-        });
-      })
-      .catch(() => {});
-  }, [device, position]);
-
-  // What the device has earned wins over what the server is willing to say now:
-  // walking away must not take a memory back.
-  const shown = useMemo(
-    () => memories.map((memory) => unlocked[memory.id] ?? memory),
-    [memories, unlocked],
+  // The whole proposed walk, from where it would start and back.
+  const previewPath = useMemo(
+    () =>
+      preview && planFrom
+        ? pathThrough(
+            planFrom,
+            preview.memories,
+            NONE,
+            preview.legs,
+            preview.loop ? planFrom : null,
+            { out: preview.out_leg, home: preview.home_leg },
+          )
+        : [],
+    [preview, planFrom],
   );
+
+  /** Make `walk` today's route, on screen and in the local cache. `start` is
+   *  where it was planned from - the server never stores it. */
+  const takeRoute = useCallback(
+    (walk: TodaysRoute, start: Coordinates | null, line?: Coordinates[]) => {
+      const drawn =
+        line ?? pathThrough(start, walk.memories, NONE, walk.legs, walk.loop ? start : null);
+      setRoute(walk.memories);
+      setRouteSize(walk.size);
+      setRouteLegs(walk.legs);
+      setRouteHome(walk.loop ? start : null);
+      setRouteLine(drawn);
+      saveRoute({
+        route_date: walk.route_date,
+        memories: walk.memories,
+        loop: walk.loop,
+        legs: walk.legs,
+        start: start ?? undefined,
+        line: drawn,
+      });
+    },
+    [],
+  );
+
+  // Whether today's walk was already accepted: the cached copy first, so a
+  // relaunch lands on it at once, then the server, which is the authority.
+  // With neither, today starts at the plan page.
+  useEffect(() => {
+    if (!device) return;
+    const today = new Date().toISOString().slice(0, 10);
+    (async () => {
+      const cached = await loadRoute(today);
+      if (!mounted.current) return;
+      if (cached) {
+        setRoute(cached.memories);
+        setRouteLegs(cached.legs ?? null);
+        if (cached.loop && cached.start) setRouteHome(cached.start);
+        if (cached.line) setRouteLine(cached.line);
+        setStage('walk');
+      }
+      try {
+        const accepted = await fetchTodaysRoute(device);
+        if (!mounted.current) return;
+        if (accepted) {
+          takeRoute(accepted, cached?.start ?? null, cached?.line);
+          setStage('walk');
+        } else if (!cached) {
+          setStage('plan');
+        }
+      } catch {
+        if (mounted.current && !cached) setStage('plan');
+      }
+    })();
+  }, [device, takeRoute]);
+
+  const planWalk = useCallback(async () => {
+    if (!device) return;
+    setPlanBusy(true);
+    setPlanError(null);
+    let from = positionRef.current;
+    if (!from && (await goToMyLocation().catch(() => false))) from = positionRef.current;
+    const fallback = !from;
+    const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
+    try {
+      const walk = await previewRoute(device, anchor, walkKm * 1000);
+      if (!mounted.current) return;
+      setPlanFrom(anchor);
+      setPlanFallback(fallback);
+      setPreview(walk);
+      setStage('preview');
+    } catch {
+      if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
+    } finally {
+      if (mounted.current) setPlanBusy(false);
+    }
+  }, [device, goToMyLocation, walkKm]);
+
+  const acceptWalk = useCallback(async () => {
+    if (!device || !planFrom) return;
+    setPlanBusy(true);
+    setPlanError(null);
+    try {
+      const walk = await acceptRoute(device, planFrom, walkKm * 1000);
+      if (!mounted.current) return;
+      // The previewed line, legs touching the start and all: the accepted
+      // walk is the same walk, and only the preview had those legs.
+      takeRoute(walk, planFrom, previewPath);
+      setPreview(null);
+      setStage('walk');
+    } catch {
+      if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
+    } finally {
+      if (mounted.current) setPlanBusy(false);
+    }
+  }, [device, planFrom, walkKm, takeRoute, previewPath]);
+
+  // The preview's zoom: the whole loop and its start, clear of the card.
+  useEffect(() => {
+    if (stage !== 'preview' || !preview || !planFrom) return;
+    mapRef.current?.fitToCoordinates(
+      [planFrom, ...preview.memories.map((memory) => memory.place.coordinates)].map((c) => ({
+        latitude: c.lat,
+        longitude: c.lng,
+      })),
+      { edgePadding: { top: 100, right: 60, bottom: 300, left: 60 }, animated: true },
+    );
+  }, [stage, preview, planFrom, mapRef]);
+
   // Ids, not memories: reachOf only asks whether this device walked to it, and
   // a Set keeps that an O(1) question inside three passes over every group.
   const earned = useMemo(() => new Set(Object.keys(unlocked).map(Number)), [unlocked]);
-  // Same overlay `shown` applies to the viewport's memories, so a route stop
-  // reads as earned the moment it is, without waiting on a refetch of either.
+  // What the device has earned wins over what the server said when the route
+  // was made, so a stop reads as earned the moment it is.
   const routeShown = useMemo(
     () => route.map((memory) => unlocked[memory.id] ?? memory),
     [route, unlocked],
+  );
+  // The only pins there are: the walk being previewed, or the walk being
+  // walked. Nothing off the route is drawn.
+  const pins = useMemo(
+    () => (stage === 'preview' ? (preview?.memories ?? []) : stage === 'walk' ? routeShown : []),
+    [stage, preview, routeShown],
   );
   // The background watch tracks today's route, not the map's panned viewport -
   // bounded (ROUTE_SIZE, well under the OS's ~20-region cap), already "nearby
@@ -429,16 +512,17 @@ export default function App() {
     saveNotifyNearby(next);
     if (!next) stopWatching().catch(() => {});
   }, []);
-  // 1-based position in today's route, by memory id - a group's badge looks
-  // itself up here rather than the route ever knowing about groups. Earned
-  // stops drop out, and the rest keep their numbers.
+  // 1-based position in the route, by memory id - a group's badge looks itself
+  // up here rather than the route ever knowing about groups. Earned stops drop
+  // out, and the rest keep their numbers. A preview numbers every stop.
   const routePositionById = useMemo(() => {
     const map = new Map<number, number>();
-    routeShown.forEach((memory, i) => {
-      if (!earned.has(memory.id)) map.set(memory.id, i + 1);
+    const walking = stage !== 'preview';
+    pins.forEach((memory, i) => {
+      if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
     });
     return map;
-  }, [routeShown, earned]);
+  }, [pins, earned, stage]);
   const routeUnlockedCount = useMemo(
     () => routeShown.filter((memory) => earned.has(memory.id)).length,
     [routeShown, earned],
@@ -450,19 +534,11 @@ export default function App() {
     [routeShown, earned],
   );
   // What is left to walk: from the person, through every unearned stop in
-  // order, and home again on a loop. The line and the pill's distance are both
-  // this one path. Between two consecutive stops it follows the street leg
-  // when there is one; to and from the person it is straight.
-  const routePath = useMemo(() => {
-    const left = routeShown.flatMap((memory, i) => (earned.has(memory.id) ? [] : [i]));
-    if (left.length === 0) return [];
-    const walk: Coordinates[] = position ? [position] : [];
-    left.forEach((i, k) => {
-      const leg = k > 0 && left[k - 1] === i - 1 ? routeLegs?.[i - 1] : undefined;
-      walk.push(...(leg ?? [routeShown[i].place.coordinates]));
-    });
-    return routeHome ? [...walk, routeHome] : walk;
-  }, [routeShown, earned, position, routeHome, routeLegs]);
+  // order, and home again on a loop.
+  const routePath = useMemo(
+    () => pathThrough(position, routeShown, earned, routeLegs, routeHome),
+    [routeShown, earned, position, routeHome, routeLegs],
+  );
   const routeDone = route.length > 0 && !nextRouteStop;
   const routeTotal = routeSize ?? route.length;
   const toNextStop =
@@ -485,7 +561,7 @@ export default function App() {
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
-  const groups = useMemo(() => groupByLocation(shown, precision), [shown, precision]);
+  const groups = useMemo(() => groupByLocation(pins, precision), [pins, precision]);
   const openMemories = useMemo(
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
@@ -530,15 +606,13 @@ export default function App() {
   }, [groups]);
 
   const withinReach = useMemo(
-    () => groups.filter((group) => reachOf(group, position, earned) === 'unlockable'),
-    [groups, position, earned],
+    () =>
+      stage === 'walk'
+        ? groups.filter((group) => reachOf(group, position, earned) === 'unlockable')
+        : [],
+    [stage, groups, position, earned],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
-
-  const nearest = useMemo(
-    () => nearestLocked(groups, position, earned),
-    [groups, position, earned],
-  );
 
   // The route stop you are standing at, lowest number first. The order is a
   // suggestion: take another way round and whichever stop you reach is the one
@@ -559,12 +633,10 @@ export default function App() {
   const onRoute = route.length > 0;
   const pillBreath = useBreath(stopHere !== null);
 
-  // Walking into range is the moment the app is for, and until now it happened
-  // in silence. The transition, not the state: withinReach gets a new array
-  // identity on every 25m position update, and its length changes on 1 -> 2.
-  // Light, because the heavier taps belong to the unlock itself. On a route
-  // day the moment is reaching a stop, not any memory.
-  const inReach = onRoute ? stopHere !== null : withinReach.length > 0;
+  // Reaching a stop is the moment the app is for. The transition, not the
+  // state: stopHere gets a new identity on every 25m position update. Light,
+  // because the heavier taps belong to the unlock itself.
+  const inReach = stopHere !== null;
   const wasInReach = useRef(false);
   useEffect(() => {
     if (inReach && !wasInReach.current) {
@@ -577,13 +649,11 @@ export default function App() {
     () => new Set(collected.map((memory) => memory.place.id)).size,
     [collected],
   );
-  // Always the server's, never ours. Every memory now carries it; /v1/stats is
-  // the fallback for a viewport with no memories in it at all, and
-  // FALLBACK_RADIUS_M only for the moments before either has answered.
+  // Always the server's, never ours: every memory carries it. FALLBACK_RADIUS_M
+  // only for the moments before a route has answered.
   const radiusMeters =
-    memories.find((memory) => memory.unlock_radius_meters)?.unlock_radius_meters ??
-    serverRadius ??
-    FALLBACK_RADIUS_M;
+    [...route, ...(preview?.memories ?? [])].find((memory) => memory.unlock_radius_meters)
+      ?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
 
   const openGroup = (group: MemoryGroup, index = 0) => {
     // A pin is a small target on a moving map, and a tap that lands has to feel
@@ -597,8 +667,7 @@ export default function App() {
 
   // A wide group is several places the grid merged because the map is zoomed
   // out, not several memories sharing a doorway. Opening a sheet on it would
-  // page through venues miles apart, so it splits instead. No load() here:
-  // landing fires onRegionChangeComplete, which is what fetches.
+  // page through venues miles apart, so it splits instead.
   const zoomTo = (group: MemoryGroup) => {
     Haptics.selectionAsync().catch(() => {});
     const span = (group.spanMeters * 3) / 111_000;
@@ -683,11 +752,8 @@ export default function App() {
       // and this is also the first sight of what anybody else will find here.
       setOpenAt([memory]);
       setOpenIndex(0);
-      // The new pin is not in `memories` until the map asks again, and the
-      // viewport has not changed - so this has to be a reload, not a load.
-      reload(region);
     },
-    [region, reload, unlocked],
+    [unlocked],
   );
 
   /** Opens Submit as an editor rather than a blank form - the Memories tab
@@ -717,11 +783,8 @@ export default function App() {
       // members in view - simpler, and the editor that led here only ever
       // opened on one memory at a time regardless of what it was stacked with.
       setOpenAt([]);
-      // The pin is gone from the corpus, not just from the local cache - the
-      // viewport has not changed, so nothing else would ever ask again.
-      reload(region);
     },
-    [unlocked, region, reload],
+    [unlocked],
   );
 
   /** Signing in or out changes whose collection this is - the server answers
@@ -757,16 +820,7 @@ export default function App() {
     [device],
   );
 
-  const bannerText =
-    status === 'failed'
-      ? "Can't reach Memory Lane"
-      : status === 'loading' && memories.length === 0
-        ? 'Finding memories…'
-        : memories.length === 0
-          ? 'No memories here yet'
-          : `${memories.length} ${memories.length === 1 ? 'memory' : 'memories'} here`;
-
-  const showPrimer = permission !== 'granted' && !primerDismissed;
+  const walking = stage === 'walk';
 
   if (!fontsReady) return null;
 
@@ -824,7 +878,12 @@ export default function App() {
               />
             )}
 
-            {routePath.length > 1 && <RouteLine path={routePath} dark={scheme === 'dark'} />}
+            {walking && routeLine.length > 1 && (
+              <RouteLine path={routeLine} dark={scheme === 'dark'} />
+            )}
+            {stage === 'preview' && previewPath.length > 1 && (
+              <RouteLine path={previewPath} dark={scheme === 'dark'} />
+            )}
 
             {groups.map((group) => {
               // The first of a group's memories that is also a route stop -
@@ -843,47 +902,36 @@ export default function App() {
                   key={group.key}
                   group={group}
                   reach={reach}
-                  lit={reach === 'unlockable' && (routePosition !== null || !onRoute)}
+                  lit={walking && reach === 'unlockable'}
                   routePosition={routePosition}
-                  routeSize={routeTotal}
+                  routeSize={walking ? routeTotal : pins.length}
+                  // A preview is a look, not a walk: its stops open once accepted.
                   onPress={() =>
-                    group.spanMeters > CLUSTER_SPAN_M ? zoomTo(group) : openGroup(group)
+                    !walking
+                      ? undefined
+                      : group.spanMeters > CLUSTER_SPAN_M
+                        ? zoomTo(group)
+                        : openGroup(group)
                   }
                 />
               );
             })}
           </MapView>
 
-          <View style={styles.banner} pointerEvents="none">
-            <Text style={styles.bannerText}>{bannerText}</Text>
-            {status === 'loading' && <ActivityIndicator size="small" color={color.inkFaint} />}
-          </View>
-
           {/* Top right, because every other overlay on this screen lives at the
               bottom and this one must never be the thing covering the unlock.
               Shown even with no position: standing somewhere empty is the best
               moment to file the first memory there, and the press asks for
               location rather than hiding the possibility. */}
-          {!showPrimer && (
+          {walking && (
             <Pressable
               style={dim(styles.add)}
               accessibilityRole="button"
               accessibilityLabel="Add a memory here"
               onPress={async () => {
-                if (!positionRef.current && !(await goToMyLocation().catch(() => false))) {
-                  // Never nothing. This press used to return silently when a
-                  // position could not be had, which is a dead tap on the one
-                  // control that writes - and the commonest reason is a
-                  // permission the primer exists to explain, including the
-                  // blocked case where it offers Settings instead.
-                  if (permission !== 'granted') {
-                    setPrimerDismissed(false);
-                    return;
-                  }
-                  // Allowed, but no fix yet. The sheet says "Waiting for your
-                  // location" and holds Post until one arrives, which beats a
-                  // button that does nothing while the GPS warms up.
-                }
+                // Without a fix the sheet says "Waiting for your location" and
+                // holds Post until one arrives, which beats a dead tap.
+                if (!positionRef.current) await goToMyLocation().catch(() => false);
                 Haptics.selectionAsync().catch(() => {});
                 setSubmitOpen(true);
               }}
@@ -892,48 +940,9 @@ export default function App() {
             </Pressable>
           )}
 
-          {/* Only on a day with no route. With one, the route pill says it. */}
-          {!showPrimer && !onRoute && withinReach.length > 0 && (
-            <ReachBanner
-              count={withinReach.length}
-              meters={null}
-              onPress={() => openGroup(withinReach[0])}
-            />
-          )}
-          {!showPrimer && !onRoute && withinReach.length === 0 && nearest && (
-            <ReachBanner
-              count={null}
-              meters={nearest.meters}
-              onPress={() => openGroup(nearest.group)}
-            />
-          )}
-
-          {/* The empty state outranks the primer. "Walk within 150 m of a pin"
-              is a promise about pins that are not there, and asking for
-              location to unlock nothing is the wrong first impression. Once
-              there is something on the map, the primer gets its turn. */}
-          {nothingHere && (
-            <Elsewhere
-              hotspots={hotspots}
-              from={{ lat: region.latitude, lng: region.longitude }}
-              onGo={(hotspot) => {
-                const next: Region = {
-                  latitude: hotspot.lat,
-                  longitude: hotspot.lng,
-                  // Wide enough to take in a metro area, because the point is
-                  // "here is the place", not "here is one pin in it".
-                  latitudeDelta: 0.12,
-                  longitudeDelta: 0.12,
-                };
-                flyTo(next, 900);
-                setRegion(next);
-              }}
-            />
-          )}
-
           {/* Above "Near me", in the same bottom slot every other floating
               control here shares - never a second region of the screen. */}
-          {!showPrimer && !nothingHere && onRoute && stopHere && (
+          {walking && onRoute && stopHere && (
             <Animated.View style={[styles.routeAt, pillBreath]}>
               <Pressable
                 style={dim()}
@@ -952,7 +961,7 @@ export default function App() {
               </Pressable>
             </Animated.View>
           )}
-          {!showPrimer && !nothingHere && onRoute && !stopHere && (
+          {walking && onRoute && !stopHere && (
             <Pressable
               style={dim(styles.route)}
               accessibilityRole="button"
@@ -993,38 +1002,8 @@ export default function App() {
               <Text style={styles.routeText}>{routeLabel}</Text>
             </Pressable>
           )}
-          {!showPrimer && !nothingHere && routeSize === 0 && (
-            <View style={styles.route} pointerEvents="none">
-              <Text style={styles.routeText}>No walk nearby today</Text>
-            </View>
-          )}
 
-          {showPrimer && !nothingHere ? (
-            <LocationPrimer
-              blocked={permission === 'blocked'}
-              onAllow={() => {
-                if (permission === 'blocked') {
-                  Linking.openSettings();
-                  return;
-                }
-                goToMyLocation().catch(() => false);
-              }}
-              onDismiss={() => {
-                setPrimerDismissed(true);
-                rememberPrimerDismissed();
-              }}
-            />
-          ) : nothingHere ? null : status === 'failed' ? (
-            <Pressable
-              style={dim(styles.locate)}
-              accessibilityRole="button"
-              accessibilityLabel="Try again"
-              accessibilityHint="Looks for memories here once more"
-              onPress={() => load(region)}
-            >
-              <Text style={styles.locateText}>Try again</Text>
-            </Pressable>
-          ) : (
+          {walking && (
             <Pressable
               style={dim(styles.locate)}
               accessibilityRole="button"
@@ -1034,13 +1013,41 @@ export default function App() {
               accessibilityHint={
                 position ? 'Centres the map on where you are' : 'Asks for permission to use your location'
               }
-              onPress={goToMyLocation}
+              onPress={() => {
+                if (permission === 'blocked') {
+                  Linking.openSettings();
+                  return;
+                }
+                goToMyLocation().catch(() => false);
+              }}
             >
               {/* Without location nothing can ever unlock, so the button says so
-                  rather than leaving a map of pins that never open. */}
+                  rather than leaving a walk whose stops never open. */}
               <Text style={styles.locateText}>{position ? 'Near me' : 'Turn on location'}</Text>
             </Pressable>
           )}
+
+          {stage === 'preview' && preview && (
+            <Preview
+              stops={preview.memories.length}
+              meters={pathMeters(previewPath)}
+              loop={preview.loop}
+              fallback={planFallback}
+              busy={planBusy}
+              error={planError}
+              onAccept={acceptWalk}
+              onBack={() => {
+                setPlanError(null);
+                setStage('plan');
+              }}
+            />
+          )}
+
+          {/* Opaque, over a map that stays mounted behind it (rule 9). */}
+          {stage === 'plan' && (
+            <Plan km={walkKm} onKm={setWalkKm} onGo={planWalk} busy={planBusy} error={planError} />
+          )}
+          {stage === 'loading' && <View style={styles.cover} />}
         </View>
 
         <View style={[styles.screen, tab !== 'collection' && styles.hidden]}>
@@ -1087,28 +1094,13 @@ export default function App() {
           />
         </View>
 
-        <TabBar tab={tab} unlockedCount={collected.length} onSelect={setTab} />
+        {/* Planning is one page and one decision; the tabs arrive with the walk. */}
+        {(walking || tab !== 'map') && (
+          <TabBar tab={tab} unlockedCount={collected.length} onSelect={setTab} />
+        )}
 
         <MemorySheet
           earned={!!openMemories[openIndex] && earned.has(openMemories[openIndex].id)}
-          // Only offered when the sheet was opened from the collection: over
-          // the map you are already looking at the answer.
-          onShowOnMap={
-            tab === 'collection'
-              ? (memory) => {
-                  const next: Region = {
-                    latitude: memory.place.coordinates.lat,
-                    longitude: memory.place.coordinates.lng,
-                    latitudeDelta: LOCATED_DELTA,
-                    longitudeDelta: LOCATED_DELTA,
-                  };
-                  setOpenAt([]);
-                  setTab('map');
-                  setRegion(next);
-                  flyTo(next);
-                }
-              : undefined
-          }
           // Only your own, and only while it is open - a sealed one shows the
           // locked composition instead, which has nowhere to put this.
           onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}
@@ -1149,29 +1141,9 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   // display:none rather than unmounting: the map keeps its region and its pins.
   hidden: { display: 'none' },
-  // A paper tab, ruled rather than shadowed. Editorial layouts use rules and
-  // weight for hierarchy; the floating translucent card is the thing every
-  // generated interface reaches for first.
-  banner: {
-    position: 'absolute',
-    top: 64,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: color.paper,
-    borderWidth: 1,
-    borderColor: color.rule,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 4,
-  },
-  bannerText: {
-    fontFamily: font.monoMedium,
-    fontSize: 12,
-    letterSpacing: 0.3,
-    color: color.inkSoft,
-  },
+  // What the map sits behind while the app finds out whether today's walk is
+  // already accepted - a flash of the plan page would be a lie.
+  cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.paper },
   // Paper and a rule, like the banner it sits beside - the seal belongs to the
   // unlock and writing is not that.
   add: {

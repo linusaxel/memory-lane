@@ -1,4 +1,5 @@
-"""GET /v1/routes/today: today's fixed set of nearby, not-yet-earned stops.
+"""Today's walk: GET /v1/routes/preview proposes it, POST /v1/routes/today
+accepts it for the day, GET /v1/routes/today reads it back.
 
 Mirrors tests/test_api_unlock.py's fixture style - a real ephemeral database,
 a TestClient, and assertions on the JSON rather than on internals, because the
@@ -72,63 +73,74 @@ def _stranger(session, place_id, summary, opens_at=None):
 
 def _offset(session, n, layer="historical", **kw):
     """A gated memory ~n*100m north of LAT,LNG - far enough apart that no two
-    share a grid cell, close enough to stay inside ROUTE_RADIUS_METERS."""
+    share a grid cell, close enough to fit a 4km walk."""
     place = _place(session, f"Stop {n}", LAT + n * 0.001, LNG)
     if layer == "stranger":
         return _stranger(session, place, f"stranger memory {n}", **kw)
     return _historical(session, place, f"historical memory {n}", f"https://e.invalid/{n:0>11}")
 
 
-def _route(client, **params):
-    return client.get(f"/v1/routes/today?device={DEVICE}&{_qs(params)}")
+def _route(client, lat=LAT, lng=LNG, budget_meters=4000):
+    """Accept today's walk."""
+    return client.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": lat, "lng": lng, "budget_meters": budget_meters},
+    )
 
 
-def _qs(params):
-    return "&".join(f"{k}={v}" for k, v in params.items())
+def _preview(client, lat=LAT, lng=LNG, budget_meters=4000):
+    return client.get(
+        f"/v1/routes/preview?device={DEVICE}&lat={lat}&lng={lng}&budget_meters={budget_meters}"
+    )
 
 
-def test_a_route_is_stable_within_the_day(client, db_session):
+def _stored(db_session):
+    return db_session.execute(text("SELECT COUNT(*) FROM daily_routes")).scalar()
+
+
+def test_a_preview_stores_nothing_and_accepting_it_stores_the_same_walk(client, db_session):
     for n in range(1, 7):
         _offset(db_session, n)
     db_session.commit()
 
-    first = _route(client, lat=LAT, lng=LNG).json()
-    assert first["meta"]["size"] == 5
-    assert len(first["memories"]) == 5
+    preview = _preview(client).json()
+    assert preview["meta"]["size"] == 5
+    assert _stored(db_session) == 0
+    assert client.get(f"/v1/routes/today?device={DEVICE}").status_code == 404
 
-    # A different position the same day must not reroll the route.
-    second = _route(client, lat=LAT + 0.02, lng=LNG + 0.02).json()
-    assert [m["id"] for m in second["memories"]] == [m["id"] for m in first["memories"]]
-    assert second["meta"]["route_date"] == first["meta"]["route_date"]
+    accepted = _route(client).json()
+    assert [m["id"] for m in accepted["memories"]] == [m["id"] for m in preview["memories"]]
+    assert accepted["meta"]["budget_meters"] == 4000
+    assert _stored(db_session) == 1
+
+    read_back = client.get(f"/v1/routes/today?device={DEVICE}").json()
+    assert read_back == accepted
 
 
-def test_radius_meters_defaults_to_the_server_default(client, db_session):
-    _offset(db_session, 1)
+def test_the_accepted_walk_is_locked_for_the_day(client, db_session):
+    for n in range(1, 7):
+        _offset(db_session, n)
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
-    assert route["meta"]["radius_meters"] == 4000
+    first = _route(client).json()
+    # Another length from another position the same day gets the first walk.
+    second = _route(client, lat=LAT + 0.02, lng=LNG + 0.02, budget_meters=1000).json()
+    assert second == first
 
 
-def test_an_explicit_radius_is_honoured_and_then_stable(client, db_session):
-    _offset(db_session, 1)
+def test_a_shorter_walk_has_fewer_stops(client, db_session):
+    for n in range(1, 7):
+        _offset(db_session, n)
     db_session.commit()
 
-    first = _route(client, lat=LAT, lng=LNG, radius_meters=1000).json()
-    assert first["meta"]["radius_meters"] == 1000
-
-    # A later call with a different radius must not reroute or restate it -
-    # the route, and the radius that produced it, are fixed for the day.
-    second = _route(client, lat=LAT, lng=LNG, radius_meters=9000).json()
-    assert second["meta"]["radius_meters"] == 1000
+    # ~111m apart in a line north: 1km as a loop, crow-flies x 1.3, reaches 3.
+    assert _preview(client, budget_meters=1000).json()["meta"]["size"] == 3
 
 
-def test_lat_lng_are_required_to_start_a_route(client, db_session):
-    _offset(db_session, 1)
-    db_session.commit()
-
-    resp = client.get(f"/v1/routes/today?device={DEVICE}")
-    assert resp.status_code == 400
+@pytest.mark.parametrize("budget", [999, 10_001])
+def test_a_walk_length_outside_1_to_10km_is_refused(client, db_session, budget):
+    assert _preview(client, budget_meters=budget).status_code == 422
+    assert _route(client, budget_meters=budget).status_code == 422
 
 
 def test_a_route_excludes_already_unlocked_memories(client, db_session):
@@ -144,7 +156,7 @@ def test_a_route_excludes_already_unlocked_memories(client, db_session):
     )
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
+    route = _route(client).json()
     ids = [m["id"] for m in route["memories"]]
     assert earned not in ids, "already earning it once should not spend a route slot on it again"
     assert keep in ids
@@ -157,7 +169,7 @@ def test_a_route_mixes_layers_when_both_are_available(client, db_session):
         _offset(db_session, n, layer="stranger")
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
+    route = _route(client).json()
     layers = {m["layer"] for m in route["memories"]}
     assert layers == {"historical", "stranger"}, "a route of one kind defeats the point of mixing"
 
@@ -167,21 +179,21 @@ def test_a_sparse_area_returns_fewer_than_five_without_erroring(client, db_sessi
     _offset(db_session, 2)
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
+    route = _route(client).json()
     assert route["meta"]["size"] == 2
     assert len(route["memories"]) == 2
 
 
 def test_an_empty_route_is_not_stored_for_the_day(client, db_session):
-    """Opening the app somewhere empty must not cost the rest of the day's walk."""
+    """Accepting somewhere empty must not cost the rest of the day's walk."""
     _offset(db_session, 1)
     db_session.commit()
 
-    empty = _route(client, lat=LAT + 1, lng=LNG).json()
+    empty = _route(client, lat=LAT + 1).json()
     assert empty["meta"]["size"] == 0
     assert empty["memories"] == []
 
-    stocked = _route(client, lat=LAT, lng=LNG).json()
+    stocked = _route(client).json()
     assert stocked["meta"]["size"] == 1
 
 
@@ -195,7 +207,7 @@ def test_an_ambiguous_centroid_is_never_a_route_stop(client, db_session):
     real = _offset(db_session, 2)
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
+    route = _route(client).json()
     ids = [m["id"] for m in route["memories"]]
     assert ambiguous not in ids
     assert real in ids
@@ -210,7 +222,7 @@ def test_a_sealed_memory_is_never_a_route_stop(client, db_session):
     open_one = _offset(db_session, 2)
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
+    route = _route(client).json()
     ids = [m["id"] for m in route["memories"]]
     assert sealed not in ids
     assert open_one in ids
@@ -231,7 +243,7 @@ def test_a_stack_never_contributes_two_route_stops(client, db_session):
         _offset(db_session, n)
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
+    route = _route(client).json()
     ids = [m["id"] for m in route["memories"]]
     assert len(stacked_ids & set(ids)) <= 1, "at most one memory from the same place per route"
 
@@ -242,7 +254,7 @@ def test_route_stops_render_locked(client, db_session):
     _offset(db_session, 1)
     db_session.commit()
 
-    route = _route(client, lat=LAT, lng=LNG).json()
+    route = _route(client).json()
     assert route["memories"][0]["locked"] is True
     assert route["memories"][0]["summary"] == ""
 
@@ -252,15 +264,24 @@ def test_street_legs_are_stored_stop_to_stop(client, db_session, monkeypatch):
         _offset(db_session, n)
     db_session.commit()
     monkeypatch.setattr(streets, "ROUTING_URL", None)
-    assert _route(client, lat=LAT, lng=LNG).json()["meta"]["legs"] is None
+    assert _route(client).json()["meta"]["legs"] is None
 
     db_session.execute(text("DELETE FROM daily_routes"))
     db_session.commit()
     monkeypatch.setattr(read, "street_legs", lambda stops: [[a, b] for a, b in pairwise(stops)])
-    first = _route(client, lat=LAT, lng=LNG).json()
+    first = _route(client).json()
     stops = [m["place"]["coordinates"] for m in first["memories"]]
     assert first["meta"]["legs"] == [[a, b] for a, b in pairwise(stops)]
 
+    # The preview also draws the legs touching the start; accepting stores
+    # none of them.
+    preview = _preview(client).json()["meta"]
+    start = {"lat": LAT, "lng": LNG}
+    assert preview["out_leg"] == [start, stops[0]]
+    assert preview["home_leg"] == [stops[-1], start]
+    assert first["meta"]["out_leg"] is None
+
     # Read back from the row, not recomputed: the start is in none of them.
     monkeypatch.setattr(read, "street_legs", lambda stops: None)
-    assert _route(client, lat=LAT, lng=LNG).json()["meta"]["legs"] == first["meta"]["legs"]
+    legs = client.get(f"/v1/routes/today?device={DEVICE}").json()["meta"]["legs"]
+    assert legs == first["meta"]["legs"]

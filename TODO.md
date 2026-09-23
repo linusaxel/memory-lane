@@ -895,6 +895,8 @@ or silently overridden.
       picked stops, so a later call in the same day sees the radius that
       actually produced the route rather than whatever it asks for next. No
       settings screen - a UI control can point at the param later.
+      **Superseded 2026-09-23:** the plan page's slider sends `budget_meters`
+      and the radius is half of it; `radius_meters` is gone (migration 022).
       - Parked: weighting a route toward "more nature" / "more historical" /
         "more friends' memories". Meaningless until a route has more than one
         layer with real density to choose between (today only the historical
@@ -1216,6 +1218,8 @@ flagged ⚠️ inline, not overridden.
       `ROUTE_BUDGET_METERS` (4000) against crow-flies × `ROUTE_CIRCUITY` 1.3.
       `_choose_stops` takes as many stops as fit, then the shortest walk. The
       budget beats the layer mix. Server knob only; the length chip is below.
+      **Superseded 2026-09-23:** the budget is the plan page's slider, sent per
+      request; `ROUTE_BUDGET_METERS` is gone.
       `radius_meters` limits
       *where candidates come from*, not *how long the walk is*: a 4 km radius
       can produce an 11 km route. Keep the radius as a prefilter and add
@@ -1327,13 +1331,13 @@ flagged ⚠️ inline, not overridden.
       the rest. In order:
       (1) **"Swap this stop"**: remove it and re-insert the next-best
       candidate, reusing the insertion step.
-      (2) A length chip (short/medium/long → `budget_meters`), one theme tag,
-      and a loop toggle.
+      (2) ~~A length chip (short/medium/long → `budget_meters`)~~ **Done
+      2026-09-23** as the plan page's slider, 1–10 km (F1). Still open: one
+      theme tag and a loop toggle.
       (3) Drag-to-reorder last. Stops already unlock in any order, so it
       mostly changes the line.
-      ⚠️ F1 lists "no settings anybody has to change" as deliberately absent,
-      and regenerating replaces today's `daily_routes` row, which bends "same
-      walk all day". Decide both before building.
+      **Decided 2026-09-23:** no regenerating. One accepted walk per device
+      per day, locked until tomorrow; a swap would need that reopened first.
       [Dietvorst, Simmons & Massey 2018](https://pubsonline.informs.org/doi/10.1287/mnsc.2016.2643) ·
       [LAPPI](https://arxiv.org/pdf/2512.14138) ·
       [Komoot planner](https://support.komoot.com/hc/en-us/articles/10206792140826-Plan-routes-in-the-app)

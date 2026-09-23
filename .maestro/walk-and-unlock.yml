@@ -16,9 +16,9 @@
 #     from the MKAnnotation's `title` - not from `accessibilityLabel`, which
 #     iOS ignores on a Marker. Tapping a pin therefore means naming its state
 #     as well as its place, and the pin turning is directly assertable.
-#  3. F25's daily route is always-on - any device with a position gets one on
-#     launch, anchored where it first asks. The walk below is that route's
-#     five stops, in order; its titles carry a "Stop N of 5." prefix. `tests/test_api_routes.py` is what pins the
+#  3. F25: the app opens on the plan page. The walk below is the 4 km default,
+#     previewed and accepted from the start position; its titles carry a
+#     "Stop N of 5." prefix. `tests/test_api_routes.py` is what pins the
 #     selection and ordering rules down; this file just has to agree with them.
 
 appId: ${APP_ID}
@@ -35,19 +35,22 @@ appId: ${APP_ID}
       # ACCESS_BACKGROUND_LOCATION (UI.md rule 2).
       location: inuse
 
+# F25: plan, preview, accept. The default length is the walk below.
 - extendedWaitUntil:
-    visible: "\\d+ memories here"
+    visible: "How far today?"
     timeout: 40000
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "5 stops · .* loop"
+    timeout: 40000
+- tapOn: "Accept this walk"
 
-# The pill needs a position as well as pins, and the button only says "Near
-# me" once there is one. Waiting on it first means a slow fix reads as a slow
-# fix rather than as a missing pill.
+# The button only says "Near me" once there is a position; waiting on it first
+# means a slow fix reads as a slow fix rather than as a missing pill.
 - extendedWaitUntil:
     visible: "Near me"
     timeout: 40000
 
-# F25: the route needs a device id and a position too. On a route day this
-# pill, not F11's nearest-lock banner, is what says where to go.
 - extendedWaitUntil:
     visible: "Today's route · 0 of 5 unlocked\\."
     timeout: 40000
@@ -178,16 +181,19 @@ appId: ${APP_ID}
 - assertVisible: "Unlocked"
 - assertVisible: ".*The bench outside, dev seed.*"
 
-# A collection row opens the same sheet, which here offers the way back.
+# A collection row opens the same sheet.
 - tapOn: ".*The bench outside, dev seed.*"
 - assertVisible: ".*pretzel cart.*"
-- assertVisible: "Show on map"
-- tapOn: "Show on map"
-- assertVisible: "\\d+ memories here"
+- tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the
-# whole assertion.
+# whole assertion. And the day is locked: the relaunch lands on the walked
+# route, not on the plan page.
 - launchApp
+- extendedWaitUntil:
+    visible: "Route walked · 5 of 5 unlocked\\."
+    timeout: 30000
+- assertNotVisible: "How far today?"
 - tapOn: "Memories.*"
 - extendedWaitUntil:
     visible: ".*The bench outside, dev seed.*"

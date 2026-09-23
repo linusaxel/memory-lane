@@ -225,16 +225,14 @@ CREATE INDEX idx_memory_hearts_memory ON memory_hearts(memory_id);
 -- stored rows, which cannot give a route the stability a reopen needs.
 -- memory_ids is an array, not a child table: it preserves stop order natively
 -- for at most a handful of ids. See db/migrations/013_daily_routes.sql.
--- radius_meters records what the day's route was actually searched within -
--- the default mirrors api/read.py's ROUTE_RADIUS_METERS default, since a row
--- predating the optional radius query param used exactly that. See
--- db/migrations/014_route_radius.sql. legs is the street shape between
+-- budget_meters is the walk length the device asked for when it accepted the
+-- route - see db/migrations/022_route_budget.sql. legs is the street shape between
 -- consecutive stops, null without a routing sidecar - see 021_route_legs.sql.
 CREATE TABLE daily_routes (
     device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
     route_date DATE NOT NULL,
     memory_ids INTEGER[] NOT NULL,
-    radius_meters INTEGER NOT NULL DEFAULT 4000,
+    budget_meters INTEGER NOT NULL DEFAULT 4000,
     legs JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (device_id, route_date)

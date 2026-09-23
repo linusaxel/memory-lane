@@ -23,7 +23,6 @@ import type { LocatedMemory } from './api.ts';
 const BLOB_KEY = 'memorylane.unlocked.v1';
 const INDEX_KEY = 'memorylane.unlocked.index.v1';
 const ITEM_PREFIX = 'memorylane.unlocked.item.';
-const PRIMER_KEY = 'memorylane.primer-dismissed.v1';
 
 /** Recorded locally because the server's copy carries the date but the local
  *  one is what renders offline. */
@@ -127,28 +126,6 @@ export async function rememberUnlocked(
     // Ignored on purpose; see above.
   }
   return next;
-}
-
-/** Whether they have already waved the location primer away.
- *
- * Re-asking on every launch is how an app teaches people to dismiss without
- * reading, and the second ask is worth less than the first. "Turn on location"
- * stays on the map for whenever they change their mind.
- */
-export async function primerWasDismissed(): Promise<boolean> {
-  try {
-    return (await AsyncStorage.getItem(PRIMER_KEY)) === '1';
-  } catch {
-    return false;
-  }
-}
-
-export async function rememberPrimerDismissed(): Promise<void> {
-  try {
-    await AsyncStorage.setItem(PRIMER_KEY, '1');
-  } catch {
-    // Being asked once more is a smaller harm than a crash on a full disk.
-  }
 }
 
 /** Refresh a memory already in the collection - an edit, typically - without

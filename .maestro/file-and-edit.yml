@@ -25,9 +25,15 @@ appId: ${APP_ID}
     permissions:
       location: inuse
 
+# "+ Add" arrives with the walk, so plan and accept one first.
 - extendedWaitUntil:
-    visible: "\\d+ memories here"
+    visible: "How far today?"
     timeout: 40000
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "5 stops · .* loop"
+    timeout: 40000
+- tapOn: "Accept this walk"
 
 # One coordinate, taken from where the phone is. No field asks for it. The
 # text is something this flow can look for again once it sits in a list.

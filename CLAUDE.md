@@ -106,7 +106,8 @@ python -m api.main
 | `db/migrations/` | One-off SQL for databases that already exist |
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
 | `config/content.yaml` | Content sources to process |
-| `mobile/App.tsx` | The map screen: pins, banner, "Near me" |
+| `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, "Near me" |
+| `mobile/src/Plan.tsx` | **How far today.** The slider page and the preview card with Accept |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
 | `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here |
@@ -215,10 +216,10 @@ Optional (with defaults):
 - `UNLOCK_RADIUS_METERS` = 150 (how close you must stand to read a memory)
 - `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)
 - `REPORT_THRESHOLD` = 3 (distinct devices needed to hide a submission)
-- `ROUTE_SIZE` = 5, `ROUTE_RADIUS_METERS` = 4000, `ROUTE_BUDGET_METERS` = 4000,
-  `ROUTE_LOOP` = 1 (today's route: how many stops, how far out to look for
-  them, how far the walk may be as crow-flies x 1.3, and whether it comes back
-  to where it started; `0` is one-way)
+- `ROUTE_SIZE` = 5, `ROUTE_LOOP` = 1 (today's route: how many stops, and
+  whether it comes back to where it started; `0` is one-way). The walk length
+  is the app's slider, sent as `budget_meters`; candidates come from within
+  half of it)
 - `ROUTING_URL` = empty (an OSRM `foot` server. Empty or down means
   crow-flies × 1.3 and straight lines. Local: `./osrm/build.sh` once, then
   `docker compose --profile routing up -d osrm` and `ROUTING_URL=http://localhost:5001`)
@@ -259,10 +260,11 @@ python -m pipeline.enqueue --status <content_id>
 ```
 
 ### Mobile app (`mobile/`)
-Expo + react-native-maps. One map screen, one detail sheet, one endpoint
-(`/v1/memories/nearby`). Before changing it read **`mobile/UI.md`** for the
-design tokens and the constraints that are load-bearing (blank maps fail store
-review, foreground-only location, 400ms debounce, radius-only API), and
+Expo + react-native-maps. A plan page, a preview, one map that shows only
+today's accepted walk, and one detail sheet; the routes endpoints feed it
+(`/v1/routes/preview`, `POST`/`GET /v1/routes/today`). Before changing it read
+**`mobile/UI.md`** for the design tokens and the constraints that are
+load-bearing (never blank or a dead end, foreground-only location), and
 **`docs/08-ux-flows.md`** for the flows it has to satisfy.
 
 ```bash
@@ -280,9 +282,13 @@ FastAPI server with PostGIS proximity queries:
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
-- `GET /v1/routes/today?device=UUID&lat=X&lng=Y` - today's five stops, computed
-  once and stored per device per day; `lat`/`lng` only matter on the day's
-  first call. The one GET that writes - see `api/read.py`'s docstring
+- `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000` - the walk
+  a loop of that length from there would be: up to five stops. Stores nothing.
+  `budget_meters` is 1000–10000
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters}` - accept it. The
+  same solve, stored; one per device per day, and a second accept gets the
+  first walk back. The client never sends stop ids
+- `GET /v1/routes/today?device=UUID` - today's accepted walk, or 404. Only reads
 - `POST /v1/memories` `{device, lat, lng, place_name, summary, tags, ...}` -
   **file your own memory.** One coordinate: it is both where you are and where
   the memory goes. Lands in the `stranger` layer, gated like everything else,

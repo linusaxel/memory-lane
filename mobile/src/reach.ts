@@ -24,23 +24,11 @@ export const FALLBACK_RADIUS_M = 150;
  *  around is still a decision rather than a trek. */
 export const WARM_MULTIPLIER = 3;
 
-/**
- * Past this, "the nearest locked memory is 6,181 km away" is not a hint, it is
- * a fact about the corpus, and the empty-state card says it better. The pill
- * exists to start a walk; 30km is the outer edge of somewhere you might go
- * today.
- */
-export const HINT_RANGE_M = 30_000;
-
 /** Shut by a date rather than by distance, so no amount of walking opens it.
  *
- *  The distinction has to exist here and not only in the sheet, because three
- *  separate things ask "can this be opened from where I am standing": the pin's
- *  colour, the within-reach banner's count, and the walk hint. A sealed memory
- *  answered yes to all three - it is `locked`, and it was 128m away. The pin
- *  wore the seal colour, the banner counted it, and because `nearestLocked`
- *  returns null the moment anything is `unlockable`, one sealed memory could
- *  also suppress the hint pointing at a pin somebody genuinely could walk to.
+ *  The distinction has to exist here and not only in the sheet, because the
+ *  pin's colour and the "at a stop" pill both ask "can this be opened from
+ *  where I am standing". A sealed memory is `locked`, and can be 128m away.
  *
  *  See F23 in docs/08-ux-flows.md. */
 export function isSealed(memory: LocatedMemory): boolean {
@@ -105,33 +93,4 @@ export function approachOf(meters: number | null, radius: number): number {
   if (meters >= far) return 0;
   if (meters <= radius) return 1;
   return (far - meters) / (far - radius);
-}
-
-/** The closest thing still shut, so a map of padlocks can answer "where do I
- *  go" and not only "you cannot read this". Null when something is already in
- *  reach, because then there is nothing to walk to. */
-export function nearestLocked(
-  groups: MemoryGroup[],
-  position: Coordinates | null,
-  earned: ReadonlySet<number>,
-): { group: MemoryGroup; meters: number } | null {
-  if (!position) return null;
-
-  let best: { group: MemoryGroup; meters: number } | null = null;
-  for (const group of groups) {
-    const reach = reachOf(group, position, earned);
-    if (reach === 'unlockable') return null;
-    // Neither is somewhere to walk to, and a stamped pin counted as the nearest
-    // lock would read "Nearest locked - 40 m" about something already read.
-    if (reach === 'plain' || reach === 'stamped') continue;
-
-    // Same rule as above: a date is not a distance, so a sealed memory is not
-    // somewhere to walk to and must not be offered as one.
-    const walkable = group.memories.filter((memory) => memory.locked && !isSealed(memory));
-    if (walkable.length === 0) continue;
-
-    const meters = metersToNearest(position, walkable);
-    if (!best || meters < best.meters) best = { group, meters };
-  }
-  return best && best.meters <= HINT_RANGE_M ? best : null;
 }

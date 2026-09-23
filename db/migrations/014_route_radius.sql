@@ -9,4 +9,13 @@
 --   docker compose exec -T db psql -U memorylane -d memorylane -v ON_ERROR_STOP=1 \
 --     < db/migrations/014_route_radius.sql
 
-ALTER TABLE daily_routes ADD COLUMN IF NOT EXISTS radius_meters INTEGER NOT NULL DEFAULT 4000;
+-- 022 renamed it to budget_meters; replayed after that, this adds nothing.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'daily_routes' AND column_name = 'budget_meters'
+    ) THEN
+        ALTER TABLE daily_routes ADD COLUMN IF NOT EXISTS radius_meters INTEGER NOT NULL DEFAULT 4000;
+    END IF;
+END $$;

@@ -43,9 +43,9 @@ def walking_matrix(points: list[Coordinates]) -> list[list[float]]:
 
 
 def street_legs(stops: list[Coordinates]) -> list[list[Coordinates]] | None:
-    """legs[i] is the street shape from stops[i] to stops[i + 1]. Only ever
-    stop to stop: a leg from where the walk started would be that start, and
-    the server stores none (docs/10-decisions.md § Routes)."""
+    """legs[i] is the street shape from stops[i] to stops[i + 1]. A leg that
+    touches where the walk started is that start, so only the preview gets
+    those, and nothing stores them (docs/10-decisions.md § Routes)."""
     if not ROUTING_URL or len(stops) < 2:
         return None
     try:

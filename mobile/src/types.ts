@@ -8,6 +8,3 @@
 /** 'blocked' is the one that cannot be fixed by asking again - only Settings. */
 export type Permission = 'unknown' | 'granted' | 'denied' | 'blocked';
 
-/** Separate states, because "nothing here" and "we could not ask" must not look
- *  alike. That identical rendering was the bug this replaced. */
-export type Status = 'loading' | 'ready' | 'failed';

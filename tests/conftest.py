@@ -16,6 +16,11 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
+# Offline and crow-flies, whatever a developer's .env says: load_dotenv never
+# overrides a variable already set, and the solver tests assert crow-flies
+# metres. A test that wants streets monkeypatches api.streets itself.
+os.environ["ROUTING_URL"] = ""
+
 # Per-process, because more than one pytest run can share this Postgres - two
 # sessions working the same repo, or xdist workers. A fixed name means one run's
 # session teardown DROPs the database another run is still using, and the second

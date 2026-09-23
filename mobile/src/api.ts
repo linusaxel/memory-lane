@@ -154,28 +154,6 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
   }
 }
 
-export async function fetchNearby(
-  lat: number,
-  lng: number,
-  radiusKm: number,
-  signal?: AbortSignal,
-): Promise<LocatedMemory[]> {
-  // No position goes with this: the map never unlocks anything, however close
-  // you are standing. Only unlockMemory does, and only when asked.
-  const params = new URLSearchParams({
-    lat: String(lat),
-    lng: String(lng),
-    radius_km: String(radiusKm),
-    limit: '100',
-  });
-
-  const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
-  // The null-coordinate filter is the trust boundary: places.coordinates is
-  // nullable in the schema and a null-coordinate marker crashes
-  // react-native-maps.
-  return (body.memories ?? []).filter(hasCoordinates);
-}
-
 /** Open one memory, and record that it opened. The server re-checks the
  *  distance and can still say no, so a result that comes back still locked is a
  *  refusal - not a success. */
@@ -243,37 +221,7 @@ export async function fetchMine(
   };
 }
 
-/** Where the corpus actually is, for a map that has nothing on it. */
-export type Hotspot = {
-  label: string;
-  lat: number;
-  lng: number;
-  memories: number;
-};
-
-export type Stats = {
-  hotspots: Hotspot[];
-  /** The server's gate radius. The app draws its reach circle from this and
-   *  must never restate it - see docs/10-decisions.md#150-m-not-50-m. */
-  unlock_radius_meters: number;
-};
-
-/** Asked lazily, only when the map turns up empty. "No memories here yet" is
- *  true and useless outside New York - and the same response carries the
- *  radius, which is the one case a memory cannot supply it. */
-export async function fetchStats(signal?: AbortSignal): Promise<Stats> {
-  const body = await get<Partial<Stats>>(
-    '/v1/stats',
-    new URLSearchParams({ hotspots: '3' }),
-    signal,
-  );
-  return {
-    hotspots: body.hotspots ?? [],
-    unlock_radius_meters: body.unlock_radius_meters ?? 0,
-  };
-}
-
-/** Today's fixed set of nearby, not-yet-earned stops. */
+/** Today's walk: up to five not-yet-earned stops, in walking order. */
 export type TodaysRoute = {
   memories: LocatedMemory[];
   /** ISO date. Compared against the local calendar day to decide whether a
@@ -288,35 +236,81 @@ export type TodaysRoute = {
   /** legs[i] is the street shape from stop i to stop i + 1, or null with no
    *  routing server. Never to or from the start, which is not stored. */
   legs: Coordinates[][] | null;
+  /** Street shapes from the start to stop 1 and from the last stop home.
+   *  Preview only: the server stores no start, so the phone keeps these. */
+  out_leg: Coordinates[] | null;
+  home_leg: Coordinates[] | null;
 };
 
-/**
- * Computed once per device per calendar day and stored server-side, so a
- * relaunch sees the same route rather than a fresh roll. `at` is required
- * only to start the day's first route - there is no stored home location
- * anywhere in this API - and is ignored on every later call the same day.
- */
-export async function fetchTodaysRoute(
-  device: string,
-  at: Coordinates | null,
-  signal?: AbortSignal,
-): Promise<TodaysRoute> {
-  const params = new URLSearchParams({ device });
-  if (at) {
-    params.set('lat', String(at.lat));
-    params.set('lng', String(at.lng));
-  }
-  const body = await get<{
-    memories?: Memory[];
-    meta?: { route_date?: string; size?: number; loop?: boolean; legs?: Coordinates[][] | null };
-  }>('/v1/routes/today', params, signal);
+type RouteBody = {
+  memories?: Memory[];
+  meta?: {
+    route_date?: string;
+    size?: number;
+    loop?: boolean;
+    legs?: Coordinates[][] | null;
+    out_leg?: Coordinates[] | null;
+    home_leg?: Coordinates[] | null;
+  };
+};
+
+function toRoute(body: RouteBody): TodaysRoute {
   return {
     memories: (body.memories ?? []).filter(hasCoordinates),
     route_date: body.meta?.route_date ?? '',
     size: body.meta?.size ?? 0,
     loop: body.meta?.loop ?? false,
     legs: body.meta?.legs ?? null,
+    out_leg: body.meta?.out_leg ?? null,
+    home_leg: body.meta?.home_leg ?? null,
   };
+}
+
+/** The walk this device accepted today, or null when it has not accepted one.
+ *  One per device per day: there is no replanning until tomorrow. */
+export async function fetchTodaysRoute(
+  device: string,
+  signal?: AbortSignal,
+): Promise<TodaysRoute | null> {
+  try {
+    return toRoute(await get<RouteBody>('/v1/routes/today', new URLSearchParams({ device }), signal));
+  } catch (e) {
+    if (e instanceof Error && e.message === 'API 404') return null;
+    throw e;
+  }
+}
+
+/** The walk a `budgetMeters` loop from `at` would be. Stores nothing. */
+export async function previewRoute(
+  device: string,
+  at: Coordinates,
+  budgetMeters: number,
+  signal?: AbortSignal,
+): Promise<TodaysRoute> {
+  const params = new URLSearchParams({
+    device,
+    lat: String(at.lat),
+    lng: String(at.lng),
+    budget_meters: String(budgetMeters),
+  });
+  return toRoute(await get<RouteBody>('/v1/routes/preview', params, signal));
+}
+
+/** Accept the previewed walk for today. Same inputs, same stops: the server
+ *  recomputes rather than trusting ids from the client. */
+export async function acceptRoute(
+  device: string,
+  at: Coordinates,
+  budgetMeters: number,
+): Promise<TodaysRoute> {
+  return toRoute(
+    await post<RouteBody>('/v1/routes/today', {
+      device,
+      lat: at.lat,
+      lng: at.lng,
+      budget_meters: budgetMeters,
+    }),
+  );
 }
 
 // --- writing -----------------------------------------------------------------
