@@ -99,7 +99,7 @@ python -m api.main
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
 | `e2e/run.sh` | **Watch the flows happen.** Drives the real app on a simulator; `--record` leaves an mp4 |
-| `.maestro/` | One flow per id in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
+| `.maestro/` | Three journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |

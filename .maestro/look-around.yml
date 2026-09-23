@@ -1,0 +1,119 @@
+# F1 discover + F8 be asked for location, F23 sealed until a date, F19
+# somewhere else entirely. docs/08-ux-flows.md
+#
+# Everything here only looks, so the three launches share one database. The
+# one write is the day's route row, and nothing below asserts on the route.
+
+appId: ${APP_ID}
+---
+# ---- F1 + F8
+#
+# The point of the first two screens is that neither of them is blank and
+# neither of them is a system dialog. Pins are already drawn before anybody is
+# asked for anything (UI.md rule 1: a blank grey map fails store review), and
+# the ask is our own card, not iOS's.
+#
+# A phone always has a position, even before it is allowed to share it.
+# Without this the simulator has no fix at all, getCurrentPositionAsync never
+# returns one, and the button correctly stays on "Turn on location".
+- setLocation:
+    latitude: 40.7484
+    longitude: -73.9857
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: unset
+
+# F1: the map has answered before we have asked for anything.
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000
+
+# F8: our card, over a populated map. Never a cold system dialog.
+- assertVisible: "Memories unlock where they happened"
+- assertVisible: "Turn on location"
+- assertVisible: "Just show me the map"
+
+- tapOn: "Turn on location"
+- tapOn:
+    text: "Allow While Using App"
+    optional: true
+
+# Permission granted: the primer is gone and the button has changed its mind.
+- assertNotVisible: "Memories unlock where they happened"
+- assertVisible: "Near me"
+
+# ---- F23
+#
+# A time lock is a different refusal from the proximity gate, and the point is
+# that standing in the right place does not answer it. The seeded `sealed`
+# memory sits at ~129m - inside the 150m radius on purpose, so the only reason
+# it stays shut is the date.
+#
+# api/gate.py checks not_yet_open() before is_locked() looks at position at
+# all, which is why this holds even for the person who filed it.
+#
+# Standing on the sealed memory itself (pipeline/seed_dev.py `sealed`).
+- setLocation:
+    latitude: 40.749
+    longitude: -73.9844
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000
+
+# Close enough that other things here are openable - so the refusal below is
+# about the date and not about where we are standing.
+- extendedWaitUntil:
+    visible: ".*within reach.*"
+    timeout: 30000
+
+# And the seal is not one of them. Standing on it, it still wears the
+# out-of-reach mark and is left out of the count, because distance is not the
+# question it is answering - see isSealed in mobile/src/reach.ts. A pin is
+# named for its state as well as its place, so this is directly assertable.
+- extendedWaitUntil:
+    visible: "A letter to whoever is here later, dev seed. Locked, too far to open."
+    timeout: 40000
+- tapOn: "A letter to whoever is here later, dev seed. Locked, too far to open."
+- assertVisible: "Sealed until then. Standing here does not open it any sooner."
+
+# No ring, not a disabled one. A time lock is not a thing you can try harder at.
+- assertNotVisible: "Hold to unlock"
+- assertNotVisible: "You are standing close enough to open this one."
+
+# ---- F19
+#
+# "No memories here yet" is honest and it is a dead end. From Copenhagen the
+# map has nothing to say unless it says where the memories actually are.
+- setLocation:
+    latitude: 55.6759
+    longitude: 12.5655
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "No memories here yet"
+    timeout: 40000
+
+# The card outranks the location primer, and names a real place with a count
+# and a distance rather than apologising.
+- assertVisible: "Nothing here"
+- assertVisible: "The closest memories are in .*"
+- assertVisible: ".* of them, .*\\. You still have to stand there to read one\\."
+
+- tapOn: "Show me .*"
+
+# Looking is not unlocking: the map travels, the gate does not move.
+- extendedWaitUntil:
+    visible: "\\d+ memories here"
+    timeout: 40000

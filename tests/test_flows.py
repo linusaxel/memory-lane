@@ -240,9 +240,9 @@ def test_maestro_flows_still_point_at_the_seed():
         "A letter to whoever is here later, dev seed",
     }
     known = {(round(lat, 6), round(lng, 6)) for lat, lng in (at(key) for key in seed_dev.OFFSETS)}
-    # Where the app falls back to, and where f1/f5 stand.
+    # Where the app falls back to, where F1 and filing stand.
     known.add((seed_dev.LAT, seed_dev.LNG))
-    # Deliberate non-seed coordinates: f7's start, and Copenhagen for f19.
+    # Deliberate non-seed coordinates: the walk's start, and Copenhagen for F19.
     known |= {START, (55.6759, 12.5655)}
 
     flows = sorted((ROOT / ".maestro").glob("*.yml"))

@@ -5,8 +5,8 @@ driving the real app on a simulator while you watch.
 
 ```bash
 ./e2e/run.sh                 # every flow, in order
-./e2e/run.sh f7              # just the unlock
-./e2e/run.sh --record f7     # and keep e2e/out/f7-walk-and-unlock.mp4
+./e2e/run.sh walk            # just the walk and unlock
+./e2e/run.sh --record walk   # and keep e2e/out/walk-and-unlock.mp4
 ./e2e/run.sh --build         # force a rebuild of the simulator app
 ./e2e/run.sh --keep          # leave the sim, Metro and the API up to poke at
 ```
@@ -14,13 +14,13 @@ driving the real app on a simulator while you watch.
 Exit codes follow the gate: **0** pass, **1** a flow failed, **2** the
 environment needs a human.
 
-**Point `--record` at one flow, not at all six.** Recording is not free and it
+**Point `--record` at one flow, not at all of them.** Recording is not free and it
 is not stable in bulk: `./e2e/run.sh` on its own passes 6/6 run after run,
 while `./e2e/run.sh --record` fails three of the six - a *different* three each
 time, and still a different three after every wait in every flow was raised to
 30-45s. `simctl io recordVideo` destabilises the simulator enough to break
 whatever happens to be running, and the flows are not what is wrong. A single
-`--record f7` is the case that matters anyway: one mp4 of somebody walking into
+`--record walk` is the case that matters anyway: one mp4 of somebody walking into
 range and holding the ring, rather than 300MB nobody watches.
 
 The waits are sized for a loaded machine. `extendedWaitUntil` returns the
@@ -45,14 +45,13 @@ Dropping the database is what makes each flow start as a stranger.
 ## It is only slow when you are doing something else
 
 Every phase prints what it cost, and the suite prints a total, because the
-numbers are surprising. A clean run is **211s**, measured with nothing else
-using the machine:
+numbers are surprising. A clean run spends **182s** in flows, measured with
+nothing else using the machine (the eight per-id files it replaced took 316s):
 
-    f1-discover 25s · f15-collection 53s · f19-elsewhere 23s
-    f23-seal 25s · f5-file-a-memory 37s · f7-walk-and-unlock 40s
+    file-and-edit 66s · look-around 49s · walk-and-unlock 67s
 
-That same suite took **twenty minutes** while a pytest run, a ruff pass and a
-docker command were sharing the machine - and `f15` alone went from 50s to 956.
+The old suite once took **twenty minutes** while a pytest run, a ruff pass and
+a docker command were sharing the machine - one flow alone went from 50s to 956.
 The simulator, Metro and the XCTest runner all lose badly under CPU contention,
 and they lose unevenly, so the result looks like one flow has become
 pathological rather than like the machine being busy.
@@ -101,12 +100,13 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 
 | File | Flow |
 |---|---|
-| `f1-discover.yml` | F1 discover, F8 be asked for location |
-| `f5-file-a-memory.yml` | F5 file your own, F21 be somebody |
-| `f7-walk-and-unlock.yml` | F11 nearest, F12 walk there, F13 walk into range, F7 unlock |
-| `f15-collection.yml` | F15 reread what you unlocked |
-| `f19-elsewhere.yml` | F19 somewhere else entirely |
-| `f23-seal.yml` | F23 sealed until a date |
+| `look-around.yml` | F1 discover, F8 be asked for location, F23 sealed until a date, F19 somewhere else entirely |
+| `walk-and-unlock.yml` | F11 nearest, F12 walk there, F13 walk into range, F7 unlock, F25 today's route, F15 reread what you unlocked |
+| `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed |
+
+Three journeys rather than one file per id: every flow pays a fresh database
+and a cold start, and the old per-id files performed the same unlock three
+times and the same filing twice. A new id joins the journey it belongs to.
 
 ## Writing a flow
 
@@ -169,7 +169,7 @@ Not scripted: taking the API down mid-flow is machinery Maestro cannot reach.
 By hand, in about ten seconds:
 
 ```bash
-./e2e/run.sh --keep f15          # earns one memory, leaves everything up
+./e2e/run.sh --keep walk         # earns one memory, leaves everything up
 lsof -ti:8090 | xargs kill       # the API goes away
 ```
 

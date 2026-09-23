@@ -1,5 +1,6 @@
 # F11 Find the nearest locked memory -> F12 Walk there -> F13 Walk into range
-# -> F7 Unlock by standing near it. docs/08-ux-flows.md
+# -> F7 Unlock by standing near it -> F25 today's route counts it -> F15
+# reread it later. docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
 #
@@ -15,13 +16,10 @@
 #     from the MKAnnotation's `title` - not from `accessibilityLabel`, which
 #     iOS ignores on a Marker. Tapping a pin therefore means naming its state
 #     as well as its place, and the pin turning is directly assertable.
-#  3. F25's daily route is always-on, not something this flow opts into - any
-#     device with a position gets one on launch. From this flow's start,
-#     `reach` is stop 2 of the route the fresh seed always produces (F25's own
-#     flow starts nearer `reach` and gets stop 1 instead), so its title carries
-#     a "Stop 2 of 5." prefix it would not carry if F25 did not exist. This is
-#     the same kind of seed-derived fact every other hardcoded string here
-#     already is - `tests/test_api_routes.py` is what actually pins the
+#  3. F25's daily route is always-on - any device with a position gets one on
+#     launch, anchored where it first asks. From this start `reach` is stop 2
+#     of the route the fresh seed always produces, so its title carries a
+#     "Stop 2 of 5." prefix. `tests/test_api_routes.py` is what pins the
 #     selection and ordering rules down; this file just has to agree with them.
 
 appId: ${APP_ID}
@@ -47,6 +45,11 @@ appId: ${APP_ID}
 # fix rather than as a missing pill.
 - extendedWaitUntil:
     visible: "Near me"
+    timeout: 40000
+
+# F25: the route needs a device id and a position too.
+- extendedWaitUntil:
+    visible: "Today's route · 0 of 5 unlocked\\."
     timeout: 40000
 
 # F11: a map of padlocks answers "where do I go", not only "you cannot read
@@ -93,3 +96,32 @@ appId: ${APP_ID}
     visible: ".*pretzel cart.*"
     timeout: 30000
 - assertNotVisible: "Hold to unlock"
+- tapOn: "Close"
+
+# F25: earning a stop updates the pill in place - no relaunch, no refetch.
+- assertVisible: "Today's route · 1 of 5 unlocked\\."
+
+# F15: unlocking is meant to be permanent - it outlives the sheet, the tab and
+# the process. (F16, the same collection with no network, is not scripted;
+# e2e/README.md has the by-hand recipe.)
+#
+# The tab keeps a count, so its accessibility label is "Memories, 1" once
+# there is one - the visible text stays "Memories" either way.
+- tapOn: "Memories.*"
+- assertVisible: "Unlocked"
+- assertVisible: ".*The bench outside, dev seed.*"
+
+# A collection row opens the same sheet, which here offers the way back.
+- tapOn: ".*The bench outside, dev seed.*"
+- assertVisible: ".*pretzel cart.*"
+- assertVisible: "Show on map"
+- tapOn: "Show on map"
+- assertVisible: "\\d+ memories here"
+
+# Still there after the process dies. No clearState this time - that is the
+# whole assertion.
+- launchApp
+- tapOn: "Memories.*"
+- extendedWaitUntil:
+    visible: ".*The bench outside, dev seed.*"
+    timeout: 30000

@@ -1,6 +1,11 @@
-# F24 Manage what you filed. docs/08-ux-flows.md
+# F5 File a memory of your own (+ F21 Be somebody), then F24 Manage what you
+# filed. docs/08-ux-flows.md
 #
-# Files one memory, then finds it again the way the author does: the
+# The only screen in the app that writes. It files where you are standing and
+# nowhere else - there is no map picker, deliberately - and what comes back is
+# already unlocked, because you were the one standing there.
+#
+# Then it finds it again the way the author does: the
 # Memories tab's "My memories" subtab, not the map. Confirms the subtab
 # shows what was filed, that opening a row hands back the same text, and that
 # a change made there survives closing the editor and coming back.
@@ -24,8 +29,8 @@ appId: ${APP_ID}
     visible: "\\d+ memories here"
     timeout: 40000
 
-# File one memory, same steps as f5-file-a-memory.yml, with text this flow can
-# look for again once it is sitting in a list.
+# One coordinate, taken from where the phone is. No field asks for it. The
+# text is something this flow can look for again once it sits in a list.
 - tapOn: "Add a memory here"
 - assertVisible: "Add a memory"
 
@@ -36,6 +41,7 @@ appId: ${APP_ID}
 - inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after."
 - tapOn: "Add a memory"
 
+# A closed vocabulary, mirrored from pipeline/tags.py.
 - tapOn: "food"
 - tapOn: "Post"
 
@@ -43,6 +49,8 @@ appId: ${APP_ID}
     visible: ".*ferry horn.*"
     timeout: 40000
 - assertVisible: "The step by the ferry landing"
+# F21: signed Anonymous until you give a name.
+- assertVisible: ".*Anonymous.*"
 - tapOn: "Close"
 
 - tapOn: "Memories.*"
