@@ -1092,6 +1092,8 @@ daemon) have no analogue here and are left out.
       are already per-memory behavioural signals. A `quality.py --signals` view
       that checks whether the regex flags predict hearts and reports. Means
       little before there are real users, but it is one query.
+      **Parked 2026-09-23:** the local DB has 3 unlocks, 0 hearts, 0 reports -
+      nothing to correlate. Build it once hearts and reports come from people.
 
 #### Scraping / ingestion
 
@@ -1141,9 +1143,15 @@ daemon) have no analogue here and are left out.
       the first `platform_id` already in `content`; check recently active
       channels often ("warm") and dormant ones rarely ("cold"). Today ingest
       is manual and re-lists the whole back catalogue.
+      **Parked 2026-09-23:** one channel, listed with `limit: 25`, costs about
+      one request, and there is no scheduler for tiers to feed. Stopping at
+      the first known id would also break "drop `limit` to backfill the whole
+      channel". Revisit with several channels and a scheduled ingest.
 - [ ] **`published_at` for survivors only.** Resolves the *Known defects*
       entry above: once videos are filtered at the video level, the per-video
       yt-dlp fetch is only paid for videos that will actually be extracted.
+      **Parked 2026-09-23:** the video filter exists now, but nothing reads
+      `published_at` (see the defect entry), so the fetch buys nothing yet.
 
 ---
 
