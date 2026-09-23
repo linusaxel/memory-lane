@@ -27,6 +27,15 @@ unlock one. Coordinates are used for that request and are not stored, profiled, 
 linked to you &mdash; an unlock records which memory was opened and when, never where
 you were standing.</p>
 
+<h2>Background location and notifications</h2>
+<p>Turning on &ldquo;Notify me when a memory is nearby&rdquo; in Settings asks for an
+additional permission &mdash; location in the background &mdash; so we can check your
+position against memories you have not unlocked yet even while the app is closed, and
+show a local notification when one is close. This is off unless you turn it on, and it
+only affects that check: your coordinates are still not stored or linked to you, the
+notification is generated on your device, and nothing is sent anywhere beyond the same
+nearby-memories check the map already makes. Turning it off stops the check immediately.</p>
+
 <h2>Accounts</h2>
 <p>You can use Memory Lane without signing in, and nothing in it is behind a sign-in.
 We never ask for a password, because we do not have any to store.</p>

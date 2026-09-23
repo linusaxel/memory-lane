@@ -48,22 +48,28 @@ def test_location_permission_string_is_specific(expo):
     assert len(text) > 40, "too vague for review"
 
 
-def test_ios_never_declares_always_on_location(expo):
-    """The iOS half of "location is foreground-only", and it was missing.
+def test_ios_declares_always_location_only_for_the_proximity_notification(expo):
+    """The iOS half of "location is foreground-only" - true until the
+    proximity notification (TODO.md's founder-brainstorm "streak + proximity
+    notification, reopened") needed background location on purpose.
 
-    Found on the first native build: `app.json` sets only the when-in-use
-    string, but expo-location's config plugin injects
+    Found on the first native build, before that feature existed: `app.json`
+    set only the when-in-use string, but expo-location's config plugin injects
     NSLocationAlwaysAndWhenInUseUsageDescription, NSLocationAlwaysUsageDescription
     and NSMotionUsageDescription with its own boilerplate unless each is
     explicitly `false`. The built Info.plist therefore declared always-on
-    location and motion for an app that asks for neither, in copy that read
-    "Allow MemoryLane to access your location".
+    location and motion for an app that asked for neither, in copy that read
+    "Allow MemoryLane to access your location". `false` deletes a key outright;
+    see applyPermissions in @expo/config-plugins.
 
-    Two separate problems. A declared purpose string is what App Store review
-    reads as intent, so it contradicts rule 2 in mobile/UI.md - and
-    ACCESS_BACKGROUND_LOCATION being blocked on Android made the pair look
-    handled when only one side was. `false` deletes the key outright; see
-    applyPermissions in @expo/config-plugins.
+    Now one of those three is a real, specific purpose string - the other two
+    stay false: the pre-iOS11 NSLocationAlwaysUsageDescription key is not
+    needed for an app that only supports iOS 13+, and there is still no
+    motion feature. A declared purpose string is what App Store review reads
+    as intent, so this pair - the deprecated key staying false, and the real
+    one being specific - is what keeps this honest, same as
+    ACCESS_BACKGROUND_LOCATION being an explicit, single line on Android
+    rather than a side effect of some other permission.
 
     Asserted on app.json rather than the generated plist because ios/ is a
     gitignored prebuild artifact and is not there on a fresh clone.
@@ -73,26 +79,33 @@ def test_ios_never_declares_always_on_location(expo):
         for entry in expo["plugins"]
         if isinstance(entry, list) and entry[0] == "expo-location"
     )
-    assert options["locationAlwaysAndWhenInUsePermission"] is False
+    always = options["locationAlwaysAndWhenInUsePermission"]
+    assert always is not False
+    assert len(always) > 40, "too vague for review"
     assert options["locationAlwaysPermission"] is False
     assert options["motionUsagePermission"] is False
     assert options["locationWhenInUsePermission"].startswith("Memory Lane")
+    assert options["isAndroidBackgroundLocationEnabled"] is True
 
 
 # -- Android -----------------------------------------------------------------
 
 
-def test_background_location_is_never_requested(expo):
+def test_background_location_is_requested_only_for_the_proximity_notification(expo):
     """ACCESS_BACKGROUND_LOCATION triggers Play's background-location
-    declaration form plus a screencast review - weeks of latency for a feature
-    v1 does not have. It must stay out."""
-    assert "ACCESS_BACKGROUND_LOCATION" not in expo["android"]["permissions"]
+    declaration form plus a screencast review - weeks of latency, budgeted for
+    in TODO.md's founder-brainstorm resolution because the proximity
+    notification cannot work without it. Explicit in the allowlist rather than
+    left as a side effect of the expo-location plugin option above, so the two
+    say the same thing."""
+    assert "ACCESS_BACKGROUND_LOCATION" in expo["android"]["permissions"]
 
 
 def test_android_permissions_are_an_explicit_allowlist(expo):
     assert set(expo["android"]["permissions"]) == {
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
         "INTERNET",
     }
 

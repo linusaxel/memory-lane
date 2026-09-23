@@ -52,12 +52,17 @@ free number. F3 is still proposed and sits at the bottom.
 | F4 | Switch between layers | Implemented |
 | F25 | Walk today's route | Implemented |
 | F26 | Heart a memory | Implemented |
+| F27 | Keep a streak | Implemented |
+| F28 | Get notified near a memory | Implemented |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
-has to change, no search in the app, no sharing, and no notifications. Each of those is a thing a user does *not* do, and the
-list is worth as much as the one above — if one of them appears, it should be
-because a flow needed it, not because apps have them.
+has to change, no search in the app, no sharing, and no push notifications.
+Each of those is a thing a user does *not* do, and the list is worth as much
+as the one above — if one of them appears, it should be because a flow needed
+it, not because apps have them. The one exception is F28's proximity
+notification: local, opt-in, off by default, and the one thing in the app
+that is allowed to interrupt somebody who is not looking at it.
 
 ---
 
@@ -718,10 +723,12 @@ anything is unlockable, a nearby seal could hide the walk hint for a pin that
 really was reachable. `isSealed` now excludes it from all three at once.
 
 **What can go wrong:** the date is the server's, and the server's clock is the
-only authority. There is no notification when it opens, because there are no
-notifications; the memory simply stops refusing. Somebody who seals a memory and
-never goes back never reads it, which is a property of the product and not a
-bug — it is the same walk everything else asks for.
+only authority. There is no notification when it opens - a seal is not a
+distance to walk into, so `geofenceRegions.ts`'s `isSealed` filter excludes it
+from F28's proximity notification the same way `reach.ts` excludes it from
+the map's walk hint; the memory simply stops refusing. Somebody who seals a
+memory and never goes back never reads it, which is a property of the product
+and not a bug — it is the same walk everything else asks for.
 
 **Done when:** a memory filed with a seal reads as sealed to its own author on
 its own coordinate, and its card says the date instead of a distance.
@@ -889,12 +896,59 @@ relaunching the app, and a locked memory shows no heart control at all.
 **Not a notification.** Nothing is pushed when a streak would break; it is a
 truer number the next time the app is opened, same as F25's route pill. This
 is the streak half of the founder-brainstorm's "streak + proximity
-notification, reopened" resolution - the geofenced proximity notification is
-the other half and is not built (see `TODO.md`).
+notification, reopened" resolution - F28 is the other half.
 
 **Done when:** unlocking on consecutive days increases the number on the "You"
 tab, a skipped day resets it, and it reads zero for a device that has never
 unlocked anything.
+
+---
+
+## F28 · Get notified near a memory — **Implemented**
+
+**Who:** someone who turned on "Notify me when a memory is nearby" in
+Settings.
+**Trigger:** walking within a locked, walkable memory's unlock radius while
+the app is not open.
+
+1. **Off by default, and it asks for something the map never needs.**
+   Turning the toggle on requests background location - `Location.
+   requestBackgroundPermissionsAsync()` - which only runs if foreground
+   permission is already granted, and notification permission. Turning it off
+   just stops the watch; nothing else about the app changes.
+2. The watch tracks today's route (F25), not the map's panned viewport - a
+   bounded, already-nearby list (`ROUTE_SIZE`, well under the ~20-region limit
+   both platforms enforce for background geofences), and one that does not
+   need re-registering every time somebody pans the map. `geofenceRegions.ts`
+   drops anything already unlocked or sealed (F23) from the watch the moment
+   the route list itself would.
+3. Crossing into a watched region fires a **local** notification -
+   `expo-notifications`, `trigger: null` - naming the place. No server push,
+   no APNs/FCM registration: the background task (`expo-task-manager`) that
+   detects the crossing runs entirely on the device.
+4. A background task cannot read React state and can start from a killed app
+   with nothing in memory, so the place name for each watched region is
+   written to `AsyncStorage` alongside the geofence call and read back by the
+   task using the region's identifier - not closed over.
+
+**Opt-in on purpose.** This is the one feature in the app that asks for
+location while the app is not open, and the only place `mobile/UI.md`'s "location
+is foreground-only" rule bends - see rule 2 there for exactly what changed and
+why the exception is scoped this narrowly.
+
+**What can go wrong:** permission denied at either step (background location,
+or notifications) leaves the toggle showing on with nothing actually watching
+- `startWatching` returns `false` rather than throwing, so a denial is silent
+the same way F26's heart failure is; there is no error state to show for a
+feature that was never guaranteed in the first place. Background delivery
+itself has not been verified end to end on a real device as of this commit -
+see `mobile/UI.md` rule 2.
+
+**Done when:** turning the toggle on with a route already loaded starts
+watching that route's still-locked stops, turning it off stops the watch, and
+`geofenceRegions.test.ts` holds the selection logic (locked, unsealed, capped
+at 20, nearest-radius-per-memory) to account without needing a device to
+prove it.
 
 ---
 

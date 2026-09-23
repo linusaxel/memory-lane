@@ -6,7 +6,16 @@
  * already frustrated is too late.
  */
 
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_BASE, type Profile } from './api.ts';
@@ -32,6 +41,10 @@ type Props = {
   radiusMeters: number;
   permission: Permission;
   onRequestLocation: () => void;
+  /** Off until chosen. Turning it on asks for background location, which is
+   *  the one permission this screen has to explain before the OS prompt does. */
+  notifyNearby: boolean;
+  onNotifyNearby: (next: boolean) => void;
 };
 
 export default function Settings({
@@ -47,6 +60,8 @@ export default function Settings({
   radiusMeters,
   permission,
   onRequestLocation,
+  notifyNearby,
+  onNotifyNearby,
 }: Props) {
   const insets = useSafeAreaInsets();
   const granted = permission === 'granted';
@@ -121,6 +136,22 @@ export default function Settings({
             {granted ? 'Manage in Settings' : 'Turn on location'}
           </Text>
         </Pressable>
+      </Section>
+
+      <Section title="Notifications">
+        <Row>
+          <Text style={styles.rowText}>Tell me when a memory I haven't unlocked is nearby.</Text>
+          <Switch
+            value={notifyNearby}
+            onValueChange={onNotifyNearby}
+            accessibilityLabel="Notify me when a memory is nearby"
+          />
+        </Row>
+        <Text style={styles.note}>
+          Off by default. Turning it on asks for location in the background, which is more than
+          the map needs — used only to check your position against memories you haven't reached
+          yet, on this device, and never for anything else.
+        </Text>
       </Section>
 
       <Section title="About">

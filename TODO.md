@@ -927,11 +927,10 @@ or silently overridden.
       Non-goals list updated below. No build work implied yet — there is no
       userbase and no priced feature to gate; revisit once Phase 3 has real
       usage to look at.
-- [ ] **Resolved 2026-09-22: streak + proximity notification, reopened.**
+- [x] **Resolved 2026-09-22: streak + proximity notification, reopened.**
       Was flagged against `docs/11-memory-types.md`'s "no notifications, no
       streaks, no gamification chrome" rule and `mobile/UI.md`'s
-      foreground-only location constraint. **Decision:** build both. Cheapest
-      real path for each, so this doesn't become a backend-infra project:
+      foreground-only location constraint. **Decision:** build both. Both done:
       - [x] **Streak.** Done, and cheaper than planned: no stored counter,
         so there is no `users.streak_count`/`streak_date` to keep in sync
         across a device's siblings. `api.accounts.current_streak` counts the
@@ -940,15 +939,22 @@ or silently overridden.
         route already write an unlock, so both extend it for free. Surfaced
         in `Settings.tsx`'s stat row once above zero, same convention as
         "filed". See F27, `docs/08-ux-flows.md`.
-      - **Proximity notification:** use on-device geofencing
-        (`expo-location`'s `startGeofencingAsync`) firing a **local**
-        notification, not a server push — no APNs/FCM registration, no push
-        server to build. Still requires flipping `mobile/UI.md` rule 2
-        (`ACCESS_BACKGROUND_LOCATION`, the iOS `NSLocationAlways…` /
-        `NSMotionUsageDescription` strings currently forced to `false`), which
-        is a real App Store privacy-review change, not just a UI toggle —
-        budget for it accordingly, and update the App Store privacy
-        disclosure alongside the code change.
+      - [x] **Proximity notification.** Done: on-device geofencing
+        (`geofence.ts`, `expo-location`'s `startGeofencingAsync` +
+        `expo-task-manager`) firing a **local** notification
+        (`expo-notifications`, no APNs/FCM, no push server) when a still-locked
+        stop on today's route comes into range. Off by default — a new
+        "Notify me when a memory is nearby" toggle in Settings, which is what
+        asks for background location, not app launch. `mobile/UI.md` rule 2,
+        `app.json` (`isAndroidBackgroundLocationEnabled`, a real
+        `NSLocationAlwaysAndWhenInUseUsageDescription` string),
+        `tests/test_app_config.py`, and both privacy-policy copies
+        (`api/privacy.py`, `mobile/store/privacy.md`) all updated together.
+        See F28, `docs/08-ux-flows.md`.
+        - Not done: a real device confirming background delivery end to end,
+          and the human-side App Store Connect / Play Console privacy
+          disclosure updates that go with a new background permission — see
+          `mobile/UI.md` rule 2 and `loop/STATE.md`'s parked table.
       `docs/11-memory-types.md`, `docs/10-decisions.md` and `mobile/UI.md`
       updated to mark the old rule superseded rather than left contradicting
       this.

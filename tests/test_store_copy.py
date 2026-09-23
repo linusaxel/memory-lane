@@ -54,6 +54,7 @@ def test_description_is_substantial():
 # A guard that cannot fail is not a guard.
 DISCLOSURES = {
     "precise location": ("location",),
+    "background location for the proximity notification": ("background",),
     "sign-in": ("google", "apple"),
     "the email a provider hands over": ("email",),
     "the public display name": ("display name",),

@@ -298,31 +298,42 @@ Each of these exists because something broke or would have been rejected.
    permission is denied, because store reviewers routinely tap Deny and an empty
    map is a rejection. Any new view needs the same treatment: an empty state
    that still shows something real.
-2. **Location is foreground-only, on both platforms.** `ACCESS_BACKGROUND_LOCATION`
-   is blocked in `app.json`; on iOS the three keys expo-location injects by
-   default — `NSLocationAlwaysAndWhenInUseUsageDescription`,
-   `NSLocationAlwaysUsageDescription` and `NSMotionUsageDescription` — are each
-   set to `false` in the plugin's options, which deletes them from the
-   Info.plist. Both halves are asserted by `tests/test_app_config.py`.
+2. **Location is foreground-only by default, and background is opt-in, single-purpose,
+   and explicit.** `ACCESS_BACKGROUND_LOCATION` is a named line in `app.json`'s
+   Android allowlist, not a side effect of some other permission; on iOS
+   `NSLocationAlwaysAndWhenInUseUsageDescription` is a real, specific purpose
+   string. Both exist for exactly one feature — the proximity notification
+   (`geofence.ts`, Settings.tsx's "Notify me when a memory is nearby" toggle,
+   off unless the person turns it on) — and nothing else in the app asks for
+   position while it is not open. The other two keys expo-location can inject —
+   `NSLocationAlwaysUsageDescription` (the pre-iOS11 fallback, not needed for an
+   app that only supports iOS 13+) and `NSMotionUsageDescription` (no motion
+   feature) — stay `false` in the plugin's options, which deletes them from the
+   Info.plist. All of this is asserted by `tests/test_app_config.py`.
 
-   **The iOS half was missing until the first native build.** `app.json` set
-   only the when-in-use string, and the plugin filled the other three with its
-   own boilerplate ("Allow MemoryLane to access your location"), so the built
-   app declared always-on location and motion for features it does not have. A
-   purpose string is what review reads as intent. Nothing caught it because the
-   Android side *was* handled, which made the pair look done — and because the
-   test read `app.json` rather than the generated plist. If you add a config
-   plugin, check what it put in the manifest:
+   **The iOS half was missing until the first native build**, before the
+   proximity notification existed. `app.json` set only the when-in-use string,
+   and the plugin filled the other three with its own boilerplate ("Allow
+   MemoryLane to access your location"), so the built app declared always-on
+   location and motion for features it did not have. A purpose string is what
+   review reads as intent. Nothing caught it because the Android side *was*
+   handled, which made the pair look done — and because the test read
+   `app.json` rather than the generated plist. If you add a config plugin,
+   check what it put in the manifest:
    `plutil -convert xml1 -o - ios/MemoryLane/Info.plist`.
 
-   **Reopened 2026-09-22** (`TODO.md`'s "Ideas — founder brainstorm" section):
-   a geofenced proximity notification is now planned, which needs background
-   location. This rule still describes today's code exactly — nothing has
-   flipped `ACCESS_BACKGROUND_LOCATION` or the iOS purpose strings yet. When it
-   does, update this rule, the App Store privacy disclosure, and
-   `tests/test_app_config.py`'s assertion together — that test currently
-   passes *because* this is false, and a change here without a matching test
-   change would be exactly the drift rule 2 exists to catch.
+   **Shipped 2026-09-23** (`TODO.md`'s "Ideas — founder brainstorm" section,
+   the proximity-notification half of "streak + proximity notification,
+   reopened" — the streak half, F27, needed none of this). Code and config are
+   both in; what has **not** happened yet is a real device verifying the
+   background delivery end to end, or updating the actual App Store Connect /
+   Play Console listings — that is a human step, not a gate the pytest suite
+   can pass. `isIosBackgroundLocationEnabled` was deliberately left `false`:
+   geofencing is CoreLocation region monitoring, which wakes the app on its
+   own and does not need continuous `UIBackgroundModes: ["location"]` the way
+   `startUpdatingLocation` in the background would — asking for the stronger
+   capability than the feature needs is exactly the kind of over-declaration
+   this rule exists to prevent.
 3. **Debounce map-driven fetches** (currently 400ms). Panning fires
    `onRegionChangeComplete` continuously; without it you DoS your own API.
 4. **The API is radius-only.** `regionToRadiusKm()` circumscribes the viewport

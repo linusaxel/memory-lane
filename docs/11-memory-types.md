@@ -173,10 +173,11 @@ And a related restraint that isn't visual, **reopened 2026-09-22** (see
 `TODO.md`'s "Ideas — founder brainstorm" section): this product used to have
 no notifications, no streaks and no gamification chrome anywhere
 (`docs/08-ux-flows.md`'s "deliberately absent" list under F1, and F23's "no
-notification when it opens" — both still describe the code as it stands
-today, since neither is a notification). A streak counter has shipped (F27);
-the geofenced proximity notification has not. Once it does, F1's
-"deliberately absent" list and F23 need updating to stop contradicting this,
-and this restraint no longer holds as a blanket rule — a route, a badge, a
-count already render silently where nothing was decided to push, but a
-proximity nudge is now allowed to.
+notification when it opens"). Both have shipped: a streak counter (F27, no
+notification of its own) and a geofenced proximity notification (F28) that is
+the one narrow exception F1's list now names — local, opt-in, off by default,
+scoped to memories that are locked and unlockable by walking there, and
+excluding a sealed one (F23) exactly as the map's own walk hint does. This
+restraint no longer holds as a blanket rule — a route, a badge, a count still
+render silently where nothing was decided to push, but this one proximity
+nudge is now allowed to.

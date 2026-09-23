@@ -43,10 +43,12 @@ import {
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
 import { devOpenMemory, devOpenScreen, devOpenTab } from './src/devOpen.ts';
+import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, nearestLocked, reachOf } from './src/reach.ts';
 import type { Region } from './src/region.ts';
+import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { loadRoute, saveRoute } from './src/route.ts';
 import {
   forgetUnlocked,
@@ -132,6 +134,9 @@ export default function App() {
   const [position, setPosition] = useState<Coordinates | null>(null);
   const [permission, setPermission] = useState<Permission>('unknown');
   const [primerDismissed, setPrimerDismissed] = useState(false);
+  // Off until chosen (notifyNearby.ts). Drives geofence.ts's background watch
+  // of today's route, not the map's own viewport list - see the effect below.
+  const [notifyNearby, setNotifyNearbyState] = useState(false);
   const [unlocked, setUnlocked] = useState<Unlocked>({});
   // Local convenience only, for a heart button that starts filled on
   // relaunch - the server's memory_hearts row is the durable fact.
@@ -341,6 +346,9 @@ export default function App() {
     primerWasDismissed().then((dismissed) => {
       if (mounted.current && dismissed) setPrimerDismissed(true);
     });
+    loadNotifyNearby().then((on) => {
+      if (mounted.current) setNotifyNearbyState(on);
+    });
   }, []);
 
   // Today's route, fetched once a device id and a first position both exist -
@@ -382,6 +390,21 @@ export default function App() {
     () => route.map((memory) => unlocked[memory.id] ?? memory),
     [route, unlocked],
   );
+  // The background watch tracks today's route, not the map's panned viewport -
+  // bounded (ROUTE_SIZE, well under the OS's ~20-region cap), already "nearby
+  // things to walk to", and it does not change every time somebody pans the
+  // map. Re-registers whenever a stop is earned, so an already-unlocked stop
+  // drops out of the watch the next time this runs rather than lingering.
+  useEffect(() => {
+    if (!notifyNearby) return;
+    startWatching(routeShown).catch(() => {});
+  }, [notifyNearby, routeShown]);
+
+  const handleNotifyNearby = useCallback((next: boolean) => {
+    setNotifyNearbyState(next);
+    saveNotifyNearby(next);
+    if (!next) stopWatching().catch(() => {});
+  }, []);
   // 1-based position in today's route, by memory id - a group's badge looks
   // itself up here rather than the route ever knowing about groups.
   const routePositionById = useMemo(() => {
@@ -961,6 +984,8 @@ export default function App() {
               }
               goToMyLocation().catch(() => false);
             }}
+            notifyNearby={notifyNearby}
+            onNotifyNearby={handleNotifyNearby}
           />
         </View>
 

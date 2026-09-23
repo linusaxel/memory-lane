@@ -547,10 +547,11 @@ going to be the first feature to need one invented. The pill just says a truer
 number the next time the app is opened, the same way "3 memories within reach"
 already does.
 
-**Reopened 2026-09-22** (`TODO.md`'s "Ideas — founder brainstorm" section): a
-streak counter has since shipped (F27) and a geofenced proximity notification
-is still planned. Neither changes this section's reasoning about the
-*route-complete* moment specifically — that stays a silent pill update,
-reusing the existing unlock haptic rather than a push — but the blanket "no
-notifications at all" is no longer true of the plan, only of the code until
-the proximity notification is built.
+**Reopened 2026-09-22, both shipped 2026-09-23** (`TODO.md`'s "Ideas —
+founder brainstorm" section): a streak counter (F27) and a geofenced
+proximity notification (F28). Neither changes this section's reasoning about
+the *route-complete* moment specifically — that stays a silent pill update,
+reusing the existing unlock haptic rather than a push — the proximity
+notification watches today's route's still-locked stops for a reason to
+interrupt somebody, not the moment the route itself completes, so the two
+never fire for the same reason.

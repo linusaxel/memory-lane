@@ -26,6 +26,7 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
         "INTERNET"
       ],
       "config": {
@@ -50,8 +51,9 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "Memory Lane uses your location to show travel memories recorded near you.",
-          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysAndWhenInUsePermission": "Memory Lane can notify you when you're near a memory you haven't unlocked yet, even when the app is in the background. This is off until you turn it on in Settings.",
           "locationAlwaysPermission": false,
+          "isAndroidBackgroundLocationEnabled": true,
           "motionUsagePermission": false
         }
       ],
@@ -72,6 +74,7 @@
       ],
       "expo-web-browser",
       "expo-apple-authentication",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {
