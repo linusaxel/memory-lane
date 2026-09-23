@@ -233,6 +233,62 @@ SYSTEM_PROMPT = SYSTEM_PROMPT.replace("{TAG_LIST}", ", ".join(TAGS))
 HISTORICAL_SYSTEM_PROMPT = HISTORICAL_SYSTEM_PROMPT.replace("{TAG_LIST}", ", ".join(TAGS))
 
 
+_NULLABLE_STRING = {"anyOf": [{"type": "string"}, {"type": "null"}]}
+
+# One schema for both prompts: the fields every memory needs are required, the
+# ones only the archival prompt asks for are optional. Enforced by the API, so
+# a reply is always parseable JSON of this shape - unless max_tokens cuts it.
+MEMORY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "memories": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "venue": {"type": "string"},
+                    "locality": {"type": "string"},
+                    "region": _NULLABLE_STRING,
+                    "lat": {"type": "number"},
+                    "lng": {"type": "number"},
+                    "timestamp_start": {"type": "number"},
+                    "summary": {"type": "string"},
+                    "tags": {"type": "array", "items": {"type": "string", "enum": list(TAGS)}},
+                    "location_precision": {
+                        "type": "string",
+                        "enum": ["exact", "street", "neighborhood", "city"],
+                    },
+                    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+                    "happened_at": _NULLABLE_STRING,
+                    "happened_precision": {
+                        "anyOf": [
+                            {"type": "string", "enum": ["day", "month", "year", "decade"]},
+                            {"type": "null"},
+                        ]
+                    },
+                    "attribution": _NULLABLE_STRING,
+                    "contrast_score": {"anyOf": [{"type": "number"}, {"type": "null"}]},
+                    "contrast_note": _NULLABLE_STRING,
+                },
+                "required": [
+                    "venue",
+                    "locality",
+                    "region",
+                    "lat",
+                    "lng",
+                    "summary",
+                    "tags",
+                    "location_precision",
+                    "confidence",
+                ],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["memories"],
+    "additionalProperties": False,
+}
+
 USER_PROMPT_TEMPLATE = """{context}Extract memories from this transcript chunk:
 
 {chunk}
@@ -324,7 +380,8 @@ def is_billing_error(e: Exception) -> bool:
 
 
 class ModelUnusableError(Exception):
-    """The configured model cannot be called at all: wrong ID, bad or revoked key.
+    """The configured model cannot be called at all: wrong ID, bad or revoked key,
+    or a request shape (schema, parameter) it rejects.
 
     Distinct from a transient API error because it will fail identically on
     every chunk of every video. Swallowing it returns zero memories per chunk,
@@ -369,6 +426,7 @@ def _request(client: anthropic.Anthropic, system_prompt: str, user: str) -> str 
                 {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}
             ],
             messages=[{"role": "user", "content": user}],
+            output_config={"format": {"type": "json_schema", "schema": MEMORY_SCHEMA}},
         )
         return response.content[0].text
 
@@ -377,8 +435,9 @@ def _request(client: anthropic.Anthropic, system_prompt: str, user: str) -> str 
             raise BillingError(
                 "API credit balance too low. Please add credits at console.anthropic.com"
             ) from e
-        logger.error(f"Error calling Claude API: {e}")
-        return None
+        # A rejected schema or parameter is rejected for every chunk, so it
+        # stops the run rather than emptying the backlog one [] at a time.
+        raise ModelUnusableError(f"EXTRACTION_MODEL={EXTRACTION_MODEL!r} rejected: {e}") from e
     except (
         anthropic.NotFoundError,
         anthropic.AuthenticationError,
@@ -394,11 +453,7 @@ def _request(client: anthropic.Anthropic, system_prompt: str, user: str) -> str 
 
 def parse_memories(content: str) -> list[dict]:
     try:
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0]
-        elif "```" in content:
-            content = content.split("```")[1].split("```")[0]
-        return json.loads(content.strip()).get("memories", [])
+        return json.loads(content)["memories"]
     except Exception:
         logger.warning(f"Failed to parse JSON from response: {content[:200]}")
         return []
@@ -429,13 +484,14 @@ def extract_chunk_stored(
 ) -> list[dict]:
     """extract_memories_from_chunk, paid for once per exact request.
 
-    Keyed on video + model + system prompt + user message, so a prompt edit
-    misses and a retry, a re-merge or a crashed run hits. Committed as soon as
-    it lands: the reply is the expensive part and must outlive whatever fails
-    next.
+    Keyed on video + model + schema + system prompt + user message, so a
+    prompt edit misses and a retry, a re-merge or a crashed run hits.
+    Committed as soon as it lands: the reply is the expensive part and must
+    outlive whatever fails next.
     """
     user = USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk)
-    key = _sha256(f"{content_id}\0{EXTRACTION_MODEL}\0{system_prompt}\0{user}")
+    schema = json.dumps(MEMORY_SCHEMA, sort_keys=True)
+    key = _sha256(f"{content_id}\0{EXTRACTION_MODEL}\0{schema}\0{system_prompt}\0{user}")
 
     raw = session.execute(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}

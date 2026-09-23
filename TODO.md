@@ -1028,10 +1028,19 @@ daemon) have no analogue here and are left out.
       keyed on sha256(video, model, system prompt, user message), with
       `prompt_hash` for grouping by variant. A retried video only pays for the
       chunk it lost: `test_a_retried_video_only_pays_for_the_chunk_it_lost`.
-- [ ] **Structured output instead of `json.loads` + fence stripping**, for the
+- [x] **Structured output instead of `json.loads` + fence stripping**, for the
       extractor and the Haiku classifier both (tool use with an input schema).
       Removes the extractor's silent `[]` on malformed JSON and the
       classifier's "can't parse → assume yes".
+      **Done 2026-09-23:** native structured outputs (`output_config.format`,
+      JSON schema) rather than tool use, so replies stay JSON text and
+      `extraction_chunks` keeps its shape. One `MEMORY_SCHEMA` serves both
+      prompts (archive-only fields optional), `CLASSIFIER_SCHEMA` for Haiku;
+      fence stripping deleted. A non-billing 400 now stops the run
+      (`ModelUnusableError`) instead of returning `[]`, because an unsupported
+      schema would be rejected on every chunk. **Not yet sent to the real
+      API** — the balance is empty — so the first funded run is the schema's
+      real test. `tests/test_extract_schema.py`.
 - [ ] **Log the classifier's verdicts** (chunk, has_memories, reason). Today a
       skipped chunk leaves no trace (`classify_chunk`, `pipeline/tasks.py`), so
       the pre-filter's false-negative rate is unknowable. Then run the

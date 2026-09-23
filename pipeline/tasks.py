@@ -54,6 +54,13 @@ Examples that DO NOT qualify:
 Respond with ONLY a JSON object:
 {"has_memories": true/false, "reason": "brief explanation"}"""
 
+CLASSIFIER_SCHEMA = {
+    "type": "object",
+    "properties": {"has_memories": {"type": "boolean"}, "reason": {"type": "string"}},
+    "required": ["has_memories", "reason"],
+    "additionalProperties": False,
+}
+
 
 def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
     """Use Haiku to quickly determine if chunk likely contains memories."""
@@ -62,6 +69,7 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
             model=CLASSIFIER_MODEL,
             max_tokens=100,
             messages=[{"role": "user", "content": f"{CLASSIFIER_PROMPT}\n\nTranscript:\n{chunk}"}],
+            output_config={"format": {"type": "json_schema", "schema": CLASSIFIER_SCHEMA}},
         )
         content = response.content[0].text
         try:
@@ -73,7 +81,8 @@ def classify_chunk(client: anthropic.Anthropic, chunk: str) -> bool:
                 logger.debug(f"Classifier: NO memories - {data.get('reason', '')[:50]}")
             return has_memories
         except json.JSONDecodeError:
-            # If we can't parse, assume it might have memories (safer)
+            # The schema makes this a max_tokens cut. Assume it might have
+            # memories (safer)
             return True
     except (
         anthropic.NotFoundError,

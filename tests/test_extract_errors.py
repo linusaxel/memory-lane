@@ -58,6 +58,14 @@ def test_an_unusable_model_stops_the_run(cls, status):
         extract_memories_from_chunk(_client_raising(_api_error(cls, status)), "a chunk")
 
 
+def test_a_rejected_request_stops_the_run():
+    """An unsupported schema is a 400 on every chunk, not an empty chunk."""
+    with pytest.raises(ModelUnusableError):
+        extract_memories_from_chunk(
+            _client_raising(_api_error(anthropic.BadRequestError, 400)), "a chunk"
+        )
+
+
 def test_the_error_names_the_model_so_the_fix_is_obvious():
     with pytest.raises(ModelUnusableError) as caught:
         extract_memories_from_chunk(_client_raising(_api_error(anthropic.NotFoundError, 404)), "x")
