@@ -38,7 +38,12 @@ def print_summary(results: dict):
 
     if "transcripts" in results:
         r = results["transcripts"]
-        print(f"  Transcripts: {r.get('fetched', 0)} fetched, {r.get('failed', 0)} failed")
+        status = f"{r.get('fetched', 0)} fetched, {r.get('failed', 0)} failed"
+        # Not results["error"]: extraction never touches YouTube and should
+        # still run on what was fetched before the block.
+        if r.get("error") == "blocked":
+            status += " (stopped: YouTube is blocking this IP - set TRANSCRIPT_PROXY)"
+        print(f"  Transcripts: {status}")
 
     if "extract" in results:
         r = results["extract"]

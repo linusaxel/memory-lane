@@ -1111,13 +1111,20 @@ daemon) have no analogue here and are left out.
       and their memories likely duplicate their episodes' — not touched; worth
       a look through `pipeline/review.py` or `pipeline/dedup.py`.
       `tests/test_video_filter.py`.
-- [ ] **Transcripts: stop on an IP block, and allow a proxy.** The existing
+- [x] **Transcripts: stop on an IP block, and allow a proxy.** The existing
       `ponytail:` note in `pipeline/transcripts.py` names the ceiling: once
       YouTube blocks the IP, every run re-hits every pending row. Detect
       `RequestBlocked`/`IpBlocked` and abort the run, add a small jittered
       delay between fetches, and an optional `TRANSCRIPT_PROXY` in
       `pipeline/config.py` (youtube-transcript-api takes a `proxy_config`).
       The post's rule: don't concentrate traffic on one IP.
+      **Done 2026-09-23:** `RequestBlocked` (and its `IpBlocked` subclass)
+      stops `fetch_pending_transcripts` on the first hit with
+      `error: "blocked"`, every row left pending; `run_all` reports it on the
+      Transcripts line and still runs extraction, which never touches YouTube.
+      `TRANSCRIPT_PROXY` becomes a `GenericProxyConfig`;
+      `TRANSCRIPT_DELAY_SECONDS` (1.5) is the mean of a uniform jitter between
+      fetches. The old `ponytail:` note is gone with the problem it named.
 - [ ] **One rate-limit bucket per external service.** YouTube transcripts,
       yt-dlp, Anthropic extract and Anthropic classify each get their own
       limit: set the Anthropic client's `max_retries` explicitly and give each

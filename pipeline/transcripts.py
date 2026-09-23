@@ -2,16 +2,20 @@
 
 import json
 import logging
+import random
+import time
 
 from sqlalchemy import text
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import (
     NoTranscriptFound,
+    RequestBlocked,
     TranscriptsDisabled,
     VideoUnavailable,
 )
+from youtube_transcript_api.proxies import GenericProxyConfig
 
-from pipeline.config import MIN_VIDEO_MINUTES
+from pipeline.config import MIN_VIDEO_MINUTES, TRANSCRIPT_DELAY_SECONDS, TRANSCRIPT_PROXY
 from pipeline.db import get_session
 
 logger = logging.getLogger(__name__)
@@ -29,7 +33,8 @@ def fetch_transcript(video_id: str) -> dict | None:
     languages = ["en", "en-US", "en-GB", "en-AU"]
 
     try:
-        api = YouTubeTranscriptApi()
+        proxy = TRANSCRIPT_PROXY and GenericProxyConfig(TRANSCRIPT_PROXY, TRANSCRIPT_PROXY)
+        api = YouTubeTranscriptApi(proxy_config=proxy)
         fetched = api.fetch(video_id, languages=languages)
         segments = fetched.to_raw_data()
         full_text = " ".join(seg["text"] for seg in segments)
@@ -76,18 +81,23 @@ def fetch_pending_transcripts():
 
         logger.info(f"Found {len(pending)} videos pending transcript fetch")
 
-        for row in pending:
+        for n, row in enumerate(pending):
             content_id, video_id, title = row
+            if n:
+                time.sleep(random.uniform(0, 2 * TRANSCRIPT_DELAY_SECONDS))
             logger.info(f"Fetching transcript for: {title or video_id}")
 
             try:
                 result = fetch_transcript(video_id)
+            except RequestBlocked as e:
+                # The IP, not the video: every row after this would fail the
+                # same way and dig the block deeper. Stop; all stay pending.
+                logger.error(f"YouTube is blocking this IP, stopping (set TRANSCRIPT_PROXY): {e}")
+                return {"fetched": fetched, "failed": failed, "error": "blocked"}
             except Exception as e:
                 # Leave transcript_failed FALSE so the next run retries this row.
                 # The retry mechanism is the existing pending-rows query - no
                 # counter column and no backoff scheduler needed.
-                # ponytail: a hard IP block makes every run re-attempt every
-                # pending video. Add a per-row attempt counter if that ever costs.
                 logger.warning(f"Transient error for {video_id}, will retry: {e}")
                 failed += 1
                 continue

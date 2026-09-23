@@ -6,7 +6,7 @@ transcript_failed = TRUE. Anything else - a network blip, an IP block, a
 consent/age gate - must NOT reach that path, or one bad minute silently
 removes a video from the pipeline forever with no record of why.
 
-Offline: no DB, no network, no API credits.
+Offline: no network, no API credits. The IP-block test needs the DB.
 """
 
 import pytest
@@ -32,7 +32,7 @@ def _api_raising(exc):
         def fetch(self, video_id, languages=None):
             raise exc
 
-    return lambda: _Api()
+    return lambda **_: _Api()
 
 
 def _api_returning(segments):
@@ -40,7 +40,7 @@ def _api_returning(segments):
         def fetch(self, video_id, languages=None):
             return _Fetched(segments)
 
-    return lambda: _Api()
+    return lambda **_: _Api()
 
 
 # -- permanent: these genuinely mean "no captions, ever" ---------------------
@@ -116,3 +116,64 @@ def test_segments_are_joined_into_full_text(monkeypatch):
     assert result["segments"] == segments
     assert result["full_text"] == "we went to Katz's"
     assert result["language"] == "en"
+
+
+# -- an IP block stops the run -----------------------------------------------
+
+
+@pytest.mark.db
+def test_an_ip_block_stops_the_run_and_leaves_every_row_pending(db_session, monkeypatch):
+    """Every row after a block fails the same way and digs it deeper."""
+    from contextlib import contextmanager
+
+    from sqlalchemy import text
+    from youtube_transcript_api._errors import IpBlocked
+
+    for vid in ("aaaaaaaaaaa", "bbbbbbbbbbb", "ccccccccccc"):
+        db_session.execute(
+            text("INSERT INTO content (url, platform, platform_id) VALUES (:u, 'youtube', :v)"),
+            {"u": f"https://www.youtube.com/watch?v={vid}", "v": vid},
+        )
+    db_session.commit()
+
+    calls = []
+
+    class _Api:
+        def fetch(self, video_id, languages=None):
+            calls.append(video_id)
+            raise IpBlocked(video_id)
+
+    @contextmanager
+    def _session():
+        yield db_session
+
+    monkeypatch.setattr(transcripts, "YouTubeTranscriptApi", lambda **_: _Api())
+    monkeypatch.setattr(transcripts, "get_session", _session)
+
+    result = transcripts.fetch_pending_transcripts()
+
+    assert result["error"] == "blocked"
+    assert len(calls) == 1
+    flags = db_session.execute(
+        text("SELECT transcript_fetched, transcript_failed FROM content")
+    ).fetchall()
+    assert set(flags) == {(False, False)}
+
+
+def test_the_proxy_is_handed_to_the_client(monkeypatch):
+    seen = {}
+
+    class _Api:
+        def fetch(self, video_id, languages=None):
+            return _Fetched([{"text": "x", "start": 0.0, "duration": 1.0}])
+
+    def _make(**kwargs):
+        seen.update(kwargs)
+        return _Api()
+
+    monkeypatch.setattr(transcripts, "YouTubeTranscriptApi", _make)
+    monkeypatch.setattr(transcripts, "TRANSCRIPT_PROXY", "http://u:p@proxy:8080")
+    transcripts.fetch_transcript("vvvvvvvvvvv")
+
+    proxies = seen["proxy_config"].to_requests_dict()
+    assert proxies == {"http": "http://u:p@proxy:8080", "https": "http://u:p@proxy:8080"}
