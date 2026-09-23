@@ -1071,11 +1071,19 @@ daemon) have no analogue here and are left out.
       model's original `before`. `tests/test_review.py`. Nothing reviewed yet:
       the ~50 rows the parked few-shot entry below waits for are a human's
       afternoon.
-- [ ] **Candidate generation for prompt changes.** `pipeline/quality.py
+- [x] **Candidate generation for prompt changes.** `pipeline/quality.py
       --compare` runs two prompt variants over a fixed sample of stored chunks,
       scores both with `quality.report()`, and shows them side by side for a
       human to pick — instead of one-shot prompt edits. Blocked on credits
       (the balance is empty).
+      **Built 2026-09-23, not yet run:** `python -m pipeline.quality --compare
+      candidate.txt [--baseline old.txt] [--sample 10]`. The sample is rebuilt
+      from `transcripts` with `chunk_transcript` (`extraction_chunks` holds
+      replies, not chunk text) and ordered by a hash, so it is the same chunks
+      every run. Both sides go through `extract_chunk_stored`: a rerun costs
+      nothing, and so does a baseline the pipeline has already extracted
+      under the same prompt. Picking a winner is left to the person reading it.
+      `tests/test_quality_compare.py`.
 - [ ] **Parked: retrieve few-shot examples instead of hard-coding three.**
       Pick examples from the golden set by source type and topic rather than
       the fixed ones in `SYSTEM_PROMPT`. Not worth it until the review loop

@@ -76,7 +76,7 @@ python -m api.main
 | `pipeline/worker.py` | RQ worker entry point for scaled extraction |
 | `pipeline/enqueue.py` | CLI to queue videos for parallel processing |
 | `pipeline/queue.py` | Redis/RQ queue setup |
-| `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change |
+| `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change; `--compare` scores a candidate prompt against the current one on the same chunks |
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Memories you can walk to.** The real corpus has none near any dev coordinate |
@@ -337,6 +337,7 @@ one shot:
 
 ```bash
 python -m pipeline.quality
+python -m pipeline.quality --compare candidate.txt   # same 10 chunks, both prompts, side by side
 ```
 
 Baseline on the 224-memory corpus, all four found by reading it rather than
