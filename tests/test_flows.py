@@ -238,6 +238,7 @@ def test_maestro_flows_still_point_at_the_seed():
         "The same rough spot, dev seed",
         "Where I was standing, dev seed",
         "A letter to whoever is here later, dev seed",
+        "Where the night went long, dev seed",
     }
     known = {(round(lat, 6), round(lng, 6)) for lat, lng in (at(key) for key in seed_dev.OFFSETS)}
     # Where the app falls back to, where F1 and filing stand.

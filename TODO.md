@@ -1162,6 +1162,212 @@ daemon) have no analogue here and are left out.
 
 ---
 
+## Ideas — routes: curated, customizable, testable (2026-09-23)
+
+Researched 2026-09-23 against `api/read.py`, `api/queries.py`, migrations
+013/014, F25 and `docs/10-decisions.md` § Routes. **Unvetted.** Why the route
+feels clunky, from the code: `ROUTE_CANDIDATES_QUERY` takes the 20 *nearest*
+candidates, `_mix_layers` alternates layers, and `_walking_order` puts them in
+greedy nearest-neighbour order as an open path, drawn crow-flies. So the stops
+are picked with no idea of the walk between them, the order can cross itself
+and double back, it never returns to where you started, and the line goes
+through buildings. In the literature this is an **Orienteering Problem** (OP):
+pick a subset of stops and an order that together collect the most "prize"
+within a length budget. Tourist apps build on it as the **Tourist Trip Design
+Problem** (TTDP). Items that conflict with rules already written in F1/F25 are
+flagged ⚠️ inline, not overridden.
+
+#### Fix the walk we already have — do these first
+
+- [ ] **Order the stops exactly. Five stops is 120 orderings.** Nearest-neighbour
+      is the weakest tour heuristic there is. Trying every ordering of ≤5 stops
+      (≤8 is 40,320) costs less than the SQL round trip. Past that, use
+      Held–Karp DP, which is exact and practical up to ~15–20 points.
+      2-opt/Or-opt only earn their place once n gets bigger than that.
+      **First step:** replace `_walking_order`'s body with
+      `min(itertools.permutations(...))` over path length from the anchor.
+      [Held–Karp](https://en.wikipedia.org/wiki/Held%E2%80%93Karp_algorithm) ·
+      [Johnson & McGeoch, TSP local search](https://www.cs.ubc.ca/~hutter/previous-earg/EmpAlgReadingGroup/TSP-JohMcg97.pdf)
+- [ ] **Choose stops for the walk, not for being nearby.** Today a stop 300 m
+      *behind* you beats a tight cluster 500 m ahead. Choosing and ordering are
+      one problem. The practical, well-proven heuristic is **ILS**: insert the
+      stop with the best prize per metre until the budget is full, then shake
+      (remove a few, re-insert). GRASP-PR, ALNS and EA4OP are for hundreds to
+      thousands of nodes; this is ≤20 candidates per request.
+      **First step:** greedy ratio insertion plus ~50 ILS iterations in pure
+      Python, seeded from `(device, route_date)` so it's reproducible. No new
+      dependency.
+      **Upgrade:** OR-Tools routing with `AddDisjunction(node, prize)` per stop
+      (prize-collecting out of the box), once time windows or several routes a
+      day arrive.
+      [Gunawan, Lau & Vansteenwegen 2016 survey](https://www.sciencedirect.com/science/article/abs/pii/S037722171630296X) ·
+      [Vansteenwegen et al. 2009, ILS for TOPTW](https://www.sciencedirect.com/science/article/abs/pii/S030505480900080X) ·
+      [Gavalas et al. 2014, TTDP survey](https://link.springer.com/article/10.1007/s10732-014-9242-5) ·
+      [Santini 2019, ALNS](https://santini.in/files/papers/santini-2019.pdf) ·
+      [Kobeaga et al. 2018, EA4OP](https://www.sciencedirect.com/science/article/abs/pii/S0305054817302241) ·
+      [OR-Tools penalties](https://developers.google.com/optimization/routing/penalties)
+- [ ] **Budget in metres of walk, not a search radius.** `radius_meters` limits
+      *where candidates come from*, not *how long the walk is*: a 4 km radius
+      can produce an 11 km route. Keep the radius as a prefilter and add
+      `budget_meters` as the real constraint. Crow-flies underestimates walking;
+      measured urban circuity is ~1.2–1.3.
+      **First step:** check the budget against `haversine × 1.3`. ⚠️ F25 rules
+      out showing minutes until street routing backs them; this keeps to that.
+      [Boeing 2019, circuity of walk vs drive networks](https://arxiv.org/pdf/1708.00836)
+- [ ] **Loop or one-way, as one flag.** A loop is the same OP with start = end,
+      and it's the default in tools people already use for walks (Komoot round
+      trips; GraphHopper's `algorithm=round_trip` takes a target distance and a
+      seed). For a daily walk from wherever you are, a loop is likely the right
+      default: it accounts for the walk home.
+      **First step:** count the last leg back to the anchor in the objective,
+      and draw it.
+      [Komoot round trips](https://support.komoot.com/hc/en-us/articles/360024590552-Planning-round-trips) ·
+      [GraphHopper round_trip](https://github.com/graphhopper/graphhopper/blob/master/docs/web/api-doc.md)
+
+#### Walking distances instead of crow-flies
+
+- [ ] **Street distances: a circuity factor now, a routing sidecar later.**
+      Lightest option first:
+      (a) **pgRouting** inside the PostGIS we already run, via
+      `pgr_dijkstraCostMatrix`. No new service, but the import is slow.
+      (b) **OSRM** `foot` profile: a `/table` matrix in milliseconds, one
+      container per region extract.
+      (c) **Valhalla** `pedestrian`: a `sources_to_targets` matrix, tunable
+      walking speed, and route shapes for the polyline.
+      (d) Hosted APIs such as Mapbox Matrix or Google `computeRouteMatrix`,
+      which charge per call.
+      **Upgrade:** Valhalla or OSRM in `docker-compose.yml`, NYC extract only.
+      Cache matrix cells on `(place_id, place_id)`; places don't move, so it
+      never goes stale. Store the `/route` geometry on the `daily_routes` row,
+      so `RouteLine` follows the streets.
+      [OSRM](https://en.wikipedia.org/wiki/Open_Source_Routing_Machine) ·
+      [Valhalla matrix](https://valhalla.github.io/valhalla/api/matrix/) ·
+      [pgRouting workshop](https://workshop.pgrouting.org/dev/en/index.html) ·
+      [Mapbox Matrix](https://docs.mapbox.com/api/navigation/matrix/) ·
+      [Google Route Matrix](https://developers.google.com/maps/documentation/routes/compute_route_matrix)
+- [ ] **Walking speed is a constant with a citation.** Normal adult walking is
+      ~1.3–1.4 m/s (Bohannon & Andrews meta-analysis, 23,111 adults), and
+      lower with age. Tourists stop and look. Dwell time counts too: holding
+      the ring and reading is the OP's "service time" at each stop.
+      **First step:** `WALK_SPEED_MPS = 1.3` and `DWELL_SECONDS` in
+      `pipeline/config.py`, used only once there is a duration input.
+      [Bohannon & Andrews 2011](https://pubmed.ncbi.nlm.nih.gov/21820535/)
+
+#### What a stop is worth
+
+- [ ] **Give stops a prize; make layer mix a diversity term.** Every candidate
+      is worth the same today, so an OP would just minimise distance. Prize
+      from signals that already exist: `contrast_score`, heart counts,
+      `extraction_confidence`. Replace `_mix_layers`' strict alternation with
+      **MMR**: λ·prize − (1−λ)·max similarity (same layer, tag overlap) to the
+      stops already picked. That keeps diversity without coming up short when
+      one layer runs dry. Scenicness (Quercia's "shortest path to happiness")
+      needs street-level data we don't have yet, so it's parked.
+      **First step:** prize = `1 + contrast_score`, MMR with λ≈0.7 inside the
+      insertion step.
+      [Carbonell & Goldstein 1998, MMR](https://www.semanticscholar.org/paper/The-Use-of-MMR-and-Diversity-Based-Reranking-in-and-Carbonell-Goldstein/fb27d922754a8bfb8dee582f0231f55174fd50e3) ·
+      [Quercia et al. 2014](https://arxiv.org/abs/1407.1031)
+
+#### Predefined routes
+
+- [ ] **`routes` + `route_stops` for authored walks.** A join table earns its
+      place here, where migration 013 rightly refused one for five ints: an
+      authored route is long-lived, reordered, shared and edited.
+      `routes(id, title, theme_tag, author_user_id, source
+      'editorial'|'generated', status 'draft'|'published', is_loop,
+      budget_meters, geometry)` and `route_stops(route_id, position,
+      memory_id)`. `daily_routes` gets an optional `route_id` for "today I'm
+      walking *this* one".
+      Prior art: VoiceMap authors a fixed ordered path with a trigger radius
+      per stop and matches talk time to walk time. Detour chained ~50 GPS pins
+      into one narrated walk. Google Maps Lists are unordered, but shareable,
+      collaborative and followable.
+      **First step:** the migration, plus `GET /v1/routes/{id}` through
+      `row_to_memory`, so stops stay gated.
+      [VoiceMap publisher docs](https://docs.voicemap.me/tour-publishers/choosing-locations/) ·
+      [Detour](https://www.technologyreview.com/2015/03/06/168961/first-groupon-founder-now-tour-guide/) ·
+      [Google Maps lists](https://support.google.com/maps/answer/7280933)
+- [ ] **Generated themed routes, reviewed by a person before publishing.** An
+      offline job: for each hotspot cluster (`HOTSPOTS_QUERY`) × each tag,
+      solve the same OP from the centroid, write `source='generated',
+      status='draft'`, then accept or reject in the style of
+      `pipeline/review.py`. This is how City Trip Planner and Strava's
+      generated routes work: the algorithm proposes, and curation or
+      popularity filters.
+      **First step:** none until one area has ≥3 tags with ≥5 walkable stops
+      each. Write that check as a query first.
+      [City Trip Planner, Vansteenwegen et al. 2011](https://www.sciencedirect.com/science/article/abs/pii/S0957417410013230) ·
+      [Strava generated routes](https://support.strava.com/en-us/articles/15401756-generated-community-routes) ·
+      [Lim et al. 2019, tour recommendation survey](https://link.springer.com/article/10.1007/s10115-018-1297-4)
+
+#### Letting people change the route
+
+- [ ] **Customise by constraints and one swap, not a route editor.** People
+      keep using an imperfect algorithm when they can modify its output even
+      slightly (Dietvorst et al. 2018). Research planners (City Trip Planner,
+      LAPPI) and Komoot/Strava take a few constraints and let the solver do
+      the rest. In order:
+      (1) **"Swap this stop"**: remove it and re-insert the next-best
+      candidate, reusing the insertion step.
+      (2) A length chip (short/medium/long → `budget_meters`), one theme tag,
+      and a loop toggle.
+      (3) Drag-to-reorder last. Stops already unlock in any order, so it
+      mostly changes the line.
+      ⚠️ F1 lists "no settings anybody has to change" as deliberately absent,
+      and regenerating replaces today's `daily_routes` row, which bends "same
+      walk all day". Decide both before building.
+      [Dietvorst, Simmons & Massey 2018](https://pubsonline.informs.org/doi/10.1287/mnsc.2016.2643) ·
+      [LAPPI](https://arxiv.org/pdf/2512.14138) ·
+      [Komoot planner](https://support.komoot.com/hc/en-us/articles/10206792140826-Plan-routes-in-the-app)
+- [ ] **An end point per request, never stored.** "End at the subway" is a
+      one-way OP; `end_lat/end_lng` is used only on the day's first call.
+      ⚠️ Storing it would bring back the stored home location that
+      `docs/10-decisions.md` § Routes decided against.
+      **First step:** skip it until loop vs one-way ships and someone asks.
+
+#### Mock data and measuring
+
+- [ ] **`seed_dev --routes`: scenarios, not a cluster.** Today's seed puts 7
+      points within ~400 m. That's enough to render a route (and
+      `.maestro/walk-and-unlock.yml` now walks stops 1→2→3 of it), but it
+      can't tell one algorithm from another. Add named scenarios, each marked
+      `dev-seed:` and removed by `--clear`:
+      - *sparse*: 2 stops.
+      - *dense*: 40 stops in 1 km².
+      - *bimodal*: two clusters either side of Central Park, where crow-flies
+        lies the most.
+      - *linear*: along Broadway.
+      - *one-layer*.
+      - *stack-heavy*.
+      Put the points on real sidewalks by sampling an OSMnx `walk` graph of
+      Midtown once, and commit the coordinates as a JSON fixture, not OSMnx as
+      a dependency.
+      [OSMnx, Boeing 2017](https://geoffboeing.com/2016/11/osmnx-python-street-networks/)
+- [ ] **`pipeline/route_bench.py`: score and time every solver on the same
+      instances.** Shaped like `perf.py` and `quality.py`: run by hand and
+      read, not part of the gate. Inputs: the classic OP benchmarks
+      (Tsiligirides sets 1–3, Chao 64/66, best-known scores from KU Leuven)
+      plus the Manhattan fixtures above. Output per solver (current NN, exact
+      order, ILS): prize, % gap to best known, metres, crossings/backtracks,
+      and p50/p95 ms. Separately, add `ROUTE_CANDIDATES_QUERY` to `perf.py`,
+      which doesn't time it today.
+      [KU Leuven OP instances](https://www.mech.kuleuven.be/en/mim/op) ·
+      [Tsiligirides 1984](https://www.researchgate.net/publication/230856233_Heuristic_Methods_Applied_to_Orienteering) ·
+      [OPLib / op-solver](https://github.com/gkobeaga/op-solver)
+- [ ] **Property tests for the solver, next to `tests/test_api_routes.py`.**
+      The endpoint tests already cover exclusions. The solver needs
+      invariants over random instances:
+      - never over budget;
+      - no place twice;
+      - the same seed gives the same route;
+      - prize ≥ the NN baseline;
+      - equals brute force when n ≤ 7;
+      - a loop starts and ends at the anchor.
+      **First step:** a seeded `random.Random(i)` loop over 200 instances in
+      one pytest. **Upgrade:** Hypothesis, if a failing case ever needs
+      shrinking.
+      [Hypothesis](https://hypothesis.readthedocs.io/)
+
 ## Decided — do not revisit
 
 Copied so they survive context resets.

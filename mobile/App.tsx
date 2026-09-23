@@ -10,7 +10,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import MapView, { Circle, Polyline } from 'react-native-maps';
+import MapView, { Circle } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
@@ -77,6 +77,7 @@ import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import ReachBanner, { useBreath } from './src/ReachBanner.tsx';
+import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
 // Held until StartupLogo's draw-on finishes, so the native splash and the JS
@@ -517,12 +518,13 @@ export default function App() {
   // suggestion: take another way round and whichever stop you reach is the one
   // to open.
   const stopHere = useMemo(() => {
-    let best: { group: MemoryGroup; position: number; name: string } | null = null;
+    let best: { group: MemoryGroup; index: number; position: number; name: string } | null =
+      null;
     for (const group of withinReach) {
-      for (const memory of group.memories) {
+      for (const [index, memory] of group.memories.entries()) {
         const at = routePositionById.get(memory.id);
         if (at && (!best || at < best.position)) {
-          best = { group, position: at, name: memory.place.name };
+          best = { group, index, position: at, name: memory.place.name };
         }
       }
     }
@@ -557,13 +559,13 @@ export default function App() {
     serverRadius ??
     FALLBACK_RADIUS_M;
 
-  const openGroup = (group: MemoryGroup) => {
+  const openGroup = (group: MemoryGroup, index = 0) => {
     // A pin is a small target on a moving map, and a tap that lands has to feel
     // different from one that misses. The heavier taps are reserved for the
     // unlock, so this is the lightest one there is.
     Haptics.selectionAsync().catch(() => {});
     setOpenAt(group.memories);
-    setOpenIndex(0);
+    setOpenIndex(index);
     setUnlockError(null);
   };
 
@@ -796,15 +798,7 @@ export default function App() {
               />
             )}
 
-            {/* A suggestion, not an unlock state - never the seal colour. */}
-            {routePath.length > 1 && (
-              <Polyline
-                coordinates={routePath.map((at) => ({ latitude: at.lat, longitude: at.lng }))}
-                strokeWidth={2}
-                strokeColor={scheme === 'dark' ? 'rgba(189,181,168,0.55)' : 'rgba(74,68,61,0.4)'}
-                lineDashPattern={[6, 6]}
-              />
-            )}
+            {routePath.length > 1 && <RouteLine path={routePath} dark={scheme === 'dark'} />}
 
             {groups.map((group) => {
               // The first of a group's memories that is also a route stop -
@@ -921,7 +915,9 @@ export default function App() {
                 accessibilityLabel={`You're at stop ${stopHere.position}: ${stopHere.name}. Open to unlock.`}
                 onPress={() => {
                   setRouteStarted(true);
-                  openGroup(stopHere.group);
+                  // At the stop's own page: in a stack, the route memory is
+                  // not necessarily the first one.
+                  openGroup(stopHere.group, stopHere.index);
                 }}
               >
                 <Text style={styles.routeAtText}>

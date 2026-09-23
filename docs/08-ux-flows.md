@@ -398,6 +398,9 @@ by the fetch dedupe. Only *successful* fetches are recorded, so it is not.
    **"Nearest locked memory · 412 m"**.
 2. Tapping it opens that memory's sheet, which offers F12.
 
+Only on a day with no route. With one, the route pill (F25) answers the same
+question with the next stop and its distance.
+
 It does not breathe and it is not seal-coloured. "Walk 400 m" is information; only
 something you can actually open is an invitation. A map of padlocks that answers
 only "you cannot read this" and never "so where do I go" is half a mechanic.
@@ -806,9 +809,11 @@ calendar day.
    Tapping it once starts the route and flies to the next stop; after that the
    pill reads "Next: <place> · 350 m".
 3. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
-   in today's route (1–5) in the badge. A faint dashed line runs from you
+   in today's route (1–5) in the badge. A line of ink dots runs from you
    to the next stop and on through the rest, in the order picked from
-   wherever the device stood at the day's first ask.
+   wherever the device stood at the day's first ask. The dots flow toward
+   where you are going and the line ebbs slowly (`mobile/src/RouteLine.tsx`;
+   iOS only, and still under Reduce Motion).
 4. Reaching a stop lights its pin, and the pill turns seal and breathes:
    "You're at stop 2 · open it", a tap opens it. Any stop, in any order — the
    numbers suggest a walk, they do not enforce one, so somebody who goes
