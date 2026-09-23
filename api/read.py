@@ -349,11 +349,13 @@ def _choose_stops(
     candidates: list, size: int, d: list, seed: str, budget_meters: float, loop: bool
 ) -> list[int]:
     """Up to `size` stops whose walk from the anchor fits `budget_meters`: as
-    many as fit, then the shortest walk, not the `size` nearest: a stop 300m
-    behind you no longer beats a tight cluster 500m ahead. Cheapest insertion
-    builds a walk, then ROUTE_SHAKES rounds drop one or two stops at random and
-    reinsert the cheapest, keeping whichever walk is shorter (iterated local
-    search). Seeded, so one device on one day always gets the same answer.
+    many as fit, then the layer mix, then the most prize, then the shortest walk - not the `size`
+    nearest: a stop 300m behind you no longer beats a tight cluster 500m ahead.
+    A stop's prize is 1 + contrast_score, so an unscored one is worth 1.
+    Insertion by prize per metre builds a walk, then ROUTE_SHAKES rounds drop
+    one or two stops at random and refill without them, keeping whichever walk
+    scores better (iterated local search). Seeded, so one device on one day
+    always gets the same answer.
 
     `d` is walking metres between nodes, node 0 the anchor and node i
     candidates[i - 1] (api.streets.walking_matrix). Returns nodes, unordered.
@@ -361,17 +363,20 @@ def _choose_stops(
     Each of stranger/other is guaranteed min(available, size // 2) stops, which
     is what the strict alternation before this gave, and still never comes up
     short when one layer runs dry or is out of budget.
-    ponytail: every stop is worth the same, so this only minimises metres
-    (TODO.md, "Give stops a prize")."""
+    ponytail: layer is the only diversity term; MMR on tag overlap once prizes
+    actually differ (TODO.md, "Give stops a prize")."""
     nodes = range(1, len(candidates) + 1)
     size = min(size, len(candidates))
+    prize = {i: 1 + (getattr(candidates[i - 1], "contrast_score", None) or 0) for i in nodes}
     stranger = {i: candidates[i - 1].layer == "stranger" for i in nodes}
     quota = {k: min(sum(v == k for v in stranger.values()), size // 2) for k in (True, False)}
 
+    def missing(walk):
+        kinds = [stranger[i] for i in walk]
+        return sum(max(0, q - kinds.count(k)) for k, q in quota.items())
+
     def fits(walk, c):
-        after = [stranger[i] for i in walk] + [stranger[c]]
-        missing = sum(max(0, q - after.count(k)) for k, q in quota.items())
-        return missing <= size - len(after)
+        return missing([*walk, c]) <= size - len(walk) - 1
 
     def cost(walk, c, at):
         prev = walk[at - 1] if at else 0
@@ -380,30 +385,40 @@ def _choose_stops(
             return d[prev][c]
         return d[prev][c] + d[c][nxt] - d[prev][nxt]
 
-    def fill(walk):
+    def fill(walk, banned=frozenset()):
         while len(walk) < size:
             room = budget_meters - _path_meters(walk, d, loop)
             options = [
                 (cost(walk, c, at), c, at)
                 for c in nodes
-                if c not in walk
+                if c not in walk and c not in banned
                 for at in range(len(walk) + 1)
             ]
             options = [o for o in options if o[0] <= room]
             if not options:
                 break
-            _, c, at = min([o for o in options if fits(walk, o[1])] or options)
+            _, c, at = min(
+                [o for o in options if fits(walk, o[1])] or options,
+                key=lambda o: (-prize[o[1]] / max(o[0], 1), o),
+            )
             walk.insert(at, c)
         return walk
 
     def score(walk):
-        return (-len(walk), _path_meters(walk, d, loop))
+        return (
+            -len(walk),
+            missing(walk),
+            -sum(prize[i] for i in walk),
+            _path_meters(walk, d, loop),
+        )
 
     rng = random.Random(seed)
     best = fill([])
     for _ in range(ROUTE_SHAKES if best else 0):
+        # Refilled with the dropped stops allowed back, a greedy fill puts the
+        # same cheap stop straight back and never reaches a better one further out.
         drop = set(rng.sample(best, rng.randint(1, min(2, len(best)))))
-        trial = fill([i for i in best if i not in drop])
+        trial = fill([i for i in best if i not in drop], drop)
         if score(trial) < score(best):
             best = trial
     return best

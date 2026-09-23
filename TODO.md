@@ -1266,17 +1266,14 @@ flagged ⚠️ inline, not overridden.
       [pgRouting workshop](https://workshop.pgrouting.org/dev/en/index.html) ·
       [Mapbox Matrix](https://docs.mapbox.com/api/navigation/matrix/) ·
       [Google Route Matrix](https://developers.google.com/maps/documentation/routes/compute_route_matrix)
-- [ ] **Walking speed is a constant with a citation.** Normal adult walking is
-      ~1.3–1.4 m/s (Bohannon & Andrews meta-analysis, 23,111 adults), and
-      lower with age. Tourists stop and look. Dwell time counts too: holding
-      the ring and reading is the OP's "service time" at each stop.
-      **First step:** `WALK_SPEED_MPS = 1.3` and `DWELL_SECONDS` in
-      `pipeline/config.py`, used only once there is a duration input.
-      [Bohannon & Andrews 2011](https://pubmed.ncbi.nlm.nih.gov/21820535/)
 
 #### What a stop is worth
 
-- [ ] **Give stops a prize; make layer mix a diversity term.** Every candidate
+- [x] **Give stops a prize; make layer mix a diversity term.** Done
+      2026-09-23: prize = 1 + `contrast_score`, insertion by prize per metre,
+      walks ranked by count, layer quota, prize, then metres. A shake round
+      no longer re-inserts what it dropped. MMR skipped: the layer quota is
+      the diversity term, and every `contrast_score` is still NULL. Every candidate
       is worth the same today, so an OP would just minimise distance. Prize
       from signals that already exist: `contrast_score`, heart counts,
       `extraction_confidence`. Replace `_mix_layers`' strict alternation with

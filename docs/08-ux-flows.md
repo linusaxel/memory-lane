@@ -799,7 +799,8 @@ anyone else's collection or the local unlock cache.
 calendar day.
 
 1. The first time a device asks that day, the server picks up to five nearby,
-   not-yet-earned memories, mixing historical and stranger layers, and stores
+   not-yet-earned memories, mixing historical and stranger layers and
+   preferring higher-contrast ones, and stores
    the choice — a relaunch the same day sees exactly the same walk, not a
    fresh roll.
 2. A pill appears above "Near me": "Today's route · 0 of 5 · 2.4 km" — the

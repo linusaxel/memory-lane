@@ -13,8 +13,14 @@ ANCHOR = Coordinates(lat=40.75, lng=-73.99)
 STEP = 0.001
 
 
-def stop(name, east, layer="historical"):
-    return SimpleNamespace(name=name, lat=ANCHOR.lat, lng=ANCHOR.lng + east * STEP, layer=layer)
+def stop(name, east, layer="historical", contrast=None):
+    return SimpleNamespace(
+        name=name,
+        lat=ANCHOR.lat,
+        lng=ANCHOR.lng + east * STEP,
+        layer=layer,
+        contrast_score=contrast,
+    )
 
 
 def crow(picks):
@@ -66,6 +72,13 @@ def test_a_tight_cluster_ahead_beats_one_stop_behind():
     # The cluster a, b, c is 6 + 1 + 1 = 8.
     picks = [stop("behind", -4), stop("a", 6), stop("b", 7), stop("c", 8)]
     assert names(choose(picks, 3, "seed", 4000, False)) == ["a", "b", "c"]
+
+
+def test_a_striking_stop_further_out_beats_a_dull_one_nearby():
+    # 1 step is 109m walked; 5 steps is 546m.
+    picks = [stop("dull", 1), stop("striking", 5, contrast=0.9)]
+    assert names(choose(picks, 1, "seed", 4000, False)) == ["striking"]
+    assert names(choose(picks, 1, "seed", 400, False)) == ["dull"]
 
 
 def test_each_layer_keeps_its_share_even_when_it_costs_metres():
