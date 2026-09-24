@@ -21,8 +21,10 @@ Metro against the compose API (`docker compose up -d`, `mobile/.env` from
 `.env.example`): `cd mobile && npx expo start --dev-client`, then tap the icon.
 
 **It needs the OSRM sidecar** (`./osrm/build.sh` once, then `docker compose
---profile routing up -d osrm`). The walk is the route OSRM picks, travelled
-along its street shapes, and without streets the app picks a different one.
+--profile routing up -d osrm`). The walk is the route OSRM picks, and without
+streets the app picks a different one. Each leg is walked in two fixes, halfway
+along its street shape and the stop, because every `setLocation` is a driver
+round trip and turn by turn the walk spent most of the journey on them.
 `E2E_ROUTING_URL` points it elsewhere.
 
 Those shapes are pasted into `walk-and-unlock.yml`, so a solver change that
@@ -121,8 +123,8 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 | File | Flow |
 |---|---|
 | `look-around.yml` | F1 plan a walk (and nothing walkable), F32 show me another, F8 be asked for location |
-| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F27 the streak on its card, F15 reread what you unlocked, F26 heart it, F31 look back at a walk |
-| `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed |
+| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F27 the streak on its card, F15 reread what you unlocked, F26 heart it, F33 leave a note and rewrite it, F31 look back at a walk |
+| `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed, and the author hearing back (hearts, notes, "New") |
 
 Three journeys rather than one file per id: every flow pays a fresh database
 and a cold start, and the old per-id files performed the same unlock three

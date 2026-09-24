@@ -112,6 +112,9 @@ export default function Notes({ memoryId, isAuthor }: Props) {
             maxLength={NOTE_MAX}
             textAlignVertical="top"
             accessibilityLabel="Your note"
+            // The placeholder goes once Rewrite fills the field, so the flows
+            // find it by id.
+            testID="note"
           />
           <View style={styles.row}>
             <Text style={styles.counter}>{NOTE_MAX - draft.length} left</Text>

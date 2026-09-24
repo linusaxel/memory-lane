@@ -394,7 +394,7 @@ function Row({
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
-      accessibilityLabel={[place, distance, meta].filter(Boolean).join(', ')}
+      accessibilityLabel={[place, distance, meta, badge].filter(Boolean).join(', ')}
     >
       <Text style={styles.place} numberOfLines={1}>
         {place}

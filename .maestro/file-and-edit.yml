@@ -1,5 +1,5 @@
 # F5 File a memory of your own (+ F21 Be somebody), then F24 Manage what you
-# filed. docs/08-ux-flows.md
+# filed, and F26/F33 the author hears back. docs/08-ux-flows.md
 #
 # The only screen in the app that writes. It files where you are standing and
 # nowhere else - there is no map picker, deliberately - and what comes back is
@@ -48,15 +48,43 @@ appId: ${APP_ID}
 - assertVisible: "The step by the ferry landing"
 # F21: signed Anonymous until you give a name.
 - assertVisible: ".*Anonymous.*"
+
+# F26 + F33 from the author's own phone, which is the only one a flow has: the
+# author unlocked it by filing it, so they may heart it and sign it too. What
+# matters is what comes back in the journal.
+- tapOn: "Heart this memory"
+- extendedWaitUntil:
+    visible: "Hearted, 1 heart"
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: "note"
+    direction: DOWN
+- tapOn:
+    id: "note"
+- inputText: "Still laughing."
+- tapOn: ".*ferry horn.*"
+- tapOn: "Leave note"
+# Rewrite is only offered on a note the server has, not on a draft.
+- extendedWaitUntil:
+    visible: "Rewrite"
+    timeout: 30000
 - tapOn: "Close"
 
+# The tab says something came back before it is opened, and the row says what.
 - tapOn: "Journal"
-- tapOn: "Memories"
+- extendedWaitUntil:
+    visible: "Memories ·"
+    timeout: 40000
+- tapOn: "Memories ·"
 
 # A server fetch: wait for its own note rather than the place name.
 - extendedWaitUntil:
     visible: ".*of yours.*"
     timeout: 40000
+- assertVisible: "The step by the ferry landing, .*1 heart · 1 note, New"
+# Opening the tab was the look: the dot goes with it.
+- assertVisible: "Memories"
 
 # The Filed row opens the same sheet as editing: fields come back exactly as
 # filed. Rows carry a live distance alongside the place name in their

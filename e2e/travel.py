@@ -6,9 +6,10 @@ e2e/run.sh runs this once per run, after `seed_dev --at LAT,LNG`. It plans the
 walk the app will be offered, through api/route_solver.py's _plan_route on the same
 database and streets, and writes:
 
-  e2e/out/legs/N.yml   the street shape to stop N, a flow the journey runFlows:
-                       one setLocation per point. Not `travel`, which spends
-                       50 fixes (~6s) on every segment however short
+  e2e/out/legs/N.yml   the walk to stop N, a flow the journey runFlows: two
+                       setLocations, halfway along the street shape and the
+                       stop. Not `travel`, which spends 50 fixes (~6s) on
+                       every segment however short
   e2e/out/legs/env     STOPn / WORDSn: each stop's name, and words from its summary
 
 The seed's five stops are the only ones in reach, so every device and every
@@ -53,7 +54,9 @@ def main(start: Coordinates) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     env = []
     for n, (name, leg) in enumerate(zip(names, [ends["out"], *legs], strict=True), 1):
-        points = [start, *leg] if n == 1 else leg
+        # Two fixes a leg, halfway and the stop: every setLocation is a driver
+        # round trip, and a walk turn by turn spent most of the journey on them.
+        points = [leg[len(leg) // 2], leg[-1]]
         (OUT / f"{n}.yml").write_text(
             "appId: ${APP_ID}\n---\n"
             + "".join(

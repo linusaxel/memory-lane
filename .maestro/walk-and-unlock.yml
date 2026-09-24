@@ -1,13 +1,13 @@
 # F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
 # loop 1 -> 5 -> F30 finish it (F27 streak) -> F15/F31 reread it in the
-# journal (F26 heart it).
+# journal (F26 heart it, F33 leave a note).
 # docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
 #
 # The start is random: e2e/run.sh picks a walkable point in central
 # Copenhagen, plants the seed round it (`seed_dev --at`), and e2e/travel.py
-# writes each leg's street shape (e2e/out/legs/N.yml) and each stop's name and
+# writes each leg as two fixes (e2e/out/legs/N.yml) and each stop's name and
 # summary words (STOPn, WORDSn). E2E_START=lat,lng replays a run.
 #
 # THREE THINGS TO KNOW BEFORE EDITING THIS FILE.
@@ -68,8 +68,8 @@ appId: ${APP_ID}
 
 # F25 + F13 + F7, five times: walk today's route in order, 1 -> 5, whichever
 # of the seed's five stops the route puts where (never the stack first).
-# Each leg is that leg's street shape from OSRM, turn by turn, so the walker
-# keeps to the pavement; it ends where the street passes the stop, inside the
+# Each leg is two fixes, halfway along its street shape from OSRM and where the
+# street passes the stop, so the walk is quick; it ends inside the
 # 20m gate. Only the stop being stood on is ever in reach. Nothing is tapped
 # while walking - the pin turns and the pill changes its mind on its own.
 - runFlow: ../e2e/out/legs/1.yml
@@ -155,9 +155,39 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Hearted, 1 heart"
     timeout: 30000
+# F33: one note each, and posting again rewrites it rather than adding one.
+# The field is taller than a line, so a tap on its middle lands below the text
+# and the cursor goes to the end: eraseText then clears all of it. Tapping the
+# summary dismisses the keyboard, which covers the send link.
+- scrollUntilVisible:
+    element:
+      id: "note"
+    direction: DOWN
+- tapOn:
+    id: "note"
+- inputText: "Stood here at dawn."
+- tapOn: ".*${WORDS1}.*"
+- tapOn: "Leave note"
+# Rewrite is only offered on a note the server has, not on a draft.
+- extendedWaitUntil:
+    visible: "Rewrite"
+    timeout: 30000
+- tapOn: "Rewrite"
+- tapOn:
+    id: "note"
+- eraseText: 40
+- inputText: "Stood here twice."
+- tapOn: ".*${WORDS1}.*"
+- tapOn: "Save note"
+- extendedWaitUntil:
+    visible: "Rewrite"
+- assertVisible: "Stood here twice\\."
+    timeout: 30000
+- assertNotVisible: "Stood here at dawn\\."
 - tapOn: "Close"
 - tapOn: "${STOP1}, .*"
 - assertVisible: "Hearted, 1 heart"
+- assertVisible: "Stood here twice\\."
 - tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the
