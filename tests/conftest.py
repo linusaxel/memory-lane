@@ -34,6 +34,29 @@ _seed = os.environ.get("ROUTE_SEED", "random")
 ROUTE_SEED = random.randrange(2**32) if _seed == "random" else int(_seed)
 
 
+@pytest.fixture(autouse=True)
+def _no_network(request, monkeypatch):
+    """Only `live` tests leave this machine. A fake that covered one crawler
+    call but not its sibling had eight ingest tests asking YouTube about
+    `@test`, a second each, passing either way."""
+    if request.node.get_closest_marker("live"):
+        return
+    import socket
+
+    connect = socket.socket.connect
+
+    def _local_only(sock, address):
+        if sock.family in (socket.AF_INET, socket.AF_INET6) and address[0] not in (
+            "127.0.0.1",
+            "::1",
+            "localhost",
+        ):
+            raise RuntimeError(f"network in an unmarked test: {address}; mark it live or fake it")
+        return connect(sock, address)
+
+    monkeypatch.setattr(socket.socket, "connect", _local_only)
+
+
 @pytest.fixture
 def route_seed():
     return ROUTE_SEED

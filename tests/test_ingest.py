@@ -41,6 +41,9 @@ def fake_channel(monkeypatch):
     import crawler.yt_crawler as yt
 
     monkeypatch.setattr(yt, "list_channel_videos", _list)
+    monkeypatch.setattr(
+        yt, "channel_metadata", lambda url: {"name": None, "url": None, "icon_url": None}
+    )
     return calls
 
 
