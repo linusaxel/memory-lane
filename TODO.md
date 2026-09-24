@@ -6,6 +6,81 @@ is active. If the two disagree, this file wins and TASKS.yaml is wrong.
 
 ---
 
+## Friction
+
+What slowed a session down or nearly shipped something wrong, and would again.
+The rules for adding to it are in CLAUDE.md, "Before you finish". Newest first;
+strike an entry when its fix lands.
+
+- [ ] **Maestro does not drive the plan page's new choices.** (2026-09-24)
+      Loop / One way and the theme chips shipped in `2f5a97f` with API tests
+      only; `look-around.yml` still taps straight through to the default loop.
+      Both journeys pass on the new code (walk 204 s, look 59 s), so nothing is
+      broken, just unwatched. **Fix:** in `look-around.yml`, tap "One way" and
+      assert a preview reading `5 stops · .* km` with no "loop"; tap a theme
+      the e2e seed does not carry and assert "No walk that long from here".
+- [ ] **The walk journey's `travel` points are hand-copied OSRM shapes.**
+      (2026-09-24) `walk-and-unlock.yml` walks fixed coordinates traced from
+      the route OSRM drew under the old solver. Today's routing change left the
+      seed's stops and order alone, so it passed, but that was luck: any solver
+      change that reorders the seed's walk breaks the journey, and the fix is a
+      manual re-trace. **Fix:** have `e2e/run.sh` accept the walk over the API
+      first and write each leg's shape into the flow's env, or a script that
+      prints the `travel` blocks from `/v1/routes/today`.
+- [ ] **Journeys are labelled with flows that no longer exist.** (2026-09-24)
+      `walk-and-unlock.yml` opens with "F11 Find the nearest locked memory",
+      and `look-around.yml` scripts "F19", both **Removed from the app** in
+      docs/08. The Copenhagen case is F1's "nothing walkable"; so is
+      `tests/test_flows.py::test_f19_*`. A reader matching ids to docs finds a
+      removed flow "covered". **Fix:** relabel to what the steps exercise.
+- [ ] **Implemented flows with no journey at all.** (2026-09-24) F26 heart is a
+      tap in an open sheet and cheap to add to the walk, after stop 1's
+      unlock: fill, count, and no heart on a locked pin (its Done-when). F27's
+      streak line is never asserted, since the walk-done card shows it only
+      above one day; a seeded yesterday's unlock in `run.sh` would reach it.
+      F2 (opens a browser), F10/F16 (network; by-hand recipe in
+      e2e/README.md), F22 (real sign-in) and F28 (background geofence) cannot
+      be scripted on a simulator. Say so in e2e/README.md, not by silence.
+- [ ] **Nothing records which migrations a database has.** (2026-09-24) The dev
+      DB had 011-024 but not 010, so `/v1/memories/search` 500'd locally and
+      nothing said so; found only by running EXPLAIN by hand. Tests build from
+      `db/schema.sql`, so the gate cannot see it either. **Fix:** a
+      `schema_migrations` table and a `db/migrate.sh` that applies what is
+      missing, or at least a check in `verify.sh` that the dev DB's columns
+      match `schema.sql`.
+- [ ] **One route change is a 4-minute bench to judge.** (2026-09-24)
+      `route_bench --scenario all --runs 40` is ~4 min, ~1 s a plan, nearly all
+      OSRM `/table`. Six tweaks cost ~25 min of waiting, and 40 runs is noisy
+      enough that the same code moved bimodal's spur rate 40% → 45%. A bench
+      also holds a transaction, so a migration on the same DB waits behind it.
+      **Fix:** cache `/table` per point set inside a bench run, and print a
+      spread (or run two seeds) so a 5-point move reads as noise or not.
+- [ ] **The route solver lives in the read router.** (2026-09-24) `api/read.py`
+      is 1,000+ lines, ~450 of them `_choose_walks` / `_plan_route` with nested
+      closures, and the ranking is split between `_choose_walks.score` and
+      `_plan_route.judge`, so it takes two readings to know what a walk is
+      ranked by. **Fix:** move the solver to `api/route_solver.py` with the
+      endpoints staying in `read.py`, and give the two rankings one docstring.
+- [ ] **Test fakes disagree about distance.** (2026-09-24) In
+      `tests/test_api_routes.py` the fake `street_legs` return straight lines
+      while `street_table` falls back to crow-flies × 1.3, so routed metres
+      are 1/1.3 of the table's. A judge change that was correct against OSRM
+      failed a test only because of that gap, and it took a debug pass to see.
+      **Fix:** one fake streets fixture whose legs and table agree.
+- [ ] **TODO.md is too big to read and goes stale.** (2026-09-24) 106 KB,
+      ~1,700 lines: no agent can read it whole, so it gets grepped, and a
+      stale entry ("Search is a sequential scan", fixed a week earlier) sent
+      this session to rebuild something that existed. **Fix:** move `[x]`
+      history into docs/10 or git, keep this file to open work, and date
+      every open entry's last check.
+- [ ] **Prettier is configured but not enforced.** (2026-09-24) `App.tsx`,
+      `Plan.tsx`, `api.ts` and `Submit.tsx` all fail `prettier --check` at
+      HEAD, so every edit asks whether to reformat a whole file. **Fix:** run
+      `prettier --write` once and add `--check` to `verify.sh`, or delete the
+      config.
+
+---
+
 ## Current state
 
 Audited 2026-09-20 against the running system, not the docs. Where the brief and

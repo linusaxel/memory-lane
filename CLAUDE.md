@@ -31,6 +31,23 @@ venv/bin/python -m ruff format .
 Style is not a matter of taste here - `pyproject.toml` decides and the gate
 enforces. Don't hand-align anything.
 
+### Then log the friction
+
+Every session, before the last commit: add to `TODO.md` § **Friction** anything
+that cost this session real time or nearly shipped something wrong. The aim is
+clean code, speed, understandability, and a repo an agent can work in without
+tripping. Be strict:
+
+- **In:** it will happen again to the next person or agent, and there is a
+  concrete fix. A stale doc, a slow loop, a trap in the tooling, code that took
+  two readings, a fake that lies.
+- **Out:** one-offs, your own slips, anything already logged (sharpen that
+  entry instead), and a problem you fixed in the same session.
+- **Shape:** one entry each. What happened, dated, what it cost, and the fix
+  in one line. No entry beats a vague one.
+
+If nothing qualifies, add nothing.
+
 ## Quick Start
 
 ```bash
