@@ -28,8 +28,7 @@ delete an entry when its fix lands.
       tests asking real YouTube about `@test`, because `fake_channel` missed
       `channel_metadata`; fixed, and `conftest._no_network` now fails any
       unmarked test that leaves localhost. What is left is per-test overhead
-      (no single test dominates), duplicate coverage, and fakes that disagree
-      (see "Test fakes disagree about distance" below).
+      (no single test dominates) and duplicate coverage.
 - [ ] **Implemented flows with no journey at all.** (checked 2026-09-24) No
       `.maestro` flow mentions a heart or a streak. F26 heart is a tap in an
       open sheet and cheap to add to the walk, after stop 1's unlock: fill,
@@ -60,16 +59,20 @@ delete an entry when its fix lands.
       to know what a walk is ranked by. **Fix:** move the solver to
       `api/route_solver.py` with the endpoints staying in `read.py`, and give
       the two rankings one docstring.
-- [ ] **Test fakes disagree about distance.** (checked 2026-09-24) In
-      `tests/test_api_routes.py` the fake `street_legs` return straight lines
-      while `street_table` falls back to crow-flies × 1.3, so routed metres
-      are 1/1.3 of the table's. A judge change that was correct against OSRM
-      failed a test only because of that gap, and it took a debug pass to see.
-      **Fix:** one fake streets fixture whose legs and table agree.
 
 ---
 
 ## Known defects
+
+- [ ] **On a ring round the start, a long ask gets an arc.** (checked
+      2026-09-24) Ten stops ~1.3 km out on every side, 10 km asked: every walk
+      `_choose_walks` shortlists is five neighbours on one side, 5.9 km, where
+      every other stop would be ~8.7 km. Likely cause, unverified: the shaped targets sit on a circle
+      *through* the start, so they all land on one side, and a shake of one or
+      two stops refills with the next cheap neighbour. Found when the test
+      fakes stopped pricing legs 1/1.3 of the table; the tests' rings were
+      scaled ×1.3 to keep what they assert. **First step:** reproduce on
+      `seed_dev --routes lakes` in `route_bench`, since the lakes are that ring.
 
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.

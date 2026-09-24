@@ -27,6 +27,22 @@ def client(api_client):
     return api_client
 
 
+@pytest.fixture
+def on_streets(monkeypatch):
+    """Streets where the table and the legs agree: straight lines, measured
+    straight. Pass other legs to add a detour; the table does not see it, as
+    OSRM's does not see the stub to a pin it snapped to the street."""
+
+    def table(points):
+        return [[read.meters_between(a, b) for b in points] for a in points], [0.0] * len(points)
+
+    def use(legs=lambda stops: [[a, b] for a, b in pairwise(stops)]):
+        monkeypatch.setattr(read, "street_table", table)
+        monkeypatch.setattr(read, "street_legs", legs)
+
+    return use
+
+
 def _place(session, name, lat, lng, precision=50):
     return session.execute(
         text(
@@ -261,7 +277,7 @@ def test_route_stops_render_locked(client, db_session):
     assert route["memories"][0]["summary"] == ""
 
 
-def test_street_legs_are_stored_stop_to_stop(client, db_session, monkeypatch):
+def test_street_legs_are_stored_stop_to_stop(client, db_session, monkeypatch, on_streets):
     for n in range(1, 4):
         _offset(db_session, n)
     db_session.commit()
@@ -270,7 +286,7 @@ def test_street_legs_are_stored_stop_to_stop(client, db_session, monkeypatch):
 
     db_session.execute(text("DELETE FROM daily_routes"))
     db_session.commit()
-    monkeypatch.setattr(read, "street_legs", lambda stops: [[a, b] for a, b in pairwise(stops)])
+    on_streets()
     first = _route(client).json()
     stops = [m["place"]["coordinates"] for m in first["memories"]]
     assert first["meta"]["legs"] == [[a, b] for a, b in pairwise(stops)]
@@ -299,7 +315,7 @@ def test_retraced_meters_counts_a_stretch_walked_twice_either_way():
 
 
 def test_a_stop_that_forces_an_out_and_back_is_swapped_for_a_clean_loop(
-    client, db_session, monkeypatch
+    client, db_session, monkeypatch, on_streets
 ):
     """Stop 2 hangs off the street: reaching it means walking a stub in and the
     same stub out. With a sixth stop to spare, the walk drops it."""
@@ -319,7 +335,7 @@ def test_a_stop_that_forces_an_out_and_back_is_swapped_for_a_clean_loop(
                 out.append([a, b])
         return out
 
-    monkeypatch.setattr(read, "street_legs", legs)
+    on_streets(legs)
     chosen = [m["id"] for m in _preview(client).json()["memories"]]
     assert len(chosen) == 5
     assert ids[2] not in chosen
@@ -343,7 +359,7 @@ def test_a_stop_too_far_from_any_street_is_never_a_stop(client, db_session, monk
 
 
 def test_a_long_ask_is_not_traded_for_a_short_walk_that_retraces_less(
-    client, db_session, monkeypatch
+    client, db_session, monkeypatch, on_streets
 ):
     """A knot of stops round the corner is a clean loop; a ring of stops a
     kilometre and more out is the walk asked for, but each one is reached by a
@@ -359,7 +375,7 @@ def test_a_long_ask_is_not_traded_for_a_short_walk_that_retraces_less(
     far = []
     for k in range(10):
         angle = 2 * math.pi * k / 10
-        lat, lng = LAT + 0.012 * math.cos(angle), LNG + 0.02 * math.sin(angle)
+        lat, lng = LAT + 0.0156 * math.cos(angle), LNG + 0.026 * math.sin(angle)
         _historical(
             db_session,
             _place(db_session, f"Far {k}", lat, lng),
@@ -379,11 +395,10 @@ def test_a_long_ask_is_not_traded_for_a_short_walk_that_retraces_less(
             out.append(shape)
         return out
 
-    monkeypatch.setattr(read, "street_legs", legs)
+    on_streets(legs)
     meta = _preview(client, budget_meters=10000).json()["meta"]
     path = [meta["out_leg"], *meta["legs"], meta["home_leg"]]
-    # The fake legs are straight, and the solver prices those x ROUTE_CIRCUITY.
-    walked = streets.ROUTE_CIRCUITY * sum(
+    walked = sum(
         read.meters_between(Coordinates(**a), Coordinates(**b))
         for leg in path
         for a, b in pairwise(leg)
@@ -549,7 +564,7 @@ def test_one_way_is_asked_for_per_walk_and_stored_with_it(client, db_session):
 
 
 def test_a_loop_is_routed_through_its_start_so_out_and_home_cannot_share_a_street(
-    client, db_session, monkeypatch
+    client, db_session, monkeypatch, on_streets
 ):
     """The start is a route's end, and an end may turn round: out and home took
     the same stretch to the corner. Routed once more past home, the start is a
@@ -566,7 +581,7 @@ def test_a_loop_is_routed_through_its_start_so_out_and_home_cannot_share_a_stree
             for i, (a, b) in enumerate(pairwise(points))
         ]
 
-    monkeypatch.setattr(read, "street_legs", legs)
+    on_streets(legs)
     meta = _preview(client).json()["meta"]
     start = Coordinates(lat=LAT, lng=LNG)
     points = asked[-1]
@@ -576,7 +591,7 @@ def test_a_loop_is_routed_through_its_start_so_out_and_home_cannot_share_a_stree
 
 
 def test_another_day_or_show_me_another_is_a_different_walk_as_good(
-    client, db_session, monkeypatch
+    client, db_session, monkeypatch, on_streets
 ):
     """Stops on a ring round the start: many loops are as good as the best, so
     the day and "Show me another" take turns through them, and the accept
@@ -584,11 +599,11 @@ def test_another_day_or_show_me_another_is_a_different_walk_as_good(
     for n in range(12):
         a = 2 * math.pi * n / 12
         place = _place(
-            db_session, f"Ring {n}", LAT + 0.005 * math.cos(a), LNG + 0.008 * math.sin(a)
+            db_session, f"Ring {n}", LAT + 0.0065 * math.cos(a), LNG + 0.0104 * math.sin(a)
         )
         _historical(db_session, place, f"ring memory {n}", f"https://e.invalid/{n:0>11}")
     db_session.commit()
-    monkeypatch.setattr(read, "street_legs", lambda stops: [[a, b] for a, b in pairwise(stops)])
+    on_streets()
 
     def ids(again=0):
         preview = client.get(
