@@ -51,11 +51,11 @@ appId: ${APP_ID}
 - tapOn: "Close"
 
 - tapOn: "Journal"
-- tapOn: "Filed"
+- tapOn: "Memories"
 
 # A server fetch: wait for its own note rather than the place name.
 - extendedWaitUntil:
-    visible: ".*you filed.*"
+    visible: ".*of yours.*"
     timeout: 40000
 
 # The Filed row opens the same sheet as editing: fields come back exactly as
@@ -105,4 +105,4 @@ appId: ${APP_ID}
     element: "Delete this memory"
     direction: DOWN
 - tapOn: "Cancel"
-- assertVisible: "Filed"
+- assertVisible: "Memories"

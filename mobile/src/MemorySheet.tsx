@@ -15,6 +15,7 @@ import type { Coordinates, LocatedMemory } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
 import HeartGlyph from './HeartGlyph.tsx';
+import Notes from './Notes.tsx';
 import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
@@ -151,15 +152,19 @@ export default function MemorySheet({
     }).start();
   }, [memory, reveal]);
 
-  /** Knowing a photograph is waiting is the pull. Handing it over would be the
+  /** Knowing a photograph or a note is waiting is the pull. Handing it over is the
    *  leak, so only the count travels. */
+  const waitingParts = memory
+    ? [
+        memory.media_count === 1
+          ? '1 attachment'
+          : memory.media_count > 1 && `${memory.media_count} attachments`,
+        memory.note_count === 1 ? '1 note' : memory.note_count > 1 && `${memory.note_count} notes`,
+      ].filter(Boolean)
+    : [];
   const waiting =
-    memory && memory.media_count > 0 ? (
-      <Text style={styles.waiting}>
-        {memory.media_count === 1
-          ? '1 attachment waiting'
-          : `${memory.media_count} attachments waiting`}
-      </Text>
+    waitingParts.length > 0 ? (
+      <Text style={styles.waiting}>{waitingParts.join(' · ')} waiting</Text>
     ) : null;
 
   const revealed = {
@@ -281,6 +286,8 @@ export default function MemorySheet({
                     </View>
                   )}
 
+                  <Notes memoryId={memory.id} isAuthor={!!onEdit} />
+
                   {!locked && onEdit && (
                     <Pressable
                       style={dim(styles.report)}
@@ -307,7 +314,7 @@ export default function MemorySheet({
                 <Animated.View style={[styles.credit, revealed]}>
                   {memory.author ? (
                     <View style={styles.byline}>
-                      <Text style={styles.bylineLabel}>Filed by</Text>
+                      <Text style={styles.bylineLabel}>Left by</Text>
                       <Text style={styles.bylineName}>{memory.author.name}</Text>
                     </View>
                   ) : memory.content?.source ? (

@@ -218,6 +218,21 @@ CREATE TABLE memory_hearts (
 -- the opposite of idx_unlocks_device above.
 CREATE INDEX idx_memory_hearts_memory ON memory_hearts(memory_id);
 
+-- A note on a memory, one per device, only from a device that unlocked it. `id`
+-- so a note can be named without naming its device. See
+-- db/migrations/026_memory_notes.sql.
+CREATE TABLE memory_notes (
+    id SERIAL PRIMARY KEY,
+    device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    memory_id INTEGER NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    body VARCHAR(280) NOT NULL,
+    hidden BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (device_id, memory_id)
+);
+
+CREATE INDEX idx_memory_notes_memory ON memory_notes(memory_id);
+
 -- Today's route: a fixed set of nearby, not-yet-earned stops, computed once
 -- per device per calendar day and stored so a relaunch sees the same route
 -- rather than a fresh roll of the dice. The first calendar-day-keyed table

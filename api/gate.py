@@ -14,7 +14,17 @@ from datetime import UTC, date, datetime
 from math import asin, cos, radians, sin, sqrt
 
 from api.media import media_url
-from api.models import Author, ContentRef, Coordinates, MediaItem, Memory, Place, Source
+from api.models import (
+    Author,
+    ContentRef,
+    Coordinates,
+    MediaItem,
+    Memory,
+    Note,
+    NotesResponse,
+    Place,
+    Source,
+)
 
 # How close you have to stand to read a memory: on the spot, not down the
 # street. See docs/10-decisions.md#20-m.
@@ -143,6 +153,22 @@ def row_author(row) -> Author | None:
     return Author(id=str(user_id), name=getattr(row, "author_name", None) or "Anonymous")
 
 
+def notes_response(rows) -> NotesResponse:
+    """Only ever called behind NOTE_ALLOWED_QUERY - a note is gated with its memory."""
+    return NotesResponse(
+        notes=[
+            Note(
+                id=r.id,
+                body=r.body,
+                author=r.display_name or "Anonymous",
+                created_at=r.created_at,
+                mine=r.mine,
+            )
+            for r in rows
+        ]
+    )
+
+
 def row_media(row) -> list[MediaItem]:
     """json_agg gives back a list of dicts; the URL is built here so the stored
     path stays a path and the client never has to know where media lives."""
@@ -208,6 +234,7 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         author=row_author(row),
         media_count=len(getattr(row, "media", None) or []),
         heart_count=getattr(row, "heart_count", 0),
+        note_count=getattr(row, "note_count", 0),
         locked=True,
         unlock_radius_meters=UNLOCK_RADIUS_METERS,
         anniversary=bool(getattr(row, "anniversary", False)),
@@ -256,6 +283,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         media=media,
         media_count=len(media),
         heart_count=getattr(row, "heart_count", 0),
+        note_count=getattr(row, "note_count", 0),
         tags=row.tags or [],
         # Set on open memories too, not just locked ones: the app needs the
         # radius to draw the reach circle, and a viewport with nothing locked in

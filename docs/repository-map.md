@@ -111,6 +111,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/device.ts` | This installation's self-issued id |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/hearted.ts` | Which memories this device has hearted |
+| `mobile/src/seen.ts` | The hearts and notes each of your memories had when you last looked |
+| `mobile/src/Notes.tsx` | The notes under an open memory (F33) |
 | `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative |
 | `mobile/src/reach.ts` | Which locked pins can be opened from where you stand (unit tested) |
 | `mobile/src/cluster.ts` | Group memories that share a map point (unit tested) |

@@ -12,7 +12,14 @@ from sqlalchemy import text
 
 import api.media
 from api.accounts import clean_name, set_display_name, touch_device, user_for_device
-from api.gate import meters_between, not_yet_open, row_coordinates, row_to_memory, today
+from api.gate import (
+    meters_between,
+    not_yet_open,
+    notes_response,
+    row_coordinates,
+    row_to_memory,
+    today,
+)
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
@@ -22,6 +29,8 @@ from api.models import (
     MediaItem,
     Memory,
     MemoryEditRequest,
+    NoteRequest,
+    NotesResponse,
     ReportRequest,
     ReportResponse,
     SubmissionRequest,
@@ -31,6 +40,9 @@ from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
     MEDIA_ATTACH,
     MEDIA_DETACH_QUERY,
+    MEMORY_NOTES_QUERY,
+    NOTE_ALLOWED_QUERY,
+    NOTE_HIDE_QUERY,
     ON_TODAYS_ROUTE_QUERY,
     OWNED_MEMORY_QUERY,
     PLACE_INSERT,
@@ -344,6 +356,60 @@ def heart_memory(memory_id: int, body: DeviceRequest):
         ).scalar()
 
     return HeartResponse(heart_count=count)
+
+
+@router.post("/v1/memories/{memory_id}/note", response_model=NotesResponse)
+def leave_note(memory_id: int, body: NoteRequest):
+    """Leave a note on a memory you unlocked, and get every note back. One per
+    device; posting again rewrites it. No unlock, no note - docs/10-decisions.md#notes-are-gated-like-a-purchase.
+    """
+    note = body.body.strip()
+    if not note:
+        raise HTTPException(status_code=422, detail="A note needs some words")
+    with get_session() as session:
+        exists = session.execute(
+            text("SELECT 1 FROM memories WHERE id = :id AND NOT hidden FOR UPDATE"),
+            {"id": memory_id},
+        ).scalar()
+        if not exists:
+            raise HTTPException(status_code=404, detail="Memory not found")
+
+        allowed = session.execute(
+            text(NOTE_ALLOWED_QUERY), {"memory_id": memory_id, "device_id": body.device}
+        ).scalar()
+        if not allowed:
+            raise HTTPException(status_code=403, detail="Stand here first")
+
+        touch_device(session, body.device)
+        session.execute(
+            text("""
+                INSERT INTO memory_notes (memory_id, device_id, body)
+                VALUES (:memory_id, CAST(:device AS uuid), :body)
+                ON CONFLICT (device_id, memory_id) DO UPDATE SET body = EXCLUDED.body
+            """),
+            {"memory_id": memory_id, "device": body.device, "body": note},
+        )
+        rows = session.execute(
+            text(MEMORY_NOTES_QUERY), {"memory_id": memory_id, "device_id": body.device}
+        ).fetchall()
+
+    return notes_response(rows)
+
+
+# ponytail: author-only moderation. Note reports + REPORT_THRESHOLD if authors
+# abandon their memories or notes turn abusive.
+@router.delete("/v1/memories/{memory_id}/notes/{note_id}", status_code=204)
+def hide_note(memory_id: int, note_id: int, device: str = Query(..., pattern=DEVICE_PATTERN)):
+    """Take a note down: its writer, or the memory's author, who is the whole
+    moderation for notes. Hidden, not deleted, like a reported memory."""
+    with get_session() as session:
+        hidden = session.execute(
+            text(NOTE_HIDE_QUERY),
+            {"note_id": note_id, "memory_id": memory_id, "device_id": device},
+        ).fetchone()
+    if not hidden:
+        raise HTTPException(status_code=404, detail="Note not found")
+    return Response(status_code=204)
 
 
 @router.post("/v1/memories/{memory_id}/report", response_model=ReportResponse)

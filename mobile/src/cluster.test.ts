@@ -26,6 +26,7 @@ function memory(id: number, name: string, lat: number, lng: number): LocatedMemo
     media: [],
     media_count: 0,
     heart_count: 0,
+    note_count: 0,
     anniversary: false,
     happened_at: null,
     opens_at: null,

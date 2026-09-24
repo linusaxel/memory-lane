@@ -41,6 +41,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   first, hidden and sealed ones included
 - `POST /v1/memories/{id}/heart` `{device}` - one heart per device, and it does
   not come back off. No position check
+- `POST /v1/memories/{id}/note` `{device, body}` / `GET /v1/memories/{id}/notes?device=UUID`
+  - one note per device, 280 characters, rewritten by posting again. Both are
+  403 without an unlock; the POST returns the list. `note_count` travels on
+  every memory, locked too
+- `DELETE /v1/memories/{id}/notes/{note_id}?device=UUID` - hide a note: your
+  own, or anyone's on a memory you filed
 - `POST /v1/memories/{id}/report` `{device, reason}` - REPORT_THRESHOLD distinct
   devices and the memory stops being served by every endpoint
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a

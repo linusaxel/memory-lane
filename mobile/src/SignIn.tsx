@@ -194,7 +194,7 @@ export default function SignIn({ device, profile, onProfile }: Props) {
     <View style={styles.wrap}>
       <Text style={styles.note}>
         Not required for anything. It exists so a new phone does not start empty — everything you
-        unlocked and everything you filed comes with you.
+        unlocked and everything you added comes with you.
       </Text>
 
       {appleAvailable && (

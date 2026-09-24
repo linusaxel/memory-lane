@@ -79,10 +79,13 @@ export type Memory = {
   /** Set on a locked memory too, like media_count and anniversary - a count
    *  is a passive signal, not the content the gate protects. */
   heart_count: number;
+  /** How many visitors left a note. Travels locked too; the notes themselves
+   *  come from fetchNotes, and only once you have unlocked it. */
+  note_count: number;
   /** Something happened here on today's date. Set on locked memories too — it
    *  is a reason to walk over and gives away nothing the pin did not. The
-   *  server sorts these to the top, which is the whole of "resurfacing": there
-   *  are no notifications in this product. */
+   *  server sorts these to the top, which is the whole of "resurfacing" - the
+   *  only notification is F28's nearby one, fired on the phone. */
   anniversary: boolean;
   /** ISO date, or null when the source did not say. The server has never sent
    *  the precision that goes with it - see api/models.py's Memory - so the
@@ -176,6 +179,35 @@ export async function unlockMemory(
 export async function heartMemory(id: number, device: string): Promise<number> {
   const res = await post<{ heart_count: number }>(`/v1/memories/${id}/heart`, { device });
   return res.heart_count;
+}
+
+/** One visitor's note. Named by id, never by device - a device id is a
+ *  credential. `mine` is whether this account wrote it. */
+export type Note = { id: number; body: string; author: string; created_at: string; mine: boolean };
+
+/** The notes on a memory you have unlocked. A 403 means you have not - the
+ *  sheet only asks once the memory is open. */
+export async function fetchNotes(id: number, device: string): Promise<Note[]> {
+  const body = await get<{ notes: Note[] }>(
+    `/v1/memories/${id}/notes`,
+    new URLSearchParams({ device }),
+  );
+  return body.notes;
+}
+
+/** Leave, or rewrite, this device's one note. Returns every note after it. */
+export async function leaveNote(id: number, device: string, body: string): Promise<Note[]> {
+  const res = await post<{ notes: Note[] }>(`/v1/memories/${id}/note`, { device, body });
+  return res.notes;
+}
+
+/** Take a note down: your own, or anyone's on a memory you filed. */
+export async function hideNote(memoryId: number, noteId: number, device: string): Promise<void> {
+  const res = await fetch(
+    `${BASE}/v1/memories/${memoryId}/notes/${noteId}?${new URLSearchParams({ device })}`,
+    { method: 'DELETE' },
+  );
+  if (!res.ok) throw new Error(`API ${res.status}`);
 }
 
 /** Everything this device - and anything signed in alongside it - has earned.

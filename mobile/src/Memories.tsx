@@ -36,6 +36,7 @@ import Padlock from './Padlock.tsx';
 import { distance, walkDate } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
+import { attention, loadSeen, saveSeen, type Seen } from './seen.ts';
 import { color, dim, font, label } from './theme.ts';
 
 type Props = {
@@ -83,6 +84,25 @@ export default function Memories({
   const [walks, setWalks] = useState<WalkedRoute[]>([]);
   const [walksStatus, setWalksStatus] = useState<Status>('loading');
   const [openWalk, setOpenWalk] = useState<number | null>(null);
+  // The baseline as it was when the journal opened, so a row stays "new" for
+  // the whole look; the look itself is what moves the baseline on.
+  const [seen, setSeen] = useState<Seen | null>(null);
+  const [looked, setLooked] = useState(false);
+
+  useEffect(() => {
+    if (!focused) return;
+    setLooked(false);
+    loadSeen().then(setSeen);
+  }, [focused]);
+
+  useEffect(() => {
+    if (!seen || section !== 'mine' || mineStatus !== 'ready') return;
+    saveSeen(seen, mine);
+    setLooked(true);
+  }, [seen, section, mineStatus, mine]);
+
+  const isNew = (m: LocatedMemory) => !!seen && attention(m) > (seen[m.id] ?? 0);
+  const anyNew = !looked && mine.some(isNew);
 
   useEffect(() => {
     loadWalked().then((cached) => {
@@ -165,8 +185,8 @@ export default function Memories({
     mineStatus !== 'ready' || mine.length === 0
       ? ''
       : mine.length === mineTotal
-        ? `${mineTotal} ${mineTotal === 1 ? 'memory' : 'memories'} you filed`
-        : `${mine.length} of ${mineTotal} you filed, so far`;
+        ? `${mineTotal} ${mineTotal === 1 ? 'memory' : 'memories'} of yours`
+        : `${mine.length} of your ${mineTotal}, so far`;
 
   const walksNote =
     walksStatus !== 'ready' || walks.length === 0
@@ -202,7 +222,7 @@ export default function Memories({
           {streak === 0 ? 'Walk today to start a streak' : streak === 1 ? 'day' : 'days in a row'}
         </Text>
       </View>
-      <Switcher section={section} onSelect={setSection} />
+      <Switcher section={section} onSelect={setSection} filedNew={anyNew} />
 
       {section === 'you' ? (
         <View style={styles.you}>{you}</View>
@@ -240,7 +260,8 @@ export default function Memories({
                 place={item.memory.place.name}
                 summary={item.memory.locked ? `Sealed until ${item.memory.opens_at?.slice(0, 4)}` : item.memory.summary}
                 distance={distanceTo(item.memory)}
-                badge={item.memory.hidden ? 'Reported' : undefined}
+                meta={reach(item.memory)}
+                badge={item.memory.hidden ? 'Reported' : isNew(item.memory) ? 'New' : undefined}
                 onPress={() => onOpenMine(item.memory)}
               />
             )
@@ -260,7 +281,7 @@ export default function Memories({
             ) : mineStatus === 'failed' ? (
               <Empty text="Can't reach Memory Lane right now." />
             ) : (
-              <Empty text="Nothing filed yet. + Add files one where you stand." />
+              <Empty text="Nothing of yours yet. + Add leaves one where you stand." />
             )
           }
           ListFooterComponent={
@@ -290,14 +311,21 @@ export default function Memories({
 function Switcher({
   section,
   onSelect,
+  filedNew,
 }: {
   section: Section;
   onSelect: (section: Section) => void;
+  /** Someone hearted or left a note on something you filed since you last looked. */
+  filedNew: boolean;
 }) {
   return (
     <View style={styles.switcher}>
       <SwitcherItem label="Walks" active={section === 'walks'} onPress={() => onSelect('walks')} />
-      <SwitcherItem label="Filed" active={section === 'mine'} onPress={() => onSelect('mine')} />
+      <SwitcherItem
+        label={filedNew ? 'Memories ·' : 'Memories'}
+        active={section === 'mine'}
+        onPress={() => onSelect('mine')}
+      />
       <SwitcherItem label="You" active={section === 'you'} onPress={() => onSelect('you')} />
     </View>
   );
@@ -323,6 +351,15 @@ function SwitcherItem({
       <View style={[styles.switcherRule, active && styles.switcherRuleActive]} />
     </Pressable>
   );
+}
+
+/** "3 hearts · 1 note": what came back for something you filed. */
+function reach(m: LocatedMemory): string | undefined {
+  const parts = [
+    m.heart_count > 0 && (m.heart_count === 1 ? '1 heart' : `${m.heart_count} hearts`),
+    m.note_count > 0 && (m.note_count === 1 ? '1 note' : `${m.note_count} notes`),
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : undefined;
 }
 
 function Header({ note }: { note: string }) {

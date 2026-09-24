@@ -92,6 +92,7 @@ class Memory(BaseModel):
     # Set on a locked memory too, like media_count and anniversary: a count is
     # a passive signal, not the content the gate protects.
     heart_count: int = 0
+    note_count: int = 0
     tags: list[str]
     confidence: str
     locked: bool = False
@@ -369,6 +370,26 @@ class ReportResponse(BaseModel):
 
 class HeartResponse(BaseModel):
     heart_count: int
+
+
+class NoteRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+    body: str = Field(min_length=1, max_length=280)
+
+
+class Note(BaseModel):
+    """One visitor's note. Named by its id, never its device: a device UUID is
+    a credential. `mine` is whether this account wrote it."""
+
+    id: int
+    body: str
+    author: str
+    created_at: datetime
+    mine: bool
+
+
+class NotesResponse(BaseModel):
+    notes: list[Note]
 
 
 class DeviceRequest(BaseModel):

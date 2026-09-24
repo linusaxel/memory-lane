@@ -50,7 +50,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ padlock                        ├─ summary  17/26 - the hero
   ├─ distance         44/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ tags     pills
-  ├─ "1 attachment waiting"         ├─ "Filed by X", or the channel and avatar
+  ├─ "1 attachment waiting"         ├─ "Left by X", or the channel and avatar
   │                                 ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 
@@ -63,9 +63,9 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; "Close" top right
 ├─ the streak, large           F27: days in a row with a walk stop unlocked
 ├─ Walks                       one row per walk; a row opens in place to its stops,
 │                              an earned one opens the sheet. Cached for the train
-├─ Filed                       what you filed; a row opens Submit as the editor
+├─ Memories                    what you added; a row opens Submit as the editor
 └─ You (src/Settings.tsx)
-   ├─ unlocked / places / filed, as numbers
+   ├─ unlocked / places / added, as numbers
    ├─ your name                what submissions are signed with. Blank = Anonymous
    ├─ account                  Apple / Google. Never a wall; see SignIn.tsx
    ├─ how unlocking works      the one place that answers "why can't I read this"

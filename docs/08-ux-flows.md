@@ -57,6 +57,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F29 | Explore what is around | Removed from the app |
 | F30 | Finish a walk | Implemented |
 | F31 | Look back at a walk | Implemented |
+| F33 | Leave a note | Implemented |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
@@ -437,7 +438,7 @@ product is about.
 ## F15 · Reread what you unlocked — **Implemented**
 
 1. **Journal**, top left of the map, opens the only other screen. The streak
-   is on top, large (F27); under it *Walks*, *Filed* (F24) and *You* (F17).
+   is on top, large (F27); under it *Walks*, *Memories* (F24) and *You* (F17).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
    says so.
@@ -578,7 +579,7 @@ not rebuilding anything.
 **Trigger:** the journal's You section, or the Signed field at the bottom of the submit sheet.
 
 1. A name, saved as it is typed. No Save button to forget to press.
-2. It appears under every memory they file, as "Filed by —".
+2. It appears under every memory they file, as "Left by —".
 3. Blank is Anonymous, and clearing it has to keep working: the name is the one
    thing here other people see.
 4. The You section gains a third figure once there is one — how many they have
@@ -660,7 +661,7 @@ they walked for.
    photo and recording.
 2. It is never a route stop (`ROUTE_CANDIDATES_QUERY` skips anything not yet
    open), and the map draws nothing else, so it is not on the map. Its author
-   finds it in the journal under Filed (F24).
+   finds it in the journal under Memories (F24).
 3. Opening it gives the locked composition with a different figure — the date,
    not the distance — and "Sealed until then. Standing here does not open it
    any sooner."
@@ -703,7 +704,7 @@ its own coordinate, and its card says the date instead of a distance.
 ## F24 · Manage what you filed — **Implemented**
 
 **Who:** somebody who has filed at least one memory.
-**Trigger:** the journal (F15) → *Filed*. Empty until something is filed, and
+**Trigger:** the journal (F15) → *Memories*. Empty until something is filed, and
 it says so rather than hiding.
 
 1. A list, newest first: place name, and either the summary or, for a sealed
@@ -721,7 +722,7 @@ it says so rather than hiding.
    everywhere else — and removes the row, its media and its place outright,
    not the hidden flag a report uses.
 
-**Always the server's list, never the local cache.** *Filed* has to show two
+**Always the server's list, never the local cache.** *Memories* has to show two
 things the offline unlock cache was never told about — a memory still sealed,
 and one enough people reported — so `/v1/me/memories` is asked fresh whenever
 the journal opens or a save or delete lands, rather than reading `AsyncStorage`.
@@ -845,6 +846,11 @@ simply does not fill and nothing is lost by tapping it again later.
 **Done when:** hearting an open memory fills the glyph and bumps the count
 immediately, the state survives closing and reopening the sheet and
 relaunching the app, and a locked memory shows no heart control at all.
+
+**The author hears back.** Every row under Journal → Memories says "3 hearts · 1
+note", and a row whose count went up since the last look wears "New" (the tab
+reads "Memories ·" until you open it). The baseline is on the phone
+(`mobile/src/seen.ts`): no push, and the server stores nothing new.
 
 ---
 
@@ -991,6 +997,31 @@ nothing to judge a walk by, so there is one walk and the button says so.
 
 **Done when:** on the lakes seed a second tap previews a different loop, and
 accepting it stores that loop. `tests/test_api_routes.py::test_another_day_*`.
+
+## F33 · Leave a note — **Implemented**
+
+**Who:** someone who has unlocked a memory, and its author. **Trigger:** the
+note field under an open memory.
+
+1. Notes sit under the summary of an open memory, oldest first, each signed
+   with its writer's display name ("Anonymous" when blank, "You" for yours).
+   A locked sheet shows only the count, beside the attachments: "2 notes
+   waiting". The notes themselves are behind the gate: the server refuses the
+   list to a device that has not unlocked the memory.
+2. One note each, up to 280 characters, no replies. Posting again rewrites
+   yours ("Rewrite"); it never adds a second.
+3. "Remove" takes down your own note, and the author sees it on every note
+   under a memory they filed. Hidden, not deleted.
+
+**Why this and not comments:** see
+[Notes are gated like a purchase](10-decisions.md#notes-are-gated-like-a-purchase).
+
+**Failure:** the list fails to load: nothing shows, the memory still reads. A
+note fails to send: "That did not go through. Try again.", the draft kept.
+
+**Done when:** an unlocked memory takes a note and shows it back, a second note
+replaces the first, the author can remove it, and a device that never unlocked
+it gets 403 from both routes. `tests/test_api_notes.py`.
 
 ## Proposed
 

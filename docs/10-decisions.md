@@ -273,6 +273,33 @@ check can run, so every way out of that block deletes them, a failed insert
 included. Orphans there are invisible: referenced by no row, returned by no
 query, costing disk for ever.
 
+---
+
+### Notes are gated like a purchase
+
+Status: Accepted
+
+Authors keep filing when they hear back, so a memory takes notes, not
+comments. Bandcamp is the model: only a buyer can leave a note on a release,
+one each, and paying is what keeps spam out. Here the price is standing on the
+spot. A note needs an unlock on one of the account's devices, and so does
+reading them, because a note can quote the memory it is under.
+
+One per device and no replies: a note is a visitor signing the book, not a
+thread, and a thread is where the floodgates are. The author of the memory is
+the whole of note moderation: they, or the note's writer, set `hidden`, and the
+row stays for the same reason a reported memory's does. That is the ceiling,
+fine until authors abandon memories or notes turn abusive; then notes get
+reports and `REPORT_THRESHOLD`.
+
+The weak spot is the gate's own:
+[the position is self-reported](#the-position-is-self-reported), so a spoofed
+GPS buys a note as cheaply as it buys an unlock. A note is shown to people who
+stood there, too, which keeps its audience small.
+
+A note is named by its own `id`, never its device: a device UUID is the only
+credential and never goes to anyone else.
+
 ## Identity
 
 ### No session tokens, signed in or not

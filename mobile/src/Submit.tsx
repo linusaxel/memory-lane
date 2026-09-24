@@ -201,10 +201,10 @@ export default function Submit({
           : posting
             ? isEditing
               ? 'Saving…'
-              : 'Filing it…'
+              : 'Adding it…'
             : isEditing
               ? 'Ready to save'
-              : 'Ready to file';
+              : 'Ready to add';
 
   const progress = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -429,7 +429,7 @@ export default function Submit({
           {/* Not decoration. It is the one thing that makes this different from
               posting anywhere else, and it has to be visible while typing. */}
           <View style={styles.here}>
-            <Text style={styles.hereLabel}>Filed at</Text>
+            <Text style={styles.hereLabel}>Added at</Text>
             <Text style={styles.hereValue}>
               {editing
                 ? `${editing.place.coordinates.lat.toFixed(5)}, ${editing.place.coordinates.lng.toFixed(5)}`
@@ -439,7 +439,7 @@ export default function Submit({
             </Text>
             <Text style={styles.hereNote}>
               {isEditing
-                ? 'Where this was filed. It does not move - a memory goes where you were standing.'
+                ? 'Where this was added. It does not move - a memory goes where you were standing.'
                 : 'A memory goes where you are standing. Other people will have to come here to read it.'}
             </Text>
           </View>

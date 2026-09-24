@@ -37,6 +37,7 @@ from api.models import (
     MyMemoriesResponse,
     NearbyMeta,
     NearbyResponse,
+    NotesResponse,
     PlacesResponse,
     PlaceWithCount,
     RouteMeta,
@@ -58,11 +59,13 @@ from api.queries import (
     COUNT_WITH_TAGS_QUERY,
     DEVICE_UNLOCKS_QUERY,
     HOTSPOTS_QUERY,
+    MEMORY_NOTES_QUERY,
     MY_MEMORIES_COUNT_QUERY,
     MY_MEMORIES_QUERY,
     NEARBY_MEMORIES_QUERY,
     NEARBY_MEMORIES_WITH_TAGS_QUERY,
     NEARBY_PLACES_QUERY,
+    NOTE_ALLOWED_QUERY,
     PLACES_COUNT_QUERY,
     ROUTE_QUERY,
     SEARCH_COUNT_QUERY,
@@ -232,6 +235,20 @@ def get_memory(
         # It failed the gate, so say by how much rather than just refusing.
         memory.distance_meters = meters_between(at, memory.place.coordinates)
     return memory
+
+
+@router.get("/v1/memories/{memory_id}/notes", response_model=NotesResponse)
+def get_notes(memory_id: int, device: str = Query(..., pattern=DEVICE_PATTERN)):
+    """The notes on a memory, oldest first, for anyone who has unlocked it. A
+    note can quote the memory, so it stays behind the same gate; everyone else
+    gets `note_count` on the memory and nothing more.
+    """
+    params = {"memory_id": memory_id, "device_id": device}
+    with get_session() as session:
+        if not session.execute(text(NOTE_ALLOWED_QUERY), params).scalar():
+            raise HTTPException(status_code=403, detail="Stand here first")
+        rows = session.execute(text(MEMORY_NOTES_QUERY), params).fetchall()
+    return gate.notes_response(rows)
 
 
 @router.get("/v1/places/nearby", response_model=PlacesResponse)

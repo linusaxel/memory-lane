@@ -69,7 +69,7 @@ export default function Settings({
       <View style={styles.stats}>
         <Stat value={unlockedCount} label={unlockedCount === 1 ? 'memory' : 'memories'} />
         <Stat value={placeCount} label={placeCount === 1 ? 'place' : 'places'} />
-        {submittedCount > 0 && <Stat value={submittedCount} label="filed" />}
+        {submittedCount > 0 && <Stat value={submittedCount} label="added" />}
       </View>
       <Text style={styles.statsNote}>
         {unlockedCount === 0
@@ -103,7 +103,7 @@ export default function Settings({
         <Row>
           <Padlock size={17} color={color.faded} />
           <Text style={styles.rowText}>
-            Memories filed at a real address stay shut until you are within{' '}
+            Memories added at a real address stay shut until you are within{' '}
             {Math.round(radiusMeters)} m of them.
           </Text>
         </Row>

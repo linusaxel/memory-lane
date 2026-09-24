@@ -1,0 +1,33 @@
+/** How many hearts and notes each memory you filed had the last time you
+ *  looked, so the Filed list can say which ones got more since. No server
+ *  state and no push: a baseline on this phone, like hearted.ts, and losing
+ *  it costs nothing but one "new" too many. */
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import type { Memory } from './api.ts';
+
+const KEY = 'memorylane.seen.v1';
+
+export type Seen = Record<number, number>;
+
+export const attention = (m: Memory) => m.heart_count + m.note_count;
+
+export async function loadSeen(): Promise<Seen> {
+  try {
+    const raw = await AsyncStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as Seen) : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function saveSeen(current: Seen, memories: Memory[]): Promise<void> {
+  const next = { ...current };
+  for (const m of memories) next[m.id] = attention(m);
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+    // Shown as new again next time. Harmless.
+  }
+}

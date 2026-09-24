@@ -49,6 +49,11 @@ MEMORY_HEART_COUNT = """(
         SELECT COUNT(*) FROM memory_hearts mh WHERE mh.memory_id = m.id
     ) as heart_count"""
 
+# Hidden notes are the author's takedowns, so they do not count.
+MEMORY_NOTE_COUNT = """(
+        SELECT COUNT(*) FROM memory_notes mn WHERE mn.memory_id = m.id AND NOT mn.hidden
+    ) as note_count"""
+
 # Something happened here on today's date. Day-and-month, so it fires every year
 # rather than once. Carried on every memory-shaped row rather than filtered on,
 # because it is a reason to look and never a reason to hide anything.
@@ -95,6 +100,7 @@ MEMORY_COLUMNS = f"""
     au.display_name as author_name,
     {MEMORY_MEDIA},
     {MEMORY_HEART_COUNT},
+    {MEMORY_NOTE_COUNT},
     {COORDINATE_IS_UNIQUE}"""
 
 # Both LEFT: a submitted memory has no content, an extracted one has no author.
@@ -358,6 +364,39 @@ MY_DEVICES = """(
            AND d.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid))
        )
 )"""
+
+# Notes open when the memory does: unlocked on any of this account's devices.
+# The author always qualifies, because filing records the author's unlock.
+# See docs/10-decisions.md#notes-are-gated-like-a-purchase.
+NOTE_ALLOWED_QUERY = f"""
+SELECT EXISTS (
+    SELECT 1 FROM unlocks WHERE memory_id = :memory_id AND device_id IN {MY_DEVICES}
+)"""
+
+MEMORY_NOTES_QUERY = f"""
+SELECT n.id, n.body, n.created_at, d.user_id, u.display_name,
+    n.device_id IN {MY_DEVICES} AS mine
+FROM memory_notes n
+JOIN devices d ON d.id = n.device_id
+LEFT JOIN users u ON u.id = d.user_id
+WHERE n.memory_id = :memory_id AND NOT n.hidden
+ORDER BY n.created_at
+"""
+
+# Its writer, or the memory's author, may take a note down.
+NOTE_HIDE_QUERY = f"""
+UPDATE memory_notes n SET hidden = TRUE
+WHERE n.id = :note_id AND n.memory_id = :memory_id
+  AND (
+      n.device_id IN {MY_DEVICES}
+      OR EXISTS (
+          SELECT 1 FROM memories m
+          WHERE m.id = n.memory_id
+            AND m.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid))
+      )
+  )
+RETURNING n.id
+"""
 
 # One person's collection, newest first. Through MEMORY_COLUMNS so an unlocked
 # memory serializes exactly like a nearby one. MIN(unlocked_at) because two
