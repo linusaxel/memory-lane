@@ -409,7 +409,7 @@ def _choose_walks(
     is what the strict alternation before this gave, and still never comes up
     short when one layer runs dry or is out of budget.
     ponytail: layer is the only diversity term; MMR on tag overlap once prizes
-    actually differ (TODO.md, "Give stops a prize")."""
+    actually differ."""
     nodes = range(1, len(candidates) + 1)
     size = min(size, len(candidates))
     prize = {i: 1 + (getattr(candidates[i - 1], "contrast_score", None) or 0) for i in nodes}
@@ -579,7 +579,7 @@ def _walking_order(picks: list[int], d: list, loop: bool = False) -> list[int]:
     every ordering. Five stops is 120 of them, and nearest-neighbour - what this
     was - doubles back whenever the closest stop is behind you.
     ponytail: exact up to EXACT_ORDER_MAX, greedy above it; Held-Karp if
-    ROUTE_SIZE ever grows that far (TODO.md, "Order the stops exactly")."""
+    ROUTE_SIZE ever grows that far."""
     if len(picks) <= EXACT_ORDER_MAX:
         # A crow-flies loop and its reverse are the same length, so which one
         # min() keeps depends on input order - here, the solver's seeded

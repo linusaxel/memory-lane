@@ -654,10 +654,8 @@ def _contrast_score(mem: dict):
         TypeError,
         ValueError,
     ):
-        # Kept exploded with a trailing comma on purpose: `ruff format` in this
-        # repo rewrites a single-line `except (A, B):` into `except A, B:`,
-        # which is Python 2 and does not compile. The magic trailing comma stops
-        # it collapsing the tuple back onto one line. See TODO.md.
+        # Kept exploded with a trailing comma on purpose.
+        # See docs/10-decisions.md#except-a-b-stays-exploded
         logger.warning("Unusable contrast_score %r, storing null", raw)
         return None
 

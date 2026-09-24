@@ -1,6 +1,6 @@
 /** Notify when a locked, walkable memory comes into range - the proximity half
- *  of the founder-brainstorm's "streak + proximity notification, reopened"
- *  decision (TODO.md). The streak half (F27) needed nothing new; this half
+ *  of docs/10-decisions.md#a-streak-and-a-proximity-notification-after-all.
+ *  The streak half (F27) needed nothing new; this half
  *  needs background location, which is why it is opt-in and off by default -
  *  Settings.tsx's toggle is the only thing that starts it.
  *

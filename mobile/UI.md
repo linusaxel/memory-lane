@@ -167,7 +167,7 @@ The watch button is **ink**, not the accent. It was YouTube red back when the
 map pins were red too; that stopped being true, and the accent is spoken for.
 
 **Shipped 2026-09-23: `seal` moved from a stamp red to a warm ochre**
-(`TODO.md`'s founder-brainstorm "warm accent, not a reskin" - hybrid, not a
+(`docs/10-decisions.md`, "Warm accent, not a reskin" - hybrid, not a
 reskin of the palette: the map style, card layout and type system are
 untouched, only this one accent moved). `sealSoft`/`sealDeep` moved with it as
 the same ramp, `halo` (below) and the two hardcoded map-`Circle` colours in
@@ -364,9 +364,8 @@ Each of these exists because something broke or would have been rejected.
    check what it put in the manifest:
    `plutil -convert xml1 -o - ios/MemoryLane/Info.plist`.
 
-   **Shipped 2026-09-23** (`TODO.md`'s "Ideas — founder brainstorm" section,
-   the proximity-notification half of "streak + proximity notification,
-   reopened" — the streak half, F27, needed none of this). Code and config are
+   **Shipped 2026-09-23** (`docs/10-decisions.md`, "A streak and a proximity
+   notification, after all" — the streak half, F27, needed none of this). Code and config are
    both in; what has **not** happened yet is a real device verifying the
    background delivery end to end, or updating the actual App Store Connect /
    Play Console listings — that is a human step, not a gate the pytest suite

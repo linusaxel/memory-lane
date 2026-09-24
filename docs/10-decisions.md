@@ -27,7 +27,8 @@ pins on.
 
 This is a proxy. `precision_meters` is the direct measure and would be the
 better rule, but 35 of those stacked places claim 50 m accuracy, so the column
-cannot be trusted until extraction is re-run. See `TODO.md`.
+cannot be trusted until extraction is re-run. See
+[the coordinates are mostly guesses](#the-coordinates-are-mostly-guesses-and-they-do-not-admit-it).
 
 ### Places holding a submission do not count toward that
 
@@ -321,6 +322,15 @@ paper and rules instead. `docs/09-visual-design.md` has the research.
 
 ## Pipeline
 
+### `except (A, B):` stays exploded
+
+`pipeline/extract.py` writes one tuple `except` over three lines with a trailing
+comma. Single-line ones were once rewritten to `except A, B:`, which does not
+compile on the Python this repo runs. It was blamed on `ruff format`, but it was
+reproduced with ruff nowhere near the tree and traced to an editor watching the
+directory. The gate caught every instance at `compileall` and none reached a
+commit. The trailing comma stays so that no formatter collapses it again.
+
 ### The RQ worker re-execs itself on macOS
 
 `OBJC_DISABLE_INITIALIZE_FORK_SAFETY` has to be set *before* any ObjC-linked
@@ -499,7 +509,59 @@ instead of parsing one `place_query` string. New rows self-dedup at insert
 time and never reach `pipeline/dedup.py`. That module is unchanged and still
 runs — it is the only thing that can clean up the places written *before*
 this migration (`venue`/`locality` NULL there), which are not being
-re-extracted since that costs API credits. See `TODO.md` 1.2.
+re-extracted since that costs API credits.
+
+18 of the heuristic's 25 proposals were reviewed and applied by hand with
+`--only` (194 places → 176, memories unchanged). The 7 rejected are the useful
+half, and none is a tuning problem:
+
+| Proposal | Why not |
+|---|---|
+| bar French Quarter ← upscale restaurant French Quarter | two venues on one block |
+| Manhattan apartment building ← Manhattan apartment | generic; plausibly two apartments |
+| Irvine California ← Irvine California comedy club | a city and a venue in it are different granularities |
+| New Jersey residential area ← airport gate boarding area | unrelated; the matcher failed |
+| Barry Park City Hudson River ← Hudson River New York City | a park is not the river |
+| Andaz West Hollywood ← Comedy Store Sunset Boulevard | two venues, one street |
+| Halifax comedy venue ← Lobster Pier 7 Halifax | two venues, one city |
+
+Merge mechanics follow `001_places_unique.sql`: repoint `memories.place_id`
+first, then delete orphans guarded by `NOT EXISTS`. `memories.place_id` is
+`ON DELETE CASCADE`, and an unguarded delete eats memory rows.
+
+### The coordinates are mostly guesses, and they do not admit it
+
+Measured 2026-09-20 on the podcast corpus: 92 of 168 placed places sit on 28
+shared points, and 121 of 215 placed memories are on them. Fourteen unrelated
+venues share Duffy Square in Times Square. The model emits a city centroid
+whenever it does not know an address, and 35 of those stacked places still
+claim `precision_meters = 50`, so "exact" and "I guessed the city" are the same
+value.
+
+| Point | Places | Memories | What it is |
+|---|---|---|---|
+| `POINT(-73.9851 40.7589)` | 14 | 23 | Duffy Square, Times Square |
+| `POINT(-90.0715 29.9511)` | 11 | 11 | New Orleans centroid |
+| `POINT(-77.0369 38.9072)` | 5 | 6 | Washington DC centroid |
+| `POINT(46.6753 24.7136)` | 5 | 6 | Riyadh centroid |
+
+What follows from it:
+
+- **Distance is anti-correlated with identity.** Two places on one centroid are
+  usually different venues, and one venue appears at two points. Dedup matches
+  names for this reason (above).
+- **Structured venue fields fix matching, not placement.** Putting a pin on the
+  right building needs a real geocoder, which was never built.
+- **No OSM/Overpass contrast enrichment.** It assumes the coordinate is the
+  place, and would confidently describe the wrong street corner. Contrast is
+  scored from the source text only.
+- **The gate trusts only an unshared coordinate** (under *The gate*), and
+  clustering (`cluster.ts`) makes a stack readable without making it right.
+
+```sql
+SELECT ST_AsText(coordinates), count(*) FROM places WHERE coordinates IS NOT NULL
+GROUP BY 1 HAVING count(*) > 1 ORDER BY 2 DESC;
+```
 
 ### Channel discovery uses yt-dlp, not a scrape
 
@@ -609,8 +671,8 @@ F1's "deliberately absent" list in `docs/08-ux-flows.md` — and a route was not
 going to be the first feature to need one invented. The pill just says a truer
 number the next time the app is opened.
 
-**Reopened 2026-09-22, both shipped 2026-09-23** (`TODO.md`'s "Ideas —
-founder brainstorm" section): a streak counter (F27) and a geofenced
+**Reopened 2026-09-22, both shipped 2026-09-23**
+([a streak and a proximity notification](#a-streak-and-a-proximity-notification-after-all)): a streak counter (F27) and a geofenced
 proximity notification (F28). Neither changes this section's reasoning about
 the *route-complete* moment specifically — that stays a silent pill update,
 reusing the existing unlock haptic rather than a push — the proximity
@@ -641,7 +703,7 @@ want to change later, so each one carries its reason:
   earns the last stop in this session, the same condition as the second
   haptic. A relaunch on a walked day starts with every stop earned and no
   unlock to set it, so it lands on the pill. Nothing is stored. Moving
-  this to the server is `daily_routes.completed_at` (TODO.md), and that is
+  this to the server is `daily_routes.completed_at` (migration 024), and that is
   for the list of past walks, not for this.
 - **Time is first unlock to last,** from the local `unlocked_at`s. It is left
   off when a stop was earned on an earlier day (a span over 12 h), because a
@@ -769,3 +831,83 @@ Walks list; the tag is not, because the stops it chose are. `ROUTE_LOOP` is
 only the default for a client that sends neither. The chips are the
 submission tags, not the whole vocabulary: eighteen chips is a form, and the
 server takes any tag in `pipeline/tags.py`.
+
+---
+
+## Product
+
+Rules that decide what gets built at all. Moved here from TODO.md's "Decided
+— do not revisit" on 2026-09-24.
+
+### Non-goals
+
+- Ad product (needs millions of DAU).
+- Multi-city launch. Saturate one neighborhood before adding a second.
+- Personal video archives as a source: GPS is already in EXIF, and people film
+  the thing rather than narrate what happened there.
+- Unmarked sponsored placement.
+- Generic Wikipedia-grade facts as primary content.
+- **A search UI.** Decided 2026-09-22: the only way to unlock a memory is to
+  walk there. `/v1/memories/search` stays a typed, tested endpoint with no
+  client. Its results carry no viewer position, so they cannot unlock anything,
+  and what it could show open is the centroid-placed rows, the corpus's worst.
+- Onboarding beyond what exists: a device id minted locally, optional
+  Google/Apple sign-in, and the location primer (F8/F9). A complaint about one
+  step there is a bug, not a feature.
+
+### Core, not polish
+
+- **Contrast scoring** decides whether the product is interesting or wallpaper.
+  Rank by the gap between the memory and what is there now, not by fame.
+- **Screenshot-native cards** are the only distribution channel geo-gated
+  content has. Place name and attribution visible, readable at thumbnail size.
+- **Layer separation.** Friend content is intimate and ephemeral, historical is
+  public and permanent. Never equal weight in one feed; friend comes first.
+- **Density over coverage.** One neighborhood before a second.
+- **Never re-extract.** Extraction is a one-time, cached cost per place, with a
+  hard cap on user-submitted ingestion.
+- **Legal posture.** Snippets, attribution, deep links to the source at the
+  right timestamp. Behave like a search engine. Never sell the raw corpus.
+
+### Copenhagen first, and the podcast is test data
+
+Decided 2026-09-20. Copenhagen is the launch area. The US comedy podcast
+(`Tuesdays with Stories`: 224 memories, none within 20 km of Copenhagen) stays
+as end-to-end test data under its own `source_name`, and nothing on the roadmap
+builds on it. The first historical source is deferred on purpose; see TODO.md's
+open questions.
+
+### Money
+
+Near-term revenue is the historical layer: embeddable maps and delivered
+corpora for tourism boards, audio-guide companies and city archives. A
+consumer subscription was reopened 2026-09-22 as a second track, once there is
+a userbase; it does not delay the B2B plan. The social layer earns nothing on
+its own. Local-business seeded memories are a later option and must be marked.
+
+### Warm accent, not a reskin
+
+Decided 2026-09-22, shipped 2026-09-23. The founder wanted the app to feel like
+a cozy, peaceful walk. The muted-parchment palette stays, because its map
+legibility and contrast work solve real problems. Only the accent moved: `seal`
+went from stamp red to a warm ochre, re-measured against the same AA bar
+(`mobile/UI.md`). If it does not read warm enough, revisit the accent, not the
+whole palette. A second "urban" theme is parked until there is a second
+neighborhood.
+
+### A streak and a proximity notification, after all
+
+Decided 2026-09-22, against the earlier "no notifications, no streaks" rule
+(`docs/11-memory-types.md`) and foreground-only location (`mobile/UI.md` rule
+2). The streak is counted from `unlocks`, never stored (F27). The notification
+is on-device geofencing over today's route with a local notification, no push
+server, off by default (F28). Background location costs Play's
+background-location declaration and a screencast review, weeks of latency,
+and that was accepted because the notification cannot work without it.
+
+### Rejected approaches, do not retry
+
+- Scraping channel HTML for `"videoId"`: returns 0 for every channel.
+- Homebrew Python 3.14: broken `pyexpat`.
+- expo-router, bottom-sheet or react-query for a one-screen app.
+- Shelling out to `pytest --collect-only` inside a test.

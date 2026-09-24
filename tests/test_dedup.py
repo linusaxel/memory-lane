@@ -111,7 +111,8 @@ def test_a_frequent_venue_is_misread_as_a_location():
     exact match on venue+locality at insert time (pipeline/extract.py's
     save_memories), not a rewrite of this heuristic - dedup.py is retained
     only to serve places written before that migration, so this input is
-    expected to produce this wrong answer permanently. See TODO.md 1.2.
+    expected to produce this wrong answer permanently. See
+    docs/10-decisions.md#place-dedup-matches-on-names-not-coordinates.
     """
     store_is_common = frozenset({"store", "west", "hollywood"})
     assert same_place(

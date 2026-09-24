@@ -10,7 +10,8 @@ amortised across everyone who ever stands there, so nothing here recomputes.
 Note what is NOT tested, because it is not built: there is no enrichment pass
 comparing the memory against what OSM says is at those coordinates today. It
 would describe the wrong place - 60% of placed places in the live corpus sit on
-a city centroid rather than the venue. See TODO.md 1.5.
+a city centroid rather than the venue. See
+docs/10-decisions.md#the-coordinates-are-mostly-guesses-and-they-do-not-admit-it.
 """
 
 import pytest

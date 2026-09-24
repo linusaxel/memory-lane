@@ -38,7 +38,7 @@ export const color = {
   rule: dual('#E0D9CC', '#332E27'),
 
   /** The one accent: stamp ink - a warm ochre, not the stamp red this was
-   *  before 2026-09-23 (TODO.md's "warm accent, not a reskin"). Everything
+   *  before 2026-09-23 (docs/10-decisions.md#warm-accent-not-a-reskin). Everything
    *  openable is this colour and nothing else is. */
   seal: dual('#8A5A17', '#D9A54B'),
   /** The ring filling during a hold. */

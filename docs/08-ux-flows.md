@@ -178,7 +178,8 @@ rows *and* several venues appear under one coordinate, so the coordinate is what
 the eye sees and what the tap target should follow.
 
 **This is mitigation, not a fix.** The underlying problem is that the
-coordinates are wrong — see the centroid section in `TODO.md`. Clustering makes
+coordinates are wrong — see `docs/10-decisions.md`, "The coordinates are mostly
+guesses". Clustering makes
 23 stacked memories reachable; it does not put them at the right addresses.
 
 ---
@@ -188,7 +189,7 @@ coordinates are wrong — see the centroid section in `TODO.md`. Clustering make
 The core mechanic, not a feature. A memory you can read from your sofa is a
 blog post; a memory you have to walk to is a reason to leave the house. This
 is also what makes the card worth screenshotting — geo-gated content has no
-other distribution channel (see *Design rules* in `TODO.md`).
+other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 
 **Who:** someone looking at a map with pins they cannot read yet.
 
@@ -231,8 +232,7 @@ open on the device across relaunches, which is the whole loop.
 
 ### The gate is server-side
 
-`TODO.md` 3.3 already states the rule and it applies here: *a client-side gate
-is not a gate*. If the API sends the summary and the client hides it, the
+The rule: *a client-side gate is not a gate*. If the API sends the summary and the client hides it, the
 content is one `curl` away and the mechanic is theatre.
 
 So a locked memory ships **place name, coordinates and distance, and nothing
@@ -844,8 +844,8 @@ badges track each unlock exactly as F7 already does.
 
 **Not a rating.** `docs/11-memory-types.md` rules out a star or a thumbs-up -
 this is a count of "this mattered to someone," never a score, and it does not
-change how anything sorts. `TODO.md`'s founder-brainstorm entry is explicit
-that using it as a ranking signal is a later decision, not this one.
+change how anything sorts. Using it as a ranking signal is a later decision,
+not this one.
 
 **Failure:** the request fails (no network, server unreachable). Silent -
 unlike F7's refusal, there is no gate outcome to explain, so the button

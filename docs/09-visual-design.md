@@ -257,7 +257,7 @@ So:
   number in a mono reads as a *measurement*; the same number in the body face
   reads as more prose. This is what makes the app feel like an instrument.
 - **One accent: stamp ink** `#8A5A17` - a warm ochre, moved 2026-09-23 from a
-  stamp red (`TODO.md`'s founder-brainstorm "warm accent, not a reskin";
+  stamp red (`docs/10-decisions.md`, "Warm accent, not a reskin";
   `mobile/UI.md` has the contrast re-measurement). Everything openable wears
   it and nothing else does. Deliberately not `amber-500`.
 - **Rules and weight, not shadows and cards.** Editorial layouts have always
@@ -309,8 +309,8 @@ generated card.
 
 This matters more than an internal screen would. Geo-gated content cannot be
 shared by linking to it — you had to be there — so a screenshot of this card is
-the only distribution channel the product has, and TODO.md already calls
-screenshot-native cards core rather than polish. The card is also where the
+the only distribution channel the product has, and `docs/10-decisions.md`
+already calls screenshot-native cards core rather than polish. The card is also where the
 attribution lives, which is why it is rendered server-side in the first place.
 
 ## The mapping

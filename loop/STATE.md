@@ -115,7 +115,7 @@ audit trail.
   time locks, the route polyline, both logo animations, the tab bar
   delimiters, the start-route affordance, the route-complete haptic, the
   configurable route distance, hearting a memory, the streak counter, the
-  proximity notification, and the warm accent. `TODO.md` carries the commit
+  proximity notification, and the warm accent. `git log` carries the commit
   for each.
 - **A prior tick in this session (t37) wrongly declared the founder-brainstorm
   list fully exhausted before it actually was** — it missed the still-unbuilt

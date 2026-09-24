@@ -1,5 +1,5 @@
 -- Structured place identity: venue + locality, exact-matched, instead of
--- parsing one place_query blob. See TODO.md 1.2 and
+-- parsing one place_query blob. See
 -- docs/10-decisions.md#place-dedup-matches-on-names-not-coordinates for why
 -- the string heuristic in pipeline/dedup.py cannot separate two real venues
 -- that share a street or neighborhood (Andaz West Hollywood vs Comedy Store

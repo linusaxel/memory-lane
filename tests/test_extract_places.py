@@ -120,7 +120,7 @@ def test_same_venue_different_incidental_text_is_one_row(db_session):
 def test_two_venues_sharing_a_locality_stay_separate(db_session):
     """The documented failure pipeline/dedup.py's heuristic cannot fix: two
     real venues on the same street. Andaz/Comedy Store, Sunset Boulevard -
-    TODO.md 1.2."""
+    docs/10-decisions.md#place-dedup-matches-on-names-not-coordinates."""
     content_id = _content(db_session)
     save_memories(
         db_session,

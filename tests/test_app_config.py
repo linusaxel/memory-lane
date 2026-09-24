@@ -50,8 +50,8 @@ def test_location_permission_string_is_specific(expo):
 
 def test_ios_declares_always_location_only_for_the_proximity_notification(expo):
     """The iOS half of "location is foreground-only" - true until the
-    proximity notification (TODO.md's founder-brainstorm "streak + proximity
-    notification, reopened") needed background location on purpose.
+    proximity notification (docs/10-decisions.md#a-streak-and-a-proximity-notification-after-all)
+    needed background location on purpose.
 
     Found on the first native build, before that feature existed: `app.json`
     set only the when-in-use string, but expo-location's config plugin injects
@@ -94,7 +94,7 @@ def test_ios_declares_always_location_only_for_the_proximity_notification(expo):
 def test_background_location_is_requested_only_for_the_proximity_notification(expo):
     """ACCESS_BACKGROUND_LOCATION triggers Play's background-location
     declaration form plus a screencast review - weeks of latency, budgeted for
-    in TODO.md's founder-brainstorm resolution because the proximity
+    in docs/10-decisions.md#a-streak-and-a-proximity-notification-after-all because the proximity
     notification cannot work without it. Explicit in the allowlist rather than
     left as a side effect of the expo-location plugin option above, so the two
     say the same thing."""
