@@ -483,12 +483,27 @@ def _choose_walks(
             walked,
         )
 
-    def shaped(heading):
+    def shaped(heading, around=False):
         """The candidates nearest `size` targets on a walk of about the budget
-        heading off from the anchor, shrunk until they fit; [] if none do."""
+        heading off from the anchor, shrunk until they fit; [] if none do.
+        `around` puts a loop's targets on a circle round the anchor instead of
+        through it: out, round and back, for stops on every side of the start
+        (a lake round a flat), which the circle through it leaves on one side."""
         aim = (1 + ROUTE_FILL) / 2 * budget_meters
         for scale in (1, 0.8, 0.6, 0.4):
-            if loop:
+            if loop and around:
+                # Out, size - 1 chords of 2 pi / size, and back.
+                radius = (
+                    scale * aim / (d_per_crow * (2 + 2 * (size - 1) * math.sin(math.pi / size)))
+                )
+                targets = [
+                    (
+                        radius * math.cos(heading + 2 * math.pi * j / size),
+                        radius * math.sin(heading + 2 * math.pi * j / size),
+                    )
+                    for j in range(size)
+                ]
+            elif loop:
                 # size + 1 corners, the anchor one of them, on a circle through it.
                 n = size + 1
                 radius = scale * aim / (d_per_crow * 2 * n * math.sin(math.pi / n))
@@ -543,9 +558,10 @@ def _choose_walks(
         ]
     if size:
         for k in range(ROUTE_HEADINGS):
-            walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS)
-            if walk:
-                walks.append(fill(_walking_order(walk, d, loop)))
+            for around in (False, True) if loop else (False,):
+                walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS, around)
+                if walk:
+                    walks.append(fill(_walking_order(walk, d, loop)))
     best = min(walks, key=score)
     for _ in range(ROUTE_SHAKES if best else 0):
         # Refilled with the dropped stops allowed back, a greedy fill puts the

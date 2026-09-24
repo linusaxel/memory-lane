@@ -64,16 +64,6 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **On a ring round the start, a long ask gets an arc.** (checked
-      2026-09-24) Ten stops ~1.3 km out on every side, 10 km asked: every walk
-      `_choose_walks` shortlists is five neighbours on one side, 5.9 km, where
-      every other stop would be ~8.7 km. Likely cause, unverified: the shaped targets sit on a circle
-      *through* the start, so they all land on one side, and a shake of one or
-      two stops refills with the next cheap neighbour. Found when the test
-      fakes stopped pricing legs 1/1.3 of the table; the tests' rings were
-      scaled ×1.3 to keep what they assert. **First step:** reproduce on
-      `seed_dev --routes lakes` in `route_bench`, since the lakes are that ring.
-
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.
       A real date needs a per-video fetch or the channel RSS feed (newest 15

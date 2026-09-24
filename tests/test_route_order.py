@@ -1,12 +1,13 @@
 """api/read.py's route solver: which stops, and in what order."""
 
 import itertools
+import math
 import random
 from types import SimpleNamespace
 
 from api.gate import meters_between
 from api.models import Coordinates
-from api.read import _choose_stops, _path_meters, _walking_order
+from api.read import ROUTE_FILL, _choose_stops, _path_meters, _walking_order
 from api.streets import ROUTE_CIRCUITY, walking_matrix
 
 ANCHOR = Coordinates(lat=40.75, lng=-73.99)
@@ -177,3 +178,21 @@ def test_solver_invariants_over_random_instances(route_seed):
                 if _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget
             )
             assert len(chosen) == most
+
+
+def test_a_ring_round_the_start_is_walked_round_not_along_one_side():
+    """The lakes round a flat: ten stops ~1.3km out on every side. Every other
+    one is 8.6km, five neighbours on one side 5.9km; a 10km ask is the first."""
+    picks = [
+        SimpleNamespace(
+            name=k,
+            lat=ANCHOR.lat + 0.012 * math.cos(2 * math.pi * k / 10),
+            lng=ANCHOR.lng + 0.016 * math.sin(2 * math.pi * k / 10),
+            layer="historical",
+        )
+        for k in range(10)
+    ]
+    d = [[meters_between(a, b) for b in [ANCHOR, *picks]] for a in [ANCHOR, *picks]]
+    for seed in "abcdef":
+        chosen = _choose_stops(picks, 5, d, seed, 10000, True, ANCHOR)
+        assert _path_meters(chosen, d, True) >= ROUTE_FILL * 10000, seed

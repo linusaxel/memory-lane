@@ -375,7 +375,7 @@ def test_a_long_ask_is_not_traded_for_a_short_walk_that_retraces_less(
     far = []
     for k in range(10):
         angle = 2 * math.pi * k / 10
-        lat, lng = LAT + 0.0156 * math.cos(angle), LNG + 0.026 * math.sin(angle)
+        lat, lng = LAT + 0.012 * math.cos(angle), LNG + 0.02 * math.sin(angle)
         _historical(
             db_session,
             _place(db_session, f"Far {k}", lat, lng),
@@ -599,7 +599,7 @@ def test_another_day_or_show_me_another_is_a_different_walk_as_good(
     for n in range(12):
         a = 2 * math.pi * n / 12
         place = _place(
-            db_session, f"Ring {n}", LAT + 0.0065 * math.cos(a), LNG + 0.0104 * math.sin(a)
+            db_session, f"Ring {n}", LAT + 0.005 * math.cos(a), LNG + 0.008 * math.sin(a)
         )
         _historical(db_session, place, f"ring memory {n}", f"https://e.invalid/{n:0>11}")
     db_session.commit()
