@@ -17,12 +17,9 @@
  * state the sheet can render.
  */
 
-import type { Tab } from './TabBar.tsx';
-
-/** Every screen a launch can land on. `submit` is not a tab - it is a modal
- *  over the map - but it is a screen somebody has to look at, which is the only
- *  distinction that matters here. */
-const SCREENS = ['walk', 'explore', 'collection', 'you', 'submit'] as const;
+/** Every screen a launch can land on: the map, the journal over it, or the
+ *  submit modal over that. */
+const SCREENS = ['walk', 'journal', 'submit'] as const;
 
 export type DevScreen = (typeof SCREENS)[number];
 
@@ -39,11 +36,6 @@ export function devOpenScreen(): DevScreen | null {
     return null;
   }
   return raw as DevScreen;
-}
-
-/** The tab a dev screen lands on. `submit` opens over the walk. */
-export function devOpenTab(screen: DevScreen): Tab {
-  return screen === 'submit' ? 'walk' : screen;
 }
 
 /** `EXPO_PUBLIC_DEV_OPEN_MEMORY=265`. Baked in when Metro starts, so changing

@@ -383,14 +383,31 @@ UNLOCK_COUNT_QUERY = (
     f"SELECT COUNT(DISTINCT memory_id) FROM unlocks WHERE device_id IN {MY_DEVICES}"
 )
 
-# The distinct calendar days this account has earned something, newest first.
-# api.accounts.current_streak turns this into a number - no stored counter, so
-# there is nothing to keep in sync when an unlock lands on a new device.
+# The distinct calendar days this account unlocked a stop of that day's walk,
+# newest first. Filing records an unlock too and must not count, or a streak
+# is kept by posting anything. api.accounts.current_streak turns this into a
+# number - no stored counter, so nothing to keep in sync across devices.
 STREAK_DAYS_QUERY = f"""
-    SELECT DISTINCT unlocked_at::date AS d
-    FROM unlocks
-    WHERE device_id IN {MY_DEVICES}
+    SELECT DISTINCT u.unlocked_at::date AS d
+    FROM unlocks u
+    JOIN daily_routes r
+      ON r.device_id IN {MY_DEVICES}
+     AND r.route_date = u.unlocked_at::date
+     AND u.memory_id = ANY(r.memory_ids)
+    WHERE u.device_id IN {MY_DEVICES}
     ORDER BY d DESC
+"""
+
+# Is this memory a stop of today's walk, on any of this account's devices?
+# The only thing the unlock asks besides the gate (docs/10, "Only today's walk
+# unlocks").
+ON_TODAYS_ROUTE_QUERY = f"""
+    SELECT EXISTS (
+        SELECT 1 FROM daily_routes
+        WHERE device_id IN {MY_DEVICES}
+          AND route_date = CAST(:today AS date)
+          AND :memory_id = ANY(memory_ids)
+    )
 """
 
 # Today's route candidates: nearby, not already earned, and actually worth the

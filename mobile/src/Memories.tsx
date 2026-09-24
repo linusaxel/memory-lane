@@ -1,29 +1,19 @@
-/** The "Memories" tab. Unlocking and filing are two different ways of ending
- *  up with a memory that is yours, and this is the one screen that shows
- *  both - as two subtabs behind a segmented control, not stacked on one
- *  scroll. They used to be stacked; at a handful of memories that read as
- *  "both, always," but at the hundreds this app is meant to hold, one
- *  section only pushed the other further down the screen. Replaces what
- *  were `Collection.tsx` (the old "Unlocked" tab) and the modal `Manage`
- *  opened from Settings.
+/** The journal: the one screen besides the map, opened from its corner.
+ *  The streak on top, then three sections behind a segmented control:
  *
- * A memory you file still shows up under both - filing unlocks it too - it
- * now just takes a tab switch to see the second copy instead of a scroll.
+ * **Walks** - every walk this account accepted, newest first. A row opens in
+ * place to its stops; an earned one opens its memory. Cached (route.ts
+ * `loadWalked`), so it reads on a train (F16).
+ * **Filed** - what you filed. Always the server's, because it has to show two
+ * things no local cache was told about: a memory still sealed and one enough
+ * people reported. Pages at `MINE_PAGE_SIZE`.
+ * **You** - Settings, passed in.
  *
- * **Unlocked** is local-first and cannot fail - it is exactly what
- * `unlocked.ts` holds, so it works on a train. **My memories** always asks
- * the server, because it has to show two things the local cache was never
- * told about: a memory still sealed (shut, seal included) and one enough
- * people reported (flagged, not dropped).
- *
- * Both subtabs render through one `FlatList`: a row only costs a mount once
- * it scrolls into view, so this holds up past the hundreds a `ScrollView` +
- * `.map()` started struggling with. My memories also pages - the server caps
- * a single answer at `MINE_PAGE_SIZE`, so scrolling near the bottom asks for
- * the next page instead of silently stopping at the cap.
+ * There is no "Unlocked" list any more: every unlock is a walk's stop or
+ * something you filed, and both are here already.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -38,76 +28,81 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   fetchMine,
   fetchWalked,
-  MINE_PAGE_SIZE,
   type Coordinates,
   type LocatedMemory,
   type WalkedRoute,
 } from './api.ts';
 import Padlock from './Padlock.tsx';
-import { distance, walkDate, when } from './format.ts';
+import { distance, walkDate } from './format.ts';
 import { metersBetween } from './region.ts';
+import { loadWalked, saveWalked } from './route.ts';
 import { color, dim, font, label } from './theme.ts';
-import type { UnlockedMemory } from './unlocked.ts';
 
 type Props = {
-  unlocked: UnlockedMemory[];
-  /** False until the local store has been read - see the old Collection's
-   *  same-named prop. It is one boolean and not a `Status` because
-   *  `loadUnlocked` cannot fail: it returns {} instead. */
-  unlockedReady: boolean;
-  onOpenUnlocked: (memory: UnlockedMemory) => void;
-
   device: string | null;
-  /** Refetches My memories each time this turns true - the section has no
-   *  other way to know the tab was left and come back to. */
+  streak: number;
+  /** Refetches each time this turns true: the journal stays mounted. */
   focused: boolean;
-  /** Bumped by App.tsx after a save or a delete. The screen never unmounts,
-   *  so those happen without `focused` re-firing - without this the section
-   *  would go on showing what was filed until the tab was left and reopened. */
+  /** Bumped by App.tsx after a save or a delete, which happen without
+   *  `focused` re-firing. */
   refreshKey: number;
   onOpenMine: (memory: LocatedMemory) => void;
-  /** Shows that walk on the map, read-only. */
-  onOpenWalk: (walk: WalkedRoute) => void;
-  /** Where the person is standing, or null if they said no to location - the
-   *  same source MemorySheet.tsx reads for its own distance. Rows show
-   *  nothing in that slot rather than a stale figure when this is null. */
+  /** An earned stop of a past walk. */
+  onOpenStop: (memory: LocatedMemory) => void;
+  onClose: () => void;
+  /** Where the person is standing, or null - rows show no distance then. */
   position: Coordinates | null;
+  you: ReactNode;
 };
 
-type MineStatus = 'loading' | 'ready' | 'failed';
-type Section = 'unlocked' | 'mine' | 'walks';
+type Status = 'loading' | 'ready' | 'failed';
+type Section = 'walks' | 'mine' | 'you';
+type Item =
+  | { kind: 'walk'; walk: WalkedRoute; index: number }
+  | { kind: 'stop'; memory: LocatedMemory; walk: number }
+  | { kind: 'mine'; memory: LocatedMemory };
 
 export default function Memories({
-  unlocked,
-  unlockedReady,
-  onOpenUnlocked,
   device,
+  streak,
   focused,
   refreshKey,
   onOpenMine,
-  onOpenWalk,
+  onOpenStop,
+  onClose,
   position,
+  you,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const [section, setSection] = useState<Section>('unlocked');
+  const [section, setSection] = useState<Section>('walks');
   const [mine, setMine] = useState<LocatedMemory[]>([]);
   const [mineTotal, setMineTotal] = useState(0);
-  const [mineStatus, setMineStatus] = useState<MineStatus>('loading');
+  const [mineStatus, setMineStatus] = useState<Status>('loading');
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [walks, setWalks] = useState<WalkedRoute[]>([]);
-  const [walksStatus, setWalksStatus] = useState<MineStatus>('loading');
+  const [walksStatus, setWalksStatus] = useState<Status>('loading');
+  const [openWalk, setOpenWalk] = useState<number | null>(null);
 
-  // Always the server's, like My memories: a walk finished on another phone
-  // of the same account belongs here too. A failed refetch keeps the last list.
   useEffect(() => {
-    if (!focused || !device || section !== 'walks') return;
+    loadWalked().then((cached) => {
+      if (cached.length === 0) return;
+      setWalks((current) => (current.length ? current : cached));
+      setWalksStatus((current) => (current === 'loading' ? 'ready' : current));
+    });
+  }, []);
+
+  // Always asked again: a walk finished on another phone of the same account
+  // belongs here too. A failed refetch keeps the last list.
+  useEffect(() => {
+    if (!focused || !device) return;
     let cancelled = false;
     fetchWalked(device)
       .then((next) => {
         if (cancelled) return;
         setWalks(next);
         setWalksStatus('ready');
+        saveWalked(next);
       })
       .catch(() => {
         if (!cancelled) setWalksStatus((current) => (current === 'ready' ? current : 'failed'));
@@ -115,8 +110,7 @@ export default function Memories({
     return () => {
       cancelled = true;
     };
-  }, [focused, device, section]);
-
+  }, [focused, device, refreshKey]);
   const load = useCallback(() => {
     if (!device) return Promise.resolve();
     return fetchMine(device).then((page) => {
@@ -167,12 +161,6 @@ export default function Memories({
       .finally(() => setLoadingMore(false));
   }, [device, loadingMore, mineStatus, mine.length, mineTotal]);
 
-  const unlockedNote = !unlockedReady
-    ? ''
-    : unlocked.length === 0
-      ? 'Nothing yet.'
-      : `${unlocked.length} ${unlocked.length === 1 ? 'memory' : 'memories'} you walked to`;
-
   const mineNote =
     mineStatus !== 'ready' || mine.length === 0
       ? ''
@@ -185,100 +173,117 @@ export default function Memories({
       ? ''
       : `${walks.length} ${walks.length === 1 ? 'walk' : 'walks'}`;
 
-  const data: (LocatedMemory | WalkedRoute)[] =
-    section === 'unlocked' ? unlocked : section === 'mine' ? mine : walks;
+  const data: Item[] =
+    section === 'mine'
+      ? mine.map((memory) => ({ kind: 'mine', memory }))
+      : walks.flatMap((walk, index): Item[] => [
+          { kind: 'walk', walk, index },
+          ...(openWalk === index
+            ? walk.memories.map((memory): Item => ({ kind: 'stop', memory, walk: index }))
+            : []),
+        ]);
 
-  // Live, not stored: neither /v1/unlocks nor /v1/me/memories ever carries a
-  // meaningful distance_meters (both force it null server-side), so this is
-  // computed the same way MemorySheet.tsx computes its own - from wherever the
-  // device is right now, not from anything the row itself remembers.
+  // Live, not stored: neither list carries a meaningful distance_meters.
   const distanceTo = (item: LocatedMemory) =>
     position ? distance(metersBetween(position.lat, position.lng, item.place.coordinates.lat, item.place.coordinates.lng)) : undefined;
 
   return (
-    <FlatList<LocatedMemory | WalkedRoute>
-      style={styles.screen}
-      contentContainerStyle={[styles.body, { paddingTop: insets.top + 14 }]}
-      data={data}
-      // Two walks can share a date: one per device, and an account has several.
-      keyExtractor={(item, index) => ('id' in item ? String(item.id) : `walk-${index}`)}
-      renderItem={({ item }) =>
-        !('id' in item) ? (
-          <Row
-            place={walkDate(item.route_date)}
-            summary={item.memories.map((memory) => memory.place.name).join(' · ')}
-            meta={`${item.earned} of ${item.size} · ${distance(item.budget_meters)}`}
-            onPress={() => onOpenWalk(item)}
-          />
-        ) : section === 'unlocked' ? (
-          <Row
-            place={item.place.name}
-            summary={item.summary}
-            distance={distanceTo(item)}
-            meta={when((item as UnlockedMemory).unlocked_at) ?? undefined}
-            onPress={() => onOpenUnlocked(item as UnlockedMemory)}
-          />
-        ) : (
-          <Row
-            place={item.place.name}
-            summary={item.locked ? `Sealed until ${item.opens_at?.slice(0, 4)}` : item.summary}
-            distance={distanceTo(item)}
-            badge={item.hidden ? 'Reported' : undefined}
-            onPress={() => onOpenMine(item)}
-          />
-        )
-      }
-      ListHeaderComponent={
-        <>
-          <Text style={styles.title}>Memories</Text>
-          <Switcher section={section} onSelect={setSection} />
-          <Header
-            note={section === 'unlocked' ? unlockedNote : section === 'mine' ? mineNote : walksNote}
-          />
-        </>
-      }
-      ListEmptyComponent={
-        section === 'unlocked' ? (
-          // No spinner: this is a disk read that resolves in a frame, and a
-          // spinner that flashes is worse than a beat of nothing.
-          !unlockedReady ? null : (
-            <Empty text="Memories open when you stand where they happened. Whatever you open stays here." />
-          )
-        ) : section === 'walks' ? (
-          walksStatus === 'loading' ? (
-            <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-          ) : walksStatus === 'failed' ? (
-            <Empty text="Can't reach Memory Lane right now." />
-          ) : (
-            <Empty text="No walks yet. Every walk you accept stays here." />
-          )
-        ) : mineStatus === 'loading' ? (
-          <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-        ) : mineStatus === 'failed' ? (
-          <Empty text="Can't reach Memory Lane right now." />
-        ) : (
-          <Empty text="Nothing filed yet." />
-        )
-      }
-      ListFooterComponent={
-        section === 'mine' && loadingMore ? (
-          <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-        ) : null
-      }
-      onEndReached={section === 'mine' ? loadMore : undefined}
-      onEndReachedThreshold={0.5}
-      refreshControl={
-        section === 'mine' ? (
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={color.inkFaint}
-            colors={[color.inkFaint]}
-            progressBackgroundColor={color.paper}
-          />
-        ) : undefined
-      }
-    />
+    <View style={[styles.screen, { paddingTop: insets.top + 14 }]}>
+      <View style={styles.top}>
+        <Text style={styles.title}>Journal</Text>
+        <Pressable style={dim()} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close journal">
+          <Text style={styles.close}>Close</Text>
+        </Pressable>
+      </View>
+      {/* The only number in the app that goes up because you went outside. */}
+      <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
+        <Text style={styles.streakValue}>{streak}</Text>
+        <Text style={styles.streakLabel}>
+          {streak === 0 ? 'Walk today to start a streak' : streak === 1 ? 'day' : 'days in a row'}
+        </Text>
+      </View>
+      <Switcher section={section} onSelect={setSection} />
+
+      {section === 'you' ? (
+        <View style={styles.you}>{you}</View>
+      ) : (
+        <FlatList<Item>
+          style={styles.list}
+          contentContainerStyle={styles.body}
+          data={data}
+          // Two walks can share a date: one per device, and an account has several.
+          keyExtractor={(item) =>
+            item.kind === 'walk'
+              ? `walk-${item.index}`
+              : item.kind === 'stop'
+                ? `walk-${item.walk}-${item.memory.id}`
+                : String(item.memory.id)
+          }
+          renderItem={({ item }) =>
+            item.kind === 'walk' ? (
+              <Row
+                place={walkDate(item.walk.route_date)}
+                summary={item.walk.memories.map((memory) => memory.place.name).join(' · ')}
+                meta={`${item.walk.earned} of ${item.walk.size} · ${distance(item.walk.budget_meters)}`}
+                onPress={() => setOpenWalk((open) => (open === item.index ? null : item.index))}
+              />
+            ) : item.kind === 'stop' ? (
+              <Row
+                inset
+                place={item.memory.place.name}
+                summary={item.memory.locked ? 'Not walked to.' : item.memory.summary}
+                distance={distanceTo(item.memory)}
+                onPress={item.memory.locked ? undefined : () => onOpenStop(item.memory)}
+              />
+            ) : (
+              <Row
+                place={item.memory.place.name}
+                summary={item.memory.locked ? `Sealed until ${item.memory.opens_at?.slice(0, 4)}` : item.memory.summary}
+                distance={distanceTo(item.memory)}
+                badge={item.memory.hidden ? 'Reported' : undefined}
+                onPress={() => onOpenMine(item.memory)}
+              />
+            )
+          }
+          ListHeaderComponent={<Header note={section === 'mine' ? mineNote : walksNote} />}
+          ListEmptyComponent={
+            section === 'walks' ? (
+              walksStatus === 'loading' ? (
+                <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+              ) : walksStatus === 'failed' ? (
+                <Empty text="Can't reach Memory Lane right now." />
+              ) : (
+                <Empty text="No walks yet. Every walk you accept stays here." />
+              )
+            ) : mineStatus === 'loading' ? (
+              <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+            ) : mineStatus === 'failed' ? (
+              <Empty text="Can't reach Memory Lane right now." />
+            ) : (
+              <Empty text="Nothing filed yet. + Add files one where you stand." />
+            )
+          }
+          ListFooterComponent={
+            section === 'mine' && loadingMore ? (
+              <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+            ) : null
+          }
+          onEndReached={section === 'mine' ? loadMore : undefined}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            section === 'mine' ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={color.inkFaint}
+                colors={[color.inkFaint]}
+                progressBackgroundColor={color.paper}
+              />
+            ) : undefined
+          }
+        />
+      )}
+    </View>
   );
 }
 
@@ -291,9 +296,9 @@ function Switcher({
 }) {
   return (
     <View style={styles.switcher}>
-      <SwitcherItem label="Unlocked" active={section === 'unlocked'} onPress={() => onSelect('unlocked')} />
-      <SwitcherItem label="My memories" active={section === 'mine'} onPress={() => onSelect('mine')} />
       <SwitcherItem label="Walks" active={section === 'walks'} onPress={() => onSelect('walks')} />
+      <SwitcherItem label="Filed" active={section === 'mine'} onPress={() => onSelect('mine')} />
+      <SwitcherItem label="You" active={section === 'you'} onPress={() => onSelect('you')} />
     </View>
   );
 }
@@ -334,6 +339,7 @@ function Row({
   distance,
   meta,
   badge,
+  inset,
   onPress,
 }: {
   place: string;
@@ -341,12 +347,15 @@ function Row({
   distance?: string;
   meta?: string;
   badge?: string;
-  onPress: () => void;
+  /** A stop, under its walk. */
+  inset?: boolean;
+  onPress?: () => void;
 }) {
   return (
     <Pressable
-      style={dim(styles.row)}
+      style={dim([styles.row, inset && styles.inset])}
       onPress={onPress}
+      disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={[place, distance, meta].filter(Boolean).join(', ')}
     >
@@ -378,8 +387,20 @@ function Empty({ text }: { text: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
+  list: { flex: 1 },
   body: { paddingBottom: 72 },
-  title: { fontFamily: font.display, fontSize: 34, color: color.ink, paddingHorizontal: 24 },
+  top: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    paddingHorizontal: 24,
+  },
+  title: { fontFamily: font.display, fontSize: 34, color: color.ink },
+  close: { ...label, color: color.ink },
+  streak: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 18, paddingHorizontal: 24 },
+  streakValue: { fontFamily: font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
+  streakLabel: { ...label, fontSize: 10 },
+  you: { flex: 1, marginTop: 12 },
   switcher: { flexDirection: 'row', marginTop: 22, paddingHorizontal: 24, gap: 24 },
   switcherItem: { gap: 8 },
   switcherLabel: { ...label, color: color.inkFaint },
@@ -398,6 +419,7 @@ const styles = StyleSheet.create({
   // A ruled entry, like a catalogue card. No nested card, no shadow - the
   // same row both sections used before the merge.
   row: { gap: 6, paddingHorizontal: 24, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 16 },
+  inset: { paddingLeft: 44 },
   place: { fontFamily: font.displaySemi, fontSize: 19, lineHeight: 26, color: color.ink },
   summary: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   metaRow: { flexDirection: 'row', gap: 10 },

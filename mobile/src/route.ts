@@ -8,7 +8,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { Coordinates, LocatedMemory } from './api.ts';
+import type { Coordinates, LocatedMemory, WalkedRoute } from './api.ts';
 
 const KEY = 'memorylane.route.v1';
 
@@ -48,5 +48,26 @@ export async function saveRoute(route: StoredRoute): Promise<void> {
   } catch {
     // In memory for the rest of this launch, gone on the next one - the same
     // bargain unlocked.ts makes for every write.
+  }
+}
+
+const WALKED_KEY = 'memorylane.walked.v1';
+
+/** The last list of walks the server gave, so the journal reads on the train
+ *  (F16). Replaced wholesale on every successful fetch. */
+export async function loadWalked(): Promise<WalkedRoute[]> {
+  try {
+    const raw = await AsyncStorage.getItem(WALKED_KEY);
+    return raw ? (JSON.parse(raw) as WalkedRoute[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveWalked(walks: WalkedRoute[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(WALKED_KEY, JSON.stringify(walks));
+  } catch {
+    // Same bargain as saveRoute.
   }
 }

@@ -19,6 +19,7 @@ import pytest
 from sqlalchemy import text
 
 from api.gate import today
+from tests.conftest import on_todays_route
 
 pytestmark = pytest.mark.db
 
@@ -64,8 +65,9 @@ def test_a_sealed_memory_does_not_open_to_the_person_who_filed_it(client):
     assert memory["opens_at"] == SOON.isoformat()
 
 
-def test_standing_on_the_spot_does_not_open_it(client):
+def test_standing_on_the_spot_does_not_open_it(client, db_session):
     memory = file_one(client, opens_at=SOON.isoformat())
+    on_todays_route(db_session, submission()["device"], memory["id"])
     read = client.get(f"/v1/memories/{memory['id']}?at_lat={LAT}&at_lng={LNG}").json()
     assert read["locked"] is True
 

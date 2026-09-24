@@ -100,11 +100,10 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here |
 | `mobile/src/NextStopArrow.tsx` | The way to the next stop, on the screen edge, while it is off screen |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
-| `mobile/src/Memories.tsx` | The Memories tab: what you unlocked and what you filed |
+| `mobile/src/Memories.tsx` | **The journal.** Streak, past walks, what you filed, and You |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
-| `mobile/src/Settings.tsx` | The third tab |
+| `mobile/src/Settings.tsx` | The journal's You section |
 | `mobile/src/SignIn.tsx` | Google and Apple buttons. Neither works in Expo Go |
-| `mobile/src/TabBar.tsx` | Four tabs, hand-rolled |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
 | `mobile/src/HeartGlyph.tsx`, `Padlock.tsx`, `StartupLogo.tsx` | Drawn marks: the heart, the app's one symbol, the launch logo |
@@ -112,11 +111,10 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/device.ts` | This installation's self-issued id |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/hearted.ts` | Which memories this device has hearted |
-| `mobile/src/route.ts` | What this device's daily walk looks like. Cached, server-authoritative, resets at midnight |
+| `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative |
 | `mobile/src/reach.ts` | Which locked pins can be opened from where you stand (unit tested) |
 | `mobile/src/cluster.ts` | Group memories that share a map point (unit tested) |
-| `mobile/src/region.ts` | Viewport -> API radius maths (unit tested) |
-| `mobile/src/useNearby.ts` | Which memories are under the viewport |
+| `mobile/src/region.ts` | Metres, paths and the next-stop arrow (unit tested) |
 | `mobile/src/useMapCamera.ts` | Owns the map ref and every camera move |
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification: the native wrapper, the pure region maths, the opt-in flag |

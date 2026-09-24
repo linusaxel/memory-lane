@@ -40,11 +40,10 @@ import {
   type Profile,
   type TodaysRoute,
   type WalkAsk,
-  type WalkedRoute,
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
-import { devOpenMemory, devOpenScreen, devOpenTab } from './src/devOpen.ts';
+import { devOpenMemory, devOpenScreen } from './src/devOpen.ts';
 import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
@@ -66,12 +65,10 @@ import Memories from './src/Memories.tsx';
 import { Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
-import { distance, walkDate } from './src/format.ts';
+import { distance } from './src/format.ts';
 import { buttonText, color, dim, font, label } from './src/theme.ts';
-import TabBar, { type Tab } from './src/TabBar.tsx';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
-import { useNearby } from './src/useNearby.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import NextStopArrow from './src/NextStopArrow.tsx';
@@ -195,9 +192,6 @@ export default function App() {
   // Local convenience only, for a heart button that starts filled on
   // relaunch - the server's memory_hearts row is the durable fact.
   const [hearted, setHearted] = useState<Set<number>>(new Set());
-  // Whether the local store has answered yet. Until it has, the collection must
-  // not claim to be empty - see Memories' `unlockedReady`.
-  const [collectionReady, setCollectionReady] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
@@ -216,9 +210,6 @@ export default function App() {
   const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
   // Street shapes between consecutive stops; null draws them straight.
   const [routeLegs, setRouteLegs] = useState<Coordinates[][] | null>(null);
-  // A walk from the Walks list, drawn over Explore instead of what is nearby.
-  // Read-only: Explore unlocks nothing. Any tab change puts it away.
-  const [pastWalk, setPastWalk] = useState<WalkedRoute | null>(null);
   // Resolved once at launch. Held in state rather than awaited at each call
   // site because the submit form needs it synchronously to decide whether it
   // can open at all.
@@ -229,23 +220,20 @@ export default function App() {
   // Set to open Submit as an editor for this memory instead of a blank form.
   // Null means Submit is either closed or filing something new.
   const [editingMemory, setEditingMemory] = useState<LocatedMemory | null>(null);
-  // Bumped after a post, a save or a delete so Memories' "My memories" section
-  // refetches without the tab having to be left and come back to.
+  // Bumped after a post, a save or a delete so the journal's Filed section
+  // refetches without being closed and opened again.
   const [mineVersion, setMineVersion] = useState(0);
   // Only the handful of values the palette cannot carry need this: the map's
   // own appearance, and the two rgba literals a MapView Circle insists on.
   const scheme = useColorScheme();
-  const [tab, setTab] = useState<Tab>('walk');
+  // The journal is the only other screen, over a map that stays mounted.
+  const [journalOpen, setJournalOpen] = useState(false);
 
   // Region reports go through the camera, not straight from the map: a move
   // replayed from onMapReady never reports itself and the map still announces
   // where it was born. See src/useMapCamera.ts.
   const { mapRef, flyTo, inFlight, onMapReady, onRegionChangeComplete } =
     useMapCamera(setRegion);
-  // Walk and Explore share the one MapView (rule 9) but not a camera: each
-  // keeps where it was left. Explore's first visit centres on you.
-  const cameraOf = useRef<Partial<Record<Tab, Region>>>({});
-  const mapTab = useRef<Tab>('walk');
   const mounted = useRef(true);
   // Read by callbacks that must not be rebuilt every time the person moves.
   const positionRef = useRef<Coordinates | null>(null);
@@ -352,7 +340,6 @@ export default function App() {
     loadUnlocked().then((stored) => {
       if (!mounted.current) return;
       setUnlocked(stored);
-      setCollectionReady(true);
     });
     loadHearted().then((stored) => {
       if (mounted.current) setHearted(stored);
@@ -582,33 +569,12 @@ export default function App() {
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
-  const selectTab = useCallback(
-    (next: Tab, to?: Region) => {
-      setTab(next);
-      setPastWalk(null);
-      if ((next !== 'walk' && next !== 'explore') || next === mapTab.current) return;
-      cameraOf.current[mapTab.current] = region;
-      mapTab.current = next;
-      const here = positionRef.current;
-      const back =
-        to ??
-        cameraOf.current[next] ??
-        (here && {
-          latitude: here.lat,
-          longitude: here.lng,
-          latitudeDelta: LOCATED_DELTA,
-          longitudeDelta: LOCATED_DELTA,
-        });
-      if (back) flyTo(back);
-    },
-    [region, flyTo],
-  );
   const groups = useMemo(() => groupByLocation(pins, precision), [pins, precision]);
 
   // On the walk the camera is pinned on the person: it follows them, cannot be
   // dragged off them, and a pinch that drifts the centre is put back. Where the
   // next stop is off screen, NextStopArrow points the way instead.
-  const pinned = tab === 'walk' && stage === 'walk' && !!position && !walkDone;
+  const pinned = stage === 'walk' && !!position && !walkDone;
   useEffect(() => {
     // Never over a flight: `region` is still where it took off, so following
     // from it undid the pill's zoom-out, and a chain of flights each cut short
@@ -619,35 +585,12 @@ export default function App() {
     if (metersBetween(region.latitude, region.longitude, position.lat, position.lng) < 4) return;
     flyTo({ ...region, latitude: position.lat, longitude: position.lng }, FOLLOW_MS);
   }, [pinned, position, region, flyTo, inFlight]);
-  // Explore: everything under the viewport, whatever today's walk is. What
-  // this device earned reads open, as it does on the walk.
-  const nearby = useNearby(region, tab === 'explore' && !pastWalk);
-  const exploreGroups = useMemo(
-    () =>
-      groupByLocation(
-        (pastWalk?.memories ?? nearby).map((memory) => unlocked[memory.id] ?? memory),
-        precision,
-      ),
-    [pastWalk, nearby, unlocked, precision],
-  );
-  // Stop to stop: the start was never stored (docs/10 § Routes).
-  const pastPath = useMemo(
-    () => (pastWalk ? pathThrough(null, pastWalk.memories, NONE, pastWalk.legs, null) : []),
-    [pastWalk],
-  );
-  useEffect(() => {
-    if (pastPath.length === 0) return;
-    mapRef.current?.fitToCoordinates(
-      pastPath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
-      { edgePadding: { top: 100, right: 60, bottom: 200, left: 60 }, animated: true },
-    );
-  }, [pastPath, mapRef]);
   const openMemories = useMemo(
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
   );
   // After the last stop's sheet is closed, not over it: that memory is read first.
-  const showDone = walkDone && tab === 'walk' && openAt.length === 0;
+  const showDone = walkDone && openAt.length === 0;
   // The whole walk, from the start and home on a loop; stop to stop one-way.
   const donePath = useMemo(
     () => (showDone ? pathThrough(routeHome, routeShown, NONE, routeLegs, routeHome) : []),
@@ -682,9 +625,7 @@ export default function App() {
   useEffect(() => {
     const screen = devOpenScreen();
     if (!screen) return;
-    const next = devOpenTab(screen);
-    setTab(next);
-    if (next === 'explore') mapTab.current = next;
+    setJournalOpen(screen === 'journal');
     setSubmitOpen(screen === 'submit');
   }, []);
 
@@ -701,14 +642,14 @@ export default function App() {
   useEffect(() => {
     const id = devOpenMemory();
     if (id == null || devOpened.current) return;
-    const group = (tab === 'explore' ? exploreGroups : groups).find((g) =>
+    const group = groups.find((g) =>
       g.memories.some((memory) => memory.id === id),
     );
     if (!group) return;
     devOpened.current = true;
     setOpenAt(group.memories);
     setOpenIndex(group.memories.findIndex((memory) => memory.id === id));
-  }, [tab, groups, exploreGroups]);
+  }, [groups]);
 
   const withinReach = useMemo(
     () =>
@@ -867,8 +808,8 @@ export default function App() {
     [unlocked],
   );
 
-  /** Opens Submit as an editor rather than a blank form - the Memories tab
-   *  and the map sheet both lead here. */
+  /** Opens Submit as an editor rather than a blank form - the journal and the
+   *  map sheet both lead here. */
   const openEditor = useCallback((memory: LocatedMemory) => {
     setEditingMemory(memory);
     setSubmitOpen(true);
@@ -951,10 +892,9 @@ export default function App() {
             black background at night. */}
         <StatusBar style="auto" />
 
-        {/* Every tab stays mounted. Unmounting the map means refetching, losing
-            the viewport and re-animating to GPS on every glance at the
-            collection - a tab switch should cost nothing. */}
-        <View style={[styles.screen, tab !== 'walk' && tab !== 'explore' && styles.hidden]}>
+        {/* The map never unmounts: that would mean refetching, losing the
+            viewport and re-animating to GPS on every glance at the journal. */}
+        <View style={styles.screen}>
           <MapView
             ref={mapRef}
             style={StyleSheet.absoluteFill}
@@ -976,7 +916,7 @@ export default function App() {
             {/* Once, around the person, at the server's radius - never around
                 each pin, which would be fifteen overlapping circles and no
                 information. No position, nothing to draw. */}
-            {tab === 'walk' && position && (
+            {position && (
               <Circle
                 center={{ latitude: position.lat, longitude: position.lng }}
                 radius={radiusMeters}
@@ -989,15 +929,12 @@ export default function App() {
               />
             )}
 
-            {tab === 'walk' && stage === 'preview' && previewPath.length > 1 && (
+            {stage === 'preview' && previewPath.length > 1 && (
               <RouteLine path={previewPath} dark={scheme === 'dark'} />
             )}
             {donePath.length > 1 && <RouteLine path={donePath} dark={scheme === 'dark'} />}
-            {tab === 'explore' && pastPath.length > 1 && (
-              <RouteLine path={pastPath} dark={scheme === 'dark'} />
-            )}
 
-            {(tab === 'walk' ? groups : []).map((group) => {
+            {groups.map((group) => {
               // The first of a group's memories that is also a route stop -
               // a mixed stack shows the route's number for the whole stack.
               let routePosition: number | null = null;
@@ -1032,22 +969,6 @@ export default function App() {
               );
             })}
 
-            {(tab === 'explore' ? exploreGroups : []).map((group) => {
-              // Nothing is earned in Explore, so nothing reads as nearly or
-              // already openable: the walk is where a stop opens.
-              const reach = reachOf(group, position, earned);
-              return (
-                <MemoryMarker
-                  key={group.key}
-                  group={group}
-                  reach={reach === 'unlockable' || reach === 'warm' ? 'locked' : reach}
-                  lit={false}
-                  onPress={() =>
-                    group.spanMeters > CLUSTER_SPAN_M ? zoomTo(group) : openGroup(group)
-                  }
-                />
-              );
-            })}
           </MapView>
 
           {pinned && nextRouteStop && (
@@ -1058,33 +979,10 @@ export default function App() {
             />
           )}
 
-          {/* Top right, because every other overlay on this screen lives at the
-              bottom and this one must never be the thing covering the unlock.
-              Shown even with no position: standing somewhere empty is the best
-              moment to file the first memory there, and the press asks for
-              location rather than hiding the possibility. */}
-          {/* Explore too: filing is standing somewhere, not unlocking. */}
-          {((walking && tab === 'walk') || (tab === 'explore' && !pastWalk)) && (
-            <Pressable
-              style={dim(styles.add)}
-              accessibilityRole="button"
-              accessibilityLabel="Add a memory here"
-              onPress={async () => {
-                // Without a fix the sheet says "Waiting for your location" and
-                // holds Post until one arrives, which beats a dead tap.
-                if (!positionRef.current) await goToMyLocation().catch(() => false);
-                Haptics.selectionAsync().catch(() => {});
-                setSubmitOpen(true);
-              }}
-            >
-              <Text style={styles.addText}>+ Add</Text>
-            </Pressable>
-          )}
-
           {/* In the same bottom slot every other floating control here shares -
               never a second region of the screen. Above "Turn on location"
               while that shows, in its place once there is a position. */}
-          {walking && tab === 'walk' && onRoute && stopHere && (
+          {walking && onRoute && stopHere && (
             <View style={[styles.routeAt, pillSlot]}>
               <Pressable
                 style={dim()}
@@ -1103,7 +1001,7 @@ export default function App() {
               </Pressable>
             </View>
           )}
-          {walking && tab === 'walk' && onRoute && !stopHere && !showDone && (
+          {walking && onRoute && !stopHere && !showDone && (
             <Pressable
               style={dim([styles.route, pillSlot])}
               accessibilityRole="button"
@@ -1157,20 +1055,7 @@ export default function App() {
             </Pressable>
           )}
 
-          {tab === 'explore' && pastWalk && (
-            <Pressable
-              style={dim([styles.route, { bottom: 44 }])}
-              accessibilityRole="button"
-              accessibilityLabel={`Walk of ${walkDate(pastWalk.route_date)}, ${pastWalk.earned} of ${pastWalk.size}. Close.`}
-              onPress={() => selectTab('collection')}
-            >
-              <Text style={styles.routeText}>
-                {`${walkDate(pastWalk.route_date)} · ${pastWalk.earned} of ${pastWalk.size} · Close`}
-              </Text>
-            </Pressable>
-          )}
-
-          {walking && tab === 'walk' && !position && (
+          {walking && !position && (
             <Pressable
               style={dim(styles.locate)}
               accessibilityRole="button"
@@ -1190,7 +1075,7 @@ export default function App() {
             </Pressable>
           )}
 
-          {tab === 'walk' && stage === 'preview' && preview && (
+          {stage === 'preview' && preview && (
             <Preview
               stops={preview.memories.length}
               meters={pathMeters(previewPath)}
@@ -1219,7 +1104,7 @@ export default function App() {
           )}
 
           {/* Opaque, over a map that stays mounted behind it (rule 9). */}
-          {tab === 'walk' && stage === 'plan' && (
+          {stage === 'plan' && (
             <Plan
               km={walkKm}
               onKm={setWalkKm}
@@ -1230,58 +1115,79 @@ export default function App() {
               error={planError}
             />
           )}
-          {tab === 'walk' && stage === 'loading' && <View style={styles.cover} />}
+          {stage === 'loading' && <View style={styles.cover} />}
+
+          {/* Last, so they sit over the plan page too. Top left the journal,
+              top right filing: every other overlay lives at the bottom, and
+              neither may cover the unlock. */}
+          <Pressable
+            style={dim([styles.corner, styles.journal])}
+            accessibilityRole="button"
+            accessibilityLabel="Journal"
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setJournalOpen(true);
+            }}
+          >
+            <Text style={styles.cornerText}>Journal</Text>
+          </Pressable>
+          {/* Any stage, walk or no walk: filing is standing somewhere, not
+              unlocking. Shown even with no position - the press asks for it. */}
+          <Pressable
+            style={dim([styles.corner, styles.add])}
+            accessibilityRole="button"
+            accessibilityLabel="Add a memory here"
+            onPress={async () => {
+              // Without a fix the sheet says "Waiting for your location" and
+              // holds Post until one arrives, which beats a dead tap.
+              if (!positionRef.current) await goToMyLocation().catch(() => false);
+              Haptics.selectionAsync().catch(() => {});
+              setSubmitOpen(true);
+            }}
+          >
+            <Text style={styles.cornerText}>+ Add</Text>
+          </Pressable>
         </View>
 
-        <View style={[styles.screen, tab !== 'collection' && styles.hidden]}>
+        <View style={[styles.cover, !journalOpen && styles.hidden]}>
           <Memories
-            unlocked={collected}
-            unlockedReady={collectionReady}
-            onOpenUnlocked={(memory) => {
-              // One memory, not its point: the collection is a list of things
-              // you earned, and a stack of strangers at the same coordinate is
-              // not that.
+            device={device}
+            streak={profile?.streak ?? 0}
+            focused={journalOpen}
+            refreshKey={mineVersion}
+            onOpenMine={openEditor}
+            onOpenStop={(memory) => {
               setOpenAt([memory]);
               setOpenIndex(0);
             }}
-            device={device}
-            focused={tab === 'collection'}
-            refreshKey={mineVersion}
-            onOpenMine={openEditor}
-            onOpenWalk={(walk) => {
-              selectTab('explore');
-              setPastWalk(walk);
-            }}
+            onClose={() => setJournalOpen(false)}
             position={position}
+            you={
+              <Settings
+                unlockedCount={collected.length}
+                placeCount={placesUnlocked}
+                submittedCount={profile?.submitted ?? 0}
+                displayName={displayName}
+                onDisplayName={rename}
+                nameError={nameError}
+                device={device}
+                profile={profile}
+                onProfile={accountChanged}
+                radiusMeters={radiusMeters}
+                permission={permission}
+                onRequestLocation={() => {
+                  if (permission === 'granted' || permission === 'blocked') {
+                    Linking.openSettings();
+                    return;
+                  }
+                  goToMyLocation().catch(() => false);
+                }}
+                notifyNearby={notifyNearby}
+                onNotifyNearby={handleNotifyNearby}
+              />
+            }
           />
         </View>
-
-        <View style={[styles.screen, tab !== 'you' && styles.hidden]}>
-          <Settings
-            unlockedCount={collected.length}
-            placeCount={placesUnlocked}
-            submittedCount={profile?.submitted ?? 0}
-            displayName={displayName}
-            onDisplayName={rename}
-            nameError={nameError}
-            device={device}
-            profile={profile}
-            onProfile={accountChanged}
-            radiusMeters={radiusMeters}
-            permission={permission}
-            onRequestLocation={() => {
-              if (permission === 'granted' || permission === 'blocked') {
-                Linking.openSettings();
-                return;
-              }
-              goToMyLocation().catch(() => false);
-            }}
-            notifyNearby={notifyNearby}
-            onNotifyNearby={handleNotifyNearby}
-          />
-        </View>
-
-        <TabBar tab={tab} unlockedCount={collected.length} onSelect={selectTab} />
 
         <MemorySheet
           earned={!!openMemories[openIndex] && earned.has(openMemories[openIndex].id)}
@@ -1293,28 +1199,7 @@ export default function App() {
           onIndex={setOpenIndex}
           onClose={() => setOpenAt([])}
           position={position}
-          // Explore opens the sheet locked with no ring: unlocking is Walk's.
-          onUnlock={tab === 'walk' ? unlock : undefined}
-          walkStop={
-            tab === 'explore' && walking && openMemories[openIndex]
-              ? routePositionById.get(openMemories[openIndex].id)
-              : undefined
-          }
-          onShowOnWalk={(memory) => {
-            setOpenAt([]);
-            const you = positionRef.current;
-            selectTab(
-              'walk',
-              you
-                ? around(you, [memory.place.coordinates], LOCATED_DELTA)
-                : {
-                    latitude: memory.place.coordinates.lat,
-                    longitude: memory.place.coordinates.lng,
-                    latitudeDelta: LOCATED_DELTA,
-                    longitudeDelta: LOCATED_DELTA,
-                  },
-            );
-          }}
+          onUnlock={unlock}
           unlocking={unlocking}
           unlockError={unlockError}
           onHeart={heart}
@@ -1349,14 +1234,11 @@ const styles = StyleSheet.create({
   // What the map sits behind while the app finds out whether today's walk is
   // already accepted - a flash of the plan page would be a lie.
   cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.paper },
-  // Paper and a rule, like the banner it sits beside - the seal belongs to the
-  // unlock and writing is not that.
-  add: {
+  // Paper and a rule - the seal belongs to the unlock, and neither of these
+  // is that.
+  corner: {
     position: 'absolute',
-    // Level with the banner, which sits at the same top and is the only other
-    // thing up here.
     top: 64,
-    right: 18,
     backgroundColor: color.paper,
     borderWidth: 1,
     borderColor: color.rule,
@@ -1364,7 +1246,9 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: 4,
   },
-  addText: { ...label, color: color.ink },
+  journal: { left: 18 },
+  add: { right: 18 },
+  cornerText: { ...label, color: color.ink },
   locate: {
     position: 'absolute',
     bottom: 44,

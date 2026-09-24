@@ -15,6 +15,8 @@ a punishment for leaving.
 import pytest
 from sqlalchemy import text
 
+from tests.conftest import on_todays_route
+
 pytestmark = pytest.mark.db
 
 LAT, LNG = 55.6759, 12.5655
@@ -53,6 +55,7 @@ def memory_id(db_session):
         {"p": place, "c": content},
     ).scalar()
     db_session.commit()
+    on_todays_route(db_session, DEVICE, memory)
     return memory
 
 
@@ -108,11 +111,14 @@ def test_one_device_cannot_read_anothers_collection(client, memory_id):
     assert client.get(f"/v1/unlocks?device={OTHER_DEVICE}").json()["memories"] == []
 
 
-def test_a_device_appears_the_first_time_it_earns_something(client, memory_id, db_session):
-    """Nothing registers a device; earning something does."""
-    assert db_session.execute(text("SELECT count(*) FROM devices")).scalar() == 0
-    _unlock(client, memory_id)
-    assert db_session.execute(text("SELECT count(*) FROM devices")).scalar() == 1
+def test_standing_on_a_memory_off_todays_walk_is_refused(client, memory_id, db_session):
+    """Five a day is the product: the server holds the walk, so it holds the rule."""
+    refused = client.post(
+        f"/v1/memories/{memory_id}/unlock", json={"device": OTHER_DEVICE, "lat": LAT, "lng": LNG}
+    )
+    assert refused.status_code == 403
+    assert "summary" not in refused.json()
+    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
 
 
 def test_a_device_id_that_is_not_a_uuid_is_rejected(client, memory_id):

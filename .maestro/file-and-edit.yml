@@ -5,14 +5,10 @@
 # nowhere else - there is no map picker, deliberately - and what comes back is
 # already unlocked, because you were the one standing there.
 #
-# Then it finds it again the way the author does: the
-# Memories tab's "My memories" subtab, not the map. Confirms the subtab
-# shows what was filed, that opening a row hands back the same text, and that
-# a change made there survives closing the editor and coming back.
-#
-# Filing something unlocks it too, so the same place name lands on both of
-# Memories' subtabs - checked below right after filing, on Unlocked (the
-# default subtab) before switching to My memories.
+# Then it finds it again the way the author does: the journal's Filed
+# section, not the map. Confirms it shows what was filed, that opening a row
+# hands back the same text, and that a change made there survives closing the
+# editor and coming back.
 
 appId: ${APP_ID}
 ---
@@ -25,15 +21,10 @@ appId: ${APP_ID}
     permissions:
       location: inuse
 
-# "+ Add" arrives with the walk, so plan and accept one first.
+# "+ Add" is there from the plan page on: filing needs no walk.
 - extendedWaitUntil:
     visible: "How far today?"
     timeout: 40000
-- tapOn: "Show me the walk"
-- extendedWaitUntil:
-    visible: "5 stops · .* loop"
-    timeout: 40000
-- tapOn: "Accept this walk"
 
 # One coordinate, taken from where the phone is. No field asks for it. The
 # text is something this flow can look for again once it sits in a list.
@@ -59,34 +50,17 @@ appId: ${APP_ID}
 - assertVisible: ".*Anonymous.*"
 - tapOn: "Close"
 
-- tapOn: "Memories.*"
-- assertVisible: "Unlocked"
-- assertVisible: "My memories"
+- tapOn: "Journal"
+- tapOn: "Filed"
 
-# Filing unlocked it too, so it sits on Unlocked - the default subtab - as
-# soon as that unlock is written back to the local cache. `rememberUnlocked`
-# is awaited, not synchronous, so this still needs a wait, not a bare assert.
-# Unlocked's row carries "<name>, <when>" as its full accessibility text
-# (Row's `meta`), and text matching here is a full-string regex, so the name
-# alone needs the wildcard - unlike the bare match used for the My memories
-# row further down, which has no `meta` to trail it.
-- extendedWaitUntil:
-    visible: ".*The step by the ferry landing.*"
-    timeout: 40000
-
-- tapOn: "My memories"
-
-# "My memories" is a server fetch, unlike "Unlocked" - wait for its own note
-# rather than the place name, which was already on screen a moment ago under
-# Unlocked.
+# A server fetch: wait for its own note rather than the place name.
 - extendedWaitUntil:
     visible: ".*you filed.*"
     timeout: 40000
 
-# The My memories row opens the same sheet as editing: fields come back
-# exactly as filed. My memories rows now carry a live distance alongside the
-# place name in their accessibility label (Memories.tsx's Row), same reason
-# Unlocked's row above needed the wildcard - so this tap does too.
+# The Filed row opens the same sheet as editing: fields come back exactly as
+# filed. Rows carry a live distance alongside the place name in their
+# accessibility label (Memories.tsx's Row), so the tap needs the wildcard.
 - tapOn: ".*The step by the ferry landing.*"
 - assertVisible: "Edit memory"
 - assertVisible: "The step by the ferry landing"
@@ -110,10 +84,9 @@ appId: ${APP_ID}
 - tapOn: "Edit memory"
 - tapOn: "Save"
 
-# Back on the Memories tab - onSaved closes the editor the same way onPosted
-# does, and App.tsx's mineVersion bump means My memories has already
-# refetched without the tab being left and reopened. Wildcarded for the same
-# distance-in-the-label reason as the tap above.
+# Back on the journal - onSaved closes the editor the same way onPosted does,
+# and App.tsx's mineVersion bump means Filed has already refetched without the
+# journal being closed and reopened.
 - extendedWaitUntil:
     visible: ".*The jetty by the ferry landing.*"
     timeout: 40000
@@ -132,4 +105,4 @@ appId: ${APP_ID}
     element: "Delete this memory"
     direction: DOWN
 - tapOn: "Cancel"
-- assertVisible: "My memories"
+- assertVisible: "Filed"

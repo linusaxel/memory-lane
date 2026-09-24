@@ -80,15 +80,26 @@ This stops `curl`, not a determined spoofer — and since submissions, it cuts
 both ways: a memory is also filed at a position nobody verified. Attestation is
 the fix and needs more than accounts. Logged in `TODO.md`.
 
-### Unlocking is Walk-only, and only the app knows it
+### Only today's walk unlocks
 
-Status: Accepted
+Status: Accepted (2026-09-24). Replaces "Unlocking is Walk-only, and only the
+app knows it".
 
-Explore never offers an unlock; Walk does. `POST /v1/memories/{id}/unlock` does
-not know which tab asked, and should not: the only thing it checks is that you
-are standing there, and a mode flag in the body would be as self-reported as the
-position. Standing at a memory with a hand-rolled request opens it, which is the
-same `curl` the section above already concedes. Keep the rule in the client.
+The app is one walk a day, five stops, and nothing else: no map of everything
+(F29 is gone), because a corpus you can browse is a corpus you can finish. So
+`POST /v1/memories/{id}/unlock` refuses with 403 any memory that is not a stop
+of today's `daily_routes` row for this account (`ON_TODAYS_ROUTE_QUERY`),
+however close you stand.
+
+The old decision kept this in the client because a "which tab" flag would be
+as self-reported as the position. The route is not self-reported: the server
+chose it and stored it on accept, and the client never sends stop ids. That is
+what makes the rule enforceable here and not there.
+
+Filing still opens its own memory for its author: that unlock is written by
+`POST /v1/memories`, not by this endpoint. It no longer extends the streak
+(F27), or the limit could be dodged by posting. Position is still self-reported,
+so a spoofed GPS walks today's five from a sofa, and no more than five.
 
 ---
 

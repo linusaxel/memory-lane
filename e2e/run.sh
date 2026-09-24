@@ -3,8 +3,8 @@
 # Watch the user flows happen. See e2e/README.md.
 #
 #   ./e2e/run.sh              every flow, in order
-#   ./e2e/run.sh f7           just the unlock
-#   ./e2e/run.sh --record f7  and keep an mp4 of it
+#   ./e2e/run.sh walk         flows whose file starts "walk-" (.maestro/walk-*.yml)
+#   ./e2e/run.sh --record walk  and keep an mp4 of it
 #
 # Exit codes follow loop/verify.sh: 0 pass, 1 a flow failed, 2 the environment
 # needs a human.
@@ -165,9 +165,10 @@ reset_database() {
   [ "$seeded" = 0 ] || { cat "$LOGS/seed.log" >&2; exit 1; }
 }
 
-# F27's streak needs an unlock yesterday, by a device id the app has not minted
-# yet. So whichever device turns up first is given one, of a memory at 0,0:
-# never a route candidate, never on screen, and no stop's date moves.
+# F27's streak needs a walk stop unlocked yesterday, by a device id the app has
+# not minted yet. So whichever device turns up first is given a one-stop walk
+# yesterday and its unlock, of a memory at 0,0: never a route candidate, never
+# on screen, and no stop's date moves.
 yesterday_unlock() {
   psql_on "$DB" "
     WITH p AS (INSERT INTO places (name, place_query, coordinates)
@@ -177,6 +178,9 @@ yesterday_unlock() {
     CREATE FUNCTION yesterday() RETURNS trigger AS \$\$ BEGIN
       INSERT INTO unlocks (device_id, memory_id, unlocked_at)
         SELECT NEW.id, m.id, now() - interval '1 day' FROM memories m
+        JOIN places p ON p.id = m.place_id WHERE p.place_query = 'e2e yesterday';
+      INSERT INTO daily_routes (device_id, route_date, memory_ids)
+        SELECT NEW.id, (now() - interval '1 day')::date, ARRAY[m.id] FROM memories m
         JOIN places p ON p.id = m.place_id WHERE p.place_query = 'e2e yesterday';
       RETURN NEW;
     END \$\$ LANGUAGE plpgsql;

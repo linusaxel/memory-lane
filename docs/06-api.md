@@ -11,7 +11,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /v1/memories/search?q=coffee&lat=X&lng=Y&radius_km=50` - Full-text search across summaries and place names (location optional)
 - `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory, gated
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
-  and the only route that records one. POST because it creates something
+  and the only route that records one. POST because it creates something.
+  403 unless the memory is a stop of this account's walk today
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true&tag=food` - the walk
   of that length from there would be: up to five stops. Stores nothing.

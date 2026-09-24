@@ -154,25 +154,6 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
   }
 }
 
-/** What Explore draws: every memory under the viewport, always locked where
- *  gated. No position goes with this, so nothing unlocks from here. */
-export async function fetchNearby(
-  lat: number,
-  lng: number,
-  radiusKm: number,
-  signal?: AbortSignal,
-): Promise<LocatedMemory[]> {
-  const params = new URLSearchParams({
-    lat: String(lat),
-    lng: String(lng),
-    radius_km: String(radiusKm),
-    limit: '100',
-  });
-  const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
-  // A null-coordinate marker crashes react-native-maps (UI.md rule 5).
-  return (body.memories ?? []).filter(hasCoordinates);
-}
-
 /** Open one memory, and record that it opened. The server re-checks the
  *  distance and can still say no, so a result that comes back still locked is a
  *  refusal - not a success. */

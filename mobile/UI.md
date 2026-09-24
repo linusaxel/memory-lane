@@ -1,6 +1,6 @@
 # UI guide
 
-For agents working in `mobile/`. Four tabs, four modals and one mechanic; this file
+For agents working in `mobile/`. One map, one journal, the modals and one mechanic; this file
 says what it looks like, why, and how to check you did not break it.
 
 Read this before changing anything under `mobile/src/` or `App.tsx`.
@@ -12,7 +12,7 @@ Three stages, one map, four modals. The stage is plain state in `App.tsx`
 of them (rule 9).
 
 ```
-Plan (src/Plan.tsx)            opaque page over the mounted map, in the Walk tab
+Plan (src/Plan.tsx)            opaque page over the mounted map
 ├─ "How far today?"            34/700
 ├─ "4 km"                      the slider's value, mono 30
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
@@ -30,7 +30,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ "+ Add"                    top right, opens Submit. See "Writing"
+├─ "Journal"                  top left, every stage, plan page included
+├─ "+ Add"                    top right, every stage: filing needs no walk. See "Writing"
 ├─ NextStopArrow              route blue, on the screen's edge, pointing at the next
 │                              stop while it is off screen (src/NextStopArrow.tsx)
 ├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap zooms out around you to the next stop;
@@ -58,30 +59,21 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
 Submit (pageSheet modal, from "+ Add") - see Writing
 
-Explore (the second tab)       the same MapView, its own camera; first visit centres on you.
-├─ Every memory under the viewport (src/useNearby.ts), grouped by cluster.ts;
-│  no pin lights, and a wide cluster zooms rather than opens
-├─ The sheet opens locked with no ring: "Memories open on a walk", or for
-│  one of today's stops "Stop N on today's walk" and "Show on the walk",
-│  which switches to Walk and flies there
-├─ "+ Add"                    top right, as on the walk: filing is not unlocking
-└─ Walk's circle, line and pill are not drawn here. Leaving mid-preview and
-   coming back resumes it: the stage lives in App, not in the tab
+Journal (src/Memories.tsx)     opaque, over the mounted map; "Close" top right
+├─ the streak, large           F27: days in a row with a walk stop unlocked
+├─ Walks                       one row per walk; a row opens in place to its stops,
+│                              an earned one opens the sheet. Cached for the train
+├─ Filed                       what you filed; a row opens Submit as the editor
+└─ You (src/Settings.tsx)
+   ├─ unlocked / places / filed, as numbers
+   ├─ your name                what submissions are signed with. Blank = Anonymous
+   ├─ account                  Apple / Google. Never a wall; see SignIn.tsx
+   ├─ how unlocking works      the one place that answers "why can't I read this"
+   ├─ location state + action
+   └─ privacy policy, and what signing out does and does not delete
 
-Memories (the third tab, src/Memories.tsx)
-└─ Unlocked: what this device has earned, newest first; a row opens the sheet.
-   My memories: what you filed
-
-Settings (the fourth tab, "You")
-├─ unlocked / places / filed, as numbers
-├─ your name                what submissions are signed with. Blank = Anonymous
-├─ account                  Apple / Google. Never a wall; see SignIn.tsx
-├─ how unlocking works      the one place that answers "why can't I read this"
-├─ location state + action
-└─ privacy policy, and what signing out does and does not delete
-
-TabBar                         hidden on the map until the walk is accepted
-└─ Map | Memories (N) | You
+There are no tabs and no map of everything: the map only ever draws you and
+today's walk (docs/10, "Only today's walk unlocks").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -100,9 +92,8 @@ that asks who you are before it shows you anything has the order wrong.
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/Plan.tsx` | the plan page and the preview card: how far, then accept |
 | `src/useBreath.ts` | the next stop's hop |
-| `src/Memories.tsx` | what the walking was for |
-| `src/TabBar.tsx` | Walk · Explore · Memories · You, hand-rolled, shown from launch |
-| `src/Settings.tsx` | the "You" tab |
+| `src/Memories.tsx` | the journal: streak, walks, filed, and You |
+| `src/Settings.tsx` | the journal's "You" section |
 | `src/theme.ts` | **every colour and font.** Start here |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
@@ -189,7 +180,7 @@ Two families, no more.
 
 **The label voice** is `label` in `theme.ts`: uppercase Plex Mono, 11px, 1.1
 tracking, `inkFaint`. Use it wherever a screen *names* a thing rather than says
-something — section headings, tab labels, meta rows, button text.
+something — section headings, section switcher labels, meta rows, button text.
 
 **Spread it — `{ ...label }` — rather than retyping its five properties.**
 Copying a token is how it stops being one: this voice was hand-retyped across
@@ -203,7 +194,7 @@ thing being pressed; pair it with `color.paper` on ink and `color.ink` on an
 outline. **`input`** is the whole text-field block, which renders in both You
 and Submit and must not drift between them.
 
-**Scale**: 34 display (tab titles) · 30 (place name) · 52 (the distance figure)
+**Scale**: 34 display (screen titles) · 30 (place name) · 52 (the distance figure)
 · 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
 · 11–12 mono (everything labelled).
 
@@ -239,7 +230,7 @@ Match a row; do not add one between two rows.
 
 | Step | Where it is |
 |---|---|
-| 2 | baseline nudges: the gap inside a byline, the tab badge's vertical padding |
+| 2 | baseline nudges: the gap inside a byline |
 | 4 | tag padding, the gap between the pause bars |
 | 6 | inside a collection row, inside the filed-at card |
 | 8 | the default small gap: between tags, a stat and its label, stacked buttons |
@@ -261,7 +252,7 @@ Anything above 26 is a one-off (36 between the stats, 38 above a You section,
 | Radius | On |
 |---|---|
 | 2 | the modal grabber, and nothing else |
-| 3 | the small enclosed labels: tags, submission chips, the tab count badge |
+| 3 | the small enclosed labels: tags, submission chips |
 | **4** | **the app's radius** — buttons, inputs, photos, thumbnails, the banner, the reach pill. Reach for this first |
 | 6 | the two cards that float over the map, and only those |
 | half the side | genuinely circular things only: the 84 hold ring, the 44 pager step, an avatar, a pin |
@@ -375,12 +366,10 @@ Each of these exists because something broke or would have been rejected.
    `startUpdatingLocation` in the background would — asking for the stronger
    capability than the feature needs is exactly the kind of over-declaration
    this rule exists to prevent.
-3. **Debounce map-driven fetches** (400ms, `useNearby`). Explore fetches by
-   viewport, and panning fires `onRegionChangeComplete` continuously; without
-   it you DoS your own API.
-4. **The API is radius-only.** `regionToRadiusKm()` circumscribes the viewport
-   and clamps to 0.1–100km; outside that the API returns 422. There is no bbox
-   endpoint.
+3. **Nothing fetches by viewport.** The map draws today's walk and nothing
+   else; if that ever changes, debounce it, because panning fires
+   `onRegionChangeComplete` continuously.
+4. *(Retired with Explore: the viewport-to-radius maths.)*
 5. **A memory with no coordinates cannot be drawn.** The API filters those out;
    do not assume `coordinates` is always present on types that allow null.
 6. **`content.url` is already resolved.** The server points it at the document,
@@ -390,19 +379,18 @@ Each of these exists because something broke or would have been rejected.
 7. **Never cover the map attribution.** The Apple Maps logo and Legal link in
    the bottom-left corner are a condition of using the map and have to stay
    visible and tappable. A floating tally in that corner is what made this a
-   rule; the tab bar moved it out of the way.
+   rule; nothing floats in that corner now.
 8. **`onRequestClose` is required on every Modal**, or the Android back button
    does nothing.
-9. **No tab unmounts.** Switching tabs uses `display: 'none'`, not a
-   conditional render. Unmounting the map means refetching, losing the viewport
-   and re-animating to GPS every time somebody glances at their collection.
-   Walk and Explore are two tabs on that one MapView; `selectTab` saves the
-   region of the one you leave and restores the other's.
+9. **The map never unmounts.** The journal is hidden with `display: 'none'`,
+   not a conditional render, and the map sits under it. Unmounting the map
+   means losing the viewport and re-animating to GPS every time somebody
+   glances at their journal.
 10. **Never fetch alongside `animateToRegion`.** It fires
     `onRegionChangeComplete` when it lands, and it does *not* land on the region
     you gave it — the map fits the deltas to the screen, so the settled viewport
-    covers noticeably more ground. Explore fetches from the region
-    `useMapCamera` reports, and pins group by it, so move the camera and let it
+    covers noticeably more ground. Pins group by the region `useMapCamera`
+    reports, so move the camera and let it
     report back; the hook also reports a long flight itself, which
     never lands audibly. See `docs/10-decisions.md#the-app`.
 11. **The credit never scrolls.** Place name above the scroll, credit pinned

@@ -1,6 +1,6 @@
 # F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
-# loop 1 -> 5 -> F30 finish it (F27 streak) -> F15 reread it later (F26 heart
-# it) -> F31 look back at the walk.
+# loop 1 -> 5 -> F30 finish it (F27 streak) -> F15/F31 reread it in the
+# journal (F26 heart it).
 # docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
@@ -79,25 +79,6 @@ appId: ${APP_ID}
 # The pin itself turned, not just the pill.
 - assertVisible: "Stop 1 of 5. ${STOP1}. Locked, within reach."
 
-# F29: the same spot from Explore. Every memory around, the stack as one
-# counted pin, and the stop you are standing on stays shut: nothing is earned
-# here. Its sheet knows it is on the walk and hands you back to it.
-- tapOn: "Explore"
-- extendedWaitUntil:
-    visible: "The corner, dev seed \\(3\\)\\. Locked, .*"
-    timeout: 40000
-- assertVisible: "Add a memory here"
-- assertNotVisible: "Unlock memory at stop 1: .*"
-- swipe:
-    start: 50%, 55%
-    end: 50%, 45%
-- extendedWaitUntil:
-    visible: "${STOP1}\\. Locked, too far to open\\."
-    timeout: 30000
-- tapOn: "${STOP1}\\. Locked, too far to open\\."
-- assertVisible: "Stop 1 on today's walk\\."
-- assertNotVisible: "Unlock this memory"
-- tapOn: "Show on the walk"
 - runFlow:
     file: steps/unlock-stop.yml
     env:
@@ -154,26 +135,28 @@ appId: ${APP_ID}
     visible: "Route walked · 5 of 5 unlocked\\."
     timeout: 30000
 
-# F15: unlocking is meant to be permanent - it outlives the sheet, the tab and
-# the process. (F16, the same collection with no network, is not scripted;
-# e2e/README.md has the by-hand recipe.)
-#
-# The tab keeps a count, so its accessibility label is "Memories, 1" once
-# there is one - the visible text stays "Memories" either way.
-- tapOn: "Memories.*"
-- assertVisible: "Unlocked"
-- assertVisible: ".*The bench outside, dev seed.*"
-
-# A collection row opens the same sheet.
-- tapOn: ".*The bench outside, dev seed.*"
-- assertVisible: ".*pølsevogn.*"
+# F15 + F31: the journal keeps the walk. Its row opens in place to its five
+# stops, and an earned one opens the same sheet. (F16, the same journal with
+# no network, is not scripted; e2e/README.md has the by-hand recipe.)
+- tapOn: "Journal"
+- assertVisible: "2 day streak"
+- extendedWaitUntil:
+    visible: ".*, 5 of 5 · .*"
+    timeout: 30000
+- tapOn: ".*, 5 of 5 · .*"
+# A stop row's label is "<place>, <distance>"; the walk row's names no stop.
+- extendedWaitUntil:
+    visible: "${STOP1}, .*"
+    timeout: 30000
+- tapOn: "${STOP1}, .*"
+- assertVisible: ".*${WORDS1}.*"
 # F26: the heart fills and the count goes up, and both outlive the sheet.
 - tapOn: "Heart this memory"
 - extendedWaitUntil:
     visible: "Hearted, 1 heart"
     timeout: 30000
 - tapOn: "Close"
-- tapOn: ".*The bench outside, dev seed.*"
+- tapOn: "${STOP1}, .*"
 - assertVisible: "Hearted, 1 heart"
 - tapOn: "Close"
 
@@ -186,25 +169,14 @@ appId: ${APP_ID}
     timeout: 30000
 - assertNotVisible: "How far today?"
 - assertNotVisible: "Walk done\\."
-- tapOn: "Memories.*"
-- extendedWaitUntil:
-    visible: ".*The bench outside, dev seed.*"
-    timeout: 30000
-# F26: and the heart outlives the process.
-- tapOn: ".*The bench outside, dev seed.*"
-- assertVisible: "Hearted, 1 heart"
-- tapOn: "Close"
-
-# F31: the walk just walked is kept. Its row opens it on the map, read-only,
-# and the bar over it goes back to the list.
-- tapOn: "Walks"
+- tapOn: "Journal"
 - extendedWaitUntil:
     visible: ".*, 5 of 5 · .*"
     timeout: 30000
 - tapOn: ".*, 5 of 5 · .*"
-- extendedWaitUntil:
-    visible: "Walk of .*, 5 of 5\\. Close\\."
-    timeout: 30000
-- assertNotVisible: "Unlock this memory"
-- tapOn: "Walk of .*, 5 of 5\\. Close\\."
-- assertVisible: "Walks"
+# F26: and the heart outlives the process.
+- tapOn: "${STOP1}, .*"
+- assertVisible: "Hearted, 1 heart"
+- tapOn: "Close"
+- tapOn: "Close journal"
+- assertVisible: "Route walked · 5 of 5 unlocked\\."

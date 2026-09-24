@@ -31,12 +31,7 @@ type Props = {
   onClose: () => void;
   /** Where the person is standing, or null if they said no to location. */
   position: Coordinates | null;
-  /** Absent in Explore, where nothing is earned: the sheet stays locked with
-   *  no ring and no distance to close, however near you stand. */
-  onUnlock?: (memory: LocatedMemory) => void;
-  /** Its number on today's walk, when Explore opened a stop of it. */
-  walkStop?: number;
-  onShowOnWalk?: (memory: LocatedMemory) => void;
+  onUnlock: (memory: LocatedMemory) => void;
   unlocking: boolean;
   unlockError: string | null;
   /** Present only for a memory this account filed, and only while it is open -
@@ -96,8 +91,6 @@ export default function MemorySheet({
   onClose,
   position,
   onUnlock,
-  walkStop,
-  onShowOnWalk,
   onHeart,
   hearted,
   unlocking,
@@ -129,7 +122,7 @@ export default function MemorySheet({
         )
       : null;
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
-  const withinReach = !!onUnlock && fromHere != null && fromHere <= radius;
+  const withinReach = fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
   // A different refusal, and the app must not confuse them: walking to a time
   // capsule does nothing, so it never gets the unlock control or the word
@@ -229,25 +222,6 @@ export default function MemorySheet({
                   <Text style={styles.gateNote}>
                     Sealed until then. Standing here does not open it any sooner.
                   </Text>
-                </>
-              ) : !onUnlock ? (
-                <>
-                  <Padlock size={34} color={color.faded} />
-                  <Text style={styles.gateNote}>
-                    {walkStop
-                      ? `Stop ${walkStop} on today's walk.`
-                      : 'Memories open on a walk, standing where they happened.'}
-                  </Text>
-                  {waiting}
-                  {walkStop && onShowOnWalk && (
-                    <Pressable
-                      style={dim(styles.walk)}
-                      accessibilityRole="button"
-                      onPress={() => onShowOnWalk(memory)}
-                    >
-                      <Text style={styles.walkText}>Show on the walk</Text>
-                    </Pressable>
-                  )}
                 </>
               ) : withinReach ? (
                 <>
@@ -516,15 +490,6 @@ const styles = StyleSheet.create({
   // Ink, not red. The seal is the unlock and nothing else gets to wear it.
   watch: { backgroundColor: color.ink, paddingVertical: 16, borderRadius: 4, alignItems: 'center' },
   watchText: { ...buttonText, color: color.paper },
-  walk: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: color.ink,
-    paddingVertical: 13,
-    paddingHorizontal: 26,
-    borderRadius: 4,
-  },
-  walkText: { ...buttonText, color: color.ink },
   linkFailed: { fontFamily: font.mono, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: {
     borderWidth: 1,

@@ -31,6 +31,7 @@ from api.route_solver import ROUTE_SIZE, _path_meters
 from api.streets import walking_matrix
 from pipeline.route_bench import START_BOX
 from pipeline.seed_dev import at, seed
+from tests.conftest import on_todays_route
 
 pytestmark = pytest.mark.db
 
@@ -107,6 +108,7 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     """
     lat, lng = at("reach")
     memory_id = seeded_id(db_session, "reach")
+    on_todays_route(db_session, DEVICE, memory_id)
 
     far = read_at(seeded, memory_id, START)
     assert far["locked"] is True
@@ -136,6 +138,7 @@ def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
     """F15: unlocking is permanent, and it is permanent for one device."""
     lat, lng = at("reach")
     memory_id = seeded_id(db_session, "reach")
+    on_todays_route(db_session, DEVICE, memory_id)
     seeded.post(f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, "lat": lat, "lng": lng})
 
     mine = seeded.get("/v1/unlocks", params={"device": DEVICE}).json()["memories"]
@@ -193,6 +196,7 @@ def test_f23_a_seal_does_not_care_where_you_are_standing(seeded, db_session):
     """
     lat, lng = at("sealed")
     sealed_id = seeded_id(db_session, "sealed")
+    on_todays_route(db_session, DEVICE, sealed_id)
     standing_on_it = read_at(seeded, sealed_id, (lat, lng))
     assert standing_on_it["locked"] is True
     assert standing_on_it["opens_at"] is not None
@@ -219,39 +223,6 @@ def test_f23_a_seal_does_not_care_where_you_are_standing(seeded, db_session):
     assert mine.status_code == 201
     assert mine.json()["locked"] is True, "your own capsule is shut to you too"
     assert mine.json()["summary"] == ""
-
-
-def test_f29_explore_shows_the_walk_and_opens_none_of_it(seeded):
-    """F29: Explore's viewport fetch, standing on today's first stop.
-
-    Explore reads /v1/memories/nearby and nothing else, so what it shows is
-    locked however close you stand; only the walk's unlock opens it.
-    """
-    walk = seeded.post(
-        "/v1/routes/today",
-        json={"device": DEVICE, "lat": START[0], "lng": START[1], "budget_meters": 4000},
-    ).json()
-    stops = walk["memories"]
-    assert stops, "the seed should make a walk from the start"
-    first = stops[0]
-    here = first["place"]["coordinates"]
-
-    seen = seeded.get(
-        "/v1/memories/nearby", params={"lat": here["lat"], "lng": here["lng"], "radius_km": 1}
-    ).json()["memories"]
-    by_id = {m["id"]: m for m in seen}
-    # Every stop is on the Explore map, so its sheet can say which one it is.
-    assert {m["id"] for m in stops} <= by_id.keys()
-    assert by_id[first["id"]]["locked"] is True
-    assert by_id[first["id"]]["summary"] == ""
-
-    # Show on the walk, and the walk's unlock is the one that opens it.
-    opened = seeded.post(
-        f"/v1/memories/{first['id']}/unlock",
-        json={"device": DEVICE, "lat": here["lat"], "lng": here["lng"]},
-    ).json()
-    assert opened["locked"] is False
-    assert opened["summary"]
 
 
 def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route_seed):

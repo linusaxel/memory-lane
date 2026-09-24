@@ -233,3 +233,26 @@ def api_client(db_session, monkeypatch, tmp_path):
     api.read.reset_stats_cache()
 
     return TestClient(api.main.app)
+
+
+def on_todays_route(session, device, *memory_ids):
+    """Make these memories stops of `device`'s walk today. The unlock refuses
+    anything else, so a test that unlocks outside a planned walk states it."""
+    from sqlalchemy import text
+
+    from api.gate import today
+
+    session.execute(
+        text("INSERT INTO devices (id) VALUES (CAST(:d AS uuid)) ON CONFLICT DO NOTHING"),
+        {"d": device},
+    )
+    session.execute(
+        text("""
+            INSERT INTO daily_routes (device_id, route_date, memory_ids)
+            VALUES (CAST(:d AS uuid), :day, :ids)
+            ON CONFLICT (device_id, route_date)
+            DO UPDATE SET memory_ids = daily_routes.memory_ids || EXCLUDED.memory_ids
+        """),
+        {"d": device, "day": today(), "ids": list(memory_ids)},
+    )
+    session.commit()

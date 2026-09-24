@@ -1,6 +1,6 @@
-"""How many days in a row this account has earned something.
+"""How many days in a row this account unlocked a stop of that day's walk.
 
-Computed from `unlocks.unlocked_at` on every read (api.accounts.current_streak),
+Computed from `unlocks.unlocked_at` joined to `daily_routes` on every read (api.accounts.current_streak),
 not stored - there is nothing to keep in sync when a second device unlocks
 something, and no counter that can drift from the rows it is supposed to
 summarize.
@@ -91,9 +91,44 @@ def test_the_profile_reports_the_streak_computed_from_unlocks(client, db_session
             ),
             {"device": DEVICE, "memory_id": memory_id, "days": days_ago},
         )
+        _walk_that_day(db_session, memory_id, days_ago)
     db_session.commit()
 
     assert client.get(f"/v1/me?device={DEVICE}").json()["streak"] == 3
+
+
+def _walk_that_day(db_session, memory_id, days_ago):
+    db_session.execute(
+        text(
+            "INSERT INTO daily_routes (device_id, route_date, memory_ids) VALUES "
+            "(CAST(:device AS uuid), (CURRENT_TIMESTAMP - :days * INTERVAL '1 day')::date, "
+            "ARRAY[:memory_id])"
+        ),
+        {"device": DEVICE, "memory_id": memory_id, "days": days_ago},
+    )
+
+
+def test_a_day_with_only_a_filing_does_not_count(client, db_session):
+    """Filing records its own unlock. If that counted, a streak would be kept
+    by posting anything; the streak is for walking."""
+    db_session.execute(
+        text("INSERT INTO devices (id) VALUES (CAST(:device AS uuid))"), {"device": DEVICE}
+    )
+    walked, filed = _place_and_memory(db_session, 0), _place_and_memory(db_session, 1)
+    for memory_id in (walked, filed):
+        db_session.execute(
+            text(
+                "INSERT INTO unlocks (device_id, memory_id) "
+                "VALUES (CAST(:device AS uuid), :memory_id)"
+            ),
+            {"device": DEVICE, "memory_id": memory_id},
+        )
+    db_session.commit()
+    assert client.get(f"/v1/me?device={DEVICE}").json()["streak"] == 0
+
+    _walk_that_day(db_session, walked, 0)
+    db_session.commit()
+    assert client.get(f"/v1/me?device={DEVICE}").json()["streak"] == 1
 
 
 def test_a_device_that_has_never_unlocked_anything_has_no_streak(client):

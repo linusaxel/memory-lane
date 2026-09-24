@@ -25,6 +25,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from sqlalchemy import text
 
 import api.auth as auth
+from tests.conftest import on_todays_route
 from tests.test_api_submit import LAT, LNG, device, submit
 
 pytestmark = pytest.mark.db
@@ -175,13 +176,14 @@ def test_the_same_account_on_a_second_phone_finds_its_collection(client):
     assert client.get(f"/v1/me?device={second}").json()["submitted"] == 1
 
 
-def test_one_memory_earned_on_two_phones_appears_once(client):
+def test_one_memory_earned_on_two_phones_appears_once(client, db_session):
     """Both devices have an unlocks row for it, and the collection is a list of
     things you have, not of times you got them."""
     first, second = device(), device()
     google(client, first)
     google(client, second)
     memory = submit(client, device=first)
+    on_todays_route(db_session, second, memory["id"])
     client.post(
         f"/v1/memories/{memory['id']}/unlock", json={"device": second, "lat": LAT, "lng": LNG}
     )

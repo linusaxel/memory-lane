@@ -31,6 +31,7 @@ from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
     MEDIA_ATTACH,
     MEDIA_DETACH_QUERY,
+    ON_TODAYS_ROUTE_QUERY,
     OWNED_MEMORY_QUERY,
     PLACE_INSERT,
     ROUTE_COMPLETED_QUERY,
@@ -131,6 +132,13 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
         row = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id}).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Memory not found")
+
+        on_route = session.execute(
+            text(ON_TODAYS_ROUTE_QUERY),
+            {"device_id": body.device, "memory_id": memory_id, "today": today()},
+        ).scalar()
+        if not on_route:
+            raise HTTPException(status_code=403, detail="Not on today's walk")
 
         at = Coordinates(lat=body.lat, lng=body.lng)
         memory = row_to_memory(row, at, include_distance=False)

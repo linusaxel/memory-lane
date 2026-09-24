@@ -1,4 +1,4 @@
-/** The third tab.
+/** The journal's "You" section (Memories.tsx).
  *
  * Three jobs: say what this device has done, hold the name submissions are
  * signed with, and answer "why can I not read this". Every app with a proximity
@@ -16,7 +16,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_BASE, type Profile } from './api.ts';
 import Padlock from './Padlock.tsx';
@@ -63,21 +62,14 @@ export default function Settings({
   notifyNearby,
   onNotifyNearby,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const granted = permission === 'granted';
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[styles.body, { paddingTop: insets.top + 14 }]}
-    >
-      <Text style={styles.title}>You</Text>
-
+    <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
       <View style={styles.stats}>
         <Stat value={unlockedCount} label={unlockedCount === 1 ? 'memory' : 'memories'} />
         <Stat value={placeCount} label={placeCount === 1 ? 'place' : 'places'} />
         {submittedCount > 0 && <Stat value={submittedCount} label="filed" />}
-        {!!profile?.streak && <Stat value={profile.streak} label="day streak" />}
       </View>
       <Text style={styles.statsNote}>
         {unlockedCount === 0
@@ -196,8 +188,7 @@ function Row({ children }: { children: React.ReactNode }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingHorizontal: 24, paddingBottom: 72, gap: 6 },
-  title: { fontFamily: font.display, fontSize: 34, color: color.ink },
-  stats: { flexDirection: 'row', gap: 36, marginTop: 24 },
+  stats: { flexDirection: 'row', gap: 36, marginTop: 12 },
   stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   statValue: { fontFamily: font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
   statLabel: { ...label, fontSize: 10 },

@@ -54,7 +54,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F26 | Heart a memory | Implemented |
 | F27 | Keep a streak | Implemented |
 | F28 | Get notified near a memory | Implemented |
-| F29 | Explore what is around | Implemented |
+| F29 | Explore what is around | Removed from the app |
 | F30 | Finish a walk | Implemented |
 | F31 | Look back at a walk | Implemented |
 
@@ -87,9 +87,10 @@ This is the entire product; every other flow exists to get somebody here or to
 make it worth having got here.
 
 **Session three — coming back.** The collection has things in it (F15), it works
-on the train home with no signal (F16), and the map has memories you can already
-read as well as ones you cannot. The You tab is where "why can't I read this"
-gets answered before it becomes a complaint (F17).
+on the train home with no signal (F16), the streak says how many days in a row
+(F27), and tomorrow there is another walk. There is no map of everything: the
+walk is the only window onto what is around. The journal's You section is where
+"why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
 
@@ -205,11 +206,15 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    It should feel like a lock turning.
 4. The memory reveals: summary, tags, source, the watch link — animated once,
    because that arrival is the only payoff the product has.
-5. It stays unlocked, and it joins the **Unlocked** tab. Re-locking something
-   they earned is a punishment for leaving, and one read and then burial under
-   a pin is barely better.
-6. That tab works with no network and no position: it renders from what the
+5. It stays unlocked, and it stays in the journal under that day's walk (F15).
+   Re-locking something they earned is a punishment for leaving.
+6. The journal works with no network and no position: it renders from what the
    device stored, so a memory you walked to is readable on the train home.
+
+**Only a stop of today's walk unlocks.** The server refuses anything else with
+403, standing on it or not: five a day is the product, and the route it checks
+against is its own `daily_routes` row, not anything the client says (docs/10,
+"Only today's walk unlocks").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -431,24 +436,24 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. The **Memories** tab carries a count, badged on the tab itself. It is the
-   only number in the app that goes up because you went outside. The tab's
-   *Unlocked* section is this flow; its *My memories* section is F24.
-2. Newest first, as catalogue entries: place, the opening of the summary, when.
-3. Tapping one opens the full sheet. There is no **Show on map**: the map
-   draws only today's walk, so a memory from another day has no pin to fly to.
+1. **Journal**, top left of the map, opens the only other screen. The streak
+   is on top, large (F27); under it *Walks*, *Filed* (F24) and *You* (F17).
+2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
+   place to its stops; an earned one opens the full sheet, one not walked to
+   says so.
+3. There is no **Show on map**: the map draws only today's walk, so a memory
+   from another day has no pin to fly to.
 
-Without this the reward for standing somewhere in the rain is one read, after
-which the memory is buried under whichever pin you happened to be near and
-findable only by going back.
-
-**Edge:** memories unlocked before the app recorded timestamps have no date.
-They sort last and simply do not say when, rather than reading "Invalid Date".
+There is no flat "Unlocked" list any more. Every unlock is a walk's stop or
+something you filed, and both are already here, grouped the way they were
+earned.
 
 ## F16 · Read on the train home — **Implemented**
 
-The collection renders entirely from device storage. No network, no position, no
-server. An unlocked memory is readable on the way home, in a tunnel, forever.
+The journal renders from device storage first: the last walks list the server
+gave (`route.ts` `loadWalked`) and the unlocked memories (`unlocked.ts`). No
+network, no position. An unlocked memory is readable on the way home, in a
+tunnel, forever.
 
 **The local copy is not the only copy any more.** An unlock is recorded against
 this installation's UUID, so clearing the app's data no longer undoes the
@@ -462,7 +467,7 @@ kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
-The **You** tab exists because every proximity-gated app needs somewhere to
+The journal's **You** section exists because every proximity-gated app needs somewhere to
 answer that, and answering it only inside the sheet that provoked the question
 is too late.
 
@@ -491,7 +496,8 @@ hotspots for anyone who wants them.
 ## F5 · File a memory of your own — **Implemented**
 
 **Who:** somebody standing somewhere something happened to them.
-**Trigger:** the **+ Add** control, top right of the map.
+**Trigger:** the **+ Add** control, top right of the map, at every stage: the
+plan page, the preview, the walk, a walked day. Filing needs no walk.
 
 1. The press checks for a position first. Without one it asks for location and
    stops — there is nothing to file *at*.
@@ -569,13 +575,13 @@ not rebuilding anything.
 ## F21 · Be somebody — **Implemented**
 
 **Who:** anybody who has filed something, or is about to.
-**Trigger:** the You tab, or the Signed field at the bottom of the submit sheet.
+**Trigger:** the journal's You section, or the Signed field at the bottom of the submit sheet.
 
 1. A name, saved as it is typed. No Save button to forget to press.
 2. It appears under every memory they file, as "Filed by —".
 3. Blank is Anonymous, and clearing it has to keep working: the name is the one
    thing here other people see.
-4. The You tab gains a third figure once there is one — how many they have
+4. The You section gains a third figure once there is one — how many they have
    filed, beside how many they unlocked and in how many places.
 
 A name needs no sign-in behind it. A `users` row is a display name and an id
@@ -654,7 +660,7 @@ they walked for.
    photo and recording.
 2. It is never a route stop (`ROUTE_CANDIDATES_QUERY` skips anything not yet
    open), and the map draws nothing else, so it is not on the map. Its author
-   finds it in My memories (F24).
+   finds it in the journal under Filed (F24).
 3. Opening it gives the locked composition with a different figure — the date,
    not the distance — and "Sealed until then. Standing here does not open it
    any sooner."
@@ -697,10 +703,8 @@ its own coordinate, and its card says the date instead of a distance.
 ## F24 · Manage what you filed — **Implemented**
 
 **Who:** somebody who has filed at least one memory.
-**Trigger:** the **Memories** tab (renamed from **Unlocked** — F15) → the *My
-memories* subtab, next to *Unlocked* behind a segmented control. Empty until
-something is filed, same as *Unlocked* is empty until something is walked to
-— neither subtab hides itself; an empty one just says so.
+**Trigger:** the journal (F15) → *Filed*. Empty until something is filed, and
+it says so rather than hiding.
 
 1. A list, newest first: place name, and either the summary or, for a sealed
    one, "Sealed until" the year — shut, seal included, same as the map pin.
@@ -717,21 +721,10 @@ something is filed, same as *Unlocked* is empty until something is walked to
    everywhere else — and removes the row, its media and its place outright,
    not the hidden flag a report uses.
 
-**A memory you file can sit in both subtabs at once, and that is correct.**
-Filing unlocks it (F5), so it belongs in *Unlocked* on the same terms as
-anything you walked to; it is also yours, so it belongs in *My memories*.
-Nothing reconciles the two - they answer different questions about the same
-row. These were stacked sections on one scroll until this became a
-two-hundred-memory app: at that size, each list pushing the other further
-down the screen cost more than a tap to switch, so the subtabs replaced the
-stack. Seeing a memory in both still costs a tab switch instead of a scroll,
-but it's one or the other now, not neither.
-
-**Always the server's list, never the local cache, for its own subtab.**
-Unlike *Unlocked*, *My memories* has to show two things the offline unlock
-cache was never told about — a memory still sealed, and one enough people
-reported — so `/v1/me/memories` is asked fresh whenever the tab is opened or
-a save or delete lands, rather than reading `AsyncStorage`.
+**Always the server's list, never the local cache.** *Filed* has to show two
+things the offline unlock cache was never told about — a memory still sealed,
+and one enough people reported — so `/v1/me/memories` is asked fresh whenever
+the journal opens or a save or delete lands, rather than reading `AsyncStorage`.
 
 **A sealed memory refuses to edit, not just to open.** F23 says nobody may read
 one early, its author included; showing the current text to change it would be
@@ -761,9 +754,8 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. "+ Add" arrives with the walk, and is in Explore too
-   (filing is standing somewhere, not unlocking); the tab bar (Walk · Explore
-   · Memories · You) is there from launch, and Walk is where it lands. There is no
+   no hotspots card. "+ Add" and "Journal" sit in the top corners at every
+   stage; there are no tabs. There is no
    "Near me": the pill recentres, and "Turn on location" shows only while
    there is no position.
 3. A pill at the bottom centre: "Today's route · 0 of 5 · 2.4 km" — the distance
@@ -858,29 +850,30 @@ relaunching the app, and a locked memory shows no heart control at all.
 
 ## F27 · Keep a streak — **Implemented**
 
-**Who:** someone who unlocks or files something most days.
-**Trigger:** none - it is a number on the "You" tab, not a moment.
+**Who:** someone who walks most days.
+**Trigger:** none - it is the number on top of the journal, not a moment.
 
 1. No counter is stored. `api.accounts.current_streak` reads the distinct
    calendar days this account (this device, or every device on the same
-   account) has an `unlocks` row, and counts back from today for as long as
-   the days are consecutive.
-2. Filing a memory records its own unlock (F5), and finishing today's route
-   (F25) means unlocking its last stop - both extend the streak the same way
-   an ordinary unlock does, with no separate tracking.
-3. Unlocking nothing yesterday *and* nothing today breaks it back to zero; not
-   having unlocked yet *today* does not, since the day is not over.
-4. Shown in `Settings.tsx`'s stat row, next to memories/places/filed, and only
-   once it is above zero - same convention as the "filed" stat.
+   account) unlocked **a stop of that day's walk** (`STREAK_DAYS_QUERY`, unlocks
+   joined to `daily_routes`), and counts back from today for as long as the
+   days are consecutive.
+2. One stop is enough; the whole walk is not required. Filing does **not**
+   count, though it records its own unlock (F5): otherwise a streak is kept by
+   posting anything (decided 2026-09-24).
+3. No stop yesterday *and* none today breaks it back to zero; none yet
+   *today* does not, since the day is not over.
+4. Shown large at the top of the journal (`Memories.tsx`), and on the closing
+   card once it is more than one day (F30).
 
 **Not a notification.** Nothing is pushed when a streak would break; it is a
 truer number the next time the app is opened, same as F25's route pill. This
 is the streak half of the founder-brainstorm's "streak + proximity
 notification, reopened" resolution - F28 is the other half.
 
-**Done when:** unlocking on consecutive days increases the number on the "You"
-tab, a skipped day resets it, and it reads zero for a device that has never
-unlocked anything.
+**Done when:** a walk stop on consecutive days increases the number, a skipped
+day resets it, a day with only a filing does not count, and it reads zero for
+a device that has never walked. `tests/test_streak.py`.
 
 ---
 
@@ -896,8 +889,7 @@ the app is not open.
    requestBackgroundPermissionsAsync()` - which only runs if foreground
    permission is already granted, and notification permission. Turning it off
    just stops the watch; nothing else about the app changes.
-2. The watch tracks today's accepted route (F25) - nothing before Accept, and
-   nothing Explore shows - a
+2. The watch tracks today's accepted route (F25) - nothing before Accept - a
    bounded, already-nearby list (`ROUTE_SIZE`, well under the ~20-region limit
    both platforms enforce for background geofences). `geofenceRegions.ts`
    drops anything already unlocked or sealed (F23) from the watch the moment
@@ -932,28 +924,12 @@ prove it.
 
 ---
 
-## F29 · Explore what is around — **Implemented**
+## F29 · Explore what is around — **Removed from the app**
 
-**Who:** anybody, walk or no walk.
-**Trigger:** the Explore tab.
-
-1. The same map as the walk, with its own camera: the first visit centres on
-   you, after that it is wherever you left it. Every memory under the
-   viewport, fetched as the camera settles (`src/useNearby.ts`), grouped by
-   `cluster.ts`; a wide cluster zooms instead of opening.
-2. **Nothing opens here.** No pin lights, standing on one included, and the
-   sheet is the locked composition with no ring: "Memories open on a walk,
-   standing where they happened." What a walk already earned, and what was
-   never gated (a shared centroid), reads open as it does everywhere.
-3. A stop of today's walk is a plain pin, and its sheet says "Stop N on
-   today's walk" with **Show on the walk**, which switches to Walk and lands
-   on it. The client still never names a stop to the server.
-4. "+ Add" is here too: filing is standing somewhere, not unlocking (F5).
-5. Leaving Walk mid-preview and coming back resumes the preview. Geofence
-   notifications (F28) keep watching the route only.
-
-The rule is the client's: `POST /v1/memories/{id}/unlock` does not know which
-tab asked (docs/10, "Unlocking is Walk-only").
+A second map of every memory under the viewport, where nothing opened. It made
+the corpus a thing to browse and to "complete"; the walk is the only window now,
+and the server holds it to that (F7, docs/10 "Only today's walk unlocks").
+Removed 2026-09-24.
 
 ## F30 · Finish a walk — **Implemented**
 
@@ -980,17 +956,17 @@ Why each of these, in `docs/10-decisions.md`, "The walk ends on a card, once".
 
 Every accepted walk is kept (`daily_routes`), and this reads them back.
 
-1. Memories has a third subtab, Walks, beside Unlocked and My memories: one
-   row per walk, newest first, "Thu, Sep 24", its stops, "5 of 5 · 4.0 km".
-   Unfinished walks are listed too; "3 of 5" says so.
-2. A row opens Explore on that walk, read-only: its stops in place of what is
-   nearby, earned ones open, nothing unlockable. The bar at the bottom names
-   the walk and goes back to the list.
-3. Across every device on a signed-in account (F22).
+1. The journal's *Walks* section (F15): one row per walk, newest first,
+   "Thu, Sep 24", its stops, "5 of 5 · 4.0 km". Unfinished walks are listed
+   too; "3 of 5" says so.
+2. A row opens in place to its stops. An earned one opens its memory; the
+   rest say "Not walked to." Nothing is drawn on the map and nothing unlocks.
+3. Across every device on a signed-in account (F22), and cached for the train
+   (F16).
 
 The km is the budget asked for, not metres walked, and the loop draws stop to
 stop, not out and home: the start is never stored (docs/10 § Routes).
-`GET /v1/routes/walked`, `src/Memories.tsx`, `App.tsx` (`pastWalk`),
+`GET /v1/routes/walked`, `src/Memories.tsx`,
 `.maestro/walk-and-unlock.yml`.
 
 ## F32 · Show me another — **Implemented**
