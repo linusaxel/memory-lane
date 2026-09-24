@@ -3,6 +3,7 @@
     python -m pipeline.seed_dev --dense 300 --seed 1
     ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench
     python -m pipeline.route_bench --runs 200 --seed 2
+    ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench --scenario all
 
 Read, not gated, like perf.py and quality.py. Each run plans a walk through
 api/read.py's own _plan_route for a fresh device, from a random start inside
@@ -11,6 +12,10 @@ off the loop is walked to and back the same way, and `retraced` is how many
 metres of that there are (api/streets.py, retraced_meters). `spur` is any at
 all, often a few metres from a mid-block start to its corner; `>50m` is one
 you would notice.
+
+`--scenario` plants seed_dev's route scenarios in the bench's own transaction
+instead, one at a time, and starts round each one's start. The rollback at the
+end puts back whatever the database held.
 """
 
 import argparse
@@ -27,7 +32,7 @@ from api.read import ROUTE_SIZE, _plan_route
 from api.streets import retraced_meters
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session
-from pipeline.seed_dev import LAT, LNG
+from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, scenario
 
 BUDGETS = (1000, 2000, 3000, 4000, 6000)
 # Starts stay well inside the pool's box, so a walk is not short of stops
@@ -35,10 +40,10 @@ BUDGETS = (1000, 2000, 3000, 4000, 6000)
 START_BOX = (0.004, 0.005)
 
 
-def run(session, rng: random.Random, budget: int) -> dict:
+def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -> dict:
     start = Coordinates(
-        lat=LAT + rng.uniform(-START_BOX[0], START_BOX[0]),
-        lng=LNG + rng.uniform(-START_BOX[1], START_BOX[1]),
+        lat=around[0] + rng.uniform(-START_BOX[0], START_BOX[0]),
+        lng=around[1] + rng.uniform(-START_BOX[1], START_BOX[1]),
     )
     began = time.perf_counter()
     stops, legs, ends = _plan_route(
@@ -61,19 +66,7 @@ def pct(values: list[float], q: int) -> float:
     return statistics.quantiles(values, n=100)[q - 1] if len(values) > 1 else values[0]
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--runs", type=int, default=100)
-    parser.add_argument("--seed", type=int, default=1)
-    args = parser.parse_args()
-    if not ROUTING_URL:
-        raise SystemExit("ROUTING_URL is unset: without streets there are no spurs to measure")
-
-    rng = random.Random(args.seed)
-    with get_session() as session:
-        results = [run(session, rng, rng.choice(BUDGETS)) for _ in range(args.runs)]
-        session.rollback()
-
+def report(results: list[dict]) -> None:
     print(
         f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'>50m':>6} {'retr p50/p95':>14} "
         f"{'walk/budget':>12} {'ms p50/p95':>12}"
@@ -94,6 +87,29 @@ def main() -> None:
             f"{statistics.median(ratio):>11.2f} "
             f"{pct(ms, 50):>5.0f}/{pct(ms, 95):<5.0f}"
         )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--runs", type=int, default=100)
+    parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument(
+        "--scenario", choices=[*ROUTE_SCENARIOS, "all"], help="plant and bench seed_dev --routes"
+    )
+    args = parser.parse_args()
+    if not ROUTING_URL:
+        raise SystemExit("ROUTING_URL is unset: without streets there are no spurs to measure")
+
+    names = [*ROUTE_SCENARIOS] if args.scenario == "all" else [args.scenario]
+    with get_session() as session:
+        for name in names:
+            around = (LAT, LNG)
+            if name:
+                around, planted = scenario(session, name, args.seed)
+                print(f"\n{name}, {planted} places: {ROUTE_SCENARIOS[name]}")
+            rng = random.Random(args.seed)
+            report([run(session, rng, rng.choice(BUDGETS), around) for _ in range(args.runs)])
+        session.rollback()
 
 
 if __name__ == "__main__":

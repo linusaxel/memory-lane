@@ -1445,8 +1445,8 @@ flagged ⚠️ inline, not overridden.
       Lexington & 77th) and linear (the foot route through Broadway's own
       intersections, 17th to Columbus Circle, a point every 80 m) are
       `pipeline/route_scenarios.json`, written once by `--snap-scenarios`.
-      `route_bench` does not read them yet: it still starts inside the dense
-      box, which bimodal and linear are outside.
+      `route_bench --scenario NAME|all` plants each in its own transaction,
+      starts round the scenario's start, and rolls back.
 - [ ] **`pipeline/route_bench.py`: score and time every solver on the same
       instances.** Shaped like `perf.py` and `quality.py`: run by hand and
       read, not part of the gate. Inputs: the classic OP benchmarks
@@ -1457,6 +1457,11 @@ flagged ⚠️ inline, not overridden.
       which doesn't time it today. **That half done 2026-09-24:** level with
       nearby at 50k memories (37 vs 36 ms), so the SQL is not where a plan's
       ~1 s goes; the OSRM `/table` is.
+      **Scenarios done 2026-09-24:** `--scenario all`, 40 runs each: full
+      walks 85-95% except sparse and stack-heavy by design, but a spur in
+      75-100% of runs and >50m in 57-78%. Stack-heavy fills 5 stops from 8
+      places at 3 km, so stops share a place. Solver comparison and the
+      OP benchmarks are still open.
       [KU Leuven OP instances](https://www.mech.kuleuven.be/en/mim/op) ·
       [Tsiligirides 1984](https://www.researchgate.net/publication/230856233_Heuristic_Methods_Applied_to_Orienteering) ·
       [OPLib / op-solver](https://github.com/gkobeaga/op-solver)
