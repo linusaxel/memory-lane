@@ -64,6 +64,14 @@ This stops `curl`, not a determined spoofer — and since submissions, it cuts
 both ways: a memory is also filed at a position nobody verified. Attestation is
 the fix and needs more than accounts. Logged in `TODO.md`.
 
+### Unlocking is Walk-only, and only the app knows it
+
+Explore never offers an unlock; Walk does. `POST /v1/memories/{id}/unlock` does
+not know which tab asked, and should not: the only thing it checks is that you
+are standing there, and a mode flag in the body would be as self-reported as the
+position. Standing at a memory with a hand-rolled request opens it, which is the
+same `curl` the section above already concedes. Keep the rule in the client.
+
 ---
 
 ## Queries

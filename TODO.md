@@ -1501,10 +1501,11 @@ In build order:
       centres on the person, after that wherever they left it.
       **Done 2026-09-24:** `useNearby` fetches from the camera's region; the
       sheet takes no `onUnlock` there and says memories open on a walk.
-- [ ] **Unlocking is Walk-only as a client rule.** `POST
+- [x] **Unlocking is Walk-only as a client rule.** `POST
       /v1/memories/{id}/unlock` does not know about modes and should not. Say
       so in docs/10 next to "The position is self-reported", so nobody
       "fixes" it server-side.
+      **Done 2026-09-24:** docs/10, under the gate.
 - [ ] **The seams - decide each while building:**
       - A route stop seen in Explore: plain pin; its sheet says "Stop N on
         today's walk" with a button that switches to Walk and flies there.
