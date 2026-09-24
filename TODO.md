@@ -249,6 +249,22 @@ exist. Verify before trusting, and strike entries when you fix them.
       `compileall`. The entry is kept struck rather than deleted because the
       original was detailed and convincing, and somebody will otherwise rediscover
       the symptom and re-blame the formatter.
+- [ ] **The reach circle lags the person** (reported 2026-09-24). The blue dot
+      moves smoothly; the circle around it jumps late, behind it. Likely causes,
+      not yet measured:
+      1. `watchPositionAsync` in `mobile/App.tsx` asks for
+         `distanceInterval: 25` at `Accuracy.Balanced`, so the circle moves at
+         most once every 25m - more than the 20m radius it draws. Its comment
+         still argues from a 150m radius. The blue dot is MapKit's own and
+         ignores all of this.
+      2. On iOS any `Circle` prop change is `removeOverlay` + `addOverlay`
+         (`AIRMapCircle.m`, `update`), the same thing that made the dashed
+         route line stutter (docs/09 §3a), so even a finer interval redraws
+         rather than slides.
+      Try a finer interval (~5m, `BestForNavigation` while a route is active)
+      first and see whether (2) is visible; if it is, the circle has to become a
+      Marker-hosted view that can animate, or go. Battery cost of (1) is
+      foreground-only, per UI.md rule 2.
 
 ---
 
