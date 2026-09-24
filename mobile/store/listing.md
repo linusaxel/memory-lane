@@ -65,7 +65,7 @@ once W2-08 is deployed.)
   These need a real device — install the `preview` APK from EAS. Using the iOS
   screenshots on a Play listing is a policy risk.
 
-Suggested three: the map with pins, a memory sheet open, the "Near me" view.
+Suggested three: the map with pins, a memory sheet open, today's walk from where you stand.
 
 ## Play Data safety answers
 

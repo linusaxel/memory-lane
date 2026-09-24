@@ -108,7 +108,7 @@ python -m api.main
 | `db/migrations/` | One-off SQL for databases that already exist |
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
 | `config/content.yaml` | Content sources to process |
-| `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, "Near me" |
+| `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, the pill recentres |
 | `mobile/src/Plan.tsx` | **How far today.** The slider page and the preview card with Accept |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |

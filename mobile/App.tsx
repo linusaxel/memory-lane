@@ -251,7 +251,7 @@ export default function App() {
 
   /** Walking into range has to change the map by itself. A position read once
    *  at launch means a pin only turns unlockable if you happen to press
-   *  "Near me" while standing on it, which is the opposite of the mechanic. */
+   *  something while standing on it, which is the opposite of the mechanic. */
   const watchPosition = useCallback(async () => {
     if (watcher.current) return;
     try {
@@ -280,7 +280,7 @@ export default function App() {
 
     // Permission granted is not the same as having a fix. Indoors, in airplane
     // mode, or on a simulator with no location set, this rejects - and the
-    // "Near me" button calls it straight from onPress, so an unhandled
+    // "Turn on location" button calls it straight from onPress, so an unhandled
     // rejection was the whole error handling.
     // EXPO_PUBLIC_DEV_LOCATION, under __DEV__ only. See src/devLocation.ts.
     let here = devLocation();
@@ -623,6 +623,7 @@ export default function App() {
   }, [withinReach, routePositionById]);
   const onRoute = route.length > 0;
   const pillBreath = useBreath(stopHere !== null);
+  const pillSlot = position && { bottom: 44 };
 
   // Reaching a stop is the moment the app is for. The transition, not the
   // state: stopHere gets a new identity on every 25m position update. Light,
@@ -931,10 +932,11 @@ export default function App() {
             </Pressable>
           )}
 
-          {/* Above "Near me", in the same bottom slot every other floating
-              control here shares - never a second region of the screen. */}
+          {/* In the same bottom slot every other floating control here shares -
+              never a second region of the screen. Above "Turn on location"
+              while that shows, in its place once there is a position. */}
           {walking && onRoute && stopHere && (
-            <Animated.View style={[styles.routeAt, pillBreath]}>
+            <Animated.View style={[styles.routeAt, pillSlot, pillBreath]}>
               <Pressable
                 style={dim()}
                 accessibilityRole="button"
@@ -954,7 +956,7 @@ export default function App() {
           )}
           {walking && onRoute && !stopHere && (
             <Pressable
-              style={dim(styles.route)}
+              style={dim([styles.route, pillSlot])}
               accessibilityRole="button"
               accessibilityLabel={
                 routeDone
@@ -967,12 +969,21 @@ export default function App() {
                 routeDone
                   ? 'Shows the whole route'
                   : routeStarted
-                    ? 'Centers the map on the next stop'
+                    ? 'Centers the map on you and the next stop'
                     : "Starts today's route"
               }
               onPress={() => {
                 setRouteStarted(true);
-                if (nextRouteStop) {
+                const you = positionRef.current;
+                if (nextRouteStop && you) {
+                  mapRef.current?.fitToCoordinates(
+                    [you, nextRouteStop.place.coordinates].map((c) => ({
+                      latitude: c.lat,
+                      longitude: c.lng,
+                    })),
+                    { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
+                  );
+                } else if (nextRouteStop) {
                   flyTo({
                     latitude: nextRouteStop.place.coordinates.lat,
                     longitude: nextRouteStop.place.coordinates.lng,
@@ -994,16 +1005,12 @@ export default function App() {
             </Pressable>
           )}
 
-          {walking && (
+          {walking && !position && (
             <Pressable
               style={dim(styles.locate)}
               accessibilityRole="button"
-              // The label follows the words, because the two states do two
-              // different things - one recentres, the other asks the system.
-              accessibilityLabel={position ? 'Near me' : 'Turn on location'}
-              accessibilityHint={
-                position ? 'Centres the map on where you are' : 'Asks for permission to use your location'
-              }
+              accessibilityLabel="Turn on location"
+              accessibilityHint="Asks for permission to use your location"
               onPress={() => {
                 if (permission === 'blocked') {
                   Linking.openSettings();
@@ -1014,7 +1021,7 @@ export default function App() {
             >
               {/* Without location nothing can ever unlock, so the button says so
                   rather than leaving a walk whose stops never open. */}
-              <Text style={styles.locateText}>{position ? 'Near me' : 'Turn on location'}</Text>
+              <Text style={styles.locateText}>Turn on location</Text>
             </Pressable>
           )}
 
@@ -1166,7 +1173,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   locateText: { ...buttonText, color: color.paper },
-  // Directly above "Near me", sharing its shadow token - UI.md's rule is that
+  // Directly above "Turn on location", sharing its shadow token - UI.md's rule is that
   // only two shadows exist in this app, and this is the same kind of small
   // solid control as the one it sits on.
   route: {

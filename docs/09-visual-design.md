@@ -65,7 +65,7 @@ survive it, because the next person will reach for `expo-blur` anyway.
 
 Soft large-radius shadows read as floating; tight dark ones read as stickers.
 That still holds for the two things that genuinely hover over the map — the
-"Near me" button and the location primer.
+"Turn on location" button and the location primer.
 
 Everywhere else the shadows came off in part 5. Stacked floating cards are the
 card-grid tell, and editorial layouts have always used rules and weight instead.

@@ -1475,7 +1475,7 @@ rewriting anything.
 
 In build order:
 
-- [ ] **Remove "Near me".** The locate button in `mobile/App.tsx` renders only
+- [x] **Remove "Near me".** The locate button in `mobile/App.tsx` renders only
       while `!position`, as "Turn on location" (keep the `blocked` →
       `Linking.openSettings()` branch). `goToMyLocation` stays - launch, plan
       and + Add still need a fix and the watcher. Recentring moves to the route
@@ -1483,6 +1483,8 @@ In build order:
       waits on `visible: "Near me"` as its "has a fix" signal; switch it to the
       pill. Docs: UI.md's screen tree and `locate` shadow row, docs/08 F25
       steps 2-3 and the "Turn on location" lines in F7 and F9.
+      **Done 2026-09-24:** the button exists only while `!position`; the pill
+      takes its slot and fits you and the next stop.
 - [ ] **Tabs: Walk · Explore · Memories · You.** `mobile/src/TabBar.tsx`
       (`Tab` gains `'explore'`, `'map'` becomes Walk). The bar shows from
       launch, which reverses "the tabs arrive with the walk" (App.tsx, docs/08

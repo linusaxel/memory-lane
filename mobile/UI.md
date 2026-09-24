@@ -27,10 +27,10 @@ Preview                         the map, fitted to the start and every stop
 MapView (the walk, full bleed)  only today's accepted stops, nothing else
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
-├─ "Today's route · N of 5 · 2.4 km"   bottom centre, above Near me;
+├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap fits you and the next stop;
 │    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
 │    "You're at stop N · open it" seal and breathing while standing at any stop
-└─ "Near me"                  bottom centre, recentres on GPS
+└─ "Turn on location"         bottom centre, below the pill, only while there is no position
 
 MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
@@ -197,7 +197,7 @@ half-loaded state.
 **Elevation is a rule, not a shadow.** Hierarchy comes from hairlines and
 weight, which is how editorial layouts have always done it and is the shortest
 way out of the stacked-card look. The only two things still casting a shadow are
-"Near me" and the preview card, which genuinely hover over a map; both carry
+"Turn on location" and the preview card, which genuinely hover over a map; both carry
 `shadow*` (iOS) and `elevation` (Android), because setting one looks flat on the
 other platform.
 
@@ -253,7 +253,7 @@ rule you have not written yet:
 | | Offset / radius / opacity | Android | On |
 |---|---|---|---|
 | card | `0,8` / 18 / 0.14 | `elevation: 6` | the preview card |
-| locate | `0,6` / 14 / 0.18 | `elevation: 5` | "Near me" — tighter and darker, because it is a small solid shape rather than a sheet of paper |
+| locate | `0,6` / 14 / 0.18 | `elevation: 5` | "Turn on location" — tighter and darker, because it is a small solid shape rather than a sheet of paper |
 
 ## Contrast, measured
 
@@ -557,7 +557,7 @@ The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
 
 A failed request on plan or preview leaves you there with "Can't reach Memory
 Lane right now." under the button. With no location permission the walk's button
-reads **"Turn on location"** instead of "Near me": nothing can unlock without a
+reads **"Turn on location"**, and it is the only time that button exists: nothing can unlock without a
 position, and a walk of pins that never open with no explanation is the worse
 bug. Requests time out after `REQUEST_TIMEOUT_MS` (8s) in `src/api.ts`.
 

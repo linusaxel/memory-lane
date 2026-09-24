@@ -44,14 +44,14 @@ appId: ${APP_ID}
     timeout: 40000
 - tapOn: "Accept this walk"
 
-# The button only says "Near me" once there is a position; waiting on it first
-# means a slow fix reads as a slow fix rather than as a missing pill.
-- extendedWaitUntil:
-    visible: "Near me"
-    timeout: 40000
-
 - extendedWaitUntil:
     visible: "Today's route · 0 of 5 unlocked\\."
+    timeout: 40000
+
+# "Turn on location" shows until there is a position, so its going is the fix.
+# Waiting on it means a slow fix reads as a slow fix, not as a locked stop.
+- extendedWaitUntil:
+    notVisible: "Turn on location"
     timeout: 40000
 
 # F17 + F12: why it will not open, and what to do about it.

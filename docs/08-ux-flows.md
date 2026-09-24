@@ -205,7 +205,7 @@ other distribution channel (see *Design rules* in `TODO.md`).
    device stored, so a memory you walked to is readable on the train home.
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
-— the bottom button reads "Turn on location" instead of "Near me" — rather than
+— a bottom button reads "Turn on location", shown only then — rather than
 showing a walk of permanently locked pins. The Midtown fallback is a planning
 anchor and never an unlock position: where a walk starts and where the person
 stands are two different parameters, precisely so that planning from a city
@@ -320,7 +320,7 @@ environment if it turns out wrong in the street.
 
 The app keeps the position live with `watchPositionAsync` (5m interval,
 foreground only). Reading it once at launch means a pin turns unlockable only if
-you happen to press "Near me" while standing on it, which is the opposite of the
+you happen to relaunch while standing on it, which is the opposite of the
 mechanic.
 
 
@@ -358,7 +358,7 @@ press on it is the only thing that can raise one.
    "Planning from Midtown. Turn on location to plan from where you are."
 2. Gated memories are all locked, and the sheet says so plainly rather than
    showing a distance it cannot know.
-3. The bottom button reads **"Turn on location"** rather than "Near me".
+3. A bottom button reads **"Turn on location"**. It exists only in this mode.
 4. No reach circle is drawn, because there is no reach.
 
 This is a real mode, not an error, and never a dead end: a reviewer who taps
@@ -401,8 +401,8 @@ distance.
 
 1. Position is *watched*, not read once (`watchPositionAsync`, 5m). Walking
    into range changes the map by itself — a position read at launch would mean a
-   pin only turns unlockable if you happen to press "Near me" while standing on
-   it, which is the opposite of the mechanic.
+   pin only turns unlockable if you happen to relaunch while standing on it,
+   which is the opposite of the mechanic.
 2. The pin becomes a seal-coloured ring with a halo, and the reach circle now contains
    it.
 3. The route pill turns seal-coloured, reads "You're at stop 2 · open it", and
@@ -760,14 +760,17 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. The tabs, "+ Add" and "Near me" arrive with the walk.
-3. A pill above "Near me": "Today's route · 0 of 5 · 2.4 km" — the distance
+   no hotspots card. The tabs and "+ Add" arrive with the walk. There is no
+   "Near me": the pill recentres, and "Turn on location" shows only while
+   there is no position.
+3. A pill at the bottom centre: "Today's route · 0 of 5 · 2.4 km" — the distance
    still to walk, from where you stand through every stop not yet earned, in
    order, and back to where the walk started: a route is a loop by default
    (`ROUTE_LOOP`), so the walk home counts. Along the streets between stops
    when a routing server is running (`ROUTING_URL`), straight from you to the
-   next stop, and said plainly as a distance, never as minutes. Tapping it once starts the
-   route and flies to the next stop; after that the pill reads
+   next stop, and said plainly as a distance, never as minutes. Tapping it starts the
+   route and fits you and the next stop on screen (the stop alone with no
+   position, the whole route once it is walked); after that the pill reads
    "Next: <place> · 350 m".
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    (1–5) in the badge. There is no line while walking: the next unearned
