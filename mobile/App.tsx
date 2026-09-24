@@ -1103,8 +1103,9 @@ export default function App() {
             />
           )}
 
-          {/* Opaque, over a map that stays mounted behind it (rule 9). */}
-          {stage === 'plan' && (
+          {/* Opaque, over a map that stays mounted behind it (rule 9). Not
+              under the journal: iOS 26 draws the slider's glass over covers. */}
+          {stage === 'plan' && !journalOpen && (
             <Plan
               km={walkKm}
               onKm={setWalkKm}
