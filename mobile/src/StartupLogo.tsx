@@ -1,38 +1,34 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View, useColorScheme } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-/** mobile/assets/logo-mark.svg's three paths, inlined - there is no SVG-import
- *  tooling in this project (no metro transformer), so this copies the same
- *  `d` strings mobile/scripts/generate-app-icons.mjs rasterizes. */
-const STROKES = [
-  { d: 'M 20 82 C 30 82 38 78 42 68 C 46 54 20 54 24 40 C 28 26 50 26 54 18', width: 7 },
-  { d: 'M 58 20 C 66 14 74 12 82 14', width: 5 },
-  { d: 'M 60 12 C 66 8 72 8 78 6', width: 4 },
-];
+/** mobile/assets/icon.svg inlined - there is no SVG-import tooling in this
+ *  project (no metro transformer). ROAD and the sun are that file's; TILE_RX
+ *  is mobile/scripts/generate-app-icons.mjs's, so the first frame here is the
+ *  native splash-icon.png exactly. */
+const ROAD =
+  'M180 1024 C220 740 760 780 640 540 C580 430 440 430 490 350 L530 350 C500 420 660 440 710 540 C820 760 520 860 820 1024Z';
+const TILE_RX = 229;
 
-// Longer than any of the three paths, so an approximate dasharray still
-// clears the full stroke with room to spare - exact getTotalLength() is not
-// worth the extra native round trip for a ~750ms one-shot.
-const DASH_LENGTH = 220;
-
-/** Draws the logo mark on once, then calls onDone. Splash colours, not
- *  DynamicColorIOS: react-native-svg's `stroke`/View `backgroundColor` here
- *  sit on the same "real colour, not a platform-resolved one" exception as
- *  the map's Circle/Polyline - see mobile/UI.md. */
+/** Fades the sun in over the splash's sunless tile, then calls onDone. Splash
+ *  colours, not DynamicColorIOS: react-native-svg's fills/View
+ *  `backgroundColor` here sit on the same "real colour, not a
+ *  platform-resolved one" exception as the map's Circle/Polyline - see
+ *  mobile/UI.md. */
 export default function StartupLogo({ onDone }: { onDone: () => void }) {
-  const scheme = useColorScheme();
-  const paper = scheme === 'dark' ? '#161412' : '#F7F4EE';
-  const ink = scheme === 'dark' ? '#F2EDE4' : '#1C1917';
+  const dark = useColorScheme() === 'dark';
+  const paper = dark ? '#161412' : '#F7F4EE';
+  const tile = dark ? '#0a2b2c' : '#106a6d';
+  const road = dark ? '#e9f1ee' : '#f2ede4';
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const animation = Animated.timing(progress, {
       toValue: 1,
       duration: 750,
-      useNativeDriver: false, // strokeDashoffset is not a native-driver prop
+      useNativeDriver: false, // react-native-svg props are not native-driver props
     });
     animation.start(({ finished }) => {
       if (finished) onDone();
@@ -43,23 +39,10 @@ export default function StartupLogo({ onDone }: { onDone: () => void }) {
 
   return (
     <View style={[styles.container, { backgroundColor: paper }]}>
-      <Svg width={120} height={120} viewBox="0 0 100 100">
-        {STROKES.map((stroke, i) => (
-          <AnimatedPath
-            key={i}
-            d={stroke.d}
-            fill="none"
-            stroke={ink}
-            strokeWidth={stroke.width}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeDasharray={DASH_LENGTH}
-            strokeDashoffset={progress.interpolate({
-              inputRange: [0, 1],
-              outputRange: [DASH_LENGTH, 0],
-            })}
-          />
-        ))}
+      <Svg width={200} height={200} viewBox="0 0 1024 1024">
+        <Rect width={1024} height={1024} rx={TILE_RX} fill={tile} />
+        <Path d={ROAD} fill={road} />
+        <AnimatedCircle cx={510} cy={280} r={66} fill="#f2a65a" opacity={progress} />
       </Svg>
     </View>
   );
