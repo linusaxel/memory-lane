@@ -675,10 +675,17 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
         pins = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
         return retraced_meters([p for leg in legs for p in leg], pins)
 
+    def judge(order, legs):
+        """Short of ROUTE_FILL of the slider first, then street retraced. A
+        short walk retraces least, so on spurs alone a 10km ask got 755m."""
+        short = max(0.0, ROUTE_FILL * budget_meters - _path_meters(order, d, ROUTE_LOOP))
+        return short // SPUR_STEP_METERS, spur(order, legs)
+
     routed = [(order, legs)] + [(o, streets(o)) for o in shortlist[1:]]
-    judged = [(spur(o, lg) // SPUR_STEP_METERS, n, o, lg) for n, (o, lg) in enumerate(routed) if lg]
-    _, _, order, legs = min(judged)
+    judged = [(judge(o, lg), n, o, lg) for n, (o, lg) in enumerate(routed) if lg]
+    _, _, order, legs = min(judged, key=lambda j: (j[0][0], j[0][1] // SPUR_STEP_METERS, j[1]))
     retraced = spur(order, legs)
+    judged_now = judge(order, legs)
     banned: set[int] = set()
     for _ in range(ROUTE_CLEANUPS):
         if retraced < 1:
@@ -690,14 +697,14 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
                 continue
             trial_legs = streets(trial)
             if trial_legs is not None:
-                cost = spur(trial, trial_legs)
-                trials.append((cost, stop, trial, trial_legs))
+                trials.append((judge(trial, trial_legs), stop, trial, trial_legs))
         if not trials:
             break
-        cost, stop, trial, trial_legs = min(trials, key=lambda t: t[0])
-        if cost >= retraced:
+        verdict, stop, trial, trial_legs = min(trials, key=lambda t: t[0])
+        if verdict >= judged_now:
             break
-        retraced, order, legs = cost, trial, trial_legs
+        judged_now, order, legs = verdict, trial, trial_legs
+        retraced = spur(order, legs)
         banned.add(stop)
 
     # One street route through the whole walk, start and home included, split

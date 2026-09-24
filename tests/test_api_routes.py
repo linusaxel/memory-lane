@@ -7,6 +7,7 @@ thing that matters is what a device actually receives.
 """
 
 import datetime
+import math
 from itertools import pairwise
 
 import pytest
@@ -339,3 +340,52 @@ def test_a_stop_too_far_from_any_street_is_never_a_stop(client, db_session, monk
     chosen = [m["id"] for m in _preview(client).json()["memories"]]
     assert ids[2] not in chosen
     assert {ids[1], ids[3]} <= set(chosen)
+
+
+def test_a_long_ask_is_not_traded_for_a_short_walk_that_retraces_less(
+    client, db_session, monkeypatch
+):
+    """A knot of stops round the corner is a clean loop; a ring of stops a
+    kilometre and more out is the walk asked for, but each one is reached by a
+    stub walked in and out. Judged on retracing alone, a 10km ask got the knot."""
+
+    for k in range(5):
+        _historical(
+            db_session,
+            _place(db_session, f"Near {k}", LAT + 0.0003 * math.cos(k), LNG + 0.0005 * math.sin(k)),
+            f"near {k}",
+            f"https://e.invalid/near{k:0>7}",
+        )
+    far = []
+    for k in range(10):
+        angle = 2 * math.pi * k / 10
+        lat, lng = LAT + 0.012 * math.cos(angle), LNG + 0.02 * math.sin(angle)
+        _historical(
+            db_session,
+            _place(db_session, f"Far {k}", lat, lng),
+            f"far {k}",
+            f"https://e.invalid/far{k:0>8}",
+        )
+        far.append(Coordinates(lat=lat, lng=lng))
+    db_session.commit()
+
+    def stub(at):
+        return Coordinates(lat=at.lat, lng=at.lng + 0.0015)
+
+    def legs(points):
+        out = []
+        for a, b in pairwise(points):
+            shape = [a] + ([stub(a)] if a in far else []) + ([stub(b)] if b in far else []) + [b]
+            out.append(shape)
+        return out
+
+    monkeypatch.setattr(read, "street_legs", legs)
+    meta = _preview(client, budget_meters=10000).json()["meta"]
+    path = [meta["out_leg"], *meta["legs"], meta["home_leg"]]
+    # The fake legs are straight, and the solver prices those x ROUTE_CIRCUITY.
+    walked = streets.ROUTE_CIRCUITY * sum(
+        read.meters_between(Coordinates(**a), Coordinates(**b))
+        for leg in path
+        for a, b in pairwise(leg)
+    )
+    assert walked >= read.ROUTE_FILL * 10000, f"a 10km ask walked {walked:.0f}m"
