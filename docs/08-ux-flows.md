@@ -56,7 +56,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F28 | Get notified near a memory | Implemented |
 | F29 | Explore what is around | Implemented |
 | F30 | Finish a walk | Implemented |
-| F31 | Look back at a walk | Proposed |
+| F31 | Look back at a walk | Implemented |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
@@ -978,6 +978,23 @@ the pill, not the card. There is no share button, by decision (2026-09-24).
 `App.tsx` (`walkDone`), `src/Plan.tsx` (`WalkDone`), `.maestro/walk-and-unlock.yml`.
 Why each of these, in `docs/10-decisions.md`, "The walk ends on a card, once".
 
+## F31 · Look back at a walk — **Implemented**
+
+Every accepted walk is kept (`daily_routes`), and this reads them back.
+
+1. Memories has a third subtab, Walks, beside Unlocked and My memories: one
+   row per walk, newest first, "Thu, Sep 24", its stops, "5 of 5 · 4.0 km".
+   Unfinished walks are listed too; "3 of 5" says so.
+2. A row opens Explore on that walk, read-only: its stops in place of what is
+   nearby, earned ones open, nothing unlockable. The bar at the bottom names
+   the walk and goes back to the list.
+3. Across every device on a signed-in account (F22).
+
+The km is the budget asked for, not metres walked, and the loop draws stop to
+stop, not out and home: the start is never stored (docs/10 § Routes).
+`GET /v1/routes/walked`, `src/Memories.tsx`, `App.tsx` (`pastWalk`),
+`.maestro/walk-and-unlock.yml`.
+
 ## Proposed
 
 Not built. Each needs a decision before it can be specified properly — see
@@ -988,14 +1005,6 @@ Not built. Each needs a decision before it can be specified properly — see
 The core of the product brief: stand in a Copenhagen street, learn what
 happened there. Blocked on choosing the historical source, and on deciding
 whether it is a separate map layer, a filter, or a second pin style.
-
-### F31 · Look back at a walk — **Proposed**
-
-Every accepted walk is already kept (`daily_routes`), and nothing reads one
-back after its day. Proposed: a Walks list beside Unlocked and My memories,
-one row per walk (date, stops earned, km). A row opens that walk on the map,
-read-only. The start was never stored, so a past loop draws stop to stop and
-not out and home. `TODO.md`, "Walk done".
 
 ### F4 · Switch between historical, friend and stranger layers — **Answered: all at once, told apart in the sheet**
 

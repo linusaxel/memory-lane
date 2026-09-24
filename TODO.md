@@ -1626,10 +1626,14 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
       walks are listed: "3 of 5" says so, and hiding them would lose a day.
       The km is the budget asked for, not the metres walked: the start was
       never stored, so the walk itself cannot be measured out and home.
-- [ ] **Flows and tests.** F30 and F31 move from Proposed to Implemented in
+- [x] **Flows and tests.** F30 and F31 move from Proposed to Implemented in
       docs/08. `.maestro/walk-and-unlock.yml` already reaches 5 of 5: add the
       closing screen there, and the Walks row after its relaunch. Headless in
       `tests/test_flows.py`: finish a walk, check `completed_at` is set once, check it is listed.
+      **Done 2026-09-24:** F31 is Implemented in docs/08. The walk journey
+      ends by opening the Walks row and closing it again;
+      `test_f30_f31_a_finished_walk_is_finished_once_and_kept` is the headless
+      twin.
 
 ## Decided — do not revisit
 

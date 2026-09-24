@@ -1,6 +1,7 @@
 # F11 Find the nearest locked memory -> F12 Walk there -> F13 Walk into range
 # -> F7 Unlock by standing near it -> F25 walk today's loop 1 -> 5 -> F30
-# finish it -> F15 reread it later. docs/08-ux-flows.md
+# finish it -> F15 reread it later -> F31 look back at the walk.
+# docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
 #
@@ -232,3 +233,17 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*The bench outside, dev seed.*"
     timeout: 30000
+
+# F31: the walk just walked is kept. Its row opens it on the map, read-only,
+# and the bar over it goes back to the list.
+- tapOn: "Walks"
+- extendedWaitUntil:
+    visible: ".*, 5 of 5 · .*"
+    timeout: 30000
+- tapOn: ".*, 5 of 5 · .*"
+- extendedWaitUntil:
+    visible: "Walk of .*, 5 of 5\\. Close\\."
+    timeout: 30000
+- assertNotVisible: "Unlock this memory"
+- tapOn: "Walk of .*, 5 of 5\\. Close\\."
+- assertVisible: "Walks"

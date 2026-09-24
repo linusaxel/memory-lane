@@ -303,6 +303,38 @@ def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route
         assert {m["id"] for m in earned} == set(ids), body
 
 
+def test_f30_f31_a_finished_walk_is_finished_once_and_kept(seeded, db_session):
+    """F30 then F31: walk today's loop to the end, then find it in Walks."""
+    body = {"device": DEVICE, "lat": START[0], "lng": START[1], "budget_meters": 4000}
+    stops = seeded.post("/v1/routes/today", json=body).json()["memories"]
+    assert stops, "the seed should make a walk from the start"
+
+    def completed_at():
+        return db_session.execute(
+            text("SELECT completed_at FROM daily_routes WHERE device_id = CAST(:d AS uuid)"),
+            {"d": DEVICE},
+        ).scalar()
+
+    for m in stops:
+        assert completed_at() is None, "finished before the last stop"
+        seeded.post(
+            f"/v1/memories/{m['id']}/unlock", json={"device": DEVICE, **m["place"]["coordinates"]}
+        )
+    finished = completed_at()
+    assert finished is not None
+    last = stops[-1]
+    seeded.post(
+        f"/v1/memories/{last['id']}/unlock", json={"device": DEVICE, **last["place"]["coordinates"]}
+    )
+    assert completed_at() == finished, "set once, never moved"
+
+    [walk] = seeded.get("/v1/routes/walked", params={"device": DEVICE}).json()["walks"]
+    assert [m["id"] for m in walk["memories"]] == [m["id"] for m in stops]
+    assert walk["meta"]["earned"] == walk["meta"]["size"] == len(stops)
+    assert walk["meta"]["completed_at"] is not None
+    assert all(not m["locked"] and m["summary"] for m in walk["memories"])
+
+
 def test_f19_somewhere_else_entirely_is_told_where_to_go(seeded):
     """F19: an empty map is a dead end unless it names the nearest hotspot."""
     copenhagen = {"lat": 55.6759, "lng": 12.5655, "radius_km": 10}
