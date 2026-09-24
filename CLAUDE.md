@@ -75,7 +75,7 @@ python -m pipeline.worker              # Start worker (run multiple in separate 
 # Seed memories you can actually reach (the real corpus has none nearby)
 python -m pipeline.seed_dev          # --clear removes them
 python -m pipeline.seed_dev --dense 300 --seed 1   # plus a full map for the route to choose from
-python -m pipeline.seed_dev --routes bimodal   # one route scenario alone: sparse, dense, bimodal, linear, one-layer, stack-heavy
+python -m pipeline.seed_dev --routes bimodal   # one route scenario alone: sparse, dense, bimodal, linear, one-layer, stack-heavy, lakes (Copenhagen)
 
 # Start API server
 python -m api.main

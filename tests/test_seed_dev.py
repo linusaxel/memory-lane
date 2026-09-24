@@ -280,6 +280,14 @@ def test_each_route_scenario_is_its_shape_alone_and_every_pin_gated(db_session, 
         assert lngs[9] < -73.972 and lngs[10] > -73.961
     if name == "linear":
         assert planted > 30 and far > 1500
+    if name == "lakes":
+        # Round all three from Olufsvej: the far tip is ~2.9 km off.
+        assert 15 <= planted <= 25 and far > 2500
+        names = db_session.execute(
+            text(f"SELECT name FROM places WHERE place_query LIKE '{PLACE_PREFIX}lakes-%'")
+        ).scalars()
+        lakes = {n.rsplit(" ", 3)[0] for n in names}
+        assert set(seed_dev.LAKES) <= lakes, "a Maestro journey asserts a stop by its lake"
 
     clear(db_session)
     db_session.commit()

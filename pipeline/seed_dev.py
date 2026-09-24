@@ -452,13 +452,13 @@ def snap_pool(tries: int = 4000) -> list[list[float]]:
     return pool
 
 
-def plant(session, content_id, rng, label, i, n, lat, lng, stranger=None, memories=1):
+def plant(session, content_id, rng, label, i, n, lat, lng, stranger=None, memories=1, name=None):
     """One place for --dense or --routes carrying `memories` memories: a
     submission a third of the time unless `stranger` says, random tags and a
     random contrast_score. The draws stay in this order so a --seed keeps
     planting the same map."""
     key = f"{PLACE_PREFIX}{label.lower()}-{i}"
-    name = f"{label.capitalize()} {i}, dev seed"
+    name = f"{name or label.capitalize()} {i}, dev seed"
     summaries = [
         f"Seeded memory {i} of {n}, placed at random on a walkable street."
         + (f" {j + 1} of {memories} here." if memories > 1 else "")
@@ -533,6 +533,7 @@ ROUTE_SCENARIOS = {
     "linear": "stops strung along Broadway, 17th Street to Columbus Circle",
     "one-layer": "20 stops, every one historical: nothing for the layer mix to do",
     "stack-heavy": "8 places carrying 3-6 memories each",
+    "lakes": "Copenhagen: round the three lakes from Olufsvej, ~9 km, named by lake",
 }
 SCENARIOS = pathlib.Path(__file__).with_name("route_scenarios.json")
 # Columbus & 81st, Lexington & 77th: two avenues off the Park, so nothing
@@ -547,6 +548,54 @@ BROADWAY = (
     (40.7614, -73.9838),
     (40.7681, -73.9819),
 )
+# Olufsvej, then down the city banks to the tip of Sankt Jørgens Sø and back up
+# the far ones: Øster Søgade, Nørre Søgade, Vester Søgade, Svineryggen, Peblinge
+# and Sortedam Dossering. Measured on OSRM at ~9.1 km, under the slider's 10.
+OLUFSVEJ = (55.7007, 12.5759)
+LAKES_LOOP = (
+    OLUFSVEJ,
+    (55.6955, 12.5790),
+    (55.6875, 12.5670),
+    (55.6828, 12.5622),
+    (55.6748, 12.5600),
+    (55.6775, 12.5565),
+    (55.6856, 12.5609),
+    (55.6930, 12.5708),
+    OLUFSVEJ,
+)
+# Each lake as a line from its north-east end to its south-west one: they are
+# long and thin, and a point at one end of Sortedams Sø is nearer the middle of
+# Peblinge Sø than the middle of its own lake.
+LAKES = {
+    "Sortedams Sø": ((55.6970, 12.5795), (55.6872, 12.5645)),
+    "Peblinge Sø": ((55.6870, 12.5630), (55.6815, 12.5595)),
+    "Sankt Jørgens Sø": ((55.6810, 12.5585), (55.6745, 12.5595)),
+}
+
+
+def lake_of(lat: float, lng: float) -> str:
+    """The lake a point is on the bank of, or where it is on the way down."""
+
+    def off(end_a, end_b) -> float:
+        # Flat metres: the lakes are 3 km across, so the error is centimetres.
+        k = math.cos(math.radians(lat))
+        ax, ay, bx, by = end_a[1] * k, end_a[0], end_b[1] * k, end_b[0]
+        px, py = lng * k, lat
+        t = max(
+            0,
+            min(
+                1,
+                ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2),
+            ),
+        )
+        return math.hypot(px - ax - t * (bx - ax), py - ay - t * (by - ay)) * 111_320
+
+    lake, metres = min(((name, off(*ends)) for name, ends in LAKES.items()), key=lambda x: x[1])
+    if metres < 200:
+        return lake
+    here = Coordinates(lat=lat, lng=lng)
+    home = meters_between(here, Coordinates(lat=OLUFSVEJ[0], lng=OLUFSVEJ[1]))
+    return "Olufsvej" if home < 150 else "On the way to the lakes"
 
 
 def within(points, lat: float, lng: float, half_meters: float) -> list:
@@ -554,6 +603,20 @@ def within(points, lat: float, lng: float, half_meters: float) -> list:
     dlat = half_meters / 111_320
     dlng = dlat / math.cos(math.radians(lat))
     return [p for p in points if abs(p[0] - lat) <= dlat and abs(p[1] - lng) <= dlng]
+
+
+def along(line, every: float, keep) -> list[list[float]]:
+    """A point every `every` metres of an OSRM geometry, each in a free cell."""
+    points, walked, last = [], every, None
+    for lng, lat in line:
+        here = Coordinates(lat=lat, lng=lng)
+        if last is not None:
+            walked += meters_between(last, here)
+        last = here
+        if walked >= every and keep(round(lat, 6), round(lng, 6)):
+            points.append([round(lat, 6), round(lng, 6)])
+            walked = 0.0
+    return points
 
 
 def snap_scenarios() -> dict:
@@ -589,19 +652,21 @@ def snap_scenarios() -> dict:
         [Coordinates(lat=a, lng=b) for a, b in BROADWAY],
         "overview=full&geometries=geojson",
     )["routes"][0]["geometry"]["coordinates"]
-    linear, walked, last = [], 80.0, None
-    for lng, lat in line:
-        here = Coordinates(lat=lat, lng=lng)
-        if last is not None:
-            walked += meters_between(last, here)
-        last = here
-        if walked >= 80 and keep(round(lat, 6), round(lng, 6)):
-            linear.append([round(lat, 6), round(lng, 6)])
-            walked = 0.0
+    linear = along(line, 80, keep)
+
+    # One every ~400m of the loop, so a shorter walk has real choices. Not the
+    # first, which is the doorstep.
+    loop = _osrm(
+        "route",
+        [Coordinates(lat=a, lng=b) for a, b in LAKES_LOOP],
+        "overview=full&geometries=geojson",
+    )["routes"][0]["geometry"]["coordinates"]
+    lakes = along(loop, 400, keep)[1:]
 
     return {
         "bimodal": {"start": list(PARK_SIDES[0]), "points": bimodal},
         "linear": {"start": list(BROADWAY[2]), "points": linear},
+        "lakes": {"start": list(OLUFSVEJ), "points": lakes},
     }
 
 
@@ -634,7 +699,8 @@ def scenario(session, name: str, seed: int) -> tuple[tuple[float, float], int]:
     content_id = content_id_of(session)
     for i, (lat, lng) in enumerate(points):
         memories = rng.randint(3, 6) if stacked else 1
-        plant(session, content_id, rng, name, i, len(points), lat, lng, stranger, memories)
+        place = lake_of(lat, lng) if name == "lakes" else None
+        plant(session, content_id, rng, name, i, len(points), lat, lng, stranger, memories, place)
     return start, len(points)
 
 

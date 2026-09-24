@@ -1797,7 +1797,14 @@ the seed; the slider's 10 km max covers either. In build order:
       Copenhagen extract, as a second dataset or a merged one, so a Copenhagen
       walk is routed on streets and not crow-flies × 1.3. **Done when:**
       `/nearest/v1/foot/12.5700,55.6900` answers on :5001.
-- [ ] **A Copenhagen lakes seed.** A `seed_dev` scenario (`--city cph`, or a
+- [x] **A Copenhagen lakes seed.**
+      **Done 2026-09-24:** `seed_dev --routes lakes`, 17 places every ~400 m
+      of the loop, each named by its lake (`Sankt Jørgens Sø 7, dev seed`) or
+      "Olufsvej" / "On the way to the lakes". Stand at 55.7007,12.5759. F19's
+      "nothing walkable" moved to Malmö (55.605, 13.0038). Previews from
+      Olufsvej reach Sankt Jørgens Sø at 6, 8 and 10 km, but come back up
+      the bank they went down: that is the next item's "clean loop home".
+      Was: A `seed_dev` scenario (`--city cph`, or a
       `ROUTE_SCENARIOS` entry) with invented memories, marked `dev seed` like
       the Midtown ones: a few on Olufsvej and the way down to the lakes, then
       spread along both banks of Sortedams Sø, Peblinge Sø and Sankt Jørgens

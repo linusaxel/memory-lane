@@ -85,11 +85,12 @@ appId: ${APP_ID}
 
 # ---- F19
 #
-# From Copenhagen there is nothing within any length of walk. The preview says
-# so and offers the slider back, rather than accepting an empty day.
+# From Malmö there is nothing within any length of walk. The preview says so
+# and offers the slider back, rather than accepting an empty day. Not
+# Copenhagen: `seed_dev --routes lakes` plants the lakes there.
 - setLocation:
-    latitude: 55.6759
-    longitude: 12.5655
+    latitude: 55.605
+    longitude: 13.0038
 
 - launchApp:
     clearState: true
