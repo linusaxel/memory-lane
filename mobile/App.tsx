@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
   Linking,
   Platform,
   Pressable,
@@ -76,7 +75,6 @@ import { useNearby } from './src/useNearby.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import NextStopArrow from './src/NextStopArrow.tsx';
-import { useBreath } from './src/useBreath.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
@@ -738,7 +736,6 @@ export default function App() {
     return best;
   }, [withinReach, routePositionById]);
   const onRoute = route.length > 0;
-  const pillBreath = useBreath(stopHere !== null);
   const pillSlot = position && { bottom: 44 };
 
   // Reaching a stop is the moment the app is for. The transition, not the
@@ -1088,11 +1085,11 @@ export default function App() {
               never a second region of the screen. Above "Turn on location"
               while that shows, in its place once there is a position. */}
           {walking && tab === 'walk' && onRoute && stopHere && (
-            <Animated.View style={[styles.routeAt, pillSlot, pillBreath]}>
+            <View style={[styles.routeAt, pillSlot]}>
               <Pressable
                 style={dim()}
                 accessibilityRole="button"
-                accessibilityLabel={`You're at stop ${stopHere.position}: ${stopHere.name}. Open to unlock.`}
+                accessibilityLabel={`Unlock memory at stop ${stopHere.position}: ${stopHere.name}.`}
                 onPress={() => {
                   setRouteStarted(true);
                   // At the stop's own page: in a stack, the route memory is
@@ -1101,10 +1098,10 @@ export default function App() {
                 }}
               >
                 <Text style={styles.routeAtText}>
-                  {`You're at stop ${stopHere.position} · open it`}
+                  Unlock memory
                 </Text>
               </Pressable>
-            </Animated.View>
+            </View>
           )}
           {walking && tab === 'walk' && onRoute && !stopHere && !showDone && (
             <Pressable

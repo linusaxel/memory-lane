@@ -3,12 +3,12 @@
 appId: ${APP_ID}
 ---
 - extendedWaitUntil:
-    visible: "You're at stop ${N}: ${STOP}\\. Open to unlock\\."
+    visible: "Unlock memory at stop ${N}: ${STOP}\\."
     timeout: 45000
 # F7: the hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
 # animation callback fires while the finger is still down, so the press
 # completes the unlock rather than cancelling it.
-- tapOn: "You're at stop ${N}: .*"
+- tapOn: "Unlock memory at stop ${N}: .*"
 - assertVisible: "You are standing close enough to open this one."
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:

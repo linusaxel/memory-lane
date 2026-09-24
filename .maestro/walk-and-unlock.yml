@@ -72,7 +72,7 @@ appId: ${APP_ID}
 # while walking - the pin turns and the pill changes its mind on its own.
 - runFlow: ../e2e/out/legs/1.yml
 - extendedWaitUntil:
-    visible: "You're at stop 1: ${STOP1}\\. Open to unlock\\."
+    visible: "Unlock memory at stop 1: ${STOP1}\\."
     timeout: 45000
 # The pin itself turned, not just the pill.
 - assertVisible: "Stop 1 of 5. ${STOP1}. Locked, within reach."
@@ -85,7 +85,7 @@ appId: ${APP_ID}
     visible: "The corner, dev seed \\(3\\)\\. Locked, .*"
     timeout: 40000
 - assertVisible: "Add a memory here"
-- assertNotVisible: "You're at stop 1: .*"
+- assertNotVisible: "Unlock memory at stop 1: .*"
 - swipe:
     start: 50%, 55%
     end: 50%, 45%

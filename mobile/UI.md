@@ -35,7 +35,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              stop while it is off screen (src/NextStopArrow.tsx)
 ├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap zooms out around you to the next stop;
 │    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
-│    "You're at stop N · open it" seal and breathing while standing at any stop
+│    "Unlock memory" seal while standing at any stop
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Walk done." 34/700, "5 memories · 4.1 km
@@ -99,7 +99,7 @@ that asks who you are before it shows you anything has the order wrong.
 | `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/Plan.tsx` | the plan page and the preview card: how far, then accept |
-| `src/useBreath.ts` | the only thing on the map that animates, the "at a stop" pill |
+| `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | what the walking was for |
 | `src/TabBar.tsx` | Walk · Explore · Memories · You, hand-rolled, shown from launch |
 | `src/Settings.tsx` | the "You" tab |
@@ -662,8 +662,7 @@ the same object.
 **Nothing on a marker animates.** Animating a custom marker's children is a
 known flicker source in react-native-maps. Markers set `tracksViewChanges={false}`
 for the frame cost and are keyed `` `${group.key}:${reach}` ``, so they repaint
-exactly when their state changes and never otherwise. The one moving thing is
-the "at a stop" pill (`useBreath`), which is not a marker.
+exactly when their state changes and never otherwise.
 
 A group is locked if any memory in it is — anything left to open outranks
 anything already earned, because a marker with something behind a gate is an

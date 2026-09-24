@@ -100,8 +100,7 @@ Two ways to get a line that moves smoothly, and why neither was taken:
   the map is still, but it has to re-project on every pan and zoom, so it trails
   the map while you move it.
 
-Motion stays where it means something: the ring, the pill breathing at a
-stop, and the next pin's hop. Neither the line nor the hop is `seal`: seal
+Motion stays where it means something: the ring and the next pin's hop. Neither the line nor the hop is `seal`: seal
 means openable.
 
 ## 4. What was rejected

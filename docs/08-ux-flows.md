@@ -198,8 +198,8 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    there — and nothing else.
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
-   into a seal-coloured ring, and the route pill says so in words: "You're at
-   stop 2 · open it", which opens the sheet.
+   into a seal-coloured ring, and the route pill says so in words: "Unlock
+   memory", which opens the sheet.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
    It should feel like a lock turning.
@@ -407,8 +407,7 @@ so nothing sends you out of it.
    which is the opposite of the mechanic.
 2. The pin becomes a seal-coloured ring with a halo, and the reach circle now contains
    it.
-3. The route pill turns seal-coloured, reads "You're at stop 2 · open it", and
-   breathes (F25).
+3. The route pill turns seal-coloured and reads "Unlock memory" (F25).
 
 **This is the moment the app is for**, and the reason nothing else on the map
 moves.
@@ -786,8 +785,8 @@ anyone else's collection or the local unlock cache.
    one after it takes over. Only the preview draws the loop, route-blue under
    the street names (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md
    §3a).
-5. Reaching a stop lights its pin, and the pill turns seal and breathes:
-   "You're at stop 2 · open it", a tap opens it. Any stop, in any order — the
+5. Reaching a stop lights its pin, and the pill turns seal and
+   reads "Unlock memory"; a tap opens it. Any stop, in any order — the
    numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the pill's count and distance move.

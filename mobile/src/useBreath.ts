@@ -11,43 +11,6 @@ function useReduceMotion() {
   return reduceMotion;
 }
 
-/** The breath, as a transform: the "at a stop" pill, when there is something
- *  to open right here. */
-export function useBreath(active: boolean) {
-  const breath = useRef(new Animated.Value(0)).current;
-  const reduceMotion = useReduceMotion();
-
-  useEffect(() => {
-    // Stopping a loop leaves the value wherever the last frame put it, so a
-    // banner that stops being reachable - or has Reduce Motion turned on -
-    // mid-breath would stay 2% too big for the rest of the session.
-    if (!active || reduceMotion) {
-      breath.setValue(0);
-      return;
-    }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(breath, {
-          toValue: 1,
-          duration: 1100,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(breath, {
-          toValue: 0,
-          duration: 1100,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [breath, active, reduceMotion]);
-
-  return { transform: [{ scale: breath.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }] };
-}
-
 /** The hop: the next stop's pin jumps, lands with a squash, and rests. Only a
  *  transform, so the pin's tap target never moves. */
 export function useHop(active: boolean) {

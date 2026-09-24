@@ -70,13 +70,6 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **The at-a-stop pill reads badly and breathes.** (checked 2026-09-24)
-      "You're at stop 3 · open it" (`mobile/App.tsx`, `routeAtText`) is poor
-      copy. Make it something like "Unlock memory". Drop `pillBreath` from
-      that `Animated.View`, because the animation is ugly. The e2e journey taps
-      its accessibility label, "You're at stop N: …. Open to unlock."
-      (`.maestro/steps/unlock-stop.yml`, `.maestro/walk-and-unlock.yml`), so
-      change both together.
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.
       A real date needs a per-video fetch or the channel RSS feed (newest 15
