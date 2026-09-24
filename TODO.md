@@ -39,7 +39,10 @@ strike an entry when its fix lands.
       manual re-trace. **Fix:** have `e2e/run.sh` accept the walk over the API
       first and write each leg's shape into the flow's env, or a script that
       prints the `travel` blocks from `/v1/routes/today`.
-- [ ] **Journeys are labelled with flows that no longer exist.** (2026-09-24)
+- [x] ~~**Journeys are labelled with flows that no longer exist.**~~ (2026-09-24)
+      **Fixed 2026-09-24:** Malmö is F1's "nothing walkable" in
+      `look-around.yml`, e2e/README.md and `tests/test_flows.py`, which now
+      asserts the empty preview instead of the removed hotspots card.
       `walk-and-unlock.yml` opens with "F11 Find the nearest locked memory",
       and `look-around.yml` scripts "F19", both **Removed from the app** in
       docs/08. The Copenhagen case is F1's "nothing walkable"; so is

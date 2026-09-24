@@ -115,7 +115,7 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 
 | File | Flow |
 |---|---|
-| `look-around.yml` | F1 discover, F8 be asked for location, F23 sealed until a date, F19 somewhere else entirely |
+| `look-around.yml` | F1 plan a walk (and nothing walkable), F32 show me another, F8 be asked for location |
 | `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F15 reread what you unlocked, F31 look back at a walk |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed |
 
@@ -168,8 +168,9 @@ react-native-maps 1.29.6, which clamps with
 map announces where it settled; fly 6,000km and it says nothing, so the fetch
 that every camera move gets for free never happened. Full reasoning in
 `docs/10-decisions.md#the-app`; `useMapCamera` now watches a flight rather than
-trusting it. This flow is the only test of it — the behaviour being relied on
-belongs to the native map, so there is nothing a unit test could hold.
+trusting it. F19 is gone and no flow flies that far any more, so nothing tests it —
+the behaviour being relied on belongs to the native map, so there is nothing
+a unit test could hold.
 
 **A pin never told a screen reader whether it could be opened.** `MemoryMarker`
 set `accessibilityLabel`, which iOS drops on a Marker: the label comes from the

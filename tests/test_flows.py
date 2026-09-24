@@ -336,15 +336,18 @@ def test_f30_f31_a_finished_walk_is_finished_once_and_kept(seeded, db_session):
     assert all(not m["locked"] and m["summary"] for m in walk["memories"])
 
 
-def test_f19_somewhere_else_entirely_is_told_where_to_go(seeded):
-    """F19: an empty map is a dead end unless it names the nearest hotspot."""
+def test_f1_nothing_walkable_is_an_empty_preview(seeded):
+    """F1: from somewhere with nothing in reach, the preview is empty, not an error."""
     # Malmö: Copenhagen has a seed now (seed_dev --routes lakes), 25 km off.
-    malmo = {"lat": 55.605, "lng": 13.0038, "radius_km": 10}
-    assert seeded.get("/v1/memories/nearby", params=malmo).json()["memories"] == []
-
-    stats = seeded.get("/v1/stats").json()
-    assert stats["hotspots"], "with no hotspot the card cannot render and F19 is a blank map"
-    assert stats["unlock_radius_meters"] == UNLOCK_RADIUS_METERS
+    malmo = {
+        "device": DEVICE,
+        "lat": 55.605,
+        "lng": 13.0038,
+        "budget_meters": ROUTE_BUDGET_MAX_METERS,
+    }
+    preview = seeded.get("/v1/routes/preview", params=malmo).json()
+    assert preview["memories"] == []
+    assert preview["meta"]["size"] == 0
 
 
 def test_maestro_flows_still_point_at_the_seed():
@@ -367,7 +370,7 @@ def test_maestro_flows_still_point_at_the_seed():
     known = {(round(lat, 6), round(lng, 6)) for lat, lng in (at(key) for key in seed_dev.OFFSETS)}
     # Where the app falls back to, where F1 and filing stand.
     known.add((seed_dev.LAT, seed_dev.LNG))
-    # Deliberate non-seed coordinates: the walk's start, and Malmö for F19.
+    # Deliberate non-seed coordinates: the walk's start, and Malmö for F1's empty case.
     known |= {START, (55.605, 13.0038)}
 
     flows = sorted((ROOT / ".maestro").glob("*.yml"))

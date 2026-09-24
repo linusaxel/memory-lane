@@ -1,4 +1,4 @@
-# F1 plan a walk (loop, one way, a theme) + F32 show me another + F8 be asked for location, F19 somewhere with no walk.
+# F1 plan a walk (loop, one way, a theme) + F32 show me another + F8 be asked for location, F1 nothing walkable.
 # docs/08-ux-flows.md
 #
 # Everything here only looks: nothing is accepted, so no route row is written
@@ -90,7 +90,7 @@ appId: ${APP_ID}
     visible: "Planning from central Copenhagen\\. Turn on location to plan from where you are\\."
     timeout: 40000
 
-# ---- F19
+# ---- F1, nothing walkable
 #
 # From Malmö there is nothing within any length of walk. The preview says so
 # and offers the slider back, rather than accepting an empty day. Not
