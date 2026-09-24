@@ -1,6 +1,8 @@
 # Memory Lane
 
-Extract location-based memories from video transcripts and make them queryable by geographic proximity.
+Real stories pinned to the places they happened, from travel shows, podcasts
+and people who were there. Each day the app plans a short walk past a few, and
+a story only opens once you are standing on its spot.
 
 ## Quick Start
 

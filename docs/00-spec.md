@@ -13,7 +13,12 @@ landing page, a pitch). Keep it word for word.
 
 ## Overview
 
-Memory Lane extracts "memories" from video content—specific experiences that happened at identifiable physical locations—and makes them queryable by geographic proximity.
+Memory Lane pins "memories" (specific experiences that happened at
+identifiable physical locations) to the places they happened. They come from
+two sources: extracted by an LLM from travel-show and podcast transcripts, or
+filed from the phone of somebody standing on the spot. Each day the app plans
+a short walk past a few of them, and a memory can only be read from within
+`UNLOCK_RADIUS_METERS` of its place.
 
 ## What is a Memory?
 
