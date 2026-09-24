@@ -1472,6 +1472,18 @@ flagged ⚠️ inline, not overridden.
       one pytest. **Upgrade:** Hypothesis, if a failing case ever needs
       shrinking.
       [Hypothesis](https://hypothesis.readthedocs.io/)
+- [ ] **The solver comes up a stop short.** Found 2026-09-24, when the
+      property tests' seeds moved to `ROUTE_SEED` (`tests/conftest.py`).
+      Seeds 0/1/2 happened to pass. Over `ROUTE_SEED` 0–40, 24 seeds fail:
+      19 times it picks a stop fewer than brute force (n ≤ 7), and 12 times it
+      leaves a stop that would still fit tacked onto the end of a 4 km
+      one-way walk. Failing seeds include 1, 4, 5, 6, 7, 8. Suspects:
+      `fill()` in `_choose_walks` inserts without reordering, and the layer
+      quota, which the brute-force check ignores, so some failures may be the
+      test's fault. **First step:** `ROUTE_SEED=1 pytest
+      tests/test_route_order.py`, and check whether the smaller walk is a mix
+      choice. **Done when** `ROUTE_SEED=random` passes run after run and the
+      conftest default goes back to random.
 
 ## Walk and Explore (2026-09-24)
 

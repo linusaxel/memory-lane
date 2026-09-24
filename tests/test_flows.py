@@ -15,7 +15,9 @@ the two layers cannot disagree about what "the bench outside" means.
 """
 
 import pathlib
+import random
 import re
+import uuid
 from datetime import timedelta
 
 import pytest
@@ -24,7 +26,10 @@ from sqlalchemy import text
 
 import pipeline.seed_dev as seed_dev
 from api.gate import UNLOCK_RADIUS_METERS, meters_between, today
-from api.models import Coordinates
+from api.models import ROUTE_BUDGET_MAX_METERS, ROUTE_BUDGET_MIN_METERS, Coordinates
+from api.read import ROUTE_SIZE, _path_meters
+from api.streets import walking_matrix
+from pipeline.route_bench import START_BOX
 from pipeline.seed_dev import at, seed
 
 pytestmark = pytest.mark.db
@@ -246,6 +251,56 @@ def test_f29_explore_shows_the_walk_and_opens_none_of_it(seeded):
     ).json()
     assert opened["locked"] is False
     assert opened["summary"]
+
+
+def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route_seed):
+    """F25 from starts and lengths nobody chose, over `seed_dev --dense`.
+
+    walk-and-unlock.yml asserts one walk by name; this asserts only what every
+    walk owes the person on it: at most five stops, within the slider, the same
+    walk once accepted, and each stop opened by standing on it.
+    """
+    rng = random.Random(route_seed)
+    seed_dev.dense(db_session, 300, route_seed)
+    db_session.commit()
+    for _ in range(5):
+        device = str(uuid.UUID(int=rng.getrandbits(128), version=4))
+        start = Coordinates(
+            lat=seed_dev.LAT + rng.uniform(-START_BOX[0], START_BOX[0]),
+            lng=seed_dev.LNG + rng.uniform(-START_BOX[1], START_BOX[1]),
+        )
+        body = {
+            "device": device,
+            "lat": start.lat,
+            "lng": start.lng,
+            "budget_meters": rng.randint(ROUTE_BUDGET_MIN_METERS, ROUTE_BUDGET_MAX_METERS),
+        }
+        preview = seeded.get("/v1/routes/preview", params=body).json()
+        stops = preview["memories"]
+        ids = [m["id"] for m in stops]
+        assert 1 <= preview["meta"]["size"] == len(ids) <= ROUTE_SIZE, body
+        assert len(set(ids)) == len(ids), body
+
+        points = [start] + [Coordinates(**m["place"]["coordinates"]) for m in stops]
+        walk = _path_meters(
+            list(range(1, len(points))), walking_matrix(points), preview["meta"]["loop"]
+        )
+        assert walk <= body["budget_meters"], body
+
+        accepted = seeded.post("/v1/routes/today", json=body).json()
+        assert [m["id"] for m in accepted["memories"]] == ids, body
+        again = seeded.post("/v1/routes/today", json={**body, "budget_meters": 1000}).json()
+        assert [m["id"] for m in again["memories"]] == ids, body
+
+        for m, here in zip(stops, points[1:], strict=True):
+            assert m["locked"] is True, body
+            opened = seeded.post(
+                f"/v1/memories/{m['id']}/unlock",
+                json={"device": device, "lat": here.lat, "lng": here.lng},
+            ).json()
+            assert opened["locked"] is False, body
+        earned = seeded.get("/v1/unlocks", params={"device": device}).json()["memories"]
+        assert {m["id"] for m in earned} == set(ids), body
 
 
 def test_f19_somewhere_else_entirely_is_told_where_to_go(seeded):

@@ -51,8 +51,8 @@ def test_the_nearest_stop_first_is_not_the_shortest_walk():
     assert [s.name for s in ordered] == ["b", "a", "c"]
 
 
-def test_never_longer_than_any_other_ordering():
-    rng = random.Random(0)
+def test_never_longer_than_any_other_ordering(route_seed):
+    rng = random.Random(route_seed + 0)
     for _ in range(200):
         picks = [
             SimpleNamespace(
@@ -98,8 +98,8 @@ def test_the_budget_caps_the_walk_not_the_count():
     assert names(choose(picks, 5, "seed", 400, False)) == ["s1", "s2", "s3"]
 
 
-def test_within_budget_repeatable_and_full_as_the_budget_allows():
-    rng = random.Random(1)
+def test_within_budget_repeatable_and_full_as_the_budget_allows(route_seed):
+    rng = random.Random(route_seed + 1)
     for i in range(100):
         picks = [
             SimpleNamespace(
@@ -137,11 +137,11 @@ def test_a_loop_counts_the_walk_home():
     assert "n" in names(choose(picks, 2, "seed", 4000, True))
 
 
-def test_solver_invariants_over_random_instances():
+def test_solver_invariants_over_random_instances(route_seed):
     """Loop and one-way, 200 seeded maps: within budget with the walk home
     counted, no stop twice, repeatable, never fewer stops than nearest-neighbour
     manages, and as many as brute force finds when n <= 7."""
-    rng = random.Random(2)
+    rng = random.Random(route_seed + 2)
     for i in range(200):
         picks = [
             SimpleNamespace(
