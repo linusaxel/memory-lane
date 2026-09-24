@@ -426,24 +426,6 @@ export default function Submit({
         <Text style={[styles.hint, ready && styles.hintReady]}>{hint}</Text>
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          {/* Not decoration. It is the one thing that makes this different from
-              posting anywhere else, and it has to be visible while typing. */}
-          <View style={styles.here}>
-            <Text style={styles.hereLabel}>Added at</Text>
-            <Text style={styles.hereValue}>
-              {editing
-                ? `${editing.place.coordinates.lat.toFixed(5)}, ${editing.place.coordinates.lng.toFixed(5)}`
-                : position
-                  ? `${position.lat.toFixed(5)}, ${position.lng.toFixed(5)}`
-                  : 'Waiting for your location'}
-            </Text>
-            <Text style={styles.hereNote}>
-              {isEditing
-                ? 'Where this was added. It does not move - a memory goes where you were standing.'
-                : 'A memory goes where you are standing. Other people will have to come here to read it.'}
-            </Text>
-          </View>
-
           <Field label="What happened?">
             <TextInput
               style={[styles.input, styles.prose]}
@@ -735,18 +717,6 @@ const styles = StyleSheet.create({
   hint: { ...label, fontSize: 9, color: color.inkFaint, paddingHorizontal: 20, paddingTop: 12 },
   hintReady: { color: color.seal },
   body: { padding: 20, paddingBottom: 56, gap: 26 },
-
-  here: {
-    borderWidth: 1,
-    borderColor: color.rule,
-    borderRadius: 4,
-    padding: 14,
-    gap: 6,
-    backgroundColor: color.paperRaised,
-  },
-  hereLabel: { ...label, fontSize: 9 },
-  hereValue: { fontFamily: font.monoMedium, fontSize: 14, color: color.ink },
-  hereNote: { fontFamily: font.prose, fontSize: 14, lineHeight: 21, color: color.inkSoft },
 
   field: { gap: 10 },
   fieldLabel: { ...label, color: color.inkSoft },
