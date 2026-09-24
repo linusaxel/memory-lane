@@ -48,6 +48,9 @@ from api.models import (
     SearchResponse,
     Stats,
     UnlocksResponse,
+    WalkedMeta,
+    WalkedResponse,
+    WalkedRoute,
 )
 from api.queries import (
     AUTHORED_ROUTE_QUERY,
@@ -69,6 +72,8 @@ from api.queries import (
     SEARCH_MEMORIES_QUERY,
     SEARCH_MEMORIES_WITH_LOCATION_QUERY,
     SINGLE_MEMORY_QUERY,
+    WALKED_QUERY,
+    WALKED_STOPS_QUERY,
 )
 from api.streets import retraced_meters, street_legs, street_table
 from pipeline.db import get_session
@@ -729,10 +734,13 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
     return [candidates[i - 1] for i in order], legs[1 : len(order)], ends
 
 
-def _route_response(route_date, rows, memory_ids, budget_meters, legs, ends=None) -> RouteResponse:
+def _route_response(
+    route_date, rows, memory_ids, budget_meters, legs, ends=None, earned=frozenset()
+) -> RouteResponse:
     # No position: these are unwalked stops, and rendering them locked is the
-    # point - the same rule every other list endpoint here follows.
-    by_id = {r.id: row_to_memory(r) for r in rows}
+    # point - the same rule every other list endpoint here follows. `earned`
+    # stops are forced open, the way get_unlocks does it.
+    by_id = {r.id: row_to_memory(r, row_coordinates(r) if r.id in earned else None) for r in rows}
     memories = [by_id[i] for i in memory_ids if i in by_id]
     return RouteResponse(
         memories=memories,
@@ -834,7 +842,45 @@ def _stored_route(session, route_date, row) -> RouteResponse:
     return _route_response(route_date, rows, memory_ids, row.budget_meters, row.legs)
 
 
-# After /today and /preview, which would otherwise read as an id.
+@router.get("/v1/routes/walked", response_model=WalkedResponse)
+def get_walked_routes(
+    device: str = Query(..., pattern=DEVICE_PATTERN),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """Every walk this account accepted, newest first, finished or not. Earned
+    stops come back open, like /v1/unlocks. The start was never stored, so a
+    past loop draws stop to stop (docs/10-decisions.md § Routes)."""
+    with get_session() as session:
+        walks = session.execute(
+            text(WALKED_QUERY), {"device_id": device, "limit": limit}
+        ).fetchall()
+        ids = sorted({i for w in walks for i in w.memory_ids})
+        stops = {
+            r.id: r
+            for r in session.execute(
+                text(WALKED_STOPS_QUERY), {"device_id": device, "ids": ids}
+            ).fetchall()
+        }
+    earned = {i for i, r in stops.items() if r.earned}
+
+    def walked(w) -> WalkedRoute:
+        ids = list(w.memory_ids)
+        rows = [stops[i] for i in ids if i in stops]
+        route = _route_response(w.route_date, rows, ids, w.budget_meters, w.legs, earned=earned)
+        meta = route.meta.model_dump() | {"size": len(route.memories)}
+        return WalkedRoute(
+            memories=route.memories,
+            meta=WalkedMeta(
+                **meta,
+                earned=sum(m.id in earned for m in route.memories),
+                completed_at=w.completed_at,
+            ),
+        )
+
+    return WalkedResponse(walks=[walked(w) for w in walks])
+
+
+# After /today, /preview and /walked, which would otherwise read as an id.
 @router.get("/v1/routes/{route_id}", response_model=AuthoredRouteResponse)
 def get_authored_route(route_id: int):
     """An authored walk, or 404 while it is a draft."""

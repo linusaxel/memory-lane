@@ -293,6 +293,8 @@ FastAPI server with PostGIS proximity queries:
   same solve, stored; one per device per day, and a second accept gets the
   first walk back. The client never sends stop ids
 - `GET /v1/routes/today?device=UUID` - today's accepted walk, or 404. Only reads
+- `GET /v1/routes/walked?device=UUID` - every walk the account accepted,
+  newest first: earned stops open, `earned` of `size`, `completed_at`
 - `GET /v1/routes/{id}` - an authored walk: its stops in order, locked like
   today's. 404 while it is a draft. Nothing writes these yet but SQL
 - `POST /v1/memories` `{device, lat, lng, place_name, summary, tags, ...}` -

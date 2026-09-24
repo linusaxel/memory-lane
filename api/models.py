@@ -4,7 +4,7 @@ Separate from the routers so `api/card.py` can import them without the cycle
 that used to force a function-level import.
 """
 
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -230,6 +230,23 @@ class RouteResponse(BaseModel):
     # entries, and nothing else in this API represents order any other way.
     memories: list[Memory]
     meta: RouteMeta
+
+
+class WalkedMeta(RouteMeta):
+    # Stops this account has earned, of `size`. Hidden stops count in neither.
+    earned: int
+    # Set by the unlock that earned the last stop; null for a walk not finished.
+    completed_at: datetime | None = None
+
+
+class WalkedRoute(BaseModel):
+    # Earned stops open, the rest locked. Walking order, like RouteResponse.
+    memories: list[Memory]
+    meta: WalkedMeta
+
+
+class WalkedResponse(BaseModel):
+    walks: list[WalkedRoute]
 
 
 class AuthoredRouteResponse(BaseModel):

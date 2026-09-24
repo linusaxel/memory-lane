@@ -455,3 +455,47 @@ def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_s
     finished = unlock(*stops[1])
     assert finished is not None
     assert unlock(*stops[1]) == finished, "set once, never moved"
+
+
+def test_walked_lists_the_accounts_walks_with_earned_stops_open(client, db_session):
+    for n in (1, 2):
+        _offset(db_session, n)
+    db_session.commit()
+    stops = _route(client).json()["memories"]
+    at = stops[0]["place"]["coordinates"]
+    client.post(f"/v1/memories/{stops[0]['id']}/unlock", json={"device": DEVICE, **at})
+
+    def walks(device=DEVICE):
+        response = client.get(f"/v1/routes/walked?device={device}")
+        assert response.status_code == 200
+        return response.json()["walks"]
+
+    [walk] = walks()
+    assert walk["meta"]["route_date"] == read.gate.today().isoformat()
+    assert (walk["meta"]["earned"], walk["meta"]["size"]) == (1, 2)
+    assert walk["meta"]["completed_at"] is None
+    assert [m["locked"] for m in walk["memories"]] == [False, True]
+    assert walk["memories"][0]["summary"] and not walk["memories"][1]["summary"]
+
+    at = stops[1]["place"]["coordinates"]
+    client.post(f"/v1/memories/{stops[1]['id']}/unlock", json={"device": DEVICE, **at})
+    assert walks()[0]["meta"]["completed_at"] is not None
+
+    sibling, stranger = (
+        "22222222-2222-2222-2222-222222222222",
+        "33333333-3333-3333-3333-333333333333",
+    )
+    user = db_session.execute(
+        text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
+    ).scalar()
+    db_session.execute(
+        text("UPDATE devices SET user_id = :u WHERE id = CAST(:d AS uuid)"),
+        {"u": user, "d": DEVICE},
+    )
+    db_session.execute(
+        text("INSERT INTO devices (id, user_id) VALUES (CAST(:d AS uuid), :u)"),
+        {"d": sibling, "u": user},
+    )
+    db_session.commit()
+    assert [w["meta"]["earned"] for w in walks(sibling)] == [2], "a new phone gets its history"
+    assert walks(stranger) == []

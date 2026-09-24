@@ -1603,7 +1603,7 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
       across the account's devices, like the route's candidates; a stop hidden
       after the accept is not owed, since the walk drops it. Nothing reads it
       yet: the next item does.
-- [ ] **Past walks: `GET /v1/routes/walked?device=UUID`.** Newest first: date,
+- [x] **Past walks: `GET /v1/routes/walked?device=UUID`.** Newest first: date,
       budget, stops earned of stops, `completed_at`, legs. Earned stops come
       back open, the way `/v1/unlocks` serves them. Across a signed-in user's
       devices through `devices.user_id`, the way unlocks reach a new phone
@@ -1612,6 +1612,11 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
       so a past loop draws stop to stop, not out and home.
       **First step:** the query in `api/queries.py`, which
       `tests/test_api_sql.py` EXPLAINs.
+      **Done 2026-09-24:** `WALKED_QUERY` and `WALKED_STOPS_QUERY`, over
+      `MY_DEVICES`. Each walk is a `RouteResponse` shape whose meta adds
+      `earned` and `completed_at`; `size` counts visible stops only, so a
+      finished walk with a stop hidden since still reads "4 of 4". Unfinished
+      walks are listed too; whether the app shows them is still open below.
 - [ ] **A Walks list in the app.** A third subtab on Memories, beside Unlocked
       and My memories: one row per walk (date, "5 of 5", km). A row opens the
       map on that walk, read-only, and unlocks nothing (like Explore).

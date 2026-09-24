@@ -452,6 +452,24 @@ WHERE r.device_id = CAST(:device_id AS uuid)
   )
 """
 
+# Every walk this account accepted, newest first - across MY_DEVICES, so a new
+# phone signed in gets its history the way it gets its unlocks (F22).
+WALKED_QUERY = f"""
+SELECT route_date, memory_ids, budget_meters, legs, completed_at
+FROM daily_routes
+WHERE device_id IN {MY_DEVICES}
+ORDER BY route_date DESC, created_at DESC
+LIMIT :limit
+"""
+
+# Those walks' stops, and whether this account has earned each one.
+WALKED_STOPS_QUERY = f"""
+SELECT {MEMORY_COLUMNS},
+    m.id IN (SELECT memory_id FROM unlocks WHERE device_id IN {MY_DEVICES}) AS earned
+{MEMORY_JOIN}
+WHERE m.id = ANY(CAST(:ids AS integer[])) AND {VISIBLE}
+"""
+
 AUTHORED_ROUTE_QUERY = """
 SELECT id, title, is_loop FROM routes WHERE id = :route_id AND status = 'published'
 """
