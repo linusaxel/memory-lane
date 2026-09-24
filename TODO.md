@@ -1454,6 +1454,68 @@ flagged ⚠️ inline, not overridden.
       shrinking.
       [Hypothesis](https://hypothesis.readthedocs.io/)
 
+## Walk and Explore (2026-09-24)
+
+Two modes, two tabs, one map. **Walk** is today's route and the only place
+anything unlocks; **Explore** is every nearby memory, clustered, never
+unlockable. Decided with the founder 2026-09-24:
+
+- Two tabs sharing the one mounted MapView (UI.md rule 9), each with its own
+  camera and pins. Not a toggle on the map, not two MapViews.
+- "Near me" goes. The slot survives only as "Turn on location" when there is no
+  position, because without one no stop can ever open.
+- Ungated memories (shared city-centroid coordinates) read normally in Explore,
+  as the API already serves them. "Not unlockable" means nothing is *earned*
+  there, not that open memories are hidden.
+
+The browse map existed until `c3d5d9c` (2026-09-23) deleted it with
+`useNearby.ts`, `region.ts`'s viewport maths, `ReachBanner`, `Elsewhere` and
+the hotspots card. `cluster.ts` survived. Recover from `c3d5d9c^` before
+rewriting anything.
+
+In build order:
+
+- [ ] **Remove "Near me".** The locate button in `mobile/App.tsx` renders only
+      while `!position`, as "Turn on location" (keep the `blocked` →
+      `Linking.openSettings()` branch). `goToMyLocation` stays - launch, plan
+      and + Add still need a fix and the watcher. Recentring moves to the route
+      pill: a tap fits you *and* the next stop. `.maestro/walk-and-unlock.yml`
+      waits on `visible: "Near me"` as its "has a fix" signal; switch it to the
+      pill. Docs: UI.md's screen tree and `locate` shadow row, docs/08 F25
+      steps 2-3 and the "Turn on location" lines in F7 and F9.
+- [ ] **Tabs: Walk · Explore · Memories · You.** `mobile/src/TabBar.tsx`
+      (`Tab` gains `'explore'`, `'map'` becomes Walk). The bar shows from
+      launch, which reverses "the tabs arrive with the walk" (App.tsx, docs/08
+      F25 step 2). Launch lands on Walk: the plan page if nothing is accepted
+      today, the walk if it is. A tab switch swaps pins and restores that tab's
+      own saved region.
+- [ ] **Explore: every nearby memory, clustered, locked.** Restore the
+      viewport fetch and its debounce from `c3d5d9c^` (`useNearby`, the radius
+      maths in `region.ts` and its tests) and un-retire UI.md rules 3 and 4.
+      Group with `cluster.ts`. `reachOf` never answers `unlockable` here, so no
+      pin lights; the sheet opens locked, without `UnlockButton`. First entry
+      centres on the person, after that wherever they left it.
+- [ ] **Unlocking is Walk-only as a client rule.** `POST
+      /v1/memories/{id}/unlock` does not know about modes and should not. Say
+      so in docs/10 next to "The position is self-reported", so nobody
+      "fixes" it server-side.
+- [ ] **The seams - decide each while building:**
+      - A route stop seen in Explore: plain pin; its sheet says "Stop N on
+        today's walk" with a button that switches to Walk and flies there.
+        (Recommended. The client still never names a stop to the server.)
+      - Leaving mid-preview and coming back resumes it - the state is in App.
+      - + Add in Walk only, or both? Filing is not unlocking. **Open.**
+      - Geofence notifications keep tracking the route only. Unchanged; write
+        it down.
+      - `EXPO_PUBLIC_DEV_OPEN_MEMORY` searches `groups`, so it has to pick a
+        tab.
+- [ ] **Flows and tests.** New docs/08 flow F29 (Explore) and F25 amended. A
+      Maestro journey: pan, clusters, a pin that stays locked while you stand
+      on it, the jump to Walk. The same journey headless in
+      `tests/test_flows.py`.
+
+---
+
 ## Decided — do not revisit
 
 Copied so they survive context resets.
