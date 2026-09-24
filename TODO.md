@@ -1815,7 +1815,15 @@ the seed; the slider's 10 km max covers either. In build order:
       (55.6759) as its "nothing walkable from here" case, and so does
       `tests/test_flows.py::test_f19_*`. Move that case to somewhere
       nothing is seeded, such as the middle of the harbour or Malmö.
-- [ ] **A different lakes loop each time.** The solver is seeded on
+- [x] **A different lakes loop each time.**
+      **Done 2026-09-24:** F32. Measured first: 10 consecutive days gave the
+      identical loop at 6, 8, 9 and 10 km, since the seed only steers the
+      search, not the pick. Now every judged walk within `ROUTE_VARIETY`
+      (10% of the slider) of the best, retracing no more, is as good, and
+      day + `again` rotate through them: 2-5 distinct loops over 10 days,
+      retracing 0-29 m. route_bench (40 runs): spur rate lakes 42%→40%,
+      bimodal 45%→42%; walk/slider bimodal 0.96→0.92, the slack's cost.
+      Streets only: crow-flies has no judge, so one walk. Was: The solver is seeded on
       `device:route_date` (`api/read.py` `_plan_route`), so a device gets
       one walk all day. Whether tomorrow's walk differs depends on the
       map, and on a fixed seed it may not. Two parts. (a) Across days: on the
@@ -1851,6 +1859,114 @@ the seed; the slider's 10 km max covers either. In build order:
       sheet.
 
 ---
+
+## Repo legibility — from Suyog Joshi's "How I structure repositories so AI can understand them" (2026-09-24)
+
+Every concept in the article, mapped to what already exists here. Most of it
+exists but in a different shape. Each item names the gap, not the idea.
+
+#### Layer 1 — README states the purpose
+- [ ] **README: add the constraints and the architecture style.** Purpose is
+      there (two sentences). Missing: the style ("Python pipeline + FastAPI over
+      PostGIS + Expo app, one repo, no services"), and the handful of invariants
+      a newcomer must not break: memories are gated by standing there; the
+      device UUID is the only credential; Google/Apple only; the summary is
+      the product. One line each, each linking to its decision.
+- [ ] **README: fix the stale facts.** "366 tests" (count it with
+      `pytest --collect-only -q`, or drop the number); the docs table is missing
+      `11-memory-types.md`; it says `api/main.py` holds the endpoints, but it is
+      60 lines now and the routes live in `read.py`/`write.py`/`accounts.py`.
+
+#### Layer 2 — docs/architecture.md
+- [ ] **Write `docs/architecture.md`.** Today it is spread across CLAUDE.md
+      "Architecture Notes", `02-scaling-and-api.md` and `01-setup.md`. Use the
+      article's headings: Style, Communication (sync: REST/JSON from the app;
+      async: RQ over Redis for classify → extract → aggregate; outbound: Anthropic,
+      YouTube, OSRM), Data ownership (who writes which table: the pipeline writes
+      content/transcripts/places/memories; the API writes unlocks/submissions/
+      media/reports/routes; nothing else writes to the DB), Security (self-issued
+      device id, provider ID tokens, the gate, upload rules), Deployment
+      (Railway via `railway.json` + `start.sh`, docker compose locally, the media
+      volume). Move content rather than copying it; leave pointers behind.
+- [ ] **Add two Mermaid diagrams to it.** (a) the pipeline, from content.yaml
+      through Haiku, Sonnet and the aggregator to the DB; (b) the request path, from
+      the app through the API and gate to PostGIS, with OSRM on the side. The
+      ASCII one in CLAUDE.md moves there.
+
+#### Layer 3 — ADRs as decision memory
+- [ ] **Decide the ADR shape, then apply it.** `docs/10-decisions.md` is already
+      an ADR log (~45 entries, anchored from code as `#the-gate`) but has no
+      Status, Options or Consequences, and it lives in one file. The article's
+      form is `docs/adr/NNN-title.md` with Title / Status / Context / Options /
+      Decision / Consequences. Option A: split it into `docs/adr/`, one file per
+      entry, and rewrite every `docs/10-decisions.md#anchor` reference in the code
+      (grep for them). Option B: keep one file and give each entry a
+      `Status:` line, an explicit "Options considered", and a "Consequences". B
+      keeps the anchors. Pick one; do not half-do both.
+- [ ] **Move `## Decided — do not revisit` (TODO.md) into the ADR log.** Those
+      are decisions, but they sit in a task list.
+- [ ] **Record superseded decisions as Superseded, not deleted.** For example,
+      "glass was tried and reverted" is already one; give it that status.
+
+#### Layer 4 — coding standards plus examples
+- [ ] **Write `docs/coding-standards.md`.** It collects the rules that live today
+      in CLAUDE.md, memory and reviews: ruff/pyproject decides style (never
+      hand-align); every SQL string lives in `api/queries.py` and is EXPLAINed by
+      `tests/test_api_sql.py`; every env knob goes in `pipeline/config.py`; every
+      memory-shaped response goes through `api/gate.py` (and anything that emits a
+      summary gates itself, as `api/card.py` does); comments only when
+      load-bearing, with the reasoning in `docs/10-decisions.md`; one tag
+      vocabulary in `pipeline/tags.py`; the app follows `mobile/UI.md`. Link it,
+      don't restate it.
+- [ ] **Coverage: measure it, don't pick 80%.** No coverage tool is installed.
+      Add `pytest-cov` to `requirements-dev.txt`, record the baseline in
+      `docs/07-testing.md`, and only then decide whether the gate enforces a floor.
+- [ ] **Create `docs/examples/` with three good examples** from real code, not
+      invented code: `good-endpoint.md` (a gated read in `api/read.py`: model in
+      `models.py`, SQL in `queries.py`, row through `gate.py`), `good-sql-test.md`
+      (the EXPLAIN pattern in `tests/test_api_sql.py`), and `good-flow-test.md`
+      (one journey in `tests/test_flows.py` using `tests/fakes.py`). Each one is a
+      pointer with the "why", so it cannot drift from the code.
+
+#### Layer 5 — repository map
+- [ ] **Write `docs/repository-map.md`.** Every top-level directory with one
+      line each (`api/ crawler/ config/ db/ docs/ e2e/ loop/ media/ mobile/ osrm/
+      pipeline/ tests/ .maestro/`), then a breakdown of `mobile/src/` and `api/`.
+      The "Key Files" table in CLAUDE.md moves here, and CLAUDE.md keeps a link.
+      README's "What's here" table becomes a link too.
+- [ ] **Delete the project-structure tree in `docs/01-setup.md`** once the map
+      exists, or else it drifts (check first whether it is already stale).
+- [ ] **Doc numbering: two `02-*` files and no 05/06.** Renumber, or drop the
+      numbers. They look like an order that isn't one.
+
+#### Layer 6 — AGENTS.md
+- [ ] **Add `AGENTS.md` at the root, and make CLAUDE.md a pointer to it**
+      (`@AGENTS.md`), so Codex, Cursor and others read the same file. One source
+      of truth.
+- [ ] **Give it the article's sections, which CLAUDE.md lacks as sections:**
+      "Before making changes" (read architecture.md, the ADRs,
+      coding-standards.md, and `mobile/UI.md` for the app); Architecture
+      constraints; Development rules (run the gate, check `$?`, log friction);
+      **Forbidden actions**, collected from the never-rules scattered through
+      CLAUDE.md today (never run `pipeline.extract` casually, because it bills every
+      pending video; never serve a summary without the gate; never match accounts
+      on email; never issue a session token; never add a password sign-in; never
+      hand-format); and a PR / commit checklist (gate green, friction logged,
+      docs updated if a decision changed).
+- [ ] **Shrink it.** CLAUDE.md is 468 lines. Once architecture, map, standards and
+      the endpoint list (which goes to `docs/api.md` or `/docs`) have moved out,
+      AGENTS.md should fit on a screen or two and link out.
+
+#### Target tree and principle
+- [ ] **Check the tree against the article's:** README.md, AGENTS.md,
+      docs/{architecture,repository-map,coding-standards}.md, docs/adr/,
+      docs/examples/, src (here: api/ pipeline/ mobile/), tests/, scripts (here:
+      loop/, e2e/). Note the deliberate differences in the repo map instead of
+      moving code.
+- [ ] **Write for both readers.** Add one check to the gate or to
+      `tests/test_harness.py`: every relative path and `#anchor` linked from
+      AGENTS.md and docs/*.md exists. This is what stops the new docs going stale,
+      which is the failure mode `10-decisions.md` itself was written to fix.
 
 ## Decided — do not revisit
 
