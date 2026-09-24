@@ -83,7 +83,11 @@ def street_legs(stops: list[Coordinates]) -> list[list[Coordinates]] | None:
     if not ROUTING_URL or len(stops) < 2:
         return None
     try:
-        route = _osrm("route", stops, "overview=false&steps=true&geometries=geojson")
+        # continue_straight: no U-turn at a stop. The foot profile allows one,
+        # and a mid-block stop turned round at is a spur back to the corner.
+        route = _osrm(
+            "route", stops, "overview=false&steps=true&geometries=geojson&continue_straight=true"
+        )
         legs = []
         for leg in route["routes"][0]["legs"]:
             shape: list[Coordinates] = []

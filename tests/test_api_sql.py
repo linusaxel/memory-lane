@@ -26,6 +26,8 @@ PARAMS = {
     # None means "every layer", which is the unfiltered shape these assert on.
     "layer": None,
     "tags": ["food"],
+    # None means "no theme", the route's unfiltered shape.
+    "tag": None,
     "query": "coffee",
     "memory_id": 1,
     "place_id": 1,

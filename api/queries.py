@@ -414,6 +414,7 @@ WHERE
     AND {WITHIN}
     AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
     AND (m.opens_at IS NULL OR m.opens_at <= CAST(:today AS date))
+    AND (CAST(:tag AS varchar) IS NULL OR CAST(:tag AS varchar) = ANY(m.tags))
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
@@ -455,7 +456,7 @@ WHERE r.device_id = CAST(:device_id AS uuid)
 # Every walk this account accepted, newest first - across MY_DEVICES, so a new
 # phone signed in gets its history the way it gets its unlocks (F22).
 WALKED_QUERY = f"""
-SELECT route_date, memory_ids, budget_meters, legs, completed_at
+SELECT route_date, memory_ids, budget_meters, legs, loop, completed_at
 FROM daily_routes
 WHERE device_id IN {MY_DEVICES}
 ORDER BY route_date DESC, created_at DESC

@@ -229,6 +229,7 @@ CREATE INDEX idx_memory_hearts_memory ON memory_hearts(memory_id);
 -- route - see db/migrations/022_route_budget.sql. legs is the street shape between
 -- consecutive stops, null without a routing sidecar - see 021_route_legs.sql.
 -- completed_at is set once, by the unlock that earns the last stop - see 024.
+-- loop is whether the walk comes back to its start, chosen per walk - see 025.
 CREATE TABLE daily_routes (
     device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
     route_date DATE NOT NULL,
@@ -237,6 +238,7 @@ CREATE TABLE daily_routes (
     legs JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
+    loop BOOLEAN NOT NULL DEFAULT TRUE,
     PRIMARY KEY (device_id, route_date)
 );
 

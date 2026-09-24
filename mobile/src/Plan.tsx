@@ -11,7 +11,9 @@
 import Slider from '@react-native-community/slider';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { SUBMISSION_TAGS, type WalkAsk } from './api.ts';
 import { distance } from './format.ts';
+import { Chip } from './Submit.tsx';
 import { buttonText, color, dim, font, label } from './theme.ts';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
@@ -19,12 +21,14 @@ export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 type PlanProps = {
   km: number;
   onKm: (km: number) => void;
+  ask: WalkAsk;
+  onAsk: (ask: WalkAsk) => void;
   onGo: () => void;
   busy: boolean;
   error: string | null;
 };
 
-export function Plan({ km, onKm, onGo, busy, error }: PlanProps) {
+export function Plan({ km, onKm, ask, onAsk, onGo, busy, error }: PlanProps) {
   return (
     <View style={styles.page}>
       <Text style={styles.title}>How far today?</Text>
@@ -47,7 +51,26 @@ export function Plan({ km, onKm, onGo, busy, error }: PlanProps) {
         <Text style={label}>{`${WALK_KM.min} km`}</Text>
         <Text style={label}>{`${WALK_KM.max} km`}</Text>
       </View>
-      <Text style={styles.note}>Five memories, looping back to where you start.</Text>
+      <View style={styles.chips}>
+        <Chip label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true })} />
+        <Chip label="One way" on={!ask.loop} onPress={() => onAsk({ ...ask, loop: false })} />
+      </View>
+      {/* One theme or none: a second tap on the chosen one lets it go. */}
+      <View style={styles.chips}>
+        {SUBMISSION_TAGS.map((tag) => (
+          <Chip
+            key={tag}
+            label={tag}
+            on={ask.tag === tag}
+            onPress={() => onAsk({ ...ask, tag: ask.tag === tag ? null : tag })}
+          />
+        ))}
+      </View>
+      <Text style={styles.note}>
+        {`Five${ask.tag ? ` ${ask.tag}` : ''} memories, ${
+          ask.loop ? 'looping back to where you start' : 'ending somewhere new'
+        }.`}
+      </Text>
 
       <Pressable
         style={dim(styles.primary)}
@@ -179,6 +202,7 @@ const styles = StyleSheet.create({
   value: { fontFamily: font.monoBold, fontSize: 30, color: color.ink, marginTop: 16 },
   slider: { marginTop: 8, height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
   note: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft, marginTop: 16 },
   primary: {
     marginTop: 14,

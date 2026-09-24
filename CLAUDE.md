@@ -85,7 +85,7 @@ python -m api.main
 | `pipeline/tags.py` | The one tag vocabulary. Both write paths filter against it |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/perf.py` | **Time the read path on a corpus this size isn't.** Run before and after touching `api/queries.py` |
-| `pipeline/route_bench.py` | **How the route does on a full map.** Spurs, stops, walk vs budget, ms, over `seed_dev --dense`. Needs `ROUTING_URL` |
+| `pipeline/route_bench.py` | **How the route does on a full map.** Spurs, stops, walk vs budget, ms, over `seed_dev --dense`. Needs `ROUTING_URL`; `--solvers` needs nothing and scores the solver against brute force |
 | `pipeline/sweep.py` | Reap uploads no submission ever claimed. Describes unless `--apply` |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
@@ -222,7 +222,8 @@ Optional (with defaults):
 - `MEDIA_DIR` = `media` (where uploads are written; a volume under Docker)
 - `REPORT_THRESHOLD` = 3 (distinct devices needed to hide a submission)
 - `ROUTE_SIZE` = 5, `ROUTE_LOOP` = 1 (today's route: how many stops, and
-  whether it comes back to where it started; `0` is one-way). The walk length
+  whether it comes back to where it started unless the request says; `0` is
+  one-way). The walk length
   is the app's slider, sent as `budget_meters`; candidates come from within
   half of it)
 - `ROUTING_URL` = empty (an OSRM `foot` server. Empty or down means
@@ -287,10 +288,11 @@ FastAPI server with PostGIS proximity queries:
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
-- `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000` - the walk
-  a loop of that length from there would be: up to five stops. Stores nothing.
-  `budget_meters` is 1000–10000
-- `POST /v1/routes/today` `{device, lat, lng, budget_meters}` - accept it. The
+- `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true&tag=food` - the walk
+  of that length from there would be: up to five stops. Stores nothing.
+  `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`, `tag` (one of
+  `pipeline/tags.py`) keeps only stops carrying it
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?}` - accept it. The
   same solve, stored; one per device per day, and a second accept gets the
   first walk back. The client never sends stop ids
 - `GET /v1/routes/today?device=UUID` - today's accepted walk, or 404. Only reads

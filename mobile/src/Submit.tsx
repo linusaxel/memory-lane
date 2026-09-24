@@ -658,7 +658,7 @@ function Field({ label: name, children }: { label: string; children: React.React
  *  recoloured. The tick is `selectionAsync`, the same one the map uses when a
  *  pin opens: this is picking, not confirming, and it must not borrow the
  *  weight of the unlock. */
-function Chip({ label: text, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+export function Chip({ label: text, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
   const pop = useRef(new Animated.Value(1)).current;
   const first = useRef(true);
 

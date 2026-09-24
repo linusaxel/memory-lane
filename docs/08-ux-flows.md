@@ -98,16 +98,18 @@ gets answered before it becomes a complaint (F17).
 **Who:** someone who opened the app and has not accepted a walk today.
 
 1. The first screen is `mobile/src/Plan.tsx`: "How far today?" and one slider,
-   1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`). The map is mounted
-   behind it, not shown.
+   1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`). Under it, **Loop** or
+   **One way** (loop to start), and one optional theme chip: a second tap lets
+   it go. The map is mounted behind it, not shown.
 2. **Show me the walk** asks for location if it has to (F8), then
-   `GET /v1/routes/preview` with that position and the length in metres. The
-   preview stores nothing.
+   `GET /v1/routes/preview` with that position, the length in metres, `loop`
+   and the theme's `tag`. The preview stores nothing.
 3. The preview is the map, fitted to the start and every stop
    (`fitToCoordinates`), with the stops numbered 1–5 and the loop drawn. A card
    reads "5 stops · 3.8 km loop", with **Accept** and **Change length**.
    Preview pins do not open: it is a look, not a walk.
-4. **Accept** is `POST /v1/routes/today` with the same position and length, and
+4. **Accept** is `POST /v1/routes/today` with the same position, length, loop
+   and theme, and
    lands on the walk (F25). **Change length** goes back to the slider, and
    nothing was stored, so it costs nothing.
 
@@ -115,7 +117,8 @@ gets answered before it becomes a complaint (F17).
 no replanning until tomorrow — that is why the preview exists at all. A
 relaunch after accepting skips this page and goes straight to the walk.
 
-**What can go wrong:** nothing walkable within that length — the card reads
+**What can go wrong:** nothing walkable within that length, or with that
+theme — the card reads
 "No walk that long from here" and offers only **Change length**. No position
 — the walk is planned from Midtown and the card says so (F9). The server
 unreachable — the page says "Can't reach Memory Lane right now." under the
@@ -770,8 +773,8 @@ anyone else's collection or the local unlock cache.
    there is no position.
 3. A pill at the bottom centre: "Today's route · 0 of 5 · 2.4 km" — the distance
    still to walk, from where you stand through every stop not yet earned, in
-   order, and back to where the walk started: a route is a loop by default
-   (`ROUTE_LOOP`), so the walk home counts. Along the streets between stops
+   order, and back to where the walk started on a loop (the plan page's
+   choice, stored as `daily_routes.loop`), so the walk home counts. Along the streets between stops
    when a routing server is running (`ROUTING_URL`), straight from you to the
    next stop, and said plainly as a distance, never as minutes. Tapping it starts the
    route and zooms out around you until the next stop is on screen (flies to

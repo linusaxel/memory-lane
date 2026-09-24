@@ -5,8 +5,11 @@ that used to force a function-level import.
 """
 
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+from pipeline.tags import TAGS
 
 
 class Coordinates(BaseModel):
@@ -199,7 +202,7 @@ class RouteMeta(BaseModel):
     size: int
     # How long a walk was asked for - the slider. Read back from the stored row.
     budget_meters: int
-    # Whether the walk ends back where it started (ROUTE_LOOP). The start is
+    # Whether the walk ends back where it started, as asked for. The start is
     # not here - the server never stores it - so the app closes the loop on
     # the position it planned from.
     loop: bool
@@ -218,11 +221,19 @@ ROUTE_BUDGET_MIN_METERS = 1000
 ROUTE_BUDGET_MAX_METERS = 10_000
 
 
+RouteTag = Literal[TAGS]
+
+
 class RouteRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
     lat: float = Field(ge=-90, le=90)
     lng: float = Field(ge=-180, le=180)
     budget_meters: int = Field(ge=ROUTE_BUDGET_MIN_METERS, le=ROUTE_BUDGET_MAX_METERS)
+    # Unset is ROUTE_LOOP. Preview and accept must send the same, or the accept
+    # plans a different walk from the one previewed.
+    loop: bool | None = None
+    # Only stops carrying this tag. A theme, not a filter on the map.
+    tag: RouteTag | None = None
 
 
 class RouteResponse(BaseModel):

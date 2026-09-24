@@ -4,6 +4,7 @@
     ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench
     python -m pipeline.route_bench --runs 200 --seed 2
     ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench --scenario all
+    python -m pipeline.route_bench --solvers
 
 Read, not gated, like perf.py and quality.py. Each run plans a walk through
 api/read.py's own _plan_route for a fresh device, from a random start inside
@@ -16,20 +17,31 @@ you would notice.
 `--scenario` plants seed_dev's route scenarios in the bench's own transaction
 instead, one at a time, and starts round each one's start. The rollback at the
 end puts back whatever the database held.
+
+`--solvers` needs neither database nor streets: random crow-flies maps of
+SOLVER_CANDIDATES stops, few enough to brute-force, scored for nearest-neighbour,
+the solver, and the exact optimum. The optimum is the orienteering one - most
+stops, then most prize - which the solver deliberately trades against turns
+back and filling the slider, so its prize gap is an upper bound on what the
+heuristic loses. The classic OP sets (Tsiligirides, Chao) are not here: they
+end somewhere other than the start and cap nothing but length, and this walk
+is five stops with a layer quota.
 """
 
 import argparse
 import datetime
+import itertools
 import random
 import statistics
 import time
 import uuid
 from itertools import pairwise
+from types import SimpleNamespace
 
 from api.gate import meters_between
 from api.models import Coordinates
-from api.read import ROUTE_SIZE, _plan_route
-from api.streets import retraced_meters
+from api.read import ROUTE_SIZE, _choose_stops, _path_meters, _plan_route, _walking_order
+from api.streets import retraced_meters, walking_matrix
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session
 from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, scenario
@@ -60,6 +72,72 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
         "retraced": retraced_meters(path, [Coordinates(lat=r.lat, lng=r.lng) for r in stops]),
         "ms": ms,
     }
+
+
+# 12 candidates is 1,585 sets of up to five, each ordered exactly: well under a
+# second of brute force per map.
+SOLVER_CANDIDATES = 12
+
+
+def solvers(runs: int, seed: int) -> None:
+    rng = random.Random(seed)
+    rows = []
+    for i in range(runs):
+        at = Coordinates(lat=LAT, lng=LNG)
+        picks = [
+            SimpleNamespace(
+                lat=LAT + rng.uniform(-0.01, 0.01),
+                lng=LNG + rng.uniform(-0.01, 0.01),
+                layer=rng.choice(["stranger", "historical"]),
+                contrast_score=rng.choice([None, rng.random()]),
+            )
+            for _ in range(SOLVER_CANDIDATES)
+        ]
+        budget, loop = rng.choice(BUDGETS), rng.random() < 0.5
+        d = walking_matrix([at] + [Coordinates(lat=p.lat, lng=p.lng) for p in picks])
+        prize = {n: 1 + (p.contrast_score or 0) for n, p in enumerate(picks, 1)}
+        nodes = range(1, len(picks) + 1)
+
+        near: list[int] = []
+        while len(near) < ROUTE_SIZE:
+            c = min(
+                (c for c in nodes if c not in near), key=lambda c: d[near[-1] if near else 0][c]
+            )
+            if _path_meters([*near, c], d, loop) > budget:
+                break
+            near.append(c)
+        began = time.perf_counter()
+        chosen = _choose_stops(picks, ROUTE_SIZE, d, str(i), budget, loop, at)
+        ms = (time.perf_counter() - began) * 1000
+        best = max(
+            (
+                s
+                for k in range(ROUTE_SIZE + 1)
+                for s in itertools.combinations(nodes, k)
+                if _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget
+            ),
+            key=lambda s: (len(s), sum(prize[n] for n in s)),
+        )
+        rows.append(
+            {
+                "nn": len(near),
+                "solver": len(chosen),
+                "exact": len(best),
+                "prize": sum(prize[n] for n in chosen) / max(sum(prize[n] for n in best), 1),
+                "ms": ms,
+            }
+        )
+    print(
+        f"{'runs':>5} {'nn<exact':>9} {'solver<exact':>13} {'prize p50/p5':>13} {'ms p50/p95':>11}"
+    )
+    same = [r["prize"] for r in rows if r["solver"] == r["exact"]]
+    print(
+        f"{runs:>5} {sum(r['nn'] < r['exact'] for r in rows) / runs:>9.0%} "
+        f"{sum(r['solver'] < r['exact'] for r in rows) / runs:>13.0%} "
+        f"{pct(same, 50):>6.0%}/{pct(same, 5):<6.0%} "
+        f"{pct([r['ms'] for r in rows], 50):>5.0f}/{pct([r['ms'] for r in rows], 95):<5.0f}"
+    )
+    print("prize is the solver's share of the optimum's, over maps where both have as many stops")
 
 
 def pct(values: list[float], q: int) -> float:
@@ -96,7 +174,12 @@ def main() -> None:
     parser.add_argument(
         "--scenario", choices=[*ROUTE_SCENARIOS, "all"], help="plant and bench seed_dev --routes"
     )
+    parser.add_argument(
+        "--solvers", action="store_true", help="nearest-neighbour, solver and exact, no streets"
+    )
     args = parser.parse_args()
+    if args.solvers:
+        return solvers(args.runs, args.seed)
     if not ROUTING_URL:
         raise SystemExit("ROUTING_URL is unset: without streets there are no spurs to measure")
 

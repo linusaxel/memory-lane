@@ -44,6 +44,7 @@ from api.models import (
     RouteMeta,
     RouteRequest,
     RouteResponse,
+    RouteTag,
     SearchMeta,
     SearchResponse,
     Stats,
@@ -83,7 +84,8 @@ router = APIRouter()
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
 # A loop ends back where the day's walk started, so its last leg is the walk
 # home, and it is counted when choosing and ordering stops. ROUTE_LOOP=0 makes
-# it one-way. The server never stores that start; the app remembers it.
+# it one-way, and a request's `loop` overrides it. The server never stores that
+# start; the app remembers it.
 ROUTE_LOOP = os.getenv("ROUTE_LOOP", "1") != "0"
 
 
@@ -595,15 +597,15 @@ def _walking_order(picks: list[int], d: list, loop: bool = False) -> list[int]:
 
 
 ROUTE_LOOKUP = """
-    SELECT memory_ids, budget_meters, legs FROM daily_routes
+    SELECT memory_ids, budget_meters, legs, loop FROM daily_routes
     WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date
 """
 
 ROUTE_INSERT = """
-    INSERT INTO daily_routes (device_id, route_date, memory_ids, budget_meters, legs)
+    INSERT INTO daily_routes (device_id, route_date, memory_ids, budget_meters, legs, loop)
     VALUES (
         CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :budget_meters,
-        CAST(:legs AS jsonb)
+        CAST(:legs AS jsonb), :loop
     )
     ON CONFLICT (device_id, route_date) DO NOTHING
 """
@@ -642,7 +644,15 @@ ROUTE_CLEANUPS = 3
 SPUR_STEP_METERS = 25
 
 
-def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route_date):
+def _plan_route(
+    session,
+    device: str,
+    at: Coordinates,
+    budget_meters: int,
+    route_date,
+    loop: bool = ROUTE_LOOP,
+    tag: str | None = None,
+):
     """The walk this device would get from `at` today: (stops in order,
     stop-to-stop street legs, {out, home} street legs touching `at`). Seeded
     on device and day, so the preview and the accept that follows it pick the
@@ -668,6 +678,7 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
             "today": route_date,
             "device_id": device,
             "limit": ROUTE_POOL,
+            "tag": tag,
         },
     ).fetchall()
     candidates = _spread(_one_per_place(candidates), budget_meters)
@@ -679,6 +690,8 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
         d = [[d[a][b] for b in rows] for a in rows]
     seed = f"{device}:{route_date}"
 
+    solve_for = budget_meters
+
     def walks(banned: set[int]) -> list[list[int]]:
         """The solver's shortlist as nodes into `d`, each in walking order,
         never any stop in `banned`."""
@@ -686,16 +699,22 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
         rows = [0, *nodes]
         dd = [[d[a][b] for b in rows] for a in rows]
         shortlist = _choose_walks(
-            [candidates[i - 1] for i in nodes], ROUTE_SIZE, dd, seed, budget_meters, ROUTE_LOOP, at
+            [candidates[i - 1] for i in nodes], ROUTE_SIZE, dd, seed, solve_for, loop, at
         )
-        return [[nodes[i - 1] for i in _walking_order(p, dd, ROUTE_LOOP)] for p in shortlist]
+        return [[nodes[i - 1] for i in _walking_order(p, dd, loop)] for p in shortlist]
 
     def walk(banned: set[int]) -> list[int]:
         return walks(banned)[0]
 
     def streets(order: list[int]):
         stops = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
-        return street_legs([at, *stops, *([at] if ROUTE_LOOP else [])])
+        if not loop:
+            return street_legs([at, *stops])
+        # Once more past home to the first stop, and that leg is the way out:
+        # with the start a waypoint mid-route, out and home cannot share the
+        # stretch to its corner. An end of a route may turn round; a middle not.
+        legs = street_legs([at, *stops, at, stops[0]])
+        return legs and [legs[-1], *legs[1:-1]]
 
     shortlist = walks(set())
     order = shortlist[0]
@@ -703,19 +722,33 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
     if legs is None:
         return [candidates[i - 1] for i in order], None, None
 
+    def routed_meters(legs):
+        return sum(meters_between(a, b) for leg in legs for a, b in itertools.pairwise(leg))
+
     def spur(order, legs):
         pins = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
         return retraced_meters([p for leg in legs for p in leg], pins)
 
     def judge(order, legs):
-        """Short of ROUTE_FILL of the slider first, then street retraced. A
-        short walk retraces least, so on spurs alone a 10km ask got 755m."""
-        short = max(0.0, ROUTE_FILL * budget_meters - _path_meters(order, d, ROUTE_LOOP))
-        return short // SPUR_STEP_METERS, spur(order, legs)
+        """Metres off the slider plus metres retraced, then retraced alone. A
+        short walk retraces least, so on spurs alone a 10km ask got 755m. Short
+        of ROUTE_FILL is read from `d`, where a stub walked in and out cannot
+        pay for itself; over the slider from the routed legs, because no U-turn
+        at a stop means round the block, which the table does not know about."""
+        short = ROUTE_FILL * budget_meters - _path_meters(order, d, loop)
+        off = max(0.0, short, routed_meters(legs) - budget_meters)
+        retraced = spur(order, legs)
+        return (off + retraced) // SPUR_STEP_METERS, retraced
 
     routed = [(order, legs)] + [(o, streets(o)) for o in shortlist[1:]]
+    # Round the block is longer than `d` says. When that takes the walk over
+    # the slider, solve again for as much less as it went over, and judge both.
+    over = routed_meters(legs) / max(_path_meters(order, d, loop), 1)
+    if routed_meters(legs) > budget_meters and over > 1:
+        solve_for = budget_meters / over
+        routed += [(o, streets(o)) for o in walks(set()) if o]
     judged = [(judge(o, lg), n, o, lg) for n, (o, lg) in enumerate(routed) if lg]
-    _, _, order, legs = min(judged, key=lambda j: (j[0][0], j[0][1] // SPUR_STEP_METERS, j[1]))
+    _, _, order, legs = min(judged, key=lambda j: j[:2])
     retraced = spur(order, legs)
     judged_now = judge(order, legs)
     banned: set[int] = set()
@@ -742,12 +775,12 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
     # One street route through the whole walk, start and home included, split
     # into the stop-to-stop legs (stored) and the two that touch the start
     # (handed to the preview, which stores nothing).
-    ends = {"out": legs[0], "home": legs[-1] if ROUTE_LOOP else None}
+    ends = {"out": legs[0], "home": legs[-1] if loop else None}
     return [candidates[i - 1] for i in order], legs[1 : len(order)], ends
 
 
 def _route_response(
-    route_date, rows, memory_ids, budget_meters, legs, ends=None, earned=frozenset()
+    route_date, rows, memory_ids, budget_meters, legs, loop, ends=None, earned=frozenset()
 ) -> RouteResponse:
     # No position: these are unwalked stops, and rendering them locked is the
     # point - the same rule every other list endpoint here follows. `earned`
@@ -760,7 +793,7 @@ def _route_response(
             route_date=route_date,
             size=len(memory_ids),
             budget_meters=budget_meters,
-            loop=ROUTE_LOOP,
+            loop=loop,
             # A stop hidden since would shift every leg after it onto the wrong
             # pair; straight lines are the honest fallback.
             legs=legs if len(memories) == len(memory_ids) else None,
@@ -780,6 +813,8 @@ def preview_route(
     lat: float = Query(..., ge=-90, le=90),
     lng: float = Query(..., ge=-180, le=180),
     budget_meters: int = Query(..., ge=ROUTE_BUDGET_MIN_METERS, le=ROUTE_BUDGET_MAX_METERS),
+    loop: bool = Query(ROUTE_LOOP),
+    tag: RouteTag | None = None,
 ):
     """The walk POST /v1/routes/today would store, stored nowhere. A device that
     already accepted today's walk still gets a preview; accepting returns the
@@ -787,10 +822,10 @@ def preview_route(
     route_date = gate.today()
     with get_session() as session:
         picked, legs, ends = _plan_route(
-            session, device, Coordinates(lat=lat, lng=lng), budget_meters, route_date
+            session, device, Coordinates(lat=lat, lng=lng), budget_meters, route_date, loop, tag
         )
     return _route_response(
-        route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), ends
+        route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), loop, ends
     )
 
 
@@ -807,15 +842,18 @@ def accept_route(body: RouteRequest):
             text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
         ).fetchone()
         if row is None:
+            loop = ROUTE_LOOP if body.loop is None else body.loop
             picked, legs, _ = _plan_route(
                 session,
                 body.device,
                 Coordinates(lat=body.lat, lng=body.lng),
                 body.budget_meters,
                 route_date,
+                loop,
+                body.tag,
             )
             if not picked:
-                return _route_response(route_date, [], [], body.budget_meters, None)
+                return _route_response(route_date, [], [], body.budget_meters, None, loop)
             touch_device(session, body.device)
             session.execute(
                 text(ROUTE_INSERT),
@@ -825,6 +863,7 @@ def accept_route(body: RouteRequest):
                     "ids": [r.id for r in picked],
                     "budget_meters": body.budget_meters,
                     "legs": json.dumps(_legs_json(legs)) if legs else None,
+                    "loop": loop,
                 },
             )
             # Somebody else's accept this second may have won the race - read
@@ -851,7 +890,7 @@ def get_todays_route(device: str = Query(..., pattern=DEVICE_PATTERN)):
 def _stored_route(session, route_date, row) -> RouteResponse:
     memory_ids = list(row.memory_ids)
     rows = session.execute(text(ROUTE_QUERY), {"ids": memory_ids}).fetchall()
-    return _route_response(route_date, rows, memory_ids, row.budget_meters, row.legs)
+    return _route_response(route_date, rows, memory_ids, row.budget_meters, row.legs, row.loop)
 
 
 @router.get("/v1/routes/walked", response_model=WalkedResponse)
@@ -878,7 +917,9 @@ def get_walked_routes(
     def walked(w) -> WalkedRoute:
         ids = list(w.memory_ids)
         rows = [stops[i] for i in ids if i in stops]
-        route = _route_response(w.route_date, rows, ids, w.budget_meters, w.legs, earned=earned)
+        route = _route_response(
+            w.route_date, rows, ids, w.budget_meters, w.legs, w.loop, earned=earned
+        )
         meta = route.meta.model_dump() | {"size": len(route.memories)}
         return WalkedRoute(
             memories=route.memories,

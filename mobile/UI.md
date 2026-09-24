@@ -16,6 +16,8 @@ Plan (src/Plan.tsx)            opaque page over the mounted map, in the Walk tab
 ├─ "How far today?"            34/700
 ├─ "4 km"                      the slider's value, mono 30
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
+├─ Loop · One way              Submit's Chip, one of the two on
+├─ theme chips                 SUBMISSION_TAGS, none or one
 └─ "Show me the walk"          ink button; asks for location, then previews
 
 Preview                         the map, fitted to the start and every stop

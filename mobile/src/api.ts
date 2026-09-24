@@ -299,11 +299,16 @@ export async function fetchTodaysRoute(
   }
 }
 
-/** The walk a `budgetMeters` loop from `at` would be. Stores nothing. */
+/** How the walk is asked for, beyond its length. Preview and accept must send
+ *  the same, or the accept plans a different walk from the one shown. */
+export type WalkAsk = { loop: boolean; tag: string | null };
+
+/** The walk a `budgetMeters` walk from `at` would be. Stores nothing. */
 export async function previewRoute(
   device: string,
   at: Coordinates,
   budgetMeters: number,
+  ask: WalkAsk,
   signal?: AbortSignal,
 ): Promise<TodaysRoute> {
   const params = new URLSearchParams({
@@ -311,7 +316,9 @@ export async function previewRoute(
     lat: String(at.lat),
     lng: String(at.lng),
     budget_meters: String(budgetMeters),
+    loop: String(ask.loop),
   });
+  if (ask.tag) params.set('tag', ask.tag);
   return toRoute(await get<RouteBody>('/v1/routes/preview', params, signal));
 }
 
@@ -321,6 +328,7 @@ export async function acceptRoute(
   device: string,
   at: Coordinates,
   budgetMeters: number,
+  ask: WalkAsk,
 ): Promise<TodaysRoute> {
   return toRoute(
     await post<RouteBody>('/v1/routes/today', {
@@ -328,6 +336,8 @@ export async function acceptRoute(
       lat: at.lat,
       lng: at.lng,
       budget_meters: budgetMeters,
+      loop: ask.loop,
+      tag: ask.tag,
     }),
   );
 }

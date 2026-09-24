@@ -499,3 +499,77 @@ def test_walked_lists_the_accounts_walks_with_earned_stops_open(client, db_sessi
     db_session.commit()
     assert [w["meta"]["earned"] for w in walks(sibling)] == [2], "a new phone gets its history"
     assert walks(stranger) == []
+
+
+def test_a_theme_keeps_only_stops_carrying_its_tag(client, db_session):
+    food = set()
+    for n in range(1, 7):
+        place = _place(db_session, f"Stop {n}", LAT + n * 0.001, LNG)
+        tags = ["food"] if n % 2 else ["music"]
+        memory = _historical(db_session, place, f"memory {n}", f"https://e.invalid/{n:0>11}", tags)
+        if n % 2:
+            food.add(memory)
+    db_session.commit()
+
+    chosen = {
+        m["id"]
+        for m in client.get(
+            f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000&tag=food"
+        ).json()["memories"]
+    }
+    assert chosen == food
+    accepted = client.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "tag": "food"},
+    ).json()
+    assert {m["id"] for m in accepted["memories"]} == food
+
+
+def test_a_theme_outside_the_vocabulary_is_refused(client):
+    query = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000&tag=gossip"
+    assert client.get(f"/v1/routes/preview?{query}").status_code == 422
+
+
+def test_one_way_is_asked_for_per_walk_and_stored_with_it(client, db_session):
+    for n in range(1, 4):
+        _offset(db_session, n)
+    db_session.commit()
+
+    query = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000&loop=false"
+    assert client.get(f"/v1/routes/preview?{query}").json()["meta"]["loop"] is False
+    accepted = client.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "loop": False},
+    )
+    assert accepted.json()["meta"]["loop"] is False
+    # Read back tomorrow's way: from the row, not from the server's default.
+    assert client.get(f"/v1/routes/today?device={DEVICE}").json()["meta"]["loop"] is False
+    walked = client.get(f"/v1/routes/walked?device={DEVICE}").json()["walks"]
+    assert walked[0]["meta"]["loop"] is False
+
+
+def test_a_loop_is_routed_through_its_start_so_out_and_home_cannot_share_a_street(
+    client, db_session, monkeypatch
+):
+    """The start is a route's end, and an end may turn round: out and home took
+    the same stretch to the corner. Routed once more past home, the start is a
+    waypoint mid-route, and the leg after it is the way out."""
+    for n in range(1, 4):
+        _offset(db_session, n)
+    db_session.commit()
+    asked = []
+
+    def legs(points):
+        asked.append(points)
+        return [
+            [a, Coordinates(lat=a.lat, lng=a.lng + 0.0001 * i), b]
+            for i, (a, b) in enumerate(pairwise(points))
+        ]
+
+    monkeypatch.setattr(read, "street_legs", legs)
+    meta = _preview(client).json()["meta"]
+    start = Coordinates(lat=LAT, lng=LNG)
+    points = asked[-1]
+    assert points[0] == start and points[-2] == start and points[-1] == points[1]
+    # The out leg is the last one routed, the one leaving the start mid-route.
+    assert meta["out_leg"][1]["lng"] == pytest.approx(LNG + 0.0001 * (len(points) - 2))

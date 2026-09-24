@@ -161,7 +161,7 @@ exist. Verify before trusting, and strike entries when you fix them.
 - [x] **Semantic place duplicates** — 18 of 25 proposals reviewed and applied,
       194 places → 176, memories unchanged at 224. Gotham Comedy Club is one pin
       with 7 memories. The 7 rejected pairs and the reasoning are in 1.2.
-- [ ] **Search is a sequential scan by construction**, and the obvious fix is
+- [x] **Search is a sequential scan by construction**, and the obvious fix is
       not one. `to_tsvector(m.summary || ' ' || p.name)` spans two tables so no
       expression index can serve it — but rewriting it as
       `to_tsvector(m.summary) @@ q OR to_tsvector(p.name) @@ q` and indexing
@@ -199,6 +199,11 @@ exist. Verify before trusting, and strike entries when you fix them.
       ones — the 121 of 215 the gate already treats as untrustworthy. Building
       search UI on top of it would be a feature that returns the corpus's worst
       data. See *Decided* below.
+
+      **Stale, struck 2026-09-24.** Design 2 shipped in `484b6fd`:
+      `db/migrations/010_search_vector.sql`, a trigger-maintained
+      `search_vector` and a GIN index, pinned by `tests/test_search_index.py`.
+      The local database had skipped 010 and 500'd on search; applied.
 - [x] **Endpoints with no consumer.** Settled by deletion: `/v1/places/{id}`,
       `/v1/places/{id}/memories` and `/v1/content/{id}/memories` had no app
       caller and no pytest, and were reached only by `api/test_api.sh` — which
@@ -1264,6 +1269,12 @@ flagged ⚠️ inline, not overridden.
       [Komoot round trips](https://support.komoot.com/hc/en-us/articles/360024590552-Planning-round-trips) ·
       [GraphHopper round_trip](https://github.com/graphhopper/graphhopper/blob/master/docs/web/api-doc.md)
 
+- [x] **Spurs: most were U-turns, not stop choice.** Found 2026-09-24 by
+      the scenario bench: a spur in 75-100% of runs. `continue_straight=true`
+      on `/route`, the start routed as a waypoint, over-budget judged on the
+      routed legs. Spurs 25-45% in the dense scenarios, over 50 m 5-30%.
+      docs/10, "No U-turn at a stop, and none at the start".
+
 #### Walking distances instead of crow-flies
 
 - [x] **Street distances: a circuity factor now, a routing sidecar later.**
@@ -1358,8 +1369,10 @@ flagged ⚠️ inline, not overridden.
       (1) **"Swap this stop"**: remove it and re-insert the next-best
       candidate, reusing the insertion step.
       (2) ~~A length chip (short/medium/long → `budget_meters`)~~ **Done
-      2026-09-23** as the plan page's slider, 1–10 km (F1). Still open: one
-      theme tag and a loop toggle.
+      2026-09-23** as the plan page's slider, 1–10 km (F1). ~~One theme tag
+      and a loop toggle~~ **Done 2026-09-24**: `loop` and `tag` on preview and
+      accept, `daily_routes.loop` (migration 025), chips on the plan page.
+      docs/10, "Loop or one-way, and a theme, per walk".
       (3) Drag-to-reorder last. Stops already unlock in any order, so it
       mostly changes the line.
       **Decided 2026-09-23:** no regenerating. One accepted walk per device
@@ -1447,7 +1460,7 @@ flagged ⚠️ inline, not overridden.
       `pipeline/route_scenarios.json`, written once by `--snap-scenarios`.
       `route_bench --scenario NAME|all` plants each in its own transaction,
       starts round the scenario's start, and rolls back.
-- [ ] **`pipeline/route_bench.py`: score and time every solver on the same
+- [x] **`pipeline/route_bench.py`: score and time every solver on the same
       instances.** Shaped like `perf.py` and `quality.py`: run by hand and
       read, not part of the gate. Inputs: the classic OP benchmarks
       (Tsiligirides sets 1–3, Chao 64/66, best-known scores from KU Leuven)
@@ -1460,8 +1473,15 @@ flagged ⚠️ inline, not overridden.
       **Scenarios done 2026-09-24:** `--scenario all`, 40 runs each: full
       walks 85-95% except sparse and stack-heavy by design, but a spur in
       75-100% of runs and >50m in 57-78%. Stack-heavy fills 5 stops from 8
-      places at 3 km, so stops share a place. Solver comparison and the
-      OP benchmarks are still open.
+      places at 3 km, so stops share a place.
+      **Solvers done 2026-09-24:** `--solvers`, 100 crow-flies maps of 12
+      candidates against brute force. The solver never has fewer stops than
+      the optimum (nearest-neighbour does on 16%); its prize is 94% of the
+      optimum's at p50, 75% at p5, some given up on purpose for turns and
+      fill. ~20 ms. **The OP sets are dropped, not pending:** they end
+      somewhere other than the start and cap only length, and this walk is
+      five stops with a layer quota. A best-known score there measures a
+      different problem.
       [KU Leuven OP instances](https://www.mech.kuleuven.be/en/mim/op) ·
       [Tsiligirides 1984](https://www.researchgate.net/publication/230856233_Heuristic_Methods_Applied_to_Orienteering) ·
       [OPLib / op-solver](https://github.com/gkobeaga/op-solver)

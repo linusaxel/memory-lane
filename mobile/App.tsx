@@ -40,6 +40,7 @@ import {
   type LocatedMemory,
   type Profile,
   type TodaysRoute,
+  type WalkAsk,
   type WalkedRoute,
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
@@ -167,6 +168,7 @@ export default function App() {
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
   const [stage, setStage] = useState<Stage>('loading');
   const [walkKm, setWalkKm] = useState(WALK_KM.initial);
+  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, tag: null });
   // Where the previewed walk starts, and whether that is Midtown standing in
   // for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
@@ -449,7 +451,7 @@ export default function App() {
     const fallback = !from;
     const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
     try {
-      const walk = await previewRoute(device, anchor, walkKm * 1000);
+      const walk = await previewRoute(device, anchor, walkKm * 1000, walkAsk);
       if (!mounted.current) return;
       setPlanFrom(anchor);
       setPlanFallback(fallback);
@@ -460,14 +462,14 @@ export default function App() {
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, goToMyLocation, walkKm]);
+  }, [device, goToMyLocation, walkKm, walkAsk]);
 
   const acceptWalk = useCallback(async () => {
     if (!device || !planFrom) return;
     setPlanBusy(true);
     setPlanError(null);
     try {
-      const walk = await acceptRoute(device, planFrom, walkKm * 1000);
+      const walk = await acceptRoute(device, planFrom, walkKm * 1000, walkAsk);
       if (!mounted.current) return;
       takeRoute(walk, planFrom);
       setPreview(null);
@@ -477,7 +479,7 @@ export default function App() {
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, planFrom, walkKm, takeRoute]);
+  }, [device, planFrom, walkKm, walkAsk, takeRoute]);
 
   // The preview's zoom: the whole loop and its start, clear of the card.
   useEffect(() => {
@@ -1208,7 +1210,15 @@ export default function App() {
 
           {/* Opaque, over a map that stays mounted behind it (rule 9). */}
           {tab === 'walk' && stage === 'plan' && (
-            <Plan km={walkKm} onKm={setWalkKm} onGo={planWalk} busy={planBusy} error={planError} />
+            <Plan
+              km={walkKm}
+              onKm={setWalkKm}
+              ask={walkAsk}
+              onAsk={setWalkAsk}
+              onGo={planWalk}
+              busy={planBusy}
+              error={planError}
+            />
           )}
           {tab === 'walk' && stage === 'loading' && <View style={styles.cover} />}
         </View>

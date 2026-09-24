@@ -730,3 +730,42 @@ walk plus one walk per heading, not the best walk's shake variants, which all
 share the stops next to the start where the walk home overlaps the walk out.
 And the circle walks respect the layer quota, or most of them fall off a
 shortlist that requires the best walk's mix.
+
+### No U-turn at a stop, and none at the start
+
+Most of what `route_bench --scenario` still called a spur was not the solver's
+choice of stops at all. It was OSRM's `foot` profile turning round at a
+waypoint: walk to a mid-block pin, U-turn, walk back to the corner you came
+from. Measured over `--scenario dense`, 2,074 m of the 3,700 m retraced sat
+within 120 m of a stop and 1,308 m round the start.
+
+- **`continue_straight=true`** on the `/route` call forbids the U-turn at every
+  waypoint in the middle of a route. The walk goes round the block instead.
+- **The start is routed as a waypoint too.** It is the route's two ends, and an
+  end may turn round, so out and home left by the same corner. `streets()` in
+  `_plan_route` asks for one leg more, past home to the first stop, and uses
+  that last leg as the way out.
+- **Round the block is longer than the table says**, so over-budget is judged on
+  the routed legs, and a walk that went over is solved again for as much less
+  as it overshot. Short of `ROUTE_FILL` is still read from the table: routed,
+  a stub walked in and out adds metres and pays for its own spur.
+- **The judge is one number**, metres off the slider plus metres retraced, not
+  the fill first and spurs second. Fill first let a 6 km ask buy its length
+  with a 2 km out-and-back.
+
+Spur rate over 40 runs a scenario, before and after: dense 88% → 25%, bimodal
+82% → 45%, linear 82% → 28%, one-layer 98% → 38%, stack-heavy 100% → 72%; over
+50 m, 57–78% → 5–30%. Full walks fell a few points, nearly all at 1 km, where
+five stops without a U-turn do not fit and the walk now says so rather than
+running to 1.35 km.
+
+### Loop or one-way, and a theme, per walk
+
+`ROUTE_LOOP` was a server setting. The plan page now sends `loop` and an
+optional `tag` with both the preview and the accept, which have to agree
+because the accept re-plans rather than trusting ids. `loop` is stored on
+`daily_routes`, since a walk has to be drawn the same way tomorrow and in the
+Walks list; the tag is not, because the stops it chose are. `ROUTE_LOOP` is
+only the default for a client that sends neither. The chips are the
+submission tags, not the whole vocabulary: eighteen chips is a form, and the
+server takes any tag in `pipeline/tags.py`.
