@@ -1566,6 +1566,52 @@ In build order:
 
 ---
 
+## Walk done, and the walks you have walked (2026-09-24)
+
+Asked for by the founder 2026-09-24: finishing a walk should feel like an
+accomplishment, and a walk should be there to look back on. Flows F30 and F31
+in `docs/08-ux-flows.md`. The persistence is mostly already there:
+`daily_routes` keeps every accepted walk (nothing deletes a row) and only
+`GET /v1/routes/today` reads one. In build order:
+
+- [ ] **Walk done: a closing screen, not just a haptic.** Today the finish is
+      `a0b5caa`'s second success haptic in `mobile/App.tsx`'s `unlock()` and
+      the pill reading "Route walked · 5 of 5". On the `routeDone` edge, close
+      the sheet onto one full-screen moment: the loop drawn whole
+      (`RouteLine`), the stops, metres walked (`pathMeters`), the time from
+      first unlock to last, and the streak (F27). One "Done" goes back to the
+      map. It is never a dead end (UI.md). Shown once per walk, remembered beside the cached route in
+      `mobile/src/route.ts`.
+      **Open:** a share or screenshot button now or later (rule 11, the credit
+      strip); whether a relaunch on a walked day shows it again.
+      **First step:** a `WalkDone.tsx` fed from what App.tsx already has
+      (`route`, `routeLegs`, `earned`), shown when `routeDone` turns true
+      during a session.
+- [ ] **Say when a walk was finished.** `daily_routes.completed_at` (migration
+      plus `db/schema.sql`), set by `POST /v1/memories/{id}/unlock` when that
+      unlock earns the device's last stop of today's walk. It cannot be derived
+      from `unlocks`, because a stop earned on another day also counts toward
+      a walk. Set once, never moved.
+      **First step:** the migration, and one `UPDATE … WHERE completed_at IS
+      NULL` after the unlock insert in `api/write.py`.
+- [ ] **Past walks: `GET /v1/routes/walked?device=UUID`.** Newest first: date,
+      budget, stops earned of stops, `completed_at`, legs. Earned stops come
+      back open, the way `/v1/unlocks` serves them. Across a signed-in user's
+      devices through `devices.user_id`, the way unlocks reach a new phone
+      (F22).
+      **Known gap, on purpose:** the start is never stored (docs/10 § Routes),
+      so a past loop draws stop to stop, not out and home.
+      **First step:** the query in `api/queries.py`, which
+      `tests/test_api_sql.py` EXPLAINs.
+- [ ] **A Walks list in the app.** A third subtab on Memories, beside Unlocked
+      and My memories: one row per walk (date, "5 of 5", km). A row opens the
+      map on that walk, read-only, and unlocks nothing (like Explore).
+      **Open:** whether unfinished walks are listed too.
+- [ ] **Flows and tests.** F30 and F31 move from Proposed to Implemented in
+      docs/08. `.maestro/walk-and-unlock.yml` already reaches 5 of 5: add the
+      closing screen there, and the Walks row after its relaunch. Headless in
+      `tests/test_flows.py`: finish a walk, check `completed_at` is set once, check it is listed.
+
 ## Decided — do not revisit
 
 Copied so they survive context resets.

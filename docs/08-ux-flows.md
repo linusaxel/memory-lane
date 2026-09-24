@@ -55,6 +55,8 @@ free number. F3 is still proposed and sits at the bottom.
 | F27 | Keep a streak | Implemented |
 | F28 | Get notified near a memory | Implemented |
 | F29 | Explore what is around | Implemented |
+| F30 | Finish a walk | Proposed |
+| F31 | Look back at a walk | Proposed |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
@@ -965,6 +967,24 @@ Not built. Each needs a decision before it can be specified properly — see
 The core of the product brief: stand in a Copenhagen street, learn what
 happened there. Blocked on choosing the historical source, and on deciding
 whether it is a separate map layer, a filter, or a second pin style.
+
+### F30 · Finish a walk — **Proposed**
+
+The last stop unlocks and the day should feel finished. Today that is a second
+success haptic and the pill reading "Route walked · 5 of 5". Proposed: the
+sheet closes onto one closing screen showing the whole loop, the stops,
+the metres walked, the time from first unlock to last, and the streak (F27).
+One button goes back to the map. It shows once per walk and is never a dead
+end. Open: whether it can be shared, and whether it shows again on a relaunch
+the same day. `TODO.md`, "Walk done".
+
+### F31 · Look back at a walk — **Proposed**
+
+Every accepted walk is already kept (`daily_routes`), and nothing reads one
+back after its day. Proposed: a Walks list beside Unlocked and My memories,
+one row per walk (date, stops earned, km). A row opens that walk on the map,
+read-only. The start was never stored, so a past loop draws stop to stop and
+not out and home. `TODO.md`, "Walk done".
 
 ### F4 · Switch between historical, friend and stranger layers — **Answered: all at once, told apart in the sheet**
 
