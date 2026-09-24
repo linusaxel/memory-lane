@@ -7,7 +7,7 @@
     python -m pipeline.route_bench --solvers
 
 Read, not gated, like perf.py and quality.py. Each run plans a walk through
-api/read.py's own _plan_route for a fresh device, from a random start inside
+api/route_solver.py's _plan_route for a fresh device, from a random start inside
 the dense seed's box, with everything the plan page lets a person set rolled
 at random: slider length, loop or one way, a theme or none, and the app's own
 `again`. Then once more with the next `again`: `fresh` is how often that is a
@@ -43,7 +43,7 @@ from types import SimpleNamespace
 
 from api.gate import meters_between
 from api.models import Coordinates
-from api.read import ROUTE_SIZE, _choose_stops, _path_meters, _plan_route, _walking_order
+from api.route_solver import ROUTE_SIZE, _choose_stops, _path_meters, _plan_route, _walking_order
 from api.streets import retraced_meters, walking_matrix
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session

@@ -155,6 +155,7 @@ memory-lane/
 │   ├── queries.py          # Every SQL string
 │   ├── gate.py             # row -> Memory, redacted unless you are near
 │   ├── read.py             # The read endpoints
+│   ├── route_solver.py     # Today's walk: which stops, what order, how ranked
 │   ├── write.py            # Unlock, media, submissions, reports
 │   ├── accounts.py         # /v1/me and /v1/auth/*
 │   ├── auth.py             # Google and Apple token verification

@@ -1,4 +1,4 @@
-"""api/read.py's route solver: which stops, and in what order."""
+"""api/route_solver.py: which stops, and in what order."""
 
 import itertools
 import math
@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from api.gate import meters_between
 from api.models import Coordinates
-from api.read import ROUTE_FILL, _choose_stops, _path_meters, _walking_order
+from api.route_solver import ROUTE_FILL, _choose_stops, _path_meters, _walking_order
 from api.streets import ROUTE_CIRCUITY, walking_matrix
 
 ANCHOR = Coordinates(lat=40.75, lng=-73.99)

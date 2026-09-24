@@ -64,7 +64,7 @@ from api.queries import (
     SEARCH_MEMORIES_QUERY,
     SINGLE_MEMORY_QUERY,
 )
-from api.read import ROUTE_POOL
+from api.route_solver import ROUTE_POOL
 
 DB = "memorylane_perf"
 URL = f"postgresql+psycopg://memorylane:memorylane@localhost:5432/{DB}"
@@ -190,7 +190,7 @@ def main() -> None:
             ROUTE_CANDIDATES_QUERY,
             {
                 **{k: near[k] for k in ("lat", "lng")},
-                # The widest slider: api/read.py searches half the budget.
+                # The widest slider: api/route_solver.py searches half the budget.
                 "radius_meters": 5_000,
                 "today": "2026-01-01",
                 "device_id": "00000000-0000-0000-0000-000000000000",

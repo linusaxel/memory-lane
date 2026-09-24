@@ -13,7 +13,7 @@ from itertools import pairwise
 import pytest
 from sqlalchemy import text
 
-from api import read, streets
+from api import read, route_solver, streets
 from api.models import Coordinates
 
 pytestmark = pytest.mark.db
@@ -37,8 +37,8 @@ def on_streets(monkeypatch):
         return [[read.meters_between(a, b) for b in points] for a in points], [0.0] * len(points)
 
     def use(legs=lambda stops: [[a, b] for a, b in pairwise(stops)]):
-        monkeypatch.setattr(read, "street_table", table)
-        monkeypatch.setattr(read, "street_legs", legs)
+        monkeypatch.setattr(route_solver, "street_table", table)
+        monkeypatch.setattr(route_solver, "street_legs", legs)
 
     return use
 
@@ -300,7 +300,7 @@ def test_street_legs_are_stored_stop_to_stop(client, db_session, monkeypatch, on
     assert first["meta"]["out_leg"] is None
 
     # Read back from the row, not recomputed: the start is in none of them.
-    monkeypatch.setattr(read, "street_legs", lambda stops: None)
+    monkeypatch.setattr(route_solver, "street_legs", lambda stops: None)
     legs = client.get(f"/v1/routes/today?device={DEVICE}").json()["meta"]["legs"]
     assert legs == first["meta"]["legs"]
 
@@ -352,7 +352,7 @@ def test_a_stop_too_far_from_any_street_is_never_a_stop(client, db_session, monk
         # Node 0 is the anchor; the second-nearest candidate is 40m off the street.
         return d, [0.0] + [40.0 if i == 1 else 5.0 for i in range(len(points) - 1)]
 
-    monkeypatch.setattr(read, "street_table", table)
+    monkeypatch.setattr(route_solver, "street_table", table)
     chosen = [m["id"] for m in _preview(client).json()["memories"]]
     assert ids[2] not in chosen
     assert {ids[1], ids[3]} <= set(chosen)
@@ -403,7 +403,7 @@ def test_a_long_ask_is_not_traded_for_a_short_walk_that_retraces_less(
         for leg in path
         for a, b in pairwise(leg)
     )
-    assert walked >= read.ROUTE_FILL * 10000, f"a 10km ask walked {walked:.0f}m"
+    assert walked >= route_solver.ROUTE_FILL * 10000, f"a 10km ask walked {walked:.0f}m"
 
 
 def _authored(session, memory_ids, status="published"):

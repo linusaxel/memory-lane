@@ -3,7 +3,7 @@
     DATABASE_URL=... ROUTING_URL=... venv/bin/python e2e/travel.py LAT,LNG
 
 e2e/run.sh runs this once per run, after `seed_dev --at LAT,LNG`. It plans the
-walk the app will be offered, through api/read.py's own _plan_route on the same
+walk the app will be offered, through api/route_solver.py's _plan_route on the same
 database and streets, and writes:
 
   e2e/out/legs/N.yml   the street shape to stop N, a flow the journey runFlows:
@@ -23,7 +23,7 @@ import sys
 import uuid
 
 from api.models import Coordinates
-from api.read import _plan_route
+from api.route_solver import _plan_route
 from pipeline.db import get_session
 
 BUDGET_METERS = 4000  # WALK_KM.initial in mobile/src/Plan.tsx

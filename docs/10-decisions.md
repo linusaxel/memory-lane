@@ -54,7 +54,7 @@ buildings a phone can read 20-30 m off, and on those spots the ring will refuse
 somebody who is there. `UNLOCK_RADIUS_METERS` is the knob if the street says so.
 
 Two things follow. A pin further than the gate from any walkable way can never
-be stood on, so with streets a route drops it (`api/read.py`, `_plan_route`).
+be stood on, so with streets a route drops it (`api/route_solver.py`, `_plan_route`).
 And the proximity notification cannot use the gate as its region - iOS does not
 reliably fire under ~100 m - so it watches 100 m and lets the map do the rest
 (`mobile/src/geofenceRegions.ts`).

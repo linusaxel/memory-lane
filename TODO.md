@@ -43,13 +43,6 @@ delete an entry when its fix lands.
       also holds a transaction, so a migration on the same DB waits behind it.
       **Fix:** cache `/table` per point set inside a bench run, and print a
       spread (or run two seeds) so a 5-point move reads as noise or not.
-- [ ] **The route solver lives in the read router.** (checked 2026-09-24)
-      `api/read.py` is 1,077 lines, ~450 of them `_choose_walks` /
-      `_plan_route` with nested closures, and the ranking is split between
-      `_choose_walks.score` and `_plan_route.judge`, so it takes two readings
-      to know what a walk is ranked by. **Fix:** move the solver to
-      `api/route_solver.py` with the endpoints staying in `read.py`, and give
-      the two rankings one docstring.
 
 ---
 

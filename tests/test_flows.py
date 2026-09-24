@@ -27,7 +27,7 @@ from sqlalchemy import text
 import pipeline.seed_dev as seed_dev
 from api.gate import UNLOCK_RADIUS_METERS, meters_between, today
 from api.models import ROUTE_BUDGET_MAX_METERS, ROUTE_BUDGET_MIN_METERS, Coordinates
-from api.read import ROUTE_SIZE, _path_meters
+from api.route_solver import ROUTE_SIZE, _path_meters
 from api.streets import walking_matrix
 from pipeline.route_bench import START_BOX
 from pipeline.seed_dev import at, seed

@@ -4,6 +4,7 @@ api/models.py    every shape the API accepts or returns
 api/queries.py   every SQL string
 api/gate.py      row -> Memory, redacted unless you are standing there
 api/read.py      the read endpoints
+api/route_solver.py  which stops today's walk visits, and in what order
 api/write.py     unlock, media, submissions, reports
 api/accounts.py  /v1/me and /v1/auth/*
 api/privacy.py   the policy both app stores require

@@ -1002,7 +1002,7 @@ length. **Trigger:** "Show me another", under Accept.
    loop and theme. A different walk comes back whenever there is another as
    good: within a tenth of the slider of the best one on metres short of it
    plus metres retraced, and retracing no more (`ROUTE_VARIETY`,
-   `api/read.py` `_plan_route`). Taps cycle through those.
+   `api/route_solver.py` `_plan_route`). Taps cycle through those.
 2. When it comes back unchanged, that was the only one: the button gives way
    to "The only walk that long from here."
 3. Accept sends the same `again`, so it stores the walk on screen. The client

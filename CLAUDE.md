@@ -111,6 +111,7 @@ python -m api.main
 | `api/queries.py` | Every SQL string. `tests/test_api_sql.py` EXPLAINs them all |
 | `api/gate.py` | row → Memory, redacted unless you are standing there |
 | `api/read.py` | The read endpoints |
+| `api/route_solver.py` | **Today's walk.** Which stops, what order; its docstring is how a walk is ranked |
 | `api/write.py` | Unlock, media, submissions, reports |
 | `api/accounts.py` | `/v1/me` and `/v1/auth/*` |
 | `api/card.py` | The server-rendered card. Gates itself; see below |
