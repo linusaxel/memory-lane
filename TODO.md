@@ -1436,7 +1436,9 @@ flagged ⚠️ inline, not overridden.
       plus the Manhattan fixtures above. Output per solver (current NN, exact
       order, ILS): prize, % gap to best known, metres, crossings/backtracks,
       and p50/p95 ms. Separately, add `ROUTE_CANDIDATES_QUERY` to `perf.py`,
-      which doesn't time it today.
+      which doesn't time it today. **That half done 2026-09-24:** level with
+      nearby at 50k memories (37 vs 36 ms), so the SQL is not where a plan's
+      ~1 s goes; the OSRM `/table` is.
       [KU Leuven OP instances](https://www.mech.kuleuven.be/en/mim/op) ·
       [Tsiligirides 1984](https://www.researchgate.net/publication/230856233_Heuristic_Methods_Applied_to_Orienteering) ·
       [OPLib / op-solver](https://github.com/gkobeaga/op-solver)

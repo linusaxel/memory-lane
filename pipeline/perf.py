@@ -38,6 +38,10 @@ Where it stands at 50,000 memories across 20,000 places, after all three:
     search, rare word             3.8 ms
     hotspots (DBSCAN)          1269.5 ms   (cached; see STATS_TTL_SECONDS)
 
+Route candidates (the plan page at its widest slider, a 5km search for 400)
+came in level with nearby, 10km when it was added: 37.4 against 36.0ms on a
+busier machine than the table above was timed on.
+
 Run it at --rows 200000 too. Everything above grows sub-linearly except search,
 which cannot: ts_rank has no index and has to be evaluated on every row the
 tsquery matches, so a word the whole corpus contains is its worst case by
@@ -56,9 +60,11 @@ from api.queries import (
     HOTSPOTS_QUERY,
     NEARBY_MEMORIES_QUERY,
     NEARBY_PLACES_QUERY,
+    ROUTE_CANDIDATES_QUERY,
     SEARCH_MEMORIES_QUERY,
     SINGLE_MEMORY_QUERY,
 )
+from api.read import ROUTE_POOL
 
 DB = "memorylane_perf"
 URL = f"postgresql+psycopg://memorylane:memorylane@localhost:5432/{DB}"
@@ -179,6 +185,19 @@ def main() -> None:
             5,
         ),
         ("single memory (unlock)", SINGLE_MEMORY_QUERY, {"memory_id": 1}, 5),
+        (
+            "route candidates, 10km",
+            ROUTE_CANDIDATES_QUERY,
+            {
+                **{k: near[k] for k in ("lat", "lng")},
+                # The widest slider: api/read.py searches half the budget.
+                "radius_meters": 5_000,
+                "today": "2026-01-01",
+                "device_id": "00000000-0000-0000-0000-000000000000",
+                "limit": ROUTE_POOL,
+            },
+            5,
+        ),
         (
             "search, common word",
             SEARCH_MEMORIES_QUERY,
