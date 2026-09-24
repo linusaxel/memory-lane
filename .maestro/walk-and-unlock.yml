@@ -156,9 +156,7 @@ appId: ${APP_ID}
     visible: "Hearted, 1 heart"
     timeout: 30000
 # F33: one note each, and posting again rewrites it rather than adding one.
-# The field is taller than a line, so a tap on its middle lands below the text
-# and the cursor goes to the end: eraseText then clears all of it. Tapping the
-# summary dismisses the keyboard, which covers the send link.
+# Return sends, because on a long memory the send link is under the keyboard.
 - scrollUntilVisible:
     element:
       id: "note"
@@ -166,28 +164,28 @@ appId: ${APP_ID}
 - tapOn:
     id: "note"
 - inputText: "Stood here at dawn."
-- tapOn: ".*${WORDS1}.*"
-- tapOn: "Leave note"
+- pressKey: Enter
 # Rewrite is only offered on a note the server has, not on a draft.
 - extendedWaitUntil:
     visible: "Rewrite"
     timeout: 30000
+# Rewrite focuses the field with the cursor after the old note.
 - tapOn: "Rewrite"
-- tapOn:
-    id: "note"
 - eraseText: 40
 - inputText: "Stood here twice."
-- tapOn: ".*${WORDS1}.*"
-- tapOn: "Save note"
+- pressKey: Enter
 - extendedWaitUntil:
     visible: "Rewrite"
-- assertVisible: "Stood here twice\\."
     timeout: 30000
+- assertVisible: "Stood here twice\\."
 - assertNotVisible: "Stood here at dawn\\."
 - tapOn: "Close"
 - tapOn: "${STOP1}, .*"
 - assertVisible: "Hearted, 1 heart"
-- assertVisible: "Stood here twice\\."
+# The note is the server's now, under the summary and whatever is attached.
+- scrollUntilVisible:
+    element: "Stood here twice\\."
+    direction: DOWN
 - tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the

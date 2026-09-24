@@ -111,6 +111,13 @@ export default function Notes({ memoryId, isAuthor }: Props) {
             multiline
             maxLength={NOTE_MAX}
             textAlignVertical="top"
+            // Return sends: a note has no paragraphs, and the send link below
+            // is under the keyboard on a long memory.
+            returnKeyType="send"
+            submitBehavior="blurAndSubmit"
+            onSubmitEditing={() => draft.trim() && !busy && send()}
+            // Rewrite means "let me type": straight into the field, cursor at the end.
+            autoFocus={editing}
             accessibilityLabel="Your note"
             // The placeholder goes once Rewrite fills the field, so the flows
             // find it by id.

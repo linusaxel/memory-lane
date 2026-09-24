@@ -63,8 +63,7 @@ appId: ${APP_ID}
 - tapOn:
     id: "note"
 - inputText: "Still laughing."
-- tapOn: ".*ferry horn.*"
-- tapOn: "Leave note"
+- pressKey: Enter
 # Rewrite is only offered on a note the server has, not on a draft.
 - extendedWaitUntil:
     visible: "Rewrite"

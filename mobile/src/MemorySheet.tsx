@@ -261,7 +261,14 @@ export default function MemorySheet({
             </View>
           ) : (
             <>
-              <ScrollView contentContainerStyle={styles.body}>
+              {/* A note's send link sits under its field: "handled" lets the
+                  first tap on it send rather than only drop the keyboard, and
+                  the insets let it scroll clear of the keyboard. */}
+              <ScrollView
+                contentContainerStyle={styles.body}
+                keyboardShouldPersistTaps="handled"
+                automaticallyAdjustKeyboardInsets
+              >
                 {/* The summary carries the sheet when nothing is attached, which
                     is every extracted memory; a submission usually brings a
                     photograph and the weight shifts to it. */}
