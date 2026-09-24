@@ -1,5 +1,6 @@
 """api/read.py's route solver: which stops, and in what order."""
 
+import itertools
 import random
 from types import SimpleNamespace
 
@@ -134,3 +135,45 @@ def test_a_loop_counts_the_walk_home():
     assert names(choose(picks, 2, "seed", 250, False)) == ["e1", "e2"]
     # A loop never walks straight out and straight back; it turns north.
     assert "n" in names(choose(picks, 2, "seed", 4000, True))
+
+
+def test_solver_invariants_over_random_instances():
+    """Loop and one-way, 200 seeded maps: within budget with the walk home
+    counted, no stop twice, repeatable, never fewer stops than nearest-neighbour
+    manages, and as many as brute force finds when n <= 7."""
+    rng = random.Random(2)
+    for i in range(200):
+        picks = [
+            SimpleNamespace(
+                lat=ANCHOR.lat + rng.uniform(-0.01, 0.01),
+                lng=ANCHOR.lng + rng.uniform(-0.01, 0.01),
+                layer=rng.choice(["stranger", "historical"]),
+                contrast_score=rng.choice([None, rng.random()]),
+            )
+            for _ in range(rng.randint(0, 12))
+        ]
+        budget, loop = rng.uniform(500, 6000), rng.random() < 0.5
+        d = crow(picks)
+        chosen = _choose_stops(picks, 5, d, str(i), budget, loop, ANCHOR)
+        assert _path_meters(chosen, d, loop) <= budget
+        assert len(set(chosen)) == len(chosen) <= 5
+        assert chosen == _choose_stops(picks, 5, d, str(i), budget, loop, ANCHOR)
+
+        here, nn = 0, []
+        while True:
+            left = [c for c in range(1, len(picks) + 1) if c not in nn]
+            nxt = min(left, key=lambda c: d[here][c], default=None)
+            if nxt is None or len(nn) == 5 or _path_meters([*nn, nxt], d, loop) > budget:
+                break
+            nn.append(nxt)
+            here = nxt
+        assert len(chosen) >= len(nn)
+
+        if len(picks) <= 7:
+            most = max(
+                len(s)
+                for k in range(min(5, len(picks)) + 1)
+                for s in itertools.combinations(range(1, len(picks) + 1), k)
+                if _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget
+            )
+            assert len(chosen) == most

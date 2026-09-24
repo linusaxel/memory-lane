@@ -1440,7 +1440,15 @@ flagged ⚠️ inline, not overridden.
       [KU Leuven OP instances](https://www.mech.kuleuven.be/en/mim/op) ·
       [Tsiligirides 1984](https://www.researchgate.net/publication/230856233_Heuristic_Methods_Applied_to_Orienteering) ·
       [OPLib / op-solver](https://github.com/gkobeaga/op-solver)
-- [ ] **Property tests for the solver, next to `tests/test_api_routes.py`.**
+- [x] **Property tests for the solver, next to `tests/test_api_routes.py`.**
+      **Done 2026-09-24:** `test_solver_invariants_over_random_instances` in
+      `tests/test_route_order.py`, 200 seeded maps, loop and one-way. It
+      found a real miss on its first run: prize-per-metre insertion spent the
+      budget on a few far stops, so 2 of 200 one-way walks got fewer stops
+      than nearest-neighbour. `_choose_walks` now also starts from the
+      nearest-neighbour walk. "Prize ≥ NN" is asserted as count ≥ NN, because
+      the ranking puts count, mix and turns ahead of prize. "Starts and ends
+      at the anchor" is the budget check with the walk home counted.
       The endpoint tests already cover exclusions. The solver needs
       invariants over random instances:
       - never over budget;

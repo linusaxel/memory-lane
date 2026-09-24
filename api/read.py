@@ -506,7 +506,15 @@ def _choose_walks(
     crow = [meters_between(at, Coordinates(lat=c.lat, lng=c.lng)) for c in candidates]
     d_per_crow = sum(d[0][i] for i in nodes) / max(sum(crow), 1) if size else 1
     offset = rng.uniform(0, 2 * math.pi)
-    walks = [fill([])]
+    # Nearest-neighbour as a start too: prize per metre can spend the budget on
+    # a few far stops where the plain nearest ones would have fit more.
+    near: list[int] = []
+    while len(near) < size:
+        c = min((c for c in nodes if c not in near), key=lambda c: d[near[-1] if near else 0][c])
+        if _path_meters([*near, c], d, loop) > budget_meters:
+            break
+        near.append(c)
+    walks = [fill([]), fill(_walking_order(near, d, loop))]
     if size:
         for k in range(ROUTE_HEADINGS):
             walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS)
