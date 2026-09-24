@@ -48,7 +48,7 @@ import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, reachOf } from './src/reach.ts';
-import { metersBetween, pathMeters, type Region } from './src/region.ts';
+import { around, metersBetween, pathMeters, type Region } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { loadRoute, saveRoute } from './src/route.ts';
 import {
@@ -73,6 +73,7 @@ import { useMapCamera } from './src/useMapCamera.ts';
 import { useNearby } from './src/useNearby.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
+import NextStopArrow from './src/NextStopArrow.tsx';
 import { useBreath } from './src/useBreath.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
@@ -578,6 +579,17 @@ export default function App() {
     [region, flyTo],
   );
   const groups = useMemo(() => groupByLocation(pins, precision), [pins, precision]);
+
+  // On the walk the camera is pinned on the person: it follows them, cannot be
+  // dragged off them, and a pinch that drifts the centre is put back. Where the
+  // next stop is off screen, NextStopArrow points the way instead.
+  const pinned = tab === 'walk' && stage === 'walk' && !!position;
+  useEffect(() => {
+    if (!pinned || !position) return;
+    // 4m: under the watcher's 5m step, over the slop of a settled map.
+    if (metersBetween(region.latitude, region.longitude, position.lat, position.lng) < 4) return;
+    flyTo({ ...region, latitude: position.lat, longitude: position.lng });
+  }, [pinned, position, region, flyTo]);
   // Explore: everything under the viewport, whatever today's walk is. What
   // this device earned reads open, as it does on the walk.
   const nearby = useNearby(region, tab === 'explore');
@@ -891,6 +903,9 @@ export default function App() {
             userInterfaceStyle={scheme === 'dark' ? 'dark' : 'light'}
             customMapStyle={MUTED_ANDROID_STYLE}
             showsPointsOfInterests={false}
+            scrollEnabled={!pinned}
+            rotateEnabled={!pinned}
+            pitchEnabled={!pinned}
             onRegionChangeComplete={onRegionChangeComplete}
             onMapReady={onMapReady}
           >
@@ -967,6 +982,14 @@ export default function App() {
             })}
           </MapView>
 
+          {pinned && nextRouteStop && (
+            <NextStopArrow
+              region={region}
+              target={nextRouteStop.place.coordinates}
+              dark={scheme === 'dark'}
+            />
+          )}
+
           {/* Top right, because every other overlay on this screen lives at the
               bottom and this one must never be the thing covering the unlock.
               Shown even with no position: standing somewhere empty is the best
@@ -1033,13 +1056,16 @@ export default function App() {
               onPress={() => {
                 setRouteStarted(true);
                 const you = positionRef.current;
-                if (nextRouteStop && you) {
-                  mapRef.current?.fitToCoordinates(
-                    [you, nextRouteStop.place.coordinates].map((c) => ({
-                      latitude: c.lat,
-                      longitude: c.lng,
-                    })),
-                    { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
+                if (you) {
+                  // Pinned on you, so zoomed out around you, not refitted.
+                  flyTo(
+                    around(
+                      you,
+                      nextRouteStop
+                        ? [nextRouteStop.place.coordinates]
+                        : routeShown.map((memory) => memory.place.coordinates),
+                      LOCATED_DELTA / 5,
+                    ),
                   );
                 } else if (nextRouteStop) {
                   flyTo({
@@ -1171,12 +1197,18 @@ export default function App() {
           }
           onShowOnWalk={(memory) => {
             setOpenAt([]);
-            selectTab('walk', {
-              latitude: memory.place.coordinates.lat,
-              longitude: memory.place.coordinates.lng,
-              latitudeDelta: LOCATED_DELTA,
-              longitudeDelta: LOCATED_DELTA,
-            });
+            const you = positionRef.current;
+            selectTab(
+              'walk',
+              you
+                ? around(you, [memory.place.coordinates], LOCATED_DELTA)
+                : {
+                    latitude: memory.place.coordinates.lat,
+                    longitude: memory.place.coordinates.lng,
+                    latitudeDelta: LOCATED_DELTA,
+                    longitudeDelta: LOCATED_DELTA,
+                  },
+            );
           }}
           unlocking={unlocking}
           unlockError={unlockError}

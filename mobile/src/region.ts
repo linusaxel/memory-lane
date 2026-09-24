@@ -104,3 +104,59 @@ export function simplifyPath<T extends { lat: number; lng: number }>(
   }
   return points.filter((_, i) => keep[i]);
 }
+
+/** A region centred on `center`, wide enough to show every point in `points`
+ *  clear of the overlays at the edges. Walk pins the camera on the person, so
+ *  "show me the next stop" zooms out around them rather than refitting. */
+export function around(
+  center: { lat: number; lng: number },
+  points: { lat: number; lng: number }[],
+  minDelta: number,
+): Region {
+  let lat = 0;
+  let lng = 0;
+  for (const p of points) {
+    lat = Math.max(lat, Math.abs(p.lat - center.lat));
+    lng = Math.max(lng, Math.abs(p.lng - center.lng));
+  }
+  // 2 for either side of the centre, and 1.4 for the pill, the tab bar and
+  // "+ Add", which a pin must not land under.
+  return {
+    latitude: center.lat,
+    longitude: center.lng,
+    latitudeDelta: Math.max(lat * 2.8, minDelta),
+    longitudeDelta: Math.max(lng * 2.8, minDelta),
+  };
+}
+
+export type Inset = { top: number; right: number; bottom: number; left: number };
+
+/** Where on a `width` x `height` north-up map showing `region` the arrow to
+ *  `target` sits, and which way it points in degrees clockwise from up; null
+ *  while `target` is inside the map less `inset`. The arrow is where the line
+ *  from the centre to the target leaves that box.
+ *
+ *  ponytail: degrees are treated as linear across the screen, which Mercator
+ *  is not; at street scale the error is under a pixel. */
+export function edgeArrow(
+  region: Region,
+  target: { lat: number; lng: number },
+  width: number,
+  height: number,
+  inset: Inset,
+): { x: number; y: number; angle: number } | null {
+  const dx = ((target.lng - region.longitude) / region.longitudeDelta) * width;
+  const dy = (-(target.lat - region.latitude) / region.latitudeDelta) * height;
+  const cx = width / 2;
+  const cy = height / 2;
+  const right = width - inset.right - cx;
+  const left = inset.left - cx;
+  const down = height - inset.bottom - cy;
+  const up = inset.top - cy;
+  if (dx >= left && dx <= right && dy >= up && dy <= down) return null;
+  const s = Math.min(
+    dx > 0 ? right / dx : dx < 0 ? left / dx : Infinity,
+    dy > 0 ? down / dy : dy < 0 ? up / dy : Infinity,
+  );
+  return { x: cx + dx * s, y: cy + dy * s, angle: (Math.atan2(dx, -dy) * 180) / Math.PI };
+}

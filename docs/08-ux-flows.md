@@ -772,9 +772,13 @@ anyone else's collection or the local unlock cache.
    (`ROUTE_LOOP`), so the walk home counts. Along the streets between stops
    when a routing server is running (`ROUTING_URL`), straight from you to the
    next stop, and said plainly as a distance, never as minutes. Tapping it starts the
-   route and fits you and the next stop on screen (the stop alone with no
-   position, the whole route once it is walked); after that the pill reads
-   "Next: <place> · 350 m".
+   route and zooms out around you until the next stop is on screen (flies to
+   the stop with no position, frames the whole route once it is walked);
+   after that the pill reads "Next: <place> · 350 m".
+   **The camera is pinned on you** while there is a position: it follows you,
+   the map does not pan or rotate, and a pinch zooms without moving the
+   centre. While the next stop is off screen, a route-blue arrow on the edge
+   of the screen points the way to it.
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    (1–5) in the badge. There is no line while walking: the next unearned
    stop, in route order, hops and is `route` blue, and when it is earned the

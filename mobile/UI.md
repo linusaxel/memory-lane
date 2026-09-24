@@ -24,10 +24,14 @@ Preview                         the map, fitted to the start and every stop
 └─ card (Preview)              "5 stops · 3.8 km loop", Accept / Change length;
      "No walk that long from here"; "Planning from Midtown…" with no position
 
-MapView (the walk, full bleed)  only today's accepted stops, nothing else
+MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
+│                              position the camera is pinned on you: it follows,
+│                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
-├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap fits you and the next stop;
+├─ NextStopArrow              route blue, on the screen's edge, pointing at the next
+│                              stop while it is off screen (src/NextStopArrow.tsx)
+├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap zooms out around you to the next stop;
 │    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
 │    "You're at stop N · open it" seal and breathing while standing at any stop
 └─ "Turn on location"         bottom centre, below the pill, only while there is no position

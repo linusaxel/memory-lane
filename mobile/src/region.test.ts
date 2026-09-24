@@ -3,6 +3,8 @@ import { test } from 'node:test';
 
 import {
   MAX_RADIUS_KM,
+  around,
+  edgeArrow,
   MIN_RADIUS_KM,
   isSameQuery,
   metersBetween,
@@ -114,4 +116,46 @@ test('zooming without moving asks a new question', () => {
 test('nothing fetched yet is never the same question', () => {
   const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
   assert.equal(isSameQuery(null, here), false);
+});
+
+const VIEW = { latitude: 40.748, longitude: -73.985, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+const NONE = { top: 0, right: 0, bottom: 0, left: 0 };
+
+test('no arrow for a stop already on screen', () => {
+  assert.equal(edgeArrow(VIEW, { lat: 40.749, lng: -73.984 }, 400, 800, NONE), null);
+});
+
+test('a stop due east is an arrow on the right edge, pointing right', () => {
+  const arrow = edgeArrow(VIEW, { lat: 40.748, lng: -73.97 }, 400, 800, NONE);
+  assert.ok(arrow);
+  assert.equal(arrow.x, 400);
+  assert.equal(arrow.y, 400);
+  assert.equal(arrow.angle, 90);
+});
+
+test('a stop north-west leaves by whichever edge the line crosses first', () => {
+  // Twice as far north as west, on a screen twice as tall as wide: the corner.
+  const arrow = edgeArrow(VIEW, { lat: 40.758, lng: -73.995 }, 400, 800, NONE);
+  assert.ok(arrow);
+  assert.ok(Math.abs(arrow.x) < 1e-9 && Math.abs(arrow.y) < 1e-9);
+  // Up and to the left, steeper than 45 because the screen is tall.
+  assert.ok(Math.abs(arrow.angle - (Math.atan2(-1, 2) * 180) / Math.PI) < 1e-9);
+});
+
+test('the inset is the edge: a stop under the pill still gets its arrow', () => {
+  const underPill = { lat: 40.7445, lng: -73.985 };
+  assert.equal(edgeArrow(VIEW, underPill, 400, 800, NONE), null);
+  const arrow = edgeArrow(VIEW, underPill, 400, 800, { ...NONE, bottom: 160 });
+  assert.ok(arrow);
+  assert.equal(arrow.y, 640);
+  assert.equal(arrow.angle, 180);
+});
+
+test('around keeps you in the middle and the stop inside the frame', () => {
+  const you = { lat: 40.748, lng: -73.985 };
+  const r = around(you, [{ lat: 40.758, lng: -73.98 }], 0.002);
+  assert.equal(r.latitude, you.lat);
+  assert.equal(r.longitude, you.lng);
+  assert.equal(edgeArrow(r, { lat: 40.758, lng: -73.98 }, 400, 800, NONE), null);
+  assert.equal(around(you, [you], 0.002).latitudeDelta, 0.002);
 });
