@@ -197,9 +197,6 @@ export default function App() {
   const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
   // Street shapes between consecutive stops; null draws them straight.
   const [routeLegs, setRouteLegs] = useState<Coordinates[][] | null>(null);
-  // The planned walk as drawn, start to home. Fixed for the day, so the line
-  // does not change shape - and restart its flow - every time you move.
-  const [routeLine, setRouteLine] = useState<Coordinates[]>([]);
   // Resolved once at launch. Held in state rather than awaited at each call
   // site because the submit form needs it synchronously to decide whether it
   // can open at all.
@@ -378,21 +375,17 @@ export default function App() {
   /** Make `walk` today's route, on screen and in the local cache. `start` is
    *  where it was planned from - the server never stores it. */
   const takeRoute = useCallback(
-    (walk: TodaysRoute, start: Coordinates | null, line?: Coordinates[]) => {
-      const drawn =
-        line ?? pathThrough(start, walk.memories, NONE, walk.legs, walk.loop ? start : null);
+    (walk: TodaysRoute, start: Coordinates | null) => {
       setRoute(walk.memories);
       setRouteSize(walk.size);
       setRouteLegs(walk.legs);
       setRouteHome(walk.loop ? start : null);
-      setRouteLine(drawn);
       saveRoute({
         route_date: walk.route_date,
         memories: walk.memories,
         loop: walk.loop,
         legs: walk.legs,
         start: start ?? undefined,
-        line: drawn,
       });
     },
     [],
@@ -411,14 +404,13 @@ export default function App() {
         setRoute(cached.memories);
         setRouteLegs(cached.legs ?? null);
         if (cached.loop && cached.start) setRouteHome(cached.start);
-        if (cached.line) setRouteLine(cached.line);
         setStage('walk');
       }
       try {
         const accepted = await fetchTodaysRoute(device);
         if (!mounted.current) return;
         if (accepted) {
-          takeRoute(accepted, cached?.start ?? null, cached?.line);
+          takeRoute(accepted, cached?.start ?? null);
           setStage('walk');
         } else if (!cached) {
           setStage('plan');
@@ -458,9 +450,7 @@ export default function App() {
     try {
       const walk = await acceptRoute(device, planFrom, walkKm * 1000);
       if (!mounted.current) return;
-      // The previewed line, legs touching the start and all: the accepted
-      // walk is the same walk, and only the preview had those legs.
-      takeRoute(walk, planFrom, previewPath);
+      takeRoute(walk, planFrom);
       setPreview(null);
       setStage('walk');
     } catch {
@@ -468,7 +458,7 @@ export default function App() {
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, planFrom, walkKm, takeRoute, previewPath]);
+  }, [device, planFrom, walkKm, takeRoute]);
 
   // The preview's zoom: the whole loop and its start, clear of the card.
   useEffect(() => {
@@ -878,9 +868,6 @@ export default function App() {
               />
             )}
 
-            {walking && routeLine.length > 1 && (
-              <RouteLine path={routeLine} dark={scheme === 'dark'} />
-            )}
             {stage === 'preview' && previewPath.length > 1 && (
               <RouteLine path={previewPath} dark={scheme === 'dark'} />
             )}
@@ -903,6 +890,9 @@ export default function App() {
                   group={group}
                   reach={reach}
                   lit={walking && reach === 'unlockable'}
+                  next={
+                    walking && group.memories.some((memory) => memory.id === nextRouteStop?.id)
+                  }
                   routePosition={routePosition}
                   routeSize={walking ? routeTotal : pins.length}
                   // A preview is a look, not a walk: its stops open once accepted.

@@ -1,16 +1,11 @@
-/** Today's route: an ink line over a paper casing, from the start through
- *  every stop and home. Still - the numbered pins already say the order.
+/** The preview's walk, drawn the way Apple Maps draws a route: a blue line
+ *  with a darker edge, under the street names (patches/react-native-maps*
+ *  moves polylines to MKOverlayLevelAboveRoads). Only the preview has one -
+ *  while walking, the next pin hops instead (docs/09-visual-design.md §3a).
  *
- *  It used to march dots along the line by ticking `lineDashPhase`. On iOS,
- *  react-native-maps answers any prop change on a Polyline by removing the
- *  overlay and adding it back (AIRMapPolyline.m, `update`), so every tick
- *  re-rendered it from scratch: the line restarted and stuttered. Nothing on
- *  a Polyline can move smoothly; docs/09-visual-design.md has the options that
- *  could, and why neither was taken.
- *
- *  Ink, never seal: seal means openable and nothing else (mobile/UI.md). Hex
- *  and not theme tokens because a Polyline takes a real colour, not a
- *  platform-resolved one - these are theme.ts `ink` and `paper`.
+ *  Still, because on iOS any Polyline prop change removes and re-adds the
+ *  overlay (AIRMapPolyline.m, `update`). Hex, not theme tokens, because a
+ *  Polyline takes a real colour: the fill is theme.ts `route`.
  */
 
 import { useMemo } from 'react';
@@ -31,15 +26,15 @@ export default function RouteLine({ path, dark }: Props) {
     <>
       <Polyline
         coordinates={coordinates}
-        strokeWidth={8}
-        strokeColor={dark ? '#161412' : '#F7F4EE'}
+        strokeWidth={9}
+        strokeColor={dark ? '#1B4F99' : '#0E3F8C'}
         lineCap="round"
         lineJoin="round"
       />
       <Polyline
         coordinates={coordinates}
-        strokeWidth={4}
-        strokeColor={dark ? '#F2EDE4' : '#1C1917'}
+        strokeWidth={6}
+        strokeColor={dark ? '#5AA2FF' : '#1A64D6'}
         lineCap="round"
         lineJoin="round"
       />

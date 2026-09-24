@@ -1,0 +1,26 @@
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm b/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm
+index d3b0723..3db5ba3 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMap.mm
+@@ -132,7 +132,7 @@ - (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex
+         [self addAnnotation:(id <MKAnnotation>) subview];
+     } else if ([subview isKindOfClass:[AIRMapPolyline class]]) {
+         ((AIRMapPolyline *)subview).map = self;
+-        [self addOverlay:(id<MKOverlay>)subview];
++        [self addOverlay:(id<MKOverlay>)subview level:MKOverlayLevelAboveRoads];
+     } else if ([subview isKindOfClass:[AIRMapPolygon class]]) {
+         ((AIRMapPolygon *)subview).map = self;
+         [self addOverlay:(id<MKOverlay>)subview];
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMapPolyline.m b/node_modules/react-native-maps/ios/AirMaps/AIRMapPolyline.m
+index 4f4596d..4694bda 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMapPolyline.m
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMapPolyline.m
+@@ -107,7 +107,7 @@ - (void) update
+     
+     if (_map == nil) return;
+     [_map removeOverlay:self];
+-    [_map addOverlay:self];
++    [_map addOverlay:self level:MKOverlayLevelAboveRoads];
+ }
+ 
+ - (void) updateRenderer:(MKOverlayPathRenderer*)renderer {

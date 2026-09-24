@@ -47,6 +47,10 @@ export const color = {
    *  when full - so it has to hold against both. */
   sealDeep: dual('#5C3A0E', '#F0C878'),
 
+  /** Walk here next: the one stop that hops, and the preview's line. Never
+   *  openable - in reach, the pin turns seal. */
+  route: dual('#1A64D6', '#5AA2FF'),
+
   /** Out of reach: the same padlock, faded. Dark enough to hold against the
    *  parchment map, and lighter in the dark where a dark pin vanishes. */
   faded: dual('#776E64', '#9A9086'),

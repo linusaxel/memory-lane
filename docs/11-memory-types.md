@@ -117,7 +117,7 @@ VoiceOver.
 
 `seal` (a warm ochre since 2026-09-23, a stamp red before it) means *openable
 now, and nothing else, ever* — the route line, a badge, a padlock, none of them
-may use it.
+may use it. "Walk here next" has its own colour, `route`.
 
 ## Guardrail appendix: things already tried and reverted for pins
 

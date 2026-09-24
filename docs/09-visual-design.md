@@ -70,11 +70,22 @@ That still holds for the two things that genuinely hover over the map — the
 Everywhere else the shadows came off in part 5. Stacked floating cards are the
 card-grid tell, and editorial layouts have always used rules and weight instead.
 
-## 3a. The route line is still — **decided 2026-09-24**
+## 3a. No line while walking; the next pin hops — **decided 2026-09-24**
 
-Ink over a paper casing, two static Polylines (`mobile/src/RouteLine.tsx`); the
-numbered pins give the order. It used to march dots by ticking
-`lineDashPhase`, and it restarted and stuttered. That is not fixable where it
+While walking there is no line. The next unearned stop is `route` blue and
+hops, and when it is earned the one after it takes over: the pin says where
+to go, so no line has to. Only the preview draws the loop.
+
+The preview's line is drawn the way Apple Maps draws a route: `route` blue
+over a darker blue edge, *under* the street names. Apple's own route (ETA
+bubbles, turn icons) is Maps.app's, not API; what MapKit gives anyone else
+is `MKPolylineRenderer`, which `<Polyline>` already is. What made ours look
+pasted on was the level: react-native-maps adds overlays with `addOverlay:`,
+which is `MKOverlayLevelAboveLabels`. `mobile/patches/` moves polylines to
+`MKOverlayLevelAboveRoads` (a native rebuild picks it up).
+
+It was ink over a paper casing before that, and before that it marched dots
+by ticking `lineDashPhase`, and it restarted and stuttered. That is not fixable where it
 was: on iOS react-native-maps answers *any* Polyline prop change with
 `removeOverlay` + `addOverlay` (`AIRMapPolyline.m`, `update`), so every tick
 re-rendered the line from scratch. It was also 70% `inkSoft`, which on
@@ -89,8 +100,9 @@ Two ways to get a line that moves smoothly, and why neither was taken:
   the map is still, but it has to re-project on every pan and zoom, so it trails
   the map while you move it.
 
-Motion stays where it means something: the ring, and the pill breathing at a
-stop. The line is not `seal`: seal means openable.
+Motion stays where it means something: the ring, the pill breathing at a
+stop, and the next pin's hop. Neither the line nor the hop is `seal`: seal
+means openable.
 
 ## 4. What was rejected
 

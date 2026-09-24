@@ -1,13 +1,14 @@
 /** What a coordinate looks like on the map: one pin, lit when it can be opened
  *  from here - see "One pin" in mobile/UI.md. */
 
-import { StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Callout, Marker } from 'react-native-maps';
 
 import type { MemoryGroup } from './cluster.ts';
 import { groupLabel } from './cluster.ts';
 import { color, font } from './theme.ts';
 import type { Reach } from './reach.ts';
+import { useHop } from './useBreath.ts';
 
 const STATE_LABEL: Record<Reach, string> = {
   plain: 'Open',
@@ -29,6 +30,9 @@ type Props = {
   /** Whether this pin lights up. The caller decides: on a route day only the
    *  route's stops do, so an off-route memory stays quiet even in reach. */
   lit: boolean;
+  /** The next stop on today's walk: it hops in `route` blue until it is in
+   *  reach, when `lit` takes over and it turns seal. */
+  next?: boolean;
 };
 
 export default function MemoryMarker({
@@ -38,6 +42,7 @@ export default function MemoryMarker({
   routePosition = null,
   routeSize = 0,
   lit,
+  next = false,
 }: Props) {
   const count = group.memories.length;
 
@@ -47,7 +52,7 @@ export default function MemoryMarker({
       // tracksViewChanges is off for the frame cost, so the marker only
       // repaints when React gives it a new identity - which is exactly when
       // its state changed.
-      key={`${group.key}:${reach}:${lit}:${routePosition ?? ''}`}
+      key={`${group.key}:${reach}:${lit}:${next}:${routePosition ?? ''}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
       // Put the middle of the pin on the point it names. iOS centres a custom
       // view already; Android defaults to bottom-centre whatever you draw, so
@@ -61,6 +66,7 @@ export default function MemoryMarker({
       // whether a pin can be opened and colour is not available to everyone,
       // so the state has to ride along with the name.
       title={[
+        next && !lit ? 'Next stop.' : null,
         routePosition ? `Stop ${routePosition} of ${routeSize}.` : null,
         `${groupLabel(group)}. ${STATE_LABEL[reach]}.`,
       ]
@@ -69,7 +75,7 @@ export default function MemoryMarker({
       tracksViewChanges={false}
       onPress={onPress}
     >
-      <Pin lit={lit} badge={routePosition || (count > 1 ? count : null)} />
+      <Pin lit={lit} next={next && !lit} badge={routePosition || (count > 1 ? count : null)} />
       {/* An empty tooltip callout, which is how you say "no callout" while
           keeping a title. Setting `title` makes MapKit offer its own bubble:
           system font on a white rounded rect, at odds with everything in
@@ -85,26 +91,32 @@ export default function MemoryMarker({
   );
 }
 
-type PinProps = { lit: boolean; badge: number | null };
+type PinProps = { lit: boolean; next: boolean; badge: number | null };
 
 /** One pin for everything. It lights up only when it can be opened from where
  *  you stand; every other state lives in the title and the sheet. The paper
  *  centre is the point: the pin you can open is the pin you are standing on,
  *  so the blue location dot lands in the hole instead of under a disc. */
-function Pin({ lit, badge }: PinProps) {
+function Pin({ lit, next, badge }: PinProps) {
+  const hop = useHop(next);
   return (
-    <View style={[styles.wrap, lit && styles.halo]}>
-      <View style={[styles.pin, lit && styles.pinLit]}>
-        <View style={[styles.eye, lit && styles.eyeLit]} />
+    <Animated.View style={[styles.wrap, lit && styles.halo, hop]}>
+      <View style={[styles.pin, lit && styles.pinLit, next && styles.pinNext]}>
+        <View style={[styles.eye, (lit || next) && styles.eyeLit]} />
       </View>
       {badge !== null && (
-        <View style={[styles.tag, { backgroundColor: lit ? color.sealDeep : color.ink }]}>
+        <View
+          style={[
+            styles.tag,
+            { backgroundColor: lit ? color.sealDeep : next ? color.route : color.ink },
+          ]}
+        >
           <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
             {badge}
           </Text>
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -138,6 +150,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pinLit: { width: LIT, height: LIT, borderRadius: LIT / 2, backgroundColor: color.seal },
+  pinNext: { width: LIT, height: LIT, borderRadius: LIT / 2, backgroundColor: color.route },
   eye: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.paper },
   eyeLit: { width: 12, height: 12, borderRadius: 6 },
 

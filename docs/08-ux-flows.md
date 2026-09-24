@@ -770,19 +770,15 @@ anyone else's collection or the local unlock cache.
    route and flies to the next stop; after that the pill reads
    "Next: <place> · 350 m".
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
-   (1–5) in the badge. A line of ink dots runs the planned loop: from the
-   start to stop 1, on through the rest, and home, on the streets all the way
-   when a routing server is running. It is the line the preview drew, fixed
-   for the day, so it does not reshape as you walk. The preview is the only
-   response carrying the two legs that touch the start; the phone keeps them,
-   inside the cached line, next to the start it already keeps
-   (`mobile/src/route.ts`), and the server stores neither. The line is ink
-   over a paper casing, and still; the numbered pins give the order
-   (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md §3a).
+   (1–5) in the badge. There is no line while walking: the next unearned
+   stop, in route order, hops and is `route` blue, and when it is earned the
+   one after it takes over. Only the preview draws the loop, route-blue under
+   the street names (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md
+   §3a).
 5. Reaching a stop lights its pin, and the pill turns seal and breathes:
    "You're at stop 2 · open it", a tap opens it. Any stop, in any order — the
    numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
-   The badge and its share of the line drop away the moment it is earned, the
+   The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the pill's count and distance move.
 6. The last stop earned, the pill reads "Route walked · 5 of 5" and a tap fits
    the map to the whole walk. No confetti — the success haptic on that final

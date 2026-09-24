@@ -20,12 +20,12 @@ Plan (src/Plan.tsx)            opaque page over the mounted map; no tab bar
 
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
-├─ the loop, drawn             RouteLine from the start and back
+├─ the loop, drawn             RouteLine from the start and back, route-blue under labels
 └─ card (Preview)              "5 stops · 3.8 km loop", Accept / Change length;
      "No walk that long from here"; "Planning from Midtown…" with no position
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else
-├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers
+├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "+ Add"                    top right, opens Submit. See "Writing"
 ├─ "Today's route · N of 5 · 2.4 km"   bottom centre, above Near me;
 │    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
@@ -142,6 +142,7 @@ it is built to look like a field guide rather than a dashboard.
 | `seal` | `#8A5A17` / `#D9A54B` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
 | `sealSoft` | `#F0E4C8` / `#3D3018` | the ring filling during a hold |
 | `sealDeep` | `#5C3A0E` / `#F0C878` | the padlock inside the ring, the count tag on a reachable pin |
+| `route` | `#1A64D6` / `#5AA2FF` | **walk here next.** The one hopping pin, and the preview's line. Never openable: in reach, the pin turns `seal` |
 
 The watch button is **ink**, not the accent. It was YouTube red back when the
 map pins were red too; that stopped being true, and the accent is spoken for.
@@ -271,6 +272,7 @@ quietly go stale.
 | `faded` on `paper` | 4.6:1 | 5.9:1 |
 | `paper` on `seal` | 5.4:1 | 8.3:1 |
 | `paper` on `faded` | 4.6:1 | 5.9:1 |
+| `paper` on `route` | 5.0:1 | 7.0:1 |
 | `sealDeep` on `paper` | 9.3:1 | 11.6:1 |
 | `sealDeep` on `sealSoft` | 8.1:1 | 8.1:1 |
 
@@ -591,7 +593,8 @@ corner slot of padlock and tag glyph: it was a legend nobody should need.
 |---|---|---|
 | every pin | disc 24, border 2; eye 8 | fill `ink`, edge + eye `paper` |
 | `unlockable`: inside the radius **and openable by walking** | disc 32, border 2; eye 12; wash 46 | fill `seal`, edge + eye `paper`, wash `halo` |
-| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ink` (`sealDeep` on a lit pin), count `paper` |
+| the next stop on today's walk, not yet in reach | disc 32, border 2; eye 12; hops (`useHop`), still under Reduce Motion | fill `route`, edge + eye `paper` |
+| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ink` (`sealDeep` on a lit pin, `route` on the next), count `paper` |
 
 **The eye is the point.** The pin you can open is the pin you are standing on,
 so the blue location dot lands in the hole rather than disappearing under a
