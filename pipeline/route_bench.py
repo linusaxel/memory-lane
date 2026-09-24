@@ -8,7 +8,9 @@ Read, not gated, like perf.py and quality.py. Each run plans a walk through
 api/read.py's own _plan_route for a fresh device, from a random start inside
 the dense seed's box, at a random slider length. The bar is "no spur": a stop
 off the loop is walked to and back the same way, and `retraced` is how many
-metres of that there are (api/streets.py, retraced_meters).
+metres of that there are (api/streets.py, retraced_meters). `spur` is any at
+all, often a few metres from a mid-block start to its corner; `>50m` is one
+you would notice.
 """
 
 import argparse
@@ -50,7 +52,7 @@ def run(session, rng: random.Random, budget: int) -> dict:
         "budget": budget,
         "stops": len(stops),
         "walk": sum(meters_between(a, b) for a, b in pairwise(path)),
-        "retraced": retraced_meters(path),
+        "retraced": retraced_meters(path, [Coordinates(lat=r.lat, lng=r.lng) for r in stops]),
         "ms": ms,
     }
 
@@ -73,7 +75,7 @@ def main() -> None:
         session.rollback()
 
     print(
-        f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'retr p50/p95':>14} "
+        f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'>50m':>6} {'retr p50/p95':>14} "
         f"{'walk/budget':>12} {'ms p50/p95':>12}"
     )
     for budget in (*BUDGETS, None):
@@ -87,6 +89,7 @@ def main() -> None:
             f"{budget or 'all':>7} {len(mine):>5} "
             f"{sum(r['stops'] == ROUTE_SIZE for r in mine) / len(mine):>6.0%} "
             f"{sum(x >= 1 for x in retraced) / len(mine):>6.0%} "
+            f"{sum(x > 50 for x in retraced) / len(mine):>6.0%} "
             f"{pct(retraced, 50):>6.0f}/{pct(retraced, 95):<6.0f}m "
             f"{statistics.median(ratio):>11.2f} "
             f"{pct(ms, 50):>5.0f}/{pct(ms, 95):<5.0f}"

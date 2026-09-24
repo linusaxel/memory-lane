@@ -1363,6 +1363,16 @@ flagged ⚠️ inline, not overridden.
       round). So `ROUTE_CLEANUPS` does not reach the bar, and the next step
       is the choice itself: prefer loops (penalise retraced street in the
       score) and aim the walk at the budget, not under it.
+      **Done 2026-09-24** (docs/10-decisions.md, "The walk the slider asked
+      for"). Same 150 runs, with `retraced_meters` no longer counting the
+      stub inside a stop's 20 m gate (93% of what it called a spur):
+      walk/budget median **0.28 → 0.84**; spur over 50 m **~10% → 9%**;
+      retraced p50/p95 **22/90 → 7/59 m**; latency unchanged, ~1.1 s,
+      nearly all of it the MLD `/table` at ~19 ms a point.
+      Still open: 6 km fills only 0.63 because the dense seed covers
+      ~1.5 km², which is the fixture's edge rather than the solver's. And
+      a CH build of the sidecar (`osrm-contract`) would likely take the
+      table from ~800 ms to tens.
       Raised 2026-09-24. The dev seed is five stops placed by hand as one clean
       loop (`pipeline/seed_dev.py`), which proves the flow and the street
       walking but games the algorithm: with five candidates there is nothing

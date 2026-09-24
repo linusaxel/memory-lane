@@ -293,6 +293,8 @@ def test_retraced_meters_counts_a_stretch_walked_twice_either_way():
     assert streets.retraced_meters([a, b, c]) == 0
     # Out to c and back to b: b-c is walked twice.
     assert round(streets.retraced_meters([a, b, c, b])) == 111
+    # With a stop at c, the 20m of it inside the gate is never walked twice.
+    assert round(streets.retraced_meters([a, b, c, b], [c])) == 91
 
 
 def test_a_stop_that_forces_an_out_and_back_is_swapped_for_a_clean_loop(

@@ -33,7 +33,9 @@ def order(picks, loop=False):
 
 
 def choose(picks, size, seed, budget, loop):
-    return [picks[i - 1] for i in _choose_stops(picks, size, crow(picks), seed, budget, loop)]
+    return [
+        picks[i - 1] for i in _choose_stops(picks, size, crow(picks), seed, budget, loop, ANCHOR)
+    ]
 
 
 def walked(picks, stops):
@@ -123,10 +125,12 @@ def test_within_budget_repeatable_and_full_as_the_budget_allows():
 
 def test_a_loop_counts_the_walk_home():
     # In steps: straight out east (1, 2) is 2 one-way, but 4 home again. East 1
-    # then north 1.1 is 1 + 1.5 = 2.5 one-way, and 3.6 as a loop.
+    # then north 1.1 is 1 + 1.5 = 2.5 one-way, and 3.6 as a loop. 250m one-way
+    # (2.3 steps) fits only the straight pair.
     north = SimpleNamespace(
         name="n", lat=ANCHOR.lat + 1.1 * STEP * 84 / 111, lng=ANCHOR.lng, layer="historical"
     )
     picks = [stop("e1", 1), stop("e2", 2), north]
-    assert names(choose(picks, 2, "seed", 4000, False)) == ["e1", "e2"]
-    assert names(choose(picks, 2, "seed", 4000, True)) == ["e1", "n"]
+    assert names(choose(picks, 2, "seed", 250, False)) == ["e1", "e2"]
+    # A loop never walks straight out and straight back; it turns north.
+    assert "n" in names(choose(picks, 2, "seed", 4000, True))

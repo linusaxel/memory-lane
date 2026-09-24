@@ -636,3 +636,51 @@ turn, re-picks, and keeps any walk with as many stops that retraces less. It
 draws from `8 * ROUTE_SIZE` candidates so there is something to swap in. A
 sparse area can still end with a spur; there is nothing cleaner to pick.
 Without streets there is nothing to measure and the solver's walk stands.
+
+### The walk the slider asked for, and a loop before a short one
+
+"Shortest walk once five stops fit" gave a 6 km slider a 900 m knot on any
+full map: 28% of the budget, measured over `seed_dev --dense` with
+`pipeline/route_bench.py`. `_choose_walks` now ranks by count, layer mix,
+**turns back on itself**, **shortfall below `ROUTE_FILL` (80%) of the
+budget**, prize, then metres, in that order. The loop comes before the length
+on purpose: a clean walk a little short beats a full one with a spur.
+
+A turn back is a turn sharper than `SHARP_TURN_DEGREES` on the map itself, at
+a stop or at a loop's start. That is all a straight-line map can say, and it is
+what keeps a crow-flies deployment (no sidecar, Railway today) from zig-zagging
+behind you and back. A street spur needs the street shapes, so the solver hands
+`_plan_route` a shortlist of up to `ROUTE_SHORTLIST` walks as good on count and
+mix as its best. Each is routed (~7 ms apiece; it is the `/table` that is slow),
+and the one retracing the fewest `SPUR_STEP_METERS` of street wins. The
+drop-a-stop cleanup still runs after it.
+
+Two estimates were tried first and dropped. An angle on *street metres* (law of
+cosines on the matrix) missed the worst case: the walk home retracing the walk
+out still looks like a 66° turn at the start. Shared street from the matrix,
+`(d[b][a] + d[b][c] - d[a][c]) / 2` at each turn, caught that but reads a
+wide turn on a street grid as overlap. Ranked above the fill, it shrank a 6 km
+walk back to 14% of its budget.
+
+Two more pieces, because ranking alone cannot build a long walk:
+
+- **Candidates are spread, not nearest.** On a full map the forty nearest all
+  sit within a few hundred metres. `_spread` reads `ROUTE_POOL` rows and keeps
+  the nearest per grid cell of budget/15 first. Still forty: the MLD sidecar's
+  `/table` costs ~19 ms a point, which is nearly all of a plan's ~1 s.
+- **Seed walks are shaped like the ask.** For `ROUTE_HEADINGS` headings, the
+  candidates nearest targets on a circle through the start that is about the
+  budget round. Insertion by prize per metre still tops them up and still
+  builds one walk from nothing, which is what a sparse map falls back on.
+
+`retraced_meters` also stopped counting the part of a stub inside a stop's
+gate: the line runs to the pin, but a person unlocks from 20 m out. That was
+93% of what it used to call a spur.
+
+Measured over 150 runs on `seed_dev --dense 300 --seed 1`: walk ÷ budget went
+from a median 0.28 to 0.84, and spurs over 50 m from ~10% of walks to 9%, at
+the same ~1.1 s. Two things only got there together. The shortlist is the best
+walk plus one walk per heading, not the best walk's shake variants, which all
+share the stops next to the start where the walk home overlaps the walk out.
+And the circle walks respect the layer quota, or most of them fall off a
+shortlist that requires the best walk's mix.

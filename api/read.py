@@ -10,6 +10,7 @@ records an unlock - that stays write.py's alone.
 
 import itertools
 import json
+import math
 import os
 import random
 import time
@@ -335,25 +336,59 @@ def _one_per_place(candidates: list) -> list:
     return out
 
 
-# Rounds of drop-and-reinsert after the first greedy walk. Twenty candidates,
-# so this is a few milliseconds.
+# Rounds of drop-and-reinsert after the first walks. Forty candidates, so
+# this is a few milliseconds.
 ROUTE_SHAKES = 50
+# A walk of at least this share of the slider counts as the walk asked for;
+# below it, the shortfall is what ranks it. Seeded walks aim halfway between.
+ROUTE_FILL = 0.8
+# Headings tried for the seeded walks, each a different circle through the start.
+ROUTE_HEADINGS = 8
+# A turn sharper than this, on the map itself, is heading back the way it came.
+SHARP_TURN_DEGREES = 45
+# Walks as good on count and layer mix as the best one, handed to
+# _plan_route to be routed on the streets and judged on what they retrace.
+ROUTE_SHORTLIST = ROUTE_HEADINGS + 2
 
 
-def _choose_stops(
-    candidates: list, size: int, d: list, seed: str, budget_meters: float, loop: bool
-) -> list[int]:
-    """Up to `size` stops whose walk from the anchor fits `budget_meters`: as
-    many as fit, then the layer mix, then the most prize, then the shortest walk - not the `size`
-    nearest: a stop 300m behind you no longer beats a tight cluster 500m ahead.
-    A stop's prize is 1 + contrast_score, so an unscored one is worth 1.
-    Insertion by prize per metre builds a walk, then ROUTE_SHAKES rounds drop
-    one or two stops at random and refill without them, keeping whichever walk
-    scores better (iterated local search). Seeded, so one device on one day
-    always gets the same answer.
+def _choose_stops(*args) -> list[int]:
+    """_choose_walks' best walk, for callers without streets to judge by."""
+    return _choose_walks(*args)[0]
+
+
+def _choose_walks(
+    candidates: list,
+    size: int,
+    d: list,
+    seed: str,
+    budget_meters: float,
+    loop: bool,
+    at: Coordinates,
+) -> list[list[int]]:
+    """Up to ROUTE_SHORTLIST walks of up to `size` stops from the anchor `at`
+    within `budget_meters`, best first, ranked by: as many stops as fit, the
+    layer mix, the fewest turns back on itself, the walk reaching ROUTE_FILL of
+    the budget, the most prize, then the shortest walk. A long slider gets a long walk, not the five nearest
+    stops in a knot. A stop's prize is 1 + contrast_score, so an unscored one
+    is worth 1. Every walk on the list has the best one's count and mix.
+
+    A turn back is a turn under SHARP_TURN_DEGREES on the map, at a stop or,
+    for a loop, at the anchor. That is all a straight-line map can say; a
+    street spur takes the street shapes, which is why there is a list and not
+    one walk. Estimating it from the matrix was tried (docs/10-decisions.md)
+    and gave long walks up for short ones.
+
+    The first walks are shaped like the ask: for ROUTE_HEADINGS headings,
+    targets on a circle through the anchor (a line, one-way) whose walk is the
+    budget, and the candidate nearest each target. Insertion by prize per metre
+    tops them up, and builds one more walk from nothing, which is what a sparse
+    map falls back on. Then ROUTE_SHAKES rounds drop one or two stops at random
+    and refill without them, keeping whichever walk scores better (iterated
+    local search). Seeded, so one device on one day always gets the same answer.
 
     `d` is walking metres between nodes, node 0 the anchor and node i
-    candidates[i - 1] (api.streets.walking_matrix). Returns nodes, unordered.
+    candidates[i - 1] (api.streets.walking_matrix). Returns nodes, unordered;
+    [[]] when there is nothing to walk to.
 
     Each of stranger/other is guaranteed min(available, size // 2) stops, which
     is what the strict alternation before this gave, and still never comes up
@@ -399,16 +434,85 @@ def _choose_stops(
             walk.insert(at, c)
         return walk
 
+    y = {0: 0.0} | {i: (candidates[i - 1].lat - at.lat) * 111_320 for i in nodes}
+    x = {0: 0.0} | {
+        i: (candidates[i - 1].lng - at.lng) * 111_320 * math.cos(math.radians(at.lat))
+        for i in nodes
+    }
+
+    def sharp(order):
+        ends = [0, *order, 0] if loop else [0, *order]
+        turns = list(zip(ends, ends[1:], ends[2:], strict=False))
+        if loop and len(order) > 1:
+            turns.append((order[-1], 0, order[0]))
+        count = 0
+        for a, b, c in turns:
+            u = (x[a] - x[b], y[a] - y[b])
+            v = (x[c] - x[b], y[c] - y[b])
+            norms = math.hypot(*u) * math.hypot(*v)
+            if norms and (u[0] * v[0] + u[1] * v[1]) / norms > math.cos(
+                math.radians(SHARP_TURN_DEGREES)
+            ):
+                count += 1
+        return count
+
     def score(walk):
+        order = _walking_order(walk, d, loop)
+        walked = _path_meters(order, d, loop)
         return (
             -len(walk),
             missing(walk),
+            sharp(order),
+            max(0.0, ROUTE_FILL * budget_meters - walked),
             -sum(prize[i] for i in walk),
-            _path_meters(walk, d, loop),
+            walked,
         )
 
+    def shaped(heading):
+        """The candidates nearest `size` targets on a walk of about the budget
+        heading off from the anchor, shrunk until they fit; [] if none do."""
+        aim = (1 + ROUTE_FILL) / 2 * budget_meters
+        for scale in (1, 0.8, 0.6, 0.4):
+            if loop:
+                # size + 1 corners, the anchor one of them, on a circle through it.
+                n = size + 1
+                radius = scale * aim / (d_per_crow * 2 * n * math.sin(math.pi / n))
+                cx, cy = radius * math.cos(heading), radius * math.sin(heading)
+                targets = [
+                    (
+                        cx + radius * math.cos(heading + math.pi + 2 * math.pi * j / n),
+                        cy + radius * math.sin(heading + math.pi + 2 * math.pi * j / n),
+                    )
+                    for j in range(1, size + 1)
+                ]
+            else:
+                step = scale * aim / (d_per_crow * size)
+                targets = [
+                    (j * step * math.cos(heading), j * step * math.sin(heading))
+                    for j in range(1, size + 1)
+                ]
+            walk: list[int] = []
+            for tx, ty in targets:
+                free = [i for i in nodes if i not in walk]
+                free = [i for i in free if fits(walk, i)] or free
+                walk.append(min(free, key=lambda i: (x[i] - tx) ** 2 + (y[i] - ty) ** 2))
+            if _path_meters(_walking_order(walk, d, loop), d, loop) <= budget_meters:
+                return walk
+        return []
+
     rng = random.Random(seed)
-    best = fill([])
+    # How much longer a walk is than the straight line, from this very matrix:
+    # 1.3 without streets, whatever the streets say with them.
+    crow = [meters_between(at, Coordinates(lat=c.lat, lng=c.lng)) for c in candidates]
+    d_per_crow = sum(d[0][i] for i in nodes) / max(sum(crow), 1) if size else 1
+    offset = rng.uniform(0, 2 * math.pi)
+    walks = [fill([])]
+    if size:
+        for k in range(ROUTE_HEADINGS):
+            walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS)
+            if walk:
+                walks.append(fill(_walking_order(walk, d, loop)))
+    best = min(walks, key=score)
     for _ in range(ROUTE_SHAKES if best else 0):
         # Refilled with the dropped stops allowed back, a greedy fill puts the
         # same cheap stop straight back and never reaches a better one further out.
@@ -416,7 +520,12 @@ def _choose_stops(
         trial = fill([i for i in best if i not in drop], drop)
         if score(trial) < score(best):
             best = trial
-    return best
+    # The best walk, then the first walks: one per heading, so the list holds
+    # different loops rather than one loop with a stop swapped.
+    ranked = {frozenset(w): score(w) for w in [best, *walks]}
+    top = score(best)
+    alike = sorted((v, sorted(w)) for w, v in ranked.items() if v[:2] == top[:2])
+    return [_walking_order(w, d, loop) for _, w in alike[:ROUTE_SHORTLIST]]
 
 
 # 8! is 40,320 orderings - still cheaper than the SQL round trip before it.
@@ -468,9 +577,37 @@ ROUTE_INSERT = """
 """
 
 
+# Rows read to spread from, and candidates kept: one street table costs ~19ms
+# a point on the MLD sidecar, so the second number is the latency knob.
+ROUTE_POOL = 400
+ROUTE_CANDIDATES = 8 * ROUTE_SIZE
+
+
+def _spread(candidates: list, budget_meters: float) -> list:
+    """ROUTE_CANDIDATES of them: the first (nearest) per grid cell of
+    budget/15, then the rest nearest first. On a full map the forty nearest all
+    sit within a few hundred metres, and no long walk can be built from them;
+    on a sparse one this keeps everything.
+    ponytail: nearest per cell, not most prize per cell."""
+    side = budget_meters / 15
+    seen: set = set()
+    first, rest = [], []
+    for r in candidates:
+        cell = (
+            round(r.lat * 111_320 / side),
+            round(r.lng * 111_320 * math.cos(math.radians(r.lat)) / side),
+        )
+        (rest if cell in seen else first).append(r)
+        seen.add(cell)
+    return (first + rest)[:ROUTE_CANDIDATES]
+
+
 # Rounds of "drop one stop and see whether the loop gets cleaner". Each round
 # routes one walk per stop, milliseconds apiece against a local sidecar.
 ROUTE_CLEANUPS = 3
+# Street walked twice is compared in steps of this, so a few metres from a
+# mid-block start to its corner never outrank the solver's own ranking.
+SPUR_STEP_METERS = 25
 
 
 def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route_date):
@@ -485,10 +622,11 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
     - A stop further from any walkable way than the gate can never be stood
       on, so it is not a stop.
     - The walk should be a clean loop, not a line with spurs: a stop off the
-      loop is walked to and back the same way. After the solver picks, each
-      stop is dropped in turn and the rest re-picked; the walk that retraces
-      the fewest metres of street, with as many stops, wins. Up to
-      ROUTE_CLEANUPS rounds."""
+      loop is walked to and back the same way. Each walk on the solver's
+      shortlist is routed, and the one retracing the fewest SPUR_STEP_METERS
+      of street wins, the solver's order breaking ties. Then each stop is
+      dropped in turn and the rest re-picked; a walk with as many stops that
+      retraces less wins. Up to ROUTE_CLEANUPS rounds."""
     candidates = session.execute(
         text(ROUTE_CANDIDATES_QUERY),
         {
@@ -497,11 +635,10 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
             "radius_meters": budget_meters / 2,
             "today": route_date,
             "device_id": device,
-            # Room to swap a stop out for a cleaner loop.
-            "limit": 8 * ROUTE_SIZE,
+            "limit": ROUTE_POOL,
         },
     ).fetchall()
-    candidates = _one_per_place(candidates)
+    candidates = _spread(_one_per_place(candidates), budget_meters)
     d, snaps = street_table([at] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates])
     if snaps:
         keep = [i for i, r in enumerate(candidates) if snaps[i + 1] <= UNLOCK_RADIUS_METERS]
@@ -510,26 +647,38 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
         d = [[d[a][b] for b in rows] for a in rows]
     seed = f"{device}:{route_date}"
 
-    def walk(banned: set[int]) -> list[int]:
-        """Stops as nodes into `d`, in walking order, never any in `banned`."""
+    def walks(banned: set[int]) -> list[list[int]]:
+        """The solver's shortlist as nodes into `d`, each in walking order,
+        never any stop in `banned`."""
         nodes = [i for i in range(1, len(candidates) + 1) if i not in banned]
         rows = [0, *nodes]
         dd = [[d[a][b] for b in rows] for a in rows]
-        picks = _choose_stops(
-            [candidates[i - 1] for i in nodes], ROUTE_SIZE, dd, seed, budget_meters, ROUTE_LOOP
+        shortlist = _choose_walks(
+            [candidates[i - 1] for i in nodes], ROUTE_SIZE, dd, seed, budget_meters, ROUTE_LOOP, at
         )
-        return [nodes[i - 1] for i in _walking_order(picks, dd, ROUTE_LOOP)]
+        return [[nodes[i - 1] for i in _walking_order(p, dd, ROUTE_LOOP)] for p in shortlist]
+
+    def walk(banned: set[int]) -> list[int]:
+        return walks(banned)[0]
 
     def streets(order: list[int]):
         stops = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
         return street_legs([at, *stops, *([at] if ROUTE_LOOP else [])])
 
-    order = walk(set())
+    shortlist = walks(set())
+    order = shortlist[0]
     legs = streets(order) if order else None
     if legs is None:
         return [candidates[i - 1] for i in order], None, None
 
-    retraced = retraced_meters([p for leg in legs for p in leg])
+    def spur(order, legs):
+        pins = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
+        return retraced_meters([p for leg in legs for p in leg], pins)
+
+    routed = [(order, legs)] + [(o, streets(o)) for o in shortlist[1:]]
+    judged = [(spur(o, lg) // SPUR_STEP_METERS, n, o, lg) for n, (o, lg) in enumerate(routed) if lg]
+    _, _, order, legs = min(judged)
+    retraced = spur(order, legs)
     banned: set[int] = set()
     for _ in range(ROUTE_CLEANUPS):
         if retraced < 1:
@@ -541,7 +690,7 @@ def _plan_route(session, device: str, at: Coordinates, budget_meters: int, route
                 continue
             trial_legs = streets(trial)
             if trial_legs is not None:
-                cost = retraced_meters([p for leg in trial_legs for p in leg])
+                cost = spur(trial, trial_legs)
                 trials.append((cost, stop, trial, trial_legs))
         if not trials:
             break

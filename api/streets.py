@@ -8,10 +8,11 @@ Add one when the sidecar is remote or billed.
 """
 
 import json
+import math
 from itertools import pairwise
 from urllib.request import urlopen
 
-from api.gate import meters_between
+from api.gate import UNLOCK_RADIUS_METERS, meters_between
 from api.models import Coordinates
 from pipeline.config import ROUTING_URL
 
@@ -50,10 +51,13 @@ def walking_matrix(points: list[Coordinates]) -> list[list[float]]:
     return street_table(points)[0]
 
 
-def retraced_meters(path: list[Coordinates]) -> float:
+def retraced_meters(path: list[Coordinates], stops: list[Coordinates] = ()) -> float:
     """Metres of `path` that walk a stretch of street already walked, either
     way: the out-and-back to a stop that sits off the loop. Street routes
-    reuse the same map nodes, so a retraced segment has the same two ends."""
+    reuse the same map nodes, so a retraced segment has the same two ends.
+
+    Not inside the gate of a stop: the line runs to the pin, but a person
+    unlocks from UNLOCK_RADIUS_METERS out and never walks the stub between."""
     seen: set = set()
     total = 0.0
     for a, b in pairwise(path):
@@ -62,7 +66,11 @@ def retraced_meters(path: list[Coordinates]) -> float:
             continue
         key = (ka, kb) if ka < kb else (kb, ka)
         if key in seen:
-            total += meters_between(a, b)
+            # Measured along the segment from whichever end is nearer a stop.
+            inside = min(
+                (meters_between(end, s) for end in (a, b) for s in stops), default=math.inf
+            )
+            total += max(0.0, meters_between(a, b) - max(0.0, UNLOCK_RADIUS_METERS - inside))
         else:
             seen.add(key)
     return total
