@@ -52,8 +52,12 @@ Submit (pageSheet modal, from "+ Add") - see Writing
 Explore (the second tab)       the same MapView, its own camera; first visit centres on you.
 ├─ Every memory under the viewport (src/useNearby.ts), grouped by cluster.ts;
 │  no pin lights, and a wide cluster zooms rather than opens
-├─ The sheet opens locked with no ring: "Memories open on a walk"
-└─ Walk's circle, line, pill and + Add are not drawn here
+├─ The sheet opens locked with no ring: "Memories open on a walk", or for
+│  one of today's stops "Stop N on today's walk" and "Show on the walk",
+│  which switches to Walk and flies there
+├─ "+ Add"                    top right, as on the walk: filing is not unlocking
+└─ Walk's circle, line and pill are not drawn here. Leaving mid-preview and
+   coming back resumes it: the stage lives in App, not in the tab
 
 Memories (the third tab, src/Memories.tsx)
 └─ Unlocked: what this device has earned, newest first; a row opens the sheet.

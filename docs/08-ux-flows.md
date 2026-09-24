@@ -760,7 +760,8 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. "+ Add" arrives with the walk; the tab bar (Walk · Explore
+   no hotspots card. "+ Add" arrives with the walk, and is in Explore too
+   (filing is standing somewhere, not unlocking); the tab bar (Walk · Explore
    · Memories · You) is there from launch, and Walk is where it lands. There is no
    "Near me": the pill recentres, and "Turn on location" shows only while
    there is no position.
@@ -890,7 +891,8 @@ the app is not open.
    requestBackgroundPermissionsAsync()` - which only runs if foreground
    permission is already granted, and notification permission. Turning it off
    just stops the watch; nothing else about the app changes.
-2. The watch tracks today's accepted route (F25) - nothing before Accept - a
+2. The watch tracks today's accepted route (F25) - nothing before Accept, and
+   nothing Explore shows - a
    bounded, already-nearby list (`ROUTE_SIZE`, well under the ~20-region limit
    both platforms enforce for background geofences). `geofenceRegions.ts`
    drops anything already unlocked or sealed (F23) from the watch the moment

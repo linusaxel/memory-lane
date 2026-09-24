@@ -558,13 +558,14 @@ export default function App() {
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
   const selectTab = useCallback(
-    (next: Tab) => {
+    (next: Tab, to?: Region) => {
       setTab(next);
       if ((next !== 'walk' && next !== 'explore') || next === mapTab.current) return;
       cameraOf.current[mapTab.current] = region;
       mapTab.current = next;
       const here = positionRef.current;
       const back =
+        to ??
         cameraOf.current[next] ??
         (here && {
           latitude: here.lat,
@@ -626,12 +627,14 @@ export default function App() {
   useEffect(() => {
     const id = devOpenMemory();
     if (id == null || devOpened.current) return;
-    const group = groups.find((g) => g.memories.some((memory) => memory.id === id));
+    const group = (tab === 'explore' ? exploreGroups : groups).find((g) =>
+      g.memories.some((memory) => memory.id === id),
+    );
     if (!group) return;
     devOpened.current = true;
     setOpenAt(group.memories);
     setOpenIndex(group.memories.findIndex((memory) => memory.id === id));
-  }, [groups]);
+  }, [tab, groups, exploreGroups]);
 
   const withinReach = useMemo(
     () =>
@@ -969,7 +972,8 @@ export default function App() {
               Shown even with no position: standing somewhere empty is the best
               moment to file the first memory there, and the press asks for
               location rather than hiding the possibility. */}
-          {walking && tab === 'walk' && (
+          {/* Explore too: filing is standing somewhere, not unlocking. */}
+          {((walking && tab === 'walk') || tab === 'explore') && (
             <Pressable
               style={dim(styles.add)}
               accessibilityRole="button"
@@ -1160,6 +1164,20 @@ export default function App() {
           position={position}
           // Explore opens the sheet locked with no ring: unlocking is Walk's.
           onUnlock={tab === 'walk' ? unlock : undefined}
+          walkStop={
+            tab === 'explore' && walking && openMemories[openIndex]
+              ? routePositionById.get(openMemories[openIndex].id)
+              : undefined
+          }
+          onShowOnWalk={(memory) => {
+            setOpenAt([]);
+            selectTab('walk', {
+              latitude: memory.place.coordinates.lat,
+              longitude: memory.place.coordinates.lng,
+              latitudeDelta: LOCATED_DELTA,
+              longitudeDelta: LOCATED_DELTA,
+            });
+          }}
           unlocking={unlocking}
           unlockError={unlockError}
           onHeart={heart}

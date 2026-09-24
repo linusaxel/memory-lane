@@ -35,6 +35,9 @@ type Props = {
   /** Absent in Explore, where nothing is earned: the sheet stays locked with
    *  no ring and no distance to close, however near you stand. */
   onUnlock?: (memory: LocatedMemory) => void;
+  /** Its number on today's walk, when Explore opened a stop of it. */
+  walkStop?: number;
+  onShowOnWalk?: (memory: LocatedMemory) => void;
   unlocking: boolean;
   unlockError: string | null;
   /** Present only for a memory this account filed, and only while it is open -
@@ -101,6 +104,8 @@ export default function MemorySheet({
   onClose,
   position,
   onUnlock,
+  walkStop,
+  onShowOnWalk,
   onHeart,
   hearted,
   unlocking,
@@ -237,9 +242,20 @@ export default function MemorySheet({
                 <>
                   <Padlock size={34} color={color.faded} />
                   <Text style={styles.gateNote}>
-                    Memories open on a walk, standing where they happened.
+                    {walkStop
+                      ? `Stop ${walkStop} on today's walk.`
+                      : 'Memories open on a walk, standing where they happened.'}
                   </Text>
                   {waiting}
+                  {walkStop && onShowOnWalk && (
+                    <Pressable
+                      style={dim(styles.walk)}
+                      accessibilityRole="button"
+                      onPress={() => onShowOnWalk(memory)}
+                    >
+                      <Text style={styles.walkText}>Show on the walk</Text>
+                    </Pressable>
+                  )}
                 </>
               ) : withinReach ? (
                 <>

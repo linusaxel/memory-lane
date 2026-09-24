@@ -1506,16 +1506,20 @@ In build order:
       so in docs/10 next to "The position is self-reported", so nobody
       "fixes" it server-side.
       **Done 2026-09-24:** docs/10, under the gate.
-- [ ] **The seams - decide each while building:**
+- [x] **The seams - decide each while building:**
       - A route stop seen in Explore: plain pin; its sheet says "Stop N on
         today's walk" with a button that switches to Walk and flies there.
         (Recommended. The client still never names a stop to the server.)
       - Leaving mid-preview and coming back resumes it - the state is in App.
-      - + Add in Walk only, or both? Filing is not unlocking. **Open.**
+      - + Add in Walk only, or both? Filing is not unlocking. **Both**, decided
+        2026-09-24.
       - Geofence notifications keep tracking the route only. Unchanged; write
         it down.
       - `EXPO_PUBLIC_DEV_OPEN_MEMORY` searches `groups`, so it has to pick a
         tab.
+      **Done 2026-09-24:** "Show on the walk" passes its region to `selectTab`;
+      preview resumes as it already did; the dev hook searches the tab it
+      launched on.
 - [ ] **Flows and tests.** New docs/08 flow F29 (Explore) and F25 amended. A
       Maestro journey: pan, clusters, a pin that stays locked while you stand
       on it, the jump to Walk. The same journey headless in
