@@ -2,6 +2,8 @@
 
 export const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 const BASE = API_BASE;
+/** Recording and playback of a memory's voice. Off unless `EXPO_PUBLIC_AUDIO=1`. */
+export const AUDIO = process.env.EXPO_PUBLIC_AUDIO === '1';
 
 export type Coordinates = { lat: number; lng: number };
 

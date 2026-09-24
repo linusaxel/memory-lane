@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
-import { mediaUrl, type MediaItem } from './api.ts';
+import { AUDIO, mediaUrl, type MediaItem } from './api.ts';
 import { duration } from './format.ts';
 import { color, dim, font, label } from './theme.ts';
 
@@ -78,7 +78,7 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
   if (media.length === 0) return null;
 
   const photos = media.filter((item) => item.kind === 'photo');
-  const sounds = media.filter((item) => item.kind === 'audio');
+  const sounds = AUDIO ? media.filter((item) => item.kind === 'audio') : [];
 
   return (
     <View style={styles.wrap}>

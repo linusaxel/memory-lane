@@ -28,6 +28,7 @@ import {
 } from 'expo-audio';
 
 import {
+  AUDIO,
   SUBMISSION_TAGS,
   deleteMemory,
   mediaUrl,
@@ -557,31 +558,33 @@ export default function Submit({
             </View>
           </Field>
 
-          <Field label="Say it out loud">
-            {sound ? (
-              <View style={styles.row}>
-                <Text style={styles.recorded}>
-                  {sound.failed ? 'Upload failed' : `Recorded · ${duration(sound.seconds ?? 0)}`}
-                </Text>
-                <Secondary
-                  label="Remove"
-                  onPress={() =>
-                    setAttachments((current) => current.filter((a) => a.kind !== 'audio'))
-                  }
-                />
-              </View>
-            ) : recording.isRecording ? (
-              <View style={styles.row}>
-                {/* The one red dot in the app that is not the seal doing its
-                    usual job - recording is the other thing worth noticing. */}
-                <View style={styles.dot} />
-                <Text style={styles.recorded}>{duration(recording.durationMillis / 1000)}</Text>
-                <Secondary label="Stop" onPress={stopRecording} />
-              </View>
-            ) : (
-              <Secondary label="Record" onPress={startRecording} />
-            )}
-          </Field>
+          {AUDIO && (
+            <Field label="Say it out loud">
+              {sound ? (
+                <View style={styles.row}>
+                  <Text style={styles.recorded}>
+                    {sound.failed ? 'Upload failed' : `Recorded · ${duration(sound.seconds ?? 0)}`}
+                  </Text>
+                  <Secondary
+                    label="Remove"
+                    onPress={() =>
+                      setAttachments((current) => current.filter((a) => a.kind !== 'audio'))
+                    }
+                  />
+                </View>
+              ) : recording.isRecording ? (
+                <View style={styles.row}>
+                  {/* The one red dot in the app that is not the seal doing its
+                      usual job - recording is the other thing worth noticing. */}
+                  <View style={styles.dot} />
+                  <Text style={styles.recorded}>{duration(recording.durationMillis / 1000)}</Text>
+                  <Secondary label="Stop" onPress={stopRecording} />
+                </View>
+              ) : (
+                <Secondary label="Record" onPress={startRecording} />
+              )}
+            </Field>
+          )}
 
           {/* Not shown while editing: the signature is a profile-wide setting
               (Settings, PUT /v1/me), not a per-memory one - this field would
