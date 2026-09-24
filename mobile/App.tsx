@@ -256,9 +256,10 @@ export default function App() {
     if (watcher.current) return;
     try {
       watcher.current = await Location.watchPositionAsync(
-        // The radius is 150m, so a finer interval spends battery to tell us
-        // nothing. Foreground only - see rule 2 in UI.md.
-        { accuracy: Location.Accuracy.Balanced, distanceInterval: 25 },
+        // The reach radius is 20m, so anything coarser than a few metres lets
+        // the person walk out of the circle before it moves. Foreground only -
+        // see rule 2 in UI.md.
+        { accuracy: Location.Accuracy.BestForNavigation, distanceInterval: 5 },
         remember,
       );
     } catch {

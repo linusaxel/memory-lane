@@ -318,7 +318,7 @@ Urban GPS can drift further than that between tall buildings, and that risk is
 accepted (`docs/10-decisions.md#20-m`). `UNLOCK_RADIUS_METERS` in the API
 environment if it turns out wrong in the street.
 
-The app keeps the position live with `watchPositionAsync` (25m interval,
+The app keeps the position live with `watchPositionAsync` (5m interval,
 foreground only). Reading it once at launch means a pin turns unlockable only if
 you happen to press "Near me" while standing on it, which is the opposite of the
 mechanic.
@@ -399,7 +399,7 @@ distance.
 
 **Who:** somebody who took the directions.
 
-1. Position is *watched*, not read once (`watchPositionAsync`, 25m). Walking
+1. Position is *watched*, not read once (`watchPositionAsync`, 5m). Walking
    into range changes the map by itself — a position read at launch would mean a
    pin only turns unlockable if you happen to press "Near me" while standing on
    it, which is the opposite of the mechanic.

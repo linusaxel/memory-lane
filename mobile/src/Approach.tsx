@@ -22,7 +22,7 @@ export default function Approach({ meters, radius }: Props) {
   const fill = useRef(new Animated.Value(filled)).current;
 
   useEffect(() => {
-    // Springs rather than jumps: a position arrives every 25m, and a disc that
+    // Springs rather than jumps: a position arrives every 5m, and a disc that
     // snaps between two sizes reads as a glitch where a rise reads as ground
     // covered.
     Animated.spring(fill, {

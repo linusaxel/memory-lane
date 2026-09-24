@@ -659,7 +659,7 @@ with a reason, walks start from where you are, and only then the system dialog.
 never asked twice, and a hard refusal (`canAskAgain === false`) swaps the button
 for **Open Settings**, which is the only route back.
 
-Position is then *watched*, not read once (`watchPositionAsync`, 25m interval,
+Position is then *watched*, not read once (`watchPositionAsync`, 5m interval,
 foreground only). Walking into range has to change the map by itself.
 
 ## Two links that can fail
@@ -709,7 +709,7 @@ budget. Spec, so it does not get re-invented per screen:
   failing. One more `Light` fires in `App.tsx` the moment the reachable set
   goes empty to non-empty — walking into range is the moment the app is for,
   and it used to happen in silence. The transition, not the state:
-  `withinReach` gets a new array identity every 25 m, so the effect keys on a
+  `withinReach` gets a new array identity every 5 m, so the effect keys on a
   boolean and a ref, not on the array or its length.
 - **The last quarter strains.** An inner ring fades up and closes in from 78%,
   arriving with the third tick, and the padlock swells as it is worked. Both
