@@ -19,6 +19,10 @@ environment needs a human.
 along its street shapes, and without streets the app picks a different one.
 `E2E_ROUTING_URL` points it elsewhere.
 
+Those shapes are pasted into `walk-and-unlock.yml`, so a solver change that
+reorders the walk breaks it. `./e2e/run.sh --keep walk`, then
+`venv/bin/python e2e/travel.py` prints every leg's `travel` block afresh.
+
 **Point `--record` at one flow, not at all of them.** Recording is not free and it
 is not stable in bulk: `./e2e/run.sh` on its own passes 6/6 run after run,
 while `./e2e/run.sh --record` fails three of the six - a *different* three each

@@ -20,8 +20,9 @@ strike an entry when its fix lands.
       broken, just unwatched. **Fix:** in `look-around.yml`, tap "One way" and
       assert a preview reading `5 stops · .* km` with no "loop"; tap a theme
       the e2e seed does not carry and assert "No walk that long from here".
-- [ ] **The walk journey's `travel` points are hand-copied OSRM shapes.**
-      (2026-09-24) `walk-and-unlock.yml` walks fixed coordinates traced from
+- [x] ~~**The walk journey's `travel` points are hand-copied OSRM shapes.**~~
+      (2026-09-24) **Fixed 2026-09-24:** `e2e/travel.py` prints them from
+      `/v1/routes/preview`. `walk-and-unlock.yml` walks fixed coordinates traced from
       the route OSRM drew under the old solver. Today's routing change left the
       seed's stops and order alone, so it passed, but that was luck: any solver
       change that reorders the seed's walk breaks the journey, and the fix is a

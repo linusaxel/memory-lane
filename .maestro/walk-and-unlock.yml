@@ -74,7 +74,8 @@ appId: ${APP_ID}
 #   5 The corner             Broadway at 34th     `stack`, three on one point
 # Each travel is that leg's street shape from OSRM, turn by turn, so the walker
 # keeps to the pavement; it ends where the street passes the stop, inside the
-# 20m gate. Only the stop being stood on is ever in reach. Nothing is tapped
+# 20m gate; `e2e/travel.py` prints them afresh when the walk changes. Only the
+# stop being stood on is ever in reach. Nothing is tapped
 # while walking - the pin turns and the pill changes its mind on its own.
 - travel:
     points:
