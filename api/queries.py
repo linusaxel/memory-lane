@@ -436,6 +436,22 @@ WHERE m.id = ANY(CAST(:ids AS integer[])) AND {VISIBLE}
 ORDER BY array_position(CAST(:ids AS integer[]), m.id)
 """
 
+# Mark today's walk finished when this unlock earned its last visible stop.
+# Earned across MY_DEVICES, like the route's candidates; hidden stops are not
+# owed, because the walk drops them (ROUTE_QUERY). Set once, never moved.
+ROUTE_COMPLETED_QUERY = f"""
+UPDATE daily_routes r SET completed_at = CURRENT_TIMESTAMP
+WHERE r.device_id = CAST(:device_id AS uuid)
+  AND r.route_date = CAST(:today AS date)
+  AND r.completed_at IS NULL
+  AND :memory_id = ANY(r.memory_ids)
+  AND NOT EXISTS (
+      SELECT 1 FROM memories m
+      WHERE m.id = ANY(r.memory_ids) AND {VISIBLE}
+        AND m.id NOT IN (SELECT memory_id FROM unlocks WHERE device_id IN {MY_DEVICES})
+  )
+"""
+
 AUTHORED_ROUTE_QUERY = """
 SELECT id, title, is_loop FROM routes WHERE id = :route_id AND status = 'published'
 """

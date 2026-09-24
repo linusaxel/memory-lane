@@ -1591,13 +1591,18 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
       closes and follows the finishing unlock in this session, so a relaunch
       does not show it again and nothing is stored. No share button, by
       decision. F30 in docs/08.
-- [ ] **Say when a walk was finished.** `daily_routes.completed_at` (migration
+- [x] **Say when a walk was finished.** `daily_routes.completed_at` (migration
       plus `db/schema.sql`), set by `POST /v1/memories/{id}/unlock` when that
       unlock earns the device's last stop of today's walk. It cannot be derived
       from `unlocks`, because a stop earned on another day also counts toward
       a walk. Set once, never moved.
       **First step:** the migration, and one `UPDATE … WHERE completed_at IS
       NULL` after the unlock insert in `api/write.py`.
+      **Done 2026-09-24:** `024_route_completed.sql`, and
+      `ROUTE_COMPLETED_QUERY` run after every unlock insert. Earned counts
+      across the account's devices, like the route's candidates; a stop hidden
+      after the accept is not owed, since the walk drops it. Nothing reads it
+      yet: the next item does.
 - [ ] **Past walks: `GET /v1/routes/walked?device=UUID`.** Newest first: date,
       budget, stops earned of stops, `completed_at`, legs. Earned stops come
       back open, the way `/v1/unlocks` serves them. Across a signed-in user's

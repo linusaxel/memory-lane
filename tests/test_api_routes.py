@@ -436,3 +436,22 @@ def test_a_stop_hidden_after_the_accept_drops_out_of_todays_walk(client, db_sess
 
     walk = client.get(f"/v1/routes/today?device={DEVICE}").json()
     assert [m["id"] for m in walk["memories"]] == stops[1:]
+
+
+def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_session):
+    for n in (1, 2):
+        _offset(db_session, n)
+    db_session.commit()
+    stops = [(m["id"], m["place"]["coordinates"]) for m in _route(client).json()["memories"]]
+
+    def unlock(memory_id, at):
+        client.post(
+            f"/v1/memories/{memory_id}/unlock",
+            json={"device": DEVICE, "lat": at["lat"], "lng": at["lng"]},
+        )
+        return db_session.execute(text("SELECT completed_at FROM daily_routes")).scalar()
+
+    assert unlock(*stops[0]) is None
+    finished = unlock(*stops[1])
+    assert finished is not None
+    assert unlock(*stops[1]) == finished, "set once, never moved"

@@ -12,7 +12,7 @@ from sqlalchemy import text
 
 import api.media
 from api.accounts import clean_name, set_display_name, touch_device, user_for_device
-from api.gate import meters_between, not_yet_open, row_coordinates, row_to_memory
+from api.gate import meters_between, not_yet_open, row_coordinates, row_to_memory, today
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
@@ -33,6 +33,7 @@ from api.queries import (
     MEDIA_DETACH_QUERY,
     OWNED_MEMORY_QUERY,
     PLACE_INSERT,
+    ROUTE_COMPLETED_QUERY,
     SINGLE_MEMORY_QUERY,
     SUBMISSION_INSERT,
 )
@@ -148,6 +149,10 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
                 ON CONFLICT (device_id, memory_id) DO NOTHING
             """),
             {"device": body.device, "memory_id": memory_id},
+        )
+        session.execute(
+            text(ROUTE_COMPLETED_QUERY),
+            {"device_id": body.device, "memory_id": memory_id, "today": today()},
         )
 
     return memory
