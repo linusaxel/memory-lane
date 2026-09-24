@@ -14,6 +14,12 @@ driving the real app on a simulator while you watch.
 Exit codes follow the gate: **0** pass, **1** a flow failed, **2** the
 environment needs a human.
 
+**Tapping the icon afterwards shows "No script URL provided".** The simulator
+app is a Debug build with no JS bundle of its own: it loads one from Metro on
+:8081, and the run kills Metro on exit. Either run with `--keep`, or start
+Metro against the compose API (`docker compose up -d`, `mobile/.env` from
+`.env.example`): `cd mobile && npx expo start --dev-client`, then tap the icon.
+
 **It needs the OSRM sidecar** (`./osrm/build.sh` once, then `docker compose
 --profile routing up -d osrm`). The walk is the route OSRM picks, travelled
 along its street shapes, and without streets the app picks a different one.

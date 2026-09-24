@@ -133,6 +133,8 @@ cleanup() {
   [ -n "$API_PID" ] && kill "$API_PID" 2>/dev/null
   kill_port "$METRO_PORT"
   psql_on memorylane "DROP DATABASE IF EXISTS $DB WITH (FORCE)" >/dev/null 2>&1
+  printf '\033[2m     Metro is down: the app icon now opens "No script URL provided".\n'
+  printf '     To poke at it: cd mobile && npx expo start --dev-client (or run with --keep)\033[0m\n'
 }
 trap cleanup EXIT
 

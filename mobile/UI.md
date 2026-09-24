@@ -546,6 +546,11 @@ now." — the app still works, it just cannot reach the API. Restart the dev ser
 rather than debugging the app. Likewise `exp://<stale-ip>:8081` hangs on
 "Opening project"; `exp://localhost:8081` does not.
 
+**"No script URL provided" is Metro not running.** The installed app (from
+`expo run:ios` or `./e2e/run.sh`) is a Debug build: it has no bundle of its
+own and there is no dev launcher to fall back to. Start Metro first: `cd
+mobile && npx expo start --dev-client`.
+
 Only one dev server can hold port 8081, and `npx expo start` cannot prompt in a
 non-interactive shell — it just prints "Skipping dev server". Kill the old one
 first: `lsof -ti:8081 | xargs kill -9`.
