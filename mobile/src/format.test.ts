@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { distance, duration, sealOpensAt, when } from './format.ts';
+import { distance, duration, sealOpensAt, walkDate, when } from './format.ts';
 
 test('metres below a kilometre, kilometres above', () => {
   assert.equal(distance(420), '420 m');
@@ -77,4 +77,8 @@ test('half a year is not a year', () => {
 
 test('a year is read around its spaces', () => {
   assert.equal(sealOpensAt(' 2041 ', NOW), '2041-01-01');
+});
+
+test("a walk's date is the day it was walked, in any timezone", () => {
+  assert.equal(walkDate('2026-09-22', 'en-US'), 'Tue, Sep 22');
 });

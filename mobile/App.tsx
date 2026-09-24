@@ -40,6 +40,7 @@ import {
   type LocatedMemory,
   type Profile,
   type TodaysRoute,
+  type WalkedRoute,
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
@@ -65,7 +66,7 @@ import Memories from './src/Memories.tsx';
 import { Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
-import { distance } from './src/format.ts';
+import { distance, walkDate } from './src/format.ts';
 import { buttonText, color, dim, font, label } from './src/theme.ts';
 import TabBar, { type Tab } from './src/TabBar.tsx';
 import type { Permission } from './src/types.ts';
@@ -205,6 +206,9 @@ export default function App() {
   const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
   // Street shapes between consecutive stops; null draws them straight.
   const [routeLegs, setRouteLegs] = useState<Coordinates[][] | null>(null);
+  // A walk from the Walks list, drawn over Explore instead of what is nearby.
+  // Read-only: Explore unlocks nothing. Any tab change puts it away.
+  const [pastWalk, setPastWalk] = useState<WalkedRoute | null>(null);
   // Resolved once at launch. Held in state rather than awaited at each call
   // site because the submit form needs it synchronously to decide whether it
   // can open at all.
@@ -568,6 +572,7 @@ export default function App() {
   const selectTab = useCallback(
     (next: Tab, to?: Region) => {
       setTab(next);
+      setPastWalk(null);
       if ((next !== 'walk' && next !== 'explore') || next === mapTab.current) return;
       cameraOf.current[mapTab.current] = region;
       mapTab.current = next;
@@ -603,15 +608,27 @@ export default function App() {
   }, [pinned, position, region, flyTo, inFlight]);
   // Explore: everything under the viewport, whatever today's walk is. What
   // this device earned reads open, as it does on the walk.
-  const nearby = useNearby(region, tab === 'explore');
+  const nearby = useNearby(region, tab === 'explore' && !pastWalk);
   const exploreGroups = useMemo(
     () =>
       groupByLocation(
-        nearby.map((memory) => unlocked[memory.id] ?? memory),
+        (pastWalk?.memories ?? nearby).map((memory) => unlocked[memory.id] ?? memory),
         precision,
       ),
-    [nearby, unlocked, precision],
+    [pastWalk, nearby, unlocked, precision],
   );
+  // Stop to stop: the start was never stored (docs/10 § Routes).
+  const pastPath = useMemo(
+    () => (pastWalk ? pathThrough(null, pastWalk.memories, NONE, pastWalk.legs, null) : []),
+    [pastWalk],
+  );
+  useEffect(() => {
+    if (pastPath.length === 0) return;
+    mapRef.current?.fitToCoordinates(
+      pastPath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
+      { edgePadding: { top: 100, right: 60, bottom: 200, left: 60 }, animated: true },
+    );
+  }, [pastPath, mapRef]);
   const openMemories = useMemo(
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
@@ -967,6 +984,9 @@ export default function App() {
               <RouteLine path={previewPath} dark={scheme === 'dark'} />
             )}
             {donePath.length > 1 && <RouteLine path={donePath} dark={scheme === 'dark'} />}
+            {tab === 'explore' && pastPath.length > 1 && (
+              <RouteLine path={pastPath} dark={scheme === 'dark'} />
+            )}
 
             {(tab === 'walk' ? groups : []).map((group) => {
               // The first of a group's memories that is also a route stop -
@@ -1035,7 +1055,7 @@ export default function App() {
               moment to file the first memory there, and the press asks for
               location rather than hiding the possibility. */}
           {/* Explore too: filing is standing somewhere, not unlocking. */}
-          {((walking && tab === 'walk') || tab === 'explore') && (
+          {((walking && tab === 'walk') || (tab === 'explore' && !pastWalk)) && (
             <Pressable
               style={dim(styles.add)}
               accessibilityRole="button"
@@ -1128,6 +1148,19 @@ export default function App() {
             </Pressable>
           )}
 
+          {tab === 'explore' && pastWalk && (
+            <Pressable
+              style={dim([styles.route, { bottom: 44 }])}
+              accessibilityRole="button"
+              accessibilityLabel={`Walk of ${walkDate(pastWalk.route_date)}, ${pastWalk.earned} of ${pastWalk.size}. Close.`}
+              onPress={() => selectTab('collection')}
+            >
+              <Text style={styles.routeText}>
+                {`${walkDate(pastWalk.route_date)} · ${pastWalk.earned} of ${pastWalk.size} · Close`}
+              </Text>
+            </Pressable>
+          )}
+
           {walking && tab === 'walk' && !position && (
             <Pressable
               style={dim(styles.locate)}
@@ -1197,6 +1230,10 @@ export default function App() {
             focused={tab === 'collection'}
             refreshKey={mineVersion}
             onOpenMine={openEditor}
+            onOpenWalk={(walk) => {
+              selectTab('explore');
+              setPastWalk(walk);
+            }}
             position={position}
           />
         </View>

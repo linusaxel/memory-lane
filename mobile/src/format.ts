@@ -41,6 +41,17 @@ export function when(at: number | undefined, now: number = Date.now()): string |
   return new Date(at as number).toLocaleDateString();
 }
 
+/** A walk's day, "Tue, Sep 22". Parsed as a local date: `new Date('2026-09-22')`
+ *  is UTC midnight, which is the 21st anywhere west of Greenwich. */
+export function walkDate(routeDate: string, locale?: string): string {
+  const [y, m, d] = routeDate.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(locale, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 /** The date a seal opens, or null when that year cannot be one.
  *
  *  Here rather than inside Submit because two places needed the answer - the

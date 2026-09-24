@@ -332,6 +332,29 @@ export async function acceptRoute(
   );
 }
 
+/** A walk this account accepted on some day, finished or not. Earned stops
+ *  come back open. The start was never stored, so it draws stop to stop. */
+export type WalkedRoute = TodaysRoute & {
+  budget_meters: number;
+  earned: number;
+  completed_at: string | null;
+};
+
+/** Every walk the account accepted, newest first. */
+export async function fetchWalked(device: string, signal?: AbortSignal): Promise<WalkedRoute[]> {
+  const body = await get<{
+    walks?: (RouteBody & {
+      meta?: { budget_meters?: number; earned?: number; completed_at?: string | null };
+    })[];
+  }>('/v1/routes/walked', new URLSearchParams({ device }), signal);
+  return (body.walks ?? []).map((walk) => ({
+    ...toRoute(walk),
+    budget_meters: walk.meta?.budget_meters ?? 0,
+    earned: walk.meta?.earned ?? 0,
+    completed_at: walk.meta?.completed_at ?? null,
+  }));
+}
+
 // --- writing -----------------------------------------------------------------
 
 /** What this device is, to the extent it is anybody. */

@@ -1617,10 +1617,15 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
       `earned` and `completed_at`; `size` counts visible stops only, so a
       finished walk with a stop hidden since still reads "4 of 4". Unfinished
       walks are listed too; whether the app shows them is still open below.
-- [ ] **A Walks list in the app.** A third subtab on Memories, beside Unlocked
+- [x] **A Walks list in the app.** A third subtab on Memories, beside Unlocked
       and My memories: one row per walk (date, "5 of 5", km). A row opens the
       map on that walk, read-only, and unlocks nothing (like Explore).
-      **Open:** whether unfinished walks are listed too.
+      **Done 2026-09-24:** `fetchWalked` in `api.ts`, the Walks subtab in
+      `Memories.tsx`, and `pastWalk` in `App.tsx`, which draws the walk over
+      Explore in place of what is nearby until any tab is chosen. Unfinished
+      walks are listed: "3 of 5" says so, and hiding them would lose a day.
+      The km is the budget asked for, not the metres walked: the start was
+      never stored, so the walk itself cannot be measured out and home.
 - [ ] **Flows and tests.** F30 and F31 move from Proposed to Implemented in
       docs/08. `.maestro/walk-and-unlock.yml` already reaches 5 of 5: add the
       closing screen there, and the Walks row after its relaunch. Headless in

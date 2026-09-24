@@ -35,9 +35,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { fetchMine, MINE_PAGE_SIZE, type Coordinates, type LocatedMemory } from './api.ts';
+import {
+  fetchMine,
+  fetchWalked,
+  MINE_PAGE_SIZE,
+  type Coordinates,
+  type LocatedMemory,
+  type WalkedRoute,
+} from './api.ts';
 import Padlock from './Padlock.tsx';
-import { distance, when } from './format.ts';
+import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { color, dim, font, label } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
@@ -59,6 +66,8 @@ type Props = {
    *  would go on showing what was filed until the tab was left and reopened. */
   refreshKey: number;
   onOpenMine: (memory: LocatedMemory) => void;
+  /** Shows that walk on the map, read-only. */
+  onOpenWalk: (walk: WalkedRoute) => void;
   /** Where the person is standing, or null if they said no to location - the
    *  same source MemorySheet.tsx reads for its own distance. Rows show
    *  nothing in that slot rather than a stale figure when this is null. */
@@ -66,6 +75,7 @@ type Props = {
 };
 
 type MineStatus = 'loading' | 'ready' | 'failed';
+type Section = 'unlocked' | 'mine' | 'walks';
 
 export default function Memories({
   unlocked,
@@ -75,15 +85,37 @@ export default function Memories({
   focused,
   refreshKey,
   onOpenMine,
+  onOpenWalk,
   position,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const [section, setSection] = useState<'unlocked' | 'mine'>('unlocked');
+  const [section, setSection] = useState<Section>('unlocked');
   const [mine, setMine] = useState<LocatedMemory[]>([]);
   const [mineTotal, setMineTotal] = useState(0);
   const [mineStatus, setMineStatus] = useState<MineStatus>('loading');
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [walks, setWalks] = useState<WalkedRoute[]>([]);
+  const [walksStatus, setWalksStatus] = useState<MineStatus>('loading');
+
+  // Always the server's, like My memories: a walk finished on another phone
+  // of the same account belongs here too. A failed refetch keeps the last list.
+  useEffect(() => {
+    if (!focused || !device || section !== 'walks') return;
+    let cancelled = false;
+    fetchWalked(device)
+      .then((next) => {
+        if (cancelled) return;
+        setWalks(next);
+        setWalksStatus('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setWalksStatus((current) => (current === 'ready' ? current : 'failed'));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [focused, device, section]);
 
   const load = useCallback(() => {
     if (!device) return Promise.resolve();
@@ -148,7 +180,13 @@ export default function Memories({
         ? `${mineTotal} ${mineTotal === 1 ? 'memory' : 'memories'} you filed`
         : `${mine.length} of ${mineTotal} you filed, so far`;
 
-  const data: LocatedMemory[] = section === 'unlocked' ? unlocked : mine;
+  const walksNote =
+    walksStatus !== 'ready' || walks.length === 0
+      ? ''
+      : `${walks.length} ${walks.length === 1 ? 'walk' : 'walks'}`;
+
+  const data: (LocatedMemory | WalkedRoute)[] =
+    section === 'unlocked' ? unlocked : section === 'mine' ? mine : walks;
 
   // Live, not stored: neither /v1/unlocks nor /v1/me/memories ever carries a
   // meaningful distance_meters (both force it null server-side), so this is
@@ -158,13 +196,21 @@ export default function Memories({
     position ? distance(metersBetween(position.lat, position.lng, item.place.coordinates.lat, item.place.coordinates.lng)) : undefined;
 
   return (
-    <FlatList<LocatedMemory>
+    <FlatList<LocatedMemory | WalkedRoute>
       style={styles.screen}
       contentContainerStyle={[styles.body, { paddingTop: insets.top + 14 }]}
       data={data}
-      keyExtractor={(item) => String(item.id)}
+      // Two walks can share a date: one per device, and an account has several.
+      keyExtractor={(item, index) => ('id' in item ? String(item.id) : `walk-${index}`)}
       renderItem={({ item }) =>
-        section === 'unlocked' ? (
+        !('id' in item) ? (
+          <Row
+            place={walkDate(item.route_date)}
+            summary={item.memories.map((memory) => memory.place.name).join(' · ')}
+            meta={`${item.earned} of ${item.size} · ${distance(item.budget_meters)}`}
+            onPress={() => onOpenWalk(item)}
+          />
+        ) : section === 'unlocked' ? (
           <Row
             place={item.place.name}
             summary={item.summary}
@@ -186,7 +232,9 @@ export default function Memories({
         <>
           <Text style={styles.title}>Memories</Text>
           <Switcher section={section} onSelect={setSection} />
-          <Header note={section === 'unlocked' ? unlockedNote : mineNote} />
+          <Header
+            note={section === 'unlocked' ? unlockedNote : section === 'mine' ? mineNote : walksNote}
+          />
         </>
       }
       ListEmptyComponent={
@@ -195,6 +243,14 @@ export default function Memories({
           // spinner that flashes is worse than a beat of nothing.
           !unlockedReady ? null : (
             <Empty text="Memories open when you stand where they happened. Whatever you open stays here." />
+          )
+        ) : section === 'walks' ? (
+          walksStatus === 'loading' ? (
+            <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+          ) : walksStatus === 'failed' ? (
+            <Empty text="Can't reach Memory Lane right now." />
+          ) : (
+            <Empty text="No walks yet. Every walk you accept stays here." />
           )
         ) : mineStatus === 'loading' ? (
           <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
@@ -230,13 +286,14 @@ function Switcher({
   section,
   onSelect,
 }: {
-  section: 'unlocked' | 'mine';
-  onSelect: (section: 'unlocked' | 'mine') => void;
+  section: Section;
+  onSelect: (section: Section) => void;
 }) {
   return (
     <View style={styles.switcher}>
       <SwitcherItem label="Unlocked" active={section === 'unlocked'} onPress={() => onSelect('unlocked')} />
       <SwitcherItem label="My memories" active={section === 'mine'} onPress={() => onSelect('mine')} />
+      <SwitcherItem label="Walks" active={section === 'walks'} onPress={() => onSelect('walks')} />
     </View>
   );
 }
