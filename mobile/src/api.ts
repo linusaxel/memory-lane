@@ -309,6 +309,7 @@ export async function previewRoute(
   at: Coordinates,
   budgetMeters: number,
   ask: WalkAsk,
+  again: number,
   signal?: AbortSignal,
 ): Promise<TodaysRoute> {
   const params = new URLSearchParams({
@@ -317,6 +318,7 @@ export async function previewRoute(
     lng: String(at.lng),
     budget_meters: String(budgetMeters),
     loop: String(ask.loop),
+    again: String(again),
   });
   if (ask.tag) params.set('tag', ask.tag);
   return toRoute(await get<RouteBody>('/v1/routes/preview', params, signal));
@@ -329,6 +331,7 @@ export async function acceptRoute(
   at: Coordinates,
   budgetMeters: number,
   ask: WalkAsk,
+  again: number,
 ): Promise<TodaysRoute> {
   return toRoute(
     await post<RouteBody>('/v1/routes/today', {
@@ -338,6 +341,7 @@ export async function acceptRoute(
       budget_meters: budgetMeters,
       loop: ask.loop,
       tag: ask.tag,
+      again,
     }),
   );
 }

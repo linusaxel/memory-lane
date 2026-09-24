@@ -998,6 +998,29 @@ stop, not out and home: the start is never stored (docs/10 § Routes).
 `GET /v1/routes/walked`, `src/Memories.tsx`, `App.tsx` (`pastWalk`),
 `.maestro/walk-and-unlock.yml`.
 
+## F32 · Show me another — **Implemented**
+
+**Who:** somebody on the preview (F1) who wants a different walk of the same
+length. **Trigger:** "Show me another", under Accept.
+
+1. The preview is replanned with `again` one higher, from the same length,
+   loop and theme. A different walk comes back whenever there is another as
+   good: within a tenth of the slider of the best one on metres short of it
+   plus metres retraced, and retracing no more (`ROUTE_VARIETY`,
+   `api/read.py` `_plan_route`). Taps cycle through those.
+2. When it comes back unchanged, that was the only one: the button gives way
+   to "The only walk that long from here."
+3. Accept sends the same `again`, so it stores the walk on screen. The client
+   still never sends stop ids. Change length starts over at `again=0`.
+
+The day takes turns through the same walks, so tomorrow's preview differs
+from today's too, without a tap. A walk already walked differs anyway: its
+unlocked stops are no longer candidates. Without a routing server there is
+nothing to judge a walk by, so there is one walk and the button says so.
+
+**Done when:** on the lakes seed a second tap previews a different loop, and
+accepting it stores that loop. `tests/test_api_routes.py::test_another_day_*`.
+
 ## Proposed
 
 Not built. Each needs a decision before it can be specified properly — see

@@ -29,6 +29,7 @@ from api.gate import (
 )
 from api.models import (
     DEVICE_PATTERN,
+    ROUTE_AGAIN_MAX,
     ROUTE_BUDGET_MAX_METERS,
     ROUTE_BUDGET_MIN_METERS,
     AuthoredRouteResponse,
@@ -642,6 +643,9 @@ ROUTE_CLEANUPS = 3
 # Street walked twice is compared in steps of this, so a few metres from a
 # mid-block start to its corner never outrank the solver's own ranking.
 SPUR_STEP_METERS = 25
+# A walk judged within this share of the slider of the best one, retracing no
+# more, is as good a walk. Day and `again` take turns through them.
+ROUTE_VARIETY = 0.1
 
 
 def _plan_route(
@@ -652,6 +656,7 @@ def _plan_route(
     route_date,
     loop: bool = ROUTE_LOOP,
     tag: str | None = None,
+    again: int = 0,
 ):
     """The walk this device would get from `at` today: (stops in order,
     stop-to-stop street legs, {out, home} street legs touching `at`). Seeded
@@ -665,8 +670,10 @@ def _plan_route(
       on, so it is not a stop.
     - The walk should be a clean loop, not a line with spurs: a stop off the
       loop is walked to and back the same way. Each walk on the solver's
-      shortlist is routed, and the one retracing the fewest SPUR_STEP_METERS
-      of street wins, the solver's order breaking ties. Then each stop is
+      shortlist is routed and judged, and every walk within ROUTE_VARIETY of
+      the best that retraces no more is as good. Which one is the day's turn,
+      plus `again` - "Show me another" - so tomorrow's loop and a re-roll
+      differ whenever there is another as good. Then each stop is
       dropped in turn and the rest re-picked; a walk with as many stops that
       retraces less wins. Up to ROUTE_CLEANUPS rounds."""
     candidates = session.execute(
@@ -748,7 +755,17 @@ def _plan_route(
         solve_for = budget_meters / over
         routed += [(o, streets(o)) for o in walks(set()) if o]
     judged = [(judge(o, lg), n, o, lg) for n, (o, lg) in enumerate(routed) if lg]
-    _, _, order, legs = min(judged, key=lambda j: j[:2])
+    (top, top_retraced), *_ = min(judged, key=lambda j: j[:2])
+    slack = ROUTE_VARIETY * budget_meters / SPUR_STEP_METERS
+    alike = sorted(
+        (
+            j
+            for j in judged
+            if j[0][0] <= top + slack and j[0][1] <= top_retraced + SPUR_STEP_METERS
+        ),
+        key=lambda j: j[:2],
+    )
+    _, _, order, legs = alike[(random.Random(seed).randrange(len(alike)) + again) % len(alike)]
     retraced = spur(order, legs)
     judged_now = judge(order, legs)
     banned: set[int] = set()
@@ -815,6 +832,7 @@ def preview_route(
     budget_meters: int = Query(..., ge=ROUTE_BUDGET_MIN_METERS, le=ROUTE_BUDGET_MAX_METERS),
     loop: bool = Query(ROUTE_LOOP),
     tag: RouteTag | None = None,
+    again: int = Query(0, ge=0, le=ROUTE_AGAIN_MAX),
 ):
     """The walk POST /v1/routes/today would store, stored nowhere. A device that
     already accepted today's walk still gets a preview; accepting returns the
@@ -822,7 +840,14 @@ def preview_route(
     route_date = gate.today()
     with get_session() as session:
         picked, legs, ends = _plan_route(
-            session, device, Coordinates(lat=lat, lng=lng), budget_meters, route_date, loop, tag
+            session,
+            device,
+            Coordinates(lat=lat, lng=lng),
+            budget_meters,
+            route_date,
+            loop,
+            tag,
+            again,
         )
     return _route_response(
         route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), loop, ends
@@ -851,6 +876,7 @@ def accept_route(body: RouteRequest):
                 route_date,
                 loop,
                 body.tag,
+                body.again,
             )
             if not picked:
                 return _route_response(route_date, [], [], body.budget_meters, None, loop)

@@ -308,8 +308,9 @@ FastAPI server with PostGIS proximity queries:
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true&tag=food` - the walk
   of that length from there would be: up to five stops. Stores nothing.
   `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`, `tag` (one of
-  `pipeline/tags.py`) keeps only stops carrying it
-- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?}` - accept it. The
+  `pipeline/tags.py`) keeps only stops carrying it; `again` is "Show me
+  another" (F32), another walk as good
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?}` - accept it. The
   same solve, stored; one per device per day, and a second accept gets the
   first walk back. The client never sends stop ids
 - `GET /v1/routes/today?device=UUID` - today's accepted walk, or 404. Only reads

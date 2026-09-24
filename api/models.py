@@ -219,6 +219,8 @@ class RouteMeta(BaseModel):
 # 1km still separates five stops in a dense corpus; 10km is a long day's outing.
 ROUTE_BUDGET_MIN_METERS = 1000
 ROUTE_BUDGET_MAX_METERS = 10_000
+# "Show me another" taps in a day. Past the walks as good, it cycles.
+ROUTE_AGAIN_MAX = 100
 
 
 RouteTag = Literal[TAGS]
@@ -234,6 +236,8 @@ class RouteRequest(BaseModel):
     loop: bool | None = None
     # Only stops carrying this tag. A theme, not a filter on the map.
     tag: RouteTag | None = None
+    # Times "Show me another" was tapped. The accept sends the preview's.
+    again: int = Field(0, ge=0, le=ROUTE_AGAIN_MAX)
 
 
 class RouteResponse(BaseModel):

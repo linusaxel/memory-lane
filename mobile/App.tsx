@@ -173,6 +173,9 @@ export default function App() {
   // for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
   const [planFallback, setPlanFallback] = useState(false);
+  // "Show me another" taps on this preview; the accept sends the same. Null
+  // once one came back unchanged: that was the only walk that long.
+  const [again, setAgain] = useState<number | null>(0);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
@@ -442,7 +445,7 @@ export default function App() {
     })();
   }, [device, takeRoute]);
 
-  const planWalk = useCallback(async () => {
+  const planWalk = useCallback(async (next = 0) => {
     if (!device) return;
     setPlanBusy(true);
     setPlanError(null);
@@ -451,8 +454,10 @@ export default function App() {
     const fallback = !from;
     const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
     try {
-      const walk = await previewRoute(device, anchor, walkKm * 1000, walkAsk);
+      const walk = await previewRoute(device, anchor, walkKm * 1000, walkAsk, next);
       if (!mounted.current) return;
+      const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
+      setAgain(next && ids(walk) === ids(preview) ? null : next);
       setPlanFrom(anchor);
       setPlanFallback(fallback);
       setPreview(walk);
@@ -462,14 +467,14 @@ export default function App() {
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, goToMyLocation, walkKm, walkAsk]);
+  }, [device, goToMyLocation, walkKm, walkAsk, preview]);
 
   const acceptWalk = useCallback(async () => {
     if (!device || !planFrom) return;
     setPlanBusy(true);
     setPlanError(null);
     try {
-      const walk = await acceptRoute(device, planFrom, walkKm * 1000, walkAsk);
+      const walk = await acceptRoute(device, planFrom, walkKm * 1000, walkAsk, again ?? 0);
       if (!mounted.current) return;
       takeRoute(walk, planFrom);
       setPreview(null);
@@ -479,7 +484,7 @@ export default function App() {
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, planFrom, walkKm, walkAsk, takeRoute]);
+  }, [device, planFrom, walkKm, walkAsk, again, takeRoute]);
 
   // The preview's zoom: the whole loop and its start, clear of the card.
   useEffect(() => {
@@ -1190,6 +1195,7 @@ export default function App() {
               busy={planBusy}
               error={planError}
               onAccept={acceptWalk}
+              onAnother={again === null ? null : () => planWalk(again + 1)}
               onBack={() => {
                 setPlanError(null);
                 setStage('plan');
@@ -1215,7 +1221,7 @@ export default function App() {
               onKm={setWalkKm}
               ask={walkAsk}
               onAsk={setWalkAsk}
-              onGo={planWalk}
+              onGo={() => planWalk()}
               busy={planBusy}
               error={planError}
             />

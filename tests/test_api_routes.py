@@ -573,3 +573,41 @@ def test_a_loop_is_routed_through_its_start_so_out_and_home_cannot_share_a_stree
     assert points[0] == start and points[-2] == start and points[-1] == points[1]
     # The out leg is the last one routed, the one leaving the start mid-route.
     assert meta["out_leg"][1]["lng"] == pytest.approx(LNG + 0.0001 * (len(points) - 2))
+
+
+def test_another_day_or_show_me_another_is_a_different_walk_as_good(
+    client, db_session, monkeypatch
+):
+    """Stops on a ring round the start: many loops are as good as the best, so
+    the day and "Show me another" take turns through them, and the accept
+    stores the one previewed."""
+    for n in range(12):
+        a = 2 * math.pi * n / 12
+        place = _place(
+            db_session, f"Ring {n}", LAT + 0.005 * math.cos(a), LNG + 0.008 * math.sin(a)
+        )
+        _historical(db_session, place, f"ring memory {n}", f"https://e.invalid/{n:0>11}")
+    db_session.commit()
+    monkeypatch.setattr(read, "street_legs", lambda stops: [[a, b] for a, b in pairwise(stops)])
+
+    def ids(again=0):
+        preview = client.get(
+            f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000"
+            f"&again={again}"
+        ).json()
+        return [m["id"] for m in preview["memories"]]
+
+    assert ids(1) != ids(0)
+    assert ids(0) == ids(0)
+    days = set()
+    for k in range(7):
+        monkeypatch.setattr(read.gate, "today", lambda k=k: datetime.date(2026, 9, 24 + k))
+        days.add(frozenset(ids()))
+    assert len(days) > 1
+
+    shown = ids(1)
+    accepted = client.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "again": 1},
+    ).json()
+    assert [m["id"] for m in accepted["memories"]] == shown

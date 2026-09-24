@@ -99,10 +99,22 @@ type PreviewProps = {
   busy: boolean;
   error: string | null;
   onAccept: () => void;
+  /** Null once a re-roll came back with the same walk: it is the only one. */
+  onAnother: (() => void) | null;
   onBack: () => void;
 };
 
-export function Preview({ stops, meters, loop, fallback, busy, error, onAccept, onBack }: PreviewProps) {
+export function Preview({
+  stops,
+  meters,
+  loop,
+  fallback,
+  busy,
+  error,
+  onAccept,
+  onAnother,
+  onBack,
+}: PreviewProps) {
   return (
     <View style={styles.card}>
       {stops === 0 ? (
@@ -133,6 +145,20 @@ export function Preview({ stops, meters, loop, fallback, busy, error, onAccept, 
           )}
         </Pressable>
       )}
+      {stops > 0 &&
+        (onAnother ? (
+          <Pressable
+            style={dim(styles.secondary)}
+            onPress={onAnother}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel="Show me another"
+          >
+            <Text style={styles.secondaryText}>Show me another</Text>
+          </Pressable>
+        ) : (
+          <Text style={styles.cardBody}>The only walk that long from here.</Text>
+        ))}
       <Pressable
         style={dim(styles.secondary)}
         onPress={onBack}
