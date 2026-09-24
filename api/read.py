@@ -350,6 +350,10 @@ ROUTE_SHAKES = 50
 # A walk of at least this share of the slider counts as the walk asked for;
 # below it, the shortfall is what ranks it. Seeded walks aim halfway between.
 ROUTE_FILL = 0.8
+# Up to this many candidates, every set of stops is tried: 120 of them at 7.
+# ponytail: a sparse map is exact, a full one heuristic; nothing tells how far
+# off the heuristic is on 40 candidates but the solver's own property tests.
+EXACT_CHOICE_MAX = 7
 # Headings tried for the seeded walks, each a different circle through the start.
 ROUTE_HEADINGS = 8
 # A turn sharper than this, on the map itself, is heading back the way it came.
@@ -527,6 +531,13 @@ def _choose_walks(
     # the anchor: every greedy start opens with the nearer one, and a shake
     # drops one or two stops, never the whole cluster it would take to cross.
     walks += [fill([c]) for c in nodes if _path_meters([c], d, loop) <= budget_meters]
+    if len(candidates) <= EXACT_CHOICE_MAX:
+        walks += [
+            list(s)
+            for k in range(1, size + 1)
+            for s in itertools.combinations(nodes, k)
+            if _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget_meters
+        ]
     if size:
         for k in range(ROUTE_HEADINGS):
             walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS)
@@ -536,8 +547,9 @@ def _choose_walks(
     for _ in range(ROUTE_SHAKES if best else 0):
         # Refilled with the dropped stops allowed back, a greedy fill puts the
         # same cheap stop straight back and never reaches a better one further out.
+        # Then again with them allowed, for one that fits on the end after all.
         drop = set(rng.sample(best, rng.randint(1, min(2, len(best)))))
-        trial = fill([i for i in best if i not in drop], drop)
+        trial = fill(fill([i for i in best if i not in drop], drop))
         if score(trial) < score(best):
             best = trial
     # The best walk, then the first walks: one per heading, so the list holds

@@ -28,11 +28,9 @@ os.environ["ROUTING_URL"] = ""
 # fails with "database memorylane_test does not exist" nowhere near the cause.
 TEST_DB = f"memorylane_test_{os.getpid()}"
 
-# The random route instances. Fixed at 0 for the gate, because the solver still
-# fails its own property tests on about half of all seeds (TODO.md, "The solver
-# comes up a stop short"). ROUTE_SEED=random draws new ones; a red run names the
-# seed that replays it.
-_seed = os.environ.get("ROUTE_SEED", "0")
+# The random route instances, new ones every run. A red run names the seed that
+# replays it: ROUTE_SEED=<n>.
+_seed = os.environ.get("ROUTE_SEED", "random")
 ROUTE_SEED = random.randrange(2**32) if _seed == "random" else int(_seed)
 
 

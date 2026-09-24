@@ -1472,7 +1472,7 @@ flagged ⚠️ inline, not overridden.
       one pytest. **Upgrade:** Hypothesis, if a failing case ever needs
       shrinking.
       [Hypothesis](https://hypothesis.readthedocs.io/)
-- [ ] **The solver comes up a stop short.** Found 2026-09-24, when the
+- [x] **The solver comes up a stop short.** Found 2026-09-24, when the
       property tests' seeds moved to `ROUTE_SEED` (`tests/conftest.py`).
       Seeds 0/1/2 happened to pass. Over `ROUTE_SEED` 0–40, 24 seeds fail:
       19 times it picks a stop fewer than brute force (n ≤ 7), and 12 times it
@@ -1490,6 +1490,14 @@ flagged ⚠️ inline, not overridden.
       candidate (15 → 45 ms on 40 candidates). Seeds 3–6 pass. The leftover
       that fits on the end is still open (seed 1); keeping the walk
       exactly ordered after each insertion was tried and changed nothing.
+      **Done 2026-09-24.** Seed 1 was a shake: it dropped a stop, refilled
+      with it banned, and the ban outlived the refill, so the stop never went
+      back on the end where it now fit. A shake now refills twice, the second
+      time with nothing banned. Random seeds then still missed about one run
+      in twenty against brute force, each a knife-edge fit (one 4-stop set,
+      28 m under a 2.9 km budget) that greedy insertion cannot be relied on to
+      find, so up to `EXACT_CHOICE_MAX` (7) candidates every set is tried.
+      Seeds 0–40 and 60 random runs pass; the conftest default is random again.
 
 ## Walk and Explore (2026-09-24)
 
