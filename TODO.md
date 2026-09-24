@@ -265,6 +265,11 @@ exist. Verify before trusting, and strike entries when you fix them.
       first and see whether (2) is visible; if it is, the circle has to become a
       Marker-hosted view that can animate, or go. Battery cost of (1) is
       foreground-only, per UI.md rule 2.
+      *2026-09-24:* (1) done - 5m at `BestForNavigation`, one setting rather
+      than switching by stage. Not yet watched moving: `EXPO_PUBLIC_DEV_LOCATION`
+      disables the watcher, so it needs Metro started without it and a
+      `simctl location start` walk. Strike this if the circle keeps up; if it
+      flickers, (2) is confirmed.
 
 ---
 
