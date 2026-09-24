@@ -70,6 +70,28 @@ That still holds for the two things that genuinely hover over the map — the
 Everywhere else the shadows came off in part 5. Stacked floating cards are the
 card-grid tell, and editorial layouts have always used rules and weight instead.
 
+## 3a. The route line is still — **decided 2026-09-24**
+
+Ink over a paper casing, two static Polylines (`mobile/src/RouteLine.tsx`); the
+numbered pins give the order. It used to march dots by ticking
+`lineDashPhase`, and it restarted and stuttered. That is not fixable where it
+was: on iOS react-native-maps answers *any* Polyline prop change with
+`removeOverlay` + `addOverlay` (`AIRMapPolyline.m`, `update`), so every tick
+re-rendered the line from scratch. It was also 70% `inkSoft`, which on
+parchment is just grey.
+
+Two ways to get a line that moves smoothly, and why neither was taken:
+
+- **MapLibre**, `line-gradient` + `line-trim-offset`, the way Mapbox animates
+  routes. Native and smooth, but it reverses "stay on react-native-maps" below:
+  a dev build, no Expo Go, and a tile source.
+- **A Skia or SVG layer over the map**, animated on the UI thread. Smooth while
+  the map is still, but it has to re-project on every pan and zoom, so it trails
+  the map while you move it.
+
+Motion stays where it means something: the ring, and the pill breathing at a
+stop. The line is not `seal`: seal means openable.
+
 ## 4. What was rejected
 
 - **Neomorphism / soft-UI / skeuomorphic textures.** Recurring in every 2026
@@ -90,6 +112,8 @@ card-grid tell, and editorial layouts have always used rules and weight instead.
 - [expo-blur / BlurView](https://docs.expo.dev/versions/latest/sdk/blur-view/) — native on iOS, translucent fallback on Android
 - [Liquid Glass Is Cracked, and Usability Suffers in iOS 26 — NN/g](https://www.nngroup.com/articles/liquid-glass/) — the contrast criticism that set the 82% figure
 - [Liquid Glass UI 2026: Apple's New Design Language](https://medium.com/@expertappdevs/liquid-glass-2026-apples-new-design-language-6a709e49ca8b) — controls float above content, content leads
+- [react-native-maps Polyline docs](https://github.com/react-native-maps/react-native-maps/blob/master/docs/polyline.md) — `lineDashPhase` iOS only, `strokeColors` MapKit only
+- [Mapbox: animate a line](https://docs.mapbox.com/mapbox-gl-js/example/animate-a-line/) and [`line-trim-offset`](https://github.com/mapbox/mapbox-gl-js/pull/11570) — how a native map animates a route
 - [Customizing the map style with cloud-based maps styling](https://github.com/react-native-maps/react-native-maps/discussions/4368) — Map IDs as the newer Google approach, not used here
 
 ---

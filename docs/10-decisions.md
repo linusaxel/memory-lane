@@ -627,8 +627,7 @@ cuts through buildings.
 ### A clean loop, not the shortest one
 
 The shortest walk through five stops often visits one down a side street and
-comes back the same way: a line with spurs, drawn twice with the dots flowing
-opposite ways. With a 20 m gate there is no passing a stop at a distance, so
+comes back the same way: a line with spurs, drawn twice over itself. With a 20 m gate there is no passing a stop at a distance, so
 the fix is choosing different stops. `_plan_route` routes the solver's walk on
 the streets and measures the metres it retraces (`api/streets.py`,
 `retraced_meters`). Then, up to `ROUTE_CLEANUPS` rounds, it drops each stop in

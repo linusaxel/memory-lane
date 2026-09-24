@@ -114,7 +114,7 @@ python -m api.main
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
 | `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
-| `mobile/src/RouteLine.tsx` | The route drawn as a flow: dots marching toward the next stop |
+| `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/route.ts` | What this device's daily walk looks like. Cached, server-authoritative, resets at midnight |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/SignIn.tsx` | Google and Apple buttons. Neither works in Expo Go |

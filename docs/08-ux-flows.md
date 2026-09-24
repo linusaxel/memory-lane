@@ -776,9 +776,9 @@ anyone else's collection or the local unlock cache.
    for the day, so it does not reshape as you walk. The preview is the only
    response carrying the two legs that touch the start; the phone keeps them,
    inside the cached line, next to the start it already keeps
-   (`mobile/src/route.ts`), and the server stores neither. The dots flow from
-   the start round the loop (`mobile/src/RouteLine.tsx`; iOS only, and still
-   under Reduce Motion).
+   (`mobile/src/route.ts`), and the server stores neither. The line is ink
+   over a paper casing, and still; the numbered pins give the order
+   (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md §3a).
 5. Reaching a stop lights its pin, and the pill turns seal and breathes:
    "You're at stop 2 · open it", a tap opens it. Any stop, in any order — the
    numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
