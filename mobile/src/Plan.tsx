@@ -5,7 +5,7 @@
  *  The page is also the location primer. "Show me the walk" is a press, so the
  *  system dialog it may raise has the context the old card over the map gave
  *  it (UI.md, "Asking for location"). Refused, the walk is planned from
- *  Midtown and the preview says so - never a dead end (rule 1).
+ *  central Copenhagen and the preview says so - never a dead end (rule 1).
  */
 
 import Slider from '@react-native-community/slider';
@@ -94,7 +94,7 @@ type PreviewProps = {
   stops: number;
   meters: number;
   loop: boolean;
-  /** Planned from Midtown because there was no position to plan from. */
+  /** Planned from central Copenhagen because there was no position to plan from. */
   fallback: boolean;
   busy: boolean;
   error: string | null;
@@ -126,7 +126,7 @@ export function Preview({
       )}
       {fallback && (
         <Text style={styles.cardBody}>
-          Planning from Midtown. Turn on location to plan from where you are.
+          Planning from central Copenhagen. Turn on location to plan from where you are.
         </Text>
       )}
       {stops > 0 && (

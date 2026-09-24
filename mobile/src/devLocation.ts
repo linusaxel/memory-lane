@@ -16,7 +16,7 @@
 
 import type { Coordinates } from './api.ts';
 
-/** `EXPO_PUBLIC_DEV_LOCATION=40.7484,-73.9857`. Baked in when Metro starts, so
+/** `EXPO_PUBLIC_DEV_LOCATION=55.67886,12.57586`. Baked in when Metro starts, so
  *  changing it needs a dev-server restart. */
 export function devLocation(): Coordinates | null {
   if (!__DEV__) return null;

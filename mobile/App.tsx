@@ -88,12 +88,12 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 /**
  * Where to look, and to plan a walk from, when we have no location permission.
  * A blank grey map or a dead end is a store-review rejection, and reviewers
- * routinely tap Deny - so this points at Manhattan, where the seeded content
- * actually is.
+ * routinely tap Deny - so this points at central Copenhagen, the first city,
+ * where the seeded content actually is.
  */
 const FALLBACK_REGION: Region = {
-  latitude: 40.7484,
-  longitude: -73.9857,
+  latitude: 55.67886,
+  longitude: 12.57586,
   latitudeDelta: 0.09,
   longitudeDelta: 0.09,
 };
@@ -169,8 +169,8 @@ export default function App() {
   const [stage, setStage] = useState<Stage>('loading');
   const [walkKm, setWalkKm] = useState(WALK_KM.initial);
   const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, tag: null });
-  // Where the previewed walk starts, and whether that is Midtown standing in
-  // for a position we could not have.
+  // Where the previewed walk starts, and whether that is central
+  // Copenhagen standing in for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
   const [planFallback, setPlanFallback] = useState(false);
   // "Show me another" taps on this preview; the accept sends the same. Null

@@ -39,9 +39,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEVICE = "e2e0e2e0-0000-4000-8000-00000000e2e0"
 OTHER_DEVICE = "e2e0e2e0-0000-4000-8000-00000000beef"
 
-# .maestro/walk-and-unlock.yml starts here: the 33rd St pavement, on the seed's
+# .maestro/walk-and-unlock.yml starts here: seed_dev's own coordinate, on the seed's
 # loop and outside every stop's 20m gate.
-START = (40.748054, -73.985885)
+START = (seed_dev.LAT, seed_dev.LNG)
 
 
 @pytest.fixture
@@ -81,7 +81,7 @@ def read_at(client, memory_id, position):
 def test_f1_discover_answers_before_anybody_has_walked_anywhere(seeded):
     """F1: the map is populated on arrival, and none of it is readable yet."""
     response = seeded.get(
-        "/v1/memories/nearby", params={"lat": 40.7484, "lng": -73.9857, "radius_km": 1}
+        "/v1/memories/nearby", params={"lat": seed_dev.LAT, "lng": seed_dev.LNG, "radius_km": 1}
     )
     assert response.status_code == 200
     memories = response.json()["memories"]
@@ -129,7 +129,7 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     )
     assert opened.status_code == 200
     assert opened.json()["locked"] is False
-    assert "pretzel cart" in opened.json()["summary"]
+    assert "pølsevogn" in opened.json()["summary"]
 
 
 def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
@@ -142,7 +142,7 @@ def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
     assert [m["id"] for m in mine] == [memory_id]
     # The collection forces its own rows open - that is what makes it readable
     # from the train with no position at all.
-    assert "pretzel cart" in mine[0]["summary"]
+    assert "pølsevogn" in mine[0]["summary"]
 
     assert seeded.get("/v1/unlocks", params={"device": OTHER_DEVICE}).json()["memories"] == []
     assert seeded.get("/v1/me", params={"device": DEVICE}).json()["unlocked"] == 1
@@ -150,7 +150,8 @@ def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
 
 def test_f5_a_filed_memory_comes_back_already_open(seeded):
     """F5 + F21: file where you are standing, and it is yours immediately."""
-    lat, lng = 40.7484, -73.9857
+    # ~45m north of START, so START below is one step too far away.
+    lat, lng = seed_dev.LAT + 0.0004, seed_dev.LNG
     draft = {
         "device": DEVICE,
         "lat": lat,
@@ -355,7 +356,7 @@ def test_maestro_flows_still_point_at_the_seed():
     """
     seeded_names = {
         "The bench outside, dev seed",
-        "Along 35th Street, dev seed",
+        "Along Niels Hemmingsens Gade, dev seed",
         "The corner, dev seed",
         "Somewhere around here, dev seed",
         "The same rough spot, dev seed",

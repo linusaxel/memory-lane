@@ -17,8 +17,8 @@
 appId: ${APP_ID}
 ---
 - setLocation:
-    latitude: 40.7484
-    longitude: -73.9857
+    latitude: 55.67886
+    longitude: 12.57586
 
 - launchApp:
     clearState: true

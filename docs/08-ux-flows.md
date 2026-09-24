@@ -77,7 +77,7 @@ these, it is probably not a flow.
 
 **Session one — "what is this?"** Pick how far to walk (F1), get asked for
 location by the button that plans it (F8), see the walk on the map and accept
-it. Decline location and the walk is planned from Midtown instead (F9). Nothing
+it. Decline location and the walk is planned from central Copenhagen instead (F9). Nothing
 is readable yet, and that is the pitch, not a failure.
 
 **Session two — the first unlock.** The route pill says where the next stop is
@@ -120,7 +120,7 @@ relaunch after accepting skips this page and goes straight to the walk.
 **What can go wrong:** nothing walkable within that length, or with that
 theme — the card reads
 "No walk that long from here" and offers only **Change length**. No position
-— the walk is planned from Midtown and the card says so (F9). The server
+— the walk is planned from central Copenhagen and the card says so (F9). The server
 unreachable — the page says "Can't reach Memory Lane right now." under the
 button, and a second press retries.
 
@@ -212,7 +212,7 @@ other distribution channel (see *Design rules* in `TODO.md`).
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
-showing a walk of permanently locked pins. The Midtown fallback is a planning
+showing a walk of permanently locked pins. The Copenhagen fallback is a planning
 anchor and never an unlock position: where a walk starts and where the person
 stands are two different parameters, precisely so that planning from a city
 cannot open it.
@@ -338,7 +338,7 @@ mechanic.
 2. **Show me the walk** is the ask: walks start from where you are, and the
    page says the walk loops back there. The system dialog comes from that
    press, never from launch.
-3. Granted → the walk is planned from here. Declined → planned from Midtown
+3. Granted → the walk is planned from here. Declined → planned from central Copenhagen
    (F9).
 
 The app never calls `requestForegroundPermissions` on mount. A cold system
@@ -350,7 +350,7 @@ runs first, silently, and a granted launch starts watching position straight
 away.
 
 **Failure:** already hard-denied (`canAskAgain === false`). The press plans from
-Midtown without a dialog; on the walk, **Turn on location** opens Settings,
+central Copenhagen without a dialog; on the walk, **Turn on location** opens Settings,
 which is the only route back.
 
 **Done when:** a first launch shows the plan page and no system dialog, and a
@@ -360,8 +360,8 @@ press on it is the only thing that can raise one.
 
 **Who:** somebody who said no, or is indoors with location off.
 
-1. The walk is planned from Midtown (`FALLBACK_REGION`), and the preview says
-   "Planning from Midtown. Turn on location to plan from where you are."
+1. The walk is planned from central Copenhagen (`FALLBACK_REGION`), and the preview says
+   "Planning from central Copenhagen. Turn on location to plan from where you are."
 2. Gated memories are all locked, and the sheet says so plainly rather than
    showing a distance it cannot know.
 3. A bottom button reads **"Turn on location"**. It exists only in this mode.

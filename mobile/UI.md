@@ -24,7 +24,7 @@ Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, route-blue under labels
 └─ card (Preview)              "5 stops · 3.8 km loop", Accept / Change length;
-     "No walk that long from here"; "Planning from Midtown…" with no position
+     "No walk that long from here"; "Planning from central Copenhagen…" with no position
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
 │                              position the camera is pinned on you: it follows,
@@ -312,7 +312,7 @@ than for a careful look.
 
 | | Delta | Roughly | When |
 |---|---|---|---|
-| `FALLBACK_REGION` | `0.09` | 10 km | Before anything is known; its centre is the Midtown planning anchor |
+| `FALLBACK_REGION` | `0.09` | 10 km | Before anything is known; its centre is the Copenhagen planning anchor |
 | `LOCATED_DELTA` | `0.01` | 1.1 km tall | Centred on the person |
 
 Landing on the person at street scale is the whole point: at 10 km a 20 m
@@ -336,7 +336,7 @@ nothing else, so panning never asks the server anything.
 Each of these exists because something broke or would have been rejected.
 
 1. **Never show a blank grey map, or a dead end.** With permission denied the
-   walk is planned from Midtown (`FALLBACK_REGION`'s centre) and the preview
+   walk is planned from central Copenhagen (`FALLBACK_REGION`'s centre) and the preview
    says so, because store reviewers routinely tap Deny and an empty map is a
    rejection. Any new view needs the same treatment: an empty state that still
    shows something real.
@@ -494,7 +494,7 @@ cd mobile && npx expo start --ios
 # 3. pre-grant location, or the permission dialog covers the first screen
 #    ("booted" is a literal simctl accepts - no need to look up a UUID)
 xcrun simctl privacy booted grant location-always host.exp.Exponent
-xcrun simctl location booted set 40.7484,-73.9857   # Manhattan: where the data is
+xcrun simctl location booted set 55.67886,12.57586   # central Copenhagen: where the dev seed is
 
 # 4. screenshot it
 xcrun simctl io booted screenshot /tmp/app.png

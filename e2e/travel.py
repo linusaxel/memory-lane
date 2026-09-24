@@ -13,7 +13,7 @@ import urllib.parse
 import urllib.request
 import uuid
 
-START = (40.748054, -73.985885)  # the flow's setLocation
+START = (55.67886, 12.57586)  # the flow's setLocation: seed_dev.LAT, LNG
 BUDGET_METERS = 4000  # WALK_KM.initial in mobile/src/Plan.tsx
 
 

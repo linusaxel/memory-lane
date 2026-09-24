@@ -24,6 +24,7 @@ those and nothing else.
 
 import argparse
 import datetime
+import functools
 import json
 import math
 import pathlib
@@ -46,7 +47,7 @@ from pipeline.tags import TAGS
 # mobile/App.tsx FALLBACK_REGION. tests/test_seed_dev.py fails if they drift:
 # the whole point is that the app's no-permission map, the documented simctl
 # coordinate and this cluster are one place rather than three.
-LAT, LNG = 40.7484, -73.9857
+LAT, LNG = 55.67886, 12.57586
 
 DEV_SEED_URL = "memorylane://dev-seed"
 PLACE_PREFIX = "dev-seed:"
@@ -54,27 +55,28 @@ PLACE_PREFIX = "dev-seed:"
 SEED_USER = "5eed0000-0000-4000-8000-00000000d0c5"
 SEED_DEVICE = "5eed0000-0000-4000-8000-00000000d5e1"
 
-# 0.0001 degrees is ~11m of latitude and only ~8m of longitude at 40.7N, and a
+# 0.0001 degrees is ~11m of latitude and only ~6m of longitude at 55.7N, and a
 # place sharing a snapped cell with another one is ungated. Every coordinate
 # below is at least 0.0008 degrees from its neighbours except where the sharing
 # is the point.
 #
 # Every one a route may pick sits within the 20m gate of a walkable way (OSRM
-# `nearest`), or a street-routed walk would drop it: a pin in the middle of the
-# Empire State Building can never be stood on. `sealed` is the exception - it
+# `nearest`), or a street-routed walk would drop it: a pin in the middle of a
+# courtyard can never be stood on. `sealed` is the exception - it
 # is never a stop - and sits inside the gate of the dev coordinate itself.
 #
-# The five stops are one clean loop round the blocks between 33rd and 35th,
-# 5th Ave and Broadway: walked from the start in .maestro/walk-and-unlock.yml
-# it retraces ~4m of street (api/streets.py, retraced_meters).
+# The five stops are one clean loop round the Latin Quarter blocks north of
+# Strøget, Gråbrødretorv in the middle: walked from the start in
+# .maestro/walk-and-unlock.yml it is ~1.3 km and retraces no street
+# (api/streets.py, retraced_meters).
 OFFSETS = {
-    "reach": (0.00036, 0.00118),  # ~105m - 5th Ave above 34th
-    "walk": (0.00132, 0.00001),  # ~147m - along 35th, locked and worth walking to
-    "stack": (0.000374, -0.001793),  # ~155m - Broadway at 34th, one place, three memories
-    "centroid": (0.0006, -0.0013),  # ~130m - two places, so neither is gated
-    "filed": (-0.00035, 0.00068),  # ~70m - 5th Ave below 34th, submitted, photo and voice
-    "sealed": (-0.00012, 0.00012),  # ~16m - a time capsule: in reach and still shut
-    "nightspot": (0.002, -0.0015),  # ~260m - 6th Ave at 35th, a second submission
+    "reach": (0.001044, 0.000784),  # ~126m - Niels Hemmingsens Gade
+    "walk": (0.00146, 0.000042),  # ~163m - further up it, locked and worth walking to
+    "stack": (0.000013, -0.00241),  # ~151m - Skindergade, one place, three memories
+    "centroid": (0.000584, -0.001794),  # ~130m - two places, so neither is gated
+    "filed": (-0.000216, 0.001048),  # ~70m - Amagertorv, submitted, photo and voice
+    "sealed": (-0.000102, 0.00018),  # ~16m - a time capsule: in reach and still shut
+    "nightspot": (0.001756, -0.002856),  # ~265m - Fiolstræde, a second submission
 }
 
 
@@ -114,13 +116,13 @@ def extracted() -> list[dict]:
         memory(
             "reach",
             "The bench outside, dev seed",
-            "We sat here for an hour arguing about whether the pretzel cart was "
-            "the same pretzel cart. It was not, and the man knew it.",
+            "We sat here for an hour arguing about whether the pølsevogn was "
+            "the same pølsevogn. It was not, and the man knew it.",
             ["food", "strange"],
         ),
         memory(
             "walk",
-            "Along 35th Street, dev seed",
+            "Along Niels Hemmingsens Gade, dev seed",
             "The night the power went out on this block and somebody wheeled a "
             "piano into the street. Nobody could agree who it belonged to.",
             ["music", "nightlife"],
@@ -232,14 +234,26 @@ def recording(destination: pathlib.Path) -> float | None:
     ffmpeg here; where these two are absent the seed skips the audio rather than
     writing something that will not play. Returns the duration in seconds.
     """
+    spoken = _spoken()
+    if spoken is None:
+        return None
+    destination.write_bytes(spoken[0])
+    return spoken[1]
+
+
+@functools.cache
+def _spoken() -> tuple[bytes, float] | None:
+    """Made once per process: ~1.8s of subprocesses, and every test that
+    seeds used to pay it again."""
     with tempfile.TemporaryDirectory() as tmp:
+        destination = pathlib.Path(tmp) / "clip.m4a"
         aiff = pathlib.Path(tmp) / "clip.aiff"
-        spoken = (
+        words = (
             "This is a seeded recording. If you can hear this, the audio player "
             "in the memory sheet is working."
         )
         try:
-            subprocess.run(["say", "-o", str(aiff), spoken], check=True, capture_output=True)
+            subprocess.run(["say", "-o", str(aiff), words], check=True, capture_output=True)
             subprocess.run(
                 ["afconvert", "-f", "m4af", "-d", "aac", str(aiff), str(destination)],
                 check=True,
@@ -248,12 +262,13 @@ def recording(destination: pathlib.Path) -> float | None:
         except (FileNotFoundError, subprocess.CalledProcessError):
             return None
 
-    probe = subprocess.run(
-        ["afinfo", str(destination)], capture_output=True, text=True, check=False
-    )
-    for line in probe.stdout.splitlines():
-        if "estimated duration" in line:
-            return round(float(line.split(":")[1].strip().split()[0]), 1)
+        probe = subprocess.run(
+            ["afinfo", str(destination)], capture_output=True, text=True, check=False
+        )
+        for line in probe.stdout.splitlines():
+            if "estimated duration" in line:
+                seconds = round(float(line.split(":")[1].strip().split()[0]), 1)
+                return destination.read_bytes(), seconds
     return None
 
 
@@ -421,11 +436,11 @@ def a_second_submission(session) -> int:
     ).scalar()
 
 
-# Walkable points over Midtown, each already snapped to a way by OSRM `nearest`
+# Walkable points over central Copenhagen, each already snapped to a way by OSRM `nearest`
 # and each in its own 0.0001-degree cell, so --dense stays offline. Written by
 # --snap-pool against a running sidecar; re-run it only to change the area.
-POOL = pathlib.Path(__file__).with_name("midtown_ways.json")
-POOL_BOX = (0.007, 0.009)  # half-height, half-width in degrees: ~1.5km square
+POOL = pathlib.Path(__file__).with_name("cph_ways.json")
+POOL_BOX = (0.007, 0.0125)  # half-height, half-width in degrees: ~1.5km square at 55.7N
 
 
 def cell(lat: float, lng: float) -> tuple[int, int]:

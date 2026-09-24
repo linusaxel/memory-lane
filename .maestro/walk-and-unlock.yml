@@ -6,8 +6,8 @@
 # This is the product. Everything else exists to get somebody here.
 #
 # Coordinates come from pipeline/seed_dev.py and tests/test_seed_dev.py fails if
-# they drift. The start is on the 33rd St pavement south of the Empire State
-# Building, on the loop itself, well outside every stop's 20m gate.
+# they drift. The start is seed_dev's own coordinate, on Klosterstræde by
+# Gråbrødretorv, on the loop itself, well outside every stop's 20m gate.
 #
 # THREE THINGS TO KNOW BEFORE EDITING THIS FILE.
 #  1. Maestro matches text as a FULL-STRING regex, not a substring. "Walk
@@ -24,8 +24,8 @@
 appId: ${APP_ID}
 ---
 - setLocation:
-    latitude: 40.748054
-    longitude: -73.985885
+    latitude: 55.67886
+    longitude: 12.57586
 
 - launchApp:
     clearState: true
@@ -67,11 +67,11 @@ appId: ${APP_ID}
 # F25 + F13 + F7, five times: walk today's route in order, 1 -> 5. From this
 # start the fresh seed's route is one clean loop round the blocks (api/read.py
 # on OSRM walking metres; pipeline/seed_dev.py lays the stops out for it):
-#   1 Where I was standing   5th Ave below 34th   `filed`, the submission
-#   2 The bench outside      5th Ave above 34th   `reach`
-#   3 Along 35th Street      35th, mid-block      `walk`
-#   4 Where the night went   6th Ave at 35th      `nightspot`
-#   5 The corner             Broadway at 34th     `stack`, three on one point
+#   1 Where I was standing   Amagertorv               `filed`, the submission
+#   2 The bench outside      Niels Hemmingsens Gade   `reach`
+#   3 Along Niels Hemm...    further up it            `walk`
+#   4 Where the night went   Fiolstræde               `nightspot`
+#   5 The corner             Skindergade              `stack`, three on one point
 # Each travel is that leg's street shape from OSRM, turn by turn, so the walker
 # keeps to the pavement; it ends where the street passes the stop, inside the
 # 20m gate; `e2e/travel.py` prints them afresh when the walk changes. Only the
@@ -79,9 +79,14 @@ appId: ${APP_ID}
 # while walking - the pin turns and the pill changes its mind on its own.
 - travel:
     points:
-      - "40.748054,-73.985885"
-      - "40.747768,-73.985219"
-      - "40.748048,-73.985015"
+      - "55.678860,12.575860"
+      - "55.678839,12.575813"
+      - "55.678672,12.576053"
+      - "55.678615,12.576136"
+      - "55.678638,12.576562"
+      - "55.678640,12.576652"
+      - "55.678641,12.576683"
+      - "55.678644,12.576908"
     speed: 10
 - extendedWaitUntil:
     visible: "You're at stop 1: Where I was standing, dev seed\\. Open to unlock\\."
@@ -125,8 +130,19 @@ appId: ${APP_ID}
 
 - travel:
     points:
-      - "40.748048,-73.985015"
-      - "40.748750,-73.984498"
+      - "55.678644,12.576908"
+      - "55.678649,12.577286"
+      - "55.678706,12.577264"
+      - "55.678722,12.577257"
+      - "55.678881,12.577132"
+      - "55.679058,12.577505"
+      - "55.679304,12.577286"
+      - "55.679346,12.577248"
+      - "55.679447,12.577179"
+      - "55.679548,12.577139"
+      - "55.679604,12.577107"
+      - "55.679631,12.577176"
+      - "55.679904,12.576643"
     speed: 10
 - extendedWaitUntil:
     visible: "You're at stop 2: The bench outside, dev seed\\. Open to unlock\\."
@@ -134,18 +150,20 @@ appId: ${APP_ID}
 - tapOn: "You're at stop 2: .*"
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
-    visible: ".*pretzel cart.*"
+    visible: ".*pølsevogn.*"
     timeout: 30000
 - tapOn: "Close"
 
 - travel:
     points:
-      - "40.748750,-73.984498"
-      - "40.749101,-73.984237"
-      - "40.749719,-73.985691"
+      - "55.679904,12.576643"
+      - "55.679993,12.576469"
+      - "55.680012,12.576437"
+      - "55.680084,12.576313"
+      - "55.680320,12.575903"
     speed: 10
 - extendedWaitUntil:
-    visible: "You're at stop 3: Along 35th Street, dev seed\\. Open to unlock\\."
+    visible: "You're at stop 3: Along Niels Hemmingsens Gade, dev seed\\. Open to unlock\\."
     timeout: 45000
 - tapOn: "You're at stop 3: .*"
 - longPressOn: "Unlock this memory"
@@ -161,8 +179,23 @@ appId: ${APP_ID}
 
 - travel:
     points:
-      - "40.749719,-73.985691"
-      - "40.750396,-73.987192"
+      - "55.680320,12.575903"
+      - "55.680497,12.575596"
+      - "55.681038,12.576369"
+      - "55.681055,12.576307"
+      - "55.681181,12.575903"
+      - "55.681206,12.575837"
+      - "55.681220,12.575799"
+      - "55.681376,12.575241"
+      - "55.681393,12.575180"
+      - "55.681363,12.575092"
+      - "55.681111,12.574331"
+      - "55.681088,12.574230"
+      - "55.681021,12.573944"
+      - "55.680912,12.573472"
+      - "55.680808,12.573025"
+      - "55.680782,12.572914"
+      - "55.680616,12.573004"
     speed: 10
 - extendedWaitUntil:
     visible: "You're at stop 4: Where the night went long, dev seed\\. Open to unlock\\."
@@ -179,10 +212,30 @@ appId: ${APP_ID}
 # only reads 5 of 5 if it did.
 - travel:
     points:
-      - "40.750396,-73.987192"
-      - "40.749383,-73.987874"
-      - "40.748920,-73.987944"
-      - "40.748751,-73.987510"
+      - "55.680616,12.573004"
+      - "55.679966,12.573357"
+      - "55.679933,12.573375"
+      - "55.679838,12.573430"
+      - "55.679738,12.573488"
+      - "55.679304,12.573741"
+      - "55.679230,12.573797"
+      - "55.679119,12.573909"
+      - "55.679009,12.574073"
+      - "55.678993,12.574094"
+      - "55.678778,12.574280"
+      - "55.678774,12.574284"
+      - "55.678764,12.574293"
+      - "55.678663,12.574348"
+      - "55.678638,12.574174"
+      - "55.678620,12.574082"
+      - "55.678586,12.573870"
+      - "55.678594,12.573812"
+      - "55.678541,12.573818"
+      - "55.678591,12.573748"
+      - "55.678632,12.573684"
+      - "55.678779,12.573456"
+      - "55.678835,12.573368"
+      - "55.678873,12.573450"
     speed: 10
 - extendedWaitUntil:
     visible: "You're at stop 5: The corner, dev seed\\. Open to unlock\\."
@@ -218,7 +271,7 @@ appId: ${APP_ID}
 
 # A collection row opens the same sheet.
 - tapOn: ".*The bench outside, dev seed.*"
-- assertVisible: ".*pretzel cart.*"
+- assertVisible: ".*pølsevogn.*"
 - tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the

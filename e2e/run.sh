@@ -188,7 +188,7 @@ kill_port "$API_PORT"
 # them and travel along its street shapes, and the 20m gate drops any pin a
 # street cannot reach. Without the sidecar that is a different app.
 ROUTING="${E2E_ROUTING_URL:-http://localhost:5001}"
-curl -fsS -m 3 "$ROUTING/nearest/v1/foot/-73.9857,40.7484" >/dev/null 2>&1 \
+curl -fsS -m 3 "$ROUTING/nearest/v1/foot/12.57586,55.67886" >/dev/null 2>&1 \
   || infra "no OSRM at $ROUTING - ./osrm/build.sh once, then docker compose --profile routing up -d osrm"
 DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL="$ROUTING" \
   venv/bin/python -m uvicorn api.main:app --port "$API_PORT" > "$LOGS/api.log" 2>&1 &

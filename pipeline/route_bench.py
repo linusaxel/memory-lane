@@ -49,7 +49,7 @@ from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, scenario
 BUDGETS = (1000, 2000, 3000, 4000, 6000)
 # Starts stay well inside the pool's box, so a walk is not short of stops
 # only because it began at the edge of the map.
-START_BOX = (0.004, 0.005)
+START_BOX = (0.004, 0.007)
 
 
 def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -> dict:

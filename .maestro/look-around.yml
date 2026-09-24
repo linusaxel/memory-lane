@@ -1,4 +1,4 @@
-# F1 plan a walk (loop, one way, a theme) + F8 be asked for location, F19 somewhere with no walk.
+# F1 plan a walk (loop, one way, a theme) + F32 show me another + F8 be asked for location, F19 somewhere with no walk.
 # docs/08-ux-flows.md
 #
 # Everything here only looks: nothing is accepted, so no route row is written
@@ -16,8 +16,8 @@ appId: ${APP_ID}
 # The first screen is ours, not a system dialog: one question and one slider.
 # Location is asked by the button, a press with a reason.
 - setLocation:
-    latitude: 40.7484
-    longitude: -73.9857
+    latitude: 55.67886
+    longitude: 12.57586
 
 - launchApp:
     clearState: true
@@ -39,9 +39,16 @@ appId: ${APP_ID}
     visible: "5 stops · .* loop"
     timeout: 40000
 - assertVisible: "Accept this walk"
-- assertNotVisible: "Planning from Midtown.*"
+- assertNotVisible: "Planning from central Copenhagen.*"
 # A preview is a look: its pins carry their stop numbers already.
 - assertVisible: "Stop 1 of 5\\. .*"
+
+# F32: another walk as good, still a preview.
+- tapOn: "Show me another"
+- extendedWaitUntil:
+    visible: "5 stops · .* loop"
+    timeout: 40000
+- assertVisible: "Accept this walk"
 
 # Changing your mind costs nothing: nothing was stored.
 - tapOn: "Change length"
@@ -69,7 +76,7 @@ appId: ${APP_ID}
 
 # ---- F8, refused
 #
-# A reviewer who taps Deny still gets a walk, planned from Midtown and saying so.
+# A reviewer who taps Deny still gets a walk, planned from central Copenhagen and saying so.
 - launchApp:
     clearState: true
     permissions:
@@ -80,7 +87,7 @@ appId: ${APP_ID}
     timeout: 40000
 - tapOn: "Show me the walk"
 - extendedWaitUntil:
-    visible: "Planning from Midtown\\. Turn on location to plan from where you are\\."
+    visible: "Planning from central Copenhagen\\. Turn on location to plan from where you are\\."
     timeout: 40000
 
 # ---- F19

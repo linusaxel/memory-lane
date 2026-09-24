@@ -78,8 +78,8 @@ def test_the_seed_sits_on_the_app_s_fallback_region():
 
 
 def test_one_memory_is_a_few_steps_away(seeded):
-    """Not inside the gate from the dev coordinate any more: that is inside the
-    Empire State Building, and a stop has to be on a street (seed_dev.OFFSETS)."""
+    """Not inside the gate from the dev coordinate any more: that is in the
+    middle of Gråbrødretorv, and a stop has to be on a street (seed_dev.OFFSETS)."""
     place = by_query(seeded)["reach"]
     away = meters_between(Coordinates(lat=LAT, lng=LNG), Coordinates(lat=place.lat, lng=place.lng))
     assert UNLOCK_RADIUS_METERS < away < 200
@@ -171,7 +171,7 @@ def test_one_is_sealed_shut_while_you_are_standing_on_it(seeded):
 
 
 def test_no_two_gated_seeds_share_a_grid_cell(seeded):
-    """0.0001 degrees is ~11m of latitude and only ~8m of longitude at 40.7N.
+    """0.0001 degrees is ~11m of latitude and only ~6m of longitude at 55.7N.
     Any accidental collision would quietly open both."""
     for name, row in by_query(seeded).items():
         if name.startswith("centroid"):

@@ -211,10 +211,10 @@ FROM memories m JOIN places p ON m.place_id = p.id;
 -- this and geocoded nothing; it was deleted.
 SELECT geocode_status, COUNT(*) FROM places GROUP BY 1;
 
--- Find nearby memories (within 10km of a point)
-SELECT m.summary, p.name, ST_Distance(p.coordinates, ST_MakePoint(-73.9857, 40.7484)::geography) as dist_m
+-- Find nearby memories (within 10km of the dev seed)
+SELECT m.summary, p.name, ST_Distance(p.coordinates, ST_MakePoint(12.57586, 55.67886)::geography) as dist_m
 FROM memories m JOIN places p ON m.place_id = p.id
-WHERE ST_DWithin(p.coordinates, ST_MakePoint(-73.9857, 40.7484)::geography, 10000)
+WHERE ST_DWithin(p.coordinates, ST_MakePoint(12.57586, 55.67886)::geography, 10000)
 ORDER BY dist_m;
 ```
 
