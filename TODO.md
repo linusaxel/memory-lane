@@ -1327,6 +1327,11 @@ flagged ⚠️ inline, not overridden.
       collaborative and followable.
       **First step:** the migration, plus `GET /v1/routes/{id}` through
       `row_to_memory`, so stops stay gated.
+      **First step done 2026-09-24:** migration 023 and the endpoint, published
+      only, hidden stops dropped. Kept to `title, status, is_loop`: no author,
+      theme, source, budget or geometry until something writes a route (the
+      generated job below, or an editor). `daily_routes.route_id` waits for
+      the app to walk one.
       [VoiceMap publisher docs](https://docs.voicemap.me/tour-publishers/choosing-locations/) ·
       [Detour](https://www.technologyreview.com/2015/03/06/168961/first-groupon-founder-now-tour-guide/) ·
       [Google Maps lists](https://support.google.com/maps/answer/7280933)

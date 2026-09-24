@@ -31,6 +31,7 @@ from api.models import (
     DEVICE_PATTERN,
     ROUTE_BUDGET_MAX_METERS,
     ROUTE_BUDGET_MIN_METERS,
+    AuthoredRouteResponse,
     Coordinates,
     Hotspot,
     Memory,
@@ -49,6 +50,8 @@ from api.models import (
     UnlocksResponse,
 )
 from api.queries import (
+    AUTHORED_ROUTE_QUERY,
+    AUTHORED_ROUTE_STOPS_QUERY,
     COUNT_QUERY,
     COUNT_WITH_TAGS_QUERY,
     DEVICE_UNLOCKS_QUERY,
@@ -825,6 +828,23 @@ def _stored_route(session, route_date, row) -> RouteResponse:
     memory_ids = list(row.memory_ids)
     rows = session.execute(text(ROUTE_QUERY), {"ids": memory_ids}).fetchall()
     return _route_response(route_date, rows, memory_ids, row.budget_meters, row.legs)
+
+
+# After /today and /preview, which would otherwise read as an id.
+@router.get("/v1/routes/{route_id}", response_model=AuthoredRouteResponse)
+def get_authored_route(route_id: int):
+    """An authored walk, or 404 while it is a draft."""
+    with get_session() as session:
+        route = session.execute(text(AUTHORED_ROUTE_QUERY), {"route_id": route_id}).fetchone()
+        if route is None:
+            raise HTTPException(status_code=404, detail="No such route")
+        rows = session.execute(text(AUTHORED_ROUTE_STOPS_QUERY), {"route_id": route_id}).fetchall()
+    return AuthoredRouteResponse(
+        id=route.id,
+        title=route.title,
+        loop=route.is_loop,
+        memories=[row_to_memory(r) for r in rows],
+    )
 
 
 @router.get("/v1/me/memories", response_model=MyMemoriesResponse)

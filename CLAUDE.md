@@ -140,6 +140,8 @@ devices       → An installation's self-issued UUID. Not a person
 users         → A display name and an id. Not an account either — yet
 identities    → (google|apple, subject) → user. How a person proves it is them
 unlocks       → (device, memory) — who has earned what
+routes        → An authored walk: title, draft|published, loop
+route_stops   → (route, position, memory). daily_routes keeps its array
 media         → Photos and recordings attached to a submitted memory
 reports       → (memory, device) — what makes public submissions defensible
 ```
@@ -291,6 +293,8 @@ FastAPI server with PostGIS proximity queries:
   same solve, stored; one per device per day, and a second accept gets the
   first walk back. The client never sends stop ids
 - `GET /v1/routes/today?device=UUID` - today's accepted walk, or 404. Only reads
+- `GET /v1/routes/{id}` - an authored walk: its stops in order, locked like
+  today's. 404 while it is a draft. Nothing writes these yet but SQL
 - `POST /v1/memories` `{device, lat, lng, place_name, summary, tags, ...}` -
   **file your own memory.** One coordinate: it is both where you are and where
   the memory goes. Lands in the `stranger` layer, gated like everything else,

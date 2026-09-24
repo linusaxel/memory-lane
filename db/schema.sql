@@ -238,6 +238,25 @@ CREATE TABLE daily_routes (
     PRIMARY KEY (device_id, route_date)
 );
 
+-- An authored walk, served by GET /v1/routes/{id} once published. A join
+-- table here, unlike daily_routes: it is long-lived, ordered and edited. See
+-- db/migrations/023_authored_routes.sql.
+CREATE TABLE routes (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    status VARCHAR(10) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+    is_loop BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE route_stops (
+    route_id INTEGER NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    memory_id INTEGER NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    PRIMARY KEY (route_id, position),
+    UNIQUE (route_id, memory_id)
+);
+
 -- A photo or a recording attached to a submitted memory. A memory of a place is
 -- a thin thing in text alone.
 CREATE TABLE media (

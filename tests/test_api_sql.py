@@ -30,6 +30,7 @@ PARAMS = {
     "memory_id": 1,
     "place_id": 1,
     "content_id": 1,
+    "route_id": 1,
     # Any valid UUID: EXPLAIN only needs the cast to parse.
     "device_id": "00000000-0000-0000-0000-000000000000",
     "device": "00000000-0000-0000-0000-000000000000",

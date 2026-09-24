@@ -432,8 +432,20 @@ LIMIT :limit
 ROUTE_QUERY = f"""
 SELECT {MEMORY_COLUMNS}
 {MEMORY_JOIN}
-WHERE m.id = ANY(CAST(:ids AS integer[]))
+WHERE m.id = ANY(CAST(:ids AS integer[])) AND {VISIBLE}
 ORDER BY array_position(CAST(:ids AS integer[]), m.id)
+"""
+
+AUTHORED_ROUTE_QUERY = """
+SELECT id, title, is_loop FROM routes WHERE id = :route_id AND status = 'published'
+"""
+
+AUTHORED_ROUTE_STOPS_QUERY = f"""
+SELECT {MEMORY_COLUMNS}
+{MEMORY_JOIN}
+JOIN route_stops rs ON rs.memory_id = m.id
+WHERE rs.route_id = :route_id AND {VISIBLE}
+ORDER BY rs.position
 """
 
 # Where the corpus actually is, for somebody standing where it is not.
