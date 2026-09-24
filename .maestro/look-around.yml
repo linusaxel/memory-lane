@@ -1,4 +1,4 @@
-# F1 plan a walk + F8 be asked for location, F19 somewhere with no walk.
+# F1 plan a walk (loop, one way, a theme) + F8 be asked for location, F19 somewhere with no walk.
 # docs/08-ux-flows.md
 #
 # Everything here only looks: nothing is accepted, so no route row is written
@@ -44,6 +44,26 @@ appId: ${APP_ID}
 - assertVisible: "Stop 1 of 5\\. .*"
 
 # Changing your mind costs nothing: nothing was stored.
+- tapOn: "Change length"
+- assertVisible: "How far today?"
+
+# One way: the same five stops' worth of walk, ending somewhere new.
+- tapOn: "One way"
+- assertVisible: "Five memories, ending somewhere new\\."
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "5 stops · [0-9.]+ k?m"
+    timeout: 40000
+- assertNotVisible: "5 stops · .* loop"
+- tapOn: "Change length"
+
+# A theme the seed carries nowhere: no walk, and the slider back.
+- tapOn: "sport"
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "No walk that long from here"
+    timeout: 40000
+- assertNotVisible: "Accept this walk"
 - tapOn: "Change length"
 - assertVisible: "How far today?"
 

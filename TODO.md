@@ -12,7 +12,8 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in CLAUDE.md, "Before you finish". Newest first;
 strike an entry when its fix lands.
 
-- [ ] **Maestro does not drive the plan page's new choices.** (2026-09-24)
+- [x] ~~**Maestro does not drive the plan page's new choices.**~~ (2026-09-24)
+      **Fixed 2026-09-24:** `look-around.yml` taps One way and `sport`.
       Loop / One way and the theme chips shipped in `2f5a97f` with API tests
       only; `look-around.yml` still taps straight through to the default loop.
       Both journeys pass on the new code (walk 204 s, look 59 s), so nothing is
