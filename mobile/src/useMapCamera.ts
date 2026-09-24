@@ -132,5 +132,8 @@ export function useMapCamera(onRegionSettled: (region: Region) => void) {
     [land],
   );
 
-  return { mapRef, flyTo, onMapReady, onRegionChangeComplete };
+  /** Whether a commanded flight has yet to land. */
+  const inFlight = useCallback(() => flying.current !== null, []);
+
+  return { mapRef, flyTo, inFlight, onMapReady, onRegionChangeComplete };
 }

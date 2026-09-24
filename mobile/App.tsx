@@ -104,6 +104,9 @@ const FALLBACK_REGION: Region = {
  */
 const LOCATED_DELTA = 0.01;
 
+/** A follow flight: quick, because the next one waits for it to land. */
+const FOLLOW_MS = 250;
+
 /** The walk from `from` through every stop not in `skip`, in order, and back to
  *  `home` on a loop. Between two consecutive stops it follows the street leg
  *  when there is one, and so do the first and last legs when `ends` has them;
@@ -220,7 +223,8 @@ export default function App() {
   // Region reports go through the camera, not straight from the map: a move
   // replayed from onMapReady never reports itself and the map still announces
   // where it was born. See src/useMapCamera.ts.
-  const { mapRef, flyTo, onMapReady, onRegionChangeComplete } = useMapCamera(setRegion);
+  const { mapRef, flyTo, inFlight, onMapReady, onRegionChangeComplete } =
+    useMapCamera(setRegion);
   // Walk and Explore share the one MapView (rule 9) but not a camera: each
   // keeps where it was left. Explore's first visit centres on you.
   const cameraOf = useRef<Partial<Record<Tab, Region>>>({});
@@ -585,11 +589,15 @@ export default function App() {
   // next stop is off screen, NextStopArrow points the way instead.
   const pinned = tab === 'walk' && stage === 'walk' && !!position;
   useEffect(() => {
-    if (!pinned || !position) return;
+    // Never over a flight: `region` is still where it took off, so following
+    // from it undid the pill's zoom-out, and a chain of flights each cut short
+    // by the next left the camera trailing the person. Its landing sets
+    // `region`, which runs this again from there.
+    if (!pinned || !position || inFlight()) return;
     // 4m: under the watcher's 5m step, over the slop of a settled map.
     if (metersBetween(region.latitude, region.longitude, position.lat, position.lng) < 4) return;
-    flyTo({ ...region, latitude: position.lat, longitude: position.lng });
-  }, [pinned, position, region, flyTo]);
+    flyTo({ ...region, latitude: position.lat, longitude: position.lng }, FOLLOW_MS);
+  }, [pinned, position, region, flyTo, inFlight]);
   // Explore: everything under the viewport, whatever today's walk is. What
   // this device earned reads open, as it does on the walk.
   const nearby = useNearby(region, tab === 'explore');
