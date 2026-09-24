@@ -1,6 +1,6 @@
 # F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
-# loop 1 -> 5 -> F30 finish it -> F15 reread it later -> F31 look back at the
-# walk.
+# loop 1 -> 5 -> F30 finish it (F27 streak) -> F15 reread it later (F26 heart
+# it) -> F31 look back at the walk.
 # docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
@@ -62,6 +62,8 @@ appId: ${APP_ID}
     timeout: 40000
 - tapOn: "Stop 2 of 5. ${STOP2}. Locked, too far to open."
 - assertVisible: "Get within 20 m and you can open it."
+# F26: nothing to heart until it is open.
+- assertNotVisible: "Heart this memory.*"
 - tapOn: "Close"
 
 # F25 + F13 + F7, five times: walk today's route in order, 1 -> 5, whichever
@@ -144,6 +146,8 @@ appId: ${APP_ID}
     visible: "Walk done\\."
     timeout: 30000
 - assertVisible: "5 memories · .* loop · .* min"
+# F27: e2e/run.sh gave this device an unlock yesterday, so today makes two.
+- assertVisible: "2 days in a row"
 - tapOn: "Done"
 
 - extendedWaitUntil:
@@ -163,6 +167,14 @@ appId: ${APP_ID}
 # A collection row opens the same sheet.
 - tapOn: ".*The bench outside, dev seed.*"
 - assertVisible: ".*pølsevogn.*"
+# F26: the heart fills and the count goes up, and both outlive the sheet.
+- tapOn: "Heart this memory"
+- extendedWaitUntil:
+    visible: "Hearted, 1 heart"
+    timeout: 30000
+- tapOn: "Close"
+- tapOn: ".*The bench outside, dev seed.*"
+- assertVisible: "Hearted, 1 heart"
 - tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the
@@ -178,6 +190,10 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*The bench outside, dev seed.*"
     timeout: 30000
+# F26: and the heart outlives the process.
+- tapOn: ".*The bench outside, dev seed.*"
+- assertVisible: "Hearted, 1 heart"
+- tapOn: "Close"
 
 # F31: the walk just walked is kept. Its row opens it on the map, read-only,
 # and the bar over it goes back to the list.

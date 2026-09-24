@@ -165,6 +165,25 @@ reset_database() {
   [ "$seeded" = 0 ] || { cat "$LOGS/seed.log" >&2; exit 1; }
 }
 
+# F27's streak needs an unlock yesterday, by a device id the app has not minted
+# yet. So whichever device turns up first is given one, of a memory at 0,0:
+# never a route candidate, never on screen, and no stop's date moves.
+yesterday_unlock() {
+  psql_on "$DB" "
+    WITH p AS (INSERT INTO places (name, place_query, coordinates)
+               VALUES ('Yesterday', 'e2e yesterday', ST_MakePoint(0, 0)::geography) RETURNING id)
+    INSERT INTO memories (place_id, content_id, summary)
+      SELECT p.id, (SELECT id FROM content LIMIT 1), 'Unlocked yesterday.' FROM p;
+    CREATE FUNCTION yesterday() RETURNS trigger AS \$\$ BEGIN
+      INSERT INTO unlocks (device_id, memory_id, unlocked_at)
+        SELECT NEW.id, m.id, now() - interval '1 day' FROM memories m
+        JOIN places p ON p.id = m.place_id WHERE p.place_query = 'e2e yesterday';
+      RETURN NEW;
+    END \$\$ LANGUAGE plpgsql;
+    CREATE TRIGGER yesterday AFTER INSERT ON devices FOR EACH ROW EXECUTE FUNCTION yesterday();
+  " >/dev/null || infra "could not seed yesterday's unlock into $DB"
+}
+
 # A walkable point in central Copenhagen, different every run. The seed is
 # planted round it and the journeys start there, so the app is driven from
 # somewhere nobody chose. E2E_START=lat,lng replays one.
@@ -316,6 +335,7 @@ for flow in "${SELECTED[@]}"; do
   flow_started=$(date +%s)
   printf '\n\033[1m  ▸ %s\033[0m\n' "$name"
   reset_database
+  [ "$name" = walk-and-unlock ] && yesterday_unlock
   # launchApp's own relaunch has been seen to no-op under the load of a screen
   # recording, which leaves the flow looking at the previous one's last screen
   # and failing on its first assertion. Killing it first makes every flow a

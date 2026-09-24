@@ -382,7 +382,14 @@ export default function MemorySheet({
               <Pressable
                 style={dim(styles.heart)}
                 accessibilityRole="button"
-                accessibilityLabel={hearted ? 'Hearted' : 'Heart this memory'}
+                accessibilityLabel={
+                  (hearted ? 'Hearted' : 'Heart this memory') +
+                  (memory.heart_count === 1
+                    ? ', 1 heart'
+                    : memory.heart_count > 1
+                      ? `, ${memory.heart_count} hearts`
+                      : '')
+                }
                 onPress={() => onHeart(memory)}
               >
                 <HeartGlyph size={18} color={color.inkSoft} filled={hearted} />

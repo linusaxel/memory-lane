@@ -57,6 +57,11 @@ device id survives - which is correct (see the survival table in `CLAUDE.md`)
 and means one flow's unlocks are still the server's truth in the next one.
 Dropping the database is what makes each flow start as a stranger.
 
+One exception, for F27: before `walk-and-unlock` the run plants a memory at
+0,0 and a trigger that unlocks it *yesterday* for whichever device first
+appears, so the walk-done card has a two-day streak to show. The app mints its
+device id itself, so there is no id to seed ahead of time.
+
 ## It is only slow when you are doing something else
 
 Every phase prints what it cost, and the suite prints a total, because the
@@ -116,7 +121,7 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 | File | Flow |
 |---|---|
 | `look-around.yml` | F1 plan a walk (and nothing walkable), F32 show me another, F8 be asked for location |
-| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F15 reread what you unlocked, F31 look back at a walk |
+| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F27 the streak on its card, F15 reread what you unlocked, F26 heart it, F31 look back at a walk |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed |
 
 Three journeys rather than one file per id: every flow pays a fresh database
@@ -179,6 +184,16 @@ place name. `subtitle` does not reach it either. The state now rides in
 `title`, which is the only string that does — and an empty tooltip `Callout`
 suppresses the bubble that `title` would otherwise raise, a white system-font
 rectangle that also sat on the map after the sheet was dismissed.
+
+## What no flow covers
+
+Implemented, and out of a simulator's reach:
+
+- **F2** opens a video in the browser, which leaves the app Maestro is driving.
+- **F10 / F16** need the network taken away mid-flow; F16 has a by-hand recipe below.
+- **F22** is a real Google or Apple sign-in, which neither works on a simulator
+  nor in a scripted one.
+- **F28** fires on a background geofence crossing with the app closed.
 
 ## Seeing F16 (the collection with no network)
 

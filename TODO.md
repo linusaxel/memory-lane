@@ -29,15 +29,6 @@ delete an entry when its fix lands.
       `channel_metadata`; fixed, and `conftest._no_network` now fails any
       unmarked test that leaves localhost. What is left is per-test overhead
       (no single test dominates) and duplicate coverage.
-- [ ] **Implemented flows with no journey at all.** (checked 2026-09-24) No
-      `.maestro` flow mentions a heart or a streak. F26 heart is a tap in an
-      open sheet and cheap to add to the walk, after stop 1's unlock: fill,
-      count, and no heart on a locked pin (its Done-when). F27's streak line is
-      never asserted, since the walk-done card shows it only above one day; a
-      seeded yesterday's unlock in `run.sh` would reach it. F2 (opens a
-      browser), F10/F16 (network; by-hand recipe in e2e/README.md), F22 (real
-      sign-in) and F28 (background geofence) cannot be scripted on a
-      simulator. Say so in e2e/README.md, not by silence.
 - [ ] **Nothing records which migrations a database has.** (checked
       2026-09-24) The dev DB had 011-024 but not 010, so `/v1/memories/search`
       500'd locally and nothing said so; found only by running EXPLAIN by
@@ -119,25 +110,6 @@ missing is a source.
       2026-09-20) **Blocked on `DEPLOY`**: there is no public origin to allow
       yet. The first thing with a customer attached, so the first that needs a
       usage bound.
-
----
-
-## Phase 4 — Stranger notes
-
-A submission lands in the `stranger` layer and is **permanent**, which is not
-what 4.1 and 4.2 assume. Both are parked on that; `P4-01` in `loop/TASKS.yaml`
-has the three ways out and why each is a person's call.
-
-- [ ] **4.1** One note per place, visible to the next visitor only. (checked
-      2026-09-21) **Parked:** stranger rows are kept, not consumed.
-- [ ] **4.2** ~7-day decay, enforced at read time. (checked 2026-09-21)
-      **Parked:** expiring a stranger memory deletes, from its author's own
-      collection, the thing they walked somewhere to write.
-- [~] **4.3** Moderation. (checked 2026-09-21) The report path hides a memory
-      at `REPORT_THRESHOLD` distinct devices. The missing half is a
-      pre-publish classifier, which spends credits on every submission
-      (`API_CREDITS`) and is not obviously worth it while three reports take
-      something down in minutes.
 
 ---
 
