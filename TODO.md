@@ -1763,7 +1763,9 @@ founder's estimate is ~5 km. Unverified: the three lakes alone are ~6.3 km
 round, so from Olufsvej it may be nearer 8. Measure it on OSRM before sizing
 the seed; the slider's 10 km max covers either. In build order:
 
-- [ ] **Fix "No script URL provided" when the app is opened by hand.** The
+- [x] **Fix "No script URL provided" when the app is opened by hand.**
+      **Done 2026-09-24:** documented in `e2e/README.md` and `mobile/UI.md`,
+      and `run.sh` prints the fix when it takes Metro down. The
       simulator app is a **Debug** build (`e2e/run.sh` builds `-configuration
       Debug`), and a Debug build has no JS bundle of its own: it loads one
       from Metro on :8081. `e2e/run.sh` kills Metro when it exits (unless
