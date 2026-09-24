@@ -12,13 +12,16 @@ import { useMemo } from 'react';
 import { Polyline } from 'react-native-maps';
 
 import type { Coordinates } from './api.ts';
+import { simplifyPath } from './region.ts';
 
 type Props = { path: Coordinates[]; dark: boolean };
 
 export default function RouteLine({ path, dark }: Props) {
   // Memoised: a fresh array makes react-native-maps rebuild the overlay.
   const coordinates = useMemo(
-    () => path.map((at) => ({ latitude: at.lat, longitude: at.lng })),
+    () =>
+      // 12m: wider than the hop between two sidewalks, narrower than a block.
+      simplifyPath(path, 12).map((at) => ({ latitude: at.lat, longitude: at.lng })),
     [path],
   );
 

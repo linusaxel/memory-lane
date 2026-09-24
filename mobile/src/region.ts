@@ -30,3 +30,41 @@ export function pathMeters(points: { lat: number; lng: number }[]): number {
   }
   return total;
 }
+
+/** The path with every point dropped that sits within `tolerance` metres of
+ *  the line between its neighbours (Douglas-Peucker). For drawing only: OSM
+ *  maps Manhattan's sidewalks as their own ways, so a street route hops from
+ *  one to the other at every crosswalk, and drawn as-is each hop is a notch. */
+export function simplifyPath<T extends { lat: number; lng: number }>(
+  points: T[],
+  tolerance: number,
+): T[] {
+  if (points.length < 3) return points;
+  const k = Math.cos((points[0].lat * Math.PI) / 180);
+  const xy = points.map((p) => [p.lng * 111320 * k, p.lat * 111320]);
+  const keep = new Array<boolean>(points.length).fill(false);
+  keep[0] = keep[points.length - 1] = true;
+  const stack: [number, number][] = [[0, points.length - 1]];
+  while (stack.length) {
+    const [a, b] = stack.pop()!;
+    const [ax, ay] = xy[a];
+    const dx = xy[b][0] - ax;
+    const dy = xy[b][1] - ay;
+    const len2 = dx * dx + dy * dy;
+    let far = -1;
+    let farthest = tolerance;
+    for (let i = a + 1; i < b; i++) {
+      const along = len2 ? ((xy[i][0] - ax) * dx + (xy[i][1] - ay) * dy) / len2 : 0;
+      const t = Math.max(0, Math.min(1, along));
+      const off = Math.hypot(xy[i][0] - ax - t * dx, xy[i][1] - ay - t * dy);
+      if (off > farthest) {
+        far = i;
+        farthest = off;
+      }
+    }
+    if (far < 0) continue;
+    keep[far] = true;
+    stack.push([a, far], [far, b]);
+  }
+  return points.filter((_, i) => keep[i]);
+}

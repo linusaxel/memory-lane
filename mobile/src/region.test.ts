@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { metersBetween, pathMeters } from './region.ts';
+import { metersBetween, pathMeters, simplifyPath } from './region.ts';
 
 test('a point is no distance from itself', () => {
   assert.equal(metersBetween(55.6759, 12.5655, 55.6759, 12.5655), 0);
@@ -27,4 +27,21 @@ test('a path is the sum of its legs, and a single point walks nowhere', () => {
   const leg = metersBetween(a.lat, a.lng, b.lat, b.lng);
   assert.ok(Math.abs(pathMeters([a, b, c]) - 2 * leg) < 0.5);
   assert.equal(pathMeters([a]), 0);
+});
+
+test('a hop between sidewalks is smoothed, a street corner is kept', () => {
+  // 200m north up one sidewalk, 15m east across the avenue, 200m north up the
+  // other, then 200m east round a corner.
+  const north = 200 / 111320;
+  const east = (m: number) => m / (111320 * Math.cos((40.75 * Math.PI) / 180));
+  const at = (dn: number, de: number) => ({ lat: 40.75 + dn, lng: -73.98 + de });
+  const path = [
+    at(0, 0),
+    at(north, 0),
+    at(north, east(15)),
+    at(2 * north, east(15)),
+    at(2 * north, east(215)),
+  ];
+  const drawn = simplifyPath(path, 12);
+  assert.deepEqual(drawn, [path[0], path[3], path[4]]);
 });
