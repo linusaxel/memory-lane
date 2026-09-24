@@ -14,8 +14,8 @@ deploy behaves differently from a laptop.
 """
 
 import pathlib
-import subprocess
 
+import psycopg
 import pytest
 from sqlalchemy import text
 
@@ -110,26 +110,9 @@ def test_content_defaults_to_video(db_session):
 
 
 def _replay(migration: pathlib.Path, db_url: str):
-    return subprocess.run(
-        [
-            "docker",
-            "compose",
-            "exec",
-            "-T",
-            "db",
-            "psql",
-            "-U",
-            "memorylane",
-            "-d",
-            db_url.rsplit("/", 1)[-1],
-            "-v",
-            "ON_ERROR_STOP=1",
-        ],
-        cwd=ROOT,
-        input=migration.read_text(),
-        capture_output=True,
-        text=True,
-    )
+    """psycopg rather than `docker compose exec psql`: that was 0.3 s a migration."""
+    with psycopg.connect(db_url.replace("+psycopg", ""), autocommit=True) as conn:
+        conn.execute(migration.read_text())
 
 
 def _shape(session):
@@ -164,8 +147,7 @@ def test_every_migration_agrees_with_the_schema(migration, db_session, db_url):
     """
     before = _shape(db_session)
 
-    replay = _replay(migration, db_url)
-    assert replay.returncode == 0, f"{migration.name} does not replay: {replay.stderr}"
+    _replay(migration, db_url)
 
     db_session.commit()
     after = _shape(db_session)

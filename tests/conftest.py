@@ -76,7 +76,11 @@ def db_url():
     if created.returncode != 0:
         pytest.fail(f"could not create {TEST_DB}: {created.stderr}")
 
-    schema = (ROOT / "db" / "schema.sql").read_text()
+    # Negative tests break constraints on purpose and the teardown's FORCE kills
+    # pooled backends; pytest reports what matters, and in the db log it read as
+    # ~950 errors hiding the one real one.
+    schema = f"ALTER DATABASE {TEST_DB} SET log_min_messages = panic;\n"
+    schema += (ROOT / "db" / "schema.sql").read_text()
     loaded = subprocess.run(
         ["docker", "compose", "exec", "-T", "db", "psql", "-U", "memorylane", "-d", TEST_DB],
         cwd=ROOT,

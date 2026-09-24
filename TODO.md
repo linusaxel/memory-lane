@@ -12,14 +12,15 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in CLAUDE.md, "Before you finish". Newest first;
 strike an entry when its fix lands.
 
-- [ ] **A broad sweep of the whole test suite.** (2026-09-24) The db
-      container's log reads as broken: ~950 ERRORs since 09-20, nearly all
-      `tests/test_schema_layers.py:81,86` inserting bad rows on purpose, plus
-      three FATALs per run from the fixture force-dropping `memorylane_test`.
-      Spotting the one real failure (migration 010 missing) in that noise took
-      a session. **Fix:** go through every test file for noise like this
-      (`SET LOCAL log_min_messages = fatal` in negative tests), plus duplicate
-      coverage, slow tests, and fakes that disagree (see "Test fakes disagree
+- [ ] **A broad sweep of the whole test suite.** (2026-09-24) **Log noise
+      fixed 2026-09-24:** the test database is created with
+      `log_min_messages = panic`, so negative tests and the FORCE drop no
+      longer write ERROR/FATAL lines to the db log; migration replays go over
+      psycopg, not `docker compose exec` (test_schema_layers 12 s → 7.6 s).
+      **Still open:** the suite is 85 s for 660 tests and no single test
+      dominates (slowest 15 sum to 14 s), so the cost is per-test overhead;
+      `test_ingest.py` (8 s) and `test_api_routes.py` (7 s) lead. Plus
+      duplicate coverage, and fakes that disagree (see "Test fakes disagree
       about distance" below).
 - [x] ~~**Maestro does not drive the plan page's new choices.**~~ (2026-09-24)
       **Fixed 2026-09-24:** `look-around.yml` taps One way and `sport`.
