@@ -760,7 +760,8 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. The tabs and "+ Add" arrive with the walk. There is no
+   no hotspots card. "+ Add" arrives with the walk; the tab bar (Walk · Explore
+   · Memories · You) is there from launch, and Walk is where it lands. There is no
    "Near me": the pill recentres, and "Turn on location" shows only while
    there is no position.
 3. A pill at the bottom centre: "Today's route · 0 of 5 · 2.4 km" — the distance

@@ -1485,12 +1485,14 @@ In build order:
       steps 2-3 and the "Turn on location" lines in F7 and F9.
       **Done 2026-09-24:** the button exists only while `!position`; the pill
       takes its slot and fits you and the next stop.
-- [ ] **Tabs: Walk · Explore · Memories · You.** `mobile/src/TabBar.tsx`
+- [x] **Tabs: Walk · Explore · Memories · You.** `mobile/src/TabBar.tsx`
       (`Tab` gains `'explore'`, `'map'` becomes Walk). The bar shows from
       launch, which reverses "the tabs arrive with the walk" (App.tsx, docs/08
       F25 step 2). Launch lands on Walk: the plan page if nothing is accepted
       today, the walk if it is. A tab switch swaps pins and restores that tab's
       own saved region.
+      **Done 2026-09-24:** `selectTab` keeps a region per map tab; Explore is
+      the bare map until the next item gives it pins.
 - [ ] **Explore: every nearby memory, clustered, locked.** Restore the
       viewport fetch and its debounce from `c3d5d9c^` (`useNearby`, the radius
       maths in `region.ts` and its tests) and un-retire UI.md rules 3 and 4.

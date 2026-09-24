@@ -1,4 +1,4 @@
-/** Three tabs, hand-rolled.
+/** Four tabs, hand-rolled.
  *
  * Not react-navigation: no stack, no deep links, no params. A router would be
  * more code than the thing it routes, and every screen stays mounted anyway -
@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { color, dim, font, label as themeLabel } from './theme.ts';
 
-export type Tab = 'map' | 'collection' | 'you';
+export type Tab = 'walk' | 'explore' | 'collection' | 'you';
 
 type Props = {
   tab: Tab;
@@ -26,7 +26,9 @@ export default function TabBar({ tab, unlockedCount, onSelect }: Props) {
     // there is nothing behind it to blur - and an overlay bar would cover the
     // Apple Maps attribution, which rule 7 does not allow.
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-      <Item label="Map" active={tab === 'map'} onPress={() => onSelect('map')} />
+      <Item label="Walk" active={tab === 'walk'} onPress={() => onSelect('walk')} />
+      <View style={styles.divider} />
+      <Item label="Explore" active={tab === 'explore'} onPress={() => onSelect('explore')} />
       <View style={styles.divider} />
       <Item
         label="Memories"

@@ -1,6 +1,6 @@
 # UI guide
 
-For agents working in `mobile/`. Three tabs, four modals and one mechanic; this file
+For agents working in `mobile/`. Four tabs, four modals and one mechanic; this file
 says what it looks like, why, and how to check you did not break it.
 
 Read this before changing anything under `mobile/src/` or `App.tsx`.
@@ -12,7 +12,7 @@ Three stages, one map, four modals. The stage is plain state in `App.tsx`
 of them (rule 9).
 
 ```
-Plan (src/Plan.tsx)            opaque page over the mounted map; no tab bar
+Plan (src/Plan.tsx)            opaque page over the mounted map, in the Walk tab
 ├─ "How far today?"            34/700
 ├─ "4 km"                      the slider's value, mono 30
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
@@ -49,11 +49,14 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
 Submit (pageSheet modal, from "+ Add") - see Writing
 
-Memories (the second tab, src/Memories.tsx)
+Explore (the second tab)       the same MapView, its own camera; first visit centres on you.
+                               Walk's pins, circle and overlays are not drawn here
+
+Memories (the third tab, src/Memories.tsx)
 └─ Unlocked: what this device has earned, newest first; a row opens the sheet.
    My memories: what you filed
 
-Settings (the third tab, "You")
+Settings (the fourth tab, "You")
 ├─ unlocked / places / filed, as numbers
 ├─ your name                what submissions are signed with. Blank = Anonymous
 ├─ account                  Apple / Google. Never a wall; see SignIn.tsx
@@ -82,7 +85,7 @@ that asks who you are before it shows you anything has the order wrong.
 | `src/Plan.tsx` | the plan page and the preview card: how far, then accept |
 | `src/useBreath.ts` | the only thing on the map that animates, the "at a stop" pill |
 | `src/Memories.tsx` | what the walking was for |
-| `src/TabBar.tsx` | three tabs, hand-rolled |
+| `src/TabBar.tsx` | Walk · Explore · Memories · You, hand-rolled, shown from launch |
 | `src/Settings.tsx` | the "You" tab |
 | `src/theme.ts` | **every colour and font.** Start here |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
@@ -377,6 +380,8 @@ Each of these exists because something broke or would have been rejected.
 9. **No tab unmounts.** Switching tabs uses `display: 'none'`, not a
    conditional render. Unmounting the map means refetching, losing the viewport
    and re-animating to GPS every time somebody glances at their collection.
+   Walk and Explore are two tabs on that one MapView; `selectTab` saves the
+   region of the one you leave and restores the other's.
 10. **Never fetch alongside `animateToRegion`.** It fires
     `onRegionChangeComplete` when it lands, and it does *not* land on the region
     you gave it — the map fits the deltas to the screen, so the settled viewport
@@ -553,7 +558,7 @@ The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → plan |
 | plan | "How far today?" and the slider | "Show me the walk" → preview |
 | preview | the walk on the map, the card | Accept → walk; Change length → plan |
-| walk | today's stops, the pill, the tabs | nothing - the day is locked |
+| walk | today's stops, the pill | nothing - the day is locked |
 
 A failed request on plan or preview leaves you there with "Can't reach Memory
 Lane right now." under the button. With no location permission the walk's button

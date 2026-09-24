@@ -213,12 +213,16 @@ export default function App() {
   // Only the handful of values the palette cannot carry need this: the map's
   // own appearance, and the two rgba literals a MapView Circle insists on.
   const scheme = useColorScheme();
-  const [tab, setTab] = useState<Tab>('map');
+  const [tab, setTab] = useState<Tab>('walk');
 
   // Region reports go through the camera, not straight from the map: a move
   // replayed from onMapReady never reports itself and the map still announces
   // where it was born. See src/useMapCamera.ts.
   const { mapRef, flyTo, onMapReady, onRegionChangeComplete } = useMapCamera(setRegion);
+  // Walk and Explore share the one MapView (rule 9) but not a camera: each
+  // keeps where it was left. Explore's first visit centres on you.
+  const cameraOf = useRef<Partial<Record<Tab, Region>>>({});
+  const mapTab = useRef<Tab>('walk');
   const mounted = useRef(true);
   // Read by callbacks that must not be rebuilt every time the person moves.
   const positionRef = useRef<Coordinates | null>(null);
@@ -552,6 +556,25 @@ export default function App() {
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
+  const selectTab = useCallback(
+    (next: Tab) => {
+      setTab(next);
+      if ((next !== 'walk' && next !== 'explore') || next === mapTab.current) return;
+      cameraOf.current[mapTab.current] = region;
+      mapTab.current = next;
+      const here = positionRef.current;
+      const back =
+        cameraOf.current[next] ??
+        (here && {
+          latitude: here.lat,
+          longitude: here.lng,
+          latitudeDelta: LOCATED_DELTA,
+          longitudeDelta: LOCATED_DELTA,
+        });
+      if (back) flyTo(back);
+    },
+    [region, flyTo],
+  );
   const groups = useMemo(() => groupByLocation(pins, precision), [pins, precision]);
   const openMemories = useMemo(
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
@@ -572,7 +595,9 @@ export default function App() {
   useEffect(() => {
     const screen = devOpenScreen();
     if (!screen) return;
-    setTab(devOpenTab(screen));
+    const next = devOpenTab(screen);
+    setTab(next);
+    if (next === 'explore') mapTab.current = next;
     setSubmitOpen(screen === 'submit');
   }, []);
 
@@ -838,7 +863,7 @@ export default function App() {
         {/* Every tab stays mounted. Unmounting the map means refetching, losing
             the viewport and re-animating to GPS on every glance at the
             collection - a tab switch should cost nothing. */}
-        <View style={[styles.screen, tab !== 'map' && styles.hidden]}>
+        <View style={[styles.screen, tab !== 'walk' && tab !== 'explore' && styles.hidden]}>
           <MapView
             ref={mapRef}
             style={StyleSheet.absoluteFill}
@@ -857,7 +882,7 @@ export default function App() {
             {/* Once, around the person, at the server's radius - never around
                 each pin, which would be fifteen overlapping circles and no
                 information. No position, nothing to draw. */}
-            {position && (
+            {tab === 'walk' && position && (
               <Circle
                 center={{ latitude: position.lat, longitude: position.lng }}
                 radius={radiusMeters}
@@ -870,11 +895,11 @@ export default function App() {
               />
             )}
 
-            {stage === 'preview' && previewPath.length > 1 && (
+            {tab === 'walk' && stage === 'preview' && previewPath.length > 1 && (
               <RouteLine path={previewPath} dark={scheme === 'dark'} />
             )}
 
-            {groups.map((group) => {
+            {(tab === 'walk' ? groups : []).map((group) => {
               // The first of a group's memories that is also a route stop -
               // a mixed stack shows the route's number for the whole stack.
               let routePosition: number | null = null;
@@ -915,7 +940,7 @@ export default function App() {
               Shown even with no position: standing somewhere empty is the best
               moment to file the first memory there, and the press asks for
               location rather than hiding the possibility. */}
-          {walking && (
+          {walking && tab === 'walk' && (
             <Pressable
               style={dim(styles.add)}
               accessibilityRole="button"
@@ -935,7 +960,7 @@ export default function App() {
           {/* In the same bottom slot every other floating control here shares -
               never a second region of the screen. Above "Turn on location"
               while that shows, in its place once there is a position. */}
-          {walking && onRoute && stopHere && (
+          {walking && tab === 'walk' && onRoute && stopHere && (
             <Animated.View style={[styles.routeAt, pillSlot, pillBreath]}>
               <Pressable
                 style={dim()}
@@ -954,7 +979,7 @@ export default function App() {
               </Pressable>
             </Animated.View>
           )}
-          {walking && onRoute && !stopHere && (
+          {walking && tab === 'walk' && onRoute && !stopHere && (
             <Pressable
               style={dim([styles.route, pillSlot])}
               accessibilityRole="button"
@@ -1005,7 +1030,7 @@ export default function App() {
             </Pressable>
           )}
 
-          {walking && !position && (
+          {walking && tab === 'walk' && !position && (
             <Pressable
               style={dim(styles.locate)}
               accessibilityRole="button"
@@ -1025,7 +1050,7 @@ export default function App() {
             </Pressable>
           )}
 
-          {stage === 'preview' && preview && (
+          {tab === 'walk' && stage === 'preview' && preview && (
             <Preview
               stops={preview.memories.length}
               meters={pathMeters(previewPath)}
@@ -1042,10 +1067,10 @@ export default function App() {
           )}
 
           {/* Opaque, over a map that stays mounted behind it (rule 9). */}
-          {stage === 'plan' && (
+          {tab === 'walk' && stage === 'plan' && (
             <Plan km={walkKm} onKm={setWalkKm} onGo={planWalk} busy={planBusy} error={planError} />
           )}
-          {stage === 'loading' && <View style={styles.cover} />}
+          {tab === 'walk' && stage === 'loading' && <View style={styles.cover} />}
         </View>
 
         <View style={[styles.screen, tab !== 'collection' && styles.hidden]}>
@@ -1092,10 +1117,7 @@ export default function App() {
           />
         </View>
 
-        {/* Planning is one page and one decision; the tabs arrive with the walk. */}
-        {(walking || tab !== 'map') && (
-          <TabBar tab={tab} unlockedCount={collected.length} onSelect={setTab} />
-        )}
+        <TabBar tab={tab} unlockedCount={collected.length} onSelect={selectTab} />
 
         <MemorySheet
           earned={!!openMemories[openIndex] && earned.has(openMemories[openIndex].id)}
