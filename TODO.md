@@ -249,7 +249,7 @@ exist. Verify before trusting, and strike entries when you fix them.
       `compileall`. The entry is kept struck rather than deleted because the
       original was detailed and convincing, and somebody will otherwise rediscover
       the symptom and re-blame the formatter.
-- [ ] **The reach circle lags the person** (reported 2026-09-24). The blue dot
+- [x] **~~The reach circle lags the person~~** (reported 2026-09-24). The blue dot
       moves smoothly; the circle around it jumps late, behind it. Likely causes,
       not yet measured:
       1. `watchPositionAsync` in `mobile/App.tsx` asks for
@@ -265,11 +265,11 @@ exist. Verify before trusting, and strike entries when you fix them.
       first and see whether (2) is visible; if it is, the circle has to become a
       Marker-hosted view that can animate, or go. Battery cost of (1) is
       foreground-only, per UI.md rule 2.
-      *2026-09-24:* (1) done - 5m at `BestForNavigation`, one setting rather
-      than switching by stage. Not yet watched moving: `EXPO_PUBLIC_DEV_LOCATION`
-      disables the watcher, so it needs Metro started without it and a
-      `simctl location start` walk. Strike this if the circle keeps up; if it
-      flickers, (2) is confirmed.
+      *Fixed 2026-09-24:* (1) - 5m at `BestForNavigation`, one setting rather
+      than switching by stage. Watched on the simulator (Maestro `travel`,
+      40m at 1.4 m/s, zoomed in): the circle stays within one 5m step of the
+      dot, well inside the ring. (2) was not visible in still frames; reopen if
+      it flickers on a real phone.
 
 ---
 
