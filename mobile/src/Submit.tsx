@@ -187,26 +187,6 @@ export default function Submit({
   const ready =
     (isEditing || !!position) && !!device && named && told && willSeal && !uploading && !posting;
 
-  /** One line, and only ever the next thing to do. A list of everything
-   *  outstanding is a list somebody has to read; this is an instruction. */
-  const hint = !isEditing && !position
-    ? 'Waiting for your location'
-    : !told
-      ? 'Say what happened here'
-      : !named
-      ? 'Name the place'
-      : !willSeal
-        ? 'A seal needs a year still to come'
-        : uploading
-          ? 'Finishing an upload'
-          : posting
-            ? isEditing
-              ? 'Saving…'
-              : 'Adding it…'
-            : isEditing
-              ? 'Ready to save'
-              : 'Ready to add';
-
   const progress = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.spring(progress, {
@@ -422,9 +402,6 @@ export default function Submit({
         <View style={styles.track}>
           <Animated.View style={[styles.fill, ready && styles.fillReady, filling]} />
         </View>
-        {/* What is still missing, said once, close enough to the greyed-out
-            Post to be read as the reason for it. */}
-        <Text style={[styles.hint, ready && styles.hintReady]}>{hint}</Text>
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <Field label="What happened?">
@@ -717,8 +694,6 @@ const styles = StyleSheet.create({
     transformOrigin: 'left',
   },
   fillReady: { backgroundColor: color.seal },
-  hint: { ...label, fontSize: 9, color: color.inkFaint, paddingHorizontal: 20, paddingTop: 12 },
-  hintReady: { color: color.seal },
   body: { padding: 20, paddingBottom: 56, gap: 26 },
 
   field: { gap: 10 },

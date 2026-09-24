@@ -410,12 +410,8 @@ are not preferences:
 - **It files where you are.** One coordinate, straight from the GPS, used as
   both "where I am" and "where this goes". There is no map picker and there is
   not going to be one - a memory you can pin from your sofa is a pin, and the
-  whole product is the difference. Declining location opens it without a position,
-  and it says "Waiting for your location" and holds Post; location allowed but
-  no fix yet opens it and says "Waiting for your location", because
-  a button that does nothing for the three seconds a GPS takes is worse than
-  one that tells you what it is waiting for. `ready` requires a position either
-  way, so neither path can file from a sofa.
+  whole product is the difference. Without a fix, declined or still coming,
+  Post stays held: `ready` requires a position, so no path can file from a sofa.
 - **Attachments upload while you type**, not on Post. A phone photo is 4 MB and
   the wait belongs in the part where somebody is composing. Post stays disabled
   while an upload is in flight, and a failed one shows as failed rather than
@@ -432,10 +428,8 @@ Three things about the shape of it:
   because something happened to them, not because they wanted to name a bench.
 - **The rule under the header is the progress.** It fills as the two required
   fields land and turns seal when the thing can be posted - the same promise
-  the unlock ring makes, and it costs a line rather than adding one. Under it,
-  one hint, and only ever the next thing to do: "Say what happened here", then
-  "Name the place", then "Ready to file". A greyed-out Post that does not say
-  why is a dead end on the only screen that writes.
+  the unlock ring makes, and it costs a line rather than adding one. No hint
+  text under it: the form is short enough to read as its own checklist.
 - **Every chip answers being touched** - `selectionAsync` and a spring, skipped
   on mount so the sheet does not flinch as it opens. The tick is the map's
   selection one, not the unlock's: this is picking, not earning, and it must
