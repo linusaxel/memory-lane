@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { metersBetween, pathMeters, simplifyPath } from './region.ts';
+import {
+  MAX_RADIUS_KM,
+  MIN_RADIUS_KM,
+  isSameQuery,
+  metersBetween,
+  pathMeters,
+  regionToRadiusKm,
+  simplifyPath,
+} from './region.ts';
 
 test('a point is no distance from itself', () => {
   assert.equal(metersBetween(55.6759, 12.5655, 55.6759, 12.5655), 0);
@@ -44,4 +52,66 @@ test('a hop between sidewalks is smoothed, a street corner is kept', () => {
   ];
   const drawn = simplifyPath(path, 12);
   assert.deepEqual(drawn, [path[0], path[3], path[4]]);
+});
+
+test('a city-sized viewport asks for a few kilometres', () => {
+  const km = regionToRadiusKm({
+    latitude: 40.75,
+    longitude: -73.98,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  });
+  assert.ok(km > 1 && km < 10, `expected a few km, got ${km}`);
+});
+
+test('a continent-sized viewport clamps to the API maximum', () => {
+  // Without the clamp this is ~2000km and the API answers 422.
+  const km = regionToRadiusKm({
+    latitude: 40,
+    longitude: -100,
+    latitudeDelta: 40,
+    longitudeDelta: 60,
+  });
+  assert.equal(km, MAX_RADIUS_KM);
+});
+
+test('a degenerate zero-size viewport still asks for a valid radius', () => {
+  const km = regionToRadiusKm({
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 0,
+    longitudeDelta: 0,
+  });
+  assert.equal(km, MIN_RADIUS_KM);
+});
+
+test('the same viewport asks the same question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  assert.equal(isSameQuery(here, here), true);
+});
+
+test('the aspect-adjusted region the map reports back still counts as the same', () => {
+  // animateToRegion never lands on exactly the region it was given - the map
+  // fits the deltas to the screen. If this stops being tolerated, recentring
+  // fetches twice again.
+  const asked = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  const landed = { ...asked, latitude: 55.67591, longitudeDelta: 0.0102 };
+  assert.equal(isSameQuery(asked, landed), true);
+});
+
+test('a real pan asks a new question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  const away = { ...here, latitude: 55.6859 };
+  assert.equal(isSameQuery(here, away), false);
+});
+
+test('zooming without moving asks a new question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  const out = { ...here, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+  assert.equal(isSameQuery(here, out), false);
+});
+
+test('nothing fetched yet is never the same question', () => {
+  const here = { latitude: 55.6759, longitude: 12.5655, latitudeDelta: 0.01, longitudeDelta: 0.01 };
+  assert.equal(isSameQuery(null, here), false);
 });

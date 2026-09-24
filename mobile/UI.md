@@ -50,7 +50,10 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 Submit (pageSheet modal, from "+ Add") - see Writing
 
 Explore (the second tab)       the same MapView, its own camera; first visit centres on you.
-                               Walk's pins, circle and overlays are not drawn here
+├─ Every memory under the viewport (src/useNearby.ts), grouped by cluster.ts;
+│  no pin lights, and a wide cluster zooms rather than opens
+├─ The sheet opens locked with no ring: "Memories open on a walk"
+└─ Walk's circle, line, pill and + Add are not drawn here
 
 Memories (the third tab, src/Memories.tsx)
 └─ Unlocked: what this device has earned, newest first; a row opens the sheet.
@@ -360,11 +363,12 @@ Each of these exists because something broke or would have been rejected.
    `startUpdatingLocation` in the background would — asking for the stronger
    capability than the feature needs is exactly the kind of over-declaration
    this rule exists to prevent.
-3. **Retired: debounce map-driven fetches.** Nothing is fetched by viewport any
-   more; the map draws only today's walk. If a map-driven fetch ever returns,
-   so does the debounce - panning fires `onRegionChangeComplete` continuously.
-4. **Retired: the API is radius-only.** Same reason. `/v1/memories/nearby`
-   still clamps `radius_km` to 0.1–100 for anyone else who calls it.
+3. **Debounce map-driven fetches** (400ms, `useNearby`). Explore fetches by
+   viewport, and panning fires `onRegionChangeComplete` continuously; without
+   it you DoS your own API.
+4. **The API is radius-only.** `regionToRadiusKm()` circumscribes the viewport
+   and clamps to 0.1–100km; outside that the API returns 422. There is no bbox
+   endpoint.
 5. **A memory with no coordinates cannot be drawn.** The API filters those out;
    do not assume `coordinates` is always present on types that allow null.
 6. **`content.url` is already resolved.** The server points it at the document,
@@ -385,9 +389,9 @@ Each of these exists because something broke or would have been rejected.
 10. **Never fetch alongside `animateToRegion`.** It fires
     `onRegionChangeComplete` when it lands, and it does *not* land on the region
     you gave it — the map fits the deltas to the screen, so the settled viewport
-    covers noticeably more ground. Nothing fetches on a move today, but the
-    region `useMapCamera` reports is what pins group by, so move the camera
-    and let it report back; the hook also reports a long flight itself, which
+    covers noticeably more ground. Explore fetches from the region
+    `useMapCamera` reports, and pins group by it, so move the camera and let it
+    report back; the hook also reports a long flight itself, which
     never lands audibly. See `docs/10-decisions.md#the-app`.
 11. **The credit never scrolls.** Place name above the scroll, credit pinned
     below it, story in between. Geo-gated content cannot be shared by linking

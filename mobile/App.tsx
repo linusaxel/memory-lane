@@ -70,6 +70,7 @@ import { buttonText, color, dim, font, label } from './src/theme.ts';
 import TabBar, { type Tab } from './src/TabBar.tsx';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
+import { useNearby } from './src/useNearby.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import { useBreath } from './src/useBreath.ts';
@@ -576,6 +577,17 @@ export default function App() {
     [region, flyTo],
   );
   const groups = useMemo(() => groupByLocation(pins, precision), [pins, precision]);
+  // Explore: everything under the viewport, whatever today's walk is. What
+  // this device earned reads open, as it does on the walk.
+  const nearby = useNearby(region, tab === 'explore');
+  const exploreGroups = useMemo(
+    () =>
+      groupByLocation(
+        nearby.map((memory) => unlocked[memory.id] ?? memory),
+        precision,
+      ),
+    [nearby, unlocked, precision],
+  );
   const openMemories = useMemo(
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
@@ -933,6 +945,23 @@ export default function App() {
                 />
               );
             })}
+
+            {(tab === 'explore' ? exploreGroups : []).map((group) => {
+              // Nothing is earned in Explore, so nothing reads as nearly or
+              // already openable: the walk is where a stop opens.
+              const reach = reachOf(group, position, earned);
+              return (
+                <MemoryMarker
+                  key={group.key}
+                  group={group}
+                  reach={reach === 'unlockable' || reach === 'warm' ? 'locked' : reach}
+                  lit={false}
+                  onPress={() =>
+                    group.spanMeters > CLUSTER_SPAN_M ? zoomTo(group) : openGroup(group)
+                  }
+                />
+              );
+            })}
           </MapView>
 
           {/* Top right, because every other overlay on this screen lives at the
@@ -1129,7 +1158,8 @@ export default function App() {
           onIndex={setOpenIndex}
           onClose={() => setOpenAt([])}
           position={position}
-          onUnlock={unlock}
+          // Explore opens the sheet locked with no ring: unlocking is Walk's.
+          onUnlock={tab === 'walk' ? unlock : undefined}
           unlocking={unlocking}
           unlockError={unlockError}
           onHeart={heart}

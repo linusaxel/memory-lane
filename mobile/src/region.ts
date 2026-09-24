@@ -1,4 +1,4 @@
-/** Map maths: the viewport shape, and metres between points. */
+/** Map maths: the viewport shape, its radius for the API, and metres between points. */
 
 export type Region = {
   latitude: number;
@@ -6,6 +6,42 @@ export type Region = {
   latitudeDelta: number;
   longitudeDelta: number;
 };
+
+/** The API rejects radius_km outside this range with a 422. */
+export const MIN_RADIUS_KM = 0.1;
+export const MAX_RADIUS_KM = 100;
+
+const KM_PER_DEGREE = 111;
+
+/**
+ * The API is radius-only (ST_DWithin), so a rectangular viewport is covered by
+ * its circumscribing circle.
+ *
+ * ponytail: over-fetches the corners, and clamps at the API maximum, so a
+ * zoomed-right-out map shows the nearest 100km rather than everything on
+ * screen. Add a bbox endpoint if that ever looks sparse.
+ */
+export function regionToRadiusKm(region: Region): number {
+  const latKm = region.latitudeDelta * KM_PER_DEGREE;
+  const lngKm =
+    region.longitudeDelta * KM_PER_DEGREE * Math.cos((region.latitude * Math.PI) / 180);
+  const radiusKm = Math.hypot(latKm, lngKm) / 2;
+  if (!Number.isFinite(radiusKm)) return MIN_RADIUS_KM;
+  return Math.min(MAX_RADIUS_KM, Math.max(MIN_RADIUS_KM, radiusKm));
+}
+
+/** Would these two viewports ask the API the same question? The map fits the
+ *  deltas to the screen, so the region it reports after a move is never quite
+ *  the one it was given; what matters is the centre and the radius. */
+export function isSameQuery(a: Region | null, b: Region): boolean {
+  if (!a) return false;
+  // 25m is well inside the 0.1km minimum radius: a pan this small cannot change
+  // what comes back.
+  const moved = metersBetween(a.latitude, a.longitude, b.latitude, b.longitude);
+  const before = regionToRadiusKm(a);
+  const after = regionToRadiusKm(b);
+  return moved < 25 && Math.abs(before - after) / after < 0.05;
+}
 
 /** Great-circle metres between two points. The unlock gate is server-side; this
  *  is only how the map decides which pin looks reachable. */

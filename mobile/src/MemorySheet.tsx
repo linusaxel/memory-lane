@@ -32,7 +32,9 @@ type Props = {
   onClose: () => void;
   /** Where the person is standing, or null if they said no to location. */
   position: Coordinates | null;
-  onUnlock: (memory: LocatedMemory) => void;
+  /** Absent in Explore, where nothing is earned: the sheet stays locked with
+   *  no ring and no distance to close, however near you stand. */
+  onUnlock?: (memory: LocatedMemory) => void;
   unlocking: boolean;
   unlockError: string | null;
   /** Present only for a memory this account filed, and only while it is open -
@@ -130,7 +132,7 @@ export default function MemorySheet({
         )
       : null;
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
-  const withinReach = fromHere != null && fromHere <= radius;
+  const withinReach = !!onUnlock && fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
   // A different refusal, and the app must not confuse them: walking to a time
   // capsule does nothing, so it never gets the unlock control or the word
@@ -230,6 +232,14 @@ export default function MemorySheet({
                   <Text style={styles.gateNote}>
                     Sealed until then. Standing here does not open it any sooner.
                   </Text>
+                </>
+              ) : !onUnlock ? (
+                <>
+                  <Padlock size={34} color={color.faded} />
+                  <Text style={styles.gateNote}>
+                    Memories open on a walk, standing where they happened.
+                  </Text>
+                  {waiting}
                 </>
               ) : withinReach ? (
                 <>

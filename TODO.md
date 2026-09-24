@@ -1493,12 +1493,14 @@ In build order:
       own saved region.
       **Done 2026-09-24:** `selectTab` keeps a region per map tab; Explore is
       the bare map until the next item gives it pins.
-- [ ] **Explore: every nearby memory, clustered, locked.** Restore the
+- [x] **Explore: every nearby memory, clustered, locked.** Restore the
       viewport fetch and its debounce from `c3d5d9c^` (`useNearby`, the radius
       maths in `region.ts` and its tests) and un-retire UI.md rules 3 and 4.
       Group with `cluster.ts`. `reachOf` never answers `unlockable` here, so no
       pin lights; the sheet opens locked, without `UnlockButton`. First entry
       centres on the person, after that wherever they left it.
+      **Done 2026-09-24:** `useNearby` fetches from the camera's region; the
+      sheet takes no `onUnlock` there and says memories open on a walk.
 - [ ] **Unlocking is Walk-only as a client rule.** `POST
       /v1/memories/{id}/unlock` does not know about modes and should not. Say
       so in docs/10 next to "The position is self-reported", so nobody
