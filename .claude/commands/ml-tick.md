@@ -107,14 +107,16 @@ and see".
 ## STEP 6 — Terminate.
 
 When every task is `done` or `blocked` and the gate is green: write a final `STATE.md`
-whose parked table is a complete human checklist, commit, then
+whose first line contains `TERMINAL` (that is what stops `loop/run.sh`) and whose
+parked table is a complete human checklist, commit, then
 
 `ScheduleWakeup(stop: true, reason: "All buildable work complete. N done, M parked on human gates — see loop/STATE.md")`
 
 Do not schedule another tick.
 
 Also terminate with `stop: true` if `JOURNAL.md` shows the gate RED with the **same**
-failure for 3 consecutive ticks — that is structural and needs a human.
+failure for 3 consecutive ticks — that is structural and needs a human. Mark
+`STATE.md`'s first line `TERMINAL` here too.
 
 ## Context discipline
 
