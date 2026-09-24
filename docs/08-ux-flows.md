@@ -15,7 +15,7 @@ Visual conventions, tokens and the store-review constraints are in
 Each flow states: who, the trigger, the numbered path, what can go wrong, and
 how you know it worked. Keep them concrete enough to test against.
 
-**Numbers are stable.** F1–F7 are referenced from `mobile/UI.md`, `CLAUDE.md`,
+**Numbers are stable.** F1–F7 are referenced from `mobile/UI.md`, `AGENTS.md`,
 `TODO.md` and from comments in the code, so they are not renumbered when new
 flows are added, even where that leaves the order untidy. New flows get the next
 free number. F3 is still proposed and sits at the bottom.

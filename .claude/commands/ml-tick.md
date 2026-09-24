@@ -123,7 +123,7 @@ failure for 3 consecutive ticks — that is structural and needs a human. Mark
 This is tick N of possibly hundreds and your context is small.
 
 - **Do** read: STATE.md, TASKS.yaml, the JOURNAL tail, the `touches:` files.
-- **Do not** read: `CLAUDE.md` in full, `docs/*`, or all 716 lines of `api/main.py` when
+- **Do not** read: `docs/*` in full, or a whole `api/` module when
   one endpoint is in scope. Use `grep -n` and ranged reads.
 - **Delegate to a subagent:** codebase archaeology ("where is X used"), long gate output
   ("report only the exit code and each failing node id, max 10 lines"), drafting store

@@ -5,8 +5,9 @@
 > `pipeline/tasks.py` and the `/v1/memories/*` endpoints. Parts never did: the
 > transcript-layer queue, the distributed rate limiter, the retry decorator and
 > the dead-letter queue. The inline code samples are sketches and have drifted
-> from the real files; treat `api/main.py`, `pipeline/tasks.py` and CLAUDE.md as
-> the source of truth, and this file as the reasoning behind them.
+> from the real files; treat `pipeline/tasks.py`, [06-api.md](06-api.md) and
+> [architecture.md](architecture.md) as the source of truth, and this file as the
+> reasoning behind them.
 
 ## Target Scale
 

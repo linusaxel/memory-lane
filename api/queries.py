@@ -143,7 +143,7 @@ LAYER_ORDER = "CASE m.layer WHEN 'friend' THEN 0 WHEN 'stranger' THEN 1 ELSE 2 E
 
 # Contrast next, not distance: the gap between the memory and what you are
 # looking at now is the product. NULLS LAST is load-bearing and inverts the
-# whole ranking if dropped - docs/10-decisions.md#nulls-last-is-load-bearing.
+# whole ranking if dropped - docs/10-decisions.md#nulls-last-in-contrast_order-is-load-bearing.
 # An anniversary outranks contrast and is outranked by layer. It is the whole of
 # what "resurfacing" means here: there are no notifications in this product, so
 # the only way a date can surface anything is by sorting it to the top of the

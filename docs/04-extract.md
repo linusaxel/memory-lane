@@ -72,3 +72,36 @@ Memories for the same place within 60 seconds are merged:
   ]
 }
 ```
+
+## Memory quality
+The summary is the product: somebody standing on the spot, on a phone, outdoors.
+Measure before and after any prompt change — extraction costs money and you get
+one shot:
+
+```bash
+python -m pipeline.quality
+python -m pipeline.quality --compare candidate.txt   # same 10 chunks, both prompts, side by side
+```
+
+Baseline on the 224-memory corpus, all four found by reading it rather than
+guessing, and all four now addressed in `SYSTEM_PROMPT`:
+
+| | | |
+|---|---|---|
+| anonymous subject | 55% | "The speaker drove the van…" instead of the name |
+| talks about talking | 20% | "He describes…" reports the recording, not the event |
+| not past tense | 12% | "He's playing the Fillmore on the 14th" is a ticket ad |
+| over 70 words | 32% | a summary of the conversation, not of what happened |
+
+The prompt now bans the labels outright, rejects upcoming shows as hard as it
+rejects hypotheticals, asks for 2–3 sentences, and carries three worked examples
+taken from the corpus's own failures. It is structured with XML tags, gives
+explicit permission to return nothing, and is sent as a cached block — it is
+~1.2k tokens resent for every chunk, and a cached read costs 10% of input.
+
+**None of it has been run against real credits** (the account balance is empty),
+so the numbers above are still the current state.
+
+- WHO: Use names ("Mark and Joe" not "the hosts")
+- WHAT HAPPENED: Anecdotes, funny moments, mishaps
+- THE VIBE: Emotions, humor, what made it memorable

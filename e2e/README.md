@@ -53,7 +53,7 @@ Its own database (`memorylane_e2e`, built from `db/schema.sql` and seeded by
 
 The database is rebuilt **before every flow**, and that is not belt-and-braces.
 `launchApp: clearState: true` wipes AsyncStorage but not the keychain, so the
-device id survives - which is correct (see the survival table in `CLAUDE.md`)
+device id survives - which is correct (see the survival table in `docs/architecture.md`)
 and means one flow's unlocks are still the server's truth in the next one.
 Dropping the database is what makes each flow start as a stranger.
 

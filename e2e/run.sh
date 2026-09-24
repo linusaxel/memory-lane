@@ -68,7 +68,7 @@ MAESTRO=$(command -v maestro || true)
 [ -z "$MAESTRO" ] && infra "maestro not found. curl -fsSL https://get.maestro.mobile.dev | bash"
 
 command -v xcrun >/dev/null   || infra "no xcrun - Xcode command line tools are not installed"
-[ -x venv/bin/python ]        || infra "no venv/bin/python - see CLAUDE.md Quick Start"
+[ -x venv/bin/python ]        || infra "no venv/bin/python - see AGENTS.md Quick start"
 docker info >/dev/null 2>&1   || infra "docker is not running"
 [ -d mobile/node_modules ]    || infra "mobile/node_modules is missing - cd mobile && npm ci"
 

@@ -6,15 +6,24 @@ alternative is wrong and the reason is not visible from the code.
 This file exists because the reasoning used to live in comments, and comments
 next to code are prose nobody re-reads when the code changes. By the time
 sign-in shipped, eight separate comments still said the app had no accounts.
-Anything here that stops being true should be edited or deleted, not left.
+Anything here that stops being true should be edited or marked Superseded, not left.
 
 Code points here by anchor: `# see docs/10-decisions.md#the-gate`.
+
+Each entry is a decision record in one file, so the anchors hold. It opens
+with a `Status:` line: Accepted, Superseded or Rejected, dated where the
+decision was. **Options considered:** and **Consequences:** label a paragraph
+only where the entry already argues one; nothing is written to fill the form.
+A superseded entry stays, marked, and is never deleted: the next person to
+have the same idea needs to find out why it went.
 
 ---
 
 ## The gate
 
 ### Only an unshared coordinate is gated
+
+Status: Accepted
 
 `api/main.py` `COORDINATE_IS_UNIQUE`, and `api/card.py` keeps a copy.
 
@@ -25,19 +34,21 @@ ask somebody to walk to a fiction. Only a coordinate no other place shares is
 trusted enough to lock. 0.0001 degrees is ~11 m, the same grid the app clusters
 pins on.
 
-This is a proxy. `precision_meters` is the direct measure and would be the
+**Options considered:** This is a proxy. `precision_meters` is the direct measure and would be the
 better rule, but 35 of those stacked places claim 50 m accuracy, so the column
 cannot be trusted until extraction is re-run. See
 [the coordinates are mostly guesses](#the-coordinates-are-mostly-guesses-and-they-do-not-admit-it).
 
 ### Places holding a submission do not count toward that
 
+Status: Accepted
+
 Each submission mints its own place row at the submitter's GPS position. Without
 excluding those from the count, filing a memory outside Katz's would put a second
 place in that grid cell and silently unlock every memory already there — a gate
 anybody could open by posting next to it.
 
-It is `NOT EXISTS` over a user memory rather than `EXISTS` over an extracted one
+**Options considered:** It is `NOT EXISTS` over a user memory rather than `EXISTS` over an extracted one
 so that a place with no memories at all still counts, which is what it did
 before submissions existed.
 
@@ -46,6 +57,8 @@ there, so the coordinate is real by construction.
 
 ### 20 m
 
+Status: Accepted 2026-09-24
+
 Decided 2026-09-24: you should be standing at the place, not down the street
 from it. It was 150 m, on the argument that urban GPS drifts tens of metres and
 a gate that will not open while you stand on the spot is a bug the person
@@ -53,7 +66,7 @@ blames on themselves. That risk is now accepted, not solved: between tall
 buildings a phone can read 20-30 m off, and on those spots the ring will refuse
 somebody who is there. `UNLOCK_RADIUS_METERS` is the knob if the street says so.
 
-Two things follow. A pin further than the gate from any walkable way can never
+**Consequences:** Two things follow. A pin further than the gate from any walkable way can never
 be stood on, so with streets a route drops it (`api/route_solver.py`, `_plan_route`).
 And the proximity notification cannot use the gate as its region - iOS does not
 reliably fire under ~100 m - so it watches 100 m and lets the map do the rest
@@ -61,11 +74,15 @@ reliably fire under ~100 m - so it watches 100 m and lets the map do the rest
 
 ### The position is self-reported
 
+Status: Accepted
+
 This stops `curl`, not a determined spoofer — and since submissions, it cuts
 both ways: a memory is also filed at a position nobody verified. Attestation is
 the fix and needs more than accounts. Logged in `TODO.md`.
 
 ### Unlocking is Walk-only, and only the app knows it
+
+Status: Accepted
 
 Explore never offers an unlock; Walk does. `POST /v1/memories/{id}/unlock` does
 not know which tab asked, and should not: the only thing it checks is that you
@@ -79,7 +96,9 @@ same `curl` the section above already concedes. Keep the rule in the client.
 
 ### Search is a stored vector, so it can use an index
 
-It was a sequential scan on purpose for a long time, and the reasoning was
+Status: Accepted
+
+**Options considered:** It was a sequential scan on purpose for a long time, and the reasoning was
 sound: `SEARCH_VECTOR` spanned two tables (`m.summary || ' ' || p.name`), and
 no expression index can serve an expression like that. Splitting it into
 `to_tsvector(m.summary) @@ q OR to_tsvector(p.name) @@ q` indexes cleanly and
@@ -93,13 +112,15 @@ the row, GIN-indexed, kept true by triggers on both tables
 (`db/migrations/010`). Search means exactly what it meant before, and the plan
 uses `idx_memories_search`.
 
-The cost is a trigger on each side. The one that is easy to forget is the
+**Consequences:** The cost is a trigger on each side. The one that is easy to forget is the
 second: a place rename has to rewrite the vector of every memory filed there,
 or a renamed place answers to its old name for ever — which is worse than the
 scan was. Renames come from `pipeline/dedup.py` in reviewed batches, so that
 is a handful of rows at a time.
 
 ### The gate's uniqueness question is indexed, and it is the hot path
+
+Status: Accepted
 
 `COORDINATE_IS_UNIQUE` decides whether a memory is gated at all, by asking
 whether any other place shares its snapped grid cell. It compares
@@ -118,6 +139,8 @@ test asserts the planner reaches for it rather than that the index exists.
 
 ### `/v1/stats` is cached for five minutes
 
+Status: Accepted
+
 Four unbounded counts and `ST_ClusterDBSCAN(...) OVER ()` — one partition, so
 no index helps and no filter shrinks it — over every placed memory in the
 corpus. It is also the endpoint every phone calls when the map comes back
@@ -133,11 +156,15 @@ long. Tests share a process, so `api_client` clears it.
 
 ### `NULLS LAST` in `CONTRAST_ORDER` is load-bearing
 
+Status: Accepted
+
 Postgres sorts NULL *first* under `DESC`. Every memory extracted before contrast
 scoring existed has no score, so without `NULLS LAST` the unscored ones outrank
 every scored one and the ranking is exactly inverted.
 
 ### Hotspots cluster places, not memories
+
+Status: Accepted
 
 DBSCAN was fed one point per memory, so a place with fifty memories handed it
 fifty identical points - and it is the one query here whose cost is
@@ -146,7 +173,7 @@ gives the same hotspots for a ninth of the work: measured on 50,000 memories
 across 20,000 places, 10.9s became 1.2s with the same four areas and the same
 totals.
 
-Two things move slightly, both toward the question being asked. The centroid is
+**Consequences:** Two things move slightly, both toward the question being asked. The centroid is
 the centre of the places in a cluster rather than one dragged toward the
 busiest venue in it, and the label is the modal trailing name-component across
 places rather than across memories. "The closest memories are in New York" is a
@@ -154,7 +181,9 @@ question about an area.
 
 ### Hotspots use DBSCAN, not a rounded grid
 
-0.5 degrees is roughly a metro area. A grid splits any city that straddles a cell
+Status: Accepted
+
+**Options considered:** 0.5 degrees is roughly a metro area. A grid splits any city that straddles a cell
 boundary — New York's places span 40.70–40.82, and a 0.1 grid cut them into two
 separate "hotspots".
 
@@ -163,6 +192,8 @@ The label is the most common trailing component of the cluster's place names:
 cluster in the corpus, which is the bar for a hint.
 
 ### A count query must mirror its result query's WHERE
+
+Status: Accepted
 
 Otherwise `meta.total` is wrong and pagination breaks. This bit three endpoints
 once already.
@@ -173,11 +204,15 @@ once already.
 
 ### A submission mints its own place
 
-Not reusing one by name: two people filing at the same café would fight over
+Status: Accepted
+
+**Options considered:** Not reusing one by name: two people filing at the same café would fight over
 whose spelling wins. The map groups by coordinate, so they land under one pin
 either way.
 
 ### Media lives on a disk, not in object storage
+
+Status: Accepted
 
 One volume is the whole feature until somebody is paying for bandwidth. The
 upload path is a trust boundary in three places — filename, extension, and the
@@ -186,6 +221,8 @@ claim about what the bytes are — and none of the three comes from the client.
 
 ### `REPORT_THRESHOLD` is the whole moderation system
 
+Status: Accepted
+
 Three distinct devices hide a memory. Low, because the corpus is small and a
 wrongly hidden memory is recoverable while a libel left up for a week is not.
 `hidden` is a flag and not a delete: a takedown that destroys the evidence makes
@@ -193,6 +230,8 @@ the next dispute unanswerable. There is no appeal, no reinstatement and no queue
 for a human — that is the ceiling, and it is fine until there is a moderator.
 
 ### A report count needs a lock too
+
+Status: Accepted
 
 Two people reporting the same memory at once would each read the count before
 either insert commits, so both would see two reports where there are three -
@@ -203,6 +242,8 @@ against each other; it takes no lock against anybody else's.
 ---
 
 ### A quota checked before the write is not a quota
+
+Status: Accepted
 
 Both allowances — twenty submissions and 64MB of uploads a day — read a count
 in one transaction and wrote in another. Anybody can win that race by not
@@ -225,16 +266,20 @@ query, costing disk for ever.
 
 ### No session tokens, signed in or not
 
+Status: Accepted
+
 The device id the app generates for itself is the only credential; signing in
 binds `devices.user_id`. Every endpoint written before sign-in keeps working
 unchanged, and a second phone becomes a second device on one user — which is the
 whole of what sign-in buys. Nothing else needed inventing to get it.
 
-The consequence: the device id is a bearer token in a request body, so anyone
+**Consequences:** the device id is a bearer token in a request body, so anyone
 holding yours can act as you. Same threat model as the self-reported position
 above, and OAuth did **not** replace it.
 
 ### Google and Apple only
+
+Status: Accepted
 
 No passwords means nothing to store, reset, rotate or leak, and no reset-email
 flow. Apple is not a preference: App Store review requires Sign in with Apple as
@@ -245,6 +290,8 @@ and why an unconfigured server answers 503 rather than verifying against nothing
 
 ### `MY_DEVICES` keeps a `d.id = :device_id` arm
 
+Status: Accepted
+
 Unlocks are recorded against a device, which was right while a device was all
 there was. Signed in, the collection has to follow the person. That arm is what
 keeps it working before anybody signs in, and after signing out.
@@ -254,6 +301,8 @@ memory; the first time is the one that counts, and without the grouping it would
 appear twice.
 
 ### An anonymous user is absorbed on sign-in; a real account never is
+
+Status: Accepted
 
 Filing a memory and then signing in is the normal order, and losing it in between
 is the version of this nobody forgives. But folding together two accounts that
@@ -270,6 +319,8 @@ Apple's may be a relay.
 
 ### `animateToRegion` never lands on the region you give it
 
+Status: Accepted
+
 The map fits the deltas to the screen, so the viewport it settles on covers
 noticeably more ground — asked 0.70 km, settled 0.89 km. Moving the camera and
 calling `load()` in the same breath is therefore two requests for one action, the
@@ -281,6 +332,8 @@ exactly like the bug it was meant to fix. Readiness is tracked in a ref rather
 than inferred from `mapRef.current`, which is set earlier.
 
 ### A long `animateToRegion` never reports back at all
+
+Status: Accepted
 
 The paragraph above is true of short flights and false of long ones. Fly 40 m
 and the map settles and calls `onRegionChangeComplete`; fly 6,000 km and it
@@ -309,11 +362,15 @@ is the native map's.
 
 ### The font gate makes effects run before the map exists
 
+Status: Accepted
+
 The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
 regions are queued and replayed from `onMapReady`.
 
 ### Glass was tried and reverted
+
+Status: Superseded
 
 Blur panels are on every list of tells for a generated interface. The app uses
 paper and rules instead. `docs/09-visual-design.md` has the research.
@@ -324,6 +381,8 @@ paper and rules instead. `docs/09-visual-design.md` has the research.
 
 ### `except (A, B):` stays exploded
 
+Status: Accepted
+
 `pipeline/extract.py` writes one tuple `except` over three lines with a trailing
 comma. Single-line ones were once rewritten to `except A, B:`, which does not
 compile on the Python this repo runs. It was blamed on `ruff format`, but it was
@@ -333,6 +392,8 @@ commit. The trailing comma stays so that no formatter collapses it again.
 
 ### The RQ worker re-execs itself on macOS
 
+Status: Accepted
+
 `OBJC_DISABLE_INITIALIZE_FORK_SAFETY` has to be set *before* any ObjC-linked
 library is imported, and RQ's work horse forks. Setting it with
 `os.environ.setdefault` inside Python is too late — measured, 22 of 22 work
@@ -340,6 +401,8 @@ horses still crashed with signal 6. `pipeline/worker.py` re-execs itself with th
 variable set before importing anything else.
 
 ### The classifier fails loud on a config error and open on a transient one
+
+Status: Accepted
 
 A 404/401/403 means `CLASSIFIER_MODEL` is unusable and will fail identically on
 every chunk forever — that exact bug once reported 22 fictional classifications
@@ -358,6 +421,8 @@ only the last attempt fails open.
 
 ### The pool is sized to the server, and the server to the pool
 
+Status: Accepted
+
 FastAPI runs a `def` handler on anyio's thread pool — forty threads by default,
 and every endpoint here but one is a `def` — while SQLAlchemy was left on its
 own defaults of five connections plus ten overflow. Twenty-five of those
@@ -374,6 +439,8 @@ thirty seconds is handed to nobody — it just holds the slot for a client that
 has gone. `tests/test_db_pool.py` keeps the two in that order.
 
 ### One statement cannot run for ever
+
+Status: Accepted
 
 Nothing bounded a query. One pathological statement holding a connection is
 survivable; thirty of them is the pool, and the way to discover that is for it
@@ -396,6 +463,8 @@ approaches this number the answer is to precompute hotspots, not to raise it.
 
 ### The server has one clock, and it is UTC
 
+Status: Accepted
+
 `not_yet_open` asked Python for today's date, which is the host's local one.
 `ANNIVERSARY` asked the database for `CURRENT_DATE`, which is the cluster's. A
 CEST laptop against a UTC container disagreed for two hours every night — and
@@ -410,6 +479,8 @@ person holding the phone anyway — a viewer's own date is the honest answer to
 "on this day", and getting it right would mean the client sending its date.
 
 ### An offset only exists when the source is a recording
+
+Status: Accepted
 
 `memories.timestamp_start` is seconds into a recording. That is meaningful for
 a YouTube transcript and meaningless for a newspaper, a registry or a memory
@@ -438,6 +509,8 @@ nothing, selected on every memory query.
 
 ### The card is rendered on the server
 
+Status: Accepted
+
 One template, three consumers: the app sheet, the embed widget, and any pasted
 link. Rendered server-side because the attribution is the legal posture — a
 client that assembles the card from JSON can drop the credit line, and this is
@@ -450,6 +523,8 @@ does not go through `row_to_memory`, so it has to remember the gate separately �
 `tests/test_api_unlock.py` holds it to that.
 
 ### The embed is an iframe, not injected markup
+
+Status: Accepted
 
 It is somebody else's site: their CSS cannot reach our map, our CSS cannot reach
 their article, and their Content-Security-Policy has one origin to allow instead
@@ -464,6 +539,8 @@ pins on a tourism page, so the first card has to be the one worth reading.
 
 ### One tag vocabulary, not two
 
+Status: Accepted
+
 The extractor's prompt listed thirteen tags, `api/write.py` offered eleven for
 submissions, and they overlapped on six — so the app's `sport` chip matched
 none of the four memories stored as `sports`, and `m.tags && …` is an
@@ -475,13 +552,15 @@ because nothing checked. `sports` was renamed to the singular `sport` in place
 
 ### Place dedup matches on names, not coordinates
 
+Status: Accepted, amended 2026-09-23
+
 `db/migrations/001_places_unique.sql` stopped the same exact `place_query`
 minting a new row. What it cannot catch is one venue described two ways:
 
     [108] Gotham Comedy Club New York City           6 memories  40.75890, -73.98510
     [211] Gotham Comedy Club Chelsea New York City   1 memory    40.74310, -73.99670
 
-One venue, two pins, 1.8 km apart — and both rows claim 50 m precision, so the
+**Options considered:** One venue, two pins, 1.8 km apart — and both rows claim 50 m precision, so the
 obvious rule (collapse places whose coordinates fall within their combined
 precision) would never fire. The model disagreed with itself about where Gotham
 is. Names are the reliable signal; coordinates are only a sanity bound.
@@ -531,6 +610,8 @@ first, then delete orphans guarded by `NOT EXISTS`. `memories.place_id` is
 
 ### The coordinates are mostly guesses, and they do not admit it
 
+Status: Accepted
+
 Measured 2026-09-20 on the podcast corpus: 92 of 168 placed places sit on 28
 shared points, and 121 of 215 placed memories are on them. Fourteen unrelated
 venues share Duffy Square in Times Square. The model emits a city centroid
@@ -545,7 +626,7 @@ value.
 | `POINT(-77.0369 38.9072)` | 5 | 6 | Washington DC centroid |
 | `POINT(46.6753 24.7136)` | 5 | 6 | Riyadh centroid |
 
-What follows from it:
+**Consequences:**
 
 - **Distance is anti-correlated with identity.** Two places on one centroid are
   usually different venues, and one venue appears at two points. Dedup matches
@@ -565,23 +646,29 @@ GROUP BY 1 HAVING count(*) > 1 ORDER BY 2 DESC;
 
 ### Channel discovery uses yt-dlp, not a scrape
 
-As of 2026-09-20 a regex over `"videoId":"..."` in the channel HTML returns zero
+Status: Accepted
+
+**Options considered:** As of 2026-09-20 a regex over `"videoId":"..."` in the channel HTML returns zero
 videos for every channel tested — YouTube no longer serves that markup to a plain
 client. Rebuilding it on the internal `youtubei/v1/browse` endpoint means a lot
 of undocumented JSON walking that fails silently by returning a short list.
 yt-dlp is that parser, maintained weekly.
 
-`crawler/` must not import `pipeline` — `pipeline.ingest` imports it.
+**Consequences:** `crawler/` must not import `pipeline` — `pipeline.ingest` imports it.
 
 ### Summary quality is measured, not asserted
+
+Status: Accepted
 
 "Improve the memory output" is unfalsifiable until the defects are counted, and
 extraction costs money, so there is one chance to tell whether a prompt change
 helped. `python -m pipeline.quality` prints the same four numbers before and
 after. Every check was found by reading the corpus, not imagined; none is a hard
-failure, they are a direction. The baseline is in `CLAUDE.md`.
+failure, they are a direction. The baseline is in [04-extract.md](04-extract.md#memory-quality).
 
 ### Markers are anchored explicitly, because the two platforms disagree
+
+Status: Accepted
 
 `react-native-maps` gives a custom marker view a different anchor on each
 platform. iOS centres it on the coordinate (a marker with children stops being
@@ -597,6 +684,8 @@ likely to be testing on.
 
 ### Reach is measured to the memory, not to the pin
 
+Status: Accepted
+
 `cluster.ts` draws a group on a *rounded* coordinate. At the 4dp street grid
 that is within ~8 m of its members and measuring to it was harmless. It stopped
 being harmless when the grid started following the zoom: at 1dp a group's point
@@ -608,6 +697,8 @@ button fails in the person's hand — or hide the mechanic while they stand on i
 count and it is correct at any precision.
 
 ### A tap on a wide group zooms instead of opening
+
+Status: Accepted
 
 Once the grid loosens, a group is two different things wearing one pin: several
 memories sharing a doorway, or several places the zoom merged. The sheet pager
@@ -624,6 +715,8 @@ them for a viewport that never exists.
 
 ### A route is anchored on where you were, not a stored home
 
+Status: Accepted
+
 `daily_routes` is the first calendar-day-keyed table in this schema — see
 `db/migrations/013_daily_routes.sql` — and it needed something to draw a route
 *from*. The obvious answer, a saved home address, does not exist anywhere in
@@ -639,6 +732,8 @@ two different routes on the same day, which is correct: the route was never a
 citywide itinerary, it was one device's walk.
 
 ### Preview, then accept, and the client never names a stop
+
+Status: Accepted
 
 The app asks how far first (F1). `GET /v1/routes/preview` solves the walk and
 stores nothing; `POST /v1/routes/today` solves it again with the same anchor
@@ -665,6 +760,8 @@ the length is what the person chose, and the radius follows from it.
 
 ### No notification when a route completes
 
+Status: Accepted, amended 2026-09-22 and 2026-09-24
+
 F25 ends its list of stops the same way F23 ends a seal: nothing is pushed at
 anyone, as of today's code. This product had no notifications at all — see
 F1's "deliberately absent" list in `docs/08-ux-flows.md` — and a route was not
@@ -684,6 +781,8 @@ never fire for the same reason.
 a card, in the app, to somebody who is already looking at it. See below.
 
 ### The walk ends on a card, once, and nothing records that it did
+
+Status: Accepted 2026-09-24
 
 F30. Decided with the founder 2026-09-24. Each choice here is one somebody may
 want to change later, so each one carries its reason:
@@ -721,6 +820,8 @@ want to change later, so each one carries its reason:
 
 ### Street legs stop at the stops
 
+Status: Accepted
+
 With `ROUTING_URL` set, stops are chosen and ordered on OSRM walking metres
 (`api/streets.py`), and the line follows the streets. The distances from the
 anchor are used for choosing and then dropped. The street *shapes* are stored
@@ -735,6 +836,8 @@ cuts through buildings.
 
 ### A clean loop, not the shortest one
 
+Status: Accepted
+
 The shortest walk through five stops often visits one down a side street and
 comes back the same way: a line with spurs, drawn twice over itself. With a 20 m gate there is no passing a stop at a distance, so
 the fix is choosing different stops. `_plan_route` routes the solver's walk on
@@ -746,6 +849,8 @@ sparse area can still end with a spur; there is nothing cleaner to pick.
 Without streets there is nothing to measure and the solver's walk stands.
 
 ### The walk the slider asked for, and a loop before a short one
+
+Status: Accepted
 
 "Shortest walk once five stops fit" gave a 6 km slider a 900 m knot on any
 full map: 28% of the budget, measured over `seed_dev --dense` with
@@ -763,7 +868,7 @@ mix as its best. Each is routed (~7 ms apiece; it is the `/table` that is slow),
 and the one retracing the fewest `SPUR_STEP_METERS` of street wins. The
 drop-a-stop cleanup still runs after it.
 
-Two estimates were tried first and dropped. An angle on *street metres* (law of
+**Options considered:** Two estimates were tried first and dropped. An angle on *street metres* (law of
 cosines on the matrix) missed the worst case: the walk home retracing the walk
 out still looks like a 66° turn at the start. Shared street from the matrix,
 `(d[b][a] + d[b][c] - d[a][c]) / 2` at each turn, caught that but reads a
@@ -795,6 +900,8 @@ shortlist that requires the best walk's mix.
 
 ### No U-turn at a stop, and none at the start
 
+Status: Accepted
+
 Most of what `route_bench --scenario` still called a spur was not the solver's
 choice of stops at all. It was OSRM's `foot` profile turning round at a
 waypoint: walk to a mid-block pin, U-turn, walk back to the corner you came
@@ -823,6 +930,8 @@ running to 1.35 km.
 
 ### Loop or one-way, and a theme, per walk
 
+Status: Accepted
+
 `ROUTE_LOOP` was a server setting. The plan page now sends `loop` and an
 optional `tag` with both the preview and the accept, which have to agree
 because the accept re-plans rather than trusting ids. `loop` is stored on
@@ -841,6 +950,8 @@ Rules that decide what gets built at all. Moved here from TODO.md's "Decided
 
 ### Non-goals
 
+Status: Rejected
+
 - Ad product (needs millions of DAU).
 - Multi-city launch. Saturate one neighborhood before adding a second.
 - Personal video archives as a source: GPS is already in EXIF, and people film
@@ -857,6 +968,8 @@ Rules that decide what gets built at all. Moved here from TODO.md's "Decided
 
 ### Core, not polish
 
+Status: Accepted
+
 - **Contrast scoring** decides whether the product is interesting or wallpaper.
   Rank by the gap between the memory and what is there now, not by fame.
 - **Screenshot-native cards** are the only distribution channel geo-gated
@@ -871,6 +984,8 @@ Rules that decide what gets built at all. Moved here from TODO.md's "Decided
 
 ### Copenhagen first, and the podcast is test data
 
+Status: Accepted 2026-09-20
+
 Decided 2026-09-20. Copenhagen is the launch area. The US comedy podcast
 (`Tuesdays with Stories`: 224 memories, none within 20 km of Copenhagen) stays
 as end-to-end test data under its own `source_name`, and nothing on the roadmap
@@ -879,6 +994,8 @@ open questions.
 
 ### Money
 
+Status: Accepted
+
 Near-term revenue is the historical layer: embeddable maps and delivered
 corpora for tourism boards, audio-guide companies and city archives. A
 consumer subscription was reopened 2026-09-22 as a second track, once there is
@@ -886,6 +1003,8 @@ a userbase; it does not delay the B2B plan. The social layer earns nothing on
 its own. Local-business seeded memories are a later option and must be marked.
 
 ### Warm accent, not a reskin
+
+Status: Accepted 2026-09-22
 
 Decided 2026-09-22, shipped 2026-09-23. The founder wanted the app to feel like
 a cozy, peaceful walk. The muted-parchment palette stays, because its map
@@ -897,6 +1016,8 @@ neighborhood.
 
 ### A streak and a proximity notification, after all
 
+Status: Accepted 2026-09-22
+
 Decided 2026-09-22, against the earlier "no notifications, no streaks" rule
 (`docs/11-memory-types.md`) and foreground-only location (`mobile/UI.md` rule
 2). The streak is counted from `unlocks`, never stored (F27). The notification
@@ -906,6 +1027,8 @@ background-location declaration and a screencast review, weeks of latency,
 and that was accepted because the notification cannot work without it.
 
 ### Rejected approaches, do not retry
+
+Status: Rejected
 
 - Scraping channel HTML for `"videoId"`: returns 0 for every channel.
 - Homebrew Python 3.14: broken `pyexpat`.

@@ -4,7 +4,7 @@
     python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10]
 
 Run it before and after any prompt change; extraction costs money and you get
-one shot. Baseline in CLAUDE.md, reasoning in
+one shot. Baseline in docs/04-extract.md, reasoning in
 docs/10-decisions.md#summary-quality-is-measured-not-asserted.
 
 --compare runs the current prompt (or --baseline) and a candidate over the same

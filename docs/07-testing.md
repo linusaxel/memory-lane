@@ -55,6 +55,26 @@ it would have sent and returns a canned payload. It proves chunking, prompt
 assembly, parsing and DB writes. It does **not** prove extraction quality —
 that needs a human with an API key.
 
+## Coverage
+
+Measured, not targeted. Baseline on 2026-09-24, gate selection
+(`-m "not credits and not live"`):
+
+```bash
+venv/bin/python -m pytest -q -m "not credits and not live" --cov=api --cov=pipeline --cov=crawler
+```
+
+| Package | Statements | Covered |
+|---|---|---|
+| `api/` | 1205 | 98% |
+| `pipeline/` | 1622 | 55% |
+| `crawler/` | 41 | 68% |
+| **Total** | 2868 | **73%** |
+
+The pipeline's gap is its CLIs (`run_all`, `enqueue`, `worker`, `perf`, `route_bench` at
+0–28%) and the paths that bill (`tasks`, `quality`, `classifier_audit`). The gate
+enforces no floor. Add one only if a number starts to slide.
+
 ## Running a subset
 
 ```bash
@@ -108,3 +128,12 @@ The first run of this suite found two crashes-or-worse in the app — a Fabric
 mounting crash in react-native-maps and an F19 that never rendered at all.
 Both are fixed; `e2e/README.md` keeps the diagnosis, because the second one is
 the kind of thing that comes back.
+
+## Spending a few cents on purpose
+
+- **There is no `--limit` flag.** `python -m pipeline.extract` runs
+  `extract_all_pending()` and bills every pending video. To spend a few cents
+  instead, extract one video through the queue path:
+  `python -m pipeline.enqueue --video <content_id>` (then `--status <id>`).
+- The extraction prompt is in `extract.py:SYSTEM_PROMPT` - tweak for better results
+- Check `geocode_status` column: 'llm' means coordinates from extraction, 'pending' means missing

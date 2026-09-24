@@ -27,6 +27,11 @@ pip install -r requirements.txt
 | `CLASSIFIER_MODEL` | No | Haiku pre-filter (default: claude-haiku-4-5) |
 | `CHUNK_MINUTES` | No | Transcript chunk size (default: 4) |
 | `CHUNK_OVERLAP_SECONDS` | No | Chunk overlap (default: 30) |
+| `MIN_VIDEO_MINUTES` | No | Shorter videos (clips cut from episodes) are never transcribed or extracted (default: 20). Backfill old rows with `python -m pipeline.ingest --refresh-sources` |
+| `TRANSCRIPT_PROXY` | No | `http://user:pass@host:port`. YouTube blocks IPs that fetch many transcripts, and cloud IPs outright. A block stops the run, rows stay pending |
+| `TRANSCRIPT_DELAY_SECONDS` | No | Mean jittered pause between transcript fetches (default: 1.5) |
+| `ROUTE_SIZE`, `ROUTE_LOOP` | No | Today's route: how many stops (default: 5), and whether it comes back to where it started unless the request says (default: 1; `0` is one-way). The walk length is the app's slider, sent as `budget_meters`; candidates come from within half of it |
+| `ROUTING_URL` | No | An OSRM `foot` server. Empty or down means crow-flies × 1.3 and straight lines. Local: `./osrm/build.sh` once, then `docker compose --profile routing up -d osrm` and `ROUTING_URL=http://localhost:5001` |
 | `CORS_ORIGINS` | No | Comma-separated origins (default: `*`). The only lockdown knob |
 | `UNLOCK_RADIUS_METERS` | No | How close you must stand to read a memory (default: 20) |
 | `MEDIA_DIR` | No | Where uploads are written (default: `media`; a volume in Docker) |
@@ -35,6 +40,7 @@ pip install -r requirements.txt
 | `GOOGLE_CLIENT_IDS` | For sign-in | Comma-separated audience whitelist. Empty = `/v1/auth/*` answers 503 |
 | `APPLE_CLIENT_IDS` | For sign-in | Same, for Apple |
 
+Every one is read once, in `pipeline/config.py`; add new ones there.
 The app has its own, baked in at dev-server start - see `mobile/.env.example`.
 
 Note: geocoding is handled by Claude during extraction; there is no geocoding
@@ -48,26 +54,33 @@ API and no geocoding stage.
 
 ### Schema
 
-Ten tables. `db/schema.sql` is the full definition and is applied on first
+Seventeen tables. `db/schema.sql` is the full definition and is applied on first
 container init; `db/migrations/` carries the same changes for databases that
 already exist, and `tests/test_schema_layers.py` holds the two in agreement.
+Who writes which is in [architecture.md](architecture.md#data-ownership).
 
 | Table | What it holds |
 |---|---|
-| `content` | Source videos and archive items |
+| `content` | Source videos (url, platform_id, publisher, status flags) |
 | `transcripts` | JSONB segments with timestamps |
-| `places` | Locations, with PostGIS coordinates |
+| `extraction_chunks` | Each chunk's raw model reply, keyed on the exact request |
+| `classifier_verdicts` | What the Haiku pre-filter decided per chunk, and why |
+| `memory_reviews` | A person's accept / edit / reject on an extracted memory. Outlives it |
+| `places` | Locations with PostGIS coordinates |
 | `memories` | Experiences pinned to places. `content_id` **or** `user_id`, never both |
 | `devices` | An installation's self-issued UUID. Not a person |
-| `users` | A display name and an id. Created on first submission or sign-in |
-| `identities` | `(google\|apple, subject)` → user. How a new phone proves it is you |
+| `users` | A display name and an id. Not an account either — yet |
+| `identities` | `(google\|apple, subject)` → user. How a person proves it is them |
 | `unlocks` | `(device, memory)` — who has earned what |
+| `memory_hearts` | `(device, memory)` — one heart each, never taken back |
+| `daily_routes` | Today's accepted walk per device, stops as an array |
+| `routes` | An authored walk: title, draft\|published, loop |
+| `route_stops` | `(route, position, memory)`. `daily_routes` keeps its array |
 | `media` | Photos and recordings attached to a submitted memory |
 | `reports` | `(memory, device)` — what makes public submissions defensible |
 
-The four original tables are detailed below. For the six that arrived with
-submissions and sign-in, read `db/schema.sql` — it is commented and it is the
-one copy that cannot go stale.
+The four original tables are detailed below. For the rest, read `db/schema.sql`:
+it is commented and it is the one copy that cannot go stale.
 
 #### `content` table
 Stores video/audio source information.
@@ -124,50 +137,7 @@ Stores extracted memories.
 
 ## Project Structure
 
-```
-memory-lane/
-├── .env                    # Environment variables (copy from .env.example)
-├── .env.example            # Template for environment variables
-├── docker-compose.yml
-├── requirements.txt
-├── config/
-│   └── content.yaml        # Content sources to process
-├── crawler/
-│   └── yt_crawler.py       # YouTube channel discovery (yt-dlp)
-├── db/
-│   ├── schema.sql          # Full schema, applied on first container init
-│   └── migrations/         # The same changes, for databases that already exist
-├── pipeline/
-│   ├── db.py               # Database connection
-│   ├── config.py           # Every env knob, read once
-│   ├── ingest.py           # Load content from config
-│   ├── transcripts.py      # Fetch YouTube transcripts
-│   ├── extract.py          # LLM memory extraction (sequential)
-│   ├── tasks.py            # The same, over RQ, with a Haiku pre-filter
-│   ├── worker.py           # RQ worker entry point
-│   ├── enqueue.py          # Queue videos for the parallel path
-│   ├── dedup.py            # Propose place merges
-│   ├── quality.py          # Score the summaries
-│   └── run_all.py          # Run full pipeline
-├── api/
-│   ├── main.py             # App, CORS, media mount, router includes
-│   ├── models.py           # Every shape the API accepts or returns
-│   ├── queries.py          # Every SQL string
-│   ├── gate.py             # row -> Memory, redacted unless you are near
-│   ├── read.py             # The read endpoints
-│   ├── route_solver.py     # Today's walk: which stops, what order, how ranked
-│   ├── write.py            # Unlock, media, submissions, reports
-│   ├── accounts.py         # /v1/me and /v1/auth/*
-│   ├── auth.py             # Google and Apple token verification
-│   ├── media.py            # What an upload may be, and where it lands
-│   ├── privacy.py          # The policy both app stores require
-│   ├── card.py             # The server-rendered card
-│   └── embed.py            # The embeddable map
-├── mobile/                 # The Expo app. Read mobile/UI.md first
-├── loop/                   # verify.sh (the gate), TASKS.yaml, STATE.md
-├── docs/                   # This directory
-└── tests/
-```
+See [repository-map.md](repository-map.md).
 
 ## Startup Commands
 
@@ -196,4 +166,50 @@ python -m pipeline.run_all
 
 # Start API
 uvicorn api.main:app --reload --port 8000
+```
+
+## Common Tasks
+
+### Add new videos
+1. Edit `config/content.yaml` — either list URLs under `videos:`, or add a
+   `channel:` (plus optional `limit:`) to auto-discover a channel's back catalogue.
+   Both can be combined; ingest merges and dedups them.
+2. Run `python -m pipeline.ingest`
+3. Run `python -m pipeline.transcripts`
+4. Run `python -m pipeline.extract`
+
+### Reset and reprocess a video
+```sql
+UPDATE content SET memories_extracted = FALSE, extraction_failed = FALSE WHERE id = X;
+DELETE FROM memories WHERE content_id = X;
+-- Then run extract again. Chunks whose request is unchanged are read back from
+-- extraction_chunks for free; add this to pay for them again:
+-- DELETE FROM extraction_chunks WHERE content_id = X;
+```
+
+### Check extraction quality
+```sql
+SELECT m.summary, p.name, m.extraction_confidence, m.tags
+FROM memories m JOIN places p ON m.place_id = p.id
+ORDER BY m.id DESC LIMIT 10;
+```
+
+### Useful queries
+```sql
+-- Check pipeline status
+SELECT transcript_fetched, memories_extracted, COUNT(*) FROM content GROUP BY 1, 2;
+
+-- See extracted memories with coordinates
+SELECT m.summary, p.name, ST_AsText(p.coordinates)
+FROM memories m JOIN places p ON m.place_id = p.id;
+
+-- Places the extractor could not place. `pipeline/geocode.py` used to print
+-- this and geocoded nothing; it was deleted.
+SELECT geocode_status, COUNT(*) FROM places GROUP BY 1;
+
+-- Find nearby memories (within 10km of the dev seed)
+SELECT m.summary, p.name, ST_Distance(p.coordinates, ST_MakePoint(12.57586, 55.67886)::geography) as dist_m
+FROM memories m JOIN places p ON m.place_id = p.id
+WHERE ST_DWithin(p.coordinates, ST_MakePoint(12.57586, 55.67886)::geography, 10000)
+ORDER BY dist_m;
 ```
