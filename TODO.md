@@ -1391,9 +1391,13 @@ flagged ⚠️ inline, not overridden.
       retraced p50/p95 **22/90 → 7/59 m**; latency unchanged, ~1.1 s,
       nearly all of it the MLD `/table` at ~19 ms a point.
       Still open: 6 km fills only 0.63 because the dense seed covers
-      ~1.5 km², which is the fixture's edge rather than the solver's. And
-      a CH build of the sidecar (`osrm-contract`) would likely take the
-      table from ~800 ms to tens.
+      ~1.5 km², which is the fixture's edge rather than the solver's.
+      **CH build of the sidecar: tried and parked 2026-09-24.** `osrm-contract`
+      on the NYC foot graph ran 20+ minutes and Docker Desktop died under it;
+      partition consumes the `.ebg` it needs, so it is a full rebuild. Not
+      worth it: a plan is a few calls a day, nothing is deployed, and
+      `ROUTE_CANDIDATES` is the latency knob if ~1 s ever matters. If it
+      does come back, `osmium extract` Manhattan first.
       Raised 2026-09-24. The dev seed is five stops placed by hand as one clean
       loop (`pipeline/seed_dev.py`), which proves the flow and the street
       walking but games the algorithm: with five candidates there is nothing
