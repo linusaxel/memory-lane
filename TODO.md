@@ -1754,6 +1754,80 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
       `test_f30_f31_a_finished_walk_is_finished_once_and_kept` is the headless
       twin.
 
+## Copenhagen: the lakes loop, and what a walk earned (2026-09-24)
+
+Asked for by the founder 2026-09-24. Copenhagen is the planned first city,
+and the test case is a real daily walk: from home on Olufsvej (Østerbro), a
+loop round the lakes to the furthest one (Sankt Jørgens Sø) and back. The
+founder's estimate is ~5 km. Unverified: the three lakes alone are ~6.3 km
+round, so from Olufsvej it may be nearer 8. Measure it on OSRM before sizing
+the seed; the slider's 10 km max covers either. In build order:
+
+- [ ] **Fix "No script URL provided" when the app is opened by hand.** The
+      simulator app is a **Debug** build (`e2e/run.sh` builds `-configuration
+      Debug`), and a Debug build has no JS bundle of its own: it loads one
+      from Metro on :8081. `e2e/run.sh` kills Metro when it exits (unless
+      `--keep`), and `expo-dev-client` is not in `mobile/package.json`, so there
+      is no launcher to fall back to. Tapping the icon after a run therefore
+      finds no packager and shows that red screen. **Fix, cheapest first:**
+      say it in `e2e/README.md` and `mobile/UI.md` ("start Metro first: `cd
+      mobile && npx expo start`"); or give `run.sh` a `--release` build that
+      embeds the bundle, for poking at the app with no Metro up. **Done when:**
+      tapping the icon after `./e2e/run.sh` either works or says how to make
+      it work.
+- [ ] **OSRM for Copenhagen.** `osrm/build.sh` fetches `NewYork.osm.pbf`
+      only, and `e2e/run.sh` refuses to run without streets. Add bbbike's
+      Copenhagen extract, as a second dataset or a merged one, so a Copenhagen
+      walk is routed on streets and not crow-flies × 1.3. **Done when:**
+      `/nearest/v1/foot/12.5700,55.6900` answers on :5001.
+- [ ] **A Copenhagen lakes seed.** A `seed_dev` scenario (`--city cph`, or a
+      `ROUTE_SCENARIOS` entry) with invented memories, marked `dev seed` like
+      the Midtown ones: a few on Olufsvej and the way down to the lakes, then
+      spread along both banks of Sortedams Sø, Peblinge Sø and Sankt Jørgens
+      Sø. Enough of them (15–25) that the walk has real choices. Each
+      snapped within the 20 m gate of a walkable way, as `snap_pool` does
+      now. Pinned by `tests/test_seed_dev.py` like the Midtown coordinates.
+      **Conflict to settle first:** `look-around.yml` uses Copenhagen
+      (55.6759) as its "nothing walkable from here" case, and so does
+      `tests/test_flows.py::test_f19_*`. Move that case to somewhere
+      nothing is seeded, such as the middle of the harbour or Malmö.
+- [ ] **A different lakes loop each time.** The solver is seeded on
+      `device:route_date` (`api/read.py` `_plan_route`), so a device gets
+      one walk all day. Whether tomorrow's walk differs depends on the
+      map, and on a fixed seed it may not. Two parts. (a) Across days: on the
+      lakes seed, assert that consecutive dates pick different stop sets while
+      each is still a clean loop home (route_bench's spur rate, not a new
+      metric). (b) Within a day: a "Show me another" on the preview that
+      re-rolls, which means the seed takes a nonce the client sends and the
+      accept repeats. That keeps "the client never sends stop ids" intact.
+      Needs a flow in docs/08 before code. **Assumption:** "customise a bit
+      differently every time" means both parts. Drop (b) if it only meant
+      day to day.
+- [ ] **A Copenhagen journey in Maestro.** A new flow, e.g.
+      `.maestro/lakes-loop.yml`: `setLocation` on Olufsvej, set the slider to
+      the measured loop length, preview, and assert a loop that reaches Sankt
+      Jørgens Sø (a named stop on its bank) and reads `.* loop`. Then preview
+      again (next day, or "Show me another") and assert the stops changed.
+      Travel blocks from `e2e/travel.py`, which needs its START and budget
+      made arguments.
+- [ ] **Seed walks already walked.** For that last journey: a few past
+      `daily_routes` rows on the lakes, dated before today, with the unlocks
+      that earned them (one finished, 5 of 5; one abandoned, 2 of 5), so the
+      Walks tab opens on a history and not on an empty list. Also seeds F27's
+      streak, which is unasserted today (see Friction).
+- [ ] **Under each walk, the memories it unlocked.** The Walks tab
+      (`mobile/src/Memories.tsx`) shows each walk as one row: date, all stop
+      names joined with ` · `, and `earned of size`. Under each row, list the
+      memories that walk earned: place name and the start of the summary,
+      each opening its sheet like a collection row. The data is already
+      there: `/v1/routes/walked` returns every stop with earned ones open.
+      Client only. Locked stops stay out of the list, or show as a count
+      ("3 not reached"). **Done when:** the Maestro journey above asserts a
+      past walk's unlocked memory under its row, and tapping it opens the
+      sheet.
+
+---
+
 ## Decided — do not revisit
 
 Copied so they survive context resets.
