@@ -518,6 +518,10 @@ def _choose_walks(
             break
         near.append(c)
     walks = [fill([]), fill(_walking_order(near, d, loop))]
+    # And from every candidate as the first stop. Two clusters either side of
+    # the anchor: every greedy start opens with the nearer one, and a shake
+    # drops one or two stops, never the whole cluster it would take to cross.
+    walks += [fill([c]) for c in nodes if _path_meters([c], d, loop) <= budget_meters]
     if size:
         for k in range(ROUTE_HEADINGS):
             walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS)

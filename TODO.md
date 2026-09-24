@@ -1484,6 +1484,12 @@ flagged ⚠️ inline, not overridden.
       tests/test_route_order.py`, and check whether the smaller walk is a mix
       choice. **Done when** `ROUTE_SEED=random` passes run after run and the
       conftest default goes back to random.
+      **Half done 2026-09-24:** the brute-force shortfall was two clusters
+      either side of the anchor, every start opening on the nearer one and a
+      shake too small to cross. `_choose_walks` now also starts from every
+      candidate (15 → 45 ms on 40 candidates). Seeds 3–6 pass. The leftover
+      that fits on the end is still open (seed 1); keeping the walk
+      exactly ordered after each insertion was tried and changed nothing.
 
 ## Walk and Explore (2026-09-24)
 
