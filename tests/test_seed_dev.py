@@ -275,9 +275,13 @@ def test_each_route_scenario_is_its_shape_alone_and_every_pin_gated(db_session, 
     if name == "stack-heavy":
         assert all(3 <= p.memories <= 6 for p in places)
     if name == "bimodal":
-        # Either side of the Park: nothing between Central Park West and 5th.
-        lngs = sorted(p.lng for p in places)
-        assert lngs[9] < -73.972 and lngs[10] > -73.961
+        # Ten a side of the harbour, and nothing out on the water between.
+        sides = [Coordinates(lat=a, lng=b) for a, b in seed_dev.HARBOUR_SIDES]
+        nearer = [
+            min((0, 1), key=lambda s: meters_between(sides[s], Coordinates(lat=p.lat, lng=p.lng)))
+            for p in places
+        ]
+        assert nearer.count(0) == nearer.count(1) == 10
     if name == "linear":
         assert planted > 30 and far > 1500
     if name == "lakes":

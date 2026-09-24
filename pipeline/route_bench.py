@@ -8,7 +8,10 @@
 
 Read, not gated, like perf.py and quality.py. Each run plans a walk through
 api/read.py's own _plan_route for a fresh device, from a random start inside
-the dense seed's box, at a random slider length. The bar is "no spur": a stop
+the dense seed's box, with everything the plan page lets a person set rolled
+at random: slider length, loop or one way, a theme or none, and the app's own
+`again`. Then once more with the next `again`: `fresh` is how often that is a
+different walk, which is "Show me another" working. The bar is "no spur": a stop
 off the loop is walked to and back the same way, and `retraced` is how many
 metres of that there are (api/streets.py, retraced_meters). `spur` is any at
 all, often a few metres from a mid-block start to its corner; `>50m` is one
@@ -45,8 +48,11 @@ from api.streets import retraced_meters, walking_matrix
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session
 from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, scenario
+from pipeline.tags import TAGS
 
-BUDGETS = (1000, 2000, 3000, 4000, 6000)
+BUDGETS = (1000, 2000, 3000, 4000, 6000, 8000, 10_000)
+# A theme on one plan in three, like somebody trying one now and then.
+THEMED = 1 / 3
 # Starts stay well inside the pool's box, so a walk is not short of stops
 # only because it began at the edge of the map.
 START_BOX = (0.004, 0.007)
@@ -57,13 +63,25 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
         lat=around[0] + rng.uniform(-START_BOX[0], START_BOX[0]),
         lng=around[1] + rng.uniform(-START_BOX[1], START_BOX[1]),
     )
+    device = str(uuid.UUID(int=rng.getrandbits(128)))
+    loop = rng.random() < 0.5
+    tag = rng.choice(TAGS) if rng.random() < THEMED else None
+    again = rng.randrange(1_000_000)
+    today = datetime.date.today()
     began = time.perf_counter()
-    stops, legs, ends = _plan_route(
-        session, str(uuid.UUID(int=rng.getrandbits(128))), start, budget, datetime.date.today()
-    )
+    stops, legs, ends = _plan_route(session, device, start, budget, today, loop, tag, again)
     ms = (time.perf_counter() - began) * 1000
+    another, _, _ = _plan_route(session, device, start, budget, today, loop, tag, again + 1)
+    fresh = {r.id for r in another} != {r.id for r in stops}
     if legs is None:  # no stops at all, or the sidecar went away mid-run
-        return {"budget": budget, "stops": len(stops), "walk": 0, "retraced": 0, "ms": ms}
+        return {
+            "budget": budget,
+            "stops": len(stops),
+            "walk": 0,
+            "retraced": 0,
+            "ms": ms,
+            "fresh": fresh,
+        }
     path = [*ends["out"], *(p for leg in legs for p in leg), *(ends["home"] or [])]
     return {
         "budget": budget,
@@ -71,6 +89,7 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
         "walk": sum(meters_between(a, b) for a, b in pairwise(path)),
         "retraced": retraced_meters(path, [Coordinates(lat=r.lat, lng=r.lng) for r in stops]),
         "ms": ms,
+        "fresh": fresh,
     }
 
 
@@ -147,7 +166,7 @@ def pct(values: list[float], q: int) -> float:
 def report(results: list[dict]) -> None:
     print(
         f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'>50m':>6} {'retr p50/p95':>14} "
-        f"{'walk/budget':>12} {'ms p50/p95':>12}"
+        f"{'walk/budget':>12} {'fresh':>6} {'ms p50/p95':>12}"
     )
     for budget in (*BUDGETS, None):
         mine = [r for r in results if budget is None or r["budget"] == budget]
@@ -163,6 +182,7 @@ def report(results: list[dict]) -> None:
             f"{sum(x > 50 for x in retraced) / len(mine):>6.0%} "
             f"{pct(retraced, 50):>6.0f}/{pct(retraced, 95):<6.0f}m "
             f"{statistics.median(ratio):>11.2f} "
+            f"{sum(r['fresh'] for r in mine) / len(mine):>6.0%} "
             f"{pct(ms, 50):>5.0f}/{pct(ms, 95):<5.0f}"
         )
 

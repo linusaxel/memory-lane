@@ -544,24 +544,23 @@ def dense(session, n: int, seed: int) -> int:
 ROUTE_SCENARIOS = {
     "sparse": "2 stops 250-400m out: a walk that cannot fill",
     "dense": "40 stops in the 1 km square round the start",
-    "bimodal": "two clusters either side of Central Park, where crow-flies lies most",
-    "linear": "stops strung along Broadway, 17th Street to Columbus Circle",
+    "bimodal": "two clusters either side of the harbour, where crow-flies lies most",
+    "linear": "stops strung along Nørrebrogade, the lakes to Frederikssundsvej",
     "one-layer": "20 stops, every one historical: nothing for the layer mix to do",
     "stack-heavy": "8 places carrying 3-6 memories each",
     "lakes": "Copenhagen: round the three lakes from Olufsvej, ~9 km, named by lake",
 }
 SCENARIOS = pathlib.Path(__file__).with_name("route_scenarios.json")
-# Columbus & 81st, Lexington & 77th: two avenues off the Park, so nothing
-# snapped within 150m of either lands on a path inside it.
-PARK_SIDES = ((40.7836, -73.9749), (40.7745, -73.958))
-# Broadway at 17th, 23rd, Herald Square, Times Square, 50th, Columbus Circle.
-BROADWAY = (
-    (40.7373, -73.9903),
-    (40.7412, -73.9894),
-    (40.7497, -73.9878),
-    (40.756, -73.9868),
-    (40.7614, -73.9838),
-    (40.7681, -73.9819),
+# Amaliegade and Holmen, facing each other across Inderhavnen: ~500 m apart
+# and ~2.2 km to walk, round by Inderhavnsbroen.
+HARBOUR_SIDES = ((55.6875, 12.5965), (55.6850, 12.6025))
+# Nørrebrogade from Dronning Louises Bro, Nørrebros Runddel, Nørrebro
+# station, on up Frederikssundsvej: ~3.8 km on OSRM.
+NØRREBROGADE = (
+    (55.6868, 12.5617),
+    (55.6930, 12.5490),
+    (55.7007, 12.5378),
+    (55.7055, 12.5290),
 )
 # Olufsvej, then down the city banks to the tip of Sankt Jørgens Sø and back up
 # the far ones: Øster Søgade, Nørre Søgade, Vester Søgade, Svineryggen, Peblinge
@@ -648,7 +647,7 @@ def snap_scenarios() -> dict:
 
     bimodal = []
     dlat = 150 / 111_320
-    for side_lat, side_lng in PARK_SIDES:
+    for side_lat, side_lng in HARBOUR_SIDES:
         dlng = dlat / math.cos(math.radians(side_lat))
         side = []
         while len(side) < 10:
@@ -660,11 +659,11 @@ def snap_scenarios() -> dict:
                 side.append([lat, lng])
         bimodal += side
 
-    # The foot route through Broadway's own intersections keeps to Broadway;
-    # a point every ~80m of it.
+    # The foot route through the street's own junctions keeps to it; a point
+    # every ~80m of it.
     line = _osrm(
         "route",
-        [Coordinates(lat=a, lng=b) for a, b in BROADWAY],
+        [Coordinates(lat=a, lng=b) for a, b in NØRREBROGADE],
         "overview=full&geometries=geojson",
     )["routes"][0]["geometry"]["coordinates"]
     linear = along(line, 80, keep)
@@ -679,8 +678,8 @@ def snap_scenarios() -> dict:
     lakes = along(loop, 400, keep)[1:]
 
     return {
-        "bimodal": {"start": list(PARK_SIDES[0]), "points": bimodal},
-        "linear": {"start": list(BROADWAY[2]), "points": linear},
+        "bimodal": {"start": list(HARBOUR_SIDES[0]), "points": bimodal},
+        "linear": {"start": list(NØRREBROGADE[1]), "points": linear},
         "lakes": {"start": list(OLUFSVEJ), "points": lakes},
     }
 
