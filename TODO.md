@@ -23,12 +23,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in CLAUDE.md, "Before you finish". Newest first;
 delete an entry when its fix lands.
 
-- [ ] **A broad sweep of the whole test suite.** (checked 2026-09-24) The
-      suite is 85 s for 660 tests and no single test dominates (slowest 15 sum
-      to 14 s), so the cost is per-test overhead; `test_ingest.py` (8 s) and
-      `test_api_routes.py` (7 s) lead. Plus duplicate coverage, and fakes that
-      disagree (see "Test fakes disagree about distance" below). The db-log
-      noise half was fixed 2026-09-24.
+- [ ] **A broad sweep of the whole test suite.** (checked 2026-09-24) Now
+      75 s for 660 tests. 10 s of the old 85 s was eight `test_ingest.py`
+      tests asking real YouTube about `@test`, because `fake_channel` missed
+      `channel_metadata`; fixed, and `conftest._no_network` now fails any
+      unmarked test that leaves localhost. What is left is per-test overhead
+      (no single test dominates), duplicate coverage, and fakes that disagree
+      (see "Test fakes disagree about distance" below).
 - [ ] **Implemented flows with no journey at all.** (checked 2026-09-24) No
       `.maestro` flow mentions a heart or a streak. F26 heart is a tap in an
       open sheet and cheap to add to the walk, after stop 1's unlock: fill,
