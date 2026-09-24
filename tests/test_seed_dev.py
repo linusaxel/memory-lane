@@ -248,3 +248,39 @@ def test_the_dense_map_is_random_repeatable_and_each_pin_gated(seeded):
 
     clear(seeded)
     assert not rows(seeded)
+
+
+# -- route scenarios ----------------------------------------------------------
+
+
+@pytest.mark.parametrize("name", seed_dev.ROUTE_SCENARIOS)
+def test_each_route_scenario_is_its_shape_alone_and_every_pin_gated(db_session, name):
+    start, planted = seed_dev.scenario(db_session, name, 1)
+    db_session.commit()
+    places = rows(db_session)
+    assert len(places) == planted
+    assert all(p.place_query.startswith(f"{PLACE_PREFIX}{name}-") for p in places), (
+        "a scenario is planted alone, or a walk in it routes through the base cluster"
+    )
+    assert all(p.in_cell == 1 for p in places), "a shared cell quietly opens both places"
+    here = Coordinates(lat=start[0], lng=start[1])
+    far = max(meters_between(here, Coordinates(lat=p.lat, lng=p.lng)) for p in places)
+
+    if name == "sparse":
+        assert planted == 2 and 250 <= far <= 400
+    if name == "dense":
+        assert planted == 40 and far < 710  # the corner of a 1 km square
+    if name == "one-layer":
+        assert not any(p.submitted for p in places)
+    if name == "stack-heavy":
+        assert all(3 <= p.memories <= 6 for p in places)
+    if name == "bimodal":
+        # Either side of the Park: nothing between Central Park West and 5th.
+        lngs = sorted(p.lng for p in places)
+        assert lngs[9] < -73.972 and lngs[10] > -73.961
+    if name == "linear":
+        assert planted > 30 and far > 1500
+
+    clear(db_session)
+    db_session.commit()
+    assert rows(db_session) == []

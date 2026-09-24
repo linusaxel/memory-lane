@@ -1422,7 +1422,7 @@ flagged ⚠️ inline, not overridden.
       needs one known walk to name its stops; point look-around's preview at
       the dense map instead.
 
-- [ ] **`seed_dev --routes`: scenarios, not a cluster.** Today's seed puts 7
+- [x] **`seed_dev --routes`: scenarios, not a cluster.** Today's seed puts 7
       points within ~400 m. That's enough to render a route (and
       `.maestro/walk-and-unlock.yml` now walks stops 1→2→3 of it), but it
       can't tell one algorithm from another. Add named scenarios, each marked
@@ -1438,6 +1438,15 @@ flagged ⚠️ inline, not overridden.
       Midtown once, and commit the coordinates as a JSON fixture, not OSMnx as
       a dependency.
       [OSMnx, Boeing 2017](https://geoffboeing.com/2016/11/osmnx-python-street-networks/)
+      **Done 2026-09-24:** `seed_dev --routes NAME [--seed S]`, one scenario
+      planted alone (on top of the base cluster a walk routes through the
+      cluster). Not OSMnx: sparse, dense, one-layer and stack-heavy sample
+      `midtown_ways.json`, already OSRM-snapped; bimodal (Columbus & 81st vs
+      Lexington & 77th) and linear (the foot route through Broadway's own
+      intersections, 17th to Columbus Circle, a point every 80 m) are
+      `pipeline/route_scenarios.json`, written once by `--snap-scenarios`.
+      `route_bench` does not read them yet: it still starts inside the dense
+      box, which bimodal and linear are outside.
 - [ ] **`pipeline/route_bench.py`: score and time every solver on the same
       instances.** Shaped like `perf.py` and `quality.py`: run by hand and
       read, not part of the gate. Inputs: the classic OP benchmarks

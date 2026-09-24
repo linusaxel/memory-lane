@@ -3,6 +3,7 @@
     python -m pipeline.seed_dev            # plant them
     python -m pipeline.seed_dev --clear    # take them away
     python -m pipeline.seed_dev --dense 300 --seed 1   # plus a full map to route over
+    python -m pipeline.seed_dev --routes bimodal       # one route scenario, alone
 
 The corpus cannot demonstrate its own mechanic. Every dense point in it is a
 model-guessed centroid and therefore deliberately ungated (F7), and the memories
@@ -24,6 +25,7 @@ those and nothing else.
 import argparse
 import datetime
 import json
+import math
 import pathlib
 import random
 import struct
@@ -168,9 +170,7 @@ def centroid_twin(session) -> None:
             "precision_meters": 10000,
         },
     ).scalar()
-    content_id = session.execute(
-        text("SELECT id FROM content WHERE url = :u"), {"u": DEV_SEED_URL}
-    ).scalar()
+    content_id = content_id_of(session)
     session.execute(
         text("""
             INSERT INTO memories (place_id, content_id, timestamp_start, summary,
@@ -257,12 +257,8 @@ def recording(destination: pathlib.Path) -> float | None:
     return None
 
 
-def filed_by_a_person(session) -> tuple[int, list[str]]:
-    """The submission-shaped memory: an author, the stranger layer, and media.
-
-    Always gated, whatever its neighbours do - `user_id IS NOT NULL` is the other
-    half of is_gated. Written through the same INSERTs api/write.py uses.
-    """
+def seed_user(session) -> None:
+    """The author every seeded submission is filed under."""
     session.execute(
         text(
             "INSERT INTO users (id, display_name) VALUES (CAST(:id AS uuid), :n) "
@@ -277,6 +273,15 @@ def filed_by_a_person(session) -> tuple[int, list[str]]:
         ),
         {"d": SEED_DEVICE, "u": SEED_USER},
     )
+
+
+def filed_by_a_person(session) -> tuple[int, list[str]]:
+    """The submission-shaped memory: an author, the stranger layer, and media.
+
+    Always gated, whatever its neighbours do - `user_id IS NOT NULL` is the other
+    half of is_gated. Written through the same INSERTs api/write.py uses.
+    """
+    seed_user(session)
 
     lat, lng = at("filed")
     place_id = session.execute(
@@ -447,30 +452,27 @@ def snap_pool(tries: int = 4000) -> list[list[float]]:
     return pool
 
 
-def dense(session, n: int, seed: int) -> int:
-    """`n` memories from POOL, chosen and dressed by `random.Random(seed)`: a
-    map full enough that a route has to choose its five. A third are
-    submissions, the rest extracted; tags and contrast_score at random."""
-    rng = random.Random(seed)
-    points = rng.sample(json.loads(POOL.read_text()), n)
-    content_id = session.execute(
-        text("SELECT id FROM content WHERE url = :u"), {"u": DEV_SEED_URL}
-    ).scalar()
-    for i, (lat, lng) in enumerate(points):
-        name = f"Dense {i}, dev seed"
-        summary = f"Seeded memory {i} of {n}, placed at random on a walkable street."
-        tags = rng.sample(TAGS, rng.randint(1, 2))
-        if rng.random() < 1 / 3:
-            place_id = session.execute(
-                text(PLACE_INSERT),
-                {
-                    "name": name,
-                    "place_query": f"{PLACE_PREFIX}dense-{i}",
-                    "lat": lat,
-                    "lng": lng,
-                    "precision_meters": 25,
-                },
-            ).scalar()
+def plant(session, content_id, rng, label, i, n, lat, lng, stranger=None, memories=1):
+    """One place for --dense or --routes carrying `memories` memories: a
+    submission a third of the time unless `stranger` says, random tags and a
+    random contrast_score. The draws stay in this order so a --seed keeps
+    planting the same map."""
+    key = f"{PLACE_PREFIX}{label.lower()}-{i}"
+    name = f"{label.capitalize()} {i}, dev seed"
+    summaries = [
+        f"Seeded memory {i} of {n}, placed at random on a walkable street."
+        + (f" {j + 1} of {memories} here." if memories > 1 else "")
+        for j in range(memories)
+    ]
+    tags = rng.sample(TAGS, rng.randint(1, 2))
+    if stranger is None:
+        stranger = rng.random() < 1 / 3
+    if stranger:
+        place_id = session.execute(
+            text(PLACE_INSERT),
+            {"name": name, "place_query": key, "lat": lat, "lng": lng, "precision_meters": 25},
+        ).scalar()
+        for summary in summaries:
             session.execute(
                 text(SUBMISSION_INSERT),
                 {
@@ -483,30 +485,157 @@ def dense(session, n: int, seed: int) -> int:
                     "user_id": SEED_USER,
                 },
             )
-        else:
-            save_memories(
-                session,
-                content_id,
-                [
-                    memory(
-                        "reach",
-                        name,
-                        summary,
-                        tags,
-                        lat=lat,
-                        lng=lng,
-                        place_query=f"{PLACE_PREFIX}dense-{i}",
-                    )
-                ],
-            )
-        session.execute(
-            text("""
-                UPDATE memories SET contrast_score = :c WHERE place_id =
-                    (SELECT id FROM places WHERE place_query = :q)
-            """),
-            {"c": round(rng.random(), 2), "q": f"{PLACE_PREFIX}dense-{i}"},
+    else:
+        # One place_query, so a stack is one place with several memories.
+        save_memories(
+            session,
+            content_id,
+            [
+                memory("reach", name, summary, tags, lat=lat, lng=lng, place_query=key)
+                for summary in summaries
+            ],
         )
+    session.execute(
+        text("""
+            UPDATE memories SET contrast_score = :c WHERE place_id =
+                (SELECT id FROM places WHERE place_query = :q)
+        """),
+        {"c": round(rng.random(), 2), "q": key},
+    )
+
+
+def content_id_of(session) -> int:
+    return session.execute(
+        text("SELECT id FROM content WHERE url = :u"), {"u": DEV_SEED_URL}
+    ).scalar()
+
+
+def dense(session, n: int, seed: int) -> int:
+    """`n` memories from POOL, chosen and dressed by `random.Random(seed)`: a
+    map full enough that a route has to choose its five. A third are
+    submissions, the rest extracted; tags and contrast_score at random."""
+    rng = random.Random(seed)
+    points = rng.sample(json.loads(POOL.read_text()), n)
+    content_id = content_id_of(session)
+    for i, (lat, lng) in enumerate(points):
+        plant(session, content_id, rng, "dense", i, n, lat, lng)
     return n
+
+
+# --routes: maps shaped to tell one solver from another, each planted alone -
+# a scenario on top of the cluster above would route through the cluster.
+# Four sample POOL; the two outside it are committed in SCENARIOS, written by
+# --snap-scenarios against a running sidecar.
+ROUTE_SCENARIOS = {
+    "sparse": "2 stops 250-400m out: a walk that cannot fill",
+    "dense": "40 stops in the 1 km square round the start",
+    "bimodal": "two clusters either side of Central Park, where crow-flies lies most",
+    "linear": "stops strung along Broadway, 17th Street to Columbus Circle",
+    "one-layer": "20 stops, every one historical: nothing for the layer mix to do",
+    "stack-heavy": "8 places carrying 3-6 memories each",
+}
+SCENARIOS = pathlib.Path(__file__).with_name("route_scenarios.json")
+# Columbus & 81st, Lexington & 77th: two avenues off the Park, so nothing
+# snapped within 150m of either lands on a path inside it.
+PARK_SIDES = ((40.7836, -73.9749), (40.7745, -73.958))
+# Broadway at 17th, 23rd, Herald Square, Times Square, 50th, Columbus Circle.
+BROADWAY = (
+    (40.7373, -73.9903),
+    (40.7412, -73.9894),
+    (40.7497, -73.9878),
+    (40.756, -73.9868),
+    (40.7614, -73.9838),
+    (40.7681, -73.9819),
+)
+
+
+def within(points, lat: float, lng: float, half_meters: float) -> list:
+    """The points inside a square of side 2 * half_meters centred on lat, lng."""
+    dlat = half_meters / 111_320
+    dlng = dlat / math.cos(math.radians(lat))
+    return [p for p in points if abs(p[0] - lat) <= dlat and abs(p[1] - lng) <= dlng]
+
+
+def snap_scenarios() -> dict:
+    from api.streets import _osrm
+
+    rng = random.Random(0)
+    taken = set()
+
+    def keep(lat, lng) -> bool:
+        if cell(lat, lng) in taken:
+            return False
+        taken.add(cell(lat, lng))
+        return True
+
+    bimodal = []
+    dlat = 150 / 111_320
+    for side_lat, side_lng in PARK_SIDES:
+        dlng = dlat / math.cos(math.radians(side_lat))
+        side = []
+        while len(side) < 10:
+            lat = side_lat + rng.uniform(-dlat, dlat)
+            lng = side_lng + rng.uniform(-dlng, dlng)
+            w = _osrm("nearest", [Coordinates(lat=lat, lng=lng)], "number=1")["waypoints"][0]
+            lng, lat = (round(x, 6) for x in w["location"])
+            if w["distance"] < 20 and keep(lat, lng):
+                side.append([lat, lng])
+        bimodal += side
+
+    # The foot route through Broadway's own intersections keeps to Broadway;
+    # a point every ~80m of it.
+    line = _osrm(
+        "route",
+        [Coordinates(lat=a, lng=b) for a, b in BROADWAY],
+        "overview=full&geometries=geojson",
+    )["routes"][0]["geometry"]["coordinates"]
+    linear, walked, last = [], 80.0, None
+    for lng, lat in line:
+        here = Coordinates(lat=lat, lng=lng)
+        if last is not None:
+            walked += meters_between(last, here)
+        last = here
+        if walked >= 80 and keep(round(lat, 6), round(lng, 6)):
+            linear.append([round(lat, 6), round(lng, 6)])
+            walked = 0.0
+
+    return {
+        "bimodal": {"start": list(PARK_SIDES[0]), "points": bimodal},
+        "linear": {"start": list(BROADWAY[2]), "points": linear},
+    }
+
+
+def scenario(session, name: str, seed: int) -> tuple[tuple[float, float], int]:
+    """Plant one ROUTE_SCENARIOS map, alone. Returns where to stand and how many
+    places it planted."""
+    clear(session)
+    content_row(session)
+    seed_user(session)
+    rng = random.Random(seed)
+    pool = json.loads(POOL.read_text())
+    square = within(pool, LAT, LNG, 500)
+    here = Coordinates(lat=LAT, lng=LNG)
+    start, stranger, stacked = (LAT, LNG), None, False
+    if name == "sparse":
+        ring = [
+            p for p in pool if 250 <= meters_between(here, Coordinates(lat=p[0], lng=p[1])) <= 400
+        ]
+        points = rng.sample(ring, 2)
+    elif name == "dense":
+        points = rng.sample(square, 40)
+    elif name == "one-layer":
+        points, stranger = rng.sample(square, 20), False
+    elif name == "stack-heavy":
+        points, stacked = rng.sample(square, 8), True
+    else:
+        fixed = json.loads(SCENARIOS.read_text())[name]
+        start, points = tuple(fixed["start"]), fixed["points"]
+
+    content_id = content_id_of(session)
+    for i, (lat, lng) in enumerate(points):
+        memories = rng.randint(3, 6) if stacked else 1
+        plant(session, content_id, rng, name, i, len(points), lat, lng, stranger, memories)
+    return start, len(points)
 
 
 def clear(session) -> int:
@@ -526,10 +655,9 @@ def clear(session) -> int:
     return removed
 
 
-def seed(session) -> dict:
-    clear(session)
-
-    content_id = session.execute(
+def content_row(session) -> int:
+    """The one content row every seeded extracted memory hangs off."""
+    return session.execute(
         text("""
             INSERT INTO content (url, platform, platform_id, source_type, source_name, title,
                                  transcript_fetched, memories_extracted)
@@ -539,6 +667,12 @@ def seed(session) -> dict:
         """),
         {"u": DEV_SEED_URL},
     ).scalar()
+
+
+def seed(session) -> dict:
+    clear(session)
+
+    content_id = content_row(session)
 
     save_memories(session, content_id, extracted())
     centroid_twin(session)
@@ -558,12 +692,29 @@ def seed(session) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--clear", action="store_true", help="remove the seed and stop")
-    parser.add_argument("--dense", type=int, metavar="N", help="also plant N random memories")
-    parser.add_argument("--seed", type=int, default=1, help="which random N (with --dense)")
+    maps = parser.add_mutually_exclusive_group()
+    maps.add_argument("--dense", type=int, metavar="N", help="also plant N random memories")
+    maps.add_argument(
+        "--routes",
+        choices=ROUTE_SCENARIOS,
+        help="plant one route scenario instead: "
+        + "; ".join(f"{k}: {v}" for k, v in ROUTE_SCENARIOS.items()),
+    )
+    parser.add_argument("--seed", type=int, default=1, help="which random map (--dense, --routes)")
     parser.add_argument(
         "--snap-pool", action="store_true", help=f"rewrite {POOL.name} (needs ROUTING_URL)"
     )
+    parser.add_argument(
+        "--snap-scenarios",
+        action="store_true",
+        help=f"rewrite {SCENARIOS.name} (needs ROUTING_URL)",
+    )
     args = parser.parse_args()
+
+    if args.snap_scenarios:
+        SCENARIOS.write_text(json.dumps(snap_scenarios(), separators=(",", ":")) + "\n")
+        print(f"wrote {', '.join(json.loads(SCENARIOS.read_text()))} to {SCENARIOS}")
+        return
 
     if args.snap_pool:
         pool = snap_pool()
@@ -574,6 +725,12 @@ def main() -> None:
     with get_session() as session:
         if args.clear:
             print(f"removed {clear(session)} seeded places and everything hanging off them")
+            return
+        if args.routes:
+            (lat, lng), n = scenario(session, args.routes, args.seed)
+            print(f"planted {args.routes}, {n} places: {ROUTE_SCENARIOS[args.routes]}")
+            print(f"  stand at {lat},{lng}")
+            print(f"  xcrun simctl location booted set {lat},{lng}")
             return
         made = seed(session)
         if args.dense:
