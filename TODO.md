@@ -12,6 +12,15 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in CLAUDE.md, "Before you finish". Newest first;
 strike an entry when its fix lands.
 
+- [ ] **A broad sweep of the whole test suite.** (2026-09-24) The db
+      container's log reads as broken: ~950 ERRORs since 09-20, nearly all
+      `tests/test_schema_layers.py:81,86` inserting bad rows on purpose, plus
+      three FATALs per run from the fixture force-dropping `memorylane_test`.
+      Spotting the one real failure (migration 010 missing) in that noise took
+      a session. **Fix:** go through every test file for noise like this
+      (`SET LOCAL log_min_messages = fatal` in negative tests), plus duplicate
+      coverage, slow tests, and fakes that disagree (see "Test fakes disagree
+      about distance" below).
 - [x] ~~**Maestro does not drive the plan page's new choices.**~~ (2026-09-24)
       **Fixed 2026-09-24:** `look-around.yml` taps One way and `sport`.
       Loop / One way and the theme chips shipped in `2f5a97f` with API tests
@@ -1777,7 +1786,13 @@ the seed; the slider's 10 km max covers either. In build order:
       embeds the bundle, for poking at the app with no Metro up. **Done when:**
       tapping the icon after `./e2e/run.sh` either works or says how to make
       it work.
-- [ ] **OSRM for Copenhagen.** `osrm/build.sh` fetches `NewYork.osm.pbf`
+- [x] **OSRM for Copenhagen.**
+      **Done 2026-09-24:** `osrm/build.sh` merges both extracts with osmium
+      (in a throwaway container) into `streets.osrm`; compose serves that.
+      Existing checkouts rerun `./osrm/build.sh` once. **Measured:** the
+      lakes loop from Olufsvej round Sankt Jørgens Sø and back is ~9.1 km
+      (hand-picked waypoints down the east banks, up the west), under the
+      slider's 10 km. Size the seed for that. `osrm/build.sh` fetched `NewYork.osm.pbf`
       only, and `e2e/run.sh` refuses to run without streets. Add bbbike's
       Copenhagen extract, as a second dataset or a merged one, so a Copenhagen
       walk is routed on streets and not crow-flies × 1.3. **Done when:**

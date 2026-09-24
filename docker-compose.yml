@@ -41,7 +41,7 @@ services:
   osrm:
     image: ghcr.io/project-osrm/osrm-backend:v5.27.1
     profiles: [routing]
-    command: osrm-routed --algorithm mld /data/nyc.osrm
+    command: osrm-routed --algorithm mld /data/streets.osrm
     ports:
       - "5001:5000"
     volumes:
