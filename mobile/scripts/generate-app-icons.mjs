@@ -13,7 +13,7 @@ const dark = readFileSync(path.join(assetsDir, 'icon-dark.svg'), 'utf8');
 const TILE_RX = 229;
 
 const noBackground = (svg) => svg.replace(/<rect[^>]*\/>/, '');
-const noSun = (svg) => svg.replace(/<circle[^>]*\/>/, '');
+const bare = (svg) => svg.replace(/<path[^>]*\/>/, '').replace(/<circle[^>]*\/>/, '');
 const rounded = (svg) => svg.replace('<rect ', `<rect rx="${TILE_RX}" `);
 const white = (svg) => svg.replace(/fill="#[0-9a-f]+"/gi, 'fill="#ffffff"');
 const teal = /<rect[^>]*fill="(#[0-9a-f]+)"/i.exec(light)[1];
@@ -31,9 +31,9 @@ async function main() {
   await write(light, 1024, 'icon.png', { opaque: true });
   await write(dark, 1024, 'icon-dark.png', { opaque: true });
 
-  // Splash: the tile without its sun. StartupLogo fades the sun in.
-  await write(rounded(noSun(light)), 1024, 'splash-icon.png');
-  await write(rounded(noSun(dark)), 1024, 'splash-icon-dark.png');
+  // Splash: the bare tile. StartupLogo draws the road and sun in over it.
+  await write(rounded(bare(light)), 1024, 'splash-icon.png');
+  await write(rounded(bare(dark)), 1024, 'splash-icon-dark.png');
 
   // Android adaptive icon: the art over a flat teal layer.
   await write(noBackground(light), 512, 'android-icon-foreground.png');

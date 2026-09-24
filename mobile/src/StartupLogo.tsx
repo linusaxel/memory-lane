@@ -1,37 +1,61 @@
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View, useColorScheme } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, View, useColorScheme } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /** mobile/assets/icon.svg inlined - there is no SVG-import tooling in this
- *  project (no metro transformer). ROAD and the sun are that file's; TILE_RX
- *  is mobile/scripts/generate-app-icons.mjs's, so the first frame here is the
- *  native splash-icon.png exactly. */
+ *  project (no metro transformer). TILE_RX is
+ *  mobile/scripts/generate-app-icons.mjs's, so the first frame here is the
+ *  native splash-icon.png (the bare tile) exactly. */
 const ROAD =
   'M180 1024 C220 740 760 780 640 540 C580 430 440 430 490 350 L530 350 C500 420 660 440 710 540 C820 760 520 860 820 1024Z';
+const ROAD_TOP = 330;
+const ROAD_SPAN = 1024 - ROAD_TOP;
+const SUN_R = 66;
 const TILE_RX = 229;
+const SIZE = 200;
 
-/** Fades the sun in over the splash's sunless tile, then calls onDone. Splash
- *  colours, not DynamicColorIOS: react-native-svg's fills/View
- *  `backgroundColor` here sit on the same "real colour, not a
- *  platform-resolved one" exception as the map's Circle/Polyline - see
- *  mobile/UI.md. */
+/** "The lane draws in": the road grows up from the bottom edge, then the sun
+ *  lands, then onDone. Timings are lane-draws-in/README.md's, minus the
+ *  breath - the app is ready by then. Splash colours, not DynamicColorIOS:
+ *  react-native-svg's fills/View `backgroundColor` here sit on the same "real
+ *  colour, not a platform-resolved one" exception as the map's
+ *  Circle/Polyline - see mobile/UI.md. */
 export default function StartupLogo({ onDone }: { onDone: () => void }) {
   const dark = useColorScheme() === 'dark';
   const paper = dark ? '#161412' : '#F7F4EE';
   const tile = dark ? '#0a2b2c' : '#106a6d';
   const road = dark ? '#e9f1ee' : '#f2ede4';
-  const progress = useRef(new Animated.Value(0)).current;
+  const reveal = useRef(new Animated.Value(0)).current;
+  const sun = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animation = Animated.timing(progress, {
-      toValue: 1,
-      duration: 750,
-      useNativeDriver: false, // react-native-svg props are not native-driver props
-    });
-    animation.start(({ finished }) => {
-      if (finished) onDone();
+    SplashScreen.hideAsync();
+    // react-native-svg props are not native-driver props
+    const animation = Animated.parallel([
+      Animated.timing(reveal, {
+        toValue: 1,
+        delay: 150,
+        duration: 650,
+        easing: Easing.bezier(0.3, 0.7, 0.2, 1),
+        useNativeDriver: false,
+      }),
+      Animated.timing(sun, {
+        toValue: 1,
+        delay: 760,
+        duration: 260,
+        easing: Easing.bezier(0, 0, 0.58, 1),
+        useNativeDriver: false,
+      }),
+    ]);
+    AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (reduce) return onDone();
+      animation.start(({ finished }) => {
+        if (finished) onDone();
+      });
     });
     return () => animation.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,11 +63,26 @@ export default function StartupLogo({ onDone }: { onDone: () => void }) {
 
   return (
     <View style={[styles.container, { backgroundColor: paper }]}>
-      <Svg width={200} height={200} viewBox="0 0 1024 1024">
-        <Rect width={1024} height={1024} rx={TILE_RX} fill={tile} />
-        <Path d={ROAD} fill={road} />
-        <AnimatedCircle cx={510} cy={280} r={66} fill="#f2a65a" opacity={progress} />
-      </Svg>
+      <View style={[styles.tile, { backgroundColor: tile }]}>
+        <Svg width={SIZE} height={SIZE} viewBox="0 0 1024 1024">
+          <Path d={ROAD} fill={road} />
+          {/* A tile-coloured cover shrinking from the top down, so the road
+              seems to grow upward. Animating a ClipPath re-renders unreliably. */}
+          <AnimatedRect
+            y={ROAD_TOP}
+            width={1024}
+            height={reveal.interpolate({ inputRange: [0, 1], outputRange: [ROAD_SPAN, 0] })}
+            fill={tile}
+          />
+          <AnimatedCircle
+            cx={510}
+            cy={280}
+            r={sun.interpolate({ inputRange: [0, 1], outputRange: [SUN_R * 0.6, SUN_R] })}
+            opacity={sun}
+            fill="#f2a65a"
+          />
+        </Svg>
+      </View>
     </View>
   );
 }
@@ -53,5 +92,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  tile: {
+    width: SIZE,
+    height: SIZE,
+    borderRadius: (SIZE * TILE_RX) / 1024,
+    overflow: 'hidden',
   },
 });

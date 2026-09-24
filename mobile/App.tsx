@@ -79,8 +79,9 @@ import { useBreath } from './src/useBreath.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
-// Held until StartupLogo's draw-on finishes, so the native splash and the JS
-// animation hand off with no gap and no double-flash.
+// Held until StartupLogo has painted its first frame, which is the splash
+// image exactly, so the native splash and the JS animation hand off with no
+// gap and no double-flash.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /**
@@ -926,10 +927,7 @@ export default function App() {
   if (!logoDone) {
     return (
       <StartupLogo
-        onDone={() => {
-          setLogoDone(true);
-          SplashScreen.hideAsync();
-        }}
+        onDone={() => setLogoDone(true)}
       />
     );
   }
