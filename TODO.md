@@ -1574,7 +1574,7 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
 `daily_routes` keeps every accepted walk (nothing deletes a row) and only
 `GET /v1/routes/today` reads one. In build order:
 
-- [ ] **Walk done: a closing screen, not just a haptic.** Today the finish is
+- [x] **Walk done: a closing screen, not just a haptic.** Today the finish is
       `a0b5caa`'s second success haptic in `mobile/App.tsx`'s `unlock()` and
       the pill reading "Route walked · 5 of 5". On the `routeDone` edge, close
       the sheet onto one full-screen moment: the loop drawn whole
@@ -1582,11 +1582,15 @@ in `docs/08-ux-flows.md`. The persistence is mostly already there:
       first unlock to last, and the streak (F27). One "Done" goes back to the
       map. It is never a dead end (UI.md). Shown once per walk, remembered beside the cached route in
       `mobile/src/route.ts`.
-      **Open:** a share or screenshot button now or later (rule 11, the credit
-      strip); whether a relaunch on a walked day shows it again.
-      **First step:** a `WalkDone.tsx` fed from what App.tsx already has
-      (`route`, `routeLegs`, `earned`), shown when `routeDone` turns true
-      during a session.
+      **Answered 2026-09-24:** no share button, ever; a relaunch does not show
+      it again. The reasons for both, and for the rest of the card's choices,
+      are in docs/10-decisions.md, "The walk ends on a card, once".
+      **Done 2026-09-24:** a card over the map, not a separate page, so the
+      loop behind it is the real map. It is `WalkDone` in `src/Plan.tsx`, next
+      to `Preview`, whose card it shares. It shows after the last stop's sheet
+      closes and follows the finishing unlock in this session, so a relaunch
+      does not show it again and nothing is stored. No share button, by
+      decision. F30 in docs/08.
 - [ ] **Say when a walk was finished.** `daily_routes.completed_at` (migration
       plus `db/schema.sql`), set by `POST /v1/memories/{id}/unlock` when that
       unlock earns the device's last stop of today's walk. It cannot be derived

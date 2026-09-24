@@ -1,6 +1,6 @@
 # F11 Find the nearest locked memory -> F12 Walk there -> F13 Walk into range
-# -> F7 Unlock by standing near it -> F25 walk today's loop 1 -> 5 -> F15
-# reread it later. docs/08-ux-flows.md
+# -> F7 Unlock by standing near it -> F25 walk today's loop 1 -> 5 -> F30
+# finish it -> F15 reread it later. docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
 #
@@ -190,7 +190,15 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*taxi that reversed.*"
     timeout: 30000
+# F30: not over the last memory, which is read first. Closing it shows the
+# whole loop and what it came to, once.
+- assertNotVisible: "Walk done\\."
 - tapOn: "Close"
+- extendedWaitUntil:
+    visible: "Walk done\\."
+    timeout: 30000
+- assertVisible: "5 memories · .* loop · .* min"
+- tapOn: "Done"
 
 - extendedWaitUntil:
     visible: "Route walked · 5 of 5 unlocked\\."
@@ -219,6 +227,7 @@ appId: ${APP_ID}
     visible: "Route walked · 5 of 5 unlocked\\."
     timeout: 30000
 - assertNotVisible: "How far today?"
+- assertNotVisible: "Walk done\\."
 - tapOn: "Memories.*"
 - extendedWaitUntil:
     visible: ".*The bench outside, dev seed.*"

@@ -34,7 +34,10 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap zooms out around you to the next stop;
 │    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
 │    "You're at stop N · open it" seal and breathing while standing at any stop
-└─ "Turn on location"         bottom centre, below the pill, only while there is no position
+├─ "Turn on location"         bottom centre, below the pill, only while there is no position
+└─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
+                               the whole loop, drawn; "Walk done." 34/700, "5 memories · 4.1 km
+                               loop · 52 min", the streak, Done. A relaunch does not show it again
 
 MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 

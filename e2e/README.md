@@ -106,7 +106,7 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 | File | Flow |
 |---|---|
 | `look-around.yml` | F1 discover, F8 be asked for location, F23 sealed until a date, F19 somewhere else entirely |
-| `walk-and-unlock.yml` | F11 nearest, F12 walk there, F13 walk into range, F7 unlock, F25 today's route, F29 explore, F15 reread what you unlocked |
+| `walk-and-unlock.yml` | F11 nearest, F12 walk there, F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F15 reread what you unlocked |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed |
 
 Three journeys rather than one file per id: every flow pays a fresh database

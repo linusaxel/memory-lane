@@ -124,6 +124,45 @@ export function Preview({ stops, meters, loop, fallback, busy, error, onAccept, 
   );
 }
 
+type WalkDoneProps = {
+  stops: number;
+  meters: number;
+  loop: boolean;
+  /** First unlock to last, or null when they were not all earned today. */
+  minutes: number | null;
+  streak: number;
+  onDone: () => void;
+};
+
+/** The day's last card: the walk drawn whole behind it, and what it came to. */
+export function WalkDone({ stops, meters, loop, minutes, streak, onDone }: WalkDoneProps) {
+  const took =
+    minutes === null
+      ? ''
+      : minutes < 60
+        ? ` · ${minutes} min`
+        : ` · ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+  return (
+    <View style={styles.card} accessibilityViewIsModal>
+      <Text style={styles.doneTitle} accessibilityRole="header">
+        Walk done.
+      </Text>
+      <Text style={styles.cardBody}>
+        {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
+      </Text>
+      {streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>}
+      <Pressable
+        style={dim(styles.primary)}
+        onPress={onDone}
+        accessibilityRole="button"
+        accessibilityLabel="Done"
+      >
+        <Text style={styles.primaryText}>Done</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   page: {
     position: 'absolute',
@@ -178,4 +217,5 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontFamily: font.display, fontSize: 23, lineHeight: 30, color: color.ink },
   cardBody: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
+  doneTitle: { fontFamily: font.display, fontSize: 34, lineHeight: 40, color: color.ink },
 });

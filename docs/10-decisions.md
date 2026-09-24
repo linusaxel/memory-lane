@@ -618,6 +618,45 @@ notification watches today's route's still-locked stops for a reason to
 interrupt somebody, not the moment the route itself completes, so the two
 never fire for the same reason.
 
+**Still no push, but no longer silent** (2026-09-24): finishing a walk shows
+a card, in the app, to somebody who is already looking at it. See below.
+
+### The walk ends on a card, once, and nothing records that it did
+
+F30. Decided with the founder 2026-09-24. Each choice here is one somebody may
+want to change later, so each one carries its reason:
+
+- **A card over the map, not a page.** The accomplishment is the loop, so the
+  map behind the card is the real map, fitted to the whole walk and drawn with
+  the preview's own `RouteLine`. It is `WalkDone` beside `Preview` in
+  `src/Plan.tsx`, the same card slot and shadow, so UI.md's two shadows stay
+  two.
+- **After the last memory, not over it.** The hold earns a memory, and the
+  person reads it first. The card waits for that sheet to close
+  (`walkDone && openAt.length === 0`).
+- **The camera lets go while it shows.** `pinned` is false while `walkDone` is
+  set, or the follow effect would fly straight back from the fit. Done
+  pins it again.
+- **Once per walk, by construction.** `walkDone` is set by the unlock that
+  earns the last stop in this session, the same condition as the second
+  haptic. A relaunch on a walked day starts with every stop earned and no
+  unlock to set it, so it lands on the pill. Nothing is stored. Moving
+  this to the server is `daily_routes.completed_at` (TODO.md), and that is
+  for the list of past walks, not for this.
+- **Time is first unlock to last,** from the local `unlocked_at`s. It is left
+  off when a stop was earned on an earlier day (a span over 12 h), because a
+  stop earned yesterday still counts toward today's walk and the number would
+  be days, not minutes.
+- **The streak is refetched** (`fetchProfile`) when the walk ends, because the
+  profile loaded at launch predates today's first unlock. It is shown only past
+  one day: "1 day in a row" is not an accomplishment.
+- **Metres are the planned walk,** the loop through every stop and home. They
+  are not what the phone's GPS says was walked. Nothing records the track, and
+  foreground-only location (UI.md rule 2) could not record it faithfully.
+- **No share button.** Decided, not deferred. A screenshot of the card still
+  works, and the card carries no memory text, so rule 11's credit strip has
+  nothing to credit.
+
 ### Street legs stop at the stops
 
 With `ROUTING_URL` set, stops are chosen and ordered on OSRM walking metres

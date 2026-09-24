@@ -62,7 +62,7 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { Plan, Preview, WALK_KM } from './src/Plan.tsx';
+import { Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
@@ -198,6 +198,9 @@ export default function App() {
   // Nothing server-side hangs off this. It only switches the pill from "here
   // is today's route" to "here is where to go next".
   const [routeStarted, setRouteStarted] = useState(false);
+  // The last stop was just earned, in this session. A relaunch on a walked day
+  // does not set it, so the closing card shows once per walk with nothing stored.
+  const [walkDone, setWalkDone] = useState(false);
   // Where a loop route comes back to, or null for a one-way one.
   const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
   // Street shapes between consecutive stops; null draws them straight.
@@ -587,7 +590,7 @@ export default function App() {
   // On the walk the camera is pinned on the person: it follows them, cannot be
   // dragged off them, and a pinch that drifts the centre is put back. Where the
   // next stop is off screen, NextStopArrow points the way instead.
-  const pinned = tab === 'walk' && stage === 'walk' && !!position;
+  const pinned = tab === 'walk' && stage === 'walk' && !!position && !walkDone;
   useEffect(() => {
     // Never over a flight: `region` is still where it took off, so following
     // from it undid the pill's zoom-out, and a chain of flights each cut short
@@ -613,6 +616,27 @@ export default function App() {
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
   );
+  // After the last stop's sheet is closed, not over it: that memory is read first.
+  const showDone = walkDone && tab === 'walk' && openAt.length === 0;
+  // The whole walk, from the start and home on a loop; stop to stop one-way.
+  const donePath = useMemo(
+    () => (showDone ? pathThrough(routeHome, routeShown, NONE, routeLegs, routeHome) : []),
+    [showDone, routeShown, routeLegs, routeHome],
+  );
+  const doneMinutes = useMemo(() => {
+    const times = routeShown.map((memory) => unlocked[memory.id]?.unlocked_at);
+    if (!showDone || times.some((t) => t === undefined)) return null;
+    const span = Math.max(...(times as number[])) - Math.min(...(times as number[]));
+    // A stop earned on an earlier day would make this a count of days.
+    return span < 12 * 3600_000 ? Math.max(1, Math.round(span / 60_000)) : null;
+  }, [showDone, routeShown, unlocked]);
+  useEffect(() => {
+    if (donePath.length < 2) return;
+    mapRef.current?.fitToCoordinates(
+      donePath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
+      { edgePadding: { top: 80, right: 60, bottom: 300, left: 60 }, animated: true },
+    );
+  }, [donePath, mapRef]);
   // Both sides have to be a real id: an extracted memory's author is null and
   // a signed-out profile's user_id is undefined, and undefined === undefined
   // would otherwise call every extracted memory yours before the profile has
@@ -752,6 +776,12 @@ export default function App() {
             routeShown.every((stop) => stop.id === memory.id || earned.has(stop.id))
           ) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            setWalkDone(true);
+            // The streak the card shows, counting today.
+            deviceId()
+              .then(fetchProfile)
+              .then((who) => mounted.current && setProfile(who))
+              .catch(() => {});
           }
           setUnlocked(await rememberUnlocked(unlocked, opened));
         } else {
@@ -936,6 +966,7 @@ export default function App() {
             {tab === 'walk' && stage === 'preview' && previewPath.length > 1 && (
               <RouteLine path={previewPath} dark={scheme === 'dark'} />
             )}
+            {donePath.length > 1 && <RouteLine path={donePath} dark={scheme === 'dark'} />}
 
             {(tab === 'walk' ? groups : []).map((group) => {
               // The first of a group's memories that is also a route stop -
@@ -1043,7 +1074,7 @@ export default function App() {
               </Pressable>
             </Animated.View>
           )}
-          {walking && tab === 'walk' && onRoute && !stopHere && (
+          {walking && tab === 'walk' && onRoute && !stopHere && !showDone && (
             <Pressable
               style={dim([styles.route, pillSlot])}
               accessibilityRole="button"
@@ -1130,6 +1161,17 @@ export default function App() {
                 setPlanError(null);
                 setStage('plan');
               }}
+            />
+          )}
+
+          {showDone && (
+            <WalkDone
+              stops={routeUnlockedCount}
+              meters={pathMeters(donePath)}
+              loop={!!routeHome}
+              minutes={doneMinutes}
+              streak={profile?.streak ?? 0}
+              onDone={() => setWalkDone(false)}
             />
           )}
 
