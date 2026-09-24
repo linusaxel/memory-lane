@@ -1,6 +1,6 @@
-# F11 Find the nearest locked memory -> F12 Walk there -> F13 Walk into range
-# -> F7 Unlock by standing near it -> F25 walk today's loop 1 -> 5 -> F30
-# finish it -> F15 reread it later -> F31 look back at the walk.
+# F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
+# loop 1 -> 5 -> F30 finish it -> F15 reread it later -> F31 look back at the
+# walk.
 # docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
@@ -56,13 +56,12 @@ appId: ${APP_ID}
     notVisible: "Turn on location"
     timeout: 40000
 
-# F17 + F12: why it will not open, and what to do about it.
+# F17: why it will not open.
 - extendedWaitUntil:
     visible: "Stop 2 of 5. ${STOP2}. Locked, too far to open."
     timeout: 40000
 - tapOn: "Stop 2 of 5. ${STOP2}. Locked, too far to open."
 - assertVisible: "Get within 20 m and you can open it."
-- assertVisible: "Walk there"
 - tapOn: "Close"
 
 # F25 + F13 + F7, five times: walk today's route in order, 1 -> 5, whichever
@@ -97,72 +96,50 @@ appId: ${APP_ID}
 - assertVisible: "Stop 1 on today's walk\\."
 - assertNotVisible: "Unlock this memory"
 - tapOn: "Show on the walk"
-- extendedWaitUntil:
-    visible: "You're at stop 1: ${STOP1}\\. Open to unlock\\."
-    timeout: 30000
-# F7: the hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
-# animation callback fires while the finger is still down, so the press
-# completes the unlock rather than cancelling it.
-- tapOn: "You're at stop 1: .*"
-- assertVisible: "You are standing close enough to open this one."
-- longPressOn: "Unlock this memory"
-- extendedWaitUntil:
-    visible: ".*${WORDS1}.*"
-    timeout: 30000
-- assertNotVisible: "Hold to unlock"
-- tapOn: "Close"
+- runFlow:
+    file: steps/unlock-stop.yml
+    env:
+      N: "1"
+      STOP: "${STOP1}"
+      WORDS: "${WORDS1}"
 
 - runFlow: ../e2e/out/legs/2.yml
-- extendedWaitUntil:
-    visible: "You're at stop 2: ${STOP2}\\. Open to unlock\\."
-    timeout: 45000
-- tapOn: "You're at stop 2: .*"
-- longPressOn: "Unlock this memory"
-- extendedWaitUntil:
-    visible: ".*${WORDS2}.*"
-    timeout: 30000
-- tapOn: "Close"
+- runFlow:
+    file: steps/unlock-stop.yml
+    env:
+      N: "2"
+      STOP: "${STOP2}"
+      WORDS: "${WORDS2}"
 
 - runFlow: ../e2e/out/legs/3.yml
-- extendedWaitUntil:
-    visible: "You're at stop 3: ${STOP3}\\. Open to unlock\\."
-    timeout: 45000
-- tapOn: "You're at stop 3: .*"
-- longPressOn: "Unlock this memory"
-- extendedWaitUntil:
-    visible: ".*${WORDS3}.*"
-    timeout: 30000
-- tapOn: "Close"
-
+- runFlow:
+    file: steps/unlock-stop.yml
+    env:
+      N: "3"
+      STOP: "${STOP3}"
+      WORDS: "${WORDS3}"
 # Three earned, stop 4 out of reach: the pill points on.
 - extendedWaitUntil:
     visible: "Next stop: ${STOP4}\\."
     timeout: 30000
 
 - runFlow: ../e2e/out/legs/4.yml
-- extendedWaitUntil:
-    visible: "You're at stop 4: ${STOP4}\\. Open to unlock\\."
-    timeout: 45000
-- tapOn: "You're at stop 4: .*"
-- longPressOn: "Unlock this memory"
-- extendedWaitUntil:
-    visible: ".*${WORDS4}.*"
-    timeout: 30000
-- tapOn: "Close"
+- runFlow:
+    file: steps/unlock-stop.yml
+    env:
+      N: "4"
+      STOP: "${STOP4}"
+      WORDS: "${WORDS4}"
 
 - runFlow: ../e2e/out/legs/5.yml
-- extendedWaitUntil:
-    visible: "You're at stop 5: ${STOP5}\\. Open to unlock\\."
-    timeout: 45000
-- tapOn: "You're at stop 5: .*"
-- longPressOn: "Unlock this memory"
-- extendedWaitUntil:
-    visible: ".*${WORDS5}.*"
-    timeout: 30000
-# F30: not over the last memory, which is read first. Closing it shows the
-# whole loop and what it came to, once.
-- assertNotVisible: "Walk done\\."
-- tapOn: "Close"
+- runFlow:
+    file: steps/unlock-stop.yml
+    env:
+      N: "5"
+      STOP: "${STOP5}"
+      WORDS: "${WORDS5}"
+
+# F30: closing the last memory shows the whole loop and what it came to, once.
 - extendedWaitUntil:
     visible: "Walk done\\."
     timeout: 30000

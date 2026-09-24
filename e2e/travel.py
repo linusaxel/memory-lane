@@ -6,7 +6,9 @@ e2e/run.sh runs this once per run, after `seed_dev --at LAT,LNG`. It plans the
 walk the app will be offered, through api/read.py's own _plan_route on the same
 database and streets, and writes:
 
-  e2e/out/legs/N.yml   the street shape to stop N, a flow the journey runFlows
+  e2e/out/legs/N.yml   the street shape to stop N, a flow the journey runFlows:
+                       one setLocation per point. Not `travel`, which spends
+                       50 fixes (~6s) on every segment however short
   e2e/out/legs/env     STOPn / WORDSn: each stop's name, and words from its summary
 
 The seed's five stops are the only ones in reach, so every device and every
@@ -53,9 +55,11 @@ def main(start: Coordinates) -> None:
     for n, (name, leg) in enumerate(zip(names, [ends["out"], *legs], strict=True), 1):
         points = [start, *leg] if n == 1 else leg
         (OUT / f"{n}.yml").write_text(
-            "appId: ${APP_ID}\n---\n- travel:\n    points:\n"
-            + "".join(f'      - "{p.lat:.6f},{p.lng:.6f}"\n' for p in points)
-            + "    speed: 10\n"
+            "appId: ${APP_ID}\n---\n"
+            + "".join(
+                f"- setLocation:\n    latitude: {p.lat:.6f}\n    longitude: {p.lng:.6f}\n"
+                for p in points
+            )
         )
         env += [f"STOP{n}={name}", f"WORDS{n}={WORDS[name]}"]
     (OUT / "env").write_text("\n".join(env) + "\n")

@@ -100,7 +100,7 @@ def test_f1_discover_answers_before_anybody_has_walked_anywhere(seeded):
 
 
 def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
-    """F11 -> F12 -> F13 -> F7, as one sequence.
+    """F13 -> F7, as one sequence.
 
     The refusal is a 200 carrying a distance, not an error: the app turns it
     into "try a few steps nearer" rather than into a failure state.

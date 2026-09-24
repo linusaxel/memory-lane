@@ -4,7 +4,6 @@ import {
   Easing,
   Linking,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -86,13 +85,6 @@ function formatSealDate(iso: string): string {
   return `${day} ${MONTHS[month - 1]} ${year}`;
 }
 
-/** Walking directions to a coordinate, in whatever maps app the phone has. */
-function walkingDirectionsUrl(lat: number, lng: number): string {
-  return Platform.OS === 'ios'
-    ? `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
-    : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
-}
-
 function formatTimestamp(seconds: number): string {
   return duration(seconds, { hours: true });
 }
@@ -115,9 +107,9 @@ export default function MemorySheet({
 }: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
-  // openURL rejects when nothing can handle the link - no browser, no maps app,
-  // a locked-down device. Both links here can hit it, so both say so instead of
-  // appearing to do nothing.
+  // openURL rejects when nothing can handle the link - no browser, a
+  // locked-down device. The source link says so instead of appearing to do
+  // nothing.
   const [linkFailed, setLinkFailed] = useState<string | null>(null);
 
   const open = (url: string, whenNothingOpens: string) => {
@@ -285,24 +277,6 @@ export default function MemorySheet({
                       : `Get within ${Math.round(radius)} m and you can open it.`}
                   </Text>
                   {waiting}
-                  {/* Knowing it is 412m away and having no idea which way is
-                      most of a dead end. The distance is the ask; this is the
-                      answer. */}
-                  <Pressable
-                    style={dim(styles.walk)}
-                    accessibilityRole="button"
-                    onPress={() =>
-                      open(
-                        walkingDirectionsUrl(
-                          memory.place.coordinates.lat,
-                          memory.place.coordinates.lng,
-                        ),
-                        'No maps app to open directions in.',
-                      )
-                    }
-                  >
-                    <Text style={styles.walkText}>Walk there</Text>
-                  </Pressable>
                 </>
               )}
             </View>

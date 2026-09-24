@@ -1,0 +1,21 @@
+# Stand on stop N and open it: walk-and-unlock.yml runs this once per stop,
+# after that stop's leg. Env: N, STOP (its place name), WORDS (from its summary).
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible: "You're at stop ${N}: ${STOP}\\. Open to unlock\\."
+    timeout: 45000
+# F7: the hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
+# animation callback fires while the finger is still down, so the press
+# completes the unlock rather than cancelling it.
+- tapOn: "You're at stop ${N}: .*"
+- assertVisible: "You are standing close enough to open this one."
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*${WORDS}.*"
+    timeout: 30000
+- assertNotVisible: "Hold to unlock"
+# F30: never over a memory, which is read first. Only closing the last one
+# shows the whole loop.
+- assertNotVisible: "Walk done\\."
+- tapOn: "Close"

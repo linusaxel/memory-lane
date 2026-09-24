@@ -50,7 +50,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ distance         44/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ tags     pills
   ├─ "1 attachment waiting"         ├─ "Filed by X", or the channel and avatar
-  ├─ "Walk there"     outlined      ├─ "Edit this memory"  own submissions only
+  │                                 ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 
   The locked side says how many attachments are waiting and never which. A
@@ -689,11 +689,11 @@ for **Open Settings**, which is the only route back.
 Position is then *watched*, not read once (`watchPositionAsync`, 5m interval,
 foreground only). Walking into range has to change the map by itself.
 
-## Two links that can fail
+## A link that can fail
 
 `Linking.openURL` rejects when nothing on the device can handle the link — no
-browser, no maps app, a managed device. Both the watch link and "Walk there" go
-through one helper in `MemorySheet` that catches it and says so. A control that
+browser, a managed device. The watch link goes through a helper in
+`MemorySheet` that catches it and says so. A control that
 silently does nothing is the failure people blame on themselves.
 
 ## Accessibility

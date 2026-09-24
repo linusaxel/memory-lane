@@ -27,7 +27,7 @@ along its street shapes, and without streets the app picks a different one.
 
 Those shapes are pasted into `walk-and-unlock.yml`, so a solver change that
 reorders the walk breaks it. `./e2e/run.sh --keep walk`, then
-`venv/bin/python e2e/travel.py` prints every leg's `travel` block afresh.
+`venv/bin/python e2e/travel.py` writes every leg afresh.
 
 **Point `--record` at one flow, not at all of them.** Recording is not free and it
 is not stable in bulk: `./e2e/run.sh` on its own passes 6/6 run after run,
@@ -116,12 +116,13 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 | File | Flow |
 |---|---|
 | `look-around.yml` | F1 discover, F8 be asked for location, F23 sealed until a date, F19 somewhere else entirely |
-| `walk-and-unlock.yml` | F11 nearest, F12 walk there, F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F15 reread what you unlocked, F31 look back at a walk |
+| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F15 reread what you unlocked, F31 look back at a walk |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed |
 
 Three journeys rather than one file per id: every flow pays a fresh database
 and a cold start, and the old per-id files performed the same unlock three
-times and the same filing twice. A new id joins the journey it belongs to.
+times and the same filing twice. A new id joins the journey it belongs to; a step a journey repeats goes in
+`.maestro/steps/`, which `run.sh` does not run on its own.
 
 ## Writing a flow
 

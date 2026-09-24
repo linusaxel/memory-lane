@@ -34,7 +34,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F9 | Use the app without location | Implemented |
 | F10 | Lose the network | Implemented |
 | F11 | Find the nearest locked memory | Removed from the app |
-| F12 | Walk there | Implemented |
+| F12 | Walk there | Removed from the app |
 | F13 | Walk into range | Implemented |
 | F14 | Be refused an unlock | Implemented |
 | F15 | Reread what you unlocked | Implemented |
@@ -81,7 +81,7 @@ it. Decline location and the walk is planned from central Copenhagen instead (F9
 is readable yet, and that is the pitch, not a failure.
 
 **Session two — the first unlock.** The route pill says where the next stop is
-(F25), the sheet hands you walking directions (F12). You arrive, the pin turns
+(F25) and the line on the map is the way there. You arrive, the pin turns
 (F13), you hold the ring (F7), and a memory arrives (F7).
 This is the entire product; every other flow exists to get somebody here or to
 make it worth having got here.
@@ -391,19 +391,15 @@ The "Nearest locked memory · 412 m" pill answered a map of padlocks. The map no
 shows only today's walk, and the route pill (F25) names the next stop and its
 distance.
 
-## F12 · Walk there — **Implemented**
+## F12 · Walk there — **Removed from the app**
 
-1. An out-of-reach memory's sheet shows the distance as a figure and a
-   **"Walk there"** button.
-2. It hands the coordinate to whatever maps app the phone has, with walking
-   directions — Apple Maps on iOS, Google Maps elsewhere.
-
-**Failure:** no maps app at all. `Linking.openURL` rejects and the sheet says
-"No maps app to open directions in" rather than appearing to do nothing.
+The sheet used to hand the coordinate to Apple or Google Maps. The walk is the
+app's own: today's route is drawn on the map and the pill names the next stop,
+so nothing sends you out of it.
 
 ## F13 · Walk into range — **Implemented**
 
-**Who:** somebody who took the directions.
+**Who:** somebody following today's route.
 
 1. Position is *watched*, not read once (`watchPositionAsync`, 5m). Walking
    into range changes the map by itself — a position read at launch would mean a

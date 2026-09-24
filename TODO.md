@@ -245,6 +245,14 @@ reading it spends its afternoon re-fixing solved problems, and the one entry
 that was outright false would have sent it hunting a ruff bug that does not
 exist. Verify before trusting, and strike entries when you fix them.
 
+- [ ] **The at-a-stop pill reads badly and breathes.** (2026-09-24) "You're at
+      stop 3 · open it" (`mobile/App.tsx`, `routeAtText`) is poor copy. Make it
+      something like "Unlock memory". Drop `pillBreath` from that
+      `Animated.View`, because the animation is ugly. The e2e journey taps its
+      accessibility label, "You're at stop N: …. Open to unlock."
+      (`.maestro/steps/unlock-stop.yml`, `.maestro/walk-and-unlock.yml`), so
+      change both together.
+
 - [x] **Semantic place duplicates** — 18 of 25 proposals reviewed and applied,
       194 places → 176, memories unchanged at 224. Gotham Comedy Club is one pin
       with 7 memories. The 7 rejected pairs and the reasoning are in 1.2.
