@@ -86,6 +86,29 @@ appId: ${APP_ID}
     timeout: 45000
 # The pin itself turned, not just the pill.
 - assertVisible: "Stop 1 of 5. Where I was standing, dev seed. Locked, within reach."
+
+# F29: the same spot from Explore. Every memory around, the stack as one
+# counted pin, and the stop you are standing on stays shut: nothing is earned
+# here. Its sheet knows it is on the walk and hands you back to it.
+- tapOn: "Explore"
+- extendedWaitUntil:
+    visible: "The corner, dev seed \\(3\\)\\. Locked, too far to open\\."
+    timeout: 40000
+- assertVisible: "Add a memory here"
+- assertNotVisible: "You're at stop 1: .*"
+- swipe:
+    start: 50%, 55%
+    end: 50%, 45%
+- extendedWaitUntil:
+    visible: "Where I was standing, dev seed\\. Locked, too far to open\\."
+    timeout: 30000
+- tapOn: "Where I was standing, dev seed\\. Locked, too far to open\\."
+- assertVisible: "Stop 1 on today's walk\\."
+- assertNotVisible: "Unlock this memory"
+- tapOn: "Show on the walk"
+- extendedWaitUntil:
+    visible: "You're at stop 1: Where I was standing, dev seed\\. Open to unlock\\."
+    timeout: 30000
 # F7: the hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
 # animation callback fires while the finger is still down, so the press
 # completes the unlock rather than cancelling it.

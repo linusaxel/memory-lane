@@ -215,6 +215,39 @@ def test_f23_a_seal_does_not_care_where_you_are_standing(seeded, db_session):
     assert mine.json()["summary"] == ""
 
 
+def test_f29_explore_shows_the_walk_and_opens_none_of_it(seeded):
+    """F29: Explore's viewport fetch, standing on today's first stop.
+
+    Explore reads /v1/memories/nearby and nothing else, so what it shows is
+    locked however close you stand; only the walk's unlock opens it.
+    """
+    walk = seeded.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": START[0], "lng": START[1], "budget_meters": 4000},
+    ).json()
+    stops = walk["memories"]
+    assert stops, "the seed should make a walk from the start"
+    first = stops[0]
+    here = first["place"]["coordinates"]
+
+    seen = seeded.get(
+        "/v1/memories/nearby", params={"lat": here["lat"], "lng": here["lng"], "radius_km": 1}
+    ).json()["memories"]
+    by_id = {m["id"]: m for m in seen}
+    # Every stop is on the Explore map, so its sheet can say which one it is.
+    assert {m["id"] for m in stops} <= by_id.keys()
+    assert by_id[first["id"]]["locked"] is True
+    assert by_id[first["id"]]["summary"] == ""
+
+    # Show on the walk, and the walk's unlock is the one that opens it.
+    opened = seeded.post(
+        f"/v1/memories/{first['id']}/unlock",
+        json={"device": DEVICE, "lat": here["lat"], "lng": here["lng"]},
+    ).json()
+    assert opened["locked"] is False
+    assert opened["summary"]
+
+
 def test_f19_somewhere_else_entirely_is_told_where_to_go(seeded):
     """F19: an empty map is a dead end unless it names the nearest hotspot."""
     copenhagen = {"lat": 55.6759, "lng": 12.5655, "radius_km": 10}

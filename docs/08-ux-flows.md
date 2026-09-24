@@ -54,6 +54,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F26 | Heart a memory | Implemented |
 | F27 | Keep a streak | Implemented |
 | F28 | Get notified near a memory | Implemented |
+| F29 | Explore what is around | Implemented |
 
 **Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
 and nothing is behind it — no onboarding carousel, no settings anybody
@@ -926,6 +927,29 @@ at 20, nearest-radius-per-memory) to account without needing a device to
 prove it.
 
 ---
+
+## F29 · Explore what is around — **Implemented**
+
+**Who:** anybody, walk or no walk.
+**Trigger:** the Explore tab.
+
+1. The same map as the walk, with its own camera: the first visit centres on
+   you, after that it is wherever you left it. Every memory under the
+   viewport, fetched as the camera settles (`src/useNearby.ts`), grouped by
+   `cluster.ts`; a wide cluster zooms instead of opening.
+2. **Nothing opens here.** No pin lights, standing on one included, and the
+   sheet is the locked composition with no ring: "Memories open on a walk,
+   standing where they happened." What a walk already earned, and what was
+   never gated (a shared centroid), reads open as it does everywhere.
+3. A stop of today's walk is a plain pin, and its sheet says "Stop N on
+   today's walk" with **Show on the walk**, which switches to Walk and lands
+   on it. The client still never names a stop to the server.
+4. "+ Add" is here too: filing is standing somewhere, not unlocking (F5).
+5. Leaving Walk mid-preview and coming back resumes the preview. Geofence
+   notifications (F28) keep watching the route only.
+
+The rule is the client's: `POST /v1/memories/{id}/unlock` does not know which
+tab asked (docs/10, "Unlocking is Walk-only").
 
 ## Proposed
 

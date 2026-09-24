@@ -1520,10 +1520,12 @@ In build order:
       **Done 2026-09-24:** "Show on the walk" passes its region to `selectTab`;
       preview resumes as it already did; the dev hook searches the tab it
       launched on.
-- [ ] **Flows and tests.** New docs/08 flow F29 (Explore) and F25 amended. A
+- [x] **Flows and tests.** New docs/08 flow F29 (Explore) and F25 amended. A
       Maestro journey: pan, clusters, a pin that stays locked while you stand
       on it, the jump to Walk. The same journey headless in
       `tests/test_flows.py`.
+      **Done 2026-09-24:** F29 joins `walk-and-unlock.yml` at stop 1, which is
+      the pin you are standing on; headless as `test_f29_*`.
 
 ---
 
