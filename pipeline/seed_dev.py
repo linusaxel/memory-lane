@@ -36,7 +36,7 @@ import zlib
 
 from sqlalchemy import text
 
-from api.gate import meters_between
+from api.gate import UNLOCK_RADIUS_METERS, meters_between
 from api.media import MEDIA_DIR
 from api.models import Coordinates
 from api.queries import PLACE_INSERT, SUBMISSION_INSERT
@@ -78,6 +78,37 @@ OFFSETS = {
     "sealed": (-0.000102, 0.00018),  # ~16m - a time capsule: in reach and still shut
     "nightspot": (0.001756, -0.002856),  # ~265m - Fiolstræde, a second submission
 }
+
+
+# The places a walk may stop at: every seed but the time capsule and the
+# ungated centroid pair.
+STOPS = ("reach", "walk", "stack", "filed", "nightspot")
+
+
+def move_to(lat: float, lng: float) -> None:
+    """Plant the cluster round lat, lng instead (`--at`, e2e/run.sh's random
+    start): each stop moved to the walkable way nearest its offset there. A
+    layout that breaks a rule the seed stands on - a stop inside the start's
+    gate, two places in one cell, `reach` not a few steps off - raises
+    ValueError, and the caller picks another start."""
+    global LAT, LNG
+    from api.streets import _osrm
+
+    LAT, LNG = lat, lng
+    for key in STOPS:
+        dlat, dlng = OFFSETS[key]
+        near = Coordinates(lat=lat + dlat, lng=lng + dlng)
+        slng, slat = _osrm("nearest", [near], "number=1")["waypoints"][0]["location"]
+        OFFSETS[key] = (round(slat - lat, 6), round(slng - lng, 6))
+    here = Coordinates(lat=lat, lng=lng)
+    away = {k: meters_between(here, Coordinates(lat=a, lng=b)) for k in STOPS for a, b in [at(k)]}
+    if min(away.values()) <= UNLOCK_RADIUS_METERS + 5:
+        raise ValueError(f"a stop is inside the start's gate: {away}")
+    if away["reach"] >= 200:
+        raise ValueError(f"reach is {away['reach']:.0f}m off, not a few steps")
+    cells = [cell(*at(k)) for k in OFFSETS]
+    if len(set(cells)) < len(cells):
+        raise ValueError("two seeded places share a grid cell, which ungates both")
 
 
 def at(key: str) -> tuple[float, float]:
@@ -122,7 +153,7 @@ def extracted() -> list[dict]:
         ),
         memory(
             "walk",
-            "Along Niels Hemmingsens Gade, dev seed",
+            "Along the street, dev seed",
             "The night the power went out on this block and somebody wheeled a "
             "piano into the street. Nobody could agree who it belonged to.",
             ["music", "nightlife"],
@@ -782,6 +813,9 @@ def main() -> None:
     )
     parser.add_argument("--seed", type=int, default=1, help="which random map (--dense, --routes)")
     parser.add_argument(
+        "--at", metavar="LAT,LNG", help="plant the cluster there, stops snapped (needs ROUTING_URL)"
+    )
+    parser.add_argument(
         "--snap-pool", action="store_true", help=f"rewrite {POOL.name} (needs ROUTING_URL)"
     )
     parser.add_argument(
@@ -812,6 +846,13 @@ def main() -> None:
             print(f"  stand at {lat},{lng}")
             print(f"  xcrun simctl location booted set {lat},{lng}")
             return
+        if args.at:
+            try:
+                move_to(*(float(x) for x in args.at.split(",")))
+            except ValueError as refused:
+                # 3, not 1: e2e/run.sh reads it as "try another start".
+                print(f"refused {args.at}: {refused}")
+                raise SystemExit(3) from None
         made = seed(session)
         if args.dense:
             print(f"planted {dense(session, args.dense, args.seed)} dense memories")

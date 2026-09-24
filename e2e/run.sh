@@ -158,8 +158,20 @@ reset_database() {
   psql_on memorylane "CREATE DATABASE $DB" >/dev/null || infra "could not create $DB"
   docker compose exec -T db psql -q -U memorylane -d "$DB" < db/schema.sql >/dev/null \
     || infra "could not load db/schema.sql into $DB"
-  DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" venv/bin/python -m pipeline.seed_dev \
-    > "$LOGS/seed.log" 2>&1 || { cat "$LOGS/seed.log" >&2; exit 1; }
+  DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL="$ROUTING" \
+    venv/bin/python -m pipeline.seed_dev --at "$START" > "$LOGS/seed.log" 2>&1
+  local seeded=$?
+  [ "$seeded" = 3 ] && return 3
+  [ "$seeded" = 0 ] || { cat "$LOGS/seed.log" >&2; exit 1; }
+}
+
+# A walkable point in central Copenhagen, different every run. The seed is
+# planted round it and the journeys start there, so the app is driven from
+# somewhere nobody chose. E2E_START=lat,lng replays one.
+random_start() {
+  venv/bin/python -c 'import json, random
+p = random.choice(json.load(open("pipeline/cph_ways.json")))
+print(f"{p[0]},{p[1]}")'
 }
 
 say "1/5  database"
@@ -171,8 +183,35 @@ done
 docker compose exec -T db pg_isready -U memorylane >/dev/null 2>&1 \
   || infra "postgres never became ready"
 
-reset_database
-echo "     seeded $DB"
+# Streets, as a person gets them: the flows name stops in the order OSRM walks
+# them and travel along its street shapes, and the 20m gate drops any pin a
+# street cannot reach. Without the sidecar that is a different app.
+ROUTING="${E2E_ROUTING_URL:-http://localhost:5001}"
+curl -fsS -m 3 "$ROUTING/nearest/v1/foot/12.57586,55.67886" >/dev/null 2>&1 \
+  || infra "no OSRM at $ROUTING - ./osrm/build.sh once, then docker compose --profile routing up -d osrm"
+
+# Some starts cannot carry the walk journey (a stop lands in the start's gate,
+# or the stack comes first); seed_dev and travel.py exit 3 and we roll again.
+for _ in $(seq 20); do
+  START="${E2E_START:-$(random_start)}"
+  if ! reset_database; then
+    [ -n "${E2E_START:-}" ] && { cat "$LOGS/seed.log" >&2; exit 1; }
+    START=
+    continue
+  fi
+  PYTHONPATH="$ROOT" DATABASE_URL="$DB_URL" ROUTING_URL="$ROUTING" venv/bin/python e2e/travel.py "$START" \
+    > "$LOGS/travel.log" 2>&1
+  case $? in
+    0) break ;;
+    3) [ -n "${E2E_START:-}" ] && { cat "$LOGS/travel.log" >&2; exit 1; }; START= ;;
+    *) cat "$LOGS/travel.log" >&2; exit 1 ;;
+  esac
+done
+[ -z "$START" ] && infra "twenty random starts in a row could not carry the walk journey"
+ENV_ARGS=(--env APP_ID="$APP_ID" --env START_LAT="${START%,*}" --env START_LNG="${START#*,}")
+while IFS= read -r line; do ENV_ARGS+=(--env "$line"); done < "$OUT/legs/env"
+echo "     seeded $DB round $START (E2E_START=$START replays it)"
+echo "     walk: $(tail -1 "$LOGS/travel.log")"
 
 # ---------------------------------------------------------------- api
 
@@ -184,12 +223,6 @@ echo "     seeded $DB"
 # which costs an afternoon before anybody suspects the port.
 say "2/5  api on :$API_PORT"
 kill_port "$API_PORT"
-# Streets, as a person gets them: the flows name stops in the order OSRM walks
-# them and travel along its street shapes, and the 20m gate drops any pin a
-# street cannot reach. Without the sidecar that is a different app.
-ROUTING="${E2E_ROUTING_URL:-http://localhost:5001}"
-curl -fsS -m 3 "$ROUTING/nearest/v1/foot/12.57586,55.67886" >/dev/null 2>&1 \
-  || infra "no OSRM at $ROUTING - ./osrm/build.sh once, then docker compose --profile routing up -d osrm"
 DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL="$ROUTING" \
   venv/bin/python -m uvicorn api.main:app --port "$API_PORT" > "$LOGS/api.log" 2>&1 &
 API_PID=$!
@@ -317,7 +350,7 @@ for flow in "${SELECTED[@]}"; do
   # FLOW_TIMEOUT is not going to.
   #
   # macOS ships no `timeout`, hence the poll.
-  "$MAESTRO" test --device "$DEVICE" --env APP_ID="$APP_ID" "$flow" &
+  "$MAESTRO" test --device "$DEVICE" "${ENV_ARGS[@]}" "$flow" &
   maestro_pid=$!
   waited=0
   while kill -0 "$maestro_pid" 2>/dev/null; do

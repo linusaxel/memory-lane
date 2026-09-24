@@ -1,52 +1,67 @@
-"""Print walk-and-unlock.yml's `travel` blocks from the walk the API plans now.
+"""Write walk-and-unlock.yml's legs and stop names for the walk from START.
 
-    ./e2e/run.sh --keep walk      # leaves the e2e API on :8090, seeded, with OSRM
-    venv/bin/python e2e/travel.py [http://localhost:8090]
+    DATABASE_URL=... ROUTING_URL=... venv/bin/python e2e/travel.py LAT,LNG
 
-Paste each block over the matching one in .maestro/walk-and-unlock.yml. If the
-stop order printed differs from the file's, the stop names in it change too.
+e2e/run.sh runs this once per run, after `seed_dev --at LAT,LNG`. It plans the
+walk the app will be offered, through api/read.py's own _plan_route on the same
+database and streets, and writes:
+
+  e2e/out/legs/N.yml   the street shape to stop N, a flow the journey runFlows
+  e2e/out/legs/env     STOPn / WORDSn: each stop's name, and words from its summary
+
+The seed's five stops are the only ones in reach, so every device and every
+`again` gets the same five in the same order. Exits 3 when the walk from here
+cannot carry the journey (fewer than five stops, or the stack first, whose
+sheet pages through three), and run.sh picks another start.
 """
 
-import json
+import datetime
+import pathlib
 import sys
-import urllib.parse
-import urllib.request
 import uuid
 
-START = (55.67886, 12.57586)  # the flow's setLocation: seed_dev.LAT, LNG
+from api.models import Coordinates
+from api.read import _plan_route
+from pipeline.db import get_session
+
 BUDGET_METERS = 4000  # WALK_KM.initial in mobile/src/Plan.tsx
+OUT = pathlib.Path(__file__).with_name("out") / "legs"
+# Words from each seeded summary, for "the sheet opened on this one".
+WORDS = {
+    "Where I was standing, dev seed": "filed this one myself",
+    "The bench outside, dev seed": "pølsevogn",
+    "Along the street, dev seed": "piano into the street",
+    "Where the night went long, dev seed": "jukebox on shuffle",
+    "The corner, dev seed": "taxi that reversed",
+}
 
 
-def point(c):
-    return f'      - "{c["lat"]:.6f},{c["lng"]:.6f}"'
+def main(start: Coordinates) -> None:
+    with get_session() as session:
+        stops, legs, ends = _plan_route(
+            session, str(uuid.uuid4()), start, BUDGET_METERS, datetime.date.today()
+        )
+    if legs is None:
+        sys.exit("no street shapes - is ROUTING_URL set and OSRM up?")
+    names = [r.place_name for r in stops]
+    if len(names) < 5 or names[0] == "The corner, dev seed":
+        print(f"this start cannot carry the journey: {names}")
+        sys.exit(3)
 
-
-def main(api):
-    query = urllib.parse.urlencode(
-        {
-            "device": str(uuid.uuid4()),
-            "lat": START[0],
-            "lng": START[1],
-            "budget_meters": BUDGET_METERS,
-        }
-    )
-    with urllib.request.urlopen(f"{api}/v1/routes/preview?{query}") as reply:
-        walk = json.load(reply)
-    meta = walk["meta"]
-    if not meta.get("legs") or not meta.get("out_leg"):
-        sys.exit("no street shapes in the preview - is the API running with ROUTING_URL?")
-
-    start = {"lat": START[0], "lng": START[1]}
-    for n, (memory, leg) in enumerate(
-        zip(walk["memories"], [meta["out_leg"], *meta["legs"]], strict=True), 1
-    ):
-        if n == 1 and leg[0] != start:
-            leg = [start, *leg]
-        print(f"# stop {n}: {memory['place']['name']}")
-        print("- travel:\n    points:")
-        print("\n".join(point(c) for c in leg))
-        print("    speed: 10\n")
+    OUT.mkdir(parents=True, exist_ok=True)
+    env = []
+    for n, (name, leg) in enumerate(zip(names, [ends["out"], *legs], strict=True), 1):
+        points = [start, *leg] if n == 1 else leg
+        (OUT / f"{n}.yml").write_text(
+            "appId: ${APP_ID}\n---\n- travel:\n    points:\n"
+            + "".join(f'      - "{p.lat:.6f},{p.lng:.6f}"\n' for p in points)
+            + "    speed: 10\n"
+        )
+        env += [f"STOP{n}={name}", f"WORDS{n}={WORDS[name]}"]
+    (OUT / "env").write_text("\n".join(env) + "\n")
+    print(" -> ".join(names))
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8090")
+    lat, lng = (float(x) for x in sys.argv[1].split(","))
+    main(Coordinates(lat=lat, lng=lng))

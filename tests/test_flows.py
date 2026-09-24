@@ -356,7 +356,7 @@ def test_maestro_flows_still_point_at_the_seed():
     """
     seeded_names = {
         "The bench outside, dev seed",
-        "Along Niels Hemmingsens Gade, dev seed",
+        "Along the street, dev seed",
         "The corner, dev seed",
         "Somewhere around here, dev seed",
         "The same rough spot, dev seed",

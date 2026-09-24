@@ -16,8 +16,8 @@ appId: ${APP_ID}
 # The first screen is ours, not a system dialog: one question and one slider.
 # Location is asked by the button, a press with a reason.
 - setLocation:
-    latitude: 55.67886
-    longitude: 12.57586
+    latitude: ${START_LAT}
+    longitude: ${START_LNG}
 
 - launchApp:
     clearState: true

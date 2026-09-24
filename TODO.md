@@ -1835,6 +1835,18 @@ the seed; the slider's 10 km max covers either. In build order:
       Needs a flow in docs/08 before code. **Assumption:** "customise a bit
       differently every time" means both parts. Drop (b) if it only meant
       day to day.
+- [ ] **Walk 10x faster between memories in the e2e journeys.** Asked for
+      2026-09-24. `e2e/travel.py` writes each leg at `speed: 10` (m/s); make
+      it 100. Since the random start (`e2e/run.sh` picks a walkable point in
+      central Copenhagen each run, `E2E_START=lat,lng` replays one), the legs
+      are longer, and walk-and-unlock ran out of its 300 s `FLOW_TIMEOUT`
+      right after reaching stop 4 (start 55.682454,12.585062); file-and-edit
+      and look-around passed. **Check first** that the pill still reports
+      "You're at stop N" at 100 m/s: a leg that ends inside the 20 m gate
+      but passes through it in a fraction of a second may not register a
+      position fix there. If not, keep the last point of each leg at 10.
+      **Done when:** `./e2e/run.sh` passes all three flows from three random
+      starts.
 - [ ] **A Copenhagen journey in Maestro.** A new flow, e.g.
       `.maestro/lakes-loop.yml`: `setLocation` on Olufsvej, set the slider to
       the measured loop length, preview, and assert a loop that reaches Sankt
