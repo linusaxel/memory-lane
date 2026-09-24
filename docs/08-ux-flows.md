@@ -1013,8 +1013,8 @@ length. **Trigger:** "Show me another", under Accept.
 3. Accept sends the same `again`, so it stores the walk on screen. The client
    still never sends stop ids. Change length starts over at `again=0`.
 
-The day takes turns through the same walks, so tomorrow's preview differs
-from today's too, without a tap. A walk already walked differs anyway: its
+Every "Show me the walk" rolls a fresh `again`, so planning twice, or
+tomorrow, can land on a different one of those walks without a tap. A walk already walked differs anyway: its
 unlocked stops are no longer candidates. Without a routing server there is
 nothing to judge a walk by, so there is one walk and the button says so.
 

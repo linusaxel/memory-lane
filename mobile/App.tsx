@@ -91,6 +91,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
  * routinely tap Deny - so this points at central Copenhagen, the first city,
  * where the seeded content actually is.
  */
+/** `again` rolls for a plan; api/models.py ROUTE_AGAIN_MAX leaves room above
+ *  it for "Show me another" taps. */
+const ROLLS = 1_000_000;
+
 const FALLBACK_REGION: Region = {
   latitude: 55.67886,
   longitude: 12.57586,
@@ -173,9 +177,11 @@ export default function App() {
   // Copenhagen standing in for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
   const [planFallback, setPlanFallback] = useState(false);
-  // "Show me another" taps on this preview; the accept sends the same. Null
-  // once one came back unchanged: that was the only walk that long.
-  const [again, setAgain] = useState<number | null>(0);
+  // Which of the walks as good this preview is: a fresh roll for every plan,
+  // one up for "Show me another", and the accept sends the same.
+  const [again, setAgain] = useState(0);
+  // "Show me another" came back unchanged: that was the only walk that long.
+  const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
@@ -445,7 +451,7 @@ export default function App() {
     })();
   }, [device, takeRoute]);
 
-  const planWalk = useCallback(async (next = 0) => {
+  const planWalk = useCallback(async (next: number, another = false) => {
     if (!device) return;
     setPlanBusy(true);
     setPlanError(null);
@@ -457,7 +463,8 @@ export default function App() {
       const walk = await previewRoute(device, anchor, walkKm * 1000, walkAsk, next);
       if (!mounted.current) return;
       const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
-      setAgain(next && ids(walk) === ids(preview) ? null : next);
+      setAgain(next);
+      setOnlyWalk(another && ids(walk) === ids(preview));
       setPlanFrom(anchor);
       setPlanFallback(fallback);
       setPreview(walk);
@@ -474,7 +481,7 @@ export default function App() {
     setPlanBusy(true);
     setPlanError(null);
     try {
-      const walk = await acceptRoute(device, planFrom, walkKm * 1000, walkAsk, again ?? 0);
+      const walk = await acceptRoute(device, planFrom, walkKm * 1000, walkAsk, again);
       if (!mounted.current) return;
       takeRoute(walk, planFrom);
       setPreview(null);
@@ -1195,7 +1202,7 @@ export default function App() {
               busy={planBusy}
               error={planError}
               onAccept={acceptWalk}
-              onAnother={again === null ? null : () => planWalk(again + 1)}
+              onAnother={onlyWalk ? null : () => planWalk(again + 1, true)}
               onBack={() => {
                 setPlanError(null);
                 setStage('plan');
@@ -1221,7 +1228,7 @@ export default function App() {
               onKm={setWalkKm}
               ask={walkAsk}
               onAsk={setWalkAsk}
-              onGo={() => planWalk()}
+              onGo={() => planWalk(Math.floor(Math.random() * ROLLS))}
               busy={planBusy}
               error={planError}
             />

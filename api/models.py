@@ -219,8 +219,9 @@ class RouteMeta(BaseModel):
 # 1km still separates five stops in a dense corpus; 10km is a long day's outing.
 ROUTE_BUDGET_MIN_METERS = 1000
 ROUTE_BUDGET_MAX_METERS = 10_000
-# "Show me another" taps in a day. Past the walks as good, it cycles.
-ROUTE_AGAIN_MAX = 100
+# The app rolls `again` below 1,000,000 for each plan and adds one per "Show me
+# another" tap. Past the walks as good, it cycles.
+ROUTE_AGAIN_MAX = 1_001_000
 
 
 RouteTag = Literal[TAGS]

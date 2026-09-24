@@ -671,9 +671,9 @@ def _plan_route(
     - The walk should be a clean loop, not a line with spurs: a stop off the
       loop is walked to and back the same way. Each walk on the solver's
       shortlist is routed and judged, and every walk within ROUTE_VARIETY of
-      the best that retraces no more is as good. Which one is the day's turn,
-      plus `again` - "Show me another" - so tomorrow's loop and a re-roll
-      differ whenever there is another as good. Then each stop is
+      the best that retraces no more is as good. Which one is the day's turn
+      plus `again`, which the app rolls afresh for every plan and steps for
+      "Show me another", so a plan differs whenever there is another as good. Then each stop is
       dropped in turn and the rest re-picked; a walk with as many stops that
       retraces less wins. Up to ROUTE_CLEANUPS rounds."""
     candidates = session.execute(
