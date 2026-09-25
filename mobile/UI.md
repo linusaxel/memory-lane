@@ -385,7 +385,10 @@ Each of these exists because something broke or would have been rejected.
 9. **The map never unmounts.** The journal is hidden with `display: 'none'`,
    not a conditional render, and the map sits under it. Unmounting the map
    means losing the viewport and re-animating to GPS every time somebody
-   glances at their journal.
+   glances at their journal. The map is the exception: anything else under a
+   cover that holds a native control (Slider, Switch) unmounts, since iOS 26
+   draws native glass controls through an opaque cover. `Plan` in `App.tsx`
+   renders only while `!journalOpen` for that reason.
 10. **Never fetch alongside `animateToRegion`.** It fires
     `onRegionChangeComplete` when it lands, and it does *not* land on the region
     you gave it — the map fits the deltas to the screen, so the settled viewport

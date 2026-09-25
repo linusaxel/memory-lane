@@ -23,15 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- [ ] **iOS 26 draws native glass controls over the opaque covers.**
-      (2026-09-25) The Plan slider's track and thumb showed on top of the
-      journal, which is a cover over a screen that stays mounted. Finding it
-      took a recorded run and frames pulled from the video by hand, since
-      there is no ffmpeg. Plan now unmounts under the journal, but the next
-      UISlider or UISwitch under a cover will do it again. Fix: add to
-      mobile/UI.md rule 9 that native controls unmount under a cover, not
-      only get hidden.
-
 - [ ] **The `.env` commit hook refuses any command mentioning a dotted path after `git add`.**
       (2026-09-24) It reads `git add .maestro/x.yml`, and even that text inside
       a heredoc, as `git add .`. So every commit touching a Maestro flow is
