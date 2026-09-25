@@ -57,6 +57,8 @@ API and no geocoding stage.
 Seventeen tables. `db/schema.sql` is the full definition and is applied on first
 container init; `db/migrations/` carries the same changes for databases that
 already exist, and `tests/test_schema_layers.py` holds the two in agreement.
+It also fails the gate when your dev database is missing a migration, and
+names the columns.
 Who writes which is in [architecture.md](architecture.md#data-ownership).
 
 | Table | What it holds |

@@ -29,13 +29,6 @@ delete an entry when its fix lands.
       `channel_metadata`; fixed, and `conftest._no_network` now fails any
       unmarked test that leaves localhost. What is left is per-test overhead
       (no single test dominates) and duplicate coverage.
-- [ ] **Nothing records which migrations a database has.** (checked
-      2026-09-24) The dev DB had 011-024 but not 010, so `/v1/memories/search`
-      500'd locally and nothing said so; found only by running EXPLAIN by
-      hand. Tests build from `db/schema.sql`, so the gate cannot see it either.
-      **Fix:** a `schema_migrations` table and a `db/migrate.sh` that applies
-      what is missing, or at least a check in `verify.sh` that the dev DB's
-      columns match `schema.sql`.
 - [ ] **One route change is a 4-minute bench to judge.** (checked 2026-09-24)
       `route_bench --scenario all --runs 40` is ~4 min, ~1 s a plan, nearly all
       OSRM `/table`. Six tweaks cost ~25 min of waiting, and 40 runs is noisy

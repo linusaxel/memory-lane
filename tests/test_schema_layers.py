@@ -158,6 +158,24 @@ def test_every_migration_agrees_with_the_schema(migration, db_session, db_url):
     )
 
 
+def test_the_dev_database_has_every_migration(db_session, db_url):
+    """Nothing records which migrations a database has. The dev DB once lacked
+    010, so search 500'd locally while every test, built from schema.sql,
+    passed. Comparing it to the schema is the check that would have said so."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    with Session(create_engine(db_url.rsplit("/", 1)[0] + "/memorylane")) as dev:
+        dev_shape = _shape(dev)
+    schema_shape = _shape(db_session)
+    assert dev_shape == schema_shape, (
+        "the dev database differs from db/schema.sql: apply what is missing from "
+        "db/migrations/ (each file's header has the command).\n"
+        f"missing from dev: {sorted(schema_shape - dev_shape)}\n"
+        f"only in dev:      {sorted(dev_shape - schema_shape)}"
+    )
+
+
 def test_the_places_unique_index_is_in_the_schema_too(db_session):
     """001's half that is not replayable. Without this index the ON CONFLICT in
     save_memories is a silent no-op and every memory mints a duplicate place."""
