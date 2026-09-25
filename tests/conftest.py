@@ -118,40 +118,60 @@ def db_url():
     _drop_test_db()
 
 
-@pytest.fixture
-def db_session(db_url):
-    """A session against the test DB, truncated between tests."""
-    from sqlalchemy import create_engine, text
-    from sqlalchemy.orm import sessionmaker
+@pytest.fixture(scope="session")
+def db_engine(db_url):
+    """One pool for the run: a new connection is ~20 ms, and a per-test engine
+    paid it on every db test. Disposed before db_url drops the database."""
+    from sqlalchemy import create_engine
 
     engine = create_engine(db_url)
-    with engine.connect() as conn:
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture
+def db_session(db_engine):
+    """A session against the test DB, emptied between tests."""
+    from sqlalchemy import text
+    from sqlalchemy.orm import sessionmaker
+
+    with db_engine.connect() as conn:
         # Discovered rather than listed. The list used to be hardcoded, and the
         # first table added after it was written (devices) leaked between tests:
         # unlocks was reached through a cascade from memories, devices was not,
         # and a test asserting "no devices yet" passed alone and failed in a
         # file. A list that has to be maintained is one somebody will not.
         #
-        # spatial_ref_sys belongs to PostGIS and lives in public; truncating it
+        # spatial_ref_sys belongs to PostGIS and lives in public; emptying it
         # takes the coordinate systems with it.
-        tables = conn.execute(
+        #
+        # DELETE rather than TRUNCATE: TRUNCATE rewrites every table's files,
+        # ~23 ms a test against ~3. The replica role skips the
+        # foreign keys, so the order does not matter.
+        conn.execute(
             text("""
-                SELECT string_agg(quote_ident(tablename), ', ')
-                FROM pg_tables
-                WHERE schemaname = 'public' AND tablename <> 'spatial_ref_sys'
+                DO $$
+                DECLARE r record;
+                BEGIN
+                    SET LOCAL session_replication_role = replica;
+                    FOR r IN SELECT tablename FROM pg_tables
+                             WHERE schemaname = 'public' AND tablename <> 'spatial_ref_sys' LOOP
+                        EXECUTE format('DELETE FROM %I', r.tablename);
+                    END LOOP;
+                    FOR r IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public' LOOP
+                        EXECUTE format('ALTER SEQUENCE %I RESTART', r.sequencename);
+                    END LOOP;
+                END $$
             """)
-        ).scalar()
-        if tables:
-            conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+        )
         conn.commit()
 
-    session = sessionmaker(bind=engine)()
+    session = sessionmaker(bind=db_engine)()
     try:
         yield session
         session.commit()
     finally:
         session.close()
-        engine.dispose()
 
 
 @pytest.fixture

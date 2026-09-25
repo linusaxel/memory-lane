@@ -23,13 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- [ ] **A broad sweep of the whole test suite.** (checked 2026-09-24) Now
-      75 s for 660 tests. 10 s of the old 85 s was eight `test_ingest.py`
-      tests asking real YouTube about `@test`, because `fake_channel` missed
-      `channel_metadata`; fixed, and `conftest._no_network` now fails any
-      unmarked test that leaves localhost. What is left is per-test overhead
-      (no single test dominates) and duplicate coverage.
-
 ---
 
 ## Known defects
