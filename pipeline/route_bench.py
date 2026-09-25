@@ -185,6 +185,9 @@ def report(results: list[dict]) -> None:
             f"{sum(r['fresh'] for r in mine) / len(mine):>6.0%} "
             f"{pct(ms, 50):>5.0f}/{pct(ms, 95):<5.0f}"
         )
+    # Worst-case 95% interval of a rate, at p = 0.5: 40 runs once moved spur 40% -> 45% on
+    # the same code.
+    print(f"a rate over {len(results)} runs is ±{1.96 * (0.25 / len(results)) ** 0.5:.0%} noise")
 
 
 def main() -> None:

@@ -29,13 +29,6 @@ delete an entry when its fix lands.
       `channel_metadata`; fixed, and `conftest._no_network` now fails any
       unmarked test that leaves localhost. What is left is per-test overhead
       (no single test dominates) and duplicate coverage.
-- [ ] **One route change is a 4-minute bench to judge.** (checked 2026-09-24)
-      `route_bench --scenario all --runs 40` is ~4 min, ~1 s a plan, nearly all
-      OSRM `/table`. Six tweaks cost ~25 min of waiting, and 40 runs is noisy
-      enough that the same code moved bimodal's spur rate 40% → 45%. A bench
-      also holds a transaction, so a migration on the same DB waits behind it.
-      **Fix:** cache `/table` per point set inside a bench run, and print a
-      spread (or run two seeds) so a 5-point move reads as noise or not.
 
 ---
 
