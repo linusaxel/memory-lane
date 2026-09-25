@@ -23,13 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- [ ] **The `.env` commit hook refuses any command mentioning a dotted path after `git add`.**
-      (2026-09-24) It reads `git add .maestro/x.yml`, and even that text inside
-      a heredoc, as `git add .`. So every commit touching a Maestro flow is
-      blocked, which cost three refused commits. Workaround: stage with an
-      absolute path (`"$PWD/.maestro/x.yml"`). Fix: match `.` or `-A` as a
-      whole argument, not as a prefix.
-
 - [ ] **A broad sweep of the whole test suite.** (checked 2026-09-24) Now
       75 s for 660 tests. 10 s of the old 85 s was eight `test_ingest.py`
       tests asking real YouTube about `@test`, because `fake_channel` missed
