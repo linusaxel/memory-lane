@@ -41,7 +41,7 @@ import {
   type LocatedMemory,
   type MediaItem,
 } from './api.ts';
-import { duration, sealOpensAt } from './format.ts';
+import { duration } from './format.ts';
 import { button, buttonText, color, dim, font, input, label } from './theme.ts';
 
 const MAX_SUMMARY = 2000;
@@ -58,8 +58,7 @@ type Props = {
   onClose: () => void;
   onPosted: (memory: LocatedMemory) => void;
   /** Set to open this screen as an editor for a memory already filed, instead
-   *  of a blank submission. Only ever a memory this account owns and can
-   *  currently read - the server refuses to edit a sealed one regardless. */
+   *  of a blank submission. Only ever a memory this account owns. */
   editing?: LocatedMemory | null;
   onSaved?: (memory: LocatedMemory) => void;
   onDeleted?: (id: number) => void;
@@ -91,8 +90,6 @@ export default function Submit({
   const [summary, setSummary] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [day, setDay] = useState(() => new Date());
-  const [sealYear, setSealYear] = useState('');
-  const [seal, setSeal] = useState<'now' | 'later'>('now');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -129,19 +126,13 @@ export default function Submit({
     setSummary('');
     setTags([]);
     setDay(new Date());
-    setSealYear('');
-    setSeal('now');
     setAttachments([]);
     setError(null);
     setConfirmingDelete(false);
     if (confirmTimer.current) clearTimeout(confirmTimer.current);
   }, [visible]);
 
-  // Prefills from the memory being edited. Only ever runs on a memory the
-  // server has already agreed is both owned by this account and currently
-  // readable - a still-sealed one never reaches this screen, so there is no
-  // "who can read it" state to recover: editing never re-seals something
-  // already open, it can only leave it as it is.
+  // Prefills from the memory being edited.
   useEffect(() => {
     if (!visible || !editing) return;
     setPlaceName(editing.place.name);
@@ -165,14 +156,8 @@ export default function Submit({
   const uploading = attachments.some((a) => !a.item && !a.failed);
   const named = placeName.trim().length > 0;
   const told = summary.trim().length > 0;
-  // The one answer, used by the button and by the draft, so they cannot
-  // disagree about whether this memory is sealed - which is how "Nobody until"
-  // with an empty year used to post something anybody could read. Not asked
-  // at all while editing - see the "Who can read it" Field below.
-  const opensAt = !isEditing && seal === 'later' ? sealOpensAt(sealYear) : null;
-  const willSeal = isEditing || seal !== 'later' || opensAt !== null;
   const ready =
-    (isEditing || !!position) && !!device && named && told && willSeal && !uploading && !posting;
+    (isEditing || !!position) && !!device && named && told && !uploading && !posting;
 
   const progress = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -287,12 +272,6 @@ export default function Submit({
       tags,
       happened_at: isoDay(day),
       happened_precision: 'day',
-      // 1 January of the year: a seal is a promise about a
-      // year, and asking somebody to pick a day for 2041 is a picker nobody
-      // needs. A year already past is simply not a seal - the server treats a
-      // date that has come as no date at all. Always null while editing: an
-      // already-open memory is never offered a seal to go back behind.
-      opens_at: opensAt,
       media_ids: attachments.flatMap((a) => (a.item ? [a.item.id] : [])),
     };
 
@@ -307,14 +286,12 @@ export default function Submit({
         onPosted(memory);
       }
       onClose();
-    } catch (err) {
+    } catch {
       if (!mounted.current) return;
       setError(
-        err instanceof Error && err.message === 'sealed'
-          ? 'This memory is sealed and cannot be edited.'
-          : isEditing
-            ? 'Could not save that. Try again in a moment.'
-            : 'Could not post that. Try again in a moment.',
+        isEditing
+          ? 'Could not save that. Try again in a moment.'
+          : 'Could not post that. Try again in a moment.',
       );
     } finally {
       if (mounted.current) setPosting(false);
@@ -437,33 +414,6 @@ export default function Submit({
               )}
             </View>
           </Field>
-
-          {/* Not offered while editing: an already-open memory has nothing to
-              recover a past seal date from - see row_to_memory - so there is
-              no honest prefill, and re-sealing something already public is
-              not this screen's job. */}
-          {!isEditing && (
-            <Field label="Who can read it">
-              <View style={styles.row}>
-                <Chip label="Anyone here" on={seal === 'now'} onPress={() => setSeal('now')} />
-                <Chip label="Nobody until" on={seal === 'later'} onPress={() => setSeal('later')} />
-                {seal === 'later' && (
-                  <TextInput
-                    style={[styles.input, styles.year]}
-                    value={sealYear}
-                    onChangeText={(next) => setSealYear(next.replace(/[^0-9]/g, '').slice(0, 4))}
-                    placeholder="2041"
-                    placeholderTextColor={color.inkFaint}
-                    keyboardType="number-pad"
-                    accessibilityLabel="Year this memory opens"
-                  />
-                )}
-              </View>
-              {/* Including you. A time capsule that its author can read is a
-                  draft, and the gate is deliberately checked before the one that
-                  opens a memory for the person who filed it. */}
-            </Field>
-          )}
 
           <Field label="Tags">
             <View style={styles.row}>
@@ -684,7 +634,6 @@ const styles = StyleSheet.create({
   },
   prose: { minHeight: 130, lineHeight: 26 },
   counter: { ...label, fontSize: 9, textAlign: 'right' },
-  year: { width: 96, fontFamily: font.mono, fontSize: 15 },
 
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   chip: {

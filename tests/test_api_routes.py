@@ -73,7 +73,7 @@ def _historical(session, place_id, summary, url, tags=None):
     ).scalar()
 
 
-def _stranger(session, place_id, summary, opens_at=None):
+def _stranger(session, place_id, summary):
     """Always gated - user_id is the other half of is_gated."""
     user_id = session.execute(
         text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
@@ -81,20 +81,20 @@ def _stranger(session, place_id, summary, opens_at=None):
     return session.execute(
         text(
             "INSERT INTO memories (place_id, content_id, timestamp_start, summary, "
-            "extraction_confidence, tags, layer, user_id, opens_at) VALUES "
+            "extraction_confidence, tags, layer, user_id) VALUES "
             "(:p, NULL, NULL, :s, 'high', ARRAY['personal']::varchar[], 'stranger', "
-            ":u, :o) RETURNING id"
+            ":u) RETURNING id"
         ),
-        {"p": place_id, "s": summary, "u": user_id, "o": opens_at},
+        {"p": place_id, "s": summary, "u": user_id},
     ).scalar()
 
 
-def _offset(session, n, layer="historical", **kw):
+def _offset(session, n, layer="historical"):
     """A gated memory ~n*100m north of LAT,LNG - far enough apart that no two
     share a grid cell, close enough to fit a 4km walk."""
     place = _place(session, f"Stop {n}", LAT + n * 0.001, LNG)
     if layer == "stranger":
-        return _stranger(session, place, f"stranger memory {n}", **kw)
+        return _stranger(session, place, f"stranger memory {n}")
     return _historical(session, place, f"historical memory {n}", f"https://e.invalid/{n:0>11}")
 
 
@@ -229,21 +229,6 @@ def test_an_ambiguous_centroid_is_never_a_route_stop(client, db_session):
     ids = [m["id"] for m in route["memories"]]
     assert ambiguous not in ids
     assert real in ids
-
-
-def test_a_sealed_memory_is_never_a_route_stop(client, db_session):
-    """A time capsule cannot be unlocked by walking there, whatever the
-    distance - a route slot spent on one would ask for a walk that can't pay
-    off."""
-    future = datetime.date.today() + datetime.timedelta(days=365)
-    sealed = _offset(db_session, 1, layer="stranger", opens_at=future)
-    open_one = _offset(db_session, 2)
-    db_session.commit()
-
-    route = _route(client).json()
-    ids = [m["id"] for m in route["memories"]]
-    assert sealed not in ids
-    assert open_one in ids
 
 
 def test_a_stack_never_contributes_two_route_stops(client, db_session):

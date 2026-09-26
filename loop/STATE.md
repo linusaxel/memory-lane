@@ -31,7 +31,7 @@ redo" below) — this is not a guess.
 TASKS.yaml's own backlog (t0–t29, 2026-09-20 to 21): full crawler → ingest →
 transcripts → extraction → API → mobile app → store config pipeline; the
 layer/contrast/tag system; proximity unlock; submissions with photo and
-audio; sign-in; anniversaries and time locks; the daily route; the embed and
+audio; sign-in; anniversaries; the daily route; the embed and
 card. See `loop/JOURNAL.md` t0–t29 for the one-line-per-tick record, or prior
 `STATE.md` revisions in git history for longer summaries.
 

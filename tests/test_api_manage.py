@@ -1,16 +1,11 @@
 """Managing a memory after it was filed: list your own, edit one, delete one.
 
-Three things are being protected here, and they mirror test_api_submit.py's
-three because they are the same shape of risk on the other end of a
-submission's life:
+Two things are being protected here, the same shape of risk as
+test_api_submit.py's on the other end of a submission's life:
 
 **Ownership.** The only credential is still a device id in the request body,
 so "is this yours" has to mean "does your account's user_id match the row's",
 checked server-side - never trust the client to only ask about its own.
-
-**The seal.** F23 says nobody may read a sealed memory early, the author
-included. Editing needs to show the current text to change it, so a sealed
-memory must refuse editing outright, not just decline to open in the app.
 
 **The cleanup.** A submission mints its own place and can carry its own
 media. Deleting one must not leave either behind, and must not touch a place
@@ -67,18 +62,6 @@ def test_offset_pages_past_the_limit_instead_of_dropping_the_rest(client):
 
     seen = {m["id"] for m in page["memories"]} | {m["id"] for m in rest["memories"]}
     assert seen == ids
-
-
-def test_the_list_shows_a_sealed_memory_shut(client):
-    """Even to the person who filed it - not_yet_open is checked before the
-    proximity trick that forces everything else in this list open."""
-    dev = device()
-    submit(client, device=dev, opens_at="2999-01-01")
-
-    listed = client.get(f"/v1/me/memories?device={dev}").json()["memories"]
-    assert listed[0]["locked"] is True
-    assert listed[0]["summary"] == ""
-    assert listed[0]["opens_at"] == "2999-01-01"
 
 
 def test_the_list_keeps_a_hidden_memory_and_says_so(client):
@@ -185,23 +168,6 @@ def test_a_second_device_on_the_same_account_may_edit(client, db_session):
         },
     )
     assert resp.status_code == 200
-
-
-def test_a_sealed_memory_refuses_to_be_edited(client):
-    dev = device()
-    memory = submit(client, device=dev, opens_at="2999-01-01")
-
-    resp = client.put(
-        f"/v1/memories/{memory['id']}",
-        json={
-            "device": dev,
-            "place_name": memory["place"]["name"],
-            "summary": "Trying to peek at my own words.",
-            "tags": [],
-            "media_ids": [],
-        },
-    )
-    assert resp.status_code == 423
 
 
 def test_editing_can_add_and_remove_photos(client, tmp_path):
@@ -320,11 +286,3 @@ def test_an_unrelated_device_cannot_delete(client):
     memory = submit(client)
     resp = client.delete(f"/v1/memories/{memory['id']}?device={device()}")
     assert resp.status_code == 404
-
-
-def test_a_sealed_memory_can_still_be_deleted(client):
-    """No need to read it to remove it - only editing needs the seal open."""
-    dev = device()
-    memory = submit(client, device=dev, opens_at="2999-01-01")
-    resp = client.delete(f"/v1/memories/{memory['id']}?device={dev}")
-    assert resp.status_code == 204

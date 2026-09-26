@@ -14,7 +14,6 @@ import api.media
 from api.accounts import touch_device, user_for_device
 from api.gate import (
     meters_between,
-    not_yet_open,
     notes_response,
     row_coordinates,
     row_to_memory,
@@ -293,7 +292,6 @@ def submit_memory(body: SubmissionRequest):
                 "tags": tags,
                 "happened_at": body.happened_at,
                 "happened_precision": precision,
-                "opens_at": body.opens_at,
                 "user_id": user_id,
             },
         ).scalar()
@@ -453,7 +451,7 @@ def report_memory(memory_id: int, body: ReportRequest):
 # into the WHERE rather than checked after, so a memory that isn't yours reads
 # as 404, the same as one that doesn't exist.
 OWN_MEMORY_LOCK = """
-    SELECT place_id, opens_at FROM memories
+    SELECT place_id FROM memories
     WHERE id = :id
       AND user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
     FOR UPDATE
@@ -466,8 +464,7 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
 
     Ownership is the only lock checked here - no position, because fixing a
     typo does not require standing where it happened again, only filing a new
-    memory does. A sealed memory refuses outright: F23 says nobody may read one
-    early, the author included, and editing needs exactly that.
+    memory does.
     """
     tags = clean_tags(body.tags)
     precision = body.happened_precision or ("day" if body.happened_at else None)
@@ -478,8 +475,6 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
         ).fetchone()
         if not owned:
             raise HTTPException(status_code=404, detail="Memory not found")
-        if not_yet_open(owned):
-            raise HTTPException(status_code=423, detail="This memory is sealed")
 
         session.execute(
             text("UPDATE places SET name = :name WHERE id = :place_id"),
@@ -491,8 +486,7 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
                     summary = :summary,
                     tags = CAST(:tags AS varchar[]),
                     happened_at = :happened_at,
-                    happened_precision = :happened_precision,
-                    opens_at = :opens_at
+                    happened_precision = :happened_precision
                 WHERE id = :id
             """),
             {
@@ -501,7 +495,6 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
                 "tags": tags,
                 "happened_at": body.happened_at,
                 "happened_precision": precision,
-                "opens_at": body.opens_at,
             },
         )
 

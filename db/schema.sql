@@ -158,10 +158,9 @@ CREATE TABLE memories (
     contrast_score REAL,
     contrast_note TEXT,
 
-    -- A memory nobody may read until this date, including whoever filed it.
-    -- Null for everything that opens on arrival, which is almost everything.
-    -- Enforced in api/gate.py ahead of the proximity check, so standing on the
-    -- spot does not open it and neither does having it in your collection.
+    -- Unused since 2026-09-26: the time capsule was removed and every memory
+    -- is public (docs/10, "Every memory is public"). Kept so migration 009
+    -- still replays against this schema.
     opens_at DATE,
 
     -- Who filed it, when a person did. Null for everything extracted.

@@ -51,22 +51,3 @@ export function walkDate(routeDate: string, locale?: string): string {
     day: 'numeric',
   });
 }
-
-/** The date a seal opens, or null when that year cannot be one.
- *
- *  Here rather than inside Submit because two places needed the answer - the
- *  draft being posted and the button deciding whether it may be - and when
- *  only the draft knew, choosing "Nobody until" and leaving the year blank
- *  posted a memory anybody standing there could read. The person had said who
- *  may read it and been quietly overruled.
- *
- *  A year that has already begun is not a seal either: the server treats a
- *  date that has come as no date at all, so accepting 1994 here would be the
- *  same silent overrule with a different cause.
- */
-export function sealOpensAt(year: string, now: Date = new Date()): string | null {
-  const trimmed = year.trim();
-  if (!/^\d{4}$/.test(trimmed)) return null;
-  if (Number(trimmed) <= now.getFullYear()) return null;
-  return `${trimmed}-01-01`;
-}

@@ -83,7 +83,6 @@ MEMORY_COLUMNS = f"""
     m.source_url,
     m.contrast_score,
     m.contrast_note,
-    m.opens_at,
     {ANNIVERSARY},
     p.id as place_id,
     p.name as place_name,
@@ -457,8 +456,6 @@ ON_TODAYS_ROUTE_QUERY = f"""
 #     route rather than re-discovering what its sibling already earned.
 #   - only walk-to-unlock memories - a centroid a route sent you to would open
 #     the moment you arrived, which is not a stop, it is scenery.
-#   - not time-locked - :today is api.gate.today(), not CURRENT_DATE, for the
-#     same UTC-vs-cluster-timezone reason ANNIVERSARY avoids it above.
 # Ordered by distance and not CONTRAST_ORDER on purpose: a route is where to
 # walk next, not a feed to rank.
 ROUTE_CANDIDATES_QUERY = f"""
@@ -470,7 +467,6 @@ WHERE
     AND {VISIBLE}
     AND {WITHIN}
     AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
-    AND (m.opens_at IS NULL OR m.opens_at <= CAST(:today AS date))
     AND (
         CAST(:tag AS varchar) IS NULL
         OR CAST(:tag AS varchar) = ANY(m.tags)
@@ -639,11 +635,11 @@ RETURNING id
 SUBMISSION_INSERT = """
 INSERT INTO memories (
     place_id, content_id, timestamp_start, summary, tags,
-    extraction_confidence, layer, happened_at, happened_precision, opens_at, user_id
+    extraction_confidence, layer, happened_at, happened_precision, user_id
 )
 VALUES (
     :place_id, NULL, NULL, :summary, CAST(:tags AS varchar[]),
-    'high', 'stranger', :happened_at, :happened_precision, :opens_at,
+    'high', 'stranger', :happened_at, :happened_precision,
     CAST(:user_id AS uuid)
 )
 RETURNING id

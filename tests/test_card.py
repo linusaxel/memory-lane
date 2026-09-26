@@ -38,7 +38,6 @@ class Row:
             user_id=None,
             author_name=None,
             photo_path=None,
-            opens_at=None,
             content_title="Tuesdays with Stories #500",
             content_url="https://www.youtube.com/watch?v=abc",
         )
@@ -220,14 +219,6 @@ def test_a_link_preview_of_a_locked_card_gives_nothing_away():
     assert "pastrami" not in html
     assert 'property="og:description" content="Something happened here.' in html
     assert 'property="og:title" content="Katz&#x27;s Delicatessen"' in html
-
-
-def test_a_sealed_card_previews_its_date_and_not_a_walk():
-    html = render_locked_card(Row(opens_at=datetime.date(2031, 5, 3)), 150)
-
-    assert "It opens on 3 May 2031" in html
-    assert "Stand within" not in html
-    assert "pastrami" not in html
 
 
 def test_an_open_card_previews_the_summary_it_is_already_showing():

@@ -478,12 +478,6 @@ Three things about the shape of it:
   selection one, not the unlock's: this is picking, not earning, and it must
   not borrow that weight.
 
-Anything the sheet offers has to be something Post can honour. Choosing
-"Nobody until" and leaving the year blank used to file a memory anybody
-standing there could read - the person said who may read it and was quietly
-overruled - so the seal is computed once, by `sealOpensAt`, and both the draft
-and the button read that one answer.
-
 A submission comes back already unlocked and its sheet opens over the map. The
 modal closing is not a confirmation, and it is also the first sight of what a
 stranger will find at that spot.
@@ -542,7 +536,7 @@ sheet can render is reachable from a script:
 python -m pipeline.seed_dev                      # prints the id of each state
 EXPO_PUBLIC_DEV_OPEN_MEMORY=265 REACT_NATIVE_PACKAGER_HOSTNAME=localhost   npx expo start --dev-client                    # restart Metro; ids bake in
 xcrun simctl launch booted com.PLACEHOLDER.memorylane
-xcrun simctl io booted screenshot /tmp/sealed.png
+xcrun simctl io booted screenshot /tmp/sheet.png
 ```
 
 What this recipe still cannot do by hand: press the unlock ring, or reach
@@ -659,11 +653,6 @@ earned and never gated all draw the same ink pin; the difference is in the
 marker's `title` (VoiceOver and Maestro still hear every state from
 `STATE_LABEL`) and in the sheet. `reachOf` in `src/reach.ts` still computes all
 five, because the banner and the walk hint need them.
-
-**A seal is not a distance.** A time-locked memory (F23) is `locked` at every
-distance, so it never lights. `isSealed` in `src/reach.ts` is the one
-predicate, checked there because the pin, the within-reach banner's count and
-the walk hint all ask "can this be opened from here".
 
 **The wrap is the tap target, not decoration.** Every pin sits in a 46px box,
 over Apple's 44 floor, which also makes the stacked pins downtown separable by

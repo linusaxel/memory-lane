@@ -8,7 +8,6 @@ let nextId = 1;
 
 function memory(opts: {
   locked?: boolean;
-  opens_at?: string | null;
   radius?: number | null;
   lat?: number;
   lng?: number;
@@ -17,7 +16,6 @@ function memory(opts: {
   return {
     id: nextId++,
     locked: opts.locked ?? true,
-    opens_at: opts.opens_at ?? null,
     unlock_radius_meters: opts.radius === undefined ? 20 : opts.radius,
     place: {
       name: opts.name ?? 'Vega',
@@ -30,14 +28,7 @@ test('an unlocked memory is nothing to walk to', () => {
   assert.deepEqual(memoriesToWatch([memory({ locked: false })]), []);
 });
 
-test('a sealed memory does not open by walking there, so it is not watched', () => {
-  assert.deepEqual(
-    memoriesToWatch([memory({ opens_at: '2099-01-01' })]),
-    [],
-  );
-});
-
-test('a locked, unsealed memory is watched', () => {
+test('a locked memory is watched', () => {
   const m = memory({});
   assert.deepEqual(memoriesToWatch([m]), [m]);
 });

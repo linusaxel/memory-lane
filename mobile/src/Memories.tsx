@@ -6,9 +6,9 @@
  * first (a walk that opened nothing is deleted, docs/10). A row opens in
  * place to the memories it earned, strung on a rail in walking order. Cached
  * (route.ts `loadWalked`), so it reads on a train (F16).
- * **Filed** - what you filed. Always the server's, because it has to show two
- * things no local cache was told about: a memory still sealed and one enough
- * people reported. Pages at `MINE_PAGE_SIZE`.
+ * **Filed** - what you filed. Always the server's, because it has to show a
+ * thing no local cache was told about: one enough people reported. Pages at
+ * `MINE_PAGE_SIZE`.
  *
  * You and settings are not here: they have their own corner on the map.
  *
@@ -261,7 +261,7 @@ export default function Memories({
           ) : (
             <Row
               place={item.memory.place.name}
-              summary={item.memory.locked ? `Sealed until ${item.memory.opens_at?.slice(0, 4)}` : item.memory.summary}
+              summary={item.memory.summary}
               distance={distanceTo(item.memory)}
               meta={reach(item.memory)}
               badge={item.memory.hidden ? 'Reported' : isNew(item.memory) ? 'New' : undefined}

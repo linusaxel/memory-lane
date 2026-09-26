@@ -46,7 +46,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F5 | File a memory of your own | Implemented |
 | F20 | Report something that should not be here | Removed from the app |
 | F21 | Be somebody | Implemented |
-| F23 | Seal a memory until a date | Implemented |
+| F23 | Seal a memory until a date | Removed from the app |
 | F24 | Manage what you filed | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
 | F4 | Switch between layers | Implemented |
@@ -684,52 +684,14 @@ theirs to change.
 ---
 
 
-## F23 · Seal a memory until a date — **Implemented**
+## F23 · Seal a memory until a date — **Removed from the app**
 
-**Who:** somebody filing a memory they do not want read yet.
-**Trigger:** the submit sheet, "Who can read it" → *Nobody until* + a year.
-
-1. They file it exactly as any other memory: same screen, same coordinate, same
-   photo and recording.
-2. It is never a route stop (`ROUTE_CANDIDATES_QUERY` skips anything not yet
-   open), and the map draws nothing else, so it is not on the map. Its author
-   finds it in the journal under Memories (F24).
-3. Opening it gives the locked composition with a different figure — the date,
-   not the distance — and "Sealed until then. Standing here does not open it
-   any sooner."
-4. On the day, it becomes an ordinary gated memory: readable by whoever is
-   standing there, including its author, who is in the same position as
-   everybody else and has to walk back.
-
-**Including the author, from the moment it is filed.** That is the whole
-feature, and it is the part the code had to be shaped around: the submit path
-deliberately records an unlock for the person filing — because filing something
-*is* standing there — and `/v1/unlocks` deliberately forces every memory in a
-collection open by handing it its own coordinates. Both of those are correct and
-both would have opened a time capsule, so `not_yet_open` is checked at the top
-of `is_locked`, ahead of position, rather than anywhere either of them could
-route around.
-
-**A year, not a date**: "2041" is what a person means, and a day picked for
-it would be a promise nobody made. A year already gone is not a
-seal — the server treats a date that has come as no date at all, so there is no
-error state and nothing to validate.
-
-**Grey, not amber, wherever it is drawn.** Found when the map still drew every
-memory: `reachOf` filtered on `memory.locked` and then measured distance, so a
-seal 128 m away came back `unlockable`. `isSealed` still excludes it there and
-from F28's watch, though a seal can no longer reach the map.
-
-**What can go wrong:** the date is the server's, and the server's clock is the
-only authority. There is no notification when it opens - a seal is not a
-distance to walk into, so `geofenceRegions.ts`'s `isSealed` filter excludes it
-from F28's proximity notification the same way `reach.ts` excludes it from
-reach; the memory simply stops refusing. Somebody who seals a
-memory and never goes back never reads it, which is a property of the product
-and not a bug — it is the same walk everything else asks for.
-
-**Done when:** a memory filed with a seal reads as sealed to its own author on
-its own coordinate, and its card says the date instead of a distance.
+Removed 2026-09-26: every memory is public. Anyone standing at a memory can
+read it, and no memory can be held back until a date, not even by its author.
+The "Who can read it" field is gone from the submit sheet, and the API no
+longer accepts or returns `opens_at`. The `memories.opens_at` column is still
+there, but nothing reads or writes it, so a memory sealed before the removal
+is now ordinary. For the reasoning, see docs/10, *Every memory is public*.
 
 ---
 
@@ -739,34 +701,25 @@ its own coordinate, and its card says the date instead of a distance.
 **Trigger:** the journal (F15) → *Memories*. Empty until something is filed, and
 it says so rather than hiding.
 
-1. A list, newest first: place name, and either the summary or, for a sealed
-   one, "Sealed until" the year — shut, seal included, same as the map pin.
-   A row reported by others carries a **Reported** badge instead of vanishing,
+1. A list, newest first: place name and summary. A row reported by others carries a **Reported** badge instead of vanishing,
    because this is the one screen an author cannot have something disappear
    from without a reason.
 2. Tapping a row opens the submit sheet in editor mode: every field prefilled
-   from the memory, **Post** relabelled **Save**, and no map, coordinate field
-   or seal picker — the pin does not move, and an already-open memory has
-   nothing to recover a past seal date from.
+   from the memory, **Post** relabelled **Save**, and no map or coordinate
+   field — the pin does not move.
 3. **Save** changes place name, summary, tags, when, and photos/recording in
    place. **Delete** takes a second, differently-worded press before it
    commits — the same two-step this app uses in place of a system alert
    everywhere else — and removes the row, its media and its place outright,
    not the hidden flag a report uses.
 
-**Always the server's list, never the local cache.** *Memories* has to show two
-things the offline unlock cache was never told about — a memory still sealed,
-and one enough people reported — so `/v1/me/memories` is asked fresh whenever
+**Always the server's list, never the local cache.** *Memories* has to show a
+thing the offline unlock cache was never told about — one enough people
+reported — so `/v1/me/memories` is asked fresh whenever
 the journal opens or a save or delete lands, rather than reading `AsyncStorage`.
 
-**A sealed memory refuses to edit, not just to open.** F23 says nobody may read
-one early, its author included; showing the current text to change it would be
-exactly that read. The server checks the seal before ownership does any good,
-the same order `is_locked` already uses, and answers 423.
-
 **What can go wrong:** the list fails to load (the sheet says so rather than
-showing stale rows); a save lands on a memory that sealed between opening the
-list and pressing Save (423, same message as trying to open one early).
+showing stale rows).
 
 **Done when:** somebody can find every memory they have filed in one place,
 fix a typo without re-filing, and take one down — and none of that touches
@@ -934,7 +887,7 @@ the app is not open.
 2. The watch tracks today's accepted route (F25) - nothing before Accept - a
    bounded, already-nearby list (`ROUTE_SIZE`, well under the ~20-region limit
    both platforms enforce for background geofences). `geofenceRegions.ts`
-   drops anything already unlocked or sealed (F23) from the watch the moment
+   drops anything already unlocked from the watch the moment
    the route list itself would.
 3. Crossing into a watched region fires a **local** notification -
    `expo-notifications`, `trigger: null` - naming the place. No server push,
@@ -960,7 +913,7 @@ see `mobile/UI.md` rule 2.
 
 **Done when:** turning the toggle on with a route already loaded starts
 watching that route's still-locked stops, turning it off stops the watch, and
-`geofenceRegions.test.ts` holds the selection logic (locked, unsealed, capped
+`geofenceRegions.test.ts` holds the selection logic (locked, capped
 at 20, nearest-radius-per-memory) to account without needing a device to
 prove it.
 
@@ -980,8 +933,7 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    distance, the summary as grey bars sized from its word count, "The only way
    in is to walk there.", and **Walk here**, which opens the plan page (F1)
    for a walk through that pin.
-   A sealed memory shows its date instead (F23). There is no unlock here, even
-   standing on it: only today's walk unlocks.
+   There is no unlock here, even standing on it: only today's walk unlocks.
 3. **Plan a walk**, bottom centre, opens the plan page (F1).
 
 The peek is a look, not a read: the summary never reaches the phone locked, so

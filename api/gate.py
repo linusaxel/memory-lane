@@ -90,8 +90,8 @@ def today() -> date:
     local date, while `ANNIVERSARY` in api/queries.py asked the database for
     CURRENT_DATE, which is the database's. On a laptop in CEST against a
     container in UTC those disagree for two hours every night - long enough
-    that a time capsule could be open while "on this day" still thought it was
-    yesterday, and long enough to fail a test at 00:04 with no code changed.
+    that today's walk and "on this day" disagreed about the date, and long
+    enough to fail a test at 00:04 with no code changed.
 
     UTC rather than either machine's local time, because neither machine's
     local time means anything to the person holding the phone. A viewer's own
@@ -102,20 +102,6 @@ def today() -> date:
     tests/test_clock.py holds the two halves together.
     """
     return datetime.now(UTC).date()
-
-
-def not_yet_open(row) -> bool:
-    """A time capsule that has not come due.
-
-    A different question from the proximity gate and a stricter one: proximity
-    asks whether you are here, this asks whether it is time, and no amount of
-    standing in the right place answers it. Because it is checked first, it also
-    survives the two places that deliberately force a memory open - the
-    collection, which passes a memory its own coordinates, and the unlock
-    endpoint, which records having walked there.
-    """
-    opens = getattr(row, "opens_at", None)
-    return opens is not None and opens > today()
 
 
 def is_locked(row, at: Coordinates | None) -> bool:
@@ -129,14 +115,9 @@ def is_locked(row, at: Coordinates | None) -> bool:
     single read, the unlock, the submission and the card all do pass it;
     get_unlocks passes a memory's own coordinates to force it open.
 
-    A time lock is checked first and is not about position at all: see
-    not_yet_open.
-
     ponytail: the position is self-reported, so this stops curl and not a
     determined spoofer. docs/10-decisions.md#the-position-is-self-reported.
     """
-    if not_yet_open(row):
-        return True
     if not is_gated(row):
         return False
     coords = row_coordinates(row)
@@ -245,10 +226,6 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         locked=True,
         unlock_radius_meters=UNLOCK_RADIUS_METERS,
         anniversary=bool(getattr(row, "anniversary", False)),
-        # Only while it is shut. Afterwards the date is just a date, and the
-        # app would have to work out for itself that it no longer means
-        # anything.
-        opens_at=getattr(row, "opens_at", None) if not_yet_open(row) else None,
         hidden=bool(getattr(row, "hidden", False)),
     )
 

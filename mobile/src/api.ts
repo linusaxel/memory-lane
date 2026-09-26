@@ -91,10 +91,6 @@ export type Memory = {
   anniversary: boolean;
   /** ISO date, or null when the source did not say. */
   happened_at: string | null;
-  /** ISO date, and set only while the memory is still sealed. A time lock is a
-   *  different refusal from the proximity one: standing here does not open it,
-   *  so the sheet must not offer the unlock. Null once the date has passed. */
-  opens_at: string | null;
   /** Set once enough people report it. Only ever true from /v1/me/memories -
    *  every other endpoint drops a hidden memory instead of flagging it. */
   hidden: boolean;
@@ -257,10 +253,9 @@ export async function fetchUnlocked(
   return (body.memories ?? []).filter(hasCoordinates);
 }
 
-/** One page of what this account has filed, newest first - including a sealed
- *  one (shown shut, seal included) and a reported one (shown, flagged
- *  `hidden`). The one screen that manages your own memories cannot let either
- *  vanish from it silently.
+/** One page of what this account has filed, newest first - including a
+ *  reported one (shown, flagged `hidden`). The one screen that manages your
+ *  own memories cannot let it vanish from it silently.
  *
  *  `total` is the server's count of everything filed, not just this page -
  *  the caller compares it against how many rows it has loaded to know
@@ -475,8 +470,6 @@ export type Draft = {
   /** ISO date, or null when the person did not say when. */
   happened_at: string | null;
   happened_precision: 'day' | 'year' | null;
-  /** ISO date. Nobody reads it before then, the author included. */
-  opens_at: string | null;
   media_ids: number[];
 };
 
@@ -552,10 +545,7 @@ export async function submitMemory(
   return memory;
 }
 
-/** Change what you filed. Refused with a `sealed` error while the memory is
- *  still sealed - F23 says nobody may read one early to edit it, the author
- *  included, and the server enforces that rather than trusting the app to
- *  simply not ask. */
+/** Change what you filed. */
 export async function updateMemory(
   device: string,
   id: number,
@@ -566,7 +556,6 @@ export async function updateMemory(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ device, ...draft }),
   });
-  if (res.status === 423) throw new Error('sealed');
   if (!res.ok) throw new Error(`API ${res.status}`);
   const memory = (await res.json()) as Memory;
   if (!hasCoordinates(memory)) throw new Error('Edited memory came back without a place');

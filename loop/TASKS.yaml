@@ -1086,46 +1086,13 @@ tasks:
       Do not run `npx prettier` on mobile/: there is no config, so it rewrites
       every file to double quotes and 80 columns. Match the file by hand.
 
-  - id: P5-02
-    goal: "Time-locked memories: a memory nobody can read until a date, including
-      whoever filed it."
-    verify: "venv/bin/python -m pytest -q tests/test_api_timelock.py"
-    touches: [db/schema.sql, db/migrations/009_time_locked.sql, api/gate.py, api/models.py,
-      api/queries.py, api/card.py, api/write.py, pipeline/seed_dev.py,
-      mobile/src/api.ts, mobile/src/MemorySheet.tsx, mobile/src/Submit.tsx,
-      mobile/src/cluster.test.ts, tests/test_api_timelock.py, docs/08-ux-flows.md]
-    depends_on: [P5-01]
-    state: done
-    attempts: 1
-    commit: 9642dba
-    note: |
-      not_yet_open is checked at the TOP of is_locked, ahead of position, and
-      that placement is the whole task. Every existing way of opening a memory
-      was a way this could leak: standing on the spot; /v1/unlocks, which forces
-      a collection open by handing each memory its own coordinates; the unlock
-      endpoint; and api/card.py, which keeps a second copy of the query and
-      needed m.opens_at adding or it would have read as "no lock". Four doors,
-      one check. Mutation-tested: stub the check and exactly those four fail.
-
-      A DATE, not a timestamp - "opens on 3 May 2031" is what a person means and
-      a time of day invites a timezone argument. The app parses the ISO string
-      by hand; `new Date("2031-05-03")` is UTC midnight and prints 2 May west of
-      Greenwich.
-
-      No validation that the date is in the future: a date that has passed is
-      the same thing as no date, which is one less error state than validating
-      it would create.
-
-      SUBMISSION_INSERT gained a bind, which broke pipeline/seed_dev.py - fixed
-      in the same commit because this change is what broke it.
-
   - id: W3-16
     goal: "Make the memory sheet reachable without a finger, and stop shipping
       purpose strings the app does not use."
     verify: "venv/bin/python -m pytest -q tests/test_app_config.py tests/test_seed_dev.py"
     touches: [mobile/app.json, mobile/src/devOpen.ts, mobile/App.tsx, mobile/.env.example,
       mobile/UI.md, pipeline/seed_dev.py, tests/test_app_config.py, tests/test_seed_dev.py]
-    depends_on: [P5-02]
+    depends_on: []
     state: done
     attempts: 1
     commit: ed86332

@@ -5,7 +5,7 @@
  */
 
 import type { Coordinates, LocatedMemory } from './api.ts';
-import { FALLBACK_RADIUS_M, isSealed } from './reach.ts';
+import { FALLBACK_RADIUS_M } from './reach.ts';
 
 /** iOS refuses to monitor more than 20 regions per app; there is no reason to
  *  ask Android for more than that either. */
@@ -25,10 +25,9 @@ export type Region = {
   notifyOnExit: false;
 };
 
-/** Locked and not sealed - a time lock does not open by walking there, so
- *  there is nothing a notification should invite anyone to do about it. */
+/** Locked: an open memory is nothing to walk to. */
 export function memoriesToWatch(memories: LocatedMemory[]): LocatedMemory[] {
-  return memories.filter((m) => m.locked && !isSealed(m)).slice(0, MAX_REGIONS);
+  return memories.filter((m) => m.locked).slice(0, MAX_REGIONS);
 }
 
 export function regionsFor(memories: LocatedMemory[]): Region[] {

@@ -18,7 +18,6 @@ so a count can run high. The job's own planning drops those stops anyway.
 
 from sqlalchemy import text
 
-from api.gate import today
 from api.models import ROUTE_BUDGET_MAX_METERS
 from api.queries import COORDINATE_IS_UNIQUE_EXPR, HOTSPOTS_QUERY, VISIBLE
 from api.route_solver import ROUTE_SIZE
@@ -36,7 +35,6 @@ JOIN memories m ON m.place_id = p.id
 CROSS JOIN LATERAL unnest(m.tags) AS t(tag)
 WHERE {VISIBLE}
     AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
-    AND (m.opens_at IS NULL OR m.opens_at <= CAST(:today AS date))
     AND t.tag = ANY(CAST(:tags AS varchar[]))
 GROUP BY h.lat, h.lng, h.label, h.memories, t.tag
 HAVING COUNT(DISTINCT p.id) >= :min_stops
@@ -52,7 +50,6 @@ def themes(session) -> list[tuple[str, int, dict[str, int]]]:
         {
             "limit": 1000,
             "radius_meters": ROUTE_BUDGET_MAX_METERS / 2,
-            "today": today(),
             "tags": list(TAGS),
             "min_stops": ROUTE_SIZE,
         },

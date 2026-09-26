@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from sqlalchemy import text
 
-from api.gate import UNLOCK_RADIUS_METERS, is_locked, not_yet_open, source_link, viewer_position
+from api.gate import UNLOCK_RADIUS_METERS, is_locked, source_link, viewer_position
 from api.media import media_url
 from api.queries import COORDINATE_IS_UNIQUE
 from pipeline.db import get_session
@@ -30,10 +30,6 @@ SELECT
     m.source_url,
     m.contrast_note,
     m.timestamp_start,
-    -- Not decorative: is_locked() checks the time lock before it checks
-    -- position, and a column this query forgot would read as "no lock" and
-    -- render a sealed memory to anyone holding the link.
-    m.opens_at,
     p.name AS place_name,
     p.precision_meters,
     c.source_name,
@@ -257,15 +253,8 @@ def render_locked_card(row, radius_meters: int) -> str:
     place = escape(row.place_name or "Unknown place")
     credit = escape(credit_line(row))
 
-    # Two different refusals. "Walk here" is useless advice for a memory that
-    # will not open to anybody today, and a card that gave it would send
-    # somebody across a city for nothing.
-    if not_yet_open(row):
-        label = "sealed"
-        withheld = f"Something happened here. It opens on {row.opens_at.strftime('%-d %B %Y')}."
-    else:
-        label = "locked"
-        withheld = f"Something happened here. Stand within {radius_meters} m of it to read it."
+    label = "locked"
+    withheld = f"Something happened here. Stand within {radius_meters} m of it to read it."
 
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">

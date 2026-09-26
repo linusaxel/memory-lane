@@ -192,7 +192,6 @@ def main() -> None:
                 **{k: near[k] for k in ("lat", "lng")},
                 # The widest slider: api/route_solver.py searches half the budget.
                 "radius_meters": 5_000,
-                "today": "2026-01-01",
                 "device_id": "00000000-0000-0000-0000-000000000000",
                 "limit": ROUTE_POOL,
                 "tag": None,

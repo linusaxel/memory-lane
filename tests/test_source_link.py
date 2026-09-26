@@ -35,7 +35,6 @@ class Row:
             extraction_confidence="high",
             layer="historical",
             happened_at=None,
-            opens_at=None,
             user_id=None,
             author_name=None,
             source_name=None,

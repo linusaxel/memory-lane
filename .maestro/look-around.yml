@@ -3,11 +3,6 @@
 #
 # Everything here only looks: nothing is accepted, so no route row is written
 # and the three launches can share one database.
-#
-# F23 (sealed until a date) used to be scripted here, by standing on the sealed
-# pin. A sealed memory is never a route stop and the map draws nothing else,
-# so there is no pin to stand on; tests/test_api_routes.py and
-# mobile/src/reach.test.ts hold the rule instead.
 
 appId: ${APP_ID}
 ---

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { distance, duration, sealOpensAt, walkDate, when } from './format.ts';
+import { distance, duration, walkDate, when } from './format.ts';
 
 test('metres below a kilometre, kilometres above', () => {
   assert.equal(distance(420), '420 m');
@@ -51,32 +51,6 @@ test('recent unlocks read as words, older ones as a date', () => {
 test('a clock skewed into the future still says today', () => {
   const now = Date.UTC(2026, 8, 20, 12);
   assert.equal(when(now + 60_000, now), 'today');
-});
-
-const NOW = new Date('2026-09-21T12:00:00Z');
-
-test('a seal needs a year still to come', () => {
-  assert.equal(sealOpensAt('2041', NOW), '2041-01-01');
-  assert.equal(sealOpensAt('2027', NOW), '2027-01-01');
-});
-
-test('a year that has already begun is not a seal', () => {
-  // The server treats a date that has come as no date at all, so letting one
-  // through here would post a readable memory to somebody who asked to seal it.
-  assert.equal(sealOpensAt('2026', NOW), null);
-  assert.equal(sealOpensAt('1994', NOW), null);
-});
-
-test('half a year is not a year', () => {
-  // The state the bug lived in: "Nobody until" chosen, year left empty.
-  assert.equal(sealOpensAt('', NOW), null);
-  assert.equal(sealOpensAt('20', NOW), null);
-  assert.equal(sealOpensAt('20x1', NOW), null);
-  assert.equal(sealOpensAt('  ', NOW), null);
-});
-
-test('a year is read around its spaces', () => {
-  assert.equal(sealOpensAt(' 2041 ', NOW), '2041-01-01');
 });
 
 test("a walk's date is the day it was walked, in any timezone", () => {

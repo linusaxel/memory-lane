@@ -1460,8 +1460,8 @@ export default function App() {
 
         <MemorySheet
           earned={!!openMemories[openIndex] && earned.has(openMemories[openIndex].id)}
-          // Only your own, and only while it is open - a sealed one shows the
-          // locked composition instead, which has nowhere to put this.
+          // Only your own, and only while it is open: the locked composition
+          // has nowhere to put this.
           onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}
           memories={openMemories}
           index={openIndex}

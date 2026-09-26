@@ -24,17 +24,6 @@ export const FALLBACK_RADIUS_M = 20;
  *  around is still a decision rather than a trek. */
 export const WARM_MULTIPLIER = 3;
 
-/** Shut by a date rather than by distance, so no amount of walking opens it.
- *
- *  The distinction has to exist here and not only in the sheet, because the
- *  pin's colour and the "at a stop" pill both ask "can this be opened from
- *  where I am standing". A sealed memory is `locked`, and can be 128m away.
- *
- *  See F23 in docs/08-ux-flows.md. */
-export function isSealed(memory: LocatedMemory): boolean {
-  return memory.opens_at != null;
-}
-
 /** To the closest one, not to the group's point. The group's point is a rounded
  *  coordinate, and at anything looser than street precision it can sit
  *  kilometres from every memory filed under it. */
@@ -67,16 +56,10 @@ export function reachOf(
     return group.memories.some((memory) => earned.has(memory.id)) ? 'stamped' : 'plain';
   }
 
-  // Distance only has an opinion about the ones distance can open. A group with
-  // nothing but sealed memories under it stays `locked`: shut, and honest about
-  // it, rather than amber for a walk that would achieve nothing.
-  // ponytail: a seal could earn its own mark on the map instead of borrowing
-  // the out-of-reach one. Grey is true today and costs no new visual language.
-  const walkable = locked.filter((memory) => !isSealed(memory));
-  if (walkable.length === 0 || !position) return 'locked';
+  if (!position) return 'locked';
 
-  const radius = walkable[0].unlock_radius_meters ?? FALLBACK_RADIUS_M;
-  const away = metersToNearest(position, walkable);
+  const radius = locked[0].unlock_radius_meters ?? FALLBACK_RADIUS_M;
+  const away = metersToNearest(position, locked);
   if (away <= radius) return 'unlockable';
   return away <= radius * WARM_MULTIPLIER ? 'warm' : 'locked';
 }

@@ -49,7 +49,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   or take down something you filed. Ownership is the only check; the delete is
   real, not the report path's hidden flag
 - `GET /v1/me/memories?device=UUID` - everything this account filed, newest
-  first, hidden and sealed ones included
+  first, hidden ones included
 - `POST /v1/memories/{id}/heart` `{device}` - one heart per device, and it does
   not come back off. No position check
 - `POST /v1/memories/{id}/note` `{device, body}` / `GET /v1/memories/{id}/notes?device=UUID`

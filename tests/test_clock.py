@@ -1,9 +1,9 @@
 """The server has one opinion of what day it is, and two rules depend on it.
 
-`not_yet_open` in api/gate.py decides whether a time capsule is still shut.
-`ANNIVERSARY` in api/queries.py decides whether something happened "on this
-day". One was Python's local date and the other was the database's, so on a
-CEST host against a UTC container they disagreed for two hours every night -
+`today()` in api/gate.py decides which day's walk unlocks. `ANNIVERSARY` in
+api/queries.py decides whether something happened "on this day". One was
+Python's local date and the other was the database's, so on a CEST host
+against a UTC container they disagreed for two hours every night -
 which is how a test that had passed for weeks failed at 00:04 with nothing
 changed but the clock.
 
@@ -25,7 +25,7 @@ def test_the_database_and_the_gate_agree_about_today(db_session):
     from_db = db_session.execute(text("SELECT (now() AT TIME ZONE 'utc')::date")).scalar()
     assert from_db == today(), (
         f"the database thinks it is {from_db} and the gate thinks it is {today()}; "
-        "a time capsule and an anniversary now disagree about what day it is"
+        "today's walk and an anniversary now disagree about what day it is"
     )
 
 

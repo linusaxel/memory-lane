@@ -19,14 +19,13 @@ import pathlib
 import random
 import re
 import uuid
-from datetime import timedelta
 
 import pytest
 import yaml
 from sqlalchemy import text
 
 import pipeline.seed_dev as seed_dev
-from api.gate import UNLOCK_RADIUS_METERS, meters_between, today
+from api.gate import UNLOCK_RADIUS_METERS, meters_between
 from api.models import ROUTE_BUDGET_MAX_METERS, ROUTE_BUDGET_MIN_METERS, Coordinates
 from api.route_solver import _path_meters, _route_size
 from api.streets import walking_matrix
@@ -186,44 +185,6 @@ def test_f5_a_filed_memory_comes_back_already_open(seeded):
         f"/v1/memories/{body['id']}", params={"at_lat": START[0], "at_lng": START[1]}
     )
     assert from_afar.json()["locked"] is True
-
-
-def test_f23_a_seal_does_not_care_where_you_are_standing(seeded, db_session):
-    """F23: not_yet_open is checked before position, so it holds for the author.
-
-    Two halves, because only the second one is surprising: the seeded capsule
-    sits *inside* the radius and still refuses, and a capsule you filed
-    yourself refuses you too.
-    """
-    lat, lng = at("sealed")
-    sealed_id = seeded_id(db_session, "sealed")
-    on_todays_route(db_session, DEVICE, sealed_id)
-    standing_on_it = read_at(seeded, sealed_id, (lat, lng))
-    assert standing_on_it["locked"] is True
-    assert standing_on_it["opens_at"] is not None
-    assert standing_on_it["summary"] == ""
-
-    # Even the unlock endpoint, which is the one route that forces the question.
-    refused = seeded.post(
-        f"/v1/memories/{sealed_id}/unlock",
-        json={"device": DEVICE, "lat": lat, "lng": lng},
-    )
-    assert refused.json()["locked"] is True
-
-    mine = seeded.post(
-        "/v1/memories",
-        json={
-            "device": DEVICE,
-            "lat": lat,
-            "lng": lng,
-            "place_name": "A note for later",
-            "summary": "Filed sealed, by somebody standing on the spot.",
-            "opens_at": str(today() + timedelta(days=365)),
-        },
-    )
-    assert mine.status_code == 201
-    assert mine.json()["locked"] is True, "your own capsule is shut to you too"
-    assert mine.json()["summary"] == ""
 
 
 def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route_seed):

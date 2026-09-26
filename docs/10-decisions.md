@@ -95,6 +95,26 @@ This stops `curl`, not a determined spoofer — and since submissions, it cuts
 both ways: a memory is also filed at a position nobody verified. Attestation is
 the fix and needs more than accounts. Logged in `TODO.md`.
 
+### Every memory is public
+
+Status: Accepted (2026-09-26)
+
+A memory can be read by anyone who stands at it. Nobody chooses who that is,
+and no memory is held back until a date. The time capsule (F23, "Nobody until"
+a year) is removed from the app, the API and the gate: `not_yet_open`, the
+route and geofence exclusions, the sealed card, and the 423 on edit are all
+gone. The founder chose to ship it this way for now. The proximity gate
+stands, and it is the only lock.
+
+`memories.opens_at` stays in the schema with nothing reading or writing it.
+Dropping it would mean rewriting migration 009, which the migration-replay test
+replays on its own. A memory sealed before the removal now reads like any
+other.
+
+**Options considered:** Hiding the "Who can read it" field and keeping the
+server half. That leaves a gate branch nothing can reach and a feature the docs
+would still have to explain.
+
 ### A map of what is locked, and only today's walk unlocks
 
 Status: Accepted 2026-09-26. Supersedes the "no map of everything" clause below.
@@ -570,7 +590,8 @@ approaches this number the answer is to precompute hotspots, not to raise it.
 
 Status: Accepted
 
-`not_yet_open` asked Python for today's date, which is the host's local one.
+`not_yet_open` (the time lock, since removed: *Every memory is public*) asked
+Python for today's date, which is the host's local one.
 `ANNIVERSARY` asked the database for `CURRENT_DATE`, which is the cluster's. A
 CEST laptop against a UTC container disagreed for two hours every night — and
 those two rules decide whether a memory is shut and whether it is "on this
@@ -949,7 +970,7 @@ not have picked.
 pin (Map first, M5) sends `include=<memory_id>` with the preview and the accept.
 It is vetted by the same `ROUTE_CANDIDATES_QUERY` that decides every other stop:
 the query sorts it first, and if it is not first it may not be a stop (hidden,
-sealed, already earned, ambiguous, or beyond half the length). A pin too far
+already earned, ambiguous, or beyond half the length). A pin too far
 from a street, or whose walk there and back is longer than the slider, is also
 refused, 422 for all of them; the last says the length that would reach it
 (`too_far`, `min_budget_meters`), which the app lifts its slider to (M6). The solver then keeps it on every walk it
@@ -1035,7 +1056,7 @@ because a hidden row is data left lying about.
 
 Status: Accepted, amended 2026-09-22 and 2026-09-24
 
-F25 ends its list of stops the same way F23 ends a seal: nothing is pushed at
+F25 ends its list of stops quietly: nothing is pushed at
 anyone, as of today's code. This product had no notifications at all — see
 F1's "deliberately absent" list in `docs/08-ux-flows.md` — and a route was not
 going to be the first feature to need one invented. The pill just says a truer

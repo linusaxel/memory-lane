@@ -463,7 +463,6 @@ def _plan_route(
             "lat": centre.lat,
             "lng": centre.lng,
             "radius_meters": budget_meters / 2,
-            "today": route_date,
             "device_id": device,
             "limit": ROUTE_POOL,
             "tag": tag,

@@ -575,9 +575,8 @@ def get_my_memories(
     offset: int = Query(0, ge=0, description="Pagination offset"),
 ):
     """Everything this account has filed, newest first - including memories
-    reported by others (hidden) and memories still sealed. Neither is a reason
-    to hide a memory from the one screen that manages it; row_to_memory still
-    renders a sealed one as shut, seal included, the author included.
+    reported by others (hidden), which is no reason to hide a memory from the
+    one screen that manages it.
 
     Paginated like /v1/memories/nearby - a filer past `limit` gets more by
     asking again with a higher `offset`, not by being silently cut off.
