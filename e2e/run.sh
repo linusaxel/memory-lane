@@ -153,13 +153,15 @@ trap cleanup EXIT
 # Dropping the database takes the unlocks with it and the device becomes a
 # stranger again.
 reset_database() {
+  local seed=(--at "$START")
+  [ "${1:-}" = lakes ] && seed=(--routes lakes)
   psql_on memorylane "DROP DATABASE IF EXISTS $DB WITH (FORCE)" >/dev/null \
     || infra "could not drop $DB"
   psql_on memorylane "CREATE DATABASE $DB" >/dev/null || infra "could not create $DB"
   docker compose exec -T db psql -q -U memorylane -d "$DB" < db/schema.sql >/dev/null \
     || infra "could not load db/schema.sql into $DB"
   DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL="$ROUTING" \
-    venv/bin/python -m pipeline.seed_dev --at "$START" > "$LOGS/seed.log" 2>&1
+    venv/bin/python -m pipeline.seed_dev "${seed[@]}" > "$LOGS/seed.log" 2>&1
   local seeded=$?
   [ "$seeded" = 3 ] && return 3
   [ "$seeded" = 0 ] || { cat "$LOGS/seed.log" >&2; exit 1; }
@@ -338,7 +340,7 @@ for flow in "${SELECTED[@]}"; do
   name=$(basename "$flow" .yml)
   flow_started=$(date +%s)
   printf '\n\033[1m  ▸ %s\033[0m\n' "$name"
-  reset_database
+  reset_database "${name%%-*}"
   [ "$name" = walk-and-unlock ] && yesterday_unlock
   # launchApp's own relaunch has been seen to no-op under the load of a screen
   # recording, which leaves the flow looking at the previous one's last screen

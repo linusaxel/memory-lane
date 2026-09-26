@@ -120,18 +120,13 @@ missing is a source.
       longest from here." under ROUTE_FILL. Left: legs routed longer than the
       shortest path (round the shore), if an honest short walk isn't enough.
       Also: 10 km plans are p95 2.2 s, twice what they were.
-- [ ] **A Copenhagen journey in Maestro.** (checked 2026-09-24: no such flow in
-      `.maestro/`) e.g. `.maestro/lakes-loop.yml`: `setLocation` on Olufsvej,
-      set the slider to the measured loop (~9.1 km), preview, and assert a
-      loop that reaches Sankt Jørgens Sø and reads `.* loop` (five stops top
-      out at 7.0 km there, not the ~9.1 km round the lakes). Then "Show me
-      another" and assert the stops changed. `e2e/travel.py` needs its START
-      and budget made arguments. Also assert a past walk's row opens to an
-      earned memory and tapping it opens the sheet (F31; needs the seed below).
-- [ ] **Seed walks already walked.** (checked 2026-09-24) For that journey: a
-      few past `daily_routes` rows on the lakes, dated before today, with the
-      unlocks that earned them (one 5 of 5, one abandoned 2 of 5), so the
-      Walks tab opens on a history. Also seeds F27's streak (see Friction).
+- [ ] **Seed walks already walked.** (checked 2026-09-26) For
+      `.maestro/lakes-loop.yml`: a few past `daily_routes` rows on the lakes,
+      dated before today, with the unlocks that earned them (one 5 of 5, one
+      abandoned 2 of 5), so the Walks tab opens on a history. Then the flow
+      asserts a past walk's row opens to an earned memory and tapping it opens
+      the sheet (F31). It could also replace run.sh's `yesterday_unlock`
+      trigger for F27's streak.
 ---
 
 ## Parked

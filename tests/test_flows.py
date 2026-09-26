@@ -343,6 +343,8 @@ def test_maestro_flows_still_point_at_the_seed():
     known.add((seed_dev.LAT, seed_dev.LNG))
     # Deliberate non-seed coordinates: the walk's start, and Malmö for F1's empty case.
     known |= {START, (55.605, 13.0038)}
+    # lakes-loop.yml stands where seed_dev --routes lakes starts.
+    known.add(seed_dev.OLUFSVEJ)
 
     flows = sorted((ROOT / ".maestro").glob("*.yml"))
     assert flows, "no flows to check - did .maestro move?"

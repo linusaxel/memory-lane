@@ -64,6 +64,9 @@ One exception, for F27: before `walk-and-unlock` the run plants a memory at
 appears, so the walk-done card has a two-day streak to show. The app mints its
 device id itself, so there is no id to seed ahead of time.
 
+And `lakes-loop` gets `seed_dev --routes lakes` instead of the random-start
+cluster: a flow named `lakes-*` is planted round the Copenhagen lakes.
+
 ## It is only slow when you are doing something else
 
 Every phase prints what it cost, and the suite prints a total, because the
@@ -124,9 +127,10 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 |---|---|
 | `look-around.yml` | F1 plan a walk (and nothing walkable), F32 show me another, F8 be asked for location |
 | `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F27 the streak on its card, F15 reread what you unlocked, F26 heart it, F33 leave a note and rewrite it, F31 look back at a walk |
+| `lakes-loop.yml` | F1 the whole slider round the lakes, "The longest from here.", F32 show me another until the far lake |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed, and the author hearing back (hearts, notes, "New") |
 
-Three journeys rather than one file per id: every flow pays a fresh database
+Four journeys rather than one file per id: every flow pays a fresh database
 and a cold start, and the old per-id files performed the same unlock three
 times and the same filing twice. A new id joins the journey it belongs to; a step a journey repeats goes in
 `.maestro/steps/`, which `run.sh` does not run on its own.

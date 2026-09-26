@@ -1,0 +1,54 @@
+# F1 plan a walk -> F32 Show me another, round the Copenhagen lakes.
+# docs/08-ux-flows.md
+#
+# e2e/run.sh plants `seed_dev --routes lakes` for this flow instead of the
+# random-start cluster: stops every ~400 m round the three lakes, each named
+# by its lake. The start is OLUFSVEJ in pipeline/seed_dev.py.
+#
+# The whole slider, 10 km. The lakes top out near 7 km however many stops, so
+# every walk here is the longest from here. Which of them the first preview
+# shows is a random roll; only some reach Sankt Jørgens Sø, the far lake, so
+# Show me another is tapped until one does. A re-roll that came back
+# unchanged would have taken the button away, so reaching it is F32 working.
+
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: 55.7007
+    longitude: 12.5759
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- extendedWaitUntil:
+    visible: "How far today?"
+    timeout: 40000
+# A slider only moves when the drag starts on its thumb, so from where 4 km
+# sits (WALK_KM.initial) to past the end. The value is the "10 km" above the
+# slider; the end label under it says the same.
+- swipe:
+    start: "37%,35%"
+    end: "99%,35%"
+- assertVisible:
+    text: "10 km"
+    above: "Walk length"
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "10 stops · .* loop"
+    timeout: 40000
+- assertVisible: "The longest from here\\."
+# Past Sortedams Sø, the lake at the door, on every roll.
+- assertVisible: "Stop .* of 10\\. Peblinge Sø.*"
+
+- repeat:
+    while:
+      notVisible: "Stop .* of 10\\. Sankt Jørgens Sø.*"
+    times: 7
+    commands:
+      - tapOn: "Show me another"
+      - waitForAnimationToEnd
+- assertVisible: "Stop .* of 10\\. Sankt Jørgens Sø.*"
+- assertVisible: "10 stops · .* loop"
+- assertVisible: "Show me another"
