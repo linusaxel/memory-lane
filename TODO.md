@@ -192,12 +192,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       ≥3 tags of ≥5 walkable stops: `python -m pipeline.themed_routes` says
       which. None yet outside the dev seed; New York and West Hollywood have
       two each. The job grows in that file.
-- [ ] **Customise by one swap, not a route editor.** (checked 2026-09-24) The
-      length slider, loop toggle and theme chip shipped. Left: (1) "Swap this
-      stop", remove it and re-insert the next-best candidate; (3)
-      drag-to-reorder, last, since stops unlock in any order anyway. A swap
-      changes the walk in progress; ending it and planning again (F34) is the
-      workaround until then.
 - [ ] **One-way walks take a final destination.** (checked 2026-09-26: the
       founder asked for it) Picking one-way lets you enter where the walk ends
       ("end at the subway"), a one-way OP. Per request, never stored: ⚠️
