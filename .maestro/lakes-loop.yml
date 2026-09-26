@@ -89,17 +89,17 @@ appId: ${APP_ID}
 # memories it earned; the stops it never reached stay out.
 - tapOn: "Journal"
 - extendedWaitUntil:
-    visible: ".*, 5 of 5 · .*"
+    visible: ".*, 5 memories · .*"
     timeout: 30000
-- assertVisible: ".*, 2 of 5 · .*"
-- tapOn: ".*, 2 of 5 · .*"
+- assertVisible: ".*, 2 memories · .*"
+- tapOn: ".*, 2 memories · .*"
 - extendedWaitUntil:
     visible: "Peblinge Sø 5, dev seed, .*"
     timeout: 30000
 - assertVisible: "Sortedams Sø 4, dev seed, .*"
 - assertNotVisible: "Sortedams Sø 3, dev seed, .*"
-- tapOn: ".*, 2 of 5 · .*"
-- tapOn: ".*, 5 of 5 · .*"
+- tapOn: ".*, 2 memories · .*"
+- tapOn: ".*, 5 memories · .*"
 - scrollUntilVisible:
     element: "Sankt Jørgens Sø 7, dev seed, .*"
     direction: DOWN

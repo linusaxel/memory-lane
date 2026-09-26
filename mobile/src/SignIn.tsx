@@ -37,7 +37,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { signIn, signOut, type Profile } from './api.ts';
 import { LogoTile } from './StartupLogo.tsx';
-import { buttonText, color, dim, font, label } from './theme.ts';
+import { button, buttonText, color, dim, font, label } from './theme.ts';
 
 // Closes the browser tab the moment the redirect comes back. Without it the
 // person is left staring at a finished Google page wondering what to tap.
@@ -291,14 +291,7 @@ const styles = StyleSheet.create({
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 },
   title: { fontFamily: font.display, fontSize: 34, color: color.ink, marginTop: 8 },
   actions: { gap: 12, alignItems: 'stretch' },
-  google: {
-    height: 46,
-    borderWidth: 1,
-    borderColor: color.ink,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  google: { ...button.outline, height: 46, paddingVertical: 0 },
   googleText: { ...buttonText, color: color.ink },
   skip: { alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 16 },
   skipText: { ...label },
@@ -306,14 +299,7 @@ const styles = StyleSheet.create({
   note: { fontFamily: font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   // Apple's button draws itself; it only takes a frame.
   apple: { height: 46, alignSelf: 'stretch' },
-  action: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: color.ink,
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    borderRadius: 4,
-  },
-  actionText: { ...label, color: color.ink },
+  action: { ...button.outline, alignSelf: 'flex-start' },
+  actionText: { ...buttonText, color: color.ink },
   error: { fontFamily: font.mono, fontSize: 13, color: color.seal, textAlign: 'center' },
 });

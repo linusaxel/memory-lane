@@ -41,7 +41,7 @@ import {
   type MediaItem,
 } from './api.ts';
 import { duration, sealOpensAt } from './format.ts';
-import { color, dim, font, input, label } from './theme.ts';
+import { button, buttonText, color, dim, font, input, label } from './theme.ts';
 
 /** Matches the server's own floor. Ten characters is not a quality bar, it is a
  *  fat-finger bar, and the button has to agree with the API about it. */
@@ -719,14 +719,8 @@ const styles = StyleSheet.create({
   chipText: { ...label, fontSize: 10, color: color.inkSoft },
   chipTextOn: { color: color.paper },
 
-  secondary: {
-    borderWidth: 1,
-    borderColor: color.ink,
-    borderRadius: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  secondaryText: { ...label, fontSize: 10, color: color.ink },
+  secondary: button.outline,
+  secondaryText: { ...buttonText, color: color.ink },
 
   thumb: { width: THUMB, height: THUMB, borderRadius: 4, backgroundColor: color.rule },
   thumbFailed: { opacity: 0.4 },
@@ -738,7 +732,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: color.scrim,
     borderRadius: 4,
   },
   thumbError: { ...label, fontSize: 9, color: color.seal, textAlign: 'center' },
@@ -751,14 +745,6 @@ const styles = StyleSheet.create({
   // Same shape as `secondary`, in the app's one red - the accent everywhere
   // else means "openable"; here, like Settings' saveFailed line, it is the
   // other thing this app says in red.
-  delete: {
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: color.seal,
-    borderRadius: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginTop: 12,
-  },
-  deleteText: { ...label, fontSize: 10, color: color.seal },
+  delete: { ...button.outline, borderColor: color.seal, alignSelf: 'center', marginTop: 12 },
+  deleteText: { ...buttonText, color: color.seal },
 });

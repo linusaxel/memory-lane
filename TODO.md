@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- [ ] **No TypeScript formatter, and `npx prettier` quietly fetches one.**
+      (2026-09-26) Formatting one edited file ran a downloaded Prettier with
+      no config and rewrote 331 lines of `Settings.tsx`; the file was checked
+      out and the edit redone. Fix: one line in AGENTS.md, "mobile/ has no
+      formatter: match the indentation by hand, never run prettier".
+
 ---
 
 ## Known defects
@@ -200,43 +206,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       notification. Maestro and simctl can press home but cannot lock the
       simulator, so the true locked-screen case needs a device. Run it without
       `EXPO_PUBLIC_DEV_LOCATION`: that pins the position and skips the watcher.
-
----
-
-## UI overhaul
-
-The founder's pass through the app, 2026-09-26. No order yet.
-
-- [ ] **No colour or visual consistency.** (checked 2026-09-26) One pass over
-      `mobile/src/theme.ts` and `mobile/UI.md` so every screen draws from the
-      same palette and the same few components.
-- [ ] **The add button: a custom icon, no text.** (checked 2026-09-26) The
-      "+ ADD" pill in the map header should look fun and say "add a memory"
-      by itself. A dedicated SVG glyph in the style of `HeartGlyph.tsx` and
-      `Padlock.tsx` (react-native-svg is installed), labelled "Add a memory"
-      for VoiceOver.
-- [ ] **Rethink the menu hierarchy.** (checked 2026-09-26) The journal
-      (`mobile/src/Memories.tsx`) holds walks, memories and you behind one
-      segmented control, which reads oddly. Decide where "you" (profile,
-      settings) lives compared with the collection.
-- [ ] **Keep only walks that unlocked something; drop "2 of 5".** (checked
-      2026-09-26) A walk with no earned stop should not be stored or listed,
-      and the journal row loses its `earned of size` (`Memories.tsx:249`).
-      ⚠️ The day lock and End walk (docs/10 *A walk can be ended*,
-      `api/read.py` ROUTE_END) need the `daily_routes` row while a walk is
-      under way: decide whether an empty one is deleted at the end or only
-      hidden from the journal, and record it in docs/10.
-- [ ] **Better delimiters between a walk's memories.** (checked 2026-09-26)
-      The expanded walk in the journal needs a clearer separation between
-      its memories. Research first (Apple Journal, Strava's activity detail,
-      timeline and stepper dividers), then pick one.
-- [ ] **"0 · Walk today to start a streak" means nothing.** (checked
-      2026-09-26) `Memories.tsx:221-224`. Rethink what the streak header
-      says, and whether it shows at all at zero.
-- [ ] **Locked pins are black, and black is not fun.** (checked 2026-09-26)
-      The `ink` disc in `mobile/src/MemoryMarker.tsx` and UI.md's pin table.
-      Try the logo's colours (`mobile/assets/icon.svg`). Still one pin kind,
-      not a visual language.
 
 ---
 

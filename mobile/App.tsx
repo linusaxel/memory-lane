@@ -74,10 +74,12 @@ import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
 import { EndPick, EndWalk, Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
+import AddGlyph from './src/AddGlyph.tsx';
+import YouGlyph from './src/YouGlyph.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
-import { buttonText, color, dim, font, label } from './src/theme.ts';
+import { buttonText, color, dim, font, label, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
@@ -250,6 +252,7 @@ export default function App() {
   // read, so a signed-in launch never flashes the sign-in screen.
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [youOpen, setYouOpen] = useState(false);
   // Set to open Submit as an editor for this memory instead of a blank form.
   // Null means Submit is either closed or filing something new.
   const [editingMemory, setEditingMemory] = useState<LocatedMemory | null>(null);
@@ -257,7 +260,7 @@ export default function App() {
   // refetches without being closed and opened again.
   const [mineVersion, setMineVersion] = useState(0);
   // Only the handful of values the palette cannot carry need this: the map's
-  // own appearance, and the two rgba literals a MapView Circle insists on.
+  // own appearance, and theme.ts `solid` for its overlays.
   const scheme = useColorScheme();
   // The journal is the only other screen, over a map that stays mounted.
   const [journalOpen, setJournalOpen] = useState(false);
@@ -1098,11 +1101,9 @@ export default function App() {
                 center={{ latitude: position.lat, longitude: position.lng }}
                 radius={radiusMeters}
                 strokeWidth={1.5}
-                // Not from the palette: a Circle takes a real colour, not a
-                // platform-resolved one, and the seal needs more presence on a
-                // dark map than on parchment.
-                strokeColor={scheme === 'dark' ? 'rgba(217,165,75,0.7)' : 'rgba(138,90,23,0.55)'}
-                fillColor={scheme === 'dark' ? 'rgba(217,165,75,0.12)' : 'rgba(138,90,23,0.07)'}
+                // A Circle takes a real colour, not a platform-resolved one.
+                strokeColor={solid(scheme === 'dark').reachStroke}
+                fillColor={solid(scheme === 'dark').reachFill}
               />
             )}
             {DEV_PINNED && position && (
@@ -1347,8 +1348,8 @@ export default function App() {
           {stage === 'loading' && <View style={styles.cover} />}
 
           {/* Last, so they sit over the plan page too. Top left the journal,
-              top right filing: every other overlay lives at the bottom, and
-              neither may cover the unlock. */}
+              top right you and filing: every other overlay lives at the
+              bottom, and none may cover the unlock. */}
           <Pressable
             style={dim([styles.corner, styles.journal])}
             accessibilityRole="button"
@@ -1363,7 +1364,20 @@ export default function App() {
           {/* Any stage, walk or no walk: filing is standing somewhere, not
               unlocking. Shown even with no position - the press asks for it. */}
           <Pressable
-            style={dim([styles.corner, styles.add])}
+            style={dim([styles.corner, styles.square, styles.you])}
+            hitSlop={4}
+            accessibilityRole="button"
+            accessibilityLabel="You and settings"
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setYouOpen(true);
+            }}
+          >
+            <YouGlyph size={22} color={color.ink} />
+          </Pressable>
+          <Pressable
+            style={dim([styles.corner, styles.square, styles.add])}
+            hitSlop={4}
             accessibilityRole="button"
             accessibilityLabel="Add a memory here"
             onPress={async () => {
@@ -1374,7 +1388,7 @@ export default function App() {
               setSubmitOpen(true);
             }}
           >
-            <Text style={styles.cornerText}>+ Add</Text>
+            <AddGlyph size={26} color={color.brand} plus={color.paper} />
           </Pressable>
           {/* Top, between them: the walk's one signal, and how it ends.
               Nothing left to reach, nothing to lose, so no are-you-sure. */}
@@ -1410,32 +1424,33 @@ export default function App() {
             }}
             onClose={() => setJournalOpen(false)}
             position={position}
-            you={
-              <Settings
-                unlockedCount={collected.length}
-                placeCount={placesUnlocked}
-                submittedCount={profile?.submitted ?? 0}
-                displayName={displayName}
-                onDisplayName={rename}
-                nameError={nameError}
-                device={device}
-                profile={profile}
-                onProfile={accountChanged}
-                radiusMeters={radiusMeters}
-                permission={permission}
-                onRequestLocation={() => {
-                  if (permission === 'granted' || permission === 'blocked') {
-                    Linking.openSettings();
-                    return;
-                  }
-                  goToMyLocation().catch(() => false);
-                }}
-                notifyNearby={notifyNearby}
-                onNotifyNearby={handleNotifyNearby}
-              />
-            }
           />
         </View>
+
+        <Settings
+          visible={youOpen}
+          onClose={() => setYouOpen(false)}
+          unlockedCount={collected.length}
+          placeCount={placesUnlocked}
+          submittedCount={profile?.submitted ?? 0}
+          displayName={displayName}
+          onDisplayName={rename}
+          nameError={nameError}
+          device={device}
+          profile={profile}
+          onProfile={accountChanged}
+          radiusMeters={radiusMeters}
+          permission={permission}
+          onRequestLocation={() => {
+            if (permission === 'granted' || permission === 'blocked') {
+              Linking.openSettings();
+              return;
+            }
+            goToMyLocation().catch(() => false);
+          }}
+          notifyNearby={notifyNearby}
+          onNotifyNearby={handleNotifyNearby}
+        />
 
         <MemorySheet
           earned={!!openMemories[openIndex] && earned.has(openMemories[openIndex].id)}
@@ -1509,6 +1524,10 @@ const styles = StyleSheet.create({
   },
   journal: { left: 18 },
   walkBar: { alignSelf: 'center', backgroundColor: color.route, borderColor: color.route },
+  // Icon-only corners: the journal's height, square. 40 plus the hitSlop is
+  // the 44 floor, and it leaves the walk pill room between them.
+  square: { width: 40, height: 40, paddingHorizontal: 0, paddingVertical: 0, alignItems: 'center', justifyContent: 'center' },
+  you: { right: 66 },
   add: { right: 18 },
   cornerText: { ...label, color: color.ink },
   walkBarText: { ...label, color: color.paper },
@@ -1520,7 +1539,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     paddingVertical: 14,
     borderRadius: 4,
-    shadowColor: '#000',
+    shadowColor: color.shadow,
     shadowOpacity: 0.18,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },
@@ -1540,7 +1559,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 9,
     borderRadius: 4,
-    shadowColor: '#000',
+    shadowColor: color.shadow,
     shadowOpacity: 0.18,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 6 },

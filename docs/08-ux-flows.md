@@ -91,7 +91,7 @@ make it worth having got here.
 **Session three — coming back.** The collection has things in it (F15), it works
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
-you, never what it says: the walk is the only way in. The journal's You section is where
+you, never what it says: the walk is the only way in. The You sheet is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -582,7 +582,7 @@ hotspots for anyone who wants them.
 ## F5 · File a memory of your own — **Implemented**
 
 **Who:** somebody standing somewhere something happened to them.
-**Trigger:** the **+ Add** control, top right of the map, at every stage: the
+**Trigger:** the **Add** pin, top right of the map, at every stage: the
 plan page, the preview, the walk, a walked day. Filing needs no walk.
 
 1. The press checks for a position first. Without one it asks for location and
@@ -661,13 +661,13 @@ not rebuilding anything.
 ## F21 · Be somebody — **Implemented**
 
 **Who:** anybody who has filed something, or is about to.
-**Trigger:** the journal's You section, or the Signed field at the bottom of the submit sheet.
+**Trigger:** the You sheet (top right of the map), or the Signed field at the bottom of the submit sheet.
 
 1. A name, saved as it is typed. No Save button to forget to press.
 2. It appears under every memory they file, as "Left by —".
 3. Blank is Anonymous, and clearing it has to keep working: the name is the one
    thing here other people see.
-4. The You section gains a third figure once there is one — how many they have
+4. The You sheet gains a third figure once there is one — how many they have
    filed, beside how many they unlocked and in how many places.
 
 A name needs no sign-in behind it. A `users` row is a display name and an id
@@ -788,12 +788,12 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. "+ Add" and "Journal" sit in the top corners at every
+   no hotspots card. Journal, You and Add sit in the top corners at every
    stage; there are no tabs. There is no
    "Near me": the pill recentres, and "Turn on location" shows only while
    there is no position.
 3. **A route-blue bar at the top centre, "On a walk · 0 of 5"**, between
-   Journal and + Add, is what says this is a walk and not the map: it holds the
+   Journal and You and Add, is what says this is a walk and not the map: it holds the
    count, and tapping it ends the walk (F34). Nothing else repeats the count.
    A pill at the bottom centre: "2.4 km to go" — the distance
    still to walk, from where you stand through every stop not yet earned, in
@@ -1023,7 +1023,7 @@ Why each of these, in `docs/10-decisions.md`, "The walk ends on a card, once".
 already walked and another in mind.
 
 1. The walk's bar, "On a walk · 2 of 5", top centre between Journal and
-   + Add (F25).
+   You and Add (F25).
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
    haven't reached lock again. What you opened stays yours.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.
@@ -1031,7 +1031,7 @@ already walked and another in mind.
    another walk can be planned the same day.
 
 The ended walk stays in the journal (F31) with what it earned, and still counts
-for the streak (F27). Its unearned stops cannot be unlocked any more (F14).
+for the streak (F27). A walk that earned nothing is deleted as it ends. Its unearned stops cannot be unlocked any more (F14).
 Offline, the card says "Can't reach Memory Lane right now." and the walk goes on.
 
 `App.tsx` (`endWalk`, `confirmEnd`), `src/Plan.tsx` (`EndWalk`),
@@ -1040,14 +1040,16 @@ Offline, the card says "Can't reach Memory Lane right now." and the walk goes on
 
 ## F31 · Look back at a walk — **Implemented**
 
-Every accepted walk is kept (`daily_routes`), and this reads them back.
+Every walk that opened something is kept (`daily_routes`), and this reads
+them back. One that opened nothing is deleted when it ends, or when the next
+walk is accepted (docs/10, "A walk that opened nothing is deleted").
 
 1. The journal's *Walks* section (F15): one row per walk, newest first,
-   "Thu, Sep 24", its stops, "5 of 5 · 4.0 km". Unfinished walks are listed
-   too; "3 of 5" says so.
-2. A row opens in place to the memories it earned, each opening its sheet.
-   Stops not reached stay out; "3 of 5" already counts them. Nothing is
-   drawn on the map and nothing unlocks.
+   "Thu, Sep 24", its stops, "5 memories · 4.0 km": what it opened, never
+   "3 of 5". Every walk listed opened something; what it missed is not the point.
+2. A row opens in place to the memories it earned, numbered on a rail in
+   walking order, each opening its sheet. Stops not reached stay out. Nothing
+   is drawn on the map and nothing unlocks.
 3. Across every device on a signed-in account (F22), and cached for the train
    (F16).
 

@@ -156,9 +156,9 @@ appId: ${APP_ID}
 - tapOn: "Journal"
 - assertVisible: "2 day streak"
 - extendedWaitUntil:
-    visible: ".*, 5 of 5 · .*"
+    visible: ".*, 5 memories · .*"
     timeout: 30000
-- tapOn: ".*, 5 of 5 · .*"
+- tapOn: ".*, 5 memories · .*"
 # A stop row's label is "<place>, <distance>"; the walk row's names no stop.
 - extendedWaitUntil:
     visible: "${STOP1}, .*"
@@ -217,9 +217,9 @@ appId: ${APP_ID}
 - assertNotVisible: "Walk done\\."
 - tapOn: "Journal"
 - extendedWaitUntil:
-    visible: ".*, 5 of 5 · .*"
+    visible: ".*, 5 memories · .*"
     timeout: 30000
-- tapOn: ".*, 5 of 5 · .*"
+- tapOn: ".*, 5 memories · .*"
 # F26: and the heart outlives the process.
 - tapOn: "${STOP1}, .*"
 - assertVisible: "Hearted, 1 heart"

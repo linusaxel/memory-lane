@@ -51,6 +51,11 @@ export const color = {
    *  openable - in reach, the pin turns seal. */
   route: dual('#1A64D6', '#5AA2FF'),
 
+  /** A memory on the map: every pin at rest, and the dot of a walk's stop in
+   *  the journal. The logo's teal, lifted in the dark so paper holds on it.
+   *  Never openable (seal) and never next (route). */
+  brand: dual('#106A6D', '#2E8F92'),
+
   /** Out of reach: the same padlock, faded. Dark enough to hold against the
    *  parchment map, and lighter in the dark where a dark pin vanishes. */
   faded: dual('#776E64', '#9A9086'),
@@ -60,7 +65,28 @@ export const color = {
    *  seal's dark value is lighter, so one alpha reads about the same over
    *  either. It lives here rather than inline so a palette change reaches it. */
   halo: 'rgba(138,90,23,0.16)',
+
+  /** The two shadows UI.md allows, and the scrim over an uploading photo. */
+  shadow: '#000',
+  scrim: 'rgba(0,0,0,0.35)',
 };
+
+/** Real colours, for the few props that cannot take a DynamicColorIOS value:
+ *  map overlays, Svg fills, the splash. Pick with `useColorScheme()`. Where a
+ *  name is also in `color`, the values are the same pair. */
+export const solid = (dark: boolean) => ({
+  paper: dark ? '#161412' : '#F7F4EE',
+  route: dark ? '#5AA2FF' : '#1A64D6',
+  /** The darker edge Apple Maps draws round a route. */
+  routeCasing: dark ? '#1B4F99' : '#0E3F8C',
+  /** The reach circle: the seal, washed over the map. */
+  reachStroke: dark ? 'rgba(217,165,75,0.7)' : 'rgba(138,90,23,0.55)',
+  reachFill: dark ? 'rgba(217,165,75,0.12)' : 'rgba(138,90,23,0.07)',
+  /** mobile/assets/icon.svg and icon-dark.svg. */
+  tile: dark ? '#0a2b2c' : '#106a6d',
+  road: dark ? '#e9f1ee' : '#f2ede4',
+  sun: '#f2a65a',
+});
 
 /** Two families and no more. Fraunces tells the stories, IBM Plex Mono is the
  *  apparatus - distances, counts, labels. */
@@ -91,6 +117,25 @@ export const buttonText = {
   fontSize: 12,
   letterSpacing: 1.2,
   textTransform: 'uppercase' as const,
+};
+
+/** The app's buttons: three boxes, one size. Spread one and add only where
+ *  it sits (margin, alignSelf); the text is always `buttonText`. */
+const buttonBox = {
+  borderWidth: 1,
+  borderRadius: 4,
+  paddingVertical: 15,
+  paddingHorizontal: 22,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+};
+export const button = {
+  /** The one thing to do. Text in paper. */
+  solid: { ...buttonBox, backgroundColor: color.ink, borderColor: color.ink },
+  /** The way back, next to a solid one. Text in ink. */
+  quiet: { ...buttonBox, borderColor: color.rule },
+  /** An action standing on its own. Text in ink. */
+  outline: { ...buttonBox, borderColor: color.ink },
 };
 
 /** A text field. The display-name input renders twice - You and Submit - and

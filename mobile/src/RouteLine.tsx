@@ -4,8 +4,8 @@
  *  while walking, the next pin hops instead (docs/09-visual-design.md §3a).
  *
  *  Still, because on iOS any Polyline prop change removes and re-adds the
- *  overlay (AIRMapPolyline.m, `update`). Hex, not theme tokens, because a
- *  Polyline takes a real colour: the fill is theme.ts `route`.
+ *  overlay (AIRMapPolyline.m, `update`). theme.ts `solid`, because a Polyline
+ *  takes a real colour.
  */
 
 import { useMemo } from 'react';
@@ -13,11 +13,13 @@ import { Polyline } from 'react-native-maps';
 
 import type { Coordinates } from './api.ts';
 import { simplifyPath } from './region.ts';
+import { solid } from './theme.ts';
 
 type Props = { path: Coordinates[]; dark: boolean };
 
 export default function RouteLine({ path, dark }: Props) {
   // Memoised: a fresh array makes react-native-maps rebuild the overlay.
+  const { route, routeCasing } = solid(dark);
   const coordinates = useMemo(
     () =>
       // 12m: wider than the hop between two sidewalks, narrower than a block.
@@ -30,14 +32,14 @@ export default function RouteLine({ path, dark }: Props) {
       <Polyline
         coordinates={coordinates}
         strokeWidth={9}
-        strokeColor={dark ? '#1B4F99' : '#0E3F8C'}
+        strokeColor={routeCasing}
         lineCap="round"
         lineJoin="round"
       />
       <Polyline
         coordinates={coordinates}
         strokeWidth={6}
-        strokeColor={dark ? '#5AA2FF' : '#1A64D6'}
+        strokeColor={route}
         lineCap="round"
         lineJoin="round"
       />

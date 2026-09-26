@@ -106,7 +106,9 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal.** Streak, past walks, what you filed, and You |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
-| `mobile/src/Settings.tsx` | The journal's You section |
+| `mobile/src/Settings.tsx` | You: its own sheet, from the map's top-right corner |
+| `mobile/src/AddGlyph.tsx` | The Add button's icon: a brand pin with a plus |
+| `mobile/src/YouGlyph.tsx` | The You button's icon |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |

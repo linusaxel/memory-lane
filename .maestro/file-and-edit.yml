@@ -23,7 +23,7 @@ appId: ${APP_ID}
 
 - runFlow: steps/sign-in.yml
 
-# "+ Add" is there from the map on: filing needs no walk.
+# Add (top right) is there from the map on: filing needs no walk.
 - extendedWaitUntil:
     visible: "Plan a walk"
     timeout: 40000

@@ -44,7 +44,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "Journal"                  top left, every stage, plan page included
-├─ "+ Add"                    top right, every stage: filing needs no walk. See "Writing"
+├─ You, Add                   top right, icons only (YouGlyph, AddGlyph), every stage.
+│                              You opens Settings; Add files a memory, no walk needed. See "Writing"
 ├─ "On a walk · 2 of 5"       top centre, the corners' shape in route blue: the walk's one
 │                              signal, and a tap ends it (F34). With stops left, a card
 │                              (EndWalk): "End this walk?", End walk / Keep walking. No system dialog
@@ -80,14 +81,16 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   The locked side says how many attachments are waiting and never which. A
   photograph of the place is the memory as much as the text is.
 
-Submit (pageSheet modal, from "+ Add") - see Writing
+Submit (pageSheet modal, from Add) - see Writing
+
+You (src/Settings.tsx, pageSheet modal, from You) - "You" 34/700, Close, then the settings
 
 Journal (src/Memories.tsx)     opaque, over the mounted map; "Close" top right
-├─ the streak, large           F27: days in a row with a walk stop unlocked
-├─ Walks                       one row per walk; a row opens in place to its stops,
-│                              an earned one opens the sheet. Cached for the train
-├─ Memories                    what you added; a row opens Submit as the editor
-└─ You (src/Settings.tsx)
+├─ the streak, large           F27: days in a row with a walk stop unlocked. Not shown at 0
+├─ Walks                       one row per walk that opened something, date and length;
+│                              a row opens in place to its earned stops, numbered on a
+│                              brand rail. An earned one opens the sheet. Cached for the train
+└─ Memories                    what you added; a row opens Submit as the editor
    ├─ unlocked / places / added, as numbers
    ├─ your name                what submissions are signed with. Blank = Anonymous
    ├─ account                  which sign-ins, add the other, sign out (back to the gate)
@@ -120,7 +123,9 @@ with no network is never stopped at the gate.
 | `src/Plan.tsx` | the plan page and the preview card: how far, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal: streak, walks, filed, and You |
-| `src/Settings.tsx` | the journal's "You" section |
+| `src/Settings.tsx` | You: name, account, how unlocking works. Its own sheet |
+| `src/AddGlyph.tsx` | the Add button: a brand pin with a plus |
+| `src/YouGlyph.tsx` | the You button: head and shoulders |
 | `src/theme.ts` | **every colour and font.** Start here |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
@@ -149,8 +154,9 @@ Two traps, both hit:
 - `app.json` must say `"userInterfaceStyle": "automatic"`. It said `"light"`,
   which pins `useColorScheme()` to light forever and makes a correct dark
   palette look like dead code.
-- A MapView `Circle` takes a real colour, not a platform-resolved one, so the
-  reach circle branches on `useColorScheme()` by hand. Same for the map's own
+- A MapView `Circle` or `Polyline`, an Svg fill and the splash take a real
+  colour, not a platform-resolved one. They read `solid(dark)` from `theme.ts`
+  with `useColorScheme()`, never a hex of their own. Same for the map's own
   `userInterfaceStyle` and the `StatusBar`, which is `"auto"` — hardcoding it is
   how an app gets black glyphs on a black background.
 
@@ -168,7 +174,7 @@ it is built to look like a field guide rather than a dashboard.
 | `paperRaised` | `#FFFDF9` / `#201D19` | the rare surface that must lift off the paper |
 | `ink` | `#1C1917` / `#F2EDE4` | primary text, solid buttons |
 | `inkSoft` | `#4A443D` / `#BDB5A8` | secondary prose |
-| `inkFaint` | `#8A837A` / `#8A8276` | labels, captions |
+| `inkFaint` | `#746D65` / `#908979` | labels, captions |
 | `rule` | `#E0D9CC` / `#332E27` | hairlines. Rules do the work shadows used to |
 | `faded` | `#776E64` / `#9A9086` | a locked pin out of reach. Dark enough for parchment, light enough for a dark map |
 
@@ -180,6 +186,11 @@ it is built to look like a field guide rather than a dashboard.
 | `sealSoft` | `#F0E4C8` / `#3D3018` | the ring filling during a hold |
 | `sealDeep` | `#5C3A0E` / `#F0C878` | the padlock inside the ring, the count tag on a reachable pin |
 | `route` | `#1A64D6` / `#5AA2FF` | **walk here next.** The one hopping pin, the preview's line, and the walk's bar. Never openable: in reach, the pin turns `seal` |
+| `brand` | `#106A6D` / `#2E8F92` | **a memory on the map.** Every pin at rest, and the dot of a walk's stop in the journal. The logo's teal. Never openable, never next |
+
+**Buttons are `button.solid`, `button.quiet` or `button.outline`** from
+`theme.ts`, with `buttonText` inside. A screen adds only where one sits
+(margin, alignSelf), never its own padding or border.
 
 The watch button is **ink**, not the accent. It was YouTube red back when the
 map pins were red too; that stopped being true, and the accent is spoken for.
@@ -621,20 +632,22 @@ paging through venues miles apart is not "1 of 23 here", it is a lie.
 
 ### One pin
 
-Every coordinate draws the same pin: a 24px `ink` disc, 2px `paper` edge, an
+Every coordinate draws the same pin: a 24px `brand` (logo teal) disc, 2px `paper` edge, an
 8px `paper` eye in the middle. It changes for one reason only — **it can be
 opened from where you stand**, and on a route day only if it is one of the
 route's stops (F25) — and then it grows to 32px in `seal`, eye 12px,
 over a `halo` wash. That is the whole visual language. Simplified 2026-09-23
 from five ink states, a round-or-folded-card shape per layer and a ranked
 corner slot of padlock and tag glyph: it was a legend nobody should need.
+The resting disc went from `ink` to `brand` on 2026-09-26: black read as
+grim, and the logo's teal ties the map to the icon.
 
 | When | Geometry | Tokens |
 |---|---|---|
-| every pin | disc 24, border 2; eye 8 | fill `ink`, edge + eye `paper` |
+| every pin | disc 24, border 2; eye 8 | fill `brand`, edge + eye `paper` |
 | `unlockable`: inside the radius **and openable by walking** | disc 32, border 2; eye 12; wash 46 | fill `seal`, edge + eye `paper`, wash `halo` |
 | the next stop on today's walk, not yet in reach | disc 32, border 2; eye 12; hops (`useHop`), still under Reduce Motion | fill `route`, edge + eye `paper` |
-| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ink` (`sealDeep` on a lit pin, `route` on the next), count `paper` |
+| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `brand` (`sealDeep` on a lit pin, `route` on the next), count `paper` |
 
 **The eye is the point.** The pin you can open is the pin you are standing on,
 so the blue location dot lands in the hole rather than disappearing under a

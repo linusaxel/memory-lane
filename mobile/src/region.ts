@@ -102,7 +102,7 @@ export function around(
     lng = Math.max(lng, Math.abs(p.lng - center.lng));
   }
   // 2 for either side of the centre, and 1.8 for the pill, the tab bar and
-  // "+ Add", which a pin must not land under: at 1.4 a stop to the north-east
+  // Add, which a pin must not land under: at 1.4 a stop to the north-east
   // sat under the button.
   return {
     latitude: center.lat,

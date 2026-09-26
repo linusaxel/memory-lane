@@ -92,7 +92,7 @@ test('around keeps you in the middle and the stop inside the frame', () => {
   assert.equal(r.latitude, you.lat);
   assert.equal(r.longitude, you.lng);
   assert.equal(edgeArrow(r, { lat: 40.758, lng: -73.98 }, 400, 800, NONE), null);
-  // The worst case, a stop out on the diagonal, stays clear of "+ Add" (top
+  // The worst case, a stop out on the diagonal, stays clear of Add (top
   // right, down to ~110pt on a 400x800 map) and the pill (bottom ~90pt).
   const corner = { lat: 40.758, lng: -73.975 };
   const framed = around(you, [corner], 0.002);

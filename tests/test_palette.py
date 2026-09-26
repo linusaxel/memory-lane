@@ -66,6 +66,7 @@ def test_the_regex_still_finds_the_whole_palette():
         "sealDeep",
         "faded",
         "route",
+        "brand",
     }
 
 
@@ -81,6 +82,7 @@ TEXT_ON_GROUND = [
     ("paper", "seal"),
     ("paper", "faded"),
     ("paper", "route"),
+    ("paper", "brand"),
     ("sealDeep", "paper"),
     ("sealDeep", "sealSoft"),
 ]

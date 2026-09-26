@@ -108,7 +108,7 @@ function Pin({ lit, next, badge }: PinProps) {
         <View
           style={[
             styles.tag,
-            { backgroundColor: lit ? color.sealDeep : next ? color.route : color.ink },
+            { backgroundColor: lit ? color.sealDeep : next ? color.route : color.brand },
           ]}
         >
           <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     borderRadius: PIN / 2,
     borderWidth: 2,
     borderColor: color.paper,
-    backgroundColor: color.ink,
+    backgroundColor: color.brand,
     alignItems: 'center',
     justifyContent: 'center',
   },

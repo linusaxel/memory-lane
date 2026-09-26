@@ -19,7 +19,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { SUBMISSION_TAGS, type WalkAsk } from './api.ts';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
-import { buttonText, color, dim, font, label } from './theme.ts';
+import { button, buttonText, color, dim, font, label } from './theme.ts';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 
@@ -366,21 +366,9 @@ const styles = StyleSheet.create({
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
   note: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft, marginTop: 16 },
-  primary: {
-    marginTop: 14,
-    backgroundColor: color.ink,
-    paddingVertical: 16,
-    borderRadius: 4,
-    alignItems: 'center',
-  },
+  primary: { ...button.solid, marginTop: 14 },
   primaryText: { ...buttonText, color: color.paper },
-  secondary: {
-    borderWidth: 1,
-    borderColor: color.rule,
-    paddingVertical: 14,
-    borderRadius: 4,
-    alignItems: 'center',
-  },
+  secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
   error: { fontFamily: font.prose, fontSize: 14, color: color.inkSoft, textAlign: 'center' },
   // The primer card's shape and shadow, in its slot: UI.md allows that one.
@@ -395,7 +383,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 24,
     gap: 10,
-    shadowColor: '#000',
+    shadowColor: color.shadow,
     shadowOpacity: 0.14,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
