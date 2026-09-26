@@ -94,17 +94,17 @@ appId: ${APP_ID}
 - assertVisible: ".*, 2 memories · .*"
 - tapOn: ".*, 2 memories · .*"
 - extendedWaitUntil:
-    visible: "Peblinge Sø 5, dev seed, .*"
+    visible: "Stop \\d+, Peblinge Sø 5, dev seed, .*"
     timeout: 30000
-- assertVisible: "Sortedams Sø 4, dev seed, .*"
-- assertNotVisible: "Sortedams Sø 3, dev seed, .*"
+- assertVisible: "Stop \\d+, Sortedams Sø 4, dev seed, .*"
+- assertNotVisible: "Stop \\d+, Sortedams Sø 3, dev seed, .*"
 - tapOn: ".*, 2 memories · .*"
 - tapOn: ".*, 5 memories · .*"
 - scrollUntilVisible:
-    element: "Sankt Jørgens Sø 7, dev seed, .*"
+    element: "Stop \\d+, Sankt Jørgens Sø 7, dev seed, .*"
     direction: DOWN
     centerElement: true
-- tapOn: "Sankt Jørgens Sø 7, dev seed, .*"
+- tapOn: "Stop \\d+, Sankt Jørgens Sø 7, dev seed, .*"
 - assertVisible: "Heart this memory"
 - tapOn: "Close"
 - tapOn: "Close journal"

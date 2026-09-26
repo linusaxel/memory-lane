@@ -70,7 +70,14 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Rewrite"
     timeout: 30000
-- tapOn: "Close"
+# Until it goes: the first tap can land while the posted note is still
+# re-rendering the sheet, and then nothing closes.
+- repeat:
+    while:
+      visible: "Rewrite"
+    times: 3
+    commands:
+      - tapOn: "Close"
 
 # The tab says something came back before it is opened, and the row says what.
 - tapOn: "Journal"

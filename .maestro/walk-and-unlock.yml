@@ -159,11 +159,11 @@ appId: ${APP_ID}
     visible: ".*, 5 memories · .*"
     timeout: 30000
 - tapOn: ".*, 5 memories · .*"
-# A stop row's label is "<place>, <distance>"; the walk row's names no stop.
+# A stop row's label is "Stop N, <place>, <distance>"; the walk row's names no stop.
 - extendedWaitUntil:
-    visible: "${STOP1}, .*"
+    visible: "Stop \\d+, ${STOP1}, .*"
     timeout: 30000
-- tapOn: "${STOP1}, .*"
+- tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible: ".*${WORDS1}.*"
 # F26: the heart fills and the count goes up, and both outlive the sheet.
 - tapOn: "Heart this memory"
@@ -198,7 +198,7 @@ appId: ${APP_ID}
 - assertVisible: "Stood here twice\\."
 - assertNotVisible: "Stood here at dawn\\."
 - tapOn: "Close"
-- tapOn: "${STOP1}, .*"
+- tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible: "Hearted, 1 heart"
 # The note is the server's now, under the summary and whatever is attached.
 - scrollUntilVisible:
@@ -221,7 +221,7 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn: ".*, 5 memories · .*"
 # F26: and the heart outlives the process.
-- tapOn: "${STOP1}, .*"
+- tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible: "Hearted, 1 heart"
 - tapOn: "Close"
 - tapOn: "Close journal"
