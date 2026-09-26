@@ -968,9 +968,11 @@ device, not one a day.
   a partial unique index over rows not ended (migration 027). Accept still
   writes with `ON CONFLICT ... DO NOTHING` against it, so two accepts racing
   still store one walk.
-- `POST /v1/routes/today/end` sets `ended_at`. The row is kept, not deleted:
-  the journal lists the walk (F31), and the streak joins unlocks to walks
-  (F27), so deleting it would take a day's streak with it.
+- `POST /v1/routes/today/end` sets `ended_at`. ~~The row is kept, not
+  deleted: the journal lists the walk (F31), and the streak joins unlocks to
+  walks (F27), so deleting it would take a day's streak with it.~~
+  **Superseded 2026-09-26** by *A walk that opened nothing is deleted*: kept
+  only if it opened something, which is all the streak ever joined on.
 - An ended walk's unearned stops lock again: `ON_TODAYS_ROUTE_QUERY` and the
   completion check read only the walk in progress. What was opened stays open.
 - The app asks first when stops are left ("End this walk?", an in-app card:
@@ -991,6 +993,29 @@ half its length, so `budget_meters / 2` is where candidates come from. It
 replaced two server knobs, `ROUTE_RADIUS_METERS` and `ROUTE_BUDGET_METERS`,
 and migration 022 renamed `daily_routes.radius_meters` to `budget_meters`:
 the length is what the person chose, and the radius follows from it.
+
+### A walk that opened nothing is deleted
+
+Status: Accepted (2026-09-26). Supersedes "the row is kept" in *A walk can be
+ended, and another planned*.
+
+The founder's call, from the UI pass: the journal keeps only walks that
+unlocked something, and a walk that opened nothing is not kept hidden either,
+because a hidden row is data left lying about.
+
+- Deleting is safe because nothing depended on an empty row. The streak
+  (`STREAK_DAYS_QUERY`) joins unlocks to that day's walk, so a walk with no
+  unlock never counted. Nothing has a foreign key to `daily_routes`.
+- `ROUTE_PRUNE` deletes this device's walks with no stop the account ever
+  unlocked, except today's walk in progress. It runs when a walk ends, and
+  when a walk is accepted, which sweeps a past day's walk that was never
+  ended.
+- It counts a reported (hidden) memory's unlock; the journal does not. The
+  streak counts that unlock, so the row stays, and the journal leaves the walk
+  out rather than list it as having opened nothing.
+- `WALKED_QUERY` filters the same way in SQL, so today's walk stays out of the
+  journal until its first unlock and `LIMIT` counts only walks it lists. The
+  journal row says what the walk opened ("5 memories"), never "3 of 5".
 
 ### No notification when a route completes
 

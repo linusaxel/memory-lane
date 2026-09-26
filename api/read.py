@@ -69,6 +69,7 @@ from api.queries import (
     NEARBY_PLACES_QUERY,
     NOTE_ALLOWED_QUERY,
     PLACES_COUNT_QUERY,
+    ROUTE_PRUNE,
     ROUTE_QUERY,
     SEARCH_COUNT_QUERY,
     SEARCH_COUNT_WITH_LOCATION_QUERY,
@@ -433,9 +434,12 @@ def accept_route(body: RouteRequest):
     POST /v1/routes/today/end ends it.
 
     An empty walk is not stored: stored, it would pin the whole day to
-    "nothing here" even after the device reaches somewhere stocked."""
+    "nothing here" even after the device reaches somewhere stocked. Nor is an
+    old one that opened nothing kept: this sweeps a past day's walk that was
+    never ended."""
     route_date = gate.today()
     with get_session() as session:
+        session.execute(text(ROUTE_PRUNE), {"device_id": body.device, "route_date": route_date})
         row = session.execute(
             text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
         ).fetchone()
@@ -478,11 +482,14 @@ def accept_route(body: RouteRequest):
 
 @router.post("/v1/routes/today/end", status_code=204)
 def end_route(body: DeviceRequest):
-    """End today's walk, finished or not, so another can be accepted. Its row
-    stays: the journal lists it and what it earned still counts. Its unearned
-    stops lock again. Nothing to end is not an error: the same tap twice."""
+    """End today's walk, finished or not, so another can be accepted. If it
+    opened something its row stays: the journal lists it and what it earned
+    still counts. If it opened nothing it is deleted. Its unearned stops lock
+    again. Nothing to end is not an error: the same tap twice."""
+    route_date = gate.today()
     with get_session() as session:
-        session.execute(text(ROUTE_END), {"device": body.device, "route_date": gate.today()})
+        session.execute(text(ROUTE_END), {"device": body.device, "route_date": route_date})
+        session.execute(text(ROUTE_PRUNE), {"device_id": body.device, "route_date": route_date})
 
 
 @router.get("/v1/routes/today", response_model=RouteResponse)
@@ -509,7 +516,7 @@ def get_walked_routes(
     device: str = Query(..., pattern=DEVICE_PATTERN),
     limit: int = Query(100, ge=1, le=500),
 ):
-    """Every walk this account accepted, newest first, finished or not. Earned
+    """Every walk this account took that opened something, newest first. Earned
     stops come back open, like /v1/unlocks. The start was never stored, so a
     past loop draws stop to stop (docs/10-decisions.md § Routes)."""
     with get_session() as session:

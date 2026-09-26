@@ -559,6 +559,9 @@ def test_one_way_is_asked_for_per_walk_and_stored_with_it(client, db_session):
     assert accepted.json()["meta"]["loop"] is False
     # Read back tomorrow's way: from the row, not from the server's default.
     assert client.get(f"/v1/routes/today?device={DEVICE}").json()["meta"]["loop"] is False
+    stop = accepted.json()["memories"][0]
+    at = stop["place"]["coordinates"]
+    client.post(f"/v1/memories/{stop['id']}/unlock", json={"device": DEVICE, **at})
     walked = client.get(f"/v1/routes/walked?device={DEVICE}").json()["walks"]
     assert walked[0]["meta"]["loop"] is False
 
@@ -777,7 +780,50 @@ def test_an_ended_walk_frees_the_day_for_another(client, db_session):
     second = _route(client, budget_meters=1000).json()
     assert second["meta"]["budget_meters"] == 1000 != first["meta"]["budget_meters"]
     assert client.get(f"/v1/routes/today?device={DEVICE}").json() == second
-    assert _stored(db_session) == 2
+    assert _stored(db_session) == 1, "the first opened nothing, so ending it deleted it"
+
+
+def _walked(client):
+    return client.get(f"/v1/routes/walked?device={DEVICE}").json()["walks"]
+
+
+def test_a_walk_that_opened_nothing_is_deleted_as_it_ends(client, db_session):
+    for n in (1, 2):
+        _offset(db_session, n)
+    db_session.commit()
+
+    _route(client)
+    assert _walked(client) == [], "listed from its first unlock, not before"
+    _end(client)
+    assert _stored(db_session) == 0
+
+    stop = _route(client).json()["memories"][0]
+    at = stop["place"]["coordinates"]
+    client.post(f"/v1/memories/{stop['id']}/unlock", json={"device": DEVICE, **at})
+    _end(client)
+    assert _stored(db_session) == 1
+    [walk] = _walked(client)
+    assert walk["meta"]["earned"] == 1
+
+
+def test_accepting_sweeps_a_past_walk_that_opened_nothing(client, db_session):
+    memory = _offset(db_session, 1)
+    for n in (2, 3):
+        _offset(db_session, n)
+    db_session.execute(text("INSERT INTO devices (id) VALUES (CAST(:d AS uuid))"), {"d": DEVICE})
+    yesterday = read.gate.today() - datetime.timedelta(days=1)
+    db_session.execute(
+        text(
+            "INSERT INTO daily_routes (device_id, route_date, memory_ids) "
+            "VALUES (CAST(:d AS uuid), :day, ARRAY[:m])"
+        ),
+        {"d": DEVICE, "day": yesterday, "m": memory},
+    )
+    db_session.commit()
+
+    _route(client)
+    dates = db_session.execute(text("SELECT route_date FROM daily_routes")).scalars().all()
+    assert dates == [read.gate.today()], "never ended, opened nothing: gone"
 
 
 def test_an_ended_walk_keeps_what_it_earned_and_locks_the_rest(client, db_session):

@@ -30,11 +30,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   same solve, stored; one in progress per device, and a second accept gets
   that walk back until it is ended. The only stop id the client ever sends is `include`, vetted
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;
-  204, and 204 again with nothing to end. The walk stays in `walked`, its
-  unearned stops lock again, and another can be accepted
+  204, and 204 again with nothing to end. A walk that opened something stays
+  in `walked`; one that opened nothing is deleted. Its unearned stops lock
+  again, and another can be accepted
 - `GET /v1/routes/today?device=UUID` - today's walk in progress, or 404. Only reads
-- `GET /v1/routes/walked?device=UUID` - every walk the account accepted,
-  newest first: earned stops open, `earned` of `size`, `completed_at`
+- `GET /v1/routes/walked?device=UUID` - every walk the account took that
+  opened something, newest first: earned stops open, `earned` of `size`, `completed_at`
 - `GET /v1/routes/{id}` - an authored walk: its stops in order, locked like
   today's. 404 while it is a draft. Nothing writes these yet but SQL
 - `POST /v1/memories` `{device, lat, lng, place_name, summary, tags, ...}` -

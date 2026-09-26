@@ -517,15 +517,35 @@ WHERE r.device_id = CAST(:device_id AS uuid)
   )
 """
 
-# Every walk this account accepted, newest first - across MY_DEVICES, so a new
-# phone signed in gets its history the way it gets its unlocks (F22). Ended
-# walks too: what was earned on one was walked.
+# Every walk this account took that opened something, newest first - across
+# MY_DEVICES, so a new phone signed in gets its history the way it gets its
+# unlocks (F22). Ended walks too: what was earned on one was walked. The
+# filter is here, not in Python, so LIMIT counts only walks that are listed;
+# it is what keeps today's walk out until its first unlock.
 WALKED_QUERY = f"""
 SELECT route_date, memory_ids, budget_meters, legs, loop, completed_at
-FROM daily_routes
+FROM daily_routes r
 WHERE device_id IN {MY_DEVICES}
+  AND EXISTS (
+      SELECT 1 FROM unlocks u JOIN memories m ON m.id = u.memory_id
+      WHERE u.device_id IN {MY_DEVICES} AND u.memory_id = ANY(r.memory_ids) AND {VISIBLE}
+  )
 ORDER BY route_date DESC, created_at DESC
 LIMIT :limit
+"""
+
+# This device's walks that opened nothing and never will: every one but
+# today's in progress (docs/10, "A walk that opened nothing is deleted").
+# Hidden memories count here, unlike the journal: the streak counts their
+# unlocks, so a walk with one is not empty.
+ROUTE_PRUNE = f"""
+DELETE FROM daily_routes r
+WHERE r.device_id = CAST(:device_id AS uuid)
+  AND NOT (r.route_date = :route_date AND r.ended_at IS NULL)
+  AND NOT EXISTS (
+      SELECT 1 FROM unlocks u
+      WHERE u.device_id IN {MY_DEVICES} AND u.memory_id = ANY(r.memory_ids)
+  )
 """
 
 # Those walks' stops, and whether this account has earned each one.
