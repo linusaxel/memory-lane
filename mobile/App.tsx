@@ -455,9 +455,25 @@ export default function App() {
     [],
   );
 
+  /** Forget today's walk, on screen and in the cache: the map comes back. */
+  const dropRoute = useCallback(() => {
+    setRoute([]);
+    setRouteSize(null);
+    setRouteLegs(null);
+    setRouteHome(null);
+    setRouteEnd(null);
+    setRouteStarted(false);
+    setWalkDone(false);
+    setConfirmEnd(false);
+    clearRoute();
+    setStage('map');
+  }, []);
+
   // Whether today's walk was already accepted: the cached copy first, so a
   // relaunch lands on it at once, then the server, which is the authority.
-  // With neither, today starts at the plan page.
+  // A 404 drops the cached copy: the walk was ended somewhere else, and
+  // keeping it would walk a route the server no longer unlocks. Offline, the
+  // cache stands. With neither, today starts at the plan page.
   useEffect(() => {
     if (!device) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -477,14 +493,14 @@ export default function App() {
         if (accepted) {
           takeRoute(accepted, cached?.start ?? null, cached?.end ?? null);
           setStage('walk');
-        } else if (!cached) {
-          setStage('map');
+        } else {
+          dropRoute();
         }
       } catch {
         if (mounted.current && !cached) setStage('map');
       }
     })();
-  }, [device, takeRoute]);
+  }, [device, takeRoute, dropRoute]);
 
   /** End today's walk and go back to the map, where another can be planned. */
   const endWalk = useCallback(async () => {
@@ -493,23 +509,13 @@ export default function App() {
     setPlanError(null);
     try {
       await endRoute(device);
-      if (!mounted.current) return;
-      setRoute([]);
-      setRouteSize(null);
-      setRouteLegs(null);
-      setRouteHome(null);
-      setRouteEnd(null);
-      setRouteStarted(false);
-      setWalkDone(false);
-      setConfirmEnd(false);
-      clearRoute();
-      setStage('map');
+      if (mounted.current) dropRoute();
     } catch {
       if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device]);
+  }, [device, dropRoute]);
 
   // The shortest walk that reaches the "Walk here" memory and the end: the
   // estimates from where you are, or what the server said, whichever is
