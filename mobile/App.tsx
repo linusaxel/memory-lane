@@ -8,7 +8,7 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import MapView, { Circle } from 'react-native-maps';
+import MapView, { Circle, Marker } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
@@ -113,6 +113,10 @@ const FALLBACK_REGION: Region = {
  * is a distance you can see.
  */
 const LOCATED_DELTA = 0.01;
+
+/** The native dot follows the simulator's GPS, not the override, so while the
+ *  position is pinned the app draws its own. See src/devLocation.ts. */
+const DEV_PINNED = devLocation() !== null;
 
 /** A follow flight: quick, because the next one waits for it to land. */
 const FOLLOW_MS = 250;
@@ -1045,7 +1049,7 @@ export default function App() {
             ref={mapRef}
             style={StyleSheet.absoluteFill}
             initialRegion={FALLBACK_REGION}
-            showsUserLocation={permission === 'granted'}
+            showsUserLocation={permission === 'granted' && !DEV_PINNED}
             // See src/mapStyle.ts: the map is a backdrop, not a competitor.
             mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
             // Apple Maps follows the system on its own, but only if it is not
@@ -1073,6 +1077,15 @@ export default function App() {
                 strokeColor={scheme === 'dark' ? 'rgba(217,165,75,0.7)' : 'rgba(138,90,23,0.55)'}
                 fillColor={scheme === 'dark' ? 'rgba(217,165,75,0.12)' : 'rgba(138,90,23,0.07)'}
               />
+            )}
+            {DEV_PINNED && position && (
+              <Marker
+                coordinate={{ latitude: position.lat, longitude: position.lng }}
+                anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={false}
+              >
+                <View style={styles.devDot} />
+              </Marker>
             )}
 
             {stage === 'preview' && previewPath.length > 1 && (
@@ -1446,6 +1459,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: color.paper },
   screen: { flex: 1 },
+  devDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: color.paperRaised, backgroundColor: color.route },
   // display:none rather than unmounting: the map keeps its region and its pins.
   hidden: { display: 'none' },
   // What the map sits behind while the app finds out whether today's walk is
