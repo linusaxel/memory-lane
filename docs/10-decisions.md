@@ -1079,13 +1079,19 @@ open questions.
 
 ### Money
 
-Status: Accepted
+Status: Accepted 2026-09-26. Supersedes the entry below.
 
-Near-term revenue is the historical layer: embeddable maps and delivered
+The founder's call: a consumer subscription is probably the most realistic
+revenue, so it is the lead track, not the second one. The historical layer
+still sells to tourism boards, audio-guide companies and city archives
+(embeddable maps, delivered corpora), alongside it. No pricing, tier or
+paywall is decided; nothing is built yet. The social layer earns nothing on
+its own. Local-business seeded memories are a later option and must be marked.
+
+~~Near-term revenue is the historical layer: embeddable maps and delivered
 corpora for tourism boards, audio-guide companies and city archives. A
 consumer subscription was reopened 2026-09-22 as a second track, once there is
-a userbase; it does not delay the B2B plan. The social layer earns nothing on
-its own. Local-business seeded memories are a later option and must be marked.
+a userbase; it does not delay the B2B plan.~~ **Superseded 2026-09-26.**
 
 ### Warm accent, not a reskin
 
