@@ -6,7 +6,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 [architecture.md](architecture.md#security).
 
 - `GET /v1/memories/nearby?lat=X&lng=Y&radius_km=10&tags=food,travel&min_confidence=medium` - Find memories near location (tags and confidence optional)
-  - Gated memories always come back locked here, with no summary, tags or source.
+  - Gated memories always come back locked here: no summary, media or links, but
+    tags, `source_name`, `year` and `summary_words` (the app's peek, F29).
     This endpoint never unlocks. See [Proximity unlock](architecture.md#proximity-unlock).
 - `GET /v1/memories/search?q=coffee&lat=X&lng=Y&radius_km=50` - Full-text search across summaries and place names (location optional)
 - `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory, gated

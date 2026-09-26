@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`lakes-loop.yml` drags the slider by screen percentage.** (2026-09-26)
+  Adding one button to the centred plan page moved the slider from 35% to 32%
+  of the screen, and the flow failed on "10 km" with nothing wrong in the app;
+  a full e2e run to find it. Fix: swipe from the slider element
+  (`swipe: from: "Walk length"`) instead of `"37%,35%"`.
+
 - **The `api` container runs whatever image was last built.** (2026-09-26) It
   does not mount the source, so a plain `docker compose up -d` served 09-22 code
   that queried a dropped column; the app showed only "Can't reach Memory Lane
@@ -167,31 +173,16 @@ live requests. Order is priority.
 
 Decided 2026-09-26 (the founder's ramble): after sign-in the app opens on a
 map of what is locked around you, and a walk is how you open any of it. Each
-step ships and stands on its own; in order.
+step ships and stands on its own; in order. M1, M2 and M4 shipped 2026-09-26
+(F29, docs/10 *A map of what is locked*); "Walk here" opens the plan page
+until M5.
 
-- [ ] **M1 Supersede "no map of everything".** docs/10 § *Only today's walk
-      unlocks* says a browsable corpus is a finishable one. Locked pins are
-      not browsable, so the rule it protects survives: only today's walk
-      unlocks. Mark the F29 line `Superseded`, restate it, fix docs/08 (F1,
-      F29) and mobile/UI.md. Docs only, before any code.
-- [ ] **M2 Open on the map.** After sign-in and the location primer (F8), the
-      map with the user's dot and the locked pins within walking range
-      (`/v1/memories/nearby`, already gated). "Plan a walk" on the map opens
-      today's F1 page unchanged: the standard way in stays. An accepted walk
-      today still opens on the walk (F25). e2e: every flow that starts on the
-      plan page taps through the map first.
-- [ ] **M3 A direction arrow on the user dot.** Check native first: MapKit's
-      user dot may draw the heading cone on a real phone by itself
-      (`showsUserLocation`, `mobile/App.tsx`); the simulator has no compass,
-      so verify on a device. Only if not: `Location.watchHeadingAsync` and a
-      custom marker.
-- [ ] **M4 Tap a locked pin: the peek.** A sheet that says plainly the only
-      way in is to walk there, with one button: "Walk here". The sneak peek is
-      what the gate already lets out (place, tag, source, year, distance), and
-      the summary as grey redacted bars sized to its length, drawn from a word
-      count, never from the text. ⚠️ The summary never reaches the client
-      locked, blurred or not: a CSS/blur peek is a leak. If the peek needs a
-      new field, it goes through `api/gate.py`.
+- [ ] **M3 A direction arrow on the user dot.** (checked 2026-09-26:
+      react-native-maps 1.29.8 has no heading or tracking-mode prop, so no code
+      can ask for it.) Look on a real phone whether MapKit's own dot draws the
+      heading beam with `showsUserLocation` (`mobile/App.tsx`); the simulator
+      has no compass. Only if not: `Location.watchHeadingAsync` and a custom
+      marker. Needs somebody with a device.
 - [ ] **M5 "Walk here" plans a walk through that memory.** `GET
       /v1/routes/preview` and `POST /v1/routes/today` take an optional
       `include=<memory_id>`. The server checks it: gated-eligible, within

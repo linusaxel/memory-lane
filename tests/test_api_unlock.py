@@ -76,8 +76,16 @@ def test_the_map_never_serves_a_summary(client, one_memory):
 
     assert mem["locked"] is True
     assert mem["summary"] == ""
-    assert mem["tags"] == []
     assert mem["content"] is None, "the source video is part of what walking there buys"
+    assert mem["media"] == [] and mem["source_url"] is None and mem["attribution"] is None
+
+
+def test_a_locked_memory_says_what_it_is_not_what_it_says(client, one_memory):
+    """The map's peek: its tags and its length, never its words."""
+    mem = _nearby(client)
+
+    assert mem["tags"] == ["music"]
+    assert mem["summary_words"] == len("the night the amp caught fire".split())
 
 
 def test_a_locked_memory_still_says_where_to_walk(client, one_memory):

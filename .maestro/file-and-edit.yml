@@ -23,9 +23,9 @@ appId: ${APP_ID}
 
 - runFlow: steps/sign-in.yml
 
-# "+ Add" is there from the plan page on: filing needs no walk.
+# "+ Add" is there from the map on: filing needs no walk.
 - extendedWaitUntil:
-    visible: "How far today?"
+    visible: "Plan a walk"
     timeout: 40000
 
 # One coordinate, taken from where the phone is. No field asks for it. The

@@ -17,7 +17,7 @@
 #     from the MKAnnotation's `title` - not from `accessibilityLabel`, which
 #     iOS ignores on a Marker. Tapping a pin therefore means naming its state
 #     as well as its place, and the pin turning is directly assertable.
-#  3. F25: the app opens on the plan page. The walk below is the 4 km default,
+#  3. F25: the app opens on the map (F29), and Plan a walk opens F1. The walk below is the 4 km default,
 #     previewed and accepted from the start position; its titles carry a
 #     "Stop N of 5." prefix. `tests/test_api_routes.py` is what pins the
 #     selection and ordering rules down; this file just has to agree with them.
@@ -39,9 +39,14 @@ appId: ${APP_ID}
 - runFlow: steps/sign-in.yml
 
 # F25: plan, preview, accept. The default length is the walk below.
+# F29: the map of what is locked comes first; Plan a walk opens F1.
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "How far today?"
-    timeout: 40000
+    timeout: 20000
 - tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "5 stops · .* loop"

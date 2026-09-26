@@ -6,4 +6,5 @@ appId: ${APP_ID}
     visible: "Memory Lane"
     timeout: 40000
 - assertNotVisible: "How far today?"
+- assertNotVisible: "Plan a walk"
 - tapOn: "Skip \\(dev build\\)"

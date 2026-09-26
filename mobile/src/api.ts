@@ -100,6 +100,11 @@ export type Memory = {
   /** Set once enough people report it. Only ever true from /v1/me/memories -
    *  every other endpoint drops a hidden memory instead of flagging it. */
   hidden: boolean;
+  /** Only on a locked memory: what it is, never what it says. The peek draws
+   *  the summary as bars sized from the word count. */
+  source_name?: string | null;
+  year?: number | null;
+  summary_words?: number | null;
 };
 
 /** Media urls come back server-relative so the host can change without a
@@ -157,6 +162,24 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
     clearTimeout(timer);
     signal?.removeEventListener('abort', forwardAbort);
   }
+}
+
+/** What the map draws before a walk: the locked memories around you. No
+ *  position goes with this, so nothing unlocks from here. */
+export async function fetchNearby(
+  at: Coordinates,
+  radiusKm: number,
+  signal?: AbortSignal,
+): Promise<LocatedMemory[]> {
+  const params = new URLSearchParams({
+    lat: String(at.lat),
+    lng: String(at.lng),
+    radius_km: String(radiusKm),
+    limit: '100',
+  });
+  const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
+  // A null-coordinate marker crashes react-native-maps (UI.md rule 5).
+  return (body.memories ?? []).filter(hasCoordinates);
 }
 
 /** Open one memory, and record that it opened. The server re-checks the

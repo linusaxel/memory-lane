@@ -7,8 +7,8 @@ Read this before changing anything under `mobile/src/` or `App.tsx`.
 
 ## The app today
 
-Three stages, one map, four modals. The stage is plain state in `App.tsx`
-(`'loading' | 'plan' | 'preview' | 'walk'`); the map stays mounted through all
+Four stages, one map, four modals. The stage is plain state in `App.tsx`
+(`'loading' | 'map' | 'plan' | 'preview' | 'walk'`); the map stays mounted through all
 of them (rule 9).
 
 ```
@@ -19,13 +19,19 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 ├─ "Continue with Google"      outlined; absent without a client id
 └─ "Skip (dev build)"          __DEV__ only, so a release bundle has none
 
+MapView (before a walk)        the first screen after sign-in, unless today's walk is accepted
+├─ you, and the reach circle   centred on you, or central Copenhagen with no position
+├─ Marker per locked memory    within 5 km (MAP_RADIUS_KM); tap -> MemorySheet's peek
+└─ "Plan a walk"               ink button, bottom centre -> Plan
+
 Plan (src/Plan.tsx)            opaque page over the mounted map
 ├─ "How far today?"            34/700
 ├─ "4 km"                      the slider's value, mono 30
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
 ├─ Loop · One way              Submit's Chip, one of the two on
 ├─ theme chips                 SUBMISSION_TAGS, none or one
-└─ "Show me the walk"          ink button; asks for location, then previews
+├─ "Show me the walk"          ink button; asks for location, then previews
+└─ "Back to the map"           outlined
 
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
@@ -61,6 +67,13 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   │                                 ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 
+  peek (the map, before a walk: the locked side, differently)
+  ├─ "music · Vega Archive · 1978 · 1.2 km"   tag, source, year, distance
+  ├─ grey bars                one per ~8 words, from summary_words: never the text,
+  │                           so never a blur of it. A blur ships what it hides
+  ├─ "The only way in is to walk there."
+  └─ "Walk here"              ink; opens Plan (a walk through that pin is TODO M5)
+
   The locked side says how many attachments are waiting and never which. A
   photograph of the place is the memory as much as the text is.
 
@@ -79,8 +92,9 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; "Close" top right
    ├─ location state + action
    └─ privacy policy, and what signing out does and does not delete
 
-There are no tabs and no map of everything: the map only ever draws you and
-today's walk (docs/10, "Only today's walk unlocks").
+There are no tabs. Before a walk the map draws what is locked around you; on a
+walk it draws only that walk. Only today's walk unlocks (docs/10, "A map of
+what is locked, and only today's walk unlocks").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -329,8 +343,9 @@ never around each pin, which would be fifteen overlapping circles and no
 information. It is `seal` at low opacity: present, and never competing with the
 pins it is there to qualify. No position, no circle.
 
-Nothing is fetched by viewport any more: the map draws the walk's stops and
-nothing else, so panning never asks the server anything.
+Nothing is fetched by viewport: the map before a walk asks once, around where
+you are, and a walk draws only its stops, so panning never asks the server
+anything.
 
 ## Rules that are load-bearing
 
@@ -376,9 +391,10 @@ Each of these exists because something broke or would have been rejected.
    `startUpdatingLocation` in the background would — asking for the stronger
    capability than the feature needs is exactly the kind of over-declaration
    this rule exists to prevent.
-3. **Nothing fetches by viewport.** The map draws today's walk and nothing
-   else; if that ever changes, debounce it, because panning fires
-   `onRegionChangeComplete` continuously.
+3. **Nothing fetches by viewport.** The map before a walk fetches by position
+   (on entering it, and when a position first arrives), and a walk fetches
+   nothing; if a fetch ever follows the viewport, debounce it, because panning
+   fires `onRegionChangeComplete` continuously.
 4. *(Retired with Explore: the viewport-to-radius maths.)*
 5. **A memory with no coordinates cannot be drawn.** The API filters those out;
    do not assume `coordinates` is always present on types that allow null.

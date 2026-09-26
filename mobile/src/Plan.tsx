@@ -2,6 +2,8 @@
  *  the map, to accept or change. One walk a day - accepting is final until
  *  tomorrow, which is why the preview exists at all.
  *
+ *  It opens from the map's "Plan a walk" (F29) and goes back to it.
+ *
  *  The page is also the location primer. "Show me the walk" is a press, so the
  *  system dialog it may raise has the context the old card over the map gave
  *  it (UI.md, "Asking for location"). Refused, the walk is planned from
@@ -27,11 +29,12 @@ type PlanProps = {
   ask: WalkAsk;
   onAsk: (ask: WalkAsk) => void;
   onGo: () => void;
+  onBack: () => void;
   busy: boolean;
   error: string | null;
 };
 
-export function Plan({ km, onKm, ask, onAsk, onGo, busy, error }: PlanProps) {
+export function Plan({ km, onKm, ask, onAsk, onGo, onBack, busy, error }: PlanProps) {
   return (
     <View style={styles.page}>
       <Text style={styles.title}>How far today?</Text>
@@ -87,6 +90,15 @@ export function Plan({ km, onKm, ask, onAsk, onGo, busy, error }: PlanProps) {
         ) : (
           <Text style={styles.primaryText}>Show me the walk</Text>
         )}
+      </Pressable>
+      <Pressable
+        style={dim(styles.secondary)}
+        onPress={onBack}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Back to the map"
+      >
+        <Text style={styles.secondaryText}>Back to the map</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>

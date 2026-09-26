@@ -284,13 +284,21 @@ def _spoken() -> tuple[bytes, float] | None:
             "in the memory sheet is working."
         )
         try:
-            subprocess.run(["say", "-o", str(aiff), words], check=True, capture_output=True)
+            # A wedged speech daemon hangs `say` for ever, and the e2e run with it.
+            subprocess.run(
+                ["say", "-o", str(aiff), words], check=True, capture_output=True, timeout=20
+            )
             subprocess.run(
                 ["afconvert", "-f", "m4af", "-d", "aac", str(aiff), str(destination)],
                 check=True,
                 capture_output=True,
+                timeout=20,
             )
-        except (FileNotFoundError, subprocess.CalledProcessError):
+        except (
+            FileNotFoundError,
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+        ):
             return None
 
         probe = subprocess.run(

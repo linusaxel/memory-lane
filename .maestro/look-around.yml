@@ -1,4 +1,4 @@
-# F1 plan a walk (loop, one way, a theme) + F32 show me another + F8 be asked for location, F1 nothing walkable.
+# F29 the map and its peek + F1 plan a walk (loop, one way, a theme) + F32 show me another + F8 be asked for location, F1 nothing walkable.
 # docs/08-ux-flows.md
 #
 # Everything here only looks: nothing is accepted, so no route row is written
@@ -13,7 +13,8 @@ appId: ${APP_ID}
 ---
 # ---- F1 + F8
 #
-# The first screen is ours, not a system dialog: one question and one slider.
+# The first screen is ours, not a system dialog: the map, then one question
+# and one slider.
 # Location is asked by the button, a press with a reason.
 - setLocation:
     latitude: ${START_LAT}
@@ -26,9 +27,27 @@ appId: ${APP_ID}
 
 - runFlow: steps/sign-in.yml
 
+# F29: the map of what is locked comes first. A pin opens the peek, bars and
+# no summary, and Walk here opens F1.
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- extendedWaitUntil:
+    visible: ".*\\. Locked, too far to open\\."
+    timeout: 20000
+- tapOn: ".*\\. Locked, too far to open\\."
+- extendedWaitUntil:
+    visible: "The only way in is to walk there\\."
+    timeout: 10000
+- tapOn: "Walk here"
 - extendedWaitUntil:
     visible: "How far today?"
-    timeout: 40000
+    timeout: 20000
+- tapOn: "Back to the map"
+- tapOn: "Plan a walk"
+- extendedWaitUntil:
+    visible: "How far today?"
+    timeout: 20000
 - assertVisible: "4 km"
 
 - tapOn: "Show me the walk"
@@ -86,9 +105,14 @@ appId: ${APP_ID}
 
 - runFlow: steps/sign-in.yml
 
+# F29: the map of what is locked comes first; Plan a walk opens F1.
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "How far today?"
-    timeout: 40000
+    timeout: 20000
 - tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "Planning from central Copenhagen\\. Turn on location to plan from where you are\\."
@@ -110,9 +134,14 @@ appId: ${APP_ID}
 
 - runFlow: steps/sign-in.yml
 
+# F29: the map of what is locked comes first; Plan a walk opens F1.
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "How far today?"
-    timeout: 40000
+    timeout: 20000
 - tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "No walk that long from here"

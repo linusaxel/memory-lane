@@ -95,7 +95,7 @@ def test_f1_discover_answers_before_anybody_has_walked_anywhere(seeded):
     assert locked, "a seed with nothing locked cannot demonstrate the product"
     for m in locked:
         assert m["summary"] == ""
-        assert m["tags"] == []
+        assert m["media"] == []
         assert m["content"] is None
         # Enough to decide whether to walk there, and no more.
         assert m["place"]["coordinates"] is not None

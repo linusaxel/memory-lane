@@ -54,7 +54,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F26 | Heart a memory | Implemented |
 | F27 | Keep a streak | Implemented |
 | F28 | Get notified near a memory | Implemented |
-| F29 | Explore what is around | Removed from the app |
+| F29 | See what is locked around you | Implemented |
 | F30 | Finish a walk | Implemented |
 | F31 | Look back at a walk | Implemented |
 | F33 | Leave a note | Implemented |
@@ -76,9 +76,9 @@ that is allowed to interrupt somebody who is not looking at it.
 Everything below is one of three sessions. If a flow does not belong to one of
 these, it is probably not a flow.
 
-**Session one — "what is this?"** Pick how far to walk (F1), get asked for
-location by the button that plans it (F8), see the walk on the map and accept
-it. Decline location and the walk is planned from central Copenhagen instead (F9). Nothing
+**Session one — "what is this?"** The map of what is locked around you (F29),
+then **Plan a walk**: pick how far (F1), get asked for location by the button
+that plans it (F8), see the walk on the map and accept it. Decline location and the walk is planned from central Copenhagen instead (F9). Nothing
 is readable yet, and that is the pitch, not a failure.
 
 **Session two — the first unlock.** The route pill says where the next stop is
@@ -89,8 +89,8 @@ make it worth having got here.
 
 **Session three — coming back.** The collection has things in it (F15), it works
 on the train home with no signal (F16), the streak says how many days in a row
-(F27), and tomorrow there is another walk. There is no map of everything: the
-walk is the only window onto what is around. The journal's You section is where
+(F27), and tomorrow there is another walk. The map shows what is locked around
+you, never what it says: the walk is the only way in. The journal's You section is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -107,7 +107,8 @@ because nothing is reachable before it (docs/10, *Sign-in comes first*).
    field, no password, no magic link.
 2. The provider's sheet, then back. The app sends the ID token it was given and
    is told who that makes it.
-3. The plan page (F1), which is also where location is asked for (F8).
+3. The map of what is locked around you (F29). Its **Plan a walk** opens the
+   plan page (F1), which is where location is asked for (F8).
 4. On a new phone: sign in, and the collection is there.
 
 Signing out (You → Account) lands back on this screen.
@@ -162,10 +163,11 @@ somebody can hand their old phone in and still have everything they walked for.
 
 **Who:** someone who opened the app and has not accepted a walk today.
 
-1. The first screen is `mobile/src/Plan.tsx`: "How far today?" and one slider,
+1. **Plan a walk** on the map (F29), or **Walk here** on a pin's peek, opens
+   `mobile/src/Plan.tsx`: "How far today?" and one slider,
    1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`). Under it, **Loop** or
    **One way** (loop to start), and one optional theme chip: a second tap lets
-   it go. The map is mounted behind it, not shown.
+   it go. The map is mounted behind it, not shown. **Back to the map** returns.
 2. **Show me the walk** asks for location if it has to (F8), then
    `GET /v1/routes/preview` with that position, the length in metres, `loop`
    and the theme's `tag`. The preview stores nothing.
@@ -191,7 +193,7 @@ the ask (`ROUTE_FILL`) adds "The longest from here." No position
 unreachable — the page says "Can't reach Memory Lane right now." under the
 button, and a second press retries.
 
-**Done when:** a first launch shows the slider and no system dialog, a press
+**Done when:** Plan a walk shows the slider and no system dialog, a press
 shows a whole walk on the map, and Accept makes it today's.
 
 ## F2 · Read one memory and go to its source — **Implemented**
@@ -405,8 +407,9 @@ mechanic.
 
 **Who:** somebody on their first launch, who has not been asked yet.
 
-1. They have signed in (F22) and the plan page is up (F1). Nothing has been
-   asked.
+1. They have signed in (F22), looked at the map (F29, centred on central
+   Copenhagen until there is a position) and opened the plan page (F1).
+   Nothing has been asked.
 2. **Show me the walk** is the ask: walks start from where you are, and the
    page says the walk loops back there. The system dialog comes from that
    press, never from launch.
@@ -425,8 +428,8 @@ away.
 central Copenhagen without a dialog; on the walk, **Turn on location** opens Settings,
 which is the only route back.
 
-**Done when:** after F22, a first launch shows the plan page and no system
-dialog, and a press on it is the only thing that can raise one.
+**Done when:** after F22, a first launch shows the map and no system
+dialog, and Show me the walk is the only thing that can raise one.
 
 ## F9 · Use the app without location — **Implemented**
 
@@ -459,9 +462,9 @@ pretends you can unlock.
 
 ## F11 · Find the nearest locked memory — **Removed from the app**
 
-The "Nearest locked memory · 412 m" pill answered a map of padlocks. The map now
-shows only today's walk, and the route pill (F25) names the next stop and its
-distance.
+The "Nearest locked memory · 412 m" pill answered a map of padlocks. On a walk
+the map shows only its stops, and the route pill (F25) names the next stop and
+its distance.
 
 ## F12 · Walk there — **Removed from the app**
 
@@ -548,8 +551,9 @@ is too late.
 
 ## F18 · Stand somewhere with nothing in it — **Removed from the app**
 
-"No memories here yet" was the nearby map's empty state. There is no nearby map;
-the empty case is the preview's "No walk that long from here" (F1).
+"No memories here yet" was the old nearby map's empty state. The map before a
+walk (F29) just draws no pins, and Plan a walk leads to the preview's "No walk
+that long from here" (F1).
 
 ## F19 · Be somewhere else entirely — **Removed from the app**
 
@@ -944,12 +948,34 @@ prove it.
 
 ---
 
-## F29 · Explore what is around — **Removed from the app**
+## F29 · See what is locked around you — **Implemented**
 
-A second map of every memory under the viewport, where nothing opened. It made
-the corpus a thing to browse and to "complete"; the walk is the only window now,
-and the server holds it to that (F7, docs/10 "Only today's walk unlocks").
-Removed 2026-09-24.
+**Who:** somebody signed in who has not accepted a walk today. Every launch
+before an accept lands here; an accepted walk opens on the walk (F25).
+
+1. The map, centred on you, or on central Copenhagen with no position. The
+   pins are the locked memories within 5 km (`MAP_RADIUS_KM`, half the longest
+   walk), from `/v1/memories/nearby`, fetched on arriving and again when a
+   position first comes. Nothing open is drawn: an open memory is not a reason
+   to walk. One you already earned wears its stamp.
+2. Tap a pin: **the peek**. Place, "locked", then tag · source · year ·
+   distance, the summary as grey bars sized from its word count, "The only way
+   in is to walk there.", and **Walk here**, which opens the plan page (F1).
+   A sealed memory shows its date instead (F23). There is no unlock here, even
+   standing on it: only today's walk unlocks.
+3. **Plan a walk**, bottom centre, opens the plan page (F1).
+
+The peek is a look, not a read: the summary never reaches the phone locked, so
+the bars come from `summary_words`, not from the text blurred. docs/10, "A
+locked memory says what it is, not what it says".
+
+Until 2026-09-26 this flow was removed: a map of every memory under the
+viewport, where nothing opened, made the corpus a thing to browse and to
+"complete". Locked pins cannot be read, so that rule survives: see docs/10, "A
+map of what is locked, and only today's walk unlocks". Walk here planning a
+walk *through* that pin is TODO.md M5.
+
+`App.tsx` (`stage === 'map'`, `fetchNearby`), `src/MemorySheet.tsx` (`onWalkHere`).
 
 ## F30 · Finish a walk — **Implemented**
 

@@ -26,15 +26,20 @@ appId: ${APP_ID}
 
 - runFlow: steps/sign-in.yml
 
+# F29: the map of what is locked comes first; Plan a walk opens F1.
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "How far today?"
-    timeout: 40000
+    timeout: 20000
 # A slider only moves when the drag starts on its thumb, so from where 4 km
 # sits (WALK_KM.initial) to past the end. The value is the "10 km" above the
 # slider; the end label under it says the same.
 - swipe:
-    start: "37%,35%"
-    end: "99%,35%"
+    start: "37%,32%"
+    end: "99%,32%"
 - assertVisible:
     text: "10 km"
     above: "Walk length"

@@ -127,8 +127,8 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 
 | File | Flow |
 |---|---|
-| `look-around.yml` | F1 plan a walk (and nothing walkable), F32 show me another, F8 be asked for location |
-| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F29 explore, F30 finish a walk, F27 the streak on its card, F15 reread what you unlocked, F26 heart it, F33 leave a note and rewrite it, F31 look back at a walk |
+| `look-around.yml` | F29 the map of what is locked and its peek, F1 plan a walk (and nothing walkable), F32 show me another, F8 be asked for location |
+| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F30 finish a walk, F27 the streak on its card, F15 reread what you unlocked, F26 heart it, F33 leave a note and rewrite it, F31 look back at a walk |
 | `lakes-loop.yml` | F1 the whole slider round the lakes, "The longest from here.", F32 show me another until the far lake, F31 look back at past walks |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed, and the author hearing back (hearts, notes, "New") |
 

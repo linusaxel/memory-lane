@@ -50,7 +50,21 @@ type Props = {
   /** This device already hearted it, one-way and permanent - the glyph fills
    *  and stays filled. */
   hearted?: boolean;
+  /** Present only on the map before a walk: a locked memory is a peek, and
+   *  walking there is the one way in (F29). */
+  onWalkHere?: () => void;
 };
+
+/** A line of the summary's length, drawn as a bar. From the word count the
+ *  server sends, never from the text: a blurred summary is a shipped one. */
+const WORDS_PER_BAR = 8;
+const MAX_BARS = 6;
+
+function redactedBars(words: number): number[] {
+  const bars = Math.min(MAX_BARS, Math.max(1, Math.ceil(words / WORDS_PER_BAR)));
+  const last = words >= bars * WORDS_PER_BAR ? 1 : (words % WORDS_PER_BAR) / WORDS_PER_BAR;
+  return Array.from({ length: bars }, (_, i) => (i < bars - 1 ? 1 : Math.max(0.3, last)));
+}
 
 function formatDistance(meters: number | null): string | null {
   return meters == null ? null : distance(meters, { suffix: 'away' });
@@ -98,6 +112,7 @@ export default function MemorySheet({
   unlockError,
   onEdit,
   earned,
+  onWalkHere,
 }: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
@@ -228,6 +243,33 @@ export default function MemorySheet({
                     Sealed until then. Standing here does not open it any sooner.
                   </Text>
                 </>
+              ) : onWalkHere ? (
+                <View style={styles.peek}>
+                  <Text style={styles.meta}>
+                    {[
+                      memory.tags[0],
+                      memory.source_name,
+                      memory.year,
+                      formatDistance(fromHere ?? memory.distance_meters),
+                    ]
+                      .filter((part) => part != null && part !== '')
+                      .join(' · ')}
+                  </Text>
+                  <View style={styles.bars} accessible accessibilityLabel="The story, locked">
+                    {redactedBars(memory.summary_words ?? 0).map((width, i) => (
+                      <View key={i} style={[styles.bar, { width: `${width * 100}%` }]} />
+                    ))}
+                  </View>
+                  <Text style={styles.gateNote}>The only way in is to walk there.</Text>
+                  <Pressable
+                    style={dim([styles.watch, styles.walkHere])}
+                    accessibilityRole="button"
+                    accessibilityLabel="Walk here"
+                    onPress={onWalkHere}
+                  >
+                    <Text style={styles.watchText}>Walk here</Text>
+                  </Pressable>
+                </View>
               ) : withinReach ? (
                 <>
                   <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
@@ -449,6 +491,11 @@ const styles = StyleSheet.create({
   reachable: { color: color.seal },
   sealed: { color: color.inkFaint },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
+  peek: { alignSelf: 'stretch', gap: 18 },
+  bars: { gap: 10 },
+  // The rule colour: a line of type that is there and cannot be read.
+  bar: { height: 12, borderRadius: 2, backgroundColor: color.rule },
+  walkHere: { alignSelf: 'stretch' },
   gateFigure: { fontFamily: font.display, fontSize: 52, color: color.ink, letterSpacing: -1 },
   // A date is not a number. 52px fits "412 m" and wraps "3 May 2031".
   sealDate: { fontSize: 34, letterSpacing: 0, textAlign: 'center' },

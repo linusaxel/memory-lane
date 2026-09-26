@@ -72,6 +72,21 @@ And the proximity notification cannot use the gate as its region - iOS does not
 reliably fire under ~100 m - so it watches 100 m and lets the map do the rest
 (`mobile/src/geofenceRegions.ts`).
 
+### A locked memory says what it is, not what it says
+
+Status: Accepted 2026-09-26
+
+The map's peek (F29) needs a reason to walk, and a place name alone is not
+one. So a locked memory now carries its tags, its source's name (the archive's
+`attribution`, else the channel), its year and `summary_words`, the summary's
+length. `api/gate.py` `locked_memory`. The summary, the media, every link and
+the timestamp stay behind the gate, and `tests/test_api_unlock.py` holds that.
+
+**Options considered:** a blurred summary is the obvious peek and is a leak:
+the text reaches the phone and a blur is a style. The bars are drawn from a
+count, so there is nothing to un-blur. A full date was left out for the year:
+enough to say "1944", not enough to find the story in an archive by date.
+
 ### The position is self-reported
 
 Status: Accepted
@@ -80,13 +95,26 @@ This stops `curl`, not a determined spoofer — and since submissions, it cuts
 both ways: a memory is also filed at a position nobody verified. Attestation is
 the fix and needs more than accounts. Logged in `TODO.md`.
 
+### A map of what is locked, and only today's walk unlocks
+
+Status: Accepted 2026-09-26. Supersedes the "no map of everything" clause below.
+
+After sign-in the app opens on a map of the locked memories around you (F29),
+and a walk is how you open any of them. A corpus you can browse is a corpus you
+can finish, but locked pins cannot be browsed: nothing on them is readable
+until you stand there on today's walk. So the rule the old clause protected
+survives unchanged: `POST /v1/memories/{id}/unlock` still refuses any memory
+that is not a stop of today's walk, and the peek has no unlock in it even
+standing on the pin.
+
 ### Only today's walk unlocks
 
 Status: Accepted (2026-09-24). Replaces "Unlocking is Walk-only, and only the
-app knows it".
+app knows it". The "no map of everything" clause is **Superseded 2026-09-26**
+by the entry above; the unlock rule stands.
 
-The app is one walk a day, five stops, and nothing else: no map of everything
-(F29 is gone), because a corpus you can browse is a corpus you can finish. So
+The app is one walk a day, five stops, and nothing else: ~~no map of everything
+(F29 is gone), because a corpus you can browse is a corpus you can finish.~~ So
 `POST /v1/memories/{id}/unlock` refuses with 403 any memory that is not a stop
 of today's `daily_routes` row for this account (`ON_TODAYS_ROUTE_QUERY`),
 however close you stand.

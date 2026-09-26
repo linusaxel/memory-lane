@@ -28,6 +28,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
   acceptRoute,
+  fetchNearby,
   fetchProfile,
   fetchTodaysRoute,
   fetchUnlocked,
@@ -91,6 +92,10 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
  *  it for "Show me another" taps. */
 const ROLLS = 1_000_000;
 
+/** How far the map looks before a walk: half the longest walk, which is as far
+ *  out as any walk can reach (docs/10, "The search radius is half the length"). */
+const MAP_RADIUS_KM = WALK_KM.max / 2;
+
 const FALLBACK_REGION: Region = {
   latitude: 55.67886,
   longitude: 12.57586,
@@ -147,9 +152,10 @@ function pathThrough(
 
 const NONE = new Set<number>();
 
-/** Plan the walk, preview it, walk it. `loading` is the moment before the
- *  device knows whether it already accepted today's walk. */
-type Stage = 'loading' | 'plan' | 'preview' | 'walk';
+/** The map of what is locked, then plan the walk, preview it, walk it.
+ *  `loading` is the moment before the device knows whether it already accepted
+ *  today's walk. */
+type Stage = 'loading' | 'map' | 'plan' | 'preview' | 'walk';
 
 export default function App() {
   // Two families carry the whole design, so there is no sensible half-loaded
@@ -179,6 +185,8 @@ export default function App() {
   // "Show me another" came back unchanged: that was the only walk that long.
   const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
+  // The locked memories around you, before any walk (F29).
+  const [nearby, setNearby] = useState<LocatedMemory[]>([]);
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   // What was tapped is a point, not a memory: the sheet pages through it.
@@ -442,10 +450,10 @@ export default function App() {
           takeRoute(accepted, cached?.start ?? null);
           setStage('walk');
         } else if (!cached) {
-          setStage('plan');
+          setStage('map');
         }
       } catch {
-        if (mounted.current && !cached) setStage('plan');
+        if (mounted.current && !cached) setStage('map');
       }
     })();
   }, [device, takeRoute]);
@@ -492,6 +500,23 @@ export default function App() {
     }
   }, [device, planFrom, walkKm, walkAsk, again, takeRoute]);
 
+  // Once on the map, and again when a position first arrives: by where you
+  // are, never by viewport, so panning fetches nothing (UI.md rule 3).
+  const located = !!position;
+  useEffect(() => {
+    if (stage !== 'map') return;
+    const controller = new AbortController();
+    const at = positionRef.current ?? {
+      lat: FALLBACK_REGION.latitude,
+      lng: FALLBACK_REGION.longitude,
+    };
+    fetchNearby(at, MAP_RADIUS_KM, controller.signal)
+      // Locked only: what is open without a walk is not a reason to take one.
+      .then((found) => mounted.current && setNearby(found.filter((memory) => memory.locked)))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [stage, located]);
+
   // The preview's zoom: the whole loop and its start, clear of the card.
   useEffect(() => {
     if (stage !== 'preview' || !preview || !planFrom) return;
@@ -513,11 +538,23 @@ export default function App() {
     () => route.map((memory) => unlocked[memory.id] ?? memory),
     [route, unlocked],
   );
-  // The only pins there are: the walk being previewed, or the walk being
-  // walked. Nothing off the route is drawn.
+  // The only pins there are: what is locked around you on the map, the walk
+  // being previewed, or the walk being walked. Nothing off the route is drawn
+  // on a walk.
+  const nearbyShown = useMemo(
+    () => nearby.map((memory) => unlocked[memory.id] ?? memory),
+    [nearby, unlocked],
+  );
   const pins = useMemo(
-    () => (stage === 'preview' ? (preview?.memories ?? []) : stage === 'walk' ? routeShown : []),
-    [stage, preview, routeShown],
+    () =>
+      stage === 'map'
+        ? nearbyShown
+        : stage === 'preview'
+          ? (preview?.memories ?? [])
+          : stage === 'walk'
+            ? routeShown
+            : [],
+    [stage, nearbyShown, preview, routeShown],
   );
   // The background watch tracks today's route, not the map's panned viewport -
   // bounded (ROUTE_SIZE, well under the OS's ~20-region cap), already "nearby
@@ -539,6 +576,8 @@ export default function App() {
   // out, and the rest keep their numbers. A preview numbers every stop.
   const routePositionById = useMemo(() => {
     const map = new Map<number, number>();
+    // The map before a walk has no route: nothing on it is a stop.
+    if (stage === 'map') return map;
     const walking = stage !== 'preview';
     pins.forEach((memory, i) => {
       if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
@@ -994,7 +1033,7 @@ export default function App() {
                   routeSize={walking ? routeTotal : pins.length}
                   // A preview is a look, not a walk: its stops open once accepted.
                   onPress={() =>
-                    !walking
+                    !walking && stage !== 'map'
                       ? undefined
                       : group.spanMeters > CLUSTER_SPAN_M
                         ? zoomTo(group)
@@ -1110,6 +1149,20 @@ export default function App() {
             </Pressable>
           )}
 
+          {stage === 'map' && (
+            <Pressable
+              style={dim(styles.locate)}
+              accessibilityRole="button"
+              accessibilityLabel="Plan a walk"
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                setStage('plan');
+              }}
+            >
+              <Text style={styles.locateText}>Plan a walk</Text>
+            </Pressable>
+          )}
+
           {stage === 'preview' && preview && (
             <Preview
               stops={preview.memories.length}
@@ -1148,6 +1201,10 @@ export default function App() {
               ask={walkAsk}
               onAsk={setWalkAsk}
               onGo={() => planWalk(Math.floor(Math.random() * ROLLS))}
+              onBack={() => {
+                setPlanError(null);
+                setStage('map');
+              }}
               busy={planBusy}
               error={planError}
             />
@@ -1240,6 +1297,16 @@ export default function App() {
           unlocking={unlocking}
           unlockError={unlockError}
           onHeart={heart}
+          // The map's peek. For now "Walk here" is the plan page; a walk
+          // through that pin is TODO.md M5.
+          onWalkHere={
+            stage === 'map'
+              ? () => {
+                  setOpenAt([]);
+                  setStage('plan');
+                }
+              : undefined
+          }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
         />
 
