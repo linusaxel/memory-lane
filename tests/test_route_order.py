@@ -210,3 +210,9 @@ def test_an_included_stop_is_on_every_walk_returned(route_seed):
             continue
         walks = _choose_walks(picks, 5, d, str(i), 4000, True, ANCHOR, pin)
         assert walks and all(pin + 1 in w for w in walks)
+
+
+def test_stops_are_spread_along_the_walk_before_prize():
+    # Two prized stops 42m apart, or one of them and a plain one halfway.
+    picks = [stop("half", 3), stop("far", 6, contrast=1), stop("next", 6.5, contrast=1)]
+    assert {p.name for p in choose(picks, 2, "s", 800, False)} != {"far", "next"}

@@ -1180,6 +1180,19 @@ A long ask still falls short where the map runs out. The lakes top out at
 7.4 km for any stop count: shortest legs cross the bridges, where the ~9 km
 walk is the shore. Only legs longer than the shortest path would fill it.
 
+### Stops spread along the walk, before filling the slider
+
+Status: Accepted
+
+The founder saw stops bunch together. Stage 1 now counts bunched legs
+(`_bunched`: a leg, out and home included, under half the walk split evenly)
+and ranks the fewest just after sharp turns, ahead of the shortfall under
+ROUTE_FILL and the prize. `route_bench` reports `gap`, the shortest leg over
+the mean one. Over 140 runs on the dense seed, gap p50 went 0.43 → 0.50: 8 km
+0.28 → 0.42, 10 km 0.27 → 0.35. Walk ÷ budget went 0.81 → 0.80 and spurs did
+not move, within the ±8% noise. Ranked after the shortfall instead, 10 km
+did not move at all: its walks fall short, so the shortfall decides first.
+
 ### No U-turn at a stop, and none at the start
 
 Status: Accepted

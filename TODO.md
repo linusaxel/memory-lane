@@ -211,10 +211,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
 
 ## Copenhagen journeys
 
-- [ ] **Spread the stops evenly along the walk.** (checked 2026-09-26) The
-      founder sees stops bunch together. The solver should prefer roughly
-      equal gaps between stops (docs/10 "About a stop a km"). Measure before
-      and after with `route_bench`.
 - [ ] **A long walk still falls short where the map runs out.** (checked
       2026-09-26) About a stop a km (docs/10) took 10 km from 0.33 to 0.56 of
       the slider on the dense seed, but the lakes top out at 7.4 km for any

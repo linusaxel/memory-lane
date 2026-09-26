@@ -15,7 +15,8 @@ different walk, which is "Show me another" working. The bar is "no spur": a stop
 off the loop is walked to and back the same way, and `retraced` is how many
 metres of that there are (api/streets.py, retraced_meters). `spur` is any at
 all, often a few metres from a mid-block start to its corner; `>50m` is one
-you would notice.
+you would notice. `gap` is the shortest leg over the mean leg, out and home
+included: 1 is stops evenly spaced, near 0 is two of them bunched.
 
 `--scenario` plants seed_dev's route scenarios in the bench's own transaction
 instead, one at a time, and starts round each one's start. The rollback at the
@@ -88,8 +89,13 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
             "retraced": 0,
             "ms": ms,
             "fresh": fresh,
+            "gap": 1,
         }
     path = [*ends["out"], *(p for leg in legs for p in leg), *(ends["home"] or [])]
+    gaps = [
+        sum(meters_between(a, b) for a, b in pairwise(leg))
+        for leg in [ends["out"], *legs, *([ends["home"]] if ends["home"] else [])]
+    ]
     return {
         "budget": budget,
         "stops": len(stops),
@@ -97,6 +103,7 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
         "retraced": retraced_meters(path, [Coordinates(lat=r.lat, lng=r.lng) for r in stops]),
         "ms": ms,
         "fresh": fresh,
+        "gap": min(gaps) / (sum(gaps) / len(gaps)),
     }
 
 
@@ -173,7 +180,7 @@ def pct(values: list[float], q: int) -> float:
 def report(results: list[dict]) -> None:
     print(
         f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'>50m':>6} {'retr p50/p95':>14} "
-        f"{'walk/budget':>12} {'fresh':>6} {'ms p50/p95':>12}"
+        f"{'walk/budget':>12} {'gap p50/p5':>11} {'fresh':>6} {'ms p50/p95':>12}"
     )
     for budget in (*BUDGETS, None):
         mine = [r for r in results if budget is None or r["budget"] == budget]
@@ -182,6 +189,7 @@ def report(results: list[dict]) -> None:
         retraced = [r["retraced"] for r in mine]
         ms = [r["ms"] for r in mine]
         ratio = [r["walk"] / r["budget"] for r in mine]
+        gap = [r["gap"] for r in mine]
         print(
             f"{budget or 'all':>7} {len(mine):>5} "
             f"{sum(r['stops'] == _route_size(r['budget']) for r in mine) / len(mine):>6.0%} "
@@ -189,6 +197,7 @@ def report(results: list[dict]) -> None:
             f"{sum(x > 50 for x in retraced) / len(mine):>6.0%} "
             f"{pct(retraced, 50):>6.0f}/{pct(retraced, 95):<6.0f}m "
             f"{statistics.median(ratio):>11.2f} "
+            f"{pct(gap, 50):>5.2f}/{pct(gap, 5):<5.2f} "
             f"{sum(r['fresh'] for r in mine) / len(mine):>6.0%} "
             f"{pct(ms, 50):>5.0f}/{pct(ms, 95):<5.0f}"
         )

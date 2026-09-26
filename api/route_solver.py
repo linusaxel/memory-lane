@@ -4,8 +4,8 @@ How a walk is ranked, in two stages, the second only with streets:
 
 1. From the matrix (`_choose_walks`, its `score`): the most stops that fit,
    then the layer mix, then the fewest sharp turns back on itself, then the
-   shortfall under ROUTE_FILL of the slider, then the most prize, then the
-   shortest walk. Every walk tied with the best one on count and mix makes a
+   shortfall under ROUTE_FILL of the slider, then the fewest bunched stops
+   (`_bunched`), then the most prize, then the shortest walk. Every walk tied with the best one on count and mix makes a
    shortlist of up to ROUTE_SHORTLIST. Without streets, the best one is the walk.
 2. From the streets (`_plan_route`, its `judge`): each shortlisted walk is
    routed and scored on metres off the slider plus metres retraced, in steps
@@ -212,6 +212,7 @@ def _choose_walks(
             -len(walk),
             missing(walk),
             sharp(order),
+            _bunched(order, d, loop),
             max(0.0, ROUTE_FILL * budget_meters - walked),
             -sum(prize[i] for i in walk),
             walked,
@@ -325,6 +326,19 @@ def _choose_walks(
     top = score(best)
     alike = sorted((v, sorted(w)) for w, v in ranked.items() if v[:2] == top[:2])
     return [_walking_order(w, d, loop) for _, w in alike[:ROUTE_SHORTLIST]]
+
+
+# A leg shorter than this share of an even one is two stops bunched together.
+BUNCHED_SHARE = 0.5
+
+
+def _bunched(order: list[int], d: list, loop: bool) -> int:
+    """Legs of the walk, out and home included, shorter than BUNCHED_SHARE of
+    the walk split evenly between them."""
+    ends = [0, *order, 0] if loop and order else [0, *order]
+    legs = [d[a][b] for a, b in itertools.pairwise(ends)]
+    even = sum(legs) / max(len(legs), 1)
+    return sum(leg < BUNCHED_SHARE * even for leg in legs)
 
 
 # 6! is 720 orderings. `score` orders every walk it looks at, so 8! (40,320)
