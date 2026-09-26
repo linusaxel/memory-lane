@@ -39,6 +39,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/yt_crawler.py` | **Channel discovery** via yt-dlp — lists a channel's videos + metadata |
 | `crawler/sources.py` | **Text sources:** the `Source` interface and `SOURCES`. A new source is one file and one line here |
 | `crawler/kb_aviser.py` | KB Labs newspapers (pre-1886), searched by street |
+| `crawler/historisk_atlas.py` | Historisk Atlas stories matched by sitemap title (`Sabotage` for the WWII set) |
 | `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB (expands `channel:` sources); `--source <name> --query <q>` runs a text source |
 | `pipeline/geocode.py` | **Places what the model names:** DAWA, Photon, Wikidata behind one guard, `place()` |
 | `pipeline/transcripts.py` | Fetches YouTube transcripts via youtube-transcript-api |

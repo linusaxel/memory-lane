@@ -120,17 +120,16 @@ live requests. Order is priority.
 
 **Next**
 
-- [ ] **Historisk Atlas via its sitemap.** (checked 2026-09-26)
-      `https://historiskatlas.dk/sitemap.xml`, 11,740 stories; robots.txt has
-      no Disallow and pages are server-rendered. Parse `window.passed.geo` →
-      `{geoid, title, intro, latitude, longitude, ugc}`. URL-encode æøå or
-      ~50% of fetches fail. `contents` and `tag_geos` are null: the licence
-      needs the API (email above). **Start at geoid 19000–20000**, the WWII
-      resistance sabotage set: exact dates and addresses ("Sabotage mod Islev
-      Møbelfabrik, 03.05.1945"), the highest-contrast material in any source
-      so far. ⚠️ Only ~8% of stories fall in Copenhagen (n=90, so ~900 total):
-      the corpus leans Funen/Jutland. ⚠️ Also a partial competitor: judge
-      their neighbourhood-level content before building on it.
+- [x] **Historisk Atlas via its sitemap.** Done 2026-09-26:
+      `python -m pipeline.ingest --source historisk-atlas --query Sabotage`
+      (884 titles match; title and intro only, 1 s between pages). The atlas's
+      point goes to the model as text, so a geocoder hit can move it (docs/10,
+      *Sources are a Protocol and a registry*). ⚠️ Not ingested or extracted:
+      no credits. ⚠️ Only ~8% of stories fall in Copenhagen and titles rarely
+      say where: a bounding box in `fetch` before billing a big batch.
+      ⚠️ `contents` and `tag_geos` stay null until the API email is answered.
+      ⚠️ Also a partial competitor: judge their neighbourhood-level content
+      before building on it. (checked 2026-09-26)
 - [ ] **Kraks Vejviser and older address directories.** (checked 2026-09-26)
       Pre-1900 editions at kb.dk carry a public domain mark (commercial use
       with credit); Copenhagen Libraries host digitised volumes at

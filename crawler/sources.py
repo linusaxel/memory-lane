@@ -25,6 +25,7 @@ class Source(Protocol):
     def fetch(self, query: str, limit: int) -> Iterable[Record]: ...
 
 
-from crawler.kb_aviser import KbAviser  # noqa: E402  (it needs Record defined first)
+from crawler.historisk_atlas import HistoriskAtlas  # noqa: E402  (they need Record defined first)
+from crawler.kb_aviser import KbAviser  # noqa: E402
 
-SOURCES: dict[str, Source] = {s.name: s for s in (KbAviser(),)}
+SOURCES: dict[str, Source] = {s.name: s for s in (KbAviser(), HistoriskAtlas())}

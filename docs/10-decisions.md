@@ -764,8 +764,9 @@ fetches transcripts later, so it would need a second stage the interface does
 not have. Revisit when a second source is two-stage.
 
 **Consequences:** a source only fetches; it never touches the database. A source
-that brings its own coordinates (Historisk Atlas) will need `Record` to grow
-optional `lat`/`lng`, and `ingest_records` somewhere to put them.
+that brings its own coordinates (Historisk Atlas) writes them into the text for
+the model's `lat`/`lng`, so a geocoder hit can still move the pin. If pins land
+off the atlas's point, `Record` grows `lat`/`lng` and `content` a column.
 
 ### DAWA places Danish addresses
 

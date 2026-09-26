@@ -66,3 +66,32 @@ def test_two_close_mentions_are_one_window_and_no_mention_keeps_everything():
     page = "a" * 3000 + "Gade" + "b" * 100 + "Gade" + "c" * 3000
     assert "…" not in kb_aviser._windows(page, "Gade")
     assert kb_aviser._windows("nothing here", "Gade") == "nothing here"
+
+
+SITEMAP = (
+    "<urlset><url><loc>https://historiskatlas.dk/Sabotage_mod_Værft,_16.01.1944_(19000)</loc></url>"
+    "<url><loc>https://historiskatlas.dk/Stüler_&amp;_Co_(19266)</loc></url></urlset>"
+)
+PAGE = (
+    'window.passed = {\n geo: {"geoid":19000,"title":"Sabotage mod Værft, 16.01.1944",'
+    '"intro":"3 bomber blev anbragt på en tagkran.","latitude":57.05,"longitude":9.94,'
+    '"contents":null}, \n collection: null };'
+)
+
+
+def test_an_atlas_story_matched_by_title_carries_its_point(monkeypatch):
+    from crawler import historisk_atlas
+
+    asked = []
+
+    def _urlopen(request, timeout):
+        asked.append(request.full_url)
+        return io.BytesIO((SITEMAP if request.full_url.endswith(".xml") else PAGE).encode())
+
+    monkeypatch.setattr(historisk_atlas.urllib.request, "urlopen", _urlopen)
+    monkeypatch.setattr(historisk_atlas.time, "sleep", lambda s: None)
+    records = list(SOURCES["historisk-atlas"].fetch("sabotage", 5))
+    assert asked[1] == "https://historiskatlas.dk/Sabotage_mod_V%C3%A6rft,_16.01.1944_(19000)"
+    assert len(asked) == 2 and len(records) == 1
+    assert records[0]["title"] == "Sabotage mod Værft, 16.01.1944"
+    assert records[0]["text"].endswith("places this at 57.05, 9.94.")
