@@ -1,9 +1,11 @@
-# F1 plan a walk -> F32 Show me another, round the Copenhagen lakes.
-# docs/08-ux-flows.md
+# F1 plan a walk -> F32 Show me another, round the Copenhagen lakes -> F31
+# look back at the walks already walked there. docs/08-ux-flows.md
 #
 # e2e/run.sh plants `seed_dev --routes lakes` for this flow instead of the
 # random-start cluster: stops every ~400 m round the three lakes, each named
-# by its lake. The start is OLUFSVEJ in pipeline/seed_dev.py.
+# by its lake. The start is OLUFSVEJ in pipeline/seed_dev.py. It also gives
+# the device two past walks (run.sh `past_walks`): the south end, 5 of 5, and
+# one given up at 2 of 5.
 #
 # The whole slider, 10 km. The lakes top out near 7 km however many stops, so
 # every walk here is the longest from here. Which of them the first preview
@@ -52,3 +54,34 @@ appId: ${APP_ID}
 - assertVisible: "Stop .* of 10\\. Sankt Jørgens Sø.*"
 - assertVisible: "10 stops · .* loop"
 - assertVisible: "Show me another"
+
+# Accepting is what registers the device, and with it the past walks.
+- tapOn: "Accept this walk"
+- extendedWaitUntil:
+    visible: "Today's route · .* of 10 unlocked\\."
+    timeout: 40000
+
+# F31: the Walks tab opens on the history, and a row opens in place to the
+# memories it earned; the stops it never reached stay out.
+- tapOn: "Journal"
+- extendedWaitUntil:
+    visible: ".*, 5 of 5 · .*"
+    timeout: 30000
+- assertVisible: ".*, 2 of 5 · .*"
+- tapOn: ".*, 2 of 5 · .*"
+- extendedWaitUntil:
+    visible: "Peblinge Sø 5, dev seed, .*"
+    timeout: 30000
+- assertVisible: "Sortedams Sø 4, dev seed, .*"
+- assertNotVisible: "Sortedams Sø 3, dev seed, .*"
+- tapOn: ".*, 2 of 5 · .*"
+- tapOn: ".*, 5 of 5 · .*"
+- scrollUntilVisible:
+    element: "Sankt Jørgens Sø 7, dev seed, .*"
+    direction: DOWN
+    centerElement: true
+- tapOn: "Sankt Jørgens Sø 7, dev seed, .*"
+- assertVisible: "Heart this memory"
+- tapOn: "Close"
+- tapOn: "Close journal"
+- assertVisible: "Today's route · .* of 10 unlocked\\."

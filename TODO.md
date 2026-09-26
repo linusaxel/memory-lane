@@ -120,13 +120,6 @@ missing is a source.
       longest from here." under ROUTE_FILL. Left: legs routed longer than the
       shortest path (round the shore), if an honest short walk isn't enough.
       Also: 10 km plans are p95 2.2 s, twice what they were.
-- [ ] **Seed walks already walked.** (checked 2026-09-26) For
-      `.maestro/lakes-loop.yml`: a few past `daily_routes` rows on the lakes,
-      dated before today, with the unlocks that earned them (one 5 of 5, one
-      abandoned 2 of 5), so the Walks tab opens on a history. Then the flow
-      asserts a past walk's row opens to an earned memory and tapping it opens
-      the sheet (F31). It could also replace run.sh's `yesterday_unlock`
-      trigger for F27's streak.
 ---
 
 ## Parked

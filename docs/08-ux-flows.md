@@ -976,7 +976,7 @@ Every accepted walk is kept (`daily_routes`), and this reads them back.
 The km is the budget asked for, not metres walked, and the loop draws stop to
 stop, not out and home: the start is never stored (docs/10 § Routes).
 `GET /v1/routes/walked`, `src/Memories.tsx`,
-`.maestro/walk-and-unlock.yml`.
+`.maestro/walk-and-unlock.yml`, and `.maestro/lakes-loop.yml` on a seeded history.
 
 ## F32 · Show me another — **Implemented**
 
