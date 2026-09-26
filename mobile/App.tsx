@@ -1491,8 +1491,6 @@ export default function App() {
           visible={submitOpen}
           position={position}
           device={device}
-          displayName={displayName}
-          onDisplayName={rename}
           editing={editingMemory}
           onClose={() => {
             setSubmitOpen(false);

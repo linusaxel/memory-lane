@@ -17,6 +17,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -36,16 +37,14 @@ import {
   updateMemory,
   uploadMedia,
   type Coordinates,
-  type EditDraft,
+  type Draft,
   type LocatedMemory,
   type MediaItem,
 } from './api.ts';
 import { duration, sealOpensAt } from './format.ts';
 import { button, buttonText, color, dim, font, input, label } from './theme.ts';
 
-/** Matches the server's own floor. Ten characters is not a quality bar, it is a
- *  fat-finger bar, and the button has to agree with the API about it. */
-const MIN_SUMMARY = 10;
+const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
 /** Long enough for a story, short enough that nobody uploads a podcast. */
 const MAX_RECORDING_SECONDS = 180;
@@ -56,9 +55,6 @@ type Props = {
    *  Ignored while editing: the pin does not move after it is filed. */
   position: Coordinates | null;
   device: string | null;
-  /** Remembered between submissions so nobody retypes their name every time. */
-  displayName: string;
-  onDisplayName: (next: string) => void;
   onClose: () => void;
   onPosted: (memory: LocatedMemory) => void;
   /** Set to open this screen as an editor for a memory already filed, instead
@@ -83,8 +79,6 @@ export default function Submit({
   visible,
   position,
   device,
-  displayName,
-  onDisplayName,
   onClose,
   onPosted,
   editing,
@@ -92,11 +86,13 @@ export default function Submit({
   onDeleted,
 }: Props) {
   const isEditing = !!editing;
+  // The title is the place row's name - docs/10, "The title is the place name".
   const [placeName, setPlaceName] = useState('');
   const [summary, setSummary] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [day, setDay] = useState(() => new Date());
+  const [yearOnly, setYearOnly] = useState(false);
   const [year, setYear] = useState('');
-  const [when, setWhen] = useState<'today' | 'earlier'>('today');
   const [sealYear, setSealYear] = useState('');
   const [seal, setSeal] = useState<'now' | 'later'>('now');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -134,8 +130,9 @@ export default function Submit({
     setPlaceName('');
     setSummary('');
     setTags([]);
+    setDay(new Date());
+    setYearOnly(false);
     setYear('');
-    setWhen('today');
     setSealYear('');
     setSeal('now');
     setAttachments([]);
@@ -154,13 +151,10 @@ export default function Submit({
     setPlaceName(editing.place.name);
     setSummary(editing.summary);
     setTags(editing.tags);
-    if (editing.happened_at) {
-      setWhen('earlier');
-      setYear(editing.happened_at.slice(0, 4));
-    } else {
-      setWhen('today');
-      setYear('');
-    }
+    const happened = editing.happened_at;
+    setYearOnly(!!happened && editing.happened_precision !== 'day');
+    setYear(happened ? happened.slice(0, 4) : '');
+    setDay(happened ? localDay(happened) : new Date());
     setAttachments(
       editing.media.map((item) => ({
         uri: mediaUrl(item),
@@ -177,7 +171,7 @@ export default function Submit({
   const sound = attachments.find((a) => a.kind === 'audio');
   const uploading = attachments.some((a) => !a.item && !a.failed);
   const named = placeName.trim().length > 0;
-  const told = summary.trim().length >= MIN_SUMMARY;
+  const told = summary.trim().length > 0;
   // The one answer, used by the button and by the draft, so they cannot
   // disagree about whether this memory is sealed - which is how "Nobody until"
   // with an empty year used to post something anybody could read. Not asked
@@ -295,17 +289,13 @@ export default function Submit({
     setError(null);
 
     const trimmedYear = year.trim();
-    const editDraft: EditDraft = {
+    const hasYear = /^\d{4}$/.test(trimmedYear);
+    const editDraft: Draft = {
       place_name: placeName.trim(),
       summary: summary.trim(),
       tags,
-      happened_at:
-        when === 'today'
-          ? new Date().toISOString().slice(0, 10)
-          : /^\d{4}$/.test(trimmedYear)
-            ? `${trimmedYear}-01-01`
-            : null,
-      happened_precision: when === 'today' ? 'day' : /^\d{4}$/.test(trimmedYear) ? 'year' : null,
+      happened_at: !yearOnly ? isoDay(day) : hasYear ? `${trimmedYear}-01-01` : null,
+      happened_precision: !yearOnly ? 'day' : hasYear ? 'year' : null,
       // 1 January of the year, like happened_at: a seal is a promise about a
       // year, and asking somebody to pick a day for 2041 is a picker nobody
       // needs. A year already past is simply not a seal - the server treats a
@@ -321,10 +311,7 @@ export default function Submit({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         onSaved?.(memory);
       } else {
-        const memory = await submitMemory(device, position!, {
-          ...editDraft,
-          display_name: displayName.trim() || null,
-        });
+        const memory = await submitMemory(device, position!, editDraft);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         onPosted(memory);
       }
@@ -404,7 +391,19 @@ export default function Submit({
         </View>
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <Field label="What happened?">
+          <Field label="Title">
+            <TextInput
+              style={styles.input}
+              value={placeName}
+              onChangeText={setPlaceName}
+              placeholder="The night the ferry horn went off"
+              placeholderTextColor={color.inkFaint}
+              maxLength={200}
+              returnKeyType="next"
+            />
+          </Field>
+
+          <Field label="Description">
             <TextInput
               style={[styles.input, styles.prose]}
               value={summary}
@@ -412,33 +411,18 @@ export default function Submit({
               placeholder="We sat here until it got light and nobody wanted to say so."
               placeholderTextColor={color.inkFaint}
               multiline
-              maxLength={2000}
+              maxLength={MAX_SUMMARY}
               textAlignVertical="top"
             />
-            <Text style={styles.counter}>
-              {summary.trim().length < MIN_SUMMARY
-                ? `${MIN_SUMMARY - summary.trim().length} more characters`
-                : `${summary.length} / 2000`}
-            </Text>
-          </Field>
-
-          <Field label="What is this place called?">
-            <TextInput
-              style={styles.input}
-              value={placeName}
-              onChangeText={setPlaceName}
-              placeholder="The bench by the harbour"
-              placeholderTextColor={color.inkFaint}
-              maxLength={200}
-              returnKeyType="next"
-            />
+            {/* Only near the limit: a count from the first letter reads as a nag. */}
+            {summary.length > MAX_SUMMARY - 200 && (
+              <Text style={styles.counter}>{`${summary.length} / ${MAX_SUMMARY}`}</Text>
+            )}
           </Field>
 
           <Field label="When">
             <View style={styles.row}>
-              <Chip label="Today" on={when === 'today'} onPress={() => setWhen('today')} />
-              <Chip label="Earlier" on={when === 'earlier'} onPress={() => setWhen('earlier')} />
-              {when === 'earlier' && (
+              {yearOnly ? (
                 <TextInput
                   style={[styles.input, styles.year]}
                   value={year}
@@ -448,10 +432,31 @@ export default function Submit({
                   keyboardType="number-pad"
                   accessibilityLabel="Year it happened"
                 />
+              ) : Platform.OS === 'ios' ? (
+                <DateTimePicker
+                  value={day}
+                  mode="date"
+                  display="compact"
+                  maximumDate={new Date()}
+                  onChange={(_, picked) => picked && setDay(picked)}
+                />
+              ) : (
+                // Android's picker is a dialog, not an inline control.
+                <Secondary
+                  label={isoDay(day)}
+                  onPress={() =>
+                    DateTimePickerAndroid.open({
+                      value: day,
+                      mode: 'date',
+                      maximumDate: new Date(),
+                      onChange: (_, picked) => picked && setDay(picked),
+                    })
+                  }
+                />
               )}
+              {/* For the 1978 case: somebody who remembers the summer, not the day. */}
+              <Chip label="Only the year" on={yearOnly} onPress={() => setYearOnly(!yearOnly)} />
             </View>
-            {/* ponytail: a year, not a date. A full picker is another
-                dependency for a field most submissions leave on Today. */}
           </Field>
 
           {/* Not offered while editing: an already-open memory has nothing to
@@ -563,23 +568,6 @@ export default function Submit({
             </Field>
           )}
 
-          {/* Not shown while editing: the signature is a profile-wide setting
-              (Settings, PUT /v1/me), not a per-memory one - this field would
-              be a second place to set the same name. */}
-          {!isEditing && (
-            <Field label="Signed">
-              <TextInput
-                style={styles.input}
-                value={displayName}
-                onChangeText={onDisplayName}
-                placeholder="Anonymous"
-                placeholderTextColor={color.inkFaint}
-                maxLength={60}
-                autoCapitalize="words"
-              />
-            </Field>
-          )}
-
           {error && <Text style={styles.error}>{error}</Text>}
 
           {isEditing && (
@@ -602,6 +590,20 @@ export default function Submit({
       </KeyboardAvoidingView>
     </Modal>
   );
+}
+
+/** YYYY-MM-DD in the phone's own zone. toISOString() is UTC, which files
+ *  anything after midnight in Copenhagen under yesterday. */
+function isoDay(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** The inverse, at local midnight: `new Date('1998-07-12')` is UTC midnight,
+ *  which is 11 July anywhere west of Greenwich. */
+function localDay(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }
 
 function Field({ label: name, children }: { label: string; children: React.ReactNode }) {

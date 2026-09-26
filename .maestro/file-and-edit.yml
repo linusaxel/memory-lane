@@ -33,7 +33,7 @@ appId: ${APP_ID}
 - tapOn: "Add a memory here"
 - assertVisible: "Add a memory"
 
-- tapOn: "The bench by the harbour"
+- tapOn: "The night the ferry horn went off"
 - inputText: "The step by the ferry landing"
 
 - tapOn: "We sat here until it got light and nobody wanted to say so."

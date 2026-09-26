@@ -196,7 +196,8 @@ def test_what_you_filed_before_signing_in_comes_with_you(client):
     """Filing first and signing in later is the normal order, and losing the
     memory in between would be the version of this nobody forgives."""
     dev = device()
-    memory = submit(client, device=dev, display_name="Bo")
+    memory = submit(client, device=dev)
+    client.put("/v1/me", json={"device": dev, "display_name": "Bo"})
     google(client, dev)
 
     profile = client.get(f"/v1/me?device={dev}").json()

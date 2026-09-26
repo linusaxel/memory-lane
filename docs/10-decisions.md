@@ -251,6 +251,20 @@ Status: Accepted
 whose spelling wins. The map groups by coordinate, so they land under one pin
 either way.
 
+### The title is the place name
+
+Status: Accepted (2026-09-26)
+
+A submission's Title is stored as its own place's `name`. Each submission
+mints its own place (above), so the name was already per-memory. It was
+already the card's heading, locked or not, and it was already required. A
+`memories.title` column would have needed a migration, and extracted memories
+would then have needed a title too, either from a fallback or a prompt change.
+Extracted memories keep their place name as the heading.
+
+**Options considered:** A title beside the place name: two headings for one
+card, and one more field on a form the founder asked to shrink.
+
 ### Media lives on a disk, not in object storage
 
 Status: Accepted

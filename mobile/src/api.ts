@@ -89,10 +89,11 @@ export type Memory = {
    *  server sorts these to the top, which is the whole of "resurfacing" - the
    *  only notification is F28's nearby one, fired on the phone. */
   anniversary: boolean;
-  /** ISO date, or null when the source did not say. The server has never sent
-   *  the precision that goes with it - see api/models.py's Memory - so the
-   *  edit form can only recover a year, not whether it was exact to the day. */
+  /** ISO date, or null when the source did not say. */
   happened_at: string | null;
+  /** How much of happened_at to trust. 'year' means 1 January stands in for
+   *  "sometime that year", and the edit form reopens on the year alone. */
+  happened_precision: 'day' | 'month' | 'year' | 'decade' | null;
   /** ISO date, and set only while the memory is still sealed. A time lock is a
    *  different refusal from the proximity one: standing here does not open it,
    *  so the sheet must not offer the unlock. Null once the date has passed. */
@@ -480,7 +481,6 @@ export type Draft = {
   /** ISO date. Nobody reads it before then, the author included. */
   opens_at: string | null;
   media_ids: number[];
-  display_name: string | null;
 };
 
 /**
@@ -555,10 +555,6 @@ export async function submitMemory(
   return memory;
 }
 
-/** Everything a submission carries except where it was filed and who it is
- *  signed with - the position never moves, and the name is `PUT /v1/me`'s job. */
-export type EditDraft = Omit<Draft, 'display_name'>;
-
 /** Change what you filed. Refused with a `sealed` error while the memory is
  *  still sealed - F23 says nobody may read one early to edit it, the author
  *  included, and the server enforces that rather than trusting the app to
@@ -566,7 +562,7 @@ export type EditDraft = Omit<Draft, 'display_name'>;
 export async function updateMemory(
   device: string,
   id: number,
-  draft: EditDraft,
+  draft: Draft,
 ): Promise<LocatedMemory> {
   const res = await fetch(`${BASE}/v1/memories/${id}`, {
     method: 'PUT',

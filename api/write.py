@@ -11,7 +11,7 @@ from fastapi import APIRouter, Form, HTTPException, Query, Response, UploadFile
 from sqlalchemy import text
 
 import api.media
-from api.accounts import clean_name, set_display_name, touch_device, user_for_device
+from api.accounts import touch_device, user_for_device
 from api.gate import (
     meters_between,
     not_yet_open,
@@ -273,9 +273,6 @@ def submit_memory(body: SubmissionRequest):
         session.execute(text(LOCK_USER), {"user_id": user_id})
         filed = session.execute(text(FILED_TODAY), {"user_id": user_id}).scalar()
         refuse_over_quota(filed, DAILY_MEMORIES, "submission")
-
-        if body.display_name is not None:
-            set_display_name(session, user_id, clean_name(body.display_name))
 
         place_id = session.execute(
             text(PLACE_INSERT),

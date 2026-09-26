@@ -29,6 +29,7 @@ function memory(id: number, name: string, lat: number, lng: number): LocatedMemo
     note_count: 0,
     anniversary: false,
     happened_at: null,
+    happened_precision: null,
     opens_at: null,
     hidden: false,
   } as LocatedMemory;

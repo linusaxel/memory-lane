@@ -23,16 +23,16 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- [ ] **No TypeScript formatter, and `npx prettier` quietly fetches one.**
-      (2026-09-26) Formatting one edited file ran a downloaded Prettier with
-      no config and rewrote 331 lines of `Settings.tsx`; the file was checked
-      out and the edit redone. Fix: one line in AGENTS.md, "mobile/ has no
-      formatter: match the indentation by hand, never run prettier".
-
 ---
 
 ## Known defects
 
+- [ ] **A year-only date is "on this day" every 1 January.** (checked
+      2026-09-26) `ANNIVERSARY` in `api/queries.py` compares month and day
+      and ignores `happened_precision`, so a memory filed as "Only the year"
+      (stored as `YYYY-01-01`) is resurfaced on New Year's Day. Extracted
+      memories with year precision do the same. Fix: require
+      `happened_precision = 'day'` in that expression.
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.
       A real date needs a per-video fetch or the channel RSS feed (newest 15
@@ -214,42 +214,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       the map and the user dot. Waits on the founder's yes and a look on a
       real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
       state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
-
----
-
-## Add a memory
-
-The founder, 2026-09-26: the flow needs title, description and date, no
-"Signed", and no "10 more characters". Each ships alone; the first three
-change `mobile/src/Submit.tsx`, `SubmitRequest`/`MemoryEditRequest` in
-`api/models.py`, and docs/08 F-flow step 3-4.
-
-- [ ] **A title field.** (checked 2026-09-26) Memories have no title today:
-      the form asks place name and "What happened?", and the card leads with
-      those. Needs a column (migration), the API field, the sheet and card
-      showing it, and an answer for extracted memories, which have none:
-      fall back to the place name, or have the prompt write one (a prompt
-      change, so `pipeline.quality` before and after, per AGENTS.md).
-- [ ] **"What happened?" becomes Description.** (checked 2026-09-26) The same
-      `summary` field, relabelled beside the title. Decide the placeholder.
-- [ ] **A date, not a year.** (checked 2026-09-26) "When" is Today or
-      Earlier + a year (docs/08, a ponytail note: a picker is a dependency).
-      The API already takes `happened_at` with `happened_precision` down to
-      `day`, so this is the app alone. No date picker is installed:
-      `@react-native-community/datetimepicker` is the Expo-supported one.
-      Keep "only the year" possible for the 1978 case.
-- [ ] **No "Signed" field: the author is the signed-in person.**
-      (checked 2026-09-26) `Signed` (placeholder "Anonymous") sets the
-      profile-wide `display_name` from the form, also sent as
-      `SubmitRequest.display_name`. Drop the field and the request field; the
-      name comes from the account (Settings, `PUT /v1/me`). Decide what a
-      memory shows when the account has no name, and whether anonymous
-      posting stays possible at all.
-- [ ] **Drop "10 more characters".** (checked 2026-09-26) A countdown under
-      the field (`MIN_SUMMARY` in `Submit.tsx`, `min_length=10` in
-      `api/models.py`) meant as a fat-finger bar reads as a quality nag. Keep
-      Post dim until there is text, show only the `n / 2000` counter near the
-      limit, and lower the API's floor to match whatever the app enforces.
 
 ---
 

@@ -99,6 +99,7 @@ class Memory(BaseModel):
     unlock_radius_meters: int | None = None
     layer: str = "historical"
     happened_at: date | None = None
+    happened_precision: str | None = None
     attribution: str | None = None
     source_url: str | None = None
     contrast_score: float | None = None
@@ -333,8 +334,7 @@ class SubmissionRequest(BaseModel):
     lat: float = Field(ge=-90, le=90)
     lng: float = Field(ge=-180, le=180)
     place_name: str = Field(min_length=1, max_length=200)
-    # Ten characters is not a quality bar, it is a fat-finger bar.
-    summary: str = Field(min_length=10, max_length=2000)
+    summary: str = Field(min_length=1, max_length=2000)
     tags: list[str] = Field(default_factory=list, max_length=8)
     happened_at: date | None = None
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
@@ -343,23 +343,17 @@ class SubmissionRequest(BaseModel):
     # is the same thing as not sending one and needs no special case.
     opens_at: date | None = None
     media_ids: list[int] = Field(default_factory=list, max_length=6)
-    # Sent with the submission rather than requiring a separate profile call, so
-    # signing your first memory is one request.
-    display_name: str | None = Field(None, max_length=60)
 
 
 class MemoryEditRequest(BaseModel):
     """Changing a memory after it was filed. Everything a submission carries
-    except lat/lng and display_name.
-
-    No position: the pin is where you stood when you filed it, and there is no
-    map picker anywhere in this app to move it to. No display_name: that is a
-    profile-level setting PUT /v1/me already owns.
+    except lat/lng: the pin is where you stood when you filed it, and there is
+    no map picker anywhere in this app to move it to.
     """
 
     device: str = Field(pattern=DEVICE_PATTERN)
     place_name: str = Field(min_length=1, max_length=200)
-    summary: str = Field(min_length=10, max_length=2000)
+    summary: str = Field(min_length=1, max_length=2000)
     tags: list[str] = Field(default_factory=list, max_length=8)
     happened_at: date | None = None
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")

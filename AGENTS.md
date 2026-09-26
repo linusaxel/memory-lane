@@ -43,6 +43,9 @@ Read what the change touches, not everything:
 
 ## Development rules
 
+`mobile/` has no formatter: match the indentation by hand, and never run
+`npx prettier`, which downloads one with no config and rewrites whole files.
+
 ### Run the gate
 
 Two things verify this project and they answer different questions. The gate

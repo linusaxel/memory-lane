@@ -590,20 +590,19 @@ plan page, the preview, the walk, a walked day. Filing needs no walk.
 2. A full-height sheet opens. The first thing on it is not a field: it is the
    coordinate, and the sentence "other people will have to come here to read
    it".
-3. Place name, then what happened. The Post control stays dim until both are
-   real — ten characters of summary, which is a fat-finger bar and not a quality
-   bar, and the same one the API enforces.
-4. **When**: Today, or Earlier and a year. *ponytail: a year, not a date. A full
-   picker is another dependency for a field most submissions leave on Today.*
+3. **Title**, then **Description**. Post stays dim until both have text; no
+   minimum length and no countdown, and the API asks for the same. The title
+   is the place row's name (docs/10, *The title is the place name*), so it is
+   the card's heading, locked or not; the description is what the gate keeps.
+4. **When**: a date, today unless changed, from the platform's own picker. Or
+   **Only the year**, for somebody who remembers the summer and not the day.
 5. **Tags** from a closed list. The server drops anything not on it, so a
    free-text field would silently eat what somebody typed.
 6. **Photos** from the camera or the library, up to four, and one **recording**
    up to three minutes. Each one uploads the moment it is taken, so the wait is
    spent composing rather than watching a spinner after Post — and a failed
    upload costs the text nothing.
-7. **Signed** with a name, remembered between submissions. Blank is Anonymous
-   and stays a real option.
-8. Post. The memory comes back already unlocked and its sheet opens on top of
+7. Post. The memory comes back already unlocked and its sheet opens on top of
    the map: the modal closing is not a confirmation, and this is also the first
    sight of what anybody else will find here.
 
@@ -661,7 +660,8 @@ not rebuilding anything.
 ## F21 · Be somebody — **Implemented**
 
 **Who:** anybody who has filed something, or is about to.
-**Trigger:** the You sheet (top right of the map), or the Signed field at the bottom of the submit sheet.
+**Trigger:** the You sheet (top right of the map). The submit sheet asks for no
+name: a memory is signed by the account that filed it.
 
 1. A name, saved as it is typed. No Save button to forget to press.
 2. It appears under every memory they file, as "Left by —".
@@ -711,8 +711,8 @@ both would have opened a time capsule, so `not_yet_open` is checked at the top
 of `is_locked`, ahead of position, rather than anywhere either of them could
 route around.
 
-**A year, not a date**, for the same reason `happened_at` takes one: a picker is
-a dependency, and "2041" is what a person means. A year already gone is not a
+**A year, not a date**: "2041" is what a person means, and a day picked for
+it would be a promise nobody made. A year already gone is not a
 seal — the server treats a date that has come as no date at all, so there is no
 error state and nothing to validate.
 

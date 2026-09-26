@@ -467,8 +467,8 @@ are not preferences:
 
 Three things about the shape of it:
 
-- **The story leads.** "What happened?" is the first field. Somebody opens this
-  because something happened to them, not because they wanted to name a bench.
+- **Title, Description, When.** In that order, and nothing asks for a name:
+  the account filing it signs it (Settings), and a blank one is Anonymous.
 - **The rule under the header is the progress.** It fills as the two required
   fields land and turns seal when the thing can be posted - the same promise
   the unlock ring makes, and it costs a line rather than adding one. No hint

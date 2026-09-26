@@ -201,12 +201,19 @@ def test_unknown_tags_are_dropped_not_fatal(client):
 def test_a_date_without_a_precision_is_a_full_date(client):
     memory = submit(client, happened_at="1998-07-12")
     assert memory["happened_at"] == "1998-07-12"
+    assert memory["happened_precision"] == "day"
+
+
+def test_only_the_year_comes_back_as_only_the_year(client):
+    """The edit form reads it to reopen on the year, not on 1 January."""
+    memory = submit(client, happened_at="1978-01-01", happened_precision="year")
+    assert memory["happened_precision"] == "year"
 
 
 @pytest.mark.parametrize(
     "bad",
     [
-        {"summary": "too short"},
+        {"summary": ""},
         {"place_name": ""},
         {"lat": 91},
         {"device": "not-a-uuid"},
@@ -224,13 +231,6 @@ def test_naming_yourself_signs_the_memory(client):
     dev = device()
     client.put("/v1/me", json={"device": dev, "display_name": "  Lise  "})
     assert submit(client, device=dev)["author"]["name"] == "Lise"
-
-
-def test_a_name_sent_with_the_submission_is_enough(client):
-    """Signing your first memory should be one request, not two."""
-    dev = device()
-    assert submit(client, device=dev, display_name="Bo")["author"]["name"] == "Bo"
-    assert client.get(f"/v1/me?device={dev}").json()["display_name"] == "Bo"
 
 
 def test_a_blank_name_is_anonymous_again(client):

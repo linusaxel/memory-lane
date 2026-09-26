@@ -299,6 +299,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         confidence=row.extraction_confidence or "medium",
         layer=getattr(row, "layer", None) or "historical",
         happened_at=getattr(row, "happened_at", None),
+        happened_precision=getattr(row, "happened_precision", None),
         attribution=getattr(row, "attribution", None),
         source_url=getattr(row, "source_url", None),
         contrast_score=getattr(row, "contrast_score", None),
