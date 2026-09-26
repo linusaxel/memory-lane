@@ -33,6 +33,13 @@ delete an entry when its fix lands.
       only). Once the video filter runs first, the fetch is only paid for
       videos that will be extracted. Blocks nothing until something serves it.
 
+- [ ] **A note on a walk's stop doesn't save.** (checked 2026-09-26)
+      `walk-and-unlock.yml` fails at `Assert that "Rewrite" is visible` after
+      typing a note on an unlocked stop and pressing Enter, 3 of 3 random
+      starts (E2E_START=55.67559,12.575547 replays one). The same steps pass in
+      `file-and-edit.yml` on your own memory, so look at what the stop's sheet
+      posts. The walk and unlocks before it pass.
+
 ---
 
 ## Phase 0 — Design questions
@@ -113,12 +120,14 @@ missing is a source.
 
 ## Copenhagen journeys
 
-- [ ] **Walk-and-unlock from three random starts.** (checked 2026-09-24) Was
-      "walk 10x faster": walk-and-unlock ran out of its 300 s `FLOW_TIMEOUT`
-      at stop 4 from 55.682454,12.585062. `eea45ed` replaced `travel` with
-      one `setLocation` per street point (walk flow 204 s → 143 s), so the
-      speed knob is gone. **Done when:** `./e2e/run.sh` passes all three flows
-      from three random starts; not yet run.
+- [ ] **The route length asked for doesn't match what the map draws.**
+      (checked 2026-09-26: reported by the founder, not measured yet) The plan
+      slider's km (`mobile/src/Plan.tsx`) goes to the solver as
+      `budget_meters`; the walk drawn on the map reads as a different length.
+      First measure it: the drawn geometry's length against the budget, over
+      a few starts and lengths (`e2e/travel.py` plans the same walk offline).
+      Then decide whether the solver undershoots or the label should say what
+      was drawn.
 - [ ] **A Copenhagen journey in Maestro.** (checked 2026-09-24: no such flow in
       `.maestro/`) e.g. `.maestro/lakes-loop.yml`: `setLocation` on Olufsvej,
       set the slider to the measured loop (~9.1 km), preview, and assert a
