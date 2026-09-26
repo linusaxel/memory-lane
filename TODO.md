@@ -27,12 +27,6 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **A year-only date is "on this day" every 1 January.** (checked
-      2026-09-26) `ANNIVERSARY` in `api/queries.py` compares month and day
-      and ignores `happened_precision`, so an extracted memory with year
-      precision (stored as `YYYY-01-01`), or an app submission filed before
-      2026-09-26 as Earlier + a year, is resurfaced on New Year's Day. Fix: require
-      `happened_precision = 'day'` in that expression.
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.
       A real date needs a per-video fetch or the channel RSS feed (newest 15
@@ -68,35 +62,13 @@ live requests. Order is priority.
 
 **This week**
 
-- [x] **DAWA resolves Danish places; the LLM only picks which place.**
-      Done 2026-09-26, and widened the same day to a worldwide chain (DAWA,
-      Photon, Wikidata; docs/10, *The LLM names the place; free geocoders
-      place it*). New extractions only; backfill not done.
-      ⚠️ The `address` and `country` prompt fields are **unmeasured**: the
-      account had no credits. Run `pipeline.quality` (video, and
-      `--source-type newspaper`) before and after, and extract content 160
-      (Blaagaardsgade, already ingested) to see a geocoded place.
-      (checked 2026-09-26) `https://api.dataforsyningen.dk/adresser?q=<address>`:
-      free, no key, WGS84, and it fuzzy-matches OCR'd spellings
-      ("Blaagaardsgade" → "Blågårdsgade"). Replaces model-guessed coordinates
-      (docs/10, *The coordinates are mostly guesses*) and their cost. Today the
-      model's coordinates go straight into `places` (`pipeline/extract.py`,
-      `geocode_status`).
-- [x] **Newspaper ingestion from KB Labs.** Done 2026-09-26:
-      `python -m pipeline.ingest --source kb-aviser --query <street>`. `pwa`
-      (OCR confidence) sits near 50 on every 1856 page, so nothing is filtered on it. (checked 2026-09-26) `GET
-      https://labs.statsbiblioteket.dk/labsapi/api/aviser/export/fields` with
-      `query`, `fields` (link, recordID, timestamp, familyId, fulltext_org),
-      `max`, `structure=header&structure=content`, `format=CSV`. Free, no key,
-      returned real 1856 text. ⚠️ Only papers over 140 years old (~pre-1886),
-      not negotiable without an institutional agreement. OCR is rough
-      Fraktur: expect garbled place names, drop low confidence. Many hits are
-      classified-ad pages, addresses with no event: filter articles from ads
-      or accept the noise. Query by street name to keep extraction targeted.
 - [ ] **Email it@historiskatlas.dk for API access.** (checked 2026-09-26) An
       open-data association of 220+ archives, museums and libraries, seeking
       partners. Say the use and the attribution. Needed because the per-story
-      licence ("Geo" in their API) is not on the public pages.
+      licence ("Geo" in their API) is not on the public pages. Until then the
+      sitemap source has title and intro only (`contents` and `tag_geos` null).
+      Also a partial competitor: judge their neighbourhood-level content
+      before building on it.
 - [ ] **Email kbhbilleder@kff.kk.dk.** (checked 2026-09-26) 41,779 historical
       photos, maps and drawings (Copenhagen Museum + City Archives), ~5,000
       out of copyright and commercially usable, many already geotagged by
@@ -106,16 +78,10 @@ live requests. Order is priority.
 
 **Next**
 
-- [x] **Historisk Atlas via its sitemap.** Done 2026-09-26:
-      `python -m pipeline.ingest --source historisk-atlas --query Sabotage`
-      (884 titles match; title and intro only, 1 s between pages). The atlas's
-      point goes to the model as text, so a geocoder hit can move it (docs/10,
-      *Sources are a Protocol and a registry*). ⚠️ Not ingested or extracted:
-      no credits. ⚠️ Only ~8% of stories fall in Copenhagen and titles rarely
-      say where: a bounding box in `fetch` before billing a big batch.
-      ⚠️ `contents` and `tag_geos` stay null until the API email is answered.
-      ⚠️ Also a partial competitor: judge their neighbourhood-level content
-      before building on it. (checked 2026-09-26)
+- [ ] **Ingest the sabotage set, Copenhagen only.** (checked 2026-09-26) Free:
+      `python -m pipeline.ingest --source historisk-atlas --query Sabotage
+      --limit 1000 --bbox 55.60,12.45,55.74,12.66` (884 titles, ~8% in
+      Copenhagen, 1 s a page). Extracting it bills: waits on `API_CREDITS`.
 - [ ] **Kraks Vejviser and older address directories.** (checked 2026-09-26)
       Pre-1900 editions at kb.dk carry a public domain mark (commercial use
       with credit); Copenhagen Libraries host digitised volumes at
@@ -263,7 +229,13 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
       funded: one video, `quality --compare` against the old prompt, the
       pending episodes, `review`, then `classifier_audit`. The 22 clips
       extracted before the video filter probably duplicate their episodes'
-      memories; look at them in `review` or `dedup`.
+      memories; look at them in `review` or `dedup`. Also unmeasured: the
+      `address` and `country` prompt fields (the geocoder chain, docs/10
+      *The LLM names the place; free geocoders place it*). Run
+      `pipeline.quality` (video, and `--source-type newspaper`) before and
+      after, and extract content 160 (Blaagaardsgade) to see a geocoded place.
+      New extractions only; no backfill yet. KB papers: `pwa` sits near 50 on
+      every 1856 page, so nothing is filtered on it; expect ad-page noise.
 - [ ] **`DEPLOY`** (checked 2026-09-20) — Railway, ~$5/mo. Not Fly: Fly's
       managed Postgres has no PostGIS. Unblocks Phase 2 and an OSRM sidecar
       (~1.6 GB RAM to build).
