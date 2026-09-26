@@ -7,6 +7,7 @@ checked, so it filters nothing and is not asked for.
 
 import csv
 import io
+import re
 import urllib.parse
 import urllib.request
 
@@ -16,6 +17,22 @@ FIELDS = ("link", "recordID", "timestamp", "familyId", "fulltext_org")
 # ponytail: length is the only ad filter; a classifier if the hand count shows
 # classified-ad pages cost more than the prompt already rejects.
 MIN_CHARS = 200
+# ponytail: a guess; tune it from the three-street hand count.
+WINDOW_CHARS = 1500
+
+
+def _windows(text: str, query: str) -> str:
+    """Only the text around each mention of the query: a page runs to 11k
+    characters of classified ads, and the model is billed for all of them.
+    No mention (OCR broke the word) keeps the whole text."""
+    spans = []
+    for m in re.finditer(re.escape(query), text, re.IGNORECASE):
+        start, end = max(0, m.start() - WINDOW_CHARS), m.end() + WINDOW_CHARS
+        if spans and start <= spans[-1][1]:
+            spans[-1][1] = end
+        else:
+            spans.append([start, end])
+    return "\n…\n".join(text[a:b].strip() for a, b in spans) if spans else text
 
 
 class KbAviser:
@@ -39,6 +56,6 @@ class KbAviser:
                     # content.url; the fragment still opens the page.
                     "source_url": f"{row['link']}#{row['recordID'].rsplit('-', 1)[-1]}",
                     "title": f"{row['familyId']} {row['timestamp'][:10]}",
-                    "text": body,
+                    "text": _windows(body, query),
                     "language": "da",
                 }

@@ -47,8 +47,9 @@ Content URLs → Transcripts → LLM Extraction (with coords) → Query API
 4. **API** - Serve nearby memories by lat/lng query
 
 There is no separate geocoding stage. Claude returns coordinates as part of
-extraction. The one exception is a Danish address, which DAWA places instead
-(docs/10-decisions.md#dawa-places-danish-addresses).
+extraction as a fallback; free geocoders (DAWA, Photon, Wikidata) place the
+venue or address it names first
+(docs/10-decisions.md#the-llm-names-the-place-free-geocoders-place-it).
 
 ## Data Model
 

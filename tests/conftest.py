@@ -35,6 +35,17 @@ ROUTE_SEED = random.randrange(2**32) if _seed == "random" else int(_seed)
 
 
 @pytest.fixture(autouse=True)
+def _no_geocoders(request, monkeypatch):
+    """save_memories asks the geocoders about every venue. Off unless a test
+    installs fakes, or is `live`; the socket guard below would catch it anyway,
+    but as a RuntimeError nowhere near the cause."""
+    if not request.node.get_closest_marker("live"):
+        from pipeline import geocode
+
+        monkeypatch.setattr(geocode, "GEOCODERS", [])
+
+
+@pytest.fixture(autouse=True)
 def _no_network(request, monkeypatch):
     """Only `live` tests leave this machine. A fake that covered one crawler
     call but not its sibling had eight ingest tests asking YouTube about

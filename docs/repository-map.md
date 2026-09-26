@@ -40,7 +40,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/sources.py` | **Text sources:** the `Source` interface and `SOURCES`. A new source is one file and one line here |
 | `crawler/kb_aviser.py` | KB Labs newspapers (pre-1886), searched by street |
 | `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB (expands `channel:` sources); `--source <name> --query <q>` runs a text source |
-| `pipeline/geocode.py` | DAWA: a Danish address to coordinates, with the two guards the live API needs |
+| `pipeline/geocode.py` | **Places what the model names:** DAWA, Photon, Wikidata behind one guard, `place()` |
 | `pipeline/transcripts.py` | Fetches YouTube transcripts via youtube-transcript-api |
 | `pipeline/extract.py` | **Core logic** - Claude extracts memories + coordinates (sequential) |
 | `pipeline/tasks.py` | RQ tasks for parallel extraction with Haiku pre-filter |

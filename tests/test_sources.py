@@ -53,3 +53,16 @@ def test_a_source_ingests_as_its_own_type(kb, ingest_into, db_session):
         )
     ).one()
     assert (row.source_type, row.language) == ("newspaper", "da")
+
+
+def test_only_the_text_around_the_street_is_kept():
+    page = "x" * 5000 + " Blaagaardsgade 12 " + "y" * 5000
+    kept = kb_aviser._windows(page, "blaagaardsgade")
+    assert "Blaagaardsgade 12" in kept
+    assert len(kept) < 2 * kb_aviser.WINDOW_CHARS + 100
+
+
+def test_two_close_mentions_are_one_window_and_no_mention_keeps_everything():
+    page = "a" * 3000 + "Gade" + "b" * 100 + "Gade" + "c" * 3000
+    assert "…" not in kb_aviser._windows(page, "Gade")
+    assert kb_aviser._windows("nothing here", "Gade") == "nothing here"

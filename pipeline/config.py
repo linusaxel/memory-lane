@@ -43,3 +43,8 @@ DB_STATEMENT_TIMEOUT_MS = int(os.getenv("DB_STATEMENT_TIMEOUT_MS", "30000"))
 # An OSRM `foot` server (osrm/build.sh) for today's route. Empty means
 # crow-flies - api/streets.py.
 ROUTING_URL = (os.getenv("ROUTING_URL") or "").rstrip("/") or None
+
+# Photon, the OpenStreetMap geocoder (pipeline/geocode.py). The public server
+# asks for about one request a second; a self-hosted country extract is the
+# same API at another URL.
+PHOTON_URL = (os.getenv("PHOTON_URL") or "https://photon.komoot.io").rstrip("/")

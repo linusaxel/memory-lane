@@ -769,7 +769,9 @@ optional `lat`/`lng`, and `ingest_records` somewhere to put them.
 
 ### DAWA places Danish addresses
 
-Status: Accepted 2026-09-26
+Status: Superseded 2026-09-26 by *The LLM names the place; free geocoders place
+it*, below. DAWA is now one national plug-in in that chain, and the `aa` → `å`
+rule became the model's job (`address` in today's spelling).
 
 The historical prompt asks for `address`, the street and number as the source
 wrote them. For a Danish place, `pipeline/geocode.py` asks DAWA
@@ -792,6 +794,52 @@ everything tested `C`, including the nonsense street.
 **Consequences:** new extractions only; existing places keep their model
 coordinates until a backfill earns its place. A miss or a network failure keeps
 the model's coordinate, which is what happened before.
+
+### The LLM names the place; free geocoders place it
+
+Status: Accepted 2026-09-26
+
+The model reads a messy transcript and decides *which* place is meant
+("Vega, Copenhagen"); it is bad at *where*. GPSBench (arXiv 2602.16105): under
+25% city-level accuracy for every model, though ~80% of misses still get the
+country. Our own corpus: 93 of 361 model-placed places share a point.
+
+So `save_memories` hands `address`, `venue`, `locality` and `country` to
+`pipeline/geocode.py:place()`, which asks a chain of free geocoders, anywhere:
+
+| Geocoder | What it knows | Licence |
+|---|---|---|
+| DAWA | Danish addresses (`country == "DK"` only) | Danish public data, free |
+| Photon (`PHOTON_URL`) | OpenStreetMap: addresses and venues worldwide | Free; public server ~1 req/s, self-host a country extract for more |
+| Wikidata | Notable places, including closed ones (CBGB) | CC0 |
+
+Every one of them answers almost anything, so one guard judges them all, with
+the trap each rule exists for (all found live, 2026-09-26):
+
+- **The name must match** (`difflib` ≥ 0.85, street for an address, name for a
+  venue). Photon answered "Blaagaardsgade 12" with Moltkes Palæ.
+- **A city is not a place.** Photon put CBGB, closed in 2006, on the centre of
+  New York. Refused, and Wikidata answers instead.
+- **Within 25 km of the model's guess.** The model gets the city right when it
+  gets the street wrong; that is what catches a same-name place elsewhere.
+- **Precision comes from what matched, not from the model.** A house number
+  before 1900 is street-level: cities renumbered (Copenhagen in 1859).
+
+No surviving hit keeps the model's coordinate as `'llm'`. `geocode_status`
+records which geocoder placed a pin: `dawa`, `photon`, `wikidata`.
+
+**Options considered:** Google keeps coordinates for 30 days and only on a
+Google map; Mapbox's cheap tier forbids storing; HERE and TomTom cache 30 days.
+We store coordinates forever, so all are out. Nominatim's public server
+discourages bulk use. OpenCage allows storage but is €45/month past testing;
+Geoapify's free tier is the fallback if Photon's public server stops serving us.
+
+**Consequences:** OpenStreetMap's licence
+([geocoding guideline](https://osmfoundation.org/wiki/Licence/Community_Guidelines/Geocoding_-_Guideline))
+lets us store its geocodes with no share-alike on our other data, on condition
+of credit: a `'photon'` place's card says "Place © OpenStreetMap contributors"
+(`api/card.py:place_credit`). The app does not show that yet. Geocoding costs
+no tokens and saves none either: coordinates are ~20 output tokens a memory.
 
 ### Summary quality is measured, not asserted
 

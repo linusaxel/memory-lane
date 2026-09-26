@@ -72,6 +72,12 @@ For each memory, extract:
        than leaving it blank because two candidates are close together.</why>
 </example>
 
+- country: ISO 3166 two-letter code of the country the venue is in ("US",
+  "DK"). Null only if you genuinely do not know.
+- address: The street and house number, if the transcript names one, written in
+  today's spelling even when the transcript uses an old one ("Blaagaardsgade 12"
+  becomes "Blågårdsgade 12"). Null if no street is named. A geocoder places
+  the pin from this and the venue; your lat / lng is only the fallback.
 - lat: Latitude estimate (decimal degrees, e.g., 48.8566)
 - lng: Longitude estimate (decimal degrees, e.g., 2.3522)
 - timestamp_start: When place is first mentioned (from [timestamp] markers in input)
@@ -195,9 +201,12 @@ For each memory, extract:
        instead of minting a new place.</why>
 </example>
 
-- address: The street and house number exactly as the text writes them, old
-  spelling and all ("Blaagaardsgade 12"). Null if the text names no street. In
-  Denmark this, not your lat / lng, decides where the pin goes.
+- country: ISO 3166 two-letter code of the country the venue is in ("US",
+  "DK"). Null only if you genuinely do not know.
+- address: The street and house number, if the text names one, written in
+  today's spelling even when the text uses an old one ("Blaagaardsgade 12"
+  becomes "Blågårdsgade 12"). Null if no street is named. A geocoder places
+  the pin from this and the venue; your lat / lng is only the fallback.
 - lat / lng: Decimal degrees
 - happened_at: ISO date of the EVENT - "1978-06-17", "1978-06", or "1978". Null if
   the text gives no date. This is when it happened, not when it was written about.
@@ -255,6 +264,7 @@ MEMORY_SCHEMA = {
                     "locality": {"type": "string"},
                     "region": _NULLABLE_STRING,
                     "address": _NULLABLE_STRING,
+                    "country": _NULLABLE_STRING,
                     "lat": {"type": "number"},
                     "lng": {"type": "number"},
                     "timestamp_start": {"type": "number"},
@@ -678,13 +688,18 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
 
         precision = precision_to_meters(mem.get("location_precision", "street"))
         status = "llm"
-        address = (mem.get("address") or "").strip()
-        if address and region and any(w in region.lower() for w in ("denmark", "danmark")):
-            happened = _happened_at(mem)
-            hit = geocode.dawa(address, locality, int(happened[:4]) if happened else None)
-            if hit:
-                lat, lng, precision = hit
-                has_coords, status = True, "dawa"
+        happened = _happened_at(mem)
+        hit = geocode.place(
+            (mem.get("address") or "").strip() or None,
+            venue,
+            locality,
+            (mem.get("country") or "").strip() or None,
+            (lat, lng) if has_coords else None,
+            int(happened[:4]) if happened else None,
+        )
+        if hit:
+            lat, lng, precision, status = hit
+            has_coords = True
 
         params = {
             "name": _place_name(venue, locality)

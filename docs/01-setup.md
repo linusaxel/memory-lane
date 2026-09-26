@@ -29,6 +29,7 @@ pip install -r requirements.txt
 | `CHUNK_OVERLAP_SECONDS` | No | Chunk overlap (default: 30) |
 | `MIN_VIDEO_MINUTES` | No | Shorter videos (clips cut from episodes) are never transcribed or extracted (default: 20). Backfill old rows with `python -m pipeline.ingest --refresh-sources` |
 | `TRANSCRIPT_PROXY` | No | `http://user:pass@host:port`. YouTube blocks IPs that fetch many transcripts, and cloud IPs outright. A block stops the run, rows stay pending |
+| `PHOTON_URL` | No | The OpenStreetMap geocoder (default: the public `https://photon.komoot.io`, ~1 req/s). A self-hosted country extract is the same API |
 | `TRANSCRIPT_DELAY_SECONDS` | No | Mean jittered pause between transcript fetches (default: 1.5) |
 | `ROUTE_SIZE`, `ROUTE_LOOP` | No | Today's route: the fewest stops it aims for (default: 5; above 5 km, about one a km), and whether it comes back to where it started unless the request says (default: 1; `0` is one-way). The walk length is the app's slider, sent as `budget_meters`; candidates come from within half of it |
 | `ROUTING_URL` | No | An OSRM `foot` server. Empty or down means crow-flies × 1.3 and straight lines. Local: `./osrm/build.sh` once, then `docker compose --profile routing up -d osrm` and `ROUTING_URL=http://localhost:5001` |
@@ -43,8 +44,9 @@ pip install -r requirements.txt
 Every one is read once, in `pipeline/config.py`; add new ones there.
 The app has its own, baked in at dev-server start - see `mobile/.env.example`.
 
-Note: geocoding is handled by Claude during extraction, except that a Danish
-address is placed by DAWA (free, no key). There is no geocoding stage.
+Note: there is no geocoding stage. During extraction Claude names the place and
+`pipeline/geocode.py` places it with free geocoders (DAWA, Photon, Wikidata, no
+keys); Claude's own coordinate is the fallback.
 
 ## Database
 

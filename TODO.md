@@ -83,12 +83,16 @@ live requests. Order is priority.
 **This week**
 
 - [x] **DAWA resolves Danish places; the LLM only picks which place.**
-      Done 2026-09-26: `pipeline/geocode.py`, new extractions only (docs/10,
-      *DAWA places Danish addresses*). Backfill of existing places not done.
-      ⚠️ The `address` prompt field is **unmeasured**: the account had no
-      credits. Run `pipeline.quality --source-type newspaper` before and after,
-      and extract content 160 (Blaagaardsgade, already ingested) to see a
-      `'dawa'` place.
+      Done 2026-09-26, and widened the same day to a worldwide chain (DAWA,
+      Photon, Wikidata; docs/10, *The LLM names the place; free geocoders
+      place it*). New extractions only; backfill not done.
+      ⚠️ The `address` and `country` prompt fields are **unmeasured**: the
+      account had no credits. Run `pipeline.quality` (video, and
+      `--source-type newspaper`) before and after, and extract content 160
+      (Blaagaardsgade, already ingested) to see a geocoded place.
+- [ ] **Credit OpenStreetMap in the app.** (checked 2026-09-26) Its licence is
+      the condition for storing Photon's geocodes. The shared card does it
+      (`api/card.py:place_credit`); the app has no credits screen yet.
       (checked 2026-09-26) `https://api.dataforsyningen.dk/adresser?q=<address>`:
       free, no key, WGS84, and it fuzzy-matches OCR'd spellings
       ("Blaagaardsgade" → "Blågårdsgade"). Replaces model-guessed coordinates
