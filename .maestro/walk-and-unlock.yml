@@ -157,10 +157,13 @@ appId: ${APP_ID}
     timeout: 30000
 # F33: one note each, and posting again rewrites it rather than adding one.
 # Return sends, because on a long memory the send link is under the keyboard.
+# Centred, because Maestro calls the field visible while the pinned "Left by"
+# footer still covers it, and the tap would land on the footer.
 - scrollUntilVisible:
     element:
       id: "note"
     direction: DOWN
+    centerElement: true
 - tapOn:
     id: "note"
 - inputText: "Stood here at dawn."

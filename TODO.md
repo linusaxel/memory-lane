@@ -33,13 +33,6 @@ delete an entry when its fix lands.
       only). Once the video filter runs first, the fetch is only paid for
       videos that will be extracted. Blocks nothing until something serves it.
 
-- [ ] **A note on a walk's stop doesn't save.** (checked 2026-09-26)
-      `walk-and-unlock.yml` fails at `Assert that "Rewrite" is visible` after
-      typing a note on an unlocked stop and pressing Enter, 3 of 3 random
-      starts (E2E_START=55.67559,12.575547 replays one). The same steps pass in
-      `file-and-edit.yml` on your own memory, so look at what the stop's sheet
-      posts. The walk and unlocks before it pass.
-
 ---
 
 ## Phase 0 — Design questions
