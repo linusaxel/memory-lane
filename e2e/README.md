@@ -176,6 +176,11 @@ Things that cost an afternoon each to discover.
    it Inside and sends no Enter. Registration lands a second or two after the
    toggle, so stand still outside every fence for a few seconds first
    (`extendedWaitUntil` with `optional: true` is the pause).
+8. **A tap on a button at the bottom does nothing: check `e2e/out/logs/metro.log`
+   for `WARN`.** Any `console.warn` raises the dev build's "Open debugger to
+   view warnings" toast over the bottom of the screen, and the tap lands on it.
+   Fix the warning; a retry only hides it. (A deprecated DateTimePicker
+   `onChange` covered the sheet's Close.)
 
 Coordinates and `dev seed` place names in the YAML are held against
 `pipeline/seed_dev.py` by `tests/test_flows.py::test_maestro_flows_still_point_at_the_seed`,

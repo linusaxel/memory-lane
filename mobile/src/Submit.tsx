@@ -396,7 +396,7 @@ export default function Submit({
                   mode="date"
                   display="compact"
                   maximumDate={new Date()}
-                  onChange={(_, picked) => picked && setDay(picked)}
+                  onValueChange={(_, picked) => setDay(picked)}
                 />
               ) : (
                 // Android's picker is a dialog, not an inline control.
@@ -407,7 +407,7 @@ export default function Submit({
                       value: day,
                       mode: 'date',
                       maximumDate: new Date(),
-                      onChange: (_, picked) => picked && setDay(picked),
+                      onValueChange: (_, picked) => setDay(picked),
                     })
                   }
                 />
