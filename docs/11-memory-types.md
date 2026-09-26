@@ -77,14 +77,13 @@ family, work, strange`. `clean()` (`pipeline/tags.py:29-40`) lowercases,
 dedups, and silently drops anything outside this closed list — *"one tag
 vocabulary, not two"* (`docs/10-decisions.md#one-tag-vocabulary-not-two`).
 
-A submission's chip picker offers a narrower ten-word subset,
-`SUBMISSION_TAGS` in `api/write.py:52-65` — chosen for somebody filing their
-own memory rather than for a podcast transcript — but the server still
-accepts any of the full eighteen from a client that sends one directly; the
-chips are a UI convenience, not a second, stricter vocabulary.
+That list is the extractor's. A submission's tags are open: the #words its
+author wrote in the description (`from_text` in `pipeline/tags.py`), since
+2026-09-26 (`docs/10-decisions.md#tags-come-from-the-text-and-a-walk-has-no-theme`).
 
 Tags say nothing about layer or confidence, and they never reach the map:
-`Memory.tags` is rendered only inside the detail sheet. (Pins carried a
+`Memory.tags` shows only as the locked peek's first word, and a submission's
+#words highlighted in its own text. (Pins carried a
 dominant-tag glyph from 2026-09-22 to 2026-09-23; it went with the one-pin
 simplification below.)
 

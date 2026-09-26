@@ -470,11 +470,6 @@ WHERE
     AND {VISIBLE}
     AND {WITHIN}
     AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
-    AND (
-        CAST(:tag AS varchar) IS NULL
-        OR CAST(:tag AS varchar) = ANY(m.tags)
-        OR m.id = CAST(:include AS integer)
-    )
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )

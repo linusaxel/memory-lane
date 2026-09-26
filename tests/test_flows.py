@@ -160,8 +160,7 @@ def test_f5_a_filed_memory_comes_back_already_open(seeded):
         "lat": lat,
         "lng": lng,
         "place_name": "The steps on the north side",
-        "summary": "Somebody had left a whole birthday cake on the step, uncut.",
-        "tags": ["food"],
+        "summary": "Somebody had left a whole birthday cake on the step, uncut. #food",
     }
     created = seeded.post("/v1/memories", json=draft)
     assert created.status_code == 201

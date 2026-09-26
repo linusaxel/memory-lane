@@ -89,14 +89,14 @@ def test_editing_changes_the_visible_fields(client):
         json={
             "device": dev,
             "place_name": "The other bench",
-            "summary": "We came back and it was gone.",
-            "tags": ["nature"],
+            "summary": "We came back and it was gone. #nature",
             "media_ids": [],
         },
     ).json()
 
     assert edited["place"]["name"] == "The other bench"
-    assert edited["summary"] == "We came back and it was gone."
+    assert edited["summary"] == "We came back and it was gone. #nature"
+    # Re-read from the new words: the old ones' tags go with them.
     assert edited["tags"] == ["nature"]
 
 
@@ -112,7 +112,6 @@ def test_a_renamed_place_still_matches_search(client):
             "device": dev,
             "place_name": "Nyhavn kiosk",
             "summary": memory["summary"],
-            "tags": [],
             "media_ids": [],
         },
     )
@@ -129,7 +128,6 @@ def test_an_unrelated_device_cannot_edit(client):
             "device": device(),
             "place_name": "Stolen",
             "summary": "Not mine to change.",
-            "tags": [],
             "media_ids": [],
         },
     )
@@ -163,7 +161,6 @@ def test_a_second_device_on_the_same_account_may_edit(client, db_session):
             "device": dev_b,
             "place_name": "Edited from the other phone",
             "summary": memory["summary"],
-            "tags": [],
             "media_ids": [],
         },
     )
@@ -182,7 +179,6 @@ def test_editing_can_add_and_remove_photos(client, tmp_path):
             "device": dev,
             "place_name": memory["place"]["name"],
             "summary": memory["summary"],
-            "tags": [],
             "media_ids": [second["id"]],
         },
     ).json()
@@ -204,7 +200,6 @@ def test_editing_cannot_adopt_somebody_elses_upload(client):
             "device": dev,
             "place_name": memory["place"]["name"],
             "summary": memory["summary"],
-            "tags": [],
             "media_ids": [somebody_elses["id"]],
         },
     )

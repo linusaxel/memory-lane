@@ -427,7 +427,6 @@ def _plan_route(
     budget_meters: int,
     route_date,
     loop: bool = ROUTE_LOOP,
-    tag: str | None = None,
     again: int = 0,
     include: int | None = None,
     end: Coordinates | None = None,
@@ -465,7 +464,6 @@ def _plan_route(
             "radius_meters": budget_meters / 2,
             "device_id": device,
             "limit": ROUTE_POOL,
-            "tag": tag,
             "include": include,
         },
     ).fetchall()

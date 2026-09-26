@@ -18,7 +18,6 @@ included, not just the one somebody complained about.
 """
 
 import pathlib
-import re
 import uuid
 
 import pytest
@@ -64,8 +63,7 @@ def submission(**overrides) -> dict:
         "lat": LAT,
         "lng": LNG,
         "place_name": "The bench by the harbour",
-        "summary": "We sat here until it got light and nobody wanted to say so.",
-        "tags": ["drink", "music"],
+        "summary": "We sat here until it got light and nobody wanted to say so. #drink #music",
     }
     body.update(overrides)
     return body
@@ -191,11 +189,18 @@ def test_standing_there_still_opens_it(client, db_session):
     assert "until it got light" in opened["summary"]
 
 
-def test_unknown_tags_are_dropped_not_fatal(client):
-    """Tags are a filing convenience. Losing one is not worth losing the memory,
-    and free text would be a soup of one-offs inside a week."""
-    memory = submit(client, tags=["music", "MUSIC", "  drink ", "crimes", ""])
-    assert memory["tags"] == ["music", "drink"]
+def test_the_tags_are_the_hashtags_in_the_description(client):
+    """Written, not picked: any #word, lowercased, first use first. The #word
+    stays in the text, where the app highlights it."""
+    memory = submit(client, summary="Tacos at 2am #Food #smørrebrød, then #food again")
+    assert memory["tags"] == ["food", "smørrebrød"]
+    assert "#Food" in memory["summary"]
+
+
+def test_a_tags_field_is_not_how_tags_arrive(client):
+    """An app from before hashtags still posts; its chips are ignored."""
+    memory = submit(client, summary="Nothing tagged here.", tags=["music"])
+    assert memory["tags"] == []
 
 
 def test_a_date_without_a_precision_is_a_full_date(client):
@@ -210,7 +215,6 @@ def test_a_date_without_a_precision_is_a_full_date(client):
         {"place_name": ""},
         {"lat": 91},
         {"device": "not-a-uuid"},
-        {"tags": ["music"] * 9},
     ],
 )
 def test_a_malformed_submission_is_refused(client, bad):
@@ -479,27 +483,7 @@ def test_media_is_served_with_sniffing_switched_off(client):
         served.unlink(missing_ok=True)
 
 
-# -- one vocabulary, three places -----------------------------------------------
-
-
-def _app_chips() -> list[str]:
-    """SUBMISSION_TAGS as mobile/src/api.ts declares it."""
-    source = (pathlib.Path(__file__).resolve().parents[1] / "mobile/src/api.ts").read_text()
-    body = re.search(r"SUBMISSION_TAGS = \[(.*?)\]", source, re.S)
-    assert body, "mobile/src/api.ts no longer declares SUBMISSION_TAGS"
-    return re.findall(r"'([a-z]+)'", body.group(1))
-
-
-def test_the_app_offers_exactly_the_chips_the_server_does():
-    """mobile/UI.md calls this out as a lie risk with nothing enforcing it.
-    A tag the app offers and the server drops vanishes with a 201."""
-    assert _app_chips() == write.SUBMISSION_TAGS
-
-
-def test_every_chip_is_in_the_vocabulary():
-    """The bug this closes: the app offered `sport`, the corpus stored `sports`,
-    and `m.tags && …` is exact-string - so that chip matched nothing."""
-    assert set(write.SUBMISSION_TAGS) <= set(TAGS)
+# -- the extractor's vocabulary -----------------------------------------------
 
 
 def test_the_extractor_is_held_to_the_same_list():

@@ -16,7 +16,7 @@
 import Slider from '@react-native-community/slider';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { SUBMISSION_TAGS, type WalkAsk } from './api.ts';
+import type { WalkAsk } from './api.ts';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
 import { button, buttonText, color, dim, font, label } from './theme.ts';
@@ -85,7 +85,7 @@ export function Plan({
         <Chip label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true, end: null })} />
         <Chip label="One way" on={!ask.loop} onPress={() => onAsk({ ...ask, loop: false })} />
       </View>
-      {/* Like the theme: a second tap lets the end go. */}
+      {/* A second tap lets the end go. */}
       {!ask.loop && (
         <View style={styles.chips}>
           <Chip
@@ -95,19 +95,8 @@ export function Plan({
           />
         </View>
       )}
-      {/* One theme or none: a second tap on the chosen one lets it go. */}
-      <View style={styles.chips}>
-        {SUBMISSION_TAGS.map((tag) => (
-          <Chip
-            key={tag}
-            label={tag}
-            on={ask.tag === tag}
-            onPress={() => onAsk({ ...ask, tag: ask.tag === tag ? null : tag })}
-          />
-        ))}
-      </View>
       <Text style={styles.note}>
-        {`Five${ask.tag ? ` ${ask.tag}` : ''} memories${through ? `, through ${through}` : ''}, ${
+        {`Five memories${through ? `, through ${through}` : ''}, ${
           ask.loop
             ? 'looping back to where you start'
             : ask.end

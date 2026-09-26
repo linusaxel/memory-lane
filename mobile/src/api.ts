@@ -341,7 +341,7 @@ export async function fetchTodaysRoute(
 /** How the walk is asked for, beyond its length. Preview and accept must send
  *  the same, or the accept plans a different walk from the one shown. `end` is
  *  where a one-way walk finishes; the server stores it nowhere. */
-export type WalkAsk = { loop: boolean; tag: string | null; end: Coordinates | null };
+export type WalkAsk = { loop: boolean; end: Coordinates | null };
 
 /** Why a walk through `include` was refused: too short to reach it (and the
  *  length that would), or it cannot be a stop at all. Null for anything else. */
@@ -373,7 +373,6 @@ export async function previewRoute(
     loop: String(ask.loop),
     again: String(again),
   });
-  if (ask.tag) params.set('tag', ask.tag);
   if (include !== null) params.set('include', String(include));
   if (ask.end) {
     params.set('end_lat', String(ask.end.lat));
@@ -399,7 +398,6 @@ export async function acceptRoute(
       lng: at.lng,
       budget_meters: budgetMeters,
       loop: ask.loop,
-      tag: ask.tag,
       again,
       include,
       end: ask.end,
@@ -465,32 +463,13 @@ export type Profile = {
 
 export type Draft = {
   place_name: string;
+  /** Its #words are the tags (hashtags.ts); there is no separate field. */
   summary: string;
-  tags: string[];
   /** ISO date, or null when the person did not say when. */
   happened_at: string | null;
   happened_precision: 'day' | 'year' | null;
   media_ids: number[];
 };
-
-/**
- * The chips a submission may carry. Mirrored from `api/write.py`, and
- * `tests/test_api_submit.py` fails if the two stop matching - they had already
- * drifted once, which is how `sport` came to match nothing.
- */
-export const SUBMISSION_TAGS = [
-  'food',
-  'drink',
-  'music',
-  'art',
-  'history',
-  'nature',
-  'sport',
-  'nightlife',
-  'work',
-  'family',
-  'strange',
-] as const;
 
 export async function fetchProfile(device: string, signal?: AbortSignal): Promise<Profile> {
   return get<Profile>('/v1/me', new URLSearchParams({ device }), signal);

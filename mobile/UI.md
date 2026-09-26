@@ -29,7 +29,6 @@ Plan (src/Plan.tsx)            opaque page over the mounted map
 ├─ "4 km"                      the slider's value, mono 30
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
 ├─ Loop · One way              Submit's Chip, one of the two on
-├─ theme chips                 SUBMISSION_TAGS, none or one
 ├─ "Show me the walk"          ink button; asks for location, then previews
 └─ "Back to the map"           outlined
 
@@ -64,10 +63,10 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700
   ├─ "locked"         13, muted     ├─ distance
-  ├─ padlock                        ├─ summary  17/26 - the hero
+  ├─ padlock                        ├─ summary  17/26, #tags semibold
   ├─ distance         44/700        ├─ photo / recording   if it has any
-  ├─ "Get within 20 m"              ├─ tags     pills
-  ├─ "1 attachment waiting"         ├─ "Left by X", or the channel and avatar
+  ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar
+  ├─ "1 attachment waiting"         │
   │                                 ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 
@@ -269,9 +268,9 @@ Match a row; do not add one between two rows.
 | Step | Where it is |
 |---|---|
 | 2 | baseline nudges: the gap inside a byline |
-| 4 | tag padding, the gap between the pause bars |
+| 4 | the gap between the pause bars |
 | 6 | inside a collection row, inside the filed-at card |
-| 8 | the default small gap: between tags, a stat and its label, stacked buttons |
+| 8 | the default small gap: a stat and its label, stacked buttons |
 | 10 | field label to input, the meta row under a place name |
 | 12 | **the most common gap**: sheet actions, section contents, avatar to text |
 | 14 | input and audio-row padding, the meta row's horizontal gap |
@@ -290,7 +289,7 @@ Anything above 26 is a one-off (36 between the stats, 38 above a You section,
 | Radius | On |
 |---|---|
 | 2 | the modal grabber, and nothing else |
-| 3 | the small enclosed labels: tags, submission chips |
+| 3 | the small enclosed labels: chips |
 | **4** | **the app's radius** — buttons, inputs, photos, thumbnails, the banner, the reach pill. Reach for this first |
 | 6 | the two cards that float over the map, and only those |
 | half the side | genuinely circular things only: the 84 hold ring, the 44 pager step, an avatar, a pin |
@@ -464,11 +463,12 @@ are not preferences:
   the wait belongs in the part where somebody is composing. Post stays disabled
   while an upload is in flight, and a failed one shows as failed rather than
   disappearing.
-- **Tags are a closed list** (`SUBMISSION_TAGS`, mirrored from `api/write.py`,
-  itself a subset of `pipeline/tags.py`). The server drops anything not in the
-  vocabulary, so a free-text field would silently eat what somebody typed.
-  `tests/test_api_submit.py` holds the app's copy equal to the server's - this
-  used to be a convention and the two had already drifted.
+- **Tags are the #words in the description**, as on X: there is no picker. The
+  server reads them (`pipeline/tags.py`, `from_text`) and the sheet draws the
+  same words in `font.displaySemi`, not a colour, since every colour here
+  already means something. `mobile/src/hashtags.ts` must match the server;
+  `tests/fixtures/hashtags.json` is read by both tests. Not tappable. The
+  placeholder ends in `#nightlife` so the form explains it.
 
 Three things about the shape of it:
 

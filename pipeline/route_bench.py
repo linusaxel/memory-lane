@@ -9,7 +9,7 @@
 Read, not gated, like perf.py and quality.py. Each run plans a walk through
 api/route_solver.py's _plan_route for a fresh device, from a random start inside
 the dense seed's box, with everything the plan page lets a person set rolled
-at random: slider length, loop or one way, a theme or none, and the app's own
+at random: slider length, loop or one way, and the app's own
 `again`. Then once more with the next `again`: `fresh` is how often that is a
 different walk, which is "Show me another" working. The bar is "no spur": a stop
 off the loop is walked to and back the same way, and `retraced` is how many
@@ -56,11 +56,8 @@ from api.streets import retraced_meters, walking_matrix
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session
 from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, scenario
-from pipeline.tags import TAGS
 
 BUDGETS = (1000, 2000, 3000, 4000, 6000, 8000, 10_000)
-# A theme on one plan in three, like somebody trying one now and then.
-THEMED = 1 / 3
 # Starts stay well inside the pool's box, so a walk is not short of stops
 # only because it began at the edge of the map.
 START_BOX = (0.004, 0.007)
@@ -73,13 +70,12 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
     )
     device = str(uuid.UUID(int=rng.getrandbits(128)))
     loop = rng.random() < 0.5
-    tag = rng.choice(TAGS) if rng.random() < THEMED else None
     again = rng.randrange(1_000_000)
     today = datetime.date.today()
     began = time.perf_counter()
-    stops, legs, ends = _plan_route(session, device, start, budget, today, loop, tag, again)
+    stops, legs, ends = _plan_route(session, device, start, budget, today, loop, again)
     ms = (time.perf_counter() - began) * 1000
-    another, _, _ = _plan_route(session, device, start, budget, today, loop, tag, again + 1)
+    another, _, _ = _plan_route(session, device, start, budget, today, loop, again + 1)
     fresh = {r.id for r in another} != {r.id for r in stops}
     if legs is None:  # no stops at all, or the sidecar went away mid-run
         return {

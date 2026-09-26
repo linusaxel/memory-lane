@@ -52,7 +52,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Memories you can walk to.** The real corpus has none near any dev coordinate |
-| `pipeline/tags.py` | The one tag vocabulary. Both write paths filter against it |
+| `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/export.py` | Hand a customer the corpus as rows, without the transcripts |
 | `pipeline/perf.py` | **Time the read path on a corpus this size isn't.** Run before and after touching `api/queries.py` |
@@ -65,6 +65,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `e2e/travel.py` | Writes the walk flow's legs and stop names for the seeded start |
 | `.maestro/` | Five journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
+| `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |
@@ -129,5 +130,6 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/theme.ts` | Every colour and typeface. Never a hex or font name anywhere else |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen |
+| `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/types.ts` | Types more than one screen needs |
 | `mobile/src/devLocation.ts`, `devOpen.ts` | Dev only: a told position, a screen opened on launch |

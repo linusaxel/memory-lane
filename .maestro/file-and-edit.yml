@@ -36,16 +36,14 @@ appId: ${APP_ID}
 - tapOn: "The night the ferry horn went off"
 - inputText: "The step by the ferry landing"
 
-- tapOn: "We sat here until it got light and nobody wanted to say so."
-- inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after."
+# The tags are the #words in it (pipeline/tags.py, from_text): no picker.
+- tapOn: "We sat here until it got light.*"
+- inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after. #food"
 - tapOn: "Add a memory"
-
-# A closed vocabulary, mirrored from pipeline/tags.py.
-- tapOn: "food"
 - tapOn: "Post"
 
 - extendedWaitUntil:
-    visible: ".*ferry horn.*"
+    visible: ".*ferry horn.* #food"
     timeout: 40000
 - assertVisible: "The step by the ferry landing"
 # F21: signed Anonymous until you give a name.
@@ -72,6 +70,12 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn: "Close"
 
+# Back on the map, it is a pin: the map draws what is locked and what you
+# filed, and this was the one that never showed.
+- extendedWaitUntil:
+    visible: "The step by the ferry landing.*\\. (Unlocked, in your collection|Open)\\."
+    timeout: 30000
+
 # The tab says something came back before it is opened, and the row says what.
 - tapOn: "Journal"
 - extendedWaitUntil:
@@ -89,8 +93,9 @@ appId: ${APP_ID}
 
 # The Filed row opens the same sheet as editing: fields come back exactly as
 # filed. Rows carry a live distance alongside the place name in their
-# accessibility label (Memories.tsx's Row), so the tap needs the wildcard.
-- tapOn: ".*The step by the ferry landing.*"
+# accessibility label (Memories.tsx's Row), so the tap needs the wildcard -
+# after the comma, or it lands on the map's own pin for it behind the journal.
+- tapOn: "The step by the ferry landing, .*"
 - assertVisible: "Edit memory"
 - assertVisible: "The step by the ferry landing"
 - assertVisible: ".*ferry horn.*"
@@ -121,7 +126,7 @@ appId: ${APP_ID}
     timeout: 40000
 - assertNotVisible: "The step by the ferry landing"
 
-- tapOn: ".*The jetty by the ferry landing.*"
+- tapOn: "The jetty by the ferry landing, .*"
 - assertVisible: "Edit memory"
 - assertVisible: "The jetty by the ferry landing"
 - assertVisible: ".*ferry horn.*"

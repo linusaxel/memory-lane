@@ -19,6 +19,7 @@ import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration } from './format.ts';
+import { hashtagParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
 import { button, buttonText, color, dim, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
@@ -278,19 +279,22 @@ export default function MemorySheet({
                 )}
 
                 <Animated.View style={revealed}>
-                  <Text style={styles.summary}>{memory.summary}</Text>
+                  {/* The #words are the tags (hashtags.ts): set in the
+                      semibold, not a colour, since every colour here already
+                      means something (UI.md, "One accent"). Not tappable. */}
+                  <Text style={styles.summary}>
+                    {hashtagParts(memory.summary).map((part, i) =>
+                      part.tag ? (
+                        <Text key={i} style={styles.hashtag}>
+                          {part.text}
+                        </Text>
+                      ) : (
+                        part.text
+                      ),
+                    )}
+                  </Text>
 
                   <MemoryMedia media={memory.media} />
-
-                  {memory.tags?.length > 0 && (
-                    <View style={styles.tags}>
-                      {memory.tags.map((tag) => (
-                        <Text key={tag} style={styles.tag}>
-                          {tag}
-                        </Text>
-                      ))}
-                    </View>
-                  )}
 
                   <Notes memoryId={memory.id} isAuthor={!!onEdit} />
 
@@ -473,18 +477,7 @@ const styles = StyleSheet.create({
     borderColor: color.ink,
   },
   summary: { fontFamily: font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },
-  tag: {
-    ...label,
-    fontSize: 10,
-    color: color.inkSoft,
-    borderWidth: 1,
-    borderColor: color.rule,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
+  hashtag: { fontFamily: font.displaySemi },
   waiting: { ...label, color: color.seal },
   // The strip carries the hairline now, so the three credit variants are just
   // their lines. Pinned above the actions, it is in every screenshot.

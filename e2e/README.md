@@ -181,6 +181,10 @@ Things that cost an afternoon each to discover.
    view warnings" toast over the bottom of the screen, and the tap lands on it.
    Fix the warning; a retry only hides it. (A deprecated DateTimePicker
    `onChange` covered the sheet's Close.)
+9. **A map pin stays tappable under a modal.** Your own memories are pins
+   (docs/10, *A map of what is locked*), and a pin's label starts with the
+   place name, so `.*<place>.*` in the journal tapped the pin behind it.
+   Match the row's own shape, `"<place>, .*"`.
 
 Coordinates and `dev seed` place names in the YAML are held against
 `pipeline/seed_dev.py` by `tests/test_flows.py::test_maestro_flows_still_point_at_the_seed`,

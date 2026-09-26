@@ -5,11 +5,8 @@ that used to force a function-level import.
 """
 
 from datetime import date, datetime
-from typing import Literal
 
 from pydantic import BaseModel, Field
-
-from pipeline.tags import TAGS
 
 
 class Coordinates(BaseModel):
@@ -228,9 +225,6 @@ ROUTE_BUDGET_MAX_METERS = 10_000
 ROUTE_AGAIN_MAX = 1_001_000
 
 
-RouteTag = Literal[TAGS]
-
-
 class RouteRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
     lat: float = Field(ge=-90, le=90)
@@ -239,8 +233,6 @@ class RouteRequest(BaseModel):
     # Unset is ROUTE_LOOP. Preview and accept must send the same, or the accept
     # plans a different walk from the one previewed.
     loop: bool | None = None
-    # Only stops carrying this tag. A theme, not a filter on the map.
-    tag: RouteTag | None = None
     # Times "Show me another" was tapped. The accept sends the preview's.
     again: int = Field(0, ge=0, le=ROUTE_AGAIN_MAX)
     # A memory the walk must pass ("Walk here"). The accept sends the preview's.
@@ -331,7 +323,6 @@ class SubmissionRequest(BaseModel):
     lng: float = Field(ge=-180, le=180)
     place_name: str = Field(min_length=1, max_length=200)
     summary: str = Field(min_length=1, max_length=2000)
-    tags: list[str] = Field(default_factory=list, max_length=8)
     happened_at: date | None = None
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
     media_ids: list[int] = Field(default_factory=list, max_length=6)
@@ -346,7 +337,6 @@ class MemoryEditRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
     place_name: str = Field(min_length=1, max_length=200)
     summary: str = Field(min_length=1, max_length=2000)
-    tags: list[str] = Field(default_factory=list, max_length=8)
     happened_at: date | None = None
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
     # The final desired set, like SubmissionRequest.media_ids - not a diff.

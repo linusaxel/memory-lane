@@ -30,7 +30,6 @@ import {
 
 import {
   AUDIO,
-  SUBMISSION_TAGS,
   deleteMemory,
   mediaUrl,
   submitMemory,
@@ -88,7 +87,6 @@ export default function Submit({
   // The title is the place row's name - docs/10, "The title is the place name".
   const [placeName, setPlaceName] = useState('');
   const [summary, setSummary] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
   const [day, setDay] = useState(() => new Date());
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [posting, setPosting] = useState(false);
@@ -124,7 +122,6 @@ export default function Submit({
     if (visible) return;
     setPlaceName('');
     setSummary('');
-    setTags([]);
     setDay(new Date());
     setAttachments([]);
     setError(null);
@@ -137,7 +134,6 @@ export default function Submit({
     if (!visible || !editing) return;
     setPlaceName(editing.place.name);
     setSummary(editing.summary);
-    setTags(editing.tags);
     setDay(editing.happened_at ? localDay(editing.happened_at) : new Date());
     setAttachments(
       editing.media.map((item) => ({
@@ -269,7 +265,6 @@ export default function Submit({
     const editDraft: Draft = {
       place_name: placeName.trim(),
       summary: summary.trim(),
-      tags,
       happened_at: isoDay(day),
       happened_precision: 'day',
       media_ids: attachments.flatMap((a) => (a.item ? [a.item.id] : [])),
@@ -376,7 +371,7 @@ export default function Submit({
               style={[styles.input, styles.prose]}
               value={summary}
               onChangeText={setSummary}
-              placeholder="We sat here until it got light and nobody wanted to say so."
+              placeholder="We sat here until it got light and nobody wanted to say so. #nightlife"
               placeholderTextColor={color.inkFaint}
               multiline
               maxLength={MAX_SUMMARY}
@@ -412,27 +407,6 @@ export default function Submit({
                   }
                 />
               )}
-            </View>
-          </Field>
-
-          <Field label="Tags">
-            <View style={styles.row}>
-              {SUBMISSION_TAGS.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  on={tags.includes(tag)}
-                  onPress={() =>
-                    setTags((current) =>
-                      current.includes(tag)
-                        ? current.filter((t) => t !== tag)
-                        : current.length < 8
-                          ? [...current, tag]
-                          : current,
-                    )
-                  }
-                />
-              ))}
             </View>
           </Field>
 

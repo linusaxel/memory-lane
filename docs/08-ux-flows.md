@@ -167,8 +167,8 @@ somebody can hand their old phone in and still have everything they walked for.
 1. **Plan a walk** on the map (F29), or **Walk here** on a pin's peek, opens
    `mobile/src/Plan.tsx`: "How far today?" and one slider,
    1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`). Under it, **Loop** or
-   **One way** (loop to start), and one optional theme chip: a second tap lets
-   it go. One way adds **Pick where it ends**: the map, a card saying to tap it,
+   **One way** (loop to start). No theme: tags are open since 2026-09-26
+   (docs/10, *Tags come from the text*). One way adds **Pick where it ends**: the map, a card saying to tap it,
    and the tap is the end ("Ends where you tapped"; a second tap lets it go).
    The slider starts at least at the crow's distance to it ×1.3 (`endFloorKm`). The map is mounted behind it, not shown. **Back to the map** returns.
    From **Walk here**, every walk passes that pin: the note reads "Five
@@ -178,24 +178,22 @@ somebody can hand their old phone in and still have everything they walked for.
    chosen is lifted, not changed: back on the map, it is yours again.
 2. **Show me the walk** asks for location if it has to (F8), then
    `GET /v1/routes/preview` with that position, the length in metres, `loop`
-   and the theme's `tag`, and the pin's `include`. The preview stores nothing.
+   and the pin's `include`. The preview stores nothing.
 3. The preview is the map, fitted to the start and every stop
    (`fitToCoordinates`), with the stops numbered 1–5 and the loop drawn. A card
    reads "5 stops · 3.8 km loop", with **Accept** and **Change length**.
    Preview pins do not open: it is a look, not a walk. From Walk here the card
    adds "Through Blågårdsgade.", on every preview; Show me another never
    drops it.
-4. **Accept** is `POST /v1/routes/today` with the same position, length, loop
-   and theme, and
-   lands on the walk (F25). **Change length** goes back to the slider, and
+4. **Accept** is `POST /v1/routes/today` with the same position, length and
+   loop, and lands on the walk (F25). **Change length** goes back to the slider, and
    nothing was stored, so it costs nothing.
 
 **Accepting starts the walk.** It stands until it is ended (F34), and then
 another can be planned the same day. A relaunch after accepting skips this
 page and goes straight to the walk.
 
-**What can go wrong:** nothing walkable within that length, or with that
-theme — the card reads
+**What can go wrong:** nothing walkable within that length — the card reads
 "No walk that long from here" and offers only **Change length**. The map runs
 out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
 the ask (`ROUTE_FILL`) adds "The longest from here." No position
@@ -231,7 +229,8 @@ happens, the app carries the attribution the summaries lack.
 1. Tap a pin → sheet slides up.
 2. Place name, distance.
 3. The summary is the point of the screen — a story about what happened there.
-4. Tags; the source video title.
+4. The source video title. A #word in the summary is a tag, set in the
+   semibold; there are no tag pills.
 5. "Watch at 12:04" → opens YouTube at that exact second.
 6. Close, or Android back → returns to the map, viewport unchanged.
 
@@ -287,7 +286,7 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
    It should feel like a lock turning.
-4. The memory reveals: summary, tags, source, the watch link — animated once,
+4. The memory reveals: summary, source, the watch link — animated once,
    because that arrival is the only payoff the product has.
 5. It stays unlocked, and it stays in the journal under that day's walk (F15).
    Re-locking something they earned is a punishment for leaving.
@@ -595,8 +594,8 @@ plan page, the preview, the walk, a walked day. Filing needs no walk.
    is the place row's name (docs/10, *The title is the place name*), so it is
    the card's heading, locked or not; the description is what the gate keeps.
 4. **When**: a date, today unless changed, from the platform's own picker.
-5. **Tags** from a closed list. The server drops anything not on it, so a
-   free-text field would silently eat what somebody typed.
+5. **Tags** are the #words written in the description, as on X (`#food`):
+   there is no picker, and the server reads them from the text.
 6. **Photos** from the camera or the library, up to four, and one **recording**
    up to three minutes. Each one uploads the moment it is taken, so the wait is
    spent composing rather than watching a spinner after Post — and a failed
@@ -707,7 +706,7 @@ it says so rather than hiding.
 2. Tapping a row opens the submit sheet in editor mode: every field prefilled
    from the memory, **Post** relabelled **Save**, and no map or coordinate
    field — the pin does not move.
-3. **Save** changes place name, summary, tags, when, and photos/recording in
+3. **Save** changes place name, summary (and so its #tags), when, and photos/recording in
    place. **Delete** takes a second, differently-worded press before it
    commits — the same two-step this app uses in place of a system alert
    everywhere else — and removes the row, its media and its place outright,
@@ -927,8 +926,10 @@ before an accept lands here; an accepted walk opens on the walk (F25).
 1. The map, centred on you, or on central Copenhagen with no position. The
    pins are the locked memories within 5 km (`MAP_RADIUS_KM`, half the longest
    walk), from `/v1/memories/nearby`, fetched on arriving and again when a
-   position first comes. Nothing open is drawn: an open memory is not a reason
-   to walk. One you already earned wears its stamp.
+   position first comes. Nothing open is drawn but what you filed: an open
+   memory is not a reason to walk, and yours is where you left it. The map
+   refetches when you file, edit or delete one. One you already earned wears
+   its stamp.
 2. Tap a pin: **the peek**. Place, "locked", then tag · source · year ·
    distance, the summary as grey bars sized from its word count, "The only way
    in is to walk there.", and **Walk here**, which opens the plan page (F1)
@@ -1015,7 +1016,7 @@ stop, not out and home: the start is never stored (docs/10 § Routes).
 length. **Trigger:** "Show me another", under Accept.
 
 1. The preview is replanned with `again` one higher, from the same length,
-   loop and theme. A different walk comes back whenever there is another as
+   loop. A different walk comes back whenever there is another as
    good: within a tenth of the slider of the best one on metres short of it
    plus metres retraced, and retracing no more (`ROUTE_VARIETY`,
    `api/route_solver.py` `_plan_route`). Taps cycle through those.

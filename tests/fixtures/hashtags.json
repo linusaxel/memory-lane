@@ -1,0 +1,14 @@
+[
+  ["Tacos at 2am #food", ["food"]],
+  ["#Food then #food again", ["food"]],
+  ["#smørrebrød på #Nørrebro", ["smørrebrød", "nørrebro"]],
+  ["Stop #1 on the walk", []],
+  ["#1990s summer", ["1990s"]],
+  ["mail me at a#b, or ##double", []],
+  ["#first_date.", ["first_date"]],
+  ["(#nightlife) and #art!", ["nightlife", "art"]],
+  ["# alone, and #", []],
+  ["#a #b #c #d #e #f #g #h #i", ["a", "b", "c", "d", "e", "f", "g", "h"]],
+  ["#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is too long", []],
+  ["no tags at all", []]
+]

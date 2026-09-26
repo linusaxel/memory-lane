@@ -15,18 +15,17 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   and the only route that records one. POST because it creates something.
   403 unless the memory is a stop of this account's walk today
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
-- `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true&tag=food` - the walk
+- `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
   of that length from there would be: up to five stops. Stores nothing.
-  `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`, `tag` (one of
-  `pipeline/tags.py`) keeps only stops carrying it; `again` is "Show me
+  `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`; `again` is "Show me
   another" (F32), another walk as good; `include=<memory_id>` is "Walk here",
-  a memory every walk passes (the theme does not filter it). 422 with
+  a memory every walk passes. 422 with
   `detail: {reason: "not_a_stop"}` when it could not be a stop, or
   `{reason: "too_far", min_budget_meters}` when the streets there are longer
   than this walk. `end_lat` and `end_lng`, together, are where a one-way walk
   finishes (it makes the walk one-way, and is stored nowhere); the same
   `too_far` when this walk cannot reach it
-- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?, include?, end?}` - accept it. The
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, include?, end?}` - accept it. The
   same solve, stored; one in progress per device, and a second accept gets
   that walk back until it is ended. The only stop id the client ever sends is `include`, vetted
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;
@@ -38,8 +37,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   opened something, newest first: earned stops open, `earned` of `size`, `completed_at`
 - `GET /v1/routes/{id}` - an authored walk: its stops in order, locked like
   today's. 404 while it is a draft. Nothing writes these yet but SQL
-- `POST /v1/memories` `{device, lat, lng, place_name, summary, tags, ...}` -
-  **file your own memory.** One coordinate: it is both where you are and where
+- `POST /v1/memories` `{device, lat, lng, place_name, summary, ...}` -
+  **file your own memory.** Its tags are the #words in `summary`
+  (`pipeline/tags.py`, `from_text`); a `tags` field is ignored. One coordinate: it is both where you are and where
   the memory goes. Lands in the `stranger` layer, gated like everything else,
   and records the unlock for the person who filed it
 - `POST /v1/media` (multipart: `device`, `file`, optional `duration_seconds`) -

@@ -501,35 +501,6 @@ def test_walked_lists_the_accounts_walks_with_earned_stops_open(client, db_sessi
     assert walks(stranger) == []
 
 
-def test_a_theme_keeps_only_stops_carrying_its_tag(client, db_session):
-    food = set()
-    for n in range(1, 7):
-        place = _place(db_session, f"Stop {n}", LAT + n * 0.001, LNG)
-        tags = ["food"] if n % 2 else ["music"]
-        memory = _historical(db_session, place, f"memory {n}", f"https://e.invalid/{n:0>11}", tags)
-        if n % 2:
-            food.add(memory)
-    db_session.commit()
-
-    chosen = {
-        m["id"]
-        for m in client.get(
-            f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000&tag=food"
-        ).json()["memories"]
-    }
-    assert chosen == food
-    accepted = client.post(
-        "/v1/routes/today",
-        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "tag": "food"},
-    ).json()
-    assert {m["id"] for m in accepted["memories"]} == food
-
-
-def test_a_theme_outside_the_vocabulary_is_refused(client):
-    query = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000&tag=gossip"
-    assert client.get(f"/v1/routes/preview?{query}").status_code == 422
-
-
 def test_one_way_is_asked_for_per_walk_and_stored_with_it(client, db_session):
     for n in range(1, 4):
         _offset(db_session, n)
@@ -702,16 +673,6 @@ def test_walk_here_refuses_what_could_never_be_a_stop(client, db_session):
         )
         assert accepted.status_code == 422
     assert _stored(db_session) == 0
-
-
-def test_walk_here_is_not_filtered_out_by_a_theme(client, db_session):
-    for n in range(1, 5):
-        place = _place(db_session, f"Stop {n}", LAT + n * 0.001, LNG)
-        _historical(db_session, place, f"memory {n}", f"https://e.invalid/{n:0>11}", ["food"])
-    music = _offset(db_session, 5)
-    db_session.commit()
-
-    assert music in {m["id"] for m in _include(client, music, tag="food").json()["memories"]}
 
 
 def test_walk_here_is_never_the_stop_the_cleanup_drops(client, db_session, on_streets):

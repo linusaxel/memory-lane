@@ -50,7 +50,7 @@ from api.queries import (
     SUBMISSION_INSERT,
 )
 from pipeline.db import get_session
-from pipeline.tags import clean as clean_tags
+from pipeline.tags import from_text as hashtags
 
 router = APIRouter()
 
@@ -61,23 +61,6 @@ REPORT_THRESHOLD = int(os.getenv("REPORT_THRESHOLD", "3"))
 # ponytail: the device id is a bearer token in the request body, so anyone
 # holding yours can post as you. OAuth did not replace this - see
 # docs/10-decisions.md#no-session-tokens-signed-in-or-not.
-
-# The chips the app offers, chosen for somebody filing their own memory rather
-# than for a podcast transcript. A subset of the vocabulary and not the
-# vocabulary itself - a client sending `travel` is accepted.
-SUBMISSION_TAGS = [
-    "food",
-    "drink",
-    "music",
-    "art",
-    "history",
-    "nature",
-    "sport",
-    "nightlife",
-    "work",
-    "family",
-    "strange",
-]
 
 # A phone's GPS in a street, honestly stated rather than flattered.
 SUBMITTED_PRECISION_METERS = 25
@@ -252,7 +235,7 @@ def submit_memory(body: SubmissionRequest):
     is recorded here too. Filing something is standing there, so re-locking it
     the moment they walk away would be absurd.
     """
-    tags = clean_tags(body.tags)
+    tags = hashtags(body.summary)
     # A date with no stated precision is a full date, which is what a phone's
     # date picker produces; the field exists for the 1978 case.
     precision = body.happened_precision or ("day" if body.happened_at else None)
@@ -466,7 +449,7 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
     typo does not require standing where it happened again, only filing a new
     memory does.
     """
-    tags = clean_tags(body.tags)
+    tags = hashtags(body.summary)
     precision = body.happened_precision or ("day" if body.happened_at else None)
 
     with get_session() as session:

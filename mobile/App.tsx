@@ -172,6 +172,14 @@ const NONE = new Set<number>();
  *  today's walk. */
 type Stage = 'loading' | 'map' | 'plan' | 'end' | 'preview' | 'walk';
 
+/** Whether `me` filed this. Both sides have to be a real id: an extracted
+ *  memory's author is null and a signed-out profile's user_id is undefined,
+ *  and undefined === undefined would otherwise call every extracted memory
+ *  yours before the profile has even loaded. */
+function filedBy(memory: LocatedMemory, me: string | null | undefined): boolean {
+  return !!me && memory.author?.id === me;
+}
+
 export default function App() {
   // Two families carry the whole design, so there is no sensible half-loaded
   // state - the splash stays up the few hundred ms this takes.
@@ -189,7 +197,7 @@ export default function App() {
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
   const [stage, setStage] = useState<Stage>('loading');
   const [walkKm, setWalkKm] = useState(WALK_KM.initial);
-  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, tag: null, end: null });
+  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, end: null });
   // Where the previewed walk starts, and whether that is central
   // Copenhagen standing in for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
@@ -604,6 +612,7 @@ export default function App() {
   // Once on the map, and again when a position first arrives: by where you
   // are, never by viewport, so panning fetches nothing (UI.md rule 3).
   const located = !!position;
+  const me = profile?.user_id;
   useEffect(() => {
     if (stage !== 'map') return;
     const controller = new AbortController();
@@ -612,11 +621,17 @@ export default function App() {
       lng: FALLBACK_REGION.longitude,
     };
     fetchNearby(at, MAP_RADIUS_KM, controller.signal)
-      // Locked only: what is open without a walk is not a reason to take one.
-      .then((found) => mounted.current && setNearby(found.filter((memory) => memory.locked)))
+      // Locked, and what you filed: what is open without a walk is not a reason
+      // to take one, but your own is where you left it (docs/10, "A map of what
+      // is locked"). mineVersion refetches the moment you file, edit or delete.
+      .then(
+        (found) =>
+          mounted.current &&
+          setNearby(found.filter((memory) => memory.locked || filedBy(memory, me))),
+      )
       .catch(() => {});
     return () => controller.abort();
-  }, [stage, located]);
+  }, [stage, located, me, mineVersion]);
 
   // The preview's zoom: the whole walk, its start and any end, clear of the card.
   useEffect(() => {
@@ -767,14 +782,7 @@ export default function App() {
       { edgePadding: { top: 80, right: 60, bottom: 300, left: 60 }, animated: true },
     );
   }, [donePath, mapRef]);
-  // Both sides have to be a real id: an extracted memory's author is null and
-  // a signed-out profile's user_id is undefined, and undefined === undefined
-  // would otherwise call every extracted memory yours before the profile has
-  // even loaded.
-  const mine =
-    !!openMemories[openIndex]?.author?.id &&
-    !!profile?.user_id &&
-    openMemories[openIndex].author?.id === profile.user_id;
+  const mine = !!openMemories[openIndex] && filedBy(openMemories[openIndex], me);
 
   // EXPO_PUBLIC_DEV_OPEN_SCREEN, under __DEV__ only. The submit sheet is three
   // taps in and there are no taps, so without this it could only be read as

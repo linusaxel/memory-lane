@@ -127,6 +127,11 @@ survives unchanged: `POST /v1/memories/{id}/unlock` still refuses any memory
 that is not a stop of today's walk, and the peek has no unlock in it even
 standing on the pin.
 
+**Amended 2026-09-26: and what you filed.** The founder filed a memory and
+never found it on the map, because filing opens it for you and the map drew
+locked ones only. Your own pins are drawn too, open: they are where you left
+them, not a corpus to browse, and every other open memory stays off the map.
+
 ### Only today's walk unlocks
 
 Status: Accepted (2026-09-24). Replaces "Unlocking is Walk-only, and only the
@@ -284,6 +289,25 @@ Extracted memories keep their place name as the heading.
 
 **Options considered:** A title beside the place name: two headings for one
 card, and one more field on a form the founder asked to shrink.
+
+### Tags come from the text, and a walk has no theme
+
+Status: Accepted 2026-09-26. Supersedes the submission half of *One tag
+vocabulary, not two* and the theme in *Loop or one-way, and a theme, per walk*.
+
+The founder: tags the way X does them. A person writes `#food` in the
+description and that is the tag; the submit form has no Tags picker, and
+`POST`/`PUT /v1/memories` take no `tags` field (an old app's is ignored).
+`pipeline/tags.py`'s `from_text` reads them: `#` then letters, digits or `_`,
+lowercased, at most eight. The app draws the same words highlighted in the text
+(`mobile/src/hashtags.ts`), and `tests/fixtures/hashtags.json` holds the two
+parsers to the same answers. Open, not closed: `#smørrebrød` is a tag. The
+closed list stays for the extractor, which has no author to write hashtags;
+its tags are kept and shown nowhere but the locked peek.
+
+With open tags there is nothing fixed to theme a walk on, so the theme went
+too: no chips on the plan page, no `tag` on `/v1/routes/preview` or
+`/v1/routes/today`, and `SUBMISSION_TAGS` is gone from both ends.
 
 ### Media lives on a disk, not in object storage
 
@@ -665,7 +689,9 @@ pins on a tourism page, so the first card has to be the one worth reading.
 
 ### One tag vocabulary, not two
 
-Status: Accepted
+Status: Accepted; the submission half **Superseded 2026-09-26** by *Tags come
+from the text, and a walk has no theme*. The extractor still filters against
+the one list.
 
 The extractor's prompt listed thirteen tags, `api/write.py` offered eleven for
 submissions, and they overlapped on six — so the app's `sport` chip matched
@@ -974,8 +1000,8 @@ already earned, ambiguous, or beyond half the length). A pin too far
 from a street, or whose walk there and back is longer than the slider, is also
 refused, 422 for all of them; the last says the length that would reach it
 (`too_far`, `min_budget_meters`), which the app lifts its slider to (M6). The solver then keeps it on every walk it
-considers, and the cleanup never drops it. The theme does not filter it out: a
-pin somebody chose outranks the chip. Seeding does not change, so preview and
+considers, and the cleanup never drops it. ~~The theme does not filter it out: a
+pin somebody chose outranks the chip.~~ (There is no theme since 2026-09-26.) Seeding does not change, so preview and
 accept still agree, and the client still cannot place a stop the rules forbid.
 
 ~~The day is locked by `ON CONFLICT (device_id, route_date) DO NOTHING`: the
@@ -1260,16 +1286,17 @@ running to 1.35 km.
 
 ### Loop or one-way, and a theme, per walk
 
-Status: Accepted
+Status: Accepted; the theme **Superseded 2026-09-26** by *Tags come from the
+text, and a walk has no theme*.
 
-`ROUTE_LOOP` was a server setting. The plan page now sends `loop` and an
-optional `tag` with both the preview and the accept, which have to agree
+`ROUTE_LOOP` was a server setting. The plan page now sends `loop` ~~and an
+optional `tag`~~ with both the preview and the accept, which have to agree
 because the accept re-plans rather than trusting ids. `loop` is stored on
 `daily_routes`, since a walk has to be drawn the same way tomorrow and in the
-Walks list; the tag is not, because the stops it chose are. `ROUTE_LOOP` is
-only the default for a client that sends neither. The chips are the
+Walks list; ~~the tag is not, because the stops it chose are.~~ `ROUTE_LOOP` is
+only the default for a client that sends neither. ~~The chips are the
 submission tags, not the whole vocabulary: eighteen chips is a form, and the
-server takes any tag in `pipeline/tags.py`.
+server takes any tag in `pipeline/tags.py`.~~
 
 ### A one-way walk can end where you tap, and nothing stores it
 
