@@ -721,7 +721,8 @@ value.
   usually different venues, and one venue appears at two points. Dedup matches
   names for this reason (above).
 - **Structured venue fields fix matching, not placement.** Putting a pin on the
-  right building needs a real geocoder, which was never built.
+  right building needs a real geocoder. Denmark has one now (*DAWA places
+  Danish addresses*, below); everywhere else still has only the model's guess.
 - **No OSM/Overpass contrast enrichment.** It assumes the coordinate is the
   place, and would confidently describe the wrong street corner. Contrast is
   scored from the source text only.
@@ -744,6 +745,51 @@ of undocumented JSON walking that fails silently by returning a short list.
 yt-dlp is that parser, maintained weekly.
 
 **Consequences:** `crawler/` must not import `pipeline` — `pipeline.ingest` imports it.
+
+### Sources are a Protocol and a registry
+
+Status: Accepted 2026-09-26
+
+More text sources are coming (TODO.md § *Data sources*), and each should be one
+file. `crawler/sources.py` defines `Record` (the dict `ingest_records` already
+took) and `Source` (`name`, `source_name`, `source_type`, `fetch(query, limit)`),
+plus `SOURCES`, one line per source. `python -m pipeline.ingest --source <name>
+--query <q>` runs any of them.
+
+**Options considered:** a base class or a plugin loader: both are more to read
+for nothing a dict does not do. Folding YouTube in: it lists videos now and
+fetches transcripts later, so it would need a second stage the interface does
+not have. Revisit when a second source is two-stage.
+
+**Consequences:** a source only fetches; it never touches the database. A source
+that brings its own coordinates (Historisk Atlas) will need `Record` to grow
+optional `lat`/`lng`, and `ingest_records` somewhere to put them.
+
+### DAWA places Danish addresses
+
+Status: Accepted 2026-09-26
+
+The historical prompt asks for `address`, the street and number as the source
+wrote them. For a Danish place, `pipeline/geocode.py` asks DAWA
+(`api.dataforsyningen.dk`, free, no key) and a hit replaces the model's
+coordinate, with `geocode_status = 'dawa'`. The model picks which place; DAWA
+says where it is.
+
+Two traps, both measured against the live API on 2026-09-26:
+
+- **`fuzzy` always answers.** "Nonexistentgade 999" came back as Vestergade 9 in
+  Nibe. A hit only counts if its street name is the one asked for (after
+  `aa` → `å`).
+- **Copenhagen renumbered its houses in 1859.** "Gothersgaden 330" in an 1856
+  paper came back as Gothersgade 130; 330 today is another building. A pre-1859
+  or undated number gives a street-level pin (200 m), never `exact`.
+
+**Options considered:** `datavask`, which grades its own match: it graded
+everything tested `C`, including the nonsense street.
+
+**Consequences:** new extractions only; existing places keep their model
+coordinates until a backfill earns its place. A miss or a network failure keeps
+the model's coordinate, which is what happened before.
 
 ### Summary quality is measured, not asserted
 

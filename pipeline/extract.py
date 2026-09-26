@@ -7,6 +7,7 @@ import logging
 import anthropic
 from sqlalchemy import text
 
+from pipeline import geocode
 from pipeline.config import (
     ANTHROPIC_API_KEY,
     CHUNK_MINUTES,
@@ -194,6 +195,9 @@ For each memory, extract:
        instead of minting a new place.</why>
 </example>
 
+- address: The street and house number exactly as the text writes them, old
+  spelling and all ("Blaagaardsgade 12"). Null if the text names no street. In
+  Denmark this, not your lat / lng, decides where the pin goes.
 - lat / lng: Decimal degrees
 - happened_at: ISO date of the EVENT - "1978-06-17", "1978-06", or "1978". Null if
   the text gives no date. This is when it happened, not when it was written about.
@@ -250,6 +254,7 @@ MEMORY_SCHEMA = {
                     "venue": {"type": "string"},
                     "locality": {"type": "string"},
                     "region": _NULLABLE_STRING,
+                    "address": _NULLABLE_STRING,
                     "lat": {"type": "number"},
                     "lng": {"type": "number"},
                     "timestamp_start": {"type": "number"},
@@ -671,6 +676,16 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
         region = (mem.get("region") or "").strip() or None
         structured = bool(venue and locality)
 
+        precision = precision_to_meters(mem.get("location_precision", "street"))
+        status = "llm"
+        address = (mem.get("address") or "").strip()
+        if address and region and any(w in region.lower() for w in ("denmark", "danmark")):
+            happened = _happened_at(mem)
+            hit = geocode.dawa(address, locality, int(happened[:4]) if happened else None)
+            if hit:
+                lat, lng, precision = hit
+                has_coords, status = True, "dawa"
+
         params = {
             "name": _place_name(venue, locality)
             if structured
@@ -681,9 +696,10 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
             "venue": venue,
             "locality": locality,
             "region": region,
-            "precision": precision_to_meters(mem.get("location_precision", "street")),
+            "precision": precision,
             "lat": lat,
             "lng": lng,
+            "status": status,
         }
 
         if structured:
@@ -707,7 +723,7 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
             place_result = session.execute(
                 text(f"""
                     INSERT INTO places (name, place_query, venue, locality, region, precision_meters, coordinates, geocode_status)
-                    VALUES (:name, :query, :venue, :locality, :region, :precision, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 'llm')
+                    VALUES (:name, :query, :venue, :locality, :region, :precision, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :status)
                     ON CONFLICT {conflict_target} DO NOTHING
                     RETURNING id
                 """),

@@ -43,8 +43,8 @@ pip install -r requirements.txt
 Every one is read once, in `pipeline/config.py`; add new ones there.
 The app has its own, baked in at dev-server start - see `mobile/.env.example`.
 
-Note: geocoding is handled by Claude during extraction; there is no geocoding
-API and no geocoding stage.
+Note: geocoding is handled by Claude during extraction, except that a Danish
+address is placed by DAWA (free, no key). There is no geocoding stage.
 
 ## Database
 

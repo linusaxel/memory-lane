@@ -33,6 +33,7 @@ For each memory, the LLM extracts:
 |-------|-------------|
 | `place_name` | Human-readable name (e.g., "Cafe de Flore, Paris") |
 | `place_query` | Dedup key and search string (e.g., "Cafe de Flore Saint-Germain Paris France"). A unique index makes this the identity of a place. |
+| `address` | Historical prompt only: street and number as the source writes them. For a Danish place DAWA turns this into the coordinates, replacing `lat`/`lng` ([why](10-decisions.md#dawa-places-danish-addresses)) |
 | `lat` | Latitude, estimated by the model. A memory without coordinates is filtered out of every API query. |
 | `lng` | Longitude, same. |
 | `timestamp_start` | When place is first mentioned (from [timestamp] markers) |

@@ -8,7 +8,7 @@ Where things live. How they talk to each other is in [architecture.md](architect
 |------|------------|
 | `api/` | FastAPI over PostGIS: reads, the gate, submissions, sign-in, routes |
 | `pipeline/` | Ingest → transcripts → extraction (sequential or over RQ), plus the dev and review tools |
-| `crawler/` | Channel discovery via yt-dlp. Imports nothing from `pipeline/` |
+| `crawler/` | Channel discovery via yt-dlp, and the text sources. Imports nothing from `pipeline/` |
 | `config/` | `content.yaml`: the sources ingest reads |
 | `db/` | `schema.sql` (applied on first container init) and `migrations/` for databases that already exist |
 | `mobile/` | The Expo app. Read [`mobile/UI.md`](../mobile/UI.md) first |
@@ -37,7 +37,10 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 |------|---------|
 | `pipeline/run_all.py` | **Run full pipeline** in one command with `--dry-run`, `--skip-*` options |
 | `crawler/yt_crawler.py` | **Channel discovery** via yt-dlp — lists a channel's videos + metadata |
-| `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB (expands `channel:` sources) |
+| `crawler/sources.py` | **Text sources:** the `Source` interface and `SOURCES`. A new source is one file and one line here |
+| `crawler/kb_aviser.py` | KB Labs newspapers (pre-1886), searched by street |
+| `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB (expands `channel:` sources); `--source <name> --query <q>` runs a text source |
+| `pipeline/geocode.py` | DAWA: a Danish address to coordinates, with the two guards the live API needs |
 | `pipeline/transcripts.py` | Fetches YouTube transcripts via youtube-transcript-api |
 | `pipeline/extract.py` | **Core logic** - Claude extracts memories + coordinates (sequential) |
 | `pipeline/tasks.py` | RQ tasks for parallel extraction with Haiku pre-filter |

@@ -126,4 +126,4 @@ the kind of thing that comes back.
   instead, extract one video through the queue path:
   `python -m pipeline.enqueue --video <content_id>` (then `--status <id>`).
 - The extraction prompt is in `extract.py:SYSTEM_PROMPT` - tweak for better results
-- Check `geocode_status` column: 'llm' means coordinates from extraction, 'pending' means missing
+- Check `geocode_status` column: 'llm' means coordinates from extraction, 'dawa' means a Danish address DAWA placed, 'pending' means missing

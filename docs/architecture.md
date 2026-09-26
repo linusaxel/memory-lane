@@ -51,7 +51,7 @@ flowchart LR
 ### LLM extraction (`pipeline/extract.py`, sequential)
 - Transcripts split into 4-min chunks with 30s overlap
 - Claude extracts: place_name, place_query, lat, lng, summary, tags, confidence
-- Coordinates come directly from LLM (no external geocoding API)
+- Coordinates come directly from LLM, except a Danish `address`, which DAWA places (`pipeline/geocode.py`)
 - Low confidence memories filtered out
 - Nearby same-place memories merged (within 60s)
 

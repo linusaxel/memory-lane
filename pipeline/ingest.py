@@ -260,15 +260,33 @@ if __name__ == "__main__":
     import argparse
 
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser(description="Load content from config/content.yaml.")
+    parser = argparse.ArgumentParser(
+        description="Load content from config/content.yaml, or from a text source."
+    )
     parser.add_argument(
         "--refresh-sources",
         action="store_true",
         help="only backfill publisher name, link and avatar on rows already ingested",
     )
+    parser.add_argument("--source", help="a text source from crawler.sources, e.g. kb-aviser")
+    parser.add_argument("--query", help="what to ask the source for, e.g. a street name")
+    parser.add_argument("--limit", type=int, default=20, help="most records to fetch")
     args = parser.parse_args()
 
-    if args.refresh_sources:
+    if args.source:
+        from crawler.sources import SOURCES
+
+        if args.source not in SOURCES:
+            parser.error(f"--source must be one of {', '.join(SOURCES)}")
+        if not args.query:
+            parser.error("--source needs --query")
+        src = SOURCES[args.source]
+        ingest_records(
+            src.fetch(args.query, args.limit),
+            source_name=src.source_name,
+            source_type=src.source_type,
+        )
+    elif args.refresh_sources:
         refresh_sources()
     else:
         ingest_content()
