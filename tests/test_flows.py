@@ -27,7 +27,7 @@ from sqlalchemy import text
 import pipeline.seed_dev as seed_dev
 from api.gate import UNLOCK_RADIUS_METERS, meters_between, today
 from api.models import ROUTE_BUDGET_MAX_METERS, ROUTE_BUDGET_MIN_METERS, Coordinates
-from api.route_solver import ROUTE_SIZE, _path_meters
+from api.route_solver import _path_meters, _route_size
 from api.streets import walking_matrix
 from pipeline.route_bench import START_BOX
 from pipeline.seed_dev import at, seed
@@ -229,7 +229,7 @@ def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route
     """F25 from starts and lengths nobody chose, over `seed_dev --dense`.
 
     walk-and-unlock.yml asserts one walk by name; this asserts only what every
-    walk owes the person on it: at most five stops, within the slider, the same
+    walk owes the person on it: at most a stop a km (five at least), within the slider, the same
     walk once accepted, and each stop opened by standing on it.
     """
     rng = random.Random(route_seed)
@@ -250,7 +250,7 @@ def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route
         preview = seeded.get("/v1/routes/preview", params=body).json()
         stops = preview["memories"]
         ids = [m["id"] for m in stops]
-        assert 1 <= preview["meta"]["size"] == len(ids) <= ROUTE_SIZE, body
+        assert 1 <= preview["meta"]["size"] == len(ids) <= _route_size(body["budget_meters"]), body
         assert len(set(ids)) == len(ids), body
 
         points = [start] + [Coordinates(**m["place"]["coordinates"]) for m in stops]

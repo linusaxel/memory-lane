@@ -120,18 +120,18 @@ missing is a source.
 
 ## Copenhagen journeys
 
-- [ ] **The route length asked for doesn't match what the map draws.**
-      (checked 2026-09-26: reported by the founder, not measured yet) The plan
-      slider's km (`mobile/src/Plan.tsx`) goes to the solver as
-      `budget_meters`; the walk drawn on the map reads as a different length.
-      First measure it: the drawn geometry's length against the budget, over
-      a few starts and lengths (`e2e/travel.py` plans the same walk offline).
-      Then decide whether the solver undershoots or the label should say what
-      was drawn.
+- [ ] **A long walk still falls short where the map runs out.** (checked
+      2026-09-26) About a stop a km (docs/10) took 10 km from 0.33 to 0.56 of
+      the slider on the dense seed, but the lakes top out at 7.4 km for any
+      stop count: shortest legs cross the bridges. Left: legs routed longer
+      than the shortest path (round the shore), or the preview saying "the
+      longest from here" when a walk is under ROUTE_FILL. Also: 10 km plans
+      are p95 2.2 s, twice what they were.
 - [ ] **A Copenhagen journey in Maestro.** (checked 2026-09-24: no such flow in
       `.maestro/`) e.g. `.maestro/lakes-loop.yml`: `setLocation` on Olufsvej,
       set the slider to the measured loop (~9.1 km), preview, and assert a
-      loop that reaches Sankt Jørgens Sø and reads `.* loop`. Then "Show me
+      loop that reaches Sankt Jørgens Sø and reads `.* loop` (five stops top
+      out at 7.0 km there, not the ~9.1 km round the lakes). Then "Show me
       another" and assert the stops changed. `e2e/travel.py` needs its START
       and budget made arguments. Also assert a past walk's row opens to an
       earned memory and tapping it opens the sheet (F31; needs the seed below).

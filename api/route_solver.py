@@ -28,6 +28,14 @@ from api.queries import ROUTE_CANDIDATES_QUERY
 from api.streets import retraced_meters, street_legs, street_table
 
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
+
+
+def _route_size(budget_meters: float) -> int:
+    """At least ROUTE_SIZE stops, then about one a km: five stops on the
+    shortest street legs between them cannot fill a long slider."""
+    return max(ROUTE_SIZE, round(budget_meters / 1000))
+
+
 # A loop ends back where the day's walk started, so its last leg is the walk
 # home, and it is counted when choosing and ordering stops. ROUTE_LOOP=0 makes
 # it one-way, and a request's `loop` overrides it. The server never stores that
@@ -146,8 +154,9 @@ def _choose_walks(
             options = [o for o in options if o[0] <= room]
             if not options:
                 break
+            ok = {c for c in {o[1] for o in options} if fits(walk, c)}
             _, c, at = min(
-                [o for o in options if fits(walk, o[1])] or options,
+                [o for o in options if o[1] in ok] or options,
                 key=lambda o: (-prize[o[1]] / max(o[0], 1), o),
             )
             walk.insert(at, c)
@@ -283,8 +292,9 @@ def _choose_walks(
     return [_walking_order(w, d, loop) for _, w in alike[:ROUTE_SHORTLIST]]
 
 
-# 8! is 40,320 orderings - still cheaper than the SQL round trip before it.
-EXACT_ORDER_MAX = 8
+# 6! is 720 orderings. `score` orders every walk it looks at, so 8! (40,320)
+# on a 10 km walk of ten stops took seconds.
+EXACT_ORDER_MAX = 6
 
 
 def _path_meters(walk, d: list, loop: bool = False) -> float:
@@ -296,10 +306,10 @@ def _path_meters(walk, d: list, loop: bool = False) -> float:
 def _walking_order(picks: list[int], d: list, loop: bool = False) -> list[int]:
     """The shortest walk from the anchor through every pick, and back to it
     when `loop`, by trying
-    every ordering. Five stops is 120 of them, and nearest-neighbour - what this
-    was - doubles back whenever the closest stop is behind you.
-    ponytail: exact up to EXACT_ORDER_MAX, greedy above it; Held-Karp if
-    ROUTE_SIZE ever grows that far."""
+    every ordering. Five stops is 120 of them, and nearest-neighbour alone
+    doubles back whenever the closest stop is behind you.
+    ponytail: exact up to EXACT_ORDER_MAX, nearest-neighbour then 2-opt above
+    it; Held-Karp if a long walk's order is ever measurably off."""
     if len(picks) <= EXACT_ORDER_MAX:
         # A crow-flies loop and its reverse are the same length, so which one
         # min() keeps depends on input order - here, the solver's seeded
@@ -307,13 +317,21 @@ def _walking_order(picks: list[int], d: list, loop: bool = False) -> list[int]:
         return list(
             min(itertools.permutations(sorted(picks)), key=lambda p: _path_meters(p, d, loop))
         )
-    remaining = list(picks)
+    remaining = sorted(picks)
     ordered = []
     here = 0
     while remaining:
         here = min(remaining, key=lambda c: d[here][c])
         ordered.append(here)
         remaining.remove(here)
+    walked = _path_meters(ordered, d, loop)
+    better = True
+    while better:
+        better = False
+        for i, j in itertools.combinations(range(len(ordered)), 2):
+            trial = ordered[:i] + ordered[i : j + 1][::-1] + ordered[j + 1 :]
+            if (meters := _path_meters(trial, d, loop)) < walked - 1e-9:
+                ordered, walked, better = trial, meters, True
     return ordered
 
 
@@ -407,7 +425,13 @@ def _plan_route(
         rows = [0, *nodes]
         dd = [[d[a][b] for b in rows] for a in rows]
         shortlist = _choose_walks(
-            [candidates[i - 1] for i in nodes], ROUTE_SIZE, dd, seed, solve_for, loop, at
+            [candidates[i - 1] for i in nodes],
+            _route_size(budget_meters),
+            dd,
+            seed,
+            solve_for,
+            loop,
+            at,
         )
         return [[nodes[i - 1] for i in _walking_order(p, dd, loop)] for p in shortlist]
 

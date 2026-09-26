@@ -936,6 +936,29 @@ share the stops next to the start where the walk home overlaps the walk out.
 And the circle walks respect the layer quota, or most of them fall off a
 shortlist that requires the best walk's mix.
 
+### About a stop a km, five at least
+
+Status: Accepted
+
+Five stops on the shortest street legs between them cannot fill a long
+slider: `route_bench` gave walk ÷ budget 0.63 at 6 km, 0.55 at 8 and 0.33 at
+10 on `seed_dev --dense`. The solver was not what fell short. On
+`--routes lakes` the longest five-stop loop from Olufsvej, brute-forced, is
+7.0 km, and it found 6.9 at a 9.1 km ask; ranking the fill above sharp turns
+changed nothing. `_route_size` now aims for `max(ROUTE_SIZE, round(km))`, a
+rule of thumb: a sparse map still gets fewer.
+
+Measured over 140 runs on the dense seed: 8 km 0.55 → 0.76, 10 km 0.33 →
+0.56, up to 5 km unchanged. The cost is time and some spurs: 10 km p50/p95
+went from 344/890 ms to 663/2171 ms, and spurs over 50 m at 8-10 km from
+10-19% to 25-38% (±22% noise at 16-20 runs a row). `_walking_order` is exact
+only to six stops now, 2-opt above, because 8! orderings per walk scored took
+seconds.
+
+A long ask still falls short where the map runs out. The lakes top out at
+7.4 km for any stop count: shortest legs cross the bridges, where the ~9 km
+walk is the shore. Only legs longer than the shortest path would fill it.
+
 ### No U-turn at a stop, and none at the start
 
 Status: Accepted

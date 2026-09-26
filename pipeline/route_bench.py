@@ -43,7 +43,14 @@ from types import SimpleNamespace
 
 from api.gate import meters_between
 from api.models import Coordinates
-from api.route_solver import ROUTE_SIZE, _choose_stops, _path_meters, _plan_route, _walking_order
+from api.route_solver import (
+    ROUTE_SIZE,
+    _choose_stops,
+    _path_meters,
+    _plan_route,
+    _route_size,
+    _walking_order,
+)
 from api.streets import retraced_meters, walking_matrix
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session
@@ -177,7 +184,7 @@ def report(results: list[dict]) -> None:
         ratio = [r["walk"] / r["budget"] for r in mine]
         print(
             f"{budget or 'all':>7} {len(mine):>5} "
-            f"{sum(r['stops'] == ROUTE_SIZE for r in mine) / len(mine):>6.0%} "
+            f"{sum(r['stops'] == _route_size(r['budget']) for r in mine) / len(mine):>6.0%} "
             f"{sum(x >= 1 for x in retraced) / len(mine):>6.0%} "
             f"{sum(x > 50 for x in retraced) / len(mine):>6.0%} "
             f"{pct(retraced, 50):>6.0f}/{pct(retraced, 95):<6.0f}m "
