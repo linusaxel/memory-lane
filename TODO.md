@@ -23,12 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **`lakes-loop.yml` drags the slider by screen percentage.** (2026-09-26)
-  Adding one button to the centred plan page moved the slider from 35% to 32%
-  of the screen, and the flow failed on "10 km" with nothing wrong in the app;
-  a full e2e run to find it. Fix: swipe from the slider element
-  (`swipe: from: "Walk length"`) instead of `"37%,35%"`.
-
 - **The `api` container runs whatever image was last built.** (2026-09-26) It
   does not mount the source, so a plain `docker compose up -d` served 09-22 code
   that queried a dropped column; the app showed only "Can't reach Memory Lane
