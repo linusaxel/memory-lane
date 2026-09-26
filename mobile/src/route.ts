@@ -51,6 +51,11 @@ export async function saveRoute(route: StoredRoute): Promise<void> {
   }
 }
 
+/** "End walk": nothing cached to paint on the next launch. */
+export async function clearRoute(): Promise<void> {
+  await AsyncStorage.removeItem(KEY).catch(() => {});
+}
+
 const WALKED_KEY = 'memorylane.walked.v1';
 
 /** The last list of walks the server gave, so the journal reads on the train

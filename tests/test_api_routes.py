@@ -718,3 +718,42 @@ def test_walk_here_too_far_by_street_says_how_long_a_walk_reaches_it(
     detail = refused.json()["detail"]
     assert detail["reason"] == "too_far"
     assert 1300 < detail["min_budget_meters"] < 1400
+
+
+def _end(client):
+    return client.post("/v1/routes/today/end", json={"device": DEVICE})
+
+
+def test_an_ended_walk_frees_the_day_for_another(client, db_session):
+    for n in range(1, 9):
+        _offset(db_session, n)
+    db_session.commit()
+
+    first = _route(client).json()
+    assert _end(client).status_code == 204
+    assert client.get(f"/v1/routes/today?device={DEVICE}").status_code == 404
+    assert _end(client).status_code == 204, "the same tap twice is not an error"
+
+    second = _route(client, budget_meters=1000).json()
+    assert second["meta"]["budget_meters"] == 1000 != first["meta"]["budget_meters"]
+    assert client.get(f"/v1/routes/today?device={DEVICE}").json() == second
+    assert _stored(db_session) == 2
+
+
+def test_an_ended_walk_keeps_what_it_earned_and_locks_the_rest(client, db_session):
+    for n in (1, 2):
+        _offset(db_session, n)
+    db_session.commit()
+    stops = _route(client).json()["memories"]
+    earned, left = ((s["id"], s["place"]["coordinates"]) for s in stops)
+
+    def unlock(memory_id, at):
+        return client.post(f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, **at})
+
+    assert unlock(*earned).status_code == 200
+    _end(client)
+    assert unlock(*left).status_code == 403, "an ended walk's stops lock again"
+
+    [walk] = client.get(f"/v1/routes/walked?device={DEVICE}").json()["walks"]
+    assert (walk["meta"]["earned"], walk["meta"]["completed_at"]) == (1, None)
+    assert client.get(f"/v1/me?device={DEVICE}").json()["streak"] == 1

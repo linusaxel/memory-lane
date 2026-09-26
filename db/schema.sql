@@ -245,7 +245,9 @@ CREATE INDEX idx_memory_notes_memory ON memory_notes(memory_id);
 -- consecutive stops, null without a routing sidecar - see 021_route_legs.sql.
 -- completed_at is set once, by the unlock that earns the last stop - see 024.
 -- loop is whether the walk comes back to its start, chosen per walk - see 025.
+-- ended_at is set by "End walk"; one walk in progress per device per day - see 027.
 CREATE TABLE daily_routes (
+    id SERIAL PRIMARY KEY,
     device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
     route_date DATE NOT NULL,
     memory_ids INTEGER[] NOT NULL,
@@ -254,8 +256,10 @@ CREATE TABLE daily_routes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
     loop BOOLEAN NOT NULL DEFAULT TRUE,
-    PRIMARY KEY (device_id, route_date)
+    ended_at TIMESTAMP
 );
+CREATE UNIQUE INDEX daily_routes_in_progress
+    ON daily_routes (device_id, route_date) WHERE ended_at IS NULL;
 
 -- An authored walk, served by GET /v1/routes/{id} once published. A join
 -- table here, unlike daily_routes: it is long-lived, ordered and edited. See

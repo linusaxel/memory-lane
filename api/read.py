@@ -3,9 +3,10 @@
 The list endpoints never pass a position to `row_to_memory`: walking into range
 must *offer* the unlock, not perform it, or there is no moment to press.
 
-One exception to "nothing here writes": POST /v1/routes/today stores the walk
-a device accepts, next to the preview; both call api/route_solver.py. It never
-records an unlock - that stays write.py's alone.
+Two exceptions to "nothing here writes": POST /v1/routes/today stores the walk
+a device accepts, next to the preview (both call api/route_solver.py), and
+POST /v1/routes/today/end ends it. Neither records an unlock - that stays
+write.py's alone.
 """
 
 import json
@@ -31,6 +32,7 @@ from api.models import (
     ROUTE_BUDGET_MIN_METERS,
     AuthoredRouteResponse,
     Coordinates,
+    DeviceRequest,
     Hotspot,
     Memory,
     MyMemoriesMeta,
@@ -338,7 +340,7 @@ def get_unlocks(
 
 ROUTE_LOOKUP = """
     SELECT memory_ids, budget_meters, legs, loop FROM daily_routes
-    WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date
+    WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date AND ended_at IS NULL
 """
 
 ROUTE_INSERT = """
@@ -347,7 +349,12 @@ ROUTE_INSERT = """
         CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :budget_meters,
         CAST(:legs AS jsonb), :loop
     )
-    ON CONFLICT (device_id, route_date) DO NOTHING
+    ON CONFLICT (device_id, route_date) WHERE ended_at IS NULL DO NOTHING
+"""
+
+ROUTE_END = """
+    UPDATE daily_routes SET ended_at = CURRENT_TIMESTAMP
+    WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date AND ended_at IS NULL
 """
 
 
@@ -413,8 +420,9 @@ def preview_route(
 
 @router.post("/v1/routes/today", response_model=RouteResponse)
 def accept_route(body: RouteRequest):
-    """Accept today's walk. One per device per day: the first accept is stored
-    and every later one gets it back, whatever it asked for.
+    """Accept today's walk. One in progress per device: the first accept is
+    stored and every later one gets it back, whatever it asked for, until
+    POST /v1/routes/today/end ends it.
 
     An empty walk is not stored: stored, it would pin the whole day to
     "nothing here" even after the device reaches somewhere stocked."""
@@ -456,6 +464,15 @@ def accept_route(body: RouteRequest):
                 text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
             ).fetchone()
         return _stored_route(session, route_date, row)
+
+
+@router.post("/v1/routes/today/end", status_code=204)
+def end_route(body: DeviceRequest):
+    """End today's walk, finished or not, so another can be accepted. Its row
+    stays: the journal lists it and what it earned still counts. Its unearned
+    stops lock again. Nothing to end is not an error: the same tap twice."""
+    with get_session() as session:
+        session.execute(text(ROUTE_END), {"device": body.device, "route_date": gate.today()})
 
 
 @router.get("/v1/routes/today", response_model=RouteResponse)

@@ -25,9 +25,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `{reason: "too_far", min_budget_meters}` when the streets there are longer
   than this walk
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?, include?}` - accept it. The
-  same solve, stored; one per device per day, and a second accept gets the
-  first walk back. The only stop id the client ever sends is `include`, vetted
-- `GET /v1/routes/today?device=UUID` - today's accepted walk, or 404. Only reads
+  same solve, stored; one in progress per device, and a second accept gets
+  that walk back until it is ended. The only stop id the client ever sends is `include`, vetted
+- `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;
+  204, and 204 again with nothing to end. The walk stays in `walked`, its
+  unearned stops lock again, and another can be accepted
+- `GET /v1/routes/today?device=UUID` - today's walk in progress, or 404. Only reads
 - `GET /v1/routes/walked?device=UUID` - every walk the account accepted,
   newest first: earned stops open, `earned` of `size`, `completed_at`
 - `GET /v1/routes/{id}` - an authored walk: its stops in order, locked like

@@ -332,8 +332,7 @@ function toRoute(body: RouteBody): TodaysRoute {
   };
 }
 
-/** The walk this device accepted today, or null when it has not accepted one.
- *  One per device per day: there is no replanning until tomorrow. */
+/** The walk this device accepted today and has not ended, or null. */
 export async function fetchTodaysRoute(
   device: string,
   signal?: AbortSignal,
@@ -407,6 +406,24 @@ export async function acceptRoute(
       include,
     }),
   );
+}
+
+/** End today's walk, finished or not, so another can be planned. Its earned
+ *  stops stay earned; the rest lock again. */
+export async function endRoute(device: string): Promise<void> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BASE}/v1/routes/today/end`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw await refused(res);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** A walk this account accepted on some day, finished or not. Earned stops

@@ -214,9 +214,10 @@ def api_client(db_session, monkeypatch, tmp_path):
     reopens every time a module is split out of `api.main`.
 
     `api.media.MEDIA_DIR` is redirected too, so uploads land in tmp_path and not
-    in the repo. The session rolls back on an exception the way
-    `pipeline.db.get_session` does; without that a refused write leaves its
-    half-written rows behind in the test and nowhere else.
+    in the repo. The session commits on success and rolls back on an exception
+    the way `pipeline.db.get_session` does; without the rollback a refused write
+    leaves its half-written rows behind, and without the commit a 404 rolls back
+    every earlier request's writes with it.
     """
     import importlib
     import pkgutil
@@ -232,6 +233,7 @@ def api_client(db_session, monkeypatch, tmp_path):
     def _session():
         try:
             yield db_session
+            db_session.commit()
         except Exception:
             db_session.rollback()
             raise
@@ -270,7 +272,7 @@ def on_todays_route(session, device, *memory_ids):
         text("""
             INSERT INTO daily_routes (device_id, route_date, memory_ids)
             VALUES (CAST(:d AS uuid), :day, :ids)
-            ON CONFLICT (device_id, route_date)
+            ON CONFLICT (device_id, route_date) WHERE ended_at IS NULL
             DO UPDATE SET memory_ids = daily_routes.memory_ids || EXCLUDED.memory_ids
         """),
         {"d": device, "day": today(), "ids": list(memory_ids)},

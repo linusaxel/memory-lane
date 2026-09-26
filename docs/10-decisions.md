@@ -113,10 +113,11 @@ Status: Accepted (2026-09-24). Replaces "Unlocking is Walk-only, and only the
 app knows it". The "no map of everything" clause is **Superseded 2026-09-26**
 by the entry above; the unlock rule stands.
 
-The app is one walk a day, five stops, and nothing else: ~~no map of everything
+The app is one walk at a time (one a day until 2026-09-26, *A walk can be
+ended*), five stops, and nothing else: ~~no map of everything
 (F29 is gone), because a corpus you can browse is a corpus you can finish.~~ So
 `POST /v1/memories/{id}/unlock` refuses with 403 any memory that is not a stop
-of today's `daily_routes` row for this account (`ON_TODAYS_ROUTE_QUERY`),
+of today's `daily_routes` walk in progress for this account (`ON_TODAYS_ROUTE_QUERY`),
 however close you stand.
 
 The old decision kept this in the client because a "which tab" flag would be
@@ -891,14 +892,48 @@ considers, and the cleanup never drops it. The theme does not filter it out: a
 pin somebody chose outranks the chip. Seeding does not change, so preview and
 accept still agree, and the client still cannot place a stop the rules forbid.
 
-The day is locked by `ON CONFLICT (device_id, route_date) DO NOTHING`: the
+~~The day is locked by `ON CONFLICT (device_id, route_date) DO NOTHING`: the
 first accept wins, and every later one, at any length and from anywhere, reads
-that row back. One walk a day was the user's call, not a limitation.
+that row back. One walk a day was the user's call, not a limitation.~~
+**Superseded 2026-09-26** by *A walk can be ended, and another planned*,
+below: the first accept still wins, but only until the walk is ended.
 
 `GET /v1/routes/today` used to be the one GET here that wrote — it made the
 route on the day's first call. With an explicit accept there is nothing for it
 to create, so it only reads, and answers 404 until something has been accepted.
 That 404 is how a launch picks the plan page over the walk.
+
+### A walk can be ended, and another planned
+
+Status: Accepted (2026-09-26). Supersedes the day lock in *Preview, then
+accept*, and settles Map first M7 and M9 (TODO.md history).
+
+The founder's call: one walk a day made a bad plan, or a walk cut short by
+rain, the whole day's. **End walk** ends today's walk at any point, and the map
+comes back with Plan a walk on it. The rule is now one walk *in progress* per
+device, not one a day.
+
+- `daily_routes` gains `ended_at` and an `id`, and `(device_id, route_date)` is
+  a partial unique index over rows not ended (migration 027). Accept still
+  writes with `ON CONFLICT ... DO NOTHING` against it, so two accepts racing
+  still store one walk.
+- `POST /v1/routes/today/end` sets `ended_at`. The row is kept, not deleted:
+  the journal lists the walk (F31), and the streak joins unlocks to walks
+  (F27), so deleting it would take a day's streak with it.
+- An ended walk's unearned stops lock again: `ON_TODAYS_ROUTE_QUERY` and the
+  completion check read only the walk in progress. What was opened stays open.
+- The app asks first when stops are left ("End this walk?", an in-app card:
+  the app raises no system dialog). A walked walk ends without asking, since
+  nothing is lost.
+
+Pause ("Resume walk") was the other option in M9, and the smaller change; it
+kept the day lock, which is what the founder wanted gone. M7 (a pin tapped
+during a walk) has no case left: off-route pins are hidden on a walk, and
+after ending one, Walk here plans the next.
+
+A walk planned again the same day is seeded the same (`device:date`), so the
+same ask can give the same stops; the app rolls `again` afresh for every plan,
+which is what varies it.
 
 **The search radius is half the length.** A loop cannot reach further out than
 half its length, so `budget_meters / 2` is where candidates come from. It

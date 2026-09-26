@@ -58,6 +58,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F30 | Finish a walk | Implemented |
 | F31 | Look back at a walk | Implemented |
 | F33 | Leave a note | Implemented |
+| F34 | End a walk | Implemented |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
 screen — no carousel, no settings anybody
@@ -187,9 +188,9 @@ somebody can hand their old phone in and still have everything they walked for.
    lands on the walk (F25). **Change length** goes back to the slider, and
    nothing was stored, so it costs nothing.
 
-**Accepting is final for the day.** One walk per device per day, and there is
-no replanning until tomorrow — that is why the preview exists at all. A
-relaunch after accepting skips this page and goes straight to the walk.
+**Accepting starts the walk.** It stands until it is ended (F34), and then
+another can be planned the same day. A relaunch after accepting skips this
+page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length, or with that
 theme — the card reads
@@ -817,11 +818,11 @@ anyone else's collection or the local unlock cache.
    the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
-**One walk a day, and it is locked.** `POST /v1/routes/today` stores the first
-accept with `ON CONFLICT DO NOTHING`; a second accept, from anywhere, at any
-length, gets the first walk back. `GET /v1/routes/today` only reads — 404 until
-something is accepted — and is how a relaunch decides between the walk and the
-plan page. No replanning until tomorrow, by decision.
+**One walk at a time.** `POST /v1/routes/today` stores the first accept with
+`ON CONFLICT DO NOTHING`; a second accept, from anywhere, at any length, gets
+the first walk back until it is ended (F34). `GET /v1/routes/today` only reads
+— 404 until something is accepted, or once it is ended — and is how a relaunch
+decides between the walk and the map.
 
 **Not a new mechanic — the same one, five times.** A route stop is nothing but
 an ordinary gated memory with one extra fact attached, its position in today's
@@ -1009,6 +1010,26 @@ that finished the walk in this session, so a relaunch on a walked day lands on
 the pill, not the card. There is no share button, by decision (2026-09-24).
 `App.tsx` (`walkDone`), `src/Plan.tsx` (`WalkDone`), `.maestro/walk-and-unlock.yml`.
 Why each of these, in `docs/10-decisions.md`, "The walk ends on a card, once".
+
+## F34 · End a walk — **Implemented**
+
+**Who:** somebody on a walk who wants out of it: a bad plan, rain, or a walk
+already walked and another in mind.
+
+1. **End walk**, top centre on the walk, between Journal and + Add.
+2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
+   haven't reached lock again. What you opened stays yours.", **End walk** and
+   **Keep walking**. A walked walk skips the card: nothing is lost.
+3. Ended, the map of what is locked comes back (F29) with **Plan a walk**, and
+   another walk can be planned the same day.
+
+The ended walk stays in the journal (F31) with what it earned, and still counts
+for the streak (F27). Its unearned stops cannot be unlocked any more (F14).
+Offline, the card says "Can't reach Memory Lane right now." and the walk goes on.
+
+`App.tsx` (`endWalk`, `confirmEnd`), `src/Plan.tsx` (`EndWalk`),
+`POST /v1/routes/today/end`, `.maestro/walk-and-unlock.yml`. Why, in
+`docs/10-decisions.md`, "A walk can be ended, and another planned".
 
 ## F31 · Look back at a walk — **Implemented**
 

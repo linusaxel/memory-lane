@@ -1,6 +1,6 @@
 /** The first thing the app asks: how far today. Then the walk it would be, on
- *  the map, to accept or change. One walk a day - accepting is final until
- *  tomorrow, which is why the preview exists at all.
+ *  the map, to accept or change. A walk can be ended any time and another
+ *  planned (EndWalk); the preview is still the look before you commit.
  *
  *  It opens from the map's "Plan a walk" (F29) and goes back to it. From a
  *  pin's "Walk here" it plans a walk through that memory, and the slider
@@ -182,7 +182,7 @@ export function Preview({
           disabled={busy}
           accessibilityRole="button"
           accessibilityLabel="Accept this walk"
-          accessibilityHint="This is today's walk. It can't be changed until tomorrow."
+          accessibilityHint="Starts this walk. You can end it any time."
         >
           {busy ? (
             <ActivityIndicator color={color.paper} />
@@ -230,6 +230,57 @@ type WalkDoneProps = {
   streak: number;
   onDone: () => void;
 };
+
+type EndWalkProps = {
+  /** Stops not reached yet: they lock again. */
+  left: number;
+  busy: boolean;
+  error: string | null;
+  onEnd: () => void;
+  onKeep: () => void;
+};
+
+/** "Are you sure?" before a walk is ended with stops still to reach. A card,
+ *  not a system dialog: this app never raises one of its own. */
+export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
+  return (
+    <View style={styles.card} accessibilityViewIsModal>
+      <Text style={styles.cardTitle} accessibilityRole="header">
+        End this walk?
+      </Text>
+      <Text style={styles.cardBody}>
+        {`${
+          left === 1
+            ? "The stop you haven't reached locks again."
+            : `The ${left} stops you haven't reached lock again.`
+        } What you opened stays yours.`}
+      </Text>
+      <Pressable
+        style={dim(styles.primary)}
+        onPress={onEnd}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="End walk"
+      >
+        {busy ? (
+          <ActivityIndicator color={color.paper} />
+        ) : (
+          <Text style={styles.primaryText}>End walk</Text>
+        )}
+      </Pressable>
+      <Pressable
+        style={dim(styles.secondary)}
+        onPress={onKeep}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Keep walking"
+      >
+        <Text style={styles.secondaryText}>Keep walking</Text>
+      </Pressable>
+      {error && <Text style={styles.error}>{error}</Text>}
+    </View>
+  );
+}
 
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
 export function WalkDone({ stops, meters, loop, minutes, streak, onDone }: WalkDoneProps) {

@@ -28,6 +28,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
   acceptRoute,
+  endRoute,
   fetchNearby,
   fetchProfile,
   fetchTodaysRoute,
@@ -52,7 +53,7 @@ import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, reachOf } from './src/reach.ts';
 import { around, metersBetween, pathMeters, type Region, walkFloorKm } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
-import { loadRoute, saveRoute } from './src/route.ts';
+import { clearRoute, loadRoute, saveRoute } from './src/route.ts';
 import {
   forgetUnlocked,
   inUnlockOrder,
@@ -64,7 +65,7 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
+import { EndWalk, Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import Submit from './src/Submit.tsx';
@@ -190,6 +191,8 @@ export default function App() {
   // server said reaches it, once it has said so (0 until then).
   const [walkTo, setWalkTo] = useState<LocatedMemory | null>(null);
   const [walkToKm, setWalkToKm] = useState(0);
+  // "End walk" was tapped with stops still to reach: the are-you-sure card.
+  const [confirmEnd, setConfirmEnd] = useState(false);
   // The locked memories around you, before any walk (F29).
   const [nearby, setNearby] = useState<LocatedMemory[]>([]);
   const [planBusy, setPlanBusy] = useState(false);
@@ -462,6 +465,30 @@ export default function App() {
       }
     })();
   }, [device, takeRoute]);
+
+  /** End today's walk and go back to the map, where another can be planned. */
+  const endWalk = useCallback(async () => {
+    if (!device) return;
+    setPlanBusy(true);
+    setPlanError(null);
+    try {
+      await endRoute(device);
+      if (!mounted.current) return;
+      setRoute([]);
+      setRouteSize(null);
+      setRouteLegs(null);
+      setRouteHome(null);
+      setRouteStarted(false);
+      setWalkDone(false);
+      setConfirmEnd(false);
+      clearRoute();
+      setStage('map');
+    } catch {
+      if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
+    } finally {
+      if (mounted.current) setPlanBusy(false);
+    }
+  }, [device]);
 
   // The shortest walk that reaches the "Walk here" memory: the estimate from
   // where you are, or what the server said, whichever is longer. It lifts the
@@ -1226,6 +1253,19 @@ export default function App() {
             />
           )}
 
+          {confirmEnd && (
+            <EndWalk
+              left={routeTotal - routeUnlockedCount}
+              busy={planBusy}
+              error={planError}
+              onEnd={endWalk}
+              onKeep={() => {
+                setPlanError(null);
+                setConfirmEnd(false);
+              }}
+            />
+          )}
+
           {showDone && (
             <WalkDone
               stops={routeUnlockedCount}
@@ -1293,6 +1333,22 @@ export default function App() {
           >
             <Text style={styles.cornerText}>+ Add</Text>
           </Pressable>
+          {/* Top, between them: where the walk's own bar goes (TODO.md M8).
+              Nothing left to reach, nothing to lose, so no are-you-sure. */}
+          {walking && !showDone && !confirmEnd && (
+            <Pressable
+              style={dim([styles.corner, styles.endWalk])}
+              accessibilityRole="button"
+              accessibilityLabel="End walk"
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                if (routeDone) endWalk();
+                else setConfirmEnd(true);
+              }}
+            >
+              <Text style={styles.cornerText}>End walk</Text>
+            </Pressable>
+          )}
         </View>
 
         <View style={[styles.cover, !journalOpen && styles.hidden]}>
@@ -1405,6 +1461,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   journal: { left: 18 },
+  endWalk: { alignSelf: 'center' },
   add: { right: 18 },
   cornerText: { ...label, color: color.ink },
   locate: {

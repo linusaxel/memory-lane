@@ -190,7 +190,8 @@ Decided 2026-09-26 (the founder's ramble): after sign-in the app opens on a
 map of what is locked around you, and a walk is how you open any of it. Each
 step ships and stands on its own; in order. M1, M2 and M4 shipped 2026-09-26
 (F29, docs/10 *A map of what is locked*); M5 and M6 (Walk here plans a walk
-through that pin) shipped the same day.
+through that pin) and M9 (End walk, F34) shipped the same day; M7 went with the
+day lock (docs/10 *A walk can be ended*).
 
 - [ ] **M3 A direction arrow on the user dot.** (checked 2026-09-26:
       react-native-maps 1.29.8 has no heading or tracking-mode prop, so no code
@@ -198,26 +199,14 @@ through that pin) shipped the same day.
       heading beam with `showsUserLocation` (`mobile/App.tsx`); the simulator
       has no compass. Only if not: `Location.watchHeadingAsync` and a custom
       marker. Needs somebody with a device.
-- [ ] **M7 A pin tapped after today's walk is accepted.** One walk a day
-      stands, so "Walk here" cannot plan a second. Decide before building:
-      the peek says "On tomorrow's walk" and the pin is remembered for
-      tomorrow's plan, or the button is simply absent. Undecided.
 - [ ] **M8 Say "you are on a walk".** (checked 2026-09-26: there is no walk
       mode today, only the app. Once accepted, the map is the walk until
-      midnight, and the F25 pill "Today's route · 0 of 5" is the only hint.)
+      it is ended (F34), and the F25 pill "Today's route · 0 of 5" is the only hint.)
       With M2 the map has two states, so the walk needs to look like one: a
       persistent top bar "On today's walk · 2 of 5" in place of Journal/+ Add,
       route-blue, and the off-route pins hidden as F25 already does. One
-      signal, not three. Update F25 and mobile/UI.md.
-- [ ] **M9 Leave the walk at any time.** An "End walk" on that bar returns to
-      the map of locked pins (M2). Decide before building: it *pauses* (today's
-      `daily_routes` row stays, the bar on the map says "Resume walk", earned
-      stops stay earned, and one walk a day stands) or it *abandons* (the row
-      is deleted and a new plan is allowed, which reopens the day lock in
-      docs/10 § *Preview, then accept*). Pause is the smaller change and keeps
-      the decision; abandon needs a superseded entry. No confirm dialog for
-      pause; one for abandon.
-
+      signal, not three. F34's End walk (top centre today) moves onto it.
+      Update F25 and mobile/UI.md.
 - [ ] **Authored walks: the rest of `routes` + `route_stops`.** (checked
       2026-09-24) Migration 023 and `GET /v1/routes/{id}` exist, published
       only, kept to `title, status, is_loop`. No author, theme, source, budget
@@ -233,9 +222,9 @@ through that pin) shipped the same day.
 - [ ] **Customise by one swap, not a route editor.** (checked 2026-09-24) The
       length slider, loop toggle and theme chip shipped. Left: (1) "Swap this
       stop", remove it and re-insert the next-best candidate; (3)
-      drag-to-reorder, last, since stops unlock in any order anyway. **Decided
-      2026-09-23:** one accepted walk per device per day, so a swap needs that
-      reopened first.
+      drag-to-reorder, last, since stops unlock in any order anyway. A swap
+      changes the walk in progress; ending it and planning again (F34) is the
+      workaround until then.
 - [ ] **An end point per request, never stored.** (checked 2026-09-23) "End at
       the subway" is a one-way OP. ⚠️ Storing it would bring back the stored
       home that docs/10 § Routes decided against. Skip until someone asks.

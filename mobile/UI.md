@@ -45,6 +45,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "Journal"                  top left, every stage, plan page included
 ├─ "+ Add"                    top right, every stage: filing needs no walk. See "Writing"
+├─ "End walk"                 top centre, the corners' shape (F34). With stops left, a card
+│                              (EndWalk): "End this walk?", End walk / Keep walking. No system dialog
 ├─ NextStopArrow              route blue, on the screen's edge, pointing at the next
 │                              stop while it is off screen (src/NextStopArrow.tsx)
 ├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap zooms out around you to the next stop;

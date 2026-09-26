@@ -57,6 +57,14 @@ appId: ${APP_ID}
     visible: "Today's route · 0 of 5 unlocked\\."
     timeout: 40000
 
+# A walk can be ended any time; with stops still to reach, it asks first.
+- tapOn: "End walk"
+- assertVisible: "End this walk\\?"
+- assertVisible: "The 5 stops you haven't reached lock again\\. What you opened stays yours\\."
+- tapOn: "Keep walking"
+- assertNotVisible: "End this walk\\?"
+- assertVisible: "Today's route · 0 of 5 unlocked\\."
+
 # "Turn on location" shows until there is a position, so its going is the fix.
 # Waiting on it means a slow fix reads as a slow fix, not as a locked stop.
 - extendedWaitUntil:
@@ -199,8 +207,8 @@ appId: ${APP_ID}
 - tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the
-# whole assertion. And the day is locked: the relaunch lands on the walked
-# route, not on the plan page.
+# whole assertion. And the walk stands until it is ended: the relaunch lands
+# on the walked route, not on the plan page.
 - launchApp
 - extendedWaitUntil:
     visible: "Route walked · 5 of 5 unlocked\\."
@@ -218,3 +226,14 @@ appId: ${APP_ID}
 - tapOn: "Close"
 - tapOn: "Close journal"
 - assertVisible: "Route walked · 5 of 5 unlocked\\."
+
+# Ending a walked walk loses nothing, so it does not ask. The map, and
+# another walk to plan the same day.
+- tapOn: "End walk"
+- assertNotVisible: "End this walk\\?"
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 30000
+- assertNotVisible: "Route walked · .*"
+- tapOn: "Plan a walk"
+- assertVisible: "How far today\\?"

@@ -437,14 +437,15 @@ STREAK_DAYS_QUERY = f"""
     ORDER BY d DESC
 """
 
-# Is this memory a stop of today's walk, on any of this account's devices?
-# The only thing the unlock asks besides the gate (docs/10, "Only today's walk
-# unlocks").
+# Is this memory a stop of today's walk in progress, on any of this account's
+# devices? The only thing the unlock asks besides the gate (docs/10, "Only
+# today's walk unlocks"). An ended walk's stops lock again.
 ON_TODAYS_ROUTE_QUERY = f"""
     SELECT EXISTS (
         SELECT 1 FROM daily_routes
         WHERE device_id IN {MY_DEVICES}
           AND route_date = CAST(:today AS date)
+          AND ended_at IS NULL
           AND :memory_id = ANY(memory_ids)
     )
 """
@@ -506,6 +507,7 @@ ROUTE_COMPLETED_QUERY = f"""
 UPDATE daily_routes r SET completed_at = CURRENT_TIMESTAMP
 WHERE r.device_id = CAST(:device_id AS uuid)
   AND r.route_date = CAST(:today AS date)
+  AND r.ended_at IS NULL
   AND r.completed_at IS NULL
   AND :memory_id = ANY(r.memory_ids)
   AND NOT EXISTS (
@@ -516,7 +518,8 @@ WHERE r.device_id = CAST(:device_id AS uuid)
 """
 
 # Every walk this account accepted, newest first - across MY_DEVICES, so a new
-# phone signed in gets its history the way it gets its unlocks (F22).
+# phone signed in gets its history the way it gets its unlocks (F22). Ended
+# walks too: what was earned on one was walked.
 WALKED_QUERY = f"""
 SELECT route_date, memory_ids, budget_meters, legs, loop, completed_at
 FROM daily_routes
