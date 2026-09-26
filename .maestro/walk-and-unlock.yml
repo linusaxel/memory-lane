@@ -31,9 +31,9 @@ appId: ${APP_ID}
 - launchApp:
     clearState: true
     permissions:
-      # iOS takes always/inuse/never/unset here, not allow. `inuse` is also the
-      # only honest value: the app is foreground-only and app.json blocks
-      # ACCESS_BACKGROUND_LOCATION (UI.md rule 2).
+      # iOS takes always/inuse/never/unset here, not allow. `inuse` because
+      # background location is only asked for by the opt-in nearby toggle
+      # (mobile/src/geofence.ts), which this flow never turns on.
       location: inuse
 
 - runFlow: steps/sign-in.yml
