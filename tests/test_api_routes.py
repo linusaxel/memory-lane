@@ -789,3 +789,72 @@ def test_an_ended_walk_keeps_what_it_earned_and_locks_the_rest(client, db_sessio
     [walk] = client.get(f"/v1/routes/walked?device={DEVICE}").json()["walks"]
     assert (walk["meta"]["earned"], walk["meta"]["completed_at"]) == (1, None)
     assert client.get(f"/v1/me?device={DEVICE}").json()["streak"] == 1
+
+
+def _subscribe(session, days=30):
+    """Bind DEVICE to an account paid up for `days` (negative: lapsed)."""
+    session.execute(
+        text("INSERT INTO devices (id) VALUES (CAST(:d AS uuid)) ON CONFLICT DO NOTHING"),
+        {"d": DEVICE},
+    )
+    user_id = session.execute(
+        text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
+    ).scalar()
+    session.execute(
+        text("UPDATE devices SET user_id = :u WHERE id = CAST(:d AS uuid)"),
+        {"u": user_id, "d": DEVICE},
+    )
+    session.execute(
+        text(
+            "INSERT INTO subscriptions (user_id, expires_at) "
+            "VALUES (:u, CURRENT_TIMESTAMP + make_interval(days => :days))"
+        ),
+        {"u": user_id, "days": days},
+    )
+    session.commit()
+
+
+def _walk_one_stop(client):
+    stop = _route(client).json()["memories"][0]
+    at = stop["place"]["coordinates"]
+    assert client.post(
+        f"/v1/memories/{stop['id']}/unlock", json={"device": DEVICE, **at}
+    ).is_success
+    _end(client)
+
+
+def test_a_walk_that_opened_something_is_the_days_free_walk(client, db_session):
+    for n in range(1, 9):
+        _offset(db_session, n)
+    db_session.commit()
+    _walk_one_stop(client)
+
+    for refused in (_preview(client), _route(client)):
+        assert refused.status_code == 403
+        assert refused.json()["detail"] == {"reason": "walked_today"}
+
+
+@pytest.mark.parametrize(("days", "again"), [(30, True), (-1, False)])
+def test_a_subscriber_walks_again_and_a_lapsed_one_does_not(client, db_session, days, again):
+    for n in range(1, 9):
+        _offset(db_session, n)
+    _subscribe(db_session, days)
+    _walk_one_stop(client)
+    assert (_route(client).status_code == 200) is again
+
+
+@pytest.mark.parametrize(("days", "opens"), [(30, True), (-1, False)])
+def test_a_subscriber_opens_what_they_stand_on_without_a_walk(client, db_session, days, opens):
+    memory = _offset(db_session, 1)
+    _subscribe(db_session, days)
+
+    def unlock(lat):
+        return client.post(
+            f"/v1/memories/{memory}/unlock", json={"device": DEVICE, "lat": lat, "lng": LNG}
+        )
+
+    here = unlock(LAT + 0.001)
+    assert here.status_code == (200 if opens else 403)
+    if opens:
+        assert not here.json()["locked"]
+        assert unlock(LAT + 0.01).json()["locked"], "paid for, but still gated on standing there"

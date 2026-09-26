@@ -173,6 +173,43 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
 
 ---
 
+## Paid map unlock
+
+Decided 2026-09-26 (the founder): a walk is free and opens its stops;
+opening a pin from the map with no walk, or a second walk the same day, needs
+a subscription. Server side shipped 2026-09-26 (docs/10 *A subscription opens
+the map*): the `subscriptions` table, the unlock's `SUBSCRIBED_QUERY` and the
+one-free-walk-a-day refusal. Nothing writes `subscriptions` yet, so everybody
+is free. What is left is blocked on `EAS_BUILD` and `STORE_ACCOUNT`.
+
+- [ ] **S3 Purchases verified server-side, never a client flag.** (checked
+      2026-09-26) A client-side entitlement is a client-side gate. Pick one:
+      RevenueCat (one SDK and one webhook for both stores, free under $2.5k
+      a month of revenue) or the App Store Server API plus the Play Developer
+      API direct (free for ever, twice the code). Either way a webhook writes
+      `subscriptions` (widen it to what the store sends), authenticated by a
+      shared secret; renewals, refunds and expiry come through it.
+      `accounts.absorb` must carry a row to the account it merges into. New knobs go in `pipeline/config.py` and
+      docs/01. Tests use a fake, never the store.
+- [ ] **S4 The paywall in the app.** (checked 2026-09-26) `subscribed` on
+      `GET /v1/me`, then: on a pin's peek, standing in range with no walk
+      through it, **Open** for a subscriber; otherwise a sheet that sells it,
+      with Walk here as the free way if today's walk is not spent. The same
+      sheet replaces "You've had today's walk. Another tomorrow." on the
+      `walked_today` 403. Needs Restore purchases, the price and period, and
+      terms and privacy links, or App Review rejects it. The purchase SDK
+      needs a dev build; Expo Go cannot buy anything. UI.md for the sheet.
+- [ ] **S5 A way past the paywall for e2e.** (checked 2026-09-26) The same
+      shape as the gate's dev knob (docs/10, the e2e entry): a dev-only
+      entitlement a release build cannot take. Then an e2e flow for each:
+      paywall shown, subscriber opens off-walk.
+- [ ] **S6 The products in the stores.** (checked 2026-09-26) One
+      auto-renewing subscription in App Store Connect and Play, a price, a
+      sandbox tester, and the subscription disclosed in both listings. Waits
+      on `STORE_ACCOUNT`.
+
+---
+
 ## Copenhagen journeys
 
 - [ ] **A long walk still falls short where the map runs out.** (checked

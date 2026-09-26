@@ -573,6 +573,8 @@ export default function App() {
         const km = Math.ceil(refusal.min_budget_meters / 1000 / WALK_KM.step) * WALK_KM.step;
         setWalkToKm(km);
         setPlanError(`Too far for ${planKm} km: at least ${km} km.`);
+      } else if (refusal?.reason === 'walked_today') {
+        setPlanError("You've had today's walk. Another tomorrow.");
       } else if (refusal) {
         setWalkTo(null);
         setPlanError("That memory can't be on a walk from here.");

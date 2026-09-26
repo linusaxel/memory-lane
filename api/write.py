@@ -48,6 +48,7 @@ from api.queries import (
     ROUTE_COMPLETED_QUERY,
     SINGLE_MEMORY_QUERY,
     SUBMISSION_INSERT,
+    SUBSCRIBED_QUERY,
 )
 from pipeline.db import get_session
 from pipeline.tags import from_text as hashtags
@@ -127,11 +128,9 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
         if not row:
             raise HTTPException(status_code=404, detail="Memory not found")
 
-        on_route = session.execute(
-            text(ON_TODAYS_ROUTE_QUERY),
-            {"device_id": body.device, "memory_id": memory_id, "today": today()},
-        ).scalar()
-        if not on_route:
+        binds = {"device_id": body.device, "memory_id": memory_id, "today": today()}
+        on_route = session.execute(text(ON_TODAYS_ROUTE_QUERY), binds).scalar()
+        if not on_route and not session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
             raise HTTPException(status_code=403, detail="Not on today's walk")
 
         at = Coordinates(lat=body.lat, lng=body.lng)

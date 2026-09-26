@@ -260,6 +260,13 @@ CREATE TABLE daily_routes (
 CREATE UNIQUE INDEX daily_routes_in_progress
     ON daily_routes (device_id, route_date) WHERE ended_at IS NULL;
 
+-- Who has paid, and until when: on the account, so every device of it is
+-- covered. See db/migrations/028_subscriptions.sql.
+CREATE TABLE subscriptions (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMP NOT NULL
+);
+
 -- An authored walk, served by GET /v1/routes/{id} once published. A join
 -- table here, unlike daily_routes: it is long-lived, ordered and edited. See
 -- db/migrations/023_authored_routes.sql.

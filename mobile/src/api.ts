@@ -343,13 +343,20 @@ export async function fetchTodaysRoute(
  *  where a one-way walk finishes; the server stores it nowhere. */
 export type WalkAsk = { loop: boolean; end: Coordinates | null };
 
-/** Why a walk through `include` was refused: too short to reach it (and the
- *  length that would), or it cannot be a stop at all. Null for anything else. */
+/** Why a walk was refused: too short to reach `include` (and the length that
+ *  would), `include` cannot be a stop at all, or today's free walk is taken.
+ *  Null for anything else. */
 export function walkHereRefusal(
   e: unknown,
-): { reason: 'too_far'; min_budget_meters: number } | { reason: 'not_a_stop' } | null {
+):
+  | { reason: 'too_far'; min_budget_meters: number }
+  | { reason: 'not_a_stop' }
+  | { reason: 'walked_today' }
+  | null {
   const detail = (e as ApiError)?.detail as { reason?: string } | undefined;
-  return detail?.reason === 'too_far' || detail?.reason === 'not_a_stop'
+  return detail?.reason === 'too_far' ||
+    detail?.reason === 'not_a_stop' ||
+    detail?.reason === 'walked_today'
     ? (detail as ReturnType<typeof walkHereRefusal>)
     : null;
 }

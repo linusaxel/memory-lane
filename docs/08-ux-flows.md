@@ -189,8 +189,9 @@ somebody can hand their old phone in and still have everything they walked for.
    loop, and lands on the walk (F25). **Change length** goes back to the slider, and
    nothing was stored, so it costs nothing.
 
-**Accepting starts the walk.** It stands until it is ended (F34), and then
-another can be planned the same day. A relaunch after accepting skips this
+**Accepting starts the walk.** It stands until it is ended (F34). Another the
+same day needs a subscription, unless the first opened nothing (docs/10,
+*A subscription opens the map*). A relaunch after accepting skips this
 page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length — the card reads
@@ -204,7 +205,8 @@ than the estimate, and the page says "Too far for 2 km: at least 3 km." and
 lifts the slider to it; further than 10 km reaches, "Too far for a walk from
 here: at least 12 km." and no button; the pin can no longer be a stop (earned,
 hidden), "That memory can't be on a walk from here." and the plan goes on
-without it.
+without it. Today's free walk already taken — "You've had today's walk.
+Another tomorrow." (the paywall comes with TODO.md S4).
 
 **Done when:** Plan a walk shows the slider and no system dialog, a press
 shows a whole walk on the map, and Accept makes it today's.

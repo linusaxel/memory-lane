@@ -440,8 +440,9 @@ STREAK_DAYS_QUERY = f"""
 """
 
 # Is this memory a stop of today's walk in progress, on any of this account's
-# devices? The only thing the unlock asks besides the gate (docs/10, "Only
-# today's walk unlocks"). An ended walk's stops lock again.
+# devices? What the unlock asks besides the gate, unless the account is
+# subscribed (docs/10, "Only today's walk unlocks"). An ended walk's stops lock
+# again.
 ON_TODAYS_ROUTE_QUERY = f"""
     SELECT EXISTS (
         SELECT 1 FROM daily_routes
@@ -449,6 +450,28 @@ ON_TODAYS_ROUTE_QUERY = f"""
           AND route_date = CAST(:today AS date)
           AND ended_at IS NULL
           AND :memory_id = ANY(memory_ids)
+    )
+"""
+
+# Is this device's account paid up? A device with no account never is. Only
+# the store's webhook writes the row (docs/10, "A subscription opens the map").
+SUBSCRIBED_QUERY = """
+    SELECT EXISTS (
+        SELECT 1 FROM subscriptions s JOIN devices d ON d.user_id = s.user_id
+        WHERE d.id = CAST(:device_id AS uuid) AND s.expires_at > CURRENT_TIMESTAMP
+    )
+"""
+
+# Has this account already had today's free walk? Any walk today on any of its
+# devices, bar this device's own in progress. An ended walk that opened nothing
+# was deleted by ROUTE_PRUNE, so it never counts: a bad plan or rain before the
+# first stop does not spend the day.
+WALKED_TODAY_QUERY = f"""
+    SELECT EXISTS (
+        SELECT 1 FROM daily_routes
+        WHERE device_id IN {MY_DEVICES}
+          AND route_date = CAST(:today AS date)
+          AND NOT (device_id = CAST(:device_id AS uuid) AND ended_at IS NULL)
     )
 """
 

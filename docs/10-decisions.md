@@ -156,6 +156,30 @@ Filing still opens its own memory for its author: that unlock is written by
 (F27), or the limit could be dodged by posting. Position is still self-reported,
 so a spoofed GPS walks today's five from a sofa, and no more than five.
 
+### A subscription opens the map
+
+Status: Accepted 2026-09-26. Amends *Only today's walk unlocks* and *A walk
+can be ended*; the gate is untouched.
+
+The founder's monetisation: a walk is free and opens its stops; opening a pin
+straight from the map, with no walk, is what a subscription buys. You still
+stand on it: `SUBSCRIBED_QUERY` relaxes `ON_TODAYS_ROUTE_QUERY` in the unlock,
+never the 20 m.
+
+Walk here plans a walk through any pin and End walk frees the day, so on
+their own they would open any pin for free in two taps and leave nothing to
+sell. So the day lock is back, per account and for free accounts only
+(`WALKED_TODAY_QUERY`, refused 403 `walked_today` at preview and accept). Its
+old cost, a bad plan or rain spending the day, is kept small: an ended walk
+that opened nothing is deleted (`ROUTE_PRUNE`), so it never counted.
+
+**Consequences:** `subscriptions` is on the account, not the device, so an
+unbound device (the dev-build Skip) is never subscribed. Only the store's
+webhook may write it, never the app: a client-side entitlement is a
+client-side gate (TODO.md S3). Until then nothing writes it and everybody is
+free. A subscriber with a spoofed GPS opens every pin from a sofa, not five:
+they have paid, and the position was always self-reported.
+
 ---
 
 ## Queries
@@ -1023,7 +1047,9 @@ accept*, and settles Map first M7 and M9 (TODO.md history).
 The founder's call: one walk a day made a bad plan, or a walk cut short by
 rain, the whole day's. **End walk** ends today's walk at any point, and the map
 comes back with Plan a walk on it. The rule is now one walk *in progress* per
-device, not one a day.
+device, not one a day. **Amended 2026-09-26** by *A subscription opens the
+map*: one free walk a day per account again, but ending one that opened
+nothing gives the day back.
 
 - `daily_routes` gains `ended_at` and an `id`, and `(device_id, route_date)` is
   a partial unique index over rows not ended (migration 027). Accept still

@@ -13,7 +13,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory, gated
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
-  403 unless the memory is a stop of this account's walk today
+  403 unless the memory is a stop of this account's walk today, or the account
+  is subscribed (`subscriptions`)
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
   of that length from there would be: up to five stops. Stores nothing.
@@ -24,14 +25,16 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `{reason: "too_far", min_budget_meters}` when the streets there are longer
   than this walk. `end_lat` and `end_lng`, together, are where a one-way walk
   finishes (it makes the walk one-way, and is stored nowhere); the same
-  `too_far` when this walk cannot reach it
+  `too_far` when this walk cannot reach it. 403 with `{reason: "walked_today"}`
+  when the account has had today's free walk and is not subscribed
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, include?, end?}` - accept it. The
   same solve, stored; one in progress per device, and a second accept gets
-  that walk back until it is ended. The only stop id the client ever sends is `include`, vetted
+  that walk back until it is ended. The same `walked_today` 403 as the preview. The only stop id the client ever sends is `include`, vetted
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;
   204, and 204 again with nothing to end. A walk that opened something stays
   in `walked`; one that opened nothing is deleted. Its unearned stops lock
-  again, and another can be accepted
+  again, and another can be accepted if it opened nothing or the account is
+  subscribed
 - `GET /v1/routes/today?device=UUID` - today's walk in progress, or 404. Only reads
 - `GET /v1/routes/walked?device=UUID` - every walk the account took that
   opened something, newest first: earned stops open, `earned` of `size`, `completed_at`

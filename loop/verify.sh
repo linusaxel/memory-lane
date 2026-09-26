@@ -37,7 +37,7 @@ $PY -m ruff format --check . >/dev/null || { echo "GATE=RED not formatted - run:
 # Only pay the Docker cost when a test is actually marked `db`.
 if $PY -m pytest --collect-only -q -m db 2>/dev/null | grep -q '::'; then
   docker info >/dev/null 2>&1 || { echo "GATE=INFRA Docker is not running - a human must start Docker Desktop"; exit 2; }
-  docker compose up -d db >/dev/null 2>&1 || { echo "GATE=INFRA db service failed to start"; exit 2; }
+  docker compose up -d --wait db >/dev/null 2>&1 || { echo "GATE=INFRA db service failed to start"; exit 2; }
   for _ in $(seq 1 30); do
     docker compose exec -T db pg_isready -U memorylane -q 2>/dev/null && break
     sleep 1
