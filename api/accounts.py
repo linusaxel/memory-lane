@@ -101,8 +101,11 @@ def profile_of(session, device: str) -> Profile:
                     (SELECT array_agg(i.provider ORDER BY i.created_at)
                      FROM identities i WHERE i.user_id = u.id),
                     ARRAY[]::varchar[]
-                ) AS providers
+                ) AS providers,
+                s.expires_at AS subscribed_until,
+                COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed
             FROM devices d JOIN users u ON d.user_id = u.id
+            LEFT JOIN subscriptions s ON s.user_id = u.id
             WHERE d.id = CAST(:device_id AS uuid)
         """),
         {"device_id": device},
@@ -122,6 +125,8 @@ def profile_of(session, device: str) -> Profile:
         unlocked=unlocked,
         streak=streak,
         providers=list(row.providers),
+        subscribed=row.subscribed,
+        subscribed_until=row.subscribed_until,
     )
 
 
@@ -171,6 +176,18 @@ def absorb(session, old_user: str, new_user: str) -> None:
     )
     session.execute(
         text("UPDATE devices SET user_id = CAST(:new AS uuid) WHERE user_id = CAST(:old AS uuid)"),
+        {"new": new_user, "old": old_user},
+    )
+    # Before the delete, whose cascade would take the subscription with it. Of
+    # the two, the one that runs longer.
+    session.execute(
+        text("""
+            INSERT INTO subscriptions (user_id, expires_at)
+            SELECT CAST(:new AS uuid), expires_at FROM subscriptions
+            WHERE user_id = CAST(:old AS uuid)
+            ON CONFLICT (user_id) DO UPDATE
+                SET expires_at = GREATEST(subscriptions.expires_at, EXCLUDED.expires_at)
+        """),
         {"new": new_user, "old": old_user},
     )
     session.execute(text("DELETE FROM users WHERE id = CAST(:id AS uuid)"), {"id": old_user})

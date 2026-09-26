@@ -227,8 +227,9 @@ appId: ${APP_ID}
 - tapOn: "Close journal"
 - assertVisible: "On a walk · 5 of 5 unlocked\\."
 
-# Ending a walked walk loses nothing, so it does not ask. The map, and
-# another walk to plan the same day.
+# Ending a walked walk loses nothing, so it does not ask. The map, and the
+# plan page, but a second walk the same day is the paywall's (F35): it opened
+# something, so it was today's free one.
 - tapOn: "On a walk.*"
 - assertNotVisible: "End this walk\\?"
 - extendedWaitUntil:
@@ -237,3 +238,9 @@ appId: ${APP_ID}
 - assertNotVisible: "On a walk.*"
 - tapOn: "Plan a walk"
 - assertVisible: "How far today\\?"
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "Open any memory you stand on"
+    timeout: 20000
+- tapOn: "Not now"
+- assertVisible: "You've had today's walk\\. Another tomorrow, or subscribe\\."

@@ -180,6 +180,40 @@ client-side gate (TODO.md S3). Until then nothing writes it and everybody is
 free. A subscriber with a spoofed GPS opens every pin from a sofa, not five:
 they have paid, and the position was always self-reported.
 
+### RevenueCat sells it; our table decides
+
+Status: Accepted 2026-09-27 (the founder's pick of the two in TODO.md S3).
+
+RevenueCat takes both stores' purchases, renewals, refunds and grace periods
+behind one SDK and one webhook, and is free until $2.5k a month of revenue.
+Talking to the App Store Server API and the Play Developer API direct is free
+for ever and roughly twice the code, in two integrations that break
+separately. Launch is both platforms, monthly and yearly, no trial.
+
+What stays ours is the only thing that opens anything: `subscriptions`. Three
+rules keep it honest (`api/billing.py`):
+
+- **RevenueCat's `app_user_id` is `users.id`.** The app calls `logIn` with the
+  account id, so the webhook names a user we know. A device with no account
+  (the dev-build Skip) is nobody to RevenueCat and cannot buy.
+- **The event body is a doorbell, not a fact.** Every event reads the
+  subscriber back from RevenueCat's REST API and makes the row match: an
+  entitlement `map` with its `expires_date`, or no row. Duplicate, late and
+  out-of-order events cannot leave a wrong row, and purchase, renewal, refund
+  and expiry are one code path.
+- **The app is never believed.** A purchase in the app calls
+  `POST /v1/me/subscription`, which does the same read-back, so the unlock a
+  second later is not waiting on the webhook. It cannot claim anything the
+  store did not say.
+
+**Consequences:** the webhook is the first endpoint here with a credential
+other than a device id: a shared secret in `Authorization`, compared in
+constant time, and 503 when unset (as `api/auth.py` does for sign-in). An
+unknown `app_user_id` is answered 200 and ignored, or RevenueCat retries it
+for days. `accounts.absorb` carries the row to the account it merges into,
+keeping the longer. An entitlement with no end date (a promotional grant from
+the dashboard) is stored as the year 9999.
+
 ---
 
 ## Queries

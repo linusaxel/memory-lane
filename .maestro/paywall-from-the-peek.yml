@@ -1,0 +1,35 @@
+# F35 subscribe, from the map's peek: standing on a pin with no walk through
+# it offers Open it now beside Walk here, and the paywall it opens has nothing
+# to sell on a simulator (no RevenueCat key) and says so, with a way out.
+# docs/08-ux-flows.md
+
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: ${BENCH_LAT}
+    longitude: ${BENCH_LNG}
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- runFlow: steps/sign-in.yml
+
+- extendedWaitUntil:
+    visible: "The bench outside, dev seed\\. Locked, within reach\\."
+    timeout: 40000
+- tapOn: "The bench outside, dev seed\\. Locked, within reach\\."
+- extendedWaitUntil:
+    visible: "You're standing on it\\. A walk opens it free, or open it now\\."
+    timeout: 10000
+- assertNotVisible: "Unlock this memory"
+- tapOn: "Open it now"
+- extendedWaitUntil:
+    visible: "Open any memory you stand on"
+    timeout: 10000
+- assertVisible: "Subscriptions aren't available right now\\."
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 10000

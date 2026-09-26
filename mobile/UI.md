@@ -807,3 +807,10 @@ flow changes, change that file in the same commit.
 Writing is F5 (file a memory), F20 (report one) and F21 (be somebody).
 Sign-in is F22, the first flow, and it is Google and Apple only — see
 `src/SignIn.tsx` for why, and for why neither button works in Expo Go.
+
+The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens after
+the peek or You closes, never on top. **Open it now** is an outline beside
+the solid **Walk here**, because the free way stays the one thing to do. No
+price is ever written in the app; the store's `priceString` is. Without a
+RevenueCat key it says "Subscriptions aren't available right now.", never a
+button that cannot work, and **Not now** is always there (rule 1).

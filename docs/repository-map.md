@@ -63,7 +63,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `e2e/run.sh` | **Watch the flows happen.** Drives the real app on a simulator; `--record` leaves an mp4 |
 | `e2e/travel.py` | Writes the walk flow's legs and stop names for the seeded start |
-| `.maestro/` | Five journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
+| `.maestro/` | Seven journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |
@@ -89,6 +89,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/streets.py` | Walking metres and street shapes for today's route, from OSRM. Crow-flies × 1.3 without it |
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
+| `api/billing.py` | Who has paid: RevenueCat's webhook and the read-back that writes `subscriptions` |
 | `api/privacy.py` | The privacy policy both app stores require, served from here |
 
 The endpoint list is [06-api.md](06-api.md).
@@ -108,6 +109,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Memories.tsx` | **The journal.** Streak, past walks, what you filed, and You |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/Settings.tsx` | You: its own sheet, from the map's top-right corner |
+| `mobile/src/Paywall.tsx` | The subscription sheet (F35). Prices from the store; "not available" without a key |
+| `mobile/src/purchases.ts` | RevenueCat, and nothing else: no-ops without a key. Never decides who has paid |
 | `mobile/src/AddGlyph.tsx` | The Add button's icon: a brand pin with a plus |
 | `mobile/src/YouGlyph.tsx` | The You button's icon |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |

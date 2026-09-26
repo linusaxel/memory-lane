@@ -10,7 +10,9 @@ database and streets, and writes:
                        setLocations, halfway along the street shape and the
                        stop. Not `travel`, which spends 50 fixes (~6s) on
                        every segment however short
-  e2e/out/legs/env     STOPn / WORDSn: each stop's name, and words from its summary
+  e2e/out/legs/env     STOPn / WORDSn: each stop's name, and words from its summary;
+                       BENCH_LAT / BENCH_LNG: the bench, stood on from the map
+                       with no walk (paywall-from-the-peek, subscriber-opens-from-map)
 
 The seed's five stops are the only ones in reach, so every device and every
 `again` gets the same five in the same order. Exits 3 when the walk from here
@@ -65,6 +67,8 @@ def main(start: Coordinates) -> None:
             )
         )
         env += [f"STOP{n}={name}", f"WORDS{n}={WORDS[name]}"]
+    [bench] = [r for r in stops if r.place_name == "The bench outside, dev seed"]
+    env += [f"BENCH_LAT={bench.lat:.6f}", f"BENCH_LNG={bench.lng:.6f}"]
     (OUT / "env").write_text("\n".join(env) + "\n")
     print(" -> ".join(names))
 

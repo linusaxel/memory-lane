@@ -34,6 +34,7 @@ import {
   fetchTodaysRoute,
   fetchUnlocked,
   heartMemory,
+  notOnWalk,
   previewRoute,
   saveDisplayName,
   unlockMemory,
@@ -84,6 +85,8 @@ import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
+import Paywall from './src/Paywall.tsx';
+import { identify } from './src/purchases.ts';
 import NextStopArrow from './src/NextStopArrow.tsx';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
@@ -261,6 +264,12 @@ export default function App() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [youOpen, setYouOpen] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+  // The store's customer is this account, so the webhook names a user the
+  // server knows (src/purchases.ts).
+  useEffect(() => {
+    identify(profile?.user_id ?? null).catch(() => {});
+  }, [profile?.user_id]);
   // Set to open Submit as an editor for this memory instead of a blank form.
   // Null means Submit is either closed or filing something new.
   const [editingMemory, setEditingMemory] = useState<LocatedMemory | null>(null);
@@ -574,7 +583,8 @@ export default function App() {
         setWalkToKm(km);
         setPlanError(`Too far for ${planKm} km: at least ${km} km.`);
       } else if (refusal?.reason === 'walked_today') {
-        setPlanError("You've had today's walk. Another tomorrow.");
+        setPlanError("You've had today's walk. Another tomorrow, or subscribe.");
+        setPaywallOpen(true);
       } else if (refusal) {
         setWalkTo(null);
         setPlanError("That memory can't be on a walk from here.");
@@ -926,8 +936,14 @@ export default function App() {
           // request. Silence here would read as a broken button.
           setUnlockError('Not close enough yet - try a few steps nearer.');
         }
-      } catch {
-        if (mounted.current) setUnlockError("Can't reach Memory Lane right now.");
+      } catch (e) {
+        if (!mounted.current) return;
+        if (notOnWalk(e)) {
+          setOpenAt([]);
+          setPaywallOpen(true);
+        } else {
+          setUnlockError("Can't reach Memory Lane right now.");
+        }
       } finally {
         if (mounted.current) setUnlocking(false);
       }
@@ -1446,6 +1462,10 @@ export default function App() {
         <Settings
           visible={youOpen}
           onClose={() => setYouOpen(false)}
+          onSubscribe={() => {
+            setYouOpen(false);
+            setPaywallOpen(true);
+          }}
           unlockedCount={collected.length}
           placeCount={placesUnlocked}
           submittedCount={profile?.submitted ?? 0}
@@ -1495,6 +1515,18 @@ export default function App() {
               : undefined
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
+          subscribed={!!profile?.subscribed}
+          onSubscribe={() => {
+            setOpenAt([]);
+            setPaywallOpen(true);
+          }}
+        />
+
+        <Paywall
+          visible={paywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          device={device}
+          onProfile={setProfile}
         />
 
         <Submit

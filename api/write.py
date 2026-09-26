@@ -131,7 +131,7 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
         binds = {"device_id": body.device, "memory_id": memory_id, "today": today()}
         on_route = session.execute(text(ON_TODAYS_ROUTE_QUERY), binds).scalar()
         if not on_route and not session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
-            raise HTTPException(status_code=403, detail="Not on today's walk")
+            raise HTTPException(status_code=403, detail={"reason": "not_on_walk"})
 
         at = Coordinates(lat=body.lat, lng=body.lng)
         memory = row_to_memory(row, at, include_distance=False)

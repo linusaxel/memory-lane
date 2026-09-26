@@ -249,6 +249,8 @@ def test_reading_a_profile_creates_nobody(client, db_session):
         "unlocked": 0,
         "streak": 0,
         "providers": [],
+        "subscribed": False,
+        "subscribed_until": None,
     }
     assert db_session.execute(text("SELECT COUNT(*) FROM users")).scalar() == 0
 

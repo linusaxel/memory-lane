@@ -20,6 +20,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.accounts import router as accounts_router
+from api.billing import router as billing_router
 from api.card import router as card_router
 from api.embed import router as embed_router
 from api.media import MEDIA_DIR, MEDIA_URL_PREFIX, NoSniff
@@ -71,6 +72,7 @@ app.include_router(privacy_router)
 app.include_router(read_router)
 app.include_router(write_router)
 app.include_router(accounts_router)
+app.include_router(billing_router)
 app.include_router(card_router)
 
 # api/embed.py ships OpenStreetMap's public tiles, whose usage policy this would

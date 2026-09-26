@@ -216,6 +216,19 @@ past_walks() {
   " >/dev/null || infra "could not seed past walks into $DB"
 }
 
+# subscriber-opens-from-map needs a paid-up account with no store. The app
+# mints its account when a name is typed in You, so whichever user turns up
+# first is given a month (the seed's own user was inserted before this).
+subscriber() {
+  psql_on "$DB" "
+    CREATE FUNCTION subscriber() RETURNS trigger AS \$\$ BEGIN
+      INSERT INTO subscriptions (user_id, expires_at) VALUES (NEW.id, now() + interval '30 days');
+      RETURN NEW;
+    END \$\$ LANGUAGE plpgsql;
+    CREATE TRIGGER subscriber AFTER INSERT ON users FOR EACH ROW EXECUTE FUNCTION subscriber();
+  " >/dev/null || infra "could not seed a subscriber into $DB"
+}
+
 # A walkable point in central Copenhagen, different every run. The seed is
 # planted round it and the journeys start there, so the app is driven from
 # somewhere nobody chose. E2E_START=lat,lng replays one.
@@ -295,6 +308,11 @@ curl -fsS "http://localhost:$API_PORT/" >/dev/null 2>&1 \
 # already in mobile/ios.
 
 say "3/5  app"
+# A new native module (a pod) is invisible to Metro: the installed binary runs
+# the new JS and dies on the missing module. So a Podfile.lock that differs
+# from the one last built is a rebuild.
+BUILT_LOCK=mobile/ios/build/Podfile.lock.built
+cmp -s mobile/ios/Podfile.lock "$BUILT_LOCK" || BUILD=1
 if [ "$BUILD" = 1 ] || ! xcrun simctl get_app_container "$DEVICE" "$APP_ID" >/dev/null 2>&1; then
   echo "     building $APP_ID (several minutes)"
   (cd mobile/ios && xcodebuild \
@@ -305,6 +323,7 @@ if [ "$BUILD" = 1 ] || ! xcrun simctl get_app_container "$DEVICE" "$APP_ID" >/de
   APP=$(find mobile/ios/build/Build/Products -maxdepth 2 -name "MemoryLane.app" | head -1)
   [ -z "$APP" ] && infra "the build produced no MemoryLane.app"
   xcrun simctl install "$DEVICE" "$APP" || infra "could not install $APP"
+  cp mobile/ios/Podfile.lock "$BUILT_LOCK"
   echo "     installed"
 else
   echo "     $APP_ID already installed"
@@ -369,6 +388,7 @@ for flow in "${SELECTED[@]}"; do
   reset_database "${name%%-*}"
   [ "$name" = walk-and-unlock ] && yesterday_unlock
   [ "$name" = lakes-loop ] && past_walks
+  [ "$name" = subscriber-opens-from-map ] && subscriber
   # launchApp's own relaunch has been seen to no-op under the load of a screen
   # recording, which leaves the flow looking at the previous one's last screen
   # and failing on its first assertion. Killing it first makes every flow a

@@ -59,6 +59,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F31 | Look back at a walk | Implemented |
 | F33 | Leave a note | Implemented |
 | F34 | End a walk | Implemented |
+| F35 | Subscribe | Implemented (no store yet) |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
 screen — no carousel, no settings anybody
@@ -1060,6 +1061,38 @@ note fails to send: "That did not go through. Try again.", the draft kept.
 **Done when:** an unlocked memory takes a note and shows it back, a second note
 replaces the first, the author can remove it, and a device that never unlocked
 it gets 403 from both routes. `tests/test_api_notes.py`.
+
+## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
+
+**Who:** somebody standing on a pin with no walk through it, or who has had
+today's free walk. **Trigger:** **Open it now** on the map's peek, or a
+second walk the same day.
+
+1. On the map, a locked pin within reach says "You're standing on it. A walk
+   opens it free, or open it now." with **Walk here** and, beside it, **Open
+   it now**. Out of reach the peek is unchanged.
+2. **Open it now**, a second walk the same day (`walked_today`), or an unlock
+   refused `not_on_walk` opens the paywall (`src/Paywall.tsx`): "Open any
+   memory you stand on", monthly and yearly at the store's price, **Restore
+   purchases**, Terms and Privacy, and **Not now**.
+3. A purchase or a restore asks the server to read the store back
+   (`POST /v1/me/subscription`); only its answer opens anything. The sheet
+   closes when it says subscribed.
+4. A subscriber's peek, standing on the pin, is the ring: hold to open it, as
+   on a walk. You shows "Subscribed until …" and **Manage subscription**;
+   signed in and not subscribed, **Subscribe**.
+
+**Why:** [A subscription opens the map](10-decisions.md#a-subscription-opens-the-map)
+and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it-our-table-decides).
+
+**Failure:** no RevenueCat key or no offerings (the simulator, e2e): "Subscriptions
+aren't available right now." and **Not now**. The person backs out of the
+store's sheet: nothing is said. Anything else: "That didn't go through. Try
+again." A purchase the server cannot find: "No subscription found for this
+account."
+
+**Done when:** `.maestro/paywall-from-the-peek.yml` and
+`.maestro/subscriber-opens-from-map.yml` pass, and `tests/test_api_billing.py`.
 
 ## Proposed
 

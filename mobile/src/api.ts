@@ -466,6 +466,10 @@ export type Profile = {
   /** Which sign-ins are attached, oldest first. Empty means this is still just
    *  a device: everything works, but a new phone would start empty. */
   providers: ('google' | 'apple')[];
+  /** Paid up now: any pin stood on opens, and walks are not one a day. */
+  subscribed: boolean;
+  /** When it ends or ended, UTC without a zone; null if never subscribed. */
+  subscribed_until: string | null;
 };
 
 export type Draft = {
@@ -480,6 +484,18 @@ export type Draft = {
 
 export async function fetchProfile(device: string, signal?: AbortSignal): Promise<Profile> {
   return get<Profile>('/v1/me', new URLSearchParams({ device }), signal);
+}
+
+/** Ask the server to read this account's subscription back from the store,
+ *  straight after a purchase or a restore, rather than wait for the webhook. */
+export async function refreshSubscription(device: string): Promise<Profile> {
+  return post<Profile>('/v1/me/subscription', { device });
+}
+
+/** An unlock refused because the memory is not on today's walk, and the
+ *  account is not subscribed: the paywall's cue. */
+export function notOnWalk(e: unknown): boolean {
+  return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'not_on_walk';
 }
 
 export async function saveDisplayName(device: string, displayName: string): Promise<Profile> {

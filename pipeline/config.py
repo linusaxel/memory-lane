@@ -48,3 +48,11 @@ ROUTING_URL = (os.getenv("ROUTING_URL") or "").rstrip("/") or None
 # asks for about one request a second; a self-hosted country extract is the
 # same API at another URL.
 PHOTON_URL = (os.getenv("PHOTON_URL") or "https://photon.komoot.io").rstrip("/")
+
+# RevenueCat sells the subscription; api/billing.py records it
+# (docs/10-decisions.md#revenuecat-sells-it-our-table-decides). The webhook
+# secret is what RevenueCat sends as its Authorization header; the API key is
+# the server-side secret key, never the app's public one. Either empty and
+# /v1/billing/* answers 503.
+REVENUECAT_WEBHOOK_SECRET = os.getenv("REVENUECAT_WEBHOOK_SECRET") or None
+REVENUECAT_API_KEY = os.getenv("REVENUECAT_API_KEY") or None

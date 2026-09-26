@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 
 import { API_BASE, type Profile } from './api.ts';
+import { manage } from './purchases.ts';
 import Padlock from './Padlock.tsx';
 import SignIn from './SignIn.tsx';
 import type { Permission } from './types.ts';
@@ -27,6 +28,8 @@ import { button, buttonText, color, dim, font, input, label } from './theme.ts';
 type Props = {
   visible: boolean;
   onClose: () => void;
+  /** Close this and open the paywall: one sheet at a time. */
+  onSubscribe: () => void;
   unlockedCount: number;
   placeCount: number;
   submittedCount: number;
@@ -66,6 +69,7 @@ export default function Settings({
   onRequestLocation,
   notifyNearby,
   onNotifyNearby,
+  onSubscribe,
 }: Props) {
   const granted = permission === 'granted';
 
@@ -109,6 +113,28 @@ export default function Settings({
 
         <Section title="Account">
           <SignIn device={device} profile={profile} onProfile={onProfile} />
+          {profile?.subscribed ? (
+            <>
+              <Text style={styles.note}>
+                Subscribed until{' '}
+                {new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}. Any memory you
+                stand on opens, walk or no walk.
+              </Text>
+              <Pressable
+                style={dim(styles.action)}
+                onPress={() => manage().catch(() => {})}
+                accessibilityRole="button"
+              >
+                <Text style={styles.actionText}>Manage subscription</Text>
+              </Pressable>
+            </>
+          ) : (
+            profile?.user_id && (
+              <Pressable style={dim(styles.action)} onPress={onSubscribe} accessibilityRole="button">
+                <Text style={styles.actionText}>Subscribe</Text>
+              </Pressable>
+            )
+          )}
         </Section>
 
         <Section title="How unlocking works">

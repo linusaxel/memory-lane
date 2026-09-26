@@ -855,6 +855,8 @@ def test_a_subscriber_opens_what_they_stand_on_without_a_walk(client, db_session
 
     here = unlock(LAT + 0.001)
     assert here.status_code == (200 if opens else 403)
+    if not opens:
+        assert here.json()["detail"] == {"reason": "not_on_walk"}
     if opens:
         assert not here.json()["locked"]
         assert unlock(LAT + 0.01).json()["locked"], "paid for, but still gated on standing there"

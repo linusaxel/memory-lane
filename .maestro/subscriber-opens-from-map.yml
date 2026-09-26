@@ -1,0 +1,41 @@
+# F35 for somebody who has paid: stood on a pin from the map, no walk, it
+# opens with the same hold as a walk's stop. e2e/run.sh's `subscriber` trigger
+# pays for whichever account the app mints first; typing a name mints it.
+# docs/10-decisions.md, "A subscription opens the map".
+
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: ${BENCH_LAT}
+    longitude: ${BENCH_LNG}
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: inuse
+
+- runFlow: steps/sign-in.yml
+
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- tapOn: "You and settings"
+- tapOn: "The name your memories are signed with"
+- inputText: "Paid"
+- tapOn: "Close"
+
+# The profile is read at launch; a relaunch reads the subscription.
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "The bench outside, dev seed\\. Locked, within reach\\."
+    timeout: 40000
+- tapOn: "The bench outside, dev seed\\. Locked, within reach\\."
+- extendedWaitUntil:
+    visible: "You are standing close enough to open this one\\."
+    timeout: 10000
+- assertNotVisible: "Open it now"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*pølsevogn.*"
+    timeout: 30000

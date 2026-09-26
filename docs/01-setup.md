@@ -40,6 +40,8 @@ pip install -r requirements.txt
 | `ENABLE_EMBED` | No | Set `0` to withhold `/embed` on a public host |
 | `GOOGLE_CLIENT_IDS` | For sign-in | Comma-separated audience whitelist. Empty = `/v1/auth/*` answers 503 |
 | `APPLE_CLIENT_IDS` | For sign-in | Same, for Apple |
+| `REVENUECAT_WEBHOOK_SECRET` | For subscriptions | What RevenueCat's webhook sends as `Authorization: Bearer …`. Empty = `/v1/billing/revenuecat` answers 503 |
+| `REVENUECAT_API_KEY` | For subscriptions | RevenueCat's secret server key (not the app's public one), to read a subscriber back. Empty = `/v1/billing/revenuecat` and `/v1/me/subscription` answer 503 |
 
 Every one is read once, in `pipeline/config.py`; add new ones there.
 The app has its own, baked in at dev-server start - see `mobile/.env.example`.

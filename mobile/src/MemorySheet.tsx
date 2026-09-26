@@ -51,6 +51,11 @@ type Props = {
   /** Present only on the map before a walk: a locked memory is a peek, and
    *  walking there is the one way in (F29). */
   onWalkHere?: () => void;
+  /** Paid up: standing on a pin opens it with no walk, so the peek gives way
+   *  to the ring (docs/10, "A subscription opens the map"). */
+  subscribed?: boolean;
+  /** The paywall, offered on the peek to somebody standing on the pin. */
+  onSubscribe?: () => void;
 };
 
 /** A line of the summary's length, drawn as a bar. From the word count the
@@ -86,6 +91,8 @@ export default function MemorySheet({
   onEdit,
   earned,
   onWalkHere,
+  subscribed,
+  onSubscribe,
 }: Props) {
   const memory = memories[index] ?? null;
   const many = memories.length > 1;
@@ -201,7 +208,7 @@ export default function MemorySheet({
               composition; an open one is a story and gets the reading column. */}
           {locked ? (
             <View style={styles.gate}>
-              {onWalkHere ? (
+              {onWalkHere && !(withinReach && subscribed) ? (
                 <View style={styles.peek}>
                   <Text style={styles.meta}>
                     {[
@@ -218,7 +225,11 @@ export default function MemorySheet({
                       <View key={i} style={[styles.bar, { width: `${width * 100}%` }]} />
                     ))}
                   </View>
-                  <Text style={styles.gateNote}>The only way in is to walk there.</Text>
+                  <Text style={styles.gateNote}>
+                    {withinReach && onSubscribe
+                      ? "You're standing on it. A walk opens it free, or open it now."
+                      : 'The only way in is to walk there.'}
+                  </Text>
                   <Pressable
                     style={dim([styles.watch, styles.walkHere])}
                     accessibilityRole="button"
@@ -227,6 +238,16 @@ export default function MemorySheet({
                   >
                     <Text style={styles.watchText}>Walk here</Text>
                   </Pressable>
+                  {withinReach && onSubscribe && (
+                    <Pressable
+                      style={dim([styles.openNow, styles.walkHere])}
+                      accessibilityRole="button"
+                      accessibilityLabel="Open it now"
+                      onPress={onSubscribe}
+                    >
+                      <Text style={styles.openNowText}>Open it now</Text>
+                    </Pressable>
+                  )}
                 </View>
               ) : withinReach ? (
                 <>
@@ -500,6 +521,9 @@ const styles = StyleSheet.create({
   // Ink, not red. The seal is the unlock and nothing else gets to wear it.
   watch: button.solid,
   watchText: { ...buttonText, color: color.paper },
+  // Beside Walk here, never above it: the free way stays the one thing to do.
+  openNow: button.outline,
+  openNowText: { ...buttonText, color: color.ink },
   linkFailed: { fontFamily: font.mono, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },

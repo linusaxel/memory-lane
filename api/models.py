@@ -302,6 +302,10 @@ class Profile(BaseModel):
     # Which sign-ins are attached, oldest first. Empty means this device is
     # still only a device: everything works, but a new phone starts empty.
     providers: list[str] = []
+    # Paid up now, and until when (naive UTC). A lapsed subscription keeps its
+    # date and reads subscribed=false. docs/10, "A subscription opens the map".
+    subscribed: bool = False
+    subscribed_until: datetime | None = None
 
 
 class ProfileRequest(BaseModel):

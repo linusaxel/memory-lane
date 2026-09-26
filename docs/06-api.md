@@ -13,8 +13,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory, gated
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
-  403 unless the memory is a stop of this account's walk today, or the account
-  is subscribed (`subscriptions`)
+  403 `{reason: "not_on_walk"}` unless the memory is a stop of this account's
+  walk today, or the account is subscribed (`subscriptions`)
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
   of that length from there would be: up to five stops. Stores nothing.
@@ -64,14 +64,21 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `POST /v1/memories/{id}/report` `{device, reason}` - REPORT_THRESHOLD distinct
   devices and the memory stops being served by every endpoint
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
-  submission is signed with, plus which sign-ins are attached. The GET creates
-  nothing
+  submission is signed with, which sign-ins are attached, and `subscribed` /
+  `subscribed_until`. The GET creates nothing
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
   display_name?}` - verify a provider ID token and bind this device to that
   account. `display_name` is for Apple, which gives the name to the client once
   and never again
 - `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
   there is no token to revoke
+- `POST /v1/me/subscription` `{device}` - read this account's subscription
+  back from RevenueCat now and return the `Profile` (`subscribed`,
+  `subscribed_until`). The app calls it after a purchase or a restore. 503
+  without `REVENUECAT_API_KEY`
+- `POST /v1/billing/revenuecat` - RevenueCat's webhook, `Authorization: Bearer
+  <REVENUECAT_WEBHOOK_SECRET>`. 401 on a wrong secret, 503 without one. Any
+  event re-reads that subscriber; an unknown `app_user_id` is 200 and ignored
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
 - `GET /v1/stats` - Database statistics
 - `GET /v1/memories/{id}/card` - the server-rendered share card. Gates itself
