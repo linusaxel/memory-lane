@@ -664,7 +664,7 @@ export default function App() {
   // drops out of the watch the next time this runs rather than lingering.
   useEffect(() => {
     if (!notifyNearby) return;
-    startWatching(routeShown).catch(() => {});
+    startWatching(routeShown).catch((e) => console.warn('Nearby notifications did not start:', e));
   }, [notifyNearby, routeShown]);
 
   const handleNotifyNearby = useCallback((next: boolean) => {

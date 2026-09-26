@@ -86,6 +86,9 @@ def test_ios_declares_always_location_only_for_the_proximity_notification(expo):
     assert options["motionUsagePermission"] is False
     assert options["locationWhenInUsePermission"].startswith("Memory Lane")
     assert options["isAndroidBackgroundLocationEnabled"] is True
+    # expo-location's startGeofencingAsync throws without UIBackgroundModes
+    # location; mobile/UI.md rule 2 has how that went unnoticed.
+    assert options["isIosBackgroundLocationEnabled"] is True
 
 
 # -- Android -----------------------------------------------------------------

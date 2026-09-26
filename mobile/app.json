@@ -57,6 +57,7 @@
           "locationWhenInUsePermission": "Memory Lane uses your location to show travel memories recorded near you.",
           "locationAlwaysAndWhenInUsePermission": "Memory Lane can notify you when you're near a memory you haven't unlocked yet, even when the app is in the background. This is off until you turn it on in Settings.",
           "locationAlwaysPermission": false,
+          "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
           "motionUsagePermission": false
         }

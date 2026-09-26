@@ -23,14 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **A Maestro assertion passed on the wrong screen.** (2026-09-26) `pressKey:
-  home` left the app in front, and `visible: ".*A memory is nearby.*"` then
-  matched the toggle's own label "Notify me when a memory is nearby" (the
-  match ignores case), so a notification that never came read as PASS. Cost a
-  false green. Fix: background with `launchApp: <another app id>`, and assert
-  on text only the thing under test can show, with an `assertNotVisible` of it
-  first.
-
 ---
 
 ## Known defects
@@ -159,7 +151,9 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       can ask for it.) Look on a real phone whether MapKit's own dot draws the
       heading beam with `showsUserLocation` (`mobile/App.tsx`); the simulator
       has no compass. Only if not: `Location.watchHeadingAsync` and a custom
-      marker. Needs somebody with a device.
+      marker. Needs somebody with a device. The same device can check F28
+      with the phone locked and the app killed (`notify-nearby.yml` covers
+      only the background).
 - [ ] **Authored walks: the rest of `routes` + `route_stops`.** (checked
       2026-09-24) Migration 023 and `GET /v1/routes/{id}` exist, published
       only, kept to `title, status, is_loop`. No author, theme, source, budget
@@ -172,16 +166,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       ≥3 tags of ≥5 walkable stops: `python -m pipeline.themed_routes` says
       which. None yet outside the dev seed; New York and West Hollywood have
       two each. The job grows in that file.
-- [ ] **The nearby notification never arrived on the simulator.** (checked
-      2026-09-26) A flow (`location: always`, `notifications: allow`, accept a
-      walk, move ~2 km off, turn on "Notify me when a memory is nearby", open
-      `com.apple.Preferences` to background the app, walk `e2e/out/legs/1.yml`
-      onto stop 1) waited 60 s twice for "Something happened near <stop>" and
-      got nothing. Unknown whether the simulator skips region Enter or
-      `startWatching` (`mobile/src/geofence.ts`) never registers: next, log
-      `Location.hasStartedGeofencingAsync` after the toggle. Kept out of
-      `.maestro/` until it is green, since `e2e/run.sh` runs every flow.
-      The locked-screen case needs a device regardless.
 - [ ] **One accent, not teal and blue.** (checked 2026-09-26) The founder:
       "Plan a walk" is black, teal works with neither buttons nor the route
       line, and a walk's stops need done, here, next and later told apart.

@@ -1,0 +1,86 @@
+# F28 Notify me when a memory is nearby: with the app in the background, walking
+# onto a stop of today's walk posts "A memory is nearby".
+# docs/08-ux-flows.md, mobile/src/geofence.ts
+#
+# The home screen, not a locked phone: neither Maestro nor simctl can lock the
+# simulator, so the locked-screen case still needs a device (TODO.md, M3).
+#
+# Only the walk on screen is watched (App.tsx, startWatching(routeShown)), so
+# a walk is accepted first. The regions are registered from ~2 km away, so
+# walking leg 1 in crosses one and fires Enter; registered from inside, iOS
+# would never say so.
+
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: ${START_LAT}
+    longitude: ${START_LNG}
+
+- launchApp:
+    clearState: true
+    permissions:
+      location: always
+      notifications: allow
+
+- runFlow: steps/sign-in.yml
+
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- tapOn: "Plan a walk"
+- extendedWaitUntil:
+    visible: "How far today?"
+    timeout: 20000
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "5 stops · .* loop"
+    timeout: 40000
+- tapOn: "Accept this walk"
+- extendedWaitUntil:
+    visible: "On a walk · 0 of 5 unlocked\\."
+    timeout: 40000
+
+- setLocation:
+    latitude: ${Number(START_LAT) + 0.02}
+    longitude: ${START_LNG}
+
+- tapOn: "You and settings"
+- scrollUntilVisible:
+    element: "Notify me when a memory is nearby"
+    direction: DOWN
+- tapOn: "Notify me when a memory is nearby"
+
+# Another app in front, not `pressKey: home`: home left this app on screen,
+# and the toggle's own label then passed for the banner.
+- launchApp: com.apple.Preferences
+# Stand still outside every fence until locationd has checked them. It adds
+# them a second or two after the toggle and first checks on the next fix; if
+# that fix is already on stop 1 the fence starts Inside and never fires Enter.
+# A person walks slower than Maestro. `optional` makes the wait a pause.
+- extendedWaitUntil:
+    visible: "never shown, a pause"
+    timeout: 5000
+    optional: true
+- setLocation:
+    latitude: ${Number(START_LAT) + 0.0201}
+    longitude: ${START_LNG}
+- extendedWaitUntil:
+    visible: "never shown, a pause"
+    timeout: 3000
+    optional: true
+- runFlow: ../e2e/out/legs/1.yml
+# The banner is SpringBoard's, and Maestro reads no text in it. So tap where it
+# sits: with a banner that brings this app back, without one the tap
+# lands on the Settings title and nothing opens. The screenshot is in
+# ~/.maestro/tests/<run>/notify-nearby/takeScreenshot/.
+- extendedWaitUntil:
+    visible: "never shown, a pause"
+    timeout: 3000
+    optional: true
+- takeScreenshot: notify-nearby-banner
+- tapOn:
+    point: 50%, 10%
+# Back where it was left: the app's own settings sheet, still open.
+- extendedWaitUntil:
+    visible: "Tell me when a memory I haven't unlocked is nearby\\."
+    timeout: 20000

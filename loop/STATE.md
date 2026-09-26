@@ -135,10 +135,10 @@ audit trail.
 - **The proximity notification watches today's route, not the map viewport.**
   `App.tsx` re-registers geofences off `routeShown`, not `memories`/the panned
   map region — bounded, already "nearby", and does not thrash on every pan.
-- **`isIosBackgroundLocationEnabled` stays `false`** in `app.json`'s
-  expo-location plugin options. Geofencing is CoreLocation region monitoring,
-  which wakes the app on its own; it does not need continuous
-  `UIBackgroundModes: ["location"]`. Do not flip this "to be safe".
+- **`isIosBackgroundLocationEnabled` is `true`** in `app.json`'s
+  expo-location plugin options (was `false` until 2026-09-26). expo-location's
+  `startGeofencingAsync` throws without `UIBackgroundModes: ["location"]`, so
+  with it off the nearby notification never started. See mobile/UI.md rule 2.
 - **`seal`/`sealSoft`/`sealDeep` are `#8A5A17`/`#F0E4C8`/`#5C3A0E` (light) and
   `#D9A54B`/`#3D3018`/`#F0C878` (dark) as of 2026-09-23** — a warm ochre,
   not the stamp red they were before. `api/card.py`'s `--accent` and the two
@@ -196,9 +196,9 @@ audit trail.
 - **Geofencing off the map's viewport list** (`memories`/`shown`) — rejected
   in favor of today's route (`routeShown`): bounded, already nearby, no
   pan-driven thrashing.
-- **`UIBackgroundModes: ["location"]`** for the proximity notification —
-  region monitoring doesn't need it; declaring it asks review for more than
-  the feature uses.
+- **Leaving out `UIBackgroundModes: ["location"]`** — superseded 2026-09-26:
+  CoreLocation doesn't need it, but expo-location's geofencing refuses to
+  start without it.
 - **A "moss" (green-leaning) variant of the new accent** — tested and passed
   contrast (4.85:1 light, tighter margin than the ochre-brown chosen), but the
   ochre-brown ramp cleared every pair with more room (5.4:1+) and reads just

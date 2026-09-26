@@ -135,15 +135,16 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 | `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F30 finish a walk, F27 the streak on its card, F15 reread what you unlocked, F26 heart it, F33 leave a note and rewrite it, F31 look back at a walk |
 | `lakes-loop.yml` | F1 the whole slider round the lakes, "The longest from here.", F32 show me another until the far lake, F31 look back at past walks |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed, and the author hearing back (hearts, notes, "New") |
+| `notify-nearby.yml` | F28 the nearby notification, with the app in the background, and its banner bringing the app back |
 
-Four journeys rather than one file per id: every flow pays a fresh database
+Five journeys rather than one file per id: every flow pays a fresh database
 and a cold start, and the old per-id files performed the same unlock three
 times and the same filing twice. A new id joins the journey it belongs to; a step a journey repeats goes in
 `.maestro/steps/`, which `run.sh` does not run on its own.
 
 ## Writing a flow
 
-Four things that cost an afternoon each to discover.
+Things that cost an afternoon each to discover.
 
 1. **Text matching is a full-string regex, not a substring.** `Walk there`
    matches only that exact label; `Nearest locked memory` matches nothing,
@@ -154,8 +155,8 @@ Four things that cost an afternoon each to discover.
    and `subtitle` never reaches the label either, which is why the state lives
    where it does (`mobile/src/MemoryMarker.tsx`).
 3. **iOS location permission takes `always`/`inuse`/`never`/`unset`, not
-   `allow`.** `inuse` is also the only honest value - the app is
-   foreground-only and `app.json` blocks background location.
+   `allow`.** `inuse` everywhere but `notify-nearby.yml`: only the opt-in
+   nearby toggle asks for `always`.
 4. **`clearState: true` does not clear AsyncStorage.** It is not enough on
    its own, so `e2e/run.sh` deletes `RCTAsyncLocalStorage_V1` before every
    flow. Without that, one flow's collection survives into the next and a
@@ -164,6 +165,17 @@ Four things that cost an afternoon each to discover.
 5. **Always `setLocation` before `launchApp`.** A simulator with no fix at all
    makes `getCurrentPositionAsync` hang, and the app correctly sits on "Turn on
    location" forever, which looks like a bug in your flow.
+6. **Maestro sees only the app in front, and matching ignores case.**
+   `pressKey: home` left this app in front, and `.*A memory is nearby.*` then
+   matched the toggle's label "Notify me when a memory is nearby": a
+   notification that never came passed. Put another app in front with
+   `launchApp: com.apple.Preferences`. A notification banner is SpringBoard's
+   and Maestro reads no text in it, so tap where it sits and assert on text
+   only this app shows. Check a new assertion fails with the thing removed.
+7. **A geofence registered with you inside it never fires.** locationd starts
+   it Inside and sends no Enter. Registration lands a second or two after the
+   toggle, so stand still outside every fence for a few seconds first
+   (`extendedWaitUntil` with `optional: true` is the pause).
 
 Coordinates and `dev seed` place names in the YAML are held against
 `pipeline/seed_dev.py` by `tests/test_flows.py::test_maestro_flows_still_point_at_the_seed`,
@@ -172,6 +184,11 @@ because when they drift the symptom is an empty map rather than an error.
 ## Bugs these flows found
 
 All fixed. Kept here because two of them are traps worth not re-setting.
+
+**The nearby notification could never start on iOS.** `startGeofencingAsync`
+throws unless `UIBackgroundModes` has `location`, which `app.json` never asked
+for (`isIosBackgroundLocationEnabled`), and App.tsx swallowed the error: the
+toggle showed on and nothing was watched. Now it warns, and the mode is set.
 
 **The map crashed on a marker mutation.** `AIRMap insertReactSubview:atIndex:`
 threw `NSRangeException` — under Fabric, `prepareForRecycle` hands back an
@@ -205,7 +222,8 @@ Implemented, and out of a simulator's reach:
 - **F10 / F16** need the network taken away mid-flow; F16 has a by-hand recipe below.
 - **F22** is a real Google or Apple sign-in, which neither works on a simulator
   nor in a scripted one.
-- **F28** fires on a background geofence crossing with the app closed.
+- **F28** with the app killed or the phone locked. `notify-nearby.yml` covers
+  the app in the background; neither Maestro nor simctl can lock a simulator.
 
 ## Seeing F16 (the collection with no network)
 

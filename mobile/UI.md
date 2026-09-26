@@ -399,12 +399,17 @@ Each of these exists because something broke or would have been rejected.
    both in; what has **not** happened yet is a real device verifying the
    background delivery end to end, or updating the actual App Store Connect /
    Play Console listings — that is a human step, not a gate the pytest suite
-   can pass. `isIosBackgroundLocationEnabled` was deliberately left `false`:
-   geofencing is CoreLocation region monitoring, which wakes the app on its
-   own and does not need continuous `UIBackgroundModes: ["location"]` the way
-   `startUpdatingLocation` in the background would — asking for the stronger
-   capability than the feature needs is exactly the kind of over-declaration
-   this rule exists to prevent.
+   can pass.
+
+   **`isIosBackgroundLocationEnabled` is `true`, as of 2026-09-26.** It was
+   left `false` on the reasoning that CoreLocation region monitoring wakes the
+   app on its own and needs no `UIBackgroundModes: ["location"]`. True of
+   CoreLocation, but expo-location's `startGeofencingAsync` refuses to start
+   without the mode (`LocationModule.swift`, `hasBackgroundModeEnabled`), and
+   App.tsx swallowed the error, so for three days the toggle showed on and
+   nothing was watched. `.maestro/notify-nearby.yml` is what caught it. The
+   mode is declared for the geofence only; nothing calls
+   `startLocationUpdatesAsync`.
 3. **Nothing fetches by viewport.** The map before a walk fetches by position
    (on entering it, and when a position first arrives), and a walk fetches
    nothing; if a fetch ever follows the viewport, debounce it, because panning
