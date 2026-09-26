@@ -18,6 +18,9 @@ import { buttonText, color, dim, font, label } from './theme.ts';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 
+/** api/route_solver.py ROUTE_FILL: under this share of the ask, the map ran out. */
+const ROUTE_FILL = 0.8;
+
 type PlanProps = {
   km: number;
   onKm: (km: number) => void;
@@ -93,6 +96,8 @@ export function Plan({ km, onKm, ask, onAsk, onGo, busy, error }: PlanProps) {
 type PreviewProps = {
   stops: number;
   meters: number;
+  /** What the slider asked for, in meters. */
+  asked: number;
   loop: boolean;
   /** Planned from central Copenhagen because there was no position to plan from. */
   fallback: boolean;
@@ -107,6 +112,7 @@ type PreviewProps = {
 export function Preview({
   stops,
   meters,
+  asked,
   loop,
   fallback,
   busy,
@@ -115,6 +121,7 @@ export function Preview({
   onAnother,
   onBack,
 }: PreviewProps) {
+  const short = stops > 0 && meters < ROUTE_FILL * asked;
   return (
     <View style={styles.card}>
       {stops === 0 ? (
@@ -124,6 +131,7 @@ export function Preview({
           {`${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${loop ? ' loop' : ''}`}
         </Text>
       )}
+      {short && <Text style={styles.cardBody}>The longest from here.</Text>}
       {fallback && (
         <Text style={styles.cardBody}>
           Planning from central Copenhagen. Turn on location to plan from where you are.
@@ -157,7 +165,9 @@ export function Preview({
             <Text style={styles.secondaryText}>Show me another</Text>
           </Pressable>
         ) : (
-          <Text style={styles.cardBody}>The only walk that long from here.</Text>
+          <Text style={styles.cardBody}>
+            {short ? 'The only walk from here.' : 'The only walk that long from here.'}
+          </Text>
         ))}
       <Pressable
         style={dim(styles.secondary)}

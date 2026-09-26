@@ -116,10 +116,10 @@ missing is a source.
 - [ ] **A long walk still falls short where the map runs out.** (checked
       2026-09-26) About a stop a km (docs/10) took 10 km from 0.33 to 0.56 of
       the slider on the dense seed, but the lakes top out at 7.4 km for any
-      stop count: shortest legs cross the bridges. Left: legs routed longer
-      than the shortest path (round the shore), or the preview saying "the
-      longest from here" when a walk is under ROUTE_FILL. Also: 10 km plans
-      are p95 2.2 s, twice what they were.
+      stop count: shortest legs cross the bridges. The preview now says "The
+      longest from here." under ROUTE_FILL. Left: legs routed longer than the
+      shortest path (round the shore), if an honest short walk isn't enough.
+      Also: 10 km plans are p95 2.2 s, twice what they were.
 - [ ] **A Copenhagen journey in Maestro.** (checked 2026-09-24: no such flow in
       `.maestro/`) e.g. `.maestro/lakes-loop.yml`: `setLocation` on Olufsvej,
       set the slider to the measured loop (~9.1 km), preview, and assert a

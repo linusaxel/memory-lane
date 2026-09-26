@@ -121,7 +121,9 @@ relaunch after accepting skips this page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length, or with that
 theme — the card reads
-"No walk that long from here" and offers only **Change length**. No position
+"No walk that long from here" and offers only **Change length**. The map runs
+out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
+the ask (`ROUTE_FILL`) adds "The longest from here." No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
 unreachable — the page says "Can't reach Memory Lane right now." under the
 button, and a second press retries.
@@ -987,7 +989,8 @@ length. **Trigger:** "Show me another", under Accept.
    plus metres retraced, and retracing no more (`ROUTE_VARIETY`,
    `api/route_solver.py` `_plan_route`). Taps cycle through those.
 2. When it comes back unchanged, that was the only one: the button gives way
-   to "The only walk that long from here."
+   to "The only walk that long from here." ("The only walk from here." when it
+   is the longest, F1).
 3. Accept sends the same `again`, so it stores the walk on screen. The client
    still never sends stop ids. Change length starts over at `again=0`.
 

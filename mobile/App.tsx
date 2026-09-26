@@ -1079,6 +1079,7 @@ export default function App() {
             <Preview
               stops={preview.memories.length}
               meters={pathMeters(previewPath)}
+              asked={walkKm * 1000}
               loop={preview.loop}
               fallback={planFallback}
               busy={planBusy}
