@@ -206,24 +206,14 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       notification. Maestro and simctl can press home but cannot lock the
       simulator, so the true locked-screen case needs a device. Run it without
       `EXPO_PUBLIC_DEV_LOCATION`: that pins the position and skips the watcher.
-- [ ] **"Plan a walk" is black.** (checked 2026-09-26) The founder flagged
-      it. `styles.locate` in `mobile/App.tsx` fills it `color.ink`, which
-      UI.md gives every solid button. Suggested: `route`, the colour of the
-      walk it starts (the preview line, the "On a walk" bar). "Turn on
-      location" shares the style; decide whether it changes too. Record the
-      rule in UI.md.
-- [ ] **On a walk, a stop's colour says done, here, next or later.**
-      (checked 2026-09-26) The founder can't tell visited stops from the rest.
-      Today: in reach is `seal`, next is `route` and hops, and every other
-      stop, done or not, is `brand` with a number tag (UI.md, *One pin*).
-      Suggested, all existing tokens, colour only (no glyphs, per *One pin*):
-      **done** `faded` at the resting 24px, a spent pin; **here** `seal`,
-      unchanged, since it already means openable now; **next** `route`,
-      hopping, unchanged; **later** `brand` with its number. It reads as grey,
-      then gold, then blue, then teal: behind you, under you, ahead of you.
-      Optional: the walked legs of the line in `faded` too. `faded` today
-      marks only padlocks, so it is free to mean "behind you" on a pin. Needs
-      the stops' opened state in `MemoryMarker.tsx`, and UI.md's pin table.
+- [ ] **One accent, not teal and blue.** (checked 2026-09-26) The founder:
+      "Plan a walk" is black, teal works with neither buttons nor the route
+      line, and a walk's stops need done, here, next and later told apart.
+      Proposed in docs/09 § 7: `ember` red replaces `brand` and `route`,
+      `faded` means behind you, `seal` stays "open it now", blue is left to
+      the map and the user dot. Waits on the founder's yes and a look on a
+      real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
+      state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
 
 ---
 

@@ -360,3 +360,68 @@ and fails if the card drifts from them — and, in the same pass, holds every
 text-on-ground pair to 4.5:1 in both themes. It caught a second contrast failure
 nobody had measured: `inkFaint` cleared AA on `paper` in the dark and missed it
 on `paperRaised`, which is where the inputs sit.
+
+# 7. Teal fights the map — **proposed 2026-09-26, not shipped**
+
+The founder: teal works with neither the buttons nor the route line, and the
+scheme should be rethought from nothing, the logo ignored.
+
+## The finding
+
+**The base map already owns blue, green and grey.** Water is blue and parks
+are green on Apple's muted map, and Copenhagen is lakes and harbour. The user
+dot is system blue. Teal sits between water and park, so a teal pin reads as
+map, and the `route` blue line is drawn over the lakes' own blue. Contrast is
+not the problem (teal is 5.3:1 on the land); hue is. Cartography's rule is a
+muted ground and one saturated accent for what matters, about 10% of the
+screen.
+
+**The hue no map uses is warm red.** Aviation draws the active route in
+magenta for the same reason; Komoot's highlights are red dots, Strava's line
+is orange. Okabe-Ito, the colour-blind-safe set, pairs vermilion `#D55E00`
+with orange `#E69F00` as distinguishable under every common deficiency, which
+is close to a red accent beside today's ochre `seal`.
+
+**Progress reads grey behind, colour ahead.** Mapbox's navigation SDK greys or
+hides the route line you have walked; fleet apps draw done legs grey, the
+current one lit, the rest in the route colour. Steppers mark done, current and
+upcoming, and done is always the quiet one.
+
+## The scheme
+
+One accent replaces both `brand` and `route`. Blue is left to the map and to
+you.
+
+| Token | Hex light / dark | Means |
+|---|---|---|
+| `ember` (new) | `#B83A12` / `#F2703F` | **a memory, and the way to it.** Every pin at rest, the solid primary button ("Plan a walk"), the route line ahead of you, the next stop (bigger, hops), a later stop's number tag. 5.2:1 on paper, 4.8:1 on the dark map |
+| `seal` | unchanged | **open it now.** The pin in reach, as today |
+| `faded` | unchanged | **behind you.** A stop already opened, the legs already walked |
+| `ink` | unchanged | text, quiet and outline buttons |
+| system blue | the OS's | **you.** The location dot, and nothing of ours |
+
+On a walk that reads grey, gold, red: behind you, under you, ahead of you.
+Next and later differ by size and the hop, not a hue, so a walk carries two
+colours and a grey, not four colours.
+
+## Open before shipping
+
+- Off-route pins during a walk: `ember` would compete with the stops. Smaller,
+  or at reduced opacity, but not `faded`, which now means done.
+- `ember` and `seal` are both warm. Size, the halo and the marker's `title`
+  carry "openable" too, but look at both on a real map, and under a
+  deuteranopia filter, before committing.
+- `tests/test_palette.py` holds text pairs to 4.5:1; `ember` with `paper` text
+  on the button clears it in light (5.2) and needs `ink` text in dark.
+- The logo stays teal until someone redraws it.
+
+## Sources
+
+- [Mapbox Navigation SDK, route line (traveled colour)](https://docs.mapbox.com/android/navigation/guides/ui-components/route-line/)
+- [Mapon, route colours: grey done, green current, blue remaining](https://help.mapon.com/en/articles/376803-what-do-the-route-colours-mean-on-the-tasks-and-routes-map)
+- [Apple, What's new in MapKit (muted emphasis for overlays)](https://developer.apple.com/videos/play/wwdc2022/10035/?time=1229)
+- [Cartography Guide, contrast](https://amyleew.gitbooks.io/cartography-guide/content/design-best-pratices/design-principles/contrast.html)
+- [Esri, accessibility essentials for mapping](https://www.esri.com/arcgis-blog/products/instant-apps/mapping/accessibility-essentials-for-gis-and-mapping)
+- [AOPA, follow the magenta line](https://www.aopa.org/news-and-media/all-news/2012/august/flight-training-magazine/follow-the-magenta-line)
+- [Okabe-Ito hex codes](https://scifig.ai/blog/okabe-ito-color-palette-hex-codes)
+- [Stepper states: done, current, upcoming](https://www.stellae.design/en/components/stepper)
