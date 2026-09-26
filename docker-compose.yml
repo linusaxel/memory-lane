@@ -18,6 +18,9 @@ services:
 
   api:
     build: .
+    # The source is mounted, so `up -d` serves today's code, not the image's.
+    # A new requirement still needs `up -d --build`.
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8080:8000"
     environment:
@@ -31,6 +34,9 @@ services:
       # which is what `python -m pipeline.seed_dev` needs, since it writes its
       # photo and recording from outside the container.
       - ./media:/data/media
+      - ./api:/app/api
+      - ./pipeline:/app/pipeline
+      - ./crawler:/app/crawler
     depends_on:
       db:
         condition: service_healthy
