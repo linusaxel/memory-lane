@@ -119,7 +119,9 @@ missing is a source.
       stop count: shortest legs cross the bridges. The preview now says "The
       longest from here." under ROUTE_FILL. Left: legs routed longer than the
       shortest path (round the shore), if an honest short walk isn't enough.
-      Also: 10 km plans are p95 2.2 s, twice what they were.
+      Also: 10 km plans are p95 1.5 s (2.1 s before `score` was cached by
+      stop set). 9 solves in 10 are the spur cleanup re-solving once per
+      stop, so the next cut changes answers: measure it with `route_bench`.
 ---
 
 ## Parked

@@ -15,6 +15,7 @@ How a walk is ranked, in two stages, the second only with streets:
    one stop and re-pick, keeping a walk with as many stops that judges better.
 """
 
+import functools
 import itertools
 import math
 import os
@@ -154,9 +155,12 @@ def _choose_walks(
             options = [o for o in options if o[0] <= room]
             if not options:
                 break
-            ok = {c for c in {o[1] for o in options} if fits(walk, c)}
+            # Whether a stop fits is its layer's, so ask once a layer.
+            one_of = {stranger[o[1]]: o[1] for o in options}
+            ok = {k for k, c in one_of.items() if fits(walk, c)}
+            options = [o for o in options if stranger[o[1]] in ok] or options
             _, c, at = min(
-                [o for o in options if o[1] in ok] or options,
+                options,
                 key=lambda o: (-prize[o[1]] / max(o[0], 1), o),
             )
             walk.insert(at, c)
@@ -185,7 +189,13 @@ def _choose_walks(
         return count
 
     def score(walk):
-        order = _walking_order(walk, d, loop)
+        return scored(frozenset(walk))
+
+    # _walking_order sorts first, so a score is the set's, and the search
+    # meets the same sets again and again.
+    @functools.cache
+    def scored(walk):
+        order = _walking_order(list(walk), d, loop)
         walked = _path_meters(order, d, loop)
         return (
             -len(walk),
