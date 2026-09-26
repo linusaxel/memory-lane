@@ -62,6 +62,77 @@ missing is a source.
       screenshotting. (checked 2026-09-20) Blocked on *Which historical source
       first?* and *Which neighborhood?* below.
 
+### Data sources
+
+Researched by the founder 2026-09-26; every "verified" below is theirs, from
+live requests. Order is priority.
+
+**This week**
+
+- [ ] **DAWA resolves Danish places; the LLM only picks which place.**
+      (checked 2026-09-26) `https://api.dataforsyningen.dk/adresser?q=<address>`:
+      free, no key, WGS84, and it fuzzy-matches OCR'd spellings
+      ("Blaagaardsgade" → "Blågårdsgade"). Replaces model-guessed coordinates
+      (docs/10, *The coordinates are mostly guesses*) and their cost. Today the
+      model's coordinates go straight into `places` (`pipeline/extract.py`,
+      `geocode_status`).
+- [ ] **Newspaper ingestion from KB Labs.** (checked 2026-09-26) `GET
+      https://labs.statsbiblioteket.dk/labsapi/api/aviser/export/fields` with
+      `query`, `fields` (link, recordID, timestamp, familyId, fulltext_org),
+      `max`, `structure=header&structure=content`, `format=CSV`. Free, no key,
+      returned real 1856 text. ⚠️ Only papers over 140 years old (~pre-1886),
+      not negotiable without an institutional agreement. OCR is rough
+      Fraktur: expect garbled place names, drop low confidence. Many hits are
+      classified-ad pages, addresses with no event: filter articles from ads
+      or accept the noise. Query by street name to keep extraction targeted.
+- [ ] **Email it@historiskatlas.dk for API access.** (checked 2026-09-26) An
+      open-data association of 220+ archives, museums and libraries, seeking
+      partners. Say the use and the attribution. Needed because the per-story
+      licence ("Geo" in their API) is not on the public pages.
+- [ ] **Email kbhbilleder@kff.kk.dk.** (checked 2026-09-26) 41,779 historical
+      photos, maps and drawings (Copenhagen Museum + City Archives), ~5,000
+      out of copyright and commercially usable, many already geotagged by
+      users. Bot-protected (HTTP 202, 0 bytes): ask, never scrape. The
+      platform is open source with a public APACS API:
+      github.com/CopenhagenCityArchives.
+
+**Next**
+
+- [ ] **Historisk Atlas via its sitemap.** (checked 2026-09-26)
+      `https://historiskatlas.dk/sitemap.xml`, 11,740 stories; robots.txt has
+      no Disallow and pages are server-rendered. Parse `window.passed.geo` →
+      `{geoid, title, intro, latitude, longitude, ugc}`. URL-encode æøå or
+      ~50% of fetches fail. `contents` and `tag_geos` are null: the licence
+      needs the API (email above). **Start at geoid 19000–20000**, the WWII
+      resistance sabotage set: exact dates and addresses ("Sabotage mod Islev
+      Møbelfabrik, 03.05.1945"), the highest-contrast material in any source
+      so far. ⚠️ Only ~8% of stories fall in Copenhagen (n=90, so ~900 total):
+      the corpus leans Funen/Jutland. ⚠️ Also a partial competitor: judge
+      their neighbourhood-level content before building on it.
+- [ ] **Kraks Vejviser and older address directories.** (checked 2026-09-26)
+      Pre-1900 editions at kb.dk carry a public domain mark (commercial use
+      with credit); Copenhagen Libraries host digitised volumes at
+      bibliotek.kk.dk/din/bag-om-kobenhavn/kraks-vejviser. OCR'd scans, real
+      extraction work. "What stood here" for nearly every address: the
+      connective tissue between the interesting cards.
+
+**Blocked or deprioritised**
+
+- [ ] **arkiv.dk.** (checked 2026-09-26) 550+ archives, no public API.
+      Institutional conversation only; plan no sprint around it.
+- [ ] **setlist.fm: do not scrape.** (checked 2026-09-26) The API is free for
+      non-commercial use only; commercial means asking Live Nation /
+      Ticketmaster, its owner. 20–30 items a request makes a city backfill
+      heavily paginated. Revisit only once a commercial licence clears.
+
+**Validate before building more**
+
+- [ ] **Three streets, counted by hand.** (checked 2026-09-26) In the launch
+      neighbourhood, count the *interesting* cards each source yields per
+      street, not the records: would this make someone stop walking? The
+      prediction to test: newspapers and the sabotage set win, directories are
+      filler.
+
 ---
 
 ## Phase 1.5 — Proximity unlock, left for when the coordinates improve
@@ -244,15 +315,15 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
 
 ## Open questions
 
-- **Which historical source first?** (checked 2026-09-22) Deliberately
-  undecided. arkiv.dk / Københavns Stadsarkiv is the brief's #1 but has no
-  public API; setlist.fm is a documented REST API with dense Copenhagen venue
-  coverage and the strongest contrast material; Mediestream sits between.
-  Founder candidates: x/Twitter, Reddit (both meter API access), free
-  literature such as Project Gutenberg (no per-venue coordinates). Check
-  reuse terms before ingesting any of them.
-- **Reuse terms for arkiv.dk and Mediestream.** (checked 2026-09-20) Unknown.
-  The legal posture assumes we may quote at all.
+- **Which historical source first?** (checked 2026-09-26) Narrowed by
+  Phase 1 § *Data sources*: KB Labs newspapers and the Historisk Atlas
+  sabotage set lead, arkiv.dk has no API, setlist.fm is non-commercial only.
+  The three-street count there decides it. Other founder candidates: x/Twitter,
+  Reddit (both meter API access), free literature such as Project Gutenberg
+  (no per-venue coordinates).
+- **Reuse terms for arkiv.dk.** (checked 2026-09-26) Unknown. The legal
+  posture assumes we may quote at all. Mediestream's are known now: KB Labs
+  serves papers over 140 years old, free.
 - **Where does "what is there now" come from?** (checked 2026-09-20) Contrast
   needs present-day place identity. Working assumption is OSM/Overpass,
   unvalidated, and useless on centroid coordinates.
