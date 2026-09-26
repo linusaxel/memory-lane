@@ -2,7 +2,7 @@
  *  The streak on top, then three sections behind a segmented control:
  *
  * **Walks** - every walk this account accepted, newest first. A row opens in
- * place to its stops; an earned one opens its memory. Cached (route.ts
+ * place to the memories it earned; the row's "2 of 5" counts the rest. Cached (route.ts
  * `loadWalked`), so it reads on a train (F16).
  * **Filed** - what you filed. Always the server's, because it has to show two
  * things no local cache was told about: a memory still sealed and one enough
@@ -199,7 +199,9 @@ export default function Memories({
       : walks.flatMap((walk, index): Item[] => [
           { kind: 'walk', walk, index },
           ...(openWalk === index
-            ? walk.memories.map((memory): Item => ({ kind: 'stop', memory, walk: index }))
+            ? walk.memories
+                .filter((memory) => !memory.locked)
+                .map((memory): Item => ({ kind: 'stop', memory, walk: index }))
             : []),
         ]);
 
@@ -251,9 +253,9 @@ export default function Memories({
               <Row
                 inset
                 place={item.memory.place.name}
-                summary={item.memory.locked ? 'Not walked to.' : item.memory.summary}
+                summary={item.memory.summary}
                 distance={distanceTo(item.memory)}
-                onPress={item.memory.locked ? undefined : () => onOpenStop(item.memory)}
+                onPress={() => onOpenStop(item.memory)}
               />
             ) : (
               <Row

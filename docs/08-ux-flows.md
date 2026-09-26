@@ -965,8 +965,9 @@ Every accepted walk is kept (`daily_routes`), and this reads them back.
 1. The journal's *Walks* section (F15): one row per walk, newest first,
    "Thu, Sep 24", its stops, "5 of 5 · 4.0 km". Unfinished walks are listed
    too; "3 of 5" says so.
-2. A row opens in place to its stops. An earned one opens its memory; the
-   rest say "Not walked to." Nothing is drawn on the map and nothing unlocks.
+2. A row opens in place to the memories it earned, each opening its sheet.
+   Stops not reached stay out; "3 of 5" already counts them. Nothing is
+   drawn on the map and nothing unlocks.
 3. Across every device on a signed-in account (F22), and cached for the train
    (F16).
 

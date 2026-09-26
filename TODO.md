@@ -124,19 +124,12 @@ missing is a source.
       set the slider to the measured loop (~9.1 km), preview, and assert a
       loop that reaches Sankt Jørgens Sø and reads `.* loop`. Then "Show me
       another" and assert the stops changed. `e2e/travel.py` needs its START
-      and budget made arguments.
+      and budget made arguments. Also assert a past walk's row opens to an
+      earned memory and tapping it opens the sheet (F31; needs the seed below).
 - [ ] **Seed walks already walked.** (checked 2026-09-24) For that journey: a
       few past `daily_routes` rows on the lakes, dated before today, with the
       unlocks that earned them (one 5 of 5, one abandoned 2 of 5), so the
       Walks tab opens on a history. Also seeds F27's streak (see Friction).
-- [ ] **Under each walk, the memories it unlocked.** (checked 2026-09-24:
-      `Memories.tsx` shows one row, `earned of size`) List the memories each
-      walk earned under its row: place name and the start of the summary, each
-      opening its sheet like a collection row. `/v1/routes/walked` already
-      returns every stop with earned ones open, so client only. Locked stops
-      stay out, or show as a count ("3 not reached"). **Done when:** the
-      Maestro journey above asserts one and tapping it opens the sheet.
-
 ---
 
 ## Parked
