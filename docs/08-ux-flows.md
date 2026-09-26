@@ -102,10 +102,9 @@ out, and on a new phone.
 **Trigger:** opening the app with no account attached. It is the first flow,
 because nothing is reachable before it (docs/10, *Sign-in comes first*).
 
-1. The logo lands (StartupLogo) and the page grows around it: the name, one line
-   saying what the account is for, Apple's own control and Continue with
-   Google. Nothing else — no carousel, no email field, no password, no magic
-   link.
+1. The logo lands (StartupLogo) and the page grows around it: the name, Apple's
+   own control and Continue with Google. Nothing else — no carousel, no email
+   field, no password, no magic link.
 2. The provider's sheet, then back. The app sends the ID token it was given and
    is told who that makes it.
 3. The plan page (F1), which is also where location is asked for (F8).
@@ -116,8 +115,8 @@ Signing out (You → Account) lands back on this screen.
 ### Why it is the gate
 
 The founder's call: no account, no app. The case for it, and what App Review
-5.1.1(v) needs to hear, is the collection that follows you to a new phone. So
-the one line on the screen says that and nothing more.
+5.1.1(v) needs to hear, is the collection that follows you to a new phone. The
+screen itself says nothing: the logo, the name and two buttons.
 
 The last answer is kept on the phone, so a signed-in person on a train with no
 network (F10, F16) opens straight to the map rather than a screen whose buttons

@@ -5,8 +5,7 @@
  * in with Apple as soon as any other third-party sign-in exists on iOS.
  *
  * It is the gate: no account, no app (docs/10, *Sign-in comes first*). The
- * screen is the whole onboarding, so it says one thing - what the account is
- * for, a collection that survives a new phone - and offers two buttons.
+ * screen is the whole onboarding: the logo, the name, and two buttons.
  *
  * Both flows end the same way - a provider-signed ID token goes to the server,
  * which decides whether it is real and which account it belongs to. The app
@@ -216,10 +215,6 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
       <View style={styles.hero}>
         <LogoTile size={120} />
         <Text style={styles.title}>Memory Lane</Text>
-        <Text style={styles.pitch}>
-          Stories that open only where they happened. Sign in, and the ones you open follow you to
-          a new phone.
-        </Text>
       </View>
 
       <View style={styles.actions}>
@@ -295,14 +290,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper, paddingHorizontal: 32 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 },
   title: { fontFamily: font.display, fontSize: 34, color: color.ink, marginTop: 8 },
-  pitch: {
-    fontFamily: font.prose,
-    fontSize: 17,
-    lineHeight: 27,
-    color: color.inkSoft,
-    textAlign: 'center',
-    maxWidth: 320,
-  },
   actions: { gap: 12, alignItems: 'stretch' },
   google: {
     height: 46,

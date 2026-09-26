@@ -15,7 +15,6 @@ of them (rule 9).
 SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed in
 ├─ the logo tile               where StartupLogo left it, at rest
 ├─ "Memory Lane"               34/700
-├─ one line                    what the account is for: the collection follows you
 ├─ Apple's own button          white on the dark paper, black on the light
 ├─ "Continue with Google"      outlined; absent without a client id
 └─ "Skip (dev build)"          __DEV__ only, so a release bundle has none
