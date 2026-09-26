@@ -71,6 +71,9 @@ python -m pipeline.worker
 python -m pipeline.worker classify   # x2
 python -m pipeline.worker extract aggregate   # x4
 
+# Or drain the queues once and exit, retries included (a one-record smoke)
+python -m pipeline.worker --burst
+
 # Check status
 python -m pipeline.enqueue --status <content_id>
 ```

@@ -84,7 +84,7 @@ somewhere. Ordered roughly by dependency, not by task id.
 
 | Task | Gate | What to do |
 |---|---|---|
-| `W1-09` | API_CREDITS | Run one video through the queue path (`python -m pipeline.enqueue --video <id>` then `pipeline.worker`), then eyeball 20 summaries for quality. Nothing else can validate extraction quality — `tests/fakes.py::FakeAnthropic` proves the plumbing, not the prose. |
+| `W1-09` | API_CREDITS | Run one video through the queue path (`python -m pipeline.enqueue --video <id>` then `pipeline.worker --burst`), then eyeball 20 summaries for quality. Nothing else can validate extraction quality — `tests/fakes.py::FakeAnthropic` proves the plumbing, not the prose. |
 | `W2-08` | DEPLOY | Railway account + card, new project, PostGIS service, `psql $DATABASE_URL -f db/schema.sql`, deploy this repo's Dockerfile, load data, note the HTTPS domain. Full steps in the task's own note. Unblocks `W3-14`. |
 | `P2-00` | DEPLOY | Stop serving OSM's public tiles from the embed before it's public. Stadia Maps (free tier, then ~$20/mo) or Protomaps on Cloudflare R2 (~$3/mo). `TILE_URL` is one constant either way. Independent of `W2-08`. |
 | `W3-14` | EAS_BUILD | Depends on `W2-08`. Replace the three `PLACEHOLDER`s in `mobile/app.json` (**irreversible once submitted**), point `eas.json` at the real Railway domain, Google Maps SDK key, `eas init`, `eas credentials`, `eas build --profile production --platform all`. |

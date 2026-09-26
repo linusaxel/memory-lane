@@ -23,13 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **Extracting one record takes three processes and a watch.** (2026-09-26)
-  `enqueue --video` needs Redis (which `verify.sh` does not start) and a
-  `pipeline.worker` that never exits, so a one-record smoke means a background
-  worker, a status poll, and remembering to kill it and clear its scheduled
-  retry, or it bills again later. Fix: `pipeline.worker --burst` (rq's
-  `work(burst=True)`), which exits when the queues are empty.
-
 - **`lakes-loop.yml` drags the slider by screen percentage.** (2026-09-26)
   Adding one button to the centred plan page moved the slider from 35% to 32%
   of the screen, and the flow failed on "10 km" with nothing wrong in the app;

@@ -14,8 +14,10 @@ if sys.platform == "darwin" and os.environ.get("OBJC_DISABLE_INITIALIZE_FORK_SAF
     os.execvp(sys.executable, [sys.executable, "-m", "pipeline.worker", *sys.argv[1:]])
 
 import logging
+import time
 
 from rq import Worker
+from rq.registry import ScheduledJobRegistry
 
 from pipeline.queue import QUEUE_AGGREGATE, QUEUE_CLASSIFY, QUEUE_EXTRACT, get_redis
 
@@ -27,17 +29,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def run_worker(queues: list[str] = None):
+def run_worker(queues: list[str] = None, burst: bool = False):
     if queues is None:
         queues = [QUEUE_AGGREGATE, QUEUE_EXTRACT, QUEUE_CLASSIFY]
 
     logger.info(f"Starting worker for queues: {queues}")
 
     conn = get_redis()
-    worker = Worker(queues, connection=conn)
-    worker.work(with_scheduler=True)
+    if not burst:
+        Worker(queues, connection=conn).work(with_scheduler=True)
+        return
+
+    # rq's burst exits with retries still scheduled, which a later worker would
+    # bill. Wait them out instead, so a burst leaves nothing behind.
+    while True:
+        Worker(queues, connection=conn).work(burst=True, with_scheduler=True)
+        if not any(ScheduledJobRegistry(q, connection=conn).count for q in queues):
+            return
+        time.sleep(5)
 
 
 if __name__ == "__main__":
-    queues = sys.argv[1:] if len(sys.argv) > 1 else None
-    run_worker(queues)
+    args = sys.argv[1:]
+    burst = "--burst" in args
+    run_worker([a for a in args if a != "--burst"] or None, burst=burst)

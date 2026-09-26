@@ -93,7 +93,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 
 python -m pipeline.ingest && python -m pipeline.transcripts   # free
 python -m pipeline.enqueue --video <content_id>               # extract one video (bills cents)
-python -m pipeline.worker                                     # run the queues
+python -m pipeline.worker --burst                             # run the queues, exit when empty
 
 python -m pipeline.seed_dev          # memories you can walk to; --clear removes them
 python -m pipeline.seed_dev --dense 300 --seed 1   # plus a full map for the route to choose from
