@@ -26,6 +26,7 @@ free number. F3 is still proposed and sits at the bottom.
 
 | | | |
 |---|---|---|
+| F22 | Sign in | Implemented |
 | F1 | Plan today's walk | Implemented |
 | F2 | Read one memory and go to its source | Implemented |
 | F6 | Many memories at one point | Implemented |
@@ -45,7 +46,6 @@ free number. F3 is still proposed and sits at the bottom.
 | F5 | File a memory of your own | Implemented |
 | F20 | Report something that should not be here | Removed from the app |
 | F21 | Be somebody | Implemented |
-| F22 | Keep your collection on a new phone | Implemented |
 | F23 | Seal a memory until a date | Implemented |
 | F24 | Manage what you filed | Implemented |
 | F3 | Arrive somewhere and find its history | Proposed |
@@ -59,8 +59,8 @@ free number. F3 is still proposed and sits at the bottom.
 | F31 | Look back at a walk | Implemented |
 | F33 | Leave a note | Implemented |
 
-**Not flows, and deliberately absent:** there is no sign-in *wall* — F22 exists
-and nothing is behind it — no onboarding carousel, no settings anybody
+**Not flows, and deliberately absent:** no onboarding beyond F22's one
+screen — no carousel, no settings anybody
 has to change (the walk length is the plan page's one question, asked as part
 of F1, not a setting), no search in the app, no sharing, and no push notifications.
 Each of those is a thing a user does *not* do, and the list is worth as much
@@ -92,6 +92,70 @@ on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. There is no map of everything: the
 walk is the only window onto what is around. The journal's You section is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
+
+---
+
+## F22 · Sign in — **Implemented**
+
+**Who:** everybody, on their first launch. The same screen again after signing
+out, and on a new phone.
+**Trigger:** opening the app with no account attached. It is the first flow,
+because nothing is reachable before it (docs/10, *Sign-in comes first*).
+
+1. The logo lands (StartupLogo) and the page grows around it: the name, one line
+   saying what the account is for, Apple's own control and Continue with
+   Google. Nothing else — no carousel, no email field, no password, no magic
+   link.
+2. The provider's sheet, then back. The app sends the ID token it was given and
+   is told who that makes it.
+3. The plan page (F1), which is also where location is asked for (F8).
+4. On a new phone: sign in, and the collection is there.
+
+Signing out (You → Account) lands back on this screen.
+
+### Why it is the gate
+
+The founder's call: no account, no app. The case for it, and what App Review
+5.1.1(v) needs to hear, is the collection that follows you to a new phone. So
+the one line on the screen says that and nothing more.
+
+The last answer is kept on the phone, so a signed-in person on a train with no
+network (F10, F16) opens straight to the map rather than a screen whose buttons
+cannot work offline.
+
+### Why only Google and Apple
+
+No passwords means nothing to store, reset, rotate or leak, and no reset-email
+flow to build. Apple is not a preference: App Store review requires Sign in with
+Apple as soon as any other third-party sign-in exists on iOS. Both usually end
+up on one account, which is why `identities` is a table and not two columns.
+
+### What the server does with it
+
+Verifies the signature, the **audience** and the issuer, then binds the device
+to a user. No session token is issued in either direction — the device id it
+already sends stays the only credential, so a second phone is simply a second
+device on one person and every other endpoint is unchanged.
+
+Signing out unlinks the device and deletes nothing. What was earned on the
+handset stays readable on the handset; what was filed stays with the account and
+comes back on the next sign-in.
+
+**What can go wrong:** signing into an account that already exists, from a phone
+that had already filed something before the gate existed — the anonymous local
+user is folded in. Signing into a *different* real account switches the device
+and merges nothing; two accounts that each have a sign-in are not ours to join
+together. Cancelling the provider's sheet leaves the screen as it was, with no
+message.
+
+**Neither button works in Expo Go.** Apple needs the entitlement and Google
+needs the app's own URL scheme, so a real sign-in needs a development build and
+real client ids. A dev build shows **Skip (dev build)** under the buttons;
+`__DEV__` strips it from a release bundle, and `./e2e/run.sh` taps it
+(`.maestro/steps/sign-in.yml`).
+
+**Done when:** a fresh install shows this screen and nothing behind it, and
+somebody can hand their old phone in and still have everything they walked for.
 
 ---
 
@@ -288,8 +352,8 @@ Attestation needs more than accounts, which now exist. See TODO.md.
 **"Forever" means as long as the account does.** Unlocks are recorded
 server-side against the keychain UUID, so clearing the app's data does not undo
 the walking. Signed out, a new phone still starts empty; signed in, the
-collection follows the person. That is F22, and it is the only thing sign-in
-is for.
+collection follows the person. That is F22, and it is the case for sign-in
+coming first.
 
 The client can still be generous with the animation. It just cannot be the
 thing deciding what you are allowed to read.
@@ -342,7 +406,8 @@ mechanic.
 
 **Who:** somebody on their first launch, who has not been asked yet.
 
-1. The plan page is up (F1). Nothing has been asked.
+1. They have signed in (F22) and the plan page is up (F1). Nothing has been
+   asked.
 2. **Show me the walk** is the ask: walks start from where you are, and the
    page says the walk loops back there. The system dialog comes from that
    press, never from launch.
@@ -361,8 +426,8 @@ away.
 central Copenhagen without a dialog; on the walk, **Turn on location** opens Settings,
 which is the only route back.
 
-**Done when:** a first launch shows the plan page and no system dialog, and a
-press on it is the only thing that can raise one.
+**Done when:** after F22, a first launch shows the plan page and no system
+dialog, and a press on it is the only thing that can raise one.
 
 ## F9 · Use the app without location — **Implemented**
 
@@ -480,7 +545,7 @@ is too late.
    to walk to a guess would be a lie.
 3. Location state, with the route to Settings.
 4. The name their submissions are signed with, and the sign-in that makes a
-   collection survive a new phone. Never a wall — see F22.
+   collection survive a new phone, and signing out — see F22.
 
 ## F18 · Stand somewhere with nothing in it — **Removed from the app**
 
@@ -601,58 +666,6 @@ theirs to change.
 
 ---
 
-## F22 · Keep your collection on a new phone — **Implemented**
-
-**Who:** somebody who has unlocked things and then changed handset, or wiped
-one.
-**Trigger:** You → Account. Never a wall, never a prompt on launch.
-
-1. Two buttons: Apple's own control, and Continue with Google. Nothing else —
-   no email field, no password, no magic link.
-2. The provider's sheet, then back. The app sends the ID token it was given and
-   is told who that makes it.
-3. Everything filed or unlocked on this phone while signed out comes with them.
-   Filing first and signing in later is the normal order and losing the memory
-   in between would be the version of this nobody forgives.
-4. On the new phone: sign in, and the collection is there.
-
-### Why it is not a gate
-
-Nothing in the app is behind it. A proximity app that asks who you are before it
-shows you anything has the order wrong, and the copy on the screen says only
-what signing in is actually for: a new phone that does not start empty.
-
-### Why only Google and Apple
-
-No passwords means nothing to store, reset, rotate or leak, and no reset-email
-flow to build. Apple is not a preference: App Store review requires Sign in with
-Apple as soon as any other third-party sign-in exists on iOS. Both usually end
-up on one account, which is why `identities` is a table and not two columns.
-
-### What the server does with it
-
-Verifies the signature, the **audience** and the issuer, then binds the device
-to a user. No session token is issued in either direction — the device id it
-already sends stays the only credential, so a second phone is simply a second
-device on one person and every other endpoint is unchanged.
-
-Signing out unlinks the device and deletes nothing. What was earned on the
-handset stays readable on the handset; what was filed stays with the account and
-comes back on the next sign-in.
-
-**What can go wrong:** signing into an account that already exists, from a phone
-that had already filed something — the anonymous local user is folded in.
-Signing into a *different* real account switches the device and merges nothing;
-two accounts that each have a sign-in are not ours to join together.
-
-**Neither button works in Expo Go.** Apple needs the entitlement and Google
-needs the app's own URL scheme, so seeing this flow at all needs a development
-build and real client ids.
-
-**Done when:** somebody can hand their old phone in and still have everything
-they walked for.
-
----
 
 ## F23 · Seal a memory until a date — **Implemented**
 
@@ -1088,8 +1101,9 @@ Answer these and the proposed flows can be written properly.
    moderation and an abuse story — turned out to be one report endpoint and a
    threshold rather than a project. Auth was the third, and it turned out not to
    be a blocker at all: a display name claimed by a device is enough to sign a
-   memory. Real sign-in (Google and Apple, nothing else) is next, and it makes a
-   collection survive a new phone rather than making contribution possible.
+   memory. Real sign-in (Google and Apple, nothing else) followed, and since
+   2026-09-26 it comes first (F22), for the collection rather than for
+   contribution.
 4. ~~**Does a pin represent a place or a memory?**~~ **Answered by
    implementation: a pin is a *point*.** Neither of the original options
    survived contact with the data — grouping by place id does not work, because

@@ -24,6 +24,8 @@ appId: ${APP_ID}
     permissions:
       location: unset
 
+- runFlow: steps/sign-in.yml
+
 - extendedWaitUntil:
     visible: "How far today?"
     timeout: 40000
@@ -82,6 +84,8 @@ appId: ${APP_ID}
     permissions:
       location: never
 
+- runFlow: steps/sign-in.yml
+
 - extendedWaitUntil:
     visible: "How far today?"
     timeout: 40000
@@ -103,6 +107,8 @@ appId: ${APP_ID}
     clearState: true
     permissions:
       location: inuse
+
+- runFlow: steps/sign-in.yml
 
 - extendedWaitUntil:
     visible: "How far today?"

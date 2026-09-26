@@ -36,6 +36,8 @@ appId: ${APP_ID}
       # ACCESS_BACKGROUND_LOCATION (UI.md rule 2).
       location: inuse
 
+- runFlow: steps/sign-in.yml
+
 # F25: plan, preview, accept. The default length is the walk below.
 - extendedWaitUntil:
     visible: "How far today?"

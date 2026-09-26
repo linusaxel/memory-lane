@@ -12,6 +12,14 @@ Three stages, one map, four modals. The stage is plain state in `App.tsx`
 of them (rule 9).
 
 ```
+SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed in
+├─ the logo tile               where StartupLogo left it, at rest
+├─ "Memory Lane"               34/700
+├─ one line                    what the account is for: the collection follows you
+├─ Apple's own button          white on the dark paper, black on the light
+├─ "Continue with Google"      outlined; absent without a client id
+└─ "Skip (dev build)"          __DEV__ only, so a release bundle has none
+
 Plan (src/Plan.tsx)            opaque page over the mounted map
 ├─ "How far today?"            34/700
 ├─ "4 km"                      the slider's value, mono 30
@@ -67,7 +75,7 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; "Close" top right
 └─ You (src/Settings.tsx)
    ├─ unlocked / places / added, as numbers
    ├─ your name                what submissions are signed with. Blank = Anonymous
-   ├─ account                  Apple / Google. Never a wall; see SignIn.tsx
+   ├─ account                  which sign-ins, add the other, sign out (back to the gate)
    ├─ how unlocking works      the one place that answers "why can't I read this"
    ├─ location state + action
    └─ privacy policy, and what signing out does and does not delete
@@ -82,8 +90,11 @@ the app's data being cleared. Signed out it is keyed on the keychain device id;
 signed in, on every device of that account — which is the entire point of
 sign-in and the only thing its copy is allowed to promise.
 
-**Sign-in is never a gate.** Nothing in the app is behind it. A proximity app
-that asks who you are before it shows you anything has the order wrong.
+**Sign-in comes first.** No account, no app: the first screen is Apple and
+Google and nothing else, and signing out lands back on it (docs/10, *Sign-in
+comes first*). Because nothing can be tried before it, that one screen has to
+earn the tap on its own. The last answer is kept locally, so a signed-in person
+with no network is never stopped at the gate.
 
 | File | What it owns |
 |---|---|
@@ -769,5 +780,5 @@ Documented flows live in `docs/08-ux-flows.md`. Build toward those, and when a
 flow changes, change that file in the same commit.
 
 Writing is F5 (file a memory), F20 (report one) and F21 (be somebody).
-Sign-in is F22, and it is Google and Apple only — see `src/SignIn.tsx` for why,
-and for why neither button works in Expo Go.
+Sign-in is F22, the first flow, and it is Google and Apple only — see
+`src/SignIn.tsx` for why, and for why neither button works in Expo Go.

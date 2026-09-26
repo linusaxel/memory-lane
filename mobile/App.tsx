@@ -64,6 +64,7 @@ import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
 import { Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
+import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { buttonText, color, dim, font, label } from './src/theme.ts';
@@ -216,6 +217,9 @@ export default function App() {
   const [device, setDevice] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [profile, setProfile] = useState<Profile | null>(null);
+  // The gate (docs/10, *Sign-in comes first*). Null until the stored answer is
+  // read, so a signed-in launch never flashes the sign-in screen.
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
   // Set to open Submit as an editor for this memory instead of a blank form.
   // Null means Submit is either closed or filing something new.
@@ -337,6 +341,9 @@ export default function App() {
   }, [goToMyLocation]);
 
   useEffect(() => {
+    loadSignedIn().then((on) => {
+      if (mounted.current) setSignedIn((known) => known || on);
+    });
     loadUnlocked().then((stored) => {
       if (!mounted.current) return;
       setUnlocked(stored);
@@ -359,6 +366,13 @@ export default function App() {
             if (!mounted.current) return;
             setProfile(who);
             setDisplayName(who.display_name ?? '');
+            // Only ever lets somebody in here, never out: this device is
+            // unlinked only by its own sign-out, which accountChanged handles,
+            // and a dev build's skip has no provider to show.
+            if (who.providers.length > 0) {
+              setSignedIn(true);
+              saveSignedIn(true);
+            }
           })
           .catch(() => {});
         const earned = await fetchUnlocked(id);
@@ -846,6 +860,9 @@ export default function App() {
     (who: Profile) => {
       setProfile(who);
       setDisplayName(who.display_name ?? '');
+      const on = who.providers.length > 0;
+      setSignedIn(on);
+      saveSignedIn(on);
       if (!device) return;
       fetchUnlocked(device)
         .then(async (earned) => {
@@ -881,6 +898,24 @@ export default function App() {
       <StartupLogo
         onDone={() => setLogoDone(true)}
       />
+    );
+  }
+
+  if (signedIn === null) return null;
+
+  if (!signedIn) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="auto" />
+        <SignInScreen
+          device={device}
+          onProfile={accountChanged}
+          onSkip={() => {
+            setSignedIn(true);
+            saveSignedIn(true);
+          }}
+        />
+      </SafeAreaProvider>
     );
   }
 

@@ -328,8 +328,9 @@ and why an unconfigured server answers 503 rather than verifying against nothing
 
 ### Sign-in comes first, and it is the whole onboarding
 
-Status: Accepted 2026-09-26, not built yet. Supersedes "Sign-in is never a gate"
-(`mobile/UI.md`, `docs/08-ux-flows.md`) and the onboarding non-goal below.
+Status: Accepted 2026-09-26, built the same day (F22). Supersedes "Sign-in is
+never a gate" (`mobile/UI.md`, `docs/08-ux-flows.md`) and the onboarding
+non-goal below.
 
 The founder's call: no account, no app. The first screen is Apple and Google
 and nothing else, then the location primer (F8/F9), then the map. No carousel,
@@ -341,7 +342,12 @@ matched on. The anonymous-absorb path stays for devices from before the gate.
 
 **Consequences:** nothing can be tried before signing in, so the one screen has
 to earn the tap on its own. Neither button works in Expo Go, so development and
-`./e2e/run.sh` need a way past the gate that a release build cannot take.
+`./e2e/run.sh` need a way past the gate that a release build cannot take: a
+**Skip (dev build)** button under `__DEV__`, which Metro strips from a release
+bundle. A button rather than an `EXPO_PUBLIC_DEV_*` knob, because `e2e/run.sh`
+blanks every such knob and a button lets e2e drive the gate. The gate lives in
+the client only; the server still serves an unbound device, which is what keeps
+the anonymous-absorb path working.
 
 ### `MY_DEVICES` keeps a `d.id = :device_id` arm
 

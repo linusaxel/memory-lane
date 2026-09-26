@@ -103,7 +103,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Memories.tsx` | **The journal.** Streak, past walks, what you filed, and You |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/Settings.tsx` | The journal's You section |
-| `mobile/src/SignIn.tsx` | Google and Apple buttons. Neither works in Expo Go |
+| `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
 | `mobile/src/HeartGlyph.tsx`, `Padlock.tsx`, `StartupLogo.tsx` | Drawn marks: the heart, the app's one symbol, the launch logo |

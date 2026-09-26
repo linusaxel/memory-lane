@@ -21,6 +21,8 @@ appId: ${APP_ID}
     permissions:
       location: inuse
 
+- runFlow: steps/sign-in.yml
+
 # "+ Add" is there from the plan page on: filing needs no walk.
 - extendedWaitUntil:
     visible: "How far today?"

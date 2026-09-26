@@ -67,6 +67,18 @@ once W2-08 is deployed.)
 
 Suggested three: the map with pins, a memory sheet open, today's walk from where you stand.
 
+## App Review notes
+
+Sign-in comes first (F22), which Guideline 5.1.1(v) rejects unless the app has
+real account features. Paste this into the review notes:
+
+> An account is required because the collection is the product: every story
+> you unlock is earned by walking to its spot, and your account is what carries
+> that collection, and the memories you file, to a new phone. Sign in with
+> Apple or Google; there is no password. To try the app, sign in, then press
+> "Show me the walk". Location is optional; declining it plans a walk from
+> central Copenhagen.
+
 ## Play Data safety answers
 
 Answer these against `store/privacy.md`, not from memory — the app collects more

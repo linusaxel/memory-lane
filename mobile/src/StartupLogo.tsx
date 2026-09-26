@@ -18,6 +18,12 @@ const SUN_R = 66;
 const TILE_RX = 229;
 const SIZE = 200;
 
+const splash = (dark: boolean) => ({
+  paper: dark ? '#161412' : '#F7F4EE',
+  tile: dark ? '#0a2b2c' : '#106a6d',
+  road: dark ? '#e9f1ee' : '#f2ede4',
+});
+
 /** "The lane draws in": the road grows up from the bottom edge, then the sun
  *  lands, then onDone. Timings are lane-draws-in/README.md's, minus the
  *  breath - the app is ready by then. Splash colours, not DynamicColorIOS:
@@ -25,10 +31,7 @@ const SIZE = 200;
  *  colour, not a platform-resolved one" exception as the map's
  *  Circle/Polyline - see mobile/UI.md. */
 export default function StartupLogo({ onDone }: { onDone: () => void }) {
-  const dark = useColorScheme() === 'dark';
-  const paper = dark ? '#161412' : '#F7F4EE';
-  const tile = dark ? '#0a2b2c' : '#106a6d';
-  const road = dark ? '#e9f1ee' : '#f2ede4';
+  const { paper, tile, road } = splash(useColorScheme() === 'dark');
   const reveal = useRef(new Animated.Value(0)).current;
   const sun = useRef(new Animated.Value(0)).current;
 
@@ -100,3 +103,25 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 });
+
+/** The same tile at rest: the lane drawn, the sun landed. What the sign-in
+ *  screen opens on, so the logo stays put when the animation hands over. */
+export function LogoTile({ size }: { size: number }) {
+  const { tile, road } = splash(useColorScheme() === 'dark');
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: (size * TILE_RX) / 1024,
+        overflow: 'hidden',
+        backgroundColor: tile,
+      }}
+    >
+      <Svg width={size} height={size} viewBox="0 0 1024 1024">
+        <Path d={ROAD} fill={road} />
+        <Circle cx={510} cy={280} r={SUN_R} fill="#f2a65a" />
+      </Svg>
+    </View>
+  );
+}

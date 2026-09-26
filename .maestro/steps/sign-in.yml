@@ -1,0 +1,9 @@
+# F22: a cleared install opens on the sign-in screen and nothing else. Neither
+# provider works on a simulator, so the dev build's skip is the way past.
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible: "Memory Lane"
+    timeout: 40000
+- assertNotVisible: "How far today?"
+- tapOn: "Skip \\(dev build\\)"
