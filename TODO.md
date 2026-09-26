@@ -78,10 +78,6 @@ live requests. Order is priority.
 
 **Next**
 
-- [ ] **Ingest the sabotage set, Copenhagen only.** (checked 2026-09-26) Free:
-      `python -m pipeline.ingest --source historisk-atlas --query Sabotage
-      --limit 1000 --bbox 55.60,12.45,55.74,12.66` (884 titles, ~8% in
-      Copenhagen, 1 s a page). Extracting it bills: waits on `API_CREDITS`.
 - [ ] **Kraks Vejviser and older address directories.** (checked 2026-09-26)
       Pre-1900 editions at kb.dk carry a public domain mark (commercial use
       with credit); Copenhagen Libraries host digitised volumes at
@@ -220,7 +216,7 @@ Each waits on something named; none is worth building before it.
 
 They cost money or need an account. Full detail in `loop/STATE.md`.
 
-- [ ] **`API_CREDITS`** (checked 2026-09-23) — the extraction path has never
+- [ ] **`API_CREDITS`** (checked 2026-09-26) — the extraction path has never
       met the real API; every test uses `FakeAnthropic`. **There is no
       `--limit` flag**: `python -m pipeline.extract` bills every pending
       video. To spend cents: `python -m pipeline.enqueue --video <content_id>`,
@@ -236,6 +232,9 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
       after, and extract content 160 (Blaagaardsgade) to see a geocoded place.
       New extractions only; no backfill yet. KB papers: `pwa` sits near 50 on
       every 1856 page, so nothing is filtered on it; expect ad-page noise.
+      Waiting too: 340 Historisk Atlas sabotage stories, all inside the
+      Copenhagen box, ingested 2026-09-26 (dev DB). Each is a title and one
+      line, so enqueue one first and judge whether that is a card at all.
 - [ ] **`DEPLOY`** (checked 2026-09-20) — Railway, ~$5/mo. Not Fly: Fly's
       managed Postgres has no PostGIS. Unblocks Phase 2 and an OSRM sidecar
       (~1.6 GB RAM to build).
