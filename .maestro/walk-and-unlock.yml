@@ -54,16 +54,16 @@ appId: ${APP_ID}
 - tapOn: "Accept this walk"
 
 - extendedWaitUntil:
-    visible: "Today's route · 0 of 5 unlocked\\."
+    visible: "On a walk · 0 of 5 unlocked\\."
     timeout: 40000
 
 # A walk can be ended any time; with stops still to reach, it asks first.
-- tapOn: "End walk"
+- tapOn: "On a walk.*"
 - assertVisible: "End this walk\\?"
 - assertVisible: "The 5 stops you haven't reached lock again\\. What you opened stays yours\\."
 - tapOn: "Keep walking"
 - assertNotVisible: "End this walk\\?"
-- assertVisible: "Today's route · 0 of 5 unlocked\\."
+- assertVisible: "On a walk · 0 of 5 unlocked\\."
 
 # "Turn on location" shows until there is a position, so its going is the fix.
 # Waiting on it means a slow fix reads as a slow fix, not as a locked stop.
@@ -147,7 +147,7 @@ appId: ${APP_ID}
 - tapOn: "Done"
 
 - extendedWaitUntil:
-    visible: "Route walked · 5 of 5 unlocked\\."
+    visible: "On a walk · 5 of 5 unlocked\\."
     timeout: 30000
 
 # F15 + F31: the journal keeps the walk. Its row opens in place to its five
@@ -211,7 +211,7 @@ appId: ${APP_ID}
 # on the walked route, not on the plan page.
 - launchApp
 - extendedWaitUntil:
-    visible: "Route walked · 5 of 5 unlocked\\."
+    visible: "On a walk · 5 of 5 unlocked\\."
     timeout: 30000
 - assertNotVisible: "How far today?"
 - assertNotVisible: "Walk done\\."
@@ -225,15 +225,15 @@ appId: ${APP_ID}
 - assertVisible: "Hearted, 1 heart"
 - tapOn: "Close"
 - tapOn: "Close journal"
-- assertVisible: "Route walked · 5 of 5 unlocked\\."
+- assertVisible: "On a walk · 5 of 5 unlocked\\."
 
 # Ending a walked walk loses nothing, so it does not ask. The map, and
 # another walk to plan the same day.
-- tapOn: "End walk"
+- tapOn: "On a walk.*"
 - assertNotVisible: "End this walk\\?"
 - extendedWaitUntil:
     visible: "Plan a walk"
     timeout: 30000
-- assertNotVisible: "Route walked · .*"
+- assertNotVisible: "On a walk.*"
 - tapOn: "Plan a walk"
 - assertVisible: "How far today\\?"

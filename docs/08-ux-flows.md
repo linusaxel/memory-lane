@@ -790,7 +790,10 @@ anyone else's collection or the local unlock cache.
    stage; there are no tabs. There is no
    "Near me": the pill recentres, and "Turn on location" shows only while
    there is no position.
-3. A pill at the bottom centre: "Today's route · 0 of 5 · 2.4 km" — the distance
+3. **A route-blue bar at the top centre, "On a walk · 0 of 5"**, between
+   Journal and + Add, is what says this is a walk and not the map: it holds the
+   count, and tapping it ends the walk (F34). Nothing else repeats the count.
+   A pill at the bottom centre: "2.4 km to go" — the distance
    still to walk, from where you stand through every stop not yet earned, in
    order, and back to where the walk started on a loop (the plan page's
    choice, stored as `daily_routes.loop`), so the walk home counts. Along the streets between stops
@@ -814,7 +817,8 @@ anyone else's collection or the local unlock cache.
    numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the pill's count and distance move.
-6. The last stop earned, the pill reads "Route walked · 5 of 5" and a tap fits
+6. The last stop earned, the bar reads "On a walk · 5 of 5", the pill
+   reads "Route walked" and a tap fits
    the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
@@ -1003,7 +1007,7 @@ The last stop unlocks and the day should feel finished.
    time is first unlock to last, and is left off if a stop was earned on
    another day), then the streak once it is more than one day (F27).
 4. Done goes back to the map, pinned on you again, with the pill at
-   "Route walked · 5 of 5".
+   "Route walked" under the bar's "On a walk · 5 of 5".
 
 It shows once per walk, and nothing stores that it did: it follows the unlock
 that finished the walk in this session, so a relaunch on a walked day lands on
@@ -1016,7 +1020,8 @@ Why each of these, in `docs/10-decisions.md`, "The walk ends on a card, once".
 **Who:** somebody on a walk who wants out of it: a bad plan, rain, or a walk
 already walked and another in mind.
 
-1. **End walk**, top centre on the walk, between Journal and + Add.
+1. The walk's bar, "On a walk · 2 of 5", top centre between Journal and
+   + Add (F25).
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
    haven't reached lock again. What you opened stays yours.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.

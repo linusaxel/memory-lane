@@ -682,13 +682,15 @@ export default function App() {
         )
       : null;
   const routeLeft = position ? pathMeters(routePath) : null;
+  // The count is the walk bar's, so the pill says only where and how far.
   const routeLabel = routeDone
-    ? `Route walked · ${routeUnlockedCount} of ${routeTotal}`
+    ? 'Route walked'
     : routeStarted && nextRouteStop
       ? `Next: ${nextRouteStop.place.name}` +
         (toNextStop === null ? '' : ` · ${distance(toNextStop)}`)
-      : `Today's route · ${routeUnlockedCount} of ${routeTotal}` +
-        (routeLeft === null ? '' : ` · ${distance(routeLeft)}`);
+      : routeLeft === null
+        ? "Today's route"
+        : `${distance(routeLeft)} to go`;
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
@@ -1150,11 +1152,9 @@ export default function App() {
               style={dim([styles.route, pillSlot])}
               accessibilityRole="button"
               accessibilityLabel={
-                routeDone
-                  ? `Route walked · ${routeUnlockedCount} of ${routeTotal} unlocked.`
-                  : routeStarted && nextRouteStop
-                    ? `Next stop: ${nextRouteStop.place.name}.`
-                    : `Today's route · ${routeUnlockedCount} of ${routeTotal} unlocked.`
+                routeStarted && nextRouteStop
+                  ? `Next stop: ${nextRouteStop.place.name}.`
+                  : `${routeLabel}.`
               }
               accessibilityHint={
                 routeDone
@@ -1333,20 +1333,23 @@ export default function App() {
           >
             <Text style={styles.cornerText}>+ Add</Text>
           </Pressable>
-          {/* Top, between them: where the walk's own bar goes (TODO.md M8).
+          {/* Top, between them: the walk's one signal, and how it ends.
               Nothing left to reach, nothing to lose, so no are-you-sure. */}
           {walking && !showDone && !confirmEnd && (
             <Pressable
-              style={dim([styles.corner, styles.endWalk])}
+              style={dim([styles.corner, styles.walkBar])}
               accessibilityRole="button"
-              accessibilityLabel="End walk"
+              accessibilityLabel={`On a walk · ${routeUnlockedCount} of ${routeTotal} unlocked.`}
+              accessibilityHint="Ends the walk"
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 if (routeDone) endWalk();
                 else setConfirmEnd(true);
               }}
             >
-              <Text style={styles.cornerText}>End walk</Text>
+              <Text style={styles.walkBarText} numberOfLines={1}>
+                On a walk · {routeUnlockedCount} of {routeTotal}
+              </Text>
             </Pressable>
           )}
         </View>
@@ -1461,9 +1464,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   journal: { left: 18 },
-  endWalk: { alignSelf: 'center' },
+  walkBar: { alignSelf: 'center', backgroundColor: color.route, borderColor: color.route },
   add: { right: 18 },
   cornerText: { ...label, color: color.ink },
+  walkBarText: { ...label, color: color.paper },
   locate: {
     position: 'absolute',
     bottom: 44,

@@ -20,6 +20,10 @@ app is a Debug build with no JS bundle of its own: it loads one from Metro on
 Metro against the compose API (`docker compose up -d`, `mobile/.env` from
 `.env.example`): `cd mobile && npx expo start --dev-client`, then tap the icon.
 
+**To see a screen mid-flow**, add `- takeScreenshot: name` to the flow for one
+run. An absolute path fails the step; a bare name lands in
+`~/.maestro/tests/<timestamp>/<flow>/takeScreenshot/name.png`.
+
 **It needs the OSRM sidecar** (`./osrm/build.sh` once, then `docker compose
 --profile routing up -d osrm`). The walk is the route OSRM picks, and without
 streets the app picks a different one. Each leg is walked in two fixes, halfway

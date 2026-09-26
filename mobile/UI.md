@@ -45,12 +45,13 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "Journal"                  top left, every stage, plan page included
 ├─ "+ Add"                    top right, every stage: filing needs no walk. See "Writing"
-├─ "End walk"                 top centre, the corners' shape (F34). With stops left, a card
+├─ "On a walk · 2 of 5"       top centre, the corners' shape in route blue: the walk's one
+│                              signal, and a tap ends it (F34). With stops left, a card
 │                              (EndWalk): "End this walk?", End walk / Keep walking. No system dialog
 ├─ NextStopArrow              route blue, on the screen's edge, pointing at the next
 │                              stop while it is off screen (src/NextStopArrow.tsx)
-├─ "Today's route · N of 5 · 2.4 km"   bottom centre; tap zooms out around you to the next stop;
-│    "Next: <place> · 350 m" once started, "Route walked · 5 of 5" when done,
+├─ "2.4 km to go"             bottom centre, no count (the bar has it); tap zooms out around
+│    you to the next stop; "Next: <place> · 350 m" once started, "Route walked" when done,
 │    "Unlock memory" seal while standing at any stop
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
@@ -178,7 +179,7 @@ it is built to look like a field guide rather than a dashboard.
 | `seal` | `#8A5A17` / `#D9A54B` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
 | `sealSoft` | `#F0E4C8` / `#3D3018` | the ring filling during a hold |
 | `sealDeep` | `#5C3A0E` / `#F0C878` | the padlock inside the ring, the count tag on a reachable pin |
-| `route` | `#1A64D6` / `#5AA2FF` | **walk here next.** The one hopping pin, and the preview's line. Never openable: in reach, the pin turns `seal` |
+| `route` | `#1A64D6` / `#5AA2FF` | **walk here next.** The one hopping pin, the preview's line, and the walk's bar. Never openable: in reach, the pin turns `seal` |
 
 The watch button is **ink**, not the accent. It was YouTube red back when the
 map pins were red too; that stopped being true, and the accent is spoken for.

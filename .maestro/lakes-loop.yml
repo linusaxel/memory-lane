@@ -65,7 +65,7 @@ appId: ${APP_ID}
 # Accepting is what registers the device, and with it the past walks.
 - tapOn: "Accept this walk"
 - extendedWaitUntil:
-    visible: "Today's route · .* of 10 unlocked\\."
+    visible: "On a walk · .* of 10 unlocked\\."
     timeout: 40000
 
 # F31: the Walks tab opens on the history, and a row opens in place to the
@@ -91,4 +91,4 @@ appId: ${APP_ID}
 - assertVisible: "Heart this memory"
 - tapOn: "Close"
 - tapOn: "Close journal"
-- assertVisible: "Today's route · .* of 10 unlocked\\."
+- assertVisible: "On a walk · .* of 10 unlocked\\."
