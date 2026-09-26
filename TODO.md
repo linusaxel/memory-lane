@@ -201,6 +201,12 @@ Nothing can be bought until the stores exist, so everybody is free.
       - Then on a real device: buy monthly, see the row, open a pin from the
         map, cancel in the sandbox, see it lapse. Nothing has ever called
         RevenueCat for real: the tests patch `billing.fetch_subscriber`.
+- [ ] **Revisit RevenueCat when its fee outgrows two integrations.** Free
+      under $2.5k/month, then 1% of gross (before VAT and the store cut). When
+      that fee passes what it costs to keep the App Store Server API and Play
+      Developer API direct, or RevenueCat blocks something we need, leave: only
+      `billing.fetch_subscriber` and the app's SDK change, since
+      `subscriptions` stays ours.
 
 ---
 
