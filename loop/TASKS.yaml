@@ -252,7 +252,7 @@ tasks:
            Set DATABASE_URL=${{Postgres.DATABASE_URL}}
         5. Load data: run the pipeline from your laptop against the prod DATABASE_URL,
            or pg_dump local -> restore.
-        6. Note the HTTPS domain, then: ./api/test_api.sh https://<domain>
+        6. Note the HTTPS domain, then: curl -fsS https://<domain>/v1/stats
       The domain from step 6 unblocks W3-08.
 
   # -- W3 -- the app ---------------------------------------------------------

@@ -83,16 +83,6 @@ venv/bin/python -m pytest -m db          # just the database-backed ones
 venv/bin/python -m ruff check .          # style only
 ```
 
-## Against a running API
-
-```bash
-docker compose up -d --build
-./api/test_api.sh                        # 14 curl checks, defaults to :8080
-```
-
-This one is data-dependent: it expects a seeded database and reports failures
-against an empty one. It is not part of the gate.
-
 ## Watching the flows, on a simulator
 
 The gate answers "is each rule right". It cannot answer "does the product

@@ -58,7 +58,7 @@ commit itself; no need to re-derive it by reading code.
 
 ```bash
 docker compose up -d --build              # API + PostGIS + Redis
-./api/test_api.sh http://localhost:8080   # 11 checks
+curl -fsS localhost:8080/v1/stats         # the API is up and has data
 ./loop/verify.sh                          # 568 pytest + 69 node tests, GREEN
 python -m pipeline.seed_dev               # memories you can actually reach
 cd mobile && npx expo start               # the app

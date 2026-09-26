@@ -199,7 +199,3 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
 - **Four off-vocabulary tags.** (checked 2026-09-22) `entertainment`,
   `celebrity`, `theater`, `festival` (15 rows) predate the filter and are
   unfilterable. Map them if a filter ever needs them.
-- **`api/test_api.sh` is not run by the gate.** (checked 2026-09-24) It was the
-  sole caller of three endpoints that went unnoticed and were deleted. Wire it
-  in behind a live-server check, or accept it is a manual tool.
-

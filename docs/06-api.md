@@ -66,9 +66,3 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /privacy` - the policy both app stores link to
 - `GET /` - the health shape Railway probes
 - `GET /docs` - Swagger UI
-
-Test the API:
-```bash
-./api/test_api.sh                    # Test local server
-./api/test_api.sh http://host:port   # Test custom URL
-```

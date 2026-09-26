@@ -85,7 +85,6 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/privacy.py` | The privacy policy both app stores require, served from here |
-| `api/test_api.sh` | API test script (run with `./api/test_api.sh`) |
 
 The endpoint list is [06-api.md](06-api.md).
 
