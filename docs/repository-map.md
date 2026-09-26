@@ -99,7 +99,7 @@ The endpoint list is [06-api.md](06-api.md).
 | File | Purpose |
 |------|---------|
 | `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, the pill recentres |
-| `mobile/src/Plan.tsx` | **How far today.** The slider page and the preview card with Accept |
+| `mobile/src/Plan.tsx` | **How far today.** The slider page and the preview card with Start walk |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |

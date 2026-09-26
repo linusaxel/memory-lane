@@ -89,14 +89,13 @@ export default function Settings({
         </View>
         <Text style={styles.statsNote}>
           {unlockedCount === 0
-            ? 'Nothing unlocked yet.'
-            : 'Everything you opened by being there. Yours to reread.'}
+            ? 'Nothing unlocked yet. Your first walk fixes that.'
+            : 'Everything you unlock stays readable, even back home.'}
         </Text>
 
         <Section title="Your name">
           <Text style={styles.note}>
-            What your own memories are signed with, and the only thing here anybody else sees. Leave
-            it blank to post as Anonymous.
+            Shown on the memories you leave. Leave it blank to stay anonymous.
           </Text>
           <TextInput
             style={styles.input}
@@ -117,8 +116,8 @@ export default function Settings({
             <>
               <Text style={styles.note}>
                 Subscribed until{' '}
-                {new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}. Any memory you
-                stand on opens, walk or no walk.
+                {new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}. Open any memory
+                you stand on, walk or no walk.
               </Text>
               <Pressable
                 style={dim(styles.action)}
@@ -141,25 +140,22 @@ export default function Settings({
           <Row>
             <Padlock size={17} color={color.faded} />
             <Text style={styles.rowText}>
-              Memories added at a real address stay shut until you are within{' '}
-              {Math.round(radiusMeters)} m of them.
+              Memories stay locked until you're within {Math.round(radiusMeters)} m of them.
             </Text>
           </Row>
           <Text style={styles.note}>
-            The server withholds the text, not the app — so there is no way to read one from your
-            sofa, and no reason to pretend otherwise.
+            No peeking from the sofa: the story only reaches your phone once you're there.
           </Text>
           <Text style={styles.note}>
-            Memories the source could only place by city are open to everyone. Asking you to walk to
-            a guess would be a lie.
+            A few are only pinned to a city, not a spot. Those are open to everyone.
           </Text>
         </Section>
 
         <Section title="Location">
           <Text style={styles.rowText}>
             {granted
-              ? 'On. Used to work out which memories are in reach, and never stored.'
-              : 'Off. Nothing can unlock without it.'}
+              ? "On. Used to tell when you're close to a memory, and never stored."
+              : "Off. You'll need it to unlock anything."}
           </Text>
           <Pressable style={dim(styles.action)} onPress={onRequestLocation} accessibilityRole="button">
             <Text style={styles.actionText}>
@@ -178,9 +174,8 @@ export default function Settings({
             />
           </Row>
           <Text style={styles.note}>
-            Off by default. Turning it on asks for location in the background, which is more than
-            the map needs — used only to check your position against memories you haven't reached
-            yet, on this device, and never for anything else.
+            This needs location in the background, only to check whether you're near a memory you
+            haven't unlocked. Your position is never stored.
           </Text>
         </Section>
 
@@ -199,10 +194,6 @@ export default function Settings({
           >
             <Text style={styles.linkText}>Places © OpenStreetMap contributors</Text>
           </Pressable>
-          <Text style={styles.note}>
-            Signed out, your collection is tied to this installation rather than to you. Signing in
-            with Google or Apple is the only thing that changes that.
-          </Text>
         </Section>
       </ScrollView>
     </Modal>

@@ -91,7 +91,7 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
           // ever, which reads as a load that never finishes rather than as a
           // photograph that is gone.
           <View key={photo.id} style={[styles.photo, styles.photoGone]}>
-            <Text style={styles.goneText}>Photograph unavailable</Text>
+            <Text style={styles.goneText}>Photo didn't load</Text>
           </View>
         ) : (
           <Image

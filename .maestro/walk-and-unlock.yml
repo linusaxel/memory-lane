@@ -51,7 +51,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "5 stops · .* loop"
     timeout: 40000
-- tapOn: "Accept this walk"
+- tapOn: "Start this walk"
 
 - extendedWaitUntil:
     visible: "On a walk · 0 of 5 unlocked\\."
@@ -60,7 +60,7 @@ appId: ${APP_ID}
 # A walk can be ended any time; with stops still to reach, it asks first.
 - tapOn: "On a walk.*"
 - assertVisible: "End this walk\\?"
-- assertVisible: "The 5 stops you haven't reached lock again\\. What you opened stays yours\\."
+- assertVisible: "The 5 stops you haven't reached will lock again\\. Anything you've unlocked stays unlocked\\."
 - tapOn: "Keep walking"
 - assertNotVisible: "End this walk\\?"
 - assertVisible: "On a walk · 0 of 5 unlocked\\."
@@ -76,7 +76,7 @@ appId: ${APP_ID}
     visible: "Stop 2 of 5. ${STOP2}. Locked, too far to open."
     timeout: 40000
 - tapOn: "Stop 2 of 5. ${STOP2}. Locked, too far to open."
-- assertVisible: "Get within 20 m and you can open it."
+- assertVisible: "Get within 20 m to unlock it\\."
 # F26: nothing to heart until it is open.
 - assertNotVisible: "Heart this memory.*"
 - tapOn: "Close"
@@ -139,7 +139,7 @@ appId: ${APP_ID}
 
 # F30: closing the last memory shows the whole loop and what it came to, once.
 - extendedWaitUntil:
-    visible: "Walk done\\."
+    visible: "Nice walk\\."
     timeout: 30000
 - assertVisible: "5 memories · .* loop · .* min"
 # F27: e2e/run.sh gave this device an unlock yesterday, so today makes two.
@@ -214,7 +214,7 @@ appId: ${APP_ID}
     visible: "On a walk · 5 of 5 unlocked\\."
     timeout: 30000
 - assertNotVisible: "How far today?"
-- assertNotVisible: "Walk done\\."
+- assertNotVisible: "Nice walk\\."
 - tapOn: "Journal"
 - extendedWaitUntil:
     visible: ".*, 5 memories · .*"
@@ -243,4 +243,4 @@ appId: ${APP_ID}
     visible: "Open any memory you stand on"
     timeout: 20000
 - tapOn: "Not now"
-- assertVisible: "You've had today's walk\\. Another tomorrow, or subscribe\\."
+- assertVisible: "That was today's free walk\\. Come back tomorrow, or subscribe for more\\."

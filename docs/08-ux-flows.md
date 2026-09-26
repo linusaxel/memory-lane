@@ -104,7 +104,8 @@ out, and on a new phone.
 **Trigger:** opening the app with no account attached. It is the first flow,
 because nothing is reachable before it (docs/10, *Sign-in comes first*).
 
-1. The logo lands (StartupLogo) and the page grows around it: the name, Apple's
+1. The logo lands (StartupLogo) and the page grows around it: the name, one line
+   ("The corner you pass every day has a story. Walk there to read it."), Apple's
    own control and Continue with Google. Nothing else — no carousel, no email
    field, no password, no magic link.
 2. The provider's sheet, then back. The app sends the ID token it was given and
@@ -119,7 +120,8 @@ Signing out (You → Account) lands back on this screen.
 
 The founder's call: no account, no app. The case for it, and what App Review
 5.1.1(v) needs to hear, is the collection that follows you to a new phone. The
-screen itself says nothing: the logo, the name and two buttons.
+screen itself says only what the app is: the logo, the name, one line and two
+buttons.
 
 The last answer is kept on the phone, so a signed-in person on a train with no
 network (F10, F16) opens straight to the map rather than a screen whose buttons
@@ -182,11 +184,11 @@ somebody can hand their old phone in and still have everything they walked for.
    and the pin's `include`. The preview stores nothing.
 3. The preview is the map, fitted to the start and every stop
    (`fitToCoordinates`), with the stops numbered 1–5 and the loop drawn. A card
-   reads "5 stops · 3.8 km loop", with **Accept** and **Change length**.
+   reads "5 stops · 3.8 km loop", with **Start walk** and **Change length**.
    Preview pins do not open: it is a look, not a walk. From Walk here the card
    adds "Through Blågårdsgade.", on every preview; Show me another never
    drops it.
-4. **Accept** is `POST /v1/routes/today` with the same position, length and
+4. **Start walk** is `POST /v1/routes/today` with the same position, length and
    loop, and lands on the walk (F25). **Change length** goes back to the slider, and
    nothing was stored, so it costs nothing.
 
@@ -198,16 +200,16 @@ page and goes straight to the walk.
 **What can go wrong:** nothing walkable within that length — the card reads
 "No walk that long from here" and offers only **Change length**. The map runs
 out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
-the ask (`ROUTE_FILL`) adds "The longest from here." No position
+the ask (`ROUTE_FILL`) adds "That's the longest walk from here." No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
 unreachable — the page says "Can't reach Memory Lane right now." under the
 button, and a second press retries. From Walk here: the streets are longer
-than the estimate, and the page says "Too far for 2 km: at least 3 km." and
-lifts the slider to it; further than 10 km reaches, "Too far for a walk from
-here: at least 12 km." and no button; the pin can no longer be a stop (earned,
+than the estimate, and the page says "2 km is too short from here. Try 3 km or more." and
+lifts the slider to it; further than 10 km reaches, "The nearest walk from
+here is over 10 km." and no button; the pin can no longer be a stop (earned,
 hidden), "That memory can't be on a walk from here." and the plan goes on
-without it. Today's free walk already taken — "You've had today's walk.
-Another tomorrow." (the paywall comes with TODO.md S4).
+without it. Today's free walk already taken — "That was today's free walk.
+Come back tomorrow, or subscribe for more." (the paywall comes with TODO.md S4).
 
 **Done when:** Plan a walk shows the slider and no system dialog, a press
 shows a whole walk on the map, and Accept makes it today's.
@@ -514,7 +516,7 @@ interaction at all.
 1. The ring fills, the heavier haptic fires, the request goes.
 2. The server re-measures and says no, because GPS drifted between the press and
    the request.
-3. The sheet says **"Not close enough yet — try a few steps nearer."**
+3. The sheet says **"Not quite there. Take a few more steps."**
 
 The client decides which control to *show*; the server decides what may be
 *read*, and those can disagree by a few metres. Silence here would read as a
@@ -732,7 +734,7 @@ anyone else's collection or the local unlock cache.
 ## F25 · Walk today's route — **Implemented**
 
 **Who:** somebody who accepted a walk (F1).
-**Trigger:** Accept on the preview, or any launch later the same day.
+**Trigger:** Start walk on the preview, or any launch later the same day.
 
 1. The accepted walk is up to five not-yet-earned memories, mixing historical
    and stranger layers and preferring higher-contrast ones, within the length
@@ -774,7 +776,7 @@ anyone else's collection or the local unlock cache.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the pill's count and distance move.
 6. The last stop earned, the bar reads "On a walk · 5 of 5", the pill
-   reads "Route walked" and a tap fits
+   reads "Every stop unlocked" and a tap fits
    the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
@@ -886,7 +888,7 @@ the app is not open.
    requestBackgroundPermissionsAsync()` - which only runs if foreground
    permission is already granted, and notification permission. Turning it off
    just stops the watch; nothing else about the app changes.
-2. The watch tracks today's accepted route (F25) - nothing before Accept - a
+2. The watch tracks today's accepted route (F25) - nothing before Start walk - a
    bounded, already-nearby list (`ROUTE_SIZE`, well under the ~20-region limit
    both platforms enforce for background geofences). `geofenceRegions.ts`
    drops anything already unlocked from the watch the moment
@@ -960,11 +962,11 @@ The last stop unlocks and the day should feel finished.
 2. Closing its sheet shows the closing card. The camera stops following you,
    and the map fits the whole walk, drawn from the start and back home on a
    loop.
-3. The card reads "Walk done.", then "5 memories · 4.1 km loop · 52 min" (the
+3. The card reads "Nice walk.", then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
    another day), then the streak once it is more than one day (F27).
 4. Done goes back to the map, pinned on you again, with the pill at
-   "Route walked" under the bar's "On a walk · 5 of 5".
+   "Every stop unlocked" under the bar's "On a walk · 5 of 5".
 
 It shows once per walk, and nothing stores that it did: it follows the unlock
 that finished the walk in this session, so a relaunch on a walked day lands on
@@ -980,7 +982,7 @@ already walked and another in mind.
 1. The walk's bar, "On a walk · 2 of 5", top centre between Journal and
    You and Add (F25).
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
-   haven't reached lock again. What you opened stays yours.", **End walk** and
+   haven't reached will lock again. Anything you've unlocked stays unlocked.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.
 3. Ended, the map of what is locked comes back (F29) with **Plan a walk**, and
    another walk can be planned the same day.
@@ -1016,7 +1018,7 @@ stop, not out and home: the start is never stored (docs/10 § Routes).
 ## F32 · Show me another — **Implemented**
 
 **Who:** somebody on the preview (F1) who wants a different walk of the same
-length. **Trigger:** "Show me another", under Accept.
+length. **Trigger:** "Show me another", under Start walk.
 
 1. The preview is replanned with `again` one higher, from the same length,
    loop. A different walk comes back whenever there is another as
@@ -1026,7 +1028,7 @@ length. **Trigger:** "Show me another", under Accept.
 2. When it comes back unchanged, that was the only one: the button gives way
    to "The only walk that long from here." ("The only walk from here." when it
    is the longest, F1).
-3. Accept sends the same `again`, so it stores the walk on screen. The client
+3. Start walk sends the same `again`, so it stores the walk on screen. The client
    still never sends stop ids. Change length starts over at `again=0`.
 
 Every "Show me the walk" rolls a fresh `again`, so planning twice, or
@@ -1056,7 +1058,7 @@ note field under an open memory.
 [Notes are gated like a purchase](10-decisions.md#notes-are-gated-like-a-purchase).
 
 **Failure:** the list fails to load: nothing shows, the memory still reads. A
-note fails to send: "That did not go through. Try again.", the draft kept.
+note fails to send: "That didn't send. Try again.", the draft kept.
 
 **Done when:** an unlocked memory takes a note and shows it back, a second note
 replaces the first, the author can remove it, and a device that never unlocked
@@ -1068,8 +1070,8 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 today's free walk. **Trigger:** **Open it now** on the map's peek, or a
 second walk the same day.
 
-1. On the map, a locked pin within reach says "You're standing on it. A walk
-   opens it free, or open it now." with **Walk here** and, beside it, **Open
+1. On the map, a locked pin within reach says "You're right here. Make it a
+   stop on today's walk, or open it now." with **Walk here** and, beside it, **Open
    it now**. Out of reach the peek is unchanged.
 2. **Open it now**, a second walk the same day (`walked_today`), or an unlock
    refused `not_on_walk` opens the paywall (`src/Paywall.tsx`): "Open any
@@ -1088,8 +1090,8 @@ and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it
 **Failure:** no RevenueCat key or no offerings (the simulator, e2e): "Subscriptions
 aren't available right now." and **Not now**. The person backs out of the
 store's sheet: nothing is said. Anything else: "That didn't go through. Try
-again." A purchase the server cannot find: "No subscription found for this
-account."
+again." A purchase the server cannot find: "No subscription on this
+account yet."
 
 **Done when:** `.maestro/paywall-from-the-peek.yml` and
 `.maestro/subscriber-opens-from-map.yml` pass, and `tests/test_api_billing.py`.

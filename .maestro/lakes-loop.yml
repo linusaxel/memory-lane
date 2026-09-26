@@ -64,7 +64,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "10 stops · .* loop"
     timeout: 40000
-- assertVisible: "The longest from here\\."
+- assertVisible: "That's the longest walk from here\\."
 # Past Sortedams Sø, the lake at the door, on every roll.
 - assertVisible: "Stop .* of 10\\. Peblinge Sø.*"
 
@@ -80,7 +80,7 @@ appId: ${APP_ID}
 - assertVisible: "Show me another"
 
 # Accepting is what registers the device, and with it the past walks.
-- tapOn: "Accept this walk"
+- tapOn: "Start this walk"
 - extendedWaitUntil:
     visible: "On a walk · .* of 10 unlocked\\."
     timeout: 40000

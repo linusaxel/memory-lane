@@ -105,7 +105,7 @@ export function Plan({
         }.`}
       </Text>
       {unreachable && (
-        <Text style={styles.note}>{`Too far for a walk from here: at least ${floorKm} km.`}</Text>
+        <Text style={styles.note}>{`The nearest walk from here is over ${WALK_KM.max} km.`}</Text>
       )}
 
       <Pressable
@@ -140,7 +140,7 @@ export function EndPick({ onCancel }: { onCancel: () => void }) {
   return (
     <View style={styles.card} pointerEvents="box-none">
       <Text style={styles.cardTitle}>Where does it end?</Text>
-      <Text style={styles.cardBody}>Tap the map where the walk should finish.</Text>
+      <Text style={styles.cardBody}>Tap the map where you want to finish.</Text>
       <Pressable
         style={dim(styles.secondary)}
         onPress={onCancel}
@@ -195,7 +195,7 @@ export function Preview({
         </Text>
       )}
       {stops > 0 && through && <Text style={styles.cardBody}>{`Through ${through}.`}</Text>}
-      {short && <Text style={styles.cardBody}>The longest from here.</Text>}
+      {short && <Text style={styles.cardBody}>That's the longest walk from here.</Text>}
       {fallback && (
         <Text style={styles.cardBody}>
           Planning from central Copenhagen. Turn on location to plan from where you are.
@@ -207,13 +207,13 @@ export function Preview({
           onPress={onAccept}
           disabled={busy}
           accessibilityRole="button"
-          accessibilityLabel="Accept this walk"
-          accessibilityHint="Starts this walk. You can end it any time."
+          accessibilityLabel="Start this walk"
+          accessibilityHint="You can end it any time."
         >
           {busy ? (
             <ActivityIndicator color={color.paper} />
           ) : (
-            <Text style={styles.primaryText}>Accept</Text>
+            <Text style={styles.primaryText}>Start walk</Text>
           )}
         </Pressable>
       )}
@@ -277,9 +277,9 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
       <Text style={styles.cardBody}>
         {`${
           left === 1
-            ? "The stop you haven't reached locks again."
-            : `The ${left} stops you haven't reached lock again.`
-        } What you opened stays yours.`}
+            ? "The stop you haven't reached will lock again."
+            : `The ${left} stops you haven't reached will lock again.`
+        } Anything you've unlocked stays unlocked.`}
       </Text>
       <Pressable
         style={dim(styles.primary)}
@@ -319,7 +319,7 @@ export function WalkDone({ stops, meters, loop, minutes, streak, onDone }: WalkD
   return (
     <View style={styles.card} accessibilityViewIsModal>
       <Text style={styles.doneTitle} accessibilityRole="header">
-        Walk done.
+        Nice walk.
       </Text>
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}

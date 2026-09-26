@@ -581,13 +581,13 @@ export default function App() {
       if (refusal?.reason === 'too_far') {
         const km = Math.ceil(refusal.min_budget_meters / 1000 / WALK_KM.step) * WALK_KM.step;
         setWalkToKm(km);
-        setPlanError(`Too far for ${planKm} km: at least ${km} km.`);
+        setPlanError(`${planKm} km is too short from here. Try ${km} km or more.`);
       } else if (refusal?.reason === 'walked_today') {
-        setPlanError("You've had today's walk. Another tomorrow, or subscribe.");
+        setPlanError("That was today's free walk. Come back tomorrow, or subscribe for more.");
         setPaywallOpen(true);
       } else if (refusal) {
         setWalkTo(null);
-        setPlanError("That memory can't be on a walk from here.");
+        setPlanError("That one won't fit on a walk from here.");
       } else {
         setPlanError("Can't reach Memory Lane right now.");
       }
@@ -742,12 +742,12 @@ export default function App() {
   const routeLeft = position ? pathMeters(routePath) : null;
   // The count is the walk bar's, so the pill says only where and how far.
   const routeLabel = routeDone
-    ? 'Route walked'
+    ? 'Every stop unlocked'
     : routeStarted && nextRouteStop
       ? `Next: ${nextRouteStop.place.name}` +
         (toNextStop === null ? '' : ` · ${distance(toNextStop)}`)
       : routeLeft === null
-        ? "Today's route"
+        ? "Today's walk"
         : `${distance(routeLeft)} to go`;
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
@@ -934,7 +934,7 @@ export default function App() {
         } else {
           // The server re-measures, and GPS moves between the press and the
           // request. Silence here would read as a broken button.
-          setUnlockError('Not close enough yet - try a few steps nearer.');
+          setUnlockError('Not quite there. Take a few more steps.');
         }
       } catch (e) {
         if (!mounted.current) return;
@@ -1053,7 +1053,7 @@ export default function App() {
       // while the field on screen says otherwise.
       saveDisplayName(device, next)
         .then(() => setNameError(null))
-        .catch(() => setNameError('Could not save your name. Keep typing to try again.'));
+        .catch(() => setNameError("Your name didn't save. Keep typing to try again."));
     },
     [device],
   );
@@ -1231,10 +1231,10 @@ export default function App() {
               }
               accessibilityHint={
                 routeDone
-                  ? 'Shows the whole route'
+                  ? 'Shows the whole walk'
                   : routeStarted
                     ? 'Centers the map on you and the next stop'
-                    : "Starts today's route"
+                    : "Starts today's walk"
               }
               onPress={() => {
                 setRouteStarted(true);

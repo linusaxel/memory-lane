@@ -9,7 +9,7 @@ appId: ${APP_ID}
 # animation callback fires while the finger is still down, so the press
 # completes the unlock rather than cancelling it.
 - tapOn: "Unlock memory at stop ${N}: .*"
-- assertVisible: "You are standing close enough to open this one."
+- assertVisible: "You made it\\."
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
     visible: ".*${WORDS}.*"
@@ -17,5 +17,5 @@ appId: ${APP_ID}
 - assertNotVisible: "Hold to unlock"
 # F30: never over a memory, which is read first. Only closing the last one
 # shows the whole loop.
-- assertNotVisible: "Walk done\\."
+- assertNotVisible: "Nice walk\\."
 - tapOn: "Close"

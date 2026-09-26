@@ -5,7 +5,7 @@
  * in with Apple as soon as any other third-party sign-in exists on iOS.
  *
  * It is the gate: no account, no app (docs/10, *Sign-in comes first*). The
- * screen is the whole onboarding: the logo, the name, and two buttons.
+ * screen is the whole onboarding: the logo, the name, one line, and two buttons.
  *
  * Both flows end the same way - a provider-signed ID token goes to the server,
  * which decides whether it is real and which account it belongs to. The app
@@ -113,7 +113,7 @@ async function withApple({ device, onProfile, onError, onBusy }: Setters) {
       ],
     });
     if (!credential.identityToken) {
-      onError('Apple did not return a sign-in token.');
+      onError("Apple sign-in didn't work. Try again.");
       return;
     }
     // Apple hands the name over on the first authorization and never again,
@@ -127,7 +127,7 @@ async function withApple({ device, onProfile, onError, onBusy }: Setters) {
   } catch (e) {
     // Cancelling is not an error and must not leave a message behind.
     if ((e as { code?: string })?.code !== 'ERR_REQUEST_CANCELED') {
-      onError('Could not finish signing in.');
+      onError("Sign-in didn't finish. Try again.");
     }
   } finally {
     onBusy(false);
@@ -169,13 +169,13 @@ function GoogleButton({ device, onProfile, onError, onBusy }: Setters) {
     if (response?.type !== 'success' || !device) return;
     const idToken = response.params?.id_token;
     if (!idToken) {
-      onError('Google did not return a sign-in token.');
+      onError("Google sign-in didn't work. Try again.");
       return;
     }
     onBusy(true);
     signIn('google', device, idToken)
       .then(onProfile)
-      .catch(() => onError('Could not finish signing in.'))
+      .catch(() => onError("Sign-in didn't finish. Try again."))
       .finally(() => onBusy(false));
   }, [response, device, onProfile, onError, onBusy]);
 
@@ -185,7 +185,7 @@ function GoogleButton({ device, onProfile, onError, onBusy }: Setters) {
       accessibilityRole="button"
       onPress={() => {
         onError(null);
-        prompt().catch(() => onError('Could not open Google sign-in.'));
+        prompt().catch(() => onError("Couldn't open Google sign-in."));
       }}
     >
       <Text style={styles.googleText}>Continue with Google</Text>
@@ -215,6 +215,9 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
       <View style={styles.hero}>
         <LogoTile size={120} />
         <Text style={styles.title}>Memory Lane</Text>
+        <Text style={styles.tagline}>
+          The corner you pass every day has a story. Walk there to read it.
+        </Text>
       </View>
 
       <View style={styles.actions}>
@@ -259,7 +262,7 @@ export default function SignIn({ device, profile, onProfile }: Props) {
     try {
       onProfile(await signOut(device));
     } catch {
-      setError('Could not sign out.');
+      setError("Couldn't sign out. Try again.");
     } finally {
       setBusy(false);
     }
@@ -269,7 +272,7 @@ export default function SignIn({ device, profile, onProfile }: Props) {
     <View style={styles.wrap}>
       <Text style={styles.note}>
         {providers.length > 0
-          ? `Signed in with ${providers.map((p) => PROVIDER_NAME[p]).join(' and ')}. Your collection and anything you file follow you to a new phone.`
+          ? `Signed in with ${providers.map((p) => PROVIDER_NAME[p]).join(' and ')}. Everything you unlock or leave follows you to a new phone.`
           : 'Not signed in: this dev build skipped the sign-in screen.'}
       </Text>
       {/* The other provider stays on offer: Apple and Google on one account
@@ -290,6 +293,14 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper, paddingHorizontal: 32 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 },
   title: { fontFamily: font.display, fontSize: 34, color: color.ink, marginTop: 8 },
+  tagline: {
+    fontFamily: font.prose,
+    fontSize: 17,
+    lineHeight: 26,
+    color: color.inkSoft,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
   actions: { gap: 12, alignItems: 'stretch' },
   google: { ...button.outline, height: 46, paddingVertical: 0 },
   googleText: { ...buttonText, color: color.ink },

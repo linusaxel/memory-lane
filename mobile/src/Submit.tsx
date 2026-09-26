@@ -195,7 +195,7 @@ export default function Submit({
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError(fromCamera ? 'No camera access.' : 'No access to your photos.');
+      setError(fromCamera ? 'Allow camera access in Settings to take a photo.' : 'Allow photo access in Settings to add one.');
       return;
     }
 
@@ -220,7 +220,7 @@ export default function Submit({
     setError(null);
     const permission = await requestRecordingPermissionsAsync();
     if (!permission.granted) {
-      setError('No microphone access.');
+      setError('Allow microphone access in Settings to record.');
       return;
     }
     // Without this iOS records at earpiece volume and routes playback to the
@@ -285,8 +285,8 @@ export default function Submit({
       if (!mounted.current) return;
       setError(
         isEditing
-          ? 'Could not save that. Try again in a moment.'
-          : 'Could not post that. Try again in a moment.',
+          ? "That didn't save. Try again in a moment."
+          : "That didn't post. Try again in a moment.",
       );
     } finally {
       if (mounted.current) setPosting(false);
@@ -313,7 +313,7 @@ export default function Submit({
       onDeleted?.(editing.id);
       onClose();
     } catch {
-      if (mounted.current) setError('Could not delete that. Try again in a moment.');
+      if (mounted.current) setError("That didn't delete. Try again in a moment.");
     } finally {
       if (mounted.current) {
         setDeleting(false);

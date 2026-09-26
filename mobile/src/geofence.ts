@@ -51,7 +51,7 @@ TaskManager.defineTask<GeofenceTaskData>(GEOFENCE_TASK, async ({ data, error }) 
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'A memory is nearby',
-      body: `Something happened near ${name}. Open Memory Lane to read it.`,
+      body: `Something happened near ${name}. Walk over and read it.`,
     },
     trigger: null,
   });

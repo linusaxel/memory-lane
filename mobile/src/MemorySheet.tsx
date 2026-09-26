@@ -227,8 +227,8 @@ export default function MemorySheet({
                   </View>
                   <Text style={styles.gateNote}>
                     {withinReach && onSubscribe
-                      ? "You're standing on it. A walk opens it free, or open it now."
-                      : 'The only way in is to walk there.'}
+                      ? "You're right here. Make it a stop on today's walk, or open it now."
+                      : 'Stand here to read it.'}
                   </Text>
                   <Pressable
                     style={dim([styles.watch, styles.walkHere])}
@@ -253,7 +253,7 @@ export default function MemorySheet({
                 <>
                   <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
                   <Text style={styles.gateNote}>
-                    {unlockError ?? 'You are standing close enough to open this one.'}
+                    {unlockError ?? 'You made it.'}
                   </Text>
                   {/* The pull belongs here most of all. It was shown only to
                       people too far away to act on it, and withheld from the
@@ -273,8 +273,8 @@ export default function MemorySheet({
                   </Text>
                   <Text style={styles.gateNote}>
                     {position == null
-                      ? 'Turn on location to unlock memories by standing near them.'
-                      : `Get within ${Math.round(radius)} m and you can open it.`}
+                      ? 'Turn on location to unlock it when you get here.'
+                      : `Get within ${Math.round(radius)} m to unlock it.`}
                   </Text>
                   {waiting}
                 </>
@@ -430,7 +430,7 @@ export default function MemorySheet({
                 }
                 // url is already resolved - a document, or the video at the
                 // right second.
-                onPress={() => open(memory.content!.url, 'Nothing here can open that source.')}
+                onPress={() => open(memory.content!.url, "Couldn't open that link.")}
               >
                 <Text style={styles.watchText}>
                   {/* An offset only exists when the source is a recording. An

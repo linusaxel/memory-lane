@@ -16,32 +16,30 @@ Travel (secondary: Entertainment)
 
 ## Description
 
-Every place has a story. Memory Lane puts them on a map.
+Memory Lane pins real stories to the places they happened, some from travel
+shows and podcasts and some left by people who were there. Each day it plans
+a short walk past a few of them, and you can only read a story once you're
+standing on its spot. It's meant to make a familiar walk feel new, because the
+ordinary corner you pass every day turns out to have a story.
 
-We listen to travel shows, comedy podcasts and video essays, pull out the moments
-that happened somewhere specific, and pin them where they belong. Open the app and
-you see the streets around you annotated with things that actually happened there —
-the deli argument, the wrong turn that became the best night of the trip, the
-restaurant that was somehow both terrible and unforgettable.
+Pick how far you feel like going. Memory Lane plans a loop past a handful of stories
+near you. Walk to each pin, hold to unlock, and read what happened right where
+you're standing.
 
-Most memories stay shut until you are standing near them. Walk within 150 metres
-and you can open one — then it is yours to reread wherever you are.
+Most stories come with the moment they were told. Tap once and the video opens
+at that exact second.
 
-Tap any pin to read what happened. Tap again and the video opens at the exact
-second the story is told, so you get it in the teller's own voice.
+Leave your own, too. Stand where something happened to you, write it down, add
+a photo or say it out loud, and it waits there for whoever walks by next.
 
-And you can add your own. Stand somewhere something happened to you, write it
-down, attach a photo or say it out loud, and leave it there for whoever comes
-next.
+• A new walk every day, as long or short as you like
+• Stories unlock only when you're standing on the spot
+• Jump to the second the story is told
+• Leave your own, with a photo or a voice recording
+• Keep a streak, and reread anything you've unlocked
 
-• A map of real stories near you
-• Unlock a memory by going to where it happened
-• Jump straight to that second of the source video
-• File your own, with a photo or a voice recording
-• No password, no feed to scroll
-
-Memory Lane is for the walk between places, the layover with an hour to kill, and
-the neighbourhood you thought you already knew.
+One walk a day is free. A subscription opens any story you stand on, walk or
+no walk.
 
 ## Keywords (iOS, max 100 chars, comma separated)
 

@@ -23,9 +23,19 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The e2e flows assert on whole sentences of copy.** 2026-09-27: a copy pass
+  had to hand-edit seven `.maestro/*.yml` files and regex-escape every changed
+  sentence, and a missed one fails a 10-minute run. Fix: give the gate notes and
+  card titles a `testID` and assert on that, keeping prose matches for labels only.
+
 ---
 
 ## Known defects
+
+- [ ] **The privacy policy still says sign-in is optional.** `mobile/store/privacy.md`
+      and `/privacy` (`api/main.py`): "You can use Memory Lane without signing in".
+      False since sign-in became the gate (docs/10, 2026-09-26). Change both
+      together; `tests/test_store_copy.py` compares them.
 
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.

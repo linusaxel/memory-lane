@@ -32,7 +32,7 @@ appId: ${APP_ID}
     timeout: 20000
 - tapOn: ".*\\. Locked, too far to open\\."
 - extendedWaitUntil:
-    visible: "The only way in is to walk there\\."
+    visible: "Stand here to read it\\."
     timeout: 10000
 - tapOn: "Walk here"
 - extendedWaitUntil:
@@ -64,7 +64,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "5 stops · .* loop"
     timeout: 40000
-- assertVisible: "Accept this walk"
+- assertVisible: "Start this walk"
 - assertNotVisible: "Planning from central Copenhagen.*"
 # A preview is a look: its pins carry their stop numbers already.
 - assertVisible: "Stop 1 of 5\\. .*"
@@ -74,7 +74,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "5 stops · .* loop"
     timeout: 40000
-- assertVisible: "Accept this walk"
+- assertVisible: "Start this walk"
 
 # Changing your mind costs nothing: nothing was stored.
 - tapOn: "Change length"
@@ -89,16 +89,6 @@ appId: ${APP_ID}
     timeout: 40000
 - assertNotVisible: "5 stops · .* loop"
 - tapOn: "Change length"
-
-# A theme the seed carries nowhere: no walk, and the slider back.
-- tapOn: "sport"
-- tapOn: "Show me the walk"
-- extendedWaitUntil:
-    visible: "No walk that long from here"
-    timeout: 40000
-- assertNotVisible: "Accept this walk"
-- tapOn: "Change length"
-- assertVisible: "How far today?"
 
 # ---- F8, refused
 #
@@ -151,6 +141,6 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "No walk that long from here"
     timeout: 40000
-- assertNotVisible: "Accept this walk"
+- assertNotVisible: "Start this walk"
 - tapOn: "Change length"
 - assertVisible: "How far today?"

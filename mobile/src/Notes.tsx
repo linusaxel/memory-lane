@@ -138,7 +138,7 @@ export default function Notes({ memoryId, isAuthor }: Props) {
           </View>
         </>
       )}
-      {failed && <Text style={styles.counter}>That did not go through. Try again.</Text>}
+      {failed && <Text style={styles.counter}>That didn't send. Try again.</Text>}
     </View>
   );
 }

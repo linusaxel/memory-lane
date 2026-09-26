@@ -15,6 +15,7 @@ of them (rule 9).
 SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed in
 ├─ the logo tile               where StartupLogo left it, at rest
 ├─ "Memory Lane"               34/700
+├─ one line                   what the app is, 17 prose, inkSoft
 ├─ Apple's own button          white on the dark paper, black on the light
 ├─ "Continue with Google"      outlined; absent without a client id
 └─ "Skip (dev build)"          __DEV__ only, so a release bundle has none
@@ -35,7 +36,7 @@ Plan (src/Plan.tsx)            opaque page over the mounted map
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, route-blue under labels
-└─ card (Preview)              "5 stops · 3.8 km loop", Accept / Change length;
+└─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length;
      "No walk that long from here"; "Planning from central Copenhagen…" with no position
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
@@ -51,11 +52,11 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ NextStopArrow              route blue, on the screen's edge, pointing at the next
 │                              stop while it is off screen (src/NextStopArrow.tsx)
 ├─ "2.4 km to go"             bottom centre, no count (the bar has it); tap zooms out around
-│    you to the next stop; "Next: <place> · 350 m" once started, "Route walked" when done,
+│    you to the next stop; "Next: <place> · 350 m" once started, "Every stop unlocked" when done,
 │    "Unlock memory" seal while standing at any stop
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
-                               the whole loop, drawn; "Walk done." 34/700, "5 memories · 4.1 km
+                               the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
                                loop · 52 min", the streak, Done. A relaunch does not show it again
 
 MemorySheet (pageSheet modal) - two compositions, not one with holes in it
@@ -74,7 +75,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ "music · Vega Archive · 1978 · 1.2 km"   tag, source, year, distance
   ├─ grey bars                one per ~8 words, from summary_words: never the text,
   │                           so never a blur of it. A blur ships what it hides
-  ├─ "The only way in is to walk there."
+  ├─ "Stand here to read it."
   └─ "Walk here"              ink; opens Plan for a walk through that pin (F1)
 
   The locked side says how many attachments are waiting and never which. A
@@ -489,10 +490,34 @@ stranger will find at that spot.
 
 ## Copy
 
-Sentence case. No exclamation marks. Count strings are singular/plural aware
-("1 memory here"). Errors say what failed in plain words — "Could not reach
-Memory Lane" — never an error code, never a stack trace. Store-facing copy in
-`mobile/store/` has character limits enforced by `tests/test_store_copy.py`.
+Write like a friend pointing at a corner, not like a manual. The product is
+simple and a bit of fun; the copy should be too. Rewritten on 2026-09-27
+against Apple's HIG (Writing), NN/g on errors and empty states, and a list of
+the tells that make text read as machine-written.
+
+- **Short, concrete, contracted.** "You made it." "Not quite there. Take a few
+  more steps." Second person, active voice, sentence case.
+- **Buttons are verbs that say what happens**: Start walk, Show me the walk,
+  Keep walking. Clear beats cute on anything you tap; the personality goes in
+  the line above the button.
+- **Errors say what happened and what to do.** "That didn't save. Try again in
+  a moment." Never "Could not", never an error code, never blame.
+- **Empty states point at the next move.** "No walks yet. Unlock a stop and
+  your walk lands here."
+- **Never defend the design to the person using it.** Why the server withholds
+  text belongs in `docs/10-decisions.md`; the app says "No peeking from the
+  sofa" and stops.
+- **No "we".** Apple's rule: nobody knows who "we" is.
+- **Avoid the machine-written tells**: em dashes in UI text, "X. Yours to Y."
+  aphorisms, "not X, but Y", three-part lists picked for rhythm, and "quietly",
+  "truly", "hidden gem".
+- **One word per thing.** A *memory* is what is pinned, a *walk* is today's
+  plan (never "route" on screen), *unlock* is what the hold does.
+
+No exclamation marks: celebrations are in the words ("Nice walk.") and the
+haptic, not the punctuation. Count strings are singular/plural aware ("1 memory
+here"). Store-facing copy in `mobile/store/` has character limits enforced by
+`tests/test_store_copy.py`.
 
 ## Verifying a UI change
 
@@ -602,7 +627,7 @@ The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
 |---|---|---|
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → plan |
 | plan | "How far today?" and the slider | "Show me the walk" → preview |
-| preview | the walk on the map, the card | Accept → walk; Change length → plan |
+| preview | the walk on the map, the card | Start walk → walk; Change length → plan |
 | walk | today's stops, the pill | nothing - the day is locked |
 
 A failed request on plan or preview leaves you there with "Can't reach Memory

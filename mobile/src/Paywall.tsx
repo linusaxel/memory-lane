@@ -47,7 +47,7 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
       const who = await refreshSubscription(device);
       onProfile(who);
       if (who.subscribed) onClose();
-      else setError('No subscription found for this account.');
+      else setError('No subscription on this account yet.');
     } catch {
       setError("That didn't go through. Try again.");
     } finally {
@@ -60,8 +60,8 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Text style={styles.title}>Open any memory you stand on</Text>
         <Text style={styles.note}>
-          No walk to plan, and as many walks a day as you like. You still have to be there. A walk a
-          day stays free.
+          Skip the plan: any memory opens the moment you're standing on it, and you can walk as much
+          as you like. One walk a day is always free.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (
@@ -82,7 +82,7 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
               </Pressable>
             ))}
             <Text style={styles.fine}>
-              Renews automatically until you cancel it in your store settings.
+              Renews automatically. Cancel anytime in your store settings.
             </Text>
             <Pressable
               style={dim(styles.link)}

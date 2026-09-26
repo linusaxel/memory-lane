@@ -224,7 +224,7 @@ export default function Memories({
       {streak > 0 && (
         <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
           <Text style={styles.streakValue}>{streak}</Text>
-          <Text style={styles.streakLabel}>{streak === 1 ? 'day walking' : 'days walking in a row'}</Text>
+          <Text style={styles.streakLabel}>{streak === 1 ? 'day in a row' : 'days in a row'}</Text>
         </View>
       )}
       <Switcher section={section} onSelect={setSection} filedNew={anyNew} />
@@ -277,14 +277,14 @@ export default function Memories({
             ) : walksStatus === 'failed' ? (
               <Empty text="Can't reach Memory Lane right now." />
             ) : (
-              <Empty text="No walks yet. A walk stays here once it opens something." />
+              <Empty text="No walks yet. Unlock a stop and your walk lands here." />
             )
           ) : mineStatus === 'loading' ? (
             <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
           ) : mineStatus === 'failed' ? (
             <Empty text="Can't reach Memory Lane right now." />
           ) : (
-            <Empty text="Nothing of yours yet. The pin in the top corner leaves one where you stand." />
+            <Empty text="You haven't left a memory yet. Tap the pin up top to leave one right where you are." />
           )
         }
         ListFooterComponent={
