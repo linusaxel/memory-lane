@@ -188,6 +188,12 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       Also: 10 km plans are p95 1.5 s (2.1 s before `score` was cached by
       stop set). 9 solves in 10 are the spur cleanup re-solving once per
       stop, so the next cut changes answers: measure it with `route_bench`.
+      Tried 2026-09-26 (dense seed, 200 runs, seed 1; before → after):
+      trying only the stops at either end of a retracing leg took p95 from
+      1131 to 722 ms (10 km: 1829 → 1116) but spurs >50 m from 12% to 16%
+      (8 km 19 → 30%). Trying those first and the rest only if none helps
+      kept spurs near (14%) but 10 km p95 stayed 1747. Both reverted: the
+      speed is bought with spurs: a founder's call, not a cleanup.
 
 ---
 
