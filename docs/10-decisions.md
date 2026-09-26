@@ -326,6 +326,23 @@ soon as any other third-party sign-in exists on iOS.
 `api/auth.py` covers what a token has to survive — signature, audience, issuer —
 and why an unconfigured server answers 503 rather than verifying against nothing.
 
+### Sign-in comes first, and it is the whole onboarding
+
+Status: Accepted 2026-09-26, not built yet. Supersedes "Sign-in is never a gate"
+(`mobile/UI.md`, `docs/08-ux-flows.md`) and the onboarding non-goal below.
+
+The founder's call: no account, no app. The first screen is Apple and Google
+and nothing else, then the location primer (F8/F9), then the map. No carousel,
+no name or email form: both providers hand over what little a profile needs.
+
+What does not change: sign-in still binds the device (*No session tokens*
+above), the device id stays the only credential, and emails are still never
+matched on. The anonymous-absorb path stays for devices from before the gate.
+
+**Consequences:** nothing can be tried before signing in, so the one screen has
+to earn the tap on its own. Neither button works in Expo Go, so development and
+`./e2e/run.sh` need a way past the gate that a release build cannot take.
+
 ### `MY_DEVICES` keeps a `d.id = :device_id` arm
 
 Status: Accepted
@@ -1023,9 +1040,10 @@ Status: Rejected
   walk there. `/v1/memories/search` stays a typed, tested endpoint with no
   client. Its results carry no viewer position, so they cannot unlock anything,
   and what it could show open is the centroid-placed rows, the corpus's worst.
-- Onboarding beyond what exists: a device id minted locally, optional
+- ~~Onboarding beyond what exists: a device id minted locally, optional
   Google/Apple sign-in, and the location primer (F8/F9). A complaint about one
-  step there is a bug, not a feature.
+  step there is a bug, not a feature.~~ **Superseded 2026-09-26** by
+  *Sign-in comes first, and it is the whole onboarding*.
 
 ### Core, not polish
 

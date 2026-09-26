@@ -124,6 +124,25 @@ missing is a source.
       stop, so the next cut changes answers: measure it with `route_bench`.
 ---
 
+## Sign-in first
+
+- [ ] **A sign-in and onboarding flow, and nothing is usable before it.**
+      (checked 2026-09-26) Decided 2026-09-26: docs/10, *Sign-in comes first*.
+      Apple and Google only, one screen, as simple as it can be and beautiful:
+      the app's paper and type (mobile/UI.md, docs/09), not a stock auth page.
+      Then the location primer (F8/F9), then the map. Today `src/SignIn.tsx`
+      is an optional card in Settings and `src/device.ts` mints an id with no
+      account. To do: (1) the screen, and the app held behind it; (2) a
+      dev/e2e bypass a release build cannot take, since neither button works
+      in Expo Go; (3) rewrite "Sign-in is never a gate" in mobile/UI.md and
+      the no-wall line in docs/08, and write F22 as the first flow; (4) sign
+      out lands back on the screen. ⚠️ App Store 5.1.1(v) rejects a login
+      wall on an app without real account features: the case is the
+      collection that follows you to a new phone, and the review notes should
+      say so. Real sign-in still waits on **`EAS_BUILD`** and real client ids.
+
+---
+
 ## Parked
 
 Each waits on something named; none is worth building before it.
