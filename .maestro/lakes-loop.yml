@@ -34,12 +34,12 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "How far today?"
     timeout: 20000
-# A slider only moves when the drag starts on its thumb, so from where 4 km
-# sits (WALK_KM.initial) to past the end. The value is the "10 km" above the
-# slider; the end label under it says the same.
-- swipe:
-    start: "37%,32%"
-    end: "99%,32%"
+# The slider seeks where it is tapped (tapToSeek), so its right end is 10 km,
+# wherever the page puts it. The value is the "10 km" above the slider; the end
+# label under it says the same.
+- tapOn:
+    text: "Walk length"
+    point: "99%,50%"
 - assertVisible:
     text: "10 km"
     above: "Walk length"

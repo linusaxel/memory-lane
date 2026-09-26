@@ -65,6 +65,7 @@ export function Plan({
         step={WALK_KM.step}
         value={km}
         onValueChange={onKm}
+        tapToSeek
         // The native component takes any ColorValue (RNCSliderNativeComponent.ts);
         // only the published typings say string.
         minimumTrackTintColor={color.ink as string}
