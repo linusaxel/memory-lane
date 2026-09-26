@@ -217,8 +217,8 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
         <LogoTile size={120} />
         <Text style={styles.title}>Memory Lane</Text>
         <Text style={styles.pitch}>
-          Stories that open only where they happened. Sign in, and everything you walk for comes
-          with you to your next phone.
+          Stories that open only where they happened. Sign in, and the ones you open follow you to
+          a new phone.
         </Text>
       </View>
 
