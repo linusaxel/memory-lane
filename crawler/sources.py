@@ -15,6 +15,8 @@ class Record(TypedDict, total=False):
     text: str  # required
     title: str
     language: str
+    lat: float  # the source's own point, if it has one; only --bbox reads it
+    lng: float
 
 
 class Source(Protocol):

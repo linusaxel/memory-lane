@@ -177,6 +177,16 @@ def refresh_sources(config: dict | None = None):
     return {"updated": updated}
 
 
+def within(records, bbox):
+    """Drop a record whose own point lies outside bbox (south, west, north, east).
+    A record with no point passes: nothing says where it is yet."""
+    south, west, north, east = bbox
+    for record in records:
+        lat, lng = record.get("lat"), record.get("lng")
+        if lat is None or lng is None or (south <= lat <= north and west <= lng <= east):
+            yield record
+
+
 def ingest_records(records, source_name, source_type="archive", platform="text"):
     """Ingest already-fetched text records - archive entries, newspaper clippings.
 
@@ -271,6 +281,12 @@ if __name__ == "__main__":
     parser.add_argument("--source", help="a text source from crawler.sources, e.g. kb-aviser")
     parser.add_argument("--query", help="what to ask the source for, e.g. a street name")
     parser.add_argument("--limit", type=int, default=20, help="most records to fetch")
+    parser.add_argument(
+        "--bbox",
+        type=lambda v: tuple(float(x) for x in v.split(",")),
+        help="south,west,north,east: drop records whose own point is outside, "
+        "e.g. 55.60,12.45,55.74,12.66 for Copenhagen",
+    )
     args = parser.parse_args()
 
     if args.source:
@@ -281,8 +297,9 @@ if __name__ == "__main__":
         if not args.query:
             parser.error("--source needs --query")
         src = SOURCES[args.source]
+        records = src.fetch(args.query, args.limit)
         ingest_records(
-            src.fetch(args.query, args.limit),
+            within(records, args.bbox) if args.bbox else records,
             source_name=src.source_name,
             source_type=src.source_type,
         )

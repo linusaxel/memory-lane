@@ -95,3 +95,16 @@ def test_an_atlas_story_matched_by_title_carries_its_point(monkeypatch):
     assert len(asked) == 2 and len(records) == 1
     assert records[0]["title"] == "Sabotage mod Værft, 16.01.1944"
     assert records[0]["text"].endswith("places this at 57.05, 9.94.")
+    assert (records[0]["lat"], records[0]["lng"]) == (57.05, 9.94)
+
+
+def test_a_bbox_drops_a_record_placed_outside_and_keeps_one_with_no_point():
+    from pipeline.ingest import within
+
+    copenhagen = (55.60, 12.45, 55.74, 12.66)
+    records = [
+        {"source_url": "in", "lat": 55.68, "lng": 12.57},
+        {"source_url": "aalborg", "lat": 57.05, "lng": 9.94},
+        {"source_url": "nowhere"},
+    ]
+    assert [r["source_url"] for r in within(records, copenhagen)] == ["in", "nowhere"]

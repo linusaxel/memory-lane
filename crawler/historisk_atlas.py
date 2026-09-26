@@ -55,4 +55,6 @@ class HistoriskAtlas:
                 "text": f"{geo['title']}\n\n{geo['intro'].strip()}\n\n"
                 f"Historisk Atlas places this at {geo['latitude']}, {geo['longitude']}.",
                 "language": "da",
+                "lat": geo["latitude"],
+                "lng": geo["longitude"],
             }
