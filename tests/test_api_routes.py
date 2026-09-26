@@ -665,7 +665,9 @@ def test_walk_here_refuses_what_could_never_be_a_stop(client, db_session):
     db_session.commit()
 
     for pin in (earned, hidden, far, far + 1000):
-        assert _include(client, pin).status_code == 422, pin
+        refused = _include(client, pin)
+        assert refused.status_code == 422, pin
+        assert refused.json()["detail"] == {"reason": "not_a_stop"}
         accepted = client.post(
             "/v1/routes/today",
             json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "include": pin},
@@ -695,3 +697,24 @@ def test_walk_here_is_never_the_stop_the_cleanup_drops(client, db_session, on_st
     )
 
     assert ids[2] in [m["id"] for m in _include(client, ids[2]).json()["memories"]]
+
+
+def test_walk_here_too_far_by_street_says_how_long_a_walk_reaches_it(
+    client, db_session, monkeypatch
+):
+    pin = _offset(db_session, 4)
+    db_session.commit()
+
+    def table(points):
+        # The crow says 445m, so it is within half of 1km; the streets say half as far again.
+        return [[read.meters_between(a, b) * 1.5 for b in points] for a in points], [0.0] * len(
+            points
+        )
+
+    monkeypatch.setattr(route_solver, "street_table", table)
+    params = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=1000&include={pin}"
+    refused = client.get(f"/v1/routes/preview?{params}")
+    assert refused.status_code == 422
+    detail = refused.json()["detail"]
+    assert detail["reason"] == "too_far"
+    assert 1300 < detail["min_budget_meters"] < 1400

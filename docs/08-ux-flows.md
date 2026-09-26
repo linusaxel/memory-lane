@@ -168,13 +168,20 @@ somebody can hand their old phone in and still have everything they walked for.
    1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`). Under it, **Loop** or
    **One way** (loop to start), and one optional theme chip: a second tap lets
    it go. The map is mounted behind it, not shown. **Back to the map** returns.
+   From **Walk here**, every walk passes that pin: the note reads "Five
+   memories, through Blågårdsgade, …", and the slider starts at the shortest
+   walk that reaches it, twice the crow's distance (×1.3 on a loop, for the
+   streets and the way back; `walkFloorKm` in `src/region.ts`). The length
+   chosen is lifted, not changed: back on the map, it is yours again.
 2. **Show me the walk** asks for location if it has to (F8), then
    `GET /v1/routes/preview` with that position, the length in metres, `loop`
-   and the theme's `tag`. The preview stores nothing.
+   and the theme's `tag`, and the pin's `include`. The preview stores nothing.
 3. The preview is the map, fitted to the start and every stop
    (`fitToCoordinates`), with the stops numbered 1–5 and the loop drawn. A card
    reads "5 stops · 3.8 km loop", with **Accept** and **Change length**.
-   Preview pins do not open: it is a look, not a walk.
+   Preview pins do not open: it is a look, not a walk. From Walk here the card
+   adds "Through Blågårdsgade.", on every preview; Show me another never
+   drops it.
 4. **Accept** is `POST /v1/routes/today` with the same position, length, loop
    and theme, and
    lands on the walk (F25). **Change length** goes back to the slider, and
@@ -191,7 +198,12 @@ out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
 the ask (`ROUTE_FILL`) adds "The longest from here." No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
 unreachable — the page says "Can't reach Memory Lane right now." under the
-button, and a second press retries.
+button, and a second press retries. From Walk here: the streets are longer
+than the estimate, and the page says "Too far for 2 km: at least 3 km." and
+lifts the slider to it; further than 10 km reaches, "Too far for a walk from
+here: at least 12 km." and no button; the pin can no longer be a stop (earned,
+hidden), "That memory can't be on a walk from here." and the plan goes on
+without it.
 
 **Done when:** Plan a walk shows the slider and no system dialog, a press
 shows a whole walk on the map, and Accept makes it today's.
@@ -960,7 +972,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    to walk. One you already earned wears its stamp.
 2. Tap a pin: **the peek**. Place, "locked", then tag · source · year ·
    distance, the summary as grey bars sized from its word count, "The only way
-   in is to walk there.", and **Walk here**, which opens the plan page (F1).
+   in is to walk there.", and **Walk here**, which opens the plan page (F1)
+   for a walk through that pin.
    A sealed memory shows its date instead (F23). There is no unlock here, even
    standing on it: only today's walk unlocks.
 3. **Plan a walk**, bottom centre, opens the plan page (F1).
@@ -972,8 +985,7 @@ locked memory says what it is, not what it says".
 Until 2026-09-26 this flow was removed: a map of every memory under the
 viewport, where nothing opened, made the corpus a thing to browse and to
 "complete". Locked pins cannot be read, so that rule survives: see docs/10, "A
-map of what is locked, and only today's walk unlocks". Walk here planning a
-walk *through* that pin is TODO.md M5.
+map of what is locked, and only today's walk unlocks".
 
 `App.tsx` (`stage === 'map'`, `fetchNearby`), `src/MemorySheet.tsx` (`onWalkHere`).
 

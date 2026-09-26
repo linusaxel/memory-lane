@@ -36,6 +36,7 @@ import {
   previewRoute,
   saveDisplayName,
   unlockMemory,
+  walkHereRefusal,
   type Coordinates,
   type LocatedMemory,
   type Profile,
@@ -49,7 +50,7 @@ import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, reachOf } from './src/reach.ts';
-import { around, metersBetween, pathMeters, type Region } from './src/region.ts';
+import { around, metersBetween, pathMeters, type Region, walkFloorKm } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { loadRoute, saveRoute } from './src/route.ts';
 import {
@@ -185,6 +186,10 @@ export default function App() {
   // "Show me another" came back unchanged: that was the only walk that long.
   const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
+  // "Walk here": the memory every planned walk passes, and the length the
+  // server said reaches it, once it has said so (0 until then).
+  const [walkTo, setWalkTo] = useState<LocatedMemory | null>(null);
+  const [walkToKm, setWalkToKm] = useState(0);
   // The locked memories around you, before any walk (F29).
   const [nearby, setNearby] = useState<LocatedMemory[]>([]);
   const [planBusy, setPlanBusy] = useState(false);
@@ -458,6 +463,18 @@ export default function App() {
     })();
   }, [device, takeRoute]);
 
+  // The shortest walk that reaches the "Walk here" memory: the estimate from
+  // where you are, or what the server said, whichever is longer. It lifts the
+  // length without changing the one chosen, which comes back with the pin gone.
+  const walkFloor = useMemo(() => {
+    if (!walkTo) return WALK_KM.min;
+    const from = position ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
+    const to = walkTo.place.coordinates;
+    const crow = metersBetween(from.lat, from.lng, to.lat, to.lng);
+    return Math.max(WALK_KM.min, walkToKm, walkFloorKm(crow, walkAsk.loop, WALK_KM.step));
+  }, [walkTo, walkToKm, position, walkAsk.loop]);
+  const planKm = walkFloor <= WALK_KM.max ? Math.max(walkKm, walkFloor) : walkKm;
+
   const planWalk = useCallback(async (next: number, another = false) => {
     if (!device) return;
     setPlanBusy(true);
@@ -467,7 +484,14 @@ export default function App() {
     const fallback = !from;
     const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
     try {
-      const walk = await previewRoute(device, anchor, walkKm * 1000, walkAsk, next);
+      const walk = await previewRoute(
+        device,
+        anchor,
+        planKm * 1000,
+        walkAsk,
+        next,
+        walkTo?.id ?? null,
+      );
       if (!mounted.current) return;
       const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
       setAgain(next);
@@ -476,29 +500,48 @@ export default function App() {
       setPlanFallback(fallback);
       setPreview(walk);
       setStage('preview');
-    } catch {
-      if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
+    } catch (e) {
+      if (!mounted.current) return;
+      const refusal = walkHereRefusal(e);
+      if (refusal?.reason === 'too_far') {
+        const km = Math.ceil(refusal.min_budget_meters / 1000 / WALK_KM.step) * WALK_KM.step;
+        setWalkToKm(km);
+        setPlanError(`Too far for ${planKm} km: at least ${km} km.`);
+      } else if (refusal) {
+        setWalkTo(null);
+        setPlanError("That memory can't be on a walk from here.");
+      } else {
+        setPlanError("Can't reach Memory Lane right now.");
+      }
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, goToMyLocation, walkKm, walkAsk, preview]);
+  }, [device, goToMyLocation, planKm, walkAsk, preview, walkTo]);
 
   const acceptWalk = useCallback(async () => {
     if (!device || !planFrom) return;
     setPlanBusy(true);
     setPlanError(null);
     try {
-      const walk = await acceptRoute(device, planFrom, walkKm * 1000, walkAsk, again);
+      const walk = await acceptRoute(
+        device,
+        planFrom,
+        planKm * 1000,
+        walkAsk,
+        again,
+        walkTo?.id ?? null,
+      );
       if (!mounted.current) return;
       takeRoute(walk, planFrom);
       setPreview(null);
+      setWalkTo(null);
       setStage('walk');
     } catch {
       if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, planFrom, walkKm, walkAsk, again, takeRoute]);
+  }, [device, planFrom, planKm, walkAsk, again, takeRoute, walkTo]);
 
   // Once on the map, and again when a position first arrives: by where you
   // are, never by viewport, so panning fetches nothing (UI.md rule 3).
@@ -1156,6 +1199,7 @@ export default function App() {
               accessibilityLabel="Plan a walk"
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
+                setWalkTo(null);
                 setStage('plan');
               }}
             >
@@ -1167,9 +1211,10 @@ export default function App() {
             <Preview
               stops={preview.memories.length}
               meters={pathMeters(previewPath)}
-              asked={walkKm * 1000}
+              asked={planKm * 1000}
               loop={preview.loop}
               fallback={planFallback}
+              through={walkTo?.place.name ?? null}
               busy={planBusy}
               error={planError}
               onAccept={acceptWalk}
@@ -1196,17 +1241,24 @@ export default function App() {
               under the journal: iOS 26 draws the slider's glass over covers. */}
           {stage === 'plan' && !journalOpen && (
             <Plan
-              km={walkKm}
+              km={planKm}
               onKm={setWalkKm}
               ask={walkAsk}
-              onAsk={setWalkAsk}
+              onAsk={(ask) => {
+                setWalkAsk(ask);
+                // The server's length was for the other shape of walk.
+                setWalkToKm(0);
+              }}
               onGo={() => planWalk(Math.floor(Math.random() * ROLLS))}
               onBack={() => {
                 setPlanError(null);
+                setWalkTo(null);
                 setStage('map');
               }}
               busy={planBusy}
               error={planError}
+              through={walkTo?.place.name ?? null}
+              floorKm={walkFloor}
             />
           )}
           {stage === 'loading' && <View style={styles.cover} />}
@@ -1297,11 +1349,13 @@ export default function App() {
           unlocking={unlocking}
           unlockError={unlockError}
           onHeart={heart}
-          // The map's peek. For now "Walk here" is the plan page; a walk
-          // through that pin is TODO.md M5.
+          // The map's peek: the plan page, for a walk through that pin.
           onWalkHere={
             stage === 'map'
               ? () => {
+                  setWalkTo(openMemories[openIndex] ?? null);
+                  setWalkToKm(0);
+                  setPlanError(null);
                   setOpenAt([]);
                   setStage('plan');
                 }

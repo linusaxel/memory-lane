@@ -72,7 +72,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ grey bars                one per ~8 words, from summary_words: never the text,
   │                           so never a blur of it. A blur ships what it hides
   ├─ "The only way in is to walk there."
-  └─ "Walk here"              ink; opens Plan (a walk through that pin is TODO M5)
+  └─ "Walk here"              ink; opens Plan for a walk through that pin (F1)
 
   The locked side says how many attachments are waiting and never which. A
   photograph of the place is the memory as much as the text is.

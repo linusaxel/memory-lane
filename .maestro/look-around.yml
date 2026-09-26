@@ -1,4 +1,4 @@
-# F29 the map and its peek + F1 plan a walk (loop, one way, a theme) + F32 show me another + F8 be asked for location, F1 nothing walkable.
+# F29 the map and its peek + M6 walk here + F1 plan a walk (loop, one way, a theme) + F32 show me another + F8 be asked for location, F1 nothing walkable.
 # docs/08-ux-flows.md
 #
 # Everything here only looks: nothing is accepted, so no route row is written
@@ -28,7 +28,7 @@ appId: ${APP_ID}
 - runFlow: steps/sign-in.yml
 
 # F29: the map of what is locked comes first. A pin opens the peek, bars and
-# no summary, and Walk here opens F1.
+# no summary, and Walk here opens F1 for a walk through that pin (TODO.md M6).
 - extendedWaitUntil:
     visible: "Plan a walk"
     timeout: 40000
@@ -43,6 +43,16 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "How far today?"
     timeout: 20000
+- assertVisible: "Five memories, through .*, looping back to where you start\\."
+- tapOn: "Show me the walk"
+- tapOn:
+    text: "Allow While Using App"
+    optional: true
+# Every preview names the pin it passes.
+- extendedWaitUntil:
+    visible: "Through .*\\."
+    timeout: 40000
+- tapOn: "Change length"
 - tapOn: "Back to the map"
 - tapOn: "Plan a walk"
 - extendedWaitUntil:

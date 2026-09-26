@@ -20,8 +20,10 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`, `tag` (one of
   `pipeline/tags.py`) keeps only stops carrying it; `again` is "Show me
   another" (F32), another walk as good; `include=<memory_id>` is "Walk here",
-  a memory every walk passes (the theme does not filter it). 422 when it could
-  not be a stop, or no walk of this length reaches it
+  a memory every walk passes (the theme does not filter it). 422 with
+  `detail: {reason: "not_a_stop"}` when it could not be a stop, or
+  `{reason: "too_far", min_budget_meters}` when the streets there are longer
+  than this walk
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?, include?}` - accept it. The
   same solve, stored; one per device per day, and a second accept gets the
   first walk back. The only stop id the client ever sends is `include`, vetted

@@ -885,7 +885,8 @@ It is vetted by the same `ROUTE_CANDIDATES_QUERY` that decides every other stop:
 the query sorts it first, and if it is not first it may not be a stop (hidden,
 sealed, already earned, ambiguous, or beyond half the length). A pin too far
 from a street, or whose walk there and back is longer than the slider, is also
-refused, 422 for all of them. The solver then keeps it on every walk it
+refused, 422 for all of them; the last says the length that would reach it
+(`too_far`, `min_budget_meters`), which the app lifts its slider to (M6). The solver then keeps it on every walk it
 considers, and the cleanup never drops it. The theme does not filter it out: a
 pin somebody chose outranks the chip. Seeding does not change, so preview and
 accept still agree, and the client still cannot place a stop the rules forbid.

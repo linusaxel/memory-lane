@@ -7,6 +7,18 @@ export type Region = {
   longitudeDelta: number;
 };
 
+/** api/streets.py ROUTE_CIRCUITY: a street walk is about this much longer than the crow flies. */
+const ROUTE_CIRCUITY = 1.3;
+
+/** The shortest walk, in km on the slider's `step`, that can pass a memory
+ *  `crowMeters` away (TODO.md M6). The server looks for stops within half the
+ *  length, so never under twice the crow's distance; a loop also walks back,
+ *  on streets. An estimate: the server's too_far says the real one. */
+export function walkFloorKm(crowMeters: number, loop: boolean, step: number): number {
+  const meters = 2 * crowMeters * (loop ? ROUTE_CIRCUITY : 1);
+  return Math.ceil(meters / 1000 / step) * step;
+}
+
 /** Great-circle metres between two points. The unlock gate is server-side; this
  *  is only how the map decides which pin looks reachable. */
 export function metersBetween(aLat: number, aLng: number, bLat: number, bLng: number): number {

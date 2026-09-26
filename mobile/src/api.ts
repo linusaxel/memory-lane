@@ -125,6 +125,15 @@ function hasCoordinates(m: Memory): m is LocatedMemory {
  *  here" forever - indistinguishable from an empty area. */
 export const REQUEST_TIMEOUT_MS = 8000;
 
+/** A refusal's `detail`, kept on the error for the one caller that reads it. */
+export type ApiError = Error & { detail?: unknown };
+
+async function refused(res: Response): Promise<ApiError> {
+  const error: ApiError = new Error(`API ${res.status}`);
+  error.detail = ((await res.json().catch(() => null)) as { detail?: unknown } | null)?.detail;
+  return error;
+}
+
 async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -138,7 +147,7 @@ async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promi
       body: JSON.stringify(body),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`API ${res.status}`);
+    if (!res.ok) throw await refused(res);
     return (await res.json()) as T;
   } finally {
     clearTimeout(timer);
@@ -156,7 +165,7 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
 
   try {
     const res = await fetch(`${BASE}${path}?${params}`, { signal: controller.signal });
-    if (!res.ok) throw new Error(`API ${res.status}`);
+    if (!res.ok) throw await refused(res);
     return (await res.json()) as T;
   } finally {
     clearTimeout(timer);
@@ -341,13 +350,26 @@ export async function fetchTodaysRoute(
  *  the same, or the accept plans a different walk from the one shown. */
 export type WalkAsk = { loop: boolean; tag: string | null };
 
-/** The walk a `budgetMeters` walk from `at` would be. Stores nothing. */
+/** Why a walk through `include` was refused: too short to reach it (and the
+ *  length that would), or it cannot be a stop at all. Null for anything else. */
+export function walkHereRefusal(
+  e: unknown,
+): { reason: 'too_far'; min_budget_meters: number } | { reason: 'not_a_stop' } | null {
+  const detail = (e as ApiError)?.detail as { reason?: string } | undefined;
+  return detail?.reason === 'too_far' || detail?.reason === 'not_a_stop'
+    ? (detail as ReturnType<typeof walkHereRefusal>)
+    : null;
+}
+
+/** The walk a `budgetMeters` walk from `at` would be. Stores nothing.
+ *  `include` is "Walk here": a memory every walk passes. */
 export async function previewRoute(
   device: string,
   at: Coordinates,
   budgetMeters: number,
   ask: WalkAsk,
   again: number,
+  include: number | null,
   signal?: AbortSignal,
 ): Promise<TodaysRoute> {
   const params = new URLSearchParams({
@@ -359,6 +381,7 @@ export async function previewRoute(
     again: String(again),
   });
   if (ask.tag) params.set('tag', ask.tag);
+  if (include !== null) params.set('include', String(include));
   return toRoute(await get<RouteBody>('/v1/routes/preview', params, signal));
 }
 
@@ -370,6 +393,7 @@ export async function acceptRoute(
   budgetMeters: number,
   ask: WalkAsk,
   again: number,
+  include: number | null,
 ): Promise<TodaysRoute> {
   return toRoute(
     await post<RouteBody>('/v1/routes/today', {
@@ -380,6 +404,7 @@ export async function acceptRoute(
       loop: ask.loop,
       tag: ask.tag,
       again,
+      include,
     }),
   );
 }

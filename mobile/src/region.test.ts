@@ -7,6 +7,7 @@ import {
   metersBetween,
   pathMeters,
   simplifyPath,
+  walkFloorKm,
 } from './region.ts';
 
 test('a point is no distance from itself', () => {
@@ -98,4 +99,11 @@ test('around keeps you in the middle and the stop inside the frame', () => {
   const clear = { top: 150, right: 0, bottom: 130, left: 0 };
   assert.equal(edgeArrow(framed, corner, 400, 800, clear), null);
   assert.equal(around(you, [you], 0.002).latitudeDelta, 0.002);
+});
+
+test('a walk through a memory is at least twice its distance, a loop more on streets', () => {
+  assert.equal(walkFloorKm(1000, false, 0.5), 2);
+  assert.equal(walkFloorKm(1000, true, 0.5), 3);
+  assert.equal(walkFloorKm(1100, false, 0.5), 2.5);
+  assert.equal(walkFloorKm(0, true, 0.5), 0);
 });

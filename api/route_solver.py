@@ -451,10 +451,16 @@ def _plan_route(
         candidates = [candidates[i] for i in keep]
         rows = [0] + [i + 1 for i in keep]
         d = [[d[a][b] for b in rows] for a in rows]
-    if include is not None and not (
-        candidates and candidates[0].id == include and _path_meters([1], d, loop) <= budget_meters
-    ):
-        raise HTTPException(status_code=422, detail="Not a stop you can reach on a walk this long")
+    if include is not None:
+        # Beyond half the length is not_a_stop too: the app floors the slider
+        # at twice the crow's distance, so that is a position that moved.
+        if not candidates or candidates[0].id != include:
+            raise HTTPException(status_code=422, detail={"reason": "not_a_stop"})
+        if (reach := _path_meters([1], d, loop)) > budget_meters:
+            raise HTTPException(
+                status_code=422,
+                detail={"reason": "too_far", "min_budget_meters": math.ceil(reach)},
+            )
     seed = f"{device}:{route_date}"
 
     solve_for = budget_meters

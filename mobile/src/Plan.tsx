@@ -2,7 +2,9 @@
  *  the map, to accept or change. One walk a day - accepting is final until
  *  tomorrow, which is why the preview exists at all.
  *
- *  It opens from the map's "Plan a walk" (F29) and goes back to it.
+ *  It opens from the map's "Plan a walk" (F29) and goes back to it. From a
+ *  pin's "Walk here" it plans a walk through that memory, and the slider
+ *  starts at the shortest walk that reaches it.
  *
  *  The page is also the location primer. "Show me the walk" is a press, so the
  *  system dialog it may raise has the context the old card over the map gave
@@ -32,16 +34,33 @@ type PlanProps = {
   onBack: () => void;
   busy: boolean;
   error: string | null;
+  /** "Walk here": the place every walk passes, or null. */
+  through: string | null;
+  /** The shortest walk that reaches it; over WALK_KM.max, none does. */
+  floorKm: number;
 };
 
-export function Plan({ km, onKm, ask, onAsk, onGo, onBack, busy, error }: PlanProps) {
+export function Plan({
+  km,
+  onKm,
+  ask,
+  onAsk,
+  onGo,
+  onBack,
+  busy,
+  error,
+  through,
+  floorKm,
+}: PlanProps) {
+  const unreachable = floorKm > WALK_KM.max;
+  const min = Math.min(Math.max(WALK_KM.min, floorKm), WALK_KM.max);
   return (
     <View style={styles.page}>
       <Text style={styles.title}>How far today?</Text>
       <Text style={styles.value} accessibilityLiveRegion="polite">{`${km} km`}</Text>
       <Slider
         style={styles.slider}
-        minimumValue={WALK_KM.min}
+        minimumValue={min}
         maximumValue={WALK_KM.max}
         step={WALK_KM.step}
         value={km}
@@ -54,7 +73,7 @@ export function Plan({ km, onKm, ask, onAsk, onGo, onBack, busy, error }: PlanPr
         accessibilityLabel="Walk length"
       />
       <View style={styles.ends}>
-        <Text style={label}>{`${WALK_KM.min} km`}</Text>
+        <Text style={label}>{`${min} km`}</Text>
         <Text style={label}>{`${WALK_KM.max} km`}</Text>
       </View>
       <View style={styles.chips}>
@@ -73,15 +92,18 @@ export function Plan({ km, onKm, ask, onAsk, onGo, onBack, busy, error }: PlanPr
         ))}
       </View>
       <Text style={styles.note}>
-        {`Five${ask.tag ? ` ${ask.tag}` : ''} memories, ${
+        {`Five${ask.tag ? ` ${ask.tag}` : ''} memories${through ? `, through ${through}` : ''}, ${
           ask.loop ? 'looping back to where you start' : 'ending somewhere new'
         }.`}
       </Text>
+      {unreachable && (
+        <Text style={styles.note}>{`Too far for a walk from here: at least ${floorKm} km.`}</Text>
+      )}
 
       <Pressable
         style={dim(styles.primary)}
         onPress={onGo}
-        disabled={busy}
+        disabled={busy || unreachable}
         accessibilityRole="button"
         accessibilityLabel="Show me the walk"
       >
@@ -113,6 +135,8 @@ type PreviewProps = {
   loop: boolean;
   /** Planned from central Copenhagen because there was no position to plan from. */
   fallback: boolean;
+  /** "Walk here": the place on every walk shown, or null. */
+  through: string | null;
   busy: boolean;
   error: string | null;
   onAccept: () => void;
@@ -127,6 +151,7 @@ export function Preview({
   asked,
   loop,
   fallback,
+  through,
   busy,
   error,
   onAccept,
@@ -143,6 +168,7 @@ export function Preview({
           {`${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${loop ? ' loop' : ''}`}
         </Text>
       )}
+      {stops > 0 && through && <Text style={styles.cardBody}>{`Through ${through}.`}</Text>}
       {short && <Text style={styles.cardBody}>The longest from here.</Text>}
       {fallback && (
         <Text style={styles.cardBody}>
