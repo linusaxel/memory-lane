@@ -51,7 +51,14 @@ import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { FALLBACK_RADIUS_M, reachOf } from './src/reach.ts';
-import { around, metersBetween, pathMeters, type Region, walkFloorKm } from './src/region.ts';
+import {
+  around,
+  endFloorKm,
+  metersBetween,
+  pathMeters,
+  type Region,
+  walkFloorKm,
+} from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { clearRoute, loadRoute, saveRoute } from './src/route.ts';
 import {
@@ -65,7 +72,7 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { EndWalk, Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
+import { EndPick, EndWalk, Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import Submit from './src/Submit.tsx';
@@ -161,7 +168,7 @@ const NONE = new Set<number>();
 /** The map of what is locked, then plan the walk, preview it, walk it.
  *  `loading` is the moment before the device knows whether it already accepted
  *  today's walk. */
-type Stage = 'loading' | 'map' | 'plan' | 'preview' | 'walk';
+type Stage = 'loading' | 'map' | 'plan' | 'end' | 'preview' | 'walk';
 
 export default function App() {
   // Two families carry the whole design, so there is no sensible half-loaded
@@ -180,7 +187,7 @@ export default function App() {
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
   const [stage, setStage] = useState<Stage>('loading');
   const [walkKm, setWalkKm] = useState(WALK_KM.initial);
-  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, tag: null });
+  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, tag: null, end: null });
   // Where the previewed walk starts, and whether that is central
   // Copenhagen standing in for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
@@ -229,6 +236,8 @@ export default function App() {
   const [walkDone, setWalkDone] = useState(false);
   // Where a loop route comes back to, or null for a one-way one.
   const [routeHome, setRouteHome] = useState<Coordinates | null>(null);
+  // Where a one-way route finishes, when one was tapped; kept like routeHome.
+  const [routeEnd, setRouteEnd] = useState<Coordinates | null>(null);
   // Street shapes between consecutive stops; null draws them straight.
   const [routeLegs, setRouteLegs] = useState<Coordinates[][] | null>(null);
   // Resolved once at launch. Held in state rather than awaited at each call
@@ -414,27 +423,30 @@ export default function App() {
             preview.memories,
             NONE,
             preview.legs,
-            preview.loop ? planFrom : null,
+            preview.loop ? planFrom : walkAsk.end,
             { out: preview.out_leg, home: preview.home_leg },
           )
         : [],
-    [preview, planFrom],
+    [preview, planFrom, walkAsk.end],
   );
 
   /** Make `walk` today's route, on screen and in the local cache. `start` is
-   *  where it was planned from - the server never stores it. */
+   *  where it was planned from and `end` where a one-way one finishes - the
+   *  server stores neither. */
   const takeRoute = useCallback(
-    (walk: TodaysRoute, start: Coordinates | null) => {
+    (walk: TodaysRoute, start: Coordinates | null, end: Coordinates | null) => {
       setRoute(walk.memories);
       setRouteSize(walk.size);
       setRouteLegs(walk.legs);
       setRouteHome(walk.loop ? start : null);
+      setRouteEnd(walk.loop ? null : end);
       saveRoute({
         route_date: walk.route_date,
         memories: walk.memories,
         loop: walk.loop,
         legs: walk.legs,
         start: start ?? undefined,
+        end: (!walk.loop && end) || undefined,
       });
     },
     [],
@@ -453,13 +465,14 @@ export default function App() {
         setRoute(cached.memories);
         setRouteLegs(cached.legs ?? null);
         if (cached.loop && cached.start) setRouteHome(cached.start);
+        if (!cached.loop && cached.end) setRouteEnd(cached.end);
         setStage('walk');
       }
       try {
         const accepted = await fetchTodaysRoute(device);
         if (!mounted.current) return;
         if (accepted) {
-          takeRoute(accepted, cached?.start ?? null);
+          takeRoute(accepted, cached?.start ?? null, cached?.end ?? null);
           setStage('walk');
         } else if (!cached) {
           setStage('map');
@@ -482,6 +495,7 @@ export default function App() {
       setRouteSize(null);
       setRouteLegs(null);
       setRouteHome(null);
+      setRouteEnd(null);
       setRouteStarted(false);
       setWalkDone(false);
       setConfirmEnd(false);
@@ -494,16 +508,20 @@ export default function App() {
     }
   }, [device]);
 
-  // The shortest walk that reaches the "Walk here" memory: the estimate from
-  // where you are, or what the server said, whichever is longer. It lifts the
-  // length without changing the one chosen, which comes back with the pin gone.
+  // The shortest walk that reaches the "Walk here" memory and the end: the
+  // estimates from where you are, or what the server said, whichever is
+  // longest. It lifts the length without changing the one chosen, which comes
+  // back with the pin gone.
   const walkFloor = useMemo(() => {
-    if (!walkTo) return WALK_KM.min;
     const from = position ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
-    const to = walkTo.place.coordinates;
-    const crow = metersBetween(from.lat, from.lng, to.lat, to.lng);
-    return Math.max(WALK_KM.min, walkToKm, walkFloorKm(crow, walkAsk.loop, WALK_KM.step));
-  }, [walkTo, walkToKm, position, walkAsk.loop]);
+    const crow = (to: Coordinates) => metersBetween(from.lat, from.lng, to.lat, to.lng);
+    const floors = [WALK_KM.min, walkToKm];
+    if (walkTo) {
+      floors.push(walkFloorKm(crow(walkTo.place.coordinates), walkAsk.loop, WALK_KM.step));
+    }
+    if (walkAsk.end) floors.push(endFloorKm(crow(walkAsk.end), WALK_KM.step));
+    return Math.max(...floors);
+  }, [walkTo, walkToKm, position, walkAsk.loop, walkAsk.end]);
   const planKm = walkFloor <= WALK_KM.max ? Math.max(walkKm, walkFloor) : walkKm;
 
   const planWalk = useCallback(async (next: number, another = false) => {
@@ -563,7 +581,7 @@ export default function App() {
         walkTo?.id ?? null,
       );
       if (!mounted.current) return;
-      takeRoute(walk, planFrom);
+      takeRoute(walk, planFrom, walkAsk.end);
       setPreview(null);
       setWalkTo(null);
       setStage('walk');
@@ -591,17 +609,17 @@ export default function App() {
     return () => controller.abort();
   }, [stage, located]);
 
-  // The preview's zoom: the whole loop and its start, clear of the card.
+  // The preview's zoom: the whole walk, its start and any end, clear of the card.
   useEffect(() => {
     if (stage !== 'preview' || !preview || !planFrom) return;
+    const end = !preview.loop && walkAsk.end ? [walkAsk.end] : [];
     mapRef.current?.fitToCoordinates(
-      [planFrom, ...preview.memories.map((memory) => memory.place.coordinates)].map((c) => ({
-        latitude: c.lat,
-        longitude: c.lng,
-      })),
+      [planFrom, ...preview.memories.map((memory) => memory.place.coordinates), ...end].map(
+        (c) => ({ latitude: c.lat, longitude: c.lng }),
+      ),
       { edgePadding: { top: 100, right: 60, bottom: 300, left: 60 }, animated: true },
     );
-  }, [stage, preview, planFrom, mapRef]);
+  }, [stage, preview, planFrom, mapRef, walkAsk.end]);
 
   // Ids, not memories: reachOf only asks whether this device walked to it, and
   // a Set keeps that an O(1) question inside three passes over every group.
@@ -621,7 +639,7 @@ export default function App() {
   );
   const pins = useMemo(
     () =>
-      stage === 'map'
+      stage === 'map' || stage === 'end'
         ? nearbyShown
         : stage === 'preview'
           ? (preview?.memories ?? [])
@@ -651,7 +669,7 @@ export default function App() {
   const routePositionById = useMemo(() => {
     const map = new Map<number, number>();
     // The map before a walk has no route: nothing on it is a stop.
-    if (stage === 'map') return map;
+    if (stage === 'map' || stage === 'end') return map;
     const walking = stage !== 'preview';
     pins.forEach((memory, i) => {
       if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
@@ -671,8 +689,8 @@ export default function App() {
   // What is left to walk: from the person, through every unearned stop in
   // order, and home again on a loop.
   const routePath = useMemo(
-    () => pathThrough(position, routeShown, earned, routeLegs, routeHome),
-    [routeShown, earned, position, routeHome, routeLegs],
+    () => pathThrough(position, routeShown, earned, routeLegs, routeHome ?? routeEnd),
+    [routeShown, earned, position, routeHome, routeEnd, routeLegs],
   );
   const routeDone = route.length > 0 && !nextRouteStop;
   const routeTotal = routeSize ?? route.length;
@@ -722,8 +740,9 @@ export default function App() {
   const showDone = walkDone && openAt.length === 0;
   // The whole walk, from the start and home on a loop; stop to stop one-way.
   const donePath = useMemo(
-    () => (showDone ? pathThrough(routeHome, routeShown, NONE, routeLegs, routeHome) : []),
-    [showDone, routeShown, routeLegs, routeHome],
+    () =>
+      showDone ? pathThrough(routeHome, routeShown, NONE, routeLegs, routeHome ?? routeEnd) : [],
+    [showDone, routeShown, routeLegs, routeHome, routeEnd],
   );
   const doneMinutes = useMemo(() => {
     const times = routeShown.map((memory) => unlocked[memory.id]?.unlocked_at);
@@ -1062,6 +1081,14 @@ export default function App() {
             pitchEnabled={!pinned}
             onRegionChangeComplete={onRegionChangeComplete}
             onMapReady={onMapReady}
+            onPress={(e) => {
+              if (stage !== 'end') return;
+              const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
+              Haptics.selectionAsync().catch(() => {});
+              setWalkAsk((ask) => ({ ...ask, end: { lat, lng } }));
+              setWalkToKm(0);
+              setStage('plan');
+            }}
           >
             {/* Once, around the person, at the server's radius - never around
                 each pin, which would be fifteen overlapping circles and no
@@ -1240,6 +1267,7 @@ export default function App() {
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 setWalkTo(null);
+                setWalkToKm(0);
                 setStage('plan');
               }}
             >
@@ -1312,8 +1340,10 @@ export default function App() {
               error={planError}
               through={walkTo?.place.name ?? null}
               floorKm={walkFloor}
+              onPickEnd={() => setStage('end')}
             />
           )}
+          {stage === 'end' && <EndPick onCancel={() => setStage('plan')} />}
           {stage === 'loading' && <View style={styles.cover} />}
 
           {/* Last, so they sit over the plan page too. Top left the journal,

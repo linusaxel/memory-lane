@@ -346,8 +346,9 @@ export async function fetchTodaysRoute(
 }
 
 /** How the walk is asked for, beyond its length. Preview and accept must send
- *  the same, or the accept plans a different walk from the one shown. */
-export type WalkAsk = { loop: boolean; tag: string | null };
+ *  the same, or the accept plans a different walk from the one shown. `end` is
+ *  where a one-way walk finishes; the server stores it nowhere. */
+export type WalkAsk = { loop: boolean; tag: string | null; end: Coordinates | null };
 
 /** Why a walk through `include` was refused: too short to reach it (and the
  *  length that would), or it cannot be a stop at all. Null for anything else. */
@@ -381,6 +382,10 @@ export async function previewRoute(
   });
   if (ask.tag) params.set('tag', ask.tag);
   if (include !== null) params.set('include', String(include));
+  if (ask.end) {
+    params.set('end_lat', String(ask.end.lat));
+    params.set('end_lng', String(ask.end.lng));
+  }
   return toRoute(await get<RouteBody>('/v1/routes/preview', params, signal));
 }
 
@@ -404,6 +409,7 @@ export async function acceptRoute(
       tag: ask.tag,
       again,
       include,
+      end: ask.end,
     }),
   );
 }

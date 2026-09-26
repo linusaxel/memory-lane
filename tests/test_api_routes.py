@@ -563,6 +563,46 @@ def test_one_way_is_asked_for_per_walk_and_stored_with_it(client, db_session):
     assert walked[0]["meta"]["loop"] is False
 
 
+def test_a_one_way_walk_to_an_end_passes_stops_on_the_way_and_finishes_there(
+    client, db_session, on_streets
+):
+    """Stops north and south, the end 2.2km north: a 2.5km walk has no room to
+    double back 400m south, and its last leg is the walk to the end."""
+    for n in (1, 2, 3, -4, -5, -6):
+        _offset(db_session, n)
+    db_session.commit()
+    on_streets()
+    end = {"lat": LAT + 0.02, "lng": LNG}
+    query = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=2500"
+
+    preview = client.get(f"/v1/routes/preview?{query}&end_lat={end['lat']}&end_lng={LNG}")
+    body = preview.json()
+    assert body["meta"]["loop"] is False
+    assert body["memories"] and all(
+        m["place"]["coordinates"]["lat"] > LAT for m in body["memories"]
+    )
+    assert body["meta"]["home_leg"][-1] == end
+    accepted = client.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 2500, "end": end},
+    ).json()
+    assert [m["id"] for m in accepted["memories"]] == [m["id"] for m in body["memories"]]
+    assert accepted["meta"]["loop"] is False
+
+
+def test_an_end_out_of_reach_says_how_long_a_walk_reaches_it(client, db_session):
+    _offset(db_session, 1)
+    db_session.commit()
+    query = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000"
+
+    # 5.6km north, and 1.3x that without streets.
+    refused = client.get(f"/v1/routes/preview?{query}&end_lat={LAT + 0.05}&end_lng={LNG}")
+    assert refused.status_code == 422
+    assert refused.json()["detail"]["reason"] == "too_far"
+    assert 7200 < refused.json()["detail"]["min_budget_meters"] < 7300
+    assert client.get(f"/v1/routes/preview?{query}&end_lat={LAT}").status_code == 422
+
+
 def test_a_loop_is_routed_through_its_start_so_out_and_home_cannot_share_a_street(
     client, db_session, monkeypatch, on_streets
 ):

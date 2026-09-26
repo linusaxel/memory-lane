@@ -19,6 +19,12 @@ export function walkFloorKm(crowMeters: number, loop: boolean, step: number): nu
   return Math.ceil(meters / 1000 / step) * step;
 }
 
+/** The shortest one-way walk, in km on the slider's `step`, that finishes
+ *  `crowMeters` away. An estimate: the server's too_far says the real one. */
+export function endFloorKm(crowMeters: number, step: number): number {
+  return Math.ceil((crowMeters * ROUTE_CIRCUITY) / 1000 / step) * step;
+}
+
 /** Great-circle metres between two points. The unlock gate is server-side; this
  *  is only how the map decides which pin looks reachable. */
 export function metersBetween(aLat: number, aLng: number, bLat: number, bLng: number): number {

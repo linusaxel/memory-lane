@@ -396,10 +396,17 @@ def preview_route(
     tag: RouteTag | None = None,
     again: int = Query(0, ge=0, le=ROUTE_AGAIN_MAX),
     include: int | None = Query(None, ge=1),
+    end_lat: float | None = Query(None, ge=-90, le=90),
+    end_lng: float | None = Query(None, ge=-180, le=180),
 ):
     """The walk POST /v1/routes/today would store, stored nowhere. A device that
     already accepted today's walk still gets a preview; accepting returns the
-    walk it already has."""
+    walk it already has. `end_lat`/`end_lng` go together: where a one-way walk
+    finishes."""
+    if (end_lat is None) != (end_lng is None):
+        raise HTTPException(status_code=422, detail="end_lat and end_lng go together")
+    end = Coordinates(lat=end_lat, lng=end_lng) if end_lat is not None else None
+    loop = loop and not end
     route_date = gate.today()
     with get_session() as session:
         picked, legs, ends = _plan_route(
@@ -412,6 +419,7 @@ def preview_route(
             tag,
             again,
             include,
+            end,
         )
     return _route_response(
         route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), loop, ends
@@ -433,6 +441,7 @@ def accept_route(body: RouteRequest):
         ).fetchone()
         if row is None:
             loop = ROUTE_LOOP if body.loop is None else body.loop
+            loop = loop and not body.end
             picked, legs, _ = _plan_route(
                 session,
                 body.device,
@@ -443,6 +452,7 @@ def accept_route(body: RouteRequest):
                 body.tag,
                 body.again,
                 body.include,
+                body.end,
             )
             if not picked:
                 return _route_response(route_date, [], [], body.budget_meters, None, loop)

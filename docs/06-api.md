@@ -23,8 +23,10 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   a memory every walk passes (the theme does not filter it). 422 with
   `detail: {reason: "not_a_stop"}` when it could not be a stop, or
   `{reason: "too_far", min_budget_meters}` when the streets there are longer
-  than this walk
-- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?, include?}` - accept it. The
+  than this walk. `end_lat` and `end_lng`, together, are where a one-way walk
+  finishes (it makes the walk one-way, and is stored nowhere); the same
+  `too_far` when this walk cannot reach it
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?, include?, end?}` - accept it. The
   same solve, stored; one in progress per device, and a second accept gets
   that walk back until it is ended. The only stop id the client ever sends is `include`, vetted
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;

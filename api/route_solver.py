@@ -95,6 +95,7 @@ def _choose_walks(
     loop: bool,
     at: Coordinates,
     include: int | None = None,
+    end: Coordinates | None = None,
 ) -> list[list[int]]:
     """Up to ROUTE_SHORTLIST walks of up to `size` stops from the anchor `at`
     within `budget_meters`, best first, ranked by stage 1 of the module
@@ -125,6 +126,9 @@ def _choose_walks(
     short when one layer runs dry or is out of budget.
     `include`, a memory id, is on every walk returned ("Walk here"). Every
     walk starts from it; _plan_route has already vetted that it fits alone.
+    `end` is where a one-way walk finishes. `d` already walks to it where a
+    loop walks home (column 0, `_plan_route`), so `loop` is true; only the
+    map's turns need to know where it is.
 
     ponytail: layer is the only diversity term; MMR on tag overlap once prizes
     actually differ."""
@@ -175,16 +179,14 @@ def _choose_walks(
             walk.insert(at, c)
         return walk
 
-    y = {0: 0.0} | {i: (candidates[i - 1].lat - at.lat) * 111_320 for i in nodes}
-    x = {0: 0.0} | {
-        i: (candidates[i - 1].lng - at.lng) * 111_320 * math.cos(math.radians(at.lat))
-        for i in nodes
-    }
+    points = {0: at, -1: end or at} | {i: candidates[i - 1] for i in nodes}
+    y = {i: (p.lat - at.lat) * 111_320 for i, p in points.items()}
+    x = {i: (p.lng - at.lng) * 111_320 * math.cos(math.radians(at.lat)) for i, p in points.items()}
 
     def sharp(order):
-        ends = [0, *order, 0] if loop else [0, *order]
+        ends = [0, *order, -1] if loop else [0, *order]
         turns = list(zip(ends, ends[1:], ends[2:], strict=False))
-        if loop and len(order) > 1:
+        if loop and not end and len(order) > 1:
             turns.append((order[-1], 0, order[0]))
         count = 0
         for a, b, c in turns:
@@ -298,7 +300,9 @@ def _choose_walks(
             if must <= set(s)
             and _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget_meters
         ]
-    if size:
+    # ponytail: no shaped walks to an end; the fills and shakes find them.
+    # A line bowed towards the end, if a long walk to one comes out short.
+    if size and not end:
         for k in range(ROUTE_HEADINGS):
             for around in (False, True) if loop else (False,):
                 walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS, around)
@@ -412,6 +416,7 @@ def _plan_route(
     tag: str | None = None,
     again: int = 0,
     include: int | None = None,
+    end: Coordinates | None = None,
 ):
     """The walk this device would get from `at` today: (stops in order,
     stop-to-stop street legs, {out, home} street legs touching `at`). Seeded
@@ -430,12 +435,19 @@ def _plan_route(
 
     `include` is a memory the walk must pass ("Walk here"). The candidates
     query puts it first if it may be a stop at all; 422 if it may not, or no
-    walk of this length reaches it."""
+    walk of this length reaches it.
+
+    `end` is where a one-way walk finishes, sent with each request and stored
+    nowhere. A stop on a walk that long is within half of it of the midway
+    point, so candidates come from there. 422 too_far if the end is out of reach."""
+    if end:
+        loop = False
+    centre = Coordinates(lat=(at.lat + end.lat) / 2, lng=(at.lng + end.lng) / 2) if end else at
     candidates = session.execute(
         text(ROUTE_CANDIDATES_QUERY),
         {
-            "lat": at.lat,
-            "lng": at.lng,
+            "lat": centre.lat,
+            "lng": centre.lng,
             "radius_meters": budget_meters / 2,
             "today": route_date,
             "device_id": device,
@@ -445,18 +457,32 @@ def _plan_route(
         },
     ).fetchall()
     candidates = _spread(_one_per_place(candidates), budget_meters)
-    d, snaps = street_table([at] + [Coordinates(lat=r.lat, lng=r.lng) for r in candidates])
+    stops_at = [Coordinates(lat=r.lat, lng=r.lng) for r in candidates]
+    d, snaps = street_table([at, *stops_at, *([end] if end else [])])
+    keep = range(len(candidates))
     if snaps:
-        keep = [i for i, r in enumerate(candidates) if snaps[i + 1] <= UNLOCK_RADIUS_METERS]
+        keep = [i for i in keep if snaps[i + 1] <= UNLOCK_RADIUS_METERS]
         candidates = [candidates[i] for i in keep]
+    if end:
+        # The walk to the end stands in for the walk home: column 0 is metres
+        # to it, so everything below that closes a loop walks to the end instead.
+        if (reach := d[0][-1]) > budget_meters:
+            raise HTTPException(
+                status_code=422,
+                detail={"reason": "too_far", "min_budget_meters": math.ceil(reach)},
+            )
+        rows = [0] + [i + 1 for i in keep]
+        d = [[d[a][-1], *(d[a][b] for b in rows[1:])] for a in rows]
+    elif snaps:
         rows = [0] + [i + 1 for i in keep]
         d = [[d[a][b] for b in rows] for a in rows]
+    closed = loop or end is not None
     if include is not None:
         # Beyond half the length is not_a_stop too: the app floors the slider
         # at twice the crow's distance, so that is a position that moved.
         if not candidates or candidates[0].id != include:
             raise HTTPException(status_code=422, detail={"reason": "not_a_stop"})
-        if (reach := _path_meters([1], d, loop)) > budget_meters:
+        if (reach := _path_meters([1], d, closed)) > budget_meters:
             raise HTTPException(
                 status_code=422,
                 detail={"reason": "too_far", "min_budget_meters": math.ceil(reach)},
@@ -477,17 +503,20 @@ def _plan_route(
             dd,
             seed,
             solve_for,
-            loop,
+            closed,
             at,
             include,
+            end,
         )
-        return [[nodes[i - 1] for i in _walking_order(p, dd, loop)] for p in shortlist]
+        return [[nodes[i - 1] for i in _walking_order(p, dd, closed)] for p in shortlist]
 
     def walk(banned: set[int]) -> list[int]:
         return walks(banned)[0]
 
     def streets(order: list[int]):
         stops = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
+        if end:
+            return street_legs([at, *stops, end])
         if not loop:
             return street_legs([at, *stops])
         # Once more past home to the first stop, and that leg is the way out:
@@ -515,7 +544,7 @@ def _plan_route(
         read from `d`, where a stub walked in and out cannot
         pay for itself; over the slider from the routed legs, because no U-turn
         at a stop means round the block, which the table does not know about."""
-        short = ROUTE_FILL * budget_meters - _path_meters(order, d, loop)
+        short = ROUTE_FILL * budget_meters - _path_meters(order, d, closed)
         off = max(0.0, short, routed_meters(legs) - budget_meters)
         retraced = spur(order, legs)
         return (off + retraced) // SPUR_STEP_METERS, retraced
@@ -523,7 +552,7 @@ def _plan_route(
     routed = [(order, legs)] + [(o, streets(o)) for o in shortlist[1:]]
     # Round the block is longer than `d` says. When that takes the walk over
     # the slider, solve again for as much less as it went over, and judge both.
-    over = routed_meters(legs) / max(_path_meters(order, d, loop), 1)
+    over = routed_meters(legs) / max(_path_meters(order, d, closed), 1)
     if routed_meters(legs) > budget_meters and over > 1:
         solve_for = budget_meters / over
         routed += [(o, streets(o)) for o in walks(set()) if o]
@@ -567,5 +596,5 @@ def _plan_route(
     # One street route through the whole walk, start and home included, split
     # into the stop-to-stop legs (stored) and the two that touch the start
     # (handed to the preview, which stores nothing).
-    ends = {"out": legs[0], "home": legs[-1] if loop else None}
+    ends = {"out": legs[0], "home": legs[-1] if closed else None}
     return [candidates[i - 1] for i in order], legs[1 : len(order)], ends

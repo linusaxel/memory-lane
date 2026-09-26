@@ -4,7 +4,8 @@
  *
  *  It opens from the map's "Plan a walk" (F29) and goes back to it. From a
  *  pin's "Walk here" it plans a walk through that memory, and the slider
- *  starts at the shortest walk that reaches it.
+ *  starts at the shortest walk that reaches it. A one-way walk can end at a
+ *  spot tapped on the map (EndPick), asked for per walk and stored nowhere.
  *
  *  The page is also the location primer. "Show me the walk" is a press, so the
  *  system dialog it may raise has the context the old card over the map gave
@@ -38,6 +39,8 @@ type PlanProps = {
   through: string | null;
   /** The shortest walk that reaches it; over WALK_KM.max, none does. */
   floorKm: number;
+  /** Go to the map to tap where a one-way walk ends. */
+  onPickEnd: () => void;
 };
 
 export function Plan({
@@ -51,6 +54,7 @@ export function Plan({
   error,
   through,
   floorKm,
+  onPickEnd,
 }: PlanProps) {
   const unreachable = floorKm > WALK_KM.max;
   const min = Math.min(Math.max(WALK_KM.min, floorKm), WALK_KM.max);
@@ -78,9 +82,19 @@ export function Plan({
         <Text style={label}>{`${WALK_KM.max} km`}</Text>
       </View>
       <View style={styles.chips}>
-        <Chip label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true })} />
+        <Chip label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true, end: null })} />
         <Chip label="One way" on={!ask.loop} onPress={() => onAsk({ ...ask, loop: false })} />
       </View>
+      {/* Like the theme: a second tap lets the end go. */}
+      {!ask.loop && (
+        <View style={styles.chips}>
+          <Chip
+            label={ask.end ? 'Ends where you tapped' : 'Pick where it ends'}
+            on={!!ask.end}
+            onPress={() => (ask.end ? onAsk({ ...ask, end: null }) : onPickEnd())}
+          />
+        </View>
+      )}
       {/* One theme or none: a second tap on the chosen one lets it go. */}
       <View style={styles.chips}>
         {SUBMISSION_TAGS.map((tag) => (
@@ -94,7 +108,11 @@ export function Plan({
       </View>
       <Text style={styles.note}>
         {`Five${ask.tag ? ` ${ask.tag}` : ''} memories${through ? `, through ${through}` : ''}, ${
-          ask.loop ? 'looping back to where you start' : 'ending somewhere new'
+          ask.loop
+            ? 'looping back to where you start'
+            : ask.end
+              ? 'ending where you tapped'
+              : 'ending somewhere new'
         }.`}
       </Text>
       {unreachable && (
@@ -124,6 +142,24 @@ export function Plan({
         <Text style={styles.secondaryText}>Back to the map</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
+    </View>
+  );
+}
+
+/** Over the map while it waits for the tap that says where the walk ends. */
+export function EndPick({ onCancel }: { onCancel: () => void }) {
+  return (
+    <View style={styles.card} pointerEvents="box-none">
+      <Text style={styles.cardTitle}>Where does it end?</Text>
+      <Text style={styles.cardBody}>Tap the map where the walk should finish.</Text>
+      <Pressable
+        style={dim(styles.secondary)}
+        onPress={onCancel}
+        accessibilityRole="button"
+        accessibilityLabel="Cancel"
+      >
+        <Text style={styles.secondaryText}>Cancel</Text>
+      </Pressable>
     </View>
   );
 }

@@ -34,6 +34,23 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "How far today?"
     timeout: 20000
+
+# One way, ending where the map is tapped: anywhere near the start is within
+# 4 km. The preview's line has no " loop" on it; Loop again for the rest.
+- tapOn: "One way"
+- tapOn: "Pick where it ends"
+- assertVisible: "Where does it end?"
+- tapOn:
+    point: "50%,30%"
+- assertVisible: "Ends where you tapped"
+- tapOn: "Show me the walk"
+- extendedWaitUntil:
+    visible: "[0-9]+ stops? · [0-9.]+ k?m"
+    timeout: 40000
+- tapOn: "Change length"
+- tapOn: "Loop"
+- assertNotVisible: "Ends where you tapped"
+
 # The slider seeks where it is tapped (tapToSeek), so its right end is 10 km,
 # wherever the page puts it. The value is the "10 km" above the slider; the end
 # label under it says the same.

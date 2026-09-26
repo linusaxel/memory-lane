@@ -248,6 +248,8 @@ class RouteRequest(BaseModel):
     again: int = Field(0, ge=0, le=ROUTE_AGAIN_MAX)
     # A memory the walk must pass ("Walk here"). The accept sends the preview's.
     include: int | None = Field(None, ge=1)
+    # Where a one-way walk finishes; it makes the walk one-way. Never stored.
+    end: Coordinates | None = None
 
 
 class RouteResponse(BaseModel):

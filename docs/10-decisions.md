@@ -1198,6 +1198,21 @@ only the default for a client that sends neither. The chips are the
 submission tags, not the whole vocabulary: eighteen chips is a form, and the
 server takes any tag in `pipeline/tags.py`.
 
+### A one-way walk can end where you tap, and nothing stores it
+
+Status: Accepted
+
+"End at the subway": on **One way**, the plan page can take a spot tapped on
+the map, and the preview and the accept both send it (`end_lat`/`end_lng`,
+`end`). Like the start it is stored nowhere, not on `daily_routes` and not as
+a preference, or it is the stored home that *A route is anchored on where you
+were* turned down; the phone keeps it next to the start (`mobile/src/route.ts`).
+The solver takes it as a loop's home: column 0 of the matrix is metres to the
+end, so ordering, insertion and the routed last leg walk there unchanged.
+Candidates come from within half the length of the midway point, and a walk
+that cannot reach the end is `too_far`. Picked on the map, not searched by
+name: no geocoder in the app, and it works anywhere.
+
 ---
 
 ## Product

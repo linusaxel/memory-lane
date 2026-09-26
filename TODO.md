@@ -192,11 +192,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       ≥3 tags of ≥5 walkable stops: `python -m pipeline.themed_routes` says
       which. None yet outside the dev seed; New York and West Hollywood have
       two each. The job grows in that file.
-- [ ] **One-way walks take a final destination.** (checked 2026-09-26: the
-      founder asked for it) Picking one-way lets you enter where the walk ends
-      ("end at the subway"), a one-way OP. Per request, never stored: ⚠️
-      storing it would bring back the stored home that docs/10 § Routes
-      decided against.
 - [ ] **Maestro: a stop's notification arrives with the phone locked.**
       (checked 2026-09-26) A flow next to `.maestro/walk-and-unlock.yml`
       (reuse `steps/`) covering `mobile/src/geofence.ts` and

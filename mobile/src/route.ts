@@ -15,12 +15,14 @@ const KEY = 'memorylane.route.v1';
 /** `start` is where this device stood when it asked for today's route: where a
  *  loop comes back to. It is kept here and never sent anywhere again - the
  *  server stores no location (docs/10-decisions.md § Routes). Optional
- *  because a route cached before loops existed has none. */
+ *  because a route cached before loops existed has none. `end` is where a
+ *  one-way walk finishes, when one was tapped: kept the same way. */
 export type StoredRoute = {
   route_date: string;
   memories: LocatedMemory[];
   loop?: boolean;
   start?: Coordinates;
+  end?: Coordinates;
   legs?: Coordinates[][] | null;
 };
 
