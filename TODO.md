@@ -23,6 +23,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The `api` container runs whatever image was last built.** (2026-09-26) It
+  does not mount the source, so a plain `docker compose up -d` served 09-22 code
+  that queried a dropped column; the app showed only "Can't reach Memory Lane
+  right now." and a session went to debugging the app. Fix: bind-mount `./api`
+  and `./pipeline` with `--reload` in `docker-compose.yml`, or `--build` in the
+  Quick start.
+
 ---
 
 ## Known defects
