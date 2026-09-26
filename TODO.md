@@ -92,7 +92,68 @@ missing is a source.
 
 ---
 
-## Routes
+## Map first
+
+Decided 2026-09-26 (the founder's ramble): after sign-in the app opens on a
+map of what is locked around you, and a walk is how you open any of it. Each
+step ships and stands on its own; in order.
+
+- [ ] **M1 Supersede "no map of everything".** docs/10 § *Only today's walk
+      unlocks* says a browsable corpus is a finishable one. Locked pins are
+      not browsable, so the rule it protects survives: only today's walk
+      unlocks. Mark the F29 line `Superseded`, restate it, fix docs/08 (F1,
+      F29) and mobile/UI.md. Docs only, before any code.
+- [ ] **M2 Open on the map.** After sign-in and the location primer (F8), the
+      map with the user's dot and the locked pins within walking range
+      (`/v1/memories/nearby`, already gated). "Plan a walk" on the map opens
+      today's F1 page unchanged: the standard way in stays. An accepted walk
+      today still opens on the walk (F25). e2e: every flow that starts on the
+      plan page taps through the map first.
+- [ ] **M3 A direction arrow on the user dot.** Check native first: MapKit's
+      user dot may draw the heading cone on a real phone by itself
+      (`showsUserLocation`, `mobile/App.tsx`); the simulator has no compass,
+      so verify on a device. Only if not: `Location.watchHeadingAsync` and a
+      custom marker.
+- [ ] **M4 Tap a locked pin: the peek.** A sheet that says plainly the only
+      way in is to walk there, with one button: "Walk here". The sneak peek is
+      what the gate already lets out (place, tag, source, year, distance), and
+      the summary as grey redacted bars sized to its length, drawn from a word
+      count, never from the text. ⚠️ The summary never reaches the client
+      locked, blurred or not: a CSS/blur peek is a leak. If the peek needs a
+      new field, it goes through `api/gate.py`.
+- [ ] **M5 "Walk here" plans a walk through that memory.** `GET
+      /v1/routes/preview` and `POST /v1/routes/today` take an optional
+      `include=<memory_id>`. The server checks it: gated-eligible, within
+      `budget_meters / 2`, reachable within `UNLOCK_RADIUS_METERS` of a street.
+      Then it seeds the solver with it as a forced stop. Accept still carries
+      no stops beyond that one id, and the solver stays deterministic, so
+      preview and accept still agree. Amend docs/10 § *Preview, then accept*
+      ("the client never names a stop" becomes "names at most one, and the
+      server vets it").
+- [ ] **M6 The plan page, started from a pin.** Same slider, loop and theme
+      chips, the chosen memory marked as a fixed stop on every preview; "Show
+      me another" never drops it. The slider's floor rises to what reaches
+      it: too far for the length reads "Too far for 2 km: at least 3 km",
+      not F1's "No walk that long from here".
+- [ ] **M7 A pin tapped after today's walk is accepted.** One walk a day
+      stands, so "Walk here" cannot plan a second. Decide before building:
+      the peek says "On tomorrow's walk" and the pin is remembered for
+      tomorrow's plan, or the button is simply absent. Undecided.
+- [ ] **M8 Say "you are on a walk".** (checked 2026-09-26: there is no walk
+      mode today, only the app. Once accepted, the map is the walk until
+      midnight, and the F25 pill "Today's route · 0 of 5" is the only hint.)
+      With M2 the map has two states, so the walk needs to look like one: a
+      persistent top bar "On today's walk · 2 of 5" in place of Journal/+ Add,
+      route-blue, and the off-route pins hidden as F25 already does. One
+      signal, not three. Update F25 and mobile/UI.md.
+- [ ] **M9 Leave the walk at any time.** An "End walk" on that bar returns to
+      the map of locked pins (M2). Decide before building: it *pauses* (today's
+      `daily_routes` row stays, the bar on the map says "Resume walk", earned
+      stops stay earned, and one walk a day stands) or it *abandons* (the row
+      is deleted and a new plan is allowed, which reopens the day lock in
+      docs/10 § *Preview, then accept*). Pause is the smaller change and keeps
+      the decision; abandon needs a superseded entry. No confirm dialog for
+      pause; one for abandon.
 
 - [ ] **Authored walks: the rest of `routes` + `route_stops`.** (checked
       2026-09-24) Migration 023 and `GET /v1/routes/{id}` exist, published
