@@ -91,8 +91,6 @@ export default function Submit({
   const [summary, setSummary] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [day, setDay] = useState(() => new Date());
-  const [yearOnly, setYearOnly] = useState(false);
-  const [year, setYear] = useState('');
   const [sealYear, setSealYear] = useState('');
   const [seal, setSeal] = useState<'now' | 'later'>('now');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -131,8 +129,6 @@ export default function Submit({
     setSummary('');
     setTags([]);
     setDay(new Date());
-    setYearOnly(false);
-    setYear('');
     setSealYear('');
     setSeal('now');
     setAttachments([]);
@@ -151,10 +147,7 @@ export default function Submit({
     setPlaceName(editing.place.name);
     setSummary(editing.summary);
     setTags(editing.tags);
-    const happened = editing.happened_at;
-    setYearOnly(!!happened && editing.happened_precision !== 'day');
-    setYear(happened ? happened.slice(0, 4) : '');
-    setDay(happened ? localDay(happened) : new Date());
+    setDay(editing.happened_at ? localDay(editing.happened_at) : new Date());
     setAttachments(
       editing.media.map((item) => ({
         uri: mediaUrl(item),
@@ -288,15 +281,13 @@ export default function Submit({
     setPosting(true);
     setError(null);
 
-    const trimmedYear = year.trim();
-    const hasYear = /^\d{4}$/.test(trimmedYear);
     const editDraft: Draft = {
       place_name: placeName.trim(),
       summary: summary.trim(),
       tags,
-      happened_at: !yearOnly ? isoDay(day) : hasYear ? `${trimmedYear}-01-01` : null,
-      happened_precision: !yearOnly ? 'day' : hasYear ? 'year' : null,
-      // 1 January of the year, like happened_at: a seal is a promise about a
+      happened_at: isoDay(day),
+      happened_precision: 'day',
+      // 1 January of the year: a seal is a promise about a
       // year, and asking somebody to pick a day for 2041 is a picker nobody
       // needs. A year already past is simply not a seal - the server treats a
       // date that has come as no date at all. Always null while editing: an
@@ -422,17 +413,7 @@ export default function Submit({
 
           <Field label="When">
             <View style={styles.row}>
-              {yearOnly ? (
-                <TextInput
-                  style={[styles.input, styles.year]}
-                  value={year}
-                  onChangeText={(next) => setYear(next.replace(/[^0-9]/g, '').slice(0, 4))}
-                  placeholder="1998"
-                  placeholderTextColor={color.inkFaint}
-                  keyboardType="number-pad"
-                  accessibilityLabel="Year it happened"
-                />
-              ) : Platform.OS === 'ios' ? (
+              {Platform.OS === 'ios' ? (
                 <DateTimePicker
                   value={day}
                   mode="date"
@@ -454,8 +435,6 @@ export default function Submit({
                   }
                 />
               )}
-              {/* For the 1978 case: somebody who remembers the summer, not the day. */}
-              <Chip label="Only the year" on={yearOnly} onPress={() => setYearOnly(!yearOnly)} />
             </View>
           </Field>
 

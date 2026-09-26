@@ -99,7 +99,6 @@ class Memory(BaseModel):
     unlock_radius_meters: int | None = None
     layer: str = "historical"
     happened_at: date | None = None
-    happened_precision: str | None = None
     attribution: str | None = None
     source_url: str | None = None
     contrast_score: float | None = None

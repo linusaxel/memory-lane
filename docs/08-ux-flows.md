@@ -594,8 +594,7 @@ plan page, the preview, the walk, a walked day. Filing needs no walk.
    minimum length and no countdown, and the API asks for the same. The title
    is the place row's name (docs/10, *The title is the place name*), so it is
    the card's heading, locked or not; the description is what the gate keeps.
-4. **When**: a date, today unless changed, from the platform's own picker. Or
-   **Only the year**, for somebody who remembers the summer and not the day.
+4. **When**: a date, today unless changed, from the platform's own picker.
 5. **Tags** from a closed list. The server drops anything not on it, so a
    free-text field would silently eat what somebody typed.
 6. **Photos** from the camera or the library, up to four, and one **recording**

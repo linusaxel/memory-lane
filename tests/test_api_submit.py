@@ -201,13 +201,6 @@ def test_unknown_tags_are_dropped_not_fatal(client):
 def test_a_date_without_a_precision_is_a_full_date(client):
     memory = submit(client, happened_at="1998-07-12")
     assert memory["happened_at"] == "1998-07-12"
-    assert memory["happened_precision"] == "day"
-
-
-def test_only_the_year_comes_back_as_only_the_year(client):
-    """The edit form reads it to reopen on the year, not on 1 January."""
-    memory = submit(client, happened_at="1978-01-01", happened_precision="year")
-    assert memory["happened_precision"] == "year"
 
 
 @pytest.mark.parametrize(

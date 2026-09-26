@@ -79,7 +79,6 @@ MEMORY_COLUMNS = f"""
     m.extraction_confidence,
     m.layer,
     m.happened_at,
-    m.happened_precision,
     m.attribution,
     m.source_url,
     m.contrast_score,

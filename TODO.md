@@ -29,9 +29,9 @@ delete an entry when its fix lands.
 
 - [ ] **A year-only date is "on this day" every 1 January.** (checked
       2026-09-26) `ANNIVERSARY` in `api/queries.py` compares month and day
-      and ignores `happened_precision`, so a memory filed as "Only the year"
-      (stored as `YYYY-01-01`) is resurfaced on New Year's Day. Extracted
-      memories with year precision do the same. Fix: require
+      and ignores `happened_precision`, so an extracted memory with year
+      precision (stored as `YYYY-01-01`), or an app submission filed before
+      2026-09-26 as Earlier + a year, is resurfaced on New Year's Day. Fix: require
       `happened_precision = 'day'` in that expression.
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.

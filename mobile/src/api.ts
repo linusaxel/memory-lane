@@ -91,9 +91,6 @@ export type Memory = {
   anniversary: boolean;
   /** ISO date, or null when the source did not say. */
   happened_at: string | null;
-  /** How much of happened_at to trust. 'year' means 1 January stands in for
-   *  "sometime that year", and the edit form reopens on the year alone. */
-  happened_precision: 'day' | 'month' | 'year' | 'decade' | null;
   /** ISO date, and set only while the memory is still sealed. A time lock is a
    *  different refusal from the proximity one: standing here does not open it,
    *  so the sheet must not offer the unlock. Null once the date has passed. */
