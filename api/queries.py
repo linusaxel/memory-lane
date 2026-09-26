@@ -55,8 +55,10 @@ MEMORY_NOTE_COUNT = """(
     ) as note_count"""
 
 # Something happened here on today's date. Day-and-month, so it fires every year
-# rather than once. Carried on every memory-shaped row rather than filtered on,
-# because it is a reason to look and never a reason to hide anything.
+# rather than once. Day precision only: a year-only date is stored as 1 January
+# and would fire every New Year's Day. Carried on every memory-shaped row rather
+# than filtered on, because it is a reason to look and never a reason to hide
+# anything.
 # ponytail: a 29 February memory resurfaces only on a leap day. Nudging it to
 # the 28th is a product decision nobody has made.
 # UTC explicitly, not CURRENT_DATE. CURRENT_DATE is whatever timezone the
@@ -65,6 +67,7 @@ MEMORY_NOTE_COUNT = """(
 # memory is shut and whether it is "on this day". See api/gate.py#today.
 ANNIVERSARY = """(
         m.happened_at IS NOT NULL
+        AND m.happened_precision IS NOT DISTINCT FROM 'day'
         AND to_char(m.happened_at, 'MM-DD')
             = to_char((now() AT TIME ZONE 'utc')::date, 'MM-DD')
     ) as anniversary"""

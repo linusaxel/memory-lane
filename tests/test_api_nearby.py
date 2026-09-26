@@ -182,6 +182,7 @@ def test_something_that_happened_today_comes_back_up(client, db_session):
         "thirty years ago today",
         contrast_score=0.1,
         happened_at=today().replace(year=today().year - 30),
+        happened_precision="day",
     )
     db_session.commit()
 
@@ -204,6 +205,24 @@ def test_the_same_date_in_another_year_is_not_an_anniversary(client, db_session)
         content,
         "yesterday",
         happened_at=today() - timedelta(days=1),
+    )
+    db_session.commit()
+
+    body = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()
+    assert body["memories"][0]["anniversary"] is False
+
+
+def test_a_year_only_date_is_not_an_anniversary(client, db_session):
+    """A year is stored as 1 January; it must not resurface every New Year."""
+    place = _place(db_session, "Vega", LAT, LNG)
+    content = _content(db_session, "https://example.invalid/iiiiiiiiiii")
+    _memory(
+        db_session,
+        place,
+        content,
+        "sometime that year",
+        happened_at=today().replace(year=today().year - 30),
+        happened_precision="year",
     )
     db_session.commit()
 
