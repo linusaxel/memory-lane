@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from api.gate import meters_between
 from api.models import Coordinates
-from api.route_solver import ROUTE_FILL, _choose_stops, _path_meters, _walking_order
+from api.route_solver import ROUTE_FILL, _choose_stops, _choose_walks, _path_meters, _walking_order
 from api.streets import ROUTE_CIRCUITY, walking_matrix
 
 ANCHOR = Coordinates(lat=40.75, lng=-73.99)
@@ -196,3 +196,17 @@ def test_a_ring_round_the_start_is_walked_round_not_along_one_side():
     for seed in "abcdef":
         chosen = _choose_stops(picks, 5, d, seed, 10000, True, ANCHOR)
         assert _path_meters(chosen, d, True) >= ROUTE_FILL * 10000, seed
+
+
+def test_an_included_stop_is_on_every_walk_returned(route_seed):
+    rng = random.Random(route_seed + 7)
+    for i in range(30):
+        picks = [stop(str(n), rng.uniform(-20, 20)) for n in range(12)]
+        for n, p in enumerate(picks):
+            p.id = n
+        pin = rng.randrange(len(picks))
+        d = crow(picks)
+        if _path_meters([pin + 1], d, True) > 4000:
+            continue
+        walks = _choose_walks(picks, 5, d, str(i), 4000, True, ANCHOR, pin)
+        assert walks and all(pin + 1 in w for w in walks)

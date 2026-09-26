@@ -626,3 +626,72 @@ def test_another_day_or_show_me_another_is_a_different_walk_as_good(
         json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "again": 1},
     ).json()
     assert [m["id"] for m in accepted["memories"]] == shown
+
+
+def _include(client, memory_id, **extra):
+    params = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000&include={memory_id}"
+    return client.get(
+        f"/v1/routes/preview?{params}" + "".join(f"&{k}={v}" for k, v in extra.items())
+    )
+
+
+def test_walk_here_puts_that_memory_on_the_walk_and_the_accept_agrees(client, db_session):
+    ids = [_offset(db_session, n) for n in range(1, 9)]
+    db_session.commit()
+    plain = {m["id"] for m in _preview(client).json()["memories"]}
+    pin = next(i for i in ids if i not in plain)
+
+    preview = [m["id"] for m in _include(client, pin).json()["memories"]]
+    assert pin in preview and len(preview) == 5
+    accepted = client.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "include": pin},
+    ).json()
+    assert [m["id"] for m in accepted["memories"]] == preview
+
+
+def test_walk_here_refuses_what_could_never_be_a_stop(client, db_session):
+    _offset(db_session, 1)
+    earned, hidden, far = _offset(db_session, 2), _offset(db_session, 3), _offset(db_session, 30)
+    db_session.execute(text("UPDATE memories SET hidden = TRUE WHERE id = :m"), {"m": hidden})
+    db_session.execute(
+        text("INSERT INTO devices (id) VALUES (CAST(:d AS uuid)) ON CONFLICT (id) DO NOTHING"),
+        {"d": DEVICE},
+    )
+    db_session.execute(
+        text("INSERT INTO unlocks (device_id, memory_id) VALUES (CAST(:d AS uuid), :m)"),
+        {"d": DEVICE, "m": earned},
+    )
+    db_session.commit()
+
+    for pin in (earned, hidden, far, far + 1000):
+        assert _include(client, pin).status_code == 422, pin
+        accepted = client.post(
+            "/v1/routes/today",
+            json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "include": pin},
+        )
+        assert accepted.status_code == 422
+    assert _stored(db_session) == 0
+
+
+def test_walk_here_is_not_filtered_out_by_a_theme(client, db_session):
+    for n in range(1, 5):
+        place = _place(db_session, f"Stop {n}", LAT + n * 0.001, LNG)
+        _historical(db_session, place, f"memory {n}", f"https://e.invalid/{n:0>11}", ["food"])
+    music = _offset(db_session, 5)
+    db_session.commit()
+
+    assert music in {m["id"] for m in _include(client, music, tag="food").json()["memories"]}
+
+
+def test_walk_here_is_never_the_stop_the_cleanup_drops(client, db_session, on_streets):
+    """The layout of the out-and-back test above, but stop 2 was asked for."""
+    ids = {n: _offset(db_session, n) for n in range(1, 7)}
+    db_session.commit()
+    spur = Coordinates(lat=LAT + 0.002, lng=LNG)
+    stub = Coordinates(lat=LAT + 0.002, lng=LNG + 0.0004)
+    on_streets(
+        lambda points: [[a, stub, b] if spur in (a, b) else [a, b] for a, b in pairwise(points)]
+    )
+
+    assert ids[2] in [m["id"] for m in _include(client, ids[2]).json()["memories"]]

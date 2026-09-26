@@ -189,8 +189,8 @@ live requests. Order is priority.
 Decided 2026-09-26 (the founder's ramble): after sign-in the app opens on a
 map of what is locked around you, and a walk is how you open any of it. Each
 step ships and stands on its own; in order. M1, M2 and M4 shipped 2026-09-26
-(F29, docs/10 *A map of what is locked*); "Walk here" opens the plan page
-until M5.
+(F29, docs/10 *A map of what is locked*); M5 (`include=`, the server half of
+"Walk here") shipped the same day. "Walk here" opens the plan page until M6.
 
 - [ ] **M3 A direction arrow on the user dot.** (checked 2026-09-26:
       react-native-maps 1.29.8 has no heading or tracking-mode prop, so no code
@@ -198,15 +198,6 @@ until M5.
       heading beam with `showsUserLocation` (`mobile/App.tsx`); the simulator
       has no compass. Only if not: `Location.watchHeadingAsync` and a custom
       marker. Needs somebody with a device.
-- [ ] **M5 "Walk here" plans a walk through that memory.** `GET
-      /v1/routes/preview` and `POST /v1/routes/today` take an optional
-      `include=<memory_id>`. The server checks it: gated-eligible, within
-      `budget_meters / 2`, reachable within `UNLOCK_RADIUS_METERS` of a street.
-      Then it seeds the solver with it as a forced stop. Accept still carries
-      no stops beyond that one id, and the solver stays deterministic, so
-      preview and accept still agree. Amend docs/10 § *Preview, then accept*
-      ("the client never names a stop" becomes "names at most one, and the
-      server vets it").
 - [ ] **M6 The plan page, started from a pin.** Same slider, loop and theme
       chips, the chosen memory marked as a fixed stop on every preview; "Show
       me another" never drops it. The slider's floor rises to what reaches

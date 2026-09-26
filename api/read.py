@@ -388,6 +388,7 @@ def preview_route(
     loop: bool = Query(ROUTE_LOOP),
     tag: RouteTag | None = None,
     again: int = Query(0, ge=0, le=ROUTE_AGAIN_MAX),
+    include: int | None = Query(None, ge=1),
 ):
     """The walk POST /v1/routes/today would store, stored nowhere. A device that
     already accepted today's walk still gets a preview; accepting returns the
@@ -403,6 +404,7 @@ def preview_route(
             loop,
             tag,
             again,
+            include,
         )
     return _route_response(
         route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), loop, ends
@@ -432,6 +434,7 @@ def accept_route(body: RouteRequest):
                 loop,
                 body.tag,
                 body.again,
+                body.include,
             )
             if not picked:
                 return _route_response(route_date, [], [], body.budget_meters, None, loop)

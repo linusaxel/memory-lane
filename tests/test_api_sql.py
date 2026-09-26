@@ -28,6 +28,8 @@ PARAMS = {
     "tags": ["food"],
     # None means "no theme", the route's unfiltered shape.
     "tag": None,
+    # None means no "Walk here" pin.
+    "include": None,
     "query": "coffee",
     "memory_id": 1,
     "place_id": 1,

@@ -246,6 +246,8 @@ class RouteRequest(BaseModel):
     tag: RouteTag | None = None
     # Times "Show me another" was tapped. The accept sends the preview's.
     again: int = Field(0, ge=0, le=ROUTE_AGAIN_MAX)
+    # A memory the walk must pass ("Walk here"). The accept sends the preview's.
+    include: int | None = Field(None, ge=1)
 
 
 class RouteResponse(BaseModel):

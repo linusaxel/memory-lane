@@ -19,10 +19,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   of that length from there would be: up to five stops. Stores nothing.
   `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`, `tag` (one of
   `pipeline/tags.py`) keeps only stops carrying it; `again` is "Show me
-  another" (F32), another walk as good
-- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?}` - accept it. The
+  another" (F32), another walk as good; `include=<memory_id>` is "Walk here",
+  a memory every walk passes (the theme does not filter it). 422 when it could
+  not be a stop, or no walk of this length reaches it
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, tag?, again?, include?}` - accept it. The
   same solve, stored; one per device per day, and a second accept gets the
-  first walk back. The client never sends stop ids
+  first walk back. The only stop id the client ever sends is `include`, vetted
 - `GET /v1/routes/today?device=UUID` - today's accepted walk, or 404. Only reads
 - `GET /v1/routes/walked?device=UUID` - every walk the account accepted,
   newest first: earned stops open, `earned` of `size`, `completed_at`

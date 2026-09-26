@@ -195,6 +195,8 @@ def main() -> None:
                 "today": "2026-01-01",
                 "device_id": "00000000-0000-0000-0000-000000000000",
                 "limit": ROUTE_POOL,
+                "tag": None,
+                "include": None,
             },
             5,
         ),

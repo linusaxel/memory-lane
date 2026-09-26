@@ -470,13 +470,19 @@ WHERE
     AND {WITHIN}
     AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
     AND (m.opens_at IS NULL OR m.opens_at <= CAST(:today AS date))
-    AND (CAST(:tag AS varchar) IS NULL OR CAST(:tag AS varchar) = ANY(m.tags))
+    AND (
+        CAST(:tag AS varchar) IS NULL
+        OR CAST(:tag AS varchar) = ANY(m.tags)
+        OR m.id = CAST(:include AS integer)
+    )
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
--- A stack's memories share one distance; the id makes which one stands for
--- the place the same on every call, so a preview and its accept agree.
-ORDER BY distance_meters ASC, m.id ASC
+-- The included memory first, so the pool limit, one-per-place and the spread
+-- all keep it; its absence from the top means it may not be a stop. A stack's
+-- memories share one distance; the id makes which one stands for the place
+-- the same on every call, so a preview and its accept agree.
+ORDER BY COALESCE(m.id = CAST(:include AS integer), false) DESC, distance_meters ASC, m.id ASC
 LIMIT :limit
 """
 

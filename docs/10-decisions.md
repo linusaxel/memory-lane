@@ -121,7 +121,8 @@ however close you stand.
 
 The old decision kept this in the client because a "which tab" flag would be
 as self-reported as the position. The route is not self-reported: the server
-chose it and stored it on accept, and the client never sends stop ids. That is
+chose it and stored it on accept, and the client names at most one stop, which
+the server vets (*Preview, then accept*). That is
 what makes the rule enforceable here and not there.
 
 Filing still opens its own memory for its author: that unlock is written by
@@ -866,9 +867,9 @@ accept — the one moment it is guaranteed to have anywhere honest to stand on
 two different routes on the same day, which is correct: the route was never a
 citywide itinerary, it was one device's walk.
 
-### Preview, then accept, and the client never names a stop
+### Preview, then accept, and the client names at most one stop
 
-Status: Accepted
+Status: Accepted, amended 2026-09-26
 
 The app asks how far first (F1). `GET /v1/routes/preview` solves the walk and
 stores nothing; `POST /v1/routes/today` solves it again with the same anchor
@@ -877,6 +878,17 @@ seeded on `device:date`, fed the same candidates, the same metres and the same
 budget. So the accept carries no memory ids, and there is nothing from the
 client to validate or trust — a device cannot accept a stop the solver would
 not have picked.
+
+**Amended 2026-09-26: at most one, and the server vets it.** "Walk here" on a
+pin (Map first, M5) sends `include=<memory_id>` with the preview and the accept.
+It is vetted by the same `ROUTE_CANDIDATES_QUERY` that decides every other stop:
+the query sorts it first, and if it is not first it may not be a stop (hidden,
+sealed, already earned, ambiguous, or beyond half the length). A pin too far
+from a street, or whose walk there and back is longer than the slider, is also
+refused, 422 for all of them. The solver then keeps it on every walk it
+considers, and the cleanup never drops it. The theme does not filter it out: a
+pin somebody chose outranks the chip. Seeding does not change, so preview and
+accept still agree, and the client still cannot place a stop the rules forbid.
 
 The day is locked by `ON CONFLICT (device_id, route_date) DO NOTHING`: the
 first accept wins, and every later one, at any length and from anywhere, reads
