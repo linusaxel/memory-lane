@@ -90,9 +90,6 @@ live requests. Order is priority.
       account had no credits. Run `pipeline.quality` (video, and
       `--source-type newspaper`) before and after, and extract content 160
       (Blaagaardsgade, already ingested) to see a geocoded place.
-- [ ] **Credit OpenStreetMap in the app.** (checked 2026-09-26) Its licence is
-      the condition for storing Photon's geocodes. The shared card does it
-      (`api/card.py:place_credit`); the app has no credits screen yet.
       (checked 2026-09-26) `https://api.dataforsyningen.dk/adresser?q=<address>`:
       free, no key, WGS84, and it fuzzy-matches OCR'd spellings
       ("Blaagaardsgade" → "Blågårdsgade"). Replaces model-guessed coordinates
@@ -194,8 +191,9 @@ Decided 2026-09-26 (the founder's ramble): after sign-in the app opens on a
 map of what is locked around you, and a walk is how you open any of it. Each
 step ships and stands on its own; in order. M1, M2 and M4 shipped 2026-09-26
 (F29, docs/10 *A map of what is locked*); M5 and M6 (Walk here plans a walk
-through that pin) and M9 (End walk, F34) shipped the same day; M7 went with the
-day lock (docs/10 *A walk can be ended*).
+through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the route-blue
+"On a walk · 2 of 5" bar, F25); M7 went with the day lock (docs/10
+*A walk can be ended*).
 
 - [ ] **M3 A direction arrow on the user dot.** (checked 2026-09-26:
       react-native-maps 1.29.8 has no heading or tracking-mode prop, so no code
@@ -203,14 +201,6 @@ day lock (docs/10 *A walk can be ended*).
       heading beam with `showsUserLocation` (`mobile/App.tsx`); the simulator
       has no compass. Only if not: `Location.watchHeadingAsync` and a custom
       marker. Needs somebody with a device.
-- [ ] **M8 Say "you are on a walk".** (checked 2026-09-26: there is no walk
-      mode today, only the app. Once accepted, the map is the walk until
-      it is ended (F34), and the F25 pill "Today's route · 0 of 5" is the only hint.)
-      With M2 the map has two states, so the walk needs to look like one: a
-      persistent top bar "On today's walk · 2 of 5" in place of Journal/+ Add,
-      route-blue, and the off-route pins hidden as F25 already does. One
-      signal, not three. F34's End walk (top centre today) moves onto it.
-      Update F25 and mobile/UI.md.
 - [ ] **Authored walks: the rest of `routes` + `route_stops`.** (checked
       2026-09-24) Migration 023 and `GET /v1/routes/{id}` exist, published
       only, kept to `title, status, is_loop`. No author, theme, source, budget

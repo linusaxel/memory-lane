@@ -154,6 +154,13 @@ export default function Settings({
         >
           <Text style={styles.linkText}>Privacy policy</Text>
         </Pressable>
+        <Pressable
+          style={dim(styles.link)}
+          accessibilityRole="link"
+          onPress={() => Linking.openURL('https://www.openstreetmap.org/copyright').catch(() => {})}
+        >
+          <Text style={styles.linkText}>Places © OpenStreetMap contributors</Text>
+        </Pressable>
         <Text style={styles.note}>
           Signed out, your collection is tied to this installation rather than to you. Signing in
           with Google or Apple is the only thing that changes that.

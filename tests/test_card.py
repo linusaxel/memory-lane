@@ -72,14 +72,6 @@ def test_credit_survives_into_the_markup():
     assert 'href="https://example.org/x"' in html
 
 
-def test_a_place_osm_placed_credits_openstreetmap_open_or_locked():
-    """Its licence is the condition for storing the geocode at all."""
-    row = Row(geocode_status="photon")
-    assert "© OpenStreetMap contributors" in render_card(row)
-    assert "© OpenStreetMap contributors" in render_locked_card(row, 20)
-    assert "OpenStreetMap" not in render_card(Row(geocode_status="llm"))
-
-
 # -- injection ----------------------------------------------------------------
 
 

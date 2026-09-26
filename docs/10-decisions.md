@@ -837,8 +837,10 @@ Geoapify's free tier is the fallback if Photon's public server stops serving us.
 **Consequences:** OpenStreetMap's licence
 ([geocoding guideline](https://osmfoundation.org/wiki/Licence/Community_Guidelines/Geocoding_-_Guideline))
 lets us store its geocodes with no share-alike on our other data, on condition
-of credit: a `'photon'` place's card says "Place © OpenStreetMap contributors"
-(`api/card.py:place_credit`). The app does not show that yet. Geocoding costs
+of credit. One line in Settings → About does it ("Places © OpenStreetMap
+contributors", linking to its copyright page): the
+[attribution guidelines](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines)
+ask the application to credit OSM, not each result. Geocoding costs
 no tokens and saves none either: coordinates are ~20 output tokens a memory.
 
 ### Summary quality is measured, not asserted

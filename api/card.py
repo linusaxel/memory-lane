@@ -36,7 +36,6 @@ SELECT
     m.opens_at,
     p.name AS place_name,
     p.precision_meters,
-    p.geocode_status,
     c.source_name,
     ST_Y(p.coordinates::geometry) AS lat,
     ST_X(p.coordinates::geometry) AS lng,
@@ -111,14 +110,6 @@ def credit_line(row) -> str:
     if row.content_url:
         return row.content_url
     return "Source unknown"
-
-
-def place_credit(row) -> str:
-    """OpenStreetMap's licence asks for credit wherever its geocodes are shown.
-    docs/10-decisions.md#the-llm-names-the-place-free-geocoders-place-it"""
-    if getattr(row, "geocode_status", None) == "photon":
-        return " · Place © OpenStreetMap contributors"
-    return ""
 
 
 def source_href(row) -> str | None:
@@ -254,7 +245,7 @@ def render_card(row) -> str:
   {photo_html}
   <p class="summary">{summary}</p>
   {contrast_html}
-  <p class="credit">{credit_html}{escape(place_credit(row))}</p>
+  <p class="credit">{credit_html}</p>
 </article>
 </body></html>"""
 
@@ -289,7 +280,7 @@ def render_locked_card(row, radius_meters: int) -> str:
   <span class="layer">{label}</span>
   <h1 class="place">{place}</h1>
   <p class="summary">{withheld}</p>
-  <p class="credit">{credit}{escape(place_credit(row))}</p>
+  <p class="credit">{credit}</p>
 </article>
 </body></html>"""
 
