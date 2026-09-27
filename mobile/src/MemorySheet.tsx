@@ -22,7 +22,7 @@ import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
-import { button, buttonText, color, dim, font, label } from './theme.ts';
+import { button, buttonText, buttonTextSmall, color, dim, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
 
 type Props = {
@@ -324,6 +324,7 @@ export default function MemorySheet({
                   {!locked && onEdit && (
                     <Pressable
                       style={dim(styles.report)}
+                      hitSlop={4}
                       accessibilityRole="button"
                       onPress={() => onEdit(memory)}
                     >
@@ -508,8 +509,8 @@ const styles = StyleSheet.create({
   bylineName: { ...font.displaySemi, fontSize: 16, color: color.ink },
   // Quiet on purpose. It has to be findable and must not be the thing the eye
   // lands on under somebody's story.
-  report: { marginTop: 28, alignSelf: 'flex-start', paddingVertical: 8 },
-  reportText: { ...label, fontSize: 12, color: color.inkFaint },
+  report: { ...button.outline, ...button.small, marginTop: 28, alignSelf: 'flex-start' },
+  reportText: { ...buttonTextSmall, color: color.ink },
   source: { ...font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ink, not red. The seal is the unlock and nothing else gets to wear it.

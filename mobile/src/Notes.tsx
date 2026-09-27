@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { fetchNotes, hideNote, leaveNote, type Note } from './api.ts';
 import { deviceId } from './device.ts';
-import { color, dim, font, input, label } from './theme.ts';
+import { button, buttonTextSmall, color, dim, font, input, label } from './theme.ts';
 
 export const NOTE_MAX = 280;
 
@@ -78,6 +78,7 @@ export default function Notes({ memoryId, isAuthor }: Props) {
               <Pressable
                 accessibilityRole="button"
                 style={dim(styles.link)}
+                hitSlop={4}
                 onPress={() => {
                   setDraft(note.body);
                   setEditing(true);
@@ -91,6 +92,7 @@ export default function Notes({ memoryId, isAuthor }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={note.mine ? 'Remove your note' : 'Remove this note'}
                 style={dim(styles.link)}
+                hitSlop={4}
                 onPress={() => remove(note)}
               >
                 <Text style={styles.linkText}>Remove</Text>
@@ -127,11 +129,12 @@ export default function Notes({ memoryId, isAuthor }: Props) {
             <Text style={styles.counter}>{NOTE_MAX - draft.length} left</Text>
             <Pressable
               accessibilityRole="button"
-              style={dim(styles.link)}
+              style={dim([styles.send, !draft.trim() && styles.off])}
+              hitSlop={4}
               disabled={busy || !draft.trim()}
               onPress={send}
             >
-              <Text style={[styles.linkText, styles.send, !draft.trim() && styles.off]}>
+              <Text style={styles.sendText}>
                 {mine ? 'Save note' : 'Leave note'}
               </Text>
             </Pressable>
@@ -150,10 +153,11 @@ const styles = StyleSheet.create({
   body: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.ink },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   author: { ...label, fontSize: 12, flex: 1 },
-  link: { paddingVertical: 6 },
-  linkText: { ...label, fontSize: 12, color: color.inkFaint },
-  send: { color: color.ink },
-  off: { opacity: 0.3 },
+  link: { ...button.outline, ...button.small },
+  linkText: { ...buttonTextSmall, color: color.ink },
+  send: { ...button.solid, ...button.small },
+  sendText: { ...buttonTextSmall, color: color.paper },
+  off: { opacity: 0.35 },
   input: { ...input },
   prose: { minHeight: 90, lineHeight: 24 },
   counter: { ...label, fontSize: 12, flex: 1 },

@@ -131,9 +131,13 @@ export const buttonText = {
   ...font.uiBold,
   fontSize: 17,
 };
+export const buttonTextSmall = { ...font.uiBold, fontSize: 15 };
 
-/** The app's buttons: three capsules, one size. Spread one and add only where
- *  it sits (margin, alignSelf); the text is always `buttonText`. */
+/** The app's buttons: three capsules, two sizes. Spread one and add only where
+ *  it sits (margin, alignSelf); the text is `buttonText`. An action inside the
+ *  page rather than ending it (Leave note, Edit this memory) spreads `small`
+ *  after the capsule, with `buttonTextSmall` and `hitSlop={4}` to reach 44pt.
+ *  A link to somewhere else (Terms, a credit) stays a link. */
 const buttonBox = {
   borderWidth: 1.5,
   borderColor: 'transparent',
@@ -151,6 +155,7 @@ export const button = {
   quiet: { ...buttonBox, backgroundColor: color.emberSoft },
   /** An action standing on its own. Text in ink. */
   outline: { ...buttonBox, borderColor: color.rule },
+  small: { minHeight: 36, paddingVertical: 7, paddingHorizontal: 16 },
 };
 
 /** A text field. The display-name input renders twice - You and Submit - and

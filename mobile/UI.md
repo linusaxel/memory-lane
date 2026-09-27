@@ -197,7 +197,11 @@ ember were one colour under protanopia (docs/09 part 8).
 **Buttons are `button.solid`, `button.quiet` or `button.outline`** from
 `theme.ts`, with `buttonText` inside: 52pt capsules, ember with paper text,
 soft ember with ink text, or a rule outline. A screen adds only where one sits
-(margin, alignSelf), never its own padding or border.
+(margin, alignSelf), never its own padding or border. An action inside a page
+rather than ending it (Leave note, Rewrite, Remove, Edit this memory) is the
+same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
+`hitSlop={4}`. Only links to somewhere else stay text: Terms, Privacy, the
+OpenStreetMap credit, Restore purchases.
 
 ## Type
 
