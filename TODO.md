@@ -39,6 +39,37 @@ delete an entry when its fix lands.
 
 ## Known defects
 
+- [ ] **Most places are the model's guess.** (checked 2026-09-27) Content 534
+      (Københavnerliv, Nørrebro pub crawl): 14 of 20 memories have
+      `geocode_status = 'llm'`; only 6 were placed by DAWA or Photon. Mexibar,
+      Skadestuen and Trippen all sit on one city-centre point (55.6761,
+      12.5683). A card that opens on the wrong corner breaks the gate. Fix:
+      hide `llm`-only places from the map, or let the geocoder retry on the
+      venue name plus the street named in the story.
+
+- [ ] **Things that aren't places get extracted as places.** (checked
+      2026-09-27) Content 534: "Skadestuen" (the emergency room), "Trippen"
+      (the name of the pub crawl), "Local brown pub in Copenhagen". Fix in
+      `SYSTEM_PROMPT`: a place is a named venue, street or address a walker
+      can find; measure with `pipeline.quality` before and after.
+
+- [ ] **One venue, several places.** (checked 2026-09-27) "Under Hylden" came
+      out three times at two coordinates: one from DAWA on Nordre Fasanvej,
+      two from the model's guess on Nørrebro. Fix: merge places by name within
+      a locality and keep the address-matched coordinates.
+
+- [ ] **A Copenhagen source yields memories abroad.** (checked 2026-09-27)
+      Content 534 produced ski-trip stories in Levi and Sölden. Harmless on the
+      map, but they cost an extraction and dilute a city source. Maybe: an
+      optional per-source bbox in `config/content.yaml`, as `ingest --bbox`
+      already does for text sources.
+
+- [ ] **English auto-captions mangle Danish place names.** (checked
+      2026-09-27) "Nørrebro" came out as "naropa" and "nepal", "Grundtvig's
+      Church" as "grunig's Kaka" (English-language Copenhagen channels).
+      Danish auto-captions for Danish speech were clean. Fix: prefer a
+      manually created track in `pipeline/transcripts.py` when one exists.
+
 - [ ] **The privacy policy still says sign-in is optional.** `mobile/store/privacy.md`
       and `/privacy` (`api/main.py`): "You can use Memory Lane without signing in".
       False since sign-in became the gate (docs/10, 2026-09-26). Change both
@@ -247,6 +278,43 @@ Nothing can be bought until the stores exist, so everybody is free.
 
 ---
 
+## Copenhagen sources
+
+Researched 2026-09-27 (channel pages, caption tracks and terms, checked on the
+primary sites). No show matches Tuesdays with Stories (comedians telling their
+own stories about named spots) in English or Danish. Københavnerliv is in
+`config/content.yaml` with one video; judge it on the defects above first.
+
+- [ ] **Next YouTube sources, best first.** (checked 2026-09-27) Try one video
+      each before a whole channel.
+      - Københavnerglimt (@Københavnerglimt-officiel, 74, da): a historian
+        walks each district. Most places per minute, but history, not memory.
+      - Fantino & Bonde (@FantinoogBonde, 18, da): comedians at one named
+        hot-dog stand or pub per episode.
+      - Erin in Copenhagen (@ErininCopenhagen, 51, en): a spot per video;
+        dormant since 2023.
+      - What Are You Doing in Denmark? (@RobeTrotting, 328, en): expat
+        comedians' stories, few named spots.
+      - Christiania1 (@christiania1, 190, da): residents' memories; Christiania
+        only.
+      - How to Live in Denmark (@how2liveindenmark, 233, en): the "On the Road"
+        episodes.
+      - One-offs: Andrew Schulz "Dropping In #20" (Copenhagen) and Ari Shaffir
+        "You Be Trippin'" with Iain Stirling (Denmark).
+- [ ] **Open sources with coordinates.** (checked 2026-09-27) Wikipedia and
+      Wikidata: 4,321 items within 5 km of Rådhuspladsen (text CC BY-SA,
+      data CC0); about famous people, not personal memories. OSM memorial
+      plaques: 108 in the centre (ODbL). Both fit the text-source path in
+      `crawler/sources.py`.
+- [ ] **Run the backlog through the Batch API.** (checked 2026-09-27) Half
+      price, and nothing in the pipeline is waiting on an answer. Worth it
+      before a whole-channel run, not for one video.
+- **Don't use:** DR podcasts (DR's terms reserve text and data mining), Reddit
+  (commercial and AI use need a contract), and indenforvoldene.dk (one author,
+  all rights reserved).
+
+---
+
 ## Parked
 
 Each waits on something named; none is worth building before it.
@@ -270,13 +338,12 @@ Each waits on something named; none is worth building before it.
 
 They cost money or need an account. Full detail in `loop/STATE.md`.
 
-- [ ] **`API_CREDITS`** (checked 2026-09-26) — the extraction path has never
-      met the real API; every test uses `FakeAnthropic`. **There is no
+- [ ] **`API_CREDITS`** (checked 2026-09-27) — funded 2026-09-27 ($20), and
+      content 534 extracted end to end on Sonnet 5 (20 memories), so the
+      schema is accepted. Everything below is still to do. **There is no
       `--limit` flag**: `python -m pipeline.extract` bills every pending
       video. To spend cents: `python -m pipeline.enqueue --video <content_id>`,
-      then `--status <id>`. What has never been sent is the structured-output
-      schema (`MEMORY_SCHEMA`), so a rejection shows on the first chunk. Once
-      funded: one video, `quality --compare` against the old prompt, the
+      then `--status <id>`. Next: `quality --compare` against the old prompt, the
       pending episodes, `review`, then `classifier_audit`. The 22 clips
       extracted before the video filter probably duplicate their episodes'
       memories; look at them in `review` or `dedup`. Also unmeasured: the
@@ -289,6 +356,13 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
       Waiting too: 340 Historisk Atlas sabotage stories, all inside the
       Copenhagen box, ingested 2026-09-26 (dev DB). Each is a title and one
       line, so enqueue one first and judge whether that is a card at all.
+- [ ] **`STADSARKIV_ERINDRINGER`** (checked 2026-09-27) — the best Copenhagen
+      source: 3,322 written memories at street level, 1,516 transcribed, from
+      about 1890 on. The writers keep copyright, and the only machine access is
+      the archive's undocumented Solr search
+      (`solr.kbharkiv.dk/solr/apacs_core/select?q=collection_id:18`). Ask the
+      archive (Eva Greve Mortensen) for written permission to summarise them
+      before ingesting any. Strip the writers' addresses and phone numbers.
 - [ ] **`DEPLOY`** (checked 2026-09-20) — Railway, ~$5/mo. Not Fly: Fly's
       managed Postgres has no PostGIS. Unblocks Phase 2 and an OSRM sidecar
       (~1.6 GB RAM to build).
