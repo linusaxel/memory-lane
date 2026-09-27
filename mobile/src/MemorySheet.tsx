@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   heading: { paddingHorizontal: 24, paddingTop: 26 },
   body: { paddingHorizontal: 24, paddingTop: 22, paddingBottom: 12 },
   // The serif is the point: these are stories somebody told, not table rows.
-  place: { fontFamily: font.display, fontSize: 30, lineHeight: 36, color: color.ink },
+  place: { ...font.display, fontSize: 30, lineHeight: 36, color: color.ink },
   // The apparatus speaks in mono. Distances are measurements, so they look like
   // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', gap: 14, marginTop: 10 },
@@ -478,10 +478,10 @@ const styles = StyleSheet.create({
   // The rule colour: a line of type that is there and cannot be read.
   bar: { height: 12, borderRadius: 2, backgroundColor: color.rule },
   walkHere: { alignSelf: 'stretch' },
-  gateFigure: { fontFamily: font.display, fontSize: 52, color: color.ink, letterSpacing: -1 },
+  gateFigure: { ...font.display, fontSize: 52, color: color.ink, letterSpacing: -1 },
   // A date is not a number. 52px fits "412 m" and wraps "3 May 2031".
   gateNote: {
-    fontFamily: font.prose,
+    ...font.prose,
     fontSize: 16,
     lineHeight: 25,
     color: color.inkSoft,
@@ -497,8 +497,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: color.ink,
   },
-  summary: { fontFamily: font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
-  hashtag: { fontFamily: font.displaySemi },
+  summary: { ...font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
+  hashtag: { ...font.displaySemi },
   waiting: { ...label, color: color.sealDeep },
   // The strip carries the hairline now, so the three credit variants are just
   // their lines. Pinned above the actions, it is in every screenshot.
@@ -511,12 +511,12 @@ const styles = StyleSheet.create({
   },
   byline: { gap: 2 },
   bylineLabel: { ...label, fontSize: 12 },
-  bylineName: { fontFamily: font.displaySemi, fontSize: 16, color: color.ink },
+  bylineName: { ...font.displaySemi, fontSize: 16, color: color.ink },
   // Quiet on purpose. It has to be findable and must not be the thing the eye
   // lands on under somebody's story.
   report: { marginTop: 28, alignSelf: 'flex-start', paddingVertical: 8 },
   reportText: { ...label, fontSize: 12, color: color.inkFaint },
-  source: { fontFamily: font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
+  source: { ...font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ink, not red. The seal is the unlock and nothing else gets to wear it.
   watch: button.solid,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   // Beside Walk here, never above it: the free way stays the one thing to do.
   openNow: button.outline,
   openNowText: { ...buttonText, color: color.ink },
-  linkFailed: { fontFamily: font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
+  linkFailed: { ...font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
   heart: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, paddingVertical: 8 },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepOff: { opacity: 0.3 },
-  stepText: { fontFamily: font.ui, fontSize: 22, color: color.inkSoft, lineHeight: 26 },
+  stepText: { ...font.ui, fontSize: 22, color: color.inkSoft, lineHeight: 26 },
   close: { paddingVertical: 12, alignItems: 'center' },
   closeText: { ...label, color: color.inkFaint },
 });

@@ -208,6 +208,9 @@ Two families, no more.
 | Display, prose | **Soft Fraunces** (`font.display` / `displaySemi` / `prose`) | an old-style serif, cut with SOFT 100 so its terminals are round (`assets/fonts`, recipe in docs/09 part 8). These are stories somebody told |
 | Everything you use | **Figtree** (`font.ui` / `uiMedium` / `uiBold`) | buttons, labels, distances, counts. A friendly sans, sentence case |
 
+Each `font` token is a style to spread, `{ ...font.display, fontSize: 34 }`,
+so trying another family or weight is an edit to `theme.ts` alone.
+
 **The label voice** is `label` in `theme.ts`: Figtree 600, 13, `inkFaint`,
 sentence case. Use it wherever a screen *names* a thing rather than says
 something — section headings, meta rows. Nothing labelled goes under 12.

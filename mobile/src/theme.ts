@@ -93,15 +93,16 @@ export const solid = (dark: boolean) => ({
 
 /** Two families and no more. Fraunces, cut soft (assets/fonts, recipe in
  *  docs/09-visual-design.md part 8), tells the stories; Figtree is everything
- *  you read to use the app - buttons, labels, distances. */
+ *  you read to use the app - buttons, labels, distances. Each is a style you
+ *  spread (`...font.display`), so a family or weight changes here alone. */
 export const font = {
-  display: 'FrauncesSoft-Bold',
-  displaySemi: 'FrauncesSoft-SemiBold',
-  prose: 'FrauncesSoft-Regular',
-  ui: 'Figtree_400Regular',
-  uiMedium: 'Figtree_500Medium',
-  uiBold: 'Figtree_600SemiBold',
-};
+  display: { fontFamily: 'FrauncesSoft-Bold' },
+  displaySemi: { fontFamily: 'FrauncesSoft-SemiBold' },
+  prose: { fontFamily: 'FrauncesSoft-Regular' },
+  ui: { fontFamily: 'Figtree_400Regular' },
+  uiMedium: { fontFamily: 'Figtree_500Medium' },
+  uiBold: { fontFamily: 'Figtree_600SemiBold' },
+} as const;
 
 /** The only corners: a field, a card over the map, and a capsule for anything
  *  you press. Circles are half their side and need no token. */
@@ -119,7 +120,7 @@ export const lift = {
 /** The app's label voice, wherever a screen names a thing rather than says
  *  something. */
 export const label = {
-  fontFamily: font.uiBold,
+  ...font.uiBold,
   fontSize: 13,
   color: color.inkFaint,
 };
@@ -127,7 +128,7 @@ export const label = {
 /** The text inside a button. Pair with `color.paper` on ember, `color.ink`
  *  on the quiet and outlined ones. */
 export const buttonText = {
-  fontFamily: font.uiBold,
+  ...font.uiBold,
   fontSize: 17,
 };
 
@@ -160,7 +161,7 @@ export const input = {
   borderRadius: radius.field,
   paddingHorizontal: 14,
   paddingVertical: 12,
-  fontFamily: font.prose,
+  ...font.prose,
   fontSize: 17,
   color: color.ink,
   backgroundColor: color.paperRaised,

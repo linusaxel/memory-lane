@@ -149,5 +149,5 @@ const styles = StyleSheet.create({
   bar: { width: 4, height: 16, backgroundColor: color.ember },
   audioText: { gap: 2 },
   audioLabel: { ...label, fontSize: 12 },
-  audioTime: { fontFamily: font.uiMedium, fontSize: 14, color: color.ink },
+  audioTime: { ...font.uiMedium, fontSize: 14, color: color.ink },
 });

@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 14,
   },
-  barTitle: { fontFamily: font.displaySemi, fontSize: 17, color: color.ink },
+  barTitle: { ...font.displaySemi, fontSize: 17, color: color.ink },
   barAction: { ...label, color: color.inkFaint },
   post: { color: color.sealDeep },
   disabled: { opacity: 0.35 },
@@ -642,9 +642,9 @@ const styles = StyleSheet.create({
   thumbError: { ...label, fontSize: 12, color: color.ember, textAlign: 'center' },
 
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.ember },
-  recorded: { fontFamily: font.uiMedium, fontSize: 14, color: color.ink },
+  recorded: { ...font.uiMedium, fontSize: 14, color: color.ink },
 
-  error: { fontFamily: font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
+  error: { ...font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
 
   // Same shape as `secondary`, in ember, like Settings' saveFailed line.
   delete: { ...button.outline, borderColor: color.ember, alignSelf: 'center', marginTop: 12 },

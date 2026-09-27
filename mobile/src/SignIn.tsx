@@ -292,9 +292,9 @@ export default function SignIn({ device, profile, onProfile }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper, paddingHorizontal: 32 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 },
-  title: { fontFamily: font.display, fontSize: 34, color: color.ink, marginTop: 8 },
+  title: { ...font.display, fontSize: 34, color: color.ink, marginTop: 8 },
   tagline: {
-    fontFamily: font.prose,
+    ...font.prose,
     fontSize: 17,
     lineHeight: 26,
     color: color.inkSoft,
@@ -307,10 +307,10 @@ const styles = StyleSheet.create({
   skip: { alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 16 },
   skipText: { ...label },
   wrap: { gap: 12 },
-  note: { fontFamily: font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
+  note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   // Apple's button draws itself; it only takes a frame.
   apple: { height: 52, alignSelf: 'stretch' },
   action: { ...button.outline, alignSelf: 'flex-start' },
   actionText: { ...buttonText, color: color.ink },
-  error: { fontFamily: font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
+  error: { ...font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
 });

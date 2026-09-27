@@ -227,18 +227,18 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
   // The journal's title bar, so the two sheets read as one app.
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  title: { fontFamily: font.display, fontSize: 34, color: color.ink },
+  title: { ...font.display, fontSize: 34, color: color.ink },
   close: { ...label, color: color.ink },
   stats: { flexDirection: 'row', gap: 36, marginTop: 12 },
   stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  statValue: { fontFamily: font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
+  statValue: { ...font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
   statLabel: { ...label, fontSize: 12 },
-  statsNote: { fontFamily: font.prose, fontSize: 15, color: color.inkFaint, marginTop: 10 },
+  statsNote: { ...font.prose, fontSize: 15, color: color.inkFaint, marginTop: 10 },
   section: { marginTop: 38, gap: 12, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
   sectionTitle: { ...label },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  rowText: { flex: 1, fontFamily: font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
-  note: { fontFamily: font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
+  rowText: { flex: 1, ...font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
+  note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   action: { ...button.outline, alignSelf: 'flex-start', marginTop: 6 },
   actionText: { ...buttonText, color: color.ink },
   input: {
@@ -247,10 +247,10 @@ const styles = StyleSheet.create({
   // Seal, matching Submit's error line. The accent is spoken for by the unlock
   // everywhere else; an error that failed to save is the one other thing the
   // app says in red, and splitting that across two treatments would be worse.
-  saveFailed: { fontFamily: font.ui, fontSize: 13, lineHeight: 20, color: color.ember },
+  saveFailed: { ...font.ui, fontSize: 13, lineHeight: 20, color: color.ember },
   link: { alignSelf: 'flex-start' },
   linkText: {
-    fontFamily: font.uiMedium,
+    ...font.uiMedium,
     fontSize: 13,
     color: color.ink,
     textDecorationLine: 'underline',

@@ -172,5 +172,5 @@ const styles = StyleSheet.create({
   },
   tagLit: { backgroundColor: color.seal, borderColor: color.sealInk },
   countLit: { color: color.sealInk },
-  count: { color: color.paper, fontFamily: font.uiBold, fontSize: 11 },
+  count: { color: color.paper, ...font.uiBold, fontSize: 11 },
 });

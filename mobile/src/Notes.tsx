@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   notes: { marginTop: 32, gap: 14 },
   heading: { ...label },
   note: { gap: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: color.rule },
-  body: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.ink },
+  body: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.ink },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   author: { ...label, fontSize: 12, flex: 1 },
   link: { paddingVertical: 6 },

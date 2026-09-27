@@ -76,6 +76,6 @@ const styles = StyleSheet.create({
   avatarEmpty: { borderWidth: 1, borderColor: color.rule },
   text: { flex: 1, gap: 1 },
   from: { ...label, fontSize: 12 },
-  name: { fontFamily: font.displaySemi, fontSize: 16, color: color.ink },
-  title: { fontFamily: font.ui, fontSize: 11, lineHeight: 16, color: color.inkFaint },
+  name: { ...font.displaySemi, fontSize: 16, color: color.ink },
+  title: { ...font.ui, fontSize: 11, lineHeight: 16, color: color.inkFaint },
 });
