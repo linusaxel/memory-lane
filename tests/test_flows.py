@@ -319,7 +319,7 @@ def test_maestro_flows_still_point_at_the_seed():
         text_ = flow.read_text()
 
         for lat, lng in re.findall(
-            r"latitude:\s*(-?\d+\.?\d*)\s*\n\s*longitude:\s*(-?\d+\.?\d*)", text_
+            r"(?:latitude|LAT):\s*(-?\d+\.?\d*)\s*\n\s*(?:longitude|LNG):\s*(-?\d+\.?\d*)", text_
         ):
             assert (float(lat), float(lng)) in known, (
                 f"{flow.name} stands at an unseeded {lat},{lng}"

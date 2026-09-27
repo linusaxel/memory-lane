@@ -221,7 +221,7 @@ past_walks() {
   " >/dev/null || infra "could not seed past walks into $DB"
 }
 
-# subscriber-opens-from-map needs a paid-up account with no store. The app
+# subscribe-from-the-peek needs a paid-up account with no store. The app
 # mints its account when a name is typed in You, so whichever user turns up
 # first is given a month (the seed's own user was inserted before this).
 subscriber() {
@@ -393,7 +393,7 @@ for flow in "${SELECTED[@]}"; do
   reset_database "${name%%-*}"
   [ "$name" = walk-and-unlock ] && yesterday_unlock
   [ "$name" = lakes-loop ] && past_walks
-  [ "$name" = subscriber-opens-from-map ] && subscriber
+  [ "$name" = subscribe-from-the-peek ] && subscriber
   # launchApp's own relaunch has been seen to no-op under the load of a screen
   # recording, which leaves the flow looking at the previous one's last screen
   # and failing on its first assertion. Killing it first makes every flow a

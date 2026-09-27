@@ -65,7 +65,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `e2e/run.sh` | **Watch the flows happen.** Drives the real app on a simulator; `--record` leaves an mp4 |
 | `e2e/travel.py` | Writes the walk flow's legs and stop names for the seeded start |
-| `.maestro/` | Seven journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
+| `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |

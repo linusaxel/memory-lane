@@ -136,11 +136,12 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 | `lakes-loop.yml` | F1 the whole slider round the lakes, "The longest from here.", F32 show me another until the far lake, F31 look back at past walks |
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed, and the author hearing back (hearts, notes, "New") |
 | `notify-nearby.yml` | F28 the nearby notification, with the app in the background, and its banner bringing the app back |
+| `subscribe-from-the-peek.yml` | F35 the paywall from the map's peek, then the same pin opening once the account has paid |
 
-Five journeys rather than one file per id: every flow pays a fresh database
+Six journeys rather than one file per id: every flow pays a fresh database
 and a cold start, and the old per-id files performed the same unlock three
 times and the same filing twice. A new id joins the journey it belongs to; a step a journey repeats goes in
-`.maestro/steps/`, which `run.sh` does not run on its own.
+`.maestro/steps/` (`launch.yml` is every flow's cold start and sign-in), which `run.sh` does not run on its own.
 
 ## Writing a flow
 
