@@ -61,7 +61,10 @@ export function Plan({
   const min = Math.min(Math.max(WALK_KM.min, floorKm), WALK_KM.max);
   return (
     <View style={styles.page}>
-      <Text style={styles.title}>How far today?</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>How far today?</Text>
+        <CloseButton onPress={onBack} disabled={busy} label="Back to the map" />
+      </View>
       <Text style={styles.value} accessibilityLiveRegion="polite">{`${km} km`}</Text>
       <Slider
         style={styles.slider}
@@ -120,15 +123,6 @@ export function Plan({
         ) : (
           <Text style={styles.primaryText}>Show me the walk</Text>
         )}
-      </Pressable>
-      <Pressable
-        style={dim(styles.secondary)}
-        onPress={onBack}
-        disabled={busy}
-        accessibilityRole="button"
-        accessibilityLabel="Back to the map"
-      >
-        <Text style={styles.secondaryText}>Back to the map</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -352,6 +346,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
   value: { ...font.uiBold, fontSize: 30, color: color.ink, marginTop: 16 },
   slider: { marginTop: 8, height: 40 },

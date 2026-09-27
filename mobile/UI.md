@@ -26,12 +26,11 @@ MapView (before a walk)        the first screen after sign-in, unless today's wa
 └─ "Plan a walk"               ember glass capsule, bottom centre -> Plan
 
 Plan (src/Plan.tsx)            opaque page over the mounted map
-├─ "How far today?"            34/700
+├─ "How far today?"            34/700, the × trailing on its line
 ├─ "4 km"                      the slider's value, 30/600
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
 ├─ Loop · One way              Submit's Chip, one of the two on
-├─ "Show me the walk"          ember button; asks for location, then previews
-└─ "Back to the map"           quiet (soft ember)
+└─ "Show me the walk"          ember button; asks for location, then previews
 
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
@@ -449,8 +448,10 @@ Each of these exists because something broke or would have been rejected.
     the least accurate tap on the screen (Hoober 2017: corner targets need
     ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
-    preview, You, Journal, a memory's sheet. A text button stays only where
-    it says more than close: Cancel beside Post, Not now on the paywall.
+    preview, the plan page, You, Journal, a memory's sheet, Add a memory.
+    Always trailing, never leading: a sheet's own action is not a corner
+    word but the solid button at the end of the page (Post, Save). A text
+    button stays only where it says more than close: Not now on the paywall.
 
 ## Writing
 
@@ -634,7 +635,7 @@ The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
 | Stage | Shows | Leaves by |
 |---|---|---|
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → plan |
-| plan | "How far today?" and the slider | "Show me the walk" → preview; Back to the map → map |
+| plan | "How far today?" and the slider | "Show me the walk" → preview; × → map |
 | preview | the walk on the map, the card | Start walk → walk; Change length → plan; × → map |
 | walk | today's stops, the pill | nothing - the day is locked |
 

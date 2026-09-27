@@ -40,6 +40,7 @@ import {
   type LocatedMemory,
   type MediaItem,
 } from './api.ts';
+import CloseButton from './CloseButton.tsx';
 import { duration } from './format.ts';
 import { button, buttonText, color, dim, font, input, label, radius } from './theme.ts';
 
@@ -334,15 +335,10 @@ export default function Submit({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.bar}>
-          <Pressable style={dim()} onPress={onClose} accessibilityRole="button" hitSlop={10}>
-            <Text style={styles.barAction}>Cancel</Text>
-          </Pressable>
+          {/* The ×'s width, so the title sits centred. */}
+          <View style={styles.barSpacer} />
           <Text style={styles.barTitle}>{isEditing ? 'Edit memory' : 'Add a memory'}</Text>
-          <Pressable style={dim()} onPress={post} disabled={!ready} accessibilityRole="button" hitSlop={10}>
-            <Text style={[styles.barAction, styles.post, !ready && styles.disabled]}>
-              {posting ? (isEditing ? 'Saving…' : 'Posting…') : isEditing ? 'Save' : 'Post'}
-            </Text>
-          </Pressable>
+          <CloseButton onPress={onClose} label="Cancel" />
         </View>
 
         {/* The rule under the header, doing a second job rather than gaining a
@@ -471,6 +467,17 @@ export default function Submit({
             </Field>
           )}
 
+          <Pressable
+            style={dim([styles.post, !ready && styles.disabled])}
+            onPress={post}
+            disabled={!ready}
+            accessibilityRole="button"
+            accessibilityLabel={isEditing ? 'Save' : 'Post'}
+          >
+            <Text style={styles.postText}>
+              {posting ? (isEditing ? 'Saving…' : 'Posting…') : isEditing ? 'Save' : 'Post'}
+            </Text>
+          </Pressable>
           {error && <Text style={styles.error}>{error}</Text>}
 
           {isEditing && (
@@ -584,8 +591,9 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
   },
   barTitle: { ...font.displaySemi, fontSize: 17, color: color.ink },
-  barAction: { ...label, color: color.inkFaint },
-  post: { color: color.sealDeep },
+  barSpacer: { width: 30 },
+  post: button.solid,
+  postText: { ...buttonText, color: color.paper },
   disabled: { opacity: 0.35 },
 
   // Full bleed, because it replaces the header's bottom rule rather than

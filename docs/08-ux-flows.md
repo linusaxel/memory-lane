@@ -173,7 +173,7 @@ somebody can hand their old phone in and still have everything they walked for.
    **One way** (loop to start). No theme: tags are open since 2026-09-26
    (docs/10, *Tags come from the text*). One way adds **Pick where it ends**: the map, a card saying to tap it,
    and the tap is the end ("Ends where you tapped"; a second tap lets it go).
-   The slider starts at least at the crow's distance to it ×1.3 (`endFloorKm`). The map is mounted behind it, not shown. **Back to the map** returns.
+   The slider starts at least at the crow's distance to it ×1.3 (`endFloorKm`). The map is mounted behind it, not shown. The × on the title line returns.
    From **Walk here**, every walk passes that pin: the note reads "Five
    memories, through Blågårdsgade, …", and the slider starts at the shortest
    walk that reaches it, twice the crow's distance (×1.3 on a loop, for the
