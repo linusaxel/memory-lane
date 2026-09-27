@@ -994,6 +994,26 @@ helped. `python -m pipeline.quality` prints the same four numbers before and
 after. Every check was found by reading the corpus, not imagined; none is a hard
 failure, they are a direction. The baseline is in [04-extract.md](04-extract.md#memory-quality).
 
+### A memory must need its spot
+
+Status: Accepted
+
+The reader is standing on the pin, so a story that could be pinned anywhere is
+worth nothing to them. The first Copenhagen video showed this: a third of its
+memories were nickname origins, ski trips and "he still lives on this street",
+pinned to venues the model had invented because the prompt told it to "guess a
+real, specific venue name even when unsure".
+
+Two parts, because a rule the model only reads leaks ("a pub crawl is not a
+venue" was in the prompt and it still returned "Nørrebro pubcrawl" twice):
+
+- The schema requires `why_here`, one line on what the spot adds. An empty one
+  is dropped in `filter_low_confidence`. It is not stored: it exists to make
+  the model answer the test, not to be shown.
+- `location_precision: city` is dropped there too. A 10km pin is not a spot.
+
+Neighborhood (1km) stays: a park is legitimately that wide.
+
 ### Markers are anchored explicitly, because the two platforms disagree
 
 Status: Accepted

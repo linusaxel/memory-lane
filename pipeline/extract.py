@@ -40,13 +40,19 @@ Does NOT qualify:
   specific the venue. This is the single most common mistake: a tour date names a
   real place and reads like an event, and it is worthless to somebody standing
   there. If the only thing anchoring the place is an upcoming show, return nothing.
+- THE PLACE IS INCIDENTAL. The reader is standing on the pin. Ask: would this
+  story lose anything if it were pinned somewhere else? How someone got a
+  nickname, where someone lives, who sponsors what, a trip mentioned in passing -
+  all fail. So does anything that happened at a place the transcript does not
+  name: never pin it to a guess.
 
 For each memory, extract:
 - venue: The proper name of the specific place - the business, building, park
   or landmark, exactly as you would say it to someone standing nearby. Not a
   description ("a bar", "the venue", "a local brown pub") and not the whole
   address. It is somewhere a walker could find on a map. An event, a parade
-  or a pub crawl is not a venue: name the street or bar it happened at. Nor
+  or a pub crawl is not a venue, and nor is the event's own name ("Trip
+  Nørrebro"): name the street or bar it happened at, or return nothing. Nor
   is an institution named only by what it is ("the emergency room",
   "Skadestuen"). Two different
   venues on the same street must get different venue names even when nothing
@@ -72,8 +78,8 @@ For each memory, extract:
        part of the venue, not the locality. The Comedy Store sits two blocks
        away on the same street, in the same locality. Sharing a locality is
        normal and expected; venue is the only field allowed to tell them
-       apart, so guess a real, specific venue name even when unsure, rather
-       than leaving it blank because two candidates are close together.</why>
+       apart. If you cannot name the real place, return nothing rather than
+       inventing a plausible one.</why>
 </example>
 
 - country: ISO 3166 two-letter code of the country the venue is in ("US",
@@ -102,8 +108,14 @@ For each memory, extract:
     not care. Write what happened, not what was said about it.
   * 2-3 sentences. If it runs past 70 words you are summarising the conversation
     rather than the event. Cut the setup and keep the thing that happened.
-  * WHO, with names. WHAT HAPPENED - the anecdote, the mishap, the funny turn.
-    THE VIBE - what made it worth telling.
+  * WHO, with names - nicknames too, when that is what the transcript uses.
+    "Someone" only when it names nobody at all. WHAT HAPPENED - the anecdote,
+    the mishap, the funny turn. THE VIBE - what made it worth telling.
+  * Lead with what happened HERE, not the frame around it (the tour, the pub
+    crawl, "the fourth of 25 stops").
+  * If the transcript names something the reader can still see or picture from
+    the spot - the trees out front, the empty lot, the stream under the street -
+    put it in. That is what makes standing there pay off.
 
   Bad: "The speaker describes performing at a theater in Boulder and mentions it
        was built in 1909."
@@ -132,14 +144,32 @@ hypothetical. Match the "good" column.
 </example>
 
 <example>
-  <bad>The speaker mentioned seeing dolphins in the East River last week,
-       connecting it to why sharks might be in the area - presumably following
-       the dolphins as prey.</bad>
-  <good>Dolphins turned up in the East River, which finally explained the
-        sharks.</good>
-  <why>Half of that was the summariser thinking aloud. Say what happened.</why>
+  <bad>(venue: Levinho aprés-ski bar) On his very first ski trip, Kansas
+       couldn't stand up on skis. In the après-ski bar the instructor called
+       out 'Kansas, come over here' and the nickname stuck.</bad>
+  <good></good>
+  <why>A fine story about a person, not a place. The transcript never named
+       the bar, so the venue was a guess, and nobody standing outside it would
+       learn anything about where they are. Return nothing.</why>
+</example>
+
+<example>
+  <bad>The bar crawl reached its fourth of 25 stops at Folmer Bendtsens Plads,
+       stopping into Ringkaféen, a 1930s bar that sank into the ground during
+       metro construction.</bad>
+  <good>Ringkaféen, open since the 1930s, sank into the ground when the metro
+        works broke through to the old Lygteå stream still running under the
+        street.</good>
+  <why>Cut the crawl logistics and lead with what happened to this building -
+       the stream under the reader's feet is the payoff.</why>
 </example>
 </examples>
+- why_here: One line on what this spot adds to the story - "the bar itself
+  sank", "the lot where it stood is still empty". It must be something that
+  happened AT this place, or something still visible there. "The crawl stopped
+  here" or "he kept coming back to the crawl" is a stop, not a story. An empty
+  string if nothing qualifies, and then the memory is dropped: that is the spot
+  test, answered.
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
   BE HONEST ABOUT THIS. If you are returning the coordinates of a city because you
@@ -217,6 +247,8 @@ For each memory, extract:
 - happened_precision: day | month | year | decade - how much of happened_at to trust
 - summary: 2-4 sentences. What happened, who was involved if named, what the place
   was at the time. Concrete and sourced, not atmospheric.
+- why_here: One line on what this spot adds - usually the event itself. An empty
+  string if the text only mentions the place in passing, and then it is dropped.
 - attribution: the source as it should be credited on a card, if the text names one
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
@@ -273,6 +305,7 @@ MEMORY_SCHEMA = {
                     "lng": {"type": "number"},
                     "timestamp_start": {"type": "number"},
                     "summary": {"type": "string"},
+                    "why_here": {"type": "string"},
                     "tags": {"type": "array", "items": {"type": "string", "enum": list(TAGS)}},
                     "location_precision": {
                         "type": "string",
@@ -297,6 +330,7 @@ MEMORY_SCHEMA = {
                     "lat",
                     "lng",
                     "summary",
+                    "why_here",
                     "tags",
                     "location_precision",
                     "confidence",
@@ -595,7 +629,15 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
 
 
 def filter_low_confidence(memories: list[dict]) -> list[dict]:
-    return [m for m in memories if m.get("confidence", "low") in ("high", "medium")]
+    """Drop what nobody could stand on: unsure, city-wide, or failing the spot test.
+    See docs/10-decisions.md#a-memory-must-need-its-spot."""
+    return [
+        m
+        for m in memories
+        if m.get("confidence", "low") in ("high", "medium")
+        and m.get("location_precision") != "city"
+        and (m.get("why_here") or "").strip()
+    ]
 
 
 def prompt_for(source_type: str | None) -> str:

@@ -47,6 +47,7 @@ class FakeAnthropic:
                     "lat": 40.7223,
                     "lng": -73.9874,
                     "summary": "Mark and Joe argued about pastrami for twenty minutes.",
+                    "why_here": "the argument was over this counter's pastrami",
                     "tags": ["food", "personal"],
                     "confidence": "high",
                     "location_precision": "exact",

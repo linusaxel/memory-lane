@@ -96,10 +96,18 @@ guessing, and all four now addressed in `SYSTEM_PROMPT`:
 | over 70 words | 32% | a summary of the conversation, not of what happened |
 
 The prompt now bans the labels outright, rejects upcoming shows as hard as it
-rejects hypotheticals, asks for 2–3 sentences, and carries three worked examples
+rejects hypotheticals, asks for 2–3 sentences, and carries four worked examples
 taken from the corpus's own failures. It is structured with XML tags, gives
 explicit permission to return nothing, and is sent as a cached block — it is
 ~1.2k tokens resent for every chunk, and a cached read costs 10% of input.
+
+A fifth check came from the first Copenhagen video: **the spot test**. Would
+the story lose anything pinned somewhere else? A nickname earned on a ski trip
+fails; a bar that sank into the stream under it passes. The model answers it in
+a required `why_here` line and an empty one is dropped, as is any `city`-wide
+pin ([decision](10-decisions.md#a-memory-must-need-its-spot)). `quality` also
+counts "someone", since the video usually gives a name or a nickname. Spot
+relevance itself has no regex: read the output.
 
 **None of it has been run against real credits** (the account balance is empty),
 so the numbers above are still the current state.

@@ -48,12 +48,16 @@ NOT_PAST = re.compile(
     r"\b(is|are|'s|'re) (going to |about to )?\w+ing\b|\bwill be\b|\bupcoming\b", re.I
 )
 
+# Nobody, when the video usually names the person, or at least their nickname.
+UNNAMED = re.compile(r"\bsomeone\b", re.I)
+
 WORD_LIMIT = 70
 
 CHECKS = (
     ("anonymous subject", ANONYMOUS.search, 'says "the speaker" instead of a name'),
     ("talks about talking", META.search, "reports the recording, not the event"),
     ("not past tense", NOT_PAST.search, "an announcement or a live narration"),
+    ("unnamed someone", UNNAMED.search, "the transcript usually names them"),
     ("over 70 words", lambda s: len(s.split()) > WORD_LIMIT, "summarises the conversation"),
 )
 

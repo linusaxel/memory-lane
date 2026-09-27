@@ -32,6 +32,7 @@ def test_the_good_shape_trips_nothing():
         "anonymous subject": 0,
         "talks about talking": 0,
         "not past tense": 0,
+        "unnamed someone": 0,
         "over 70 words": 0,
     }
 
@@ -50,6 +51,12 @@ def test_reporting_the_recording_is_caught():
     assert counts(META_REAL)["talks about talking"] == 1
 
 
+def test_someone_is_caught():
+    """Verbatim from the Copenhagen video, where the rider is named in the transcript."""
+    real = "Working as a ski guide, someone met 'maleren' and his friends in Sölden."
+    assert counts(real)["unnamed someone"] == 1
+
+
 def test_length_is_counted_in_words_not_characters():
     """A 71-word summary of a conversation, not a 400-character one - the limit
     is about how much there is to read standing up, not about storage."""
@@ -59,6 +66,22 @@ def test_length_is_counted_in_words_not_characters():
 
 def test_a_clean_corpus_reports_all_zeroes():
     assert set(counts(GOOD, GOOD).values()) == {0}
+
+
+def test_a_memory_nobody_could_stand_on_is_dropped():
+    """The spot test, answered: an empty why_here or a city-wide pin goes."""
+    from pipeline.extract import filter_low_confidence
+
+    ok = {"confidence": "medium", "location_precision": "street", "why_here": "it sank"}
+    kept = filter_low_confidence(
+        [
+            ok,
+            {**ok, "why_here": " "},
+            {**ok, "location_precision": "city"},
+            {**ok, "confidence": "low"},
+        ]
+    )
+    assert kept == [ok]
 
 
 # -- the prompt itself, since the corpus cannot be re-extracted for free ------
