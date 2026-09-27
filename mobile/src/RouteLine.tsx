@@ -19,7 +19,7 @@ type Props = { path: Coordinates[]; dark: boolean };
 
 export default function RouteLine({ path, dark }: Props) {
   // Memoised: a fresh array makes react-native-maps rebuild the overlay.
-  const { ember, emberCasing } = solid(dark);
+  const { line, lineCasing } = solid(dark);
   const coordinates = useMemo(
     () =>
       // 12m: wider than the hop between two sidewalks, narrower than a block.
@@ -32,14 +32,14 @@ export default function RouteLine({ path, dark }: Props) {
       <Polyline
         coordinates={coordinates}
         strokeWidth={9}
-        strokeColor={emberCasing}
+        strokeColor={lineCasing}
         lineCap="round"
         lineJoin="round"
       />
       <Polyline
         coordinates={coordinates}
         strokeWidth={6}
-        strokeColor={ember}
+        strokeColor={line}
         lineCap="round"
         lineJoin="round"
       />

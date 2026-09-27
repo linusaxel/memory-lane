@@ -35,7 +35,7 @@ Plan (src/Plan.tsx)            opaque page over the mounted map
 
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
-├─ the loop, drawn             RouteLine from the start and back, ember under labels
+├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
 └─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length;
      "No walk that long from here"; "Planning from central Copenhagen…" with no position
 
@@ -184,7 +184,7 @@ to your location dot.
 
 | Token | Hex | Meaning |
 |---|---|---|
-| `ember` | `#A8350F` / `#F2703F` | **a memory, and the way to it.** Every pin, the next stop (bigger, hops), the preview's line, the walk's bar, the primary button, errors |
+| `ember` | `#A8350F` / `#F2703F` | **a memory, and the way to it.** Every pin, the next stop (bigger, hops), the preview's line (washed out: `solid().line`), the walk's bar, the primary button, errors |
 | `emberSoft` | `#F6E2D8` / `#3A2219` | the quiet button's fill |
 | `seal` | `#F2B53A` / `#F5C542` | **openable.** The in-reach pin, the reach circle, the "Unlock memory" pill. A fill, never text |
 | `sealInk` | `#2B1D05` / `#1F1605` | anything drawn on seal: a lit pin's edge and eye, the pill's words |

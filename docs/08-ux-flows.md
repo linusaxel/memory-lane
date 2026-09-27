@@ -767,7 +767,7 @@ anyone else's collection or the local unlock cache.
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    (1–5) in the badge. There is no line while walking: the next unearned
    stop, in route order, hops and is `ember`, and when it is earned the
-   one after it takes over. Only the preview draws the loop, ember under
+   one after it takes over. Only the preview draws the loop, washed-out ember under
    the street names (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md
    §3a).
 5. Reaching a stop lights its pin, and the pill turns seal and

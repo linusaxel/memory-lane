@@ -79,6 +79,9 @@ export const solid = (dark: boolean) => ({
   ember: dark ? '#F2703F' : '#A8350F',
   /** The darker edge Apple Maps draws round a route. */
   emberCasing: dark ? '#8A2E0C' : '#6E2208',
+  /** The preview's line: ember washed out, so the ember pins on it pop. */
+  line: dark ? '#8C4128' : '#EDA38A',
+  lineCasing: dark ? '#5E2A18' : '#D98266',
   /** The reach circle: the seal, washed over the map. */
   reachStroke: dark ? 'rgba(245,197,66,0.75)' : 'rgba(176,120,10,0.7)',
   reachFill: dark ? 'rgba(245,197,66,0.12)' : 'rgba(242,181,58,0.14)',
