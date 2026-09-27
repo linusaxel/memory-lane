@@ -23,11 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **YouTube IP-blocks transcripts after ~40 fetches a day.** 2026-09-27:
-  screening six channels plus two ingests hit `RequestBlocked` twice in one
-  session, stalling screening for hours both times; nothing warns before it.
-  Fix: set `TRANSCRIPT_PROXY` in `.env` (a residential proxy, per
-  youtube-transcript-api's README) and note it in docs/01-setup.md.
 - **A classifier prompt change can't be measured without a throwaway script.**
   2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
@@ -329,6 +324,30 @@ rejects and why are rows now: `python -m pipeline.sources list`.
       data CC0); about famous people, not personal memories. OSM memorial
       plaques: 108 in the centre (ODbL). Both fit the text-source path in
       `crawler/sources.py`.
+- [ ] **Get transcripts past YouTube's IP block.** (checked 2026-09-27) After
+      ~40 caption fetches in a day, youtube-transcript-api gets
+      `RequestBlocked`. It happened twice in one session and stalled screening
+      and a 12-episode Københavnerglimt batch for hours. `pipeline/transcripts.py`
+      stops cleanly, and rows stay pending, but nothing warns before the
+      block. That is now the ceiling on how fast sources grow: extraction
+      is ~$0.02-0.05 a memory, and captions are the bottleneck. In order, free
+      first:
+      1. **Fall back to yt-dlp's subtitles** (`--write-auto-subs
+         --skip-download --sub-format json3`). yt-dlp lists channels fine
+         during a block, and it can take `--cookies-from-browser`. Check first
+         that the caption endpoint isn't blocked with it; if not, it's a second
+         fetcher behind the same `transcripts` rows.
+      2. **Drip, don't burst.** Make `TRANSCRIPT_DELAY_SECONDS` (1.5 s mean)
+         30-60 s, and let the worker fetch a few an hour in the background
+         instead of 20 in a minute. It's free and slow, and fine for a backlog.
+      3. **Local Whisper on the audio** (yt-dlp `-x`). No captions needed,
+         and the same path the podcast source plans to use. It costs CPU
+         time, and audio downloads may have their own limit.
+      4. **A rotating residential proxy.** `WebshareProxyConfig` is built
+         into youtube-transcript-api (a few $ a month), while today's
+         `TRANSCRIPT_PROXY` is a `GenericProxyConfig`. A fixed or datacenter
+         proxy gets blocked like a cloud IP. Paid, so last, but it's the
+         library's own answer and a one-line change in `_api()`.
 - [ ] **Run the backlog through the Batch API.** (checked 2026-09-27) Half
       price, and nothing in the pipeline is waiting on an answer. Worth it
       before a whole-channel run, not for one video.
