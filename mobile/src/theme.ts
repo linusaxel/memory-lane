@@ -91,17 +91,17 @@ export const solid = (dark: boolean) => ({
   sun: '#f2a65a',
 });
 
-/** Two families and no more. Fraunces, cut soft (assets/fonts, recipe in
- *  docs/09-visual-design.md part 8), tells the stories; Figtree is everything
- *  you read to use the app - buttons, labels, distances. Each is a style you
+/** One family, SF Pro Rounded: the system's own, so it sits with the map's
+ *  labels, and rounded, so it is friendly. Android has no rounded cut and
+ *  falls back to Roboto, which is the map's there. Each token is a style you
  *  spread (`...font.display`), so a family or weight changes here alone. */
 export const font = {
-  display: { fontFamily: 'FrauncesSoft-Bold' },
-  displaySemi: { fontFamily: 'FrauncesSoft-SemiBold' },
-  prose: { fontFamily: 'FrauncesSoft-Regular' },
-  ui: { fontFamily: 'Figtree_400Regular' },
-  uiMedium: { fontFamily: 'Figtree_500Medium' },
-  uiBold: { fontFamily: 'Figtree_600SemiBold' },
+  display: { fontFamily: 'ui-rounded', fontWeight: '700' },
+  displaySemi: { fontFamily: 'ui-rounded', fontWeight: '600' },
+  prose: { fontFamily: 'ui-rounded', fontWeight: '400' },
+  ui: { fontFamily: 'ui-rounded', fontWeight: '400' },
+  uiMedium: { fontFamily: 'ui-rounded', fontWeight: '500' },
+  uiBold: { fontFamily: 'ui-rounded', fontWeight: '600' },
 } as const;
 
 /** The only corners: a field, a card over the map, and a capsule for anything

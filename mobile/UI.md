@@ -27,7 +27,7 @@ MapView (before a walk)        the first screen after sign-in, unless today's wa
 
 Plan (src/Plan.tsx)            opaque page over the mounted map
 ├─ "How far today?"            34/700
-├─ "4 km"                      the slider's value, Figtree 30
+├─ "4 km"                      the slider's value, 30/600
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
 ├─ Loop · One way              Submit's Chip, one of the two on
 ├─ "Show me the walk"          ember button; asks for location, then previews
@@ -136,7 +136,7 @@ with no network is never stopped at the gate.
 
 **`src/theme.ts` is the only place colours and fonts are defined.** Import from
 it; never write a hex or a font name inline. If you find yourself reaching for a
-Tailwind value or the system font, that is the generic look coming back — see
+Tailwind value, that is the generic look coming back — see
 [`docs/09-visual-design.md`](../docs/09-visual-design.md) part 5 for why this
 palette exists at all.
 
@@ -167,7 +167,7 @@ lightens too — a locked pin has to survive a dark map, where the light-mode
 value disappeared entirely.
 
 **Warm and rounded** since 2026-09-27 (`docs/09-visual-design.md` part 8):
-paper and a serif, one warm accent, capsules, and glass only over the map.
+paper and one rounded face, one warm accent, capsules, and glass only over the map.
 
 | Token | Hex | Used for |
 |---|---|---|
@@ -201,17 +201,21 @@ soft ember with ink text, or a rule outline. A screen adds only where one sits
 
 ## Type
 
-Two families, no more.
+One family: **SF Pro Rounded** (`fontFamily: 'ui-rounded'`), the system's own.
+It sits with Apple Maps' labels, which are SF Pro, and its round terminals keep
+the app friendly. Nothing to bundle or load. Android has no rounded cut and
+gets Roboto, which is Google Maps' label face there.
 
-| Role | Family | Why |
+| Token | Weight | Used for |
 |---|---|---|
-| Display, prose | **Soft Fraunces** (`font.display` / `displaySemi` / `prose`) | an old-style serif, cut with SOFT 100 so its terminals are round (`assets/fonts`, recipe in docs/09 part 8). These are stories somebody told |
-| Everything you use | **Figtree** (`font.ui` / `uiMedium` / `uiBold`) | buttons, labels, distances, counts. A friendly sans, sentence case |
+| `font.display` / `displaySemi` | 700 / 600 | titles, place names, the big figures |
+| `font.prose` | 400 | the stories and every sentence |
+| `font.ui` / `uiMedium` / `uiBold` | 400 / 500 / 600 | buttons, labels, distances, counts. Sentence case |
 
 Each `font` token is a style to spread, `{ ...font.display, fontSize: 34 }`,
 so trying another family or weight is an edit to `theme.ts` alone.
 
-**The label voice** is `label` in `theme.ts`: Figtree 600, 13, `inkFaint`,
+**The label voice** is `label` in `theme.ts`: 600 at 13, `inkFaint`,
 sentence case. Use it wherever a screen *names* a thing rather than says
 something — section headings, meta rows. Nothing labelled goes under 12.
 
@@ -219,18 +223,15 @@ something — section headings, meta rows. Nothing labelled goes under 12.
 token is how it stops being one: the old mono voice was hand-retyped across most
 of the app and its tracking had drifted three ways before anybody noticed.
 
-**`buttonText`** is Figtree 600 at 17, the HIG's Headline size; pair it with
+**`buttonText`** is 600 at 17, the HIG's Headline size; pair it with
 `color.paper` on ember and `color.ink` on the quiet and outlined buttons.
 **`input`** is the whole text-field block, which renders in both You and Submit
 and must not drift between them.
 
 **Scale**: 34 display (screen titles) · 30 (place name) · 52 (the distance figure)
 · 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
-· 12–15 Figtree (everything labelled) · 17 buttons.
+· 12–15 (everything labelled) · 17 buttons.
 
-Fonts load in `App.tsx` via `useFonts`, and the app renders `null` until they
-are ready. Two families carry the whole design, so there is no sensible
-half-loaded state.
 
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 

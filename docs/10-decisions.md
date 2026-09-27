@@ -569,7 +569,11 @@ is the native map's.
 
 ### The font gate makes effects run before the map exists
 
-Status: Accepted
+Status: Superseded 2026-09-27
+
+There is no font gate any more: the app's one font is the system's (see "One
+font, the map's"). The replay from `onMapReady` stays, since the native map can
+still be ready after a mount effect fires.
 
 The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
@@ -1477,6 +1481,19 @@ whole palette. A second "urban" theme is parked until there is a second
 neighborhood.~~ **Superseded 2026-09-27.** It did not read warm enough, and
 the shape and type were the bigger half of why.
 
+### One font, the map's
+
+Status: Accepted 2026-09-27
+
+The founder saw three faces on one screen: Fraunces on the walk card, Figtree
+on its buttons and SF Pro in the map's street names, which `react-native-maps`
+cannot restyle on iOS. Five variants were compared on the simulator, and the
+app now uses **SF Pro Rounded** everywhere (`'ui-rounded'` in
+`mobile/src/theme.ts`). It is the map's family and it is round, so it is still
+friendly, and there is nothing to bundle or load. Android falls back to Roboto,
+the map's face there. The web card (`api/card.py`, `api/embed.py`) still uses
+Fraunces and Figtree. Supersedes the type bullet of "Friendly, not sharp".
+
 ### Friendly, not sharp
 
 Status: Accepted 2026-09-27
@@ -1492,7 +1509,8 @@ an instrument went (`docs/09-visual-design.md` part 8 has the research):
   colour under protanopia. Gold is a fill, never text.
 - **Capsules and soft corners**: buttons are 52pt pills, cards over the map 28,
   fields 14. Supersedes "corners are 4px".
-- **Soft Fraunces + Figtree**, still two families. IBM Plex Mono and the
+- **Soft Fraunces + Figtree**, still two families (superseded by "One font,
+  the map's"). IBM Plex Mono and the
   uppercase label voice are gone; supersedes "Fraunces + Plex Mono".
 - **Liquid Glass on the map controls only** (`expo-glass-effect`), paper and
   one soft shadow where it is unavailable. Supersedes "elevation is a rule, not

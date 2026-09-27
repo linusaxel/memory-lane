@@ -147,10 +147,10 @@ first tried on:
 - **Floating white cards with soft shadows everywhere** — kept only for the
   two elements that genuinely hover over the map ("Turn on location", the location
   primer); a pin is not one of those, and never gets a shadow of its own.
-- **Tailwind's zinc ramp / the system sans-serif** — the app's palette
-  (`mobile/src/theme.ts`) and type system (soft Fraunces + Figtree) exist
-  specifically so nothing in the app, pins included, reads as a generated
-  default.
+- **Tailwind's zinc ramp** — the app's palette (`mobile/src/theme.ts`)
+  exists specifically so nothing in the app, pins included, reads as a
+  generated default. The type is now the system's own, SF Pro Rounded, chosen
+  to sit with the map (`docs/10-decisions.md`, "One font, the map's").
 
 And a related restraint that isn't visual, **reopened 2026-09-22** (see
 `docs/10-decisions.md`, "A streak and a proximity notification, after all"): this product used to have

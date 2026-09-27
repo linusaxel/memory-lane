@@ -13,12 +13,6 @@ import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useFonts } from 'expo-font';
-import {
-  Figtree_400Regular,
-  Figtree_500Medium,
-  Figtree_600SemiBold,
-} from '@expo-google-fonts/figtree';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
@@ -180,16 +174,6 @@ function filedBy(memory: LocatedMemory, me: string | null | undefined): boolean 
 }
 
 export default function App() {
-  // Two families carry the whole design, so there is no sensible half-loaded
-  // state - the splash stays up the few hundred ms this takes.
-  const [fontsReady] = useFonts({
-    'FrauncesSoft-Bold': require('./assets/fonts/FrauncesSoft-Bold.ttf'),
-    'FrauncesSoft-SemiBold': require('./assets/fonts/FrauncesSoft-SemiBold.ttf'),
-    'FrauncesSoft-Regular': require('./assets/fonts/FrauncesSoft-Regular.ttf'),
-    Figtree_400Regular,
-    Figtree_500Medium,
-    Figtree_600SemiBold,
-  });
   const [logoDone, setLogoDone] = useState(false);
 
   // Only for grouping pins at the zoom they are seen at.
@@ -1055,8 +1039,6 @@ export default function App() {
   );
 
   const walking = stage === 'walk';
-
-  if (!fontsReady) return null;
 
   if (!logoDone) {
     return (

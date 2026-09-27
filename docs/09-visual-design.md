@@ -280,6 +280,8 @@ admitted consistency was held together "by convention and reviewing eyes".
 
 Every value in `theme.ts` should be one somebody chose. If a future change
 reaches for a Tailwind hex or the system font, that is the tell coming back.
+(The system font half is superseded: see "One font, the map's" in
+`docs/10-decisions.md`.)
 
 ## Sources
 
@@ -478,6 +480,10 @@ instead of dimming. The hop was already hand-tuned squash and stretch, and
 stayed.
 
 ## Cutting the soft Fraunces
+
+Superseded 2026-09-27: the app is set in SF Pro Rounded and the Fraunces files
+are gone ("One font, the map's" in `docs/10-decisions.md`). The recipe stays in
+case a serif comes back.
 
 `@expo-google-fonts/fraunces` ships only weights, and React Native cannot set
 a variation axis, so the three statics in `mobile/assets/fonts/` are cut from

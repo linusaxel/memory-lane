@@ -62,7 +62,6 @@
           "motionUsagePermission": false
         }
       ],
-      "expo-font",
       "expo-secure-store",
       [
         "expo-audio",
