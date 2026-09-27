@@ -903,6 +903,9 @@ the app is not open.
    with nothing in memory, so the place name for each watched region is
    written to `AsyncStorage` alongside the geofence call and read back by the
    task using the region's identifier - not closed over.
+5. Tapping it opens that memory's sheet, the same as tapping its pin. The
+   memory id rides in the notification's `data`; `App.tsx` reads it with
+   `useLastNotificationResponse`, which also covers a tap that launched the app.
 
 **Opt-in on purpose.** This is the one feature in the app that asks for
 location while the app is not open, and the only place `mobile/UI.md`'s "location

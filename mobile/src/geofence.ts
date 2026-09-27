@@ -52,6 +52,7 @@ TaskManager.defineTask<GeofenceTaskData>(GEOFENCE_TASK, async ({ data, error }) 
     content: {
       title: 'A memory is nearby',
       body: `Something happened near ${name}. Walk over and read it.`,
+      data: { memoryId: Number(id) },
     },
     trigger: null,
   });

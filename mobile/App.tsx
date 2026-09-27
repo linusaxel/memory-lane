@@ -11,6 +11,7 @@ import {
 import MapView, { Circle, Marker } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -801,18 +802,39 @@ export default function App() {
   // first version opened the one memory and quietly hid the pager, so the
   // three-deep stack screenshotted as a single: the affordance has to reproduce
   // the tap or it is a second code path that can disagree with the product.
+  const openMemory = useCallback(
+    (id: number): boolean => {
+      const group = groups.find((g) =>
+        g.memories.some((memory) => memory.id === id),
+      );
+      if (!group) return false;
+      setOpenAt(group.memories);
+      setOpenIndex(group.memories.findIndex((memory) => memory.id === id));
+      return true;
+    },
+    [groups],
+  );
+
   const devOpened = useRef(false);
   useEffect(() => {
     const id = devOpenMemory();
     if (id == null || devOpened.current) return;
-    const group = groups.find((g) =>
-      g.memories.some((memory) => memory.id === id),
-    );
-    if (!group) return;
-    devOpened.current = true;
-    setOpenAt(group.memories);
-    setOpenIndex(group.memories.findIndex((memory) => memory.id === id));
-  }, [groups]);
+    if (openMemory(id)) devOpened.current = true;
+  }, [openMemory]);
+
+  // Tapping the proximity notification (src/geofence.ts) opens the memory it
+  // named. Waits for `groups`, which are still empty on a cold start.
+  const notification = Notifications.useLastNotificationResponse();
+  const handledNotification = useRef<string | null>(null);
+  useEffect(() => {
+    const request = notification?.notification.request;
+    const id = request?.content.data?.memoryId;
+    if (typeof id !== 'number' || handledNotification.current === request!.identifier) return;
+    if (!openMemory(id)) return;
+    handledNotification.current = request!.identifier;
+    setJournalOpen(false);
+    setSubmitOpen(false);
+  }, [notification, openMemory]);
 
   const withinReach = useMemo(
     () =>
