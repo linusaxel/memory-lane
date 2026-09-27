@@ -941,16 +941,16 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    memory is not a reason to walk, and yours is where you left it. The map
    refetches when you file, edit or delete one. One you already earned wears
    its stamp.
-2. Tap a pin: **the peek**. Place, "locked", then tag · source · year ·
-   distance, the summary as grey bars sized from its word count, "The only way
-   in is to walk there.", and **Walk here**, which opens the plan page (F1)
-   for a walk through that pin.
+2. Tap a pin: **the peek**. Place and a padlock, then tag · source · year ·
+   distance, what is waiting, "Stand here to read it.", and **Walk here** in
+   the bottom bar,
+   which opens the plan page (F1) for a walk through that pin.
    There is no unlock here, even standing on it: only today's walk unlocks.
 3. **Plan a walk**, bottom centre, opens the plan page (F1).
 
-The peek is a look, not a read: the summary never reaches the phone locked, so
-the bars come from `summary_words`, not from the text blurred. docs/10, "A
-locked memory says what it is, not what it says".
+The peek is a look, not a read: the summary never reaches the phone locked, and
+the peek draws nothing in its place. docs/10, "A locked memory says what it is,
+not what it says".
 
 Until 2026-09-26 this flow was removed: a map of every memory under the
 viewport, where nothing opened, made the corpus a thing to browse and to

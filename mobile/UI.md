@@ -62,7 +62,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700
-  ├─ "locked"         13, muted     ├─ distance
+  ├─ padlock          12, muted     ├─ distance
   ├─ padlock                        ├─ summary  17/26, #tags semibold
   ├─ distance         44/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar; the heart trailing on that line
@@ -72,10 +72,9 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
   peek (the map, before a walk: the locked side, differently)
   ├─ "music · Vega Archive · 1978 · 1.2 km"   tag, source, year, distance
-  ├─ grey bars                one per ~8 words, from summary_words: never the text,
-  │                           so never a blur of it. A blur ships what it hides
+  ├─ "1 attachment waiting"
   ├─ "Stand here to read it."
-  └─ "Walk here"              ink; opens Plan for a walk through that pin (F1)
+  └─ "Walk here"              ink, in the bottom bar; opens Plan for a walk through that pin (F1)
 
   The locked side says how many attachments are waiting and never which. A
   photograph of the place is the memory as much as the text is.
@@ -764,8 +763,8 @@ this is not a polish pass:
 - Markers carry an `accessibilityLabel` with their state. The callout title says
   *where*; only the colour says whether you can read it, and colour is not
   available to everyone.
-- Every state that colour distinguishes is also written: "locked", "within
-  reach", "Nearest locked memory".
+- Every state that colour distinguishes is also written or drawn: the padlock
+  (a shape, read out as "Locked"), "within reach", "Nearest locked memory".
 
 ## The unlock control
 

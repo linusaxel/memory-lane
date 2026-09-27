@@ -17,6 +17,7 @@ import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
 import HeartGlyph from './HeartGlyph.tsx';
 import Notes from './Notes.tsx';
+import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration } from './format.ts';
@@ -58,17 +59,6 @@ type Props = {
   /** The paywall, offered on the peek to somebody standing on the pin. */
   onSubscribe?: () => void;
 };
-
-/** A line of the summary's length, drawn as a bar. From the word count the
- *  server sends, never from the text: a blurred summary is a shipped one. */
-const WORDS_PER_BAR = 8;
-const MAX_BARS = 6;
-
-function redactedBars(words: number): number[] {
-  const bars = Math.min(MAX_BARS, Math.max(1, Math.ceil(words / WORDS_PER_BAR)));
-  const last = words >= bars * WORDS_PER_BAR ? 1 : (words % WORDS_PER_BAR) / WORDS_PER_BAR;
-  return Array.from({ length: bars }, (_, i) => (i < bars - 1 ? 1 : Math.max(0.3, last)));
-}
 
 function formatDistance(meters: number | null): string | null {
   return meters == null ? null : distance(meters, { suffix: 'away' });
@@ -121,6 +111,8 @@ export default function MemorySheet({
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
+  // The map's look before a walk. Paid up and standing on it, the ring wins.
+  const peeking = locked && !!onWalkHere && !(withinReach && subscribed);
   const hearts = memory?.heart_count ?? 0;
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
   // Your own memory: you see that it mattered, you cannot say so (api/write.py
@@ -221,61 +213,42 @@ export default function MemorySheet({
               {/* The server already sorted it to the top; this says why. No
                   accent - the seal means openable and nothing else gets it. */}
               {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
-              {locked && (
-                <Text style={[styles.meta, withinReach ? styles.reachable : styles.shut]}>
-                  {withinReach ? 'within reach' : 'locked'}
-                </Text>
-              )}
+              {locked &&
+                (withinReach ? (
+                  <Text style={[styles.meta, styles.reachable]}>within reach</Text>
+                ) : (
+                  <View accessible accessibilityLabel="Locked">
+                    <Padlock size={12} color={color.inkFaint} />
+                  </View>
+                ))}
             </View>
           </View>
 
           {/* Two different screens, not one screen with the middle deleted. A
               locked memory has nothing to scroll, so it gets a centred
               composition; an open one is a story and gets the reading column. */}
-          {locked ? (
+          {peeking ? (
+            <View style={styles.peek}>
+              <Text style={styles.meta}>
+                {[
+                  memory.tags[0],
+                  memory.source_name,
+                  memory.year,
+                  formatDistance(fromHere ?? memory.distance_meters),
+                ]
+                  .filter((part) => part != null && part !== '')
+                  .join(' · ')}
+              </Text>
+              {waiting}
+              <Text style={styles.peekNote}>
+                {withinReach && onSubscribe
+                  ? "You're right here. Make it a stop on today's walk, or open it now."
+                  : 'Stand here to read it.'}
+              </Text>
+            </View>
+          ) : locked ? (
             <View style={styles.gate}>
-              {onWalkHere && !(withinReach && subscribed) ? (
-                <View style={styles.peek}>
-                  <Text style={styles.meta}>
-                    {[
-                      memory.tags[0],
-                      memory.source_name,
-                      memory.year,
-                      formatDistance(fromHere ?? memory.distance_meters),
-                    ]
-                      .filter((part) => part != null && part !== '')
-                      .join(' · ')}
-                  </Text>
-                  <View style={styles.bars} accessible accessibilityLabel="The story, locked">
-                    {redactedBars(memory.summary_words ?? 0).map((width, i) => (
-                      <View key={i} style={[styles.bar, { width: `${width * 100}%` }]} />
-                    ))}
-                  </View>
-                  <Text style={styles.gateNote}>
-                    {withinReach && onSubscribe
-                      ? "You're right here. Make it a stop on today's walk, or open it now."
-                      : 'Stand here to read it.'}
-                  </Text>
-                  <Pressable
-                    style={dim([styles.watch, styles.walkHere])}
-                    accessibilityRole="button"
-                    accessibilityLabel="Walk here"
-                    onPress={onWalkHere}
-                  >
-                    <Text style={styles.watchText}>Walk here</Text>
-                  </Pressable>
-                  {withinReach && onSubscribe && (
-                    <Pressable
-                      style={dim([styles.openNow, styles.walkHere])}
-                      accessibilityRole="button"
-                      accessibilityLabel="Open it now"
-                      onPress={onSubscribe}
-                    >
-                      <Text style={styles.openNowText}>Open it now</Text>
-                    </Pressable>
-                  )}
-                </View>
-              ) : withinReach ? (
+              {withinReach ? (
                 <>
                   <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
                   <Text style={styles.gateNote}>
@@ -392,66 +365,88 @@ export default function MemorySheet({
             </>
           )}
 
-          <View style={styles.actions}>
-            {/* Without this, every memory but the first at a stacked point is
-                unreachable - and 60% of this corpus sits on a shared point. */}
-            {many && (
-              <View style={styles.pager}>
+          {(many || peeking || (!locked && memory.content) || linkFailed) && (
+            <View style={styles.actions}>
+              {/* Without this, every memory but the first at a stacked point is
+                  unreachable - and 60% of this corpus sits on a shared point. */}
+              {many && (
+                <View style={styles.pager}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Previous memory here"
+                    style={dim([styles.step, index === 0 && styles.stepOff])}
+                    disabled={index === 0}
+                    onPress={() => onIndex(index - 1)}
+                  >
+                    <Text style={styles.stepText}>‹</Text>
+                  </Pressable>
+                  <Text style={styles.pagerText}>
+                    {index + 1} of {memories.length} here
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Next memory here"
+                    style={dim([styles.step, index === memories.length - 1 && styles.stepOff])}
+                    disabled={index === memories.length - 1}
+                    onPress={() => onIndex(index + 1)}
+                  >
+                    <Text style={styles.stepText}>›</Text>
+                  </Pressable>
+                </View>
+              )}
+              {peeking && (
                 <Pressable
+                  style={dim(styles.watch)}
                   accessibilityRole="button"
-                  accessibilityLabel="Previous memory here"
-                  style={dim([styles.step, index === 0 && styles.stepOff])}
-                  disabled={index === 0}
-                  onPress={() => onIndex(index - 1)}
+                  accessibilityLabel="Walk here"
+                  onPress={onWalkHere}
                 >
-                  <Text style={styles.stepText}>‹</Text>
+                  <Text style={styles.watchText}>Walk here</Text>
                 </Pressable>
-                <Text style={styles.pagerText}>
-                  {index + 1} of {memories.length} here
-                </Text>
+              )}
+              {peeking && withinReach && onSubscribe && (
                 <Pressable
+                  style={dim(styles.openNow)}
                   accessibilityRole="button"
-                  accessibilityLabel="Next memory here"
-                  style={dim([styles.step, index === memories.length - 1 && styles.stepOff])}
-                  disabled={index === memories.length - 1}
-                  onPress={() => onIndex(index + 1)}
+                  accessibilityLabel="Open it now"
+                  onPress={onSubscribe}
                 >
-                  <Text style={styles.stepText}>›</Text>
+                  <Text style={styles.openNowText}>Open it now</Text>
                 </Pressable>
-              </View>
-            )}
-            {!locked && memory.content && (
-              <Pressable
-                style={dim(styles.watch)}
-                accessibilityRole="button"
-                // Says where it goes, not what it reads. "Watch at 12:04" out of
-                // context is a time of day.
-                accessibilityLabel={
-                  memory.content.timestamp_start === null
-                    ? 'Open the source'
-                    : `Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`
-                }
-                accessibilityHint={
-                  memory.content.timestamp_start === null
-                    ? 'Opens the source this memory came from'
-                    : 'Opens the source video at that second'
-                }
-                // url is already resolved - a document, or the video at the
-                // right second.
-                onPress={() => open(memory.content!.url, "Couldn't open that link.")}
-              >
-                <Text style={styles.watchText}>
-                  {/* An offset only exists when the source is a recording. An
-                      archival document has none, and "Watch at 0:00" against a
-                      newspaper is a time the source never had. */}
-                  {memory.content.timestamp_start === null
-                    ? 'Open the source'
-                    : `Watch at ${formatTimestamp(memory.content.timestamp_start)}`}
-                </Text>
-              </Pressable>
-            )}
-            {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
-          </View>
+              )}
+              {!locked && memory.content && (
+                <Pressable
+                  style={dim(styles.watch)}
+                  accessibilityRole="button"
+                  // Says where it goes, not what it reads. "Watch at 12:04" out of
+                  // context is a time of day.
+                  accessibilityLabel={
+                    memory.content.timestamp_start === null
+                      ? 'Open the source'
+                      : `Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`
+                  }
+                  accessibilityHint={
+                    memory.content.timestamp_start === null
+                      ? 'Opens the source this memory came from'
+                      : 'Opens the source video at that second'
+                  }
+                  // url is already resolved - a document, or the video at the
+                  // right second.
+                  onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                >
+                  <Text style={styles.watchText}>
+                    {/* An offset only exists when the source is a recording. An
+                        archival document has none, and "Watch at 0:00" against a
+                        newspaper is a time the source never had. */}
+                    {memory.content.timestamp_start === null
+                      ? 'Open the source'
+                      : `Watch at ${formatTimestamp(memory.content.timestamp_start)}`}
+                  </Text>
+                </Pressable>
+              )}
+              {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
+            </View>
+          )}
         </View>
       )}
     </Modal>
@@ -468,16 +463,12 @@ const styles = StyleSheet.create({
   place: { ...font.display, fontSize: 30, lineHeight: 36, color: color.ink, paddingRight: 30 },
   // The apparatus speaks in mono. Distances are measurements, so they look like
   // measurements rather than like more prose.
-  metaRow: { flexDirection: 'row', gap: 14, marginTop: 10 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
   meta: { ...label },
   reachable: { color: color.sealDeep },
-  shut: { color: color.inkFaint },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
-  peek: { alignSelf: 'stretch', gap: 18 },
-  bars: { gap: 10 },
-  // The rule colour: a line of type that is there and cannot be read.
-  bar: { height: 12, borderRadius: 2, backgroundColor: color.rule },
-  walkHere: { alignSelf: 'stretch' },
+  // The reading column, not the centred gate: it is the top of a story.
+  peek: { flex: 1, paddingHorizontal: 24, paddingTop: 22, gap: 16 },
   gateFigure: { ...font.display, fontSize: 52, color: color.ink, letterSpacing: -1 },
   // A date is not a number. 52px fits "412 m" and wraps "3 May 2031".
   gateNote: {
@@ -487,6 +478,7 @@ const styles = StyleSheet.create({
     color: color.inkSoft,
     textAlign: 'center',
   },
+  peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   // The impression, on the page this time: the same ring the pin wears once
   // this is earned, inked the other way round because the ground is paper.
   stamp: { alignSelf: 'flex-start', marginBottom: 18 },
