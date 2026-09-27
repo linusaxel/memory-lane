@@ -812,7 +812,7 @@ badges track each unlock exactly as F7 already does.
 ## F26 · Heart a memory — **Implemented**
 
 **Who:** someone reading a memory they have already unlocked.
-**Trigger:** tapping the heart control in the sheet's action bar.
+**Trigger:** tapping the heart at the end of the sheet's credit line, beside "Left by".
 
 1. The heart control only appears once a memory is open, never on a locked
    one - there is nothing to react to yet, and F7's gate has already decided
@@ -826,6 +826,8 @@ badges track each unlock exactly as F7 already does.
    `mobile/src/hearted.ts`), and the count survives everywhere - it is part
    of the memory itself, sent even while locked, the same as `media_count`
    and the anniversary flag.
+5. Not your own. On a memory you filed the count shows, and there is nothing
+   to tap; the API answers a heart on it with 403.
 
 **Not a rating.** `docs/11-memory-types.md` rules out a star or a thumbs-up -
 this is a count of "this mattered to someone," never a score, and it does not

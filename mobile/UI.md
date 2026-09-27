@@ -65,8 +65,8 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   ├─ "locked"         13, muted     ├─ distance
   ├─ padlock                        ├─ summary  17/26, #tags semibold
   ├─ distance         44/700        ├─ photo / recording   if it has any
-  ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar
-  ├─ "1 attachment waiting"         │
+  ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar; the heart trailing on that line
+  ├─ "1 attachment waiting"         │    (a count only, on your own memory)
   │                                 ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 

@@ -313,11 +313,19 @@ def heart_memory(memory_id: int, body: DeviceRequest):
     report_memory below: an existence check, an idempotent insert, a count.
     """
     with get_session() as session:
-        exists = session.execute(
-            text("SELECT 1 FROM memories WHERE id = :id FOR UPDATE"), {"id": memory_id}
-        ).scalar()
-        if not exists:
+        memory = session.execute(
+            text("""
+                SELECT user_id IS NOT NULL
+                   AND user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
+                   AS own
+                FROM memories WHERE id = :id FOR UPDATE
+            """),
+            {"id": memory_id, "device": body.device},
+        ).fetchone()
+        if not memory:
             raise HTTPException(status_code=404, detail="Memory not found")
+        if memory.own:
+            raise HTTPException(status_code=403, detail="You can't heart your own memory")
 
         touch_device(session, body.device)
         session.execute(

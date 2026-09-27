@@ -54,7 +54,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /v1/me/memories?device=UUID` - everything this account filed, newest
   first, hidden ones included
 - `POST /v1/memories/{id}/heart` `{device}` - one heart per device, and it does
-  not come back off. No position check
+  not come back off. No position check. Your own memory is a 403
 - `POST /v1/memories/{id}/note` `{device, body}` / `GET /v1/memories/{id}/notes?device=UUID`
   - one note per device, 280 characters, rewritten by posting again. Both are
   403 without an unlock; the POST returns the list. `note_count` travels on

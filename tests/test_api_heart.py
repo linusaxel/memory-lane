@@ -102,3 +102,20 @@ def test_a_device_id_that_is_not_a_uuid_is_rejected(client, memory_id):
 
 def test_hearting_something_that_does_not_exist_is_a_404(client):
     assert _heart(client, 999999).status_code == 404
+
+
+def test_you_cannot_heart_your_own_memory(client, memory_id, db_session):
+    user = db_session.execute(
+        text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
+    ).scalar()
+    db_session.execute(
+        text("INSERT INTO devices (id, user_id) VALUES (CAST(:d AS uuid), :u)"),
+        {"d": DEVICE, "u": user},
+    )
+    db_session.execute(
+        text("UPDATE memories SET user_id = :u WHERE id = :m"), {"u": user, "m": memory_id}
+    )
+    db_session.commit()
+    assert _heart(client, memory_id).status_code == 403
+    assert db_session.execute(text("SELECT count(*) FROM memory_hearts")).scalar() == 0
+    assert _heart(client, memory_id, device=OTHER_DEVICE).status_code == 200

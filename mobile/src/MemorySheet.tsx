@@ -121,6 +121,30 @@ export default function MemorySheet({
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
+  const hearts = memory?.heart_count ?? 0;
+  const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
+  // Your own memory: you see that it mattered, you cannot say so (api/write.py
+  // heart_memory refuses it too). onEdit is only passed for your own.
+  const heart =
+    !memory || locked || !onHeart ? null : onEdit ? (
+      hearts > 0 && (
+        <View style={styles.heart}>
+          <HeartGlyph size={18} color={color.inkSoft} filled />
+          <Text style={styles.heartText}>{heartsText}</Text>
+        </View>
+      )
+    ) : (
+      <Pressable
+        style={dim(styles.heart)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={(hearted ? 'Hearted' : 'Heart this memory') + (hearts > 0 ? `, ${heartsText}` : '')}
+        onPress={() => onHeart(memory)}
+      >
+        <HeartGlyph size={18} color={color.inkSoft} filled={hearted} />
+        {hearts > 0 && <Text style={styles.heartText}>{heartsText}</Text>}
+      </Pressable>
+    );
 
   // The reveal is the payoff. Swapping the text in place would throw away the
   // only moment the product has - so the content arrives, once, on the frame
@@ -344,22 +368,25 @@ export default function MemorySheet({
                   the strip, which now carries the one hairline - so the strip
                   is skipped entirely when there is nothing to credit, rather
                   than leaving a stray rule above the buttons. */}
-              {(memory.author || memory.content?.source || memory.content?.title) && (
+              {(memory.author || memory.content?.source || memory.content?.title || heart) && (
                 <Animated.View style={[styles.credit, revealed]}>
-                  {memory.author ? (
-                    <View style={styles.byline}>
-                      <Text style={styles.bylineLabel}>Left by</Text>
-                      <Text style={styles.bylineName}>{memory.author.name}</Text>
-                    </View>
-                  ) : memory.content?.source ? (
-                    <SourceLine source={memory.content.source} title={memory.content.title} />
-                  ) : (
-                    memory.content?.title && (
-                      <Text style={styles.source} numberOfLines={2}>
-                        {memory.content.title}
-                      </Text>
-                    )
-                  )}
+                  <View style={styles.creditText}>
+                    {memory.author ? (
+                      <View style={styles.byline}>
+                        <Text style={styles.bylineLabel}>Left by</Text>
+                        <Text style={styles.bylineName}>{memory.author.name}</Text>
+                      </View>
+                    ) : memory.content?.source ? (
+                      <SourceLine source={memory.content.source} title={memory.content.title} />
+                    ) : (
+                      memory.content?.title && (
+                        <Text style={styles.source} numberOfLines={2}>
+                          {memory.content.title}
+                        </Text>
+                      )
+                    )}
+                  </View>
+                  {heart}
                 </Animated.View>
               )}
             </>
@@ -392,28 +419,6 @@ export default function MemorySheet({
                   <Text style={styles.stepText}>›</Text>
                 </Pressable>
               </View>
-            )}
-            {!locked && onHeart && (
-              <Pressable
-                style={dim(styles.heart)}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  (hearted ? 'Hearted' : 'Heart this memory') +
-                  (memory.heart_count === 1
-                    ? ', 1 heart'
-                    : memory.heart_count > 1
-                      ? `, ${memory.heart_count} hearts`
-                      : '')
-                }
-                onPress={() => onHeart(memory)}
-              >
-                <HeartGlyph size={18} color={color.inkSoft} filled={hearted} />
-                {memory.heart_count > 0 && (
-                  <Text style={styles.heartText}>
-                    {memory.heart_count === 1 ? '1 heart' : `${memory.heart_count} hearts`}
-                  </Text>
-                )}
-              </Pressable>
             )}
             {!locked && memory.content && (
               <Pressable
@@ -503,7 +508,11 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     borderTopWidth: 1,
     borderTopColor: color.rule,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
+  creditText: { flex: 1 },
   byline: { gap: 2 },
   bylineLabel: { ...label, fontSize: 12 },
   bylineName: { ...font.displaySemi, fontSize: 16, color: color.ink },
@@ -522,7 +531,7 @@ const styles = StyleSheet.create({
   linkFailed: { ...font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
-  heart: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, paddingVertical: 8 },
+  heart: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },
   heartText: { ...label, color: color.inkSoft },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   pagerText: {
