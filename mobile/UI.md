@@ -23,19 +23,19 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 MapView (before a walk)        the first screen after sign-in, unless today's walk is accepted
 ├─ you, and the reach circle   centred on you, or central Copenhagen with no position
 ├─ Marker per locked memory    within 5 km (MAP_RADIUS_KM); tap -> MemorySheet's peek
-└─ "Plan a walk"               ink button, bottom centre -> Plan
+└─ "Plan a walk"               ember glass capsule, bottom centre -> Plan
 
 Plan (src/Plan.tsx)            opaque page over the mounted map
 ├─ "How far today?"            34/700
-├─ "4 km"                      the slider's value, mono 30
+├─ "4 km"                      the slider's value, Figtree 30
 ├─ slider                      1-10 km, 0.5 steps (WALK_KM)
 ├─ Loop · One way              Submit's Chip, one of the two on
-├─ "Show me the walk"          ink button; asks for location, then previews
-└─ "Back to the map"           outlined
+├─ "Show me the walk"          ember button; asks for location, then previews
+└─ "Back to the map"           quiet (soft ember)
 
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
-├─ the loop, drawn             RouteLine from the start and back, route-blue under labels
+├─ the loop, drawn             RouteLine from the start and back, ember under labels
 └─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length;
      "No walk that long from here"; "Planning from central Copenhagen…" with no position
 
@@ -43,13 +43,13 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ "Journal"                  top left, every stage, plan page included
-├─ You, Add                   top right, icons only (YouGlyph, AddGlyph), every stage.
+├─ "Journal"                  top left, every stage, plan page included. Glass (src/Glass.tsx)
+├─ You, Add                   top right, 44pt glass circles (YouGlyph, AddGlyph), every stage.
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
-├─ "On a walk · 2 of 5"       top centre, the corners' shape in route blue: the walk's one
+├─ "On a walk · 2 of 5"       top centre, the corners' capsule tinted ember: the walk's one
 │                              signal, and a tap ends it (F34). With stops left, a card
 │                              (EndWalk): "End this walk?", End walk / Keep walking. No system dialog
-├─ NextStopArrow              route blue, on the screen's edge, pointing at the next
+├─ NextStopArrow              ember, on the screen's edge, pointing at the next
 │                              stop while it is off screen (src/NextStopArrow.tsx)
 ├─ "2.4 km to go"             bottom centre, no count (the bar has it); tap zooms out around
 │    you to the next stop; "Next: <place> · 350 m" once started, "Every stop unlocked" when done,
@@ -89,7 +89,7 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; "Close" top right
 ├─ the streak, large           F27: days in a row with a walk stop unlocked. Not shown at 0
 ├─ Walks                       one row per walk that opened something, date and length;
 │                              a row opens in place to its earned stops, numbered on a
-│                              brand rail. An earned one opens the sheet. Cached for the train
+│                              ember rail. An earned one opens the sheet. Cached for the train
 └─ Memories                    what you added; a row opens Submit as the editor
    ├─ unlocked / places / added, as numbers
    ├─ your name                what submissions are signed with. Blank = Anonymous
@@ -124,9 +124,10 @@ with no network is never stopped at the gate.
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal: streak, walks, filed, and You |
 | `src/Settings.tsx` | You: name, account, how unlocking works. Its own sheet |
-| `src/AddGlyph.tsx` | the Add button: a brand pin with a plus |
+| `src/AddGlyph.tsx` | the Add button: an ember pin with a plus |
 | `src/YouGlyph.tsx` | the You button: head and shoulders |
-| `src/theme.ts` | **every colour and font.** Start here |
+| `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
+| `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
@@ -161,12 +162,12 @@ Two traps, both hit:
   how an app gets black glyphs on a black background.
 
 **Dark is not the light palette inverted.** Paper becomes a warm near-black
-rather than a grey, the seal *lightens* so it still reads as the one thing you
-can act on, and `faded` lightens too — a locked pin has to survive a dark map,
-where the light-mode value disappeared entirely.
+rather than a grey, ember *lightens* so it holds on a dark map, and `faded`
+lightens too — a locked pin has to survive a dark map, where the light-mode
+value disappeared entirely.
 
-**Ink and paper.** The app is an archive of anecdotes pinned to coordinates, so
-it is built to look like a field guide rather than a dashboard.
+**Warm and rounded** since 2026-09-27 (`docs/09-visual-design.md` part 8):
+paper and a serif, one warm accent, capsules, and glass only over the map.
 
 | Token | Hex | Used for |
 |---|---|---|
@@ -178,34 +179,25 @@ it is built to look like a field guide rather than a dashboard.
 | `rule` | `#E0D9CC` / `#332E27` | hairlines. Rules do the work shadows used to |
 | `faded` | `#776E64` / `#9A9086` | a locked pin out of reach. Dark enough for parchment, light enough for a dark map |
 
-**One accent, and it means one thing.**
+**Two warm colours, and each means one thing.** Blue is left to the map and
+to your location dot.
 
 | Token | Hex | Meaning |
 |---|---|---|
-| `seal` | `#8A5A17` / `#D9A54B` | **openable.** The reach pill, the unlock ring, the in-reach pin. Nothing else, ever |
-| `sealSoft` | `#F0E4C8` / `#3D3018` | the ring filling during a hold |
-| `sealDeep` | `#5C3A0E` / `#F0C878` | the padlock inside the ring, the count tag on a reachable pin |
-| `route` | `#1A64D6` / `#5AA2FF` | **walk here next.** The one hopping pin, the preview's line, and the walk's bar. Never openable: in reach, the pin turns `seal` |
-| `brand` | `#106A6D` / `#2E8F92` | **a memory on the map.** Every pin at rest, and the dot of a walk's stop in the journal. The logo's teal. Never openable, never next |
+| `ember` | `#A8350F` / `#F2703F` | **a memory, and the way to it.** Every pin, the next stop (bigger, hops), the preview's line, the walk's bar, the primary button, errors |
+| `emberSoft` | `#F6E2D8` / `#3A2219` | the quiet button's fill |
+| `seal` | `#F2B53A` / `#F5C542` | **openable.** The in-reach pin, the reach circle, the "Unlock memory" pill. A fill, never text |
+| `sealInk` | `#2B1D05` / `#1F1605` | anything drawn on seal: a lit pin's edge and eye, the pill's words |
+| `sealSoft` | `#FCEBC2` / `#3E3112` | the ring filling during a hold |
+| `sealDeep` | `#7A4F00` / `#F7D074` | seal as words or a thin mark on paper: the unlock ring, the padlock, "within reach" |
+
+Ember and seal differ in lightness on purpose: the earlier ochre `seal` and
+ember were one colour under protanopia (docs/09 part 8).
 
 **Buttons are `button.solid`, `button.quiet` or `button.outline`** from
-`theme.ts`, with `buttonText` inside. A screen adds only where one sits
+`theme.ts`, with `buttonText` inside: 52pt capsules, ember with paper text,
+soft ember with ink text, or a rule outline. A screen adds only where one sits
 (margin, alignSelf), never its own padding or border.
-
-The watch button is **ink**, not the accent. It was YouTube red back when the
-map pins were red too; that stopped being true, and the accent is spoken for.
-
-**Shipped 2026-09-23: `seal` moved from a stamp red to a warm ochre**
-(`docs/10-decisions.md`, "Warm accent, not a reskin" - hybrid, not a
-reskin of the palette: the map style, card layout and type system are
-untouched, only this one accent moved). `sealSoft`/`sealDeep` moved with it as
-the same ramp, `halo` (below) and the two hardcoded map-`Circle` colours in
-`App.tsx` (which cannot take a `dual()` value - see "Light and dark" above)
-were updated to match, and `api/card.py`'s `--accent` copy was updated
-alongside `theme.ts` so `tests/test_palette.py`'s
-`test_the_card_uses_the_apps_palette` still holds. Every contrast pair below
-was re-measured against the new hex values before this shipped, same
-requirement as before.
 
 ## Type
 
@@ -213,41 +205,40 @@ Two families, no more.
 
 | Role | Family | Why |
 |---|---|---|
-| Display, prose | **Fraunces** (`font.display` / `displaySemi` / `prose`) | an old-style serif with its wonk left in. These are stories somebody told, not table rows |
-| Apparatus | **IBM Plex Mono** (`font.mono` / `monoMedium` / `monoBold`) | distances, counts, labels, buttons. A number in a mono reads as a measurement |
+| Display, prose | **Soft Fraunces** (`font.display` / `displaySemi` / `prose`) | an old-style serif, cut with SOFT 100 so its terminals are round (`assets/fonts`, recipe in docs/09 part 8). These are stories somebody told |
+| Everything you use | **Figtree** (`font.ui` / `uiMedium` / `uiBold`) | buttons, labels, distances, counts. A friendly sans, sentence case |
 
-**The label voice** is `label` in `theme.ts`: uppercase Plex Mono, 11px, 1.1
-tracking, `inkFaint`. Use it wherever a screen *names* a thing rather than says
-something — section headings, section switcher labels, meta rows, button text.
+**The label voice** is `label` in `theme.ts`: Figtree 600, 13, `inkFaint`,
+sentence case. Use it wherever a screen *names* a thing rather than says
+something — section headings, meta rows. Nothing labelled goes under 12.
 
-**Spread it — `{ ...label }` — rather than retyping its five properties.**
-Copying a token is how it stops being one: this voice was hand-retyped across
-most of the app at one point and the tracking had already drifted between 1.0,
-1.1 and 1.2 before anybody noticed, because nothing about five repeated lines
-says they were meant to match.
+**Spread it — `{ ...label }` — rather than retyping its properties.** Copying a
+token is how it stops being one: the old mono voice was hand-retyped across most
+of the app and its tracking had drifted three ways before anybody noticed.
 
-`theme.ts` exports two more composites for the same reason. **`buttonText`** is
-the label voice one step up in size and tracking — 12px, 1.2 — because it is the
-thing being pressed; pair it with `color.paper` on ink and `color.ink` on an
-outline. **`input`** is the whole text-field block, which renders in both You
-and Submit and must not drift between them.
+**`buttonText`** is Figtree 600 at 17, the HIG's Headline size; pair it with
+`color.paper` on ember and `color.ink` on the quiet and outlined buttons.
+**`input`** is the whole text-field block, which renders in both You and Submit
+and must not drift between them.
 
 **Scale**: 34 display (screen titles) · 30 (place name) · 52 (the distance figure)
 · 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
-· 11–12 mono (everything labelled).
+· 12–15 Figtree (everything labelled) · 17 buttons.
 
 Fonts load in `App.tsx` via `useFonts`, and the app renders `null` until they
 are ready. Two families carry the whole design, so there is no sensible
 half-loaded state.
 
-**Corners are 4px**, not pills.
+**Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
-**Elevation is a rule, not a shadow.** Hierarchy comes from hairlines and
-weight, which is how editorial layouts have always done it and is the shortest
-way out of the stacked-card look. The only two things still casting a shadow are
-"Turn on location" and the preview card, which genuinely hover over a map; both carry
-`shadow*` (iOS) and `elevation` (Android), because setting one looks flat on the
-other platform.
+**Glass over the map, flat inside sheets.** The controls floating over the map
+(Journal, You, Add, the walk bar, the distance pill, Plan a walk, Turn on
+location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
+only on the one prominent control, or raised paper with `lift` where glass is
+unavailable. Never glass on a sheet or a card, never glass on glass. A glass
+control scales rather than dims when pressed: opacity on a glass view's parent
+stops the effect rendering. Inside sheets, hierarchy is still hairlines and
+weight.
 
 **The map is muted on purpose.** `mutedStandard` on iOS, a style array on
 Android, points of interest off. The app has one subject and it is the pins.
@@ -285,23 +276,19 @@ Match a row; do not add one between two rows.
 Anything above 26 is a one-off (36 between the stats, 38 above a You section,
 72 of bottom padding) and stays a literal.
 
-**Corners**, all of them:
+**Corners**, all of them (`radius` in `theme.ts`):
 
 | Radius | On |
 |---|---|
-| 2 | the modal grabber, and nothing else |
-| 3 | the small enclosed labels: chips |
-| **4** | **the app's radius** — buttons, inputs, photos, thumbnails, the banner, the reach pill. Reach for this first |
-| 6 | the two cards that float over the map, and only those |
-| half the side | genuinely circular things only: the 84 hold ring, the 44 pager step, an avatar, a pin |
+| 2 | the modal grabber and the peek's grey bars, and nothing else |
+| `field` 14 | inputs, photos, thumbnails |
+| `card` 28 | the cards that float over the map, and only those |
+| `pill` | **anything you press**: buttons, chips, the glass controls |
+| half the side | genuinely circular things only: the 84 hold ring, the 44 pager step and glass circles, an avatar, a pin |
 
-**The two shadows**, in full, because there are only two and a third one is a
-rule you have not written yet:
-
-| | Offset / radius / opacity | Android | On |
-|---|---|---|---|
-| card | `0,8` / 18 / 0.14 | `elevation: 6` | the preview card |
-| locate | `0,6` / 14 / 0.18 | `elevation: 5` | "Turn on location" — tighter and darker, because it is a small solid shape rather than a sheet of paper |
+**One shadow**, `lift` (`0,4` / 16 / 0.12, `elevation: 4`): the paper cards
+over the map, and the glass controls' fallback. A second one is a rule you have
+not written yet.
 
 ## Contrast, measured
 
@@ -318,11 +305,12 @@ quietly go stale.
 | `inkFaint` on `paper` | 4.6:1 | 5.3:1 |
 | `inkFaint` on `paperRaised` | 5.0:1 | 4.8:1 |
 | `faded` on `paper` | 4.6:1 | 5.9:1 |
-| `paper` on `seal` | 5.4:1 | 8.3:1 |
+| `sealInk` on `seal` | 8.9:1 | 11.0:1 |
 | `paper` on `faded` | 4.6:1 | 5.9:1 |
-| `paper` on `route` | 5.0:1 | 7.0:1 |
-| `sealDeep` on `paper` | 9.3:1 | 11.6:1 |
-| `sealDeep` on `sealSoft` | 8.1:1 | 8.1:1 |
+| `paper` on `ember` | 6.0:1 | 6.3:1 |
+| `ink` on `emberSoft` | 14.0:1 | 12.7:1 |
+| `sealDeep` on `paper` | 6.5:1 | 12.5:1 |
+| `sealDeep` on `sealSoft` | 6.0:1 | 8.6:1 |
 
 **`inkFaint` moved in both themes to get here**, and the way it failed is worth
 keeping. The light value was `#8A837A` — 3.4:1, well under AA, on the colour
@@ -580,6 +568,12 @@ shows its own permission copy and no native manifest.
 cd mobile && npx expo run:ios     # builds, installs, launches, then exits
 ```
 
+**With an iPhone paired to this Mac it dies asking for a signing
+certificate**, even with `--device <simulator>`: the CLI takes the
+physical-device branch anyway. `./e2e/run.sh` builds with `xcodebuild` for that
+reason (its step 3/5, which also rebuilds whenever `Podfile.lock` changed), and
+running it is the shortest way to a fresh simulator build.
+
 It bakes the LAN IP into the launch URL and exits with Metro, so start Metro
 yourself afterwards with `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` and
 `xcrun simctl launch` — the dev client remembers the last URL it loaded. Do not
@@ -656,22 +650,22 @@ paging through venues miles apart is not "1 of 23 here", it is a lie.
 
 ### One pin
 
-Every coordinate draws the same pin: a 24px `brand` (logo teal) disc, 2px `paper` edge, an
+Every coordinate draws the same pin: a 24px `ember` disc, 2px `paper` edge, an
 8px `paper` eye in the middle. It changes for one reason only — **it can be
 opened from where you stand**, and on a route day only if it is one of the
-route's stops (F25) — and then it grows to 32px in `seal`, eye 12px,
-over a `halo` wash. That is the whole visual language. Simplified 2026-09-23
+route's stops (F25) — and then it grows to 32px in gold `seal` with a `sealInk`
+edge and eye 12px, over a `halo` wash. That is the whole visual language. Simplified 2026-09-23
 from five ink states, a round-or-folded-card shape per layer and a ranked
 corner slot of padlock and tag glyph: it was a legend nobody should need.
-The resting disc went from `ink` to `brand` on 2026-09-26: black read as
-grim, and the logo's teal ties the map to the icon.
+The resting disc went from `ink` to teal on 2026-09-26 (black read as grim),
+and to `ember` on 2026-09-27: teal read as water and park.
 
 | When | Geometry | Tokens |
 |---|---|---|
-| every pin | disc 24, border 2; eye 8 | fill `brand`, edge + eye `paper` |
-| `unlockable`: inside the radius **and openable by walking** | disc 32, border 2; eye 12; wash 46 | fill `seal`, edge + eye `paper`, wash `halo` |
-| the next stop on today's walk, not yet in reach | disc 32, border 2; eye 12; hops (`useHop`), still under Reduce Motion | fill `route`, edge + eye `paper` |
-| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `brand` (`sealDeep` on a lit pin, `route` on the next), count `paper` |
+| every pin | disc 24, border 2; eye 8 | fill `ember`, edge + eye `paper` |
+| `unlockable`: inside the radius **and openable by walking** | disc 32, border 2; eye 12; wash 46 | fill `seal`, edge + eye `sealInk`, wash `halo` |
+| the next stop on today's walk, not yet in reach | disc 32, border 2; eye 12; hops (`useHop`), still under Reduce Motion | fill `ember`, edge + eye `paper`. Size and the hop tell it apart |
+| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ember`, count `paper` (`seal` with `sealInk` on a lit pin) |
 
 **The eye is the point.** The pin you can open is the pin you are standing on,
 so the blue location dot lands in the hole rather than disappearing under a

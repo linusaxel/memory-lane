@@ -16,7 +16,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { AUDIO, mediaUrl, type MediaItem } from './api.ts';
 import { duration } from './format.ts';
-import { color, dim, font, label } from './theme.ts';
+import { color, dim, font, label, radius } from './theme.ts';
 
 function Recording({ item }: { item: MediaItem }) {
   const player = useAudioPlayer(mediaUrl(item));
@@ -111,16 +111,16 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
 
 const styles = StyleSheet.create({
   wrap: { gap: 12, marginTop: 22 },
-  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: 4, backgroundColor: color.rule },
+  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.field, backgroundColor: color.rule },
   photoGone: { alignItems: 'center', justifyContent: 'center' },
-  goneText: { ...label, fontSize: 9, color: color.inkSoft },
+  goneText: { ...label, fontSize: 12, color: color.inkSoft },
   audio: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
     borderWidth: 1,
     borderColor: color.rule,
-    borderRadius: 4,
+    borderRadius: radius.field,
     padding: 14,
     backgroundColor: color.paperRaised,
   },
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: color.seal,
+    borderColor: color.ember,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -143,11 +143,11 @@ const styles = StyleSheet.create({
     borderLeftWidth: 13,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderLeftColor: color.seal,
+    borderLeftColor: color.ember,
   },
   pause: { flexDirection: 'row', gap: 4 },
-  bar: { width: 4, height: 16, backgroundColor: color.seal },
+  bar: { width: 4, height: 16, backgroundColor: color.ember },
   audioText: { gap: 2 },
-  audioLabel: { ...label, fontSize: 9 },
-  audioTime: { fontFamily: font.monoMedium, fontSize: 14, color: color.ink },
+  audioLabel: { ...label, fontSize: 12 },
+  audioTime: { fontFamily: font.uiMedium, fontSize: 14, color: color.ink },
 });

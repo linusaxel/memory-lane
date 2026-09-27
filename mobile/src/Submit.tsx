@@ -41,7 +41,7 @@ import {
   type MediaItem,
 } from './api.ts';
 import { duration } from './format.ts';
-import { button, buttonText, color, dim, font, input, label } from './theme.ts';
+import { button, buttonText, color, dim, font, input, label, radius } from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   },
   barTitle: { fontFamily: font.displaySemi, fontSize: 17, color: color.ink },
   barAction: { ...label, color: color.inkFaint },
-  post: { color: color.seal },
+  post: { color: color.sealDeep },
   disabled: { opacity: 0.35 },
 
   // Full bleed, because it replaces the header's bottom rule rather than
@@ -607,26 +607,26 @@ const styles = StyleSheet.create({
     ...input,
   },
   prose: { minHeight: 130, lineHeight: 26 },
-  counter: { ...label, fontSize: 9, textAlign: 'right' },
+  counter: { ...label, fontSize: 12, textAlign: 'right' },
 
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   chip: {
     borderWidth: 1,
     borderColor: color.rule,
-    borderRadius: 3,
-    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    paddingHorizontal: 14,
     // 40 tall with the label's line box, and the row gap keeps neighbours
     // from stealing the edges of the target.
     paddingVertical: 11,
   },
-  chipOn: { backgroundColor: color.ink, borderColor: color.ink },
-  chipText: { ...label, fontSize: 10, color: color.inkSoft },
+  chipOn: { backgroundColor: color.ember, borderColor: color.ember },
+  chipText: { ...label, fontSize: 12, color: color.inkSoft },
   chipTextOn: { color: color.paper },
 
   secondary: button.outline,
   secondaryText: { ...buttonText, color: color.ink },
 
-  thumb: { width: THUMB, height: THUMB, borderRadius: 4, backgroundColor: color.rule },
+  thumb: { width: THUMB, height: THUMB, borderRadius: radius.field, backgroundColor: color.rule },
   thumbFailed: { opacity: 0.4 },
   thumbBusy: {
     position: 'absolute',
@@ -637,18 +637,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: color.scrim,
-    borderRadius: 4,
+    borderRadius: radius.field,
   },
-  thumbError: { ...label, fontSize: 9, color: color.seal, textAlign: 'center' },
+  thumbError: { ...label, fontSize: 12, color: color.ember, textAlign: 'center' },
 
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.seal },
-  recorded: { fontFamily: font.monoMedium, fontSize: 14, color: color.ink },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.ember },
+  recorded: { fontFamily: font.uiMedium, fontSize: 14, color: color.ink },
 
-  error: { fontFamily: font.mono, fontSize: 13, color: color.seal, textAlign: 'center' },
+  error: { fontFamily: font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
 
-  // Same shape as `secondary`, in the app's one red - the accent everywhere
-  // else means "openable"; here, like Settings' saveFailed line, it is the
-  // other thing this app says in red.
-  delete: { ...button.outline, borderColor: color.seal, alignSelf: 'center', marginTop: 12 },
-  deleteText: { ...buttonText, color: color.seal },
+  // Same shape as `secondary`, in ember, like Settings' saveFailed line.
+  delete: { ...button.outline, borderColor: color.ember, alignSelf: 'center', marginTop: 12 },
+  deleteText: { ...buttonText, color: color.ember },
 });

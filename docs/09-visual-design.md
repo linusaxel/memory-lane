@@ -55,6 +55,10 @@ then lost it: it sits *in* the layout, not over the map, so there was nothing to
 blur, and making it an overlay would have covered the Apple Maps attribution
 (rule 7 in UI.md).
 
+*(2026-09-27: native Liquid Glass came back for the map controls only - part
+8. It is the system material, not a translucent white pill, so neither
+finding below is what killed it.)*
+
 **And then the rest of it went too** — see part 5. Glassmorphism turns up on
 every list of tells for a generated interface, and having fought it to 82% white
 to keep it readable, what was left was a translucent white pill: the cost of the
@@ -361,7 +365,7 @@ text-on-ground pair to 4.5:1 in both themes. It caught a second contrast failure
 nobody had measured: `inkFaint` cleared AA on `paper` in the dark and missed it
 on `paperRaised`, which is where the inputs sit.
 
-# 7. Teal fights the map — **proposed 2026-09-26, not shipped**
+# 7. Teal fights the map — **shipped 2026-09-27, with a gold seal (part 8)**
 
 The founder: teal works with neither the buttons nor the route line, and the
 scheme should be rethought from nothing, the logo ignored.
@@ -425,3 +429,88 @@ colours and a grey, not four colours.
 - [AOPA, follow the magenta line](https://www.aopa.org/news-and-media/all-news/2012/august/flight-training-magazine/follow-the-magenta-line)
 - [Okabe-Ito hex codes](https://scifig.ai/blog/okabe-ito-color-palette-hex-codes)
 - [Stepper states: done, current, upcoming](https://www.stellae.design/en/components/stepper)
+
+---
+
+# 8. Friendly, not sharp — **shipped 2026-09-27**
+
+The founder: not fun, not friendly, colours that do not match, buttons too
+sharp. A screenshot agreed: 4px black rectangles with spaced uppercase mono,
+and teal pins, a blue line, an ochre ring and black buttons on one screen.
+Part 5 was right that the look needed decisions; the decisions it made read as
+an instrument, and "cream paper, serif, uppercase mono" is itself on the lists
+of editorial tells now.
+
+## What the research said
+
+- **Shape.** iOS 26 buttons are capsules by default and nested corners are
+  concentric (parent radius minus padding); one or two prominent buttons per
+  view, told apart by style rather than size. Airbnb, Duolingo, Headspace and
+  Komoot run 12px to full capsule on buttons and 16-28 on cards; none of them
+  uses 4. The curvature preference is real but modest (meta-analysis g = .39,
+  weaker in East Asian samples), and round marks read warm where angular ones
+  read competent and hard.
+- **Colour.** Pleasure tracks brightness far more than hue, and black rates
+  as the most "overbearing" colour: the case against a black primary button.
+  One saturated accent over a muted map is the cartography rule.
+- **Ember beside the old ochre failed colour blindness.** Simulated
+  protanopia put `#B83A12` and `#8A5A17` 4.9 ΔE apart at a 1.03 luminance
+  ratio: one colour. Warm-on-warm works only if the two differ in lightness,
+  so `seal` became a bright gold (35+ ΔE from ember under both deuteranopia and
+  protanopia). Gold is too light for text or a paper edge, hence `sealInk` on
+  it and `sealDeep` for gold words on paper.
+- **Glass** belongs to the navigation layer floating over content, never on
+  content and never on glass; tint only the one prominent control. Apple Maps
+  is Apple's own example. The system handles Reduce Transparency and Increase
+  Contrast.
+- **Type.** 17pt semibold sentence-case button labels (HIG Headline), an 11pt
+  floor. Friendly apps run on one warm UI family. Fraunces has a SOFT axis
+  that rounds its terminals toward Cooper and Recoleta.
+
+## What shipped
+
+`ember` for a memory and the way there, gold `seal` for openable, `faded` for
+done, and blue left to the map. Capsule buttons (52pt, ember or a soft ember
+tint), 28 on cards over the map, 14 on fields. Soft Fraunces for stories,
+Figtree for everything you read to use the app. `src/Glass.tsx` on the map
+controls, paper and one shadow without it. Presses give a little (scale 0.97)
+instead of dimming. The hop was already hand-tuned squash and stretch, and
+stayed.
+
+## Cutting the soft Fraunces
+
+`@expo-google-fonts/fraunces` ships only weights, and React Native cannot set
+a variation axis, so the three statics in `mobile/assets/fonts/` are cut from
+the Google Fonts variable file with fonttools, with unique names so iOS does
+not merge them:
+
+```python
+from fontTools.ttLib import TTFont
+from fontTools.varLib.instancer import instantiateVariableFont
+# Fraunces[SOFT,WONK,opsz,wght].ttf from github.com/google/fonts/ofl/fraunces
+instantiateVariableFont(TTFont(src), dict(wght=700, opsz=36, SOFT=100, WONK=1))  # Bold
+# SemiBold: wght=600, opsz=36, WONK=1.  Regular: wght=400, opsz=18, WONK=0.
+# Then set name IDs 1, 4 and 6 to FrauncesSoft-<Weight> before saving.
+```
+
+## Not done, and when
+
+- Static-image markers: when the pin count makes the map stutter.
+- A signature object (Airbnb's 3D icons, Duolingo's lip): once this has been
+  lived with.
+- Springs on every press: if the instant scale feels cheap on a device.
+
+## Sources
+
+- [WWDC25 356, Get to know the new design system](https://developer.apple.com/videos/play/wwdc2025/356/) — capsule, fixed and concentric shapes
+- [WWDC25 219, Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/) — navigation layer only, tint only what matters
+- [HIG, Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) and [Typography](https://developer.apple.com/design/human-interface-guidelines/typography)
+- [expo-glass-effect](https://docs.expo.dev/versions/latest/sdk/glass-effect/) — the opacity trap
+- [Google, Expressive design research](https://design.google/library/expressive-material-design-google-research) — 46 studies, "playful" and "friendly" scores (Google's own, not peer-reviewed)
+- [Chuquichambi et al. 2022](https://nyaspubs.onlinelibrary.wiley.com/doi/10.1111/nyas.14919) — curvature preference meta-analysis
+- [Jiang et al. 2016](https://www.semanticscholar.org/paper/Does-Your-Company-Have-the-Right-Logo-How-and-Why-Jiang-Gorn/9cb1bc27782f497d1f0c5d201576cb8d96756aff) — round reads warm, angular reads hard
+- [Valdez & Mehrabian 1994](https://www.semanticscholar.org/paper/Effects-of-color-on-emotions.-Valdez-Mehrabian/d15bdf485f3a64abb59e4d0d1d1b18a9fc652bf9) — brightness drives pleasure, black is overbearing
+- [Duolingo illustration guidelines](https://design.duolingo.com/illustration) — "pointy shapes are off-brand"
+- [It's Nice That on Airbnb 2025](https://www.itsnicethat.com/articles/airbnb-app-redesign-140525) — "fun, alive, and simple", more curved edges
+- [Google Design, Fraunces](https://design.google/library/a-new-take-on-old-style-typeface) — the SOFT and WONK axes
+- [NN/g, Liquid Glass](https://www.nngroup.com/articles/liquid-glass/) — glass over busy content loses contrast

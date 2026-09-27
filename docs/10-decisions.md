@@ -1443,15 +1443,37 @@ a userbase; it does not delay the B2B plan.~~ **Superseded 2026-09-26.**
 
 ### Warm accent, not a reskin
 
-Status: Accepted 2026-09-22
+Status: Superseded 2026-09-27 by *Friendly, not sharp*
 
-Decided 2026-09-22, shipped 2026-09-23. The founder wanted the app to feel like
+~~Decided 2026-09-22, shipped 2026-09-23. The founder wanted the app to feel like
 a cozy, peaceful walk. The muted-parchment palette stays, because its map
 legibility and contrast work solve real problems. Only the accent moved: `seal`
 went from stamp red to a warm ochre, re-measured against the same AA bar
 (`mobile/UI.md`). If it does not read warm enough, revisit the accent, not the
 whole palette. A second "urban" theme is parked until there is a second
-neighborhood.
+neighborhood.~~ **Superseded 2026-09-27.** It did not read warm enough, and
+the shape and type were the bigger half of why.
+
+### Friendly, not sharp
+
+Status: Accepted 2026-09-27
+
+The founder: the app was not fun or friendly, the colours clashed and the
+buttons were too sharp. Paper and a serif stay; everything else that read as
+an instrument went (`docs/09-visual-design.md` part 8 has the research):
+
+- **One accent, `ember`, for a memory and the way to it**: every pin, the next
+  stop, the preview line, the primary button. `brand` teal and `route` blue are
+  gone; blue is the map's and your location dot's. Part 7's proposal, shipped.
+- **`seal` is bright gold**, not ochre: ember beside the ochre collapsed to one
+  colour under protanopia. Gold is a fill, never text.
+- **Capsules and soft corners**: buttons are 52pt pills, cards over the map 28,
+  fields 14. Supersedes "corners are 4px".
+- **Soft Fraunces + Figtree**, still two families. IBM Plex Mono and the
+  uppercase label voice are gone; supersedes "Fraunces + Plex Mono".
+- **Liquid Glass on the map controls only** (`expo-glass-effect`), paper and
+  one soft shadow where it is unavailable. Supersedes "elevation is a rule, not
+  a shadow" for things over the map; sheets stay flat.
 
 ### A streak and a proximity notification, after all
 

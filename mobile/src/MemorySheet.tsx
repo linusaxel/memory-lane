@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', gap: 14, marginTop: 10 },
   meta: { ...label },
-  reachable: { color: color.seal },
+  reachable: { color: color.sealDeep },
   shut: { color: color.inkFaint },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
   peek: { alignSelf: 'stretch', gap: 18 },
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   summary: { fontFamily: font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
   hashtag: { fontFamily: font.displaySemi },
-  waiting: { ...label, color: color.seal },
+  waiting: { ...label, color: color.sealDeep },
   // The strip carries the hairline now, so the three credit variants are just
   // their lines. Pinned above the actions, it is in every screenshot.
   credit: {
@@ -510,13 +510,13 @@ const styles = StyleSheet.create({
     borderTopColor: color.rule,
   },
   byline: { gap: 2 },
-  bylineLabel: { ...label, fontSize: 9 },
+  bylineLabel: { ...label, fontSize: 12 },
   bylineName: { fontFamily: font.displaySemi, fontSize: 16, color: color.ink },
   // Quiet on purpose. It has to be findable and must not be the thing the eye
   // lands on under somebody's story.
   report: { marginTop: 28, alignSelf: 'flex-start', paddingVertical: 8 },
-  reportText: { ...label, fontSize: 9, color: color.inkFaint },
-  source: { fontFamily: font.mono, fontSize: 12, lineHeight: 19, color: color.inkFaint },
+  reportText: { ...label, fontSize: 12, color: color.inkFaint },
+  source: { fontFamily: font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ink, not red. The seal is the unlock and nothing else gets to wear it.
   watch: button.solid,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   // Beside Walk here, never above it: the free way stays the one thing to do.
   openNow: button.outline,
   openNowText: { ...buttonText, color: color.ink },
-  linkFailed: { fontFamily: font.mono, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
+  linkFailed: { fontFamily: font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
   heart: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, paddingVertical: 8 },
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepOff: { opacity: 0.3 },
-  stepText: { fontSize: 22, color: color.inkSoft, lineHeight: 26 },
+  stepText: { fontFamily: font.ui, fontSize: 22, color: color.inkSoft, lineHeight: 26 },
   close: { paddingVertical: 12, alignItems: 'center' },
   closeText: { ...label, color: color.inkFaint },
 });

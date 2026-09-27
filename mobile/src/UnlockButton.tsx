@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     height: RING,
     borderRadius: RING / 2,
     borderWidth: 3,
-    borderColor: color.seal,
+    borderColor: color.sealDeep,
     backgroundColor: color.paper,
     alignItems: 'center',
     justifyContent: 'center',
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     bottom: 4,
     borderRadius: RING / 2,
     borderWidth: 2,
-    borderColor: color.seal,
+    borderColor: color.sealDeep,
   },
   flare: {
     position: 'absolute',

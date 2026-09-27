@@ -118,19 +118,20 @@ def source_href(row) -> str | None:
 # WebView and a link preview with no asset pipeline behind it.
 FONT_HREF = (
     "https://fonts.googleapis.com/css2?"
-    "family=Fraunces:opsz,wght@9..144,400;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    "family=Figtree:wght@400;500;600"
+    "&family=Fraunces:opsz,wght,SOFT,WONK@9..144,400,100,0;9..144,700,100,1&display=swap"
 )
 
 # The palette is mobile/src/theme.ts, copied by hand because there are eleven
 # values and no build step between TypeScript and Python. tests/test_palette.py
 # fails if the two drift. Why these colours at all: docs/09-visual-design.md.
 CARD_CSS = """
-:root{--bg:#f7f4ee;--fg:#1c1917;--muted:#776e64;--rule:#e0d9cc;--accent:#8a5a17}
+:root{--bg:#f7f4ee;--fg:#1c1917;--muted:#776e64;--rule:#e0d9cc;--accent:#a8350f}
 @media (prefers-color-scheme:dark){
-  :root{--bg:#161412;--fg:#f2ede4;--muted:#9a9086;--rule:#332e27;--accent:#d9a54b}
+  :root{--bg:#161412;--fg:#f2ede4;--muted:#9a9086;--rule:#332e27;--accent:#f2703f}
 }
 *{box-sizing:border-box}
-/* Fraunces and IBM Plex Mono, with stacks that hold on their own: a link
+/* Soft Fraunces and Figtree, with stacks that hold on their own: a link
    preview bot fetches no fonts, and a card that collapses to Times is worse
    than one that was never restyled. `muted` is `faded`, not `inkFaint` - this
    sets 12px in it and inkFaint is 3.4:1 on paper. */
@@ -152,7 +153,7 @@ body{min-height:100svh;display:flex;flex-direction:column;
   flex-direction:column;gap:14px}
 /* clamp() so the place name survives being scaled down to a thumbnail */
 .place{font-size:clamp(22px,5.5vw,30px);font-weight:700;line-height:1.2;margin:0}
-.when{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+.when{font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:12px;color:var(--muted);margin:0}
 /* 19/31, the same size the app's sheet gives it, because it is the same
    sentence and it is the reason anybody opened this. */
@@ -162,17 +163,16 @@ body{min-height:100svh;display:flex;flex-direction:column;
 .contrast{margin:0;padding-top:14px;border-top:1px solid var(--rule);
   font-size:16px;line-height:25px;color:var(--muted)}
 .credit{margin-top:4px;padding-top:14px;border-top:1px solid var(--rule);
-  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:12px;line-height:19px;color:var(--muted);display:flex;
   flex-wrap:wrap;gap:6px}
 .credit a{color:var(--accent)}
 /* A submitted memory usually is the photograph. Sized by aspect rather than a
    fixed height so a portrait phone shot is not cropped to a letterbox. */
-.photo{width:100%;border-radius:4px;display:block;max-height:60vh;object-fit:cover}
+.photo{width:100%;border-radius:14px;display:block;max-height:60vh;object-fit:cover}
 .layer{display:inline-block;
-  font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  font-size:11px;font-weight:500;text-transform:uppercase;
-  letter-spacing:1.1px;color:var(--muted)}
+  font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:13px;font-weight:600;color:var(--muted)}
 @media (max-width:360px){.card{padding:18px 16px}.summary{font-size:17px;line-height:28px}}
 """
 

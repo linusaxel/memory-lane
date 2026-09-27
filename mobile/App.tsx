@@ -15,15 +15,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import {
-  Fraunces_400Regular,
-  Fraunces_600SemiBold,
-  Fraunces_700Bold,
-} from '@expo-google-fonts/fraunces';
-import {
-  IBMPlexMono_400Regular,
-  IBMPlexMono_500Medium,
-  IBMPlexMono_600SemiBold,
-} from '@expo-google-fonts/ibm-plex-mono';
+  Figtree_400Regular,
+  Figtree_500Medium,
+  Figtree_600SemiBold,
+} from '@expo-google-fonts/figtree';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
@@ -80,7 +75,8 @@ import YouGlyph from './src/YouGlyph.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
-import { buttonText, color, dim, font, label, solid } from './src/theme.ts';
+import { GlassButton } from './src/Glass.tsx';
+import { buttonText, color, font, label, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
@@ -187,12 +183,12 @@ export default function App() {
   // Two families carry the whole design, so there is no sensible half-loaded
   // state - the splash stays up the few hundred ms this takes.
   const [fontsReady] = useFonts({
-    Fraunces_400Regular,
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
-    IBMPlexMono_400Regular,
-    IBMPlexMono_500Medium,
-    IBMPlexMono_600SemiBold,
+    'FrauncesSoft-Bold': require('./assets/fonts/FrauncesSoft-Bold.ttf'),
+    'FrauncesSoft-SemiBold': require('./assets/fonts/FrauncesSoft-SemiBold.ttf'),
+    'FrauncesSoft-Regular': require('./assets/fonts/FrauncesSoft-Regular.ttf'),
+    Figtree_400Regular,
+    Figtree_500Medium,
+    Figtree_600SemiBold,
   });
   const [logoDone, setLogoDone] = useState(false);
 
@@ -1202,9 +1198,10 @@ export default function App() {
               never a second region of the screen. Above "Turn on location"
               while that shows, in its place once there is a position. */}
           {walking && onRoute && stopHere && (
-            <View style={[styles.routeAt, pillSlot]}>
-              <Pressable
-                style={dim()}
+            <GlassButton
+                place={[styles.routeAt, pillSlot]}
+                style={styles.pill}
+                tint={color.seal}
                 accessibilityRole="button"
                 accessibilityLabel={`Unlock memory at stop ${stopHere.position}: ${stopHere.name}.`}
                 onPress={() => {
@@ -1217,12 +1214,12 @@ export default function App() {
                 <Text style={styles.routeAtText}>
                   Unlock memory
                 </Text>
-              </Pressable>
-            </View>
+            </GlassButton>
           )}
           {walking && onRoute && !stopHere && !showDone && (
-            <Pressable
-              style={dim([styles.route, pillSlot])}
+            <GlassButton
+              place={[styles.route, pillSlot]}
+              style={styles.pill}
               accessibilityRole="button"
               accessibilityLabel={
                 routeStarted && nextRouteStop
@@ -1269,12 +1266,14 @@ export default function App() {
               }}
             >
               <Text style={styles.routeText}>{routeLabel}</Text>
-            </Pressable>
+            </GlassButton>
           )}
 
           {walking && !position && (
-            <Pressable
-              style={dim(styles.locate)}
+            <GlassButton
+              place={styles.locate}
+              style={styles.bigPill}
+              tint={color.ember}
               accessibilityRole="button"
               accessibilityLabel="Turn on location"
               accessibilityHint="Asks for permission to use your location"
@@ -1289,12 +1288,14 @@ export default function App() {
               {/* Without location nothing can ever unlock, so the button says so
                   rather than leaving a walk whose stops never open. */}
               <Text style={styles.locateText}>Turn on location</Text>
-            </Pressable>
+            </GlassButton>
           )}
 
           {stage === 'map' && (
-            <Pressable
-              style={dim(styles.locate)}
+            <GlassButton
+              place={styles.locate}
+              style={styles.bigPill}
+              tint={color.ember}
               accessibilityRole="button"
               accessibilityLabel="Plan a walk"
               onPress={() => {
@@ -1305,7 +1306,7 @@ export default function App() {
               }}
             >
               <Text style={styles.locateText}>Plan a walk</Text>
-            </Pressable>
+            </GlassButton>
           )}
 
           {stage === 'preview' && preview && (
@@ -1382,8 +1383,9 @@ export default function App() {
           {/* Last, so they sit over the plan page too. Top left the journal,
               top right you and filing: every other overlay lives at the
               bottom, and none may cover the unlock. */}
-          <Pressable
-            style={dim([styles.corner, styles.journal])}
+          <GlassButton
+            place={[styles.corner, styles.journal]}
+            style={styles.pill}
             accessibilityRole="button"
             accessibilityLabel="Journal"
             onPress={() => {
@@ -1392,11 +1394,12 @@ export default function App() {
             }}
           >
             <Text style={styles.cornerText}>Journal</Text>
-          </Pressable>
+          </GlassButton>
           {/* Any stage, walk or no walk: filing is standing somewhere, not
               unlocking. Shown even with no position - the press asks for it. */}
-          <Pressable
-            style={dim([styles.corner, styles.square, styles.you])}
+          <GlassButton
+            place={[styles.corner, styles.you]}
+            style={styles.circle}
             hitSlop={4}
             accessibilityRole="button"
             accessibilityLabel="You and settings"
@@ -1406,9 +1409,10 @@ export default function App() {
             }}
           >
             <YouGlyph size={22} color={color.ink} />
-          </Pressable>
-          <Pressable
-            style={dim([styles.corner, styles.square, styles.add])}
+          </GlassButton>
+          <GlassButton
+            place={[styles.corner, styles.add]}
+            style={styles.circle}
             hitSlop={4}
             accessibilityRole="button"
             accessibilityLabel="Add a memory here"
@@ -1420,13 +1424,15 @@ export default function App() {
               setSubmitOpen(true);
             }}
           >
-            <AddGlyph size={26} color={color.brand} plus={color.paper} />
-          </Pressable>
+            <AddGlyph size={26} color={color.ember} plus={color.paper} />
+          </GlassButton>
           {/* Top, between them: the walk's one signal, and how it ends.
               Nothing left to reach, nothing to lose, so no are-you-sure. */}
           {walking && !showDone && !confirmEnd && (
-            <Pressable
-              style={dim([styles.corner, styles.walkBar])}
+            <GlassButton
+              place={[styles.corner, styles.walkBar]}
+              style={styles.pill}
+              tint={color.ember}
               accessibilityRole="button"
               accessibilityLabel={`On a walk · ${routeUnlockedCount} of ${routeTotal} unlocked.`}
               accessibilityHint="Ends the walk"
@@ -1439,7 +1445,7 @@ export default function App() {
               <Text style={styles.walkBarText} numberOfLines={1}>
                 On a walk · {routeUnlockedCount} of {routeTotal}
               </Text>
-            </Pressable>
+            </GlassButton>
           )}
         </View>
 
@@ -1550,85 +1556,42 @@ export default function App() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: color.paper },
   screen: { flex: 1 },
-  devDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: color.paperRaised, backgroundColor: color.route },
+  devDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: color.paperRaised, backgroundColor: color.ember },
   // display:none rather than unmounting: the map keeps its region and its pins.
   hidden: { display: 'none' },
   // What the map sits behind while the app finds out whether today's walk is
   // already accepted - a flash of the plan page would be a lie.
   cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.paper },
-  // Paper and a rule - the seal belongs to the unlock, and neither of these
-  // is that.
-  corner: {
-    position: 'absolute',
-    top: 64,
-    backgroundColor: color.paper,
-    borderWidth: 1,
-    borderColor: color.rule,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    borderRadius: 4,
-  },
+  // Glass over the map (src/Glass.tsx). `corner` and friends place a
+  // control; `pill`, `bigPill` and `circle` are its shape.
+  corner: { position: 'absolute', top: 64 },
   journal: { left: 18 },
-  walkBar: { alignSelf: 'center', backgroundColor: color.route, borderColor: color.route },
-  // Icon-only corners: the journal's height, square. 40 plus the hitSlop is
-  // the 44 floor, and it leaves the walk pill room between them.
-  square: { width: 40, height: 40, paddingHorizontal: 0, paddingVertical: 0, alignItems: 'center', justifyContent: 'center' },
-  you: { right: 66 },
+  walkBar: { alignSelf: 'center' },
+  you: { right: 70 },
   add: { right: 18 },
-  cornerText: { ...label, color: color.ink },
-  walkBarText: { ...label, color: color.paper },
-  locate: {
-    position: 'absolute',
-    bottom: 44,
-    alignSelf: 'center',
-    backgroundColor: color.ink,
-    paddingHorizontal: 26,
-    paddingVertical: 14,
-    borderRadius: 4,
-    shadowColor: color.shadow,
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
+  pill: {
+    minHeight: 44,
+    paddingHorizontal: 18,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  bigPill: {
+    minHeight: 52,
+    paddingHorizontal: 28,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  cornerText: { ...label, fontSize: 15, color: color.ink },
+  walkBarText: { ...label, fontSize: 15, color: color.paper },
+  locate: { position: 'absolute', bottom: 44, alignSelf: 'center' },
   locateText: { ...buttonText, color: color.paper },
-  // Directly above "Turn on location", sharing its shadow token - UI.md's rule is that
-  // only two shadows exist in this app, and this is the same kind of small
-  // solid control as the one it sits on.
-  route: {
-    position: 'absolute',
-    bottom: 100,
-    alignSelf: 'center',
-    backgroundColor: color.paper,
-    borderWidth: 1,
-    borderColor: color.rule,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 4,
-    shadowColor: color.shadow,
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
-  },
-  routeText: {
-    fontFamily: font.monoMedium,
-    fontSize: 12,
-    letterSpacing: 0.3,
-    color: color.inkSoft,
-  },
-  // The route pill's one loud moment: the reach banner's seal, in its slot.
+  // Directly above "Turn on location" while that shows, in its place after.
+  route: { position: 'absolute', bottom: 100, alignSelf: 'center' },
+  routeText: { ...label, fontSize: 15, color: color.ink },
+  // The pill's one loud moment: openable, so seal.
   routeAt: { position: 'absolute', bottom: 100, alignSelf: 'center' },
-  routeAtText: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 4,
-    overflow: 'hidden',
-    fontFamily: font.monoBold,
-    fontSize: 12,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    backgroundColor: color.seal,
-    color: color.paper,
-  },
+  routeAtText: { ...label, fontSize: 15, color: color.sealInk },
 });

@@ -131,6 +131,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification: the native wrapper, the pure region maths, the opt-in flag |
 | `mobile/src/theme.ts` | Every colour and typeface. Never a hex or font name anywhere else |
+| `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
+| `mobile/assets/fonts/` | Fraunces cut soft (SOFT 100), three static weights, and its OFL. Recipe in docs/09 part 8 |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |

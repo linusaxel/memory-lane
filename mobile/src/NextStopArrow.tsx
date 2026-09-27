@@ -22,7 +22,7 @@ type Props = { region: Region; target: Coordinates; dark: boolean };
 
 export default function NextStopArrow({ region, target, dark }: Props) {
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  const { route, routeCasing } = solid(dark);
+  const { ember, emberCasing } = solid(dark);
   const arrow = size && edgeArrow(region, target, size.width, size.height, INSET);
 
   return (
@@ -48,8 +48,8 @@ export default function NextStopArrow({ region, target, dark }: Props) {
                 line's casing, so the two read as one thing. */}
             <Path
               d="M17 3 L30 29 L17 22 L4 29 Z"
-              fill={route}
-              stroke={routeCasing}
+              fill={ember}
+              stroke={emberCasing}
               strokeWidth={2.5}
               strokeLinejoin="round"
             />

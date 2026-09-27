@@ -49,7 +49,7 @@ EMBED_HTML = """<!doctype html>
 <title>Memory Lane</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500&family=Fraunces:opsz,wght,SOFT,WONK@9..144,400,100,0&display=swap">
 <style>
   :root {{ color-scheme: light dark; }}
   /* Typography only. `Canvas` and `color-scheme` stay: this widget lives in
@@ -57,7 +57,7 @@ EMBED_HTML = """<!doctype html>
      the card inside the panel carries the full palette. */
   html, body {{
     margin: 0; height: 100%;
-    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family: Figtree, system-ui, -apple-system, "Segoe UI", sans-serif;
   }}
   #map {{ position: absolute; inset: 0; }}
   /* z-index 600 is deliberate and is the attribution rule, not a stacking
@@ -89,7 +89,7 @@ EMBED_HTML = """<!doctype html>
   }}
   #empty[data-show] {{ display: grid; }}
   #empty p {{
-    background: Canvas; padding: .6rem 1rem; border-radius: 4px; margin: 0;
+    background: Canvas; padding: .6rem 1rem; border-radius: 999px; margin: 0;
     font-family: Fraunces, Georgia, "Times New Roman", serif; font-size: 1rem;
   }}
 </style>

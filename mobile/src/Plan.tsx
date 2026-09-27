@@ -19,7 +19,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import type { WalkAsk } from './api.ts';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
-import { button, buttonText, color, dim, font, label } from './theme.ts';
+import { button, buttonText, color, dim, font, label, lift, radius } from './theme.ts';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 
@@ -72,9 +72,8 @@ export function Plan({
         tapToSeek
         // The native component takes any ColorValue (RNCSliderNativeComponent.ts);
         // only the published typings say string.
-        minimumTrackTintColor={color.ink as string}
+        minimumTrackTintColor={color.ember as string}
         maximumTrackTintColor={color.rule as string}
-        thumbTintColor={color.ink as string}
         accessibilityLabel="Walk length"
       />
       <View style={styles.ends}>
@@ -350,7 +349,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: { fontFamily: font.display, fontSize: 34, lineHeight: 40, color: color.ink },
-  value: { fontFamily: font.monoBold, fontSize: 30, color: color.ink, marginTop: 16 },
+  value: { fontFamily: font.uiBold, fontSize: 30, color: color.ink, marginTop: 16 },
   slider: { marginTop: 8, height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
@@ -360,23 +359,17 @@ const styles = StyleSheet.create({
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
   error: { fontFamily: font.prose, fontSize: 14, color: color.inkSoft, textAlign: 'center' },
-  // The primer card's shape and shadow, in its slot: UI.md allows that one.
+  // Paper floating over the map: the card corner and the one shadow.
   card: {
     position: 'absolute',
     left: 16,
     right: 16,
     bottom: 26,
-    backgroundColor: color.paper,
-    borderWidth: 1,
-    borderColor: color.rule,
-    borderRadius: 6,
+    backgroundColor: color.paperRaised,
+    borderRadius: radius.card,
     padding: 24,
     gap: 10,
-    shadowColor: color.shadow,
-    shadowOpacity: 0.14,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
+    ...lift,
   },
   cardTitle: { fontFamily: font.display, fontSize: 23, lineHeight: 30, color: color.ink },
   cardBody: { fontFamily: font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },

@@ -148,7 +148,7 @@ first tried on:
   two elements that genuinely hover over the map ("Turn on location", the location
   primer); a pin is not one of those, and never gets a shadow of its own.
 - **Tailwind's zinc ramp / the system sans-serif** — the app's palette
-  (`mobile/src/theme.ts`) and type system (Fraunces + IBM Plex Mono) exist
+  (`mobile/src/theme.ts`) and type system (soft Fraunces + Figtree) exist
   specifically so nothing in the app, pins included, reads as a generated
   default.
 

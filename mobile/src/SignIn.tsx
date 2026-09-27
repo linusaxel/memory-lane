@@ -147,7 +147,7 @@ function AppleButton(props: Setters) {
           ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
           : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
       }
-      cornerRadius={4}
+      cornerRadius={26}
       style={styles.apple}
       onPress={() => withApple(props)}
     />
@@ -302,15 +302,15 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   actions: { gap: 12, alignItems: 'stretch' },
-  google: { ...button.outline, height: 46, paddingVertical: 0 },
+  google: { ...button.outline, height: 52, paddingVertical: 0 },
   googleText: { ...buttonText, color: color.ink },
   skip: { alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 16 },
   skipText: { ...label },
   wrap: { gap: 12 },
   note: { fontFamily: font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   // Apple's button draws itself; it only takes a frame.
-  apple: { height: 46, alignSelf: 'stretch' },
+  apple: { height: 52, alignSelf: 'stretch' },
   action: { ...button.outline, alignSelf: 'flex-start' },
   actionText: { ...buttonText, color: color.ink },
-  error: { fontFamily: font.mono, fontSize: 13, color: color.seal, textAlign: 'center' },
+  error: { fontFamily: font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
 });

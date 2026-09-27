@@ -37,24 +37,24 @@ export const color = {
   /** Hairlines and dividers. Editorial layouts rule; they do not shadow. */
   rule: dual('#E0D9CC', '#332E27'),
 
-  /** The one accent: stamp ink - a warm ochre, not the stamp red this was
-   *  before 2026-09-23 (docs/10-decisions.md#warm-accent-not-a-reskin). Everything
-   *  openable is this colour and nothing else is. */
-  seal: dual('#8A5A17', '#D9A54B'),
+  /** A memory, and the way to it: every pin, the next stop, the preview's
+   *  line, the one primary button. The warm red no base map uses, so it never
+   *  reads as water or park. docs/09-visual-design.md part 8. */
+  ember: dual('#A8350F', '#F2703F'),
+  /** The quiet button's fill: ember, barely. */
+  emberSoft: dual('#F6E2D8', '#3A2219'),
+
+  /** Openable now, and nothing else: the in-reach pin, the reach circle, the
+   *  unlock ring. Bright gold, because ember beside the old ochre was one
+   *  colour to a protanope. It is a fill, never text: text and marks on it are
+   *  sealInk, and gold text on paper is sealDeep. */
+  seal: dual('#F2B53A', '#F5C542'),
+  /** Anything drawn on seal: a pin's edge and eye, the pill's words. */
+  sealInk: dual('#2B1D05', '#1F1605'),
   /** The ring filling during a hold. */
-  sealSoft: dual('#F0E4C8', '#3D3018'),
-  /** The padlock inside the ring, which sits on paper at rest and on sealSoft
-   *  when full - so it has to hold against both. */
-  sealDeep: dual('#5C3A0E', '#F0C878'),
-
-  /** Walk here next: the one stop that hops, and the preview's line. Never
-   *  openable - in reach, the pin turns seal. */
-  route: dual('#1A64D6', '#5AA2FF'),
-
-  /** A memory on the map: every pin at rest, and the dot of a walk's stop in
-   *  the journal. The logo's teal, lifted in the dark so paper holds on it.
-   *  Never openable (seal) and never next (route). */
-  brand: dual('#106A6D', '#2E8F92'),
+  sealSoft: dual('#FCEBC2', '#3E3112'),
+  /** Seal as text or a thin mark on paper, and the padlock inside the ring. */
+  sealDeep: dual('#7A4F00', '#F7D074'),
 
   /** Out of reach: the same padlock, faded. Dark enough to hold against the
    *  parchment map, and lighter in the dark where a dark pin vanishes. */
@@ -64,7 +64,7 @@ export const color = {
    *  Deliberately not a pair: it is a translucent seal over a map, and the
    *  seal's dark value is lighter, so one alpha reads about the same over
    *  either. It lives here rather than inline so a palette change reaches it. */
-  halo: 'rgba(138,90,23,0.16)',
+  halo: 'rgba(242,181,58,0.3)',
 
   /** The two shadows UI.md allows, and the scrim over an uploading photo. */
   shadow: '#000',
@@ -76,66 +76,77 @@ export const color = {
  *  name is also in `color`, the values are the same pair. */
 export const solid = (dark: boolean) => ({
   paper: dark ? '#161412' : '#F7F4EE',
-  route: dark ? '#5AA2FF' : '#1A64D6',
+  ember: dark ? '#F2703F' : '#A8350F',
   /** The darker edge Apple Maps draws round a route. */
-  routeCasing: dark ? '#1B4F99' : '#0E3F8C',
+  emberCasing: dark ? '#8A2E0C' : '#6E2208',
   /** The reach circle: the seal, washed over the map. */
-  reachStroke: dark ? 'rgba(217,165,75,0.7)' : 'rgba(138,90,23,0.55)',
-  reachFill: dark ? 'rgba(217,165,75,0.12)' : 'rgba(138,90,23,0.07)',
+  reachStroke: dark ? 'rgba(245,197,66,0.75)' : 'rgba(176,120,10,0.7)',
+  reachFill: dark ? 'rgba(245,197,66,0.12)' : 'rgba(242,181,58,0.14)',
   /** mobile/assets/icon.svg and icon-dark.svg. */
   tile: dark ? '#0a2b2c' : '#106a6d',
   road: dark ? '#e9f1ee' : '#f2ede4',
   sun: '#f2a65a',
 });
 
-/** Two families and no more. Fraunces tells the stories, IBM Plex Mono is the
- *  apparatus - distances, counts, labels. */
+/** Two families and no more. Fraunces, cut soft (assets/fonts, recipe in
+ *  docs/09-visual-design.md part 8), tells the stories; Figtree is everything
+ *  you read to use the app - buttons, labels, distances. */
 export const font = {
-  display: 'Fraunces_700Bold',
-  displaySemi: 'Fraunces_600SemiBold',
-  prose: 'Fraunces_400Regular',
-  mono: 'IBMPlexMono_400Regular',
-  monoMedium: 'IBMPlexMono_500Medium',
-  monoBold: 'IBMPlexMono_600SemiBold',
+  display: 'FrauncesSoft-Bold',
+  displaySemi: 'FrauncesSoft-SemiBold',
+  prose: 'FrauncesSoft-Regular',
+  ui: 'Figtree_400Regular',
+  uiMedium: 'Figtree_500Medium',
+  uiBold: 'Figtree_600SemiBold',
 };
 
-/** Uppercase mono with tracking. The app's label voice, used everywhere a
- *  screen names a thing rather than says something. */
+/** The only corners: a field, a card over the map, and a capsule for anything
+ *  you press. Circles are half their side and need no token. */
+export const radius = { field: 14, card: 28, pill: 999 };
+
+/** The one shadow, for paper that floats over the map. */
+export const lift = {
+  shadowColor: color.shadow,
+  shadowOffset: { width: 0, height: 4 },
+  shadowRadius: 16,
+  shadowOpacity: 0.12,
+  elevation: 4,
+};
+
+/** The app's label voice, wherever a screen names a thing rather than says
+ *  something. */
 export const label = {
-  fontFamily: font.monoBold,
-  fontSize: 11,
-  letterSpacing: 1.1,
-  textTransform: 'uppercase' as const,
+  fontFamily: font.uiBold,
+  fontSize: 13,
   color: color.inkFaint,
 };
 
-/** The text inside a button, filled or outlined. One step up from `label` in
- *  size and tracking, because it is the thing being pressed. Pair with
- *  `color: color.paper` on ink, `color.ink` on an outline. */
+/** The text inside a button. Pair with `color.paper` on ember, `color.ink`
+ *  on the quiet and outlined ones. */
 export const buttonText = {
-  fontFamily: font.monoBold,
-  fontSize: 12,
-  letterSpacing: 1.2,
-  textTransform: 'uppercase' as const,
+  fontFamily: font.uiBold,
+  fontSize: 17,
 };
 
-/** The app's buttons: three boxes, one size. Spread one and add only where
+/** The app's buttons: three capsules, one size. Spread one and add only where
  *  it sits (margin, alignSelf); the text is always `buttonText`. */
 const buttonBox = {
-  borderWidth: 1,
-  borderRadius: 4,
-  paddingVertical: 15,
-  paddingHorizontal: 22,
+  borderWidth: 1.5,
+  borderColor: 'transparent',
+  borderRadius: radius.pill,
+  minHeight: 52,
+  paddingVertical: 14,
+  paddingHorizontal: 24,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
 export const button = {
   /** The one thing to do. Text in paper. */
-  solid: { ...buttonBox, backgroundColor: color.ink, borderColor: color.ink },
+  solid: { ...buttonBox, backgroundColor: color.ember },
   /** The way back, next to a solid one. Text in ink. */
-  quiet: { ...buttonBox, borderColor: color.rule },
+  quiet: { ...buttonBox, backgroundColor: color.emberSoft },
   /** An action standing on its own. Text in ink. */
-  outline: { ...buttonBox, borderColor: color.ink },
+  outline: { ...buttonBox, borderColor: color.rule },
 };
 
 /** A text field. The display-name input renders twice - You and Submit - and
@@ -143,7 +154,7 @@ export const button = {
 export const input = {
   borderWidth: 1,
   borderColor: color.rule,
-  borderRadius: 4,
+  borderRadius: radius.field,
   paddingHorizontal: 14,
   paddingVertical: 12,
   fontFamily: font.prose,
@@ -152,7 +163,7 @@ export const input = {
   backgroundColor: color.paperRaised,
 };
 
-/** Every Pressable in the app dims while it is held.
+/** Every Pressable in the app gives a little while it is held.
  *
  *  It is one helper rather than a `pressed &&` in twenty-eight StyleSheets for
  *  the same reason `label` is one object: the value drifts the moment it is
@@ -167,5 +178,5 @@ export const dim =
   (base?: StyleProp<ViewStyle>) =>
   ({ pressed }: PressableStateCallbackType): StyleProp<ViewStyle> => [
     base,
-    pressed && { opacity: 0.55 },
+    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
   ];

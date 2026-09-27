@@ -748,7 +748,7 @@ anyone else's collection or the local unlock cache.
    stage; there are no tabs. There is no
    "Near me": the pill recentres, and "Turn on location" shows only while
    there is no position.
-3. **A route-blue bar at the top centre, "On a walk · 0 of 5"**, between
+3. **An ember glass bar at the top centre, "On a walk · 0 of 5"**, between
    Journal and You and Add, is what says this is a walk and not the map: it holds the
    count, and tapping it ends the walk (F34). Nothing else repeats the count.
    A pill at the bottom centre: "2.4 km to go" — the distance
@@ -762,12 +762,12 @@ anyone else's collection or the local unlock cache.
    after that the pill reads "Next: <place> · 350 m".
    **The camera is pinned on you** while there is a position: it follows you,
    the map does not pan or rotate, and a pinch zooms without moving the
-   centre. While the next stop is off screen, a route-blue arrow on the edge
+   centre. While the next stop is off screen, an ember arrow on the edge
    of the screen points the way to it.
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    (1–5) in the badge. There is no line while walking: the next unearned
-   stop, in route order, hops and is `route` blue, and when it is earned the
-   one after it takes over. Only the preview draws the loop, route-blue under
+   stop, in route order, hops and is `ember`, and when it is earned the
+   one after it takes over. Only the preview draws the loop, ember under
    the street names (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md
    §3a).
 5. Reaching a stop lights its pin, and the pill turns seal and

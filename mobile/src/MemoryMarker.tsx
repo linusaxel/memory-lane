@@ -102,16 +102,16 @@ function Pin({ lit, next, badge }: PinProps) {
   return (
     <Animated.View style={[styles.wrap, lit && styles.halo, hop]}>
       <View style={[styles.pin, lit && styles.pinLit, next && styles.pinNext]}>
-        <View style={[styles.eye, (lit || next) && styles.eyeLit]} />
+        <View style={[styles.eye, (lit || next) && styles.eyeLit, lit && styles.onSeal]} />
       </View>
       {badge !== null && (
         <View
           style={[
             styles.tag,
-            { backgroundColor: lit ? color.sealDeep : next ? color.route : color.brand },
+            lit ? styles.tagLit : null,
           ]}
         >
-          <Text style={styles.count} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
+          <Text style={[styles.count, lit && styles.countLit]} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
             {badge}
           </Text>
         </View>
@@ -145,14 +145,16 @@ const styles = StyleSheet.create({
     borderRadius: PIN / 2,
     borderWidth: 2,
     borderColor: color.paper,
-    backgroundColor: color.brand,
+    backgroundColor: color.ember,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pinLit: { width: LIT, height: LIT, borderRadius: LIT / 2, backgroundColor: color.seal },
-  pinNext: { width: LIT, height: LIT, borderRadius: LIT / 2, backgroundColor: color.route },
+  // Gold is too light for a paper edge, so a lit pin draws in sealInk.
+  pinLit: { width: LIT, height: LIT, borderRadius: LIT / 2, backgroundColor: color.seal, borderColor: color.sealInk },
+  pinNext: { width: LIT, height: LIT, borderRadius: LIT / 2 },
   eye: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.paper },
   eyeLit: { width: 12, height: 12, borderRadius: 6 },
+  onSeal: { backgroundColor: color.sealInk },
 
   tag: {
     position: 'absolute',
@@ -164,8 +166,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: color.paper,
+    backgroundColor: color.ember,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  count: { color: color.paper, fontFamily: font.monoBold, fontSize: 11 },
+  tagLit: { backgroundColor: color.seal, borderColor: color.sealInk },
+  countLit: { color: color.sealInk },
+  count: { color: color.paper, fontFamily: font.uiBold, fontSize: 11 },
 });

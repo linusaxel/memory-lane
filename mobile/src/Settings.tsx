@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 36, marginTop: 12 },
   stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   statValue: { fontFamily: font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
-  statLabel: { ...label, fontSize: 10 },
+  statLabel: { ...label, fontSize: 12 },
   statsNote: { fontFamily: font.prose, fontSize: 15, color: color.inkFaint, marginTop: 10 },
   section: { marginTop: 38, gap: 12, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
   sectionTitle: { ...label },
@@ -247,10 +247,10 @@ const styles = StyleSheet.create({
   // Seal, matching Submit's error line. The accent is spoken for by the unlock
   // everywhere else; an error that failed to save is the one other thing the
   // app says in red, and splitting that across two treatments would be worse.
-  saveFailed: { fontFamily: font.mono, fontSize: 13, lineHeight: 20, color: color.seal },
+  saveFailed: { fontFamily: font.ui, fontSize: 13, lineHeight: 20, color: color.ember },
   link: { alignSelf: 'flex-start' },
   linkText: {
-    fontFamily: font.monoMedium,
+    fontFamily: font.uiMedium,
     fontSize: 13,
     color: color.ink,
     textDecorationLine: 'underline',
