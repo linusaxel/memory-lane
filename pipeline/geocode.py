@@ -111,9 +111,10 @@ class Photon:
         hits = []
         for f in (data or {}).get("features", []):
             p = f["properties"]
-            kind = {"house": "poi" if p.get("name") else "house", "street": "street"}.get(
-                p.get("type"), "district" if p.get("type") in ("district", "locality") else "city"
-            )
+            named = "poi" if p.get("name") else None
+            kind = {"house": named or "house", "other": named, "street": "street"}.get(
+                p.get("type")
+            ) or ("district" if p.get("type") in ("district", "locality") else "city")
             lng, lat = f["geometry"]["coordinates"]
             hits.append(
                 Hit(

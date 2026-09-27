@@ -141,12 +141,14 @@ def test_photon_reads_a_named_house_as_a_place_and_a_city_as_a_city(monkeypatch)
             "features": [
                 feature("Vega", "house", [12.544, 55.668]),
                 feature("København", "city", [12.57, 55.68]),
+                feature("Nørrebroparken", "other", [12.543, 55.698]),
             ]
         },
     )
-    vega, city = geocode.Photon().search("Vega", "Copenhagen", None)
+    vega, city, park = geocode.Photon().search("Vega", "Copenhagen", None)
     assert (vega.kind, vega.lat, vega.name) == ("poi", 55.668, "Vega")
     assert city.kind == "city"
+    assert park.kind == "poi"
 
 
 def test_wikidata_takes_coordinates_from_P625_and_skips_items_without(monkeypatch):

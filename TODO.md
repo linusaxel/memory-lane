@@ -49,10 +49,10 @@ delete an entry when its fix lands.
 - [ ] **Most places are still the model's guess.** (checked 2026-09-27)
       Content 534 re-extracted after the looser name match: 10 of 18 `llm`,
       down from 14 of 20; Under Hylden is one place on Photon's POI. Left:
-      Mexibar and Maskot aren't in OSM under those names, and "Nørrebro
-      Parken" is refused because Photon's `other` type maps to `city` in
-      `Photon.search`. Next: map `other` to `poi` when it carries a name, then
-      decide whether an `llm`-only place belongs on the map at all.
+      Mexibar and Maskot aren't in OSM under those names. A named Photon
+      `other` (a park, a square) is a `poi` now, not a `city`; unmeasured
+      until 534 is re-extracted. Next: decide whether an `llm`-only place
+      belongs on the map at all.
 
 - [ ] **One venue named three ways becomes three pins.** (2026-09-27,
       content 535) Jørgen Leth's barber on Vognmagergade came out as
@@ -74,10 +74,6 @@ delete an entry when its fix lands.
       auto-captions. Next: have the brief spell names from the title and
       source when they disagree with the transcript.
 
-- [ ] **Memory 4409 is a duplicate of 4408** (the Woodstock raid), saved
-      before the merge lost its 60 s window in 7c1cfee. Delete it, or
-      re-aggregate content 536 (one new judge call).
-
 - [ ] **Prompt caching: only the classifier is left uncached.** Measured
       2026-09-27 on videos 535-537 (one burst worker): chunk 1 writes ~4.3k
       (system ~3.8k + source and brief ~0.5k), every later chunk reads it, and
@@ -86,11 +82,6 @@ delete an entry when its fix lands.
       under Haiku's 4,096 minimum) are never cached. Left: with several
       workers, a video's first wave of chunks may all write. Check the
       `cache read` log lines the first time more than one worker runs.
-
-- [ ] **The privacy policy still says sign-in is optional.** `mobile/store/privacy.md`
-      and `/privacy` (`api/main.py`): "You can use Memory Lane without signing in".
-      False since sign-in became the gate (docs/10, 2026-09-26). Change both
-      together; `tests/test_store_copy.py` compares them.
 
 - [ ] **`published_at` is always NULL.** (checked 2026-09-24: nothing in `api/`
       reads it) yt-dlp flat extraction returns no timestamp for this channel.

@@ -37,9 +37,9 @@ notification is generated on your device, and nothing is sent anywhere beyond th
 nearby-memories check the map already makes. Turning it off stops the check immediately.</p>
 
 <h2>Accounts</h2>
-<p>You can use Memory Lane without signing in, and nothing in it is behind a sign-in.
-We never ask for a password, because we do not have any to store.</p>
-<p>If you do sign in, it is with Google or Apple. They tell us an identifier for your
+<p>Memory Lane asks you to sign in before you use it. We never ask for a password,
+because we do not have any to store.</p>
+<p>You sign in with Google or Apple. They tell us an identifier for your
 account with them and, if you allow it, an email address; we store both so that your
 collection can follow you to a new phone. We receive nothing else &mdash; no contacts,
 no calendar, no profile, no access to anything in your Google or Apple account &mdash;

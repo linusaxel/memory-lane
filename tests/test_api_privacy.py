@@ -30,7 +30,8 @@ def test_privacy_page_explains_what_signing_in_does_and_does_not_do():
     """This used to be named ..._states_there_are_no_accounts and assert the
     substring "account", which stayed true when the sentence under it flipped."""
     body = client.get("/privacy").text.lower()
-    assert "without signing in" in body, "using the app signed out has to stay stated"
+    assert "without signing in" not in body, "sign-in has been required since 2026-09-26"
+    assert "asks you to sign in" in body
     assert "never ask for a password" in body
     assert "there are none" not in body
 
