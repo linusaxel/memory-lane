@@ -242,6 +242,14 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       the map and the user dot. Waits on the founder's yes and a look on a
       real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
       state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
+- [ ] **A walk always has options.** (checked 2026-09-27) The founder: "Show
+      me the walk" ending on "No walk that long from here" (`Plan.tsx:187`) or
+      "The only walk that long from here." (`Plan.tsx:229`, `App.tsx:192`) is a
+      letdown. Add back/forward buttons through walk options, and never run
+      dry: when the asked length has only 1-2 routes, the next options step
+      down (10 km → 9 → 8 km…) and, if needed, up. Be lenient, never an empty
+      answer. Touches the preview flow in `App.tsx`/`Plan.tsx` and the route
+      request in `api.ts`; F1/F32 in docs/08.
 
 ---
 

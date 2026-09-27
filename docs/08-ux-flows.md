@@ -942,9 +942,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    refetches when you file, edit or delete one. One you already earned wears
    its stamp.
 2. Tap a pin: **the peek**. Place and a padlock, then tag · source · year ·
-   distance, what is waiting, "Stand here to read it.", and **Walk here** in
-   the bottom bar,
-   which opens the plan page (F1) for a walk through that pin.
+   distance, what is waiting, and **Walk here** in the bottom bar, which
+   opens the plan page (F1) for a walk through that pin.
    There is no unlock here, even standing on it: only today's walk unlocks.
 3. **Plan a walk**, bottom centre, opens the plan page (F1).
 

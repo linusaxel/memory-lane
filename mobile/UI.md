@@ -73,7 +73,6 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   peek (the map, before a walk: the locked side, differently)
   ├─ "music · Vega Archive · 1978 · 1.2 km"   tag, source, year, distance
   ├─ "1 attachment waiting"
-  ├─ "Stand here to read it."
   └─ "Walk here"              ink, in the bottom bar; opens Plan for a walk through that pin (F1)
 
   The locked side says how many attachments are waiting and never which. A

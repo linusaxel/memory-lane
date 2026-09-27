@@ -32,7 +32,7 @@ appId: ${APP_ID}
     timeout: 20000
 - tapOn: ".*\\. Locked, too far to open\\."
 - extendedWaitUntil:
-    visible: "Stand here to read it\\."
+    visible: "Walk here"
     timeout: 10000
 - tapOn: "Walk here"
 - extendedWaitUntil:

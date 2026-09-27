@@ -240,11 +240,11 @@ export default function MemorySheet({
                   .join(' · ')}
               </Text>
               {waiting}
-              <Text style={styles.peekNote}>
-                {withinReach && onSubscribe
-                  ? "You're right here. Make it a stop on today's walk, or open it now."
-                  : 'Stand here to read it.'}
-              </Text>
+              {withinReach && onSubscribe && (
+                <Text style={styles.peekNote}>
+                  You're right here. Make it a stop on today's walk, or open it now.
+                </Text>
+              )}
             </View>
           ) : locked ? (
             <View style={styles.gate}>
