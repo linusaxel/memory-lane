@@ -22,7 +22,7 @@ import HeartGlyph from './HeartGlyph.tsx';
 import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
-import { distance, duration, walkMinutes } from './format.ts';
+import { distance, duration } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -241,6 +241,16 @@ export default function MemorySheet({
 
             <View style={styles.heading}>
               <Text style={styles.place}>{memory.place.name}</Text>
+              {peeking && (memory.author || memory.source_name) && (
+                <View style={styles.peekFrom}>
+                  {memory.author && <YouGlyph size={13} color={color.inkFaint} />}
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {memory.author
+                      ? `Left by ${memory.author.name}`
+                      : `From ${memory.source_name}`}
+                  </Text>
+                </View>
+              )}
               {/* What it is about, as the #words the open story sets them in
                   (UI.md, "Tags are the #words"): under the name they belong
                   to, not in the apparatus line. Not tappable. */}
@@ -282,30 +292,21 @@ export default function MemorySheet({
                     {fromHere != null && (
                       <Text style={styles.peekFigure}>{distance(fromHere)}</Text>
                     )}
-                    <Text style={styles.peekNote}>
-                      {fromHere == null
-                        ? 'Turn on location to see how far.'
-                        : withinReach
-                          ? "You're right here. Make it a stop on today's walk, or open it now."
-                          : `Opens within ${Math.round(radius)} m · ${walkMinutes(fromHere)} min walk`}
-                    </Text>
+                    {(fromHere == null || withinReach) && (
+                      <Text style={styles.peekNote}>
+                        {fromHere == null
+                          ? 'Turn on location to see how far.'
+                          : "You're right here. Make it a stop on today's walk, or open it now."}
+                      </Text>
+                    )}
+                    {(memory.year != null || hearts > 0) && (
+                      <Text style={styles.meta}>
+                        {[memory.year, hearts > 0 && heartsText].filter(Boolean).join(' · ')}
+                      </Text>
+                    )}
+                    {waiting}
                   </View>
                 </View>
-                <View style={styles.peekFrom}>
-                  {memory.author && <YouGlyph size={13} color={color.inkFaint} />}
-                  <Text style={styles.meta}>
-                    {[
-                      memory.author
-                        ? `Left by ${memory.author.name}`
-                        : memory.source_name && `From ${memory.source_name}`,
-                      memory.year,
-                      hearts > 0 && heartsText,
-                    ]
-                      .filter((part) => part != null && part !== '' && part !== false)
-                      .join(' · ')}
-                  </Text>
-                </View>
-                {waiting}
               </View>
             ) : locked ? (
               <View style={styles.gate}>
@@ -537,7 +538,7 @@ const styles = StyleSheet.create({
   // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
   meta: { ...label },
-  peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
   reachable: { color: color.sealDeep },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
   peek: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 14 },

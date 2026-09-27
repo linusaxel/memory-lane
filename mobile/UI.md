@@ -72,11 +72,11 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
   peek (the map, before a walk: a card over the live map, sized to its content)
   ├─ place name
+  ├─ "From Vega Archive", or a person glyph + "Left by Anna"   who, directly under the name
   ├─ #music  #nightlife      every tag, outline pills in displaySemi, under the name
   ├─ Approach ring  +  "472 m"  36/700      the lock as the distance still to go
-  │                    "Opens within 20 m · 8 min walk"
-  ├─ "Vega Archive · 1978 · 12 hearts"   source, year, hearts
-  ├─ "1 attachment waiting"
+  │                    "1978 · 12 hearts"   the year off the source line: it is when, not when published
+  │                    "1 attachment waiting"
   └─ "Walk here"              ink, in the bottom bar; opens Plan for a walk through that pin (F1)
 
   The locked side says how many attachments are waiting and never which. A

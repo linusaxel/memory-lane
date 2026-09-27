@@ -6,8 +6,6 @@
  * drifted apart and a third shipped an "Invalid Date".
  */
 
-import { ROUTE_CIRCUITY } from './region.ts';
-
 /** One decimal below 10 km, none above: "1.4 km" is a decision and "6181.0 km"
  *  is a spreadsheet. */
 export function distance(meters: number, { suffix = '' }: { suffix?: string } = {}): string {
@@ -17,12 +15,6 @@ export function distance(meters: number, { suffix = '' }: { suffix?: string } = 
       ? `${Math.round(meters)} m`
       : `${km < 10 ? km.toFixed(1) : Math.round(km).toLocaleString()} km`;
   return suffix ? `${body} ${suffix}` : body;
-}
-
-/** Minutes on foot to somewhere this far as the crow flies: streets add
- *  ROUTE_CIRCUITY, and a walker covers about 80 m a minute (4.8 km/h). */
-export function walkMinutes(crowMeters: number): number {
-  return Math.max(1, Math.round((crowMeters * ROUTE_CIRCUITY) / 80));
 }
 
 /** m:ss, or h:mm:ss once there is an hour to show. Clamped at zero because a

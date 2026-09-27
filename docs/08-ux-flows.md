@@ -941,10 +941,11 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    memory is not a reason to walk, and yours is where you left it. The map
    refetches when you file, edit or delete one. One you already earned wears
    its stamp.
-2. Tap a pin: **the peek**, a card over the map rather than a page. Place and
-   its #tags, the approach ring beside the distance and "Opens within 20 m ·
-   8 min walk", then source · year · hearts, what is waiting, and **Walk here**,
-   which opens the plan page (F1) for a walk through that pin.
+2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
+   who it is from ("From" a source, "Left by" a person, with a glyph), its
+   #tags, then the approach ring beside the distance with year · hearts and what
+   is waiting, and **Walk here**, which opens the plan page (F1) for a walk
+   through that pin.
    There is no unlock here, even standing on it: only today's walk unlocks.
 3. **Plan a walk**, bottom centre, opens the plan page (F1).
 
