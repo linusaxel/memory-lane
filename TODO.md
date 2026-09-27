@@ -347,7 +347,7 @@ rejects and why are rows now: `python -m pipeline.sources list`.
          into youtube-transcript-api (a few $ a month), while today's
          `TRANSCRIPT_PROXY` is a `GenericProxyConfig`. A fixed or datacenter
          proxy gets blocked like a cloud IP. Paid, so last, but it's the
-         library's own answer and a one-line change in `_api()`.
+         library's own answer and a one-line change in `fetch_transcript()`.
 - [ ] **Run the backlog through the Batch API.** (checked 2026-09-27) Half
       price, and nothing in the pipeline is waiting on an answer. Worth it
       before a whole-channel run, not for one video.
