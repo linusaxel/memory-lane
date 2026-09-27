@@ -46,19 +46,22 @@ logger = logging.getLogger(__name__)
 
 CLASSIFIER_PROMPT = """Analyze this transcript chunk and determine if it contains any LOCATION-BASED MEMORIES.
 
-A location-based memory is when someone describes a PERSONAL EXPERIENCE at a SPECIFIC PHYSICAL PLACE.
+A location-based memory is something that already happened at a SPECIFIC, NAMED PLACE: a personal
+experience, an event, a mishap, or something that once stood there. Told first-hand or as history.
 
 Examples that QUALIFY:
 - "I had the best pizza at this place in Brooklyn"
-- "We visited the Colosseum and got lost trying to find the entrance"
 - "I proposed to my wife on the Golden Gate Bridge"
+- "In 1943 the resistance blew up the factory that stood on this corner"
+- "The bar counter here was mortared in so solidly the police couldn't remove it"
 
 Examples that DO NOT qualify:
 - General facts: "Paris is known for the Eiffel Tower"
 - Hypotheticals: "I want to visit Japan someday"
+- Announcements and listings: a tour date, an auction notice, a flat to let
 - Vague references: "somewhere in Europe"
 
-Respond with ONLY a JSON object:
+Respond with ONLY a JSON object, the reason in under 20 words:
 {"has_memories": true/false, "reason": "brief explanation"}"""
 
 CLASSIFIER_SCHEMA = {
@@ -96,7 +99,7 @@ def classify_chunk(
     try:
         response = client.messages.create(
             model=CLASSIFIER_MODEL,
-            max_tokens=100,
+            max_tokens=300,
             messages=[{"role": "user", "content": f"{CLASSIFIER_PROMPT}\n\nTranscript:\n{chunk}"}],
             output_config={"format": {"type": "json_schema", "schema": CLASSIFIER_SCHEMA}},
         )

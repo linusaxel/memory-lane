@@ -626,6 +626,29 @@ the two models have separate rate limits, and failing open joined them. So a
 transient error raises and RQ retries the classify job on its own queue, and
 only the last attempt fails open.
 
+### The classifier passes history, not only first-hand experience
+
+Status: Accepted (2026-09-27)
+
+The pre-filter asked for "a PERSONAL EXPERIENCE at a SPECIFIC PHYSICAL PLACE"
+while the extraction prompt already took "an event, a mishap, something that
+stood here". So a 1943 sabotage at a named factory was rejected as "a factual
+historical account", and every archive and text source screened at 0.00. It now
+asks for what the extractor asks for: something that already happened at a
+named place, first-hand or as history. Announcements and listings stay out.
+
+`max_tokens` went from 100 to 300 with the same change: 48 of 297 stored
+verdicts were a reason cut off mid-sentence, which fails open, so one chunk in
+six reached Sonnet unjudged.
+
+Measured by replaying 195 stored chunks through both prompts at 300 tokens:
+unparseable replies 16% → 0; Historisk Atlas 0 → 5 of 6; KB notices stay 0 of 6;
+Københavnerglimt 4 → 23 of 23 (Denmark's first film screening on Halmtorvet,
+Kierkegaard dying at Frederikshospitalet); Københavnerliv 24 → 25 of 30. The 6
+flips down were all right (botany, colour theory, cycling plans). The cost is
+more Sonnet on history-heavy sources, some of it on places outside Copenhagen
+(Greenland colonies in a Christianshavn lecture) that the judge has to drop.
+
 ---
 
 ## Serving

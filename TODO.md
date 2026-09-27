@@ -23,6 +23,16 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **YouTube IP-blocks transcripts after ~40 fetches a day.** 2026-09-27:
+  screening six channels plus two ingests hit `RequestBlocked` twice in one
+  session, stalling screening for hours both times; nothing warns before it.
+  Fix: set `TRANSCRIPT_PROXY` in `.env` (a residential proxy, per
+  youtube-transcript-api's README) and note it in docs/01-setup.md.
+- **A classifier prompt change can't be measured without a throwaway script.**
+  2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
+  the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
+  scratch replay. Fix: `classifier_audit --against <old prompt file>` that
+  replays stored chunks through both prompts and prints flips per source.
 - **A run's cost can't be read from its log.** 2026-09-27: the worker logs
   cache read/write/uncached input per call but no output tokens, so three
   Københavnerliv videos were guessed at $0.30-0.50 each and only the console
