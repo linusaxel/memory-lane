@@ -21,6 +21,7 @@ import anthropic
 from rq import Worker
 from rq.registry import ScheduledJobRegistry
 
+import pipeline.tasks  # noqa: F401  (loaded once, so a fork never imports a half-saved edit)
 from pipeline.config import ANTHROPIC_API_KEY, CLASSIFIER_MODEL, EXTRACTION_MODEL
 from pipeline.queue import QUEUE_AGGREGATE, QUEUE_CLASSIFY, QUEUE_EXTRACT, get_redis
 
