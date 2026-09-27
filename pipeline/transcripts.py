@@ -14,9 +14,15 @@ from youtube_transcript_api._errors import (
     TranscriptsDisabled,
     VideoUnavailable,
 )
-from youtube_transcript_api.proxies import GenericProxyConfig
+from youtube_transcript_api.proxies import GenericProxyConfig, WebshareProxyConfig
 
-from pipeline.config import MIN_VIDEO_MINUTES, TRANSCRIPT_DELAY_SECONDS, TRANSCRIPT_PROXY
+from pipeline.config import (
+    MIN_VIDEO_MINUTES,
+    TRANSCRIPT_DELAY_SECONDS,
+    TRANSCRIPT_PROXY,
+    WEBSHARE_PROXY_PASSWORD,
+    WEBSHARE_PROXY_USERNAME,
+)
 from pipeline.db import get_session
 
 logger = logging.getLogger(__name__)
@@ -35,6 +41,8 @@ def fetch_transcript(video_id: str) -> dict | None:
 
     try:
         proxy = TRANSCRIPT_PROXY and GenericProxyConfig(TRANSCRIPT_PROXY, TRANSCRIPT_PROXY)
+        if WEBSHARE_PROXY_USERNAME and WEBSHARE_PROXY_PASSWORD:
+            proxy = WebshareProxyConfig(WEBSHARE_PROXY_USERNAME, WEBSHARE_PROXY_PASSWORD)
         api = YouTubeTranscriptApi(proxy_config=proxy)
         # A person's captions before the machine's, in any of the languages:
         # English auto-captions heard "Nørrebro" as "naropa". The library's own

@@ -23,9 +23,12 @@ CHUNK_OVERLAP_SECONDS = int(os.getenv("CHUNK_OVERLAP_SECONDS", "30"))
 # duplicate memory. Unknown durations (hand-listed videos) are never filtered.
 MIN_VIDEO_MINUTES = int(os.getenv("MIN_VIDEO_MINUTES", "20"))
 # YouTube blocks an IP that fetches too many transcripts, and cloud IPs are
-# blocked outright. A proxy URL (http://user:pass@host:port) spreads the load;
+# blocked outright. A proxy URL (http://user:pass@host:port) spreads the load,
+# and Webshare's rotating residential pool (it wins when set) gets past it;
 # the delay is the mean pause between fetches, jittered so they do not tick.
 TRANSCRIPT_PROXY = os.getenv("TRANSCRIPT_PROXY") or None
+WEBSHARE_PROXY_USERNAME = os.getenv("WEBSHARE_PROXY_USERNAME") or None
+WEBSHARE_PROXY_PASSWORD = os.getenv("WEBSHARE_PROXY_PASSWORD") or None
 TRANSCRIPT_DELAY_SECONDS = float(os.getenv("TRANSCRIPT_DELAY_SECONDS", "1.5"))
 
 # Sized so the connection pool and anyio's thread pool cannot drift apart -

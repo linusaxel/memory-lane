@@ -336,29 +336,25 @@ rejects and why are rows now: `python -m pipeline.sources list`.
 - [ ] **Get transcripts past YouTube's IP block.** (checked 2026-09-27) After
       ~40 caption fetches in a day, youtube-transcript-api gets
       `RequestBlocked`, and a batch stalls for hours. Captions, not the
-      ~$0.02-0.05 a memory, are the ceiling on growth. The drip shipped
-      (`transcripts --limit`, cron line in `docs/01-setup.md`). Left, in order:
-      1. **yt-dlp subtitles: failed the probe, one lever left.** On
-         2026-09-27 the library listed tracks fine, but yt-dlp's caption
-         download got HTTP 429 with no cookies, with node as JS runtime, and
-         with curl_cffi impersonation. With `--cookies-from-browser chrome`
-         it got "The page needs to be reloaded" (a JS challenge). The last try,
-         `--remote-components ejs:github` (yt-dlp's official solver, fetched
-         from GitHub), is untested; run it by hand. Temper hopes: minutes
-         later the library's own caption download was blocked too, while
-         listing still worked. The block is on the timedtext endpoint both
-         tools use, not on the library. If captions come back,
-         `fetch_captions()` goes in `crawler/yt_crawler.py` as a fallback on
-         `RequestBlocked`. Trap: `automatic_captions` lists machine
-         translations into every language (a Danish video offers `en`), so
-         take only the `-orig` track.
-      2. **Local Whisper on the audio** (yt-dlp `-x`). No captions needed,
-         and the same path the podcast source plans to use. Needs ffmpeg, and
-         audio downloads likely hit the same 429. Build with the podcast source.
-      3. **A rotating residential proxy.** `WebshareProxyConfig` is built
-         into youtube-transcript-api (a few $ a month), while today's
-         `TRANSCRIPT_PROXY` is a `GenericProxyConfig`. It's a one-line change in
-         `fetch_transcript()`. Do it when the drip can't keep up.
+      ~$0.02-0.05 a memory, are the ceiling on growth. It is an IP rate limit
+      on the timedtext endpoint; no header, cookie or client trick lifts it.
+      Shipped: the drip (`transcripts --limit`) and `WEBSHARE_PROXY_*`
+      (rotating residential, ~$3.50/GB, ~2,500 transcripts). Left: buy the
+      Webshare plan and run `--limit 60` past the wall. Researched dead ends,
+      so nobody re-tries them: the library's cookie auth (off since v1.1.0);
+      yt-dlp `--remote-components ejs` (JS challenges, not 429s); yt-dlp with
+      cookies ("page needs to be reloaded", yt-dlp #17389, fix in unmerged
+      PR #17723); InnerTube `get_transcript` (HTTP 400 since 2025-12,
+      YouTube.js #1102); Tor (exits banned); `captions.download` (own videos
+      only). If Webshare IPs get blocked too (library #511):
+      1. **Supadata**, 100 transcripts a month free, then $5/300.
+      2. **yt-dlp + bgutil PO tokens, by hand:** `pip install
+         bgutil-ytdlp-pot-provider`, its docker server on 4416, then
+         `--extractor-args youtube:player_client=android_vr,web_embedded`.
+         Same IP, so it only helps if the block is on the token, not the IP.
+         Trap: `automatic_captions` lists machine translations into every
+         language, so take only the `-orig` track.
+      3. **Local Whisper on the audio** (yt-dlp `-x`), with the podcast source.
 - [ ] **Run the backlog through the Batch API.** (checked 2026-09-27) Half
       price, and nothing in the pipeline is waiting on an answer. Worth it
       before a whole-channel run, not for one video.
