@@ -177,12 +177,11 @@ def test_unparseable_url_is_skipped_not_fatal(ingest_into):
     assert _rows(ingest_into) == []
 
 
-def test_default_config_still_reads_the_yaml_file(ingest_into, monkeypatch):
-    """ingest_content() with no argument must behave exactly as before -
-    pipeline/run_all.py calls it that way."""
+def test_default_config_reads_the_sources_table(ingest_into, monkeypatch):
+    """pipeline/run_all.py calls ingest_content() with no argument."""
     called = []
 
-    def _load():
+    def _load(statuses=("active",)):
         called.append(True)
         return {"sources": []}
 

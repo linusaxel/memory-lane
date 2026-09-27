@@ -290,25 +290,33 @@ Nothing can be bought until the stores exist, so everybody is free.
 
 Researched 2026-09-27 (channel pages, caption tracks and terms, checked on the
 primary sites). No show matches Tuesdays with Stories (comedians telling their
-own stories about named spots) in English or Danish. Københavnerliv is in
-`config/content.yaml` with one video; judge it on the defects above first.
+own stories about named spots) in English or Danish. The candidates, the
+rejects and why are rows now: `python -m pipeline.sources list`.
 
-- [ ] **Next YouTube sources, best first.** (checked 2026-09-27) Try one video
-      each before a whole channel.
-      - Københavnerglimt (@Københavnerglimt-officiel, 74, da): a historian
-        walks each district. Most places per minute, but history, not memory.
-      - Fantino & Bonde (@FantinoogBonde, 18, da): comedians at one named
-        hot-dog stand or pub per episode.
-      - Erin in Copenhagen (@ErininCopenhagen, 51, en): a spot per video;
-        dormant since 2023.
-      - What Are You Doing in Denmark? (@RobeTrotting, 328, en): expat
-        comedians' stories, few named spots.
-      - Christiania1 (@christiania1, 190, da): residents' memories; Christiania
-        only.
-      - How to Live in Denmark (@how2liveindenmark, 233, en): the "On the Road"
-        episodes.
-      - One-offs: Andrew Schulz "Dropping In #20" (Copenhagen) and Ari Shaffir
-        "You Be Trippin'" with Iain Stirling (Denmark).
+- [ ] **Screen the discovered local TV and archives.** (checked 2026-09-27) The
+      first `discover` run found Bispebjerg Lokal-TV, Christianshavns Kvarter,
+      Frederiksberg Lokal TV, Kgs. Enghave Lokalhistoriske Arkiv, Foreningen
+      Gadeliv, Peter Jensen's "Vesterbro-minder 1900–1920". `screen` each;
+      promote the ones that pass to `trial`.
+- [ ] **Trial the Wollstonecraft letters** (source 11). (checked 2026-09-27)
+      Screened 3 of 3 windows passing. `enqueue` one part, then judge: the
+      historical prompt reads a first-person memoir, and 1795 street names may
+      not geocode.
+- [ ] **One-off videos.** (checked 2026-09-27) Andrew Schulz "Dropping In #20"
+      (Copenhagen) and Ari Shaffir "You Be Trippin'" with Iain Stirling
+      (Denmark): `ingest --video … --to <id>` under their channels.
+- [ ] **Sources that need their own plan.** (checked 2026-09-27) From the
+      source-scaling ideation, each with a named catch:
+      - Walk-and-talk recording: someone narrates a walk; Whisper plus the GPS
+        track at each timestamp is the coordinate, no geocoding. A product
+        feature, not a source.
+      - Podcasts: RSS plus local Whisper into `transcripts`, never DR.
+      - Public-domain memoirs (Andersen's *Mit Livs Eventyr*, Nexø's
+        *Erindringer*): Runeberg / ADL, after the Wollstonecraft trial says
+        whether books pay. Needs historical street names.
+      - Politiets Registerblade (1890–1923): who lived at each address. Filler.
+      - Film locations (DFI, fan lists): already placed, very stop-worthy.
+      - Prompt at a thin spot: "Were you ever here?" opens the submit sheet.
 - [ ] **Open sources with coordinates.** (checked 2026-09-27) Wikipedia and
       Wikidata: 4,321 items within 5 km of Rådhuspladsen (text CC BY-SA,
       data CC0); about famous people, not personal memories. OSM memorial
@@ -317,9 +325,6 @@ own stories about named spots) in English or Danish. Københavnerliv is in
 - [ ] **Run the backlog through the Batch API.** (checked 2026-09-27) Half
       price, and nothing in the pipeline is waiting on an answer. Worth it
       before a whole-channel run, not for one video.
-- **Don't use:** DR podcasts (DR's terms reserve text and data mining), Reddit
-  (commercial and AI use need a contract), and indenforvoldene.dk (one author,
-  all rights reserved).
 
 ---
 

@@ -71,7 +71,7 @@ def fetch_transcript(video_id: str) -> dict | None:
 LONG_ENOUGH = f"(c.duration_seconds IS NULL OR c.duration_seconds >= {MIN_VIDEO_MINUTES * 60})"
 
 
-def fetch_pending_transcripts():
+def fetch_pending_transcripts(content_ids: list[int] | None = None):
     fetched = 0
     failed = 0
 
@@ -84,7 +84,9 @@ def fetch_pending_transcripts():
                   AND transcript_failed = FALSE
                   AND platform = 'youtube'
                   AND {LONG_ENOUGH}
-            """)
+                  AND (CAST(:ids AS integer[]) IS NULL OR id = ANY(CAST(:ids AS integer[])))
+            """),
+            {"ids": content_ids},
         ).fetchall()
 
         logger.info(f"Found {len(pending)} videos pending transcript fetch")

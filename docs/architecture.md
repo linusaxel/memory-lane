@@ -24,7 +24,7 @@ offline. The API is the only thing the app talks to.
 
 ```mermaid
 flowchart LR
-  yaml[config/content.yaml] --> ingest[pipeline.ingest]
+  sources[(sources table)] --> ingest[pipeline.ingest]
   yt[YouTube] --> ingest
   ingest --> tr[pipeline.transcripts]
   yt --> tr
@@ -100,7 +100,7 @@ One database, two writers. Nothing else writes to it.
 
 | Writer | Tables |
 |--------|--------|
-| Pipeline | `content`, `transcripts`, `extraction_chunks`, `classifier_verdicts`, `places`, `memories` (extracted), `memory_reviews` |
+| Pipeline | `sources`, `content`, `transcripts`, `extraction_chunks`, `classifier_verdicts`, `places`, `memories` (extracted), `memory_reviews` |
 | API | `devices`, `users`, `identities`, `unlocks`, `memory_hearts`, `daily_routes`, `places` + `memories` (submitted), `media`, `reports` |
 | Only SQL, for now | `routes`, `route_stops` (authored walks) |
 

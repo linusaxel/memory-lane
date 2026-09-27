@@ -9,7 +9,6 @@ Where things live. How they talk to each other is in [architecture.md](architect
 | `api/` | FastAPI over PostGIS: reads, the gate, submissions, sign-in, routes |
 | `pipeline/` | Ingest → transcripts → extraction (sequential or over RQ), plus the dev and review tools |
 | `crawler/` | Channel discovery via yt-dlp, and the text sources. Imports nothing from `pipeline/` |
-| `config/` | `content.yaml`: the sources ingest reads |
 | `db/` | `schema.sql` (applied on first container init) and `migrations/` for databases that already exist |
 | `mobile/` | The Expo app. Read [`mobile/UI.md`](../mobile/UI.md) first |
 | `tests/` | pytest. [07-testing.md](07-testing.md) covers markers and fakes |
@@ -36,11 +35,13 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | File | Purpose |
 |------|---------|
 | `pipeline/run_all.py` | **Run full pipeline** in one command with `--dry-run`, `--skip-*` options |
-| `crawler/yt_crawler.py` | **Channel discovery** via yt-dlp — lists a channel's videos + metadata |
+| `crawler/yt_crawler.py` | **Channel discovery** via yt-dlp — lists a channel's videos + metadata, and searches YouTube |
 | `crawler/sources.py` | **Text sources:** the `Source` interface and `SOURCES`. A new source is one file and one line here |
 | `crawler/kb_aviser.py` | KB Labs newspapers (pre-1886), searched by street |
 | `crawler/historisk_atlas.py` | Historisk Atlas stories matched by sitemap title (`Sabotage` for the WWII set) |
-| `pipeline/ingest.py` | Loads video URLs from `config/content.yaml` into DB (expands `channel:` sources); `--source <name> --query <q>` runs a text source |
+| `crawler/gutenberg.py` | Public-domain books: `<ebook id> <word>` keeps the windows naming the place |
+| `pipeline/ingest.py` | Polls the `active` channels in `sources` into `content`; `--video <url> --to <id>` adds one; `--source <name> --query <q>` runs a text source |
+| `pipeline/sources.py` | **The source funnel:** `list` (yield per source), `discover` (YouTube search over Copenhagen), `screen` (Haiku only), `set`, `add` |
 | `pipeline/geocode.py` | **Places what the model names:** DAWA, Photon, Wikidata behind one guard, `place()` |
 | `pipeline/transcripts.py` | Fetches YouTube transcripts via youtube-transcript-api |
 | `pipeline/extract.py` | **Core logic** - Claude extracts memories + coordinates (sequential) |
@@ -70,7 +71,6 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
-| `config/content.yaml` | Content sources to process |
 
 ## `api/`
 

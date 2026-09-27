@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Read content URLs from `config/content.yaml` and insert them into the `content` table.
+Poll the `active` YouTube channels in the `sources` table and insert their videos into
+the `content` table. Finding and judging sources is `pipeline/sources.py`; see
+[Sources are rows with a status](10-decisions.md#sources-are-rows-with-a-status).
 
 ## Behavior
 
@@ -10,29 +12,20 @@ Read content URLs from `config/content.yaml` and insert them into the `content` 
 - Extracts platform-specific IDs (e.g., YouTube video ID from URL)
 - Stores optional metadata (title, source name)
 
-## Config Format
+## Sources
 
-```yaml
-sources:
-  - name: "Channel Name"
-    platform: youtube
-
-    # Optional: auto-discover the channel's videos (via yt-dlp).
-    # Title and publish date come back with each video.
-    channel: "https://www.youtube.com/@handle"
-    limit: 25                 # omit to ingest the entire channel
-
-    # Optional: hand-listed videos. Can be combined with `channel:` -
-    # both lists are merged and deduped on the normalized URL.
-    videos:
-      - url: "https://www.youtube.com/watch?v=VIDEO_ID"
-        title: "Optional Title Override"
-      - url: "https://www.youtube.com/watch?v=ANOTHER_ID"
+```bash
+python -m pipeline.sources list                       # every source, best yield first
+python -m pipeline.sources add youtube_channel https://www.youtube.com/@handle "Name"
+python -m pipeline.sources screen <id>                # Haiku on 3 items, no Sonnet
+python -m pipeline.ingest --video <url> --to <id>     # one trial episode
+python -m pipeline.sources set <id> active            # ingest now polls it
 ```
 
-A source needs `channel:`, `videos:`, or both. Re-running ingest is idempotent:
-already-known URLs are skipped, so discovering a channel repeatedly only ever
-inserts what is new.
+Only `active` channels are polled, `poll_limit` newest videos each (NULL is the
+whole channel). A `candidate`'s or `rejected` source's items are ingested only
+to be screened, and bulk extraction (`enqueue --all`) skips them. Re-running
+ingest is idempotent: already-known URLs are skipped.
 
 ## Supported Platforms
 

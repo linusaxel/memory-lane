@@ -891,6 +891,37 @@ that brings its own coordinates (Historisk Atlas) writes them into the text for
 the model's `lat`/`lng`, so a geocoder hit can still move the pin. If pins land
 off the atlas's point, `Record` grows `lat`/`lng` and `content` a column.
 
+### Sources are rows with a status
+
+Status: Accepted 2026-09-27. Replaces `config/content.yaml`.
+
+A source is anything that yields a story tied to a spot: a channel, a
+searchable archive, a book, an institution. Each is a row in `sources` with a
+status, `candidate → trial → active`, or `paused` / `rejected` with the reason
+in `note`. `content.source_id` points back, and the `source_yield` view ranks
+them by memories per hour and by the Haiku pass rate (`screened`). The app's
+own people are one extra row in that view, as the baseline.
+
+The funnel is `pipeline/sources.py`: `discover` (YouTube search over Copenhagen
+neighbourhoods; a hit counts only if it is long and its title names the place),
+`screen` (Haiku on three items, about a cent, nothing to Sonnet), then a person
+decides. A trial is one item: `ingest --video … --to <id>`, then `enqueue`.
+Only `active` channels are polled. A candidate's or rejected source's items are
+in `content` so they can be screened, and `PENDING_EXTRACTION` skips them, so
+`enqueue --all` never bills a whole candidate.
+
+**Options considered:** Keeping the YAML: it could hold a channel list but not
+a status, a yield, or the TODO.md prose about why a source was dropped, and
+discovery would have to write to a checked-in file. A column on `content`:
+a candidate has no content yet.
+
+**Consequences:** the seed rows are in both `db/schema.sql` and
+`db/migrations/029_sources.sql`. A fresh database loses the hand-listed videos
+that were in the YAML; re-add one with `ingest --video`. The first discovery run
+(46 candidates, 2026-09-27) found local TV and local-history archives rather
+than storytellers: the vein to screen first. Screening rejected Kend Din By at
+0 of 8 chunks: silent archive film.
+
 ### DAWA places Danish addresses
 
 Status: Superseded 2026-09-26 by *The LLM names the place; free geocoders place

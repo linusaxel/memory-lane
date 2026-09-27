@@ -409,7 +409,8 @@ def chunk_transcript(
 
 
 # Here as well as before the transcript fetch: a clip's transcript may predate
-# the filter.
+# the filter. A candidate's items are ingested only to be screened by Haiku; one
+# goes to Sonnet by `enqueue --video`, never in bulk.
 PENDING_EXTRACTION = f"""
 FROM content c
 JOIN transcripts t ON c.id = t.content_id
@@ -417,6 +418,10 @@ WHERE c.memories_extracted = FALSE
   AND c.extraction_failed = FALSE
   AND c.transcript_fetched = TRUE
   AND {LONG_ENOUGH}
+  AND NOT EXISTS (
+      SELECT 1 FROM sources s
+      WHERE s.id = c.source_id AND s.status IN ('candidate', 'rejected')
+  )
 """
 
 

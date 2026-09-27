@@ -1,9 +1,8 @@
-"""Content ingestion from config/content.yaml into the database."""
+"""Content ingestion from the `sources` table into the database."""
 
 import json
 import logging
 import re
-from pathlib import Path
 
 import yaml
 from sqlalchemy import text
@@ -11,8 +10,6 @@ from sqlalchemy import text
 from pipeline.db import get_session
 
 logger = logging.getLogger(__name__)
-
-CONFIG_PATH = Path(__file__).parent.parent / "config" / "content.yaml"
 
 
 def extract_youtube_id(url: str) -> str | None:
@@ -30,19 +27,31 @@ def normalize_youtube_url(video_id: str) -> str:
     return f"https://www.youtube.com/watch?v={video_id}"
 
 
-def load_config() -> dict:
-    if not CONFIG_PATH.exists():
-        raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
-
-    with open(CONFIG_PATH) as f:
-        return yaml.safe_load(f)
+def load_config(statuses=("active",)) -> dict:
+    """The YouTube channels in `sources` with one of `statuses`, shaped as the
+    config dict ingest_content has always taken. Only `active` is polled: a
+    trial is one video, added by hand with --video."""
+    with get_session() as session:
+        rows = session.execute(
+            text("""
+                SELECT id, name, locator, poll_limit FROM sources
+                WHERE kind = 'youtube_channel' AND status = ANY(:statuses)
+                ORDER BY id
+            """),
+            {"statuses": list(statuses)},
+        ).fetchall()
+    return {
+        "sources": [
+            {"id": r.id, "name": r.name, "channel": r.locator, "limit": r.poll_limit} for r in rows
+        ]
+    }
 
 
 def ingest_content(config: dict | None = None):
     """Ingest content from config into database.
 
-    `config` defaults to config/content.yaml; passing one in keeps the DB write
-    path testable without touching the file.
+    `config` defaults to the active channels in `sources`; passing one in keeps
+    the DB write path testable without a crawl.
     """
     if config is None:
         config = load_config()
@@ -96,11 +105,11 @@ def ingest_content(config: dict | None = None):
                 session.execute(
                     text("""
                         INSERT INTO content (
-                            url, platform, platform_id, source_name, source_url,
+                            url, platform, platform_id, source_id, source_name, source_url,
                             source_icon_url, title, published_at, duration_seconds
                         )
                         VALUES (
-                            :url, :platform, :platform_id, :source_name, :source_url,
+                            :url, :platform, :platform_id, :source_id, :source_name, :source_url,
                             :source_icon_url, :title, :published_at, :duration_seconds
                         )
                     """),
@@ -108,6 +117,7 @@ def ingest_content(config: dict | None = None):
                         "url": normalized_url,
                         "platform": platform,
                         "platform_id": video_id,
+                        "source_id": source.get("id"),
                         "source_name": source_name,
                         "source_url": channel.get("url"),
                         "source_icon_url": channel.get("icon_url"),
@@ -134,7 +144,7 @@ def refresh_sources(config: dict | None = None):
     from crawler.yt_crawler import channel_metadata, list_channel_videos
 
     if config is None:
-        config = load_config()
+        config = load_config(("trial", "active"))
 
     updated = 0
     with get_session() as session:
@@ -187,7 +197,7 @@ def within(records, bbox):
             yield record
 
 
-def ingest_records(records, source_name, source_type="archive", platform="text"):
+def ingest_records(records, source_name, source_type="archive", platform="text", source_id=None):
     """Ingest already-fetched text records - archive entries, newspaper clippings.
 
     A second entry point rather than a wider `ingest_content`, so the YouTube
@@ -227,13 +237,16 @@ def ingest_records(records, source_name, source_type="archive", platform="text")
             content_id = session.execute(
                 text("""
                     INSERT INTO content
-                        (url, platform, source_name, title, source_type, transcript_fetched)
-                    VALUES (:url, :platform, :source_name, :title, :source_type, TRUE)
+                        (url, platform, source_id, source_name, title, source_type,
+                         transcript_fetched)
+                    VALUES (:url, :platform, :source_id, :source_name, :title, :source_type,
+                            TRUE)
                     RETURNING id
                 """),
                 {
                     "url": url,
                     "platform": platform,
+                    "source_id": source_id,
                     "source_name": source_name,
                     "title": record.get("title"),
                     "source_type": source_type,
@@ -259,6 +272,20 @@ def ingest_records(records, source_name, source_type="archive", platform="text")
     return {"inserted": inserted, "skipped": skipped}
 
 
+def text_source_row(key: str, query: str):
+    """The `sources` row a text-source run belongs to: the exact
+    `<key>:<query>` (one book), else the bare `<key>:` (a searchable archive)."""
+    with get_session() as session:
+        return session.execute(
+            text("""
+                SELECT id, name FROM sources
+                WHERE locator IN (:exact, :bare)
+                ORDER BY locator = :exact DESC LIMIT 1
+            """),
+            {"exact": f"{key}:{query}", "bare": f"{key}:"},
+        ).fetchone()
+
+
 def load_records(path):
     """Read a YAML file of {source_name, source_type, records:[...]} for ingest_records."""
     with open(path) as f:
@@ -271,8 +298,10 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(
-        description="Load content from config/content.yaml, or from a text source."
+        description="Load content from the active sources, one video, or a text source."
     )
+    parser.add_argument("--video", help="one YouTube URL, e.g. a source's trial episode")
+    parser.add_argument("--to", type=int, metavar="SOURCE_ID", help="the source --video belongs to")
     parser.add_argument(
         "--refresh-sources",
         action="store_true",
@@ -297,11 +326,25 @@ if __name__ == "__main__":
         if not args.query:
             parser.error("--source needs --query")
         src = SOURCES[args.source]
+        row = text_source_row(args.source, args.query)
         records = src.fetch(args.query, args.limit)
         ingest_records(
             within(records, args.bbox) if args.bbox else records,
-            source_name=src.source_name,
+            source_name=row.name if row else src.source_name,
             source_type=src.source_type,
+            source_id=row.id if row else None,
+        )
+    elif args.video:
+        if not args.to:
+            parser.error("--video needs --to <source id>: python -m pipeline.sources list")
+        with get_session() as session:
+            name = session.execute(
+                text("SELECT name FROM sources WHERE id = :id"), {"id": args.to}
+            ).scalar()
+        if not name:
+            parser.error(f"no source {args.to}")
+        ingest_content(
+            {"sources": [{"id": args.to, "name": name, "videos": [{"url": args.video}]}]}
         )
     elif args.refresh_sources:
         refresh_sources()

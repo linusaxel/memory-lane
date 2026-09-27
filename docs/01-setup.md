@@ -58,7 +58,7 @@ keys); Claude's own coordinate is the fallback.
 
 ### Schema
 
-Seventeen tables. `db/schema.sql` is the full definition and is applied on first
+Eighteen tables and a view. `db/schema.sql` is the full definition and is applied on first
 container init; `db/migrations/` carries the same changes for databases that
 already exist, and `tests/test_schema_layers.py` holds the two in agreement.
 It also fails the gate when your dev database is missing a migration, and
@@ -67,6 +67,7 @@ Who writes which is in [architecture.md](architecture.md#data-ownership).
 
 | Table | What it holds |
 |---|---|
+| `sources` | Where memories come from: kind, locator, `candidate → trial → active`, why. `source_yield` is the view that ranks them |
 | `content` | Source videos (url, platform_id, publisher, status flags) |
 | `transcripts` | JSONB segments with timestamps |
 | `extraction_chunks` | Each chunk's raw model reply, keyed on the exact request |
@@ -160,7 +161,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Run pipeline stages (with venv activated)
-python -m pipeline.ingest       # Load content URLs from config
+python -m pipeline.ingest       # Poll the active sources
 python -m pipeline.transcripts  # Fetch YouTube transcripts
 python -m pipeline.extract      # Extract memories with coordinates
 
@@ -177,9 +178,10 @@ uvicorn api.main:app --reload --port 8000
 ## Common Tasks
 
 ### Add new videos
-1. Edit `config/content.yaml` — either list URLs under `videos:`, or add a
-   `channel:` (plus optional `limit:`) to auto-discover a channel's back catalogue.
-   Both can be combined; ingest merges and dedups them.
+1. Find and judge the source in `sources` (`python -m pipeline.sources list`):
+   `discover` or `add` it, `screen` it (Haiku, about a cent), then either
+   `python -m pipeline.ingest --video <url> --to <id>` for one trial episode, or
+   `set <id> active` (with `poll_limit`) to have ingest poll the channel.
 2. Run `python -m pipeline.ingest`
 3. Run `python -m pipeline.transcripts`
 4. Run `python -m pipeline.extract`

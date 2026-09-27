@@ -102,6 +102,24 @@ def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict
     return videos
 
 
+def search_videos(query: str, limit: int = 20) -> list[dict]:
+    """YouTube search. [{"url", "title", "duration_seconds", "channel",
+    "channel_url"}]; channel_url is the /channel/<id> form `sources.locator` uses."""
+    with YoutubeDL(YDL_OPTS) as ydl:
+        info = ydl.extract_info(f"ytsearch{limit}:{query}", download=False) or {}
+    return [
+        {
+            "url": f"https://www.youtube.com/watch?v={e['id']}",
+            "title": e.get("title"),
+            "duration_seconds": e.get("duration"),
+            "channel": e.get("channel"),
+            "channel_url": f"https://www.youtube.com/channel/{e['channel_id']}",
+        }
+        for e in info.get("entries") or []
+        if e and e.get("id") and e.get("channel_id")
+    ]
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="List a YouTube channel's videos.")
     parser.add_argument(
