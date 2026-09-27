@@ -82,13 +82,18 @@ Measured from the console balance, since the logs carry no output tokens
 
 | Run | Episodes | Video | Memories | Cost | $/memory | $/episode |
 |---|---|---|---|---|---|---|
-| 2026-09-27, Københavnerliv pubs, walks, place history | 12 | ~6.5 h | 48 | $2.83 | $0.06 | $0.24 |
+| 2026-09-27, Københavnerliv pubs, walks, place history | 12 | ~6.5 h | 48 | ~$2.00 | $0.04 | $0.17 |
+| 2026-09-27, Københavnerglimt cinemas, hospitals ×2 | 3 | 1.3 h | 41 | ~$0.70 | $0.02 | $0.23 |
+
+The first row's window also held a ~$0.80 classifier replay and Haiku screens
+($2.83 in all), subtracted by the replay's own token count.
 
 Yield decides $/memory far more than length does. The same channel's film
 talk and festival episodes gave 5 memories from three videos at ~$0.30 each,
 and local-TV guided tours (Bispebjerg, NTV Nørrebro) about 1 an hour. Budget
-by the source's `mem/h` in `sources list`: roughly $0.40 an hour of video, so
-a 6 mem/h source is ~$0.07 a memory and a 1 mem/h source ~$0.40.
+by the source's `mem/h` in `sources list`: roughly $0.30-0.50 an hour of video,
+so a 30 mem/h history series is ~$0.02 a memory, a 6 mem/h one ~$0.05, and a
+1 mem/h one ~$0.40.
 
 ## Memory quality
 The summary is the product: somebody standing on the spot, on a phone, outdoors.
