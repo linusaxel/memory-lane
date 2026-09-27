@@ -2,12 +2,15 @@
 discovery adds, and what screening spends. Real PostGIS; no network (the
 crawler and Haiku are faked)."""
 
+import io
+import zipfile
 from contextlib import contextmanager
 
 import pytest
 from sqlalchemy import text
 
 from crawler.gutenberg import windows
+from crawler.runeberg import book
 from pipeline import ingest, sources, tasks
 from pipeline.extract import PENDING_EXTRACTION
 
@@ -166,3 +169,15 @@ def test_a_book_is_cut_to_the_windows_that_name_the_place():
     kept = windows(raw, "copenhagen")
     assert len(kept) == 1 and kept[0].startswith("Copenhagen burned.")
     assert "licence" not in "".join(windows(raw))
+
+
+def test_a_runeberg_zip_reads_as_its_pages_in_order_without_page_numbers():
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr("Metadata", "TITLE: Minder\nLANGUAGE: da\n")
+        z.writestr("Pages/0011.txt", "11\nog saa til Nyhavn.")
+        z.writestr("Pages/0010.txt", "10\nJeg boede paa Amagertorv")
+        z.writestr("Pages.lst", "0010|10")
+    title, language, text = book(buf.getvalue())
+    assert (title, language) == ("Minder", "da")
+    assert text == "Jeg boede paa Amagertorv\n\nog saa til Nyhavn."

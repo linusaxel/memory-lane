@@ -30,5 +30,8 @@ class Source(Protocol):
 from crawler.gutenberg import Gutenberg  # noqa: E402  (they need Record defined first)
 from crawler.historisk_atlas import HistoriskAtlas  # noqa: E402
 from crawler.kb_aviser import KbAviser  # noqa: E402
+from crawler.runeberg import Runeberg  # noqa: E402
 
-SOURCES: dict[str, Source] = {s.name: s for s in (KbAviser(), HistoriskAtlas(), Gutenberg())}
+SOURCES: dict[str, Source] = {
+    s.name: s for s in (KbAviser(), HistoriskAtlas(), Gutenberg(), Runeberg())
+}

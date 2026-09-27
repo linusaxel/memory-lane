@@ -40,6 +40,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/kb_aviser.py` | KB Labs newspapers (pre-1886), searched by street |
 | `crawler/historisk_atlas.py` | Historisk Atlas stories matched by sitemap title (`Sabotage` for the WWII set) |
 | `crawler/gutenberg.py` | Public-domain books: `<ebook id> <word>` keeps the windows naming the place |
+| `crawler/runeberg.py` | Nordic public-domain books from Projekt Runeberg, same query shape: `<work key> <word>` |
 | `pipeline/ingest.py` | Polls the `active` channels in `sources` into `content`; `--video <url> --to <id>` adds one; `--source <name> --query <q>` runs a text source |
 | `pipeline/sources.py` | **The source funnel:** `list` (yield per source), `discover` (YouTube search over Copenhagen), `screen` (Haiku only), `set`, `add` |
 | `pipeline/geocode.py` | **Places what the model names:** DAWA, Photon, Wikidata behind one guard, `place()` |
