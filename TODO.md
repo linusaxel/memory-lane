@@ -23,6 +23,10 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The venv has no pip.** 2026-09-27: AGENTS.md's quick start says
+  `python3 -m venv` and `pip install`, but `venv/` was made by uv, so
+  `venv/bin/pip` and `python -m pip` both fail; it took three tries to find
+  `uv pip install --python venv/bin/python`. Fix: make the quick start say uv.
 - **A route-size change breaks e2e, and run.sh calls it INFRA.** 2026-09-27:
   one stop a km made the 4 km default four stops; travel.py exits 3 on anything
   short of the flows' count, so run.sh rolled 20 starts and blamed the
