@@ -305,7 +305,9 @@ MEMORY_SCHEMA = {
     "additionalProperties": False,
 }
 
-USER_PROMPT_TEMPLATE = """{context}Extract memories from this transcript chunk:
+# "Extract memories" presumed there were some. Most chunks have none.
+USER_PROMPT_TEMPLATE = """{context}List the place stories in this transcript chunk, if there
+are any. Most chunks have none.
 
 {chunk}
 
@@ -618,6 +620,166 @@ def video_brief(session, client, content_id: int, segments: list, source: str, t
         return json.loads(raw)["brief"] if raw else ""
     except (ValueError, KeyError):
         return ""
+
+
+JUDGE_PROMPT = """You decide which of these short place stories are worth telling.
+Each will be read by a stranger standing at the spot, on a phone. Judge every
+candidate on its own merits; it is fine, and common, for most to fail.
+
+For each candidate, write a one-line note first, then answer yes or no:
+- only_here: Swap in another place's name. Does the story become false or
+  pointless? Yes means the place is the point. Where someone lives or grew up
+  is about them, not the place: no.
+- breach: Does it depart from what normally happens at this kind of place or
+  event? A crawl starting, a round bought, a drunk mishap is what normally
+  happens: no.
+- consequence: Did something change, or leave a lasting effect beyond the
+  people there?
+- visible_now: Can someone standing there see it or a trace of it - the
+  building, the bridge, the water, the trees, the cracks, the empty plot?
+- so_what: Can you say in one sentence why a stranger would care, without "it
+  was fun", "it was wild" or "it's where they met"?
+- stands_alone: Would a stranger understand every name and event in it?
+
+<examples>
+<example>
+Ringkaféen: "Ringkaféen has poured beer since the 1930s, and sank into the
+ground when metro works broke through to the old Lygteå stream still running
+under the street. Cracks showed on its front until recently."
+note: a bar undermined by a buried stream - the street hides a river.
+only_here yes, breach yes, consequence yes, visible_now yes, so_what yes,
+stands_alone yes
+</example>
+<example>
+Under Hylden: "Under Hylden is named for the elder trees still in its front
+garden, and dates from when new buildings had to include a pub for locals."
+note: the name is on the trees you can see, and a forgotten law made the pub.
+only_here yes, breach yes, consequence yes, visible_now yes, so_what yes,
+stands_alone yes
+</example>
+<example>
+Maskot: "Maskot is where Trip Nørrebro always starts. A few drinks go down here
+before the group sets off."
+note: a routine starting point; any bar could be it.
+only_here no, breach no, consequence no, visible_now no, so_what no,
+stands_alone yes
+</example>
+<example>
+Saalbach: "Working as a ski guide, he met Maleren, who came for two weeks with
+friends. That led to an invitation to join Trip Nørrebro."
+note: backstory about how two people met; nothing happened at the place.
+only_here no, breach no, consequence no, visible_now no, so_what no,
+stands_alone yes
+</example>
+<example>
+Mexibar: "One participant drank too much and was helped to throw up, then the
+group carried on drinking at Mexibar."
+note: a generic drunk mishap that could be any bar on any crawl.
+only_here no, breach no, consequence no, visible_now no, so_what no,
+stands_alone no
+</example>
+</examples>
+
+Return one verdict per candidate, by its index."""
+
+JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "verdicts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "index": {"type": "integer"},
+                    "note": {"type": "string"},
+                    **{
+                        q: {"type": "boolean"}
+                        for q in (
+                            "only_here",
+                            "breach",
+                            "consequence",
+                            "visible_now",
+                            "so_what",
+                            "stands_alone",
+                        )
+                    },
+                },
+                "required": [
+                    "index",
+                    "note",
+                    "only_here",
+                    "breach",
+                    "consequence",
+                    "visible_now",
+                    "so_what",
+                    "stands_alone",
+                ],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["verdicts"],
+    "additionalProperties": False,
+}
+
+# Of breach, consequence, visible_now and so_what. Tuned against labelled
+# stories from video 534; see docs/10-decisions.md#a-story-has-to-be-worth-telling.
+TELLABLE_MIN = 2
+
+
+def tellable(v: dict) -> bool:
+    """The model answers the questions; the bar is here, in code."""
+    rest = sum(bool(v.get(q)) for q in ("breach", "consequence", "visible_now", "so_what"))
+    return bool(v.get("only_here")) and bool(v.get("stands_alone")) and rest >= TELLABLE_MIN
+
+
+# The same story, judged twice, flipped: Under Hylden passed and then failed. A
+# majority of three differently ordered passes also cancels position bias.
+JUDGE_PASSES = 3
+
+
+def _judge(session, client, content_id: int, memories: list[dict], order) -> dict | None:
+    """{index: tellable} for one pass, or None if it failed or was unreadable.
+    Indices are the originals whatever the order, so passes compare."""
+    user = "\n\n".join(
+        f"[{i}] {memories[i].get('venue')}: {memories[i].get('summary')}"
+        + (
+            f"\n(what happened there: {memories[i]['happened_there']})"
+            if memories[i].get("happened_there")
+            else ""
+        )
+        for i in order
+    )
+    try:
+        raw = _stored_request(session, client, content_id, -2, JUDGE_PROMPT, user, JUDGE_SCHEMA)
+        return {v["index"]: tellable(v) for v in json.loads(raw)["verdicts"]}
+    except (TransientAPIError, TypeError, ValueError, KeyError):
+        return None
+
+
+def worth_telling(session, client, content_id: int, memories: list[dict]) -> list[dict]:
+    """The memories a stranger would care about, judged together once per video.
+
+    Per chunk, a routine stop never had to compete with a bar that sank into a
+    stream. No brief on purpose: the judge reads each summary as a stranger
+    would. A failed or unreadable judge keeps everything - it only filters, and
+    must not empty a video. A tie drops: the point is fewer, better stories.
+    """
+    if not memories:
+        return []
+    n = len(memories)
+    half = n // 2
+    orders = [range(n), reversed(range(n)), [*range(half, n), *range(half)]][:JUDGE_PASSES]
+    votes = [v for o in orders if (v := _judge(session, client, content_id, memories, list(o)))]
+    if not votes:
+        logger.warning(f"[content:{content_id}] tellability judge failed, keeping all")
+        return memories
+
+    def kept(i: int) -> bool:
+        ballots = [v[i] for v in votes if i in v]
+        return not ballots or 2 * sum(ballots) > len(ballots)
+
+    return [m for i, m in enumerate(memories) if kept(i)]
 
 
 def _venue_locality_key(mem: dict) -> tuple[str, str]:
@@ -1003,7 +1165,7 @@ def extract_all_pending():
                         return {"extracted": extracted, "failed": failed, "error": "model"}
 
                 merged = merge_nearby_memories(all_memories)
-                filtered = filter_low_confidence(merged)
+                filtered = worth_telling(session, client, content_id, filter_low_confidence(merged))
 
                 logger.info(
                     f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering"

@@ -142,3 +142,64 @@ def test_the_brief_reaches_every_chunk():
     assert "<video_brief>" in context and brief in context
     assert "not a source of memories" in context
     assert source_context("Københavnerliv", None) == source_context("Københavnerliv", None, "")
+
+
+def _verdict(**yes):
+    base = dict.fromkeys(
+        ("only_here", "breach", "consequence", "visible_now", "so_what", "stands_alone"), False
+    )
+    return {**base, **yes}
+
+
+def test_the_tellability_bar():
+    """The model answers yes/no; code holds the bar. The place must be the point,
+    a stranger must follow it, and two of the other four must hold - an origin
+    story like Nørrebroparken has consequence and a point, but breaks no script."""
+    from pipeline.extract import tellable
+
+    must = {"only_here": True, "stands_alone": True}
+    assert tellable(_verdict(**must, consequence=True, so_what=True))
+    assert not tellable(_verdict(**must, breach=True))
+    assert not tellable(
+        _verdict(stands_alone=True, breach=True, consequence=True, visible_now=True, so_what=True)
+    )
+    assert not tellable(
+        _verdict(only_here=True, breach=True, consequence=True, visible_now=True, so_what=True)
+    )
+
+
+def test_an_unreadable_judge_keeps_everything():
+    """It only filters: a broken judge must not empty a video."""
+    from pipeline.extract import worth_telling
+
+    class _Session:
+        def execute(self, *a, **k):
+            return type("R", (), {"scalar": lambda self: "not json"})()
+
+    memories = [{"venue": "Ringkaféen", "summary": "It sank."}]
+    assert worth_telling(_Session(), None, 1, memories) == memories
+
+
+def test_the_judge_drops_what_fails_and_keeps_what_it_skipped():
+    import json
+
+    from pipeline.extract import worth_telling
+
+    reply = json.dumps(
+        {
+            "verdicts": [
+                {"index": 0, "note": "sank", **_verdict(**dict.fromkeys(_verdict(), True))},
+                {"index": 1, "note": "routine", **_verdict(stands_alone=True)},
+            ]
+        }
+    )
+
+    class _Session:
+        def execute(self, *a, **k):
+            return type("R", (), {"scalar": lambda self: reply})()
+
+    memories = [{"venue": "Ringkaféen"}, {"venue": "Maskot"}, {"venue": "not judged"}]
+    assert [m["venue"] for m in worth_telling(_Session(), None, 1, memories)] == [
+        "Ringkaféen",
+        "not judged",
+    ]

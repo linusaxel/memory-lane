@@ -30,6 +30,7 @@ from pipeline.extract import (
     save_memories,
     source_context,
     video_brief,
+    worth_telling,
 )
 from pipeline.queue import (
     QUEUE_AGGREGATE,
@@ -365,11 +366,15 @@ def task_aggregate_memories(content_id: int):
     logger.info(f"[content:{content_id}] Collected {len(all_memories)} raw memories")
 
     merged = merge_nearby_memories(all_memories)
-    filtered = filter_low_confidence(merged)
-
-    logger.info(f"[content:{content_id}] After merge: {len(merged)}, after filter: {len(filtered)}")
+    candidates = filter_low_confidence(merged)
 
     with get_session() as session:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        filtered = worth_telling(session, client, content_id, candidates)
+        logger.info(
+            f"[content:{content_id}] After merge: {len(merged)}, after filter: "
+            f"{len(candidates)}, worth telling: {len(filtered)}"
+        )
         save_memories(session, content_id, filtered, layer_for(_source_type(redis, content_id)))
 
         session.execute(

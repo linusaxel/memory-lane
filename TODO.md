@@ -54,18 +54,30 @@ delete an entry when its fix lands.
       `Photon.search`. Next: map `other` to `poi` when it carries a name, then
       decide whether an `llm`-only place belongs on the map at all.
 
-- [ ] **Events still come out as places.** (checked 2026-09-27) The venue rule
-      in `SYSTEM_PROMPT` took out Skadestuen, Trippen and "Local brown pub",
-      but content 534 still gives "Nørrebro pubcrawl" (2 memories), "Nordre
-      Fasanvej pub crawl route" and "Kødbyen strip club". Fix: one worked
-      `<example>` of a pub crawl split into its bars, measured with
-      `quality --compare`.
+- [ ] **Prompt caching mostly doesn't happen, and nothing would say if it
+      stopped.** (checked 2026-09-27, against
+      https://platform.claude.com/docs/en/build-with-claude/prompt-caching)
+      Every `_request` marks the system prompt `cache_control: ephemeral`, but
+      a prompt below the model's minimum is silently not cached:
+      - Sonnet 5's minimum is 1,024 tokens. `SYSTEM_PROMPT` (~1.5k) clears it;
+        `JUDGE_PROMPT` (~0.9k) and `BRIEF_PROMPT` (~0.2k) do not.
+      - Haiku 4.5's minimum is 4,096 tokens, and `CLASSIFIER_PROMPT` is ~0.2k,
+        so all 22 classifier calls per video pay full price.
 
-- [ ] **A Copenhagen source yields memories abroad.** (checked 2026-09-27)
-      Content 534 produced ski-trip stories in Levi and Sölden. Harmless on the
-      map, but they cost an extraction and dilute a city source. Maybe: an
-      optional per-source bbox in `config/content.yaml`, as `ingest --bbox`
-      already does for text sources.
+      What to do:
+      1. Log `usage.cache_read_input_tokens` and `cache_creation_input_tokens`
+         in `_request` and `classify_chunk`. Both 0 means no cache.
+      2. The brief is the same for every chunk of a video. Send it as its own
+         user content block with a second breakpoint, ahead of the chunk, so
+         the ~300 tokens read at 10% from chunk two on.
+      3. Chunks of one video run in parallel on RQ, so the first wave all
+         writes rather than reads. Measure before fixing: one chunk first,
+         then the rest.
+      4. The judge's three passes share only the system prompt, and it is under
+         the minimum. Not worth padding.
+
+      Sonnet 5 reads cost $0.20/MTok against $2 base, and 5m writes cost 1.25x.
+      Cents per video either way; the win is knowing, then the brief.
 
 - [ ] **The privacy policy still says sign-in is optional.** `mobile/store/privacy.md`
       and `/privacy` (`api/main.py`): "You can use Memory Lane without signing in".

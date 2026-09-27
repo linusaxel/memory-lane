@@ -1055,6 +1055,58 @@ What still leaks about once a run is a biography fact (where Maleren lives) and
 "the crawl" without its name. The research's next steps, in order, are thinking at
 low effort and then a separate yes/no judge per memory.
 
+### A story has to be worth telling
+
+Status: Accepted
+
+Grounding a story to its spot doesn't make it interesting. "Maskot is where the
+crawl always starts; a few drinks go down here" is true, named and on the spot,
+and nobody would stop walking for it. Two parts of the pipeline pushed toward
+producing something:
+- The chunk message said "Extract memories", which implies there are some.
+- Each chunk was judged alone, so a routine stop never competed with the bar
+  that sank into a stream.
+
+`worth_telling()` makes one Sonnet call per video over every candidate that
+survived the grounding filters, and answers six yes/no questions for each:
+- `only_here`: the swap test
+- `breach`: it departs from the script
+- `consequence`
+- `visible_now`
+- `so_what`
+- `stands_alone`
+
+These come from what the storytelling and editorial literature agrees on:
+- Labov's reportability, and Bruner and Baroni on a breached script.
+- Harcup and O'Neill's news values.
+- Tilden and Ham's "so what".
+- Atlas Obscura, and VoiceMap's stops.
+
+Four choices shape how it works:
+- **Yes/no, not a score.** Scores out of 10 are poorly calibrated, and a rubric
+  of binary answers with anchors holds (Stureborg et al., Prometheus). The
+  model answers; `tellable()` holds the bar in code.
+- **A bar, not a top N.** Editors bar first and fit what passes. A quota would
+  pad a dull video, and a dull video giving nothing is correct.
+- **No brief.** The judge reads as a stranger does, so `stands_alone` means
+  something.
+- **It only filters.** An unreadable or unavailable judge keeps everything.
+
+It is cached at `chunk_index = -2` like the brief.
+
+**Tuned against labels, not intuition.** 16 stories from video 534 were labelled
+keep or drop by hand.
+- The first judge, with a bar of 3 of the 4 optional criteria, agreed on 12.
+  Origin stories like Nørrebroparken have consequence and a point but break no
+  script, so the bar is now 2 (`TELLABLE_MIN`).
+- The same story, judged twice, flipped: Under Hylden passed, then failed.
+  `JUDGE_PASSES = 3` runs are shown the candidates in different orders and take
+  the majority, which also cancels position bias. A tie drops.
+- The result is 15 of 16, and 10 of the 11 that are not close to a rubric
+  example. The one miss is Lundtoftegade, where the founder lives.
+- Across three full runs, no labelled "drop" survived. Each run kept 4–5
+  memories, down from 9–11.
+
 ### Markers are anchored explicitly, because the two platforms disagree
 
 Status: Accepted

@@ -111,6 +111,12 @@ fails; a bar that sank into the stream under it passes.
   which one.
 
 The reasons are in the [decision](10-decisions.md#a-memory-is-decided-before-it-is-written).
+
+Grounded is not the same as interesting. Once per video, `worth_telling()` asks
+six yes/no questions of every candidate that survived: the swap test, breach,
+consequence, visible now, so what, and stands alone. Code keeps a candidate only
+if the swap test and stands-alone both hold, plus 2 of the other 4, on a majority of three passes in different orders
+([decision](10-decisions.md#a-story-has-to-be-worth-telling)).
 `quality` also counts "someone", since the video usually gives a name or a
 nickname. Spot relevance itself has no regex: read the output.
 
