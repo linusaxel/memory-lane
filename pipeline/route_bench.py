@@ -15,7 +15,8 @@ different walk, which is "Show me another" working. The bar is "no spur": a stop
 off the loop is walked to and back the same way, and `retraced` is how many
 metres of that there are (api/streets.py, retraced_meters). `spur` is any at
 all, often a few metres from a mid-block start to its corner; `>50m` is one
-you would notice. `gap` is the shortest leg over the mean leg, out and home
+you would notice. `cross` is any walk that passes a street corner twice
+without retracing, a figure of eight (crossings). `gap` is the shortest leg over the mean leg, out and home
 included: 1 is stops evenly spaced, near 0 is two of them bunched.
 
 `--scenario` plants seed_dev's route scenarios in the bench's own transaction
@@ -52,7 +53,7 @@ from api.route_solver import (
     _route_size,
     _walking_order,
 )
-from api.streets import retraced_meters, walking_matrix
+from api.streets import crossings, retraced_meters, walking_matrix
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session
 from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, scenario
@@ -83,6 +84,7 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
             "stops": len(stops),
             "walk": 0,
             "retraced": 0,
+            "crossings": 0,
             "ms": ms,
             "fresh": fresh,
             "gap": 1,
@@ -97,6 +99,7 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
         "stops": len(stops),
         "walk": sum(meters_between(a, b) for a, b in pairwise(path)),
         "retraced": retraced_meters(path, [Coordinates(lat=r.lat, lng=r.lng) for r in stops]),
+        "crossings": crossings(path, [start, *(Coordinates(lat=r.lat, lng=r.lng) for r in stops)]),
         "ms": ms,
         "fresh": fresh,
         "gap": min(gaps) / (sum(gaps) / len(gaps)),
@@ -175,7 +178,7 @@ def pct(values: list[float], q: int) -> float:
 
 def report(results: list[dict]) -> None:
     print(
-        f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'>50m':>6} {'retr p50/p95':>14} "
+        f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'>50m':>6} {'cross':>6} {'retr p50/p95':>14} "
         f"{'walk/budget':>12} {'gap p50/p5':>11} {'fresh':>6} {'ms p50/p95':>12}"
     )
     for budget in (*BUDGETS, None):
@@ -191,6 +194,7 @@ def report(results: list[dict]) -> None:
             f"{sum(r['stops'] == _route_size(r['budget']) for r in mine) / len(mine):>6.0%} "
             f"{sum(x >= 1 for x in retraced) / len(mine):>6.0%} "
             f"{sum(x > 50 for x in retraced) / len(mine):>6.0%} "
+            f"{sum(r['crossings'] > 0 for r in mine) / len(mine):>6.0%} "
             f"{pct(retraced, 50):>6.0f}/{pct(retraced, 95):<6.0f}m "
             f"{statistics.median(ratio):>11.2f} "
             f"{pct(gap, 50):>5.2f}/{pct(gap, 5):<5.2f} "

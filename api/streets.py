@@ -76,6 +76,30 @@ def retraced_meters(path: list[Coordinates], stops: list[Coordinates] = ()) -> f
     return total
 
 
+def crossings(path: list[Coordinates], stops: list[Coordinates] = ()) -> int:
+    """Street corners `path` comes back to on streets it has not walked either
+    time: where the walk crosses or touches itself, a figure of eight. A spur
+    walks the same street back, and that is retraced_meters'.
+
+    Not inside the gate of a stop, where one leg ends and the next begins."""
+    keys = [(round(p.lat, 5), round(p.lng, 5)) for p in path]
+    walk = [
+        (k, p) for i, (k, p) in enumerate(zip(keys, path, strict=True)) if not i or k != keys[i - 1]
+    ]
+    seen, edges, count = set(), set(), 0
+    for (a, _), (b, at), (c, _) in zip(walk, walk[1:], walk[2:], strict=False):
+        if (
+            b in seen
+            and frozenset((a, b)) not in edges
+            and frozenset((b, c)) not in edges
+            and min((meters_between(at, s) for s in stops), default=math.inf) > UNLOCK_RADIUS_METERS
+        ):
+            count += 1
+        seen.add(a)
+        edges.add(frozenset((a, b)))
+    return count
+
+
 def street_legs(stops: list[Coordinates]) -> list[list[Coordinates]] | None:
     """legs[i] is the street shape from stops[i] to stops[i + 1]. A leg that
     touches where the walk started is that start, so only the preview gets

@@ -1344,6 +1344,29 @@ Spur rate over 40 runs a scenario, before and after: dense 88% → 25%, bimodal
 five stops without a U-turn do not fit and the walk now says so rather than
 running to 1.35 km.
 
+### A walk that doesn't cross itself
+
+Status: Accepted
+
+A loop drawn as a figure of eight reads as lost. The judge could not see one:
+it adds no retraced metres, and the chords between stops do not cross even
+when the streets do (a leg overshooting past the next stop, the way home
+cutting back across it). On a street graph two legs cross at a shared corner,
+so `crossings` (`api/streets.py`) counts corners the path comes back to on two
+streets it has not walked. A spur walks the same street back, so it stays
+`retraced_meters`', and a corner inside a stop's gate or the start's is where
+legs meet.
+
+Stage 2 adds `CROSSING_METERS` (300) a crossing to the one-number judge, a
+walk as good must cross no more than the best, and the drop-a-stop cleanup
+runs on a crossing as it does on a spur. A penalty rather than a rank of its
+own, for the reason the turn-back one was: shape above the fill shrinks walks.
+
+`route_bench` reports `cross`. Over 100 runs: `--scenario dense` 7% → 0%, and
+the DB's seed map at 2-4 km 31-75% → 0%; walk ÷ budget, spurs and time within
+noise. At 6-10 km on that map it did not move: `fresh` is 0%, there is one
+walk to pick, and its way home already retraces the way out.
+
 ### Loop or one-way, and a theme, per walk
 
 Status: Accepted; the theme **Superseded 2026-09-26** by *Tags come from the

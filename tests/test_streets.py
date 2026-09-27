@@ -78,3 +78,25 @@ def test_one_shape_per_leg_joined_across_steps(osrm):
 def test_one_stop_has_no_legs(osrm):
     assert streets.street_legs([A]) is None
     assert osrm[1] == []
+
+
+def grid(*cells):
+    """Corners a block (~110 m) apart."""
+    return [Coordinates(lat=40.75 + y * 0.001, lng=-73.99 + x * 0.001) for x, y in cells]
+
+
+def test_a_walk_that_crosses_itself_counts_the_corner():
+    figure_eight = grid((0, 1), (1, 1), (2, 1), (2, 2), (1, 2), (1, 1), (1, 0), (0, 0), (0, 1))
+    assert streets.crossings(figure_eight) == 1
+
+
+def test_a_clean_loop_and_a_spur_cross_nothing():
+    square = grid((0, 0), (1, 0), (1, 1), (0, 1), (0, 0))
+    spur = grid((0, 0), (1, 0), (2, 0), (1, 0), (1, 1), (0, 1), (0, 0))
+    assert streets.crossings(square) == 0
+    assert streets.crossings(spur) == 0
+
+
+def test_a_corner_inside_a_stops_gate_is_where_legs_meet():
+    figure_eight = grid((0, 1), (1, 1), (2, 1), (2, 2), (1, 2), (1, 1), (1, 0), (0, 0), (0, 1))
+    assert streets.crossings(figure_eight, grid((1, 1))) == 0

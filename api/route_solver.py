@@ -8,9 +8,10 @@ How a walk is ranked, in two stages, the second only with streets:
    (`_bunched`), then the most prize, then the shortest walk. Every walk tied with the best one on count and mix makes a
    shortlist of up to ROUTE_SHORTLIST. Without streets, the best one is the walk.
 2. From the streets (`_plan_route`, its `judge`): each shortlisted walk is
-   routed and scored on metres off the slider plus metres retraced, in steps
-   of SPUR_STEP_METERS, then on retraced metres alone. Every walk within
-   ROUTE_VARIETY of the slider of the best one, retracing no more, is as good;
+   routed and scored on metres off the slider plus metres retraced plus
+   CROSSING_METERS a place it crosses itself, in steps of SPUR_STEP_METERS,
+   then on retraced metres alone. Every walk within ROUTE_VARIETY of the
+   slider of the best one, retracing and crossing no more, is as good;
    the day plus `again` picks among them. Then up to ROUTE_CLEANUPS rounds drop
    one stop and re-pick, keeping a walk with as many stops that judges better.
 """
@@ -27,7 +28,7 @@ from sqlalchemy import text
 from api.gate import UNLOCK_RADIUS_METERS, meters_between
 from api.models import Coordinates
 from api.queries import ROUTE_CANDIDATES_QUERY
-from api.streets import retraced_meters, street_legs, street_table
+from api.streets import crossings, retraced_meters, street_legs, street_table
 
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
 
@@ -415,6 +416,9 @@ ROUTE_CLEANUPS = 3
 # Street walked twice is compared in steps of this, so a few metres from a
 # mid-block start to its corner never outrank the solver's own ranking.
 SPUR_STEP_METERS = 25
+# What a walk crossing its own path costs in the judge, as if it were this
+# many metres retraced: a figure of eight reads as lost on the map.
+CROSSING_METERS = 300
 # A walk judged within this share of the slider of the best one, retracing no
 # more, is as good a walk. Day and `again` take turns through them.
 ROUTE_VARIETY = 0.1
@@ -549,6 +553,12 @@ def _plan_route(
         pins = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
         return retraced_meters([p for leg in legs for p in leg], pins)
 
+    def crossed(order, legs):
+        pins = [at] + [
+            Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order
+        ]
+        return crossings([p for leg in legs for p in leg], pins)
+
     def judge(order, legs):
         """Stage 2's ranking, in the module docstring. A short walk retraces
         least, so on spurs alone a 10km ask got 755m. Short of ROUTE_FILL is
@@ -558,7 +568,8 @@ def _plan_route(
         short = ROUTE_FILL * budget_meters - _path_meters(order, d, closed)
         off = max(0.0, short, routed_meters(legs) - budget_meters)
         retraced = spur(order, legs)
-        return (off + retraced) // SPUR_STEP_METERS, retraced
+        tangled = CROSSING_METERS * crossed(order, legs)
+        return (off + retraced + tangled) // SPUR_STEP_METERS, retraced
 
     routed = [(order, legs)] + [(o, streets(o)) for o in shortlist[1:]]
     # Round the block is longer than `d` says. When that takes the walk over
@@ -567,23 +578,25 @@ def _plan_route(
     if routed_meters(legs) > budget_meters and over > 1:
         solve_for = budget_meters / over
         routed += [(o, streets(o)) for o in walks(set()) if o]
-    judged = [(judge(o, lg), n, o, lg) for n, (o, lg) in enumerate(routed) if lg]
-    (top, top_retraced), *_ = min(judged, key=lambda j: j[:2])
+    judged = [(judge(o, lg), crossed(o, lg), n, o, lg) for n, (o, lg) in enumerate(routed) if lg]
+    (top, top_retraced), top_crossed, *_ = min(judged, key=lambda j: j[:3])
     slack = ROUTE_VARIETY * budget_meters / SPUR_STEP_METERS
     alike = sorted(
         (
             j
             for j in judged
-            if j[0][0] <= top + slack and j[0][1] <= top_retraced + SPUR_STEP_METERS
+            if j[0][0] <= top + slack
+            and j[0][1] <= top_retraced + SPUR_STEP_METERS
+            and j[1] <= top_crossed
         ),
-        key=lambda j: j[:2],
+        key=lambda j: j[:3],
     )
-    _, _, order, legs = alike[(random.Random(seed).randrange(len(alike)) + again) % len(alike)]
+    *_, order, legs = alike[(random.Random(seed).randrange(len(alike)) + again) % len(alike)]
     retraced = spur(order, legs)
     judged_now = judge(order, legs)
     banned: set[int] = set()
     for _ in range(ROUTE_CLEANUPS):
-        if retraced < 1:
+        if retraced < 1 and not crossed(order, legs):
             break
         trials = []
         for stop in order:
