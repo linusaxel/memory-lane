@@ -331,28 +331,30 @@ rejects and why are rows now: `python -m pipeline.sources list`.
       `crawler/sources.py`.
 - [ ] **Get transcripts past YouTube's IP block.** (checked 2026-09-27) After
       ~40 caption fetches in a day, youtube-transcript-api gets
-      `RequestBlocked`. It happened twice in one session and stalled screening
-      and a 12-episode Københavnerglimt batch for hours. `pipeline/transcripts.py`
-      stops cleanly, and rows stay pending, but nothing warns before the
-      block. That is now the ceiling on how fast sources grow: extraction
-      is ~$0.02-0.05 a memory, and captions are the bottleneck. In order, free
-      first:
-      1. **Fall back to yt-dlp's subtitles** (`--write-auto-subs
-         --skip-download --sub-format json3`). yt-dlp lists channels fine
-         during a block, and it can take `--cookies-from-browser`. Check first
-         that the caption endpoint isn't blocked with it; if not, it's a second
-         fetcher behind the same `transcripts` rows.
-      2. **Drip, don't burst.** Make `TRANSCRIPT_DELAY_SECONDS` (1.5 s mean)
-         30-60 s, and let the worker fetch a few an hour in the background
-         instead of 20 in a minute. It's free and slow, and fine for a backlog.
-      3. **Local Whisper on the audio** (yt-dlp `-x`). No captions needed,
-         and the same path the podcast source plans to use. It costs CPU
-         time, and audio downloads may have their own limit.
-      4. **A rotating residential proxy.** `WebshareProxyConfig` is built
+      `RequestBlocked`, and a batch stalls for hours. Captions, not the
+      ~$0.02-0.05 a memory, are the ceiling on growth. The drip shipped
+      (`transcripts --limit`, cron line in `docs/01-setup.md`). Left, in order:
+      1. **yt-dlp subtitles: failed the probe, one lever left.** On
+         2026-09-27 the library listed tracks fine, but yt-dlp's caption
+         download got HTTP 429 with no cookies, with node as JS runtime, and
+         with curl_cffi impersonation. With `--cookies-from-browser chrome`
+         it got "The page needs to be reloaded" (a JS challenge). The last try,
+         `--remote-components ejs:github` (yt-dlp's official solver, fetched
+         from GitHub), is untested; run it by hand. Temper hopes: minutes
+         later the library's own caption download was blocked too, while
+         listing still worked. The block is on the timedtext endpoint both
+         tools use, not on the library. If captions come back,
+         `fetch_captions()` goes in `crawler/yt_crawler.py` as a fallback on
+         `RequestBlocked`. Trap: `automatic_captions` lists machine
+         translations into every language (a Danish video offers `en`), so
+         take only the `-orig` track.
+      2. **Local Whisper on the audio** (yt-dlp `-x`). No captions needed,
+         and the same path the podcast source plans to use. Needs ffmpeg, and
+         audio downloads likely hit the same 429. Build with the podcast source.
+      3. **A rotating residential proxy.** `WebshareProxyConfig` is built
          into youtube-transcript-api (a few $ a month), while today's
-         `TRANSCRIPT_PROXY` is a `GenericProxyConfig`. A fixed or datacenter
-         proxy gets blocked like a cloud IP. Paid, so last, but it's the
-         library's own answer and a one-line change in `fetch_transcript()`.
+         `TRANSCRIPT_PROXY` is a `GenericProxyConfig`. It's a one-line change in
+         `fetch_transcript()`. Do it when the drip can't keep up.
 - [ ] **Run the backlog through the Batch API.** (checked 2026-09-27) Half
       price, and nothing in the pipeline is waiting on an answer. Worth it
       before a whole-channel run, not for one video.

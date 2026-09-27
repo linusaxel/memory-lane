@@ -183,6 +183,32 @@ def test_an_ip_block_stops_the_run_and_leaves_every_row_pending(db_session, monk
     assert set(flags) == {(False, False)}
 
 
+@pytest.mark.db
+def test_limit_fetches_only_that_many(db_session, monkeypatch):
+    """The drip: `--limit 3` from cron, so a backlog never bursts into a block."""
+    from contextlib import contextmanager
+
+    from sqlalchemy import text
+
+    for vid in ("aaaaaaaaaaa", "bbbbbbbbbbb", "ccccccccccc"):
+        db_session.execute(
+            text("INSERT INTO content (url, platform, platform_id) VALUES (:u, 'youtube', :v)"),
+            {"u": f"https://www.youtube.com/watch?v={vid}", "v": vid},
+        )
+    db_session.commit()
+
+    @contextmanager
+    def _session():
+        yield db_session
+
+    segments = [{"text": "x", "start": 0.0, "duration": 1.0}]
+    monkeypatch.setattr(transcripts, "YouTubeTranscriptApi", _api_returning(segments))
+    monkeypatch.setattr(transcripts, "get_session", _session)
+    monkeypatch.setattr(transcripts, "TRANSCRIPT_DELAY_SECONDS", 0)
+
+    assert transcripts.fetch_pending_transcripts(limit=2) == {"fetched": 2, "failed": 0}
+
+
 def test_the_proxy_is_handed_to_the_client(monkeypatch):
     seen = {}
 

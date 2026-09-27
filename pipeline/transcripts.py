@@ -1,5 +1,6 @@
 """Fetch YouTube transcripts and store in database."""
 
+import argparse
 import json
 import logging
 import random
@@ -71,7 +72,7 @@ def fetch_transcript(video_id: str) -> dict | None:
 LONG_ENOUGH = f"(c.duration_seconds IS NULL OR c.duration_seconds >= {MIN_VIDEO_MINUTES * 60})"
 
 
-def fetch_pending_transcripts(content_ids: list[int] | None = None):
+def fetch_pending_transcripts(content_ids: list[int] | None = None, limit: int | None = None):
     fetched = 0
     failed = 0
 
@@ -85,8 +86,10 @@ def fetch_pending_transcripts(content_ids: list[int] | None = None):
                   AND platform = 'youtube'
                   AND {LONG_ENOUGH}
                   AND (CAST(:ids AS integer[]) IS NULL OR id = ANY(CAST(:ids AS integer[])))
+                ORDER BY id
+                LIMIT :limit
             """),
-            {"ids": content_ids},
+            {"ids": content_ids, "limit": limit},
         ).fetchall()
 
         logger.info(f"Found {len(pending)} videos pending transcript fetch")
@@ -153,4 +156,7 @@ def fetch_pending_transcripts(content_ids: list[int] | None = None):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    fetch_pending_transcripts()
+    parser = argparse.ArgumentParser(description="Fetch pending YouTube transcripts")
+    # The drip: a few an hour from cron stays under YouTube's block. docs/01-setup.md
+    parser.add_argument("--limit", type=int, help="Fetch at most this many")
+    fetch_pending_transcripts(limit=parser.parse_args().limit)
