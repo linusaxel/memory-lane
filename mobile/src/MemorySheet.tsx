@@ -28,6 +28,7 @@ import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { button, buttonText, buttonTextSmall, color, dim, font, label, lift, radius as corner } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
+import YouGlyph from './YouGlyph.tsx';
 
 type Props = {
   /** Everything at the tapped point. One marker can hide a dozen memories. */
@@ -290,15 +291,20 @@ export default function MemorySheet({
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.meta}>
-                  {[
-                    memory.source_name,
-                    memory.year,
-                    hearts > 0 && heartsText,
-                  ]
-                    .filter((part) => part != null && part !== '' && part !== false)
-                    .join(' · ')}
-                </Text>
+                <View style={styles.peekFrom}>
+                  {memory.author && <YouGlyph size={13} color={color.inkFaint} />}
+                  <Text style={styles.meta}>
+                    {[
+                      memory.author
+                        ? `Left by ${memory.author.name}`
+                        : memory.source_name && `From ${memory.source_name}`,
+                      memory.year,
+                      hearts > 0 && heartsText,
+                    ]
+                      .filter((part) => part != null && part !== '' && part !== false)
+                      .join(' · ')}
+                  </Text>
+                </View>
                 {waiting}
               </View>
             ) : locked ? (
@@ -531,6 +537,7 @@ const styles = StyleSheet.create({
   // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
   meta: { ...label },
+  peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   reachable: { color: color.sealDeep },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
   peek: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 14 },
