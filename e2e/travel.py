@@ -14,10 +14,11 @@ database and streets, and writes:
                        BENCH_LAT / BENCH_LNG: the bench, stood on from the map
                        with no walk (paywall-from-the-peek, subscriber-opens-from-map)
 
-The seed's five stops are the only ones in reach, so every device and every
-`again` gets the same five in the same order. Exits 3 when the walk from here
-cannot carry the journey (fewer than five stops, or the stack first, whose
-sheet pages through three), and run.sh picks another start.
+The 4 km default is four stops, and run.sh leaves the seed only four in reach,
+so every device and every `again` gets the same four in the same order.
+Exits 3 when the walk from here cannot carry the journey (fewer than four
+stops, no bench, or the stack first, whose sheet pages through three), and
+run.sh picks another start.
 """
 
 import datetime
@@ -49,7 +50,7 @@ def main(start: Coordinates) -> None:
     if legs is None:
         sys.exit("no street shapes - is ROUTING_URL set and OSRM up?")
     names = [r.place_name for r in stops]
-    if len(names) < 5 or names[0] == "Woodstock, dev seed":
+    if len(names) < 4 or names[0] == "Woodstock, dev seed" or "Ringkaféen, dev seed" not in names:
         print(f"this start cannot carry the journey: {names}")
         sys.exit(3)
 

@@ -165,6 +165,11 @@ reset_database() {
   local seeded=$?
   [ "$seeded" = 3 ] && return 3
   [ "$seeded" = 0 ] || { cat "$LOGS/seed.log" >&2; exit 1; }
+  # The 4 km default is four stops, and the route is seeded on device, so with
+  # five in reach travel.py's device and the app's pick different fours. Four
+  # in reach leaves nothing to pick. No flow names the bridge.
+  [ "${1:-}" = lakes ] || psql_on "$DB" "DELETE FROM places WHERE name = 'Nørrebrogade bridge, dev seed'" >/dev/null \
+    || infra "could not drop the bridge from $DB"
 }
 
 # F27's streak needs a walk stop unlocked yesterday, by a device id the app has

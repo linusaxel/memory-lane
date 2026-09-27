@@ -1,5 +1,5 @@
 # F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
-# loop 1 -> 5 -> F30 finish it (F27 streak) -> F15/F31 reread it in the
+# loop 1 -> 4 -> F30 finish it (F27 streak) -> F15/F31 reread it in the
 # journal (F26 heart it, F33 leave a note).
 # docs/08-ux-flows.md
 #
@@ -19,7 +19,7 @@
 #     as well as its place, and the pin turning is directly assertable.
 #  3. F25: the app opens on the map (F29), and Plan a walk opens F1. The walk below is the 4 km default,
 #     previewed and accepted from the start position; its titles carry a
-#     "Stop N of 5." prefix. `tests/test_api_routes.py` is what pins the
+#     "Stop N of 4." prefix. `tests/test_api_routes.py` is what pins the
 #     selection and ordering rules down; this file just has to agree with them.
 
 appId: ${APP_ID}
@@ -49,21 +49,21 @@ appId: ${APP_ID}
     timeout: 20000
 - tapOn: "Show me the walk"
 - extendedWaitUntil:
-    visible: "5 stops · .* loop"
+    visible: "4 stops · .* loop"
     timeout: 40000
 - tapOn: "Start this walk"
 
 - extendedWaitUntil:
-    visible: "On a walk · 0 of 5 unlocked\\."
+    visible: "On a walk · 0 of 4 unlocked\\."
     timeout: 40000
 
 # A walk can be ended any time; with stops still to reach, it asks first.
 - tapOn: "On a walk.*"
 - assertVisible: "End this walk\\?"
-- assertVisible: "The 5 stops you haven't reached will lock again\\. Anything you've unlocked stays unlocked\\."
+- assertVisible: "The 4 stops you haven't reached will lock again\\. Anything you've unlocked stays unlocked\\."
 - tapOn: "Keep walking"
 - assertNotVisible: "End this walk\\?"
-- assertVisible: "On a walk · 0 of 5 unlocked\\."
+- assertVisible: "On a walk · 0 of 4 unlocked\\."
 
 # "Turn on location" shows until there is a position, so its going is the fix.
 # Waiting on it means a slow fix reads as a slow fix, not as a locked stop.
@@ -73,16 +73,16 @@ appId: ${APP_ID}
 
 # F17: why it will not open.
 - extendedWaitUntil:
-    visible: "Stop 2 of 5. ${STOP2}. Locked, too far to open."
+    visible: "Stop 2 of 4. ${STOP2}. Locked, too far to open."
     timeout: 40000
-- tapOn: "Stop 2 of 5. ${STOP2}. Locked, too far to open."
+- tapOn: "Stop 2 of 4. ${STOP2}. Locked, too far to open."
 - assertVisible: "Get within 20 m to unlock it\\."
 # F26: nothing to heart until it is open.
 - assertNotVisible: "Heart this memory.*"
 - tapOn: "Close"
 
-# F25 + F13 + F7, five times: walk today's route in order, 1 -> 5, whichever
-# of the seed's five stops the route puts where (never the stack first).
+# F25 + F13 + F7, four times: walk today's route in order, 1 -> 4, whichever
+# four of the seed's five stops the route picks (never the stack first).
 # Each leg is two fixes, halfway along its street shape from OSRM and where the
 # street passes the stop, so the walk is quick; it ends inside the
 # 20m gate. Only the stop being stood on is ever in reach. Nothing is tapped
@@ -92,7 +92,7 @@ appId: ${APP_ID}
     visible: "Unlock memory at stop 1: ${STOP1}\\."
     timeout: 45000
 # The pin itself turned, not just the pill.
-- assertVisible: "Stop 1 of 5. ${STOP1}. Locked, within reach."
+- assertVisible: "Stop 1 of 4. ${STOP1}. Locked, within reach."
 
 - runFlow:
     file: steps/unlock-stop.yml
@@ -129,25 +129,17 @@ appId: ${APP_ID}
       STOP: "${STOP4}"
       WORDS: "${WORDS4}"
 
-- runFlow: ../e2e/out/legs/5.yml
-- runFlow:
-    file: steps/unlock-stop.yml
-    env:
-      N: "5"
-      STOP: "${STOP5}"
-      WORDS: "${WORDS5}"
-
 # F30: closing the last memory shows the whole loop and what it came to, once.
 - extendedWaitUntil:
     visible: "Nice walk\\."
     timeout: 30000
-- assertVisible: "5 memories · .* loop · .* min"
+- assertVisible: "4 memories · .* loop · .* min"
 # F27: e2e/run.sh gave this device an unlock yesterday, so today makes two.
 - assertVisible: "2 days in a row"
 - tapOn: "Done"
 
 - extendedWaitUntil:
-    visible: "On a walk · 5 of 5 unlocked\\."
+    visible: "On a walk · 4 of 4 unlocked\\."
     timeout: 30000
 
 # F15 + F31: the journal keeps the walk. Its row opens in place to its five
@@ -156,9 +148,9 @@ appId: ${APP_ID}
 - tapOn: "Journal"
 - assertVisible: "2 day streak"
 - extendedWaitUntil:
-    visible: ".*, 5 memories · .*"
+    visible: ".*, 4 memories · .*"
     timeout: 30000
-- tapOn: ".*, 5 memories · .*"
+- tapOn: ".*, 4 memories · .*"
 # A stop row's label is "Stop N, <place>, <distance>"; the walk row's names no stop.
 - extendedWaitUntil:
     visible: "Stop \\d+, ${STOP1}, .*"
@@ -211,21 +203,21 @@ appId: ${APP_ID}
 # on the walked route, not on the plan page.
 - launchApp
 - extendedWaitUntil:
-    visible: "On a walk · 5 of 5 unlocked\\."
+    visible: "On a walk · 4 of 4 unlocked\\."
     timeout: 30000
 - assertNotVisible: "How far today?"
 - assertNotVisible: "Nice walk\\."
 - tapOn: "Journal"
 - extendedWaitUntil:
-    visible: ".*, 5 memories · .*"
+    visible: ".*, 4 memories · .*"
     timeout: 30000
-- tapOn: ".*, 5 memories · .*"
+- tapOn: ".*, 4 memories · .*"
 # F26: and the heart outlives the process.
 - tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible: "Hearted, 1 heart"
 - tapOn: "Close"
 - tapOn: "Close journal"
-- assertVisible: "On a walk · 5 of 5 unlocked\\."
+- assertVisible: "On a walk · 4 of 4 unlocked\\."
 
 # Ending a walked walk loses nothing, so it does not ask. The map, and the
 # plan page, but a second walk the same day is the paywall's (F35): it opened
