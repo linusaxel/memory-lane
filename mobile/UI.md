@@ -36,7 +36,7 @@ Plan (src/Plan.tsx)            opaque page over the mounted map
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
-└─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length / Back to the map;
+└─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length, × to the map;
      "No walk that long from here"; "Planning from central Copenhagen…" with no position
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
@@ -441,6 +441,13 @@ Each of these exists because something broke or would have been rejected.
     `MemorySheet.tsx` is that strip; it carries the one hairline, so the three
     credit variants inside it have none of their own. Anything new that can
     appear under a summary goes *in* the scroll, not between the two.
+12. **Every view has a way out.** A card over the map dismisses with an × in
+    its top-trailing corner, on the title line (Apple Maps' convention, HIG
+    Toolbars: a back chevron retraces a hierarchy, a close dismisses a layer).
+    Never a new floating control top left: Journal owns that corner, and it is
+    the least accurate tap on the screen (Hoober 2017: corner targets need
+    ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
+    44pt (HIG Buttons).
 
 ## Writing
 
@@ -625,7 +632,7 @@ The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
 |---|---|---|
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → plan |
 | plan | "How far today?" and the slider | "Show me the walk" → preview; Back to the map → map |
-| preview | the walk on the map, the card | Start walk → walk; Change length → plan; Back to the map → map |
+| preview | the walk on the map, the card | Start walk → walk; Change length → plan; × → map |
 | walk | today's stops, the pill | nothing - the day is locked |
 
 A failed request on plan or preview leaves you there with "Can't reach Memory

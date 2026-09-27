@@ -15,6 +15,7 @@
 
 import Slider from '@react-native-community/slider';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Path, Svg } from 'react-native-svg';
 
 import type { WalkAsk } from './api.ts';
 import { distance } from './format.ts';
@@ -189,9 +190,9 @@ export function Preview({
   return (
     <View style={styles.card}>
       {stops === 0 ? (
-        <Text style={styles.cardTitle}>No walk that long from here</Text>
+        <Text style={[styles.cardTitle, styles.besideClose]}>No walk that long from here</Text>
       ) : (
-        <Text style={styles.cardTitle}>
+        <Text style={[styles.cardTitle, styles.besideClose]}>
           {`${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${loop ? ' loop' : ''}`}
         </Text>
       )}
@@ -243,16 +244,19 @@ export function Preview({
       >
         <Text style={styles.secondaryText}>Change length</Text>
       </Pressable>
+      {error && <Text style={styles.error}>{error}</Text>}
       <Pressable
-        style={dim(styles.secondary)}
+        style={dim(styles.close)}
         onPress={onMap}
         disabled={busy}
+        hitSlop={7}
         accessibilityRole="button"
         accessibilityLabel="Back to the map"
       >
-        <Text style={styles.secondaryText}>Back to the map</Text>
+        <Svg width={12} height={12} viewBox="0 0 12 12">
+          <Path d="M1.5 1.5l9 9M10.5 1.5l-9 9" stroke={color.inkSoft} strokeWidth={1.8} strokeLinecap="round" />
+        </Svg>
       </Pressable>
-      {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
@@ -384,5 +388,18 @@ const styles = StyleSheet.create({
   },
   cardTitle: { ...font.display, fontSize: 23, lineHeight: 30, color: color.ink },
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
+  // Apple's close: top trailing on the card, on the title line (UI.md, rule 12).
+  close: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.rule,
+  },
+  besideClose: { paddingRight: 36 },
   doneTitle: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
 });
