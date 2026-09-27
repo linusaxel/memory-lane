@@ -526,16 +526,17 @@ product is about.
 ## F15 · Reread what you unlocked — **Implemented**
 
 1. **Journal**, top left of the map, opens the only other screen. The streak
-   is on top, large (F27); under it *Walks*, *Memories* (F24) and *You* (F17).
+   is on top, large (F27); under it *Walks*, *Unlocked Memories* and *My
+   Memories* (F24).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
    says so.
 3. There is no **Show on map**: the map draws only today's walk, so a memory
    from another day has no pin to fly to.
 
-There is no flat "Unlocked" list any more. Every unlock is a walk's stop or
-something you filed, and both are already here, grouped the way they were
-earned.
+*Unlocked Memories* is every unlock in one flat list, newest first, from the
+device's copy (F16), each opening its sheet. What you filed yourself stays in
+*My Memories*, not here.
 
 ## F16 · Read on the train home — **Implemented**
 
@@ -702,7 +703,7 @@ is now ordinary. For the reasoning, see docs/10, *Every memory is public*.
 ## F24 · Manage what you filed — **Implemented**
 
 **Who:** somebody who has filed at least one memory.
-**Trigger:** the journal (F15) → *Memories*. Empty until something is filed, and
+**Trigger:** the journal (F15) → *My Memories*. Empty until something is filed, and
 it says so rather than hiding.
 
 1. A list, newest first: place name and summary. A row reported by others carries a **Reported** badge instead of vanishing,
@@ -842,7 +843,7 @@ simply does not fill and nothing is lost by tapping it again later.
 immediately, the state survives closing and reopening the sheet and
 relaunching the app, and a locked memory shows no heart control at all.
 
-**The author hears back.** Every row under Journal → Memories says "3 hearts · 1
+**The author hears back.** Every row under Journal → My Memories says "3 hearts · 1
 note", and a row whose count went up since the last look wears "New" (the tab
 reads "Memories ·" until you open it). The baseline is on the phone
 (`mobile/src/seen.ts`): no push, and the server stores nothing new.

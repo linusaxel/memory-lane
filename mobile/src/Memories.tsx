@@ -1,19 +1,18 @@
 /** The journal: the one screen besides the map, opened from its corner.
- *  The streak on top, once there is one, then two sections behind a
+ *  The streak on top, once there is one, then three sections behind a
  *  segmented control:
  *
  * **Walks** - every walk this account took that opened something, newest
  * first (a walk that opened nothing is deleted, docs/10). A row opens in
  * place to the memories it earned, strung on a rail in walking order. Cached
  * (route.ts `loadWalked`), so it reads on a train (F16).
- * **Filed** - what you filed. Always the server's, because it has to show a
- * thing no local cache was told about: one enough people reported. Pages at
- * `MINE_PAGE_SIZE`.
+ * **Unlocked Memories** - everything earned, newest first, from App.tsx's
+ * local copy (unlocked.ts), so it too reads on a train. Your own are left out.
+ * **My Memories** - what you filed. Always the server's, because it has to
+ * show a thing no local cache was told about: one enough people reported.
+ * Pages at `MINE_PAGE_SIZE`.
  *
  * You and settings are not here: they have their own corner on the map.
- *
- * There is no "Unlocked" list any more: every unlock is a walk's stop or
- * something you filed, and both are here already.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -51,6 +50,8 @@ type Props = {
   /** Bumped by App.tsx after a save or a delete, which happen without
    *  `focused` re-firing. */
   refreshKey: number;
+  /** Everything this device has earned, newest first. */
+  unlocked: LocatedMemory[];
   onOpenMine: (memory: LocatedMemory) => void;
   /** An earned stop of a past walk. */
   onOpenStop: (memory: LocatedMemory) => void;
@@ -60,10 +61,11 @@ type Props = {
 };
 
 type Status = 'loading' | 'ready' | 'failed';
-type Section = 'walks' | 'mine';
+type Section = 'walks' | 'unlocked' | 'mine';
 type Item =
   | { kind: 'walk'; walk: WalkedRoute; index: number }
   | { kind: 'stop'; memory: LocatedMemory; walk: number; stop: number }
+  | { kind: 'unlocked'; memory: LocatedMemory }
   | { kind: 'mine'; memory: LocatedMemory };
 
 export default function Memories({
@@ -71,6 +73,7 @@ export default function Memories({
   streak,
   focused,
   refreshKey,
+  unlocked,
   onOpenMine,
   onOpenStop,
   onClose,
@@ -195,10 +198,20 @@ export default function Memories({
       ? ''
       : `${walks.length} ${walks.length === 1 ? 'walk' : 'walks'}`;
 
+  // Filing unlocks what you filed (App.tsx), so leave your own out.
+  // ponytail: knows only the loaded pages of `mine`; an own memory past them,
+  // or with `mine` unreachable, still shows. A server `mine` flag if that bites.
+  const mineIds = new Set(mine.map((memory) => memory.id));
+  const others = unlocked.filter((memory) => !mineIds.has(memory.id));
+
+  const unlockedNote = others.length ? `${others.length} unlocked` : '';
+
   const data: Item[] =
     section === 'mine'
       ? mine.map((memory) => ({ kind: 'mine', memory }))
-      : walks.flatMap((walk, index): Item[] => [
+      : section === 'unlocked'
+        ? others.map((memory) => ({ kind: 'unlocked', memory }))
+        : walks.flatMap((walk, index): Item[] => [
           { kind: 'walk', walk, index },
           ...(openWalk === index
             ? walk.memories
@@ -249,9 +262,9 @@ export default function Memories({
               meta={`${item.walk.earned} ${item.walk.earned === 1 ? 'memory' : 'memories'} · ${distance(item.walk.budget_meters)}`}
               onPress={() => setOpenWalk((open) => (open === item.index ? null : item.index))}
             />
-          ) : item.kind === 'stop' ? (
+          ) : item.kind === 'stop' || item.kind === 'unlocked' ? (
             <Row
-              stop={item.stop}
+              stop={item.kind === 'stop' ? item.stop : undefined}
               place={item.memory.place.name}
               summary={item.memory.summary}
               distance={distanceTo(item.memory)}
@@ -268,9 +281,13 @@ export default function Memories({
             />
           )
         }
-        ListHeaderComponent={<Header note={section === 'mine' ? mineNote : walksNote} />}
+        ListHeaderComponent={
+          <Header note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote} />
+        }
         ListEmptyComponent={
-          section === 'walks' ? (
+          section === 'unlocked' ? (
+            <Empty text="Nothing unlocked yet. Walk to a stop and it opens here." />
+          ) : section === 'walks' ? (
             walksStatus === 'loading' ? (
               <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
             ) : walksStatus === 'failed' ? (
@@ -323,7 +340,12 @@ function Switcher({
     <View style={styles.switcher}>
       <SwitcherItem label="Walks" active={section === 'walks'} onPress={() => onSelect('walks')} />
       <SwitcherItem
-        label={filedNew ? 'Memories ·' : 'Memories'}
+        label="Unlocked Memories"
+        active={section === 'unlocked'}
+        onPress={() => onSelect('unlocked')}
+      />
+      <SwitcherItem
+        label={filedNew ? 'My Memories ·' : 'My Memories'}
         active={section === 'mine'}
         onPress={() => onSelect('mine')}
       />

@@ -121,7 +121,7 @@ with no network is never stopped at the gate.
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/Plan.tsx` | the plan page and the preview card: how far, then accept |
 | `src/useBreath.ts` | the next stop's hop |
-| `src/Memories.tsx` | the journal: streak, walks, filed, and You |
+| `src/Memories.tsx` | the journal: streak, walks, unlocked, and what you filed |
 | `src/Settings.tsx` | You: name, account, how unlocking works. Its own sheet |
 | `src/AddGlyph.tsx` | the Add button: an ember pin with a plus |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |

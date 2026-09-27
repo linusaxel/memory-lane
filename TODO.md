@@ -23,6 +23,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **file-and-edit.yml is red on main.** 2026-09-27: after Post, the flow's
+  `".*ferry horn.* #food"` never shows, on a clean `main` too, so nothing after
+  it (the journal's My Memories tab, edit, delete) is checked end to end. It
+  cost a second e2e run to prove the break was not the journal change. Fix: find
+  what the posted sheet now renders instead, and assert on that.
 - **The venv has no pip.** 2026-09-27: AGENTS.md's quick start says
   `python3 -m venv` and `pip install`, but `venv/` was made by uv, so
   `venv/bin/pip` and `python -m pip` both fail; it took three tries to find

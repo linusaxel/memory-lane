@@ -1462,6 +1462,7 @@ export default function App() {
             streak={profile?.streak ?? 0}
             focused={journalOpen}
             refreshKey={mineVersion}
+            unlocked={collected}
             onOpenMine={openEditor}
             onOpenStop={(memory) => {
               setOpenAt([memory]);
