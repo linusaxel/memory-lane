@@ -832,12 +832,14 @@ def _same_story(a: dict, b: dict, overlap: float = 0.3) -> bool:
     return not union or len(words[0] & words[1]) / len(union) >= overlap
 
 
-def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -> list[dict]:
-    """Merge memories for the same place within threshold_seconds.
+def merge_nearby_memories(memories: list[dict]) -> list[dict]:
+    """Merge retellings of one story at one place, anywhere in the video.
 
     Keyed on (venue, locality), W4-02 - the model no longer returns
     place_query. Folded the same way save_memories folds it, so a chunk
-    boundary that capitalizes a name differently still merges.
+    boundary that capitalizes a name differently still merges. No time
+    window: a speaker comes back to a story minutes later, and word overlap
+    alone tells a retelling from a second story.
     """
     if not memories:
         return []
@@ -855,12 +857,10 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
             continue
 
         same_place = _venue_locality_key(current) == _venue_locality_key(mem)
-        time_diff = abs(mem.get("timestamp_start", 0) - current.get("timestamp_start", 0))
 
-        # Two overlapping chunks tell the same story twice: keep the first
-        # telling. Two different stories at one bar stay two memories - gluing
-        # them made 110-word cards.
-        if same_place and time_diff <= threshold_seconds and _same_story(current, mem):
+        # One story told twice: keep the first telling. Two different stories
+        # at one bar stay two memories - gluing them made 110-word cards.
+        if same_place and _same_story(current, mem):
             current_tags = set(current.get("tags", []))
             current_tags.update(mem.get("tags", []))
             current["tags"] = list(current_tags)

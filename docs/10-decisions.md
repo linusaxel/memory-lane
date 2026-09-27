@@ -1042,6 +1042,9 @@ Three changes, each because a prompt rule alone had leaked on real output:
 The merge also changed. It concatenated two summaries at one venue, which glued
 two stories into 110-word cards. Now it keeps the first telling of one story, and
 keeps different stories apart by word overlap (`_same_story`).
+2026-09-27: the 60-second window it also required is gone. Café Woodstock's
+raid was told at 3:07 and again at 4:14, 0.36 overlap, and came out as two
+memories. Distinct stories at one place overlap 0.07 at most on the corpus.
 
 `location_precision: city` is still dropped. A 10km pin is not a spot, and a park
 at 1km is.

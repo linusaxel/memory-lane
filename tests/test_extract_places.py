@@ -184,3 +184,15 @@ def test_merge_keeps_two_stories_at_one_bar_apart():
     one = "Ringkaféen, a bar from the 1930s at Folmer Bendtsens Plads, sank into the ground when metro construction broke through to the old Lygteå stream running beneath the asphalt."
     two = "Ringkafeen, a bar dating from the 1930s on Folmer Bensens Plads, sank into the ground when metro construction broke through to the old Lygteå stream running under the asphalt."
     assert len(merge_nearby_memories([dict(at, summary=one), dict(at, summary=two)])) == 1
+
+
+def test_a_story_told_again_minutes_later_is_one_memory():
+    """Verbatim from Café Woodstock: the raid told at 3:07 and again at 4:14."""
+    at = {"venue": "Woodstock", "locality": "Copenhagen"}
+    one = "During the 'værtshuskrigen,' when the state tried stripping Christiania's bars of alcohol licenses and equipment, Woodstock was completely gutted, with truckloads of bar stools, bottles and beer crates hauled away. But the bar counter itself stayed standing, since a customer had mortared it in with a technique so solid even police with the right tools couldn't remove it."
+    two = "During værtshuskrigen, when the state tried to strip Christiania's bars of alcohol licenses and equipment, police arrived at Woodstock in trucks and hauled away the tables, benches, beer and tap equipment. The bar counter itself, built with an unusual masonry technique, could not be removed and still stands today, with only its tabletop lost."
+    memories = [
+        dict(at, summary=one, timestamp_start=187.0),
+        dict(at, summary=two, timestamp_start=254.6),
+    ]
+    assert [m["summary"] for m in merge_nearby_memories(memories)] == [one]
