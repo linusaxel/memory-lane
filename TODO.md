@@ -54,27 +54,14 @@ delete an entry when its fix lands.
       `Photon.search`. Next: map `other` to `poi` when it carries a name, then
       decide whether an `llm`-only place belongs on the map at all.
 
-- [ ] **Prompt caching mostly doesn't happen, and nothing would say if it
-      stopped.** (checked 2026-09-27, against
-      https://platform.claude.com/docs/en/build-with-claude/prompt-caching)
-      Every `_request` marks the system prompt `cache_control: ephemeral`, but
-      a prompt below the model's minimum is silently not cached:
-      - Sonnet 5's minimum is 1,024 tokens. `SYSTEM_PROMPT` (~1.5k) clears it;
-        `JUDGE_PROMPT` (~0.9k) and `BRIEF_PROMPT` (~0.2k) do not.
-      - Haiku 4.5's minimum is 4,096 tokens, and `CLASSIFIER_PROMPT` is ~0.2k,
-        so all 22 classifier calls per video pay full price.
-
-      Done 2026-09-27: `log_cache` logs cache read/write per call, and the
-      source + brief travel as their own user block with a second breakpoint.
-      Left:
-      1. Chunks of one video run in parallel on RQ, so the first wave all
-         writes rather than reads. Measure before fixing: enqueue one video
-         and read the `cache read` log lines per chunk.
-      2. The judge's three passes share only the system prompt, and it is under
-         the minimum. Not worth padding.
-
-      Sonnet 5 reads cost $0.20/MTok against $2 base, and 5m writes cost 1.25x.
-      Cents per video either way; the win is knowing, then the brief.
+- [ ] **Prompt caching: only the classifier is left uncached.** Measured
+      2026-09-27 on videos 535-537 (one burst worker): chunk 1 writes ~4.3k
+      (system ~3.8k + source and brief ~0.5k), every later chunk reads it, and
+      the judge's ~1.4k system prompt is read on passes two and three. The
+      brief call (~14k, once a video) and the Haiku classifier (~0.2k prompt,
+      under Haiku's 4,096 minimum) are never cached. Left: with several
+      workers, a video's first wave of chunks may all write. Check the
+      `cache read` log lines the first time more than one worker runs.
 
 - [ ] **The privacy policy still says sign-in is optional.** `mobile/store/privacy.md`
       and `/privacy` (`api/main.py`): "You can use Memory Lane without signing in".
