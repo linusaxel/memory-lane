@@ -20,3 +20,9 @@ sources:
       - url: "https://www.youtube.com/watch?v=kZAqbulueXc"
       - url: "https://www.youtube.com/watch?v=QGCLljlLf1g"
       - url: "https://www.youtube.com/watch?v=0IHZRUW72Xs"
+
+  - name: "Københavnerliv"
+    platform: youtube
+    # Danish. Owners and regulars telling stories about their own pub or shop.
+    videos:
+      - url: "https://www.youtube.com/watch?v=YVNEM5PhT0Q"

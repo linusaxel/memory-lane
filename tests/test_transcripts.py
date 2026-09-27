@@ -20,8 +20,9 @@ from pipeline import transcripts
 
 
 class _Fetched:
-    def __init__(self, segments):
+    def __init__(self, segments, language_code="en"):
         self._segments = segments
+        self.language_code = language_code
 
     def to_raw_data(self):
         return self._segments

@@ -23,6 +23,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A retired model ID in `.env` stalls `worker --burst` for ~12 minutes.**
+  2026-09-27: `.env` still pinned `EXTRACTION_MODEL=claude-sonnet-4-20250514`,
+  every extract got a 404, and `ModelUnusableError` was retried on the
+  30/120/600 s schedule like a transient error while burst waited it out. Fix:
+  fail the job without retries on `ModelUnusableError`, and have the worker check
+  both model IDs once at startup.
+
 - **The e2e flows assert on whole sentences of copy.** 2026-09-27: a copy pass
   had to hand-edit seven `.maestro/*.yml` files and regex-escape every changed
   sentence, and a missed one fails a 10-minute run. Fix: give the gate notes and

@@ -30,7 +30,7 @@ def fetch_transcript(video_id: str) -> dict | None:
     Returns None only for PERMANENT failures (captions disabled, video gone,
     no matching language). Transient errors propagate so the caller can retry.
     """
-    languages = ["en", "en-US", "en-GB", "en-AU"]
+    languages = ["en", "en-US", "en-GB", "en-AU", "da"]
 
     try:
         proxy = TRANSCRIPT_PROXY and GenericProxyConfig(TRANSCRIPT_PROXY, TRANSCRIPT_PROXY)
@@ -42,7 +42,7 @@ def fetch_transcript(video_id: str) -> dict | None:
         return {
             "segments": segments,
             "full_text": full_text,
-            "language": "en",
+            "language": fetched.language_code,
         }
 
     except TranscriptsDisabled:
