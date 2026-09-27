@@ -168,6 +168,7 @@ type PreviewProps = {
   /** Null once a re-roll came back with the same walk: it is the only one. */
   onAnother: (() => void) | null;
   onBack: () => void;
+  onMap: () => void;
 };
 
 export function Preview({
@@ -182,6 +183,7 @@ export function Preview({
   onAccept,
   onAnother,
   onBack,
+  onMap,
 }: PreviewProps) {
   const short = stops > 0 && meters < ROUTE_FILL * asked;
   return (
@@ -240,6 +242,15 @@ export function Preview({
         accessibilityLabel="Change length"
       >
         <Text style={styles.secondaryText}>Change length</Text>
+      </Pressable>
+      <Pressable
+        style={dim(styles.secondary)}
+        onPress={onMap}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityLabel="Back to the map"
+      >
+        <Text style={styles.secondaryText}>Back to the map</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
     </View>

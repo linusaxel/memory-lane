@@ -36,7 +36,7 @@ Plan (src/Plan.tsx)            opaque page over the mounted map
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
-└─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length;
+└─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length / Back to the map;
      "No walk that long from here"; "Planning from central Copenhagen…" with no position
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
@@ -624,8 +624,8 @@ The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
 | Stage | Shows | Leaves by |
 |---|---|---|
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → plan |
-| plan | "How far today?" and the slider | "Show me the walk" → preview |
-| preview | the walk on the map, the card | Start walk → walk; Change length → plan |
+| plan | "How far today?" and the slider | "Show me the walk" → preview; Back to the map → map |
+| preview | the walk on the map, the card | Start walk → walk; Change length → plan; Back to the map → map |
 | walk | today's stops, the pill | nothing - the day is locked |
 
 A failed request on plan or preview leaves you there with "Can't reach Memory

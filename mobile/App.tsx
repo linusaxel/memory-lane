@@ -576,6 +576,12 @@ export default function App() {
     }
   }, [device, goToMyLocation, planKm, walkAsk, preview, walkTo]);
 
+  const backToMap = () => {
+    setPlanError(null);
+    setWalkTo(null);
+    setStage('map');
+  };
+
   const acceptWalk = useCallback(async () => {
     if (!device || !planFrom) return;
     setPlanBusy(true);
@@ -1307,6 +1313,7 @@ export default function App() {
                 setPlanError(null);
                 setStage('plan');
               }}
+              onMap={backToMap}
             />
           )}
 
@@ -1347,11 +1354,7 @@ export default function App() {
                 setWalkToKm(0);
               }}
               onGo={() => planWalk(Math.floor(Math.random() * ROLLS))}
-              onBack={() => {
-                setPlanError(null);
-                setWalkTo(null);
-                setStage('map');
-              }}
+              onBack={backToMap}
               busy={planBusy}
               error={planError}
               through={walkTo?.place.name ?? null}
