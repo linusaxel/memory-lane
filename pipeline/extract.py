@@ -445,6 +445,9 @@ def _request(client: anthropic.Anthropic, system_prompt: str, user: str) -> str 
                 {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}
             ],
             messages=[{"role": "user", "content": user}],
+            # Sonnet 5 thinks by default: billed output, eats max_tokens, and
+            # puts a thinking block at content[0].
+            thinking={"type": "disabled"},
             output_config={"format": {"type": "json_schema", "schema": MEMORY_SCHEMA}},
         )
         return response.content[0].text
