@@ -203,3 +203,37 @@ def test_the_judge_drops_what_fails_and_keeps_what_it_skipped():
         "Ringkaféen",
         "not judged",
     ]
+
+
+def _replying(reply):
+    class _Session:
+        def execute(self, *a, **k):
+            return type("R", (), {"scalar": lambda self: reply})()
+
+    return _Session()
+
+
+def test_one_venue_named_three_ways_in_a_video_becomes_one_name():
+    """Content 535: Jørgen Leth's barber came out as three places."""
+    import json
+
+    from pipeline.extract import one_name_per_venue
+
+    names = [
+        "Barbershop on Vognmagergade",
+        "Herrefrisør på Vognmagergade",
+        "Jørgen Let's barbershop, Vognmagergade",
+        "Under Hylden",
+    ]
+    memories = [{"venue": v, "locality": "Copenhagen", "summary": "..."} for v in names]
+    memories.append({"venue": "herrefrisør på vognmagergade", "locality": "copenhagen"})
+    reply = json.dumps({"same": [{"index": 1, "as": 0}, {"index": 2, "as": 0}]})
+    out = one_name_per_venue(_replying(reply), None, 1, memories)
+    assert [m["venue"] for m in out] == [names[0]] * 3 + ["Under Hylden", names[0]]
+
+
+def test_an_unreadable_venue_reply_changes_nothing():
+    from pipeline.extract import one_name_per_venue
+
+    memories = [{"venue": "Maskot"}, {"venue": "Mexibar"}]
+    assert one_name_per_venue(_replying("not json"), None, 1, memories) == memories

@@ -27,6 +27,7 @@ from pipeline.extract import (
     layer_for,
     log_cache,
     merge_nearby_memories,
+    one_name_per_venue,
     prompt_for,
     save_memories,
     source_context,
@@ -373,6 +374,7 @@ def task_aggregate_memories(content_id: int):
     with get_session() as session:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         filtered = worth_telling(session, client, content_id, candidates)
+        filtered = one_name_per_venue(session, client, content_id, filtered)
         logger.info(
             f"[content:{content_id}] After merge: {len(merged)}, after filter: "
             f"{len(candidates)}, worth telling: {len(filtered)}"

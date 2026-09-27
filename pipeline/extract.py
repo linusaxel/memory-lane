@@ -822,6 +822,66 @@ def worth_telling(session, client, content_id: int, memories: list[dict]) -> lis
     return [m for i, m in enumerate(memories) if kept(i)]
 
 
+SAME_VENUE_PROMPT = """Each line is a place named in one video, with a story
+told there. Chunks of the video were read separately, so one real place may be
+named several ways: in two languages, by its owner, by its street.
+
+Say which lines name the same real place as another line. Only when the stories
+make it clear: two bars on the same street are two places. For each duplicate,
+give its index and the index of the line to keep - the name a walker would find
+on a map. Most videos have none; an empty list is the usual answer."""
+
+SAME_VENUE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "same": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"index": {"type": "integer"}, "as": {"type": "integer"}},
+                "required": ["index", "as"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["same"],
+    "additionalProperties": False,
+}
+
+
+def one_name_per_venue(session, client, content_id: int, memories: list[dict]) -> list[dict]:
+    """One venue named three ways in one video is one place, not three pins:
+    save_memories matches names exactly. A failed reply changes nothing. See
+    docs/10-decisions.md#one-venue-one-name-per-video."""
+    first = {}
+    for m in memories:
+        first.setdefault(_venue_locality_key(m), m)
+    keys = list(first)
+    if len(keys) < 2:
+        return memories
+    user = "\n".join(
+        f"[{i}] {first[k].get('venue')}, {first[k].get('locality')}: {first[k].get('summary')}"
+        for i, k in enumerate(keys)
+    )
+    try:
+        raw = _stored_request(
+            session, client, content_id, -3, SAME_VENUE_PROMPT, user, SAME_VENUE_SCHEMA
+        )
+        pairs = json.loads(raw)["same"]
+    except (TransientAPIError, TypeError, ValueError, KeyError):
+        return memories
+    canonical = {}
+    for p in pairs:
+        i, j = p.get("index"), p.get("as")
+        if i != j and all(isinstance(x, int) and 0 <= x < len(keys) for x in (i, j)):
+            canonical[keys[i]] = first[keys[j]]
+    out = []
+    for m in memories:
+        keep = canonical.get(_venue_locality_key(m))
+        out.append(m | {"venue": keep["venue"], "locality": keep["locality"]} if keep else m)
+    return out
+
+
 def _venue_locality_key(mem: dict) -> tuple[str, str]:
     return (
         (mem.get("venue") or "").strip().lower(),

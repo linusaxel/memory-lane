@@ -117,6 +117,10 @@ six yes/no questions of every candidate that survived: the swap test, breach,
 consequence, visible now, so what, and stands alone. Code keeps a candidate only
 if the swap test and stands-alone both hold, plus 2 of the other 4, on a majority of three passes in different orders
 ([decision](10-decisions.md#a-story-has-to-be-worth-telling)).
+Then `one_name_per_venue()` asks, once per video, which of the survivors' venue
+names are one real place, so "Barbershop on Vognmagergade" and "Herrefrisør på
+Vognmagergade" land on one pin
+([decision](10-decisions.md#one-venue-one-name-per-video)).
 `quality` also counts "someone", since the video usually gives a name or a
 nickname. Spot relevance itself has no regex: read the output.
 

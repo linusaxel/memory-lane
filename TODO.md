@@ -47,21 +47,13 @@ delete an entry when its fix lands.
 ## Known defects
 
 - [ ] **Most places are still the model's guess.** (checked 2026-09-27)
-      Content 534 re-extracted after the looser name match: 10 of 18 `llm`,
-      down from 14 of 20; Under Hylden is one place on Photon's POI. Left:
-      Mexibar and Maskot aren't in OSM under those names. A named Photon
-      `other` (a park, a square) is a `poi` now, not a `city`; unmeasured
-      until 534 is re-extracted. Next: decide whether an `llm`-only place
-      belongs on the map at all.
-
-- [ ] **One venue named three ways becomes three pins.** (2026-09-27,
-      content 535) Jørgen Leth's barber on Vognmagergade came out as
-      "Barbershop on Vognmagergade", "Herrefrisør på Vognmagergade" and
-      "Jørgen Let's barbershop, Vognmagergade": three stories, rightly kept
-      apart, but three `places` rows, because `save_memories` matches
-      `(venue, locality)` exactly. Next: one venue name per video (the brief
-      deliberately names no places, see `video_brief`), or run
-      `pipeline/dedup.py` over new rows.
+      10 of 26 venue places are `llm`, and re-geocoding all 10 today finds
+      none: the names aren't on the map as said. "Nørrebro Bridge" is
+      Dronning Louises Bro, "Barbershop on Vognmagergade" is a description,
+      Maskot and Mexibar aren't in OSM. A named Photon `other` is a `poi` now
+      (Nørrebroparken resolves at 50 m) but no current row needed it. Next:
+      decide whether an `llm`-only place belongs on the map at all, or have
+      the prompt give the local name ("Dronning Louises Bro").
 
 - [ ] **A retelling with new detail is not merged.** (2026-09-27, content
       537) Tove Ditlevsen growing up on Hedebygade is told at 2:24 and 5:44

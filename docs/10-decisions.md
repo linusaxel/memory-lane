@@ -1141,6 +1141,32 @@ keep or drop by hand.
 - Across three full runs, no labelled "drop" survived. Each run kept 4–5
   memories, down from 9–11.
 
+### One venue, one name per video
+
+Status: Accepted 2026-09-27
+
+Each chunk names its venue on its own, and `save_memories` matches
+`(venue, locality)` exactly. Content 535 named Jørgen Leth's barber three ways
+("Barbershop on Vognmagergade", "Herrefrisør på Vognmagergade", "Jørgen Let's
+barbershop, Vognmagergade"), so one shop got three pins.
+
+After the judge, `one_name_per_venue()` makes one call per video with two or
+more distinct venues. It sends each venue with its first story and asks which
+of them are the same place. Each duplicate takes the name of the one to keep.
+The model only picks among the given names, so it can't invent one. A failed
+reply changes nothing.
+
+Rejected:
+- Naming venues in the brief. `BRIEF_PROMPT` leaves places out, because a place
+  listed there gets pinned to stories that happened elsewhere.
+- `pipeline/dedup.py`'s token rule. The three names share only the street, and a
+  street-only match would also fold "Mexibar, Nørrebrogade" into any other bar
+  on Nørrebrogade. Only something that reads the stories knows a herrefrisør is
+  a barbershop.
+
+**Consequences:** one more cached call per video. Across videos, the same venue
+under two names still makes two rows (`dedup.py` covers the cases it can).
+
 ### Markers are anchored explicitly, because the two platforms disagree
 
 Status: Accepted
