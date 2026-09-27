@@ -62,7 +62,7 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700
-  ├─ padlock          12, muted     ├─ distance
+  ├─ "within reach"   13, seal      ├─ distance
   ├─ padlock                        ├─ summary  17/26, #tags semibold
   ├─ distance         44/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar; the heart trailing on that line
@@ -70,8 +70,11 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
   │                                 ├─ "Edit this memory"  own submissions only
   └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
 
-  peek (the map, before a walk: the locked side, differently)
-  ├─ "music · Vega Archive · 1978 · 1.2 km"   tag, source, year, distance
+  peek (the map, before a walk: a card over the live map, sized to its content)
+  ├─ place name
+  ├─ Approach ring  +  "472 m"  36/700      the lock as the distance still to go
+  │                    "Opens within 20 m · 8 min walk"
+  ├─ "music · Vega Archive · 1978 · 12 hearts"   tag, source, year, hearts
   ├─ "1 attachment waiting"
   └─ "Walk here"              ink, in the bottom bar; opens Plan for a walk through that pin (F1)
 

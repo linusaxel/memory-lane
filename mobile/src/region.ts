@@ -8,7 +8,7 @@ export type Region = {
 };
 
 /** api/streets.py ROUTE_CIRCUITY: a street walk is about this much longer than the crow flies. */
-const ROUTE_CIRCUITY = 1.3;
+export const ROUTE_CIRCUITY = 1.3;
 
 /** The shortest walk, in km on the slider's `step`, that can pass a memory
  *  `crowMeters` away (TODO.md M6). The server looks for stops within half the

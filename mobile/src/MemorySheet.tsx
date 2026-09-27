@@ -17,13 +17,13 @@ import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
 import HeartGlyph from './HeartGlyph.tsx';
 import Notes from './Notes.tsx';
-import Padlock from './Padlock.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
-import { distance, duration } from './format.ts';
+import { distance, duration, walkMinutes } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
-import { button, buttonText, buttonTextSmall, color, dim, font, label } from './theme.ts';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { button, buttonText, buttonTextSmall, color, dim, font, label, lift, radius as corner } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
 
 type Props = {
@@ -86,6 +86,12 @@ export default function MemorySheet({
   onSubscribe,
 }: Props) {
   const memory = memories[index] ?? null;
+  const insets = useSafeAreaInsets();
+  // The map before a walk: a card over the map, sized to what it holds, not a
+  // page. Fixed for the whole opening - a modal cannot change how it is
+  // presented while it is up - so a stack that pages onto an open memory
+  // grows the card to a page instead (docs/10, "The peek is a card").
+  const compact = !!onWalkHere;
   const many = memories.length > 1;
   // openURL rejects when nothing can handle the link - no browser, a
   // locked-down device. The source link says so instead of appearing to do
@@ -191,262 +197,285 @@ export default function MemorySheet({
     <Modal
       visible={!!memory}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle={compact ? 'overFullScreen' : 'pageSheet'}
+      transparent={compact}
       // Required, or the Android back button does nothing.
       onRequestClose={onClose}
     >
       {memory && (
-        <View style={styles.sheet}>
-          <View style={styles.grabberRow}>
-            <View style={styles.grabber} />
-          </View>
-          <CloseButton place={styles.close} onPress={onClose} />
+        <View style={[styles.fill, compact && styles.over]}>
+          {compact && (
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              accessibilityLabel="Close"
+              onPress={onClose}
+            />
+          )}
+          <View
+            style={[
+              styles.sheet,
+              compact && [styles.card, !peeking && styles.cardTall],
+            ]}
+          >
+            <View style={styles.grabberRow}>
+              <View style={styles.grabber} />
+            </View>
+            <CloseButton place={styles.close} onPress={onClose} />
 
-          <View style={styles.heading}>
-            <Text style={styles.place}>{memory.place.name}</Text>
-            <View style={styles.metaRow}>
-              {(!locked || withinReach) && formatDistance(fromHere ?? memory.distance_meters) && (
-                <Text style={[styles.meta, withinReach && locked && styles.reachable]}>
-                  {formatDistance(fromHere ?? memory.distance_meters)}
-                </Text>
-              )}
-              {/* The server already sorted it to the top; this says why. No
-                  accent - the seal means openable and nothing else gets it. */}
-              {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
-              {locked &&
-                (withinReach ? (
+            <View style={styles.heading}>
+              <Text style={styles.place}>{memory.place.name}</Text>
+              <View style={styles.metaRow}>
+                {(!locked || (withinReach && !peeking)) &&
+                  formatDistance(fromHere ?? memory.distance_meters) && (
+                  <Text style={[styles.meta, withinReach && locked && styles.reachable]}>
+                    {formatDistance(fromHere ?? memory.distance_meters)}
+                  </Text>
+                )}
+                {/* The server already sorted it to the top; this says why. No
+                    accent - the seal means openable and nothing else gets it. */}
+                {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
+                {locked && withinReach && (
                   <Text style={[styles.meta, styles.reachable]}>within reach</Text>
-                ) : (
-                  <View accessible accessibilityLabel="Locked">
-                    <Padlock size={12} color={color.inkFaint} />
-                  </View>
-                ))}
+                )}
+              </View>
             </View>
-          </View>
 
-          {/* Two different screens, not one screen with the middle deleted. A
-              locked memory has nothing to scroll, so it gets a centred
-              composition; an open one is a story and gets the reading column. */}
-          {peeking ? (
-            <View style={styles.peek}>
-              <Text style={styles.meta}>
-                {[
-                  memory.tags[0],
-                  memory.source_name,
-                  memory.year,
-                  formatDistance(fromHere ?? memory.distance_meters),
-                ]
-                  .filter((part) => part != null && part !== '')
-                  .join(' · ')}
-              </Text>
-              {waiting}
-              {withinReach && onSubscribe && (
-                <Text style={styles.peekNote}>
-                  You're right here. Make it a stop on today's walk, or open it now.
-                </Text>
-              )}
-            </View>
-          ) : locked ? (
-            <View style={styles.gate}>
-              {withinReach ? (
-                <>
-                  <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
-                  <Text style={styles.gateNote}>
-                    {unlockError ?? 'You made it.'}
-                  </Text>
-                  {/* The pull belongs here most of all. It was shown only to
-                      people too far away to act on it, and withheld from the
-                      one person who is about to hold the ring - so the second
-                      before the hold, which is the whole of the suspense, said
-                      less than the minute before the walk. Still only the
-                      count: handing the photograph over is the leak. */}
-                  {waiting}
-                </>
-              ) : (
-                <>
+            {/* Two different screens, not one screen with the middle deleted. A
+                locked memory has nothing to scroll, so it gets a centred
+                composition; an open one is a story and gets the reading column. */}
+            {peeking ? (
+              <View style={styles.peek}>
+                {/* The lock is the ring you will hold, drawn as how far there is
+                    still to go: a condition to meet, not a badge. */}
+                <View style={styles.approach}>
                   <Approach meters={fromHere} radius={radius} />
-                  <Text style={styles.gateFigure}>
-                    {position == null
-                      ? '—'
-                      : formatDistance(fromHere)?.replace(' away', '')}
-                  </Text>
-                  <Text style={styles.gateNote}>
-                    {position == null
-                      ? 'Turn on location to unlock it when you get here.'
-                      : `Get within ${Math.round(radius)} m to unlock it.`}
-                  </Text>
-                  {waiting}
-                </>
-              )}
-            </View>
-          ) : (
-            <>
-              {/* A note's send link sits under its field: "handled" lets the
-                  first tap on it send rather than only drop the keyboard, and
-                  the insets let it scroll clear of the keyboard. */}
-              <ScrollView
-                contentContainerStyle={styles.body}
-                keyboardShouldPersistTaps="handled"
-                automaticallyAdjustKeyboardInsets
-              >
-                {/* The summary carries the sheet when nothing is attached, which
-                    is every extracted memory; a submission usually brings a
-                    photograph and the weight shifts to it. */}
-                {earned && (
-                  <Animated.View style={[styles.stamp, pressed]}>
-                    <View style={styles.stampMark} />
+                  <View style={styles.approachText}>
+                    {fromHere != null && (
+                      <Text style={styles.peekFigure}>{distance(fromHere)}</Text>
+                    )}
+                    <Text style={styles.peekNote}>
+                      {fromHere == null
+                        ? 'Turn on location to see how far.'
+                        : withinReach
+                          ? "You're right here. Make it a stop on today's walk, or open it now."
+                          : `Opens within ${Math.round(radius)} m · ${walkMinutes(fromHere)} min walk`}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.meta}>
+                  {[
+                    memory.tags[0],
+                    memory.source_name,
+                    memory.year,
+                    hearts > 0 && heartsText,
+                  ]
+                    .filter((part) => part != null && part !== '' && part !== false)
+                    .join(' · ')}
+                </Text>
+                {waiting}
+              </View>
+            ) : locked ? (
+              <View style={styles.gate}>
+                {withinReach ? (
+                  <>
+                    <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
+                    <Text style={styles.gateNote}>
+                      {unlockError ?? 'You made it.'}
+                    </Text>
+                    {/* The pull belongs here most of all. It was shown only to
+                        people too far away to act on it, and withheld from the
+                        one person who is about to hold the ring - so the second
+                        before the hold, which is the whole of the suspense, said
+                        less than the minute before the walk. Still only the
+                        count: handing the photograph over is the leak. */}
+                    {waiting}
+                  </>
+                ) : (
+                  <>
+                    <Approach meters={fromHere} radius={radius} />
+                    <Text style={styles.gateFigure}>
+                      {position == null
+                        ? '—'
+                        : formatDistance(fromHere)?.replace(' away', '')}
+                    </Text>
+                    <Text style={styles.gateNote}>
+                      {position == null
+                        ? 'Turn on location to unlock it when you get here.'
+                        : `Get within ${Math.round(radius)} m to unlock it.`}
+                    </Text>
+                    {waiting}
+                  </>
+                )}
+              </View>
+            ) : (
+              <>
+                {/* A note's send link sits under its field: "handled" lets the
+                    first tap on it send rather than only drop the keyboard, and
+                    the insets let it scroll clear of the keyboard. */}
+                <ScrollView
+                  contentContainerStyle={styles.body}
+                  keyboardShouldPersistTaps="handled"
+                  automaticallyAdjustKeyboardInsets
+                >
+                  {/* The summary carries the sheet when nothing is attached, which
+                      is every extracted memory; a submission usually brings a
+                      photograph and the weight shifts to it. */}
+                  {earned && (
+                    <Animated.View style={[styles.stamp, pressed]}>
+                      <View style={styles.stampMark} />
+                    </Animated.View>
+                  )}
+
+                  <Animated.View style={revealed}>
+                    {/* The #words are the tags (hashtags.ts): set in the
+                        semibold, not a colour, since every colour here already
+                        means something (UI.md, "One accent"). Not tappable. */}
+                    <Text style={styles.summary}>
+                      {hashtagParts(memory.summary).map((part, i) =>
+                        part.tag ? (
+                          <Text key={i} style={styles.hashtag}>
+                            {part.text}
+                          </Text>
+                        ) : (
+                          part.text
+                        ),
+                      )}
+                    </Text>
+
+                    <MemoryMedia media={memory.media} />
+
+                    <Notes memoryId={memory.id} isAuthor={!!onEdit} />
+
+                    {!locked && onEdit && (
+                      <Pressable
+                        style={dim(styles.report)}
+                        hitSlop={4}
+                        accessibilityRole="button"
+                        onPress={() => onEdit(memory)}
+                      >
+                        <Text style={styles.reportText}>Edit this memory</Text>
+                      </Pressable>
+                    )}
+                  </Animated.View>
+                </ScrollView>
+
+                {/* Pinned, not scrolled. A screenshot is the only way geo-gated
+                    content travels - you cannot share it by linking to it,
+                    because you had to be there - and until now a long story
+                    pushed the credit off the bottom of the frame. The place name
+                    was already fixed above the scroll; this is the other half of
+                    the same rule, and it is the legal posture as much as the
+                    design one. The three variants gave up their own top rules to
+                    the strip, which now carries the one hairline - so the strip
+                    is skipped entirely when there is nothing to credit, rather
+                    than leaving a stray rule above the buttons. */}
+                {(memory.author || memory.content?.source || memory.content?.title || heart) && (
+                  <Animated.View style={[styles.credit, revealed]}>
+                    <View style={styles.creditText}>
+                      {memory.author ? (
+                        <View style={styles.byline}>
+                          <Text style={styles.bylineLabel}>Left by</Text>
+                          <Text style={styles.bylineName}>{memory.author.name}</Text>
+                        </View>
+                      ) : memory.content?.source ? (
+                        <SourceLine source={memory.content.source} title={memory.content.title} />
+                      ) : (
+                        memory.content?.title && (
+                          <Text style={styles.source} numberOfLines={2}>
+                            {memory.content.title}
+                          </Text>
+                        )
+                      )}
+                    </View>
+                    {heart}
                   </Animated.View>
                 )}
+              </>
+            )}
 
-                <Animated.View style={revealed}>
-                  {/* The #words are the tags (hashtags.ts): set in the
-                      semibold, not a colour, since every colour here already
-                      means something (UI.md, "One accent"). Not tappable. */}
-                  <Text style={styles.summary}>
-                    {hashtagParts(memory.summary).map((part, i) =>
-                      part.tag ? (
-                        <Text key={i} style={styles.hashtag}>
-                          {part.text}
-                        </Text>
-                      ) : (
-                        part.text
-                      ),
-                    )}
-                  </Text>
-
-                  <MemoryMedia media={memory.media} />
-
-                  <Notes memoryId={memory.id} isAuthor={!!onEdit} />
-
-                  {!locked && onEdit && (
+            {(many || peeking || (!locked && memory.content) || linkFailed) && (
+              <View style={[styles.actions, compact && { paddingBottom: 20 + insets.bottom }]}>
+                {/* Without this, every memory but the first at a stacked point is
+                    unreachable - and 60% of this corpus sits on a shared point. */}
+                {many && (
+                  <View style={styles.pager}>
                     <Pressable
-                      style={dim(styles.report)}
-                      hitSlop={4}
                       accessibilityRole="button"
-                      onPress={() => onEdit(memory)}
+                      accessibilityLabel="Previous memory here"
+                      style={dim([styles.step, index === 0 && styles.stepOff])}
+                      disabled={index === 0}
+                      onPress={() => onIndex(index - 1)}
                     >
-                      <Text style={styles.reportText}>Edit this memory</Text>
+                      <Text style={styles.stepText}>‹</Text>
                     </Pressable>
-                  )}
-                </Animated.View>
-              </ScrollView>
-
-              {/* Pinned, not scrolled. A screenshot is the only way geo-gated
-                  content travels - you cannot share it by linking to it,
-                  because you had to be there - and until now a long story
-                  pushed the credit off the bottom of the frame. The place name
-                  was already fixed above the scroll; this is the other half of
-                  the same rule, and it is the legal posture as much as the
-                  design one. The three variants gave up their own top rules to
-                  the strip, which now carries the one hairline - so the strip
-                  is skipped entirely when there is nothing to credit, rather
-                  than leaving a stray rule above the buttons. */}
-              {(memory.author || memory.content?.source || memory.content?.title || heart) && (
-                <Animated.View style={[styles.credit, revealed]}>
-                  <View style={styles.creditText}>
-                    {memory.author ? (
-                      <View style={styles.byline}>
-                        <Text style={styles.bylineLabel}>Left by</Text>
-                        <Text style={styles.bylineName}>{memory.author.name}</Text>
-                      </View>
-                    ) : memory.content?.source ? (
-                      <SourceLine source={memory.content.source} title={memory.content.title} />
-                    ) : (
-                      memory.content?.title && (
-                        <Text style={styles.source} numberOfLines={2}>
-                          {memory.content.title}
-                        </Text>
-                      )
-                    )}
+                    <Text style={styles.pagerText}>
+                      {index + 1} of {memories.length} here
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Next memory here"
+                      style={dim([styles.step, index === memories.length - 1 && styles.stepOff])}
+                      disabled={index === memories.length - 1}
+                      onPress={() => onIndex(index + 1)}
+                    >
+                      <Text style={styles.stepText}>›</Text>
+                    </Pressable>
                   </View>
-                  {heart}
-                </Animated.View>
-              )}
-            </>
-          )}
-
-          {(many || peeking || (!locked && memory.content) || linkFailed) && (
-            <View style={styles.actions}>
-              {/* Without this, every memory but the first at a stacked point is
-                  unreachable - and 60% of this corpus sits on a shared point. */}
-              {many && (
-                <View style={styles.pager}>
+                )}
+                {peeking && (
                   <Pressable
+                    style={dim(styles.watch)}
                     accessibilityRole="button"
-                    accessibilityLabel="Previous memory here"
-                    style={dim([styles.step, index === 0 && styles.stepOff])}
-                    disabled={index === 0}
-                    onPress={() => onIndex(index - 1)}
+                    accessibilityLabel="Walk here"
+                    onPress={onWalkHere}
                   >
-                    <Text style={styles.stepText}>‹</Text>
+                    <Text style={styles.watchText}>Walk here</Text>
                   </Pressable>
-                  <Text style={styles.pagerText}>
-                    {index + 1} of {memories.length} here
-                  </Text>
+                )}
+                {peeking && withinReach && onSubscribe && (
                   <Pressable
+                    style={dim(styles.openNow)}
                     accessibilityRole="button"
-                    accessibilityLabel="Next memory here"
-                    style={dim([styles.step, index === memories.length - 1 && styles.stepOff])}
-                    disabled={index === memories.length - 1}
-                    onPress={() => onIndex(index + 1)}
+                    accessibilityLabel="Open it now"
+                    onPress={onSubscribe}
                   >
-                    <Text style={styles.stepText}>›</Text>
+                    <Text style={styles.openNowText}>Open it now</Text>
                   </Pressable>
-                </View>
-              )}
-              {peeking && (
-                <Pressable
-                  style={dim(styles.watch)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Walk here"
-                  onPress={onWalkHere}
-                >
-                  <Text style={styles.watchText}>Walk here</Text>
-                </Pressable>
-              )}
-              {peeking && withinReach && onSubscribe && (
-                <Pressable
-                  style={dim(styles.openNow)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Open it now"
-                  onPress={onSubscribe}
-                >
-                  <Text style={styles.openNowText}>Open it now</Text>
-                </Pressable>
-              )}
-              {!locked && memory.content && (
-                <Pressable
-                  style={dim(styles.watch)}
-                  accessibilityRole="button"
-                  // Says where it goes, not what it reads. "Watch at 12:04" out of
-                  // context is a time of day.
-                  accessibilityLabel={
-                    memory.content.timestamp_start === null
-                      ? 'Open the source'
-                      : `Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`
-                  }
-                  accessibilityHint={
-                    memory.content.timestamp_start === null
-                      ? 'Opens the source this memory came from'
-                      : 'Opens the source video at that second'
-                  }
-                  // url is already resolved - a document, or the video at the
-                  // right second.
-                  onPress={() => open(memory.content!.url, "Couldn't open that link.")}
-                >
-                  <Text style={styles.watchText}>
-                    {/* An offset only exists when the source is a recording. An
-                        archival document has none, and "Watch at 0:00" against a
-                        newspaper is a time the source never had. */}
-                    {memory.content.timestamp_start === null
-                      ? 'Open the source'
-                      : `Watch at ${formatTimestamp(memory.content.timestamp_start)}`}
-                  </Text>
-                </Pressable>
-              )}
-              {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
-            </View>
-          )}
+                )}
+                {!locked && memory.content && (
+                  <Pressable
+                    style={dim(styles.watch)}
+                    accessibilityRole="button"
+                    // Says where it goes, not what it reads. "Watch at 12:04" out of
+                    // context is a time of day.
+                    accessibilityLabel={
+                      memory.content.timestamp_start === null
+                        ? 'Open the source'
+                        : `Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`
+                    }
+                    accessibilityHint={
+                      memory.content.timestamp_start === null
+                        ? 'Opens the source this memory came from'
+                        : 'Opens the source video at that second'
+                    }
+                    // url is already resolved - a document, or the video at the
+                    // right second.
+                    onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                  >
+                    <Text style={styles.watchText}>
+                      {/* An offset only exists when the source is a recording. An
+                          archival document has none, and "Watch at 0:00" against a
+                          newspaper is a time the source never had. */}
+                      {memory.content.timestamp_start === null
+                        ? 'Open the source'
+                        : `Watch at ${formatTimestamp(memory.content.timestamp_start)}`}
+                    </Text>
+                  </Pressable>
+                )}
+                {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
+              </View>
+            )}
+          </View>
         </View>
       )}
     </Modal>
@@ -454,7 +483,19 @@ export default function MemorySheet({
 }
 
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
   sheet: { flex: 1, backgroundColor: color.paper },
+  // Paper over the live map, not a dimmed one: the pin you tapped stays in
+  // view above the card. The corners match the page sheet's.
+  over: { justifyContent: 'flex-end' },
+  card: {
+    flex: 0,
+    borderTopLeftRadius: corner.card,
+    borderTopRightRadius: corner.card,
+    ...lift,
+  },
+  // Paged onto something that is not a peek: the page it would have been.
+  cardTall: { height: '92%' },
   grabberRow: { alignItems: 'center', paddingTop: 10 },
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
   heading: { paddingHorizontal: 24, paddingTop: 26 },
@@ -467,8 +508,10 @@ const styles = StyleSheet.create({
   meta: { ...label },
   reachable: { color: color.sealDeep },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
-  // The reading column, not the centred gate: it is the top of a story.
-  peek: { flex: 1, paddingHorizontal: 24, paddingTop: 22, gap: 16 },
+  peek: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 14 },
+  approach: { flexDirection: 'row', alignItems: 'center', gap: 18 },
+  approachText: { flex: 1, gap: 2 },
+  peekFigure: { ...font.display, fontSize: 36, lineHeight: 42, color: color.ink, letterSpacing: -0.5 },
   gateFigure: { ...font.display, fontSize: 52, color: color.ink, letterSpacing: -1 },
   // A date is not a number. 52px fits "412 m" and wraps "3 May 2031".
   gateNote: {

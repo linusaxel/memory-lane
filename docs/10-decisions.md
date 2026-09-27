@@ -72,6 +72,26 @@ And the proximity notification cannot use the gate as its region - iOS does not
 reliably fire under ~100 m - so it watches 100 m and lets the map do the rest
 (`mobile/src/geofenceRegions.ts`).
 
+### The peek is a card
+
+Status: Accepted 2026-09-27
+
+The peek opened as a full-height page sheet that was four-fifths empty, with a
+12px padlock under the title that read as noise. No app with location-gated
+places does that: Find My and Maps open a place in a short sheet over a live
+map, and Geocaching and Find My sell the walk with a distance that counts
+down. So on the map `MemorySheet` is an `overFullScreen` card sized to its
+content, the map undimmed above it, and the lock is `Approach` (the ring you
+will hold) beside the distance, "Opens within 20 m" and the minutes on foot.
+
+The presentation is fixed per opening, because a modal cannot change it while
+up. A stack that pages from a peek onto something else grows the card to 92%.
+No swipe to dismiss: × and a tap on the map close it.
+
+**Options considered:** a native sheet with detents needs `@expo/ui` or
+react-native-screens and a native rebuild; RN's `Modal` has no detents. Kept
+for when swipe-down is missed.
+
 ### A locked memory says what it is, not what it says
 
 Status: Accepted 2026-09-26
