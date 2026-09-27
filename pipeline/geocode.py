@@ -190,7 +190,7 @@ def _same(a: str | None, b: str | None) -> bool:
 GENERIC = frozenset({"cafe", "café", "bar", "bodega", "pub", "restaurant", "the"})
 
 
-def _unbracket(name: str) -> str:
+def unbracket(name: str) -> str:
     """ "Bopa Bar" from "Bopa Bar (Nørrebro pub crawl)"."""
     return re.sub(r"\s*\([^)]*\)", "", name).strip()
 
@@ -203,7 +203,7 @@ def _same_venue(venue: str | None, hit: Hit) -> bool:
     if not (venue and hit.name):
         return False
     a, b = (
-        [w for w in re.findall(r"\w+", _unbracket(n).lower()) if w not in GENERIC]
+        [w for w in re.findall(r"\w+", unbracket(n).lower()) if w not in GENERIC]
         for n in (venue, hit.name)
     )
     if not (a and b):
@@ -245,7 +245,7 @@ def place(
     if address and _split_address(address)[1]:
         queries.append(("address", address))
     if venue:
-        queries.append(("venue", _unbracket(venue)))
+        queries.append(("venue", venue))
     if address and not _split_address(address)[1]:
         queries.append(("address", address))
 

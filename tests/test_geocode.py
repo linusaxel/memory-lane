@@ -249,3 +249,10 @@ def test_two_points_apart_are_two_places(monkeypatch, db_session):
         _chain(monkeypatch, Fake([_poi("Fri BikeShop", lat, 12.556)], source="photon"))
         save_memories(db_session, content, [_memory(venue="Fri BikeShop", locality=str(lat))])
     assert len(_places(db_session)) == 2
+
+
+@pytest.mark.db
+def test_a_bracket_on_a_venue_is_not_its_name(monkeypatch, db_session):
+    _chain(monkeypatch, Fake([]))
+    save_memories(db_session, _content(db_session), [_memory(venue="Bopa Bar (pub crawl stop)")])
+    assert db_session.execute(text("SELECT venue FROM places")).scalar() == "Bopa Bar"

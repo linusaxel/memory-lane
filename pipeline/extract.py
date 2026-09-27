@@ -44,7 +44,11 @@ Does NOT qualify:
 For each memory, extract:
 - venue: The proper name of the specific place - the business, building, park
   or landmark, exactly as you would say it to someone standing nearby. Not a
-  description ("a bar", "the venue") and not the whole address. Two different
+  description ("a bar", "the venue", "a local brown pub") and not the whole
+  address. It is somewhere a walker could find on a map. An event, a parade
+  or a pub crawl is not a venue: name the street or bar it happened at. Nor
+  is an institution named only by what it is ("the emergency room",
+  "Skadestuen"). Two different
   venues on the same street must get different venue names even when nothing
   else about them differs - this is the field a duplicate check keys on, so it
   cannot mean "the neighborhood" or "the block".
@@ -684,7 +688,8 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
         lng = mem.get("lng")
         has_coords = lat is not None and lng is not None
 
-        venue = (mem.get("venue") or "").strip() or None
+        # The model brackets context onto a name: "Bopa Bar (Nørrebro pub crawl)".
+        venue = geocode.unbracket(mem.get("venue") or "") or None
         locality = (mem.get("locality") or "").strip() or None
         region = (mem.get("region") or "").strip() or None
         structured = bool(venue and locality)
