@@ -333,14 +333,23 @@ rejects and why are rows now: `python -m pipeline.sources list`.
       data CC0); about famous people, not personal memories. OSM memorial
       plaques: 108 in the centre (ODbL). Both fit the text-source path in
       `crawler/sources.py`.
+- [ ] **Set up the Webshare proxy.** (2026-09-27) The code is in;
+      transcripts stay capped at ~40 a day until this is done.
+      1. Buy Webshare's **rotating residential** plan (~$3.50/GB, ~2,500
+         transcripts), not the free proxies: those are datacenter and blocked.
+      2. Put `WEBSHARE_PROXY_USERNAME` and `WEBSHARE_PROXY_PASSWORD` in `.env`
+         (the proxy username and password on its dashboard, not the login).
+      3. Run `python -m pipeline.transcripts --limit 60`. It works if it gets
+         past ~40 without `RequestBlocked`. If not, the fallbacks are below.
+      4. Put the drip back to a shorter delay in cron once it holds.
 - [ ] **Get transcripts past YouTube's IP block.** (checked 2026-09-27) After
       ~40 caption fetches in a day, youtube-transcript-api gets
       `RequestBlocked`, and a batch stalls for hours. Captions, not the
       ~$0.02-0.05 a memory, are the ceiling on growth. It is an IP rate limit
       on the timedtext endpoint; no header, cookie or client trick lifts it.
       Shipped: the drip (`transcripts --limit`) and `WEBSHARE_PROXY_*`
-      (rotating residential, ~$3.50/GB, ~2,500 transcripts). Left: buy the
-      Webshare plan and run `--limit 60` past the wall. Researched dead ends,
+      (rotating residential, ~$3.50/GB, ~2,500 transcripts). Left: the setup
+      item above. Researched dead ends,
       so nobody re-tries them: the library's cookie auth (off since v1.1.0);
       yt-dlp `--remote-components ejs` (JS challenges, not 429s); yt-dlp with
       cookies ("page needs to be reloaded", yt-dlp #17389, fix in unmerged
