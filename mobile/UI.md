@@ -35,7 +35,7 @@ Plan (src/Plan.tsx)            opaque page over the mounted map
 Preview                         the map, fitted to the start and every stop
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
-└─ card (Preview)              "5 stops · 3.8 km loop", Start walk / Change length, × to the map;
+└─ card (Preview)              "4 stops · 3.8 km loop", Start walk / Change length, × to the map;
      "No walk that long from here"; "Planning from central Copenhagen…" with no position
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a

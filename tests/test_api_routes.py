@@ -122,7 +122,7 @@ def test_a_preview_stores_nothing_and_accepting_it_stores_the_same_walk(client, 
     db_session.commit()
 
     preview = _preview(client).json()
-    assert preview["meta"]["size"] == 5
+    assert preview["meta"]["size"] == 4
     assert _stored(db_session) == 0
     assert client.get(f"/v1/routes/today?device={DEVICE}").status_code == 404
 
@@ -151,8 +151,8 @@ def test_a_shorter_walk_has_fewer_stops(client, db_session):
         _offset(db_session, n)
     db_session.commit()
 
-    # ~111m apart in a line north: 1km as a loop, crow-flies x 1.3, reaches 3.
-    assert _preview(client, budget_meters=1000).json()["meta"]["size"] == 3
+    # ~111m apart in a line north: 1km reaches 3, but asks for one stop a km.
+    assert _preview(client, budget_meters=1000).json()["meta"]["size"] == 1
 
 
 @pytest.mark.parametrize("budget", [999, 10_001])
@@ -322,7 +322,7 @@ def test_a_stop_that_forces_an_out_and_back_is_swapped_for_a_clean_loop(
 
     on_streets(legs)
     chosen = [m["id"] for m in _preview(client).json()["memories"]]
-    assert len(chosen) == 5
+    assert len(chosen) == 4
     assert ids[2] not in chosen
 
 
@@ -606,7 +606,7 @@ def test_another_day_or_show_me_another_is_a_different_walk_as_good(
 
     def ids(again=0):
         preview = client.get(
-            f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000"
+            f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=5000"
             f"&again={again}"
         ).json()
         return [m["id"] for m in preview["memories"]]
@@ -622,7 +622,7 @@ def test_another_day_or_show_me_another_is_a_different_walk_as_good(
     shown = ids(1)
     accepted = client.post(
         "/v1/routes/today",
-        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "again": 1},
+        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 5000, "again": 1},
     ).json()
     assert [m["id"] for m in accepted["memories"]] == shown
 
@@ -641,7 +641,7 @@ def test_walk_here_puts_that_memory_on_the_walk_and_the_accept_agrees(client, db
     pin = next(i for i in ids if i not in plain)
 
     preview = [m["id"] for m in _include(client, pin).json()["memories"]]
-    assert pin in preview and len(preview) == 5
+    assert pin in preview and len(preview) == 4
     accepted = client.post(
         "/v1/routes/today",
         json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "include": pin},

@@ -17,7 +17,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   walk today, or the account is subscribed (`subscriptions`)
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
-  of that length from there would be: up to five stops. Stores nothing.
+  of that length from there would be: about one stop a km. Stores nothing.
   `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`; `again` is "Show me
   another" (F32), another walk as good; `include=<memory_id>` is "Walk here",
   a memory every walk passes. 422 with

@@ -184,7 +184,7 @@ somebody can hand their old phone in and still have everything they walked for.
    and the pin's `include`. The preview stores nothing.
 3. The preview is the map, fitted to the start and every stop
    (`fitToCoordinates`), with the stops numbered 1–5 and the loop drawn. A card
-   reads "5 stops · 3.8 km loop", with **Start walk** and **Change length**, and an × in its corner back to the map.
+   reads "4 stops · 3.8 km loop", with **Start walk** and **Change length**, and an × in its corner back to the map.
    Preview pins do not open: it is a look, not a walk. From Walk here the card
    adds "Through Blågårdsgade.", on every preview; Show me another never
    drops it.

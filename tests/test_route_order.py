@@ -7,7 +7,14 @@ from types import SimpleNamespace
 
 from api.gate import meters_between
 from api.models import Coordinates
-from api.route_solver import ROUTE_FILL, _choose_stops, _choose_walks, _path_meters, _walking_order
+from api.route_solver import (
+    ROUTE_FILL,
+    _choose_stops,
+    _choose_walks,
+    _path_meters,
+    _route_size,
+    _walking_order,
+)
 from api.streets import ROUTE_CIRCUITY, walking_matrix
 
 ANCHOR = Coordinates(lat=40.75, lng=-73.99)
@@ -216,3 +223,7 @@ def test_stops_are_spread_along_the_walk_before_prize():
     # Two prized stops 42m apart, or one of them and a plain one halfway.
     picks = [stop("half", 3), stop("far", 6, contrast=1), stop("next", 6.5, contrast=1)]
     assert {p.name for p in choose(picks, 2, "s", 800, False)} != {"far", "next"}
+
+
+def test_about_one_stop_a_km():
+    assert [_route_size(m) for m in (1000, 1500, 2500, 4000, 10_000)] == [1, 2, 3, 4, 10]

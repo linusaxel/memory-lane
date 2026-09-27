@@ -31,7 +31,7 @@ pip install -r requirements.txt
 | `TRANSCRIPT_PROXY` | No | `http://user:pass@host:port`. YouTube blocks IPs that fetch many transcripts, and cloud IPs outright. A block stops the run, rows stay pending |
 | `PHOTON_URL` | No | The OpenStreetMap geocoder (default: the public `https://photon.komoot.io`, ~1 req/s). A self-hosted country extract is the same API |
 | `TRANSCRIPT_DELAY_SECONDS` | No | Mean jittered pause between transcript fetches (default: 1.5) |
-| `ROUTE_SIZE`, `ROUTE_LOOP` | No | Today's route: the fewest stops it aims for (default: 5; above 5 km, about one a km), and whether it comes back to where it started unless the request says (default: 1; `0` is one-way). The walk length is the app's slider, sent as `budget_meters`; candidates come from within half of it |
+| `ROUTE_SIZE`, `ROUTE_LOOP` | No | Today's route: how many candidates it draws from, 8 × this (default: 5; a walk aims for about one stop a km), and whether it comes back to where it started unless the request says (default: 1; `0` is one-way). The walk length is the app's slider, sent as `budget_meters`; candidates come from within half of it |
 | `ROUTING_URL` | No | An OSRM `foot` server. Empty or down means crow-flies × 1.3 and straight lines. Local: `./osrm/build.sh` once, then `docker compose --profile routing up -d osrm` and `ROUTING_URL=http://localhost:5001` |
 | `CORS_ORIGINS` | No | Comma-separated origins (default: `*`). The only lockdown knob |
 | `UNLOCK_RADIUS_METERS` | No | How close you must stand to read a memory (default: 20) |

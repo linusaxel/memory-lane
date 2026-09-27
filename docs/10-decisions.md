@@ -1474,7 +1474,7 @@ shortlist that requires the best walk's mix.
 
 ### About a stop a km, five at least
 
-Status: Accepted
+Status: Superseded by [About a stop a km, from the first](#about-a-stop-a-km-from-the-first)
 
 Five stops on the shortest street legs between them cannot fill a long
 slider: `route_bench` gave walk ÷ budget 0.63 at 6 km, 0.55 at 8 and 0.33 at
@@ -1494,6 +1494,17 @@ seconds.
 A long ask still falls short where the map runs out. The lakes top out at
 7.4 km for any stop count: shortest legs cross the bridges, where the ~9 km
 walk is the shore. Only legs longer than the shortest path would fill it.
+
+### About a stop a km, from the first
+
+Status: Accepted
+
+The floor of five made every walk up to 5 km ask for five stops, so a 1 km
+walk wanted as many as a 5 km one. `_route_size` is now `ceil(km)`, at least
+one: 1 km is one stop, 4 km four, 10 km ten. `ceil`, not `round`, because the
+slider steps half a km and `round` gives 2.5 → 2 but 3.5 → 4. It is still a
+ceiling; a sparse map gets fewer. `ROUTE_SIZE` stays as the candidate pool's
+scale (`8 * ROUTE_SIZE`) and the themed walks' size.
 
 ### Stops spread along the walk, before filling the slider
 

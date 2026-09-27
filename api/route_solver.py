@@ -34,9 +34,8 @@ ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
 
 
 def _route_size(budget_meters: float) -> int:
-    """At least ROUTE_SIZE stops, then about one a km: five stops on the
-    shortest street legs between them cannot fill a long slider."""
-    return max(ROUTE_SIZE, round(budget_meters / 1000))
+    """About one stop a km, rounded up: the slider steps half a km."""
+    return max(1, math.ceil(budget_meters / 1000))
 
 
 # A loop ends back where the day's walk started, so its last leg is the walk
