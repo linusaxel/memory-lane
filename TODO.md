@@ -23,6 +23,14 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`mobile/` has no formatter, so every edit is hand-indented.** 2026-09-27:
+  wrapping the sheet's credit strip in a row meant re-indenting fifteen JSX lines
+  by hand, and the same session left a stray `</Pressable>` that only the
+  typecheck caught. Fix: pin Prettier as a devDependency with a config matching
+  today's style (2 spaces, single quotes, trailing commas), add `prettier --check`
+  to `loop/verify.sh`, and do one reformat commit listed in `.git-blame-ignore-revs`.
+  Then drop the "never run `npx prettier`" rule in AGENTS.md.
+
 - **The e2e flows assert on whole sentences of copy.** 2026-09-27: a copy pass
   had to hand-edit seven `.maestro/*.yml` files and regex-escape every changed
   sentence, and a missed one fails a 10-minute run. Fix: give the gate notes and
