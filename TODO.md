@@ -54,6 +54,30 @@ delete an entry when its fix lands.
       `Photon.search`. Next: map `other` to `poi` when it carries a name, then
       decide whether an `llm`-only place belongs on the map at all.
 
+- [ ] **One venue named three ways becomes three pins.** (2026-09-27,
+      content 535) Jørgen Leth's barber on Vognmagergade came out as
+      "Barbershop on Vognmagergade", "Herrefrisør på Vognmagergade" and
+      "Jørgen Let's barbershop, Vognmagergade": three stories, rightly kept
+      apart, but three `places` rows, because `save_memories` matches
+      `(venue, locality)` exactly. Next: one venue name per video (the brief
+      deliberately names no places, see `video_brief`), or run
+      `pipeline/dedup.py` over new rows.
+
+- [ ] **A retelling with new detail is not merged.** (2026-09-27, content
+      537) Tove Ditlevsen growing up on Hedebygade is told at 2:24 and 5:44
+      with 0.20 word overlap, under `_same_story`'s 0.3. Distinct stories at
+      one place peak at 0.07 on the corpus, but that is 19 memories. Next:
+      collect a few more before moving the bar to 0.2.
+
+- [ ] **A name misspelled in the captions is copied into every summary.**
+      (2026-09-27, content 535) "Jørgen Let" for Leth, from the
+      auto-captions. Next: have the brief spell names from the title and
+      source when they disagree with the transcript.
+
+- [ ] **Memory 4409 is a duplicate of 4408** (the Woodstock raid), saved
+      before the merge lost its 60 s window in 7c1cfee. Delete it, or
+      re-aggregate content 536 (one new judge call).
+
 - [ ] **Prompt caching: only the classifier is left uncached.** Measured
       2026-09-27 on videos 535-537 (one burst worker): chunk 1 writes ~4.3k
       (system ~3.8k + source and brief ~0.5k), every later chunk reads it, and
