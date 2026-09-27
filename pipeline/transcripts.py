@@ -35,7 +35,15 @@ def fetch_transcript(video_id: str) -> dict | None:
     try:
         proxy = TRANSCRIPT_PROXY and GenericProxyConfig(TRANSCRIPT_PROXY, TRANSCRIPT_PROXY)
         api = YouTubeTranscriptApi(proxy_config=proxy)
-        fetched = api.fetch(video_id, languages=languages)
+        # A person's captions before the machine's, in any of the languages:
+        # English auto-captions heard "Nørrebro" as "naropa". The library's own
+        # fetch() tries each language's two tracks before the next language.
+        tracks = api.list(video_id)
+        try:
+            track = tracks.find_manually_created_transcript(languages)
+        except NoTranscriptFound:
+            track = tracks.find_generated_transcript(languages)
+        fetched = track.fetch()
         segments = fetched.to_raw_data()
         full_text = " ".join(seg["text"] for seg in segments)
 

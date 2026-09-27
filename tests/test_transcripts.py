@@ -28,9 +28,31 @@ class _Fetched:
         return self._segments
 
 
+class _Track:
+    def __init__(self, fetched):
+        self.fetch = lambda: fetched
+
+
+class _Tracks:
+    """A video's caption tracks: a manual one, a generated one, either missing."""
+
+    def __init__(self, manual=None, generated=None):
+        self.manual, self.generated = manual, generated
+
+    def find_manually_created_transcript(self, languages):
+        if not self.manual:
+            raise NoTranscriptFound("v", languages, {})
+        return _Track(self.manual)
+
+    def find_generated_transcript(self, languages):
+        if not self.generated:
+            raise NoTranscriptFound("v", languages, {})
+        return _Track(self.generated)
+
+
 def _api_raising(exc):
     class _Api:
-        def fetch(self, video_id, languages=None):
+        def list(self, video_id):
             raise exc
 
     return lambda **_: _Api()
@@ -38,8 +60,8 @@ def _api_raising(exc):
 
 def _api_returning(segments):
     class _Api:
-        def fetch(self, video_id, languages=None):
-            return _Fetched(segments)
+        def list(self, video_id):
+            return _Tracks(generated=_Fetched(segments))
 
     return lambda **_: _Api()
 
@@ -140,7 +162,7 @@ def test_an_ip_block_stops_the_run_and_leaves_every_row_pending(db_session, monk
     calls = []
 
     class _Api:
-        def fetch(self, video_id, languages=None):
+        def list(self, video_id):
             calls.append(video_id)
             raise IpBlocked(video_id)
 
@@ -165,8 +187,8 @@ def test_the_proxy_is_handed_to_the_client(monkeypatch):
     seen = {}
 
     class _Api:
-        def fetch(self, video_id, languages=None):
-            return _Fetched([{"text": "x", "start": 0.0, "duration": 1.0}])
+        def list(self, video_id):
+            return _Tracks(generated=_Fetched([{"text": "x", "start": 0.0, "duration": 1.0}]))
 
     def _make(**kwargs):
         seen.update(kwargs)
@@ -178,3 +200,16 @@ def test_the_proxy_is_handed_to_the_client(monkeypatch):
 
     proxies = seen["proxy_config"].to_requests_dict()
     assert proxies == {"http": "http://u:p@proxy:8080", "https": "http://u:p@proxy:8080"}
+
+
+def test_a_person_s_captions_beat_the_machine_s_in_another_language(monkeypatch):
+    """Content 534's English channels: auto-captions heard "Nørrebro" as "naropa"."""
+    manual = _Fetched([{"text": "Nørrebro", "start": 0.0, "duration": 1.0}], "da")
+    auto = _Fetched([{"text": "naropa", "start": 0.0, "duration": 1.0}], "en")
+
+    class _Api:
+        def list(self, video_id):
+            return _Tracks(manual=manual, generated=auto)
+
+    monkeypatch.setattr(transcripts, "YouTubeTranscriptApi", lambda **_: _Api())
+    assert transcripts.fetch_transcript("vvvvvvvvvvv")["language"] == "da"

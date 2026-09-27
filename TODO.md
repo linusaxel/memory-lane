@@ -59,12 +59,6 @@ delete an entry when its fix lands.
       optional per-source bbox in `config/content.yaml`, as `ingest --bbox`
       already does for text sources.
 
-- [ ] **English auto-captions mangle Danish place names.** (checked
-      2026-09-27) "Nørrebro" came out as "naropa" and "nepal", "Grundtvig's
-      Church" as "grunig's Kaka" (English-language Copenhagen channels).
-      Danish auto-captions for Danish speech were clean. Fix: prefer a
-      manually created track in `pipeline/transcripts.py` when one exists.
-
 - [ ] **The privacy policy still says sign-in is optional.** `mobile/store/privacy.md`
       and `/privacy` (`api/main.py`): "You can use Memory Lane without signing in".
       False since sign-in became the gate (docs/10, 2026-09-26). Change both
