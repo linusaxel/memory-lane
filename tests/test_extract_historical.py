@@ -178,3 +178,13 @@ def test_a_transcript_memory_without_a_date_still_saves(db_session):
     row = db_session.execute(text("SELECT layer, happened_at FROM memories")).fetchone()
     assert row.layer == "historical"
     assert row.happened_at is None
+
+
+def test_the_shared_context_is_its_own_cached_block_ahead_of_the_chunk():
+    """Every chunk of a video shares the source and brief, so they get the
+    second breakpoint and the chunk comes after it."""
+    fake = FakeAnthropic([ARCHIVE_MEMORY])
+    extract_memories_from_chunk(fake, "some archive text", HISTORICAL_SYSTEM_PROMPT, "the brief")
+    context, chunk = fake.messages.calls[0]["messages"][0]["content"]
+    assert context == {"type": "text", "text": "the brief", "cache_control": {"type": "ephemeral"}}
+    assert "some archive text" in chunk["text"] and "cache_control" not in chunk

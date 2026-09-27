@@ -25,6 +25,7 @@ from pipeline.extract import (
     is_billing_error,
     is_transient,
     layer_for,
+    log_cache,
     merge_nearby_memories,
     prompt_for,
     save_memories,
@@ -98,6 +99,7 @@ def classify_chunk(
             messages=[{"role": "user", "content": f"{CLASSIFIER_PROMPT}\n\nTranscript:\n{chunk}"}],
             output_config={"format": {"type": "json_schema", "schema": CLASSIFIER_SCHEMA}},
         )
+        log_cache(response)
         content = response.content[0].text
         try:
             data = json.loads(content)

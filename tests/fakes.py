@@ -15,7 +15,16 @@ class _Content:
         self.text = text
 
 
+class _Usage:
+    input_tokens = 0
+    cache_read_input_tokens = 0
+    cache_creation_input_tokens = 0
+
+
 class _Response:
+    model = "fake"
+    usage = _Usage()
+
     def __init__(self, text):
         self.content = [_Content(text)]
 

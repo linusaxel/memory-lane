@@ -64,16 +64,13 @@ delete an entry when its fix lands.
       - Haiku 4.5's minimum is 4,096 tokens, and `CLASSIFIER_PROMPT` is ~0.2k,
         so all 22 classifier calls per video pay full price.
 
-      What to do:
-      1. Log `usage.cache_read_input_tokens` and `cache_creation_input_tokens`
-         in `_request` and `classify_chunk`. Both 0 means no cache.
-      2. The brief is the same for every chunk of a video. Send it as its own
-         user content block with a second breakpoint, ahead of the chunk, so
-         the ~300 tokens read at 10% from chunk two on.
-      3. Chunks of one video run in parallel on RQ, so the first wave all
-         writes rather than reads. Measure before fixing: one chunk first,
-         then the rest.
-      4. The judge's three passes share only the system prompt, and it is under
+      Done 2026-09-27: `log_cache` logs cache read/write per call, and the
+      source + brief travel as their own user block with a second breakpoint.
+      Left:
+      1. Chunks of one video run in parallel on RQ, so the first wave all
+         writes rather than reads. Measure before fixing: enqueue one video
+         and read the `cache read` log lines per chunk.
+      2. The judge's three passes share only the system prompt, and it is under
          the minimum. Not worth padding.
 
       Sonnet 5 reads cost $0.20/MTok against $2 base, and 5m writes cost 1.25x.

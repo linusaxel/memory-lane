@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import text
 
 from pipeline.quality import compare, report, sample_chunks
-from tests.fakes import FakeAnthropic
+from tests.fakes import FakeAnthropic, _Response
 
 BASE = FakeAnthropic().messages._payload[0]
 
@@ -27,7 +27,7 @@ class _ByPrompt:
             else "Mark argued about pastrami at Katz's."
         )
         reply = json.dumps({"memories": [dict(BASE, summary=summary)]})
-        return type("R", (), {"content": [type("C", (), {"text": reply})()]})()
+        return _Response(reply)
 
 
 def _video_with_chunks(db_session, n):

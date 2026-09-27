@@ -306,7 +306,7 @@ MEMORY_SCHEMA = {
 }
 
 # "Extract memories" presumed there were some. Most chunks have none.
-USER_PROMPT_TEMPLATE = """{context}List the place stories in this transcript chunk, if there
+USER_PROMPT_TEMPLATE = """List the place stories in this transcript chunk, if there
 are any. Most chunks have none.
 
 {chunk}
@@ -469,10 +469,36 @@ def is_transient(e: Exception) -> bool:
     )
 
 
+def log_cache(response) -> None:
+    """Both 0 means the prefix was under the model's minimum and nothing cached."""
+    u = response.usage
+    logger.info(
+        f"{response.model}: cache read {u.cache_read_input_tokens}, "
+        f"write {u.cache_creation_input_tokens}, uncached {u.input_tokens}"
+    )
+
+
 def _request(
-    client: anthropic.Anthropic, system_prompt: str, user: str, schema: dict = MEMORY_SCHEMA
+    client: anthropic.Anthropic,
+    system_prompt: str,
+    user: str,
+    schema: dict = MEMORY_SCHEMA,
+    context: str = "",
 ) -> str | None:
-    """The model's raw reply, or None for an error no retry will fix."""
+    """The model's raw reply, or None for an error no retry will fix.
+
+    `context` is what every chunk of one video shares (source, brief). It goes
+    ahead of `user` with a second breakpoint, so from chunk two it is read at
+    10% along with the system prompt.
+    """
+    content = (
+        [
+            {"type": "text", "text": context, "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": user},
+        ]
+        if context
+        else user
+    )
     try:
         response = client.messages.create(
             model=EXTRACTION_MODEL,
@@ -480,17 +506,18 @@ def _request(
             # The system prompt is ~1.2k tokens and is resent for every chunk -
             # 22 chunks a video, 55 videos. Cached reads cost 10% of input and a
             # write costs 1.25x, so this pays for itself on the second chunk.
-            # The variable part (context + chunk) is in the message, after this,
-            # which is the order caching requires.
+            # The chunk is last, after this and the context, which is the
+            # order caching requires.
             system=[
                 {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}
             ],
-            messages=[{"role": "user", "content": user}],
+            messages=[{"role": "user", "content": content}],
             # Sonnet 5 thinks by default: billed output, eats max_tokens, and
             # puts a thinking block at content[0].
             thinking={"type": "disabled"},
             output_config={"format": {"type": "json_schema", "schema": schema}},
         )
+        log_cache(response)
         return response.content[0].text
 
     except anthropic.BadRequestError as e:
@@ -528,7 +555,9 @@ def extract_memories_from_chunk(
     system_prompt: str = SYSTEM_PROMPT,
     context: str = "",
 ) -> list[dict]:
-    raw = _request(client, system_prompt, USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk))
+    raw = _request(
+        client, system_prompt, USER_PROMPT_TEMPLATE.format(chunk=chunk), MEMORY_SCHEMA, context
+    )
     return [] if raw is None else grounded(parse_memories(raw), chunk)
 
 
@@ -552,22 +581,28 @@ def extract_chunk_stored(
     Committed as soon as it lands: the reply is the expensive part and must
     outlive whatever fails next.
     """
-    user = USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk)
-    raw = _stored_request(session, client, content_id, chunk_index, system_prompt, user)
+    user = USER_PROMPT_TEMPLATE.format(chunk=chunk)
+    raw = _stored_request(
+        session, client, content_id, chunk_index, system_prompt, user, context=context
+    )
     return [] if raw is None else grounded(parse_memories(raw), chunk)
 
 
 def _stored_request(
-    session, client, content_id, chunk_index, system_prompt, user, schema=MEMORY_SCHEMA
+    session, client, content_id, chunk_index, system_prompt, user, schema=MEMORY_SCHEMA, context=""
 ) -> str | None:
     key_schema = json.dumps(schema, sort_keys=True)
-    key = _sha256(f"{content_id}\0{EXTRACTION_MODEL}\0{key_schema}\0{system_prompt}\0{user}")
+    # context + user is the message as it was before it was split in two, so
+    # rows stored then still hit.
+    key = _sha256(
+        f"{content_id}\0{EXTRACTION_MODEL}\0{key_schema}\0{system_prompt}\0{context}{user}"
+    )
 
     raw = session.execute(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
     ).scalar()
     if raw is None:
-        raw = _request(client, system_prompt, user, schema)
+        raw = _request(client, system_prompt, user, schema, context)
         if raw is None:
             return None
         session.execute(
