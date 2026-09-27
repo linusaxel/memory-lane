@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 
+import CloseButton from './CloseButton.tsx';
 import type { Coordinates, LocatedMemory } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
@@ -183,6 +184,7 @@ export default function MemorySheet({
           <View style={styles.grabberRow}>
             <View style={styles.grabber} />
           </View>
+          <CloseButton place={styles.close} onPress={onClose} />
 
           <View style={styles.heading}>
             <Text style={styles.place}>{memory.place.name}</Text>
@@ -443,14 +445,6 @@ export default function MemorySheet({
               </Pressable>
             )}
             {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
-            <Pressable
-              style={dim(styles.close)}
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-              onPress={onClose}
-            >
-              <Text style={styles.closeText}>Close</Text>
-            </Pressable>
           </View>
         </View>
       )}
@@ -465,7 +459,7 @@ const styles = StyleSheet.create({
   heading: { paddingHorizontal: 24, paddingTop: 26 },
   body: { paddingHorizontal: 24, paddingTop: 22, paddingBottom: 12 },
   // The serif is the point: these are stories somebody told, not table rows.
-  place: { ...font.display, fontSize: 30, lineHeight: 36, color: color.ink },
+  place: { ...font.display, fontSize: 30, lineHeight: 36, color: color.ink, paddingRight: 30 },
   // The apparatus speaks in mono. Distances are measurements, so they look like
   // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', gap: 14, marginTop: 10 },
@@ -548,6 +542,5 @@ const styles = StyleSheet.create({
   },
   stepOff: { opacity: 0.3 },
   stepText: { ...font.ui, fontSize: 22, color: color.inkSoft, lineHeight: 26 },
-  close: { paddingVertical: 12, alignItems: 'center' },
-  closeText: { ...label, color: color.inkFaint },
+  close: { position: 'absolute', top: 20, right: 20, zIndex: 1 },
 });

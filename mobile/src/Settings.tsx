@@ -20,6 +20,7 @@ import {
 
 import { API_BASE, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
+import CloseButton from './CloseButton.tsx';
 import Padlock from './Padlock.tsx';
 import SignIn from './SignIn.tsx';
 import type { Permission } from './types.ts';
@@ -78,9 +79,7 @@ export default function Settings({
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
           <Text style={styles.title}>You</Text>
-          <Pressable style={dim()} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close">
-            <Text style={styles.close}>Close</Text>
-          </Pressable>
+          <CloseButton onPress={onClose} />
         </View>
         <View style={styles.stats}>
           <Stat value={unlockedCount} label={unlockedCount === 1 ? 'memory' : 'memories'} />
@@ -226,9 +225,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
   // The journal's title bar, so the two sheets read as one app.
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { ...font.display, fontSize: 34, color: color.ink },
-  close: { ...label, color: color.ink },
   stats: { flexDirection: 'row', gap: 36, marginTop: 12 },
   stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   statValue: { ...font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },

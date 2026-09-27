@@ -35,6 +35,7 @@ import {
   type LocatedMemory,
   type WalkedRoute,
 } from './api.ts';
+import CloseButton from './CloseButton.tsx';
 import Padlock from './Padlock.tsx';
 import { distance, walkDate } from './format.ts';
 import { metersBetween } from './region.ts';
@@ -214,9 +215,7 @@ export default function Memories({
     <View style={[styles.screen, { paddingTop: insets.top + 14 }]}>
       <View style={styles.top}>
         <Text style={styles.title}>Journal</Text>
-        <Pressable style={dim()} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close journal">
-          <Text style={styles.close}>Close</Text>
-        </Pressable>
+        <CloseButton onPress={onClose} label="Close journal" />
       </View>
       {/* The only number in the app that goes up because you went outside.
           Nothing at zero: a 0 is not a thing to show off, and the empty walk
@@ -438,11 +437,10 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'baseline',
+    alignItems: 'center',
     paddingHorizontal: 24,
   },
   title: { ...font.display, fontSize: 34, color: color.ink },
-  close: { ...label, color: color.ink },
   streak: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 18, paddingHorizontal: 24 },
   streakValue: { ...font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
   streakLabel: { ...label, fontSize: 12 },

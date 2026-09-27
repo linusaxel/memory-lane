@@ -112,6 +112,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Paywall.tsx` | The subscription sheet (F35). Prices from the store; "not available" without a key |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: no-ops without a key. Never decides who has paid |
 | `mobile/src/AddGlyph.tsx` | The Add button's icon: a brand pin with a plus |
+| `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |
 | `mobile/src/YouGlyph.tsx` | The You button's icon |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |

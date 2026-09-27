@@ -83,9 +83,9 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
 Submit (pageSheet modal, from Add) - see Writing
 
-You (src/Settings.tsx, pageSheet modal, from You) - "You" 34/700, Close, then the settings
+You (src/Settings.tsx, pageSheet modal, from You) - "You" 34/700, × top right, then the settings
 
-Journal (src/Memories.tsx)     opaque, over the mounted map; "Close" top right
+Journal (src/Memories.tsx)     opaque, over the mounted map; × top right
 ├─ the streak, large           F27: days in a row with a walk stop unlocked. Not shown at 0
 ├─ Walks                       one row per walk that opened something, date and length;
 │                              a row opens in place to its earned stops, numbered on a
@@ -125,6 +125,7 @@ with no network is never stopped at the gate.
 | `src/Memories.tsx` | the journal: streak, walks, filed, and You |
 | `src/Settings.tsx` | You: name, account, how unlocking works. Its own sheet |
 | `src/AddGlyph.tsx` | the Add button: an ember pin with a plus |
+| `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |
 | `src/YouGlyph.tsx` | the You button: head and shoulders |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
@@ -447,7 +448,9 @@ Each of these exists because something broke or would have been rejected.
     Never a new floating control top left: Journal owns that corner, and it is
     the least accurate tap on the screen (Hoober 2017: corner targets need
     ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
-    44pt (HIG Buttons).
+    44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
+    preview, You, Journal, a memory's sheet. A text button stays only where
+    it says more than close: Cancel beside Post, Not now on the paywall.
 
 ## Writing
 
