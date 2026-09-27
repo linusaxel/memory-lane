@@ -75,6 +75,21 @@ Memories for the same place within 60 seconds are merged:
 }
 ```
 
+## What it costs
+
+Measured from the console balance, since the logs carry no output tokens
+(TODO.md, Friction). Sonnet 5 extracts; Haiku screening is cents.
+
+| Run | Episodes | Video | Memories | Cost | $/memory | $/episode |
+|---|---|---|---|---|---|---|
+| 2026-09-27, Københavnerliv pubs, walks, place history | 12 | ~6.5 h | 48 | $2.83 | $0.06 | $0.24 |
+
+Yield decides $/memory far more than length does. The same channel's film
+talk and festival episodes gave 5 memories from three videos at ~$0.30 each,
+and local-TV guided tours (Bispebjerg, NTV Nørrebro) about 1 an hour. Budget
+by the source's `mem/h` in `sources list`: roughly $0.40 an hour of video, so
+a 6 mem/h source is ~$0.07 a memory and a 1 mem/h source ~$0.40.
+
 ## Memory quality
 The summary is the product: somebody standing on the spot, on a phone, outdoors.
 Measure before and after any prompt change — extraction costs money and you get
