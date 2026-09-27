@@ -108,12 +108,10 @@ class Memory(BaseModel):
     # own management view - every other query filters hidden rows out instead
     # of serving them with a flag.
     hidden: bool = False
-    # Only on the locked shape: what a memory is, never what it says. The map's
-    # peek draws the summary as bars from the word count. See
+    # Only on the locked shape: what a memory is, never what it says. See
     # docs/10-decisions.md#a-locked-memory-says-what-it-is-not-what-it-says.
     source_name: str | None = None
     year: int | None = None
-    summary_words: int | None = None
 
 
 class NearbyMeta(BaseModel):

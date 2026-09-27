@@ -78,14 +78,18 @@ Status: Accepted 2026-09-26
 
 The map's peek (F29) needs a reason to walk, and a place name alone is not
 one. So a locked memory now carries its tags, its source's name (the archive's
-`attribution`, else the channel), its year and `summary_words`, the summary's
-length. `api/gate.py` `locked_memory`. The summary, the media, every link and
-the timestamp stay behind the gate, and `tests/test_api_unlock.py` holds that.
+`attribution`, else the channel) and its year. `api/gate.py` `locked_memory`.
+The summary, the media, every link and the timestamp stay behind the gate, and
+`tests/test_api_unlock.py` holds that.
+
+Decided 2026-09-27: the peek shows the title and no stand-in for the text, so
+`summary_words`, which drew the summary as grey bars, is gone from the API too.
 
 **Options considered:** a blurred summary is the obvious peek and is a leak:
-the text reaches the phone and a blur is a style. The bars are drawn from a
-count, so there is nothing to un-blur. A full date was left out for the year:
-enough to say "1944", not enough to find the story in an archive by date.
+the text reaches the phone and a blur is a style. The bars were drawn from a
+count, so there was nothing to un-blur, and then they were dropped as noise.
+A full date was left out for the year: enough to say "1944", not enough to
+find the story in an archive by date.
 
 ### The position is self-reported
 

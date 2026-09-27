@@ -199,7 +199,7 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
     to decide whether to walk there, which is the only decision a locked memory
     has to support. The photo itself stays behind the gate with the text.
 
-    Its tags, its source's name, its year and its length say what it is, not
+    Its tags, its source's name and its year say what it is, not
     what it says: docs/10-decisions.md#a-locked-memory-says-what-it-is-not-what-it-says."""
     happened = getattr(row, "happened_at", None)
     return Memory(
@@ -216,7 +216,6 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         tags=getattr(row, "tags", None) or [],
         source_name=getattr(row, "attribution", None) or getattr(row, "source_name", None),
         year=happened.year if happened else None,
-        summary_words=len((getattr(row, "summary", None) or "").split()),
         confidence=row.extraction_confidence or "medium",
         layer=getattr(row, "layer", None) or "historical",
         author=row_author(row),

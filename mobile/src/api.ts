@@ -94,11 +94,9 @@ export type Memory = {
   /** Set once enough people report it. Only ever true from /v1/me/memories -
    *  every other endpoint drops a hidden memory instead of flagging it. */
   hidden: boolean;
-  /** Only on a locked memory: what it is, never what it says. The peek draws
-   *  the summary as bars sized from the word count. */
+  /** Only on a locked memory: what it is, never what it says. */
   source_name?: string | null;
   year?: number | null;
-  summary_words?: number | null;
 };
 
 /** Media urls come back server-relative so the host can change without a

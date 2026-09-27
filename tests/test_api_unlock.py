@@ -81,11 +81,11 @@ def test_the_map_never_serves_a_summary(client, one_memory):
 
 
 def test_a_locked_memory_says_what_it_is_not_what_it_says(client, one_memory):
-    """The map's peek: its tags and its length, never its words."""
+    """The map's peek: its tags, never its words, not even how many."""
     mem = _nearby(client)
 
     assert mem["tags"] == ["music"]
-    assert mem["summary_words"] == len("the night the amp caught fire".split())
+    assert "summary_words" not in mem
 
 
 def test_a_locked_memory_still_says_where_to_walk(client, one_memory):
