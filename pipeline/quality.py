@@ -30,6 +30,7 @@ from pipeline.extract import (
     filter_low_confidence,
     prompt_for,
     source_context,
+    video_brief,
 )
 
 # The label instead of the name. This is the big one, and the prompt now bans it.
@@ -67,7 +68,7 @@ def report(summaries: list[str]) -> list[tuple[str, int, str]]:
     return [(name, sum(1 for s in summaries if test(s)), why) for name, test, why in CHECKS]
 
 
-def sample_chunks(session, n: int, source_type: str = "video") -> list[tuple]:
+def sample_chunks(session, n: int, source_type: str = "video", client=None) -> list[tuple]:
     """(content_id, chunk_index, chunk, context), the same n every run.
 
     Rebuilt from transcripts rather than read from anywhere extraction wrote,
@@ -87,10 +88,23 @@ def sample_chunks(session, n: int, source_type: str = "video") -> list[tuple]:
     chunks = []
     for r in rows:
         segments = r.segments if isinstance(r.segments, list) else json.loads(r.segments)
-        context = source_context(r.source_name, r.title)
-        chunks += [(r.id, i, c, context) for i, c in enumerate(chunk_transcript(segments))]
+        chunks += [(r.id, i, c, segments, r) for i, c in enumerate(chunk_transcript(segments))]
     chunks.sort(key=lambda c: hashlib.md5(f"{c[0]}-{c[1]}".encode()).hexdigest())
-    return chunks[:n]
+    # The brief is built only for the videos sampled: it is one billed call each.
+    brief = client is not None and source_type == "video"
+    return [
+        (
+            cid,
+            i,
+            c,
+            source_context(
+                r.source_name,
+                r.title,
+                video_brief(session, client, cid, segs, r.source_name, r.title) if brief else "",
+            ),
+        )
+        for cid, i, c, segs, r in chunks[:n]
+    ]
 
 
 def compare(session, client, prompts: dict[str, str], chunks) -> dict[str, list[list[dict]]]:
@@ -144,7 +158,7 @@ def main():
             baseline = prompt_for(args.source_type)
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         with get_session() as session:
-            chunks = sample_chunks(session, args.sample, args.source_type)
+            chunks = sample_chunks(session, args.sample, args.source_type, client)
             results = compare(
                 session, client, {"baseline": baseline, "candidate": candidate}, chunks
             )

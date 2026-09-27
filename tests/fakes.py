@@ -41,13 +41,15 @@ class FakeAnthropic:
         if payload is None:
             payload = [
                 {
+                    "place_words": "Katz's",
+                    "happened_there": "Mark and Joe argued over the pastrami at the counter.",
+                    "spot_test": "pass",
                     "venue": "Katz's Delicatessen",
                     "locality": "New York",
                     "region": "New York, USA",
                     "lat": 40.7223,
                     "lng": -73.9874,
                     "summary": "Mark and Joe argued about pastrami for twenty minutes.",
-                    "why_here": "the argument was over this counter's pastrami",
                     "tags": ["food", "personal"],
                     "confidence": "high",
                     "location_precision": "exact",

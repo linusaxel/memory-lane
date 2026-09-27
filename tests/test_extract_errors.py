@@ -103,7 +103,7 @@ class _FailsOnSecondCall:
         return self._ok.create(**kwargs)
 
 
-def _pending_video(db_session, vid, segments='[{"start": 0, "text": "hello"}]'):
+def _pending_video(db_session, vid, segments='[{"start": 0, "text": "hello at Katz\'s"}]'):
     content_id = db_session.execute(
         text(
             "INSERT INTO content (url, platform, platform_id, transcript_fetched) "
@@ -139,6 +139,8 @@ def _run(db_session, monkeypatch, client):
     monkeypatch.setattr(extract, "get_session", _session)
     monkeypatch.setattr(extract, "ANTHROPIC_API_KEY", "test")
     monkeypatch.setattr(extract.anthropic, "Anthropic", lambda **_: client)
+    # These count calls to the chunk extractor; the brief is tested on its own.
+    monkeypatch.setattr(extract, "video_brief", lambda *a, **k: "")
     return extract.extract_all_pending()
 
 
@@ -241,7 +243,7 @@ def test_a_retried_video_only_pays_for_the_chunk_it_lost(db_session, monkeypatch
     _pending_video(
         db_session,
         "ccccccccccc",
-        '[{"start": 0, "text": "first"}, {"start": 600, "text": "second"}]',
+        '[{"start": 0, "text": "first at Katz\'s"}, {"start": 600, "text": "second at Katz\'s"}]',
     )
     _run(db_session, monkeypatch, _FailsOnSecondCall(_api_error(anthropic.OverloadedError, 529)))
     assert _states(db_session) == [(False, False)]

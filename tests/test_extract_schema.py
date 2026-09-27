@@ -47,3 +47,9 @@ def test_every_field_the_archival_prompt_asks_for_is_allowed():
 
 def test_the_tag_enum_is_the_one_vocabulary():
     assert ITEM["properties"]["tags"]["items"]["enum"] == list(TAGS)
+
+
+def test_the_decision_is_made_before_the_venue():
+    """Claude fills fields in schema order. With venue first it commits to a place
+    and then justifies it; the quote and the spot test have to come first."""
+    assert list(ITEM["properties"])[:4] == ["place_words", "happened_there", "spot_test", "venue"]

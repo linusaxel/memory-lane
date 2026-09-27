@@ -103,11 +103,16 @@ explicit permission to return nothing, and is sent as a cached block — it is
 
 A fifth check came from the first Copenhagen video: **the spot test**. Would
 the story lose anything pinned somewhere else? A nickname earned on a ski trip
-fails; a bar that sank into the stream under it passes. The model answers it in
-a required `why_here` line and an empty one is dropped, as is any `city`-wide
-pin ([decision](10-decisions.md#a-memory-must-need-its-spot)). `quality` also
-counts "someone", since the video usually gives a name or a nickname. Spot
-relevance itself has no regex: read the output.
+fails; a bar that sank into the stream under it passes.
+- The model answers it in `spot_test`, after quoting the place in `place_words`
+  and before it names a venue.
+- Code drops a fail, a quote that isn't in the chunk, and a `city`-wide pin.
+- Every chunk also gets a brief of the whole video, so "the pub crawl" can say
+  which one.
+
+The reasons are in the [decision](10-decisions.md#a-memory-is-decided-before-it-is-written).
+`quality` also counts "someone", since the video usually gives a name or a
+nickname. Spot relevance itself has no regex: read the output.
 
 **None of it has been run against real credits** (the account balance is empty),
 so the numbers above are still the current state.

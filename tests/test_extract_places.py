@@ -152,6 +152,7 @@ def test_merge_nearby_keys_on_venue_and_locality():
     merged = merge_nearby_memories([a, b])
     assert len(merged) == 1
     assert set(merged[0]["tags"]) == {"music", "history"}
+    assert merged[0]["summary"] == "s1", "two stories glued together are over the word limit"
 
 
 def test_merge_nearby_does_not_merge_different_venues_same_locality():
@@ -168,3 +169,18 @@ def test_merge_nearby_does_not_merge_different_venues_same_locality():
         "summary": "s2",
     }
     assert len(merge_nearby_memories([a, b])) == 2
+
+
+def test_merge_keeps_two_stories_at_one_bar_apart():
+    """Verbatim from the Copenhagen video: the crawl's opening and Tit Ind are
+    both pinned to Maskot seconds apart, and are two memories. The Ringkaféen
+    pair is one story told by two overlapping chunks, and is one."""
+    at = {"venue": "Maskot", "locality": "Copenhagen", "timestamp_start": 10.0}
+    opening = "The 30th anniversary of Trip Nørrebro was declared underway outside Maskot with cake, shots, and a round of hugs and toasts."
+    tit_ind = "Maskot's owners, Helle and Kim, took it over after their previous bar, Tit Ind near Nørrebro station, was torn down to make way for metro construction."
+    assert len(merge_nearby_memories([dict(at, summary=opening), dict(at, summary=tit_ind)])) == 2
+
+    at = dict(at, venue="Ringkaféen")
+    one = "Ringkaféen, a bar from the 1930s at Folmer Bendtsens Plads, sank into the ground when metro construction broke through to the old Lygteå stream running beneath the asphalt."
+    two = "Ringkafeen, a bar dating from the 1930s on Folmer Bensens Plads, sank into the ground when metro construction broke through to the old Lygteå stream running under the asphalt."
+    assert len(merge_nearby_memories([dict(at, summary=one), dict(at, summary=two)])) == 1

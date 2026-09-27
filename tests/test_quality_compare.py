@@ -38,7 +38,7 @@ def _video_with_chunks(db_session, n):
             "RETURNING id"
         )
     ).scalar()
-    segments = [{"start": k * 300, "text": f"part {k}"} for k in range(n)]
+    segments = [{"start": k * 300, "text": f"part {k} at Katz's"} for k in range(n)]
     db_session.execute(
         text(
             "INSERT INTO transcripts (content_id, segments, full_text) "
@@ -47,6 +47,7 @@ def _video_with_chunks(db_session, n):
         {"id": content_id, "s": json.dumps(segments)},
     )
     db_session.commit()
+    return content_id
 
 
 @pytest.mark.db
@@ -76,3 +77,16 @@ def test_the_comparison_scores_each_side_and_reruns_free(db_session):
 
     compare(db_session, client, {"baseline": "OLD", "candidate": "NEW"}, chunks)
     assert len(client.calls) == 2 * len(chunks), "a rerun must read extraction_chunks back"
+
+
+@pytest.mark.db
+def test_the_brief_is_paid_for_once_per_video(db_session):
+    from pipeline.extract import video_brief
+
+    content_id = _video_with_chunks(db_session, 2)
+    fake = FakeAnthropic({"brief": "Trip Nørrebro: a yearly crawl."})
+    segments = [{"start": 0, "text": "Trip Nørbrong 30 års jubilæum"}]
+    for _ in range(2):
+        brief = video_brief(db_session, fake, content_id, segments, "Københavnerliv", None)
+    assert brief == "Trip Nørrebro: a yearly crawl."
+    assert len(fake.messages.calls) == 1

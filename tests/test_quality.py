@@ -69,14 +69,14 @@ def test_a_clean_corpus_reports_all_zeroes():
 
 
 def test_a_memory_nobody_could_stand_on_is_dropped():
-    """The spot test, answered: an empty why_here or a city-wide pin goes."""
+    """The spot test, answered: a fail or a city-wide pin goes."""
     from pipeline.extract import filter_low_confidence
 
-    ok = {"confidence": "medium", "location_precision": "street", "why_here": "it sank"}
+    ok = {"confidence": "medium", "location_precision": "street", "spot_test": "pass"}
     kept = filter_low_confidence(
         [
             ok,
-            {**ok, "why_here": " "},
+            {**ok, "spot_test": "fail"},
             {**ok, "location_precision": "city"},
             {**ok, "confidence": "low"},
         ]
@@ -121,3 +121,24 @@ def test_no_source_means_no_context_rather_than_an_empty_claim():
     from pipeline.extract import source_context
 
     assert source_context(None, "an episode") == ""
+
+
+def test_a_place_the_chunk_never_names_is_dropped():
+    """The quote gate. Captions split and punctuate a name differently from how
+    the model copies it, so the match ignores both - but not the words."""
+    from pipeline.extract import grounded
+
+    chunk = "[01:33] Og øh ringkafen her,\n[01:36] den er fra 30'erne."
+    said = {"place_words": "Ringkafen her, den er fra 30'erne"}
+    invented = {"place_words": "Levinho après-ski bar"}
+    assert grounded([said, invented, {"place_words": ""}], chunk) == [said]
+
+
+def test_the_brief_reaches_every_chunk():
+    from pipeline.extract import source_context
+
+    brief = "Trip Nørrebro: a yearly crawl through Nørrebro's bars."
+    context = source_context("Københavnerliv", None, brief)
+    assert "<video_brief>" in context and brief in context
+    assert "not a source of memories" in context
+    assert source_context("Københavnerliv", None) == source_context("Københavnerliv", None, "")

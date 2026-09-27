@@ -29,6 +29,7 @@ from pipeline.extract import (
     prompt_for,
     save_memories,
     source_context,
+    video_brief,
 )
 from pipeline.queue import (
     QUEUE_AGGREGATE,
@@ -162,6 +163,11 @@ def _source_type(redis, content_id: int) -> str:
     return raw.decode() if isinstance(raw, bytes) else str(raw)
 
 
+def _brief(redis, content_id: int) -> str:
+    raw = redis.hget(f"extraction:{content_id}", "brief") or b""
+    return raw.decode() if isinstance(raw, bytes) else str(raw)
+
+
 def _source_and_title(content_id: int) -> tuple[str | None, str | None]:
     """Who published this and which episode, for the prompt's context line.
 
@@ -188,7 +194,7 @@ def task_enqueue_chunks(content_id: int):
     with get_session() as session:
         row = session.execute(
             text("""
-                SELECT c.title, t.segments, c.source_type
+                SELECT c.title, t.segments, c.source_type, c.source_name
                 FROM content c
                 JOIN transcripts t ON c.id = t.content_id
                 WHERE c.id = :id
@@ -200,8 +206,13 @@ def task_enqueue_chunks(content_id: int):
             logger.error(f"[content:{content_id}] No transcript found")
             return {"error": "no_transcript"}
 
-        title, segments_json, source_type = row
+        title, segments_json, source_type, source_name = row
         segments = segments_json if isinstance(segments_json, list) else json.loads(segments_json)
+        # Archival records are short and self-contained; a video needs its frame.
+        brief = ""
+        if (source_type or "video") == "video":
+            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+            brief = video_brief(session, client, content_id, segments, source_name, title)
 
     chunks = chunk_transcript(segments, CHUNK_MINUTES, CHUNK_OVERLAP_SECONDS)
     total_chunks = len(chunks)
@@ -222,6 +233,7 @@ def task_enqueue_chunks(content_id: int):
             # task_classify_chunk would otherwise have to forward a value it
             # never reads.
             "source_type": source_type or "video",
+            "brief": brief,
         },
     )
 
@@ -307,7 +319,7 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
                 chunk_index,
                 chunk_text,
                 prompt_for(source_type),
-                source_context(*_source_and_title(content_id)),
+                source_context(*_source_and_title(content_id), _brief(redis, content_id)),
             )
     except (ModelUnusableError, BillingError):
         _final(get_current_job())

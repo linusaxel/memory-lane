@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+import re
 
 import anthropic
 from sqlalchemy import text
@@ -23,167 +24,121 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """You extract location-based memories from video transcripts.
 
-A memory is something that HAPPENED at a SPECIFIC PHYSICAL LOCATION.
+A memory is something that happened at a specific, named place, told so that a
+stranger standing on that spot, reading it on a phone, gets something from
+being exactly there. It is the whole product.
 
-QUALIFIES as a memory:
-- Personal experiences: "I proposed to my wife on this bridge"
-- Specific events: "We had dinner at a restaurant in the Latin Quarter"
-- Vivid recollections: "I got lost in the medina and found this incredible spice market"
+What qualifies:
+- It already happened: a personal experience, an event, a mishap, something
+  that stood here. An announcement is not a memory: "I'm playing the Fillmore on
+  the 14th" is a ticket ad, and a tour date is the most common way a real venue
+  sneaks in with nothing having happened there.
+- The transcript names the place. A place you would have to guess is not one.
+- The place is the point. Would the story lose anything pinned somewhere else?
+  How someone got a nickname, how they met or joined something, where someone
+  lives, who sponsors what, a trip mentioned in passing: these are stories
+  about people, and fail.
+- It is concrete. Hypotheticals, recommendations, general facts and "somewhere
+  in Europe" are not memories.
 
-Does NOT qualify:
-- Hypotheticals: "I want to visit Paris someday"
-- Vague references: "Somewhere in Europe"
-- General facts: "Paris is the capital of France"
-- Recommendations without personal experience: "You should check out the Eiffel Tower"
-- ANNOUNCEMENTS AND PROMOS. "I'm playing the Fillmore on the 14th, come out" is a
-  ticket ad, not a memory. If it has not happened yet, it is not a memory, however
-  specific the venue. This is the single most common mistake: a tour date names a
-  real place and reads like an event, and it is worthless to somebody standing
-  there. If the only thing anchoring the place is an upcoming show, return nothing.
-- THE PLACE IS INCIDENTAL. The reader is standing on the pin. Ask: would this
-  story lose anything if it were pinned somewhere else? How someone got a
-  nickname, where someone lives, who sponsors what, a trip mentioned in passing -
-  all fail. So does anything that happened at a place the transcript does not
-  name: never pin it to a guess.
-
-For each memory, extract:
-- venue: The proper name of the specific place - the business, building, park
-  or landmark, exactly as you would say it to someone standing nearby. Not a
-  description ("a bar", "the venue", "a local brown pub") and not the whole
-  address. It is somewhere a walker could find on a map. An event, a parade
-  or a pub crawl is not a venue, and nor is the event's own name ("Trip
-  Nørrebro"): name the street or bar it happened at, or return nothing. Nor
-  is an institution named only by what it is ("the emergency room",
-  "Skadestuen"). Two different
-  venues on the same street must get different venue names even when nothing
-  else about them differs - this is the field a duplicate check keys on, so it
-  cannot mean "the neighborhood" or "the block".
-- locality: The city or town the venue is in. Always this level - never a
-  neighborhood, borough or street, even when the transcript names one and even
-  when that is how you would say it in everyday speech. "Chelsea, Manhattan"
-  becomes locality "New York City", not "Chelsea": consistency here matters
-  more than specificity, because it is the second half of the same duplicate
-  check, and the same venue mentioned twice must produce the same locality
-  both times.
-- region: State/province and/or country, whichever a mapmaker would need to
-  find the locality unambiguously ("California, USA" for West Hollywood,
-  "Denmark" for Copenhagen - no state needed there). Null only if you
-  genuinely do not know.
-
-<example>
-  <venue>Andaz West Hollywood</venue>
-  <locality>West Hollywood</locality>
-  <region>California, USA</region>
-  <why>The hotel's own name happens to contain "West Hollywood" - that text is
-       part of the venue, not the locality. The Comedy Store sits two blocks
-       away on the same street, in the same locality. Sharing a locality is
-       normal and expected; venue is the only field allowed to tell them
-       apart. If you cannot name the real place, return nothing rather than
-       inventing a plausible one.</why>
-</example>
-
-- country: ISO 3166 two-letter code of the country the venue is in ("US",
-  "DK"). Null only if you genuinely do not know.
-- address: The street and house number, if the transcript names one, written in
-  today's spelling even when the transcript uses an old one ("Blaagaardsgade 12"
-  becomes "Blågårdsgade 12"). Null if no street is named. A geocoder places
-  the pin from this and the venue; your lat / lng is only the fallback.
-- lat: Latitude estimate (decimal degrees, e.g., 48.8566)
-- lng: Longitude estimate (decimal degrees, e.g., 2.3522)
-- timestamp_start: When place is first mentioned (from [timestamp] markers in input)
-- summary: 2-3 sentences, 40-70 words, capturing the STORY rather than the facts.
-  This is read by somebody standing on the spot, on a phone, outdoors. It is the
-  whole product. Rules, in order of how often they are broken:
-
-  * NEVER write "the speaker", "the host", "the hosts", "the comedian" or
-    "the narrator". Use the name if the transcript gives one. If it does not,
-    write the sentence without a subject label - "someone", or just start with
-    what happened. Half of a previous run began "The speaker...", which reads
-    like a machine describing a recording instead of a thing that happened here.
-  * PAST TENSE. Always. "Mark drove the van into a ditch", never "Mark is
-    driving" or "Mark talks about driving". You are reporting an event, not
-    narrating a transcript.
-  * NEVER refer to the recording. No "they mentioned", "he describes", "they
-    were discussing". The listener does not know there is a recording, and does
-    not care. Write what happened, not what was said about it.
-  * 2-3 sentences. If it runs past 70 words you are summarising the conversation
-    rather than the event. Cut the setup and keep the thing that happened.
-  * WHO, with names - nicknames too, when that is what the transcript uses.
-    "Someone" only when it names nobody at all. WHAT HAPPENED - the anecdote,
-    the mishap, the funny turn. THE VIBE - what made it worth telling.
-  * Lead with what happened HERE, not the frame around it (the tour, the pub
-    crawl, "the fourth of 25 stops").
-  * If the transcript names something the reader can still see or picture from
-    the spot - the trees out front, the empty lot, the stream under the street -
-    put it in. That is what makes standing there pay off.
-
-  Bad: "The speaker describes performing at a theater in Boulder and mentions it
-       was built in 1909."
-  Good: "Mark did three sold-out nights at this 1909 theatre, joking that the
-        marquee had survived prohibition, the depression, and now his act."
+Fields, in the order you fill them. The first three decide whether there is a
+memory at all; answer them before you name a venue or write a word of summary.
+- place_words: The words of the transcript that name where it happened, copied
+  exactly as spoken, misspellings included ("ringkafen her"). Code checks these
+  are in the transcript; a paraphrase is dropped.
+- happened_there: One line - what happened at that place, and nowhere else.
+- spot_test: "pass" if the place is the point, "fail" if the story would be the
+  same pinned anywhere. Only "pass" is kept, so a "fail" costs nothing.
+- venue: The place place_words names - a business, building, park, street or
+  landmark - as you would say it to someone standing nearby, in today's
+  spelling. If place_words gives no name ("an old bodega"), there is no venue
+  and no memory; never take a name from the brief. Somewhere a walker could find on a map: an event or its name ("Trip
+  Nørrebro", a pub crawl, a parade) is context for the summary, and the venue
+  is the street or bar it happened at. Name an institution by its name, not by
+  what it is ("the emergency room"). Two venues on one street get different
+  names: a duplicate check keys on this field.
+- locality: The city or town, always at that level - "Chelsea, Manhattan" is
+  "New York City". The same venue must get the same locality every time; it is
+  the other half of the duplicate check. Two venues sharing a locality is
+  normal (Andaz West Hollywood and the Comedy Store are both in West Hollywood).
+- region: State and/or country, whatever a mapmaker needs ("California, USA",
+  "Denmark"). Null only if you do not know.
+- country: ISO 3166 two-letter code ("US", "DK"). Null only if you do not know.
+- address: Street and house number if the transcript names one, in today's
+  spelling ("Blaagaardsgade 12" is "Blågårdsgade 12"). Null otherwise. A
+  geocoder places the pin from this and the venue.
+- lat, lng: Decimal degrees; only the fallback if the geocoder misses.
+- timestamp_start: When the place is first mentioned, from the [timestamp] markers.
+- summary: 2-3 sentences, 40-70 words and never more, past tense, written for a stranger who
+  has never seen the video:
+  * Lead with the most interesting thing about this spot.
+  * Name people, with their nicknames where the transcript uses them ("Mark",
+    "Maleren, the painter"). With no name, give a role - "a ski guide", "one
+    regular". Every sentence has a subject.
+  * The first time an event or series appears, say what it is in a few words
+    of your own, from the brief - never just "the pub crawl". A walker reads
+    several of these in a row, so vary the wording.
+  * THE VIBE: what made it worth telling - the funny turn, the mishap.
+  * If the transcript names something still visible from the spot - the trees
+    out front, the empty lot, the stream under the street - put it in.
+  * Tell what happened, not what was said: the reader does not know there is a
+    recording, so no "he describes", "they mentioned", "the speaker", "the host".
+  * One idea. Past 70 words you are summarising the conversation; cut the setup
+    and keep what happened.
+- tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
+- location_precision: exact (~50m), street (~200m), neighborhood (~1km), city
+  (~10km). Only say "exact" when you know the building; if you are giving a
+  city's coordinates, say "city". A false "exact" puts a pin on the wrong
+  doorstep and claims 50m accuracy while doing it.
+- confidence: high (clear place, definite event), medium (somewhat vague), low
+  (uncertain).
 
 <examples>
-Every one of these is taken from a real run and is the mistake, not a
-hypothetical. Match the "good" column.
+Real cases, shown with the deciding fields and the summary (the rest omitted).
 
 <example>
-  <bad>The speaker performed at Joe List's downtown comedy showcase called
-       'Sesh' - described as the best show in North America.</bad>
-  <good>Mark played Joe's downtown showcase, Sesh, and called it the best room
-        in North America.</good>
-  <why>"The speaker" names nobody, and Joe List is the other host - the context
-       above the transcript says so. "Described as" reports the recording.</why>
+{"place_words": "ringkafen her, den er fra 30'erne",
+ "happened_there": "The bar sank when metro works broke into the stream beneath it.",
+ "spot_test": "pass", "venue": "Ringkaféen",
+ "summary": "Ringkaféen has poured beer here since the 1930s, and it sank into the ground when metro works broke through to the old Lygteå stream still running under the street. Cracks showed on its front until recently."}
 </example>
 
 <example>
-  <bad>The speaker is performing at Falls View Casino in Niagara on the 14th,
-       making a joke about Marilyn Monroe.</bad>
-  <good></good>
-  <why>Nothing happened there. A tour date names a real venue and reads like an
-       event, and is worthless to somebody standing outside it. Return nothing.</why>
+{"place_words": "i Nørrebro Parken. Og ø der startede det",
+ "happened_there": "Trip Nørrebro began here in 1996 with crates of beer.",
+ "spot_test": "pass", "venue": "Nørrebroparken",
+ "summary": "This is where Trip Nørrebro began, the yearly crawl that now winds through some 25 of Nørrebro's old brown bars. In 1996 it was just Maleren, a local painter, and a few friends with crates of beer and a beer relay on the grass."}
 </example>
 
 <example>
-  <bad>(venue: Levinho aprés-ski bar) On his very first ski trip, Kansas
-       couldn't stand up on skis. In the après-ski bar the instructor called
-       out 'Kansas, come over here' and the nickname stuck.</bad>
-  <good></good>
-  <why>A fine story about a person, not a place. The transcript never named
-       the bar, so the venue was a guess, and nobody standing outside it would
-       learn anything about where they are. Return nothing.</why>
+{"place_words": "Joe's downtown showcase, Sesh",
+ "happened_there": "Mark played the showcase and called it the best room in North America.",
+ "spot_test": "pass", "venue": "Sesh",
+ "summary": "Mark Normand played Joe List's downtown showcase, Sesh, and came off stage calling it the best room in North America."}
 </example>
 
 <example>
-  <bad>The bar crawl reached its fourth of 25 stops at Folmer Bendtsens Plads,
-       stopping into Ringkaféen, a 1930s bar that sank into the ground during
-       metro construction.</bad>
-  <good>Ringkaféen, open since the 1930s, sank into the ground when the metro
-        works broke through to the old Lygteå stream still running under the
-        street.</good>
-  <why>Cut the crawl logistics and lead with what happened to this building -
-       the stream under the reader's feet is the payoff.</why>
+{"place_words": "den her bar her, den aftterskibar",
+ "happened_there": "An instructor shouted 'Kansas' across an après-ski bar and the nickname stuck.",
+ "spot_test": "fail", "venue": "Levinho après-ski bar",
+ "summary": "..."}
+Fail: how Kansas got his name, and the bar is incidental - it would be the same
+story pinned anywhere.
+</example>
+
+<example>
+{"place_words": "Falls View Casino in Niagara on the 14th",
+ "happened_there": "Nothing yet - it is a tour date.",
+ "spot_test": "fail", "venue": "Fallsview Casino", "summary": "..."}
+Fail: an upcoming show, so nothing has happened there.
 </example>
 </examples>
-- why_here: One line on what this spot adds to the story - "the bar itself
-  sank", "the lot where it stood is still empty". It must be something that
-  happened AT this place, or something still visible there. "The crawl stopped
-  here" or "he kept coming back to the crawl" is a stop, not a story. An empty
-  string if nothing qualifies, and then the memory is dropped: that is the spot
-  test, answered.
-- tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
-- location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
-  BE HONEST ABOUT THIS. If you are returning the coordinates of a city because you
-  do not know the address, say "city". Only say "exact" when you know the specific
-  building or street address. A wrong "exact" is worse than an honest "city": it
-  puts a pin on the wrong doorstep and claims 50m accuracy while doing it.
-- confidence: high (clear location + definite event), medium (somewhat vague), low (uncertain)
 
 <uncertainty>
 An empty list is a correct and common answer. Most of a conversation is not
 about a place. If you are unsure whether something happened, or where, or to
 whom, leave it out - a missing memory costs nothing, and an invented one is
-indistinguishable from a real one once it is a row in the database and a pin on
-a map somebody walked to.
+indistinguishable from a real one once it is a pin on a map somebody walked to.
 </uncertainty>
 
 Return JSON: {"memories": [...]}
@@ -247,8 +202,11 @@ For each memory, extract:
 - happened_precision: day | month | year | decade - how much of happened_at to trust
 - summary: 2-4 sentences. What happened, who was involved if named, what the place
   was at the time. Concrete and sourced, not atmospheric.
-- why_here: One line on what this spot adds - usually the event itself. An empty
-  string if the text only mentions the place in passing, and then it is dropped.
+- place_words: The words of the text that name the place, copied exactly. Code
+  checks they are in the text.
+- happened_there: One line - what happened at that place.
+- spot_test: "pass" if the event happened at the place, "fail" if the text only
+  mentions it in passing. Only "pass" is kept.
 - attribution: the source as it should be credited on a card, if the text names one
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
@@ -296,6 +254,9 @@ MEMORY_SCHEMA = {
             "items": {
                 "type": "object",
                 "properties": {
+                    "place_words": {"type": "string"},
+                    "happened_there": {"type": "string"},
+                    "spot_test": {"type": "string", "enum": ["pass", "fail"]},
                     "venue": {"type": "string"},
                     "locality": {"type": "string"},
                     "region": _NULLABLE_STRING,
@@ -305,7 +266,6 @@ MEMORY_SCHEMA = {
                     "lng": {"type": "number"},
                     "timestamp_start": {"type": "number"},
                     "summary": {"type": "string"},
-                    "why_here": {"type": "string"},
                     "tags": {"type": "array", "items": {"type": "string", "enum": list(TAGS)}},
                     "location_precision": {
                         "type": "string",
@@ -324,13 +284,15 @@ MEMORY_SCHEMA = {
                     "contrast_note": _NULLABLE_STRING,
                 },
                 "required": [
+                    "place_words",
+                    "happened_there",
+                    "spot_test",
                     "venue",
                     "locality",
                     "region",
                     "lat",
                     "lng",
                     "summary",
-                    "why_here",
                     "tags",
                     "location_precision",
                     "confidence",
@@ -363,14 +325,51 @@ label - never "the speaker", "the host" or "the narrator".
 """
 
 
-def source_context(source_name: str | None, title: str | None) -> str:
+def source_context(source_name: str | None, title: str | None, brief: str = "") -> str:
     """The lead-in for a chunk, or nothing when we know nothing about the source."""
-    if not source_name:
-        return ""
-    return SOURCE_CONTEXT_TEMPLATE.format(
-        source=source_name,
-        title=f', episode "{title}"' if title else "",
+    lead = (
+        SOURCE_CONTEXT_TEMPLATE.format(
+            source=source_name,
+            title=f', episode "{title}"' if title else "",
+        )
+        if source_name
+        else ""
     )
+    return lead + (BRIEF_TEMPLATE.format(brief=brief) if brief else "")
+
+
+BRIEF_TEMPLATE = """<video_brief>
+{brief}
+</video_brief>
+The brief covers the whole video, so use it to name the people and say what an
+event is. It is context for writing, not a source of memories: every memory
+comes from the transcript chunk below.
+
+"""
+
+BRIEF_PROMPT = """You write the brief that every later reader of one chunk of this
+video's transcript gets, so that a story from minute 33 can say what was set up
+in minute 1. About 120 words, in English, plain prose, facts only:
+
+- What the video is: who made it, what happens, where.
+- Every named event, series, route or group it refers to, with a one-line
+  definition ("Trip Nørrebro: a yearly pub crawl through about 25 old bars on
+  Nørrebro, Copenhagen, started in 1996").
+- The people: names and nicknames, and who they are ("Maleren, the painter:
+  the Nørrebro local who founded the crawl").
+
+Leave out the individual places - bars, streets, stops. Each chunk names its
+own, and a place listed here gets pinned to stories that happened elsewhere.
+
+Only what the transcript says. Correct obvious caption misspellings of names
+("Trip Nørbrong" is "Trip Nørrebro")."""
+
+BRIEF_SCHEMA = {
+    "type": "object",
+    "properties": {"brief": {"type": "string"}},
+    "required": ["brief"],
+    "additionalProperties": False,
+}
 
 
 def chunk_transcript(
@@ -468,7 +467,9 @@ def is_transient(e: Exception) -> bool:
     )
 
 
-def _request(client: anthropic.Anthropic, system_prompt: str, user: str) -> str | None:
+def _request(
+    client: anthropic.Anthropic, system_prompt: str, user: str, schema: dict = MEMORY_SCHEMA
+) -> str | None:
     """The model's raw reply, or None for an error no retry will fix."""
     try:
         response = client.messages.create(
@@ -486,7 +487,7 @@ def _request(client: anthropic.Anthropic, system_prompt: str, user: str) -> str 
             # Sonnet 5 thinks by default: billed output, eats max_tokens, and
             # puts a thinking block at content[0].
             thinking={"type": "disabled"},
-            output_config={"format": {"type": "json_schema", "schema": MEMORY_SCHEMA}},
+            output_config={"format": {"type": "json_schema", "schema": schema}},
         )
         return response.content[0].text
 
@@ -526,7 +527,7 @@ def extract_memories_from_chunk(
     context: str = "",
 ) -> list[dict]:
     raw = _request(client, system_prompt, USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk))
-    return [] if raw is None else parse_memories(raw)
+    return [] if raw is None else grounded(parse_memories(raw), chunk)
 
 
 def _sha256(s: str) -> str:
@@ -550,16 +551,23 @@ def extract_chunk_stored(
     outlive whatever fails next.
     """
     user = USER_PROMPT_TEMPLATE.format(context=context, chunk=chunk)
-    schema = json.dumps(MEMORY_SCHEMA, sort_keys=True)
-    key = _sha256(f"{content_id}\0{EXTRACTION_MODEL}\0{schema}\0{system_prompt}\0{user}")
+    raw = _stored_request(session, client, content_id, chunk_index, system_prompt, user)
+    return [] if raw is None else grounded(parse_memories(raw), chunk)
+
+
+def _stored_request(
+    session, client, content_id, chunk_index, system_prompt, user, schema=MEMORY_SCHEMA
+) -> str | None:
+    key_schema = json.dumps(schema, sort_keys=True)
+    key = _sha256(f"{content_id}\0{EXTRACTION_MODEL}\0{key_schema}\0{system_prompt}\0{user}")
 
     raw = session.execute(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
     ).scalar()
     if raw is None:
-        raw = _request(client, system_prompt, user)
+        raw = _request(client, system_prompt, user, schema)
         if raw is None:
-            return []
+            return None
         session.execute(
             text("""
                 INSERT INTO extraction_chunks
@@ -577,7 +585,39 @@ def extract_chunk_stored(
             },
         )
         session.commit()
-    return parse_memories(raw)
+    return raw
+
+
+def _squash(s: str) -> str:
+    """Lowercase letters and digits only, timestamp markers gone: captions split
+    and punctuate a name differently from how the model copies it."""
+    return "".join(ch for ch in re.sub(r"\[[\d:.]+\]", "", s).lower() if ch.isalnum())
+
+
+def grounded(memories: list[dict], chunk: str) -> list[dict]:
+    """Only memories whose place_words are really in the chunk. The quote comes
+    before the venue in the schema, so a venue the transcript never named - the
+    invented ski bar - has nothing to quote. See
+    docs/10-decisions.md#a-memory-is-decided-before-it-is-written."""
+    text_ = _squash(chunk)
+    return [m for m in memories if (q := _squash(m.get("place_words") or "")) and q in text_]
+
+
+def video_brief(session, client, content_id: int, segments: list, source: str, title) -> str:
+    """Who and what the whole video is about, for every chunk to write from.
+
+    A chunk is four minutes; the pub crawl is introduced in minute one and
+    Nørrebroparken comes up in minute 33, so without this the summary says
+    "the pub crawl" to a reader who has no idea which. Stored like a chunk, at
+    index -1, so it is paid for once per video.
+    """
+    transcript = " ".join((s.get("text") or "").strip() for s in segments)
+    user = f"{source_context(source, title)}Transcript:\n\n{transcript}"
+    raw = _stored_request(session, client, content_id, -1, BRIEF_PROMPT, user, BRIEF_SCHEMA)
+    try:
+        return json.loads(raw)["brief"] if raw else ""
+    except (ValueError, KeyError):
+        return ""
 
 
 def _venue_locality_key(mem: dict) -> tuple[str, str]:
@@ -585,6 +625,14 @@ def _venue_locality_key(mem: dict) -> tuple[str, str]:
         (mem.get("venue") or "").strip().lower(),
         (mem.get("locality") or "").strip().lower(),
     )
+
+
+def _same_story(a: dict, b: dict, overlap: float = 0.3) -> bool:
+    """Word overlap of the two summaries. A retelling shares its names and
+    nouns; a different story at the same bar mostly does not."""
+    words = [{w for w in re.findall(r"\w{4,}", (m.get("summary") or "").lower())} for m in (a, b)]
+    union = words[0] | words[1]
+    return not union or len(words[0] & words[1]) / len(union) >= overlap
 
 
 def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -> list[dict]:
@@ -612,9 +660,10 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
         same_place = _venue_locality_key(current) == _venue_locality_key(mem)
         time_diff = abs(mem.get("timestamp_start", 0) - current.get("timestamp_start", 0))
 
-        if same_place and time_diff <= threshold_seconds:
-            if mem.get("summary") and mem["summary"] not in current.get("summary", ""):
-                current["summary"] = current.get("summary", "") + " " + mem["summary"]
+        # Two overlapping chunks tell the same story twice: keep the first
+        # telling. Two different stories at one bar stay two memories - gluing
+        # them made 110-word cards.
+        if same_place and time_diff <= threshold_seconds and _same_story(current, mem):
             current_tags = set(current.get("tags", []))
             current_tags.update(mem.get("tags", []))
             current["tags"] = list(current_tags)
@@ -630,13 +679,13 @@ def merge_nearby_memories(memories: list[dict], threshold_seconds: float = 60) -
 
 def filter_low_confidence(memories: list[dict]) -> list[dict]:
     """Drop what nobody could stand on: unsure, city-wide, or failing the spot test.
-    See docs/10-decisions.md#a-memory-must-need-its-spot."""
+    See docs/10-decisions.md#a-memory-is-decided-before-it-is-written."""
     return [
         m
         for m in memories
         if m.get("confidence", "low") in ("high", "medium")
         and m.get("location_precision") != "city"
-        and (m.get("why_here") or "").strip()
+        and m.get("spot_test") == "pass"
     ]
 
 
@@ -928,6 +977,9 @@ def extract_all_pending():
                 )
                 chunks = chunk_transcript(segments, CHUNK_MINUTES, CHUNK_OVERLAP_SECONDS)
                 logger.info(f"  Split into {len(chunks)} chunks")
+                brief = ""
+                if (source_type or "video") == "video":
+                    brief = video_brief(session, client, content_id, segments, source_name, title)
 
                 all_memories = []
                 for i, chunk in enumerate(chunks):
@@ -940,7 +992,7 @@ def extract_all_pending():
                             i,
                             chunk,
                             prompt_for(source_type),
-                            source_context(source_name, title),
+                            source_context(source_name, title, brief),
                         )
                         all_memories.extend(memories)
                     except BillingError as e:

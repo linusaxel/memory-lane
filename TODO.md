@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A prompt's variance can't be measured without hand-deleting its cache.**
+  2026-09-27: `extraction_chunks` is keyed on the exact request, so re-running
+  a video on the same prompt returns the stored reply. Six runs of video 534 each
+  needed a psql `DELETE` of its rows first. Fix: a `--runs N` on
+  `pipeline.quality` that calls `extract_memories_from_chunk` unstored and
+  prints each run's survivors.
 - **`mobile/` has no formatter, so every edit is hand-indented.** 2026-09-27:
   wrapping the sheet's credit strip in a row meant re-indenting fifteen JSX lines
   by hand, and the same session left a stray `</Pressable>` that only the

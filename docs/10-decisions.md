@@ -996,7 +996,9 @@ failure, they are a direction. The baseline is in [04-extract.md](04-extract.md#
 
 ### A memory must need its spot
 
-Status: Accepted
+Status: Superseded by [A memory is decided before it is written](#a-memory-is-decided-before-it-is-written).
+`why_here` came after the summary in the schema, so the model wrote the story and
+then justified it: the Kansas ski-bar story came back with a reason attached.
 
 The reader is standing on the pin, so a story that could be pinned anywhere is
 worth nothing to them. The first Copenhagen video showed this: a third of its
@@ -1013,6 +1015,45 @@ venue" was in the prompt and it still returned "Nørrebro pubcrawl" twice):
 - `location_precision: city` is dropped there too. A 10km pin is not a spot.
 
 Neighborhood (1km) stays: a park is legitimately that wide.
+
+### A memory is decided before it is written
+
+Status: Accepted
+
+Three changes, each because a prompt rule alone had leaked on real output:
+
+- **The decision comes first in the schema.** Claude fills fields in schema
+  order, so with `venue` first it committed to a place and wrote the story before
+  anything asked whether the place mattered. Now `place_words` (the transcript's
+  own words for the place), `happened_there` and `spot_test` come before
+  `venue`, and only `spot_test: pass` is kept.
+- **The quote is checked in code.** `grounded()` drops a memory whose
+  `place_words` are not in the chunk, with case, spaces and punctuation
+  ignored because captions mangle names. It can't catch a real name used for
+  the wrong story: "Levinho" is in the transcript. That is what `spot_test` is for.
+- **Every chunk gets a brief of the whole video.** A chunk is four minutes. The
+  crawl is introduced in minute one and Nørrebroparken comes up in minute 33, so
+  the summary said "the pub crawl" to a reader with no idea which one.
+  - `video_brief()` makes one call per video, stored in `extraction_chunks` at
+    index -1. It names the events and people, and deliberately not the places:
+    when it listed bars, a chunk pinned one bar's story to another bar's name.
+  - This is Anthropic's contextual-retrieval pattern.
+
+The merge also changed. It concatenated two summaries at one venue, which glued
+two stories into 110-word cards. Now it keeps the first telling of one story, and
+keeps different stories apart by word overlap (`_same_story`).
+
+`location_precision: city` is still dropped. A 10km pin is not a spot, and a park
+at 1km is.
+
+On one video, over six runs:
+- the stories where the place was incidental went from about 7 of 18 to about 1 in 11;
+- the invented ski bar and the crawl-named venues went to none;
+- every run keeps Ringkaféen, Under Hylden, Maskot and Nørrebroparken.
+
+What still leaks about once a run is a biography fact (where Maleren lives) and
+"the crawl" without its name. The research's next steps, in order, are thinking at
+low effort and then a separate yes/no judge per memory.
 
 ### Markers are anchored explicitly, because the two platforms disagree
 
