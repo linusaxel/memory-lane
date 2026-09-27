@@ -16,9 +16,11 @@ if sys.platform == "darwin" and os.environ.get("OBJC_DISABLE_INITIALIZE_FORK_SAF
 import logging
 import time
 
+import anthropic
 from rq import Worker
 from rq.registry import ScheduledJobRegistry
 
+from pipeline.config import ANTHROPIC_API_KEY, CLASSIFIER_MODEL, EXTRACTION_MODEL
 from pipeline.queue import QUEUE_AGGREGATE, QUEUE_CLASSIFY, QUEUE_EXTRACT, get_redis
 
 # force=True: pipeline.config sets an INFO default on import, and basicConfig
@@ -29,9 +31,33 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def check_models():
+    """Exit before the first job on a model ID the API refuses. A retired ID in
+    .env otherwise fails every chunk, one at a time."""
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    for name, model in (
+        ("EXTRACTION_MODEL", EXTRACTION_MODEL),
+        ("CLASSIFIER_MODEL", CLASSIFIER_MODEL),
+    ):
+        try:
+            client.models.retrieve(model)
+        except (
+            anthropic.NotFoundError,
+            anthropic.AuthenticationError,
+            anthropic.PermissionDeniedError,
+        ) as e:
+            # Kept exploded with a trailing comma on purpose.
+            # See docs/10-decisions.md#except-a-b-stays-exploded
+            sys.exit(f"{name}={model!r} is not usable: {e}")
+        except anthropic.APIError as e:
+            logger.warning(f"Could not check {name}={model!r}, starting anyway: {e}")
+
+
 def run_worker(queues: list[str] = None, burst: bool = False):
     if queues is None:
         queues = [QUEUE_AGGREGATE, QUEUE_EXTRACT, QUEUE_CLASSIFY]
+
+    check_models()
 
     logger.info(f"Starting worker for queues: {queues}")
 

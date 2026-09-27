@@ -17,6 +17,7 @@ from pipeline.db import get_session
 from pipeline.extract import (
     PENDING_EXTRACTION,
     BillingError,
+    ModelUnusableError,
     TransientAPIError,
     chunk_transcript,
     extract_chunk_stored,
@@ -70,6 +71,13 @@ FAIL_OPEN = "fail-open: "
 RETRY = Retry(max=3, interval=[30, 120, 600])
 
 
+def _final(job):
+    """No retry: a dead model ID or an empty balance fails every attempt alike,
+    and a burst worker would wait out the 12-minute schedule for nothing."""
+    if job:
+        job.retries_left = 0
+
+
 def classify_chunk(
     client: anthropic.Anthropic, chunk: str, last_attempt: bool = True
 ) -> tuple[bool, str]:
@@ -105,7 +113,7 @@ def classify_chunk(
         anthropic.PermissionDeniedError,
     ) as e:
         # docs/10-decisions.md#the-classifier-fails-loud-on-a-config-error-and-open-on-a-transient-one
-        raise RuntimeError(f"CLASSIFIER_MODEL={CLASSIFIER_MODEL!r} is not usable: {e}") from e
+        raise ModelUnusableError(f"CLASSIFIER_MODEL={CLASSIFIER_MODEL!r} is not usable: {e}") from e
     except Exception as e:
         # Same decision as above: a billing error is not transient.
         if is_billing_error(e):
@@ -241,9 +249,13 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     job = get_current_job()
-    has_memories, reason = classify_chunk(
-        client, chunk_text, last_attempt=not (job and job.retries_left)
-    )
+    try:
+        has_memories, reason = classify_chunk(
+            client, chunk_text, last_attempt=not (job and job.retries_left)
+        )
+    except (ModelUnusableError, BillingError):
+        _final(job)
+        raise
     with get_session() as session:
         record_verdict(session, content_id, chunk_index, has_memories, reason, chunk_text)
 
@@ -286,16 +298,20 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
     # hash written before this field existed still picks the old prompt.
     source_type = _source_type(redis, content_id)
     # Same context the sequential path builds, from the same two fields.
-    with get_session() as session:
-        memories = extract_chunk_stored(
-            session,
-            client,
-            content_id,
-            chunk_index,
-            chunk_text,
-            prompt_for(source_type),
-            source_context(*_source_and_title(content_id)),
-        )
+    try:
+        with get_session() as session:
+            memories = extract_chunk_stored(
+                session,
+                client,
+                content_id,
+                chunk_index,
+                chunk_text,
+                prompt_for(source_type),
+                source_context(*_source_and_title(content_id)),
+            )
+    except (ModelUnusableError, BillingError):
+        _final(get_current_job())
+        raise
 
     if memories:
         redis.hset(f"extraction:{content_id}:memories", str(chunk_index), json.dumps(memories))

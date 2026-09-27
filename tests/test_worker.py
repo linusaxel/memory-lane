@@ -1,6 +1,11 @@
-"""--burst waits out scheduled retries instead of leaving them to bill later."""
+"""--burst waits out scheduled retries instead of leaving them to bill later,
+and a dead model ID stops the worker before its first job."""
 
 import os
+
+import anthropic
+import httpx
+import pytest
 
 # Importing pipeline.worker on macOS re-execs into a real worker unless this is set.
 os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
@@ -26,6 +31,7 @@ def test_burst_runs_until_no_retry_is_scheduled(monkeypatch):
     def fake_sleep(_):
         scheduled.pop(0)
 
+    monkeypatch.setattr(worker, "check_models", lambda: None)
     monkeypatch.setattr(worker, "get_redis", lambda: None)
     monkeypatch.setattr(worker, "Worker", FakeWorker)
     monkeypatch.setattr(worker, "ScheduledJobRegistry", FakeRegistry)
@@ -34,3 +40,21 @@ def test_burst_runs_until_no_retry_is_scheduled(monkeypatch):
     worker.run_worker(["classify", "extract"], burst=True)
 
     assert passes == [{"burst": True, "with_scheduler": True}] * 3
+
+
+def test_a_retired_model_id_stops_the_worker_naming_its_variable(monkeypatch):
+    """2026-09-27: EXTRACTION_MODEL=claude-sonnet-4-20250514 held a burst for 12 minutes."""
+
+    class Models:
+        def retrieve(self, model):
+            if model == "claude-sonnet-4-20250514":
+                response = httpx.Response(404, request=httpx.Request("GET", "https://x"))
+                raise anthropic.NotFoundError("not found", response=response, body=None)
+
+    class Client:
+        models = Models()
+
+    monkeypatch.setattr(worker.anthropic, "Anthropic", lambda **_: Client())
+    monkeypatch.setattr(worker, "EXTRACTION_MODEL", "claude-sonnet-4-20250514")
+    with pytest.raises(SystemExit, match="EXTRACTION_MODEL='claude-sonnet-4-20250514'"):
+        worker.check_models()
