@@ -50,7 +50,7 @@ type Props = {
   /** Bumped by App.tsx after a save or a delete, which happen without
    *  `focused` re-firing. */
   refreshKey: number;
-  /** Everything this device has earned, newest first. */
+  /** Everything this device has earned, newest first, minus what you filed. */
   unlocked: LocatedMemory[];
   onOpenMine: (memory: LocatedMemory) => void;
   /** An earned stop of a past walk. */
@@ -198,19 +198,13 @@ export default function Memories({
       ? ''
       : `${walks.length} ${walks.length === 1 ? 'walk' : 'walks'}`;
 
-  // Filing unlocks what you filed (App.tsx), so leave your own out.
-  // ponytail: knows only the loaded pages of `mine`; an own memory past them,
-  // or with `mine` unreachable, still shows. A server `mine` flag if that bites.
-  const mineIds = new Set(mine.map((memory) => memory.id));
-  const others = unlocked.filter((memory) => !mineIds.has(memory.id));
-
-  const unlockedNote = others.length ? `${others.length} unlocked` : '';
+  const unlockedNote = unlocked.length ? `${unlocked.length} unlocked` : '';
 
   const data: Item[] =
     section === 'mine'
       ? mine.map((memory) => ({ kind: 'mine', memory }))
       : section === 'unlocked'
-        ? others.map((memory) => ({ kind: 'unlocked', memory }))
+        ? unlocked.map((memory) => ({ kind: 'unlocked', memory }))
         : walks.flatMap((walk, index): Item[] => [
           { kind: 'walk', walk, index },
           ...(openWalk === index
@@ -280,6 +274,12 @@ export default function Memories({
               onPress={() => onOpenMine(item.memory)}
             />
           )
+        }
+        // Between rows only, never above the first. A stop's rail is its own
+        // delimiter, so nothing is drawn above one.
+        // FlatList can render one with no trailingItem at all.
+        ItemSeparatorComponent={({ trailingItem }: { trailingItem?: Item }) =>
+          trailingItem?.kind === 'stop' ? null : <View style={styles.separator} />
         }
         ListHeaderComponent={
           <Header note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote} />
@@ -386,7 +386,7 @@ function reach(m: LocatedMemory): string | undefined {
 
 function Header({ note }: { note: string }) {
   return (
-    <View style={[styles.header, !!note && styles.headerWithNote]}>
+    <View style={styles.header}>
       {!!note && <Text style={styles.sectionNote}>{note}</Text>}
     </View>
   );
@@ -472,22 +472,19 @@ const styles = StyleSheet.create({
   switcherLabelActive: { color: color.ink },
   switcherRule: { height: 2, backgroundColor: 'transparent' },
   switcherRuleActive: { backgroundColor: color.ink },
-  header: {
-    marginTop: 30,
-    paddingHorizontal: 24,
-    borderTopWidth: 1,
-    borderTopColor: color.rule,
-    paddingTop: 18,
-  },
-  headerWithNote: { marginBottom: 12 },
+  // Space, not a rule, sets the list off from the switcher: a rule here and
+  // another between rows read as a double line.
+  header: { marginTop: 32, paddingHorizontal: 24 },
   sectionNote: { ...font.prose, fontSize: 15, color: color.inkFaint },
-  // A ruled entry, like a catalogue card. No nested card, no shadow - the
-  // same row both sections used before the merge.
-  row: { gap: 6, paddingHorizontal: 24, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 16 },
+  // A ruled entry, like a catalogue card. No nested card, no shadow. The rule
+  // sits between rows (`separator`), inset to the text like iOS's own lists,
+  // and the padding is even so it belongs to neither row.
+  row: { gap: 6, paddingHorizontal: 24, paddingVertical: 18 },
+  separator: { height: StyleSheet.hairlineWidth, marginHorizontal: 24, backgroundColor: color.rule },
   // A walk's stops hang off one rail, numbered like the map's route badges,
   // instead of each being ruled off as its own entry. Rows sit edge to edge,
   // so the rail runs unbroken from the first stop to the last.
-  stop: { paddingLeft: 60, borderTopWidth: 0, paddingBottom: 10 },
+  stop: { paddingLeft: 60, paddingTop: 16, paddingBottom: 10 },
   rail: { position: 'absolute', left: 33, top: 0, bottom: 0, width: 1, backgroundColor: color.rule },
   dot: {
     position: 'absolute',

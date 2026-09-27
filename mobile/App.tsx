@@ -844,6 +844,11 @@ export default function App() {
     [stage, groups, position, earned],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
+  // Filing unlocks what you filed; the journal keeps that under My Memories.
+  const unlockedByOthers = useMemo(
+    () => collected.filter((memory) => !filedBy(memory, me)),
+    [collected, me],
+  );
 
   // The route stop you are standing at, lowest number first. The order is a
   // suggestion: take another way round and whichever stop you reach is the one
@@ -1462,7 +1467,7 @@ export default function App() {
             streak={profile?.streak ?? 0}
             focused={journalOpen}
             refreshKey={mineVersion}
-            unlocked={collected}
+            unlocked={unlockedByOthers}
             onOpenMine={openEditor}
             onOpenStop={(memory) => {
               setOpenAt([memory]);
