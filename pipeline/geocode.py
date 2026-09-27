@@ -185,6 +185,32 @@ def _same(a: str | None, b: str | None) -> bool:
     return bool(a and b) and difflib.SequenceMatcher(None, a.lower(), b.lower()).ratio() >= 0.85
 
 
+# Words a venue's name gains or loses between the story and OSM: "Under Hylden"
+# is "Café Under Hylden" on the map.
+GENERIC = frozenset({"cafe", "café", "bar", "bodega", "pub", "restaurant", "the"})
+
+
+def _unbracket(name: str) -> str:
+    """ "Bopa Bar" from "Bopa Bar (Nørrebro pub crawl)"."""
+    return re.sub(r"\s*\([^)]*\)", "", name).strip()
+
+
+def _same_venue(venue: str | None, hit: Hit) -> bool:
+    """The same name, give or take spacing and generic words, or a point of
+    interest's name inside the venue's: the model adds context ("Fri BikeShop
+    Nørrebro"), the map never should ("Nørrebrogade" is not "Nørrebrogade
+    Pizza"). Only a POI: "Nørrebro Parken" contains the district "Nørrebro"."""
+    if not (venue and hit.name):
+        return False
+    a, b = (
+        [w for w in re.findall(r"\w+", _unbracket(n).lower()) if w not in GENERIC]
+        for n in (venue, hit.name)
+    )
+    if not (a and b):
+        return False
+    return (hit.kind == "poi" and set(b) <= set(a)) or _same("".join(a), "".join(b))
+
+
 def _km(a: tuple, b: tuple) -> float:
     (lat1, lng1), (lat2, lng2) = map(lambda p: (math.radians(p[0]), math.radians(p[1])), (a, b))
     h = (
@@ -213,11 +239,15 @@ def place(
 ) -> tuple[float, float, int, str] | None:
     """(lat, lng, precision_meters, source) for the first hit that survives the
     guard, or None. `near` is the model's own guess: wrong street, right city."""
+    # A street with no number is a guess along its whole length; the venue,
+    # if the map knows it, is a point.
     queries = []
-    if address:
+    if address and _split_address(address)[1]:
         queries.append(("address", address))
     if venue:
-        queries.append(("venue", venue))
+        queries.append(("venue", _unbracket(venue)))
+    if address and not _split_address(address)[1]:
+        queries.append(("address", address))
 
     for kind, text in queries:
         street, number = _split_address(text) if kind == "address" else (None, None)
@@ -243,7 +273,7 @@ def place(
                         PRECISION_M["house" if house and trusted else "street"],
                         g.source,
                     )
-                if not _same(venue, hit.name):
+                if not _same_venue(venue, hit):
                     continue
                 return hit.lat, hit.lng, PRECISION_M[hit.kind], g.source
     return None

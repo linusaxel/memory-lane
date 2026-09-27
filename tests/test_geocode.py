@@ -86,6 +86,33 @@ def test_the_number_may_come_first():
     assert geocode._split_address("Vesterbro 47 A") == ("Vesterbro", "47")
 
 
+@pytest.mark.parametrize(
+    ("venue", "on_the_map"),
+    [
+        ("Under Hylden", "Café Under Hylden"),
+        ("Fri BikeShop Nørrebro", "Fri BikeShop"),
+        ("Bopa Bar (Nørrebro pub crawl)", "Cafe Bopa"),
+        ("Nørrebro Parken", "Nørrebroparken"),
+    ],
+)
+def test_a_venue_matches_its_name_on_the_map(venue, on_the_map):
+    """Content 534's misses, 2026-09-27: each was on Photon under these names."""
+    assert geocode._same_venue(venue, _poi(on_the_map))
+
+
+def test_the_map_may_not_add_words_to_a_venue_nor_a_district_match_a_park():
+    assert not geocode._same_venue("Nørrebrogade", _poi("Nørrebrogade Pizza"))
+    assert not geocode._same_venue("Nørrebro Parken", _poi("Nørrebro", kind="district"))
+
+
+def test_a_street_without_a_number_waits_for_the_venue(monkeypatch):
+    """Nordre Fasanvej is 2 km long; the café on it is a point."""
+    fake = Fake([_poi("Café Under Hylden")])
+    _chain(monkeypatch, fake)
+    assert geocode.place("Nordre Fasanvej", "Under Hylden", "Frederiksberg", "DK", COPENHAGEN, None)
+    assert fake.asked == ["Under Hylden"]
+
+
 def test_a_national_geocoder_only_hears_its_own_country(monkeypatch):
     dk = Fake([], countries={"DK"})
     _chain(monkeypatch, dk)
@@ -195,3 +222,30 @@ def test_no_accepted_hit_keeps_the_models_coordinate(monkeypatch, db_session):
     _chain(monkeypatch, Fake([]))
     save_memories(db_session, _content(db_session), [_memory()])
     assert tuple(_place(db_session)) == ("llm", 10000, pytest.approx(55.6761))
+
+
+def _places(db_session):
+    return db_session.execute(
+        text("SELECT geocode_status, ST_Y(coordinates::geometry) FROM places")
+    ).all()
+
+
+@pytest.mark.db
+def test_one_venue_in_two_localities_is_one_place_on_the_better_point(monkeypatch, db_session):
+    """Under Hylden came as Copenhagen (a guess) and Frederiksberg (a POI), 2.4 km apart."""
+    content = _content(db_session)
+    _chain(monkeypatch, Fake([]))
+    save_memories(db_session, content, [_memory(venue="Under Hylden", lat=55.6929, lng=12.5535)])
+    _chain(monkeypatch, Fake([_poi("Café Under Hylden", 55.698, 12.536)], source="photon"))
+    save_memories(db_session, content, [_memory(venue="Under Hylden", locality="Frederiksberg")])
+    assert [tuple(r) for r in _places(db_session)] == [("photon", pytest.approx(55.698))]
+
+
+@pytest.mark.db
+def test_two_points_apart_are_two_places(monkeypatch, db_session):
+    """A chain: two Fri BikeShops, each placed to the door."""
+    content = _content(db_session)
+    for lat in (55.686, 55.710):
+        _chain(monkeypatch, Fake([_poi("Fri BikeShop", lat, 12.556)], source="photon"))
+        save_memories(db_session, content, [_memory(venue="Fri BikeShop", locality=str(lat))])
+    assert len(_places(db_session)) == 2

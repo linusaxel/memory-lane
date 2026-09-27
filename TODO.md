@@ -53,11 +53,6 @@ delete an entry when its fix lands.
       `SYSTEM_PROMPT`: a place is a named venue, street or address a walker
       can find; measure with `pipeline.quality` before and after.
 
-- [ ] **One venue, several places.** (checked 2026-09-27) "Under Hylden" came
-      out three times at two coordinates: one from DAWA on Nordre Fasanvej,
-      two from the model's guess on Nørrebro. Fix: merge places by name within
-      a locality and keep the address-matched coordinates.
-
 - [ ] **A Copenhagen source yields memories abroad.** (checked 2026-09-27)
       Content 534 produced ski-trip stories in Levi and Sölden. Harmless on the
       map, but they cost an extraction and dilute a city source. Maybe: an

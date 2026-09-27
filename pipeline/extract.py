@@ -720,6 +720,11 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
             "status": status,
         }
 
+        place_id = _same_venue_nearby(session, params) if venue and has_coords else None
+        if place_id:
+            _save_memory(session, place_id, content_id, mem, layer)
+            continue
+
         if structured:
             conflict_target = (
                 "(lower(btrim(venue)), lower(btrim(locality))) "
@@ -769,40 +774,82 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
             logger.warning(f"Could not get place_id for: {venue or mem.get('place_name')}")
             continue
 
+        _save_memory(session, place_id, content_id, mem, layer)
+
+
+def _same_venue_nearby(session, params: dict) -> int | None:
+    """The place this venue already is, in whatever locality the model named
+    it: "Under Hylden" came as Frederiksberg once and Copenhagen twice. Within
+    10 km, and unless both sides are points: two 50 m hits apart are a chain,
+    not one venue. A better placing replaces the stored one."""
+    row = session.execute(
+        text("""
+            SELECT id, precision_meters, geocode_status FROM places
+            WHERE lower(btrim(venue)) = lower(btrim(:venue))
+              AND coordinates IS NOT NULL
+              AND geocode_status <> 'user'
+              AND ST_DWithin(
+                  coordinates, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 10000
+              )
+              AND (precision_meters > 50 OR geocode_status = 'llm'
+                   OR :precision > 50 OR :status = 'llm')
+            ORDER BY (geocode_status = 'llm'), precision_meters
+            LIMIT 1
+        """),
+        params,
+    ).fetchone()
+    if not row:
+        return None
+    if params["status"] != "llm" and (
+        row.geocode_status == "llm" or params["precision"] < row.precision_meters
+    ):
         session.execute(
             text("""
-                INSERT INTO memories (
-                    place_id, content_id, timestamp_start, summary, tags,
-                    extraction_confidence, layer, happened_at, happened_precision,
-                    attribution, source_url, contrast_score, contrast_note
-                )
-                VALUES (
-                    :place_id, :content_id, :ts_start, :summary, :tags,
-                    :confidence, :layer, CAST(:happened_at AS DATE), :happened_precision,
-                    :attribution, :source_url, :contrast_score, :contrast_note
-                )
+                UPDATE places SET
+                    coordinates = ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+                    precision_meters = :precision, geocode_status = :status
+                WHERE id = :id
             """),
-            {
-                "place_id": place_id,
-                "content_id": content_id,
-                # No default: the historical prompt never asks for an offset,
-                # and a 0 here would be a fabricated second zero rather than a
-                # missing one. api.gate.source_link reads the difference.
-                "ts_start": mem.get("timestamp_start"),
-                "summary": mem.get("summary", ""),
-                # Filtered here and not trusted from the model: it emitted
-                # five tags that were never on its own menu.
-                "tags": clean_tags(mem.get("tags")),
-                "confidence": mem.get("confidence", "medium"),
-                "layer": layer,
-                "happened_at": _happened_at(mem),
-                "happened_precision": mem.get("happened_precision"),
-                "attribution": mem.get("attribution"),
-                "source_url": mem.get("source_url"),
-                "contrast_score": _contrast_score(mem),
-                "contrast_note": mem.get("contrast_note"),
-            },
+            {**params, "id": row.id},
         )
+    return row.id
+
+
+def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str):
+    session.execute(
+        text("""
+            INSERT INTO memories (
+                place_id, content_id, timestamp_start, summary, tags,
+                extraction_confidence, layer, happened_at, happened_precision,
+                attribution, source_url, contrast_score, contrast_note
+            )
+            VALUES (
+                :place_id, :content_id, :ts_start, :summary, :tags,
+                :confidence, :layer, CAST(:happened_at AS DATE), :happened_precision,
+                :attribution, :source_url, :contrast_score, :contrast_note
+            )
+        """),
+        {
+            "place_id": place_id,
+            "content_id": content_id,
+            # No default: the historical prompt never asks for an offset,
+            # and a 0 here would be a fabricated second zero rather than a
+            # missing one. api.gate.source_link reads the difference.
+            "ts_start": mem.get("timestamp_start"),
+            "summary": mem.get("summary", ""),
+            # Filtered here and not trusted from the model: it emitted
+            # five tags that were never on its own menu.
+            "tags": clean_tags(mem.get("tags")),
+            "confidence": mem.get("confidence", "medium"),
+            "layer": layer,
+            "happened_at": _happened_at(mem),
+            "happened_precision": mem.get("happened_precision"),
+            "attribution": mem.get("attribution"),
+            "source_url": mem.get("source_url"),
+            "contrast_score": _contrast_score(mem),
+            "contrast_note": mem.get("contrast_note"),
+        },
+    )
 
 
 def extract_all_pending():

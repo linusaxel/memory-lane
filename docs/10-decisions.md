@@ -952,6 +952,23 @@ the trap each rule exists for (all found live, 2026-09-26):
 No surviving hit keeps the model's coordinate as `'llm'`. `geocode_status`
 records which geocoder placed a pin: `dawa`, `photon`, `wikidata`.
 
+Amended 2026-09-27, after the first Danish extraction (content 534) left 14 of
+20 places on the model's guess, most of them on Photon under a slightly
+different name:
+
+- **A venue's name matches loosely.** Brackets and generic words (café, bar,
+  bodega, pub, restaurant, the) are dropped and spaces ignored, so "Under
+  Hylden" is "Café Under Hylden" and "Nørrebro Parken" is "Nørrebroparken". A
+  POI's name may also sit inside the venue's ("Fri BikeShop Nørrebro" is "Fri
+  BikeShop"), never the reverse: "Nørrebrogade" is not "Nørrebrogade Pizza".
+- **A street without a number comes after the venue.** It is a guess along the
+  whole street; the venue, if the map has it, is a point.
+- **One venue is one place, across localities.** The model named Under Hylden's
+  locality Frederiksberg once and Copenhagen twice. `save_memories` joins a
+  place with the same venue within 10 km unless both are 50 m points (two
+  of those apart are a chain), and a better placing replaces the stored one.
+  New extractions only; `pipeline/dedup.py` is still the tool for old rows.
+
 **Options considered:** Google keeps coordinates for 30 days and only on a
 Google map; Mapbox's cheap tier forbids storing; HERE and TomTom cache 30 days.
 We store coordinates forever, so all are out. Nominatim's public server
