@@ -23,6 +23,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A route-size change breaks e2e, and run.sh calls it INFRA.** 2026-09-27:
+  one stop a km made the 4 km default four stops; travel.py exits 3 on anything
+  short of the flows' count, so run.sh rolled 20 starts and blamed the
+  environment. The gate stayed green. Fix: a test in `tests/test_flows.py`
+  that `_route_size(WALK_KM.initial km)` equals the stops walk-and-unlock.yml walks.
 - **A classifier prompt change can't be measured without a throwaway script.**
   2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
