@@ -72,9 +72,10 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
   peek (the map, before a walk: a card over the live map, sized to its content)
   ├─ place name
+  ├─ #music  #nightlife      every tag, outline pills in displaySemi, under the name
   ├─ Approach ring  +  "472 m"  36/700      the lock as the distance still to go
   │                    "Opens within 20 m · 8 min walk"
-  ├─ "music · Vega Archive · 1978 · 12 hearts"   tag, source, year, hearts
+  ├─ "Vega Archive · 1978 · 12 hearts"   source, year, hearts
   ├─ "1 attachment waiting"
   └─ "Walk here"              ink, in the bottom bar; opens Plan for a walk through that pin (F1)
 

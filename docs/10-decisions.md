@@ -86,11 +86,14 @@ will hold) beside the distance, "Opens within 20 m" and the minutes on foot.
 
 The presentation is fixed per opening, because a modal cannot change it while
 up. A stack that pages from a peek onto something else grows the card to 92%.
-No swipe to dismiss: × and a tap on the map close it.
+×, a tap on the map, or pulling the card down closes it. The pull is a
+transparent `ScrollView` with the card at its foot: iOS's own rubber band,
+released past 70 px. A JS `PanResponder` got the touch but never its moves in
+this modal, so it could not follow a finger. Android has no bounce and closes
+by × or back.
 
 **Options considered:** a native sheet with detents needs `@expo/ui` or
-react-native-screens and a native rebuild; RN's `Modal` has no detents. Kept
-for when swipe-down is missed.
+react-native-screens and a native rebuild; RN's `Modal` has no detents.
 
 ### A locked memory says what it is, not what it says
 

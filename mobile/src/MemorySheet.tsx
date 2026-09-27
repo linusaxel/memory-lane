@@ -9,6 +9,9 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 
 import CloseButton from './CloseButton.tsx';
@@ -148,6 +151,16 @@ export default function MemorySheet({
   // only moment the product has - so the content arrives, once, on the frame
   // after a memory stops being locked.
   const reveal = useRef(new Animated.Value(1)).current;
+
+  // Swipe the card down to close it, as a page sheet does. The card sits at
+  // the foot of a transparent scroll view, so pulling it down is the native
+  // rubber band - UIKit's own gesture, which a JS pan responder could not get
+  // the moves of here - and letting go far enough down closes it.
+  const pulled = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (e.nativeEvent.contentOffset.y < -70) onClose();
+  };
+  const { height: screenHeight } = useWindowDimensions();
+
   const seen = useRef<string | null>(null);
 
   useEffect(() => {
@@ -203,18 +216,21 @@ export default function MemorySheet({
       onRequestClose={onClose}
     >
       {memory && (
-        <View style={[styles.fill, compact && styles.over]}>
+        <ScrollView
+          style={styles.fill}
+          contentContainerStyle={styles.over}
+          scrollEnabled={compact}
+          alwaysBounceVertical={compact}
+          showsVerticalScrollIndicator={false}
+          onScrollEndDrag={pulled}
+        >
           {compact && (
-            <Pressable
-              style={StyleSheet.absoluteFill}
-              accessibilityLabel="Close"
-              onPress={onClose}
-            />
+            <Pressable style={styles.fill} accessibilityLabel="Close" onPress={onClose} />
           )}
           <View
             style={[
               styles.sheet,
-              compact && [styles.card, !peeking && styles.cardTall],
+              compact && [styles.card, !peeking && { height: screenHeight * 0.92 }],
             ]}
           >
             <View style={styles.grabberRow}>
@@ -224,6 +240,18 @@ export default function MemorySheet({
 
             <View style={styles.heading}>
               <Text style={styles.place}>{memory.place.name}</Text>
+              {/* What it is about, as the #words the open story sets them in
+                  (UI.md, "Tags are the #words"): under the name they belong
+                  to, not in the apparatus line. Not tappable. */}
+              {peeking && memory.tags.length > 0 && (
+                <View style={styles.tags}>
+                  {memory.tags.map((tag) => (
+                    <View key={tag} style={styles.tag}>
+                      <Text style={styles.tagText}>#{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
               <View style={styles.metaRow}>
                 {(!locked || (withinReach && !peeking)) &&
                   formatDistance(fromHere ?? memory.distance_meters) && (
@@ -264,7 +292,6 @@ export default function MemorySheet({
                 </View>
                 <Text style={styles.meta}>
                   {[
-                    memory.tags[0],
                     memory.source_name,
                     memory.year,
                     hearts > 0 && heartsText,
@@ -476,7 +503,7 @@ export default function MemorySheet({
               </View>
             )}
           </View>
-        </View>
+        </ScrollView>
       )}
     </Modal>
   );
@@ -487,15 +514,13 @@ const styles = StyleSheet.create({
   sheet: { flex: 1, backgroundColor: color.paper },
   // Paper over the live map, not a dimmed one: the pin you tapped stays in
   // view above the card. The corners match the page sheet's.
-  over: { justifyContent: 'flex-end' },
+  over: { flexGrow: 1, justifyContent: 'flex-end' },
   card: {
     flex: 0,
     borderTopLeftRadius: corner.card,
     borderTopRightRadius: corner.card,
     ...lift,
   },
-  // Paged onto something that is not a peek: the page it would have been.
-  cardTall: { height: '92%' },
   grabberRow: { alignItems: 'center', paddingTop: 10 },
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
   heading: { paddingHorizontal: 24, paddingTop: 26 },
@@ -509,6 +534,15 @@ const styles = StyleSheet.create({
   reachable: { color: color.sealDeep },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
   peek: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 14 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
+  tag: {
+    borderWidth: 1,
+    borderColor: color.rule,
+    borderRadius: corner.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  tagText: { ...font.displaySemi, fontSize: 13, color: color.inkSoft },
   approach: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   approachText: { flex: 1, gap: 2 },
   peekFigure: { ...font.display, fontSize: 36, lineHeight: 42, color: color.ink, letterSpacing: -0.5 },
