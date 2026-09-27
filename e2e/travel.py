@@ -34,10 +34,10 @@ OUT = pathlib.Path(__file__).with_name("out") / "legs"
 # Words from each seeded summary, for "the sheet opened on this one".
 WORDS = {
     "Where I was standing, dev seed": "filed this one myself",
-    "The bench outside, dev seed": "pølsevogn",
-    "Along the street, dev seed": "piano into the street",
+    "Ringkaféen, dev seed": "Lygteå",
+    "Nørrebrogade bridge, dev seed": "swam to the other side",
     "Where the night went long, dev seed": "jukebox on shuffle",
-    "The corner, dev seed": "taxi that reversed",
+    "Woodstock, dev seed": "mortared it in",
 }
 
 
@@ -49,7 +49,7 @@ def main(start: Coordinates) -> None:
     if legs is None:
         sys.exit("no street shapes - is ROUTING_URL set and OSRM up?")
     names = [r.place_name for r in stops]
-    if len(names) < 5 or names[0] == "The corner, dev seed":
+    if len(names) < 5 or names[0] == "Woodstock, dev seed":
         print(f"this start cannot carry the journey: {names}")
         sys.exit(3)
 
@@ -67,7 +67,7 @@ def main(start: Coordinates) -> None:
             )
         )
         env += [f"STOP{n}={name}", f"WORDS{n}={WORDS[name]}"]
-    [bench] = [r for r in stops if r.place_name == "The bench outside, dev seed"]
+    [bench] = [r for r in stops if r.place_name == "Ringkaféen, dev seed"]
     env += [f"BENCH_LAT={bench.lat:.6f}", f"BENCH_LNG={bench.lng:.6f}"]
     (OUT / "env").write_text("\n".join(env) + "\n")
     print(" -> ".join(names))

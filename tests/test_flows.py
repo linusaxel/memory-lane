@@ -11,7 +11,7 @@ tomorrow compose into one collection. Keep this file to whole flows - a rule
 that fits in one request belongs beside its siblings, not here.
 
 The fixture is `pipeline.seed_dev`, the same corpus the simulator run uses, so
-the two layers cannot disagree about what "the bench outside" means.
+the two layers cannot disagree about what "Ringkaféen" means.
 """
 
 import json
@@ -131,7 +131,7 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     )
     assert opened.status_code == 200
     assert opened.json()["locked"] is False
-    assert "pølsevogn" in opened.json()["summary"]
+    assert "Lygteå" in opened.json()["summary"]
 
 
 def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
@@ -145,7 +145,7 @@ def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
     assert [m["id"] for m in mine] == [memory_id]
     # The collection forces its own rows open - that is what makes it readable
     # from the train with no position at all.
-    assert "pølsevogn" in mine[0]["summary"]
+    assert "Lygteå" in mine[0]["summary"]
 
     assert seeded.get("/v1/unlocks", params={"device": OTHER_DEVICE}).json()["memories"] == []
     assert seeded.get("/v1/me", params={"device": DEVICE}).json()["unlocked"] == 1
@@ -290,10 +290,10 @@ def test_maestro_flows_still_point_at_the_seed():
     as this file's neighbour keeps on mobile/App.tsx's FALLBACK_REGION.
     """
     seeded_names = {
-        "The bench outside, dev seed",
-        "Along the street, dev seed",
-        "The corner, dev seed",
-        "Somewhere around here, dev seed",
+        "Ringkaféen, dev seed",
+        "Nørrebrogade bridge, dev seed",
+        "Woodstock, dev seed",
+        "Hedebygade, dev seed",
         "The same rough spot, dev seed",
         "Where I was standing, dev seed",
         "A letter to whoever is here later, dev seed",

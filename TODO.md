@@ -23,6 +23,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A run's cost can't be read from its log.** 2026-09-27: the worker logs
+  cache read/write/uncached input per call but no output tokens, so three
+  Københavnerliv videos were guessed at $0.30-0.50 each and only the console
+  said $1-2. With $15 of credit, every batch needs a number. Fix: add
+  `usage.output_tokens` to the same `cache read` log line in `pipeline/extract.py`.
 - **A prompt's variance can't be measured without hand-deleting its cache.**
   2026-09-27: `extraction_chunks` is keyed on the exact request, so re-running
   a video on the same prompt returns the stored reply. Six runs of video 534 each

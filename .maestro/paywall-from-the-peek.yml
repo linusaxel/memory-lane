@@ -17,9 +17,9 @@ appId: ${APP_ID}
 - runFlow: steps/sign-in.yml
 
 - extendedWaitUntil:
-    visible: "The bench outside, dev seed\\. Locked, within reach\\."
+    visible: "Ringkaféen, dev seed\\. Locked, within reach\\."
     timeout: 40000
-- tapOn: "The bench outside, dev seed\\. Locked, within reach\\."
+- tapOn: "Ringkaféen, dev seed\\. Locked, within reach\\."
 - extendedWaitUntil:
     visible: "You're right here\\. Make it a stop on today's walk, or open it now\\."
     timeout: 10000

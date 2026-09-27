@@ -28,14 +28,14 @@ appId: ${APP_ID}
 - launchApp:
     clearState: false
 - extendedWaitUntil:
-    visible: "The bench outside, dev seed\\. Locked, within reach\\."
+    visible: "Ringkaféen, dev seed\\. Locked, within reach\\."
     timeout: 40000
-- tapOn: "The bench outside, dev seed\\. Locked, within reach\\."
+- tapOn: "Ringkaféen, dev seed\\. Locked, within reach\\."
 - extendedWaitUntil:
     visible: "You made it\\."
     timeout: 10000
 - assertNotVisible: "Open it now"
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
-    visible: ".*pølsevogn.*"
+    visible: ".*Lygteå.*"
     timeout: 30000

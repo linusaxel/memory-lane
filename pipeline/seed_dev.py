@@ -142,45 +142,60 @@ def extracted() -> list[dict]:
     return [
         memory(
             "reach",
-            "The bench outside, dev seed",
-            "We sat here for an hour arguing about whether the pølsevogn was "
-            "the same pølsevogn. It was not, and the man knew it.",
-            ["food", "strange"],
+            "Ringkaféen, dev seed",
+            "Ringkaféen has stood on Folmer Bendtsens Plads since the 1930s and sank into "
+            "the ground after metro construction broke through to the old Lygteå stream "
+            "running beneath the asphalt. Cracks were visible in the building's facade "
+            "until recently, and the owners hail from Montenegro, giving the corner bar a "
+            "faint Balkan-meets-Paris feel.",
+            ["history", "drink", "culture"],
         ),
         memory(
             "walk",
-            "Along the street, dev seed",
-            "The night the power went out on this block and somebody wheeled a "
-            "piano into the street. Nobody could agree who it belonged to.",
-            ["music", "nightlife"],
+            "Nørrebrogade bridge, dev seed",
+            "One year during Trip Nørrebro, the annual pub crawl, participants stripped off "
+            "their clothes at the bridge on Nørrebrogade, jumped into the water, swam to the "
+            "other side, and got dressed again. Maleren, the crawl's founder, recalled it as "
+            "one of the era's wilder stunts.",
+            ["nightlife", "strange", "adventure"],
         ),
         memory(
             "stack",
-            "The corner, dev seed",
-            "First of three at this exact point: the taxi that reversed the "
-            "whole length of the block rather than admit the turn was missed.",
-            ["strange"],
+            "Woodstock, dev seed",
+            "During the 'værtshuskrigen', when the state tried stripping Christiania's bars "
+            "of alcohol licenses and equipment, Woodstock was completely gutted, with "
+            "truckloads of bar stools, bottles and beer crates hauled away. But the bar "
+            "counter itself stayed standing, since a customer had mortared it in with a "
+            "technique so solid even police with the right tools couldn't remove it.",
+            ["history", "strange", "drink"],
         ),
         memory(
             "stack",
-            "The corner, dev seed",
-            "Second of three: a wedding party queued outside for forty minutes "
-            "in the rain, and the bride was the only one who found it funny.",
-            ["family"],
+            "Woodstock, dev seed",
+            "At Woodstock, deceased regulars are remembered with a breakfast tray bearing "
+            "their name hung on a 'mindeparaply', a memorial umbrella. Customers toss spare "
+            "coins onto it as tips, and the money goes to the bereaved for flowers or "
+            "funeral costs; in hard times three trays have hung there at once.",
+            ["culture", "personal", "history"],
         ),
         memory(
             "stack",
-            "The corner, dev seed",
-            "Third of three: the fire escape somebody had turned into a garden, "
-            "four storeys of tomatoes nobody was allowed to touch.",
-            ["nature"],
+            "Woodstock, dev seed",
+            "The wooden building that houses Woodstock was built by the German military "
+            "during World War II, when they occupied the barracks and needed a motorcycle "
+            "repair workshop of their own between the larger existing structures. They "
+            "built this small shed to service their military motorcycles, and it later "
+            "became the bar.",
+            ["history", "drink"],
         ),
         memory(
             "centroid",
-            "Somewhere around here, dev seed",
-            "Filed to the middle of the neighbourhood because the transcript "
-            "never said where. Open to everyone - walking to a guess is a lie.",
-            ["history"],
+            "Hedebygade, dev seed",
+            "Tove Ditlevsen grew up on Hedebygade, a hard working-class street on Vesterbro "
+            "at the time. This is the street she immortalized as 'barndommens gade' (the "
+            "street of childhood) in her book Barndom, writing unsparingly about what it "
+            "meant to be a child here.",
+            ["history", "culture", "personal"],
         ),
     ]
 
@@ -459,18 +474,74 @@ def snap_pool(tries: int = 4000) -> list[list[float]]:
     return pool
 
 
-def plant(session, content_id, rng, label, i, n, lat, lng, stranger=None, memories=1, name=None):
+# Real summaries (extracted 2026-09-27, Københavnerliv) for the --dense and
+# --routes filler, so a full map reads like the product. Picked by index, not
+# rng, so a --seed keeps planting the same map.
+REAL = (
+    "The crawl's second stop sits down Nordre Fasanvej from Maskot, an old inn from the "
+    "early 1900s that once held a royal charter and stabled the king's horses. New owners "
+    "now mix events and youthful crowds with the old regulars, who still smoke in one end "
+    "and play the jukebox in the other.",
+    "This is where Trip Nørrebro, the yearly pub crawl through Nørrebro's old brown bars, "
+    "began in 1996. It started quiet and small, just crates of beer and a beer relay among "
+    "friends, before escalating over the following two or three years into the massive "
+    "30-year tradition it became.",
+    "Jørgen Leth sat in this chair every Wednesday for a clean shave with hot towels and a "
+    "blade, right up until near the end of his life. On his last visit he forgot his "
+    "glasses, which his barber left in place, turned toward the chair, so that Leth's eyes "
+    "still watch him work each day.",
+    "The barbershop where Jørgen Leth was a longtime customer was founded in 1937, the same "
+    "year he was born, originally set up so Egmont's executives next door could be groomed. "
+    "Its black glass fittings and chairs are still the originals from that year.",
+    "In his last years, Jørgen Leth arrived here by taxi around 12:30 and was led in with "
+    "his cane and jacket by his barber of many years. Too frail to climb into the tall, old "
+    "leather barber chair alone, he was lifted up only when the barber pressed a foot "
+    "against his to hoist him together.",
+    "Woodstock had been painted classic red for decades, after starting out light green, "
+    "until the team decided last summer it needed color. Nico Hageman, a Copenhagen "
+    "graffiti artist based on Christiania, took on the job and covered the whole exterior "
+    "in his distinctive spray style, adding patterns, flowers and smiling smileys.",
+    "Tove Ditlevsen spent her entire childhood on the fourth floor of this Hedebygade "
+    "building. Standing by the very entrance gate, a passage from her memoir Barndom was "
+    "read aloud, describing the reek of beer and urine on the stairs and a neighbor, Fru "
+    "Poulsen, beckoning her inside.",
+    "Tove Ditlevsen, the Vesterbro-born poet and author, was buried from Kristkirken on "
+    "Enghaveplads nearly 50 years ago. Not a single seat inside was empty, as mostly women "
+    "came to say a proper farewell to the writer whose work had guided how they thought "
+    "about living a life.",
+    "Copenhagen named this square after Tove Ditlevsen and set lines of her poetry into the "
+    "paving stones around it, including 'the one is him I love, the other loves me' - her "
+    "poetry at its simplest and purest.",
+    "Tove Ditlevsen's funeral packed the church while several hundred more people waited "
+    "outside. When the coffin emerged, the women present spontaneously bowed as if she were "
+    "royalty, and a procession followed it away, an almost state-like farewell rare for a "
+    "Danish writer.",
+    "Fuglereden, standing in an old corner building with a small tower on Frederiksborgvej, "
+    "was one of the last of its kind in Nordvest after the landowner tried to tear it down "
+    "to build four-story youth housing. Local protests forced a compromise, sparing the "
+    "1886 building while the owner built on nearby garages on Porsvej instead.",
+    "Dennis fell in love with this corner building in 1998 and wanted to run a pub there, "
+    "but the liquor authority initially refused because a school stood right opposite. He "
+    "later got it going anyway with encouragement from the property owner.",
+    "A bar once called Glashuset, in Nordvest, got converted into a more standard beer bar, "
+    "and in the process lost its billiard table, its jukebox and its cigarettes. What "
+    "remained felt sterile compared to before, marking a shift in the neighborhood's "
+    "character.",
+    "After new owners took over Glendekroen, they pushed out some of the old regulars, "
+    "banned smoking inside, and began hosting bingo nights and karaoke while showing "
+    "football. Anders said the change made the bar more welcoming to people who once felt "
+    "intimidated by the old crowd of smokers and drinkers.",
+)
+
+
+def plant(session, content_id, rng, label, i, lat, lng, stranger=None, memories=1, name=None):
     """One place for --dense or --routes carrying `memories` memories: a
     submission a third of the time unless `stranger` says, random tags and a
     random contrast_score. The draws stay in this order so a --seed keeps
     planting the same map."""
     key = f"{PLACE_PREFIX}{label.lower()}-{i}"
     name = f"{name or label.capitalize()} {i}, dev seed"
-    summaries = [
-        f"Seeded memory {i} of {n}, placed at random on a walkable street."
-        + (f" {j + 1} of {memories} here." if memories > 1 else "")
-        for j in range(memories)
-    ]
+    summaries = [REAL[(i + j) % len(REAL)] for j in range(memories)]
     tags = rng.sample(TAGS, rng.randint(1, 2))
     if stranger is None:
         stranger = rng.random() < 1 / 3
@@ -524,7 +595,7 @@ def dense(session, n: int, seed: int) -> int:
     points = rng.sample(json.loads(POOL.read_text()), n)
     content_id = content_id_of(session)
     for i, (lat, lng) in enumerate(points):
-        plant(session, content_id, rng, "dense", i, n, lat, lng)
+        plant(session, content_id, rng, "dense", i, lat, lng)
     return n
 
 
@@ -705,7 +776,7 @@ def scenario(session, name: str, seed: int) -> tuple[tuple[float, float], int]:
     for i, (lat, lng) in enumerate(points):
         memories = rng.randint(3, 6) if stacked else 1
         place = lake_of(lat, lng) if name == "lakes" else None
-        plant(session, content_id, rng, name, i, len(points), lat, lng, stranger, memories, place)
+        plant(session, content_id, rng, name, i, lat, lng, stranger, memories, place)
     return start, len(points)
 
 
