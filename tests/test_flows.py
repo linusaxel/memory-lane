@@ -190,7 +190,7 @@ def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route
     """F25 from starts and lengths nobody chose, over `seed_dev --dense`.
 
     walk-and-unlock.yml asserts one walk by name; this asserts only what every
-    walk owes the person on it: about a stop a km, within the slider, the same
+    walk owes the person on it: at most a stop a km (five at least), within the slider, the same
     walk once accepted, and each stop opened by standing on it.
     """
     rng = random.Random(route_seed)

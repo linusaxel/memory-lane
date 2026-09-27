@@ -62,17 +62,17 @@ appId: ${APP_ID}
 
 # The preview: the whole loop on the map, and a decision.
 - extendedWaitUntil:
-    visible: "4 stops · .* loop"
+    visible: "5 stops · .* loop"
     timeout: 40000
 - assertVisible: "Start this walk"
 - assertNotVisible: "Planning from central Copenhagen.*"
 # A preview is a look: its pins carry their stop numbers already.
-- assertVisible: "Stop 1 of 4\\. .*"
+- assertVisible: "Stop 1 of 5\\. .*"
 
 # F32: another walk as good, still a preview.
 - tapOn: "Show me another"
 - extendedWaitUntil:
-    visible: "4 stops · .* loop"
+    visible: "5 stops · .* loop"
     timeout: 40000
 - assertVisible: "Start this walk"
 
@@ -80,14 +80,14 @@ appId: ${APP_ID}
 - tapOn: "Change length"
 - assertVisible: "How far today?"
 
-# One way: the same four stops' worth of walk, ending somewhere new.
+# One way: the same five stops' worth of walk, ending somewhere new.
 - tapOn: "One way"
 - assertVisible: "Five memories, ending somewhere new\\."
 - tapOn: "Show me the walk"
 - extendedWaitUntil:
-    visible: "4 stops · [0-9.]+ k?m"
+    visible: "5 stops · [0-9.]+ k?m"
     timeout: 40000
-- assertNotVisible: "4 stops · .* loop"
+- assertNotVisible: "5 stops · .* loop"
 - tapOn: "Change length"
 
 # ---- F8, refused
