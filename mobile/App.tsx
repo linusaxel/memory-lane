@@ -63,7 +63,7 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { EndPick, EndWalk, Plan, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
+import { EndPick, EndWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import AddGlyph from './src/AddGlyph.tsx';
 import YouGlyph from './src/YouGlyph.tsx';
@@ -96,6 +96,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 /** `again` rolls for a plan; api/models.py ROUTE_AGAIN_MAX leaves room above
  *  it for "Show me another" taps. */
 const ROLLS = 1_000_000;
+
+const planKey = (km: number, ask: WalkAsk) => `${km}|${ask.loop}|${ask.end?.lat},${ask.end?.lng}`;
 
 /** How far the map looks before a walk: half the longest walk, which is as far
  *  out as any walk can reach (docs/10, "The search radius is half the length"). */
@@ -164,7 +166,7 @@ const NONE = new Set<number>();
 /** The map of what is locked, then plan the walk, preview it, walk it.
  *  `loading` is the moment before the device knows whether it already accepted
  *  today's walk. */
-type Stage = 'loading' | 'map' | 'plan' | 'end' | 'preview' | 'walk';
+type Stage = 'loading' | 'map' | 'end' | 'preview' | 'walk';
 
 /** Whether `me` filed this. Both sides have to be a real id: an extracted
  *  memory's author is null and a signed-out profile's user_id is undefined,
@@ -196,6 +198,8 @@ export default function App() {
   // server said reaches it, once it has said so (0 until then).
   const [walkTo, setWalkTo] = useState<LocatedMemory | null>(null);
   const [walkToKm, setWalkToKm] = useState(0);
+  // Its own length, from the floor, so it leaves "Plan a walk"'s alone.
+  const [hereKm, setHereKm] = useState(WALK_KM.min);
   // "End walk" was tapped with stops still to reach: the are-you-sure card.
   const [confirmEnd, setConfirmEnd] = useState(false);
   // The locked memories around you, before any walk (F29).
@@ -529,8 +533,11 @@ export default function App() {
     if (walkAsk.end) floors.push(endFloorKm(crow(walkAsk.end), WALK_KM.step));
     return Math.max(...floors);
   }, [walkTo, walkToKm, position, walkAsk.loop, walkAsk.end]);
-  const planKm = walkFloor <= WALK_KM.max ? Math.max(walkKm, walkFloor) : walkKm;
+  const askedKm = walkTo ? hereKm : walkKm;
+  const planKm = walkFloor <= WALK_KM.max ? Math.max(askedKm, walkFloor) : askedKm;
 
+  // The length and shape of the walk on the card, once it is drawn.
+  const plannedKey = useRef<string | null>(null);
   const planWalk = useCallback(async (next: number, another = false) => {
     if (!device) return;
     setPlanBusy(true);
@@ -540,16 +547,32 @@ export default function App() {
     const fallback = !from;
     const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
     try {
-      const walk = await previewRoute(
-        device,
-        anchor,
-        planKm * 1000,
-        walkAsk,
-        next,
-        walkTo?.id ?? null,
-      );
-      if (!mounted.current) return;
+      const plan = (km: number) =>
+        previewRoute(device, anchor, km * 1000, walkAsk, next, walkTo?.id ?? null);
       const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
+      let km = planKm;
+      let walk = await plan(km);
+      // Never "the only walk": the same one back offers the nearest other
+      // length, and the slider moves to say so.
+      // ponytail: up to six previews in a row; a server-side "nearest other walk" if it drags.
+      if (another && ids(walk) === ids(preview)) {
+        const low = Math.max(WALK_KM.min, walkFloor);
+        const tried = new Set([km]);
+        for (const step of [-0.5, 0.5, -1, 1, -1.5, 1.5]) {
+          const nearby = Math.min(Math.max(planKm + step, low), WALK_KM.max);
+          if (tried.has(nearby)) continue;
+          tried.add(nearby);
+          const other = await plan(nearby);
+          if (ids(other) !== ids(preview)) {
+            km = nearby;
+            walk = other;
+            break;
+          }
+        }
+      }
+      if (!mounted.current) return;
+      if (km !== planKm) (walkTo ? setHereKm : setWalkKm)(km);
+      plannedKey.current = planKey(km, walkAsk);
       setAgain(next);
       setOnlyWalk(another && ids(walk) === ids(preview));
       setPlanFrom(anchor);
@@ -575,7 +598,24 @@ export default function App() {
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, goToMyLocation, planKm, walkAsk, preview, walkTo]);
+  }, [device, goToMyLocation, planKm, walkFloor, walkAsk, preview, walkTo]);
+
+  // Draw first, adjust after: opening the card plans, and so does every
+  // change to it. A "too far" answer lifts planKm, which plans once more at a
+  // length that reaches. Through a ref, so a new preview does not re-plan, and
+  // not for what is already drawn: a length Show me another moved to.
+  const planWalkRef = useRef(planWalk);
+  planWalkRef.current = planWalk;
+  const planning = stage === 'preview';
+  useEffect(() => {
+    if (!planning) {
+      plannedKey.current = null;
+      return;
+    }
+    if (plannedKey.current !== planKey(planKm, walkAsk)) {
+      planWalkRef.current(Math.floor(Math.random() * ROLLS));
+    }
+  }, [planning, planKm, walkAsk]);
 
   const backToMap = () => {
     setPlanError(null);
@@ -1133,7 +1173,7 @@ export default function App() {
               Haptics.selectionAsync().catch(() => {});
               setWalkAsk((ask) => ({ ...ask, end: { lat, lng } }));
               setWalkToKm(0);
-              setStage('plan');
+              setStage('preview');
             }}
           >
             {/* Once, around the person, at the server's radius - never around
@@ -1317,29 +1357,35 @@ export default function App() {
                 Haptics.selectionAsync().catch(() => {});
                 setWalkTo(null);
                 setWalkToKm(0);
-                setStage('plan');
+                setPreview(null);
+                setStage('preview');
               }}
             >
               <Text style={styles.locateText}>Plan a walk</Text>
             </GlassButton>
           )}
 
-          {stage === 'preview' && preview && (
+          {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
+          {stage === 'preview' && !journalOpen && (
             <Preview
-              stops={preview.memories.length}
+              stops={preview ? preview.memories.length : null}
               meters={pathMeters(previewPath)}
-              asked={planKm * 1000}
-              loop={preview.loop}
+              km={planKm}
+              onKm={walkTo ? setHereKm : setWalkKm}
+              ask={walkAsk}
+              onAsk={(ask) => {
+                setWalkAsk(ask);
+                // The server's length was for the other shape of walk.
+                setWalkToKm(0);
+              }}
+              floorKm={walkFloor}
+              onPickEnd={() => setStage('end')}
               fallback={planFallback}
               through={walkTo?.place.name ?? null}
               busy={planBusy}
               error={planError}
               onAccept={acceptWalk}
               onAnother={onlyWalk ? null : () => planWalk(again + 1, true)}
-              onBack={() => {
-                setPlanError(null);
-                setStage('plan');
-              }}
               onMap={backToMap}
             />
           )}
@@ -1368,28 +1414,7 @@ export default function App() {
             />
           )}
 
-          {/* Opaque, over a map that stays mounted behind it (rule 9). Not
-              under the journal: iOS 26 draws the slider's glass over covers. */}
-          {stage === 'plan' && !journalOpen && (
-            <Plan
-              km={planKm}
-              onKm={setWalkKm}
-              ask={walkAsk}
-              onAsk={(ask) => {
-                setWalkAsk(ask);
-                // The server's length was for the other shape of walk.
-                setWalkToKm(0);
-              }}
-              onGo={() => planWalk(Math.floor(Math.random() * ROLLS))}
-              onBack={backToMap}
-              busy={planBusy}
-              error={planError}
-              through={walkTo?.place.name ?? null}
-              floorKm={walkFloor}
-              onPickEnd={() => setStage('end')}
-            />
-          )}
-          {stage === 'end' && <EndPick onCancel={() => setStage('plan')} />}
+          {stage === 'end' && <EndPick onCancel={() => setStage('preview')} />}
           {stage === 'loading' && <View style={styles.cover} />}
 
           {/* Last, so they sit over the plan page too. Top left the journal,
@@ -1521,15 +1546,18 @@ export default function App() {
           unlocking={unlocking}
           unlockError={unlockError}
           onHeart={heart}
-          // The map's peek: the plan page, for a walk through that pin.
+          // The map's peek: a walk through that pin, drawn at once.
           onWalkHere={
             stage === 'map'
               ? () => {
                   setWalkTo(openMemories[openIndex] ?? null);
                   setWalkToKm(0);
+                  // From the floor: the shortest walk that reaches it.
+                  setHereKm(WALK_KM.min);
                   setPlanError(null);
+                  setPreview(null);
                   setOpenAt([]);
-                  setStage('plan');
+                  setStage('preview');
                 }
               : undefined
           }

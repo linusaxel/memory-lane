@@ -10,30 +10,23 @@
 # The whole slider, 10 km. The lakes top out near 7 km however many stops, so
 # every walk here is the longest from here. Which of them the first preview
 # shows is a random roll; only some reach Sankt Jørgens Sø, the far lake, so
-# Show me another is tapped until one does. A re-roll that came back
-# unchanged would have taken the button away, so reaching it is F32 working.
+# Show me another is tapped until one does, stepping the length when the lakes
+# run out of walks at it, so reaching it is F32 working.
 
 appId: ${APP_ID}
 ---
-- setLocation:
-    latitude: 55.7007
-    longitude: 12.5759
-
-- launchApp:
-    clearState: true
-    permissions:
-      location: inuse
-
-- runFlow: steps/sign-in.yml
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: 55.7007
+      LNG: 12.5759
+      LOCATION: inuse
 
 # F29: the map of what is locked comes first; Plan a walk opens F1.
-- extendedWaitUntil:
-    visible: "Plan a walk"
-    timeout: 40000
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
-    visible: "How far today?"
-    timeout: 20000
+    visible: "[0-9]+ stops? · .* loop"
+    timeout: 40000
 
 # One way, ending where the map is tapped: anywhere near the start is within
 # 4 km. The preview's line has no " loop" on it; Loop again for the rest.
@@ -43,11 +36,9 @@ appId: ${APP_ID}
 - tapOn:
     point: "50%,30%"
 - assertVisible: "Ends where you tapped"
-- tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "[0-9]+ stops? · [0-9.]+ k?m"
     timeout: 40000
-- tapOn: "Change length"
 - tapOn: "Loop"
 - assertNotVisible: "Ends where you tapped"
 
@@ -60,7 +51,6 @@ appId: ${APP_ID}
 - assertVisible:
     text: "10 km"
     above: "Walk length"
-- tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "10 stops · .* loop"
     timeout: 40000
@@ -70,13 +60,13 @@ appId: ${APP_ID}
 
 - repeat:
     while:
-      notVisible: "Stop .* of 10\\. Sankt Jørgens Sø.*"
+      notVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
     times: 7
     commands:
       - tapOn: "Show me another"
       - waitForAnimationToEnd
-- assertVisible: "Stop .* of 10\\. Sankt Jørgens Sø.*"
-- assertVisible: "10 stops · .* loop"
+- assertVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
+- assertVisible: "[0-9]+ stops · .* loop"
 - assertVisible: "Show me another"
 
 # Accepting is what registers the device, and with it the past walks.
@@ -91,14 +81,14 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*, 5 memories · .*"
     timeout: 30000
-- assertVisible: ".*, 2 memories · .*"
-- tapOn: ".*, 2 memories · .*"
+- assertVisible: ".*, 2 memories · 4\\.0 km"
+- tapOn: ".*, 2 memories · 4\\.0 km"
 - extendedWaitUntil:
     visible: "Stop \\d+, Peblinge Sø 5, dev seed, .*"
     timeout: 30000
 - assertVisible: "Stop \\d+, Sortedams Sø 4, dev seed, .*"
 - assertNotVisible: "Stop \\d+, Sortedams Sø 3, dev seed, .*"
-- tapOn: ".*, 2 memories · .*"
+- tapOn: ".*, 2 memories · 4\\.0 km"
 - tapOn: ".*, 5 memories · .*"
 - scrollUntilVisible:
     element: "Stop \\d+, Sankt Jørgens Sø 7, dev seed, .*"

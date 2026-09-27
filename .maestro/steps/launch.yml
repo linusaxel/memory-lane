@@ -1,0 +1,15 @@
+# Stand at LAT,LNG, open a cleared install with LOCATION permission, sign in,
+# and wait for the map. notify-nearby.yml launches by hand: it needs notifications.
+appId: ${APP_ID}
+---
+- setLocation:
+    latitude: ${LAT}
+    longitude: ${LNG}
+- launchApp:
+    clearState: true
+    permissions:
+      location: ${LOCATION}
+- runFlow: sign-in.yml
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000

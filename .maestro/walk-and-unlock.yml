@@ -24,30 +24,19 @@
 
 appId: ${APP_ID}
 ---
-- setLocation:
-    latitude: ${START_LAT}
-    longitude: ${START_LNG}
-
-- launchApp:
-    clearState: true
-    permissions:
-      # iOS takes always/inuse/never/unset here, not allow. `inuse` because
-      # background location is only asked for by the opt-in nearby toggle
-      # (mobile/src/geofence.ts), which this flow never turns on.
-      location: inuse
-
-- runFlow: steps/sign-in.yml
+# iOS takes always/inuse/never/unset here, not allow. `inuse` because
+# background location is only asked for by the opt-in nearby toggle
+# (mobile/src/geofence.ts), which this flow never turns on.
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: ${START_LAT}
+      LNG: ${START_LNG}
+      LOCATION: inuse
 
 # F25: plan, preview, accept. The default length is the walk below.
 # F29: the map of what is locked comes first; Plan a walk opens F1.
-- extendedWaitUntil:
-    visible: "Plan a walk"
-    timeout: 40000
 - tapOn: "Plan a walk"
-- extendedWaitUntil:
-    visible: "How far today?"
-    timeout: 20000
-- tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "4 stops · .* loop"
     timeout: 40000
@@ -200,12 +189,12 @@ appId: ${APP_ID}
 
 # Still there after the process dies. No clearState this time - that is the
 # whole assertion. And the walk stands until it is ended: the relaunch lands
-# on the walked route, not on the plan page.
+# on the walked route, not on a planned one.
 - launchApp
 - extendedWaitUntil:
     visible: "On a walk · 4 of 4 unlocked\\."
     timeout: 30000
-- assertNotVisible: "How far today?"
+- assertNotVisible: "A walk from here"
 - assertNotVisible: "Nice walk\\."
 - tapOn: "Journal"
 - extendedWaitUntil:
@@ -219,8 +208,8 @@ appId: ${APP_ID}
 - tapOn: "Close journal"
 - assertVisible: "On a walk · 4 of 4 unlocked\\."
 
-# Ending a walked walk loses nothing, so it does not ask. The map, and the
-# plan page, but a second walk the same day is the paywall's (F35): it opened
+# Ending a walked walk loses nothing, so it does not ask. The map, and
+# Plan a walk, but a second walk the same day is the paywall's (F35): it opened
 # something, so it was today's free one.
 - tapOn: "On a walk.*"
 - assertNotVisible: "End this walk\\?"
@@ -229,8 +218,6 @@ appId: ${APP_ID}
     timeout: 30000
 - assertNotVisible: "On a walk.*"
 - tapOn: "Plan a walk"
-- assertVisible: "How far today\\?"
-- tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "Open any memory you stand on"
     timeout: 20000

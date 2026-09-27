@@ -1,19 +1,19 @@
-/** The first thing the app asks: how far today. Then the walk it would be, on
- *  the map, to accept or change. A walk can be ended any time and another
- *  planned (EndWalk); the preview is still the look before you commit.
+/** A walk, drawn first and adjusted after. "Plan a walk" (F29) and a pin's
+ *  "Walk here" both go straight to a walk on the map; the card under it holds
+ *  the length and the shape, and any change redraws the walk. From "Walk here"
+ *  every walk passes that memory, and the length starts at the shortest walk
+ *  that reaches it. A one-way walk can end at a spot tapped on the map
+ *  (EndPick), asked for per walk and stored nowhere. docs/10, "Draw first,
+ *  adjust after".
  *
- *  It opens from the map's "Plan a walk" (F29) and goes back to it. From a
- *  pin's "Walk here" it plans a walk through that memory, and the slider
- *  starts at the shortest walk that reaches it. A one-way walk can end at a
- *  spot tapped on the map (EndPick), asked for per walk and stored nowhere.
- *
- *  The page is also the location primer. "Show me the walk" is a press, so the
- *  system dialog it may raise has the context the old card over the map gave
- *  it (UI.md, "Asking for location"). Refused, the walk is planned from
- *  central Copenhagen and the preview says so - never a dead end (rule 1).
+ *  The press that opened it is the location ask: a press with a reason, so the
+ *  system dialog it may raise is never cold (UI.md, "Asking for location").
+ *  Refused, the walk is planned from central Copenhagen and the card says so -
+ *  never a dead end (rule 1).
  */
 
 import Slider from '@react-native-community/slider';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { WalkAsk } from './api.ts';
@@ -27,52 +27,28 @@ export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 /** api/route_solver.py ROUTE_FILL: under this share of the ask, the map ran out. */
 const ROUTE_FILL = 0.8;
 
-type PlanProps = {
-  km: number;
-  onKm: (km: number) => void;
-  ask: WalkAsk;
-  onAsk: (ask: WalkAsk) => void;
-  onGo: () => void;
-  onBack: () => void;
-  busy: boolean;
-  error: string | null;
-  /** "Walk here": the place every walk passes, or null. */
-  through: string | null;
-  /** The shortest walk that reaches it; over WALK_KM.max, none does. */
-  floorKm: number;
-  /** Go to the map to tap where a one-way walk ends. */
-  onPickEnd: () => void;
-};
+type LengthProps = { km: number; min: number; onKm: (km: number) => void };
 
-export function Plan({
-  km,
-  onKm,
-  ask,
-  onAsk,
-  onGo,
-  onBack,
-  busy,
-  error,
-  through,
-  floorKm,
-  onPickEnd,
-}: PlanProps) {
-  const unreachable = floorKm > WALK_KM.max;
-  const min = Math.min(Math.max(WALK_KM.min, floorKm), WALK_KM.max);
+/** Uncontrolled: the library's `value` is write-only, and lifting every tick
+ *  re-rendered all of App under the thumb. No `step` either - iOS snaps the
+ *  thumb only on release, which read as a jolt - so it rounds here, and the
+ *  walk redraws once, on release. */
+function LengthSlider({ km, min, onKm }: LengthProps) {
+  const [shown, setShown] = useState(km);
+  const round = (v: number) => Math.round(v / WALK_KM.step) * WALK_KM.step;
   return (
-    <View style={styles.page}>
-      <View style={styles.titleRow}>
-        <Text style={styles.title}>How far today?</Text>
-        <CloseButton onPress={onBack} disabled={busy} label="Back to the map" />
-      </View>
-      <Text style={styles.value} accessibilityLiveRegion="polite">{`${km} km`}</Text>
+    <>
+      <Text style={styles.value} accessibilityLiveRegion="polite">{`${shown} km`}</Text>
       <Slider
         style={styles.slider}
         minimumValue={min}
         maximumValue={WALK_KM.max}
-        step={WALK_KM.step}
         value={km}
-        onValueChange={onKm}
+        onValueChange={(v) => setShown(round(v))}
+        onSlidingComplete={(v) => {
+          setShown(round(v));
+          onKm(round(v));
+        }}
         tapToSeek
         // The native component takes any ColorValue (RNCSliderNativeComponent.ts);
         // only the published typings say string.
@@ -84,48 +60,7 @@ export function Plan({
         <Text style={label}>{`${min} km`}</Text>
         <Text style={label}>{`${WALK_KM.max} km`}</Text>
       </View>
-      <View style={styles.chips}>
-        <Chip label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true, end: null })} />
-        <Chip label="One way" on={!ask.loop} onPress={() => onAsk({ ...ask, loop: false })} />
-      </View>
-      {/* A second tap lets the end go. */}
-      {!ask.loop && (
-        <View style={styles.chips}>
-          <Chip
-            label={ask.end ? 'Ends where you tapped' : 'Pick where it ends'}
-            on={!!ask.end}
-            onPress={() => (ask.end ? onAsk({ ...ask, end: null }) : onPickEnd())}
-          />
-        </View>
-      )}
-      <Text style={styles.note}>
-        {`Five memories${through ? `, through ${through}` : ''}, ${
-          ask.loop
-            ? 'looping back to where you start'
-            : ask.end
-              ? 'ending where you tapped'
-              : 'ending somewhere new'
-        }.`}
-      </Text>
-      {unreachable && (
-        <Text style={styles.note}>{`The nearest walk from here is over ${WALK_KM.max} km.`}</Text>
-      )}
-
-      <Pressable
-        style={dim(styles.primary)}
-        onPress={onGo}
-        disabled={busy || unreachable}
-        accessibilityRole="button"
-        accessibilityLabel="Show me the walk"
-      >
-        {busy ? (
-          <ActivityIndicator color={color.paper} />
-        ) : (
-          <Text style={styles.primaryText}>Show me the walk</Text>
-        )}
-      </Pressable>
-      {error && <Text style={styles.error}>{error}</Text>}
-    </View>
+    </>
   );
 }
 
@@ -148,11 +83,18 @@ export function EndPick({ onCancel }: { onCancel: () => void }) {
 }
 
 type PreviewProps = {
-  stops: number;
+  /** Null until the first walk comes back. */
+  stops: number | null;
   meters: number;
-  /** What the slider asked for, in meters. */
-  asked: number;
-  loop: boolean;
+  /** What the slider asked for. */
+  km: number;
+  onKm: (km: number) => void;
+  ask: WalkAsk;
+  onAsk: (ask: WalkAsk) => void;
+  /** The shortest walk that reaches the pin and the end; over WALK_KM.max, none does. */
+  floorKm: number;
+  /** Go to the map to tap where a one-way walk ends. */
+  onPickEnd: () => void;
   /** Planned from central Copenhagen because there was no position to plan from. */
   fallback: boolean;
   /** "Walk here": the place on every walk shown, or null. */
@@ -160,84 +102,96 @@ type PreviewProps = {
   busy: boolean;
   error: string | null;
   onAccept: () => void;
-  /** Null once a re-roll came back with the same walk: it is the only one. */
+  /** Null once no length near this one has another walk. */
   onAnother: (() => void) | null;
-  onBack: () => void;
   onMap: () => void;
 };
 
 export function Preview({
   stops,
   meters,
-  asked,
-  loop,
+  km,
+  onKm,
+  ask,
+  onAsk,
+  floorKm,
+  onPickEnd,
   fallback,
   through,
   busy,
   error,
   onAccept,
   onAnother,
-  onBack,
   onMap,
 }: PreviewProps) {
-  const short = stops > 0 && meters < ROUTE_FILL * asked;
+  const found = stops != null && stops > 0;
+  const short = found && meters < ROUTE_FILL * km * 1000;
+  const unreachable = floorKm > WALK_KM.max;
+  // Up to the slider's grid, so a floor of 2.3 km does not shift every step.
+  const min = Math.min(Math.ceil(Math.max(WALK_KM.min, floorKm) / WALK_KM.step) * WALK_KM.step, WALK_KM.max);
   return (
     <View style={styles.card}>
-      {stops === 0 ? (
-        <Text style={[styles.cardTitle, styles.besideClose]}>No walk that long from here</Text>
-      ) : (
-        <Text style={[styles.cardTitle, styles.besideClose]}>
-          {`${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${loop ? ' loop' : ''}`}
-        </Text>
-      )}
-      {stops > 0 && through && <Text style={styles.cardBody}>{`Through ${through}.`}</Text>}
+      <Text style={[styles.cardTitle, styles.besideClose]}>
+        {through ? `A walk through ${through}` : 'A walk from here'}
+      </Text>
+      <Text style={styles.cardBody}>
+        {stops == null
+          ? 'Finding a walk…'
+          : stops === 0
+            ? 'No walk that long from here.'
+            : `${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
+      </Text>
       {short && <Text style={styles.cardBody}>That's the longest walk from here.</Text>}
       {fallback && (
         <Text style={styles.cardBody}>
           Planning from central Copenhagen. Turn on location to plan from where you are.
         </Text>
       )}
-      {stops > 0 && (
+      {unreachable ? (
+        <Text style={styles.cardBody}>{`The nearest walk from here is over ${WALK_KM.max} km.`}</Text>
+      ) : (
+        // Keyed, so a length the server lifted resets the label; never mid-drag,
+        // since only a release changes km.
+        <LengthSlider key={`${min}:${km}`} km={Math.max(km, min)} min={min} onKm={onKm} />
+      )}
+      <View style={styles.chips}>
+        <Chip label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true, end: null })} />
+        <Chip label="One way" on={!ask.loop} onPress={() => onAsk({ ...ask, loop: false })} />
+        {/* A second tap lets the end go. */}
+        {!ask.loop && (
+          <Chip
+            label={ask.end ? 'Ends where you tapped' : 'Pick where it ends'}
+            on={!!ask.end}
+            onPress={() => (ask.end ? onAsk({ ...ask, end: null }) : onPickEnd())}
+          />
+        )}
+      </View>
+      <Pressable
+        style={dim(styles.primary)}
+        onPress={onAccept}
+        disabled={busy || !found}
+        accessibilityRole="button"
+        accessibilityLabel="Start this walk"
+        accessibilityHint="You can end it any time."
+      >
+        {busy ? (
+          <ActivityIndicator color={color.paper} />
+        ) : (
+          <Text style={styles.primaryText}>Start walk</Text>
+        )}
+      </Pressable>
+      {/* Gone only when no length near this one has another walk either. */}
+      {found && onAnother && (
         <Pressable
-          style={dim(styles.primary)}
-          onPress={onAccept}
+          style={dim(styles.secondary)}
+          onPress={onAnother}
           disabled={busy}
           accessibilityRole="button"
-          accessibilityLabel="Start this walk"
-          accessibilityHint="You can end it any time."
+          accessibilityLabel="Show me another"
         >
-          {busy ? (
-            <ActivityIndicator color={color.paper} />
-          ) : (
-            <Text style={styles.primaryText}>Start walk</Text>
-          )}
+          <Text style={styles.secondaryText}>Show me another</Text>
         </Pressable>
       )}
-      {stops > 0 &&
-        (onAnother ? (
-          <Pressable
-            style={dim(styles.secondary)}
-            onPress={onAnother}
-            disabled={busy}
-            accessibilityRole="button"
-            accessibilityLabel="Show me another"
-          >
-            <Text style={styles.secondaryText}>Show me another</Text>
-          </Pressable>
-        ) : (
-          <Text style={styles.cardBody}>
-            {short ? 'The only walk from here.' : 'The only walk that long from here.'}
-          </Text>
-        ))}
-      <Pressable
-        style={dim(styles.secondary)}
-        onPress={onBack}
-        disabled={busy}
-        accessibilityRole="button"
-        accessibilityLabel="Change length"
-      >
-        <Text style={styles.secondaryText}>Change length</Text>
-      </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
       <CloseButton place={styles.close} onPress={onMap} disabled={busy} label="Back to the map" />
     </View>
@@ -335,24 +289,10 @@ export function WalkDone({ stops, meters, loop, minutes, streak, onDone }: WalkD
 }
 
 const styles = StyleSheet.create({
-  page: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: color.paper,
-    paddingHorizontal: 24,
-    justifyContent: 'center',
-    gap: 8,
-  },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
-  value: { ...font.uiBold, fontSize: 30, color: color.ink, marginTop: 16 },
-  slider: { marginTop: 8, height: 40 },
+  value: { ...font.uiBold, fontSize: 22, color: color.ink, marginTop: 4 },
+  slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
-  note: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft, marginTop: 16 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   primary: { ...button.solid, marginTop: 14 },
   primaryText: { ...buttonText, color: color.paper },
   secondary: button.quiet,

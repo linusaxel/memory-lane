@@ -1,0 +1,53 @@
+# F35 subscribe, from the map's peek, before and after paying.
+# docs/08-ux-flows.md, docs/10-decisions.md "A subscription opens the map".
+#
+# Standing on a pin with no walk through it offers Open it now beside Walk
+# here, and the paywall it opens has nothing to sell on a simulator (no
+# RevenueCat key) and says so, with a way out. Then typing a name mints the
+# account, e2e/run.sh's `subscriber` trigger pays for it, and the same pin opens
+# with the same hold as a walk's stop.
+
+appId: ${APP_ID}
+---
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: ${BENCH_LAT}
+      LNG: ${BENCH_LNG}
+      LOCATION: inuse
+
+- tapOn: "Ringkaféen, dev seed\\. Locked, within reach\\."
+- extendedWaitUntil:
+    visible: "You're right here\\. Make it a stop on today's walk, or open it now\\."
+    timeout: 10000
+- assertNotVisible: "Unlock this memory"
+- tapOn: "Open it now"
+- extendedWaitUntil:
+    visible: "Open any memory you stand on"
+    timeout: 10000
+- assertVisible: "Subscriptions aren't available right now\\."
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 10000
+
+- tapOn: "You and settings"
+- tapOn: "The name your memories are signed with"
+- inputText: "Paid"
+- tapOn: "Close"
+
+# The profile is read at launch; a relaunch reads the subscription.
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "Ringkaféen, dev seed\\. Locked, within reach\\."
+    timeout: 40000
+- tapOn: "Ringkaféen, dev seed\\. Locked, within reach\\."
+- extendedWaitUntil:
+    visible: "You made it\\."
+    timeout: 10000
+- assertNotVisible: "Open it now"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*Lygteå.*"
+    timeout: 30000

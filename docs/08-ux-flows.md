@@ -63,8 +63,8 @@ free number. F3 is still proposed and sits at the bottom.
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
 screen — no carousel, no settings anybody
-has to change (the walk length is the plan page's one question, asked as part
-of F1, not a setting), no search in the app, no sharing, and no push notifications.
+has to change (the walk length is the preview card's one slider, part of F1,
+not a setting), no search in the app, no sharing, and no push notifications.
 Each of those is a thing a user does *not* do, and the list is worth as much
 as the one above — if one of them appears, it should be because a flow needed
 it, not because apps have them. The one exception is F28's proximity
@@ -110,8 +110,8 @@ because nothing is reachable before it (docs/10, *Sign-in comes first*).
    field, no password, no magic link.
 2. The provider's sheet, then back. The app sends the ID token it was given and
    is told who that makes it.
-3. The map of what is locked around you (F29). Its **Plan a walk** opens the
-   plan page (F1), which is where location is asked for (F8).
+3. The map of what is locked around you (F29). Its **Plan a walk** draws a
+   walk (F1), and that press is where location is asked for (F8).
 4. On a new phone: sign in, and the collection is there.
 
 Signing out (You → Account) lands back on this screen.
@@ -167,30 +167,29 @@ somebody can hand their old phone in and still have everything they walked for.
 
 **Who:** someone who opened the app and has not accepted a walk today.
 
-1. **Plan a walk** on the map (F29), or **Walk here** on a pin's peek, opens
-   `mobile/src/Plan.tsx`: "How far today?" and one slider,
-   1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`). Under it, **Loop** or
-   **One way** (loop to start). No theme: tags are open since 2026-09-26
-   (docs/10, *Tags come from the text*). One way adds **Pick where it ends**: the map, a card saying to tap it,
-   and the tap is the end ("Ends where you tapped"; a second tap lets it go).
-   The slider starts at least at the crow's distance to it ×1.3 (`endFloorKm`). The map is mounted behind it, not shown. The × on the title line returns.
-   From **Walk here**, every walk passes that pin: the note reads "Five
-   memories, through Blågårdsgade, …", and the slider starts at the shortest
-   walk that reaches it, twice the crow's distance (×1.3 on a loop, for the
-   streets and the way back; `walkFloorKm` in `src/region.ts`). The length
-   chosen is lifted, not changed: back on the map, it is yours again.
-2. **Show me the walk** asks for location if it has to (F8), then
-   `GET /v1/routes/preview` with that position, the length in metres, `loop`
-   and the pin's `include`. The preview stores nothing.
-3. The preview is the map, fitted to the start and every stop
-   (`fitToCoordinates`), with the stops numbered 1–5 and the loop drawn. A card
-   reads "4 stops · 3.8 km loop", with **Start walk** and **Change length**, and an × in its corner back to the map.
-   Preview pins do not open: it is a look, not a walk. From Walk here the card
-   adds "Through Blågårdsgade.", on every preview; Show me another never
-   drops it.
-4. **Start walk** is `POST /v1/routes/today` with the same position, length and
-   loop, and lands on the walk (F25). **Change length** goes back to the slider, and
-   nothing was stored, so it costs nothing.
+1. **Plan a walk** on the map (F29), or **Walk here** on a pin's peek, draws a
+   walk at once: no question first (docs/10, *Draw first, adjust after*). The
+   press asks for location if it has to (F8), then `GET /v1/routes/preview`
+   with that position, the length in metres, `loop` and the pin's `include`.
+   The preview stores nothing.
+2. The preview is the map, fitted to the start and every stop
+   (`fitToCoordinates`), with the stops numbered and the loop drawn. Preview
+   pins do not open: it is a look, not a walk. The card (`mobile/src/Plan.tsx`)
+   reads "A walk from here", then "4 stops · 3.8 km loop", then the length:
+   one slider, 1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`), about one
+   stop a km. Under it **Loop** or **One way**. No theme: tags are open since
+   2026-09-26 (docs/10, *Tags come from the text*). One way adds **Pick where
+   it ends**: the map, a card saying to tap it, and the tap is the end ("Ends
+   where you tapped"; a second tap lets it go), with the slider at least the
+   crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
+   slider only on release. The × returns to the map.
+   From **Walk here**, every walk passes that pin: the card reads "A walk
+   through Blågårdsgade", and the length starts at the shortest walk that
+   reaches it, twice the crow's distance (×1.3 on a loop, for the streets and
+   the way back; `walkFloorKm` in `src/region.ts`). It has its own length:
+   Plan a walk's is left alone. Show me another never drops the pin.
+3. **Start walk** is `POST /v1/routes/today` with the same position, length and
+   loop, and lands on the walk (F25).
 
 **Accepting starts the walk.** It stands until it is ended (F34). Another the
 same day needs a subscription, unless the first opened nothing (docs/10,
@@ -198,21 +197,21 @@ same day needs a subscription, unless the first opened nothing (docs/10,
 page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length — the card reads
-"No walk that long from here" and offers only **Change length**. The map runs
+"No walk that long from here." with the slider still there, and no Start walk. The map runs
 out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
 the ask (`ROUTE_FILL`) adds "That's the longest walk from here." No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
-unreachable — the page says "Can't reach Memory Lane right now." under the
-button, and a second press retries. From Walk here: the streets are longer
-than the estimate, and the page says "2 km is too short from here. Try 3 km or more." and
-lifts the slider to it; further than 10 km reaches, "The nearest walk from
+unreachable — the card says "Can't reach Memory Lane right now." under the
+button, and any change retries. From Walk here: the streets are longer than
+the estimate, and the server's shortest length lifts the slider and the walk
+is drawn again at it; further than 10 km reaches, "The nearest walk from
 here is over 10 km." and no button; the pin can no longer be a stop (earned,
 hidden), "That memory can't be on a walk from here." and the plan goes on
 without it. Today's free walk already taken — "That was today's free walk.
 Come back tomorrow, or subscribe for more." (the paywall comes with TODO.md S4).
 
-**Done when:** Plan a walk shows the slider and no system dialog, a press
-shows a whole walk on the map, and Accept makes it today's.
+**Done when:** Plan a walk shows a whole walk on the map, a change to the card
+redraws it, and Accept makes it today's.
 
 ## F2 · Read one memory and go to its source — **Implemented**
 
@@ -427,17 +426,15 @@ mechanic.
 **Who:** somebody on their first launch, who has not been asked yet.
 
 1. They have signed in (F22), looked at the map (F29, centred on central
-   Copenhagen until there is a position) and opened the plan page (F1).
-   Nothing has been asked.
-2. **Show me the walk** is the ask: walks start from where you are, and the
-   page says the walk loops back there. The system dialog comes from that
-   press, never from launch.
+   Copenhagen until there is a position). Nothing has been asked.
+2. **Plan a walk** (or a pin's **Walk here**) is the ask: walks start from
+   where you are. The system dialog comes from that press, never from launch.
 3. Granted → the walk is planned from here. Declined → planned from central Copenhagen
    (F9).
 
 The app never calls `requestForegroundPermissions` on mount. A cold system
 dialog is one tap from a permanent no; a press with a reason in front of it is
-not cold. There is no primer card any more — the plan page is the context.
+not cold. There is no primer card any more — the press is the context.
 
 Somebody who already granted it is never asked again: `getForegroundPermissions`
 runs first, silently, and a granted launch starts watching position straight
@@ -448,7 +445,7 @@ central Copenhagen without a dialog; on the walk, **Turn on location** opens Set
 which is the only route back.
 
 **Done when:** after F22, a first launch shows the map and no system
-dialog, and Show me the walk is the only thing that can raise one.
+dialog, and Plan a walk or Walk here is the only thing that can raise one.
 
 ## F9 · Use the app without location — **Implemented**
 
@@ -588,7 +585,7 @@ hotspots for anyone who wants them.
 
 **Who:** somebody standing somewhere something happened to them.
 **Trigger:** the **Add** pin, top right of the map, at every stage: the
-plan page, the preview, the walk, a walked day. Filing needs no walk.
+map, the preview, the walk, a walked day. Filing needs no walk.
 
 1. The press checks for a position first. Without one it asks for location and
    stops — there is nothing to file *at*.
@@ -754,7 +751,7 @@ anyone else's collection or the local unlock cache.
    count, and tapping it ends the walk (F34). Nothing else repeats the count.
    A pill at the bottom centre: "2.4 km to go" — the distance
    still to walk, from where you stand through every stop not yet earned, in
-   order, and back to where the walk started on a loop (the plan page's
+   order, and back to where the walk started on a loop (the preview's
    choice, stored as `daily_routes.loop`), so the walk home counts. Along the streets between stops
    when a routing server is running (`ROUTING_URL`), straight from you to the
    next stop, and said plainly as a distance, never as minutes. Tapping it starts the
@@ -944,10 +941,9 @@ before an accept lands here; an accepted walk opens on the walk (F25).
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
    who it is from ("From" a source, "Left by" a person, with a glyph), its
    #tags, then the approach ring beside the distance with year · hearts and what
-   is waiting, and **Walk here**, which opens the plan page (F1) for a walk
-   through that pin.
+   is waiting, and **Walk here**, which draws a walk through that pin (F1).
    There is no unlock here, even standing on it: only today's walk unlocks.
-3. **Plan a walk**, bottom centre, opens the plan page (F1).
+3. **Plan a walk**, bottom centre, draws a walk (F1).
 
 The peek is a look, not a read: the summary never reaches the phone locked, and
 the peek draws nothing in its place. docs/10, "A locked memory says what it is,
@@ -1032,16 +1028,19 @@ length. **Trigger:** "Show me another", under Start walk.
    good: within a tenth of the slider of the best one on metres short of it
    plus metres retraced, and retracing no more (`ROUTE_VARIETY`,
    `api/route_solver.py` `_plan_route`). Taps cycle through those.
-2. When it comes back unchanged, that was the only one: the button gives way
-   to "The only walk that long from here." ("The only walk from here." when it
-   is the longest, F1).
+2. When it comes back unchanged, that was the only one at that length, so the
+   card offers one of a similar length instead: the nearest other length that
+   has a different walk (−0.5, +0.5, −1, +1, −1.5, +1.5 km, within the slider
+   and above the pin's floor), and the slider moves to it. Never "the only
+   walk". Only when none of those differs does the button go, with no line in
+   its place.
 3. Start walk sends the same `again`, so it stores the walk on screen. The client
-   still never sends stop ids. Change length starts over at `again=0`.
+   still never sends stop ids.
 
-Every "Show me the walk" rolls a fresh `again`, so planning twice, or
+Every plan, and every change on the card, rolls a fresh `again`, so planning twice, or
 tomorrow, can land on a different one of those walks without a tap. A walk already walked differs anyway: its
 unlocked stops are no longer candidates. Without a routing server there is
-nothing to judge a walk by, so there is one walk and the button says so.
+nothing to judge a walk by, so each tap steps the length.
 
 **Done when:** on the lakes seed a second tap previews a different loop, and
 accepting it stores that loop. `tests/test_api_routes.py::test_another_day_*`.
@@ -1100,8 +1099,7 @@ store's sheet: nothing is said. Anything else: "That didn't go through. Try
 again." A purchase the server cannot find: "No subscription on this
 account yet."
 
-**Done when:** `.maestro/paywall-from-the-peek.yml` and
-`.maestro/subscriber-opens-from-map.yml` pass, and `tests/test_api_billing.py`.
+**Done when:** `.maestro/subscribe-from-the-peek.yml` passes, and `tests/test_api_billing.py`.
 
 ## Proposed
 

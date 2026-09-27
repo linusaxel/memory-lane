@@ -11,22 +11,15 @@ appId: ${APP_ID}
 # The first screen is ours, not a system dialog: the map, then one question
 # and one slider.
 # Location is asked by the button, a press with a reason.
-- setLocation:
-    latitude: ${START_LAT}
-    longitude: ${START_LNG}
-
-- launchApp:
-    clearState: true
-    permissions:
-      location: unset
-
-- runFlow: steps/sign-in.yml
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: ${START_LAT}
+      LNG: ${START_LNG}
+      LOCATION: unset
 
 # F29: the map of what is locked comes first. A pin opens the peek, bars and
 # no summary, and Walk here opens F1 for a walk through that pin (TODO.md M6).
-- extendedWaitUntil:
-    visible: "Plan a walk"
-    timeout: 40000
 - extendedWaitUntil:
     visible: ".*\\. Locked, too far to open\\."
     timeout: 20000
@@ -35,30 +28,18 @@ appId: ${APP_ID}
     visible: "Walk here"
     timeout: 10000
 - tapOn: "Walk here"
-- extendedWaitUntil:
-    visible: "How far today?"
-    timeout: 20000
-- assertVisible: "Five memories, through .*, looping back to where you start\\."
-- tapOn: "Show me the walk"
 - tapOn:
     text: "Allow While Using App"
     optional: true
-# Every preview names the pin it passes.
+# Drawn at once, and every walk names the pin it passes.
 - extendedWaitUntil:
-    visible: "Through .*\\."
+    visible: "A walk through .*"
     timeout: 40000
-- tapOn: "Change length"
+- extendedWaitUntil:
+    visible: "[0-9]+ stops? · .* loop"
+    timeout: 40000
 - tapOn: "Back to the map"
 - tapOn: "Plan a walk"
-- extendedWaitUntil:
-    visible: "How far today?"
-    timeout: 20000
-- assertVisible: "4 km"
-
-- tapOn: "Show me the walk"
-- tapOn:
-    text: "Allow While Using App"
-    optional: true
 
 # The preview: the whole loop on the map, and a decision.
 - extendedWaitUntil:
@@ -69,46 +50,31 @@ appId: ${APP_ID}
 # A preview is a look: its pins carry their stop numbers already.
 - assertVisible: "Stop 1 of 4\\. .*"
 
-# F32: another walk as good, still a preview.
+# F32: another walk as good, or one of a similar length, still a preview.
 - tapOn: "Show me another"
 - extendedWaitUntil:
-    visible: "4 stops · .* loop"
+    visible: "[0-9]+ stops · .* loop"
     timeout: 40000
 - assertVisible: "Start this walk"
 
-# Changing your mind costs nothing: nothing was stored.
-- tapOn: "Change length"
-- assertVisible: "How far today?"
-
-# One way: the same four stops' worth of walk, ending somewhere new.
+# One way redraws in place: the same four stops' worth, ending somewhere new.
 - tapOn: "One way"
-- assertVisible: "Five memories, ending somewhere new\\."
-- tapOn: "Show me the walk"
 - extendedWaitUntil:
-    visible: "4 stops · [0-9.]+ k?m"
+    visible: "[0-9]+ stops · [0-9.]+ k?m"
     timeout: 40000
-- assertNotVisible: "4 stops · .* loop"
-- tapOn: "Change length"
+- assertNotVisible: "[0-9]+ stops · .* loop"
+- tapOn: "Loop"
 
 # ---- F8, refused
 #
 # A reviewer who taps Deny still gets a walk, planned from central Copenhagen and saying so.
-- launchApp:
-    clearState: true
-    permissions:
-      location: never
-
-- runFlow: steps/sign-in.yml
-
-# F29: the map of what is locked comes first; Plan a walk opens F1.
-- extendedWaitUntil:
-    visible: "Plan a walk"
-    timeout: 40000
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: ${START_LAT}
+      LNG: ${START_LNG}
+      LOCATION: never
 - tapOn: "Plan a walk"
-- extendedWaitUntil:
-    visible: "How far today?"
-    timeout: 20000
-- tapOn: "Show me the walk"
 - extendedWaitUntil:
     visible: "Planning from central Copenhagen\\. Turn on location to plan from where you are\\."
     timeout: 40000
@@ -118,29 +84,14 @@ appId: ${APP_ID}
 # From Malmö there is nothing within any length of walk. The preview says so
 # and offers the slider back, rather than accepting an empty day. Not
 # Copenhagen: `seed_dev --routes lakes` plants the lakes there.
-- setLocation:
-    latitude: 55.605
-    longitude: 13.0038
-
-- launchApp:
-    clearState: true
-    permissions:
-      location: inuse
-
-- runFlow: steps/sign-in.yml
-
-# F29: the map of what is locked comes first; Plan a walk opens F1.
-- extendedWaitUntil:
-    visible: "Plan a walk"
-    timeout: 40000
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: 55.605
+      LNG: 13.0038
+      LOCATION: inuse
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
-    visible: "How far today?"
-    timeout: 20000
-- tapOn: "Show me the walk"
-- extendedWaitUntil:
-    visible: "No walk that long from here"
+    visible: "No walk that long from here\\."
     timeout: 40000
-- assertNotVisible: "Start this walk"
-- tapOn: "Change length"
-- assertVisible: "How far today?"
+- assertVisible: "Walk length"

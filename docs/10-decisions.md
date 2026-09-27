@@ -1651,6 +1651,30 @@ Candidates come from within half the length of the midway point, and a walk
 that cannot reach the end is `too_far`. Picked on the map, not searched by
 name: no geocoder in the app, and it works anywhere.
 
+### Draw first, adjust after
+
+Status: Accepted 2026-09-27
+
+"Plan a walk" and a pin's "Walk here" both draw a walk at once. The
+"How far today?" page that used to come first is gone, and the slider, Loop /
+One way and the end moved onto the preview card, where any change redraws the
+walk. Every app that routes to a chosen place draws the route first: Apple
+and Google Maps, Geocaching, and AllTrails. Strava's suggested routes and Go
+Jauntly's circular walks, the closest to a daily walk, also show routes at a
+default length before asking anything. A length question before a pin you
+already chose only asks you to choose again. "Walk here" starts at the
+shortest walk that reaches the pin, with its own length, so it leaves Plan a
+walk's alone.
+
+The slider stays: the founder likes it. It is uncontrolled. The library's
+`value` is write-only, and lifting every tick re-rendered all of `App.tsx`
+under the thumb. It rounds in JS instead of passing `step`, because iOS snaps
+the thumb only on release, and that read as a jolt. The walk redraws once, on
+release.
+
+The press that opens the card is now the location ask (F8), which keeps it a
+press with a reason.
+
 ---
 
 ## Product

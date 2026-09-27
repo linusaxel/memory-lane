@@ -29,10 +29,6 @@ appId: ${APP_ID}
     timeout: 40000
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
-    visible: "How far today?"
-    timeout: 20000
-- tapOn: "Show me the walk"
-- extendedWaitUntil:
     visible: "4 stops · .* loop"
     timeout: 40000
 - tapOn: "Start this walk"

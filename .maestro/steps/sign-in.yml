@@ -5,6 +5,6 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Memory Lane"
     timeout: 40000
-- assertNotVisible: "How far today?"
+- assertNotVisible: "A walk from here"
 - assertNotVisible: "Plan a walk"
 - tapOn: "Skip \\(dev build\\)"

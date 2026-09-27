@@ -23,6 +23,15 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Checking a preview-card change means minutes-long e2e flows.** 2026-09-27:
+  the four flows that touch planning (look-around, lakes-loop, walk-and-unlock,
+  notify-nearby) take 100-160 s each, and notify-nearby minutes more. Each one
+  signs in from a cleared launch and walks a whole scenario, so re-checking one
+  card string cost about 10 minutes, and the founder called it far too long.
+  Fix: a short `plan-card.yml` (sign in, Plan a walk, drag, One way, Show me
+  another) that the long flows stop re-asserting, so a card change is checked
+  in under a minute.
+
 - **file-and-edit.yml is red on main.** 2026-09-27: after Post, the flow's
   `".*ferry horn.* #food"` never shows, on a clean `main` too, so nothing after
   it (the journal's My Memories tab, edit, delete) is checked end to end. It
@@ -69,6 +78,14 @@ delete an entry when its fix lands.
 ---
 
 ## Known defects
+
+- [ ] **Photo upload in Add a memory fails.** (reported 2026-09-27, the
+      founder) Picking a picture does not attach. Path: `Submit.tsx` `attach`
+      → `api.ts` `uploadMedia` → `api/media.py` `save_upload`. First suspects:
+      the picker's `quality: 0.7` re-encode still handing back HEIC bytes sent
+      as `image/jpeg`, which the magic check refuses with a 415; and the
+      `failed` state never says why. Next: reproduce on the simulator and read
+      the status in `docker compose logs api`.
 
 - [ ] **Most places are still the model's guess.** (checked 2026-09-27)
       10 of 26 venue places are `llm`, and re-geocoding all 10 today finds
@@ -242,14 +259,11 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       the map and the user dot. Waits on the founder's yes and a look on a
       real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
       state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
-- [ ] **A walk always has options.** (checked 2026-09-27) The founder: "Show
-      me the walk" ending on "No walk that long from here" (`Plan.tsx:187`) or
-      "The only walk that long from here." (`Plan.tsx:229`, `App.tsx:192`) is a
-      letdown. Add back/forward buttons through walk options, and never run
-      dry: when the asked length has only 1-2 routes, the next options step
-      down (10 km → 9 → 8 km…) and, if needed, up. Be lenient, never an empty
-      answer. Touches the preview flow in `App.tsx`/`Plan.tsx` and the route
-      request in `api.ts`; F1/F32 in docs/08.
+- [ ] **A walk always has options.** (checked 2026-09-27) Show me another
+      now steps to a nearby length when the asked one has no other walk (F32),
+      and "the only walk" is gone. Left: back/forward through the walks already
+      shown, and "No walk that long from here" still ends on nothing - it
+      could offer the nearest length that has one. `App.tsx` `planWalk`.
 
 ---
 

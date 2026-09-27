@@ -12,22 +12,14 @@
 
 appId: ${APP_ID}
 ---
-- setLocation:
-    latitude: ${START_LAT}
-    longitude: ${START_LNG}
-
-- launchApp:
-    clearState: true
-    permissions:
-      location: inuse
-
-- runFlow: steps/sign-in.yml
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: ${START_LAT}
+      LNG: ${START_LNG}
+      LOCATION: inuse
 
 # Add (top right) is there from the map on: filing needs no walk.
-- extendedWaitUntil:
-    visible: "Plan a walk"
-    timeout: 40000
-
 # One coordinate, taken from where the phone is. No field asks for it. The
 # text is something this flow can look for again once it sits in a list.
 - tapOn: "Add a memory here"

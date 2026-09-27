@@ -23,26 +23,24 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 MapView (before a walk)        the first screen after sign-in, unless today's walk is accepted
 ├─ you, and the reach circle   centred on you, or central Copenhagen with no position
 ├─ Marker per locked memory    within 5 km (MAP_RADIUS_KM); tap -> MemorySheet's peek
-└─ "Plan a walk"               ember glass capsule, bottom centre -> Plan
+└─ "Plan a walk"               ember glass capsule, bottom centre -> Preview, drawn at once
 
-Plan (src/Plan.tsx)            opaque page over the mounted map
-├─ "How far today?"            34/700, the × trailing on its line
-├─ "4 km"                      the slider's value, 30/600
-├─ slider                      1-10 km, 0.5 steps (WALK_KM)
-├─ Loop · One way              Submit's Chip, one of the two on
-└─ "Show me the walk"          ember button; asks for location, then previews
-
-Preview                         the map, fitted to the start and every stop
+Preview (src/Plan.tsx)          the map, fitted to the start and every stop. Draw first, adjust after
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
-└─ card (Preview)              "4 stops · 3.8 km loop", Start walk / Change length, × to the map;
-     "No walk that long from here"; "Planning from central Copenhagen…" with no position
+└─ card (Preview)              every change on it redraws the walk
+   ├─ "A walk from here"        23/700, the × trailing; "A walk through <place>" from Walk here
+   ├─ "4 stops · 3.8 km loop"   "Finding a walk…" first; "No walk that long from here."
+   ├─ "Planning from central Copenhagen…"   with no position
+   ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
+   ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
+   └─ Start walk / Show me another
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ "Journal"                  top left, every stage, plan page included. Glass (src/Glass.tsx)
+├─ "Journal"                  top left, every stage, preview included. Glass (src/Glass.tsx)
 ├─ You, Add                   top right, 44pt glass circles (YouGlyph, AddGlyph), every stage.
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
 ├─ "On a walk · 2 of 5"       top centre, the corners' capsule tinted ember: the walk's one
@@ -121,7 +119,7 @@ with no network is never stopped at the gate.
 | `src/Padlock.tsx` | the one symbol, at any size, in any colour |
 | `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
-| `src/Plan.tsx` | the plan page and the preview card: how far, then accept |
+| `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal: streak, walks, unlocked, and what you filed |
 | `src/Settings.tsx` | You: name, account, how unlocking works. Its own sheet |
@@ -454,7 +452,7 @@ Each of these exists because something broke or would have been rejected.
     the least accurate tap on the screen (Hoober 2017: corner targets need
     ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
-    preview, the plan page, You, Journal, a memory's sheet, Add a memory.
+    preview, You, Journal, a memory's sheet, Add a memory.
     Always trailing, never leading: a sheet's own action is not a corner
     word but the solid button at the end of the page (Post, Save). A text
     button stays only where it says more than close: Not now on the paywall.
@@ -506,7 +504,7 @@ the tells that make text read as machine-written.
 
 - **Short, concrete, contracted.** "You made it." "Not quite there. Take a few
   more steps." Second person, active voice, sentence case.
-- **Buttons are verbs that say what happens**: Start walk, Show me the walk,
+- **Buttons are verbs that say what happens**: Start walk, Plan a walk,
   Keep walking. Clear beats cute on anything you tap; the personality goes in
   the line above the button.
 - **Errors say what happened and what to do.** "That didn't save. Try again in
@@ -604,7 +602,7 @@ every screenshot until the simulator is rebooted.
 
 **Use `localhost` for the simulator, a LAN IP only for a physical phone.** Expo
 bakes `EXPO_PUBLIC_API_URL` in at dev-server start, so if you pass your LAN IP
-and then change network, the plan page says "Can't reach Memory Lane right
+and then change network, the preview says "Can't reach Memory Lane right
 now." — the app still works, it just cannot reach the API. Restart the dev server
 rather than debugging the app. Likewise `exp://<stale-ip>:8081` hangs on
 "Opening project"; `exp://localhost:8081` does not.
@@ -636,16 +634,15 @@ and there is no RN test runner installed — do not add one without asking.
 
 ## States
 
-The app has four stages (`App.tsx`'s `Stage`), and they must stay distinct:
+The app's stages (`App.tsx`'s `Stage`) must stay distinct:
 
 | Stage | Shows | Leaves by |
 |---|---|---|
-| loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → plan |
-| plan | "How far today?" and the slider | "Show me the walk" → preview; × → map |
-| preview | the walk on the map, the card | Start walk → walk; Change length → plan; × → map |
+| loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → map |
+| preview | the walk on the map, the card with its length and shape | Start walk → walk; × → map |
 | walk | today's stops, the pill | nothing - the day is locked |
 
-A failed request on plan or preview leaves you there with "Can't reach Memory
+A failed request on the preview leaves you there with "Can't reach Memory
 Lane right now." under the button. With no location permission the walk's button
 reads **"Turn on location"**, and it is the only time that button exists: nothing can unlock without a
 position, and a walk of pins that never open with no explanation is the worse
@@ -739,7 +736,7 @@ measuring to it would say "walk a kilometre" while you stand on the thing.
 Never `requestForegroundPermissionsAsync` on mount. That fires a system dialog
 with no context, and one tap makes it permanent — it is the pattern every guide
 names as the mistake, and the reported gap is roughly 30% opt-in cold against
-65% after a primer. The plan page's "Show me the walk" is the ask: a press
+65% after a primer. "Plan a walk" (or a pin's "Walk here") is the ask: a press
 with a reason, walks start from where you are, and only then the system dialog.
 `getForegroundPermissionsAsync` runs first so somebody who already said yes is
 never asked twice, and a hard refusal (`canAskAgain === false`) swaps the button
