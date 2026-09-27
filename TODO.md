@@ -32,19 +32,20 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **Most places are the model's guess.** (checked 2026-09-27) Content 534
-      (Københavnerliv, Nørrebro pub crawl): 14 of 20 memories have
-      `geocode_status = 'llm'`; only 6 were placed by DAWA or Photon. Mexibar,
-      Skadestuen and Trippen all sit on one city-centre point (55.6761,
-      12.5683). A card that opens on the wrong corner breaks the gate. Fix:
-      hide `llm`-only places from the map, or let the geocoder retry on the
-      venue name plus the street named in the story.
+- [ ] **Most places are still the model's guess.** (checked 2026-09-27)
+      Content 534 re-extracted after the looser name match: 10 of 18 `llm`,
+      down from 14 of 20; Under Hylden is one place on Photon's POI. Left:
+      Mexibar and Maskot aren't in OSM under those names, and "Nørrebro
+      Parken" is refused because Photon's `other` type maps to `city` in
+      `Photon.search`. Next: map `other` to `poi` when it carries a name, then
+      decide whether an `llm`-only place belongs on the map at all.
 
-- [ ] **Things that aren't places get extracted as places.** (checked
-      2026-09-27) Content 534: "Skadestuen" (the emergency room), "Trippen"
-      (the name of the pub crawl), "Local brown pub in Copenhagen". Fix in
-      `SYSTEM_PROMPT`: a place is a named venue, street or address a walker
-      can find; measure with `pipeline.quality` before and after.
+- [ ] **Events still come out as places.** (checked 2026-09-27) The venue rule
+      in `SYSTEM_PROMPT` took out Skadestuen, Trippen and "Local brown pub",
+      but content 534 still gives "Nørrebro pubcrawl" (2 memories), "Nordre
+      Fasanvej pub crawl route" and "Kødbyen strip club". Fix: one worked
+      `<example>` of a pub crawl split into its bars, measured with
+      `quality --compare`.
 
 - [ ] **A Copenhagen source yields memories abroad.** (checked 2026-09-27)
       Content 534 produced ski-trip stories in Levi and Sölden. Harmless on the

@@ -14,6 +14,7 @@ if sys.platform == "darwin" and os.environ.get("OBJC_DISABLE_INITIALIZE_FORK_SAF
     os.execvp(sys.executable, [sys.executable, "-m", "pipeline.worker", *sys.argv[1:]])
 
 import logging
+import subprocess
 import time
 
 import anthropic
@@ -33,7 +34,14 @@ logger = logging.getLogger(__name__)
 
 def check_models():
     """Exit before the first job on a model ID the API refuses. A retired ID in
-    .env otherwise fails every chunk, one at a time."""
+    .env otherwise fails every chunk, one at a time. Checked in a child: one
+    HTTP call in this process and macOS segfaults every forked work-horse."""
+    child = subprocess.run([sys.executable, "-c", "from pipeline.worker import _check; _check()"])
+    if child.returncode:
+        sys.exit(child.returncode)
+
+
+def _check():
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     for name, model in (
         ("EXTRACTION_MODEL", EXTRACTION_MODEL),

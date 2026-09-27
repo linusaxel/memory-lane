@@ -57,4 +57,4 @@ def test_a_retired_model_id_stops_the_worker_naming_its_variable(monkeypatch):
     monkeypatch.setattr(worker.anthropic, "Anthropic", lambda **_: Client())
     monkeypatch.setattr(worker, "EXTRACTION_MODEL", "claude-sonnet-4-20250514")
     with pytest.raises(SystemExit, match="EXTRACTION_MODEL='claude-sonnet-4-20250514'"):
-        worker.check_models()
+        worker._check()
