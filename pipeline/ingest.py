@@ -134,8 +134,8 @@ def ingest_content(config: dict | None = None):
 
 
 def refresh_sources(config: dict | None = None):
-    """Backfill source_url, source_icon_url and duration_seconds on rows
-    ingested before they existed.
+    """Backfill source_url, source_icon_url, duration_seconds and a missing
+    title on rows ingested without them.
 
     Separate from ingest_content because it is the only part that must touch the
     network for rows that are already present, and because re-running ingest
@@ -174,14 +174,18 @@ def refresh_sources(config: dict | None = None):
             # The whole channel, not `limit`: rows ingested months ago have
             # long since dropped out of the newest N.
             for video in list_channel_videos(source["channel"]):
-                if video.get("duration_seconds") is None:
-                    continue
                 session.execute(
                     text("""
-                        UPDATE content SET duration_seconds = :d
-                        WHERE platform_id = :id AND duration_seconds IS NULL
+                        UPDATE content
+                        SET duration_seconds = COALESCE(duration_seconds, :d),
+                            title = COALESCE(NULLIF(title, ''), :t)
+                        WHERE platform_id = :id
                     """),
-                    {"d": video["duration_seconds"], "id": extract_youtube_id(video["url"])},
+                    {
+                        "d": video.get("duration_seconds"),
+                        "t": video.get("title"),
+                        "id": extract_youtube_id(video["url"]),
+                    },
                 )
 
     return {"updated": updated}
@@ -305,7 +309,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--refresh-sources",
         action="store_true",
-        help="only backfill publisher name, link and avatar on rows already ingested",
+        help="only backfill publisher, duration and title on rows already ingested",
     )
     parser.add_argument("--source", help="a text source from crawler.sources, e.g. kb-aviser")
     parser.add_argument("--query", help="what to ask the source for, e.g. a street name")
@@ -343,8 +347,10 @@ if __name__ == "__main__":
             ).scalar()
         if not name:
             parser.error(f"no source {args.to}")
+        from crawler.yt_crawler import video_metadata
+
         ingest_content(
-            {"sources": [{"id": args.to, "name": name, "videos": [{"url": args.video}]}]}
+            {"sources": [{"id": args.to, "name": name, "videos": [video_metadata(args.video)]}]}
         )
     elif args.refresh_sources:
         refresh_sources()

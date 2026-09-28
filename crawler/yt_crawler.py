@@ -59,6 +59,20 @@ def channel_metadata(channel_url: str) -> dict:
     }
 
 
+def video_metadata(url: str) -> dict:
+    """One video, shaped like a `list_channel_videos` entry. The title is what
+    spells the names the auto-captions mishear ("Jørgen Let" for Leth)."""
+    with YoutubeDL(YDL_OPTS) as ydl:
+        info = ydl.extract_info(url, download=False) or {}
+    ts = info.get("timestamp") or info.get("release_timestamp")
+    return {
+        "url": url,
+        "title": info.get("title"),
+        "published_at": datetime.fromtimestamp(ts, UTC) if ts else None,
+        "duration_seconds": info.get("duration"),
+    }
+
+
 def list_channel_videos(channel_url: str, limit: int | None = None) -> list[dict]:
     """List a channel's videos, newest first.
 

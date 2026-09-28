@@ -113,10 +113,12 @@ delete an entry when its fix lands.
       closed place is a Wikidata or historical-map lookup, not a prompt
       fix; decide whether an `llm`-only pin is served at all.
 
-- [ ] **A name misspelled in the captions is copied into every summary.**
-      (2026-09-27, content 535) "Jørgen Let" for Leth, from the
-      auto-captions. Next: have the brief spell names from the title and
-      source when they disagree with the transcript.
+- [ ] **A brief can end in junk, or not parse.** (2026-09-28) Content 535's
+      brief ended "434 words? no.  Let's not worry.", and again "《End brief."
+      when rebuilt; 583's ends in a run of `}` and fails `json.loads`, so its
+      chunks got no brief at all. Both are over the ~120 words asked for.
+      Next: cap the brief with `max_tokens` near 250 and log a brief that
+      fails to parse, instead of silently returning "".
 
 - [ ] **Prompt caching: only the classifier is left uncached.** Measured
       2026-09-27 on videos 535-537 (one burst worker): chunk 1 writes ~4.3k

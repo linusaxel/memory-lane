@@ -53,7 +53,7 @@ def test_a_clip_whose_transcript_predates_the_filter_is_not_extracted(db_session
     assert got == ["episode0000"]
 
 
-def test_refresh_backfills_duration_without_overwriting(db_session, monkeypatch):
+def test_refresh_backfills_duration_and_title_without_overwriting(db_session, monkeypatch):
     from contextlib import contextmanager
 
     import crawler.yt_crawler as yt
@@ -61,6 +61,7 @@ def test_refresh_backfills_duration_without_overwriting(db_session, monkeypatch)
     _video(db_session, "aaaaaaaaaaa", None)
     _video(db_session, "bbbbbbbbbbb", 3000)
     db_session.execute(text("UPDATE content SET source_name = 'Test Channel'"))
+    db_session.execute(text("UPDATE content SET title = 'Kept' WHERE platform_id = 'bbbbbbbbbbb'"))
 
     @contextmanager
     def _session():
@@ -72,7 +73,7 @@ def test_refresh_backfills_duration_without_overwriting(db_session, monkeypatch)
         yt,
         "list_channel_videos",
         lambda url, limit=None: [
-            {"url": f"https://www.youtube.com/watch?v={v}", "duration_seconds": 600}
+            {"url": f"https://www.youtube.com/watch?v={v}", "duration_seconds": 600, "title": v}
             for v in ("aaaaaaaaaaa", "bbbbbbbbbbb")
         ],
     )
@@ -80,6 +81,6 @@ def test_refresh_backfills_duration_without_overwriting(db_session, monkeypatch)
         {"sources": [{"name": "Test Channel", "channel": "https://www.youtube.com/@t"}]}
     )
     got = db_session.execute(
-        text("SELECT platform_id, duration_seconds FROM content ORDER BY platform_id")
+        text("SELECT platform_id, duration_seconds, title FROM content ORDER BY platform_id")
     ).fetchall()
-    assert got == [("aaaaaaaaaaa", 600), ("bbbbbbbbbbb", 3000)]
+    assert got == [("aaaaaaaaaaa", 600, "aaaaaaaaaaa"), ("bbbbbbbbbbb", 3000, "Kept")]
