@@ -248,8 +248,39 @@ def test_both_providers_can_be_attached_to_one_person(client):
     the same person will sign in with each of them at some point."""
     dev = device()
     google(client, dev)
-    profile = client.post("/v1/auth/apple", json={"device": dev, "id_token": apple_token()}).json()
+    profile = client.post(
+        "/v1/auth/apple",
+        json={"device": dev, "id_token": apple_token(), "link_token": token()},
+    ).json()
     assert profile["providers"] == ["google", "apple"]
+
+
+def test_a_stolen_device_id_cannot_add_a_sign_in(client):
+    """The device id is the only credential, so holding it must not be enough
+    to bind a new identity to the account: that would own it from any phone."""
+    victim = device()
+    google(client, victim)
+
+    for link in ({}, {"link_token": token(sub="somebody-else")}):
+        stolen = client.post(
+            "/v1/auth/apple",
+            json={"device": victim, "id_token": apple_token(sub="attacker"), **link},
+        )
+        assert stolen.status_code == 403
+    assert client.get(f"/v1/me?device={victim}").json()["providers"] == ["google"]
+
+
+def test_deleting_an_account_takes_everything_it_made(client, db_session):
+    dev = device()
+    google(client, dev)
+    submit(client, device=dev)
+
+    assert client.delete(f"/v1/me?device={dev}").status_code == 204
+
+    for table in ("users", "identities", "memories", "devices"):
+        assert db_session.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar() == 0, table
+    fresh = google(client, dev).json()
+    assert fresh["submitted"] == 0
 
 
 def test_apple_carries_the_name_the_client_was_given(client):

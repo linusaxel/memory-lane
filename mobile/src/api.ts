@@ -578,22 +578,33 @@ export async function deleteMemory(device: string, id: number): Promise<void> {
  * session token comes back - see docs/10-decisions.md#identity.
  *
  * `displayName` is for Apple, which gives the name to the client on the very
- * first authorization and never again.
+ * first authorization and never again. `linkToken` is a fresh token from a
+ * sign-in already on the account: adding a second one needs it.
  */
 export async function signIn(
   provider: 'google' | 'apple',
   device: string,
   idToken: string,
   displayName?: string | null,
+  linkToken?: string,
 ): Promise<Profile> {
   return post<Profile>(`/v1/auth/${provider}`, {
     device,
     id_token: idToken,
     display_name: displayName ?? null,
+    link_token: linkToken ?? null,
   });
 }
 
 /** Unlink this device. Nothing is deleted, and there is no token to revoke. */
 export async function signOut(device: string): Promise<Profile> {
   return post<Profile>('/v1/auth/signout', { device });
+}
+
+/** Delete the account and everything it made: memories, media, sign-ins. */
+export async function deleteAccount(device: string): Promise<void> {
+  const res = await fetch(`${BASE}/v1/me?${new URLSearchParams({ device })}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
 }

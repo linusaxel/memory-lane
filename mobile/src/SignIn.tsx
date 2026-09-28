@@ -35,7 +35,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { signIn, signOut, type Profile } from './api.ts';
+import { deleteAccount, fetchProfile, signIn, signOut, type Profile } from './api.ts';
 import { LogoTile } from './StartupLogo.tsx';
 import { button, buttonText, color, dim, font, label } from './theme.ts';
 
@@ -102,7 +102,7 @@ function useAppleAvailable() {
   return available;
 }
 
-async function withApple({ device, onProfile, onError, onBusy }: Setters) {
+async function withApple({ device, onProfile, onError, onBusy }: Setters, linkToken?: string) {
   if (!device) return;
   onError(null);
   try {
@@ -123,7 +123,7 @@ async function withApple({ device, onProfile, onError, onBusy }: Setters) {
       .filter(Boolean)
       .join(' ');
     onBusy(true);
-    onProfile(await signIn('apple', device, credential.identityToken, name || null));
+    onProfile(await signIn('apple', device, credential.identityToken, name || null, linkToken));
   } catch (e) {
     // Cancelling is not an error and must not leave a message behind.
     if ((e as { code?: string })?.code !== 'ERR_REQUEST_CANCELED') {
@@ -137,7 +137,7 @@ async function withApple({ device, onProfile, onError, onBusy }: Setters) {
 /** Apple's own control, because their guidelines require their styling
  *  wherever it appears. Black would vanish on the dark paper, and a native
  *  button cannot take a DynamicColorIOS pair, so it is asked. */
-function AppleButton(props: Setters) {
+function AppleButton({ onPress, ...props }: Setters & { onPress?: () => void }) {
   const dark = useColorScheme() === 'dark';
   return (
     <AppleAuthentication.AppleAuthenticationButton
@@ -149,7 +149,7 @@ function AppleButton(props: Setters) {
       }
       cornerRadius={26}
       style={styles.apple}
-      onPress={() => withApple(props)}
+      onPress={onPress ?? (() => withApple(props))}
     />
   );
 }
@@ -190,6 +190,34 @@ function GoogleButton({ device, onProfile, onError, onBusy }: Setters) {
     >
       <Text style={styles.googleText}>Continue with Google</Text>
     </Pressable>
+  );
+}
+
+/** Apple onto a Google account. Google again first: the server won't add a
+ *  sign-in on the device id alone, or anyone holding it could add their own. */
+function LinkApple(props: Setters) {
+  const [, response, prompt] = Google.useIdTokenAuthRequest(GOOGLE);
+
+  // Keyed on the response alone: re-running on every new `props` would open
+  // Apple's sheet again each render.
+  useEffect(() => {
+    if (response?.type !== 'success') return;
+    const proof = response.params?.id_token;
+    if (!proof) {
+      props.onError("Google sign-in didn't work. Try again.");
+      return;
+    }
+    withApple(props, proof);
+  }, [response]);
+
+  return (
+    <AppleButton
+      {...props}
+      onPress={() => {
+        props.onError(null);
+        prompt().catch(() => props.onError("Couldn't open Google sign-in."));
+      }}
+    />
   );
 }
 
@@ -255,6 +283,25 @@ export default function SignIn({ device, profile, onProfile }: Props) {
   const [error, setError] = useState<string | null>(null);
   const appleAvailable = useAppleAvailable();
   const providers = profile?.providers ?? [];
+  // Two presses, as Submit's delete: this app never uses a system dialog.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const remove = async () => {
+    if (!device) return;
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      return;
+    }
+    setBusy(true);
+    try {
+      await deleteAccount(device);
+      onProfile(await fetchProfile(device));
+    } catch {
+      setError("Couldn't delete the account. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const leave = async () => {
     if (!device) return;
@@ -277,11 +324,25 @@ export default function SignIn({ device, profile, onProfile }: Props) {
       </Text>
       {/* The other provider stays on offer: Apple and Google on one account
           is the normal case here, not an edge one. */}
-      {appleAvailable && providers.length > 0 && !providers.includes('apple') && (
-        <AppleButton device={device} onProfile={onProfile} onError={setError} onBusy={setBusy} />
-      )}
+      {appleAvailable &&
+        GOOGLE_CONFIGURED &&
+        providers.includes('google') &&
+        !providers.includes('apple') && (
+          <LinkApple device={device} onProfile={onProfile} onError={setError} onBusy={setBusy} />
+        )}
       <Pressable style={dim(styles.action)} onPress={leave} accessibilityRole="button">
         <Text style={styles.actionText}>Sign out</Text>
+      </Pressable>
+      {confirmingDelete && (
+        <Text style={styles.note}>
+          Your memories, photos, notes and sign-ins are deleted for good. A
+          subscription is cancelled in the App Store or Google Play, not here.
+        </Text>
+      )}
+      <Pressable style={dim(styles.action)} onPress={remove} accessibilityRole="button">
+        <Text style={styles.deleteText}>
+          {confirmingDelete ? 'Delete for good' : 'Delete account'}
+        </Text>
       </Pressable>
       {busy && <ActivityIndicator size="small" color={color.inkFaint} />}
       {error && <Text style={styles.error}>{error}</Text>}
@@ -312,5 +373,6 @@ const styles = StyleSheet.create({
   apple: { height: 52, alignSelf: 'stretch' },
   action: { ...button.outline, alignSelf: 'flex-start' },
   actionText: { ...buttonText, color: color.ink },
+  deleteText: { ...buttonText, color: color.ember },
   error: { ...font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
 });

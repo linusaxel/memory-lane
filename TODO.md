@@ -124,6 +124,56 @@ delete an entry when its fix lands.
 
 ---
 
+## Launch readiness
+
+From a readiness audit on 2026-09-28: what stands between "TODO done" and a
+public launch that the rest of this file doesn't track. Blockers first.
+
+- [ ] **Account deletion's two loose ends.** (checked 2026-09-28) `DELETE
+      /v1/me` and the journal's two-press delete are built, but a Sign in with
+      Apple account must also have its tokens revoked through Apple's REST
+      API, which needs the `.p8` key (`STORE_ACCOUNT`), and GDPR wants an
+      export too.
+- [ ] **UGC rules (App Store 1.2).** (checked 2026-09-28) No blocking a user,
+      no filtering, no moderator contact in the app. `REPORT_THRESHOLD` counts
+      self-issued device ids, so one person with three ids hides any memory,
+      and nothing reinstates it.
+- [ ] **The privacy policy is wrong and thin.** (checked 2026-09-28)
+      `api/privacy.py` says photos are re-encoded; they are stored raw with
+      EXIF GPS intact (`api/media.py`). No controller, no email, no legal basis,
+      no retention, no RevenueCat or geocoders; contact is "open an issue".
+      The generated `PrivacyInfo.xcprivacy` declares no collected data.
+- [ ] **The corpus has no legal footing for a paid app.** (checked 2026-09-28)
+      Summaries of creators' videos behind a subscription, fetched through a
+      proxy built to get past YouTube's block, naming real people, with no
+      takedown route. Needs a lawyer's read before launch, not after.
+- [ ] **iOS declares background modes it doesn't use.** (checked 2026-09-28)
+      The prebuilt `Info.plist` has `audio` and `fetch`; geofencing needs
+      neither, nor the `location` mode (`isIosBackgroundLocationEnabled` in
+      `mobile/app.json`). Likely a 2.5.4 rejection.
+- [ ] **No production database discipline.** (checked 2026-09-28) Nothing
+      records applied migrations and nothing runs them; `schema.sql` only runs
+      on a fresh docker volume. No backups, no staging. Media lives on local
+      disk, which a Railway redeploy loses without a volume.
+- [ ] **Nobody hears about a crash.** (checked 2026-09-28) No error
+      reporting in the app or the API, no error boundary (a render error is a
+      blank screen), no API logging config, and the `/` health check never
+      touches the database.
+- [ ] **Unsafe defaults for a public host.** (checked 2026-09-28)
+      `DATABASE_URL` falls back to the dev password (`pipeline/db.py`),
+      `/docs` is public, `ENABLE_EMBED` defaults on, and the `development` and
+      `preview` EAS profiles point at localhost. No `expo-updates`, so every
+      fix waits on review.
+- [ ] **Sign-in loose ends.** (checked 2026-09-28) No Apple nonce (a captured
+      token replays until it expires); Apple `email_verified` treats a missing
+      value as verified (`api/auth.py`); `DEVICE_PATTERN` accepts 36 dashes
+      and the cast then 500s.
+- [ ] **Nearby notifications aren't throttled.** (checked 2026-09-28) Every
+      region entry fires (`mobile/src/geofence.ts`), so dithering on a
+      boundary or clustered stops repeats the alert.
+
+---
+
 ## Phase 0 — Design questions
 
 - [ ] **D.5 Write F3 properly** once the historical source is chosen (W4-00).

@@ -67,9 +67,14 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   submission is signed with, which sign-ins are attached, and `subscribed` /
   `subscribed_until`. The GET creates nothing
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
-  display_name?}` - verify a provider ID token and bind this device to that
-  account. `display_name` is for Apple, which gives the name to the client once
-  and never again
+  display_name?, link_token?}` - verify a provider ID token and bind this device
+  to that account. `display_name` is for Apple, which gives the name to the
+  client once and never again. Adding a new sign-in to an account that already
+  has one needs `link_token`, a fresh token from a sign-in already on it; 403
+  without it
+- `DELETE /v1/me?device=UUID` - delete the account and everything it made:
+  memories, media, sign-ins, the subscription row, and every device on it with
+  their unlocks, hearts, notes and walks. 204
 - `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
   there is no token to revoke
 - `POST /v1/me/subscription` `{device}` - read this account's subscription

@@ -60,8 +60,8 @@ not want a stranger standing there to read.</p>
 We strip nothing from them beyond re-encoding photos for size, so do not attach a file
 whose contents you would not publish.</p>
 <p>Anyone can report a memory. Enough reports and it stops being shown to anybody; the
-record of it is kept so a dispute can be answered. To have something you posted removed,
-open an issue on the project repository.</p>
+record of it is kept so a dispute can be answered. You can delete anything you posted
+from the app, or delete your account, which deletes everything you posted with it.</p>
 
 <h2>Your unlocked memories</h2>
 <p>To keep the memories you unlock, your copy of the app generates a random identifier

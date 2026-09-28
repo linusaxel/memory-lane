@@ -7,12 +7,13 @@ and signing in binds devices.user_id. docs/10-decisions.md#identity.
 import uuid
 from datetime import date, timedelta
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from sqlalchemy import text
 
-from api.auth import apple_identity, google_identity
+import api.media
+from api.auth import apple_identity, either_identity, google_identity
 from api.models import DEVICE_PATTERN, DeviceRequest, Profile, ProfileRequest, SignInRequest
-from api.queries import STREAK_DAYS_QUERY, UNLOCK_COUNT_QUERY
+from api.queries import DELETE_ORPHAN_SUBMITTED_PLACE, STREAK_DAYS_QUERY, UNLOCK_COUNT_QUERY
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -193,7 +194,7 @@ def absorb(session, old_user: str, new_user: str) -> None:
     session.execute(text("DELETE FROM users WHERE id = CAST(:id AS uuid)"), {"id": old_user})
 
 
-def sign_in(session, device: str, provider: str, subject: str, email, name) -> Profile:
+def sign_in(session, device: str, provider: str, subject: str, email, name, proof=None) -> Profile:
     """Bind this device to the account behind a verified identity.
 
     Three cases, and the middle one is the one worth reading twice:
@@ -201,7 +202,11 @@ def sign_in(session, device: str, provider: str, subject: str, email, name) -> P
       new identity, no user     create a user and attach the identity
       new identity, has a user  attach it to the user this device already is,
                                 which is how a name and any memories filed
-                                before signing in survive the transition
+                                before signing in survive the transition. If
+                                that user already has a sign-in, `proof` (a
+                                verified (provider, subject)) must be one of
+                                them: otherwise a stolen device id would let
+                                anyone bind their own identity to the account
       known identity            point the device at that user, and absorb the
                                 anonymous one it was using
     """
@@ -215,6 +220,10 @@ def sign_in(session, device: str, provider: str, subject: str, email, name) -> P
     ).scalar()
 
     if known is None:
+        if current and not linked_with_proof(session, str(current), proof):
+            raise HTTPException(
+                status_code=403, detail="Sign in to this account again to add another sign-in"
+            )
         user_id = str(current) if current else user_for_device(session, device)
         session.execute(
             text("""
@@ -248,18 +257,35 @@ def sign_in(session, device: str, provider: str, subject: str, email, name) -> P
     return profile_of(session, device)
 
 
+def linked_with_proof(session, user_id: str, proof) -> bool:
+    """True if the user has no sign-in yet, or `proof` is one of theirs."""
+    identities = session.execute(
+        text("SELECT provider, subject FROM identities WHERE user_id = CAST(:id AS uuid)"),
+        {"id": user_id},
+    ).fetchall()
+    return not identities or proof in {(i.provider, i.subject) for i in identities}
+
+
+def link_proof(body: SignInRequest):
+    return either_identity(body.link_token) if body.link_token else None
+
+
 @router.post("/v1/auth/google", response_model=Profile)
 def sign_in_with_google(body: SignInRequest):
     subject, email, name = google_identity(body.id_token)
+    proof = link_proof(body)
     with get_session() as session:
-        return sign_in(session, body.device, "google", subject, email, body.display_name or name)
+        return sign_in(
+            session, body.device, "google", subject, email, body.display_name or name, proof
+        )
 
 
 @router.post("/v1/auth/apple", response_model=Profile)
 def sign_in_with_apple(body: SignInRequest):
     subject, email = apple_identity(body.id_token)
+    proof = link_proof(body)
     with get_session() as session:
-        return sign_in(session, body.device, "apple", subject, email, body.display_name)
+        return sign_in(session, body.device, "apple", subject, email, body.display_name, proof)
 
 
 @router.post("/v1/auth/signout", response_model=Profile)
@@ -276,3 +302,50 @@ def sign_out(body: DeviceRequest):
             {"id": body.device},
         )
         return profile_of(session, body.device)
+
+
+@router.delete("/v1/me", status_code=204)
+def delete_account(device: str = Query(..., pattern=DEVICE_PATTERN)):
+    """Delete the account this device is signed into, and everything it made.
+
+    Its memories and their media, its sign-ins and subscription row, and every
+    device on it with what those devices did: unlocks, hearts, notes, walks,
+    reports. Walkers lose those memories, which is the point: the person asked
+    for their words and photographs to be gone. A store subscription is the
+    store's to cancel; the app says so before asking.
+    """
+    with get_session() as session:
+        user_id = session.execute(
+            text("SELECT user_id FROM devices WHERE id = CAST(:id AS uuid)"), {"id": device}
+        ).scalar()
+        owner = {"user": str(user_id) if user_id else None, "device": device}
+        devices = """(SELECT id FROM devices
+            WHERE user_id = CAST(:user AS uuid) OR id = CAST(:device AS uuid))"""
+        mine = "(SELECT id FROM memories WHERE user_id = CAST(:user AS uuid))"
+
+        paths = [
+            row.path
+            for row in session.execute(
+                text(f"SELECT path FROM media WHERE memory_id IN {mine} OR device_id IN {devices}"),
+                owner,
+            )
+        ]
+        places = [
+            row.place_id
+            for row in session.execute(
+                text("SELECT DISTINCT place_id FROM memories WHERE user_id = CAST(:user AS uuid)"),
+                owner,
+            )
+        ]
+        session.execute(text(f"DELETE FROM media WHERE device_id IN {devices}"), owner)
+        session.execute(text("DELETE FROM memories WHERE user_id = CAST(:user AS uuid)"), owner)
+        for place_id in places:
+            session.execute(text(DELETE_ORPHAN_SUBMITTED_PLACE), {"place_id": place_id})
+        session.execute(text(f"DELETE FROM devices WHERE id IN {devices}"), owner)
+        session.execute(text("DELETE FROM users WHERE id = CAST(:user AS uuid)"), owner)
+
+    # File after row, as delete_memory does: sweep reaps what a crash leaves.
+    for path in paths:
+        (api.media.MEDIA_DIR / path).unlink(missing_ok=True)
+
+    return Response(status_code=204)

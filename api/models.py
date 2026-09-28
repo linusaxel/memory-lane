@@ -391,3 +391,7 @@ class SignInRequest(BaseModel):
     # Apple hands the person's name to the client on the very first
     # authorization and never again, so it has to travel separately or be lost.
     display_name: str | None = Field(None, max_length=60)
+    # Adding a second provider to a signed-in account: a fresh ID token from one
+    # already on it. The device id alone can't be the proof, or anyone holding
+    # it could bind their own identity to that account.
+    link_token: str | None = Field(None, min_length=20, max_length=8192)

@@ -94,3 +94,20 @@ def apple_identity(token: str) -> tuple[str, str | None]:
     claims = verify(token, jwks_url=APPLE_JWKS, issuer=APPLE_ISSUER, audiences=APPLE_CLIENT_IDS)
     email = claims.get("email") if claims.get("email_verified") in (True, "true", None) else None
     return claims["sub"], email
+
+
+def either_identity(token: str) -> tuple[str, str]:
+    """(provider, subject) for a token from either provider.
+
+    The unverified issuer only picks which check to run; that check is the one
+    that decides.
+    """
+    try:
+        issuer = jwt.decode(token, options={"verify_signature": False}).get("iss")
+    except jwt.PyJWTError as e:
+        raise HTTPException(status_code=401, detail="Sign-in token was not accepted") from e
+    if issuer == GOOGLE_ISSUER:
+        return "google", google_identity(token)[0]
+    if issuer == APPLE_ISSUER:
+        return "apple", apple_identity(token)[0]
+    raise HTTPException(status_code=401, detail="Sign-in token was not accepted")

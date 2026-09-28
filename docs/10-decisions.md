@@ -488,6 +488,32 @@ whole of what sign-in buys. Nothing else needed inventing to get it.
 holding yours can act as you. Same threat model as the self-reported position
 above, and OAuth did **not** replace it.
 
+### Adding a sign-in needs one already on the account
+
+Status: Accepted 2026-09-28
+
+Before this, a new identity signing in on a device attached itself to whatever
+user the device was, which is how Apple joins a Google account. It also meant
+anyone holding a signed-in person's device id could sign in with their own
+Google and own that account from any phone. Now a device whose user already has
+a sign-in only gains another with `link_token`, a fresh token from one already
+on it (`api/accounts.py` `linked_with_proof`); without it, 403. An anonymous
+user still takes its first sign-in on the device id alone, since the device id
+already is everything that user has.
+
+**Consequences:** adding Apple in the journal asks for Google first, then Apple.
+
+### Deleting an account deletes what it made
+
+Status: Accepted 2026-09-28
+
+App Store review requires in-app account deletion, and GDPR wants erasure.
+`DELETE /v1/me` removes the account's memories and media, its sign-ins and
+subscription row, and every device on it with their unlocks, hearts, notes and
+walks. Walkers lose those memories. The alternative, keeping them as anonymous,
+is weaker on erasure and was turned down. A store subscription is the store's
+to cancel, and the app says so before the second press.
+
 ### Google and Apple only
 
 Status: Accepted
