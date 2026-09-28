@@ -182,10 +182,21 @@ export default function Submit({
       setAttachments((current) =>
         current.map((a) => (a.uri === draft.uri ? { ...a, item } : a)),
       );
-    } catch {
+    } catch (e) {
       if (!mounted.current) return;
       setAttachments((current) =>
         current.map((a) => (a.uri === draft.uri ? { ...a, failed: true } : a)),
+      );
+      // The statuses api/media.py and api/write.py refuse an upload with.
+      const status = String(e).match(/API (\d+)/)?.[1];
+      setError(
+        status === '413'
+          ? "That one's too big to attach."
+          : status === '415'
+            ? "That kind of file can't be attached."
+            : status === '429'
+              ? "That's all the uploads for today."
+              : "That didn't upload. Try again in a moment.",
       );
     }
   };
@@ -205,6 +216,10 @@ export default function Submit({
       // Re-encoded rather than sent as-is: a modern phone photo is 5-8 MB and
       // this is a thumbnail on a map card, not a print.
       quality: 0.7,
+      // A HEIC is handed back as-is, and uncompressed, unless the picker is
+      // asked for the compatible representation: then it is a JPEG and
+      // `quality` applies. iOS only; Android returns JPEG already.
+      preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
     };
     const result = fromCamera
       ? await ImagePicker.launchCameraAsync(options)
@@ -212,9 +227,8 @@ export default function Submit({
     const picked = result.canceled ? null : result.assets[0];
     if (!picked) return;
 
-    // quality: 0.7 re-encodes to JPEG, so the asset's own mimeType (HEIC on
-    // iOS) describes the original and not what is about to be sent.
-    await attach({ uri: picked.uri, kind: 'photo' }, 'image/jpeg');
+    // The picker keeps a PNG a PNG, so the type is what it says it wrote.
+    await attach({ uri: picked.uri, kind: 'photo' }, picked.mimeType ?? 'image/jpeg');
   };
 
   const startRecording = async () => {

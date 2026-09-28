@@ -1,4 +1,6 @@
 /** Memory Lane API client. One fetch, no wrapper library. */
+import { File } from 'expo-file-system';
+
 
 export const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 const BASE = API_BASE;
@@ -522,9 +524,12 @@ export async function uploadMedia(
 ): Promise<MediaItem> {
   const form = new FormData();
   form.append('device', device);
-  // The server generates the stored name; this one only decides the multipart
-  // part's filename, which nothing downstream trusts.
-  form.append('file', { uri, name: uri.split('/').pop() ?? 'upload', type: mime } as never);
+  // expo/fetch is the global fetch and refuses React Native's `{ uri }` part, so
+  // the part hands over its bytes. `type` is ours, not File's guess from the
+  // extension. The server generates the stored name; this one only decides the
+  // multipart part's filename, which nothing downstream trusts.
+  const file = new File(uri);
+  form.append('file', { name: file.name, type: mime, bytes: () => file.bytes() } as never);
   if (durationSeconds != null) form.append('duration_seconds', String(Math.round(durationSeconds)));
 
   const res = await fetch(`${BASE}/v1/media`, { method: 'POST', body: form });

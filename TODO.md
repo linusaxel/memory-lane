@@ -23,6 +23,19 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **No flow attaches a photo, so uploads broke unseen.** 2026-09-28: SDK 57's
+  global `expo/fetch` refuses React Native's `{ uri }` FormData part, and every
+  photo and recording failed on the phone without a request reaching the API.
+  Maestro can drive the system picker (tap "Library", "Allow Full Access", a
+  cell by `point`), so it is testable. Fix: in `file-and-edit.yml`, attach the
+  simulator's first stock photo before Post and assert its image on the card.
+- **A damaged Pods tree fails as a link error.** 2026-09-28: the simulator slice
+  of `Pods/React-Core-prebuilt/React.xcframework` had lost its `React` binary,
+  so every build died on `ld: framework 'React' not found` and run.sh said
+  "xcodebuild failed". A clean `build/` did not help and wiped the codegen
+  output `pod install` keeps there; about 20 minutes to find. Fix: a run.sh
+  preflight that the binary exists, else "rm -rf mobile/ios/Pods/React-Core-prebuilt && pod install".
+
 - **Checking a preview-card change means minutes-long e2e flows.** 2026-09-27:
   the four flows that touch planning (look-around, lakes-loop, walk-and-unlock,
   notify-nearby) take 100-160 s each, and notify-nearby minutes more. Each one
@@ -78,14 +91,6 @@ delete an entry when its fix lands.
 ---
 
 ## Known defects
-
-- [ ] **Photo upload in Add a memory fails.** (reported 2026-09-27, the
-      founder) Picking a picture does not attach. Path: `Submit.tsx` `attach`
-      → `api.ts` `uploadMedia` → `api/media.py` `save_upload`. First suspects:
-      the picker's `quality: 0.7` re-encode still handing back HEIC bytes sent
-      as `image/jpeg`, which the magic check refuses with a 415; and the
-      `failed` state never says why. Next: reproduce on the simulator and read
-      the status in `docker compose logs api`.
 
 - [ ] **Most places are still the model's guess.** (checked 2026-09-27)
       10 of 26 venue places are `llm`, and re-geocoding all 10 today finds
