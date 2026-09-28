@@ -135,11 +135,11 @@ delete an entry when its fix lands.
 From a readiness audit on 2026-09-28: what stands between "TODO done" and a
 public launch that the rest of this file doesn't track. Blockers first.
 
-- [ ] **Account deletion's two loose ends.** (checked 2026-09-28) `DELETE
+- [ ] **Account deletion: Apple token revocation.** (checked 2026-09-28) `DELETE
       /v1/me` and the journal's two-press delete are built, but a Sign in with
       Apple account must also have its tokens revoked through Apple's REST
-      API, which needs the `.p8` key (`STORE_ACCOUNT`), and GDPR wants an
-      export too.
+      API, which needs the `.p8` key (`STORE_ACCOUNT`). The GDPR copy is
+      `python -m api.my_data`, answered by email: see the privacy policy entry.
 - [ ] **UGC rules (App Store 1.2).** (checked 2026-09-28) No blocking a user,
       no filtering, no moderator contact in the app. `REPORT_THRESHOLD` counts
       self-issued device ids, so one person with three ids hides any memory,
@@ -147,7 +147,9 @@ public launch that the rest of this file doesn't track. Blockers first.
 - [ ] **The privacy policy is wrong and thin.** (checked 2026-09-28)
       `api/privacy.py` says photos are re-encoded; they are stored raw with
       EXIF GPS intact (`api/media.py`). No controller, no email, no legal basis,
-      no retention, no RevenueCat or geocoders; contact is "open an issue".
+      no retention, no RevenueCat or geocoders; contact is "open an issue",
+      which would have someone post their device id in public to ask for a
+      copy of their data. Needs a real address, and a line saying to ask it.
       The generated `PrivacyInfo.xcprivacy` declares no collected data.
 - [ ] **The corpus has no legal footing for a paid app.** (checked 2026-09-28)
       Summaries of creators' videos behind a subscription, fetched through a

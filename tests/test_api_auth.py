@@ -283,6 +283,21 @@ def test_deleting_an_account_takes_everything_it_made(client, db_session):
     assert fresh["submitted"] == 0
 
 
+def test_a_copy_of_their_data_is_what_deleting_would_take(client, db_session):
+    from api.my_data import my_data
+
+    dev, other = device(), device()
+    google(client, dev)
+    memory = submit(client, device=dev)
+    submit(client, device=other)
+
+    got = my_data(db_session, dev)
+    assert [m["id"] for m in got["memories"]] == [memory["id"]]
+    assert got["memories"][0]["lat"] == pytest.approx(LAT, abs=1e-3)
+    assert [i["provider"] for i in got["identities"]] == ["google"]
+    assert [d["id"] for d in got["devices"]] == [dev]
+
+
 def test_apple_carries_the_name_the_client_was_given(client):
     """Apple puts it nowhere in the token - it is handed to the app once, on the
     first authorization, and never again."""

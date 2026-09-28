@@ -304,6 +304,13 @@ def sign_out(body: DeviceRequest):
         return profile_of(session, body.device)
 
 
+# What is someone's, given {user, device}: deletion removes it and api/my_data.py
+# hands a copy of it, so the two cannot drift apart.
+OWNED_DEVICES = """(SELECT id FROM devices
+    WHERE user_id = CAST(:user AS uuid) OR id = CAST(:device AS uuid))"""
+OWNED_MEMORIES = "(SELECT id FROM memories WHERE user_id = CAST(:user AS uuid))"
+
+
 @router.delete("/v1/me", status_code=204)
 def delete_account(device: str = Query(..., pattern=DEVICE_PATTERN)):
     """Delete the account this device is signed into, and everything it made.
@@ -319,9 +326,7 @@ def delete_account(device: str = Query(..., pattern=DEVICE_PATTERN)):
             text("SELECT user_id FROM devices WHERE id = CAST(:id AS uuid)"), {"id": device}
         ).scalar()
         owner = {"user": str(user_id) if user_id else None, "device": device}
-        devices = """(SELECT id FROM devices
-            WHERE user_id = CAST(:user AS uuid) OR id = CAST(:device AS uuid))"""
-        mine = "(SELECT id FROM memories WHERE user_id = CAST(:user AS uuid))"
+        devices, mine = OWNED_DEVICES, OWNED_MEMORIES
 
         paths = [
             row.path

@@ -514,6 +514,17 @@ walks. Walkers lose those memories. The alternative, keeping them as anonymous,
 is weaker on erasure and was turned down. A store subscription is the store's
 to cancel, and the app says so before the second press.
 
+### Data export is on request
+
+Status: Accepted 2026-09-28
+
+GDPR gives people a copy of their data (Art. 15, 20); Apple asks only for
+deletion. A copy is answered by email within the month, not from the app:
+`python -m api.my_data --device <uuid>` prints everything, as JSON, from the
+same definition of "theirs" that `DELETE /v1/me` deletes (`OWNED_DEVICES`,
+`OWNED_MEMORIES` in `api/accounts.py`). An in-app export was turned down: a new
+public route to rate-limit and document, for a request that comes rarely.
+
 ### Google and Apple only
 
 Status: Accepted

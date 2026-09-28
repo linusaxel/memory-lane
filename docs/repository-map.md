@@ -85,6 +85,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/route_solver.py` | **Today's walk.** Which stops, what order; its docstring is how a walk is ranked |
 | `api/write.py` | Unlock, media, submissions, reports |
 | `api/accounts.py` | `/v1/me` and `/v1/auth/*` |
+| `api/my_data.py` | A copy of one person's data, for a GDPR request. A CLI, not a route |
 | `api/card.py` | The server-rendered card. Gates itself |
 | `api/embed.py` | The embeddable map. Off when `ENABLE_EMBED=0` |
 | `api/streets.py` | Walking metres and street shapes for today's route, from OSRM. Crow-flies × 1.3 without it |
