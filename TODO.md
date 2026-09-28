@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Placement has no before/after tool.** 2026-09-28: `quality --compare`
+  samples chunks by hash and scores summaries only. A venue-line change is
+  judged on the chunks that produced `llm` places, by whether they geocode.
+  That took a throwaway script (baseline read free from `extraction_chunks`,
+  candidate billed, both run through `geocode.place`). Fix: a `--places` mode
+  on `pipeline.quality` doing just that.
 - **No flow attaches a photo, so uploads broke unseen.** 2026-09-28: SDK 57's
   global `expo/fetch` refuses React Native's `{ uri }` FormData part, and every
   photo and recording failed on the phone without a request reaching the API.
@@ -92,14 +98,20 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **Most places are still the model's guess.** (checked 2026-09-27)
-      10 of 26 venue places are `llm`, and re-geocoding all 10 today finds
-      none: the names aren't on the map as said. "Nørrebro Bridge" is
-      Dronning Louises Bro, "Barbershop on Vognmagergade" is a description,
-      Maskot and Mexibar aren't in OSM. A named Photon `other` is a `poi` now
-      (Nørrebroparken resolves at 50 m) but no current row needed it. Next:
-      decide whether an `llm`-only place belongs on the map at all, or have
-      the prompt give the local name ("Dronning Louises Bro").
+- [ ] **Most places are still the model's guess.** (checked 2026-09-28)
+      55 of 132 venue places are `llm` now (32 video, 20 book, 3 archive).
+      Most are gone rather than misnamed: closed cinemas (Palladium, Vester
+      Bio), hospitals (Sundholm, Frederikshospitalet), cafés (HH Café,
+      Chickegrill). OSM has no such point. A "name it as the local map does,
+      in the local language" venue line was measured on the 53 chunks behind
+      them and not shipped: placed went 17 → 24 of kept, but kept fell 102 →
+      88. Most gains are a street or a district standing in for the
+      venue (Strøget, Kødbyen, "Frederiksberg"), and it misnamed two addresses
+      (Toldbodgade → "Topgade 77"). Its real wins: Vor Frue Kirke,
+      Assistens Kirkegård, Amalienborg, Gustav-Adolf-Gedenkstein. The book
+      prompt kept German names either way (Friedrichshospital). Next: a
+      closed place is a Wikidata or historical-map lookup, not a prompt
+      fix; decide whether an `llm`-only pin is served at all.
 
 - [ ] **A retelling with new detail is not merged.** (2026-09-27, content
       537) Tove Ditlevsen growing up on Hedebygade is told at 2:24 and 5:44
