@@ -102,6 +102,9 @@ def get_nearby_memories(
     min_confidence: str = Query(
         "medium", pattern="^(low|medium|high)$", description="Minimum confidence"
     ),
+    device: str | None = Query(
+        None, pattern=DEVICE_PATTERN, description="Leaves out who it blocked"
+    ),
 ):
     """Find memories near a location.
 
@@ -120,6 +123,7 @@ def get_nearby_memories(
             "offset": offset,
             "min_confidence": min_confidence,
             "layer": layer,
+            "device_id": device,
         }
 
         if tags:
@@ -227,7 +231,9 @@ def get_memory(
     and the summary, tags and source come back. Without one, a gated memory
     returns its place and nothing else."""
     with get_session() as session:
-        result = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id})
+        result = session.execute(
+            text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id, "device_id": None}
+        )
         row = result.fetchone()
 
     if not row:

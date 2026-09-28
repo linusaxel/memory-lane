@@ -841,7 +841,7 @@ completed hold can still come back refused when GPS has drifted. Say so —
 Documented flows live in `docs/08-ux-flows.md`. Build toward those, and when a
 flow changes, change that file in the same commit.
 
-Writing is F5 (file a memory), F20 (report one) and F21 (be somebody).
+Writing is F5 (file a memory), F20 (report or block) and F21 (be somebody).
 Sign-in is F22, the first flow, and it is Google and Apple only — see
 `src/SignIn.tsx` for why, and for why neither button works in Expo Go.
 

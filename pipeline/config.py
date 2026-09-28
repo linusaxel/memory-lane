@@ -52,6 +52,14 @@ ROUTING_URL = (os.getenv("ROUTING_URL") or "").rstrip("/") or None
 # same API at another URL.
 PHOTON_URL = (os.getenv("PHOTON_URL") or "https://photon.komoot.io").rstrip("/")
 
+# What people post is screened by CLASSIFIER_MODEL before it is public
+# (api/moderation.py). Off for tests and e2e, which must not call out.
+SCREEN_POSTS = os.getenv("SCREEN_POSTS", "1") == "1"
+
+# The address the privacy policy gives for questions and data requests. Unset,
+# the policy says one is coming rather than inventing one.
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL") or None
+
 # RevenueCat sells the subscription; api/billing.py records it
 # (docs/10-decisions.md#revenuecat-sells-it-our-table-decides). The webhook
 # secret is what RevenueCat sends as its Authorization header; the API key is

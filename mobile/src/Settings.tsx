@@ -189,6 +189,13 @@ export default function Settings({
           <Pressable
             style={dim(styles.link)}
             accessibilityRole="link"
+            onPress={() => Linking.openURL(`${API_BASE}/privacy#contact`).catch(() => {})}
+          >
+            <Text style={styles.linkText}>Contact us</Text>
+          </Pressable>
+          <Pressable
+            style={dim(styles.link)}
+            accessibilityRole="link"
             onPress={() => Linking.openURL('https://www.openstreetmap.org/copyright').catch(() => {})}
           >
             <Text style={styles.linkText}>Places © OpenStreetMap contributors</Text>

@@ -514,6 +514,33 @@ walks. Walkers lose those memories. The alternative, keeping them as anonymous,
 is weaker on erasure and was turned down. A store subscription is the store's
 to cancel, and the app says so before the second press.
 
+### Posts are screened, reports need an account
+
+Status: Accepted 2026-09-28
+
+App Store 1.2 wants a filter, a report with a timely answer, a block and a
+contact, for anything people post. Each one here, and the trap it avoids:
+
+- **Screened before stored.** `api/moderation.py` asks `CLASSIFIER_MODEL` a yes
+  or no for a memory, an edit, a note and a name (~$0.0002 each). A failed call
+  refuses the post (503) instead of publishing it unscreened, since a post
+  cannot be taken back from the phones it reached. The list of what is refused
+  is short on purpose: drink, crime and death in the past are the corpus.
+- **A report counts an account with a sign-in.** A device id is self-issued, so
+  counting devices let one person hide anything. Anonymous users are one
+  `PUT /v1/me` away, so the account must have a Google or Apple identity.
+- **Reinstating clears, never deletes.** `python -m api.moderate --restore`
+  sets `reports.cleared_at`; the rows stay as evidence and stop counting.
+- **A block is per viewer, in SQL.** `not_blocked()` in `api/queries.py` joins
+  on the viewer's account, next to `VISIBLE`, in every read that knows who is
+  asking. A read that does not (the card, search, places) shows it, since
+  nobody is signed in to have blocked anything.
+- **Contact is one setting.** `CONTACT_EMAIL` fills the policy's #contact, which
+  the app's Contact row opens: no second copy in the app to drift.
+
+The report button came back for this: it was removed from the app on
+2026-09-22 with nothing depending on its absence.
+
 ### Data export is on request
 
 Status: Accepted 2026-09-28

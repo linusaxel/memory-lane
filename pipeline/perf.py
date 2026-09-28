@@ -174,6 +174,7 @@ def main() -> None:
         "offset": 0,
         "layer": None,
         "min_confidence": "medium",
+        "device_id": None,
     }
     work = [
         ("nearby, 10km", NEARBY_MEMORIES_QUERY, near, 5),
@@ -184,7 +185,7 @@ def main() -> None:
             {k: near[k] for k in ("lat", "lng", "radius_meters", "limit", "offset")},
             5,
         ),
-        ("single memory (unlock)", SINGLE_MEMORY_QUERY, {"memory_id": 1}, 5),
+        ("single memory (unlock)", SINGLE_MEMORY_QUERY, {"memory_id": 1, "device_id": None}, 5),
         (
             "route candidates, 10km",
             ROUTE_CANDIDATES_QUERY,

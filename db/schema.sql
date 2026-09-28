@@ -345,8 +345,19 @@ CREATE TABLE reports (
     device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
     reason VARCHAR(40),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- One per device, so the auto-hide threshold counts people not presses.
+    -- Set when a reviewer reinstates the memory: kept as evidence, no longer
+    -- counted. db/migrations/030_moderation.sql.
+    cleared_at TIMESTAMP,
+    -- One per device; the threshold counts the accounts behind them.
     PRIMARY KEY (memory_id, device_id)
+);
+
+-- Someone this device's account never wants to read again (App Store 1.2).
+CREATE TABLE blocks (
+    device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+    blocked_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (device_id, blocked_user_id)
 );
 
 CREATE INDEX idx_memories_place ON memories(place_id);

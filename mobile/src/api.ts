@@ -172,6 +172,7 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
 export async function fetchNearby(
   at: Coordinates,
   radiusKm: number,
+  device: string | null,
   signal?: AbortSignal,
 ): Promise<LocatedMemory[]> {
   const params = new URLSearchParams({
@@ -180,6 +181,8 @@ export async function fetchNearby(
     radius_km: String(radiusKm),
     limit: '100',
   });
+  // Only so the server can leave out whoever this account blocked.
+  if (device) params.set('device', device);
   const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
   // A null-coordinate marker crashes react-native-maps (UI.md rule 5).
   return (body.memories ?? []).filter(hasCoordinates);
@@ -412,6 +415,30 @@ export async function acceptRoute(
   );
 }
 
+/** Say this should not be here. Enough signed-in accounts and it stops being
+ *  served to anybody until someone reviews it. */
+export async function reportMemory(id: number, device: string): Promise<void> {
+  await post(`/v1/memories/${id}/report`, { device, reason: null });
+}
+
+/** Never see this person's memories or notes again, on any phone on this
+ *  account. They are not told. */
+export async function blockUser(userId: string, device: string): Promise<void> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${BASE}/v1/users/${userId}/block`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw await refused(res);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** End today's walk, finished or not, so another can be planned. Its earned
  *  stops stay earned; the rest lock again. */
 export async function endRoute(device: string): Promise<void> {
@@ -498,13 +525,19 @@ export function notOnWalk(e: unknown): boolean {
   return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'not_on_walk';
 }
 
+/** Text the screening refused (api/moderation.py), as against a failure that
+ *  trying again would fix. */
+export function wasRefused(e: unknown): boolean {
+  return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'refused';
+}
+
 export async function saveDisplayName(device: string, displayName: string): Promise<Profile> {
   const res = await fetch(`${BASE}/v1/me`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ device, display_name: displayName }),
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) throw await refused(res);
   return (await res.json()) as Profile;
 }
 
@@ -561,7 +594,7 @@ export async function updateMemory(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ device, ...draft }),
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) throw await refused(res);
   const memory = (await res.json()) as Memory;
   if (!hasCoordinates(memory)) throw new Error('Edited memory came back without a place');
   return memory;

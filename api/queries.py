@@ -117,6 +117,20 @@ LEFT JOIN users au ON m.user_id = au.id"""
 # takedown that only covers the endpoint somebody complained about is not one.
 VISIBLE = "NOT m.hidden"
 
+
+def not_blocked(author: str) -> str:
+    """Nothing by someone the viewer's account blocked. The viewer is
+    :device_id, and a NULL one (a read that does not know who asks) blocks
+    nothing. App Store 1.2; docs/10-decisions.md#posts-are-screened-reports-need-an-account."""
+    return f"""NOT EXISTS (
+        SELECT 1 FROM blocks b JOIN devices bd ON bd.id = b.device_id
+        WHERE b.blocked_user_id = {author}
+          AND (bd.id = CAST(:device_id AS uuid)
+               OR bd.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid))))"""
+
+
+NOT_BLOCKED = not_blocked("m.user_id")
+
 DISTANCE = "ST_Distance(p.coordinates, ST_MakePoint(:lng, :lat)::geography) as distance_meters"
 WITHIN = "ST_DWithin(p.coordinates, ST_MakePoint(:lng, :lat)::geography, :radius_meters)"
 
@@ -168,6 +182,7 @@ SELECT {MEMORY_COLUMNS},
 WHERE
     p.coordinates IS NOT NULL
     AND {VISIBLE}
+    AND {NOT_BLOCKED}
     AND {WITHIN}
     AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
@@ -182,6 +197,7 @@ SELECT {MEMORY_COLUMNS},
 WHERE
     p.coordinates IS NOT NULL
     AND {VISIBLE}
+    AND {NOT_BLOCKED}
     AND {WITHIN}
     AND m.tags && CAST(:tags AS varchar[])
     AND {LAYER_FILTER}
@@ -199,6 +215,7 @@ JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
     AND {VISIBLE}
+    AND {NOT_BLOCKED}
     AND {WITHIN}
     AND {LAYER_FILTER}
     AND {CONFIDENCE_FILTER}
@@ -211,6 +228,7 @@ JOIN places p ON m.place_id = p.id
 WHERE
     p.coordinates IS NOT NULL
     AND {VISIBLE}
+    AND {NOT_BLOCKED}
     AND {WITHIN}
     AND m.tags && CAST(:tags AS varchar[])
     AND {LAYER_FILTER}
@@ -248,6 +266,7 @@ SELECT {MEMORY_COLUMNS},
     m.created_at
 {MEMORY_JOIN}
 WHERE m.id = :memory_id AND {VISIBLE}
+    AND {NOT_BLOCKED}
 """
 
 # Author-facing only, so VISIBLE is deliberately absent: a reported memory
@@ -381,7 +400,7 @@ SELECT n.id, n.body, n.created_at, d.user_id, u.display_name,
 FROM memory_notes n
 JOIN devices d ON d.id = n.device_id
 LEFT JOIN users u ON u.id = d.user_id
-WHERE n.memory_id = :memory_id AND NOT n.hidden
+WHERE n.memory_id = :memory_id AND NOT n.hidden AND {not_blocked("d.user_id")}
 ORDER BY n.created_at
 """
 
@@ -416,6 +435,7 @@ SELECT {MEMORY_COLUMNS},
 {MEMORY_JOIN}
 JOIN earned ON earned.memory_id = m.id
 WHERE {VISIBLE}
+    AND {NOT_BLOCKED}
 ORDER BY earned.unlocked_at DESC
 LIMIT :limit
 """
@@ -491,6 +511,7 @@ SELECT {MEMORY_COLUMNS},
 WHERE
     p.coordinates IS NOT NULL
     AND {VISIBLE}
+    AND {NOT_BLOCKED}
     AND {WITHIN}
     AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
     AND NOT EXISTS (

@@ -5,7 +5,7 @@ the authority on shapes (`api/models.py`); this is the map. Where the code lives
 is in [repository-map.md](repository-map.md#api); why it is gated is in
 [architecture.md](architecture.md#security).
 
-- `GET /v1/memories/nearby?lat=X&lng=Y&radius_km=10&tags=food,travel&min_confidence=medium` - Find memories near location (tags and confidence optional)
+- `GET /v1/memories/nearby?lat=X&lng=Y&radius_km=10&tags=food,travel&min_confidence=medium&device=UUID` - Find memories near location (tags, confidence and device optional; a device leaves out whoever it blocked)
   - Gated memories always come back locked here: no summary, media or links, but
     tags, `source_name` and `year` (the app's peek, F29).
     This endpoint never unlocks. See [Proximity unlock](architecture.md#proximity-unlock).
@@ -62,7 +62,15 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `DELETE /v1/memories/{id}/notes/{note_id}?device=UUID` - hide a note: your
   own, or anyone's on a memory you filed
 - `POST /v1/memories/{id}/report` `{device, reason}` - REPORT_THRESHOLD distinct
-  devices and the memory stops being served by every endpoint
+  signed-in accounts and the memory stops being served by every endpoint. A
+  device with no Google or Apple sign-in is recorded and not counted.
+  `python -m api.moderate` lists what is hidden and reinstates it
+- `POST /v1/users/{id}/block` `{device}` - that person's memories and notes are
+  gone for every device on this account: nearby (pass `device`), unlock, the
+  collection, notes and today's walk. 404 for nobody. No unblock
+- A memory, an edit, a note and a display name are screened before they are
+  stored (`api/moderation.py`): 422 `{"reason": "refused"}` when refused, 503
+  when the check cannot run. Nothing unscreened is published
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, and `subscribed` /
   `subscribed_until`. The GET creates nothing

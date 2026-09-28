@@ -13,6 +13,7 @@ from sqlalchemy import text
 import api.media
 from api.auth import apple_identity, either_identity, google_identity
 from api.models import DEVICE_PATTERN, DeviceRequest, Profile, ProfileRequest, SignInRequest
+from api.moderation import screen
 from api.queries import DELETE_ORPHAN_SUBMITTED_PLACE, STREAK_DAYS_QUERY, UNLOCK_COUNT_QUERY
 from pipeline.db import get_session
 
@@ -144,9 +145,11 @@ def set_profile(body: ProfileRequest):
     """Name yourself, or stop being named. This is the one call that creates a
     user without a submission attached, because choosing the name before writing
     the memory is the order people do it in."""
+    name = clean_name(body.display_name)
+    screen(name)
     with get_session() as session:
         user_id = user_for_device(session, body.device)
-        set_display_name(session, user_id, clean_name(body.display_name))
+        set_display_name(session, user_id, name)
         return profile_of(session, body.device)
 
 

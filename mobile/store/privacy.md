@@ -50,8 +50,11 @@ Photos and recordings you attach are stored on our servers and shown with the
 memory. We strip nothing from them beyond re-encoding photos for size, so do not
 attach a file whose contents you would not publish.
 
-Anyone can report a memory. Enough reports and it stops being shown to anybody;
-the record of it is kept so a dispute can be answered. You can delete anything
+Before anything you post is shown, its text is checked for abuse, and refused
+if it is. Anyone signed in can report a memory. Enough reports and it stops
+being shown to anybody until we review it; the record of it is kept so a
+dispute can be answered. You can block a person, and you will not see anything
+they post again. You can delete anything
 you posted from the app, or delete your account, which deletes everything you
 posted with it.
 
@@ -74,7 +77,10 @@ background and nothing is uploaded that you did not attach.
 **What we do keep.** Our servers keep standard technical request logs
 (timestamp, coarse IP, endpoint) for reliability and abuse prevention.
 
-**Third parties.** We sell nothing and share nothing. Opening a memory's source
-video hands you off to YouTube, whose own privacy policy then applies.
+**Third parties.** We sell nothing. The text of what you post is sent to
+Anthropic, only to check it before it is shown; it is not used to train their
+models. Opening a memory's source video hands you off to YouTube, whose own
+privacy policy then applies.
 
-**Contact.** Open an issue on the project repository.
+**Contact.** Write to the address on the web version of this policy, to ask a
+question, to report something, or for a copy of everything we hold about you.

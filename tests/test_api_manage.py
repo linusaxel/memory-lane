@@ -15,7 +15,7 @@ another memory still uses.
 import pytest
 from sqlalchemy import text
 
-from tests.test_api_submit import LAT, LNG, device, submit, upload
+from tests.test_api_submit import LAT, LNG, device, signed_in, submit, upload
 
 pytestmark = pytest.mark.db
 
@@ -64,13 +64,13 @@ def test_offset_pages_past_the_limit_instead_of_dropping_the_rest(client):
     assert seen == ids
 
 
-def test_the_list_keeps_a_hidden_memory_and_says_so(client):
+def test_the_list_keeps_a_hidden_memory_and_says_so(client, db_session):
     """Every other endpoint drops a hidden memory silently. This one is the
     author's own management screen, so it has to say what happened instead."""
     dev = device()
     memory = submit(client, device=dev)
     for _ in range(3):
-        client.post(f"/v1/memories/{memory['id']}/report", json={"device": device()})
+        client.post(f"/v1/memories/{memory['id']}/report", json={"device": signed_in(db_session)})
 
     listed = client.get(f"/v1/me/memories?device={dev}").json()["memories"]
     assert listed[0]["hidden"] is True

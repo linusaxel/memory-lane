@@ -44,7 +44,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F18 | Stand somewhere with nothing in it | Removed from the app |
 | F19 | Somewhere else entirely | Removed from the app |
 | F5 | File a memory of your own | Implemented |
-| F20 | Report something that should not be here | Removed from the app |
+| F20 | Report something that should not be here, or block who wrote it | Implemented |
 | F21 | Be somebody | Implemented |
 | F23 | Seal a memory until a date | Removed from the app |
 | F24 | Manage what you filed | Implemented |
@@ -640,21 +640,23 @@ same spot.
 
 ---
 
-## F20 · Report something that should not be here — **Removed from the app**
+## F20 · Report something that should not be here, or block who wrote it — **Implemented**
 
-The "Report this memory" button was pulled from `MemorySheet.tsx` - the app
-has no in-app moderation entry point right now. The mechanism it drove is
-still there and still works, just unreachable from a phone:
+Back on 2026-09-28 for App Store 1.2, which wants a report, a block and a filter.
 
-`POST /v1/memories/{id}/report` (`api/write.py`) still takes a report from
-`{device, reason}`, and three distinct devices reporting the same memory still
-takes it out of every endpoint at once - the map, the search, the counts, the
-card, and the collection of the person who filed it. `REPORT_THRESHOLD` and
-the `hidden` flag (a flag, not a delete - a takedown that destroys the
-evidence makes the next dispute unanswerable) are unchanged in
-`tests/test_api_manage.py`/`tests/test_api_submit.py`. Reintroducing a trigger
-for it in the app is a matter of wiring a control back up to that endpoint,
-not rebuilding anything.
+**Who:** anybody who opened a memory somebody filed. Never on an extracted
+memory (there is nobody to report a podcast to), never on your own.
+
+1. Under the memory: **Report this memory**. One press, it reads "Reported",
+   and nothing else changes for them. `REPORT_THRESHOLD` signed-in accounts
+   hide it everywhere until `python -m api.moderate --restore` puts it back.
+2. **Block {name}**, then a second press: "you will not see anything they post".
+   The sheet closes and their pins leave the map, on every phone on the
+   account. There is no unblock yet.
+3. Posting something the screening refuses keeps the draft and says what can't
+   be posted; a check that could not run is the ordinary "try again".
+
+Settings → About → **Contact us** opens the policy at its Contact section.
 
 ---
 

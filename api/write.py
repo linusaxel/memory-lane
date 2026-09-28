@@ -35,6 +35,7 @@ from api.models import (
     SubmissionRequest,
     UnlockRequest,
 )
+from api.moderation import screen
 from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
     MEDIA_ATTACH,
@@ -124,7 +125,9 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
     unlocking is the one thing in this product that is supposed to be an act.
     """
     with get_session() as session:
-        row = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id}).fetchone()
+        row = session.execute(
+            text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id, "device_id": body.device}
+        ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Memory not found")
 
@@ -234,6 +237,7 @@ def submit_memory(body: SubmissionRequest):
     is recorded here too. Filing something is standing there, so re-locking it
     the moment they walk away would be absurd.
     """
+    screen(body.place_name, body.summary)
     tags = hashtags(body.summary)
     # A date with no stated precision is a full date, which is what a phone's
     # date picker produces; the field exists for the 1978 case.
@@ -299,7 +303,9 @@ def submit_memory(body: SubmissionRequest):
             {"device": body.device, "memory_id": memory_id},
         )
 
-        row = session.execute(text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id}).fetchone()
+        row = session.execute(
+            text(SINGLE_MEMORY_QUERY), {"memory_id": memory_id, "device_id": body.device}
+        ).fetchone()
 
     return row_to_memory(row, Coordinates(lat=body.lat, lng=body.lng), include_distance=False)
 
@@ -351,6 +357,7 @@ def leave_note(memory_id: int, body: NoteRequest):
     note = body.body.strip()
     if not note:
         raise HTTPException(status_code=422, detail="A note needs some words")
+    screen(note)
     with get_session() as session:
         exists = session.execute(
             text("SELECT 1 FROM memories WHERE id = :id AND NOT hidden FOR UPDATE"),
@@ -397,12 +404,23 @@ def hide_note(memory_id: int, note_id: int, device: str = Query(..., pattern=DEV
     return Response(status_code=204)
 
 
+# Accounts, not devices, and only ones signed in with Google or Apple: an
+# anonymous user is one PUT /v1/me away. A cleared report is kept, not counted.
+REPORTING_ACCOUNTS = """
+    SELECT COUNT(DISTINCT d.user_id) FROM reports r JOIN devices d ON d.id = r.device_id
+    WHERE r.memory_id = :id AND r.cleared_at IS NULL
+      AND EXISTS (SELECT 1 FROM identities i WHERE i.user_id = d.user_id)
+"""
+
+
 @router.post("/v1/memories/{memory_id}/report", response_model=ReportResponse)
 def report_memory(memory_id: int, body: ReportRequest):
     """Say this should not be here.
 
     One report per device, counted rather than acted on individually, and at
     REPORT_THRESHOLD the memory stops being served by every endpoint at once.
+    Only signed-in accounts count: a device id is self-issued, so three of them
+    are one person. A reviewer reinstates with `python -m api.moderate`.
     The row stays: a takedown that destroys the evidence makes the next dispute
     unanswerable.
     """
@@ -423,9 +441,7 @@ def report_memory(memory_id: int, body: ReportRequest):
             """),
             {"memory_id": memory_id, "device": body.device, "reason": body.reason},
         )
-        count = session.execute(
-            text("SELECT COUNT(*) FROM reports WHERE memory_id = :id"), {"id": memory_id}
-        ).scalar()
+        count = session.execute(text(REPORTING_ACCOUNTS), {"id": memory_id}).scalar()
 
         hidden = count >= REPORT_THRESHOLD
         if hidden:
@@ -434,6 +450,28 @@ def report_memory(memory_id: int, body: ReportRequest):
             )
 
     return ReportResponse(reports=count, hidden=hidden)
+
+
+@router.post("/v1/users/{user_id}/block", status_code=204)
+def block_user(user_id: uuid.UUID, body: DeviceRequest):
+    """Never be shown this person's memories or notes again, on any phone on
+    this account. Nobody is told; the other person's words stay up for
+    everyone else. There is no unblock yet."""
+    with get_session() as session:
+        if not session.execute(
+            text("SELECT 1 FROM users WHERE id = :id"), {"id": user_id}
+        ).scalar():
+            raise HTTPException(status_code=404, detail="Nobody by that id")
+        touch_device(session, body.device)
+        session.execute(
+            text("""
+                INSERT INTO blocks (device_id, blocked_user_id)
+                VALUES (CAST(:device AS uuid), :user)
+                ON CONFLICT DO NOTHING
+            """),
+            {"device": body.device, "user": user_id},
+        )
+    return Response(status_code=204)
 
 
 # The lock and ownership check edit and delete share. FOR UPDATE on the row
@@ -456,6 +494,7 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
     typo does not require standing where it happened again, only filing a new
     memory does.
     """
+    screen(body.place_name, body.summary)
     tags = hashtags(body.summary)
     precision = body.happened_precision or ("day" if body.happened_at else None)
 

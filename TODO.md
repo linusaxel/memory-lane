@@ -98,6 +98,16 @@ delete an entry when its fix lands.
 
 ## Known defects
 
+- [ ] **Walk: the next-stop arrow shows while the stop is on screen.**
+      (reported 2026-09-28) `mobile/src/NextStopArrow.tsx` asks `edgeArrow`
+      (`region.ts`) with the arrow's own `INSET` as the visible box, so a
+      stop in the top 135pt or bottom 115pt, or the 25pt side margins, gets
+      an arrow though its pin is plainly visible. Suspect too: `region` only
+      updates on `onRegionChangeComplete`, so during a follow flight the
+      arrow tests the old frame. Fix: test visibility against the full map
+      frame (or just the chrome, not chrome + arrow margin), keep `INSET`
+      for placing the arrow only; add the case to `region.test.ts`.
+
 - [ ] **Most places are still the model's guess.** (checked 2026-09-28)
       55 of 132 venue places are `llm` now (32 video, 20 book, 3 archive).
       Most are gone rather than misnamed: closed cinemas (Palladium, Vester
@@ -140,16 +150,11 @@ public launch that the rest of this file doesn't track. Blockers first.
       Apple account must also have its tokens revoked through Apple's REST
       API, which needs the `.p8` key (`STORE_ACCOUNT`). The GDPR copy is
       `python -m api.my_data`, answered by email: see the privacy policy entry.
-- [ ] **UGC rules (App Store 1.2).** (checked 2026-09-28) No blocking a user,
-      no filtering, no moderator contact in the app. `REPORT_THRESHOLD` counts
-      self-issued device ids, so one person with three ids hides any memory,
-      and nothing reinstates it.
 - [ ] **The privacy policy is wrong and thin.** (checked 2026-09-28)
       `api/privacy.py` says photos are re-encoded; they are stored raw with
-      EXIF GPS intact (`api/media.py`). No controller, no email, no legal basis,
-      no retention, no RevenueCat or geocoders; contact is "open an issue",
-      which would have someone post their device id in public to ask for a
-      copy of their data. Needs a real address, and a line saying to ask it.
+      EXIF GPS intact (`api/media.py`). No controller, no legal basis, no
+      retention, no RevenueCat or geocoders. Contact reads `CONTACT_EMAIL`,
+      unset until you pick an address.
       The generated `PrivacyInfo.xcprivacy` declares no collected data.
 - [ ] **The corpus has no legal footing for a paid app.** (checked 2026-09-28)
       Summaries of creators' videos behind a subscription, fetched through a

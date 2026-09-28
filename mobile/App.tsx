@@ -18,6 +18,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import {
   acceptRoute,
+  blockUser,
   endRoute,
   fetchNearby,
   fetchProfile,
@@ -26,9 +27,11 @@ import {
   heartMemory,
   notOnWalk,
   previewRoute,
+  reportMemory,
   saveDisplayName,
   unlockMemory,
   walkHereRefusal,
+  wasRefused,
   type Coordinates,
   type LocatedMemory,
   type Profile,
@@ -659,7 +662,7 @@ export default function App() {
       lat: FALLBACK_REGION.latitude,
       lng: FALLBACK_REGION.longitude,
     };
-    fetchNearby(at, MAP_RADIUS_KM, controller.signal)
+    fetchNearby(at, MAP_RADIUS_KM, device, controller.signal)
       // Locked, and what you filed: what is open without a walk is not a reason
       // to take one, but your own is where you left it (docs/10, "A map of what
       // is locked"). mineVersion refetches the moment you file, edit or delete.
@@ -670,7 +673,7 @@ export default function App() {
       )
       .catch(() => {});
     return () => controller.abort();
-  }, [stage, located, me, mineVersion]);
+  }, [stage, located, me, mineVersion, device]);
 
   // The preview's zoom: the whole walk, its start and any end, clear of the card.
   useEffect(() => {
@@ -1029,12 +1032,40 @@ export default function App() {
     [hearted, unlocked],
   );
 
+  // Reported from this device already. Local only: the server counts accounts,
+  // and this stops the control offering a second press that does nothing.
+  const [reported, setReported] = useState<Set<number>>(new Set());
+  const report = useCallback(async (memory: LocatedMemory) => {
+    // Optimistic: it is idempotent per device, and a report that says it landed
+    // beats one that silently did not.
+    setReported((current) => new Set(current).add(memory.id));
+    reportMemory(memory.id, await deviceId()).catch(() => {});
+  }, []);
+  const block = useCallback(async (memory: LocatedMemory) => {
+    const author = memory.author?.id;
+    if (!author) return;
+    try {
+      await blockUser(author, await deviceId());
+    } catch {
+      return;
+    }
+    if (!mounted.current) return;
+    setNearby((current) => current.filter((m) => m.author?.id !== author));
+    setOpenAt([]);
+  }, []);
+
   const posted = useCallback(
     async (memory: LocatedMemory) => {
       // Already unlocked by the server - filing something is standing there -
       // so it goes straight into the collection.
       setUnlocked(await rememberUnlocked(unlocked, memory));
-      setProfile((who) => (who ? { ...who, submitted: who.submitted + 1 } : who));
+      // Filing is what made this device a user, if nothing had yet: without the
+      // id the sheet below would take their own memory for a stranger's.
+      setProfile((who) =>
+        who
+          ? { ...who, submitted: who.submitted + 1, user_id: who.user_id ?? memory.author?.id ?? null }
+          : who,
+      );
       setMineVersion((v) => v + 1);
       // Show them what they filed. The modal closing is not a confirmation,
       // and this is also the first sight of what anybody else will find here.
@@ -1106,7 +1137,13 @@ export default function App() {
       // while the field on screen says otherwise.
       saveDisplayName(device, next)
         .then(() => setNameError(null))
-        .catch(() => setNameError("Your name didn't save. Keep typing to try again."));
+        .catch((e) =>
+          setNameError(
+            wasRefused(e)
+              ? "That name can't be used here."
+              : "Your name didn't save. Keep typing to try again.",
+          ),
+        );
     },
     [device],
   );
@@ -1537,6 +1574,10 @@ export default function App() {
           // Only your own, and only while it is open: the locked composition
           // has nowhere to put this.
           onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}
+          // Only what a person filed, and not your own.
+          onReport={openMemories[openIndex]?.author && !mine ? report : undefined}
+          reported={reported.has(openMemories[openIndex]?.id ?? -1)}
+          onBlock={openMemories[openIndex]?.author && !mine ? block : undefined}
           memories={openMemories}
           index={openIndex}
           onIndex={setOpenIndex}

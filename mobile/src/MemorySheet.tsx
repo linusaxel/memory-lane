@@ -62,6 +62,15 @@ type Props = {
   subscribed?: boolean;
   /** The paywall, offered on the peek to somebody standing on the pin. */
   onSubscribe?: () => void;
+  /** Absent for extracted memories, and for your own: there is nobody to
+   *  report a podcast to, and reporting yourself is not a real control. */
+  onReport?: (memory: LocatedMemory) => void;
+  /** Already reported from this device, so the control says so instead of
+   *  offering a second press that does nothing. */
+  reported?: boolean;
+  /** Present exactly when onReport is: blocking hides everything its author
+   *  posted, on every phone on this account. */
+  onBlock?: (memory: LocatedMemory) => void;
 };
 
 function formatDistance(meters: number | null): string | null {
@@ -88,8 +97,14 @@ export default function MemorySheet({
   onWalkHere,
   subscribed,
   onSubscribe,
+  onReport,
+  reported,
+  onBlock,
 }: Props) {
   const memory = memories[index] ?? null;
+  // There is no unblock, so it takes a second press, and paging resets it.
+  const [confirmBlock, setConfirmBlock] = useState(false);
+  useEffect(() => setConfirmBlock(false), [memory?.id]);
   const insets = useSafeAreaInsets();
   // The map before a walk: a card over the map, sized to what it holds, not a
   // page. Fixed for the whole opening - a modal cannot change how it is
@@ -219,14 +234,20 @@ export default function MemorySheet({
       {memory && (
         <ScrollView
           style={styles.fill}
-          contentContainerStyle={styles.over}
+          // The page sheet is held to the screen, or a long story pushes the
+          // pinned credit and heart off it with no scroll to get them back.
+          contentContainerStyle={compact ? styles.over : styles.page}
+          // Close answers the first tap while a note's keyboard is up.
+          keyboardShouldPersistTaps="handled"
           scrollEnabled={compact}
           alwaysBounceVertical={compact}
           showsVerticalScrollIndicator={false}
           onScrollEndDrag={pulled}
         >
           {compact && (
-            <Pressable style={styles.fill} accessibilityLabel="Close" onPress={onClose} />
+            // Not "Close": that is the X, and one label on two controls reads
+            // twice to VoiceOver and sends a flow's tap to the status bar.
+            <Pressable style={styles.fill} accessibilityLabel="Dismiss" onPress={onClose} />
           )}
           <View
             style={[
@@ -390,6 +411,34 @@ export default function MemorySheet({
                         <Text style={styles.reportText}>Edit this memory</Text>
                       </Pressable>
                     )}
+
+                    {!locked && onReport && (
+                      <Pressable
+                        style={dim(styles.report)}
+                        hitSlop={4}
+                        accessibilityRole="button"
+                        disabled={reported}
+                        onPress={() => onReport(memory)}
+                      >
+                        <Text style={styles.reportText}>
+                          {reported ? 'Reported' : 'Report this memory'}
+                        </Text>
+                      </Pressable>
+                    )}
+                    {!locked && onBlock && memory.author && (
+                      <Pressable
+                        style={dim(styles.block)}
+                        hitSlop={4}
+                        accessibilityRole="button"
+                        onPress={() => (confirmBlock ? onBlock(memory) : setConfirmBlock(true))}
+                      >
+                        <Text style={styles.reportText}>
+                          {confirmBlock
+                            ? 'Tap again: you will not see anything they post'
+                            : `Block ${memory.author.name === 'Anonymous' ? 'this person' : memory.author.name}`}
+                        </Text>
+                      </Pressable>
+                    )}
                   </Animated.View>
                 </ScrollView>
 
@@ -522,6 +571,7 @@ const styles = StyleSheet.create({
   // Paper over the live map, not a dimmed one: the pin you tapped stays in
   // view above the card. The corners match the page sheet's.
   over: { flexGrow: 1, justifyContent: 'flex-end' },
+  page: { height: '100%' },
   card: {
     flex: 0,
     borderTopLeftRadius: corner.card,
@@ -596,6 +646,7 @@ const styles = StyleSheet.create({
   // Quiet on purpose. It has to be findable and must not be the thing the eye
   // lands on under somebody's story.
   report: { ...button.outline, ...button.small, marginTop: 28, alignSelf: 'flex-start' },
+  block: { ...button.outline, ...button.small, marginTop: 12, alignSelf: 'flex-start' },
   reportText: { ...buttonTextSmall, color: color.ink },
   source: { ...font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },

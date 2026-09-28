@@ -51,6 +51,19 @@ def device() -> str:
     return str(uuid.uuid4())
 
 
+def signed_in(session) -> str:
+    """A device on an account with a Google sign-in: the only kind whose report
+    counts."""
+    dev, user = device(), str(uuid.uuid4())
+    for sql in (
+        "INSERT INTO users (id) VALUES (CAST(:user AS uuid))",
+        "INSERT INTO identities (provider, subject, user_id) VALUES ('google', :dev, CAST(:user AS uuid))",
+        "INSERT INTO devices (id, user_id) VALUES (CAST(:dev AS uuid), CAST(:user AS uuid))",
+    ):
+        session.execute(text(sql), {"user": user, "dev": dev})
+    return dev
+
+
 @pytest.fixture
 def client(api_client):
     """conftest's, under the shorter name every test here already uses."""
@@ -375,11 +388,15 @@ def test_enough_reports_hide_it_everywhere(client, db_session):
 
     for _ in range(write.REPORT_THRESHOLD - 1):
         assert (
-            client.post(f"/v1/memories/{mid}/report", json={"device": device()}).json()["hidden"]
+            client.post(
+                f"/v1/memories/{mid}/report", json={"device": signed_in(db_session)}
+            ).json()["hidden"]
             is False
         )
 
-    assert client.post(f"/v1/memories/{mid}/report", json={"device": device()}).json()["hidden"]
+    assert client.post(f"/v1/memories/{mid}/report", json={"device": signed_in(db_session)}).json()[
+        "hidden"
+    ]
 
     assert client.get(f"/v1/memories/{mid}").status_code == 404
     assert client.get(f"/v1/memories/{mid}/card").status_code == 404
@@ -394,21 +411,69 @@ def test_enough_reports_hide_it_everywhere(client, db_session):
     assert db_session.execute(text("SELECT COUNT(*) FROM memories")).scalar() == 1
 
 
-def test_it_leaves_the_collection_of_the_person_who_filed_it(client):
+def test_it_leaves_the_collection_of_the_person_who_filed_it(client, db_session):
     dev = device()
     memory = submit(client, device=dev)
     for _ in range(write.REPORT_THRESHOLD):
-        client.post(f"/v1/memories/{memory['id']}/report", json={"device": device()})
+        client.post(f"/v1/memories/{memory['id']}/report", json={"device": signed_in(db_session)})
     assert client.get(f"/v1/unlocks?device={dev}").json()["memories"] == []
 
 
-def test_one_device_cannot_report_three_times(client):
+def test_one_device_cannot_report_three_times(client, db_session):
     """The threshold counts people, not presses."""
     memory = submit(client)
-    dev = device()
+    dev = signed_in(db_session)
     for _ in range(write.REPORT_THRESHOLD + 2):
         last = client.post(f"/v1/memories/{memory['id']}/report", json={"device": dev}).json()
     assert last == {"reports": 1, "hidden": False}
+
+
+def test_a_reinstated_memory_needs_fresh_reports_to_go_again(client, db_session):
+    from api.moderate import restore
+
+    memory = submit(client)
+    mid = memory["id"]
+    for _ in range(write.REPORT_THRESHOLD):
+        client.post(f"/v1/memories/{mid}/report", json={"device": signed_in(db_session)})
+    assert client.get(f"/v1/memories/{mid}").status_code == 404
+
+    assert restore(db_session, mid)
+    assert client.get(f"/v1/memories/{mid}").status_code == 200
+    again = client.post(f"/v1/memories/{mid}/report", json={"device": signed_in(db_session)})
+    assert again.json() == {"reports": 1, "hidden": False}
+    # Cleared, not deleted: the dispute can still be answered.
+    total = db_session.execute(text("SELECT COUNT(*) FROM reports")).scalar()
+    assert total == write.REPORT_THRESHOLD + 1
+
+
+def test_devices_without_a_sign_in_cannot_take_a_memory_down(client):
+    """A device id is self-issued: one person can mint as many as they like."""
+    memory = submit(client)
+    for _ in range(write.REPORT_THRESHOLD + 2):
+        last = client.post(f"/v1/memories/{memory['id']}/report", json={"device": device()}).json()
+    assert last == {"reports": 0, "hidden": False}
+
+
+def test_a_blocked_author_is_gone_for_the_blocker_only(client, db_session):
+    author, walker = device(), device()
+    memory = submit(client, device=author)
+    near = f"/v1/memories/nearby?lat={LAT}&lng={LNG}&radius_km=1"
+    on_todays_route(db_session, walker, memory["id"])
+
+    blocked = client.post(f"/v1/users/{memory['author']['id']}/block", json={"device": walker})
+    assert blocked.status_code == 204
+
+    assert client.get(f"{near}&device={walker}").json()["meta"]["total"] == 0
+    assert client.get(near).json()["meta"]["total"] == 1
+    opened = client.post(
+        f"/v1/memories/{memory['id']}/unlock", json={"device": walker, "lat": LAT, "lng": LNG}
+    )
+    assert opened.status_code == 404
+
+
+def test_blocking_nobody_is_a_404(client):
+    missing = client.post(f"/v1/users/{uuid.uuid4()}/block", json={"device": device()})
+    assert missing.status_code == 404
 
 
 def test_reporting_something_that_does_not_exist_is_a_404(client):

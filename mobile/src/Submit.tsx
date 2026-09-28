@@ -35,6 +35,7 @@ import {
   submitMemory,
   updateMemory,
   uploadMedia,
+  wasRefused,
   type Coordinates,
   type Draft,
   type LocatedMemory,
@@ -296,12 +297,14 @@ export default function Submit({
         onPosted(memory);
       }
       onClose();
-    } catch {
+    } catch (e) {
       if (!mounted.current) return;
       setError(
-        isEditing
-          ? "That didn't save. Try again in a moment."
-          : "That didn't post. Try again in a moment.",
+        wasRefused(e)
+          ? "That can't be posted here. Take out anything hateful, sexual or threatening, or anyone's contact details."
+          : isEditing
+            ? "That didn't save. Try again in a moment."
+            : "That didn't post. Try again in a moment.",
       );
     } finally {
       if (mounted.current) setPosting(false);

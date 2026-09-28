@@ -8,6 +8,8 @@ Connect. tests/test_store_copy.py holds the two to the same set of disclosures.
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
+from pipeline.config import CONTACT_EMAIL
+
 router = APIRouter()
 
 PRIVACY_HTML = """<!doctype html>
@@ -59,8 +61,10 @@ not want a stranger standing there to read.</p>
 <p>Photos and recordings you attach are stored on our servers and shown with the memory.
 We strip nothing from them beyond re-encoding photos for size, so do not attach a file
 whose contents you would not publish.</p>
-<p>Anyone can report a memory. Enough reports and it stops being shown to anybody; the
-record of it is kept so a dispute can be answered. You can delete anything you posted
+<p>Before anything you post is shown, its text is checked for abuse, and refused if it
+is. Anyone signed in can report a memory. Enough reports and it stops being shown to
+anybody until we review it; the record of it is kept so a dispute can be answered. You
+can block a person, and you will not see anything they post again. You can delete anything you posted
 from the app, or delete your account, which deletes everything you posted with it.</p>
 
 <h2>Your unlocked memories</h2>
@@ -83,15 +87,23 @@ attach.</p>
 for reliability and abuse prevention.</p>
 
 <h2>Third parties</h2>
-<p>We sell nothing and share nothing. Opening a memory's source video hands you off to
-YouTube, whose own privacy policy then applies.</p>
+<p>We sell nothing. The text of what you post is sent to Anthropic, only to check it
+before it is shown; it is not used to train their models. Opening a memory's source
+video hands you off to YouTube, whose own privacy policy then applies.</p>
 
-<h2>Contact</h2>
-<p>Questions: open an issue on the project repository.</p>
+<h2 id="contact">Contact</h2>
+<p>CONTACT_LINE To ask a question, to report something, or for a copy of everything we
+hold about you.</p>
 </body></html>"""
 
 
 @router.get("/privacy", response_class=HTMLResponse, include_in_schema=False)
 def privacy_policy():
-    """Both app stores require a publicly reachable privacy policy URL."""
-    return PRIVACY_HTML
+    """Both app stores require a publicly reachable privacy policy URL. The app's
+    Contact row opens it at #contact, so the address lives in one setting."""
+    line = (
+        f'Write to <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a>.'
+        if CONTACT_EMAIL
+        else "A contact address is published here before launch."
+    )
+    return PRIVACY_HTML.replace("CONTACT_LINE", line)

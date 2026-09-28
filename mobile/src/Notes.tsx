@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { fetchNotes, hideNote, leaveNote, type Note } from './api.ts';
+import { fetchNotes, hideNote, leaveNote, wasRefused, type Note } from './api.ts';
 import { deviceId } from './device.ts';
 import { button, buttonTextSmall, color, dim, font, input, label } from './theme.ts';
 
@@ -23,7 +23,7 @@ export default function Notes({ memoryId, isAuthor }: Props) {
   const [draft, setDraft] = useState('');
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<boolean | 'refused'>(false);
 
   useEffect(() => {
     let live = true;
@@ -50,8 +50,8 @@ export default function Notes({ memoryId, isAuthor }: Props) {
       setNotes(await leaveNote(memoryId, await deviceId(), draft.trim()));
       setEditing(false);
       setDraft('');
-    } catch {
-      setFailed(true);
+    } catch (e) {
+      setFailed(wasRefused(e) ? 'refused' : true);
     } finally {
       setBusy(false);
     }
@@ -141,7 +141,11 @@ export default function Notes({ memoryId, isAuthor }: Props) {
           </View>
         </>
       )}
-      {failed && <Text style={styles.counter}>That didn't send. Try again.</Text>}
+      {failed && (
+        <Text style={styles.counter}>
+          {failed === 'refused' ? "That note can't be posted here." : "That didn't send. Try again."}
+        </Text>
+      )}
     </View>
   );
 }

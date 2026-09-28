@@ -31,7 +31,8 @@ appId: ${APP_ID}
 # The tags are the #words in it (pipeline/tags.py, from_text): no picker.
 - tapOn: "We sat here until it got light.*"
 - inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after. #food"
-- tapOn: "Add a memory"
+# Tapping the header no longer drops the keyboard, and Post sits under it.
+- hideKeyboard
 - tapOn: "Post"
 
 - extendedWaitUntil:
@@ -41,13 +42,12 @@ appId: ${APP_ID}
 # F21: signed Anonymous until you give a name.
 - assertVisible: ".*Anonymous.*"
 
-# F26 + F33 from the author's own phone, which is the only one a flow has: the
-# author unlocked it by filing it, so they may heart it and sign it too. What
-# matters is what comes back in the journal.
-- tapOn: "Heart this memory"
-- extendedWaitUntil:
-    visible: "Hearted, 1 heart"
-    timeout: 30000
+# F33 from the author's own phone, which is the only one a flow has: the
+# author unlocked it by filing it, so they may sign it. They may not heart it
+# (api/write.py), and are not offered Report or Block. What matters is what
+# comes back in the journal.
+- assertNotVisible: "Heart this memory"
+- assertNotVisible: "Report this memory"
 - scrollUntilVisible:
     element:
       id: "note"
@@ -60,6 +60,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Rewrite"
     timeout: 30000
+- hideKeyboard
 - tapOn: "Close"
 
 # Back on the map, it is a pin: the map draws what is locked and what you
@@ -79,7 +80,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*of yours.*"
     timeout: 40000
-- assertVisible: "The step by the ferry landing, .*1 heart · 1 note, New"
+- assertVisible: "The step by the ferry landing, .*1 note, New"
 # Opening the tab was the look: the dot goes with it.
 - assertVisible: "My Memories"
 
@@ -93,21 +94,16 @@ appId: ${APP_ID}
 - assertVisible: ".*ferry horn.*"
 
 # Change the place name and save. Post becomes Save while editing - same
-# button, relabelled - and tapping the bar title dismisses the keyboard, the
-# same idiom the filing steps above used on "Add a memory". Both fields
+# button, relabelled - and it sits under the keyboard, so hideKeyboard first,
+# as the filing steps above do. Both fields
 # asserted above sit above the fold, so nothing here has scrolled yet.
 #
-# A tap on this text places the cursor where it lands, not at the end, and
-# eraseText only deletes backward from there - iOS 26's edit menu has no
-# Select All to fall back on (Cut/Copy/Paste/Replace/AutoFill/Look
-# Up/Translate/Share, checked on-device). Tapping this exact string lands
-# the cursor right before its last word every time, so erasing 60 clears
-# everything before "landing" and leaves "landing" itself untouched - typed
-# text is the new prefix, not the whole name, and the untouched word finishes it.
+# eraseText deletes backward from wherever the tap put the cursor. On
+# 2026-09-28 that was the end: 60 clears the whole name, so it is typed whole.
 - tapOn: "The step by the ferry landing"
 - eraseText: 60
-- inputText: "The jetty by the ferry "
-- tapOn: "Edit memory"
+- inputText: "The jetty by the ferry landing"
+- hideKeyboard
 - tapOn: "Save"
 
 # Back on the journal - onSaved closes the editor the same way onPosted does,
