@@ -656,9 +656,19 @@ def video_brief(session, client, content_id: int, segments: list, source: str, t
     transcript = " ".join((s.get("text") or "").strip() for s in segments)
     user = f"{source_context(source, title)}Transcript:\n\n{transcript}"
     raw = _stored_request(session, client, content_id, -1, BRIEF_PROMPT, user, BRIEF_SCHEMA)
+    return brief_from(raw) if raw else ""
+
+
+def brief_from(raw: str) -> str:
+    """The brief, without the spiral a curly quote starts. The model sometimes
+    ends it with ” instead of ", which leaves it inside the JSON string, and it
+    keeps trying to close: `”}} 434 words? no.` or `”}]}}}}` up to max_tokens,
+    unterminated. What it meant to write ends at the ”."""
+    head, cut, _ = raw.partition("”}")
     try:
-        return json.loads(raw)["brief"] if raw else ""
+        return json.loads(head + '"}' if cut else raw)["brief"]
     except (ValueError, KeyError):
+        logger.warning(f"Unusable brief, chunks go without one: {raw[:200]}")
         return ""
 
 

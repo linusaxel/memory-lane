@@ -90,3 +90,17 @@ def test_the_brief_is_paid_for_once_per_video(db_session):
         brief = video_brief(db_session, fake, content_id, segments, "Københavnerliv", None)
     assert brief == "Trip Nørrebro: a yearly crawl."
     assert len(fake.messages.calls) == 1
+
+
+def test_a_brief_ending_in_a_curly_quote_is_cut_there():
+    """Both shapes stored on 2026-09-28: 535 rambled past its ”, and 583 repeated
+    } until max_tokens, which does not parse at all."""
+    from pipeline.extract import brief_from
+
+    rambled = '{"brief":"Leth\'s portrait films.”}} 434 words? no.  Let\'s not worry."}'
+    spiral = '{"brief":"25 of 220 pubs have closed.”}]' + "}" * 50
+    assert brief_from(rambled) == "Leth's portrait films."
+    assert brief_from(spiral) == "25 of 220 pubs have closed."
+    assert (
+        brief_from('{"brief":"Trip Nørrebro: a yearly crawl."}') == "Trip Nørrebro: a yearly crawl."
+    )
