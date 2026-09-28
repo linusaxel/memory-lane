@@ -196,3 +196,17 @@ def test_a_story_told_again_minutes_later_is_one_memory():
         dict(at, summary=two, timestamp_start=254.6),
     ]
     assert [m["summary"] for m in merge_nearby_memories(memories)] == [one]
+
+
+def test_the_bar_sits_between_a_retelling_and_a_second_story():
+    """Verbatim, the closest pair of each on the corpus (2026-09-28): Hedebygade
+    told twice overlaps 0.20, Flyvergrillen's two stories 0.14."""
+    at = {"venue": "Hedebygade", "locality": "Copenhagen"}
+    one = "Tove Ditlevsen grew up on Hedebygade, a hard working-class street on Vesterbro at the time. This is the street she immortalized as 'barndommens gade' (the street of childhood) in her book Barndom, writing unsparingly about what it meant to be a child here."
+    two = "Tove Ditlevsen grew up on this street, Hedebygade, in a rough working-class quarter near Istedgade where prostitution and poverty shaped daily life. She wrote about it with unusual bluntness in her novel Barndom, later reissued as the first part of what became internationally known as The Copenhagen Trilogy, praised by The New York Times as a landmark of Scandinavian literature."
+    assert len(merge_nearby_memories([dict(at, summary=one), dict(at, summary=two)])) == 1
+
+    at = {"venue": "Flyvergrillen", "locality": "Kastrup"}
+    bush = "When George Bush landed in Denmark in the mid-2000s, crowds packed Flyvergrillen to watch Air Force One touch down at the airport next door. The grill bar, open since the early 1970s, has long drawn plane enthusiasts who come just to watch takeoffs and landings."
+    kiosk = "People used to gather here just to watch planes, and a boy would run around selling ice cream he'd bought from a shop further down the road. Someone decided to open an ice cream kiosk on the spot instead, and by the 1970s it had grown into the grill bar known as Flyvergrillen."
+    assert len(merge_nearby_memories([dict(at, summary=bush), dict(at, summary=kiosk)])) == 2

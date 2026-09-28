@@ -1152,6 +1152,9 @@ keeps different stories apart by word overlap (`_same_story`).
 2026-09-27: the 60-second window it also required is gone. Café Woodstock's
 raid was told at 3:07 and again at 4:14, 0.36 overlap, and came out as two
 memories. Distinct stories at one place overlap 0.07 at most on the corpus.
+2026-09-28: the bar is 0.2, not 0.3. Of 62 same-place pairs, every one
+from 0.20 up is a retelling (Tove Ditlevsen on Hedebygade, 0.20) and the
+closest two stories overlap 0.14 (Flyvergrillen).
 
 `location_precision: city` is still dropped. A 10km pin is not a spot, and a park
 at 1km is.

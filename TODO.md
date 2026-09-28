@@ -113,12 +113,6 @@ delete an entry when its fix lands.
       closed place is a Wikidata or historical-map lookup, not a prompt
       fix; decide whether an `llm`-only pin is served at all.
 
-- [ ] **A retelling with new detail is not merged.** (2026-09-27, content
-      537) Tove Ditlevsen growing up on Hedebygade is told at 2:24 and 5:44
-      with 0.20 word overlap, under `_same_story`'s 0.3. Distinct stories at
-      one place peak at 0.07 on the corpus, but that is 19 memories. Next:
-      collect a few more before moving the bar to 0.2.
-
 - [ ] **A name misspelled in the captions is copied into every summary.**
       (2026-09-27, content 535) "Jørgen Let" for Leth, from the
       auto-captions. Next: have the brief spell names from the title and

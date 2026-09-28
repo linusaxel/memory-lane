@@ -889,7 +889,7 @@ def _venue_locality_key(mem: dict) -> tuple[str, str]:
     )
 
 
-def _same_story(a: dict, b: dict, overlap: float = 0.3) -> bool:
+def _same_story(a: dict, b: dict, overlap: float = 0.2) -> bool:
     """Word overlap of the two summaries. A retelling shares its names and
     nouns; a different story at the same bar mostly does not."""
     words = [{w for w in re.findall(r"\w{4,}", (m.get("summary") or "").lower())} for m in (a, b)]
