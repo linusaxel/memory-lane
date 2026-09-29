@@ -31,7 +31,6 @@ import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Circle, Svg } from 'react-native-svg';
 import { button, buttonText, buttonTextSmall, color, dim, font, label, lift, radius as corner } from './theme.ts';
-import UnlockButton from './UnlockButton.tsx';
 import YouGlyph from './YouGlyph.tsx';
 
 type Props = {
@@ -42,9 +41,8 @@ type Props = {
   onClose: () => void;
   /** Where the person is standing, or null if they said no to location. */
   position: Coordinates | null;
-  onUnlock: (memory: LocatedMemory) => void;
-  unlocking: boolean;
-  unlockError: string | null;
+  /** The memory a hold on the map just opened: its story arrives animated. */
+  revealId?: number | null;
   /** Present only for a memory this account filed. */
   onEdit?: (memory: LocatedMemory) => void;
   /** This device walked here and opened it. Not the same as "unlocked": most of
@@ -61,9 +59,6 @@ type Props = {
   /** Present only on the map before a walk: a locked memory is a peek, and
    *  walking there is the one way in (F29). */
   onWalkHere?: () => void;
-  /** Paid up: standing on a pin opens it with no walk, so the peek gives way
-   *  to the ring (docs/10, "A subscription opens the map"). */
-  subscribed?: boolean;
   /** The paywall, offered on the peek to somebody standing on the pin. */
   onSubscribe?: () => void;
   /** Absent for extracted memories, and for your own: there is nobody to
@@ -132,15 +127,12 @@ export default function MemorySheet({
   onIndex,
   onClose,
   position,
-  onUnlock,
+  revealId,
   onHeart,
   hearted,
-  unlocking,
-  unlockError,
   onEdit,
   earned,
   onWalkHere,
-  subscribed,
   onSubscribe,
   onReport,
   reported,
@@ -178,8 +170,8 @@ export default function MemorySheet({
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
-  // The map's look before a walk. Paid up and standing on it, the ring wins.
-  const peeking = locked && !!onWalkHere && !(withinReach && subscribed);
+  // The map's look before a walk. Standing on it, the ring is on the map.
+  const peeking = locked && !!onWalkHere;
   const hearts = memory?.heart_count ?? 0;
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
   // Your own memory: you see that it mattered, you cannot say so (api/write.py
@@ -206,8 +198,8 @@ export default function MemorySheet({
     );
 
   // The reveal is the payoff. Swapping the text in place would throw away the
-  // only moment the product has - so the content arrives, once, on the frame
-  // after a memory stops being locked.
+  // only moment the product has - so the content arrives, once, as the sheet
+  // opens on what the hold unlocked.
   const reveal = useRef(new Animated.Value(1)).current;
 
   // Swipe the card down to close it, as a page sheet does. The card sits at
@@ -219,13 +211,12 @@ export default function MemorySheet({
   };
   const { height: screenHeight } = useWindowDimensions();
 
-  const seen = useRef<string | null>(null);
+  // Once per hold: paging away and back is rereading, not arriving.
+  const arrived = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!memory) return;
-    const justOpened = seen.current === `${memory.id}:true` && !memory.locked;
-    seen.current = `${memory.id}:${memory.locked}`;
-    if (!justOpened) return;
+    if (!memory || memory.locked || memory.id !== revealId || arrived.current === revealId) return;
+    arrived.current = revealId;
 
     reveal.setValue(0);
     Animated.timing(reveal, {
@@ -234,7 +225,7 @@ export default function MemorySheet({
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [memory, reveal]);
+  }, [memory, revealId, reveal]);
 
   /** Knowing a photograph or a note is waiting is the pull. Handing it over is the
    *  leak, so only the count travels. */
@@ -344,18 +335,14 @@ export default function MemorySheet({
                 </View>
               )}
               <View style={styles.metaRow}>
-                {(!locked || (withinReach && !peeking)) &&
-                  formatDistance(fromHere ?? memory.distance_meters) && (
-                  <Text style={[styles.meta, withinReach && locked && styles.reachable]}>
+                {!locked && formatDistance(fromHere ?? memory.distance_meters) && (
+                  <Text style={styles.meta}>
                     {formatDistance(fromHere ?? memory.distance_meters)}
                   </Text>
                 )}
                 {/* The server already sorted it to the top; this says why. No
                     accent - the seal means openable and nothing else gets it. */}
                 {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
-                {locked && withinReach && (
-                  <Text style={[styles.meta, styles.reachable]}>within reach</Text>
-                )}
               </View>
             </View>
 
@@ -390,36 +377,19 @@ export default function MemorySheet({
               </View>
             ) : locked ? (
               <View style={styles.gate}>
-                {withinReach ? (
-                  <>
-                    <UnlockButton onUnlock={() => onUnlock(memory)} busy={unlocking} />
-                    <Text style={styles.gateNote}>
-                      {unlockError ?? 'You made it.'}
-                    </Text>
-                    {/* The pull belongs here most of all. It was shown only to
-                        people too far away to act on it, and withheld from the
-                        one person who is about to hold the ring - so the second
-                        before the hold, which is the whole of the suspense, said
-                        less than the minute before the walk. Still only the
-                        count: handing the photograph over is the leak. */}
-                    {waiting}
-                  </>
-                ) : (
-                  <>
-                    <Approach meters={fromHere} radius={radius} />
-                    <Text style={styles.gateFigure}>
-                      {position == null
-                        ? '—'
-                        : formatDistance(fromHere)?.replace(' away', '')}
-                    </Text>
-                    <Text style={styles.gateNote}>
-                      {position == null
-                        ? 'Turn on location to unlock it when you get here.'
-                        : `Get within ${Math.round(radius)} m to unlock it.`}
-                    </Text>
-                    {waiting}
-                  </>
-                )}
+                {/* In reach, the ring is on the map and this is not open. */}
+                <Approach meters={fromHere} radius={radius} />
+                <Text style={styles.gateFigure}>
+                  {position == null
+                    ? '—'
+                    : formatDistance(fromHere)?.replace(' away', '')}
+                </Text>
+                <Text style={styles.gateNote}>
+                  {position == null
+                    ? 'Turn on location to unlock it when you get here.'
+                    : `Get within ${Math.round(radius)} m to unlock it.`}
+                </Text>
+                {waiting}
               </View>
             ) : (
               <>
@@ -620,7 +590,6 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
   meta: { ...label },
   peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
-  reachable: { color: color.sealDeep },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
   peek: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 14 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },

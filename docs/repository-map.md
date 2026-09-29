@@ -109,6 +109,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Plan.tsx` | **How far today.** The slider page and the preview card with Start walk |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
+| `mobile/src/UnlockHere.tsx` | The unlock ring over the map, for the memory you stand on |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
 | `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here |
 | `mobile/src/NextStopArrow.tsx` | The way to the next stop, on the screen edge, while it is off screen |

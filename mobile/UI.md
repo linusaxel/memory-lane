@@ -51,7 +51,10 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              stop while it is off screen (src/NextStopArrow.tsx)
 ├─ "2.4 km to go"             bottom centre, no count (the bar has it); tap zooms out around
 │    you to the next stop; "Next: <place> · 350 m" once started, "Every stop unlocked" when done,
-│    "Unlock memory" seal while standing at any stop
+│    replaced by the unlock ring (src/UnlockHere.tsx) while standing at any stop:
+│    the ring, the place, year or source, "1 attachment waiting", "You made it." A subscriber
+│    gets it on the map before a walk too, above "Plan a walk". Tapping a pin in reach points
+│    it at that pin; the hold opens the sheet on the story
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
@@ -61,13 +64,14 @@ MemorySheet (pageSheet modal) - two compositions, not one with holes in it
 
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700
-  ├─ "within reach"   13, seal      ├─ distance
-  ├─ padlock                        ├─ summary  17/26, #tags semibold
+  ├─ padlock                        ├─ distance
+  │                                 ├─ summary  17/26, #tags semibold
   ├─ distance         44/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar; the heart trailing on that line
   ├─ "1 attachment waiting"         │    (a count only, on your own memory)
   │                                 ├─ "Edit this memory"  own submissions only
-  └─ or, in reach: the ring         └─ "Watch at 12:04"  ink, YouTube at the second
+  │  (in reach it is not opened:    └─ "Watch at 12:04"  ink, YouTube at the second
+  └─  the ring is on the map)
 
   peek (the map, before a walk: a card over the live map, sized to its content)
   ├─ place name
@@ -120,6 +124,7 @@ with no network is never stopped at the gate.
 | `src/Padlock.tsx` | the one symbol, at any size, in any colour |
 | `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
+| `src/UnlockHere.tsx` | the ring over the map, with the place it opens |
 | `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal: streak, walks, unlocked, and what you filed |
@@ -187,10 +192,10 @@ to your location dot.
 |---|---|---|
 | `ember` | `#A8350F` / `#F2703F` | **a memory, and the way to it.** Every pin, the next stop (bigger, hops), the preview's line (washed out: `solid().line`), the walk's bar, the primary button, errors |
 | `emberSoft` | `#F6E2D8` / `#3A2219` | the quiet button's fill |
-| `seal` | `#F2B53A` / `#F5C542` | **openable.** The in-reach pin, the reach circle, the "Unlock memory" pill. A fill, never text |
+| `seal` | `#F2B53A` / `#F5C542` | **openable.** The in-reach pin, the reach circle. A fill, never text |
 | `sealInk` | `#2B1D05` / `#1F1605` | anything drawn on seal: a lit pin's edge and eye, the pill's words |
 | `sealSoft` | `#FCEBC2` / `#3E3112` | the ring filling during a hold |
-| `sealDeep` | `#7A4F00` / `#F7D074` | seal as words or a thin mark on paper: the unlock ring, the padlock, "within reach" |
+| `sealDeep` | `#7A4F00` / `#F7D074` | seal as words or a thin mark on paper: the unlock ring, the padlock, "attachments waiting" |
 
 Ember and seal differ in lightness on purpose: the earlier ochre `seal` and
 ember were one colour under protanopia (docs/09 part 8).
@@ -802,13 +807,20 @@ budget. Spec, so it does not get re-invented per screen:
 - **The burst plays over the request, not after it.** A completed hold fires
   the unlock and the flare in the same frame, so the round trip happens behind
   something worth watching. The payoff proper is not here — it is the wax
-  stamp coming down in `MemorySheet`, and this hands off to it.
+  stamp coming down in `MemorySheet` as it opens (`revealId`), and this hands
+  off to it.
 - **Transform and opacity only.** Those are what `useNativeDriver` can carry;
   an animated colour puts the whole control back on the JS thread for the
   900ms it most needs to be smooth.
-- **A refusal resets the ring.** Success unmounts the control — the sheet
-  swaps to its open composition — so `busy` falling back to false is always a
-  no, and a ring left full beside an error reads as "it worked".
+- **It lives on the map, not in a sheet.** `src/UnlockHere.tsx` holds it in
+  the bottom slot the route pill uses, clear of the map attribution (rule 7);
+  it needs no × because walking away takes it away (rule 12). A sheet opening
+  only to hold a ring was a layer with nothing in it (docs/10, "Unlock on the
+  map").
+- **A refusal resets the ring.** Success unmounts the control — the memory is
+  no longer locked, and the sheet opens on it with the stamp — so `busy`
+  falling back to false is always a no, and a ring left full beside an error
+  reads as "it worked".
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the
   same 84px circle with a rim that thickens inward as you close — empty at
   three radii (`WARM_MULTIPLIER`, so the sheet and the pin agree about

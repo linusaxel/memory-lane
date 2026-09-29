@@ -95,6 +95,28 @@ by × or back.
 **Options considered:** a native sheet with detents needs `@expo/ui` or
 react-native-screens and a native rebuild; RN's `Modal` has no detents.
 
+### Unlock on the map
+
+Status: Accepted 2026-09-29
+
+In reach, a pin opened a sheet that held only the place, "within reach", the
+ring and "You made it.": a whole layer to reach one control. The ring now
+comes up over the map in the route pill's slot (`src/UnlockHere.tsx`), with
+the place name, its year or source and what is waiting, and the hold opens
+the sheet on the story. A locked memory has no title to tease with, so the
+place name is it and the gate is unchanged.
+
+**Consequences:** a pin in reach is not opened by a tap, it points the ring at
+itself; that is how two in reach at once are told apart, with the route stop
+first and otherwise the nearest. A subscriber gets the ring on the map before a
+walk with no tap at all. The reveal can no longer be a locked memory turning
+open in a sheet that is already up, so App hands the sheet the id it just
+unlocked (`revealId`). Walking into reach closes a sheet open on that memory.
+
+**Options considered:** ‹ › on the ring to page between memories in reach:
+more control for a case the 20 m radius makes rare, and tapping the pin you
+want already says which.
+
 ### A locked memory says what it is, not what it says
 
 Status: Accepted 2026-09-26

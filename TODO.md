@@ -381,7 +381,7 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       the map and the user dot. Waits on the founder's yes and a look on a
       real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
       state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
-- [ ] **Unlock on the map, not in a sheet.** (asked 2026-09-29) In reach, a
+- [x] **Unlock on the map, not in a sheet.** (asked 2026-09-29) In reach, a
       pin opens a sheet that holds only the place, "within reach", the hold
       ring and "You made it." Drop that state of `MemorySheet.tsx` and show
       the ring (`UnlockButton.tsx`) over the map when a pin is unlockable, with

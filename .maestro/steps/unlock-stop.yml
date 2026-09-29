@@ -2,14 +2,14 @@
 # after that stop's leg. Env: N, STOP (its place name), WORDS (from its summary).
 appId: ${APP_ID}
 ---
+# F7: the ring comes up on the map, named for the stop, with no sheet to open.
 - extendedWaitUntil:
-    visible: "Unlock memory at stop ${N}: ${STOP}\\."
+    visible: "${STOP}"
     timeout: 45000
-# F7: the hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
+- assertVisible: "You made it\\."
+# The hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
 # animation callback fires while the finger is still down, so the press
 # completes the unlock rather than cancelling it.
-- tapOn: "Unlock memory at stop ${N}: .*"
-- assertVisible: "You made it\\."
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
     visible: ".*${WORDS}.*"

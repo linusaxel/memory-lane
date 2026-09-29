@@ -74,6 +74,7 @@ import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
+import UnlockHere from './src/UnlockHere.tsx';
 import { buttonText, color, font, label, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
@@ -230,6 +231,7 @@ export default function App() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [revealId, setRevealId] = useState<number | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
   // a sparse area); it is not `route.length`, because a stop the local cache
   // lost or the server pruned still counted toward "today" when it was made.
@@ -923,12 +925,14 @@ export default function App() {
     setSubmitOpen(false);
   }, [notification, openMemory]);
 
+  // A subscriber opens whatever they stand on, walk or no walk.
+  const subscribed = !!profile?.subscribed;
   const withinReach = useMemo(
     () =>
-      stage === 'walk'
+      stage === 'walk' || (stage === 'map' && subscribed)
         ? groups.filter((group) => reachOf(group, position, earned) === 'unlockable')
         : [],
-    [stage, groups, position, earned],
+    [stage, subscribed, groups, position, earned],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
   // Filing unlocks what you filed; the journal keeps that under My Memories.
@@ -956,17 +960,44 @@ export default function App() {
   const onRoute = route.length > 0;
   const pillSlot = position && { bottom: 44 };
 
+  // The memory the ring on the map opens: the one tapped, else the route stop
+  // you are at, else - paid up - the nearest. docs/10, "Unlock on the map".
+  const [pickedId, setPickedId] = useState<number | null>(null);
+  const ringFor = useMemo(() => {
+    if (!position) return null;
+    const here: { group: MemoryGroup; index: number; away: number }[] = [];
+    for (const group of withinReach) {
+      for (const [index, memory] of group.memories.entries()) {
+        const { lat, lng } = memory.place.coordinates;
+        const away = metersBetween(position.lat, position.lng, lat, lng);
+        if (memory.locked && away <= (memory.unlock_radius_meters ?? FALLBACK_RADIUS_M)) {
+          here.push({ group, index, away });
+        }
+      }
+    }
+    const picked = here.find(({ group, index }) => group.memories[index].id === pickedId);
+    if (picked) return picked;
+    if (stopHere) return stopHere;
+    if (!subscribed) return null;
+    return here.sort((a, b) => a.away - b.away)[0] ?? null;
+  }, [withinReach, position, pickedId, stopHere, subscribed]);
+  const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
+
   // Reaching a stop is the moment the app is for. The transition, not the
-  // state: stopHere gets a new identity on every 25m position update. Light,
-  // because the heavier taps belong to the unlock itself.
-  const inReach = stopHere !== null;
+  // state: ringFor gets a new identity on every 5m position update. Light,
+  // because the heavier taps belong to the unlock itself. A sheet open on the
+  // memory gives way, or it would hide the ring.
+  const inReach = ringMemory !== null;
   const wasInReach = useRef(false);
   useEffect(() => {
     if (inReach && !wasInReach.current) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      setOpenAt((open) => (open.some((m) => m.id === ringMemory?.id && m.locked) ? [] : open));
     }
     wasInReach.current = inReach;
-  }, [inReach]);
+  }, [inReach, ringMemory]);
+  // A refusal belongs to the memory it was for.
+  useEffect(() => setUnlockError(null), [ringMemory?.id]);
 
   const placesUnlocked = useMemo(
     () => new Set(collected.map((memory) => memory.place.id)).size,
@@ -977,6 +1008,14 @@ export default function App() {
   const radiusMeters =
     [...route, ...(preview?.memories ?? [])].find((memory) => memory.unlock_radius_meters)
       ?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
+
+  // In reach, a pin is not opened but held: tapping it points the ring at it.
+  const pickRing = (group: MemoryGroup) => {
+    Haptics.selectionAsync().catch(() => {});
+    const locked = group.memories.filter((memory) => memory.locked);
+    setPickedId((locked.find((memory) => routePositionById.has(memory.id)) ?? locked[0]).id);
+    setUnlockError(null);
+  };
 
   const openGroup = (group: MemoryGroup, index = 0) => {
     // A pin is a small target on a moving map, and a tap that lands has to feel
@@ -1003,15 +1042,15 @@ export default function App() {
   };
 
   const unlock = useCallback(
-    async (memory: LocatedMemory) => {
+    async (memory: LocatedMemory): Promise<boolean> => {
       const at = positionRef.current;
-      if (!at) return;
+      if (!at) return false;
 
       setUnlocking(true);
       setUnlockError(null);
       try {
         const opened = await unlockMemory(memory.id, at, await deviceId());
-        if (!mounted.current) return;
+        if (!mounted.current) return false;
         if (opened) {
           // This was the last not-yet-earned stop of a started route: the same
           // success haptic UnlockButton fires for one memory
@@ -1031,13 +1070,14 @@ export default function App() {
               .catch(() => {});
           }
           setUnlocked(await rememberUnlocked(unlocked, opened));
+          return true;
         } else {
           // The server re-measures, and GPS moves between the press and the
           // request. Silence here would read as a broken button.
           setUnlockError('Not quite there. Take a few more steps.');
         }
       } catch (e) {
-        if (!mounted.current) return;
+        if (!mounted.current) return false;
         if (notOnWalk(e)) {
           setOpenAt([]);
           setPaywallOpen(true);
@@ -1047,6 +1087,7 @@ export default function App() {
       } finally {
         if (mounted.current) setUnlocking(false);
       }
+      return false;
     },
     [unlocked, routeStarted, nextRouteStop, routeShown, earned],
   );
@@ -1333,7 +1374,9 @@ export default function App() {
                       ? undefined
                       : group.spanMeters > CLUSTER_SPAN_M
                         ? zoomTo(group)
-                        : openGroup(group)
+                        : withinReach.includes(group)
+                          ? pickRing(group)
+                          : openGroup(group)
                   }
                 />
               );
@@ -1352,26 +1395,24 @@ export default function App() {
           {/* In the same bottom slot every other floating control here shares -
               never a second region of the screen. Above "Turn on location"
               while that shows, in its place once there is a position. */}
-          {walking && onRoute && stopHere && (
-            <GlassButton
-                place={[styles.routeAt, pillSlot]}
-                style={styles.pill}
-                tint={color.seal}
-                accessibilityRole="button"
-                accessibilityLabel={`Unlock memory at stop ${stopHere.position}: ${stopHere.name}.`}
-                onPress={() => {
-                  setRouteStarted(true);
-                  // At the stop's own page: in a stack, the route memory is
-                  // not necessarily the first one.
-                  openGroup(stopHere.group, stopHere.index);
-                }}
-              >
-                <Text style={styles.routeAtText}>
-                  Unlock memory
-                </Text>
-            </GlassButton>
+          {ringFor && ringMemory && (
+            <UnlockHere
+              memory={ringMemory}
+              place={{ bottom: stage === 'map' ? 108 : 44 }}
+              busy={unlocking}
+              error={unlockError}
+              onUnlock={async () => {
+                if (walking) setRouteStarted(true);
+                if (!(await unlock(ringMemory))) return;
+                setRevealId(ringMemory.id);
+                setPickedId(null);
+                // Not openGroup: its tap would land on the hold's Success.
+                setOpenAt(ringFor.group.memories);
+                setOpenIndex(ringFor.index);
+              }}
+            />
           )}
-          {walking && onRoute && !stopHere && !showDone && (
+          {walking && onRoute && !ringMemory && !showDone && (
             <GlassButton
               place={[styles.route, pillSlot]}
               style={styles.pill}
@@ -1655,9 +1696,7 @@ export default function App() {
           onIndex={setOpenIndex}
           onClose={() => setOpenAt([])}
           position={position}
-          onUnlock={unlock}
-          unlocking={unlocking}
-          unlockError={unlockError}
+          revealId={revealId}
           onHeart={heart}
           // The map's peek: a walk through that pin, drawn at once.
           onWalkHere={
@@ -1675,7 +1714,6 @@ export default function App() {
               : undefined
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
-          subscribed={!!profile?.subscribed}
           onSubscribe={() => {
             setOpenAt([]);
             setPaywallOpen(true);
@@ -1745,7 +1783,4 @@ const styles = StyleSheet.create({
   // Directly above "Turn on location" while that shows, in its place after.
   route: { position: 'absolute', bottom: 100, alignSelf: 'center' },
   routeText: { ...label, fontSize: 15, color: color.ink },
-  // The pill's one loud moment: openable, so seal.
-  routeAt: { position: 'absolute', bottom: 100, alignSelf: 'center' },
-  routeAtText: { ...label, fontSize: 15, color: color.sealInk },
 });

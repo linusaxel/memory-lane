@@ -5,7 +5,7 @@
 # here, and the paywall it opens has nothing to sell on a simulator (no
 # RevenueCat key) and says so, with a way out. Then typing a name mints the
 # account, e2e/run.sh's `subscriber` trigger pays for it, and the same pin opens
-# with the same hold as a walk's stop.
+# with the same hold as a walk's stop, on the map.
 
 appId: ${APP_ID}
 ---
@@ -39,14 +39,11 @@ appId: ${APP_ID}
 # The profile is read at launch; a relaunch reads the subscription.
 - launchApp:
     clearState: false
+# Paid up, the ring is on the map without a tap on the pin.
 - extendedWaitUntil:
-    visible: "Ringkaféen, dev seed\\. Locked, within reach\\."
+    visible: "Unlock this memory"
     timeout: 40000
-- tapOn: "Ringkaféen, dev seed\\. Locked, within reach\\."
-- extendedWaitUntil:
-    visible: "You made it\\."
-    timeout: 10000
-- assertNotVisible: "Open it now"
+- assertVisible: "Ringkaféen, dev seed"
 - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
     visible: ".*Lygteå.*"

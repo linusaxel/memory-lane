@@ -287,13 +287,16 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    there — and nothing else.
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
-   into a seal-coloured ring, and the route pill says so in words: "Unlock
-   memory", which opens the sheet.
+   into a seal-coloured ring, and the unlock ring comes up over the map in
+   the route pill's place: the place name, its year or source, what is
+   waiting, "You made it." No sheet opens first. With two in reach it is the
+   route stop's, and tapping the other pin points it there instead.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
    It should feel like a lock turning.
-4. The memory reveals: summary, source, the watch link — animated once,
-   because that arrival is the only payoff the product has.
+4. The sheet opens on the memory, and it reveals: summary, source, the watch
+   link — animated once, because that arrival is the only payoff the product
+   has.
 5. It stays unlocked, and it stays in the journal under that day's walk (F15).
    Re-locking something they earned is a punishment for leaving.
 6. The journal works with no network and no position: it renders from what the
@@ -312,7 +315,7 @@ stands are two different parameters, precisely so that planning from a city
 cannot open it.
 
 **Failure:** the hold completes and the server still refuses, because GPS moved
-in between. The sheet says "Not close enough yet", because a control that
+in between. The ring says "Not quite there. Take a few more steps.", because a control that
 appears to do nothing is the worse outcome.
 
 **Failure:** location was never granted. The app never fires the system dialog
@@ -500,7 +503,8 @@ so nothing sends you out of it.
    which is the opposite of the mechanic.
 2. The pin becomes a seal-coloured ring with a halo, and the reach circle now contains
    it.
-3. The route pill turns seal-coloured and reads "Unlock memory" (F25).
+3. The unlock ring comes up over the map in the route pill's place (F7), and
+   a sheet open on that memory closes so it is not hidden.
 
 **This is the moment the app is for**, and the reason nothing else on the map
 moves.
@@ -515,7 +519,7 @@ interaction at all.
 1. The ring fills, the heavier haptic fires, the request goes.
 2. The server re-measures and says no, because GPS drifted between the press and
    the request.
-3. The sheet says **"Not quite there. Take a few more steps."**
+3. The ring on the map says **"Not quite there. Take a few more steps."**
 
 The client decides which control to *show*; the server decides what may be
 *read*, and those can disagree by a few metres. Silence here would read as a
@@ -774,8 +778,8 @@ anyone else's collection or the local unlock cache.
    one after it takes over. Only the preview draws the loop, washed-out ember under
    the street names (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md
    §3a).
-5. Reaching a stop lights its pin, and the pill turns seal and
-   reads "Unlock memory"; a tap opens it. Any stop, in any order — the
+5. Reaching a stop lights its pin, and the unlock ring takes the pill's
+   place over the map; a hold opens it. Any stop, in any order — the
    numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the pill's count and distance move.
@@ -1103,8 +1107,8 @@ second walk the same day.
 3. A purchase or a restore asks the server to read the store back
    (`POST /v1/me/subscription`); only its answer opens anything. The sheet
    closes when it says subscribed.
-4. A subscriber's peek, standing on the pin, is the ring: hold to open it, as
-   on a walk. You shows "Subscribed until …" and **Manage subscription**;
+4. A subscriber standing on a pin gets the ring over the map, with no tap on
+   the pin: hold to open it, as on a walk. You shows "Subscribed until …" and **Manage subscription**;
    signed in and not subscribed, **Subscribe**.
 
 **Why:** [A subscription opens the map](10-decisions.md#a-subscription-opens-the-map)

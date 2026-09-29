@@ -75,12 +75,12 @@ appId: ${APP_ID}
 # Each leg is two fixes, halfway along its street shape from OSRM and where the
 # street passes the stop, so the walk is quick; it ends inside the
 # 20m gate. Only the stop being stood on is ever in reach. Nothing is tapped
-# while walking - the pin turns and the pill changes its mind on its own.
+# while walking - the pin turns and the ring comes up on its own.
 - runFlow: ../e2e/out/legs/1.yml
 - extendedWaitUntil:
-    visible: "Unlock memory at stop 1: ${STOP1}\\."
+    visible: "Unlock this memory"
     timeout: 45000
-# The pin itself turned, not just the pill.
+# The pin itself turned, not just the ring.
 - assertVisible: "Stop 1 of 4. ${STOP1}. Locked, within reach."
 
 - runFlow:
