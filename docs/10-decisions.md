@@ -543,7 +543,9 @@ Status: Accepted 2026-09-28
 App Store 1.2 wants a filter, a report with a timely answer, a block and a
 contact, for anything people post. Each one here, and the trap it avoids:
 
-- **Screened before stored.** `api/moderation.py` asks `CLASSIFIER_MODEL` a yes
+- **Screened before stored.** *Superseded 2026-09-29 by
+  [Posts are screened by rules, not a model](#posts-are-screened-by-rules-not-a-model).*
+  `api/moderation.py` asked `CLASSIFIER_MODEL` a yes
   or no for a memory, an edit, a note and a name (~$0.0002 each). A failed call
   refuses the post (503) instead of publishing it unscreened, since a post
   cannot be taken back from the phones it reached. The list of what is refused
@@ -562,6 +564,30 @@ contact, for anything people post. Each one here, and the trap it avoids:
 
 The report button came back for this: it was removed from the app on
 2026-09-22 with nothing depending on its absence.
+
+### Posts are screened by rules, not a model
+
+Status: Accepted 2026-09-29. Supersedes the first bullet of *Posts are
+screened, reports need an account*.
+
+A Haiku call in front of every post put a paid, flaky network call in front of
+the most basic thing a person does, and a missing key made every post a 503.
+X and YouTube publish at once: cheap automatic checks refuse the clear cases at
+upload, and reports and reviewers handle the rest afterwards. So
+`api/moderation.py` refuses a word from `api/blocked_words.txt` (LDNOOBW English
+and Danish, pruned of plain swearing and of words a place story uses), an
+email, a phone number of eight digits or more and a link, all offline, and
+report, `REPORT_THRESHOLD` and block do the rest.
+
+**Consequences:** it runs in tests and e2e too, since nothing calls out. Over
+the 209 memories in the corpus it refused one, the *Deep Throat* cinema, and
+that term is out of the list. A word list misses anything written around it;
+reports are what catch that.
+
+**Options considered:** a human approving every post before it is public: the
+strongest answer to 1.2, but a daily chore, a pin that does not appear, and a
+visibility state the product does not have. Publishing unscreened: the weakest
+answer to 1.2's "filter".
 
 ### Data export is on request
 

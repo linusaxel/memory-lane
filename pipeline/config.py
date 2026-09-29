@@ -60,10 +60,6 @@ ROUTING_URL = (os.getenv("ROUTING_URL") or "").rstrip("/") or None
 # same API at another URL.
 PHOTON_URL = (os.getenv("PHOTON_URL") or "https://photon.komoot.io").rstrip("/")
 
-# What people post is screened by CLASSIFIER_MODEL before it is public
-# (api/moderation.py). Off for tests and e2e, which must not call out.
-SCREEN_POSTS = os.getenv("SCREEN_POSTS", "1") == "1"
-
 # Lift the one free walk a day, so the simulator is not paywalled after one
 # walk. Never on the public host, whatever it is set to.
 UNLIMITED_WALKS = not PUBLIC_HOST and os.getenv("UNLIMITED_WALKS") == "1"

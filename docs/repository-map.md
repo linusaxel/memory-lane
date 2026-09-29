@@ -97,7 +97,8 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/billing.py` | Who has paid: RevenueCat's webhook and the read-back that writes `subscriptions` |
 | `api/privacy.py` | The privacy policy both app stores require, served from here. Its #contact is the app's Contact row |
-| `api/moderation.py` | Screens a post, note or name with Haiku before it is public (App Store 1.2) |
+| `api/moderation.py` | Screens a post, note or name by local rules before it is public (App Store 1.2) |
+| `api/blocked_words.txt` | The words `moderation.py` refuses: LDNOOBW English and Danish, pruned |
 | `api/moderate.py` | A CLI for a reviewer: what reports hid, and reinstating it |
 
 The endpoint list is [06-api.md](06-api.md).

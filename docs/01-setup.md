@@ -42,7 +42,6 @@ pip install -r requirements.txt
 | `GOOGLE_CLIENT_IDS` | For sign-in | Comma-separated audience whitelist. Empty = `/v1/auth/*` answers 503 |
 | `APPLE_CLIENT_IDS` | For sign-in | Same, for Apple |
 | `UNLIMITED_WALKS` | No | `1` lifts the one free walk a day. Ignored on the public host. `docker-compose.yml` turns it on for the local API |
-| `SCREEN_POSTS` | No | `0` stops screening posts, notes and names with `CLASSIFIER_MODEL` before they are public (default: on). Tests and `e2e/run.sh` turn it off |
 | `CONTACT_EMAIL` | Before launch | The address the privacy policy's Contact section gives, and so the app's Contact row. Unset, it says one is coming |
 | `REVENUECAT_WEBHOOK_SECRET` | For subscriptions | What RevenueCat's webhook sends as `Authorization: Bearer …`. Empty = `/v1/billing/revenuecat` answers 503 |
 | `REVENUECAT_API_KEY` | For subscriptions | RevenueCat's secret server key (not the app's public one), to read a subscriber back. Empty = `/v1/billing/revenuecat` and `/v1/me/subscription` answer 503 |

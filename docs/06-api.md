@@ -68,9 +68,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `POST /v1/users/{id}/block` `{device}` - that person's memories and notes are
   gone for every device on this account: nearby (pass `device`), unlock, the
   collection, notes and today's walk. 404 for nobody. No unblock
-- A memory, an edit, a note and a display name are screened before they are
-  stored (`api/moderation.py`): 422 `{"reason": "refused"}` when refused, 503
-  when the check cannot run. Nothing unscreened is published
+- A memory, an edit, a note and a display name are screened by local rules
+  before they are stored (`api/moderation.py`): 422 `{"reason": "refused"}`
+  for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, and `subscribed` /
   `subscribed_until`. The GET creates nothing

@@ -1,0 +1,320 @@
+# Refused whole-word in anything posted (api/moderation.py).
+# From LDNOOBW, List of Dirty, Naughty, Obscene, and Otherwise Bad Words,
+# English and Danish, CC BY 4.0: github.com/LDNOOBW. Pruned of plain swearing
+# and of words a place story uses (history, music, nightlife).
+2 girls 1 cup
+2g1c
+acrotomophilia
+alabama hot pocket
+alaskan pipeline
+anal
+anilingus
+anus
+assmunch
+auto erotic
+autoerotic
+babeland
+baby batter
+baby juice
+ball gag
+ball gravy
+ball kicking
+ball licking
+ball sack
+ball sucking
+bangbros
+bangbus
+bareback
+barely legal
+barenaked
+bbw
+bdsm
+beaner
+beaners
+beastiality
+beaver cleaver
+beaver lips
+bestiality
+big breasts
+big knockers
+big tits
+birdlock
+black cock
+blonde action
+blonde on blonde action
+blow job
+blow your load
+blowjob
+blue waffle
+blumpkin
+bondage
+boner
+boob
+boobs
+brown showers
+brunette action
+bukkake
+bulldyke
+bullet vibe
+bung hole
+bunghole
+busty
+buttcheeks
+butthole
+bøsserøv
+camel toe
+camgirl
+camslut
+camwhore
+carpet muncher
+carpetmuncher
+chocolate rosebuds
+cialis
+circlejerk
+cleveland steamer
+clit
+clitoris
+clover clamps
+coon
+coons
+coprolagnia
+coprophilia
+cornhole
+creampie
+cum
+cumming
+cumshot
+cumshots
+cunnilingus
+cunt
+darkie
+date rape
+daterape
+dendrophilia
+dick
+dildo
+dingleberries
+dingleberry
+dirty sanchez
+dog style
+doggie style
+doggiestyle
+doggy style
+doggystyle
+dolcett
+dominatrix
+dommes
+donkey punch
+double dong
+double penetration
+dp action
+dry hump
+dvda
+eat my ass
+ecchi
+ejaculation
+fag
+faggot
+fecal
+felch
+fellatio
+feltch
+female squirting
+femdom
+figging
+fingerbang
+fingering
+fisse
+fissehår
+fisting
+foot fetish
+footjob
+frotting
+fuck buttons
+fudge packer
+fudgepacker
+futanari
+g-spot
+gang bang
+gangbang
+giant cock
+girl on top
+girls gone wild
+goatcx
+goatse
+gokkun
+golden shower
+goo girl
+goodpoop
+goregasm
+group sex
+guro
+hand job
+handjob
+hentai
+hestepik
+honkey
+horny
+hot carl
+humping
+jack off
+jail bait
+jailbait
+jerk off
+jigaboo
+jiggaboo
+jiggerboo
+jizz
+juggs
+kike
+kinbaku
+kinkster
+knobbing
+kussekryller
+leather restraint
+leather straight jacket
+lemon party
+livesex
+make me come
+male squirting
+masturbate
+masturbating
+masturbation
+menage a trois
+milf
+missionary position
+motherfucker
+mound of venus
+mr hands
+muff diver
+muffdiving
+nambla
+nawashi
+nig nog
+nigga
+nigger
+nimphomania
+nsfw
+nsfw images
+nympho
+nymphomania
+omorashi
+one cup two girls
+one guy one jar
+orgasm
+orgy
+paedophile
+paki
+pedobear
+pedophile
+pegging
+penis
+phone sex
+pik
+pikey
+pikhår
+pikslugeri
+piksutteri
+piss pig
+pisspig
+pleasure chest
+pole smoker
+ponyplay
+poon
+poontang
+poop chute
+poopchute
+porn
+porno
+pornography
+prince albert piercing
+pthc
+pubes
+punany
+pussy
+queaf
+queef
+quim
+raghead
+raging boner
+reverse cowgirl
+rimjob
+rimming
+rosy palm
+rosy palm and her 5 sisters
+rusty trombone
+røvhul
+røvskæg
+røvspræke
+s&m
+santorum
+schlong
+scissoring
+semen
+sexcam
+sexo
+shaved beaver
+shaved pussy
+shemale
+shibari
+shitblimp
+shota
+shrimping
+skeet
+slanteye
+slut
+smut
+snowballing
+sodomize
+sodomy
+spastic
+spic
+splooge
+splooge moose
+spooge
+spread legs
+spunk
+strap on
+strapon
+strappado
+style doggy
+suicide girls
+tea bagging
+threesome
+throating
+thumbzilla
+tits
+titties
+titty
+towelhead
+tranny
+tribadism
+tub girl
+tubgirl
+twat
+twink
+two girls one cup
+upskirt
+urethra play
+urophilia
+vagina
+venus mound
+viagra
+vibrator
+violet wand
+vorarephilia
+voyeurweb
+voyuer
+vulva
+wank
+wet dream
+wetback
+white power
+whore
+worldsex
+wrinkled starfish
+yaoi
+yellow showers
+yiffy
+zoophilia
+🖕
