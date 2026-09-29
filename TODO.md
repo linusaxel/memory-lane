@@ -23,6 +23,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`sources screen` says only "pass rate: None" when it screened nothing.**
+  2026-09-29: two channels gave that with no reason. One had no long video
+  in the newest nine; the other's only long video had no captions
+  (`transcript_failed`). Finding out took two DB lookups. Fix: `screen` logs
+  how many long videos it found, and how many have no captions.
 - **`walking_matrix` returns zeros off the sidecar's map.** 2026-09-29: a
   scratch script with the tests' New York `ANCHOR` and `.env`'s `ROUTING_URL`
   got an all-zero matrix, because OSRM snaps every point to one node at the
@@ -377,11 +382,14 @@ primary sites). No show matches Tuesdays with Stories (comedians telling their
 own stories about named spots) in English or Danish. The candidates, the
 rejects and why are rows now: `python -m pipeline.sources list`.
 
-- [ ] **Screen the discovered local TV and archives.** (checked 2026-09-27) The
-      first `discover` run found Bispebjerg Lokal-TV, Christianshavns Kvarter,
-      Frederiksberg Lokal TV, Kgs. Enghave Lokalhistoriske Arkiv, Foreningen
-      Gadeliv, Peter Jensen's "Vesterbro-minder 1900–1920". `screen` each;
-      promote the ones that pass to `trial`.
+- [ ] **Decide on the local TV channels.** (checked 2026-09-29) All screened.
+      Your call, by the funnel's rule. For scale, the two active channels pass 0.85–1.00
+      at 6–31 memories an hour. NTV Nørrebro (144) passes 0.57 at 2.5/h and
+      Bispebjerg Lokal-TV (146) 0.47 at 1.3/h, both from trial extractions
+      already made. Frederiksberg Lokal TV (159) passes 0.42 and Christianshavns
+      Kvarter (155) 0.32, not yet trialled. Rejected Peter Jensen (152, a DR
+      radio archive). Paused Kgs. Enghave (176, no captions, waits on Whisper).
+      Foreningen Gadeliv was never a row.
 - [ ] **Trial the Wollstonecraft letters** (source 11). (checked 2026-09-27)
       Screened 3 of 3 windows passing. `enqueue` one part, then judge: the
       historical prompt reads a first-person memoir, and 1795 street names may
