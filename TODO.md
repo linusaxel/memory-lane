@@ -163,10 +163,6 @@ public launch that the rest of this file doesn't track. Blockers first.
       Summaries of creators' videos behind a subscription, fetched through a
       proxy built to get past YouTube's block, naming real people, with no
       takedown route. Needs a lawyer's read before launch, not after.
-- [ ] **iOS declares background modes it doesn't use.** (checked 2026-09-28)
-      The prebuilt `Info.plist` has `audio` and `fetch`; geofencing needs
-      neither, nor the `location` mode (`isIosBackgroundLocationEnabled` in
-      `mobile/app.json`). Likely a 2.5.4 rejection.
 - [ ] **No production database discipline.** (checked 2026-09-28) Nothing
       records applied migrations and nothing runs them; `schema.sql` only runs
       on a fresh docker volume. No backups, no staging. Media lives on local

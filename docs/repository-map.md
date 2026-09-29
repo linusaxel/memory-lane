@@ -142,3 +142,4 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/types.ts` | Types more than one screen needs |
 | `mobile/src/devLocation.ts`, `devOpen.ts` | Dev only: a told position, a screen opened on launch |
+| `mobile/plugins/withoutBackgroundFetch.js` | Takes back the `fetch` background mode expo-task-manager declares for every app |

@@ -91,6 +91,18 @@ def test_ios_declares_always_location_only_for_the_proximity_notification(expo):
     assert options["isIosBackgroundLocationEnabled"] is True
 
 
+def test_ios_declares_no_background_mode_but_location(expo):
+    """App Review rejects a background mode the app never uses (2.5.4).
+    expo-audio declares `audio` unless told not to, and expo-task-manager
+    declares `fetch` for any app linking it; a recording only plays on screen,
+    and geofencing needs `location` alone. `npx expo config --type introspect`
+    shows the result, but only in a copy without `ios/`: it starts from the
+    Info.plist already there, so it never shows a mode going away."""
+    audio = next(p for p in expo["plugins"] if isinstance(p, list) and p[0] == "expo-audio")
+    assert audio[1]["enableBackgroundPlayback"] is False
+    assert "./plugins/withoutBackgroundFetch" in expo["plugins"]
+
+
 # -- Android -----------------------------------------------------------------
 
 

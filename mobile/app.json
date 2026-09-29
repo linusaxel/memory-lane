@@ -66,7 +66,8 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Memory Lane records your voice when you say a memory out loud at a place."
+          "microphonePermission": "Memory Lane records your voice when you say a memory out loud at a place.",
+          "enableBackgroundPlayback": false
         }
       ],
       [
@@ -92,7 +93,8 @@
           }
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "./plugins/withoutBackgroundFetch"
     ]
   }
 }
