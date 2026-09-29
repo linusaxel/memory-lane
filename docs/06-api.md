@@ -100,4 +100,4 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /embed`, `/embed.js` - the embeddable map. Off when `ENABLE_EMBED=0`
 - `GET /privacy` - the policy both app stores link to
 - `GET /` - the health shape Railway probes
-- `GET /docs` - Swagger UI
+- `GET /docs` - Swagger UI. Not on Railway

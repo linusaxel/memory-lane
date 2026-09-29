@@ -171,11 +171,10 @@ public launch that the rest of this file doesn't track. Blockers first.
       reporting in the app or the API, no error boundary (a render error is a
       blank screen), no API logging config, and the `/` health check never
       touches the database.
-- [ ] **Unsafe defaults for a public host.** (checked 2026-09-28)
-      `DATABASE_URL` falls back to the dev password (`pipeline/db.py`),
-      `/docs` is public, `ENABLE_EMBED` defaults on, and the `development` and
-      `preview` EAS profiles point at localhost. No `expo-updates`, so every
-      fix waits on review.
+- [ ] **No `expo-updates`, so every fix waits on review.** (checked
+      2026-09-29) Needs the EAS project (`EAS_BUILD`) for its update URL and a
+      `runtimeVersion` policy. The `development` EAS profile still points at
+      localhost, which is right for a dev client.
 - [ ] **A Google token isn't bound to its device.** (checked 2026-09-29) Apple's
       nonce must be the SHA-256 of the device (`api/auth.py`); Google's isn't
       checked, so a captured Google token signs in any device until it expires

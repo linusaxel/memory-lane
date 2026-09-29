@@ -150,7 +150,10 @@ def test_placeholders_are_still_flagged(expo, eas):
         unresolved.append("bundleIdentifier")
     if "PLACEHOLDER" in expo["android"]["config"]["googleMaps"]["apiKey"]:
         unresolved.append("googleMaps.apiKey")
-    if "PLACEHOLDER" in eas["build"]["production"]["env"]["EXPO_PUBLIC_API_URL"]:
+    if any(
+        "PLACEHOLDER" in eas["build"][p]["env"]["EXPO_PUBLIC_API_URL"]
+        for p in ("production", "preview")
+    ):
         unresolved.append("EXPO_PUBLIC_API_URL")
     assert unresolved == [], f"still PLACEHOLDER: {', '.join(unresolved)}"
 

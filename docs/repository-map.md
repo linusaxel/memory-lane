@@ -68,6 +68,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
+| `tests/test_public_host.py` | What Railway's host turns off: `/docs`, the embed, the dev database fallback |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |

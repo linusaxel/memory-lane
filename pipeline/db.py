@@ -11,9 +11,11 @@ from pipeline import config
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://memorylane:memorylane@localhost:5432/memorylane"
+DATABASE_URL = os.getenv("DATABASE_URL") or (
+    None if config.PUBLIC_HOST else "postgresql://memorylane:memorylane@localhost:5432/memorylane"
 )
+if DATABASE_URL is None:
+    raise RuntimeError("DATABASE_URL is unset on a public host; the dev default is not a fallback")
 
 # Railway hands out postgresql:// URLs and SQLAlchemy would pick psycopg2.
 if DATABASE_URL.startswith("postgresql://"):

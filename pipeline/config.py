@@ -12,6 +12,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Set by Railway on every deploy, so the public host cannot forget to say it is
+# one. There, nothing falls back to a dev value: no default DATABASE_URL, no
+# /docs, and the embed is off unless ENABLE_EMBED=1.
+PUBLIC_HOST = bool(os.getenv("RAILWAY_ENVIRONMENT_NAME"))
+# api/embed.py ships OpenStreetMap's public tiles, whose usage policy a real
+# host would violate.
+ENABLE_EMBED = os.getenv("ENABLE_EMBED", "0" if PUBLIC_HOST else "1") != "0"
+
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-5")
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-4-5")

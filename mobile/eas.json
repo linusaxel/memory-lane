@@ -10,7 +10,10 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://PLACEHOLDER.up.railway.app"
+      }
     },
     "production": {
       "autoIncrement": true,

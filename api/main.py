@@ -27,7 +27,7 @@ from api.media import MEDIA_DIR, MEDIA_URL_PREFIX, NoSniff
 from api.privacy import router as privacy_router
 from api.read import router as read_router
 from api.write import router as write_router
-from pipeline.config import MAX_CONCURRENCY
+from pipeline.config import ENABLE_EMBED, MAX_CONCURRENCY, PUBLIC_HOST
 
 
 @asynccontextmanager
@@ -53,6 +53,10 @@ app = FastAPI(
     description="Query location-based memories from video content",
     version="1.0.0",
     lifespan=lifespan,
+    # A map of every endpoint is for us, not for whoever finds the host.
+    docs_url=None if PUBLIC_HOST else "/docs",
+    redoc_url=None if PUBLIC_HOST else "/redoc",
+    openapi_url=None if PUBLIC_HOST else "/openapi.json",
 )
 
 app.add_middleware(
@@ -75,11 +79,8 @@ app.include_router(accounts_router)
 app.include_router(billing_router)
 app.include_router(card_router)
 
-# api/embed.py ships OpenStreetMap's public tiles, whose usage policy this would
-# violate on a real host - its own comment says "DO NOT put this embed on a
-# public host until this line changes". That guard was a comment while
-# railway.json deploys this app unconditionally, so it is a switch now.
-if os.getenv("ENABLE_EMBED", "1") != "0":
+# Off on the public host unless asked for: pipeline/config.py.
+if ENABLE_EMBED:
     app.include_router(embed_router)
 
 

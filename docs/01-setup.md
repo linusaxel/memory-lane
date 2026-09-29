@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | No | PostgreSQL connection string (default: local Docker) |
+| `DATABASE_URL` | On Railway | PostgreSQL connection string (default: local Docker; on Railway there is none, and the API refuses to start) |
 | `REDIS_URL` | No | Queue backend (default: local Docker) |
 | `ANTHROPIC_API_KEY` | Yes | Claude API key |
 | `EXTRACTION_MODEL` | No | Claude model (default: claude-sonnet-5) |
@@ -38,7 +38,7 @@ pip install -r requirements.txt
 | `UNLOCK_RADIUS_METERS` | No | How close you must stand to read a memory (default: 20) |
 | `MEDIA_DIR` | No | Where uploads are written (default: `media`; a volume in Docker) |
 | `REPORT_THRESHOLD` | No | Distinct devices needed to hide a submission (default: 3) |
-| `ENABLE_EMBED` | No | Set `0` to withhold `/embed` on a public host |
+| `ENABLE_EMBED` | No | `/embed` and `/embed.js`. Default on locally, off on Railway; `1` turns it on there |
 | `GOOGLE_CLIENT_IDS` | For sign-in | Comma-separated audience whitelist. Empty = `/v1/auth/*` answers 503 |
 | `APPLE_CLIENT_IDS` | For sign-in | Same, for Apple |
 | `SCREEN_POSTS` | No | `0` stops screening posts, notes and names with `CLASSIFIER_MODEL` before they are public (default: on). Tests and `e2e/run.sh` turn it off |
@@ -47,6 +47,8 @@ pip install -r requirements.txt
 | `REVENUECAT_API_KEY` | For subscriptions | RevenueCat's secret server key (not the app's public one), to read a subscriber back. Empty = `/v1/billing/revenuecat` and `/v1/me/subscription` answer 503 |
 
 Every one is read once, in `pipeline/config.py`; add new ones there.
+`RAILWAY_ENVIRONMENT_NAME`, which Railway sets itself, marks the public host:
+no dev database fallback, no `/docs`, the embed off.
 The app has its own, baked in at dev-server start - see `mobile/.env.example`.
 
 Note: there is no geocoding stage. During extraction Claude names the place and
