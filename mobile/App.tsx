@@ -1256,6 +1256,21 @@ export default function App() {
               setWalkToKm(0);
               setStage('preview');
             }}
+            // Teleport, under __DEV__ only: the pinned position ignores the
+            // simulator's GPS. See src/devLocation.ts. A pin swallows the
+            // press, so one beside a pin lands on it.
+            onLongPress={
+              __DEV__
+                ? (e) => {
+                    const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
+                    const near = pins
+                      .map((m) => m.place.coordinates)
+                      .find((c) => metersBetween(lat, lng, c.lat, c.lng) < 40);
+                    Haptics.selectionAsync().catch(() => {});
+                    setHere(near ?? { lat, lng });
+                  }
+                : undefined
+            }
           >
             {/* Once, around the person, at the server's radius - never around
                 each pin, which would be fifteen overlapping circles and no

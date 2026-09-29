@@ -551,6 +551,11 @@ cd mobile && npx expo start --ios
 #    ("booted" is a literal simctl accepts - no need to look up a UUID)
 xcrun simctl privacy booted grant location-always host.exp.Exponent
 xcrun simctl location booted set 55.67886,12.57586   # central Copenhagen: where the dev seed is
+#    With EXPO_PUBLIC_DEV_LOCATION set the app ignores that: long-press the map
+#    to move instead (__DEV__ only); beside a pin lands on the pin. Maestro
+#    cannot trigger it: neither longPressOn nor a held swipe reaches the map.
+#    `python -m pipeline.seed_dev --unlock` also unlocks the 5 nearest for the
+#    app's device, so the journal is not empty. Launch the app once first.
 
 # 4. screenshot it
 xcrun simctl io booted screenshot /tmp/app.png
@@ -596,7 +601,10 @@ running it is the shortest way to a fresh simulator build.
 
 It bakes the LAN IP into the launch URL and exits with Metro, so start Metro
 yourself afterwards with `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` and
-`xcrun simctl launch` — the dev client remembers the last URL it loaded. Do not
+`xcrun simctl launch` — the dev client remembers the last URL it loaded, if
+it ever loaded one. A fresh install has none and shows "No script URL
+provided"; tell it once: `xcrun simctl spawn booted defaults write
+com.PLACEHOLDER.memorylane RCT_jsLocation localhost:8081`. Do not
 re-open the `com.PLACEHOLDER.memorylane://` URL by hand: the "Open in Memory
 Lane?" system alert it raises cannot be dismissed without a tap and sits over
 every screenshot until the simulator is rebooted.

@@ -797,6 +797,33 @@ def clear(session) -> int:
     return removed
 
 
+def unlock_nearest(session, n: int) -> str | None:
+    """Unlock the n seeded memories nearest the cluster for the device seen
+    last - the app's own, self-minted id - so the journal is not empty on a
+    fresh start. None when the app has not registered a device yet."""
+    device = session.execute(
+        text(
+            "SELECT id FROM devices WHERE id <> CAST(:seed AS uuid) "
+            "ORDER BY last_seen DESC NULLS LAST LIMIT 1"
+        ),
+        {"seed": SEED_DEVICE},
+    ).scalar()
+    if device is None:
+        return None
+    session.execute(
+        text(f"""
+            INSERT INTO unlocks (device_id, memory_id)
+            SELECT :d, m.id FROM memories m JOIN places p ON p.id = m.place_id
+            WHERE p.place_query LIKE '{PLACE_PREFIX}%'
+            ORDER BY p.coordinates <-> ST_MakePoint(:lng, :lat)::geography
+            LIMIT :n
+            ON CONFLICT DO NOTHING
+        """),
+        {"d": device, "n": n, "lat": LAT, "lng": LNG},
+    )
+    return str(device)
+
+
 def content_row(session) -> int:
     """The one content row every seeded extracted memory hangs off."""
     return session.execute(
@@ -839,6 +866,14 @@ def main() -> None:
         choices=ROUTE_SCENARIOS,
         help="plant one route scenario instead: "
         + "; ".join(f"{k}: {v}" for k, v in ROUTE_SCENARIOS.items()),
+    )
+    parser.add_argument(
+        "--unlock",
+        type=int,
+        nargs="?",
+        const=5,
+        metavar="N",
+        help="also unlock the N nearest (default 5) for the app's device",
     )
     parser.add_argument("--seed", type=int, default=1, help="which random map (--dense, --routes)")
     parser.add_argument(
@@ -885,6 +920,13 @@ def main() -> None:
         made = seed(session)
         if args.dense:
             print(f"planted {dense(session, args.dense, args.seed)} dense memories")
+        if args.unlock:
+            device = unlock_nearest(session, args.unlock)
+            print(
+                f"unlocked {args.unlock} for device {device}"
+                if device
+                else "nothing unlocked: launch the app once so it registers a device"
+            )
 
     print(f"seeded at {LAT},{LNG} — {', '.join(made['media'])}")
     here = Coordinates(lat=LAT, lng=LNG)
