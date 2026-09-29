@@ -31,6 +31,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -107,6 +108,8 @@ async function withApple({ device, onProfile, onError, onBusy }: Setters, linkTo
   onError(null);
   try {
     const credential = await AppleAuthentication.signInAsync({
+      // The server refuses an Apple token not minted for this device: api/auth.py.
+      nonce: await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, device),
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
         AppleAuthentication.AppleAuthenticationScope.EMAIL,

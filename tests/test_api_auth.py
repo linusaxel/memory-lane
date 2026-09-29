@@ -69,13 +69,15 @@ def token(**claims) -> str:
     return jwt.encode(body, KEY, algorithm="RS256")
 
 
-def apple_token(**claims) -> str:
+def apple_token(dev: str, **claims) -> str:
+    """Minted for `dev`: the app asks Apple for the device's nonce."""
     return token(
         **{
             "iss": auth.APPLE_ISSUER,
             "aud": APPLE_ID,
             "sub": "apple-user-1",
             "name": None,
+            "nonce": auth.device_nonce(dev),
             **claims,
         }
     )
@@ -137,7 +139,7 @@ def test_an_apple_token_is_not_a_google_one(client):
     """Same key, same shape, wrong issuer and audience for this endpoint."""
     assert (
         client.post(
-            "/v1/auth/google", json={"device": device(), "id_token": apple_token()}
+            "/v1/auth/google", json={"device": device(), "id_token": apple_token(device())}
         ).status_code
         == 401
     )
@@ -156,6 +158,30 @@ def test_an_unverified_email_is_not_recorded(client, db_session):
     half-true address in our records is worse than none."""
     google(client, device(), id_token=token(email_verified=False))
     assert db_session.execute(text("SELECT email FROM identities")).scalar() is None
+
+
+def test_an_apple_token_signs_in_only_the_device_it_was_minted_for(client):
+    """No session to tie it to, so the nonce ties it to the device: a token
+    copied off the wire is no use on any other phone."""
+    mine, theirs = device(), device()
+    for id_token in (apple_token(mine), apple_token(mine, nonce=None)):
+        response = client.post("/v1/auth/apple", json={"device": theirs, "id_token": id_token})
+        assert response.status_code == 401
+    assert client.get(f"/v1/me?device={theirs}").json()["providers"] == []
+
+
+def test_an_apple_email_it_does_not_say_is_verified_is_not_recorded(client, db_session):
+    dev = device()
+    client.post(
+        "/v1/auth/apple", json={"device": dev, "id_token": apple_token(dev, email_verified=None)}
+    )
+    assert db_session.execute(text("SELECT email FROM identities")).scalar() is None
+
+
+def test_a_device_id_has_to_be_a_uuid(client):
+    """Not just 36 of the right characters: the cast to uuid would 500."""
+    response = client.post("/v1/auth/google", json={"device": "-" * 36, "id_token": token()})
+    assert response.status_code == 422
 
 
 # -- what signing in buys ------------------------------------------------------
@@ -229,13 +255,13 @@ def test_two_real_accounts_are_never_merged(client, db_session):
     what is theirs. Only an *anonymous* user gets absorbed.
     """
     theirs, mine = device(), device()
-    client.post("/v1/auth/apple", json={"device": theirs, "id_token": apple_token()})
+    client.post("/v1/auth/apple", json={"device": theirs, "id_token": apple_token(theirs)})
 
     google(client, mine)
     submit(client, device=mine)
     assert client.get(f"/v1/me?device={mine}").json()["submitted"] == 1
 
-    client.post("/v1/auth/apple", json={"device": mine, "id_token": apple_token()})
+    client.post("/v1/auth/apple", json={"device": mine, "id_token": apple_token(mine)})
 
     assert db_session.execute(text("SELECT COUNT(*) FROM users")).scalar() == 2
     switched = client.get(f"/v1/me?device={mine}").json()
@@ -250,7 +276,7 @@ def test_both_providers_can_be_attached_to_one_person(client):
     google(client, dev)
     profile = client.post(
         "/v1/auth/apple",
-        json={"device": dev, "id_token": apple_token(), "link_token": token()},
+        json={"device": dev, "id_token": apple_token(dev), "link_token": token()},
     ).json()
     assert profile["providers"] == ["google", "apple"]
 
@@ -264,7 +290,7 @@ def test_a_stolen_device_id_cannot_add_a_sign_in(client):
     for link in ({}, {"link_token": token(sub="somebody-else")}):
         stolen = client.post(
             "/v1/auth/apple",
-            json={"device": victim, "id_token": apple_token(sub="attacker"), **link},
+            json={"device": victim, "id_token": apple_token(victim, sub="attacker"), **link},
         )
         assert stolen.status_code == 403
     assert client.get(f"/v1/me?device={victim}").json()["providers"] == ["google"]
@@ -304,7 +330,7 @@ def test_apple_carries_the_name_the_client_was_given(client):
     dev = device()
     profile = client.post(
         "/v1/auth/apple",
-        json={"device": dev, "id_token": apple_token(), "display_name": "Ida"},
+        json={"device": dev, "id_token": apple_token(dev), "display_name": "Ida"},
     ).json()
     assert profile["display_name"] == "Ida"
 

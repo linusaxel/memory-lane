@@ -175,7 +175,7 @@ class Stats(BaseModel):
     hotspots: list[Hotspot]
 
 
-DEVICE_PATTERN = r"^[0-9a-fA-F-]{36}$"
+DEVICE_PATTERN = r"^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$"
 
 
 class UnlockRequest(BaseModel):

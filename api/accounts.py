@@ -270,7 +270,7 @@ def linked_with_proof(session, user_id: str, proof) -> bool:
 
 
 def link_proof(body: SignInRequest):
-    return either_identity(body.link_token) if body.link_token else None
+    return either_identity(body.link_token, body.device) if body.link_token else None
 
 
 @router.post("/v1/auth/google", response_model=Profile)
@@ -285,7 +285,7 @@ def sign_in_with_google(body: SignInRequest):
 
 @router.post("/v1/auth/apple", response_model=Profile)
 def sign_in_with_apple(body: SignInRequest):
-    subject, email = apple_identity(body.id_token)
+    subject, email = apple_identity(body.id_token, body.device)
     proof = link_proof(body)
     with get_session() as session:
         return sign_in(session, body.device, "apple", subject, email, body.display_name, proof)

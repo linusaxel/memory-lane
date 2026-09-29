@@ -13,8 +13,13 @@ real and whose it is. Three checks, each of which fails open if skipped:
     issuer      Google's or Apple's, matched exactly.
 
 Expiry comes free from PyJWT, which is the reason not to hand-roll this.
+
+Apple's token also carries a nonce, and it has to be the SHA-256 of the device
+id it arrives with. The app asks for that, so a token copied off the wire only
+signs in the phone it was minted for, which holds the id already.
 """
 
+import hashlib
 import os
 
 import jwt
@@ -83,20 +88,27 @@ def google_identity(token: str) -> tuple[str, str | None, str | None]:
     return claims["sub"], email, claims.get("name")
 
 
-def apple_identity(token: str) -> tuple[str, str | None]:
+def device_nonce(device: str) -> str:
+    return hashlib.sha256(device.encode()).hexdigest()
+
+
+def apple_identity(token: str, device: str) -> tuple[str, str | None]:
     """(subject, email). No name: Apple puts it nowhere in the token.
 
     It is handed to the app once, on the very first authorization, and never
     again - so the display name has to travel as a separate field from the
     client or be lost. `email` may be a private relay address, which is a real
-    address and is treated as one.
+    address and is treated as one. Apple sends `email_verified` as a string
+    as often as a boolean; missing is unverified.
     """
     claims = verify(token, jwks_url=APPLE_JWKS, issuer=APPLE_ISSUER, audiences=APPLE_CLIENT_IDS)
-    email = claims.get("email") if claims.get("email_verified") in (True, "true", None) else None
+    if claims.get("nonce") != device_nonce(device):
+        raise HTTPException(status_code=401, detail="Sign-in token was not accepted")
+    email = claims.get("email") if claims.get("email_verified") in (True, "true") else None
     return claims["sub"], email
 
 
-def either_identity(token: str) -> tuple[str, str]:
+def either_identity(token: str, device: str) -> tuple[str, str]:
     """(provider, subject) for a token from either provider.
 
     The unverified issuer only picks which check to run; that check is the one
@@ -109,5 +121,5 @@ def either_identity(token: str) -> tuple[str, str]:
     if issuer == GOOGLE_ISSUER:
         return "google", google_identity(token)[0]
     if issuer == APPLE_ISSUER:
-        return "apple", apple_identity(token)[0]
+        return "apple", apple_identity(token, device)[0]
     raise HTTPException(status_code=401, detail="Sign-in token was not accepted")

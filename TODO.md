@@ -176,10 +176,11 @@ public launch that the rest of this file doesn't track. Blockers first.
       `/docs` is public, `ENABLE_EMBED` defaults on, and the `development` and
       `preview` EAS profiles point at localhost. No `expo-updates`, so every
       fix waits on review.
-- [ ] **Sign-in loose ends.** (checked 2026-09-28) No Apple nonce (a captured
-      token replays until it expires); Apple `email_verified` treats a missing
-      value as verified (`api/auth.py`); `DEVICE_PATTERN` accepts 36 dashes
-      and the cast then 500s.
+- [ ] **A Google token isn't bound to its device.** (checked 2026-09-29) Apple's
+      nonce must be the SHA-256 of the device (`api/auth.py`); Google's isn't
+      checked, so a captured Google token signs in any device until it expires
+      (an hour). expo-auth-session sends its own random nonce; pass
+      `extraParams: { nonce }` with the device hash and check it the same way.
 - [ ] **Nearby notifications aren't throttled.** (checked 2026-09-28) Every
       region entry fires (`mobile/src/geofence.ts`), so dithering on a
       boundary or clustered stops repeats the alert.
