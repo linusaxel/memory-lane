@@ -23,6 +23,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Auto mode blocks `python -m pipeline.transcripts`.** 2026-09-29: Claude
+  Code's permission classifier refused the transcript fetch outright, which left
+  105 videos untranscribed and a session stuck until a human ran it. It will
+  refuse again. Fix: a Bash allow rule for it in `.claude/settings.json`, or a
+  human runs it (`! venv/bin/python -m pipeline.transcripts`).
 - **`sources screen` says only "pass rate: None" when it screened nothing.**
   2026-09-29: two channels gave that with no reason. One had no long video
   in the newest nine; the other's only long video had no captions

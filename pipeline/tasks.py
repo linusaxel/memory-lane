@@ -364,21 +364,35 @@ def task_aggregate_memories(content_id: int):
     """
     logger.info(f"[content:{content_id}] Aggregating memories")
 
-    redis = get_redis()
-    redis.hset(f"extraction:{content_id}", "status", "aggregating")
-
-    memories_hash = redis.hgetall(f"extraction:{content_id}:memories")
-    all_memories = []
-
-    for memories_json in memories_hash.values():
-        all_memories.extend(json.loads(memories_json))
-
-    logger.info(f"[content:{content_id}] Collected {len(all_memories)} raw memories")
-
-    merged = merge_nearby_memories(all_memories)
-    candidates = filter_low_confidence(merged)
-
     with get_session() as session:
+        # The claim, and the lock a second aggregation of the same content waits
+        # on: _check_extraction_complete can enqueue one per worker that finished
+        # a last chunk, and each would insert every memory again.
+        claimed = session.execute(
+            text("""
+                UPDATE content SET memories_extracted = TRUE
+                WHERE id = :id AND NOT memories_extracted RETURNING id
+            """),
+            {"id": content_id},
+        ).scalar()
+        if claimed is None:
+            logger.info(f"[content:{content_id}] Already aggregated, skipping")
+            return {"skipped": "already_extracted"}
+
+        redis = get_redis()
+        redis.hset(f"extraction:{content_id}", "status", "aggregating")
+
+        memories_hash = redis.hgetall(f"extraction:{content_id}:memories")
+        all_memories = []
+
+        for memories_json in memories_hash.values():
+            all_memories.extend(json.loads(memories_json))
+
+        logger.info(f"[content:{content_id}] Collected {len(all_memories)} raw memories")
+
+        merged = merge_nearby_memories(all_memories)
+        candidates = filter_low_confidence(merged)
+
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         filtered = worth_telling(session, client, content_id, candidates)
         filtered = one_name_per_venue(session, client, content_id, filtered)
@@ -387,10 +401,6 @@ def task_aggregate_memories(content_id: int):
             f"{len(candidates)}, worth telling: {len(filtered)}"
         )
         save_memories(session, content_id, filtered, layer_for(_source_type(redis, content_id)))
-
-        session.execute(
-            text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": content_id}
-        )
 
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}

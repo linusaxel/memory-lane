@@ -1344,6 +1344,11 @@ empty one: e2e's throwaway database and the tests'. `pipeline/route_bench.py`
 plants the dense map in its own transaction and rolls it back, as `--scenario`
 already did. `task_enqueue_chunks` skips content already extracted, because
 aggregation only inserts and a second pass is a second copy of every memory.
+`task_aggregate_memories` claims the content first (`UPDATE ... WHERE NOT
+memories_extracted`, in its own transaction). `_check_extraction_complete` reads
+the chunk counter without claiming it, so two workers that finish a content's
+last chunks each enqueue an aggregation. The second one waits on the row lock
+and then saves nothing.
 
 ## Routes
 
