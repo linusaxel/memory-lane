@@ -1,6 +1,5 @@
 """How today's route behaves on a full map, from many starts and lengths.
 
-    python -m pipeline.seed_dev --dense 300 --seed 1
     ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench
     python -m pipeline.route_bench --runs 200 --seed 2
     ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench --scenario all
@@ -9,7 +8,7 @@
 
 Read, not gated, like perf.py and quality.py. Each run plans a walk through
 api/route_solver.py's _plan_route for a fresh device, from a random start inside
-the dense seed's box, with everything the plan page lets a person set rolled
+seed_dev's dense map (300 memories, planted in the bench's own transaction), in its box, with everything the plan page lets a person set rolled
 at random: slider length, loop or one way, and the app's own
 `again`. Then once more with the next `again`: `fresh` is how often that is a
 different walk, which is "Show me another" working. The bar is "no spur": a stop
@@ -24,8 +23,7 @@ longest leg over the mean: a long empty stretch, often the last leg to an end.
 `--end` makes every run one way to an end at a random heading, 0.5-0.8 of the
 slider away as the crow flies over walking's 1.3, as a tapped end would be.
 
-`--scenario` plants seed_dev's route scenarios in the bench's own transaction
-instead, one at a time, and starts round each one's start. The rollback at the
+`--scenario` plants seed_dev's route scenarios instead, one at a time, and starts round each one's start. The rollback at the
 end puts back whatever the database held.
 
 `--solvers` needs neither database nor streets: random crow-flies maps of
@@ -62,7 +60,7 @@ from api.route_solver import (
 from api.streets import crossings, retraced_meters, walking_matrix
 from pipeline.config import ROUTING_URL
 from pipeline.db import get_session
-from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, scenario
+from pipeline.seed_dev import LAT, LNG, ROUTE_SCENARIOS, dense, scenario, seed
 
 BUDGETS = (1000, 2000, 3000, 4000, 6000, 8000, 10_000)
 # Starts stay well inside the pool's box, so a walk is not short of stops
@@ -250,6 +248,9 @@ def main() -> None:
             if name:
                 around, planted = scenario(session, name, args.seed)
                 print(f"\n{name}, {planted} places: {ROUTE_SCENARIOS[name]}")
+            else:
+                seed(session)
+                dense(session, 300, args.seed)
             rng = random.Random(args.seed)
             report(
                 [run(session, rng, rng.choice(BUDGETS), around, args.end) for _ in range(args.runs)]

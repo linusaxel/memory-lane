@@ -538,24 +538,22 @@ cd mobile && npm run typecheck      # also run by the gate
 To actually look at it — this works today, no physical device:
 
 ```bash
-# 1. API, and memories you can actually reach
+# 1. API. The dev database is real data: 38 memories within 500 m of the
+#    fallback coordinate below.
 docker compose up -d --build
-python -m pipeline.seed_dev            # --clear takes them away again
 
 # 2. cp .env.example .env  (once). It carries EXPO_PUBLIC_DEV_LOCATION, which
-#    pins the app's position to the seed under __DEV__ - so the Simulator's
+#    pins the app's position to central Copenhagen under __DEV__ - so the Simulator's
 #    location stops being something you set after every boot.
 cd mobile && npx expo start --ios
 
 # 3. pre-grant location, or the permission dialog covers the first screen
 #    ("booted" is a literal simctl accepts - no need to look up a UUID)
 xcrun simctl privacy booted grant location-always host.exp.Exponent
-xcrun simctl location booted set 55.67886,12.57586   # central Copenhagen: where the dev seed is
+xcrun simctl location booted set 55.67886,12.57586   # central Copenhagen
 #    With EXPO_PUBLIC_DEV_LOCATION set the app ignores that: long-press the map
 #    to move instead (__DEV__ only), or a pin to stand on it. Maestro
 #    cannot trigger it: neither longPressOn nor a held swipe reaches the map.
-#    `python -m pipeline.seed_dev --unlock` also unlocks the 5 nearest for the
-#    app's device, so the journal is not empty. Launch the app once first.
 
 # 4. screenshot it
 xcrun simctl io booted screenshot /tmp/app.png
@@ -576,7 +574,7 @@ For a single screenshot the recipe below is still shorter than a flow.
 sheet can render is reachable from a script:
 
 ```bash
-python -m pipeline.seed_dev                      # prints the id of each state
+curl -s 'localhost:8080/v1/memories/nearby?lat=55.67886&lng=12.57586&radius_km=1'   # pick an id
 EXPO_PUBLIC_DEV_OPEN_MEMORY=265 REACT_NATIVE_PACKAGER_HOSTNAME=localhost   npx expo start --dev-client                    # restart Metro; ids bake in
 xcrun simctl launch booted com.PLACEHOLDER.memorylane
 xcrun simctl io booted screenshot /tmp/sheet.png
@@ -625,17 +623,11 @@ Only one dev server can hold port 8081, and `npx expo start` cannot prompt in a
 non-interactive shell — it just prints "Skipping dev server". Kill the old one
 first: `lsof -ti:8081 | xargs kill -9`.
 
-**Without the seed you cannot exercise the unlock at all**, and moving the
-Simulator does not help. Every dense point in the real corpus is a model-guessed
-centroid and therefore deliberately ungated (F7), and the memories that *are*
-gated are the scattered ones — so the nearest thing you could open is kilometres
-from any round-number coordinate. `pipeline/seed_dev.py` plants one of every
-state at `FALLBACK_REGION`: one in reach, one 400m away, a stack, an open
-centroid pair, and one filed by a person with a photo and a recording.
-
-The real corpus is a US comedy podcast — from Copenhagen the preview will
-correctly say "No walk within 10 km from here" and you will think you broke
-something.
+**The dev database is real data**, and it is enough (2026-09-29): 38 memories
+within 500 m of `FALLBACK_REGION`, 14 of them gated. Long-press the map or a pin
+to stand where one is. The seed (`pipeline/seed_dev.py`, one of every state the
+sheet can render) goes only into an empty database, which is what e2e builds;
+beside the real corpus it copied real summaries into duplicates, so it refuses.
 
 Pure map maths goes in `src/region.ts` with a `node --test` case beside it;
 the gate runs `mobile/src/*.test.ts`. Component behaviour is currently untested

@@ -100,9 +100,8 @@ python -m pipeline.ingest && python -m pipeline.transcripts   # free: polls the 
 python -m pipeline.enqueue --video <content_id>               # extract one video (bills cents)
 python -m pipeline.worker --burst                             # run the queues, exit when empty
 
-python -m pipeline.seed_dev          # memories you can walk to; --clear removes them
-python -m pipeline.seed_dev --dense 300 --seed 1   # plus a full map for the route to choose from
-python -m pipeline.seed_dev --routes bimodal   # one route scenario alone, all in Copenhagen: sparse, dense, bimodal, linear, one-layer, stack-heavy, lakes
+# The dev database is real data only. seed_dev refuses it and seeds empty
+# databases (e2e/run.sh's); route_bench plants its map and rolls it back.
 
 uvicorn api.main:app --reload        # API; /docs is Swagger
 cd mobile && npx expo start --ios    # the app (mobile/UI.md has the recipe)

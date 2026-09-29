@@ -12,9 +12,6 @@
  *
  *     EXPO_PUBLIC_DEV_OPEN_MEMORY=265 npx expo start --dev-client
  *     xcrun simctl io booted screenshot /tmp/sheet.png
- *
- * Pair it with `python -m pipeline.seed_dev`, which prints the id of every
- * state the sheet can render.
  */
 
 /** Every screen a launch can land on: the map, the journal over it, or the

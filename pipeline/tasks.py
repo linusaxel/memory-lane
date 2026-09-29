@@ -201,7 +201,7 @@ def task_enqueue_chunks(content_id: int):
     with get_session() as session:
         row = session.execute(
             text("""
-                SELECT c.title, t.segments, c.source_type, c.source_name
+                SELECT c.title, t.segments, c.source_type, c.source_name, c.memories_extracted
                 FROM content c
                 JOIN transcripts t ON c.id = t.content_id
                 WHERE c.id = :id
@@ -213,7 +213,11 @@ def task_enqueue_chunks(content_id: int):
             logger.error(f"[content:{content_id}] No transcript found")
             return {"error": "no_transcript"}
 
-        title, segments_json, source_type, source_name = row
+        title, segments_json, source_type, source_name, extracted = row
+        if extracted:
+            # Aggregation only inserts, so a second pass is a second copy of every memory.
+            logger.info(f"[content:{content_id}] Already extracted, skipping")
+            return {"skipped": "already_extracted"}
         segments = segments_json if isinstance(segments_json, list) else json.loads(segments_json)
         # Archival records are short and self-contained; a video needs its frame.
         brief = ""

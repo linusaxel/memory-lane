@@ -53,13 +53,13 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change; `--compare` scores a candidate prompt against the current one on the same chunks |
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
-| `pipeline/seed_dev.py` | **Memories you can walk to.** The real corpus has none near any dev coordinate |
+| `pipeline/seed_dev.py` | **Fixtures for an empty database**: e2e's, the tests', route_bench's. Refuses one holding real content |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset |
 | `pipeline/export.py` | Hand a customer the corpus as rows, without the transcripts |
 | `pipeline/perf.py` | **Time the read path on a corpus this size isn't.** Run before and after touching `api/queries.py` |
 | `pipeline/themed_routes.py` | **Which areas could carry themed walks.** Per hotspot, the tags with `ROUTE_SIZE` walkable stops; ready at three. The check before the generated-routes job, which will grow here |
-| `pipeline/route_bench.py` | **How the route does on a full map.** Every plan setting rolled at random; spurs, stops, walk vs budget, `fresh` (another roll, another walk), ms, over `seed_dev --dense`. Needs `ROUTING_URL`; `--solvers` needs nothing and scores the solver against brute force |
+| `pipeline/route_bench.py` | **How the route does on a full map.** Every plan setting rolled at random; spurs, stops, walk vs budget, `fresh` (another roll, another walk), ms, over `seed_dev`'s dense map, planted and rolled back. Needs `ROUTING_URL`; `--solvers` needs nothing and scores the solver against brute force |
 | `pipeline/sweep.py` | Reap uploads no submission ever claimed. Describes unless `--apply` |
 | `pipeline/migrate.py` | **Brings a database up to `schema.sql`** and records it in `schema_migrations`. The Dockerfile runs it before the API |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |

@@ -10,8 +10,7 @@
  *
  * What it buys is that `xcrun simctl location booted set` stops being a step you
  * have to remember after every boot — and it works on a physical device, where
- * simctl cannot help at all. Pair it with `python -m pipeline.seed_dev`, which
- * plants memories at exactly this coordinate.
+ * simctl cannot help at all. Real memories are in reach at this coordinate.
  */
 
 import type { Coordinates } from './api.ts';

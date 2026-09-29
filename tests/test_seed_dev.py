@@ -152,6 +152,27 @@ def test_seeding_twice_leaves_one_copy(seeded):
     assert len(rows(seeded)) == before
 
 
+def test_a_database_with_real_content_is_refused(db_session, monkeypatch):
+    """The seed copies real summaries, so beside the real ones it is a duplicate."""
+    from contextlib import contextmanager
+
+    db_session.execute(
+        text(
+            "INSERT INTO content (url, platform) VALUES ('https://youtube.com/watch?v=x', 'youtube')"
+        )
+    )
+
+    @contextmanager
+    def _session():
+        yield db_session
+
+    monkeypatch.setattr(seed_dev, "get_session", _session)
+    monkeypatch.setattr("sys.argv", ["seed_dev"])
+    with pytest.raises(SystemExit, match="real content"):
+        seed_dev.main()
+    assert db_session.execute(text("SELECT COUNT(*) FROM memories")).scalar() == 0
+
+
 def test_clear_removes_everything_it_made(seeded):
     total_before = seeded.execute(text("SELECT COUNT(*) FROM memories")).scalar()
     assert total_before > 0

@@ -1329,6 +1329,22 @@ No `load()` alongside that `flyTo`: landing fires `onRegionChangeComplete`,
 which is what fetches. Doing both is two requests for one action, the first of
 them for a viewport that never exists.
 
+### The dev database is real data
+
+Status: Accepted 2026-09-29
+
+The seed's fixtures copy real Københavnerliv summaries word for word (since
+2026-09-27). Planted in the dev database, each one sat beside its original: five
+memories twice over. The seed was there because the corpus once had nothing
+gated near any dev coordinate. Now it has 38 memories within 500 m of
+`FALLBACK_REGION`, 14 of them gated, and long-press moves you to any of them.
+
+So `pipeline/seed_dev.py` refuses a database holding real content and seeds only an
+empty one: e2e's throwaway database and the tests'. `pipeline/route_bench.py`
+plants the dense map in its own transaction and rolls it back, as `--scenario`
+already did. `task_enqueue_chunks` skips content already extracted, because
+aggregation only inserts and a second pass is a second copy of every memory.
+
 ## Routes
 
 ### A route is anchored on where you were, not a stored home

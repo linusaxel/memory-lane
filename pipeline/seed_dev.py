@@ -16,7 +16,9 @@ This plants a cluster at FALLBACK_REGION - the coordinate the app already falls
 back to and the one every doc tells you to give the Simulator - covering each
 state the app can render. Idempotent: run it as often as you like.
 
-Nothing here is true, and none of it may reach a real corpus. Everything it
+Nothing here is true, and none of it may reach a real corpus: `main` refuses a
+database holding real content, so it seeds only an empty one, such as the one
+e2e/run.sh builds. The dev database is real data (docs/10-decisions.md#the-dev-database-is-real-data). Everything it
 writes is marked: one content row at DEV_SEED_URL, places whose place_query
 starts with `dev-seed:`, and a fixed user and device. `--clear` removes exactly
 those and nothing else.
@@ -824,6 +826,12 @@ def unlock_nearest(session, n: int) -> str | None:
     return str(device)
 
 
+def real_content(session) -> bool:
+    return session.execute(
+        text("SELECT EXISTS (SELECT 1 FROM content WHERE url NOT LIKE 'memorylane://%')")
+    ).scalar()
+
+
 def content_row(session) -> int:
     """The one content row every seeded extracted memory hangs off."""
     return session.execute(
@@ -904,6 +912,11 @@ def main() -> None:
         if args.clear:
             print(f"removed {clear(session)} seeded places and everything hanging off them")
             return
+        if real_content(session):
+            raise SystemExit(
+                "refused: this database holds real content, and the seed copies it. "
+                "Point DATABASE_URL at an empty one."
+            )
         if args.routes:
             (lat, lng), n = scenario(session, args.routes, args.seed)
             print(f"planted {args.routes}, {n} places: {ROUTE_SCENARIOS[args.routes]}")
