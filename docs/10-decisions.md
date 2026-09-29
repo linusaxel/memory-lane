@@ -1800,6 +1800,56 @@ Status: Accepted
   hard cap on user-submitted ingestion.
 - **Legal posture.** Snippets, attribution, deep links to the source at the
   right timestamp. Behave like a search engine. Never sell the raw corpus.
+  Source by source, see *The sources' legal footing*.
+
+### The sources' legal footing
+
+Status: Accepted 2026-09-29. Research from primary sources, not a lawyer's
+opinion. A Danish IP and data lawyer still reads it before launch.
+
+The archival books and the old newspapers are fine. The YouTube corpus, fetched
+the way it is today, is not. The Stadsarkiv memoirs and arkiv.dk are closed
+until someone gives permission.
+
+| Source | Verdict | Why | What it takes |
+|---|---|---|---|
+| YouTube channels | **No, as built** | The [ToS](https://www.youtube.com/t/terms) bans "automated means (such as robots, botnets or scrapers)" and non-personal, commercial use, with Danish law governing. The Webshare proxy exists to beat an IP block: German courts held YouTube's protection an effective TPM (LG Hamburg 310 O 316/21; OLG Hamburg 5 U 54/23), so ophavsretsloven §75c is in play. Transcripts kept forever fall outside §11b(3) TDM ("så længe det er nødvendigt"), and YouTube reserves TDM. Apple 5.2.2/5.2.3 want authorisation on request. The Data API can't help: `captions.download` needs edit rights on the video | Written permission per channel, drop the proxy, delete a transcript once it is extracted |
+| Project Gutenberg | Yes | Howitt's translation (she died 1888) and Wollstonecraft (died 1797) are public domain | The site is ["human users only"](https://www.gutenberg.org/policy/robot_access.html): past a handful of books, use a mirror or the harvest endpoint. Strip the PG header, or its trademark licence asks 20% of profits. Crediting "via Project Gutenberg" needs no permission |
+| Projekt Runeberg | Yes | Møller died 1898, Oehlenschläger 1850. Birket Smith's 1869 *Jammersminde* text is free; the notes and modern-Danish renderings of later editions are not (§4) | Confirm which *Jammersminde* edition it is |
+| Historisk Atlas | Partly | Each story's licence is set by the institution that wrote it, anything from © to CC to PD | Ingest CC BY, BY-SA and PD only, credit the institution, and ask about the sabotage set |
+| KB Labs newspapers | Yes | Only papers over 140 years old are served. An unsigned article runs 70 years from publication (§63(3)) | Check a bylined author died before 1956 |
+| kbhbilleder | PD-marked only | Everything else needs the photographer or VISDA. A simple photo is protected 50 years from when it was taken (§70) | Filter on the Public Domain mark |
+| Stadsarkiv Erindringer | **No** | The writers keep copyright. The 1995 call allowed reading only with the author's permission for 25 years. The undocumented Solr endpoint is no authorisation, and the archive holds a §71 database right. The texts name private people | The archive's agreement and the authors' permission, first |
+| arkiv.dk | **No** | [Terms](https://arkiv.dk/rettigheder): "udelukkende til privat brug … må ikke … anvendes i kommercielle sammenhænge" | Exclude it, or license item by item from each local archive |
+| Nominatim | Low volume | "an absolute maximum of 1 request per second", no bulk geocoding, no resale | Self-host before a B2B corpus sale |
+
+Across every source:
+
+- **GDPR.** A summary that names a real person is processing, public source or
+  not. The journalism exemption (databeskyttelsesloven §3(8)) needs editing and
+  fact-checking under an editorial policy (CJEU C-199/24, 9 July 2026), which
+  unreviewed LLM output does not have. Rely on a written legitimate-interest
+  assessment instead. A dead person is protected for 10 years after death (§2(5)). Health,
+  politics (WWII resistance or collaboration) and crime about private people
+  are Art 9 and §8 data: suppress them.
+- **An exact address next to a private person** is the risk of straffeloven
+  §264d (private matters) and §267 (a hallucinated slur). Place them at the
+  street, or drop the name.
+- **A takedown route is mandatory.** DSA Arts 16 and 17 bind even a micro
+  company, for user submissions. For our own summaries we have no hosting
+  shield at all (Art 6(2)).
+- **Label the summary AI-generated.** AI Act Art 50(4) applies from 2 August
+  2026 to text published to inform the public, unless a human holds editorial
+  responsibility.
+- **User submissions** need reporting, blocking and a published contact (Apple
+  1.2, Google Play's UGC policy).
+
+**Consequences:** the summary itself was never the risk. Forty to seventy words
+of our own, crediting the source and linking back to it, take facts rather
+than expression (Infopaq C-5/08 is the test, not the word count). The risk is
+how the text is fetched and how long it is kept. The paywall doesn't change
+whether something infringes, but it breaks YouTube's "personal,
+non-commercial" clause and raises the damages.
 
 ### Copenhagen first, and the podcast is test data
 

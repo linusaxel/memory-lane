@@ -161,10 +161,18 @@ public launch that the rest of this file doesn't track. Blockers first.
       basis, no retention, no RevenueCat or geocoders. Contact reads `CONTACT_EMAIL`,
       unset until you pick an address.
       The generated `PrivacyInfo.xcprivacy` declares no collected data.
-- [ ] **The corpus has no legal footing for a paid app.** (checked 2026-09-28)
-      Summaries of creators' videos behind a subscription, fetched through a
-      proxy built to get past YouTube's block, naming real people, with no
-      takedown route. Needs a lawyer's read before launch, not after.
+- [ ] **The corpus has no legal footing for a paid app.** (checked 2026-09-29)
+      Researched source by source in docs/10, *The sources' legal footing*;
+      a Danish lawyer still reads it before launch. The blockers:
+      - YouTube: written permission per channel, drop the Webshare proxy,
+        delete a transcript once it is extracted. Or drop the channels.
+      - Historisk Atlas: ingest only CC BY, BY-SA and PD stories.
+      - A report and takedown route on every memory (DSA Arts 16/17), for
+        privacy, defamation and copyright alike.
+      - Label summaries AI-generated (AI Act Art 50(4), in force now).
+      - Suppress health, crime and WWII politics about private people, and
+        place private people at the street, not the door.
+      - A written legitimate-interest assessment and a DPIA.
 - [ ] **No production database discipline.** (checked 2026-09-29)
       `pipeline.migrate` runs on every deploy now. No backups, no staging. Media lives on local
       disk, which a Railway redeploy loses without a volume.
@@ -232,8 +240,9 @@ live requests. Order is priority.
 
 **Blocked or deprioritised**
 
-- [ ] **arkiv.dk.** (checked 2026-09-26) 550+ archives, no public API.
-      Institutional conversation only; plan no sprint around it.
+- [ ] **arkiv.dk: excluded.** (checked 2026-09-29) 550+ archives, no public
+      API, and its terms say private use only, never commercial. Licensing
+      happens item by item with each local archive; plan no sprint around it.
 - [ ] **setlist.fm: do not scrape.** (checked 2026-09-26) The API is free for
       non-commercial use only; commercial means asking Live Nation /
       Ticketmaster, its owner. 20–30 items a request makes a city backfill
@@ -523,9 +532,6 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
   The three-street count there decides it. Other founder candidates: x/Twitter,
   Reddit (both meter API access), free literature such as Project Gutenberg
   (no per-venue coordinates).
-- **Reuse terms for arkiv.dk.** (checked 2026-09-26) Unknown. The legal
-  posture assumes we may quote at all. Mediestream's are known now: KB Labs
-  serves papers over 140 years old, free.
 - **Where does "what is there now" come from?** (checked 2026-09-20) Contrast
   needs present-day place identity. Working assumption is OSM/Overpass,
   unvalidated, and useless on centroid coordinates.
