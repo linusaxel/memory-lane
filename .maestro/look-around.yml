@@ -56,6 +56,23 @@ appId: ${APP_ID}
     visible: "[0-9]+ stops · .* loop"
     timeout: 40000
 - assertVisible: "Start this walk"
+# Both kept: a swipe on the words goes back to the first, and on again.
+- assertVisible: "2 of 2"
+- swipe:
+    from:
+      id: "walk-summary"
+    direction: RIGHT
+- extendedWaitUntil:
+    visible: "1 of 2"
+    timeout: 5000
+- assertVisible: "4 stops · .* loop"
+- swipe:
+    from:
+      id: "walk-summary"
+    direction: LEFT
+- extendedWaitUntil:
+    visible: "2 of 2"
+    timeout: 5000
 
 # One way redraws in place: the same four stops' worth, ending somewhere new.
 - tapOn: "One way"
@@ -92,6 +109,6 @@ appId: ${APP_ID}
       LOCATION: inuse
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
-    visible: "No walk that long from here\\."
+    visible: "No walk within 10 km from here\\."
     timeout: 40000
 - assertVisible: "Walk length"

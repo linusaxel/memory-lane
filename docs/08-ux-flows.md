@@ -196,8 +196,10 @@ same day needs a subscription, unless the first opened nothing (docs/10,
 *A subscription opens the map*). A relaunch after accepting skips this
 page and goes straight to the walk.
 
-**What can go wrong:** nothing walkable within that length — the card reads
-"No walk that long from here." with the slider still there, and no Start walk. The map runs
+**What can go wrong:** nothing walkable within that length — the card moves the
+slider up to the nearest length that has a walk and says "Nothing at 4 km; this
+is the nearest." (F32). Nothing within 10 km at all reads "No walk within 10 km
+from here." with the slider still there, and no Start walk. The map runs
 out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
 the ask (`ROUTE_FILL`) adds "That's the longest walk from here." No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
@@ -576,7 +578,7 @@ that long from here" (F1).
 
 The hotspots card (`Elsewhere`, "Show me New York") pointed an empty map at the
 corpus. With no browsing map there is nothing to point; from Copenhagen the
-preview says "No walk that long from here" (F1). `/v1/stats` still returns
+preview says "No walk within 10 km from here" (F1). `/v1/stats` still returns
 hotspots for anyone who wants them.
 
 ---
@@ -800,7 +802,7 @@ one exception, opt-in, and it watches only this walk's stops.
 **A sparse area gets an honestly shorter route, not a padded one.** Fewer than
 five walkable memories within the length means a route of two or three, and
 the card and the pill say so — "0 of 2" rather than pretending a fifth stop
-exists. None at all is F1's "No walk that long from here", and an empty walk is
+exists. None at all is F1's "No walk within 10 km from here", and an empty walk is
 never stored.
 
 **Done when:** an accepted walk shows exactly its stops and nothing else,
@@ -1036,8 +1038,16 @@ length. **Trigger:** "Show me another", under Start walk.
    and above the pin's floor), and the slider moves to it. Never "the only
    walk". Only when none of those differs does the button go, with no line in
    its place.
-3. Start walk sends the same `again`, so it stores the walk on screen. The client
-   still never sends stop ids.
+3. Every walk shown is kept until the next fresh plan. With more than one, the
+   title reads "2 of 3" and "← swipe for others →" sits under the summary: a
+   swipe on the words (never the slider) steps back or on, with the slider
+   moved to that walk's length and no request. VoiceOver adjusts the same way.
+4. Start walk sends the on-screen walk's `again`, so it stores the walk on
+   screen. The client still never sends stop ids.
+
+An empty length is the other dead end: a fresh plan with no stops moves up to
+the nearest length that has a walk (10 km asked first, so nothing within reach
+costs one request), and says "Nothing at 4 km; this is the nearest."
 
 Every plan, and every change on the card, rolls a fresh `again`, so planning twice, or
 tomorrow, can land on a different one of those walks without a tap. A walk already walked differs anyway: its
@@ -1155,10 +1165,8 @@ Answer these and the proposed flows can be written properly.
 1. ~~**Layers: filter or stack?**~~ **Answered: stacked, with distinct pin
    shapes** — not colours, because the one accent is spoken for. See F4.
 2. ~~**What does a person see with zero memories nearby?**~~ **Partly settled.**
-   The preview says "No walk that long from here" and offers the slider back
-   (F1). Still open as a *product* question: should it suggest the length that
-   would find something? Doing nothing is defensible until there is a corpus
-   worth widening into.
+   An empty length moves to the nearest one with a walk (F32); nothing within
+   10 km says "No walk within 10 km from here" and offers the slider back (F1).
 3. ~~**Is contribution in v1 at all**, or is v1 read-only?~~ **Answered: it is
    in.** F5 ships it, and the two things the old note said blocked it —
    moderation and an abuse story — turned out to be one report endpoint and a

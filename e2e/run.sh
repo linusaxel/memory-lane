@@ -3,7 +3,7 @@
 # Watch the user flows happen. See e2e/README.md.
 #
 #   ./e2e/run.sh              every flow, in order
-#   ./e2e/run.sh walk         flows whose file starts "walk-" (.maestro/walk-*.yml)
+#   ./e2e/run.sh walk         flows whose file starts "walk-" (.maestro/walk-*.yml), or a whole name
 #   ./e2e/run.sh --record walk  and keep an mp4 of it
 #
 # Exit codes follow loop/verify.sh: 0 pass, 1 a flow failed, 2 the environment
@@ -372,7 +372,7 @@ if [ ${#FLOWS[@]} -eq 0 ]; then
 else
   SELECTED=()
   for name in "${FLOWS[@]}"; do
-    match=$(ls .maestro/"$name"-*.yml 2>/dev/null | head -1)
+    match=$(ls .maestro/"$name".yml .maestro/"$name"-*.yml 2>/dev/null | head -1)
     [ -z "$match" ] && { echo "no flow matches '$name' in .maestro/" >&2; exit 2; }
     SELECTED+=("$match")
   done

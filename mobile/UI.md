@@ -29,8 +29,10 @@ Preview (src/Plan.tsx)          the map, fitted to the start and every stop. Dra
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
 └─ card (Preview)              every change on it redraws the walk
-   ├─ "A walk from here"        23/700, the × trailing; "A walk through <place>" from Walk here
-   ├─ "4 stops · 3.8 km loop"   "Finding a walk…" first; "No walk that long from here."
+   ├─ "A walk from here"        23/700, the × trailing; "A walk through <place>" from Walk here; "2 of 3" once Show me another has shown more
+   ├─ "4 stops · 3.8 km loop"   "Finding a walk…" first; "No walk within 10 km from here."
+   ├─ "Nothing at 4 km; this is the nearest."   an empty length moved up to one with a walk
+   ├─ "← swipe for others →"    with the count: title to here is the swipe zone, never the slider
    ├─ "Planning from central Copenhagen…"   with no position
    ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
    ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
@@ -625,7 +627,7 @@ state at `FALLBACK_REGION`: one in reach, one 400m away, a stack, an open
 centroid pair, and one filed by a person with a photo and a recording.
 
 The real corpus is a US comedy podcast — from Copenhagen the preview will
-correctly say "No walk that long from here" and you will think you broke
+correctly say "No walk within 10 km from here" and you will think you broke
 something.
 
 Pure map maths goes in `src/region.ts` with a `node --test` case beside it;

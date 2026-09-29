@@ -303,11 +303,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       the map and the user dot. Waits on the founder's yes and a look on a
       real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
       state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
-- [ ] **A walk always has options.** (checked 2026-09-27) Show me another
-      now steps to a nearby length when the asked one has no other walk (F32),
-      and "the only walk" is gone. Left: back/forward through the walks already
-      shown, and "No walk that long from here" still ends on nothing - it
-      could offer the nearest length that has one. `App.tsx` `planWalk`.
 
 ---
 

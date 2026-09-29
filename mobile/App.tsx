@@ -197,6 +197,12 @@ export default function App() {
   // "Show me another" came back unchanged: that was the only walk that long.
   const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
+  // Every walk this card has shown since the last fresh plan, and which is on
+  // screen: a swipe steps through them.
+  const [shown, setShown] = useState<{ again: number; km: number; walk: TodaysRoute }[]>([]);
+  const [shownAt, setShownAt] = useState(0);
+  // The length that came back empty, when the card moved to the nearest that doesn't.
+  const [emptyAt, setEmptyAt] = useState<number | null>(null);
   // "Walk here": the memory every planned walk passes, and the length the
   // server said reaches it, once it has said so (0 until then).
   const [walkTo, setWalkTo] = useState<LocatedMemory | null>(null);
@@ -553,12 +559,29 @@ export default function App() {
       const plan = (km: number) =>
         previewRoute(device, anchor, km * 1000, walkAsk, next, walkTo?.id ?? null);
       const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
+      const last = shown[shown.length - 1]?.walk ?? null;
       let km = planKm;
       let walk = await plan(km);
       // Never "the only walk": the same one back offers the nearest other
-      // length, and the slider moves to say so.
-      // ponytail: up to six previews in a row; a server-side "nearest other walk" if it drags.
-      if (another && ids(walk) === ids(preview)) {
+      // length, and the slider moves to say so. Never "no walk" either: an
+      // empty length moves up to the nearest that has one. The longest first,
+      // so nothing within reach at all costs one request, not eighteen.
+      // ponytail: up to eighteen previews in a row; a server-side "nearest walk" if it drags.
+      const empty = !another && walk.memories.length === 0 && km < WALK_KM.max;
+      if (empty) {
+        const longest = await plan(WALK_KM.max);
+        if (longest.memories.length > 0) {
+          for (let up = km + WALK_KM.step; up <= WALK_KM.max; up += WALK_KM.step) {
+            const other = up === WALK_KM.max ? longest : await plan(up);
+            if (other.memories.length > 0) {
+              km = up;
+              walk = other;
+              break;
+            }
+          }
+        }
+      }
+      if (another && ids(walk) === ids(last)) {
         const low = Math.max(WALK_KM.min, walkFloor);
         const tried = new Set([km]);
         for (const step of [-0.5, 0.5, -1, 1, -1.5, 1.5]) {
@@ -566,7 +589,7 @@ export default function App() {
           if (tried.has(nearby)) continue;
           tried.add(nearby);
           const other = await plan(nearby);
-          if (ids(other) !== ids(preview)) {
+          if (ids(other) !== ids(last)) {
             km = nearby;
             walk = other;
             break;
@@ -577,7 +600,16 @@ export default function App() {
       if (km !== planKm) (walkTo ? setHereKm : setWalkKm)(km);
       plannedKey.current = planKey(km, walkAsk);
       setAgain(next);
-      setOnlyWalk(another && ids(walk) === ids(preview));
+      const only = another && ids(walk) === ids(last);
+      setOnlyWalk(only);
+      if (!another) {
+        setShown([{ again: next, km, walk }]);
+        setShownAt(0);
+        setEmptyAt(empty && km !== planKm ? planKm : null);
+      } else if (!only) {
+        setShown([...shown, { again: next, km, walk }]);
+        setShownAt(shown.length);
+      }
       setPlanFrom(anchor);
       setPlanFallback(fallback);
       setPreview(walk);
@@ -601,7 +633,19 @@ export default function App() {
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, goToMyLocation, planKm, walkFloor, walkAsk, preview, walkTo]);
+  }, [device, goToMyLocation, planKm, walkFloor, walkAsk, shown, walkTo]);
+
+  /** A swipe on the card: back or on through the walks it has shown. */
+  const showAt = (i: number) => {
+    const entry = shown[i];
+    if (!entry) return;
+    if (entry.km !== planKm) (walkTo ? setHereKm : setWalkKm)(entry.km);
+    plannedKey.current = planKey(entry.km, walkAsk);
+    setShownAt(i);
+    setAgain(entry.again);
+    setPreview(entry.walk);
+    setPlanError(null);
+  };
 
   // Draw first, adjust after: opening the card plans, and so does every
   // change to it. A "too far" answer lifts planKm, which plans once more at a
@@ -1422,7 +1466,12 @@ export default function App() {
               busy={planBusy}
               error={planError}
               onAccept={acceptWalk}
-              onAnother={onlyWalk ? null : () => planWalk(again + 1, true)}
+              onAnother={
+                onlyWalk ? null : () => planWalk((shown[shown.length - 1]?.again ?? again) + 1, true)
+              }
+              position={preview && shown.length > 1 ? { at: shownAt + 1, of: shown.length } : null}
+              onSwipe={(dir) => showAt(shownAt + dir)}
+              emptyAt={emptyAt}
               onMap={backToMap}
             />
           )}

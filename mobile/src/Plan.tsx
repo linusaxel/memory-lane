@@ -13,8 +13,8 @@
  */
 
 import Slider from '@react-native-community/slider';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { WalkAsk } from './api.ts';
 import CloseButton from './CloseButton.tsx';
@@ -104,8 +104,31 @@ type PreviewProps = {
   onAccept: () => void;
   /** Null once no length near this one has another walk. */
   onAnother: (() => void) | null;
+  /** Which of the walks this card has shown is on screen; null while only one. */
+  position: { at: number; of: number } | null;
+  /** -1 back to the walk before, 1 on to the one after. */
+  onSwipe: (dir: -1 | 1) => void;
+  /** The asked length, when it had no walk and the card moved to the nearest. */
+  emptyAt: number | null;
   onMap: () => void;
 };
+
+/** Sideways only, and only past a clear drag, so a tap or a scroll is left alone.
+ *  Around the words, never the slider: its native drag would fight this one. */
+function useSwipe(onSwipe: (dir: -1 | 1) => void) {
+  const latest = useRef(onSwipe);
+  latest.current = onSwipe;
+  return useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > 2 * Math.abs(g.dy),
+        onPanResponderRelease: (_, g) => {
+          if (Math.abs(g.dx) > 60) latest.current(g.dx > 0 ? -1 : 1);
+        },
+      }).panHandlers,
+    [],
+  );
+}
 
 export function Preview({
   stops,
@@ -122,8 +145,16 @@ export function Preview({
   error,
   onAccept,
   onAnother,
+  position,
+  onSwipe,
+  emptyAt,
   onMap,
 }: PreviewProps) {
+  // Nothing before the first or after the last.
+  const step = (dir: -1 | 1) => {
+    if (position && position.at + dir >= 1 && position.at + dir <= position.of) onSwipe(dir);
+  };
+  const swipe = useSwipe(step);
   const found = stops != null && stops > 0;
   const short = found && meters < ROUTE_FILL * km * 1000;
   const unreachable = floorKm > WALK_KM.max;
@@ -131,16 +162,46 @@ export function Preview({
   const min = Math.min(Math.ceil(Math.max(WALK_KM.min, floorKm) / WALK_KM.step) * WALK_KM.step, WALK_KM.max);
   return (
     <View style={styles.card}>
-      <Text style={[styles.cardTitle, styles.besideClose]}>
-        {through ? `A walk through ${through}` : 'A walk from here'}
-      </Text>
-      <Text style={styles.cardBody}>
-        {stops == null
-          ? 'Finding a walk…'
-          : stops === 0
-            ? 'No walk that long from here.'
-            : `${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
-      </Text>
+      <View
+        style={styles.summary}
+        testID="walk-summary"
+        {...(position ? swipe : {})}
+      >
+        <View style={[styles.titleRow, styles.besideClose]}>
+          <Text style={[styles.cardTitle, styles.shrink]}>
+            {through ? `A walk through ${through}` : 'A walk from here'}
+          </Text>
+          {/* The swipe for VoiceOver: on the count, not the whole zone, which
+              would merge the lines under it into one label. */}
+          {position && (
+            <Text
+              style={label}
+              accessibilityRole="adjustable"
+              accessibilityLabel="Walks shown"
+              accessibilityValue={{ text: `${position.at} of ${position.of}` }}
+              accessibilityActions={[{ name: 'decrement' }, { name: 'increment' }]}
+              onAccessibilityAction={(e) => step(e.nativeEvent.actionName === 'decrement' ? -1 : 1)}
+            >
+              {`${position.at} of ${position.of}`}
+            </Text>
+          )}
+        </View>
+        <Text style={styles.cardBody}>
+          {stops == null
+            ? 'Finding a walk…'
+            : stops === 0
+              ? `No walk within ${WALK_KM.max} km from here.`
+              : `${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
+        </Text>
+        {found && emptyAt != null && (
+          <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
+        )}
+        {position && (
+          <Text style={label} accessibilityElementsHidden importantForAccessibility="no">
+            ← swipe for others →
+          </Text>
+        )}
+      </View>
       {short && <Text style={styles.cardBody}>That's the longest walk from here.</Text>}
       {fallback && (
         <Text style={styles.cardBody}>
@@ -315,5 +376,8 @@ const styles = StyleSheet.create({
   // Apple's close: top trailing on the card, on the title line (UI.md, rule 12).
   close: { position: 'absolute', top: 20, right: 20 },
   besideClose: { paddingRight: 36 },
+  summary: { gap: 10 },
+  shrink: { flexShrink: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
   doneTitle: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
 });
