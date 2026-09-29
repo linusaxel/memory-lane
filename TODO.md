@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`quality --labels` would print a table on an empty balance.** 2026-09-29:
+  `worth_telling` keeps everything when the judge fails, so a run with no
+  credits reads as "the judge keeps all 209", with only a WARNING line in the
+  log to say otherwise. It took a grep of the log for 200s to trust the
+  baseline. Fix: `replay_labels` counts contents where the judge failed, and
+  `_print_labels` refuses to score if any did.
 - **Auto mode blocks `python -m pipeline.transcripts`.** 2026-09-29: Claude
   Code's permission classifier refused the transcript fetch outright, which left
   105 videos untranscribed and a session stuck until a human ran it. It will
@@ -197,13 +203,9 @@ public launch that the rest of this file doesn't track. Blockers first.
 
 A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 52 worth the walk. These are the fixes, in order. Measure each one against the
-labels before and after. Every change is to `pipeline/extract.py` unless named.
+labels before and after (`python -m pipeline.quality --labels`). Every change
+is to `pipeline/extract.py` unless named.
 
-- [ ] **A replay against the labels.** (checked 2026-09-29) The 209 verdicts
-      are in `tests/fixtures/walk_labels.json`, scored by AI agents, so spot-check
-      them before tuning to them. Missing: a `pipeline.quality` mode that
-      re-judges the stored summaries and prints precision and recall against
-      them. Every change below is then measured without re-extracting.
 - [ ] **Launch-area gate.** (checked 2026-09-29) 32 memories are outside
       Copenhagen, 10 of 11 from Oehlenschläger's travel volumes. Drop a pin
       outside a launch box at save time (a config knob), and name the launch area
@@ -227,7 +229,9 @@ labels before and after. Every change is to `pipeline/extract.py` unless named.
       gates: `private_person` (a private person's death, health, crime or
       addiction; ~10), `promo` (present-day listings and ads; ~15) and
       `relative_time` ("last summer"; ~7). Add Copenhagen archival examples,
-      then retune `tellable()` against the labels.
+      then retune `tellable()` against the labels. Measure with
+      `python -m pipeline.quality --labels`; the baseline to beat (docs/04)
+      is precision 31%, recall 92%.
 - [ ] **Summary against its chunk.** (checked 2026-09-29) ~20 factual or
       speech-recognition errors: Tom "Christensen", Vestergade for
       Vimmelskaftet, lupus called cancer. `grounded()` checks only

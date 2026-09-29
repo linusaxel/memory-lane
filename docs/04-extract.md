@@ -103,6 +103,7 @@ one shot:
 ```bash
 python -m pipeline.quality
 python -m pipeline.quality --compare candidate.txt   # same 10 chunks, both prompts, side by side
+python -m pipeline.quality --labels                  # the judge against the corpus read's verdicts
 ```
 
 Baseline on the 224-memory corpus, all four found by reading it rather than
@@ -153,6 +154,16 @@ a person, so treat the counts as approximate. Each verdict is in
 `tests/fixtures/walk_labels.json`: id, walk/maybe/skip, the total out of 10 on
 the five criteria the scorers used (site, surprise, story, trace, standalone),
 and flags. The fixes are in TODO.md, *Make memories worth the walk*.
+A spot-check of 20 (7 walk, 7 maybe, 6 skip) held on every verdict and found
+three flags missing: two `hall` for "Jørgen Let" (Leth), one `german`. They
+are fixed in the file.
+
+**Baseline for the judge** (`quality --labels`, 2026-09-29, 151 Sonnet calls).
+Re-judging the 209, today's judge keeps 156: 48 of 52 walks, 41 of 55 maybes,
+67 of 102 skips. Precision 31% (walk of kept), recall 92%. It drops a flag's
+memories no more often than the rest: `stale` 0 of 6, `adv` 3 of 19, `priv` 7
+of 16, `out` 13 of 32. That is the number Judge v2 has to beat: precision up,
+recall held.
 
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,

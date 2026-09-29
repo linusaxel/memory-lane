@@ -2,6 +2,7 @@
 
     python -m pipeline.quality
     python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10]
+    python -m pipeline.quality --labels [tests/fixtures/walk_labels.json]
 
 Run it before and after any prompt change; extraction costs money and you get
 one shot. Baseline in docs/04-extract.md, reasoning in
@@ -12,6 +13,12 @@ stable sample of transcript chunks, scores both, and prints them side by side
 for a person to pick. It bills the extractor per chunk per prompt (~$0.003),
 once: replies land in extraction_chunks, so a rerun, or a baseline the pipeline
 already ran, is free.
+
+--labels re-judges the stored memories the corpus read labelled walk, maybe or
+skip, through the pipeline's own judge, and prints what it keeps of each. The
+judge sees the place name and summary only: happened_there is not stored. It
+bills the judge once per content per pass; a rerun on unchanged code is free,
+so before and after a judge change only the change is paid for.
 """
 
 import argparse
@@ -31,6 +38,7 @@ from pipeline.extract import (
     prompt_for,
     source_context,
     video_brief,
+    worth_telling,
 )
 
 # The label instead of the name. This is the big one, and the prompt now bans it.
@@ -120,6 +128,62 @@ def compare(session, client, prompts: dict[str, str], chunks) -> dict[str, list[
     }
 
 
+def replay_labels(session, client, ids) -> dict[int, bool]:
+    """{memory_id: kept} for the labelled memories still in the database,
+    judged together per content as the pipeline judges a video."""
+    rows = session.execute(
+        text("""
+            SELECT m.id, m.content_id, p.name, m.summary
+            FROM memories m JOIN places p ON p.id = m.place_id
+            WHERE m.id = ANY(:ids)
+            ORDER BY m.content_id, m.id
+        """),
+        {"ids": list(ids)},
+    ).fetchall()
+    by_content: dict[int, list] = {}
+    for r in rows:
+        by_content.setdefault(r.content_id, []).append(r)
+    kept = {}
+    for content_id, group in by_content.items():
+        memories = [{"id": r.id, "venue": r.name, "summary": r.summary} for r in group]
+        survivors = {m["id"] for m in worth_telling(session, client, content_id, memories)}
+        kept |= {m["id"]: m["id"] in survivors for m in memories}
+    return kept
+
+
+def score_labels(kept: dict[int, bool], labels: list[dict]) -> dict:
+    """Kept per verdict and per flag, precision and walk recall. Pure."""
+    judged = [m for m in labels if m["id"] in kept]
+    verdicts = {v: [0, 0] for v in ("walk", "maybe", "skip")}
+    flags: dict[str, list[int]] = {}
+    for m in judged:
+        verdicts[m["verdict"]][kept[m["id"]]] += 1
+        for f in m["flags"]:
+            flags.setdefault(f, [0, 0])[kept[m["id"]]] += 1
+    n_kept = sum(kept[m["id"]] for m in judged)
+    walk_kept, walk_dropped = verdicts["walk"][1], verdicts["walk"][0]
+    return {
+        "missing": len(labels) - len(judged),
+        "verdicts": verdicts,
+        "flags": flags,
+        "precision": walk_kept / n_kept if n_kept else 0.0,
+        "recall": walk_kept / (walk_kept + walk_dropped) if walk_kept + walk_dropped else 0.0,
+    }
+
+
+def _print_labels(score: dict):
+    print(f"{'':<10}{'kept':>6}{'dropped':>9}")
+    for v, (dropped, kept) in score["verdicts"].items():
+        print(f"{v:<10}{kept:>6}{dropped:>9}")
+    print(f"\nprecision {score['precision']:.0%} (walk of kept)")
+    print(f"recall    {score['recall']:.0%} (kept of walk)")
+    print(f"\n{'flag':<10}{'kept':>6}{'dropped':>9}")
+    for f, (dropped, kept) in sorted(score["flags"].items(), key=lambda x: -sum(x[1])):
+        print(f"{f:<10}{kept:>6}{dropped:>9}")
+    if score["missing"]:
+        print(f"\n{score['missing']} labelled memories are not in this database")
+
+
 def _print_report(summaries: list[str]):
     total = len(summaries)
     print(f"{'total':<22}{total:>5}")
@@ -146,7 +210,19 @@ def main():
     parser.add_argument("--baseline", metavar="PROMPT_FILE", help="default: the current prompt")
     parser.add_argument("--sample", type=int, default=10)
     parser.add_argument("--source-type", default="video")
+    parser.add_argument(
+        "--labels", nargs="?", const="tests/fixtures/walk_labels.json", metavar="LABELS_FILE"
+    )
     args = parser.parse_args()
+
+    if args.labels:
+        with open(args.labels) as f:
+            labels = json.load(f)["memories"]
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        with get_session() as session:
+            kept = replay_labels(session, client, [m["id"] for m in labels])
+        _print_labels(score_labels(kept, labels))
+        return
 
     if args.compare:
         with open(args.compare) as f:

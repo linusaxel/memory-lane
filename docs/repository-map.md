@@ -50,7 +50,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/worker.py` | RQ worker entry point for scaled extraction |
 | `pipeline/enqueue.py` | CLI to queue videos for parallel processing |
 | `pipeline/queue.py` | Redis/RQ queue setup |
-| `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change; `--compare` scores a candidate prompt against the current one on the same chunks |
+| `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change; `--compare` scores a candidate prompt against the current one on the same chunks; `--labels` re-judges the labelled memories and prints what the judge keeps of each verdict |
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Fixtures for an empty database**: e2e's, the tests', route_bench's. Refuses one holding real content |
@@ -69,6 +69,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/walk_labels.json` | Walk/maybe/skip for all 209 memories as of 2026-09-29 (docs/04, *Corpus read*): what a judge change is measured against |
+| `tests/test_quality_labels.py` | `quality --labels` scores the judge against the labels and reruns free |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
 | `tests/test_public_host.py` | What Railway's host turns off (`/docs`, the embed, the dev database fallback), and the health check |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |

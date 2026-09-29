@@ -135,7 +135,8 @@
    "verdict": "walk",
    "total": 7,
    "flags": [
-    "dup"
+    "dup",
+    "hall"
    ]
   },
   {
@@ -144,7 +145,8 @@
    "total": 7,
    "flags": [
     "priv",
-    "dup"
+    "dup",
+    "hall"
    ]
   },
   {
@@ -1187,7 +1189,8 @@
    "verdict": "walk",
    "total": 7,
    "flags": [
-    "p1000"
+    "p1000",
+    "german"
    ]
   },
   {
