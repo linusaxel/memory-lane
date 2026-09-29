@@ -33,6 +33,9 @@ type Props = {
   /** The next stop on today's walk: it hops in `route` blue until it is in
    *  reach, when `lit` takes over and it turns seal. */
   next?: boolean;
+  /** Dev teleport: a long-press on a pin never reaches the map's, but it does
+   *  start a drag, so the drag's start is the hook. */
+  onLongPress?: () => void;
 };
 
 export default function MemoryMarker({
@@ -43,6 +46,7 @@ export default function MemoryMarker({
   routeSize = 0,
   lit,
   next = false,
+  onLongPress,
 }: Props) {
   const count = group.memories.length;
 
@@ -74,6 +78,8 @@ export default function MemoryMarker({
         .join(' ')}
       tracksViewChanges={false}
       onPress={onPress}
+      draggable={!!onLongPress}
+      onDragStart={onLongPress}
     >
       <Pin lit={lit} next={next && !lit} badge={routePosition || (count > 1 ? count : null)} />
       {/* An empty tooltip callout, which is how you say "no callout" while

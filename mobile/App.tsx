@@ -1257,17 +1257,13 @@ export default function App() {
               setStage('preview');
             }}
             // Teleport, under __DEV__ only: the pinned position ignores the
-            // simulator's GPS. See src/devLocation.ts. A pin swallows the
-            // press, so one beside a pin lands on it.
+            // simulator's GPS. See src/devLocation.ts. A pin has its own.
             onLongPress={
               __DEV__
                 ? (e) => {
                     const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
-                    const near = pins
-                      .map((m) => m.place.coordinates)
-                      .find((c) => metersBetween(lat, lng, c.lat, c.lng) < 40);
                     Haptics.selectionAsync().catch(() => {});
-                    setHere(near ?? { lat, lng });
+                    setHere({ lat, lng });
                   }
                 : undefined
             }
@@ -1323,6 +1319,14 @@ export default function App() {
                   }
                   routePosition={routePosition}
                   routeSize={walking ? routeTotal : pins.length}
+                  onLongPress={
+                    __DEV__
+                      ? () => {
+                          Haptics.selectionAsync().catch(() => {});
+                          setHere({ lat: group.lat, lng: group.lng });
+                        }
+                      : undefined
+                  }
                   // A preview is a look, not a walk: its stops open once accepted.
                   onPress={() =>
                     !walking && stage !== 'map'

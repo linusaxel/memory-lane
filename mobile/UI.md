@@ -552,7 +552,7 @@ cd mobile && npx expo start --ios
 xcrun simctl privacy booted grant location-always host.exp.Exponent
 xcrun simctl location booted set 55.67886,12.57586   # central Copenhagen: where the dev seed is
 #    With EXPO_PUBLIC_DEV_LOCATION set the app ignores that: long-press the map
-#    to move instead (__DEV__ only); beside a pin lands on the pin. Maestro
+#    to move instead (__DEV__ only), or a pin to stand on it. Maestro
 #    cannot trigger it: neither longPressOn nor a held swipe reaches the map.
 #    `python -m pipeline.seed_dev --unlock` also unlocks the 5 nearest for the
 #    app's device, so the journal is not empty. Launch the app once first.
