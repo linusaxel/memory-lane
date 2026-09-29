@@ -102,6 +102,16 @@ delete an entry when its fix lands.
 
 ## Known defects
 
+- [ ] **A one-way walk bunches its stops at the start.** (reported
+      2026-09-29, founder's screenshot) Nørreport to a tapped end past
+      Islands Brygge, 4 km: all four stops sit within ~500 m of the start,
+      and the last ~2.5 km to the end has none. Suspect: `api/route_solver.py`
+      seeds shaped walks only when there is no end ("ponytail: no shaped walks
+      to an end", ~l.304), so a one-way plan falls to nearest-neighbour and
+      prize-per-metre fills, which spend the stops early and walk the rest
+      empty. Fix: a seed spaced along the line to the end (the "line bowed
+      towards the end" that comment names), then a `route_bench` scenario
+      with an end, scoring the largest gap between stops.
 - [ ] **Most places are still the model's guess.** (checked 2026-09-28)
       55 of 132 venue places are `llm` now (32 video, 20 book, 3 archive).
       Most are gone rather than misnamed: closed cinemas (Palladium, Vester
