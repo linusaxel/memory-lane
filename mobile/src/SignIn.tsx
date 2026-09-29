@@ -19,7 +19,7 @@
  * that a release build cannot take: see `Skip` below.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -103,13 +103,29 @@ function useAppleAvailable() {
   return available;
 }
 
+/** The server refuses a token not minted for this device: api/auth.py. */
+function deviceNonce(device: string) {
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, device);
+}
+
+/** Google's request, asking for the device's nonce. Null until the hash is
+ *  ready: a request built without it would get a token the server refuses. */
+function useGoogleRequest(device: string | null) {
+  const [nonce, setNonce] = useState<string | null>(null);
+  useEffect(() => {
+    if (device) deviceNonce(device).then(setNonce);
+  }, [device]);
+  const extraParams = useMemo(() => (nonce ? { nonce } : undefined), [nonce]);
+  const [, response, prompt] = Google.useIdTokenAuthRequest({ ...GOOGLE, extraParams });
+  return [response, nonce ? prompt : null] as const;
+}
+
 async function withApple({ device, onProfile, onError, onBusy }: Setters, linkToken?: string) {
   if (!device) return;
   onError(null);
   try {
     const credential = await AppleAuthentication.signInAsync({
-      // The server refuses an Apple token not minted for this device: api/auth.py.
-      nonce: await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, device),
+      nonce: await deviceNonce(device),
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
         AppleAuthentication.AppleAuthenticationScope.EMAIL,
@@ -164,7 +180,7 @@ function AppleButton({ onPress, ...props }: Setters & { onPress?: () => void }) 
  * to not be rendered, which is what GOOGLE_CONFIGURED decides below.
  */
 function GoogleButton({ device, onProfile, onError, onBusy }: Setters) {
-  const [, response, prompt] = Google.useIdTokenAuthRequest(GOOGLE);
+  const [response, prompt] = useGoogleRequest(device);
 
   // The flow finishes in a browser and comes back through `response` rather
   // than by resolving the prompt, so the exchange has to live in an effect.
@@ -188,7 +204,7 @@ function GoogleButton({ device, onProfile, onError, onBusy }: Setters) {
       accessibilityRole="button"
       onPress={() => {
         onError(null);
-        prompt().catch(() => onError("Couldn't open Google sign-in."));
+        prompt?.().catch(() => onError("Couldn't open Google sign-in."));
       }}
     >
       <Text style={styles.googleText}>Continue with Google</Text>
@@ -199,7 +215,7 @@ function GoogleButton({ device, onProfile, onError, onBusy }: Setters) {
 /** Apple onto a Google account. Google again first: the server won't add a
  *  sign-in on the device id alone, or anyone holding it could add their own. */
 function LinkApple(props: Setters) {
-  const [, response, prompt] = Google.useIdTokenAuthRequest(GOOGLE);
+  const [response, prompt] = useGoogleRequest(props.device);
 
   // Keyed on the response alone: re-running on every new `props` would open
   // Apple's sheet again each render.
@@ -218,7 +234,7 @@ function LinkApple(props: Setters) {
       {...props}
       onPress={() => {
         props.onError(null);
-        prompt().catch(() => props.onError("Couldn't open Google sign-in."));
+        prompt?.().catch(() => props.onError("Couldn't open Google sign-in."));
       }}
     />
   );

@@ -165,12 +165,6 @@ public launch that the rest of this file doesn't track. Blockers first.
       2026-09-29) Needs the EAS project (`EAS_BUILD`) for its update URL and a
       `runtimeVersion` policy. The `development` EAS profile still points at
       localhost, which is right for a dev client.
-- [ ] **A Google token isn't bound to its device.** (checked 2026-09-29) Apple's
-      nonce must be the SHA-256 of the device (`api/auth.py`); Google's isn't
-      checked, so a captured Google token signs in any device until it expires
-      (an hour). expo-auth-session sends its own random nonce; pass
-      `extraParams: { nonce }` with the device hash and check it the same way.
-
 ---
 
 ## Phase 0 — Design questions

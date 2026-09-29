@@ -14,9 +14,9 @@ real and whose it is. Three checks, each of which fails open if skipped:
 
 Expiry comes free from PyJWT, which is the reason not to hand-roll this.
 
-Apple's token also carries a nonce, and it has to be the SHA-256 of the device
-id it arrives with. The app asks for that, so a token copied off the wire only
-signs in the phone it was minted for, which holds the id already.
+Both tokens also carry a nonce, and it has to be the SHA-256 of the device id
+it arrives with. The app asks each provider for that, so a token copied off the
+wire only signs in the phone it was minted for, which holds the id already.
 """
 
 import hashlib
@@ -76,7 +76,7 @@ def verify(token: str, *, jwks_url: str, issuer: str, audiences: list[str]) -> d
         raise HTTPException(status_code=401, detail="Sign-in token was not accepted") from e
 
 
-def google_identity(token: str) -> tuple[str, str | None, str | None]:
+def google_identity(token: str, device: str) -> tuple[str, str | None, str | None]:
     """(subject, email, name). `sub` is Google's stable per-account id.
 
     An unverified email is dropped rather than stored: Google will hand one over
@@ -84,12 +84,18 @@ def google_identity(token: str) -> tuple[str, str | None, str | None]:
     records is worse than none.
     """
     claims = verify(token, jwks_url=GOOGLE_JWKS, issuer=GOOGLE_ISSUER, audiences=GOOGLE_CLIENT_IDS)
+    bound_to(claims, device)
     email = claims.get("email") if claims.get("email_verified") else None
     return claims["sub"], email, claims.get("name")
 
 
 def device_nonce(device: str) -> str:
     return hashlib.sha256(device.encode()).hexdigest()
+
+
+def bound_to(claims: dict, device: str) -> None:
+    if claims.get("nonce") != device_nonce(device):
+        raise HTTPException(status_code=401, detail="Sign-in token was not accepted")
 
 
 def apple_identity(token: str, device: str) -> tuple[str, str | None]:
@@ -102,8 +108,7 @@ def apple_identity(token: str, device: str) -> tuple[str, str | None]:
     as often as a boolean; missing is unverified.
     """
     claims = verify(token, jwks_url=APPLE_JWKS, issuer=APPLE_ISSUER, audiences=APPLE_CLIENT_IDS)
-    if claims.get("nonce") != device_nonce(device):
-        raise HTTPException(status_code=401, detail="Sign-in token was not accepted")
+    bound_to(claims, device)
     email = claims.get("email") if claims.get("email_verified") in (True, "true") else None
     return claims["sub"], email
 
@@ -119,7 +124,7 @@ def either_identity(token: str, device: str) -> tuple[str, str]:
     except jwt.PyJWTError as e:
         raise HTTPException(status_code=401, detail="Sign-in token was not accepted") from e
     if issuer == GOOGLE_ISSUER:
-        return "google", google_identity(token)[0]
+        return "google", google_identity(token, device)[0]
     if issuer == APPLE_ISSUER:
         return "apple", apple_identity(token, device)[0]
     raise HTTPException(status_code=401, detail="Sign-in token was not accepted")

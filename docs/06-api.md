@@ -79,8 +79,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   to that account. `display_name` is for Apple, which gives the name to the
   client once and never again. Adding a new sign-in to an account that already
   has one needs `link_token`, a fresh token from a sign-in already on it; 403
-  without it. An Apple token's `nonce` must be the SHA-256 hex of `device`, or
-  401: a copied token signs in only the phone it was minted for
+  without it. Every token's `nonce`, `link_token`'s too, must be the SHA-256
+  hex of `device`, or 401: a copied token signs in only the phone it was minted for
 - `DELETE /v1/me?device=UUID` - delete the account and everything it made:
   memories, media, sign-ins, the subscription row, and every device on it with
   their unlocks, hearts, notes and walks. 204

@@ -83,8 +83,15 @@ def apple_token(dev: str, **claims) -> str:
     )
 
 
+def google_token(dev: str, **claims) -> str:
+    """Minted for `dev`: the app asks Google for the device's nonce, as for Apple."""
+    return token(nonce=auth.device_nonce(dev), **claims)
+
+
 def google(client, dev, **body):
-    return client.post("/v1/auth/google", json={"device": dev, "id_token": token(), **body})
+    return client.post(
+        "/v1/auth/google", json={"device": dev, "id_token": google_token(dev), **body}
+    )
 
 
 # -- what a token has to survive ----------------------------------------------
@@ -102,8 +109,9 @@ def test_a_real_token_signs_you_in(client):
 def test_a_token_for_another_app_is_refused(client):
     """The check people forget. A valid Google token minted for somebody else's
     client id is still a perfectly valid Google token."""
-    other = token(aud="9999.apps.googleusercontent.com")
-    response = client.post("/v1/auth/google", json={"device": device(), "id_token": other})
+    dev = device()
+    other = google_token(dev, aud="9999.apps.googleusercontent.com")
+    response = client.post("/v1/auth/google", json={"device": dev, "id_token": other})
     assert response.status_code == 401
 
 
@@ -156,7 +164,8 @@ def test_an_unconfigured_server_refuses_rather_than_accepts(client, monkeypatch)
 def test_an_unverified_email_is_not_recorded(client, db_session):
     """Google hands one over for an account that never confirmed it, and a
     half-true address in our records is worse than none."""
-    google(client, device(), id_token=token(email_verified=False))
+    dev = device()
+    google(client, dev, id_token=google_token(dev, email_verified=False))
     assert db_session.execute(text("SELECT email FROM identities")).scalar() is None
 
 
@@ -167,6 +176,21 @@ def test_an_apple_token_signs_in_only_the_device_it_was_minted_for(client):
     for id_token in (apple_token(mine), apple_token(mine, nonce=None)):
         response = client.post("/v1/auth/apple", json={"device": theirs, "id_token": id_token})
         assert response.status_code == 401
+    assert client.get(f"/v1/me?device={theirs}").json()["providers"] == []
+
+
+def test_a_google_token_signs_in_only_the_device_it_was_minted_for(client):
+    """The same binding as Apple's: Google's token lives an hour, and without
+    it a copy off the wire signs in any phone until then. As a link proof too."""
+    mine, theirs = device(), device()
+    for id_token in (google_token(mine), token()):
+        response = client.post("/v1/auth/google", json={"device": theirs, "id_token": id_token})
+        assert response.status_code == 401
+        linked = client.post(
+            "/v1/auth/apple",
+            json={"device": theirs, "id_token": apple_token(theirs), "link_token": id_token},
+        )
+        assert linked.status_code == 401
     assert client.get(f"/v1/me?device={theirs}").json()["providers"] == []
 
 
@@ -276,7 +300,7 @@ def test_both_providers_can_be_attached_to_one_person(client):
     google(client, dev)
     profile = client.post(
         "/v1/auth/apple",
-        json={"device": dev, "id_token": apple_token(dev), "link_token": token()},
+        json={"device": dev, "id_token": apple_token(dev), "link_token": google_token(dev)},
     ).json()
     assert profile["providers"] == ["google", "apple"]
 
@@ -287,7 +311,7 @@ def test_a_stolen_device_id_cannot_add_a_sign_in(client):
     victim = device()
     google(client, victim)
 
-    for link in ({}, {"link_token": token(sub="somebody-else")}):
+    for link in ({}, {"link_token": google_token(victim, sub="somebody-else")}):
         stolen = client.post(
             "/v1/auth/apple",
             json={"device": victim, "id_token": apple_token(victim, sub="attacker"), **link},
@@ -348,12 +372,7 @@ def test_signing_out_unlinks_without_deleting(client):
     assert client.get(f"/v1/unlocks?device={dev}").json()["memories"][0]["id"] == memory["id"]
     assert client.get(f"/v1/me?device={dev}").json()["submitted"] == 0
 
-    assert (
-        client.post("/v1/auth/google", json={"device": dev, "id_token": token()}).json()[
-            "submitted"
-        ]
-        == 1
-    )
+    assert google(client, dev).json()["submitted"] == 1
 
 
 def test_signing_out_of_nothing_is_not_an_error(client):

@@ -275,7 +275,7 @@ def link_proof(body: SignInRequest):
 
 @router.post("/v1/auth/google", response_model=Profile)
 def sign_in_with_google(body: SignInRequest):
-    subject, email, name = google_identity(body.id_token)
+    subject, email, name = google_identity(body.id_token, body.device)
     proof = link_proof(body)
     with get_session() as session:
         return sign_in(
