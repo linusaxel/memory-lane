@@ -1038,10 +1038,13 @@ length. **Trigger:** "Show me another", under Start walk.
    and above the pin's floor), and the slider moves to it. Never "the only
    walk". Only when none of those differs does the button go, with no line in
    its place.
-3. Every walk shown is kept until the next fresh plan. With more than one, the
-   title reads "2 of 3" and "← swipe for others →" sits under the summary: a
-   swipe on the words (never the slider) steps back or on, with the slider
-   moved to that walk's length and no request. VoiceOver adjusts the same way.
+3. Every walk shown is kept until the next fresh plan. With more than one, a ‹
+   (Previous walk) sits left of Show me another and "2 of 3" under them. ‹
+   steps back; Show me another first steps on through the walks ‹ passed, and
+   only at the newest asks for another. Either way the slider moves to that
+   walk's length, stepping needs no request, and VoiceOver hears "Walk 2 of 3".
+   Not a swipe: nobody found it (the founder, 2026-09-29), and one forward
+   button, not a › beside it, keeps the button that asks labelled.
 4. Start walk sends the on-screen walk's `again`, so it stores the walk on
    screen. The client still never sends stop ids.
 

@@ -198,7 +198,7 @@ export default function App() {
   const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
   // Every walk this card has shown since the last fresh plan, and which is on
-  // screen: a swipe steps through them.
+  // screen: back steps through them, and Show me another steps on again first.
   const [shown, setShown] = useState<{ again: number; km: number; walk: TodaysRoute }[]>([]);
   const [shownAt, setShownAt] = useState(0);
   // The length that came back empty, when the card moved to the nearest that doesn't.
@@ -635,7 +635,7 @@ export default function App() {
     }
   }, [device, goToMyLocation, planKm, walkFloor, walkAsk, shown, walkTo]);
 
-  /** A swipe on the card: back or on through the walks it has shown. */
+  /** Back, or on again, through the walks the card has shown. */
   const showAt = (i: number) => {
     const entry = shown[i];
     if (!entry) return;
@@ -1467,10 +1467,14 @@ export default function App() {
               error={planError}
               onAccept={acceptWalk}
               onAnother={
-                onlyWalk ? null : () => planWalk((shown[shown.length - 1]?.again ?? again) + 1, true)
+                shownAt < shown.length - 1
+                  ? () => showAt(shownAt + 1)
+                  : onlyWalk
+                    ? null
+                    : () => planWalk((shown[shown.length - 1]?.again ?? again) + 1, true)
               }
               position={preview && shown.length > 1 ? { at: shownAt + 1, of: shown.length } : null}
-              onSwipe={(dir) => showAt(shownAt + dir)}
+              onBack={() => showAt(shownAt - 1)}
               emptyAt={emptyAt}
               onMap={backToMap}
             />

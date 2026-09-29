@@ -56,20 +56,14 @@ appId: ${APP_ID}
     visible: "[0-9]+ stops · .* loop"
     timeout: 40000
 - assertVisible: "Start this walk"
-# Both kept: a swipe on the words goes back to the first, and on again.
+# Both kept: back goes to the first, and Show me another on to the second again.
 - assertVisible: "2 of 2"
-- swipe:
-    from:
-      id: "walk-summary"
-    direction: RIGHT
+- tapOn: "Previous walk"
 - extendedWaitUntil:
     visible: "1 of 2"
     timeout: 5000
 - assertVisible: "4 stops · .* loop"
-- swipe:
-    from:
-      id: "walk-summary"
-    direction: LEFT
+- tapOn: "Show me another"
 - extendedWaitUntil:
     visible: "2 of 2"
     timeout: 5000
