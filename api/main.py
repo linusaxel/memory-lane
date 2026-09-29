@@ -12,12 +12,14 @@ api/card.py      the server-rendered card
 api/embed.py     the embeddable map
 """
 
+import logging
 import os
 from contextlib import asynccontextmanager
 
 import anyio.to_thread
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from api.accounts import router as accounts_router
 from api.billing import router as billing_router
@@ -28,6 +30,12 @@ from api.privacy import router as privacy_router
 from api.read import router as read_router
 from api.write import router as write_router
 from pipeline.config import ENABLE_EMBED, MAX_CONCURRENCY, PUBLIC_HOST
+from pipeline.db import get_session
+
+# Uvicorn configures its own loggers only; without this, the API's own
+# warnings reach stderr with no time on them and its info lines not at all.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -85,8 +93,16 @@ if ENABLE_EMBED:
 
 
 @app.get("/")
-def root():
-    """API root - health check. railway.json points at this."""
+def root(response: Response):
+    """API root - health check. railway.json points at this, so a deploy that
+    cannot reach its database fails there instead of going live."""
+    try:
+        with get_session() as session:
+            session.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("Health check: the database did not answer")
+        response.status_code = 503
+        return {"status": "no database", "service": "memory-lane"}
     return {"status": "ok", "service": "memory-lane"}
 
 

@@ -167,10 +167,11 @@ public launch that the rest of this file doesn't track. Blockers first.
       records applied migrations and nothing runs them; `schema.sql` only runs
       on a fresh docker volume. No backups, no staging. Media lives on local
       disk, which a Railway redeploy loses without a volume.
-- [ ] **Nobody hears about a crash.** (checked 2026-09-28) No error
-      reporting in the app or the API, no error boundary (a render error is a
-      blank screen), no API logging config, and the `/` health check never
-      touches the database.
+- [ ] **Nobody hears about a crash.** (checked 2026-09-29) A render error
+      shows `mobile/src/Crashed.tsx`, the API logs with timestamps, and `/`
+      answers 503 without its database. Still no error reporting: nothing
+      leaves the phone or the server. Pick a service (Sentry's free tier covers
+      both), then report from `Crashed.componentDidCatch` and the API.
 - [ ] **No `expo-updates`, so every fix waits on review.** (checked
       2026-09-29) Needs the EAS project (`EAS_BUILD`) for its update URL and a
       `runtimeVersion` policy. The `development` EAS profile still points at

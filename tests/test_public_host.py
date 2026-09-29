@@ -1,4 +1,5 @@
-"""What the app does once Railway says it is the public host.
+"""What the app does once Railway says it is the public host, and the health
+check Railway deploys against.
 
 Imported fresh in a subprocess, because every one of these is decided at import,
 and run outside the repo so the developer's .env (which the image never copies)
@@ -9,6 +10,13 @@ import os
 import pathlib
 import subprocess
 import sys
+from contextlib import contextmanager
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.exc import OperationalError
+
+import api.main
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
@@ -50,3 +58,22 @@ def test_railway_without_a_database_url_refuses_to_start(tmp_path):
     """Not a fallback to the dev password: pipeline/db.py."""
     out = run(tmp_path, RAILWAY_ENVIRONMENT_NAME="production")
     assert out.returncode != 0 and "DATABASE_URL is unset" in out.stderr
+
+
+@pytest.mark.db
+def test_the_health_check_asks_the_database(api_client):
+    """Railway's healthcheckPath points at / - this is load-bearing for deploy."""
+    r = api_client.get("/")
+    assert (r.status_code, r.json()) == (200, {"status": "ok", "service": "memory-lane"})
+
+
+def test_a_host_that_cannot_reach_its_database_is_not_healthy(monkeypatch):
+    """Otherwise a deploy with a wrong DATABASE_URL goes live and 500s."""
+
+    @contextmanager
+    def unreachable():
+        raise OperationalError("SELECT 1", {}, Exception("connection refused"))
+        yield
+
+    monkeypatch.setattr(api.main, "get_session", unreachable)
+    assert TestClient(api.main.app).get("/").status_code == 503

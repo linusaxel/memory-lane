@@ -68,7 +68,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
-| `tests/test_public_host.py` | What Railway's host turns off: `/docs`, the embed, the dev database fallback |
+| `tests/test_public_host.py` | What Railway's host turns off (`/docs`, the embed, the dev database fallback), and the health check |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | One-off SQL for databases that already exist |
@@ -142,5 +142,6 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/format.ts` | How numbers are written on screen |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/types.ts` | Types more than one screen needs |
+| `mobile/src/Crashed.tsx` | What a render error shows instead of a blank screen, around the whole app |
 | `mobile/src/devLocation.ts`, `devOpen.ts` | Dev only: a told position, a screen opened on launch |
 | `mobile/plugins/withoutBackgroundFetch.js` | Takes back the `fetch` background mode expo-task-manager declares for every app |
