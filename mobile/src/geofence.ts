@@ -23,22 +23,41 @@ import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 
 import type { LocatedMemory } from './api.ts';
-import { memoriesToWatch, regionsFor } from './geofenceRegions.ts';
+import { mayNotify, memoriesToWatch, regionsFor, type Sent } from './geofenceRegions.ts';
 
 export const GEOFENCE_TASK = 'memory-lane-proximity';
 
 const NAMES_KEY = 'memorylane.geofenceNames.v1';
+const SENT_KEY = 'memorylane.geofenceSent.v1';
 
 type GeofenceTaskData = {
   eventType: Location.GeofencingEventType;
   region: Location.LocationRegion;
 };
 
-TaskManager.defineTask<GeofenceTaskData>(GEOFENCE_TASK, async ({ data, error }) => {
-  if (error || !data) return;
-  if (data.eventType !== Location.GeofencingEventType.Enter) return;
+/** One event at a time: entering a cluster fires several at once, and each has
+ *  to see what the one before it stored. */
+let queue = Promise.resolve();
 
-  const id = data.region.identifier;
+TaskManager.defineTask<GeofenceTaskData>(GEOFENCE_TASK, ({ data, error }) => {
+  if (error || !data) return Promise.resolve();
+  if (data.eventType !== Location.GeofencingEventType.Enter) return Promise.resolve();
+  queue = queue.then(() => onEnter(data.region.identifier ?? '')).catch(() => {});
+  return queue;
+});
+
+async function onEnter(id: string) {
+  let sent: Sent = { last: 0, byId: {} };
+  try {
+    const raw = await AsyncStorage.getItem(SENT_KEY);
+    if (raw) sent = JSON.parse(raw) as Sent;
+  } catch {
+    // Nothing stored reads as nothing sent.
+  }
+  const next = mayNotify(id, Date.now(), sent);
+  if (!next) return;
+  await AsyncStorage.setItem(SENT_KEY, JSON.stringify(next)).catch(() => {});
+
   let name = 'a place';
   try {
     const raw = await AsyncStorage.getItem(NAMES_KEY);
@@ -56,7 +75,7 @@ TaskManager.defineTask<GeofenceTaskData>(GEOFENCE_TASK, async ({ data, error }) 
     },
     trigger: null,
   });
-});
+}
 
 /** Starts (or restarts, replacing the region list) watching the given
  *  memories. Requests background location and notification permission if

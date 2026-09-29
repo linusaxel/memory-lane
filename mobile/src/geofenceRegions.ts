@@ -40,3 +40,21 @@ export function regionsFor(memories: LocatedMemory[]): Region[] {
     notifyOnExit: false,
   }));
 }
+
+/** A boundary walked along fires Enter over and over, and a cluster of stops
+ *  fires one each, so an alert is let through at most once a day per memory
+ *  and once per half hour in all. */
+const SAME_MEMORY_MS = 24 * 60 * 60 * 1000;
+const ANY_MEMORY_MS = 30 * 60 * 1000;
+
+export type Sent = { last: number; byId: Record<string, number> };
+
+/** The record to store if memory `id` may notify now, or null if it may not. */
+export function mayNotify(id: string, now: number, sent: Sent): Sent | null {
+  if (now - sent.last < ANY_MEMORY_MS) return null;
+  if (now - (sent.byId[id] ?? -Infinity) < SAME_MEMORY_MS) return null;
+  const byId = Object.fromEntries(
+    Object.entries(sent.byId).filter(([, at]) => now - at < SAME_MEMORY_MS),
+  );
+  return { last: now, byId: { ...byId, [id]: now } };
+}

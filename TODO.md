@@ -180,9 +180,6 @@ public launch that the rest of this file doesn't track. Blockers first.
       checked, so a captured Google token signs in any device until it expires
       (an hour). expo-auth-session sends its own random nonce; pass
       `extraParams: { nonce }` with the device hash and check it the same way.
-- [ ] **Nearby notifications aren't throttled.** (checked 2026-09-28) Every
-      region entry fires (`mobile/src/geofence.ts`), so dithering on a
-      boundary or clustered stops repeats the alert.
 
 ---
 

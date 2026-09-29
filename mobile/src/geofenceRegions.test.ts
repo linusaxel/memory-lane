@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import type { LocatedMemory } from './api.ts';
-import { memoriesToWatch, regionsFor } from './geofenceRegions.ts';
+import { mayNotify, memoriesToWatch, regionsFor } from './geofenceRegions.ts';
 
 let nextId = 1;
 
@@ -55,4 +55,28 @@ test('a region carries the memory id, its coordinates, and its own radius', () =
 test('a gate smaller than iOS can watch is watched at the smallest it can', () => {
   assert.equal(regionsFor([memory({ radius: 20 })])[0].radius, 100);
   assert.equal(regionsFor([memory({ radius: null })])[0].radius, 100);
+});
+
+const HOUR = 60 * 60 * 1000;
+const NOTHING = { last: 0, byId: {} };
+
+test('the first memory you walk into notifies', () => {
+  assert.deepEqual(mayNotify('1', 10 * HOUR, NOTHING), { last: 10 * HOUR, byId: { '1': 10 * HOUR } });
+});
+
+test('a cluster entered at once notifies once', () => {
+  const sent = mayNotify('1', 10 * HOUR, NOTHING)!;
+  assert.equal(mayNotify('2', 10 * HOUR + 1000, sent), null);
+  assert.notEqual(mayNotify('2', 11 * HOUR, sent), null);
+});
+
+test('dithering on one boundary notifies once a day', () => {
+  const sent = mayNotify('1', 10 * HOUR, NOTHING)!;
+  assert.equal(mayNotify('1', 20 * HOUR, sent), null);
+  assert.notEqual(mayNotify('1', 35 * HOUR, sent), null);
+});
+
+test('a day-old alert is forgotten, so the record stays small', () => {
+  const sent = mayNotify('1', 10 * HOUR, NOTHING)!;
+  assert.deepEqual(Object.keys(mayNotify('2', 40 * HOUR, sent)!.byId), ['2']);
 });
