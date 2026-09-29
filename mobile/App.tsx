@@ -97,7 +97,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
  * where the seeded content actually is.
  */
 /** `again` rolls for a plan; api/models.py ROUTE_AGAIN_MAX leaves room above
- *  it for "Show me another" taps. */
+ *  it for "Next walk" taps. */
 const ROLLS = 1_000_000;
 
 const planKey = (km: number, ask: WalkAsk) => `${km}|${ask.loop}|${ask.end?.lat},${ask.end?.lng}`;
@@ -192,13 +192,13 @@ export default function App() {
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
   const [planFallback, setPlanFallback] = useState(false);
   // Which of the walks as good this preview is: a fresh roll for every plan,
-  // one up for "Show me another", and the accept sends the same.
+  // one up for "Next walk", and the accept sends the same.
   const [again, setAgain] = useState(0);
-  // "Show me another" came back unchanged: that was the only walk that long.
+  // "Next walk" came back unchanged: that was the only walk that long.
   const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
   // Every walk this card has shown since the last fresh plan, and which is on
-  // screen: back steps through them, and Show me another steps on again first.
+  // screen: ‹ steps back through them, and › steps on again before asking.
   const [shown, setShown] = useState<{ again: number; km: number; walk: TodaysRoute }[]>([]);
   const [shownAt, setShownAt] = useState(0);
   // The length that came back empty, when the card moved to the nearest that doesn't.
@@ -650,7 +650,7 @@ export default function App() {
   // Draw first, adjust after: opening the card plans, and so does every
   // change to it. A "too far" answer lifts planKm, which plans once more at a
   // length that reaches. Through a ref, so a new preview does not re-plan, and
-  // not for what is already drawn: a length Show me another moved to.
+  // not for what is already drawn: a length Next walk moved to.
   const planWalkRef = useRef(planWalk);
   planWalkRef.current = planWalk;
   const planning = stage === 'preview';
@@ -1466,15 +1466,15 @@ export default function App() {
               busy={planBusy}
               error={planError}
               onAccept={acceptWalk}
-              onAnother={
+              onNext={
                 shownAt < shown.length - 1
                   ? () => showAt(shownAt + 1)
                   : onlyWalk
                     ? null
                     : () => planWalk((shown[shown.length - 1]?.again ?? again) + 1, true)
               }
-              position={preview && shown.length > 1 ? { at: shownAt + 1, of: shown.length } : null}
-              onBack={() => showAt(shownAt - 1)}
+              onBack={shownAt > 0 ? () => showAt(shownAt - 1) : null}
+              walkNumber={shownAt + 1}
               emptyAt={emptyAt}
               onMap={backToMap}
             />

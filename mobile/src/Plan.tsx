@@ -13,7 +13,7 @@
  */
 
 import Slider from '@react-native-community/slider';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { WalkAsk } from './api.ts';
@@ -102,17 +102,35 @@ type PreviewProps = {
   busy: boolean;
   error: string | null;
   onAccept: () => void;
-  /** On through the walks stepped back past, then a new one. Null once no
-   *  length near this one has another walk. */
-  onAnother: (() => void) | null;
-  /** Which of the walks this card has shown is on screen; null while only one. */
-  position: { at: number; of: number } | null;
-  /** Back to the walk shown before this one. */
-  onBack: () => void;
+  /** On through the walks stepped back past, then a new one. Null on the last:
+   *  no length near this one has another walk. */
+  onNext: (() => void) | null;
+  /** Back to the walk shown before this one; null on the first. */
+  onBack: (() => void) | null;
+  /** Which walk this is, counting from the first: said to VoiceOver. */
+  walkNumber: number;
   /** The asked length, when it had no walk and the card moved to the nearest. */
   emptyAt: number | null;
   onMap: () => void;
 };
+
+/** One side of the pages; null keeps the side's space empty. */
+type ArrowProps = { glyph: string; name: string; onPress: (() => void) | null; busy: boolean };
+
+function Arrow({ glyph, name, onPress, busy }: ArrowProps) {
+  if (!onPress) return <View style={styles.arrow} />;
+  return (
+    <Pressable
+      style={dim(styles.arrow)}
+      onPress={onPress}
+      disabled={busy}
+      accessibilityRole="button"
+      accessibilityLabel={name}
+    >
+      <Text style={styles.arrowText}>{glyph}</Text>
+    </Pressable>
+  );
+}
 
 export function Preview({
   stops,
@@ -128,17 +146,18 @@ export function Preview({
   busy,
   error,
   onAccept,
-  onAnother,
-  position,
+  onNext,
   onBack,
+  walkNumber,
   emptyAt,
   onMap,
 }: PreviewProps) {
   // Said, not focused: the arrows keep VoiceOver where it is (WAI carousels).
-  const at = position?.at;
+  const stepped = useRef(false);
   useEffect(() => {
-    if (position) AccessibilityInfo.announceForAccessibility(`Walk ${position.at} of ${position.of}`);
-  }, [at]);
+    if (stepped.current) AccessibilityInfo.announceForAccessibility(`Walk ${walkNumber}`);
+    stepped.current = true;
+  }, [walkNumber]);
   const found = stops != null && stops > 0;
   const short = found && meters < ROUTE_FILL * km * 1000;
   const unreachable = floorKm > WALK_KM.max;
@@ -149,13 +168,19 @@ export function Preview({
       <Text style={[styles.cardTitle, styles.besideClose]}>
         {through ? `A walk through ${through}` : 'A walk from here'}
       </Text>
-      <Text style={styles.cardBody}>
-        {stops == null
-          ? 'Finding a walk…'
-          : stops === 0
-            ? `No walk within ${WALK_KM.max} km from here.`
-            : `${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
-      </Text>
+      {/* Pages: the arrows flank what they change. A missing one keeps its
+          space, so the line never shifts between walks. */}
+      <View style={styles.pages}>
+        {found && <Arrow glyph="‹" name="Previous walk" onPress={onBack} busy={busy} />}
+        <Text style={[styles.cardBody, found && styles.paged]}>
+          {stops == null
+            ? 'Finding a walk…'
+            : stops === 0
+              ? `No walk within ${WALK_KM.max} km from here.`
+              : `${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
+        </Text>
+        {found && <Arrow glyph="›" name="Next walk" onPress={onNext} busy={busy} />}
+      </View>
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
       )}
@@ -198,43 +223,6 @@ export function Preview({
           <Text style={styles.primaryText}>Start walk</Text>
         )}
       </Pressable>
-      {/* Back beside forward, every step in one row; the spacer keeps Show me
-          another centred under Start walk. Show me another is gone only when no
-          length near this one has another walk either. */}
-      {found && (onAnother || position) && (
-        <View style={styles.anotherRow}>
-          {position ? (
-            <Pressable
-              style={dim(styles.back)}
-              onPress={onBack}
-              disabled={busy || position.at === 1}
-              accessibilityRole="button"
-              accessibilityLabel="Previous walk"
-            >
-              <Text style={[styles.backText, position.at === 1 && styles.backOff]}>‹</Text>
-            </Pressable>
-          ) : (
-            <View style={styles.back} />
-          )}
-          {onAnother ? (
-            <Pressable
-              style={dim([styles.secondary, styles.anotherButton])}
-              onPress={onAnother}
-              disabled={busy}
-              accessibilityRole="button"
-              accessibilityLabel="Show me another"
-            >
-              <Text style={styles.secondaryText}>Show me another</Text>
-            </Pressable>
-          ) : (
-            <View style={styles.anotherButton} />
-          )}
-          <View style={styles.back} />
-        </View>
-      )}
-      {found && position && (
-        <Text style={[label, styles.count]}>{`${position.at} of ${position.of}`}</Text>
-      )}
       {error && <Text style={styles.error}>{error}</Text>}
       <CloseButton place={styles.close} onPress={onMap} disabled={busy} label="Back to the map" />
     </View>
@@ -358,12 +346,10 @@ const styles = StyleSheet.create({
   // Apple's close: top trailing on the card, on the title line (UI.md, rule 12).
   close: { position: 'absolute', top: 20, right: 20 },
   besideClose: { paddingRight: 36 },
-  anotherRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  anotherButton: { flex: 1 },
+  pages: { flexDirection: 'row', alignItems: 'center' },
+  paged: { flex: 1, textAlign: 'center' },
   // 44pt, Apple's smallest hit target.
-  back: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backText: { ...buttonText, fontSize: 32, lineHeight: 36, color: color.ink },
-  backOff: { color: color.rule },
-  count: { textAlign: 'center' },
+  arrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  arrowText: { ...buttonText, fontSize: 32, lineHeight: 36, color: color.ink },
   doneTitle: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
 });

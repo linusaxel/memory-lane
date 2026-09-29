@@ -187,7 +187,7 @@ somebody can hand their old phone in and still have everything they walked for.
    through Blågårdsgade", and the length starts at the shortest walk that
    reaches it, twice the crow's distance (×1.3 on a loop, for the streets and
    the way back; `walkFloorKm` in `src/region.ts`). It has its own length:
-   Plan a walk's is left alone. Show me another never drops the pin.
+   Plan a walk's is left alone. Next walk never drops the pin.
 3. **Start walk** is `POST /v1/routes/today` with the same position, length and
    loop, and lands on the walk (F25).
 
@@ -1022,10 +1022,10 @@ stop, not out and home: the start is never stored (docs/10 § Routes).
 `GET /v1/routes/walked`, `src/Memories.tsx`,
 `.maestro/walk-and-unlock.yml`, and `.maestro/lakes-loop.yml` on a seeded history.
 
-## F32 · Show me another — **Implemented**
+## F32 · Next walk — **Implemented**
 
 **Who:** somebody on the preview (F1) who wants a different walk of the same
-length. **Trigger:** "Show me another", under Start walk.
+length. **Trigger:** › (Next walk), right of the stops line.
 
 1. The preview is replanned with `again` one higher, from the same length,
    loop. A different walk comes back whenever there is another as
@@ -1036,15 +1036,15 @@ length. **Trigger:** "Show me another", under Start walk.
    card offers one of a similar length instead: the nearest other length that
    has a different walk (−0.5, +0.5, −1, +1, −1.5, +1.5 km, within the slider
    and above the pin's floor), and the slider moves to it. Never "the only
-   walk". Only when none of those differs does the button go, with no line in
-   its place.
-3. Every walk shown is kept until the next fresh plan. With more than one, a ‹
-   (Previous walk) sits left of Show me another and "2 of 3" under them. ‹
-   steps back; Show me another first steps on through the walks ‹ passed, and
-   only at the newest asks for another. Either way the slider moves to that
-   walk's length, stepping needs no request, and VoiceOver hears "Walk 2 of 3".
-   Not a swipe: nobody found it (the founder, 2026-09-29), and one forward
-   button, not a › beside it, keeps the button that asks labelled.
+   walk". Only when none of those differs does › go: that walk is the last page.
+3. The walks are pages, kept until the next fresh plan: ‹ and › flank "5 stops
+   · 4.1 km loop", the line they change. The first has no ‹, the last no ›.
+   › steps on through the walks ‹ passed and only at the newest asks for
+   another. The slider moves to that walk's length, stepping back needs no
+   request, and VoiceOver hears "Walk 2". No count: the total isn't known
+   until the last is found, and "1 of 1, 2 of 2" read wrong. Not a swipe
+   (nobody found it), nor a Show me another button beside the arrows (two
+   forwards): the founder, 2026-09-29.
 4. Start walk sends the on-screen walk's `again`, so it stores the walk on
    screen. The client still never sends stop ids.
 

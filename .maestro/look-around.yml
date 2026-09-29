@@ -50,22 +50,23 @@ appId: ${APP_ID}
 # A preview is a look: its pins carry their stop numbers already.
 - assertVisible: "Stop 1 of 4\\. .*"
 
-# F32: another walk as good, or one of a similar length, still a preview.
-- tapOn: "Show me another"
+# F32: › is another walk as good, or one of a similar length, still a preview.
+- assertNotVisible: "Previous walk"
+- tapOn: "Next walk"
 - extendedWaitUntil:
-    visible: "[0-9]+ stops · .* loop"
+    visible: "Previous walk"
     timeout: 40000
+- assertVisible: "[0-9]+ stops · .* loop"
 - assertVisible: "Start this walk"
-# Both kept: back goes to the first, and Show me another on to the second again.
-- assertVisible: "2 of 2"
+# Pages: back to the first, which has no ‹, and on again.
 - tapOn: "Previous walk"
 - extendedWaitUntil:
-    visible: "1 of 2"
+    notVisible: "Previous walk"
     timeout: 5000
 - assertVisible: "4 stops · .* loop"
-- tapOn: "Show me another"
+- tapOn: "Next walk"
 - extendedWaitUntil:
-    visible: "2 of 2"
+    visible: "Previous walk"
     timeout: 5000
 
 # One way redraws in place: the same four stops' worth, ending somewhere new.

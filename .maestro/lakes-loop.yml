@@ -1,4 +1,4 @@
-# F1 plan a walk -> F32 Show me another, round the Copenhagen lakes -> F31
+# F1 plan a walk -> F32 Next walk, round the Copenhagen lakes -> F31
 # look back at the walks already walked there. docs/08-ux-flows.md
 #
 # e2e/run.sh plants `seed_dev --routes lakes` for this flow instead of the
@@ -10,7 +10,7 @@
 # The whole slider, 10 km. The lakes top out near 7 km however many stops, so
 # every walk here is the longest from here. Which of them the first preview
 # shows is a random roll; only some reach Sankt Jørgens Sø, the far lake, so
-# Show me another is tapped until one does, stepping the length when the lakes
+# Next walk is tapped until one does, stepping the length when the lakes
 # run out of walks at it, so reaching it is F32 working.
 
 appId: ${APP_ID}
@@ -63,11 +63,11 @@ appId: ${APP_ID}
       notVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
     times: 7
     commands:
-      - tapOn: "Show me another"
+      - tapOn: "Next walk"
       - waitForAnimationToEnd
 - assertVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
 - assertVisible: "[0-9]+ stops · .* loop"
-- assertVisible: "Show me another"
+- assertVisible: "Next walk"
 
 # Accepting is what registers the device, and with it the past walks.
 - tapOn: "Start this walk"

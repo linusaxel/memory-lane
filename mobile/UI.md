@@ -30,14 +30,12 @@ Preview (src/Plan.tsx)          the map, fitted to the start and every stop. Dra
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
 └─ card (Preview)              every change on it redraws the walk
    ├─ "A walk from here"        23/700, the × trailing; "A walk through <place>" from Walk here
-   ├─ "4 stops · 3.8 km loop"   "Finding a walk…" first; "No walk within 10 km from here."
+   ├─ ‹ "4 stops · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left; "Finding a walk…" first; "No walk within 10 km from here."
    ├─ "Nothing at 4 km; this is the nearest."   an empty length moved up to one with a walk
    ├─ "Planning from central Copenhagen…"   with no position
    ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
    ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
-   ├─ Start walk
-   ├─ ‹  Show me another        ‹ (Previous walk, 44pt) once it has shown two; Show me another replays what ‹ stepped past, then asks
-   └─ "2 of 3"                  the count, centred under them; VoiceOver hears "Walk 2 of 3"
+   └─ Start walk
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
 │                              position the camera is pinned on you: it follows,
