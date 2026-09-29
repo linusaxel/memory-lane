@@ -47,7 +47,8 @@ comes to that spot, alongside the display name you chose or "Anonymous". Do not
 post anything you would not want a stranger standing there to read.
 
 Photos and recordings you attach are stored on our servers and shown with the
-memory. We strip nothing from them beyond re-encoding photos for size, so do not
+memory. Photos are re-encoded when they arrive, which removes the location,
+camera and time the phone wrote into them. Nothing else is stripped, so do not
 attach a file whose contents you would not publish.
 
 Before anything you post is shown, its text is checked for abuse, and refused

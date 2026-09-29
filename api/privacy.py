@@ -59,8 +59,9 @@ coordinates you were standing at are shown to anyone who comes to that spot, alo
 the display name you chose or &ldquo;Anonymous&rdquo;. Do not post anything you would
 not want a stranger standing there to read.</p>
 <p>Photos and recordings you attach are stored on our servers and shown with the memory.
-We strip nothing from them beyond re-encoding photos for size, so do not attach a file
-whose contents you would not publish.</p>
+Photos are re-encoded when they arrive, which removes the location, camera and time
+the phone wrote into them. Nothing else is stripped, so do not attach a file whose
+contents you would not publish.</p>
 <p>Before anything you post is shown, its text is checked for abuse, and refused if it
 is. Anyone signed in can report a memory. Enough reports and it stops being shown to
 anybody until we review it; the record of it is kept so a dispute can be answered. You

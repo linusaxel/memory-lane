@@ -23,6 +23,10 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The venv has no pip.** 2026-09-29: AGENTS.md and `docs/01-setup.md` say
+  `pip install -r requirements.txt`, but `venv/` was made by uv, so
+  `venv/bin/pip` and `python -m pip` both fail. Only `loop/verify.sh` names
+  `uv pip install --python venv/bin/python`. Fix: say that in both docs.
 - **Placement has no before/after tool.** 2026-09-28: `quality --compare`
   samples chunks by hash and scores summaries only. A venue-line change is
   judged on the chunks that produced `llm` places, by whether they geocode.
@@ -150,10 +154,9 @@ public launch that the rest of this file doesn't track. Blockers first.
       Apple account must also have its tokens revoked through Apple's REST
       API, which needs the `.p8` key (`STORE_ACCOUNT`). The GDPR copy is
       `python -m api.my_data`, answered by email: see the privacy policy entry.
-- [ ] **The privacy policy is wrong and thin.** (checked 2026-09-28)
-      `api/privacy.py` says photos are re-encoded; they are stored raw with
-      EXIF GPS intact (`api/media.py`). No controller, no legal basis, no
-      retention, no RevenueCat or geocoders. Contact reads `CONTACT_EMAIL`,
+- [ ] **The privacy policy is thin.** (checked 2026-09-29) Photos are
+      re-encoded without EXIF now (`api/media.py`). No controller, no legal
+      basis, no retention, no RevenueCat or geocoders. Contact reads `CONTACT_EMAIL`,
       unset until you pick an address.
       The generated `PrivacyInfo.xcprivacy` declares no collected data.
 - [ ] **The corpus has no legal footing for a paid app.** (checked 2026-09-28)

@@ -17,10 +17,12 @@ to remove it from every endpoint at once - the search, the counts and the card
 included, not just the one somebody complained about.
 """
 
+import io
 import pathlib
 import uuid
 
 import pytest
+from PIL import Image
 from sqlalchemy import text
 
 import api.main as m
@@ -293,7 +295,8 @@ def test_a_photo_travels_with_the_memory(client, tmp_path):
     uploaded = upload(client, dev).json()
     assert uploaded["kind"] == "photo"
     assert uploaded["url"].startswith("/media/")
-    assert (tmp_path / uploaded["url"].removeprefix("/media/")).read_bytes() == PNG
+    with Image.open(tmp_path / uploaded["url"].removeprefix("/media/")) as stored:
+        assert (stored.format, stored.size) == ("PNG", (1, 1))
 
     memory = submit(client, device=dev, media_ids=[uploaded["id"]])
     assert [item["url"] for item in memory["media"]] == [uploaded["url"]]
@@ -310,6 +313,29 @@ def test_a_recording_keeps_the_length_the_phone_measured(client):
 
     photo = upload(client, dev, duration_seconds="41.5").json()
     assert photo["duration_seconds"] is None, "a photograph has no length"
+
+
+def test_a_photo_loses_where_it_was_taken(client, tmp_path):
+    """A memory is public, so a phone photo's EXIF - GPS to the metre, the
+    camera, the time - would be too. The orientation tag goes with the rest,
+    so a sideways camera shot has to come back already turned."""
+    exif = Image.Exif()
+    exif[0x0112] = 6  # Orientation: rotate 90 to display
+    exif[0x0110] = "iPhone 17"  # Model
+    exif.get_ifd(0x8825)[2] = (55.0, 40.0, 33.2)  # GPSLatitude
+    shot = io.BytesIO()
+    Image.new("RGB", (40, 20), "red").save(shot, "JPEG", exif=exif)
+
+    uploaded = upload(client, device(), shot.getvalue(), "image/jpeg", "a.jpg").json()
+    with Image.open(tmp_path / uploaded["url"].removeprefix("/media/")) as stored:
+        assert not stored.getexif()
+        assert stored.size == (20, 40)
+
+
+def test_a_file_that_only_starts_like_a_photo_is_refused(client, tmp_path):
+    response = upload(client, device(), PNG[:16] + b"\x00" * 64)
+    assert response.status_code == 415
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_the_locked_card_says_there_is_a_photo_without_showing_it(client):

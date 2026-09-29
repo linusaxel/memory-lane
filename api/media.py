@@ -14,6 +14,7 @@ import pathlib
 import uuid
 
 from fastapi import HTTPException, UploadFile
+from PIL import Image, ImageOps
 from starlette.staticfiles import StaticFiles
 
 MEDIA_DIR = pathlib.Path(os.getenv("MEDIA_DIR", "media")).resolve()
@@ -26,14 +27,13 @@ MAX_PHOTO_BYTES = 12 * 1024 * 1024
 MAX_AUDIO_BYTES = 25 * 1024 * 1024
 
 # The only types that exist, the extension each one gets, and the byte prefix it
-# has to actually start with. (offset, magic) - ISO base media files (heic, m4a,
-# mp4) carry theirs at offset 4, after the box length.
+# has to actually start with. (offset, magic) - ISO base media files (m4a, mp4)
+# carry theirs at offset 4, after the box length. No HEIC: every photo is
+# re-encoded, Pillow cannot read HEIC, and the app asks the picker for JPEG.
 ALLOWED = {
     "image/jpeg": ("photo", ".jpg", [(0, b"\xff\xd8\xff")]),
     "image/png": ("photo", ".png", [(0, b"\x89PNG\r\n\x1a\n")]),
     "image/webp": ("photo", ".webp", [(0, b"RIFF"), (8, b"WEBP")]),
-    "image/heic": ("photo", ".heic", [(4, b"ftyp")]),
-    "image/heif": ("photo", ".heic", [(4, b"ftyp")]),
     "audio/m4a": ("audio", ".m4a", [(4, b"ftyp")]),
     "audio/x-m4a": ("audio", ".m4a", [(4, b"ftyp")]),
     "audio/mp4": ("audio", ".m4a", [(4, b"ftyp")]),
@@ -52,7 +52,6 @@ CHUNK = 64 * 1024
 # Content-Type is a property of this code and not of /etc/mime.types.
 SERVED_TYPES = {
     ".m4a": "audio/mp4",
-    ".heic": "image/heic",
     ".webp": "image/webp",
     ".wav": "audio/wav",
 }
@@ -123,7 +122,25 @@ async def save_upload(upload: UploadFile) -> tuple[str, str, str, int]:
         destination.unlink(missing_ok=True)
         raise HTTPException(status_code=400, detail="Empty file")
 
+    if kind == "photo":
+        written = _strip_metadata(destination)
+
     return relative, kind, mime, written
+
+
+def _strip_metadata(path: pathlib.Path) -> int:
+    """Re-encode a photo in place, so what we serve carries no EXIF: a phone
+    photo's GPS, camera and capture time. The orientation tag goes with it, so
+    it is applied to the pixels first. Returns the new size."""
+    try:
+        with Image.open(path) as image:
+            upright = ImageOps.exif_transpose(image)
+            icc = image.info.get("icc_profile")
+            upright.save(path, format=image.format, icc_profile=icc)
+    except Exception:
+        path.unlink(missing_ok=True)
+        raise HTTPException(status_code=415, detail="File is not a readable image") from None
+    return path.stat().st_size
 
 
 def media_url(path: str) -> str:
