@@ -329,6 +329,15 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       the map and the user dot. Waits on the founder's yes and a look on a
       real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
       state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
+- [ ] **Unlock on the map, not in a sheet.** (asked 2026-09-29) In reach, a
+      pin opens a sheet that holds only the place, "within reach", the hold
+      ring and "You made it." Drop that state of `MemorySheet.tsx` and show
+      the ring (`UnlockButton.tsx`) over the map when a pin is unlockable, with
+      a small teaser of the memory's title. A hold opens the sheet on the
+      story. Mind: two in reach at once (the nearest, or ‹ ›); the subscriber
+      peek (`subscribe-from-the-peek.yml`); the e2e flows that hold "Unlock
+      this memory" in the sheet (`.maestro/steps/unlock-stop.yml`); F7 in
+      docs/08-ux-flows.md; and UI.md's layer rules.
 
 ---
 
