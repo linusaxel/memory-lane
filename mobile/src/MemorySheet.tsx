@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActionSheetIOS,
+  Alert,
   Animated,
   Easing,
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,6 +29,7 @@ import { distance, duration } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Circle, Svg } from 'react-native-svg';
 import { button, buttonText, buttonTextSmall, color, dim, font, label, lift, radius as corner } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
 import YouGlyph from './YouGlyph.tsx';
@@ -73,6 +77,47 @@ type Props = {
   onBlock?: (memory: LocatedMemory) => void;
 };
 
+/** Report and block, behind ⋯ the way a post does it: App Store 1.2 wants both
+ *  reachable, not on show. There is no unblock, so block asks first. */
+function moreActions(
+  memory: LocatedMemory,
+  reported: boolean | undefined,
+  onReport: (memory: LocatedMemory) => void,
+  onBlock?: (memory: LocatedMemory) => void,
+) {
+  const who = memory.author?.name === 'Anonymous' ? 'this person' : memory.author?.name;
+  const actions = [
+    reported ? null : { label: 'Report this memory', run: () => onReport(memory) },
+    onBlock && who
+      ? {
+          label: `Block ${who}`,
+          destructive: true,
+          run: () =>
+            Alert.alert(`Block ${who}?`, 'You will not see anything they post.', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Block', style: 'destructive', onPress: () => onBlock(memory) },
+            ]),
+        }
+      : null,
+  ].filter((a) => a !== null);
+  if (actions.length === 0) return;
+  if (Platform.OS === 'ios') {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: [...actions.map((a) => a.label), 'Cancel'],
+        cancelButtonIndex: actions.length,
+        destructiveButtonIndex: actions.findIndex((a) => 'destructive' in a),
+      },
+      (i) => actions[i]?.run(),
+    );
+  } else {
+    Alert.alert('', undefined, [
+      ...actions.map((a) => ({ text: a.label, onPress: a.run })),
+      { text: 'Cancel', style: 'cancel' as const },
+    ]);
+  }
+}
+
 function formatDistance(meters: number | null): string | null {
   return meters == null ? null : distance(meters, { suffix: 'away' });
 }
@@ -102,9 +147,6 @@ export default function MemorySheet({
   onBlock,
 }: Props) {
   const memory = memories[index] ?? null;
-  // There is no unblock, so it takes a second press, and paging resets it.
-  const [confirmBlock, setConfirmBlock] = useState(false);
-  useEffect(() => setConfirmBlock(false), [memory?.id]);
   const insets = useSafeAreaInsets();
   // The map before a walk: a card over the map, sized to what it holds, not a
   // page. Fixed for the whole opening - a modal cannot change how it is
@@ -259,9 +301,26 @@ export default function MemorySheet({
               <View style={styles.grabber} />
             </View>
             <CloseButton place={styles.close} onPress={onClose} />
+            {!locked && onReport && (
+              <Pressable
+                style={dim(styles.more)}
+                hitSlop={7}
+                accessibilityRole="button"
+                accessibilityLabel="More"
+                onPress={() => moreActions(memory, reported, onReport, onBlock)}
+              >
+                <Svg width={14} height={4} viewBox="0 0 14 4">
+                  {[2, 7, 12].map((cx) => (
+                    <Circle key={cx} cx={cx} cy={2} r={1.6} fill={color.inkSoft} />
+                  ))}
+                </Svg>
+              </Pressable>
+            )}
 
             <View style={styles.heading}>
-              <Text style={styles.place}>{memory.place.name}</Text>
+              <Text style={[styles.place, !locked && onReport && styles.placeBesideMore]}>
+                {memory.place.name}
+              </Text>
               {peeking && (memory.author || memory.source_name) && (
                 <View style={styles.peekFrom}>
                   {memory.author && <YouGlyph size={13} color={color.inkFaint} />}
@@ -409,34 +468,6 @@ export default function MemorySheet({
                         onPress={() => onEdit(memory)}
                       >
                         <Text style={styles.reportText}>Edit this memory</Text>
-                      </Pressable>
-                    )}
-
-                    {!locked && onReport && (
-                      <Pressable
-                        style={dim(styles.report)}
-                        hitSlop={4}
-                        accessibilityRole="button"
-                        disabled={reported}
-                        onPress={() => onReport(memory)}
-                      >
-                        <Text style={styles.reportText}>
-                          {reported ? 'Reported' : 'Report this memory'}
-                        </Text>
-                      </Pressable>
-                    )}
-                    {!locked && onBlock && memory.author && (
-                      <Pressable
-                        style={dim(styles.block)}
-                        hitSlop={4}
-                        accessibilityRole="button"
-                        onPress={() => (confirmBlock ? onBlock(memory) : setConfirmBlock(true))}
-                      >
-                        <Text style={styles.reportText}>
-                          {confirmBlock
-                            ? 'Tap again: you will not see anything they post'
-                            : `Block ${memory.author.name === 'Anonymous' ? 'this person' : memory.author.name}`}
-                        </Text>
                       </Pressable>
                     )}
                   </Animated.View>
@@ -646,7 +677,6 @@ const styles = StyleSheet.create({
   // Quiet on purpose. It has to be findable and must not be the thing the eye
   // lands on under somebody's story.
   report: { ...button.outline, ...button.small, marginTop: 28, alignSelf: 'flex-start' },
-  block: { ...button.outline, ...button.small, marginTop: 12, alignSelf: 'flex-start' },
   reportText: { ...buttonTextSmall, color: color.ink },
   source: { ...font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
@@ -681,4 +711,18 @@ const styles = StyleSheet.create({
   stepOff: { opacity: 0.3 },
   stepText: { ...font.ui, fontSize: 22, color: color.inkSoft, lineHeight: 26 },
   close: { position: 'absolute', top: 20, right: 20, zIndex: 1 },
+  // CloseButton's circle, one along.
+  more: {
+    position: 'absolute',
+    top: 20,
+    right: 58,
+    zIndex: 1,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.rule,
+  },
+  placeBesideMore: { paddingRight: 68 },
 });

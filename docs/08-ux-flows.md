@@ -649,10 +649,12 @@ Back on 2026-09-28 for App Store 1.2, which wants a report, a block and a filter
 **Who:** anybody who opened a memory somebody filed. Never on an extracted
 memory (there is nobody to report a podcast to), never on your own.
 
-1. Under the memory: **Report this memory**. One press, it reads "Reported",
-   and nothing else changes for them. `REPORT_THRESHOLD` signed-in accounts
+Both sit behind **⋯** beside the ×, as on a post: the native action sheet.
+
+1. **Report this memory**. One press, it leaves the menu, and nothing else
+   changes for them. `REPORT_THRESHOLD` signed-in accounts
    hide it everywhere until `python -m api.moderate --restore` puts it back.
-2. **Block {name}**, then a second press: "you will not see anything they post".
+2. **Block {name}**, then an alert to confirm: "you will not see anything they post".
    The sheet closes and their pins leave the map, on every phone on the
    account. There is no unblock yet.
 3. Posting something the screening refuses keeps the draft and says what can't

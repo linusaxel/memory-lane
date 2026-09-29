@@ -47,7 +47,7 @@ appId: ${APP_ID}
 # (api/write.py), and are not offered Report or Block. What matters is what
 # comes back in the journal.
 - assertNotVisible: "Heart this memory"
-- assertNotVisible: "Report this memory"
+- assertNotVisible: "More"
 - scrollUntilVisible:
     element:
       id: "note"
