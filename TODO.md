@@ -153,9 +153,8 @@ public launch that the rest of this file doesn't track. Blockers first.
       Summaries of creators' videos behind a subscription, fetched through a
       proxy built to get past YouTube's block, naming real people, with no
       takedown route. Needs a lawyer's read before launch, not after.
-- [ ] **No production database discipline.** (checked 2026-09-28) Nothing
-      records applied migrations and nothing runs them; `schema.sql` only runs
-      on a fresh docker volume. No backups, no staging. Media lives on local
+- [ ] **No production database discipline.** (checked 2026-09-29)
+      `pipeline.migrate` runs on every deploy now. No backups, no staging. Media lives on local
       disk, which a Railway redeploy loses without a volume.
 - [ ] **Nobody hears about a crash.** (checked 2026-09-29) A render error
       shows `mobile/src/Crashed.tsx`, the API logs with timestamps, and `/`

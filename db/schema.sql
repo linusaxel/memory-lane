@@ -547,3 +547,9 @@ INSERT INTO sources (kind, locator, name, language, status, poll_limit, licence,
     ('institution', 'https://indenforvoldene.dk', 'indenforvoldene.dk', 'da', 'rejected', NULL,
      'no', 'One author, all rights reserved.')
 ON CONFLICT (locator) DO NOTHING;
+
+-- Which db/migrations/ files this database has. Written by pipeline/migrate.py.
+CREATE TABLE schema_migrations (
+    name TEXT PRIMARY KEY,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

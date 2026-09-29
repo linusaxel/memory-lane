@@ -169,8 +169,7 @@ def test_the_dev_database_has_every_migration(db_session, db_url):
         dev_shape = _shape(dev)
     schema_shape = _shape(db_session)
     assert dev_shape == schema_shape, (
-        "the dev database differs from db/schema.sql: apply what is missing from "
-        "db/migrations/ (each file's header has the command).\n"
+        "the dev database differs from db/schema.sql: run python -m pipeline.migrate.\n"
         f"missing from dev: {sorted(schema_shape - dev_shape)}\n"
         f"only in dev:      {sorted(dev_shape - schema_shape)}"
     )
@@ -183,3 +182,37 @@ def test_the_places_unique_index_is_in_the_schema_too(db_session):
         text("SELECT indexname FROM pg_indexes WHERE tablename = 'places'")
     ).fetchall()
     assert "idx_places_place_query" in {r[0] for r in found}
+
+
+def test_migrate_builds_an_empty_database_and_replays_an_existing_one(db_session, db_url):
+    """The deploy path: Railway's database starts empty, a dev one predates
+    schema_migrations. Both end in schema.sql's shape with every file recorded,
+    and a second run applies nothing."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+
+    from pipeline.migrate import MIGRATIONS, migrate
+
+    every = {m.name for m in MIGRATIONS.glob("*.sql")}
+    admin = db_url.rsplit("/", 1)[0].replace("+psycopg", "") + "/memorylane"
+    fresh = db_url + "_fresh"
+    name = fresh.rsplit("/", 1)[1]
+    with psycopg.connect(admin, autocommit=True) as conn:
+        conn.execute(f"DROP DATABASE IF EXISTS {name} WITH (FORCE)")
+        conn.execute(f"CREATE DATABASE {name}")
+    try:
+        assert migrate(fresh) == ["schema.sql"]
+        assert migrate(fresh) == []
+        engine = create_engine(fresh)
+        with Session(engine) as s:
+            assert _shape(s) == _shape(db_session)
+            recorded = {r[0] for r in s.execute(text("SELECT name FROM schema_migrations"))}
+        engine.dispose()
+        assert recorded == every
+    finally:
+        with psycopg.connect(admin, autocommit=True) as conn:
+            conn.execute(f"DROP DATABASE IF EXISTS {name} WITH (FORCE)")
+
+    db_session.commit()
+    assert "001_places_unique.sql" not in migrate(db_url)
+    assert migrate(db_url) == []

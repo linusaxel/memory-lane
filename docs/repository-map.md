@@ -9,7 +9,7 @@ Where things live. How they talk to each other is in [architecture.md](architect
 | `api/` | FastAPI over PostGIS: reads, the gate, submissions, sign-in, routes |
 | `pipeline/` | Ingest → transcripts → extraction (sequential or over RQ), plus the dev and review tools |
 | `crawler/` | Channel discovery via yt-dlp, and the text sources. Imports nothing from `pipeline/` |
-| `db/` | `schema.sql` (applied on first container init) and `migrations/` for databases that already exist |
+| `db/` | `schema.sql` (applied on first container init) and `migrations/` for databases that already exist; `python -m pipeline.migrate` applies both |
 | `mobile/` | The Expo app. Read [`mobile/UI.md`](../mobile/UI.md) first |
 | `tests/` | pytest. [07-testing.md](07-testing.md) covers markers and fakes |
 | `loop/` | `verify.sh` (the gate) and the autonomous loop's state: `TASKS.yaml`, `STATE.md`, `JOURNAL.md`, `run.sh` |
@@ -61,6 +61,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/themed_routes.py` | **Which areas could carry themed walks.** Per hotspot, the tags with `ROUTE_SIZE` walkable stops; ready at three. The check before the generated-routes job, which will grow here |
 | `pipeline/route_bench.py` | **How the route does on a full map.** Every plan setting rolled at random; spurs, stops, walk vs budget, `fresh` (another roll, another walk), ms, over `seed_dev --dense`. Needs `ROUTING_URL`; `--solvers` needs nothing and scores the solver against brute force |
 | `pipeline/sweep.py` | Reap uploads no submission ever claimed. Describes unless `--apply` |
+| `pipeline/migrate.py` | **Brings a database up to `schema.sql`** and records it in `schema_migrations`. The Dockerfile runs it before the API |
 | `pipeline/db.py` | Database connection (SQLAlchemy + psycopg3) |
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `e2e/run.sh` | **Watch the flows happen.** Drives the real app on a simulator; `--record` leaves an mp4 |
@@ -71,7 +72,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `tests/test_public_host.py` | What Railway's host turns off (`/docs`, the embed, the dev database fallback), and the health check |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
-| `db/migrations/` | One-off SQL for databases that already exist |
+| `db/migrations/` | SQL for databases that already exist, applied by `pipeline.migrate` |
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
 
 ## `api/`
