@@ -834,6 +834,16 @@ def test_a_walk_that_opened_something_is_the_days_free_walk(client, db_session):
         assert refused.json()["detail"] == {"reason": "walked_today"}
 
 
+def test_unlimited_walks_lifts_the_day_lock(client, db_session, monkeypatch):
+    monkeypatch.setattr("api.read.UNLIMITED_WALKS", True)
+    for n in range(1, 9):
+        _offset(db_session, n)
+    db_session.commit()
+    _walk_one_stop(client)
+
+    assert _preview(client).is_success
+
+
 @pytest.mark.parametrize(("days", "again"), [(30, True), (-1, False)])
 def test_a_subscriber_walks_again_and_a_lapsed_one_does_not(client, db_session, days, again):
     for n in range(1, 9):

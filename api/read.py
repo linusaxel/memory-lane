@@ -81,6 +81,7 @@ from api.queries import (
     WALKED_TODAY_QUERY,
 )
 from api.route_solver import ROUTE_LOOP, _plan_route
+from pipeline.config import UNLIMITED_WALKS
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -398,6 +399,8 @@ def _refuse_second_walk(session, device: str, route_date) -> None:
     """One free walk a day per account; a subscriber has no limit (docs/10, "A
     subscription opens the map"). Without it, Walk here and End walk open any
     pin on the map for free, and there is nothing left to sell."""
+    if UNLIMITED_WALKS:
+        return
     binds = {"device_id": device, "today": route_date}
     if session.execute(text(WALKED_TODAY_QUERY), binds).scalar() and not (
         session.execute(text(SUBSCRIBED_QUERY), binds).scalar()
