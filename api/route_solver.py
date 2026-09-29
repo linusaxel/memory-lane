@@ -5,7 +5,7 @@ How a walk is ranked, in two stages, the second only with streets:
 1. From the matrix (`_choose_walks`, its `score`): the most stops that fit,
    then the layer mix, then the fewest sharp turns back on itself, then the
    shortfall under ROUTE_FILL of the slider, then the fewest bunched stops
-   (`_bunched`), then the most prize, then the shortest walk. Every walk tied with the best one on count and mix makes a
+   (`_bunched`), then the most prize, then the shortest walk. Every walk tied with the best one on count and mix (and, to an end, bunched no more) makes a
    shortlist of up to ROUTE_SHORTLIST. Without streets, the best one is the walk.
 2. From the streets (`_plan_route`, its `judge`): each shortlisted walk is
    routed and scored on metres off the slider plus metres retraced plus
@@ -110,8 +110,8 @@ def _choose_walks(
     and gave long walks up for short ones.
 
     The first walks are shaped like the ask: for ROUTE_HEADINGS headings,
-    targets on a circle through the anchor (a line, one-way) whose walk is the
-    budget, and the candidate nearest each target. Insertion by prize per metre
+    targets on a circle through the anchor (a line, one-way; to an end, the
+    line there bowed to one side) whose walk is the budget, and the candidate nearest each target. Insertion by prize per metre
     tops them up, and builds one more walk from nothing, which is what a sparse
     map falls back on. Then ROUTE_SHAKES rounds drop one or two stops at random
     and refill without them, keeping whichever walk scores better (iterated
@@ -238,6 +238,20 @@ def _choose_walks(
                     )
                     for j in range(size)
                 ]
+            elif end:
+                # Evenly along the line to the end, bowed to one side by as
+                # much as the budget has over walking it straight (a triangle).
+                span = math.hypot(x[-1], y[-1])
+                half = scale * aim / d_per_crow / 2
+                bow = math.cos(heading) * math.sqrt(max(0.0, half**2 - (span / 2) ** 2))
+                nx, ny = -y[-1] / max(span, 1), x[-1] / max(span, 1)
+                targets = [
+                    (
+                        t * x[-1] + bow * math.sin(math.pi * t) * nx,
+                        t * y[-1] + bow * math.sin(math.pi * t) * ny,
+                    )
+                    for t in (j / (size + 1) for j in range(1, size + 1))
+                ]
             elif loop:
                 # size + 1 corners, the anchor one of them, on a circle through it.
                 n = size + 1
@@ -301,11 +315,9 @@ def _choose_walks(
             if must <= set(s)
             and _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget_meters
         ]
-    # ponytail: no shaped walks to an end; the fills and shakes find them.
-    # A line bowed towards the end, if a long walk to one comes out short.
-    if size and not end:
+    if size:
         for k in range(ROUTE_HEADINGS):
-            for around in (False, True) if loop else (False,):
+            for around in (False, True) if loop and not end else (False,):
                 walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS, around)
                 if walk:
                     walks.append(fill(_walking_order(walk, d, loop)))
@@ -321,10 +333,16 @@ def _choose_walks(
         if score(trial) < score(best):
             best = trial
     # The best walk, then the first walks: one per heading, so the list holds
-    # different loops rather than one loop with a stop swapped.
+    # different loops rather than one loop with a stop swapped. To an end, none
+    # more bunched than the best: stage 2 does not look, and the greedy fills
+    # spend every stop near the start and walk the rest of the way empty.
     ranked = {frozenset(w): score(w) for w in [best, *walks]}
     top = score(best)
-    alike = sorted((v, sorted(w)) for w, v in ranked.items() if v[:2] == top[:2])
+    alike = sorted(
+        (v, sorted(w))
+        for w, v in ranked.items()
+        if v[:2] == top[:2] and (not end or v[3] <= top[3])
+    )
     return [_walking_order(w, d, loop) for _, w in alike[:ROUTE_SHORTLIST]]
 
 

@@ -227,3 +227,29 @@ def test_stops_are_spread_along_the_walk_before_prize():
 
 def test_about_one_stop_a_km():
     assert [_route_size(m) for m in (1000, 1500, 2500, 4000, 10_000)] == [1, 2, 3, 4, 10]
+
+
+def test_a_walk_to_an_end_spreads_its_stops_along_the_way():
+    """Six stops in a knot by the start, three strung along the 2.5km to the
+    end: prize per metre spends every stop in the knot and walks the rest of
+    the way empty. Every walk the shortlist offers spreads them out."""
+
+    def pt(name, east, north):
+        return SimpleNamespace(
+            name=name,
+            id=name,
+            lat=ANCHOR.lat + north * STEP,
+            lng=ANCHOR.lng + east * STEP,
+            layer="historical",
+        )
+
+    end = Coordinates(lat=ANCHOR.lat, lng=ANCHOR.lng + 30 * STEP)
+    picks = [pt(f"knot{k}", 1 + 0.6 * k, 0.3 * (-1) ** k) for k in range(6)]
+    picks += [pt(f"way{k}", 8 * k, 2 * (-1) ** k) for k in (1, 2, 3)]
+    m = crow([*picks, end])
+    # As _plan_route builds it: column 0 is metres to the end, not home.
+    d = [[row[-1], *row[1:-1]] for row in m[:-1]]
+    for seed in "abcdef":
+        for walk in _choose_walks(picks, 4, d, seed, 4000, True, ANCHOR, None, end):
+            legs = [d[a][b] for a, b in itertools.pairwise([0, *walk, 0])]
+            assert max(legs) < 2 * sum(legs) / len(legs), (seed, walk)

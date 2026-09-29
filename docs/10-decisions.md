@@ -1718,6 +1718,23 @@ Candidates come from within half the length of the midway point, and a walk
 that cannot reach the end is `too_far`. Picked on the map, not searched by
 name: no geocoder in the app, and it works anywhere.
 
+### A walk to an end spreads its stops along the way
+
+Status: Accepted
+
+Nørreport to past Islands Brygge, 4 km: all four stops fell within ~500 m of
+the start and the last ~2.5 km had none. A walk to an end had no shaped seeds,
+so prize per metre filled it with the cheap stops by the start. It now gets
+ROUTE_HEADINGS seeds evenly along the line to the end, each bowed to one side
+by up to what the slider has over walking it straight. Its shortlist also drops
+any walk more bunched than the best one, because stage 2 never looks at
+bunching and picked the knotted walks on the day's dice. `route_bench --end`,
+100 runs on the dense seed: the longest leg over the mean went from p50 2.12
+to 1.83, and gap from 0.30 to 0.46. The cost is variety: a new walk on the
+next `again` fell from 79% to 53%. Loops keep their shortlist. Filtered the
+same way, they went a little more even (max 1.63 → 1.60) but fresh fell from
+57% to 46% (10 km: 53% → 12%), which is the founder's call.
+
 ### Draw first, adjust after
 
 Status: Accepted 2026-09-27

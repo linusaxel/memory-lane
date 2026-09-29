@@ -23,6 +23,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`walking_matrix` returns zeros off the sidecar's map.** 2026-09-29: a
+  scratch script with the tests' New York `ANCHOR` and `.env`'s `ROUTING_URL`
+  got an all-zero matrix, because OSRM snaps every point to one node at the
+  edge of Copenhagen. The solver picked walks on it without complaint, and it
+  cost a round of misreading. `_plan_route` drops such points by snap, but
+  `walking_matrix` passes the zeros on. Fix: in `street_table`, fall back to
+  crow-flies when every snap is over `UNLOCK_RADIUS_METERS`.
 - **The venv has no pip.** 2026-09-29: AGENTS.md and `docs/01-setup.md` say
   `pip install -r requirements.txt`, but `venv/` was made by uv, so
   `venv/bin/pip` and `python -m pip` both fail. Only `loop/verify.sh` names
@@ -102,16 +109,6 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **A one-way walk bunches its stops at the start.** (reported
-      2026-09-29, founder's screenshot) Nørreport to a tapped end past
-      Islands Brygge, 4 km: all four stops sit within ~500 m of the start,
-      and the last ~2.5 km to the end has none. Suspect: `api/route_solver.py`
-      seeds shaped walks only when there is no end ("ponytail: no shaped walks
-      to an end", ~l.304), so a one-way plan falls to nearest-neighbour and
-      prize-per-metre fills, which spend the stops early and walk the rest
-      empty. Fix: a seed spaced along the line to the end (the "line bowed
-      towards the end" that comment names), then a `route_bench` scenario
-      with an end, scoring the largest gap between stops.
 - [ ] **Most places are still the model's guess.** (checked 2026-09-28)
       55 of 132 venue places are `llm` now (32 video, 20 book, 3 archive).
       Most are gone rather than misnamed: closed cinemas (Palladium, Vester

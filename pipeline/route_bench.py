@@ -5,6 +5,7 @@
     python -m pipeline.route_bench --runs 200 --seed 2
     ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench --scenario all
     python -m pipeline.route_bench --solvers
+    ROUTING_URL=http://localhost:5001 python -m pipeline.route_bench --end
 
 Read, not gated, like perf.py and quality.py. Each run plans a walk through
 api/route_solver.py's _plan_route for a fresh device, from a random start inside
@@ -17,7 +18,11 @@ metres of that there are (api/streets.py, retraced_meters). `spur` is any at
 all, often a few metres from a mid-block start to its corner; `>50m` is one
 you would notice. `cross` is any walk that passes a street corner twice
 without retracing, a figure of eight (crossings). `gap` is the shortest leg over the mean leg, out and home
-included: 1 is stops evenly spaced, near 0 is two of them bunched.
+included: 1 is stops evenly spaced, near 0 is two of them bunched. `max` is the
+longest leg over the mean: a long empty stretch, often the last leg to an end.
+
+`--end` makes every run one way to an end at a random heading, 0.5-0.8 of the
+slider away as the crow flies over walking's 1.3, as a tapped end would be.
 
 `--scenario` plants seed_dev's route scenarios in the bench's own transaction
 instead, one at a time, and starts round each one's start. The rollback at the
@@ -36,6 +41,7 @@ is five stops with a layer quota.
 import argparse
 import datetime
 import itertools
+import math
 import random
 import statistics
 import time
@@ -64,7 +70,9 @@ BUDGETS = (1000, 2000, 3000, 4000, 6000, 8000, 10_000)
 START_BOX = (0.004, 0.007)
 
 
-def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -> dict:
+def run(
+    session, rng: random.Random, budget: int, around: tuple[float, float], to_end: bool = False
+) -> dict:
     start = Coordinates(
         lat=around[0] + rng.uniform(-START_BOX[0], START_BOX[0]),
         lng=around[1] + rng.uniform(-START_BOX[1], START_BOX[1]),
@@ -72,11 +80,19 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
     device = str(uuid.UUID(int=rng.getrandbits(128)))
     loop = rng.random() < 0.5
     again = rng.randrange(1_000_000)
+    end = None
+    if to_end:
+        heading, reach = rng.uniform(0, 2 * math.pi), rng.uniform(0.5, 0.8) * budget / 1.3
+        end = Coordinates(
+            lat=start.lat + reach * math.cos(heading) / 111_320,
+            lng=start.lng
+            + reach * math.sin(heading) / (111_320 * math.cos(math.radians(start.lat))),
+        )
     today = datetime.date.today()
     began = time.perf_counter()
-    stops, legs, ends = _plan_route(session, device, start, budget, today, loop, again)
+    stops, legs, ends = _plan_route(session, device, start, budget, today, loop, again, end=end)
     ms = (time.perf_counter() - began) * 1000
-    another, _, _ = _plan_route(session, device, start, budget, today, loop, again + 1)
+    another, _, _ = _plan_route(session, device, start, budget, today, loop, again + 1, end=end)
     fresh = {r.id for r in another} != {r.id for r in stops}
     if legs is None:  # no stops at all, or the sidecar went away mid-run
         return {
@@ -88,6 +104,7 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
             "ms": ms,
             "fresh": fresh,
             "gap": 1,
+            "max": 1,
         }
     path = [*ends["out"], *(p for leg in legs for p in leg), *(ends["home"] or [])]
     gaps = [
@@ -103,6 +120,7 @@ def run(session, rng: random.Random, budget: int, around: tuple[float, float]) -
         "ms": ms,
         "fresh": fresh,
         "gap": min(gaps) / (sum(gaps) / len(gaps)),
+        "max": max(gaps) / (sum(gaps) / len(gaps)),
     }
 
 
@@ -179,7 +197,7 @@ def pct(values: list[float], q: int) -> float:
 def report(results: list[dict]) -> None:
     print(
         f"{'budget':>7} {'runs':>5} {'full':>6} {'spur':>6} {'>50m':>6} {'cross':>6} {'retr p50/p95':>14} "
-        f"{'walk/budget':>12} {'gap p50/p5':>11} {'fresh':>6} {'ms p50/p95':>12}"
+        f"{'walk/budget':>12} {'gap p50/p5':>11} {'max p50/p95':>12} {'fresh':>6} {'ms p50/p95':>12}"
     )
     for budget in (*BUDGETS, None):
         mine = [r for r in results if budget is None or r["budget"] == budget]
@@ -189,6 +207,7 @@ def report(results: list[dict]) -> None:
         ms = [r["ms"] for r in mine]
         ratio = [r["walk"] / r["budget"] for r in mine]
         gap = [r["gap"] for r in mine]
+        most = [r["max"] for r in mine]
         print(
             f"{budget or 'all':>7} {len(mine):>5} "
             f"{sum(r['stops'] == _route_size(r['budget']) for r in mine) / len(mine):>6.0%} "
@@ -198,6 +217,7 @@ def report(results: list[dict]) -> None:
             f"{pct(retraced, 50):>6.0f}/{pct(retraced, 95):<6.0f}m "
             f"{statistics.median(ratio):>11.2f} "
             f"{pct(gap, 50):>5.2f}/{pct(gap, 5):<5.2f} "
+            f"{pct(most, 50):>6.2f}/{pct(most, 95):<5.2f} "
             f"{sum(r['fresh'] for r in mine) / len(mine):>6.0%} "
             f"{pct(ms, 50):>5.0f}/{pct(ms, 95):<5.0f}"
         )
@@ -216,6 +236,7 @@ def main() -> None:
     parser.add_argument(
         "--solvers", action="store_true", help="nearest-neighbour, solver and exact, no streets"
     )
+    parser.add_argument("--end", action="store_true", help="every run one way to an end")
     args = parser.parse_args()
     if args.solvers:
         return solvers(args.runs, args.seed)
@@ -230,7 +251,9 @@ def main() -> None:
                 around, planted = scenario(session, name, args.seed)
                 print(f"\n{name}, {planted} places: {ROUTE_SCENARIOS[name]}")
             rng = random.Random(args.seed)
-            report([run(session, rng, rng.choice(BUDGETS), around) for _ in range(args.runs)])
+            report(
+                [run(session, rng, rng.choice(BUDGETS), around, args.end) for _ in range(args.runs)]
+            )
         session.rollback()
 
 
