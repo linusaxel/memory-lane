@@ -144,6 +144,63 @@ Vognmagergade" land on one pin
 `quality` also counts "someone", since the video usually gives a name or a
 nickname. Spot relevance itself has no regex: read the output.
 
+### Corpus read, 2026-09-29
+
+Every visible memory (209) was read and scored by hand against a rubric built
+from the interpretation and locative-media literature. **About a quarter are
+worth the walk.** The fixes are in TODO.md, *Make memories worth the walk*.
+
+The rubric scores six criteria from 0 to 2 each:
+
+| Criterion | 2 means | Source |
+|---|---|---|
+| Site-lock | it happened at this doorway, not "in Copenhagen" | Reid et al., [magic moments](https://dl.acm.org/doi/10.1145/1178477.1178529) |
+| Visible trace | the text points at something still there | English Heritage [plaque criteria](https://www.english-heritage.org.uk/visit/blue-plaques/propose-a-plaque/) |
+| Incident | a scene with people and stakes, not names and dates | [VoiceMap](https://docs.voicemap.me/tour-publishers/writing-scripts-that-make-listeners-feel-something/), Made to Stick |
+| Surprise | "wait, *here*?", a small gap you want closed | [Tilden](https://mylearning.nps.gov/library-resources/tildens-six-principles-ace/), Loewenstein 1994 |
+| Feeling | awe, danger, anger, absurdity | Berger & Milkman, [JMR 2012](https://journals.sagepub.com/doi/10.1509/jmr.10.0353) |
+| Relates | then against now, tied to the walker | Tilden, Ham's [TORE](https://panorama.solutions/sites/default/files/Ham-TORE_model-2008.pdf) |
+
+A total of 9 or more out of 12 is worth the walk, 7–8 is filler, and 6 or less is cut.
+Whatever the total, site-lock must score at least 1, and trace and relates can't
+both be 0. Being on the spot adds imagery, not emotion or recall (Karapanos et al.,
+[IwC 2012](https://www.sciencedirect.com/science/article/abs/pii/S0953543812000367)),
+so a story needs the place and the telling both.
+
+| Source | Walk | Maybe | Skip |
+|---|---|---|---|
+| Københavnerglimt (41) | 14 | 16 | 11 |
+| Københavnerliv (71) | 16 | 20 | 35 |
+| Local TV (3) | 0 | 1 | 2 |
+| Books (81) | 20 | 12 | 49 |
+| Historisk Atlas (13) | 2 | 6 | 5 |
+| **All (209)** | **52** | **55** | **102** |
+
+The best examples:
+- 4408: the Woodstock counter that survived because a regular had mortared it in.
+- 4545: a suicide on Frederiksberg Allé, seen by the boy Oehlenschläger.
+- 4528: Andersen praying on the empty Royal Theatre stage.
+- 4482: staged Boer War footage in the circus building.
+- 4470: an airport rampart against ice-cream eaters.
+
+What sank the rest, roughly how often:
+
+| Failure | Count | Example |
+|---|---|---|
+| Near-duplicate of another memory | ~50 in ~17 clusters | Ditlevsen ×6, the Blue Tower ×8, 4624/4625 |
+| Vague or wrong pin | ~40 | the Royal Theatre at 1000 m; 4564 is Frederiksborg, not Frederiksberg |
+| A description, not an incident | ~40 | "opened X, closed Y, now Z" |
+| Speaker or name never introduced | ~50 | "Christine", "the host", Rahbek |
+| Outside Copenhagen | 32 | Oehlenschläger's travels, 10 of 11 abroad |
+| Factual or speech-recognition error | ~20 | Tom "Christensen", lupus called cancer |
+| Present-day promotion | ~15 | 4471, 4475 |
+| A private person's death, health or crime | ~10 | 4435, 4466 |
+| Relative time that will go stale | ~7 | "last summer" |
+
+Then against now, the contrast the product ranks by, is almost never stated,
+and `contrast_score` looks like a default (0.7 on 11 of the 13 Historisk Atlas
+entries).
+
 **None of it has been run against real credits** (the account balance is empty),
 so the numbers above are still the current state.
 

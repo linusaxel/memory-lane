@@ -193,6 +193,57 @@ public launch that the rest of this file doesn't track. Blockers first.
 
 ---
 
+## Make memories worth the walk
+
+A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
+52 worth the walk. These are the fixes, in order. Measure each one against the
+labels before and after. Every change is to `pipeline/extract.py` unless named.
+
+- [ ] **Labels first.** (checked 2026-09-29) Store the 209 walk/maybe/skip
+      verdicts as `tests/fixtures/walk_labels.json`. A judge change is then a
+      replay over stored summaries with precision and recall, with no
+      re-extraction.
+- [ ] **Launch-area gate.** (checked 2026-09-29) 32 memories are outside
+      Copenhagen, 10 of 11 from Oehlenschläger's travel volumes. Drop a pin
+      outside a launch box at save time (a config knob), and name the launch area
+      in the Haiku classifier so those chunks never reach Sonnet.
+- [ ] **Duplicates across contents.** (checked 2026-09-29) ~50 memories in
+      ~17 clusters: Ditlevsen ×6, the Blue Tower ×8, 4624/4625, and
+      Frederikshospitalet on two place rows. `merge_nearby_memories` only
+      compares within one content. At save, ask Haiku "same event?" of each
+      saved memory within ~150 m and drop a match. Then merge the existing
+      clusters by hand (`review`, `dedup`).
+- [ ] **The archival prompt, up to the video prompt's level.** (checked
+      2026-09-29) `HISTORICAL_SYSTEM_PROMPT` has none of the summary rules:
+      lead with the surprise, 40–70 words, a role for every name ("Rahbek, the
+      critic"), the visible trace, and worked examples. Add 4545 as a pass, and
+      "X visited here" and a coronation abroad as fails. Venues in their modern
+      local name (Frauenkirche is Vor Frue Kirke), and confidence low where
+      that is uncertain: 4564 put Frederiksborg on Frederiksberg.
+- [ ] **Judge v2 on the research rubric.** (checked 2026-09-29) `JUDGE_PROMPT`
+      has no incident, feeling or then-vs-now question, and its examples are
+      all Nørrebro pubs. Add `incident`, `feeling` and `relates`, plus three
+      gates: `private_person` (a private person's death, health, crime or
+      addiction; ~10), `promo` (present-day listings and ads; ~15) and
+      `relative_time` ("last summer"; ~7). Add Copenhagen archival examples,
+      then retune `tellable()` against the labels.
+- [ ] **Summary against its chunk.** (checked 2026-09-29) ~20 factual or
+      speech-recognition errors: Tom "Christensen", Vestergade for
+      Vimmelskaftet, lupus called cancer. `grounded()` checks only
+      `place_words`. Make one Haiku call per memory and drop any claim the chunk
+      doesn't make. Have the prompt spell known people as they are in print.
+- [ ] **Then-vs-now from OSM.** (checked 2026-09-29) Almost no summary says
+      what stands there now, and `contrast_score` is 0.7 on 11 of 13 Historisk
+      Atlas entries. Reverse-geocode the pin for its present-day name and type.
+      Write a "now" clause only when OSM confirms it, and score contrast from that
+      clause. This answers *Where does "what is there now" come from?*.
+- [ ] **Source triage.** (checked 2026-09-29) Keep Oehlenschläger vol. I, the
+      Copenhagen chapters of Andersen, and Historisk Atlas. Stop Oehlenschläger's
+      travel volumes (48558, 48559) and the Carl Møller and Liebenberg books.
+      Merge Leonora Christina's eight Blue Tower memories into two or three.
+
+---
+
 ## Phase 0 — Design questions
 
 - [ ] **D.5 Write F3 properly** once the historical source is chosen (W4-00).
