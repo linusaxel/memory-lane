@@ -15,15 +15,22 @@ const SIZE = 34;
 const MARGIN = SIZE / 2 + 8;
 // The edges it rides are the map's less what sits on them: You and Add at the top
 // (App.tsx styles.add, top 64), the pill and the Maps attribution at the
-// bottom, which rule 7 says nothing covers.
-const INSET = { top: 110 + MARGIN, right: MARGIN, bottom: 90 + MARGIN, left: MARGIN };
+// bottom, which rule 7 says nothing covers. A stop is on screen until one of
+// those covers it; MARGIN only keeps the arrow itself off them.
+const CHROME = { top: 110, right: 0, bottom: 90, left: 0 };
+const INSET = {
+  top: CHROME.top + MARGIN,
+  right: MARGIN,
+  bottom: CHROME.bottom + MARGIN,
+  left: MARGIN,
+};
 
 type Props = { region: Region; target: Coordinates; dark: boolean };
 
 export default function NextStopArrow({ region, target, dark }: Props) {
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const { ember, emberCasing } = solid(dark);
-  const arrow = size && edgeArrow(region, target, size.width, size.height, INSET);
+  const arrow = size && edgeArrow(region, target, size.width, size.height, INSET, CHROME);
 
   return (
     <View

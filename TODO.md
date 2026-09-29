@@ -102,16 +102,6 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **Walk: the next-stop arrow shows while the stop is on screen.**
-      (reported 2026-09-28) `mobile/src/NextStopArrow.tsx` asks `edgeArrow`
-      (`region.ts`) with the arrow's own `INSET` as the visible box, so a
-      stop in the top 135pt or bottom 115pt, or the 25pt side margins, gets
-      an arrow though its pin is plainly visible. Suspect too: `region` only
-      updates on `onRegionChangeComplete`, so during a follow flight the
-      arrow tests the old frame. Fix: test visibility against the full map
-      frame (or just the chrome, not chrome + arrow margin), keep `INSET`
-      for placing the arrow only; add the case to `region.test.ts`.
-
 - [ ] **Most places are still the model's guess.** (checked 2026-09-28)
       55 of 132 venue places are `llm` now (32 video, 20 book, 3 archive).
       Most are gone rather than misnamed: closed cinemas (Palladium, Vester

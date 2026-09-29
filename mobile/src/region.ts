@@ -116,8 +116,9 @@ export type Inset = { top: number; right: number; bottom: number; left: number }
 
 /** Where on a `width` x `height` north-up map showing `region` the arrow to
  *  `target` sits, and which way it points in degrees clockwise from up; null
- *  while `target` is inside the map less `inset`. The arrow is where the line
- *  from the centre to the target leaves that box.
+ *  while `target` is inside the map less `visible`, what covers its edges. The
+ *  arrow is where the line from the centre to the target leaves the map less
+ *  `inset`, which also keeps the arrow itself clear of them.
  *
  *  ponytail: degrees are treated as linear across the screen, which Mercator
  *  is not; at street scale the error is under a pixel. */
@@ -127,6 +128,7 @@ export function edgeArrow(
   width: number,
   height: number,
   inset: Inset,
+  visible: Inset = inset,
 ): { x: number; y: number; angle: number } | null {
   const dx = ((target.lng - region.longitude) / region.longitudeDelta) * width;
   const dy = (-(target.lat - region.latitude) / region.latitudeDelta) * height;
@@ -136,7 +138,13 @@ export function edgeArrow(
   const left = inset.left - cx;
   const down = height - inset.bottom - cy;
   const up = inset.top - cy;
-  if (dx >= left && dx <= right && dy >= up && dy <= down) return null;
+  if (
+    dx >= visible.left - cx &&
+    dx <= width - visible.right - cx &&
+    dy >= visible.top - cy &&
+    dy <= height - visible.bottom - cy
+  )
+    return null;
   const s = Math.min(
     dx > 0 ? right / dx : dx < 0 ? left / dx : Infinity,
     dy > 0 ? down / dy : dy < 0 ? up / dy : Infinity,

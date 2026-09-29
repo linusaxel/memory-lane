@@ -86,6 +86,19 @@ test('the inset is the edge: a stop under the pill still gets its arrow', () => 
   assert.equal(arrow.angle, 180);
 });
 
+test('a stop in the arrow margin is on screen: no arrow', () => {
+  // 20pt in from the right edge: inside the arrow's margin, clear of the chrome.
+  const nearEdge = { lat: 40.748, lng: -73.985 + 0.01 * (180 / 400) };
+  const margin = { top: 135, right: 25, bottom: 115, left: 25 };
+  const chrome = { top: 110, right: 0, bottom: 90, left: 0 };
+  assert.ok(edgeArrow(VIEW, nearEdge, 400, 800, margin));
+  assert.equal(edgeArrow(VIEW, nearEdge, 400, 800, margin, chrome), null);
+  // Once it is off screen, the arrow still sits inside the margin.
+  const off = edgeArrow(VIEW, { lat: 40.748, lng: -73.97 }, 400, 800, margin, chrome);
+  assert.ok(off);
+  assert.equal(off.x, 375);
+});
+
 test('around keeps you in the middle and the stop inside the frame', () => {
   const you = { lat: 40.748, lng: -73.985 };
   const r = around(you, [{ lat: 40.758, lng: -73.98 }], 0.002);
