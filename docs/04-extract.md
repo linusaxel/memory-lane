@@ -146,11 +146,26 @@ nickname. Spot relevance itself has no regex: read the output.
 
 ### Corpus read, 2026-09-29
 
-Every visible memory (209) was read and scored by hand against a rubric built
-from the interpretation and locative-media literature. **About a quarter are
-worth the walk.** The fixes are in TODO.md, *Make memories worth the walk*.
+Every visible memory (209) was read and scored against a rubric built from the
+interpretation and locative-media literature. **About a quarter are worth the
+walk.** The scoring was done by AI agents (Claude), one read per memory, not by
+a person, so treat the counts as approximate. Each verdict is in
+`tests/fixtures/walk_labels.json`: id, walk/maybe/skip, the total out of 10 on
+the five criteria the scorers used (site, surprise, story, trace, standalone),
+and flags. The fixes are in TODO.md, *Make memories worth the walk*.
 
-The rubric scores six criteria from 0 to 2 each:
+Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
+`p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
+`ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day
+promotion, `priv` a private person's death, health or crime, `hall` a likely
+factual error, `stale` relative time, `obsc` only for specialists, `german` a
+German place name left in.
+
+The verdicts used five criteria from 0 to 2 each: site, surprise, story, trace
+and standalone. A total of 7 or more with no disqualifying flag was a walk, 5–6
+a maybe. The research rubric below came in at the same time and is the one to
+build the next judge on. It swaps standalone for feeling and then-vs-now, and
+scores six criteria from 0 to 2 each:
 
 | Criterion | 2 means | Source |
 |---|---|---|

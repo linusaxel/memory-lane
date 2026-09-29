@@ -199,10 +199,11 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 52 worth the walk. These are the fixes, in order. Measure each one against the
 labels before and after. Every change is to `pipeline/extract.py` unless named.
 
-- [ ] **Labels first.** (checked 2026-09-29) Store the 209 walk/maybe/skip
-      verdicts as `tests/fixtures/walk_labels.json`. A judge change is then a
-      replay over stored summaries with precision and recall, with no
-      re-extraction.
+- [ ] **A replay against the labels.** (checked 2026-09-29) The 209 verdicts
+      are in `tests/fixtures/walk_labels.json`, scored by AI agents, so spot-check
+      them before tuning to them. Missing: a `pipeline.quality` mode that
+      re-judges the stored summaries and prints precision and recall against
+      them. Every change below is then measured without re-extracting.
 - [ ] **Launch-area gate.** (checked 2026-09-29) 32 memories are outside
       Copenhagen, 10 of 11 from Oehlenschläger's travel volumes. Drop a pin
       outside a launch box at save time (a config knob), and name the launch area

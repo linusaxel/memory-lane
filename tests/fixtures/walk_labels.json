@@ -1,0 +1,1679 @@
+{
+ "scored": "2026-09-29",
+ "rubric": "docs/04-extract.md#corpus-read-2026-09-29",
+ "memories": [
+  {
+   "id": 4400,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "ctx",
+    "pin",
+    "adv"
+   ]
+  },
+  {
+   "id": 4401,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 4402,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4403,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "stale",
+    "adv"
+   ]
+  },
+  {
+   "id": 4407,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup",
+    "priv"
+   ]
+  },
+  {
+   "id": 4408,
+   "verdict": "walk",
+   "total": 10,
+   "flags": []
+  },
+  {
+   "id": 4410,
+   "verdict": "walk",
+   "total": 9,
+   "flags": []
+  },
+  {
+   "id": 4411,
+   "verdict": "walk",
+   "total": 9,
+   "flags": []
+  },
+  {
+   "id": 4412,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "stale",
+    "adv"
+   ]
+  },
+  {
+   "id": 4413,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "dup",
+    "pin"
+   ]
+  },
+  {
+   "id": 4414,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "dup",
+    "pin",
+    "adv"
+   ]
+  },
+  {
+   "id": 4415,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 4416,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "stale",
+    "dup"
+   ]
+  },
+  {
+   "id": 4417,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4418,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "dup",
+    "pin"
+   ]
+  },
+  {
+   "id": 4419,
+   "verdict": "walk",
+   "total": 10,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4420,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4421,
+   "verdict": "maybe",
+   "total": 7,
+   "flags": [
+    "priv",
+    "dup"
+   ]
+  },
+  {
+   "id": 4422,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4423,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 4424,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4425,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "p1000",
+    "desc"
+   ]
+  },
+  {
+   "id": 4426,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "adv",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4427,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "ctx"
+   ]
+  },
+  {
+   "id": 4428,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "ctx",
+    "adv"
+   ]
+  },
+  {
+   "id": 4429,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "pin",
+    "desc"
+   ]
+  },
+  {
+   "id": 4430,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "ctx"
+   ]
+  },
+  {
+   "id": 4431,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "priv"
+   ]
+  },
+  {
+   "id": 4432,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "adv"
+   ]
+  },
+  {
+   "id": 4433,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "priv",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4434,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "priv",
+    "hall"
+   ]
+  },
+  {
+   "id": 4435,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "priv"
+   ]
+  },
+  {
+   "id": 4436,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "priv"
+   ]
+  },
+  {
+   "id": 4437,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "adv"
+   ]
+  },
+  {
+   "id": 4438,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "priv",
+    "adv"
+   ]
+  },
+  {
+   "id": 4439,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": []
+  },
+  {
+   "id": 4440,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "adv"
+   ]
+  },
+  {
+   "id": 4441,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4442,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4443,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "pin",
+    "hall"
+   ]
+  },
+  {
+   "id": 4444,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "pin",
+    "priv",
+    "hall"
+   ]
+  },
+  {
+   "id": 4445,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "hall",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4446,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "ctx"
+   ]
+  },
+  {
+   "id": 4447,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": []
+  },
+  {
+   "id": 4448,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "adv",
+    "dup"
+   ]
+  },
+  {
+   "id": 4449,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "ctx"
+   ]
+  },
+  {
+   "id": 4450,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "p1000",
+    "dup"
+   ]
+  },
+  {
+   "id": 4451,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 4452,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4453,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "priv",
+    "dup"
+   ]
+  },
+  {
+   "id": 4454,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "hall",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4455,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "priv",
+    "dup"
+   ]
+  },
+  {
+   "id": 4456,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "pin",
+    "stale"
+   ]
+  },
+  {
+   "id": 4457,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "hall",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4458,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "ctx"
+   ]
+  },
+  {
+   "id": 4459,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "hall",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4460,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "hall",
+    "priv"
+   ]
+  },
+  {
+   "id": 4461,
+   "verdict": "skip",
+   "total": 1,
+   "flags": [
+    "priv",
+    "adv"
+   ]
+  },
+  {
+   "id": 4462,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "pin",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4463,
+   "verdict": "maybe",
+   "total": 7,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4464,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "adv",
+    "priv",
+    "stale"
+   ]
+  },
+  {
+   "id": 4465,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4466,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "priv",
+    "p1000"
+   ]
+  },
+  {
+   "id": 4467,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "p1000",
+    "adv"
+   ]
+  },
+  {
+   "id": 4468,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4469,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4470,
+   "verdict": "walk",
+   "total": 9,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4471,
+   "verdict": "skip",
+   "total": 2,
+   "flags": [
+    "adv",
+    "hall"
+   ]
+  },
+  {
+   "id": 4472,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "pin",
+    "priv"
+   ]
+  },
+  {
+   "id": 4473,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "hall",
+    "p1000"
+   ]
+  },
+  {
+   "id": 4474,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4475,
+   "verdict": "skip",
+   "total": 2,
+   "flags": [
+    "adv"
+   ]
+  },
+  {
+   "id": 4476,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup",
+    "stale"
+   ]
+  },
+  {
+   "id": 4477,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "adv"
+   ]
+  },
+  {
+   "id": 4478,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "ctx",
+    "dup"
+   ]
+  },
+  {
+   "id": 4479,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "ctx"
+   ]
+  },
+  {
+   "id": 4480,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4481,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4482,
+   "verdict": "walk",
+   "total": 9,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4483,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "ctx",
+    "hall"
+   ]
+  },
+  {
+   "id": 4484,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "adv"
+   ]
+  },
+  {
+   "id": 4485,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "adv"
+   ]
+  },
+  {
+   "id": 4486,
+   "verdict": "maybe",
+   "total": 7,
+   "flags": [
+    "p1000",
+    "hall",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4487,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4488,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 4489,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4490,
+   "verdict": "maybe",
+   "total": 7,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4491,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4492,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": []
+  },
+  {
+   "id": 4493,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4494,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "hall",
+    "ctx"
+   ]
+  },
+  {
+   "id": 4495,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4496,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4497,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4498,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4499,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 4500,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "hall"
+   ]
+  },
+  {
+   "id": 4501,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4502,
+   "verdict": "skip",
+   "total": 3,
+   "flags": []
+  },
+  {
+   "id": 4503,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "hall",
+    "pin"
+   ]
+  },
+  {
+   "id": 4504,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4505,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4506,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4507,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4508,
+   "verdict": "skip",
+   "total": 8,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 4509,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4510,
+   "verdict": "walk",
+   "total": 9,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4511,
+   "verdict": "walk",
+   "total": 9,
+   "flags": []
+  },
+  {
+   "id": 4512,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4513,
+   "verdict": "walk",
+   "total": 9,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4514,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "dup",
+    "hall"
+   ]
+  },
+  {
+   "id": 4515,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4516,
+   "verdict": "maybe",
+   "total": 8,
+   "flags": [
+    "p1000",
+    "hall"
+   ]
+  },
+  {
+   "id": 4517,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 4518,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "ctx",
+    "hall"
+   ]
+  },
+  {
+   "id": 4519,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4520,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4521,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4522,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4523,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out",
+    "pin"
+   ]
+  },
+  {
+   "id": 4524,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out",
+    "pin"
+   ]
+  },
+  {
+   "id": 4525,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4526,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4527,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4528,
+   "verdict": "walk",
+   "total": 9,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4529,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": []
+  },
+  {
+   "id": 4530,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4531,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4532,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4533,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4534,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "german"
+   ]
+  },
+  {
+   "id": 4535,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4536,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4537,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4538,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4539,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4540,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4541,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4542,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4543,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4544,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "wrong",
+    "p1000"
+   ]
+  },
+  {
+   "id": 4545,
+   "verdict": "walk",
+   "total": 9,
+   "flags": [
+    "german"
+   ]
+  },
+  {
+   "id": 4546,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 4547,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4548,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4549,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "p1000",
+    "obsc"
+   ]
+  },
+  {
+   "id": 4550,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4551,
+   "verdict": "skip",
+   "total": 8,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4552,
+   "verdict": "walk",
+   "total": 9,
+   "flags": []
+  },
+  {
+   "id": 4553,
+   "verdict": "skip",
+   "total": 8,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 4554,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "obsc"
+   ]
+  },
+  {
+   "id": 4555,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4556,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4557,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "ctx"
+   ]
+  },
+  {
+   "id": 4558,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4559,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4560,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4561,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4562,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4563,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4564,
+   "verdict": "skip",
+   "total": 2,
+   "flags": [
+    "wrong",
+    "p1000",
+    "dup"
+   ]
+  },
+  {
+   "id": 4565,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "wrong",
+    "hall"
+   ]
+  },
+  {
+   "id": 4566,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4567,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "p1000",
+    "obsc"
+   ]
+  },
+  {
+   "id": 4568,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4569,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "german"
+   ]
+  },
+  {
+   "id": 4570,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "obsc"
+   ]
+  },
+  {
+   "id": 4571,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": []
+  },
+  {
+   "id": 4572,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": []
+  },
+  {
+   "id": 4573,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "obsc"
+   ]
+  },
+  {
+   "id": 4574,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "obsc"
+   ]
+  },
+  {
+   "id": 4575,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "obsc"
+   ]
+  },
+  {
+   "id": 4576,
+   "verdict": "skip",
+   "total": 2,
+   "flags": [
+    "obsc"
+   ]
+  },
+  {
+   "id": 4577,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 4578,
+   "verdict": "skip",
+   "total": 4,
+   "flags": []
+  },
+  {
+   "id": 4579,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4580,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "p1000",
+    "obsc"
+   ]
+  },
+  {
+   "id": 4581,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "obsc"
+   ]
+  },
+  {
+   "id": 4582,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4619,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "pin",
+    "obsc"
+   ]
+  },
+  {
+   "id": 4620,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 4621,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4622,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4623,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4624,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "p1000",
+    "dup"
+   ]
+  },
+  {
+   "id": 4625,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "dup",
+    "hall"
+   ]
+  },
+  {
+   "id": 4935,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4936,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4937,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4938,
+   "verdict": "skip",
+   "total": 7,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4939,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4940,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4941,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4942,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4943,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4944,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "hall",
+    "dup"
+   ]
+  },
+  {
+   "id": 4945,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 4946,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4947,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4948,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4949,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4950,
+   "verdict": "skip",
+   "total": 6,
+   "flags": [
+    "out"
+   ]
+  },
+  {
+   "id": 4951,
+   "verdict": "skip",
+   "total": 3,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4952,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": []
+  },
+  {
+   "id": 4953,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "desc"
+   ]
+  },
+  {
+   "id": 4954,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 4955,
+   "verdict": "walk",
+   "total": 7,
+   "flags": []
+  },
+  {
+   "id": 4956,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "p1000"
+   ]
+  },
+  {
+   "id": 4957,
+   "verdict": "maybe",
+   "total": 5,
+   "flags": [
+    "dup"
+   ]
+  }
+ ]
+}

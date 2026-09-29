@@ -68,6 +68,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `e2e/travel.py` | Writes the walk flow's legs and stop names for the seeded start |
 | `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
+| `tests/fixtures/walk_labels.json` | Walk/maybe/skip for all 209 memories as of 2026-09-29 (docs/04, *Corpus read*): what a judge change is measured against |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
 | `tests/test_public_host.py` | What Railway's host turns off (`/docs`, the embed, the dev database fallback), and the health check |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |
