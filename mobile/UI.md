@@ -60,7 +60,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
                                loop · 52 min", the streak, Done. A relaunch does not show it again
 
-MemorySheet (pageSheet modal) - two compositions, not one with holes in it
+MemorySheet (a floating card on the map, max 60%; a pageSheet elsewhere) - two compositions, not one with holes in it
 
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700
@@ -778,6 +778,14 @@ this is not a polish pass:
 map; this is the moment the product is *about*, so it gets the animation
 budget. Spec, so it does not get re-invented per screen:
 
+- **Alive at rest, quiet under the thumb.** Borrowed from Shazam: before
+  it is touched, the ring breathes (1 to 1.03) and two seal ripples leave it
+  half a breath apart (`IDLE_MS`, 2.4s), over a static seal glow. It asks
+  to be pressed. On press-in the ripples fade and the ring squishes to 0.94,
+  so the press is answered in the same frame. The squish reacts to the press
+  and the fill is the progress; one never stands in for the other. Letting go
+  pops it back with a little overshoot. It never loops while `busy` or with
+  Reduce Motion on.
 - **Press and hold, not tap.** ~900ms. A tap is a click; a hold is a lock
   turning. It also makes an accidental unlock almost impossible, which matters
   because unlocking is irreversible.
@@ -847,7 +855,7 @@ file names the gap.
 **The button never decides anything.** It asks
 `POST /v1/memories/{id}/unlock` and the server re-measures, so a
 completed hold can still come back refused when GPS has drifted. Say so —
-"Not close enough yet" — rather than leaving a control that looks broken.
+"Not quite there. Take a few more steps." — rather than leaving a control that looks broken.
 
 ## Flows
 

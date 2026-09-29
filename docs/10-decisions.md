@@ -85,7 +85,8 @@ content, the map undimmed above it, and the lock is `Approach` (the ring you
 will hold) beside the distance, "Opens within 20 m" and the minutes on foot.
 
 The presentation is fixed per opening, because a modal cannot change it while
-up. A stack that pages from a peek onto something else grows the card to 92%.
+up. ~~A stack that pages from a peek onto something else grows the card to 92%.~~
+Superseded 2026-09-29 by "An open memory is a card too", below.
 ×, a tap on the map, or pulling the card down closes it. The pull is a
 transparent `ScrollView` with the card at its foot: iOS's own rubber band,
 released past 70 px. A JS `PanResponder` got the touch but never its moves in
@@ -94,6 +95,20 @@ by × or back.
 
 **Options considered:** a native sheet with detents needs `@expo/ui` or
 react-native-screens and a native rebuild; RN's `Modal` has no detents.
+
+### An open memory is a card too
+
+Status: Accepted 2026-09-29
+
+Holding the ring swapped a card over the map for a page covering 92% of the
+screen, so unlocking read as leaving the map rather than opening something on
+it. On the map, every `MemorySheet` is now the unlock card's footprint: 16 in
+from each edge, rounded all round, and floating over the undimmed map. It
+grows to fit its content up to 60% of the screen, and a longer story scrolls
+inside the card. On a walk, the next stop stays in view while you read.
+
+**Options considered:** a short teaser card you tap to expand. That puts a
+step between the hold and the story, at the payoff.
 
 ### Unlock on the map
 

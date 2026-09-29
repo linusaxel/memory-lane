@@ -42,6 +42,10 @@ const TICKS: { at: number; style: Haptics.ImpactFeedbackStyle }[] = [
  *  feel and the thing you see arrive together. */
 const STRAIN_FROM = TICKS[2].at / HOLD_MS;
 
+/** One breath and one ripple at rest. Slow enough to read as alive, not as a
+ *  spinner asking you to wait. */
+const IDLE_MS = 2400;
+
 type Props = {
   onUnlock: () => void;
   busy?: boolean;
@@ -51,15 +55,53 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
   const fill = useRef(new Animated.Value(0)).current;
   const burst = useRef(new Animated.Value(0)).current;
   const sprung = useRef(new Animated.Value(0)).current;
+  const idle = useRef(new Animated.Value(0)).current;
+  const calm = useRef(new Animated.Value(0)).current;
+  const press = useRef(new Animated.Value(0)).current;
+  const loop = useRef<Animated.CompositeAnimation | null>(null);
   const holding = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [assistive, setAssistive] = useState(false);
+  const [still, setStill] = useState(false);
 
   useEffect(() => {
     AccessibilityInfo.isScreenReaderEnabled().then(setAssistive);
-    const sub = AccessibilityInfo.addEventListener('screenReaderChanged', setAssistive);
-    return () => sub.remove();
+    AccessibilityInfo.isReduceMotionEnabled().then(setStill);
+    const subs = [
+      AccessibilityInfo.addEventListener('screenReaderChanged', setAssistive),
+      AccessibilityInfo.addEventListener('reduceMotionChanged', setStill),
+    ];
+    return () => subs.forEach((sub) => sub.remove());
   }, []);
+
+  // At rest the ring breathes and ripples, so it asks to be touched before it
+  // is. The hold takes the stage from it: nothing loops while the ring fills.
+  const rest = () => {
+    if (busy || still) return;
+    Animated.timing(calm, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+    loop.current?.stop();
+    idle.setValue(0);
+    loop.current = Animated.loop(
+      Animated.timing(idle, {
+        toValue: 1,
+        duration: IDLE_MS,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    loop.current.start();
+  };
+
+  const quiet = () => {
+    loop.current?.stop();
+    Animated.timing(calm, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+  };
+
+  useEffect(() => {
+    if (busy || still) quiet();
+    else rest();
+    return () => loop.current?.stop();
+  }, [busy, still]);
 
   const clearTicks = () => {
     timers.current.forEach(clearTimeout);
@@ -85,6 +127,8 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
     if (busy) return;
     holding.current = true;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    quiet();
+    Animated.spring(press, { toValue: 1, speed: 40, bounciness: 0, useNativeDriver: true }).start();
 
     clearTicks();
     timers.current = TICKS.map(({ at, style }) =>
@@ -106,6 +150,7 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
       // in the app that means a thing was earned, and nothing else uses it.
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       Animated.parallel([
+        release(),
         Animated.timing(burst, {
           toValue: 1,
           duration: 420,
@@ -133,7 +178,13 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
     // Springs back where it was, visibly. Letting go early has to read as "you
     // let go", not as "it refused you" - and no haptic, which would reward it.
     Animated.spring(fill, { toValue: 0, speed: 14, useNativeDriver: true }).start();
+    release().start();
+    rest();
   };
+
+  // Pops back past where it was, so letting go is answered as firmly as pressing.
+  const release = () =>
+    Animated.spring(press, { toValue: 0, speed: 20, bounciness: 10, useNativeDriver: true });
 
   // Everything below is transform and opacity only, because those are the two
   // things useNativeDriver can carry. A colour that animates would put this
@@ -144,6 +195,19 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
   const straining = {
     opacity: fill.interpolate(STRAIN),
     transform: [{ scale: fill.interpolate(STRAIN_SCALE) }],
+  };
+
+  // Two ripples half a breath apart, so one is always leaving the ring.
+  const ripple = (phase: Animated.AnimatedInterpolation<number> | Animated.Value) => ({
+    opacity: Animated.multiply(phase.interpolate(RIPPLE_FADE), calm),
+    transform: [{ scale: phase.interpolate(RIPPLE_SCALE) }],
+  });
+  const later = Animated.modulo(Animated.add(idle, 0.5), 1);
+
+  const body = {
+    transform: [
+      { scale: Animated.multiply(idle.interpolate(BREATHE), press.interpolate(SQUISH)) },
+    ],
   };
 
   const flare = {
@@ -185,20 +249,25 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
         onPress={assistive ? onUnlock : undefined}
       >
         {/* Outside the clipped ring, or it would be trimmed to nothing. */}
+        <Animated.View pointerEvents="none" style={[styles.ripple, ripple(idle)]} />
+        <Animated.View pointerEvents="none" style={[styles.ripple, ripple(later)]} />
         <Animated.View pointerEvents="none" style={[styles.flare, flare]} />
 
-        <View style={styles.ring}>
-          <Animated.View style={[styles.fill, rising]} />
-          {/* The last quarter. An inner ring brightening and closing in is the
-              lock about to turn, and it arrives with the third haptic. */}
-          <Animated.View pointerEvents="none" style={[styles.strain, straining]} />
-          {/* The same padlock the map pins use, so the ring reads as the thing
-              that opens them rather than as a record button. Amber-700 stays
-              readable on both the white rest state and the filled one. */}
-          <Animated.View style={working}>
-            <Padlock size={27} color={color.sealDeep} shackleStyle={shackle} />
-          </Animated.View>
-        </View>
+        {/* The glow lives out here: the ring's overflow clip would cut it off. */}
+        <Animated.View style={[styles.glow, body]}>
+          <View style={styles.ring}>
+            <Animated.View style={[styles.fill, rising]} />
+            {/* The last quarter. An inner ring brightening and closing in is the
+                lock about to turn, and it arrives with the third haptic. */}
+            <Animated.View pointerEvents="none" style={[styles.strain, straining]} />
+            {/* The same padlock the map pins use, so the ring reads as the thing
+                that opens them rather than as a record button. Amber-700 stays
+                readable on both the white rest state and the filled one. */}
+            <Animated.View style={working}>
+              <Padlock size={27} color={color.sealDeep} shackleStyle={shackle} />
+            </Animated.View>
+          </View>
+        </Animated.View>
       </Pressable>
       <Text style={styles.caption}>{busy ? 'Unlocking…' : 'Hold to unlock'}</Text>
     </View>
@@ -221,10 +290,32 @@ const RECOIL = {
   outputRange: ['0deg', '3deg', '0deg'],
   extrapolate: 'clamp' as const,
 };
+const BREATHE = { inputRange: [0, 0.5, 1], outputRange: [1, 1.03, 1] };
+const SQUISH = { inputRange: [0, 1], outputRange: [1, 0.94] };
+const RIPPLE_SCALE = { inputRange: [0, 1], outputRange: [1, 1.6] };
+const RIPPLE_FADE = { inputRange: [0, 1], outputRange: [0.45, 0] };
 const GIVE = { inputRange: [0, 0.35, 1], outputRange: [0, 0.22, 0] };
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: 12, paddingVertical: 8 },
+  glow: {
+    borderRadius: RING / 2,
+    backgroundColor: color.paper,
+    shadowColor: color.seal,
+    shadowOpacity: 0.5,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  ripple: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: RING,
+    height: RING,
+    borderRadius: RING / 2,
+    borderWidth: 2,
+    borderColor: color.seal,
+  },
   ring: {
     width: RING,
     height: RING,

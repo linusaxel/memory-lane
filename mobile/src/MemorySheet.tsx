@@ -285,7 +285,7 @@ export default function MemorySheet({
           <View
             style={[
               styles.sheet,
-              compact && [styles.card, !peeking && { height: screenHeight * 0.92 }],
+              compact && [styles.card, { maxHeight: screenHeight * 0.6, marginBottom: 16 + insets.bottom }],
             ]}
           >
             <View style={styles.grabberRow}>
@@ -478,7 +478,7 @@ export default function MemorySheet({
             )}
 
             {(many || peeking || (!locked && memory.content) || linkFailed) && (
-              <View style={[styles.actions, compact && { paddingBottom: 20 + insets.bottom }]}>
+              <View style={styles.actions}>
                 {/* Without this, every memory but the first at a stacked point is
                     unreachable - and 60% of this corpus sits on a shared point. */}
                 {many && (
@@ -570,13 +570,14 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   sheet: { flex: 1, backgroundColor: color.paper },
   // Paper over the live map, not a dimmed one: the pin you tapped stays in
-  // view above the card. The corners match the page sheet's.
+  // view above the card. The unlock card's footprint, so the story opens where
+  // the ring was; a long one scrolls inside it.
   over: { flexGrow: 1, justifyContent: 'flex-end' },
   page: { height: '100%' },
   card: {
     flex: 0,
-    borderTopLeftRadius: corner.card,
-    borderTopRightRadius: corner.card,
+    marginHorizontal: 16,
+    borderRadius: corner.card,
     ...lift,
   },
   grabberRow: { alignItems: 'center', paddingTop: 10 },
