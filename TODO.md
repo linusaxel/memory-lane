@@ -165,6 +165,7 @@ public launch that the rest of this file doesn't track. Blockers first.
       2026-09-29) Needs the EAS project (`EAS_BUILD`) for its update URL and a
       `runtimeVersion` policy. The `development` EAS profile still points at
       localhost, which is right for a dev client.
+
 ---
 
 ## Phase 0 — Design questions
