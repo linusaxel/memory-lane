@@ -420,6 +420,33 @@ Nothing can be bought until the stores exist, so everybody is free.
       Developer API direct, or RevenueCat blocks something we need, leave: only
       `billing.fetch_subscriber` and the app's SDK change, since
       `subscriptions` stays ours.
+- [ ] **Steps buy an unlock, so a free account can wander.** (checked
+      2026-09-30) The founder's idea: instead of one planned walk a day, a
+      free account walks anywhere and spends steps to open the pin it stands
+      on. The 20 m gate is untouched; only the free tier's limit changes.
+      Walks stay, as a plan anyone can ask for, not the only way to open a
+      pin. Subscribers are unchanged (`SUBSCRIBED_QUERY`).
+      - Decide first, in docs/10: a new entry that supersedes the free-tier
+        half of *A subscription opens the map* (the day lock,
+        `WALKED_TODAY_QUERY`) and amends *Only today's walk unlocks*. It
+        names the numbers: steps per unlock (start at 1,000?), a daily
+        credit cap, and whether a walk's stops still open free.
+      - Counting: v1 is steps counted with the app open, on both platforms
+        (`expo-sensors` Pedometer `watchStepCount`). iOS can read earlier
+        steps too (`getStepCountAsync`, Motion & Fitness permission, no
+        HealthKit); Android can't without Health Connect. Pocket steps on
+        Android come later, if at all.
+      - Server: a ledger (steps credited, unlocks spent) on the account, a
+        credit endpoint that caps per day, and the unlock checks balance
+        where it checks today's route. Steps are self-reported, like the
+        position; the cap limits what a faked count opens.
+      - App: the balance on the map, and the unlock ring asks for steps
+        instead of a walk. Store privacy disclosures add motion data.
+      - Tests: unlock refused below the price, allowed at it, balance spent
+        once under two racing unlocks, credit capped per day. Update the
+        paywall e2e flows that assume one walk a day.
+      - Check it still sells: with dense pins in the centre, the price decides
+        how much of the map free covers. Tune it on the corpus before launch.
 
 ---
 
