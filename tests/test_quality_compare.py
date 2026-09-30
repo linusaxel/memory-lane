@@ -66,7 +66,8 @@ def test_the_comparison_scores_each_side_and_reruns_free(db_session):
     client = _ByPrompt()
 
     results = compare(db_session, client, {"baseline": "OLD", "candidate": "NEW"}, chunks)
-    assert len(client.calls) == 2 * len(chunks)
+    # Per chunk per prompt: the extraction and its check against the chunk.
+    assert len(client.calls) == 4 * len(chunks)
 
     def flagged(name):
         summaries = [m["summary"] for kept in results[name] for m in kept]
@@ -76,7 +77,7 @@ def test_the_comparison_scores_each_side_and_reruns_free(db_session):
     assert flagged("candidate")["anonymous subject"] == 0
 
     compare(db_session, client, {"baseline": "OLD", "candidate": "NEW"}, chunks)
-    assert len(client.calls) == 2 * len(chunks), "a rerun must read extraction_chunks back"
+    assert len(client.calls) == 4 * len(chunks), "a rerun must read extraction_chunks back"
 
 
 @pytest.mark.db

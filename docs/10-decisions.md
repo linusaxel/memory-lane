@@ -1380,6 +1380,30 @@ telling for a stranger standing there is kept and the other is hidden.
 Many distinct stories on one spot (the Blue Tower's eight) are not duplicates.
 That is a curation call, in TODO.md's *Source triage*.
 
+### A summary is checked against its chunk, not corrected
+
+Status: Accepted, 2026-09-30
+
+After extraction, one Sonnet call per chunk lists the claims in each summary
+that the chunk and its brief don't make: a name, number, date, street, who
+did what. They are stored in `memories.unsupported` and shown by
+`python -m pipeline.review` (`--flagged` for only those). Nothing edits the
+summary; a person does, with `--edit`.
+
+- **Flag, don't fix.** Three automatic fixes were replayed over the 209
+  labelled memories (docs/04, *Summary against its chunk*). The best one,
+  Sonnet naming word-level fixes for code to apply, found the real errors
+  (Kristensen, the Spanish-American war), but cut the core of the best walk
+  and turned right names back into what the captions misheard. A list costs a
+  reader nothing when it is wrong.
+- **Sonnet, not Haiku.** Haiku's lists pasted source-language text and
+  comments in, as it chained scenes in the dedup check.
+- **At the chunk.** The chunk is the only text the summary may claim from, and
+  `extraction_chunks` holds the reply that wrote each summary verbatim, so
+  `review --check` can list claims for memories extracted before this.
+- **NULL is not clean.** NULL is never checked, `{}` checked and clean, so a
+  failed check is not read as a pass.
+
 ### One venue, one name per video
 
 Status: Accepted 2026-09-27

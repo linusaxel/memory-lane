@@ -627,7 +627,13 @@ def extract_chunk_stored(
     raw = _stored_request(
         session, client, content_id, chunk_index, system_prompt, user, context=context
     )
-    return [] if raw is None else grounded(parse_memories(raw), chunk)
+    if raw is None:
+        return []
+    memories = grounded(parse_memories(raw), chunk)
+    claims = unsupported(session, client, content_id, chunk_index, chunk, context, memories)
+    for mem, found in zip(memories, claims, strict=True) if claims is not None else ():
+        mem["unsupported"] = found
+    return memories
 
 
 def _stored_request(
@@ -680,6 +686,97 @@ def grounded(memories: list[dict], chunk: str) -> list[dict]:
     docs/10-decisions.md#a-memory-is-decided-before-it-is-written."""
     text_ = _squash(chunk)
     return [m for m in memories if (q := _squash(m.get("place_words") or "")) and q in text_]
+
+
+UNSUPPORTED_PROMPT = """Each numbered story was written in English from the
+source text that follows it, with the context above it. Find the claims of
+fact a reader would take away from each story - a name, a number, a date, a
+street, a diagnosis, who did what - that the source gets different.
+
+For each claim you look at, quote it from the story (as few words as make it),
+say what the source says about it, then give a verdict:
+- contradicts: the source says something else ("the Boer War", where the
+  source says the Spanish-American war).
+- absent: neither the source nor the context says it.
+- supported: they say it, in whatever language or words.
+
+Style, wording, order, translation and detail left out are not claims. A name
+the captions misheard is supported when it is clearly the same person or
+place. Most stories have nothing to look at; give an empty list for those."""
+
+UNSUPPORTED_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "checks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "index": {"type": "integer"},
+                    "claims": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "claim": {"type": "string"},
+                                "source_says": {"type": "string"},
+                                "verdict": {
+                                    "type": "string",
+                                    "enum": ["contradicts", "absent", "supported"],
+                                },
+                            },
+                            "required": ["claim", "source_says", "verdict"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                "required": ["index", "claims"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["checks"],
+    "additionalProperties": False,
+}
+
+# What gets stored. "absent" was 3 in 4 of the first run's flags and mostly
+# wrong: the best walk's core, read from a German source. See docs/10.
+FLAGGED = ("contradicts",)
+
+
+def unsupported(
+    session, client, content_id: int, chunk_index: int, chunk: str, context: str, memories
+) -> list[list[str]] | None:
+    """Per memory, the claims its chunk doesn't make, or None if the check
+    failed. One Sonnet call per chunk, stored like the extraction. It flags
+    and never edits: every automatic fix tried damaged a walk. See
+    docs/10-decisions.md#a-summary-is-checked-against-its-chunk-not-corrected."""
+    if not memories:
+        return []
+    stories = "\n\n".join(f"[{i}] {m.get('summary')}" for i, m in enumerate(memories))
+    user = f"Stories:\n\n{stories}\n\nSource text:\n\n{chunk}"
+    try:
+        raw = _stored_request(
+            session,
+            client,
+            content_id,
+            chunk_index,
+            UNSUPPORTED_PROMPT,
+            user,
+            UNSUPPORTED_SCHEMA,
+            context,
+        )
+        found = {
+            c["index"]: [
+                f"{x['claim']} (source: {x['source_says']})"
+                for x in c["claims"]
+                if x["verdict"] in FLAGGED
+            ]
+            for c in json.loads(raw)["checks"]
+        }
+    except (TransientAPIError, TypeError, ValueError, KeyError):
+        return None
+    return [found.get(i, []) for i in range(len(memories))]
 
 
 def video_brief(session, client, content_id: int, segments: list, source: str, title) -> str:
@@ -1332,12 +1429,12 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
             INSERT INTO memories (
                 place_id, content_id, timestamp_start, summary, tags,
                 extraction_confidence, layer, happened_at, happened_precision,
-                attribution, source_url, contrast_score, contrast_note
+                attribution, source_url, contrast_score, contrast_note, unsupported
             )
             VALUES (
                 :place_id, :content_id, :ts_start, :summary, :tags,
                 :confidence, :layer, CAST(:happened_at AS DATE), :happened_precision,
-                :attribution, :source_url, :contrast_score, :contrast_note
+                :attribution, :source_url, :contrast_score, :contrast_note, :unsupported
             )
         """),
         {
@@ -1359,6 +1456,7 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
             "source_url": mem.get("source_url"),
             "contrast_score": _contrast_score(mem),
             "contrast_note": mem.get("contrast_note"),
+            "unsupported": mem.get("unsupported"),
         },
     )
 

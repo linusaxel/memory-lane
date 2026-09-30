@@ -142,6 +142,7 @@ def _run(db_session, monkeypatch, client):
     # These count calls to the chunk extractor; the brief is tested on its own.
     monkeypatch.setattr(extract, "video_brief", lambda *a, **k: "")
     monkeypatch.setattr(extract, "worth_telling", lambda s, c, i, memories: memories)
+    monkeypatch.setattr(extract, "unsupported", lambda *a: None)
     return extract.extract_all_pending()
 
 

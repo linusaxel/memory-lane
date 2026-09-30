@@ -209,15 +209,11 @@ is to `pipeline/extract.py` unless named.
       The bar of two of incident, breach and feeling cost 40% of the walks, so
       retune that. Measure with `python -m pipeline.quality --labels --half
       tune`, then report `--half check` against v1's 32% / 96%.
-- [ ] **Summary against its chunk.** (checked 2026-09-30) ~20 factual or
-      speech-recognition errors: Tom "Christensen", Vestergade for
-      Vimmelskaftet, lupus called cancer. Measured three ways and not
-      shipped (docs/04, *Summary against its chunk*): Haiku mangles
-      summaries, and Sonnet fixes the real errors but cut the core of 4545
-      and "fixed" names back to what the captions misheard. **Needs your
-      call:** a Sonnet check that only *flags* (stores the unsupported claims
-      for `review`, edits nothing), or park it. Separately, and unmeasured:
-      have the extraction prompt spell known people as they are in print.
+- [ ] **Spell known people as they are in print.** (checked 2026-09-30) The
+      check against the chunk (docs/10, *A summary is checked against its
+      chunk*) lists a misheard name but can't fix one the captions give: Tom
+      "Christensen", Jørgen "Let", "Politikken". Add the line to both
+      extraction prompts, and measure it with `quality --compare`.
 - [ ] **Then-vs-now from OSM.** (checked 2026-09-29) Almost no summary says
       what stands there now, and `contrast_score` is 0.7 on 11 of 13 Historisk
       Atlas entries. Reverse-geocode the pin for its present-day name and type.

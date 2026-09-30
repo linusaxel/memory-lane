@@ -150,6 +150,7 @@ Stores extracted memories.
 | summary | TEXT | Memory description |
 | tags | VARCHAR(50)[] | Category tags |
 | extraction_confidence | VARCHAR(20) | high/medium/low |
+| unsupported | TEXT[] | Claims its chunk doesn't make, for review. NULL never checked, `{}` clean |
 
 ## Project Structure
 
