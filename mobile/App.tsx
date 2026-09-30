@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
+  Dimensions,
   Linking,
   Platform,
   Pressable,
@@ -1319,13 +1320,26 @@ export default function App() {
               setStage('preview');
             }}
             // Teleport, under __DEV__ only: the pinned position ignores the
-            // simulator's GPS. See src/devLocation.ts. A pin has its own.
+            // simulator's GPS. See src/devLocation.ts. Pressed on a pin, onto
+            // the pin itself, so you stand inside its 20 m; the press lands up
+            // to a pin's width off its point. Reaching here over a marker needs
+            // patches/react-native-maps+1.29.8.patch.
             onLongPress={
               __DEV__
                 ? (e) => {
                     const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
+                    const slop = (region.latitudeDelta * 111_000 * 24) / Dimensions.get('window').height;
+                    let pin: { lat: number; lng: number } | null = null;
+                    let best = slop;
+                    for (const group of groups) {
+                      const away = metersBetween(lat, lng, group.lat, group.lng);
+                      if (away <= best) {
+                        best = away;
+                        pin = group;
+                      }
+                    }
                     Haptics.selectionAsync().catch(() => {});
-                    setHere({ lat, lng });
+                    setHere(pin ? { lat: pin.lat, lng: pin.lng } : { lat, lng });
                   }
                 : undefined
             }
@@ -1757,19 +1771,6 @@ export default function App() {
               : undefined
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
-          // Dev teleport onto this pin. Not a long-press on the pin: MapKit
-          // turns that into a drag, which leaves a system pin behind.
-          onStandHere={
-            __DEV__
-              ? () => {
-                  const memory = openMemories[openIndex];
-                  if (!memory) return;
-                  Haptics.selectionAsync().catch(() => {});
-                  setHere(memory.place.coordinates);
-                  setOpenAt([]);
-                }
-              : undefined
-          }
           freeLeft={profile?.free_unlocks ?? 0}
           stepPrice={profile && !profile.subscribed ? profile.steps_per_unlock : undefined}
           onOpenFree={async () => {

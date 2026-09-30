@@ -11,6 +11,20 @@ index d3b0723..3db5ba3 100644
      } else if ([subview isKindOfClass:[AIRMapPolygon class]]) {
          ((AIRMapPolygon *)subview).map = self;
          [self addOverlay:(id<MKOverlay>)subview];
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m b/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m
+index d034034..74b2cd2 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMapManager.m
+@@ -68,6 +68,9 @@ - (UIView *)view
+     longPress.cancelsTouchesInView = NO;
+ 
+     doubleTap.delegate = self;
++    // Alongside MapKit's own recognizers, so a long-press on a marker reaches
++    // onLongPress instead of being swallowed by annotation selection.
++    longPress.delegate = self;
+ 
+     // disable drag by default
+     drag.enabled = NO;
 diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMapPolyline.m b/node_modules/react-native-maps/ios/AirMaps/AIRMapPolyline.m
 index 4f4596d..4694bda 100644
 --- a/node_modules/react-native-maps/ios/AirMaps/AIRMapPolyline.m
@@ -24,3 +38,10 @@ index 4f4596d..4694bda 100644
  }
  
  - (void) updateRenderer:(MKOverlayPathRenderer*)renderer {
+diff --git a/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h b/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h
+index e4fc048..91b6de5 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h
++++ b/node_modules/react-native-maps/ios/AirMaps/RNMapsDefines.h
+@@ -1 +1 @@
+-#define HAVE_GOOGLE_MAPS 1
++#define HAVE_GOOGLE_MAPS 0
