@@ -1779,9 +1779,12 @@ export default function App() {
           freeLeft={profile?.free_unlocks ?? 0}
           stepPrice={profile && !profile.subscribed ? profile.steps_per_unlock : undefined}
           stepsShort={short}
+          opening={unlocking}
           onOpenFree={async () => {
             const memory = openMemories[openIndex];
-            if (memory && (await unlock(memory))) setRevealId(memory.id);
+            if (!memory || !(await unlock(memory))) return;
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            setRevealId(memory.id);
           }}
         />
 

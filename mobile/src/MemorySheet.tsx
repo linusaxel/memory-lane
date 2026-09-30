@@ -59,6 +59,8 @@ type Props = {
    *  you are (docs/10, "Three free a day, then steps where you stand"). */
   freeLeft?: number;
   onOpenFree?: () => void;
+  /** A free open is in flight: one tap spends one. */
+  opening?: boolean;
   /** What standing on it costs once the free ones are gone; absent for a
    *  subscriber, who pays nothing there. */
   stepPrice?: number;
@@ -139,6 +141,7 @@ export default function MemorySheet({
   onWalkHere,
   freeLeft = 0,
   onOpenFree,
+  opening = false,
   stepPrice,
   stepsShort = 0,
   compact = false,
@@ -527,6 +530,8 @@ export default function MemorySheet({
                     style={dim(styles.watch)}
                     accessibilityRole="button"
                     accessibilityLabel={`Open it now, ${freeLeft} free today`}
+                    accessibilityState={{ busy: opening }}
+                    disabled={opening}
                     onPress={onOpenFree}
                   >
                     <Text style={styles.watchText}>Open it now · {freeLeft} free today</Text>
