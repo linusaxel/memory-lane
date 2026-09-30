@@ -212,6 +212,26 @@ three Kasino carnival fires and Andersen's rent-lowering tears. Venues came out
 Danish ("Det Kongelige Teater"). On 12 Historisk Atlas chunks it kept the
 same 11, in tighter words. Existing memories are not re-extracted.
 
+**Summary against its chunk, measured and not shipped** (2026-09-30). Every
+labelled memory traces to its chunk (`extraction_chunks` holds the reply that
+wrote each summary, verbatim), so a check was replayed over all 209, one call
+per chunk, with the video's brief as context. Three designs:
+- Haiku rewriting the summary: 55% changed, 3 walks dropped (Ringkaféen,
+  Hedebygade, Nyvartov), summaries replaced by verbatim source, "Venue, City:"
+  prefixed.
+- Haiku naming `{wrong, right}` fixes that code applies: 75% changed, Danish
+  and German pasted into English ("det tyske militær"), comments ("(confirmed
+  in transcript)"), whole passages swapped in.
+- Sonnet, same fixes, told "only what a reader would believe wrongly": 70
+  changed, 19 of 52 walks. Real catches: Kristensen, Politiken, the
+  Spanish-American war (4482), Kronborg (4543), Count Horn's name. But it cut
+  the father and the boy from 4545, the best walk; echoed caption mishearings
+  back as fixes (Toldbodgade to "Tøjboggade", Mor Jane to "Moriane"); cut what
+  the brief supplied ("began in 1996"); and left "bars,." behind.
+
+An automatic edit that hurts the best walk is worse than the ~20 errors it
+fixes. What worked is finding them, not fixing them.
+
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day
