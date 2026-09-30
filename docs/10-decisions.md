@@ -1354,6 +1354,32 @@ Existing memories outside the box were hidden on the dev database, not
 reviewed as rejects, so the review reject rate still measures quality. The SQL
 is in docs/04, *Corpus read*.
 
+### A memory is not saved twice
+
+Status: Accepted, 2026-09-30
+
+Before a memory is saved, Sonnet is asked whether it tells the same happening
+as a visible memory already within `DUP_RADIUS_METERS` (150 m), from any
+content, including earlier memories in the same batch. On a match, the better
+telling for a stranger standing there is kept and the other is hidden.
+
+- **At save, across contents.** `merge_nearby_memories` only sees one video,
+  and its word overlap missed paraphrases: Ditlevsen's childhood street, told
+  twice in one video in other words.
+- **The better telling, not the first.** Keeping the first hid Oehlenschläger
+  watching Christiansborg burn (a walk) behind a two-line account of the same
+  fire.
+- **Sonnet, stored, not Haiku.** Two Haiku runs over the corpus disagreed with
+  each other, and each hid a walk: one chained three different Blue Tower
+  scenes into one. Sonnet through `_stored_request` (chunk_index -4) hid only
+  labelled duplicates, and a rerun answers the same for free.
+- **150 m.** Two sources put one sabotage 20 m apart. Wider pulls in the next
+  building's stories, and a different story at the same spot is never a match.
+- **It only filters.** A failed or unreadable check saves the memory.
+
+Many distinct stories on one spot (the Blue Tower's eight) are not duplicates.
+That is a curation call, in TODO.md's *Source triage*.
+
 ### One venue, one name per video
 
 Status: Accepted 2026-09-27

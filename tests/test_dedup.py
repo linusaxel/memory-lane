@@ -13,6 +13,8 @@ separate reasons; deriving `common` from a seven-item fixture tests neither,
 because the threshold lands somewhere real corpora never put it.
 """
 
+import pytest
+
 from pipeline.dedup import city_level, common_tokens, distinctive, propose, same_place, tokens
 
 # What the estimator actually produces for these rows against the live 194-place
@@ -129,3 +131,26 @@ def test_the_estimator_calls_recurring_tokens_common():
     common = common_tokens(corpus)
     assert "store" in common
     assert "gotham" not in common
+
+
+@pytest.mark.db
+def test_memory_repeats_keeps_the_first_telling_of_each(db_session):
+    from sqlalchemy import text
+
+    from pipeline.dedup import memory_repeats
+    from pipeline.extract import save_memories
+    from tests.fakes import FakeAnthropic
+
+    content_id = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id) "
+            "VALUES ('https://www.youtube.com/watch?v=ddddddddddd', 'youtube', 'ddddddddddd') "
+            "RETURNING id"
+        )
+    ).scalar()
+    base = {"place_name": "Katz's", "place_query": "Katz's", "lat": 40.7223, "lng": -73.9874}
+    save_memories(db_session, content_id, [{**base, "summary": s} for s in ("one", "two", "three")])
+    ids = db_session.execute(text("SELECT id FROM memories ORDER BY id")).scalars().all()
+
+    pairs = memory_repeats(db_session, FakeAnthropic({"reason": "same", "same_as": 0}))
+    assert pairs == [(ids[0], ids[1]), (ids[0], ids[2])], "a repeat is never kept against"

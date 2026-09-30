@@ -1046,7 +1046,101 @@ def _contrast_score(mem: dict):
         return None
 
 
-def save_memories(session, content_id: int, memories: list[dict], layer: str = "historical"):
+SAME_EVENT_PROMPT = """The first story is new. The numbered ones are already saved
+near the same spot, from this source or another.
+
+Does the new story tell the same happening as one of them - told again, in
+other words, from another source or with other details? Another story at the
+same place, or another moment in the same person's life, is not the same
+happening: a funeral and a childhood on one street are two.
+
+Give the index of the one it repeats, or -1 if none. If it repeats one, say
+whether the new telling is the better one for a stranger standing there: a
+scene rather than a summary, more specific, more vivid."""
+
+SAME_EVENT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "reason": {"type": "string"},
+        "same_as": {"type": "integer"},
+        "new_is_better": {"type": "boolean"},
+    },
+    "required": ["reason", "same_as", "new_is_better"],
+    "additionalProperties": False,
+}
+
+# A retelling is pinned where its source put it; two sources put one sabotage
+# 20 m apart. See docs/10-decisions.md#a-memory-is-not-saved-twice.
+DUP_RADIUS_METERS = 150
+
+
+def same_event(
+    session, client, content_id: int, new: dict, neighbours: list[dict]
+) -> tuple[int, bool] | None:
+    """(index of the neighbour `new` retells, whether `new` tells it better),
+    or None. Stored like the judge, at chunk_index -4, so a rerun answers the
+    same. A failed or unreadable reply is None."""
+    lines = "\n\n".join(
+        f"[{i}] {n.get('venue')}: {n.get('summary')}" for i, n in enumerate(neighbours)
+    )
+    user = f"New: {new.get('venue')}: {new.get('summary')}\n\n{lines}"
+    raw = _stored_request(
+        session, client, content_id, -4, SAME_EVENT_PROMPT, user, SAME_EVENT_SCHEMA
+    )
+    try:
+        reply = json.loads(raw)
+        i, better = reply["same_as"], bool(reply.get("new_is_better"))
+    except (TypeError, ValueError, KeyError):
+        return None
+    return (i, better) if isinstance(i, int) and 0 <= i < len(neighbours) else None
+
+
+def nearby_memories(session, lat: float, lng: float, before: int | None = None) -> list:
+    """Visible memories within DUP_RADIUS_METERS, nearest first, at most 10."""
+    return session.execute(
+        text("""
+            SELECT m.id, p.name AS venue, m.summary
+            FROM memories m JOIN places p ON p.id = m.place_id
+            WHERE NOT m.hidden
+              AND (CAST(:before AS int) IS NULL OR m.id < :before)
+              AND ST_DWithin(
+                  p.coordinates, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :r
+              )
+            ORDER BY p.coordinates <-> ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+            LIMIT 10
+        """),
+        {"lat": lat, "lng": lng, "r": DUP_RADIUS_METERS, "before": before},
+    ).fetchall()
+
+
+def _told_already(session, client, content_id: int, mem: dict, lat: float, lng: float) -> bool:
+    """True if an earlier memory already tells this better. A better telling
+    is saved and hides the earlier one. It only filters: a failed check saves."""
+    near = nearby_memories(session, lat, lng)
+    if not near:
+        return False
+    try:
+        hit = same_event(session, client, content_id, mem, [n._asdict() for n in near])
+    except Exception as e:
+        logger.warning(f"[content:{content_id}] same-event check failed, saving: {e}")
+        return False
+    if hit is None:
+        return False
+    i, better = hit
+    if better:
+        session.execute(
+            text("UPDATE memories SET hidden = TRUE WHERE id = :id"), {"id": near[i].id}
+        )
+        logger.info(f"[content:{content_id}] tells memory {near[i].id} better, hiding it")
+        return False
+    logger.info(f"[content:{content_id}] retells memory {near[i].id}: {mem.get('venue')}")
+    return True
+
+
+def save_memories(
+    session, content_id: int, memories: list[dict], layer: str = "historical", client=None
+):
+    """With a client, a memory that retells one already saved nearby is dropped."""
     for mem in memories:
         lat = mem.get("lat")
         lng = mem.get("lng")
@@ -1075,6 +1169,9 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
 
         if has_coords and LAUNCH_BBOX and not _in_box(lat, lng, LAUNCH_BBOX):
             logger.info(f"[content:{content_id}] outside the launch area: {venue} ({lat}, {lng})")
+            continue
+
+        if client and has_coords and _told_already(session, client, content_id, mem, lat, lng):
             continue
 
         params = {
@@ -1291,7 +1388,7 @@ def extract_all_pending():
                     f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering"
                 )
 
-                save_memories(session, content_id, filtered, layer_for(source_type))
+                save_memories(session, content_id, filtered, layer_for(source_type), client)
 
                 session.execute(
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),

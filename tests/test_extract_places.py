@@ -68,6 +68,51 @@ def test_a_pin_outside_the_launch_area_is_not_saved(db_session, monkeypatch):
     assert saved == ["Nørrebro", "unpinned"]
 
 
+def _saved(session):
+    return session.execute(text("SELECT summary FROM memories ORDER BY id")).scalars().all()
+
+
+def test_a_retelling_nearby_is_not_saved_and_another_story_is(db_session):
+    from tests.fakes import FakeAnthropic
+
+    content_id = _content(db_session)
+    save_memories(db_session, content_id, [_memory("the pastrami argument")])
+    same = FakeAnthropic({"reason": "the same argument", "same_as": 0})
+    other = FakeAnthropic({"reason": "a different night", "same_as": -1})
+
+    save_memories(db_session, content_id, [_memory("they argued over pastrami")], client=same)
+    save_memories(db_session, content_id, [_memory("the night the lights went")], client=other)
+
+    assert _saved(db_session) == ["the pastrami argument", "the night the lights went"]
+    assert len(same.messages.calls) == len(other.messages.calls) == 1
+
+
+def test_an_unreadable_or_failed_check_saves_the_memory(db_session):
+    from tests.fakes import FakeAnthropic
+
+    class _Down:
+        class messages:
+            @staticmethod
+            def create(**kwargs):
+                raise RuntimeError("overloaded")
+
+    content_id = _content(db_session)
+    save_memories(db_session, content_id, [_memory("first")])
+    save_memories(db_session, content_id, [_memory("second")], client=FakeAnthropic(["no"]))
+    save_memories(db_session, content_id, [_memory("third")], client=_Down())
+    assert _saved(db_session) == ["first", "second", "third"]
+
+
+def test_the_first_telling_in_one_batch_is_kept(db_session):
+    from tests.fakes import FakeAnthropic
+
+    fake = FakeAnthropic({"reason": "told twice", "same_as": 0})
+    content_id = _content(db_session)
+    save_memories(db_session, content_id, [_memory("first"), _memory("again")], client=fake)
+    assert _saved(db_session) == ["first"]
+    assert len(fake.messages.calls) == 1, "the first memory has no neighbour to ask about"
+
+
 def test_the_same_place_twice_is_one_row(db_session):
     content_id = _content(db_session)
     save_memories(db_session, content_id, [_memory("first visit")])
@@ -228,3 +273,16 @@ def test_the_bar_sits_between_a_retelling_and_a_second_story():
     bush = "When George Bush landed in Denmark in the mid-2000s, crowds packed Flyvergrillen to watch Air Force One touch down at the airport next door. The grill bar, open since the early 1970s, has long drawn plane enthusiasts who come just to watch takeoffs and landings."
     kiosk = "People used to gather here just to watch planes, and a boy would run around selling ice cream he'd bought from a shop further down the road. Someone decided to open an ice cream kiosk on the spot instead, and by the 1970s it had grown into the grill bar known as Flyvergrillen."
     assert len(merge_nearby_memories([dict(at, summary=bush), dict(at, summary=kiosk)])) == 2
+
+
+def test_a_better_telling_is_saved_and_hides_the_first(db_session):
+    from tests.fakes import FakeAnthropic
+
+    better = FakeAnthropic({"reason": "a scene", "same_as": 0, "new_is_better": True})
+    content_id = _content(db_session)
+    save_memories(db_session, content_id, [_memory("the palace burned")])
+    save_memories(db_session, content_id, [_memory("he watched the roof fall")], client=better)
+    visible = db_session.execute(
+        text("SELECT summary FROM memories WHERE NOT hidden ORDER BY id")
+    ).scalars()
+    assert list(visible) == ["he watched the roof fall"]

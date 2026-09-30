@@ -400,7 +400,9 @@ def task_aggregate_memories(content_id: int):
             f"[content:{content_id}] After merge: {len(merged)}, after filter: "
             f"{len(candidates)}, worth telling: {len(filtered)}"
         )
-        save_memories(session, content_id, filtered, layer_for(_source_type(redis, content_id)))
+        save_memories(
+            session, content_id, filtered, layer_for(_source_type(redis, content_id)), client
+        )
 
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}

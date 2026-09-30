@@ -200,12 +200,6 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
-- [ ] **Duplicates across contents.** (checked 2026-09-29) ~50 memories in
-      ~17 clusters: Ditlevsen ×6, the Blue Tower ×8, 4624/4625, and
-      Frederikshospitalet on two place rows. `merge_nearby_memories` only
-      compares within one content. At save, ask Haiku "same event?" of each
-      saved memory within ~150 m and drop a match. Then merge the existing
-      clusters by hand (`review`, `dedup`).
 - [ ] **The archival prompt, up to the video prompt's level.** (checked
       2026-09-29) `HISTORICAL_SYSTEM_PROMPT` has none of the summary rules:
       lead with the surprise, 40–70 words, a role for every name ("Rahbek, the
@@ -214,7 +208,7 @@ is to `pipeline/extract.py` unless named.
       local name (Frauenkirche is Vor Frue Kirke), and confidence low where
       that is uncertain: 4564 put Frederiksborg on Frederiksberg.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
-      until dedup and grounding land (the launch-area gate has). It was measured
+      until grounding lands (the launch-area gate and dedup have). It was measured
       once (docs/04, *Judge v2, measured and parked*): most of the skips it
       keeps fail on place, duplicates or facts, which a judge reading a summary
       can't see. When it comes back, the three drop-gates (`private_person`
@@ -235,7 +229,11 @@ is to `pipeline/extract.py` unless named.
 - [ ] **Source triage.** (checked 2026-09-29) Keep Oehlenschläger vol. I, the
       Copenhagen chapters of Andersen, and Historisk Atlas. Stop Oehlenschläger's
       travel volumes (48558, 48559) and the Carl Møller and Liebenberg books.
-      Merge Leonora Christina's eight Blue Tower memories into two or three.
+      Merge Leonora Christina's eight Blue Tower memories into two or three:
+      distinct scenes, so `dedup --memories` rightly leaves them. Also by hand:
+      Frederikshospitalet is two place rows (Kunstindustrimuseet is the same
+      building), and Flyvergrillen 4468/4469 and Glud & Marstrand 4954/4957
+      are retellings the check missed.
 
 ---
 

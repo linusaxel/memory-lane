@@ -184,6 +184,14 @@ them, and the judge is worth retuning after they land.
 The 35 were hidden on the dev database with the SQL below. Visible labelled
 memories are now 52 walk, 54 maybe, 68 skip: 30% worth the walk, up from 25%.
 
+**Retellings** (2026-09-30, docs/10 *A memory is not saved twice*).
+`python -m pipeline.dedup --memories` found 6 on the visible corpus, and all 6
+it hid are labelled `dup`, with no walk lost: Hedebygade, Toldbodgade 67,
+Gammel Toldbod, Centralhjørnet, Leonora's arrival at the Blue Tower, and the
+Christiansborg fire (the walk kept, the skip hidden). It missed two pairs the
+labels call duplicates, Flyvergrillen and the Glud & Marstrand sabotage.
+Visible labelled memories are now 52 walk, 52 maybe, 64 skip: 31%.
+
 ```sql
 UPDATE memories m SET hidden = TRUE FROM places p
 WHERE p.id = m.place_id AND NOT m.hidden

@@ -3,6 +3,11 @@
 Matches on names, not coordinates, and demands a distinctive token from both
 sides. Why - and the Gotham Comedy Club case it is measured against -
 docs/10-decisions.md#place-dedup-matches-on-names-not-coordinates.
+
+--memories finds memories that retell an earlier one within 150 m, from any
+content, with the same check save_memories makes (one stored Sonnet call per
+memory that has neighbours, so a rerun is free). --apply hides the weaker
+telling of each pair.
 """
 
 import argparse
@@ -10,9 +15,12 @@ import math
 import re
 from collections import Counter
 
+import anthropic
 from sqlalchemy import text
 
+from pipeline.config import ANTHROPIC_API_KEY
 from pipeline.db import get_session
+from pipeline.extract import nearby_memories, same_event
 
 # Words that never identify a venue: they describe a kind of place, or glue.
 STOPWORDS = frozenset(
@@ -227,6 +235,54 @@ def parse_only(spec: str, merges):
     return [proposed[pair] for pair in sorted(wanted)]
 
 
+def memory_repeats(session, client) -> list[tuple[int, int]]:
+    """(kept, hidden) pairs over the visible memories, oldest first, as they
+    would have gone at save: the better telling is kept."""
+    rows = session.execute(
+        text("""
+            SELECT m.id, m.content_id, p.name AS venue, m.summary,
+                   ST_Y(p.coordinates::geometry) AS lat, ST_X(p.coordinates::geometry) AS lng
+            FROM memories m JOIN places p ON p.id = m.place_id
+            WHERE NOT m.hidden AND p.coordinates IS NOT NULL
+            ORDER BY m.id
+        """)
+    ).fetchall()
+    pairs, hidden = [], set()
+    for r in rows:
+        near = [
+            n for n in nearby_memories(session, r.lat, r.lng, before=r.id) if n.id not in hidden
+        ]
+        hit = near and same_event(
+            session, client, r.content_id, r._asdict(), [n._asdict() for n in near]
+        )
+        if hit:
+            i, better = hit
+            kept, drop = (r.id, near[i].id) if better else (near[i].id, r.id)
+            pairs.append((kept, drop))
+            hidden.add(drop)
+    return pairs
+
+
+def _memories(apply: bool):
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    with get_session() as session:
+        pairs = memory_repeats(session, client)
+        summary = dict(session.execute(text("SELECT id, summary FROM memories")).fetchall())
+        for kept, repeat in pairs:
+            print(f"  keep [{kept}] {summary[kept][:100]}")
+            print(f"  drop [{repeat}] {summary[repeat][:100]}\n")
+        print(f"{len(pairs)} repeats")
+        if apply and pairs:
+            session.execute(
+                text("UPDATE memories SET hidden = TRUE WHERE id = ANY(:ids)"),
+                {"ids": [r for _, r in pairs]},
+            )
+            session.commit()
+            print(f"{len(pairs)} hidden")
+        elif not apply:
+            print("nothing changed - pass --apply to hide them")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="perform the merges")
@@ -235,7 +291,12 @@ def main():
         metavar="KEEP:DROP,...",
         help="apply just these reviewed pairs, instead of every proposal",
     )
+    parser.add_argument("--memories", action="store_true", help="retold memories, not places")
     args = parser.parse_args()
+
+    if args.memories:
+        _memories(args.apply)
+        return
 
     with get_session() as session:
         places = _load_places(session)
