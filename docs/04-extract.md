@@ -163,7 +163,20 @@ Re-judging the 209, today's judge keeps 156: 48 of 52 walks, 41 of 55 maybes,
 67 of 102 skips. Precision 31% (walk of kept), recall 92%. It drops a flag's
 memories no more often than the rest: `stale` 0 of 6, `adv` 3 of 19, `priv` 7
 of 16, `out` 13 of 32. That is the number Judge v2 has to beat: precision up,
-recall held.
+recall held. By half (`--half`, even content ids tune, odd check): tune 29% /
+89%, check 32% / 96%.
+
+**Judge v2, measured and parked** (2026-09-30, 151 Sonnet calls). The rubric's
+questions (incident, feeling, relates) plus three drop-gates
+(`private_person` within living memory, `promo`, `relative_time`), with
+Copenhagen archival examples from the tune half. The gates work: they dropped
+`adv` 18 of 19, `priv` 13 of 16, `stale` 6 of 6. The story bar doesn't: at two
+of incident, breach and feeling, check-half precision is 42% but recall 60%.
+No bar held 85% recall above v1's precision, so v1 stays. The reason is in the
+labels: of the ~28 skips per half the gated judge still keeps, 17–18 are
+skipped only for `out`, `pin`, `p1000`, `dup` or `hall`. A judge reading a
+summary can't see those. The launch-area gate, the dedup and grounding fix
+them, and the judge is worth retuning after they land.
 
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,

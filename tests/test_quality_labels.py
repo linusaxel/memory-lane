@@ -53,8 +53,8 @@ def test_the_replay_scores_the_judge_against_the_labels_and_reruns_free(db_sessi
         {"id": -1, "verdict": "walk", "flags": []},
     ]
 
-    kept = replay_labels(db_session, fake, [m["id"] for m in labels])
-    assert kept == {sank: True, start: False}
+    kept, failed = replay_labels(db_session, fake, [m["id"] for m in labels])
+    assert (kept, failed) == ({sank: True, start: False}, [])
     calls = len(fake.messages.calls)
 
     score = score_labels(kept, labels)
@@ -64,3 +64,21 @@ def test_the_replay_scores_the_judge_against_the_labels_and_reruns_free(db_sessi
 
     replay_labels(db_session, fake, [m["id"] for m in labels])
     assert len(fake.messages.calls) == calls, "a rerun must read extraction_chunks back"
+
+    assert replay_labels(db_session, fake, [sank], half=1 - content % 2) == ({}, [])
+
+
+@pytest.mark.db
+def test_a_failed_judge_is_reported_not_scored_as_keeping_everything(db_session):
+    content = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id) "
+            "VALUES ('https://www.youtube.com/watch?v=mmmmmmmmmmm', 'youtube', 'mmmmmmmmmmm') "
+            "RETURNING id"
+        )
+    ).scalar()
+    memory = _memory(db_session, content, "Maskot, Copenhagen", "The crawl starts here.")
+    db_session.commit()
+
+    kept, failed = replay_labels(db_session, FakeAnthropic({"not": "verdicts"}), [memory])
+    assert (kept, failed) == ({memory: True}, [content])

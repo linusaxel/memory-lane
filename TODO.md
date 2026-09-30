@@ -23,12 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **`quality --labels` would print a table on an empty balance.** 2026-09-29:
-  `worth_telling` keeps everything when the judge fails, so a run with no
-  credits reads as "the judge keeps all 209", with only a WARNING line in the
-  log to say otherwise. It took a grep of the log for 200s to trust the
-  baseline. Fix: `replay_labels` counts contents where the judge failed, and
-  `_print_labels` refuses to score if any did.
 - **Auto mode blocks `python -m pipeline.transcripts`.** 2026-09-29: Claude
   Code's permission classifier refused the transcript fetch outright, which left
   105 videos untranscribed and a session stuck until a human ran it. It will
@@ -223,15 +217,15 @@ is to `pipeline/extract.py` unless named.
       "X visited here" and a coronation abroad as fails. Venues in their modern
       local name (Frauenkirche is Vor Frue Kirke), and confidence low where
       that is uncertain: 4564 put Frederiksborg on Frederiksberg.
-- [ ] **Judge v2 on the research rubric.** (checked 2026-09-29) `JUDGE_PROMPT`
-      has no incident, feeling or then-vs-now question, and its examples are
-      all Nørrebro pubs. Add `incident`, `feeling` and `relates`, plus three
-      gates: `private_person` (a private person's death, health, crime or
-      addiction; ~10), `promo` (present-day listings and ads; ~15) and
-      `relative_time` ("last summer"; ~7). Add Copenhagen archival examples,
-      then retune `tellable()` against the labels. Measure with
-      `python -m pipeline.quality --labels`; the baseline to beat (docs/04)
-      is precision 31%, recall 92%.
+- [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
+      until the launch-area gate, dedup and grounding land. It was measured
+      once (docs/04, *Judge v2, measured and parked*): most of the skips it
+      keeps fail on place, duplicates or facts, which a judge reading a summary
+      can't see. When it comes back, the three drop-gates (`private_person`
+      within living memory, `promo`, `relative_time`) worked as worded there.
+      The bar of two of incident, breach and feeling cost 40% of the walks, so
+      retune that. Measure with `python -m pipeline.quality --labels --half
+      tune`, then report `--half check` against v1's 32% / 96%.
 - [ ] **Summary against its chunk.** (checked 2026-09-29) ~20 factual or
       speech-recognition errors: Tom "Christensen", Vestergade for
       Vimmelskaftet, lupus called cancer. `grounded()` checks only

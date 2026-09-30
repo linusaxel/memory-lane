@@ -2,7 +2,7 @@
 
     python -m pipeline.quality
     python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10]
-    python -m pipeline.quality --labels [tests/fixtures/walk_labels.json]
+    python -m pipeline.quality --labels [tests/fixtures/walk_labels.json] [--half tune|check]
 
 Run it before and after any prompt change; extraction costs money and you get
 one shot. Baseline in docs/04-extract.md, reasoning in
@@ -18,7 +18,8 @@ already ran, is free.
 skip, through the pipeline's own judge, and prints what it keeps of each. The
 judge sees the place name and summary only: happened_there is not stored. It
 bills the judge once per content per pass; a rerun on unchanged code is free,
-so before and after a judge change only the change is paid for.
+so before and after a judge change only the change is paid for. --half tune
+takes even content ids and --half check odd: tune a judge on one, report the other.
 """
 
 import argparse
@@ -32,6 +33,7 @@ from sqlalchemy import text
 from pipeline.config import ANTHROPIC_API_KEY
 from pipeline.db import get_session
 from pipeline.extract import (
+    _judge,
     chunk_transcript,
     extract_chunk_stored,
     filter_low_confidence,
@@ -128,27 +130,34 @@ def compare(session, client, prompts: dict[str, str], chunks) -> dict[str, list[
     }
 
 
-def replay_labels(session, client, ids) -> dict[int, bool]:
-    """{memory_id: kept} for the labelled memories still in the database,
-    judged together per content as the pipeline judges a video."""
+def replay_labels(session, client, ids, half=None) -> tuple[dict[int, bool], list[int]]:
+    """({memory_id: kept}, contents the judge failed on) for the labelled
+    memories still in the database, judged together per content as the
+    pipeline judges a video. half 0 or 1 takes the contents of that parity.
+
+    A failed judge keeps everything, which would score as a lenient judge, so
+    the failures are returned for the caller to refuse."""
     rows = session.execute(
         text("""
             SELECT m.id, m.content_id, p.name, m.summary
             FROM memories m JOIN places p ON p.id = m.place_id
-            WHERE m.id = ANY(:ids)
+            WHERE m.id = ANY(:ids) AND (CAST(:half AS int) IS NULL OR m.content_id % 2 = :half)
             ORDER BY m.content_id, m.id
         """),
-        {"ids": list(ids)},
+        {"ids": list(ids), "half": half},
     ).fetchall()
     by_content: dict[int, list] = {}
     for r in rows:
         by_content.setdefault(r.content_id, []).append(r)
-    kept = {}
+    kept, failed = {}, []
     for content_id, group in by_content.items():
         memories = [{"id": r.id, "venue": r.name, "summary": r.summary} for r in group]
         survivors = {m["id"] for m in worth_telling(session, client, content_id, memories)}
         kept |= {m["id"]: m["id"] in survivors for m in memories}
-    return kept
+        # The first pass, read back from extraction_chunks if it succeeded.
+        if _judge(session, client, content_id, memories, list(range(len(memories)))) is None:
+            failed.append(content_id)
+    return kept, failed
 
 
 def score_labels(kept: dict[int, bool], labels: list[dict]) -> dict:
@@ -213,14 +222,22 @@ def main():
     parser.add_argument(
         "--labels", nargs="?", const="tests/fixtures/walk_labels.json", metavar="LABELS_FILE"
     )
+    parser.add_argument(
+        "--half", choices=("tune", "check"), help="--labels on even or odd content ids only"
+    )
     args = parser.parse_args()
 
     if args.labels:
         with open(args.labels) as f:
             labels = json.load(f)["memories"]
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        half = {"tune": 0, "check": 1}.get(args.half)
         with get_session() as session:
-            kept = replay_labels(session, client, [m["id"] for m in labels])
+            kept, failed = replay_labels(session, client, [m["id"] for m in labels], half)
+        if failed:
+            raise SystemExit(f"the judge failed on contents {failed}: no score")
+        if half is not None:
+            labels = [m for m in labels if m["id"] in kept]
         _print_labels(score_labels(kept, labels))
         return
 
