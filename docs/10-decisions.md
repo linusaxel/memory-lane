@@ -1377,8 +1377,10 @@ telling for a stranger standing there is kept and the other is hidden.
   building's stories, and a different story at the same spot is never a match.
 - **It only filters.** A failed or unreadable check saves the memory.
 
-Many distinct stories on one spot (the Blue Tower's eight) are not duplicates.
-That is a curation call, in TODO.md's *Source triage*.
+Many distinct stories on one spot (the Blue Tower's eight) are not duplicates,
+and they all stay: the founder, 2026-09-30, "fine to have multiple memories in
+same location as long as they're not the same content". Only a retelling is
+hidden.
 
 ### One venue, one name per video
 
