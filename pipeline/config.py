@@ -68,6 +68,11 @@ ROUTING_URL = (os.getenv("ROUTING_URL") or "").rstrip("/") or None
 # same API at another URL.
 PHOTON_URL = (os.getenv("PHOTON_URL") or "https://photon.komoot.io").rstrip("/")
 
+# Overpass, which says what stands on a pin today (pipeline/now.py). The public
+# server refuses bursts and sometimes whole IPs for a while; a mirror or a
+# self-hosted one is the same API.
+OVERPASS_URL = (os.getenv("OVERPASS_URL") or "https://overpass-api.de/api/interpreter").rstrip("/")
+
 # Lift the one free walk a day, so the simulator is not paywalled after one
 # walk. Never on the public host, whatever it is set to.
 UNLIMITED_WALKS = not PUBLIC_HOST and os.getenv("UNLIMITED_WALKS") == "1"

@@ -55,6 +55,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Fixtures for an empty database**: e2e's, the tests', route_bench's. Refuses one holding real content |
 | `pipeline/links.py` | Links the names in a summary to Wikipedia via Wikidata, only on one exact match. Runs after aggregation; alone, it is the backfill. Bills a little |
+| `pipeline/now.py` | Asks OpenStreetMap what a building-level pin stands inside today, and writes the "now" side of its contrast from that. Runs after aggregation; alone, it is the backfill. Free |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset. `--memories` finds retold memories within 150 m, and `--apply` hides the weaker telling |
 | `pipeline/export.py` | Hand a customer the corpus as rows, without the transcripts |

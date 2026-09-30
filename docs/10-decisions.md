@@ -1204,6 +1204,36 @@ contributors", linking to its copyright page): the
 ask the application to credit OSM, not each result. Geocoding costs
 no tokens and saves none either: coordinates are ~20 output tokens a memory.
 
+### What is there now comes from OSM, not the model
+
+Status: Accepted 2026-09-30
+
+The model's `contrast_note` guesses the present ("current use unknown", "a
+joke about dynamite hides real gangster history"), and its score looks like a
+default. `pipeline/now.py` asks Overpass which named building or amenity a pin
+stands inside (`is_in`), and writes the "now" side from that: "Still
+Rigshospitalet, a hospital." (0.2) or "Now Designmuseum Danmark, a museum."
+(0.9). The model's note and score stay where OSM says nothing.
+
+- **Only a building-level pin** (50 m, placed by DAWA, Photon or Wikidata). A
+  model's guess or a street's middle stands inside whatever happens to be there.
+- **Same or changed is a name match**, `geocode._same_venue` against every name
+  it goes by today, `name:*` included, so "Church of Our Lady" is Vor Frue
+  Kirke. `old_name` is not one: a pin inside what was Frederiks Hospital has
+  changed.
+- **A changed place needs a kind.** A bare `building=yes` or a `landuse` says
+  nothing about what stands there.
+
+Measured 2026-09-30 on the 42 building-level places behind visible memories:
+16 still the same, about 4 changed (Frederikshospitalet, Blegdamshospitalet,
+Dagmar Teatret, Bakkehus), about 20 with nothing named. Most of those are
+bars, which OSM keeps as points that `is_in` cannot see.
+
+**Consequences:** the public Overpass server refuses bursts and blocked this
+IP for a while on the first day (`OVERPASS_URL` takes a mirror). A place it
+did not answer for is looked at again next run. Credit is the same line in
+Settings → About as the geocodes.
+
 ### Summary quality is measured, not asserted
 
 Status: Accepted

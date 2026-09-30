@@ -35,6 +35,7 @@ from pipeline.extract import (
     worth_telling,
 )
 from pipeline.links import link_memories
+from pipeline.now import look_up
 from pipeline.queue import (
     QUEUE_AGGREGATE,
     QUEUE_CLASSIFY,
@@ -412,6 +413,11 @@ def task_aggregate_memories(content_id: int):
             link_memories(session, client, content_id=content_id)
     except Exception:
         logger.exception(f"[content:{content_id}] Linking names failed; memories are saved")
+    try:
+        with get_session() as session:
+            look_up(session)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Looking up what is there now failed")
 
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}

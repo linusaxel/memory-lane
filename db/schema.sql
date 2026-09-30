@@ -109,6 +109,9 @@ CREATE TABLE places (
     precision_meters INTEGER DEFAULT 200,
     geocode_status VARCHAR(20) DEFAULT 'pending',
     geocoded_at TIMESTAMP,
+    -- What stands here today, from OSM (pipeline/now.py). Null until looked
+    -- at; {} when OSM names nothing here.
+    now JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

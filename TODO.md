@@ -232,21 +232,13 @@ is to `pipeline/extract.py` unless named.
       work. Most of these are misheard names, which the next item targets.
       Separately, and unmeasured: have the extraction prompt spell known
       people as they are in print.
-- [ ] **Then-vs-now from OSM.** (checked 2026-09-29) Almost no summary says
-      what stands there now, and `contrast_score` is 0.7 on 11 of 13 Historisk
-      Atlas entries. Reverse-geocode the pin for its present-day name and type.
-      Write a "now" clause only when OSM confirms it, and score contrast from that
-      clause. This answers *Where does "what is there now" come from?*.
-- [x] **Link the names in a summary.** (built 2026-09-30, `pipeline/links.py`) Summaries name
-      real people and places ("Thorvald Stauning", "Christiansborg"), and the
-      reader can't look them up. At extraction, have the model list the
-      notable names it used. Then resolve each one to a Wikidata QID with
-      the search `pipeline/geocode.py`'s `Wikidata` already calls, and store
-      the sitelink (the local-language Wikipedia first, then en). Link only
-      exact, unambiguous matches, since a wrong Stauning is worse than no
-      link. The card shows the links as tappable spans, behind the gate like
-      the summary itself. Measure how many of the corpus's names resolve
-      before building the UI.
+- [ ] **Then-vs-now: finish the backfill, then the points.** (checked
+      2026-09-30) `pipeline/now.py` is built (docs/10, *What is there now comes
+      from OSM, not the model*). The first run looked at 14 places and confirmed
+      4 before overpass-api.de started refusing this IP. Run `python -m
+      pipeline.now` again until it logs no "did not answer". Next, the ~20 bars that
+      OSM stores as points need an `around` query, which the public server
+      times out on. Then check that the ranking reads better.
 
 ---
 
@@ -594,9 +586,6 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
   The three-street count there decides it. Other founder candidates: x/Twitter,
   Reddit (both meter API access), free literature such as Project Gutenberg
   (no per-venue coordinates).
-- **Where does "what is there now" come from?** (checked 2026-09-20) Contrast
-  needs present-day place identity. Working assumption is OSM/Overpass,
-  unvalidated, and useless on centroid coordinates.
 - **Which Copenhagen neighborhood?** (checked 2026-09-20) "Saturate one
   neighborhood" needs a boundary before density can be measured.
 - **Does the podcast corpus eventually get pruned?** (checked 2026-09-20) It is
