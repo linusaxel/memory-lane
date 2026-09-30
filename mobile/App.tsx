@@ -1381,14 +1381,6 @@ export default function App() {
                   }
                   routePosition={routePosition}
                   routeSize={walking ? routeTotal : pins.length}
-                  onLongPress={
-                    __DEV__
-                      ? () => {
-                          Haptics.selectionAsync().catch(() => {});
-                          setHere({ lat: group.lat, lng: group.lng });
-                        }
-                      : undefined
-                  }
                   // A preview is a look, not a walk: its stops open once accepted.
                   onPress={() =>
                     !walking && stage !== 'map'
@@ -1765,6 +1757,19 @@ export default function App() {
               : undefined
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
+          // Dev teleport onto this pin. Not a long-press on the pin: MapKit
+          // turns that into a drag, which leaves a system pin behind.
+          onStandHere={
+            __DEV__
+              ? () => {
+                  const memory = openMemories[openIndex];
+                  if (!memory) return;
+                  Haptics.selectionAsync().catch(() => {});
+                  setHere(memory.place.coordinates);
+                  setOpenAt([]);
+                }
+              : undefined
+          }
           freeLeft={profile?.free_unlocks ?? 0}
           stepPrice={profile && !profile.subscribed ? profile.steps_per_unlock : undefined}
           onOpenFree={async () => {

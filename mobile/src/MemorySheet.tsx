@@ -62,6 +62,8 @@ type Props = {
   /** What standing on it costs once the free ones are gone; absent for a
    *  subscriber, who pays nothing there. */
   stepPrice?: number;
+  /** Dev builds only: move the pinned position onto this memory. */
+  onStandHere?: () => void;
   /** Over the map, in any stage: a card. Over the journal: a page. */
   compact?: boolean;
   /** Absent for extracted memories, and for your own: there is nobody to
@@ -138,6 +140,7 @@ export default function MemorySheet({
   freeLeft = 0,
   onOpenFree,
   stepPrice,
+  onStandHere,
   compact = false,
   onReport,
   reported,
@@ -483,7 +486,7 @@ export default function MemorySheet({
             )}
 
             {(many ||
-              (peeking && (onWalkHere || openFree)) ||
+              (peeking && (onWalkHere || openFree || onStandHere)) ||
               (!locked && memory.content) ||
               linkFailed) && (
               <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
@@ -532,6 +535,16 @@ export default function MemorySheet({
                     onPress={onWalkHere}
                   >
                     <Text style={styles.secondaryText}>Walk here</Text>
+                  </Pressable>
+                )}
+                {peeking && onStandHere && (
+                  <Pressable
+                    style={dim(styles.secondary)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Stand here (dev)"
+                    onPress={onStandHere}
+                  >
+                    <Text style={styles.secondaryText}>Stand here (dev)</Text>
                   </Pressable>
                 )}
                 {!locked && memory.content && (

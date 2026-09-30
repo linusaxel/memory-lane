@@ -631,8 +631,9 @@ non-interactive shell — it just prints "Skipping dev server". Kill the old one
 first: `lsof -ti:8081 | xargs kill -9`.
 
 **The dev database is real data**, and it is enough (2026-09-29): 38 memories
-within 500 m of `FALLBACK_REGION`, 14 of them gated. Long-press the map or a pin
-to stand where one is. The seed (`pipeline/seed_dev.py`, one of every state the
+within 500 m of `FALLBACK_REGION`, 14 of them gated. Long-press the map, or tap a pin
+and **Stand here (dev)**, to stand where one is. Not a long-press on the pin:
+MapKit makes that a drag, which left a system pin behind and moved nobody. The seed (`pipeline/seed_dev.py`, one of every state the
 sheet can render) goes only into an empty database, which is what e2e builds;
 beside the real corpus it copied real summaries into duplicates, so it refuses.
 
