@@ -23,6 +23,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`quality --compare` shows one draw per chunk, and a chunk varies more
+  than a prompt.** 2026-09-30: the stored baseline kept two Andersen memories
+  from a chunk the same prompt leaves empty 6 times in 8, so the candidate
+  read as a regression until it was rerun by hand (~50 extra calls). Fix: a
+  `--runs N` that reports how often each chunk keeps something, per prompt.
 - **A stale queue bills whatever it holds on the next worker run.** 2026-09-30:
   424 jobs enqueued 2026-09-29 and never run (325 Historisk Atlas stories,
   9 book chapters, 10 videos) sat behind a one-book re-extraction; `worker
@@ -239,13 +244,6 @@ is to `pipeline/extract.py` unless named.
       pipeline.now` again until it logs no "did not answer". Next, the ~20 bars that
       OSM stores as points need an `around` query, which the public server
       times out on. Then check that the ranking reads better.
-- [ ] **Let a visible oddity with a life story pass.** (checked 2026-09-30)
-      The Weather Girls on Richshuset are the north star (docs/04, *The north
-      star*), and `HISTORICAL_SYSTEM_PROMPT`'s static-description rule would
-      reject them. Narrow the rule so that something still visible, working or
-      odd, with a dated history (made, stopped, restored), passes. Add the
-      Weather Girls as a worked pass example. Measure with `python -m
-      pipeline.quality --compare` before it ships.
 
 ---
 

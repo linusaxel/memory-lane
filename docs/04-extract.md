@@ -313,11 +313,29 @@ a historical memory should read like. Written as a card:
 On the research rubric it scores 10 of 12: site-lock 2, trace 2, incident 1,
 surprise 2, feeling 1, relates 2. It works because you look up and it is still
 there, it still moves, and the then against now is spelled out ("stood still
-for decades"). **Today's archival prompt would drop it.** Its rule "a building
-existing is not something that happened" can't tell static description from a
-visible oddity with a life story (made, broken, restored). The fix is in
-TODO.md, *Make memories worth the walk*. The post runs ~400 words; cards stay at
-40–70, and whether a card may run longer is an open question there.
+for decades"). The post runs ~400 words; cards stay at 40–70, and whether a
+card may run longer is an open question in TODO.md.
+
+**Letting it pass** (2026-09-30, ~110 Sonnet calls). The archival prompt
+dropped the post: "a building existing is not something that happened" couldn't
+tell static description from a visible oddity with dated turns (made, stopped,
+restored). `HISTORICAL_SYSTEM_PROMPT` now qualifies "a thing still there with a
+life of its own" and says a tower, spire or portal with a build date is not one.
+- The post itself: dropped before, kept 3 of 3 after.
+- A held-out neon sign told in the same architectural register: dropped
+  before, kept 3 of 3.
+- Four held-out oddities with a plain event in them (Lurblæserne, the stork
+  fountain's midwives, the Nyhavn anchor, Rundetårn's ramp) passed before and
+  after. Three plain descriptions (a historicism block, a Plesner villa, a
+  restored fountain) returned nothing before and after.
+- `quality --compare`, archive 20 chunks: 19 against 19, the same places.
+  Books 15 chunks: 5 against 8. The losses are Hellebæk and Hamburg (outside
+  the launch area), the thin Kasino quarrel, and Andersen's rent tears, from a
+  chunk the old prompt itself leaves empty 6 times in 8.
+
+The Weather Girls are not a worked example in the prompt. A version with them
+in it kept 4 book memories and never kept that Andersen chunk
+in 8 runs, and it would stop them working as a held-out test.
 
 What sank the rest, roughly how often:
 

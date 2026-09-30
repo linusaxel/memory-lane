@@ -157,11 +157,17 @@ QUALIFIES:
 - Events: "Bowie played this room in 1978, 400 capacity"
 - Things that stood here: "The bakery was on that corner until '78"
 - Documented incidents: "The tram derailed outside the pharmacy in March 1931"
+- A thing still there with a life of its own: an odd, working or strange
+  feature a stranger can look up and see, whose story has dated turns - made,
+  stopped, restored, moved. "Gilded figures on this tower have told the weather
+  since 1936; they stood still for decades and moved again in 2024." The turns
+  are the events.
 
 Does NOT qualify - reject these as firmly as you would reject a hypothetical:
 - Static description: "this building was constructed in 1902", "four storeys, tiled roof"
   A building EXISTING is not something that HAPPENED. If you cannot name an event,
-  there is no memory here.
+  there is no memory here. A tower, a spire or a carved portal is not a thing
+  with a life of its own; a build date and a style are not turns in a story.
 - Architectural or stylistic commentary: "a fine example of the national romantic style"
 - Encyclopaedia facts: "Copenhagen is the capital of Denmark"
 - A visit: "X visited the cathedral", "X dined at the palace". Someone famous
