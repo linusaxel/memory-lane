@@ -25,7 +25,6 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from sqlalchemy import text
 
 import api.auth as auth
-from tests.conftest import on_todays_route
 from tests.test_api_submit import LAT, LNG, device, submit
 
 pytestmark = pytest.mark.db
@@ -233,7 +232,6 @@ def test_one_memory_earned_on_two_phones_appears_once(client, db_session):
     google(client, first)
     google(client, second)
     memory = submit(client, device=first)
-    on_todays_route(db_session, second, memory["id"])
     client.post(
         f"/v1/memories/{memory['id']}/unlock", json={"device": second, "lat": LAT, "lng": LNG}
     )

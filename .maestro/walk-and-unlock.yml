@@ -209,8 +209,8 @@ appId: ${APP_ID}
 - assertVisible: "On a walk · 4 of 4 unlocked\\."
 
 # Ending a walked walk loses nothing, so it does not ask. The map, and
-# Plan a walk, but a second walk the same day is the paywall's (F35): it opened
-# something, so it was today's free one.
+# Plan a walk, and a second walk the same day is not the paywall's: a walk
+# is a plan now, and its stops cost steps (docs/10, "Steps open a memory").
 - tapOn: "On a walk.*"
 - assertNotVisible: "End this walk\\?"
 - extendedWaitUntil:
@@ -218,8 +218,5 @@ appId: ${APP_ID}
     timeout: 30000
 - assertNotVisible: "On a walk.*"
 - tapOn: "Plan a walk"
-- extendedWaitUntil:
-    visible: "Open any memory you stand on"
-    timeout: 20000
-- tapOn: "Not now"
-- assertVisible: "That was today's free walk\\. Come back tomorrow, or subscribe for more\\."
+- waitForAnimationToEnd
+- assertNotVisible: "Open any memory you stand on"

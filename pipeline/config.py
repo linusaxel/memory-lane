@@ -73,10 +73,6 @@ PHOTON_URL = (os.getenv("PHOTON_URL") or "https://photon.komoot.io").rstrip("/")
 # self-hosted one is the same API.
 OVERPASS_URL = (os.getenv("OVERPASS_URL") or "https://overpass-api.de/api/interpreter").rstrip("/")
 
-# Lift the one free walk a day, so the simulator is not paywalled after one
-# walk. Never on the public host, whatever it is set to.
-UNLIMITED_WALKS = not PUBLIC_HOST and os.getenv("UNLIMITED_WALKS") == "1"
-
 # The address the privacy policy gives for questions and data requests. Unset,
 # the policy says one is coming rather than inventing one.
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL") or None

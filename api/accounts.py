@@ -12,9 +12,21 @@ from sqlalchemy import text
 
 import api.media
 from api.auth import apple_identity, either_identity, google_identity
-from api.models import DEVICE_PATTERN, DeviceRequest, Profile, ProfileRequest, SignInRequest
+from api.models import (
+    DEVICE_PATTERN,
+    DeviceRequest,
+    Profile,
+    ProfileRequest,
+    SignInRequest,
+    StepsRequest,
+)
 from api.moderation import screen
-from api.queries import DELETE_ORPHAN_SUBMITTED_PLACE, STREAK_DAYS_QUERY, UNLOCK_COUNT_QUERY
+from api.queries import (
+    CREDIT_STEPS,
+    DELETE_ORPHAN_SUBMITTED_PLACE,
+    STREAK_DAYS_QUERY,
+    UNLOCK_COUNT_QUERY,
+)
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -105,7 +117,8 @@ def profile_of(session, device: str) -> Profile:
                     ARRAY[]::varchar[]
                 ) AS providers,
                 s.expires_at AS subscribed_until,
-                COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed
+                COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed,
+                u.free_unlocks, u.steps, u.steps_counted_until
             FROM devices d JOIN users u ON d.user_id = u.id
             LEFT JOIN subscriptions s ON s.user_id = u.id
             WHERE d.id = CAST(:device_id AS uuid)
@@ -129,6 +142,9 @@ def profile_of(session, device: str) -> Profile:
         providers=list(row.providers),
         subscribed=row.subscribed,
         subscribed_until=row.subscribed_until,
+        free_unlocks=row.free_unlocks,
+        steps=row.steps,
+        steps_counted_until=row.steps_counted_until,
     )
 
 
@@ -150,6 +166,32 @@ def set_profile(body: ProfileRequest):
     with get_session() as session:
         user_id = user_for_device(session, body.device)
         set_display_name(session, user_id, name)
+        return profile_of(session, body.device)
+
+
+# Faster than anyone walks, sustained: a count over it is shaken or made up.
+MAX_STEPS_PER_SECOND = 3
+
+
+@router.post("/v1/me/steps", response_model=Profile)
+def credit_steps(body: StepsRequest):
+    """Add the steps the phone counted since the watermark, and move it to now.
+
+    A `since` that is no longer the watermark credits nothing and answers the
+    profile as it is, whose watermark the next sync starts from: a retry or a
+    second phone racing this one is counted once.
+    """
+    with get_session() as session:
+        user_id = user_for_device(session, body.device)
+        session.execute(
+            text(CREDIT_STEPS),
+            {
+                "user_id": user_id,
+                "since": body.since.replace(tzinfo=None),
+                "steps": body.steps,
+                "max_rate": MAX_STEPS_PER_SECOND,
+            },
+        )
         return profile_of(session, body.device)
 
 

@@ -60,8 +60,8 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Text style={styles.title}>Open any memory you stand on</Text>
         <Text style={styles.note}>
-          Skip the plan: any memory opens the moment you're standing on it, and you can walk as much
-          as you like. One walk a day is always free.
+          Skip the steps: any memory opens the moment you're standing on it. Without a
+          subscription, each one after your first three costs 1,000 steps.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (

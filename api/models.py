@@ -291,6 +291,12 @@ class MyMemoriesResponse(BaseModel):
     meta: MyMemoriesMeta
 
 
+# docs/10, "Steps open a memory". FREE_UNLOCKS is also the column default in
+# db/schema.sql.
+FREE_UNLOCKS = 3
+STEPS_PER_UNLOCK = 1000
+
+
 class Profile(BaseModel):
     """What this device is, to the extent it is anybody.
 
@@ -313,6 +319,23 @@ class Profile(BaseModel):
     # date and reads subscribed=false. docs/10, "A subscription opens the map".
     subscribed: bool = False
     subscribed_until: datetime | None = None
+    # What a free account opens memories with: free ones first, then
+    # steps_per_unlock steps each. Steps count from steps_counted_until (naive
+    # UTC), null until there is a user row. docs/10, "Steps open a memory".
+    free_unlocks: int = FREE_UNLOCKS
+    steps: int = 0
+    steps_per_unlock: int = STEPS_PER_UNLOCK
+    steps_counted_until: datetime | None = None
+
+
+class StepsRequest(BaseModel):
+    """The steps the phone counted from `since`, which must be the watermark
+    the profile last gave it. Seven days of Core Motion is at most a few
+    hundred thousand; the bound is only against garbage."""
+
+    device: str = Field(pattern=DEVICE_PATTERN)
+    since: datetime
+    steps: int = Field(ge=0, le=1_000_000)
 
 
 class ProfileRequest(BaseModel):

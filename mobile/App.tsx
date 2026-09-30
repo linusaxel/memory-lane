@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AppState,
   Linking,
   Platform,
   Pressable,
@@ -25,7 +26,7 @@ import {
   fetchTodaysRoute,
   fetchUnlocked,
   heartMemory,
-  notOnWalk,
+  outOfSteps,
   previewRoute,
   reportMemory,
   saveDisplayName,
@@ -71,6 +72,7 @@ import Settings from './src/Settings.tsx';
 import AddGlyph from './src/AddGlyph.tsx';
 import YouGlyph from './src/YouGlyph.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
+import { syncSteps } from './src/steps.ts';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
@@ -418,7 +420,9 @@ export default function App() {
               setSignedIn(true);
               saveSignedIn(true);
             }
+            return syncSteps(id, who);
           })
+          .then((after) => after && mounted.current && setProfile(after))
           .catch(() => {});
         const earned = await fetchUnlocked(id);
         if (!mounted.current || earned.length === 0) return;
@@ -623,9 +627,6 @@ export default function App() {
         const km = Math.ceil(refusal.min_budget_meters / 1000 / WALK_KM.step) * WALK_KM.step;
         setWalkToKm(km);
         setPlanError(`${planKm} km is too short from here. Try ${km} km or more.`);
-      } else if (refusal?.reason === 'walked_today') {
-        setPlanError("That was today's free walk. Come back tomorrow, or subscribe for more.");
-        setPaywallOpen(true);
       } else if (refusal) {
         setWalkTo(null);
         setPlanError("That one won't fit on a walk from here.");
@@ -925,14 +926,14 @@ export default function App() {
     setSubmitOpen(false);
   }, [notification, openMemory]);
 
-  // A subscriber opens whatever they stand on, walk or no walk.
-  const subscribed = !!profile?.subscribed;
+  // Whatever you stand on opens, walk or no walk: free ones first, then steps
+  // (docs/10, "Steps open a memory").
   const withinReach = useMemo(
     () =>
-      stage === 'walk' || (stage === 'map' && subscribed)
+      stage === 'walk' || stage === 'map'
         ? groups.filter((group) => reachOf(group, position, earned) === 'unlockable')
         : [],
-    [stage, subscribed, groups, position, earned],
+    [stage, groups, position, earned],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
   // Filing unlocks what you filed; the journal keeps that under My Memories.
@@ -961,7 +962,7 @@ export default function App() {
   const pillSlot = position && { bottom: 44 };
 
   // The memory the ring on the map opens: the one tapped, else the route stop
-  // you are at, else - paid up - the nearest. docs/10, "Unlock on the map".
+  // you are at, else the nearest. docs/10, "Unlock on the map".
   const [pickedId, setPickedId] = useState<number | null>(null);
   const ringFor = useMemo(() => {
     if (!position) return null;
@@ -978,9 +979,8 @@ export default function App() {
     const picked = here.find(({ group, index }) => group.memories[index].id === pickedId);
     if (picked) return picked;
     if (stopHere) return stopHere;
-    if (!subscribed) return null;
     return here.sort((a, b) => a.away - b.away)[0] ?? null;
-  }, [withinReach, position, pickedId, stopHere, subscribed]);
+  }, [withinReach, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
 
   // Reaching a stop is the moment the app is for. The transition, not the
@@ -1063,12 +1063,12 @@ export default function App() {
           ) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
             setWalkDone(true);
-            // The streak the card shows, counting today.
-            deviceId()
-              .then(fetchProfile)
-              .then((who) => mounted.current && setProfile(who))
-              .catch(() => {});
           }
+          // What it cost, and the streak the walk's card shows, counting today.
+          deviceId()
+            .then(fetchProfile)
+            .then((who) => mounted.current && setProfile(who))
+            .catch(() => {});
           setUnlocked(await rememberUnlocked(unlocked, opened));
           return true;
         } else {
@@ -1078,8 +1078,11 @@ export default function App() {
         }
       } catch (e) {
         if (!mounted.current) return false;
-        if (notOnWalk(e)) {
-          setOpenAt([]);
+        const short = outOfSteps(e);
+        if (short) {
+          setUnlockError(
+            `It takes ${short.price.toLocaleString()} steps. You have ${short.steps.toLocaleString()}.`,
+          );
           setPaywallOpen(true);
         } else {
           setUnlockError("Can't reach Memory Lane right now.");
@@ -1091,6 +1094,21 @@ export default function App() {
     },
     [unlocked, routeStarted, nextRouteStop, routeShown, earned],
   );
+
+  // Back in the app, count what was walked while it was away.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      deviceId()
+        .then(async (id) => {
+          const who = await fetchProfile(id);
+          const after = (await syncSteps(id, who)) ?? who;
+          if (mounted.current) setProfile(after);
+        })
+        .catch(() => {});
+    });
+    return () => sub.remove();
+  }, []);
 
   const heart = useCallback(
     async (memory: LocatedMemory) => {
@@ -1401,6 +1419,13 @@ export default function App() {
               place={{ bottom: stage === 'map' ? 108 : 44 }}
               busy={unlocking}
               error={unlockError}
+              cost={
+                !profile || profile.subscribed
+                  ? null
+                  : profile.free_unlocks > 0
+                    ? `Free · ${profile.free_unlocks} left`
+                    : `${profile.steps_per_unlock.toLocaleString()} steps · you have ${profile.steps.toLocaleString()}`
+              }
               onUnlock={async () => {
                 if (walking) setRouteStarted(true);
                 if (!(await unlock(ringMemory))) return;
@@ -1714,10 +1739,6 @@ export default function App() {
               : undefined
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
-          onSubscribe={() => {
-            setOpenAt([]);
-            setPaywallOpen(true);
-          }}
         />
 
         <Paywall

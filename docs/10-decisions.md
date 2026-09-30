@@ -210,9 +210,10 @@ them, not a corpus to browse, and every other open memory stays off the map.
 
 ### Only today's walk unlocks
 
-Status: Accepted (2026-09-24). Replaces "Unlocking is Walk-only, and only the
-app knows it". The "no map of everything" clause is **Superseded 2026-09-26**
-by the entry above; the unlock rule stands.
+Status: **Superseded 2026-09-30** by *Steps open a memory*: any memory you
+stand on opens, walk or no walk. Accepted 2026-09-24; replaced "Unlocking is
+Walk-only, and only the app knows it". The "no map of everything" clause was
+superseded 2026-09-26 by the entry above.
 
 The app is one walk at a time (one a day until 2026-09-26, *A walk can be
 ended*), five stops, and nothing else: ~~no map of everything
@@ -234,8 +235,10 @@ so a spoofed GPS walks today's five from a sofa, and no more than five.
 
 ### A subscription opens the map
 
-Status: Accepted 2026-09-26. Amends *Only today's walk unlocks* and *A walk
-can be ended*; the gate is untouched.
+Status: **Superseded 2026-09-30** by *Steps open a memory*, which keeps the
+subscription and drops the walk as the free way in, and the day lock with it.
+Accepted 2026-09-26; amended *Only today's walk unlocks* and *A walk can be
+ended*.
 
 The founder's monetisation: a walk is free and opens its stops; opening a pin
 straight from the map, with no walk, is what a subscription buys. You still
@@ -255,6 +258,45 @@ webhook may write it, never the app: a client-side entitlement is a
 client-side gate (TODO.md S3). Until then nothing writes it and everybody is
 free. A subscriber with a spoofed GPS opens every pin from a sofa, not five:
 they have paid, and the position was always self-reported.
+
+### Steps open a memory
+
+Status: Accepted 2026-09-30. Supersedes *Only today's walk unlocks* and *A
+subscription opens the map*; the gate is untouched.
+
+The founder: wander anywhere, and spend what you walked. A new account opens
+three memories free; after that each costs 1,000 steps (`FREE_UNLOCKS`,
+`STEPS_PER_UNLOCK` in `api/models.py`). A subscriber pays nothing. You still
+stand on it: the charge is taken in `api/write.py` `pay_for_unlock` only once
+the gate has opened, so a refusal for distance costs nothing, and opening a
+memory this account already earned costs nothing. Out of both, the unlock is
+refused 403 `{reason: "no_steps", steps, price}`. A walk is now a plan, not a
+licence: its stops cost the same, and the day lock (`WALKED_TODAY_QUERY`,
+`UNLIMITED_WALKS`) went with the reason for it.
+
+Steps come from the phone's own Core Motion history (`expo-sensors`
+Pedometer), which counts with the app closed and keeps seven days. iOS only
+for now: on Android `getStepCountAsync` throws, and the way round it is Health
+Connect, with a Play declaration (TODO.md). Researched 2026-09-30 against Expo's
+source, Apple's and Google's policy, and Pikmin Bloom, Pokémon GO, Sweatcoin,
+Walkr and Stepn: 1,000 steps is Pikmin's cheapest seedling, about ten minutes'
+walk.
+
+The server keeps a balance and a watermark on `users`, never a day's count.
+`POST /v1/me/steps` takes the steps the phone counted from `since`, credits
+them only if `since` is still the watermark, and moves the watermark to now:
+a retry, or a second phone racing the first, is counted once. A step series
+beside precise location could be health data (WP29's 2015 annex on lifestyle
+apps; CJEU C-184/20); a balance is not. Apple 5.1.3 covers Motion and Fitness
+too, so the count never leaves our server, and a denied permission leaves the
+free three and the subscription.
+
+**Consequences:** the count is self-reported, like the position, so a shaken
+phone earns unlocks. The credit is capped at three steps a second over the
+window, and nothing else: what it buys is a public story you still have to
+stand on. The balance is on the account, so an anonymous device folded into an
+account at sign-in (`absorb`) brings nothing; the account's own is kept. No cap
+on the stored balance yet: add one if a hoard empties the map in an afternoon.
 
 ### RevenueCat sells it; our table decides
 

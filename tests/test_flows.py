@@ -31,7 +31,7 @@ from api.route_solver import _path_meters, _route_size
 from api.streets import walking_matrix
 from pipeline.route_bench import START_BOX
 from pipeline.seed_dev import at, seed
-from tests.conftest import on_todays_route
+from tests.conftest import give_steps
 
 pytestmark = pytest.mark.db
 
@@ -108,7 +108,6 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     """
     lat, lng = at("reach")
     memory_id = seeded_id(db_session, "reach")
-    on_todays_route(db_session, DEVICE, memory_id)
 
     far = read_at(seeded, memory_id, START)
     assert far["locked"] is True
@@ -138,7 +137,6 @@ def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
     """F15: unlocking is permanent, and it is permanent for one device."""
     lat, lng = at("reach")
     memory_id = seeded_id(db_session, "reach")
-    on_todays_route(db_session, DEVICE, memory_id)
     seeded.post(f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, "lat": lat, "lng": lng})
 
     mine = seeded.get("/v1/unlocks", params={"device": DEVICE}).json()["memories"]
@@ -220,6 +218,7 @@ def test_f25_a_random_walk_on_a_full_map_can_be_walked(seeded, db_session, route
         )
         assert walk <= body["budget_meters"], body
 
+        give_steps(db_session, device, 1000 * len(stops))
         accepted = seeded.post("/v1/routes/today", json=body).json()
         assert [m["id"] for m in accepted["memories"]] == ids, body
         again = seeded.post("/v1/routes/today", json={**body, "budget_meters": 1000}).json()
@@ -241,6 +240,7 @@ def test_f30_f31_a_finished_walk_is_finished_once_and_kept(seeded, db_session):
     body = {"device": DEVICE, "lat": START[0], "lng": START[1], "budget_meters": 4000}
     stops = seeded.post("/v1/routes/today", json=body).json()["memories"]
     assert stops, "the seed should make a walk from the start"
+    give_steps(db_session, DEVICE, 1000 * len(stops))
 
     def completed_at():
         return db_session.execute(

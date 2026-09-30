@@ -352,19 +352,12 @@ export async function fetchTodaysRoute(
 export type WalkAsk = { loop: boolean; end: Coordinates | null };
 
 /** Why a walk was refused: too short to reach `include` (and the length that
- *  would), `include` cannot be a stop at all, or today's free walk is taken.
- *  Null for anything else. */
+ *  would), or `include` cannot be a stop at all. Null for anything else. */
 export function walkHereRefusal(
   e: unknown,
-):
-  | { reason: 'too_far'; min_budget_meters: number }
-  | { reason: 'not_a_stop' }
-  | { reason: 'walked_today' }
-  | null {
+): { reason: 'too_far'; min_budget_meters: number } | { reason: 'not_a_stop' } | null {
   const detail = (e as ApiError)?.detail as { reason?: string } | undefined;
-  return detail?.reason === 'too_far' ||
-    detail?.reason === 'not_a_stop' ||
-    detail?.reason === 'walked_today'
+  return detail?.reason === 'too_far' || detail?.reason === 'not_a_stop'
     ? (detail as ReturnType<typeof walkHereRefusal>)
     : null;
 }
@@ -498,10 +491,17 @@ export type Profile = {
   /** Which sign-ins are attached, oldest first. Empty means this is still just
    *  a device: everything works, but a new phone would start empty. */
   providers: ('google' | 'apple')[];
-  /** Paid up now: any pin stood on opens, and walks are not one a day. */
+  /** Paid up now: any pin stood on opens without spending steps. */
   subscribed: boolean;
   /** When it ends or ended, UTC without a zone; null if never subscribed. */
   subscribed_until: string | null;
+  /** What a free account opens memories with: these first, then
+   *  `steps_per_unlock` steps each (docs/10, "Steps open a memory"). */
+  free_unlocks: number;
+  steps: number;
+  steps_per_unlock: number;
+  /** Steps count from here, UTC without a zone; null until there is an account. */
+  steps_counted_until: string | null;
 };
 
 export type Draft = {
@@ -524,10 +524,19 @@ export async function refreshSubscription(device: string): Promise<Profile> {
   return post<Profile>('/v1/me/subscription', { device });
 }
 
-/** An unlock refused because the memory is not on today's walk, and the
- *  account is not subscribed: the paywall's cue. */
-export function notOnWalk(e: unknown): boolean {
-  return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'not_on_walk';
+/** Credit the steps walked since `since`, the profile's watermark. A stale
+ *  `since` credits nothing, and the profile that comes back has the new one. */
+export async function creditSteps(device: string, since: string, steps: number): Promise<Profile> {
+  return post<Profile>('/v1/me/steps', { device, since, steps });
+}
+
+/** An unlock refused for want of steps, with what there is and what it costs:
+ *  the paywall's cue. */
+export function outOfSteps(e: unknown): { steps: number; price: number } | null {
+  const detail = (e as ApiError)?.detail as
+    | { reason?: string; steps: number; price: number }
+    | undefined;
+  return detail?.reason === 'no_steps' ? detail : null;
 }
 
 /** Text the screening refused (api/moderation.py), as against a failure that

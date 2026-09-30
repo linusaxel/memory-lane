@@ -270,24 +270,14 @@ def api_client(db_session, monkeypatch, tmp_path):
     return TestClient(api.main.app)
 
 
-def on_todays_route(session, device, *memory_ids):
-    """Make these memories stops of `device`'s walk today. The unlock refuses
-    anything else, so a test that unlocks outside a planned walk states it."""
+def give_steps(session, device, steps):
+    """Give `device`'s account `steps` to open memories with, past its free ones."""
     from sqlalchemy import text
 
-    from api.gate import today
+    from api.accounts import user_for_device
 
+    user_id = user_for_device(session, device)
     session.execute(
-        text("INSERT INTO devices (id) VALUES (CAST(:d AS uuid)) ON CONFLICT DO NOTHING"),
-        {"d": device},
-    )
-    session.execute(
-        text("""
-            INSERT INTO daily_routes (device_id, route_date, memory_ids)
-            VALUES (CAST(:d AS uuid), :day, :ids)
-            ON CONFLICT (device_id, route_date) WHERE ended_at IS NULL
-            DO UPDATE SET memory_ids = daily_routes.memory_ids || EXCLUDED.memory_ids
-        """),
-        {"d": device, "day": today(), "ids": list(memory_ids)},
+        text("UPDATE users SET steps = :s WHERE id = CAST(:u AS uuid)"), {"s": steps, "u": user_id}
     )
     session.commit()

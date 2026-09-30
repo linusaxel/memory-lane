@@ -22,6 +22,7 @@ from api.gate import (
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
+    STEPS_PER_UNLOCK,
     Coordinates,
     DeviceRequest,
     HeartResponse,
@@ -38,16 +39,18 @@ from api.models import (
 from api.moderation import screen
 from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
+    EARNED_QUERY,
     MEDIA_ATTACH,
     MEDIA_DETACH_QUERY,
     MEMORY_NOTES_QUERY,
     NOTE_ALLOWED_QUERY,
     NOTE_HIDE_QUERY,
-    ON_TODAYS_ROUTE_QUERY,
     OWNED_MEMORY_QUERY,
     PLACE_INSERT,
     ROUTE_COMPLETED_QUERY,
     SINGLE_MEMORY_QUERY,
+    SPEND_FREE_UNLOCK,
+    SPEND_STEPS,
     SUBMISSION_INSERT,
     SUBSCRIBED_QUERY,
 )
@@ -115,6 +118,34 @@ def refuse_over_quota(used: int, limit: int, what: str) -> None:
         )
 
 
+def pay_for_unlock(session, device: str, memory_id: int) -> None:
+    """A free unlock while any are left, then STEPS_PER_UNLOCK steps; nothing
+    for a subscriber, or for a memory this account has already opened
+    (docs/10, "Steps open a memory"). Refuses 403 `no_steps` with the balance.
+
+    Under the user's row lock, so two presses on one memory are charged once.
+    """
+    user_id = user_for_device(session, device)
+    session.execute(text(LOCK_USER), {"user_id": user_id})
+    binds = {"device_id": device, "memory_id": memory_id}
+    if session.execute(text(EARNED_QUERY), binds).scalar():
+        return
+    if session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
+        return
+    if session.execute(text(SPEND_FREE_UNLOCK), {"user_id": user_id}).first():
+        return
+    spend = {"user_id": user_id, "price": STEPS_PER_UNLOCK}
+    if session.execute(text(SPEND_STEPS), spend).first():
+        return
+    steps = session.execute(
+        text("SELECT steps FROM users WHERE id = CAST(:user_id AS uuid)"), {"user_id": user_id}
+    ).scalar()
+    raise HTTPException(
+        status_code=403,
+        detail={"reason": "no_steps", "steps": steps, "price": STEPS_PER_UNLOCK},
+    )
+
+
 @router.post("/v1/memories/{memory_id}/unlock", response_model=Memory)
 def unlock_memory(memory_id: int, body: UnlockRequest):
     """Earn a memory, and record that it was earned.
@@ -131,11 +162,6 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
         if not row:
             raise HTTPException(status_code=404, detail="Memory not found")
 
-        binds = {"device_id": body.device, "memory_id": memory_id, "today": today()}
-        on_route = session.execute(text(ON_TODAYS_ROUTE_QUERY), binds).scalar()
-        if not on_route and not session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
-            raise HTTPException(status_code=403, detail={"reason": "not_on_walk"})
-
         at = Coordinates(lat=body.lat, lng=body.lng)
         memory = row_to_memory(row, at, include_distance=False)
         if memory.locked:
@@ -145,7 +171,7 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
                 memory.distance_meters = meters_between(at, memory.place.coordinates)
             return memory
 
-        touch_device(session, body.device)
+        pay_for_unlock(session, body.device, memory_id)
         session.execute(
             text("""
                 INSERT INTO unlocks (device_id, memory_id)

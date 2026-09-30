@@ -15,7 +15,7 @@ a punishment for leaving.
 import pytest
 from sqlalchemy import text
 
-from tests.conftest import on_todays_route
+from tests.conftest import give_steps
 
 pytestmark = pytest.mark.db
 
@@ -55,7 +55,6 @@ def memory_id(db_session):
         {"p": place, "c": content},
     ).scalar()
     db_session.commit()
-    on_todays_route(db_session, DEVICE, memory)
     return memory
 
 
@@ -111,14 +110,126 @@ def test_one_device_cannot_read_anothers_collection(client, memory_id):
     assert client.get(f"/v1/unlocks?device={OTHER_DEVICE}").json()["memories"] == []
 
 
-def test_standing_on_a_memory_off_todays_walk_is_refused(client, memory_id, db_session):
-    """Five a day is the product: the server holds the walk, so it holds the rule."""
-    refused = client.post(
-        f"/v1/memories/{memory_id}/unlock", json={"device": OTHER_DEVICE, "lat": LAT, "lng": LNG}
+def _memories(session, n):
+    """n more memories on the same spot, each its own place so none is merged."""
+    ids = []
+    for i in range(n):
+        place = session.execute(
+            text(
+                "INSERT INTO places (name, place_query, coordinates, precision_meters) "
+                "VALUES (:n, :n, ST_MakePoint(:lng, :lat)::geography, 50) RETURNING id"
+            ),
+            {"n": f"Spot {i}", "lat": LAT + 0.00001 * (i + 1), "lng": LNG},
+        ).scalar()
+        ids.append(
+            session.execute(
+                text(
+                    "INSERT INTO memories (place_id, summary, extraction_confidence) "
+                    "VALUES (:p, :s, 'high') RETURNING id"
+                ),
+                {"p": place, "s": f"memory {i}"},
+            ).scalar()
+        )
+    session.commit()
+    return ids
+
+
+def _press(client, memory_id):
+    return client.post(
+        f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, "lat": LAT, "lng": LNG}
     )
+
+
+def _balance(client, device=DEVICE):
+    me = client.get(f"/v1/me?device={device}").json()
+    return me["free_unlocks"], me["steps"]
+
+
+def test_three_free_then_a_thousand_steps_each(client, memory_id, db_session):
+    """docs/10, "Steps open a memory"."""
+    first, second, third, fourth = [memory_id, *_memories(db_session, 3)]
+    for m in (first, second, third):
+        assert _press(client, m).status_code == 200
+    assert _balance(client) == (0, 0)
+
+    refused = _press(client, fourth)
     assert refused.status_code == 403
-    assert "summary" not in refused.json()
-    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
+    assert refused.json()["detail"] == {"reason": "no_steps", "steps": 0, "price": 1000}
+    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 3
+
+    give_steps(db_session, DEVICE, 1500)
+    assert _press(client, fourth).status_code == 200
+    assert _balance(client) == (0, 500)
+
+
+def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
+    _unlock(client, memory_id)
+    _unlock(client, memory_id)
+    assert _balance(client) == (2, 0)
+
+
+def test_a_refusal_for_distance_costs_nothing(client, memory_id):
+    far = client.post(
+        f"/v1/memories/{memory_id}/unlock",
+        json={"device": DEVICE, "lat": FAR_LAT, "lng": LNG},
+    )
+    assert far.json()["locked"] is True
+    assert _balance(client) == (3, 0)
+
+
+def test_a_subscriber_spends_nothing(client, memory_id, db_session):
+    give_steps(db_session, DEVICE, 0)
+    db_session.execute(
+        text(
+            "INSERT INTO subscriptions (user_id, expires_at) "
+            "SELECT user_id, CURRENT_TIMESTAMP + INTERVAL '1 day' FROM devices "
+            "WHERE id = CAST(:d AS uuid)"
+        ),
+        {"d": DEVICE},
+    )
+    db_session.commit()
+    assert _press(client, memory_id).status_code == 200
+    assert _balance(client) == (3, 0)
+
+
+def test_steps_are_credited_once_from_the_watermark(client, db_session):
+    give_steps(db_session, DEVICE, 0)
+    db_session.execute(
+        text(
+            "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '1 hour' "
+            "WHERE id = (SELECT user_id FROM devices WHERE id = CAST(:d AS uuid))"
+        ),
+        {"d": DEVICE},
+    )
+    db_session.commit()
+    since = client.get(f"/v1/me?device={DEVICE}").json()["steps_counted_until"]
+
+    def credit(steps):
+        return client.post(
+            "/v1/me/steps", json={"device": DEVICE, "since": since, "steps": steps}
+        ).json()
+
+    after = credit(2400)
+    assert after["steps"] == 2400
+    assert after["steps_counted_until"] > since
+    assert credit(2400)["steps"] == 2400, "a retry from the old watermark counts nothing"
+
+
+def test_steps_faster_than_anyone_walks_are_capped(client, db_session):
+    give_steps(db_session, DEVICE, 0)
+    db_session.execute(
+        text(
+            "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '10 seconds' "
+            "WHERE id = (SELECT user_id FROM devices WHERE id = CAST(:d AS uuid))"
+        ),
+        {"d": DEVICE},
+    )
+    db_session.commit()
+    since = client.get(f"/v1/me?device={DEVICE}").json()["steps_counted_until"]
+    after = client.post(
+        "/v1/me/steps", json={"device": DEVICE, "since": since, "steps": 100_000}
+    ).json()
+    assert 30 <= after["steps"] < 40
 
 
 def test_a_device_id_that_is_not_a_uuid_is_rejected(client, memory_id):

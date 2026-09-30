@@ -31,7 +31,6 @@ import api.write as write
 from pipeline.extract import HISTORICAL_SYSTEM_PROMPT, SYSTEM_PROMPT
 from pipeline.tags import TAGS
 from pipeline.tags import clean as extract_clean
-from tests.conftest import on_todays_route
 
 pytestmark = pytest.mark.db
 
@@ -195,7 +194,6 @@ def test_filing_next_to_a_memory_does_not_unlock_it(client, db_session):
 def test_standing_there_still_opens_it(client, db_session):
     memory = submit(client)
     walker = device()
-    on_todays_route(db_session, walker, memory["id"])
     opened = client.post(
         f"/v1/memories/{memory['id']}/unlock",
         json={"device": walker, "lat": LAT, "lng": LNG},
@@ -266,6 +264,10 @@ def test_reading_a_profile_creates_nobody(client, db_session):
         "providers": [],
         "subscribed": False,
         "subscribed_until": None,
+        "free_unlocks": 3,
+        "steps": 0,
+        "steps_per_unlock": 1000,
+        "steps_counted_until": None,
     }
     assert db_session.execute(text("SELECT COUNT(*) FROM users")).scalar() == 0
 
@@ -484,7 +486,6 @@ def test_a_blocked_author_is_gone_for_the_blocker_only(client, db_session):
     author, walker = device(), device()
     memory = submit(client, device=author)
     near = f"/v1/memories/nearby?lat={LAT}&lng={LNG}&radius_km=1"
-    on_todays_route(db_session, walker, memory["id"])
 
     blocked = client.post(f"/v1/users/{memory['author']['id']}/block", json={"device": walker})
     assert blocked.status_code == 204

@@ -13,10 +13,12 @@ type Props = {
   onUnlock: () => void;
   busy: boolean;
   error: string | null;
+  /** What opening it spends; null for a subscriber. */
+  cost: string | null;
   place?: StyleProp<ViewStyle>;
 };
 
-export default function UnlockHere({ memory, onUnlock, busy, error, place }: Props) {
+export default function UnlockHere({ memory, onUnlock, busy, error, cost, place }: Props) {
   const from = [memory.year, memory.source_name].filter(Boolean).join(' · ');
   const waiting = [
     memory.media_count === 1
@@ -36,6 +38,7 @@ export default function UnlockHere({ memory, onUnlock, busy, error, place }: Pro
           <Text style={styles.waiting}>{waiting.join(' · ')} waiting</Text>
         )}
         <Text style={styles.note}>{error ?? 'You made it.'}</Text>
+        {cost && !error && <Text style={label}>{cost}</Text>}
       </View>
     </View>
   );

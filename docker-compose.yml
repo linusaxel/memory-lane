@@ -28,8 +28,6 @@ services:
       MEDIA_DIR: /data/media
       # Street distances for today's route. Crow-flies when osrm is not up.
       ROUTING_URL: http://osrm:5000
-      # No paywall after the first walk (pipeline/config.py). 0 to see it.
-      UNLIMITED_WALKS: ${UNLIMITED_WALKS:-1}
     volumes:
       # Uploaded photos and recordings. A bind mount rather than a named volume:
       # it survives a rebuild just the same, and it lets the host see the files -

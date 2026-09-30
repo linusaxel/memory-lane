@@ -124,7 +124,13 @@ CREATE TABLE users (
     -- Nullable: contributing without being named is allowed, and the API
     -- renders those "Anonymous".
     display_name VARCHAR(60),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -- What a free account opens memories with: three on the house, then
+    -- 1,000 steps each. A balance and a watermark, never a day's count
+    -- (docs/10-decisions.md#steps-open-a-memory).
+    free_unlocks INTEGER NOT NULL DEFAULT 3,
+    steps INTEGER NOT NULL DEFAULT 0,
+    steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- How a person proves they are the same person on a new phone. Google and

@@ -1,0 +1,49 @@
+# F35 subscribe, when a free account has nothing left to open a memory with.
+# docs/08-ux-flows.md, docs/10-decisions.md "Steps open a memory".
+#
+# e2e/run.sh's `broke` trigger gives the account the app mints no free unlocks,
+# and there are no steps on a simulator. Standing on a pin, the ring is on the
+# map with no walk; the hold is refused, and the paywall it opens has nothing to
+# sell on a simulator (no RevenueCat key) and says so, with a way out. Then
+# typing a name mints the account, `subscriber` pays for it, and the same hold
+# opens the memory.
+
+appId: ${APP_ID}
+---
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: ${BENCH_LAT}
+      LNG: ${BENCH_LNG}
+      LOCATION: inuse
+
+- extendedWaitUntil:
+    visible: "Unlock this memory"
+    timeout: 40000
+- assertVisible: "Ringkaféen, dev seed"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: "Open any memory you stand on"
+    timeout: 20000
+- assertVisible: "Subscriptions aren't available right now\\."
+- tapOn: "Not now"
+- extendedWaitUntil:
+    visible: "It takes 1,000 steps\\. You have 0\\."
+    timeout: 10000
+
+- tapOn: "You and settings"
+- tapOn: "The name your memories are signed with"
+- inputText: "Paid"
+- tapOn: "Close"
+
+# The profile is read at launch; a relaunch reads the subscription.
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "Unlock this memory"
+    timeout: 40000
+- assertVisible: "Ringkaféen, dev seed"
+- longPressOn: "Unlock this memory"
+- extendedWaitUntil:
+    visible: ".*Lygteå.*"
+    timeout: 30000

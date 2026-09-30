@@ -122,6 +122,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/Settings.tsx` | You: its own sheet, from the map's top-right corner |
 | `mobile/src/Paywall.tsx` | The subscription sheet (F35). Prices from the store; "not available" without a key |
+| `mobile/src/steps.ts` | Steps walked, from Core Motion, credited to the account. iOS only |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: no-ops without a key. Never decides who has paid |
 | `mobile/src/AddGlyph.tsx` | The Add button's icon: a brand pin with a plus |
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |

@@ -209,8 +209,7 @@ the estimate, and the server's shortest length lifts the slider and the walk
 is drawn again at it; further than 10 km reaches, "The nearest walk from
 here is over 10 km." and no button; the pin can no longer be a stop (earned,
 hidden), "That memory can't be on a walk from here." and the plan goes on
-without it. Today's free walk already taken — "That was today's free walk.
-Come back tomorrow, or subscribe for more." (the paywall comes with TODO.md S4).
+without it.
 
 **Done when:** Plan a walk shows a whole walk on the map, a change to the card
 redraws it, and Accept makes it today's.
@@ -302,10 +301,9 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 6. The journal works with no network and no position: it renders from what the
    device stored, so a memory you walked to is readable on the train home.
 
-**Only a stop of today's walk unlocks.** The server refuses anything else with
-403, standing on it or not: five a day is the product, and the route it checks
-against is its own `daily_routes` row, not anything the client says (docs/10,
-"Only today's walk unlocks").
+**Any memory you stand on unlocks**, walk or no walk. It spends one of the
+account's three free unlocks, then 1,000 steps; a subscriber spends nothing
+(F35, and docs/10, "Steps open a memory").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -952,7 +950,7 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    who it is from ("From" a source, "Left by" a person, with a glyph), its
    #tags, then the approach ring beside the distance with year · hearts and what
    is waiting, and **Walk here**, which draws a walk through that pin (F1).
-   There is no unlock here, even standing on it: only today's walk unlocks.
+   Standing on it, the peek gives way to the ring over the map (F7).
 3. **Plan a walk**, bottom centre, draws a walk (F1).
 
 The peek is a look, not a read: the summary never reaches the phone locked, and
@@ -962,7 +960,8 @@ not what it says".
 Until 2026-09-26 this flow was removed: a map of every memory under the
 viewport, where nothing opened, made the corpus a thing to browse and to
 "complete". Locked pins cannot be read, so that rule survives: see docs/10, "A
-map of what is locked, and only today's walk unlocks".
+map of what is locked, and only today's walk unlocks". Since 2026-09-30 any of
+them opens when you stand on it, for steps (docs/10, "Steps open a memory").
 
 `App.tsx` (`stage === 'map'`, `fetchNearby`), `src/MemorySheet.tsx` (`onWalkHere`).
 
@@ -1093,25 +1092,27 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 
 ## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
 
-**Who:** somebody standing on a pin with no walk through it, or who has had
-today's free walk. **Trigger:** **Open it now** on the map's peek, or a
-second walk the same day.
+**Who:** a free account standing on a pin with no free unlocks left and fewer
+than 1,000 steps. **Trigger:** the hold on the ring is refused `no_steps`, or
+**Subscribe** in You.
 
-1. On the map, a locked pin within reach says "You're right here. Make it a
-   stop on today's walk, or open it now." with **Walk here** and, beside it, **Open
-   it now**. Out of reach the peek is unchanged.
-2. **Open it now**, a second walk the same day (`walked_today`), or an unlock
-   refused `not_on_walk` opens the paywall (`src/Paywall.tsx`): "Open any
-   memory you stand on", monthly and yearly at the store's price, **Restore
-   purchases**, Terms and Privacy, and **Not now**.
+1. On the map, anyone standing on a locked pin gets the ring, walk or no walk.
+   Under the place it says what the hold spends: "Free · 3 left", then
+   "1,000 steps · you have 2,340". A subscriber sees nothing there.
+2. A hold with nothing to spend says "It takes 1,000 steps. You have 420." and
+   opens the paywall (`src/Paywall.tsx`): "Open any memory you stand on",
+   monthly and yearly at the store's price, **Restore purchases**, Terms and
+   Privacy, and **Not now**.
 3. A purchase or a restore asks the server to read the store back
    (`POST /v1/me/subscription`); only its answer opens anything. The sheet
    closes when it says subscribed.
-4. A subscriber standing on a pin gets the ring over the map, with no tap on
-   the pin: hold to open it, as on a walk. You shows "Subscribed until …" and **Manage subscription**;
-   signed in and not subscribed, **Subscribe**.
+4. A subscriber's hold spends nothing. You shows "Subscribed until …" and
+   **Manage subscription**; signed in and not subscribed, **Subscribe**.
 
-**Why:** [A subscription opens the map](10-decisions.md#a-subscription-opens-the-map)
+Steps are the phone's own count (Core Motion, iOS only), read when the app
+opens or comes back, and credited from where the last count stopped.
+
+**Why:** [Steps open a memory](10-decisions.md#steps-open-a-memory)
 and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it-our-table-decides).
 
 **Failure:** no RevenueCat key or no offerings (the simulator, e2e): "Subscriptions
@@ -1120,7 +1121,8 @@ store's sheet: nothing is said. Anything else: "That didn't go through. Try
 again." A purchase the server cannot find: "No subscription on this
 account yet."
 
-**Done when:** `.maestro/subscribe-from-the-peek.yml` passes, and `tests/test_api_billing.py`.
+**Done when:** `.maestro/subscribe-when-out-of-steps.yml` passes, and
+`tests/test_api_billing.py` and `tests/test_api_unlocks.py`.
 
 ## Proposed
 

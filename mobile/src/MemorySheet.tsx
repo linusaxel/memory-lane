@@ -57,8 +57,6 @@ type Props = {
   onWalkHere?: () => void;
   /** Over the map, in any stage: a card. Over the journal: a page. */
   compact?: boolean;
-  /** The paywall, offered on the peek to somebody standing on the pin. */
-  onSubscribe?: () => void;
   /** Absent for extracted memories, and for your own: there is nobody to
    *  report a podcast to, and reporting yourself is not a real control. */
   onReport?: (memory: LocatedMemory) => void;
@@ -131,7 +129,6 @@ export default function MemorySheet({
   onEdit,
   onWalkHere,
   compact = false,
-  onSubscribe,
   onReport,
   reported,
   onBlock,
@@ -354,7 +351,7 @@ export default function MemorySheet({
                         {fromHere == null
                           ? 'Turn on location to see how far.'
                           : onWalkHere
-                            ? "You're right here. Make it a stop on today's walk, or open it now."
+                            ? "You're right here. Hold the ring on the map to open it."
                             : `Get within ${Math.round(radius)} m to unlock it.`}
                       </Text>
                     )}
@@ -474,7 +471,7 @@ export default function MemorySheet({
             )}
 
             {(many ||
-              (peeking && (onWalkHere || (withinReach && onSubscribe))) ||
+              (peeking && onWalkHere) ||
               (!locked && memory.content) ||
               linkFailed) && (
               <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
@@ -513,16 +510,6 @@ export default function MemorySheet({
                     onPress={onWalkHere}
                   >
                     <Text style={styles.watchText}>Walk here</Text>
-                  </Pressable>
-                )}
-                {peeking && withinReach && onSubscribe && (
-                  <Pressable
-                    style={dim(styles.openNow)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Open it now"
-                    onPress={onSubscribe}
-                  >
-                    <Text style={styles.openNowText}>Open it now</Text>
                   </Pressable>
                 )}
                 {!locked && memory.content && (
@@ -642,8 +629,6 @@ const styles = StyleSheet.create({
   watch: button.solid,
   watchText: { ...buttonText, color: color.paper },
   // Beside Walk here, never above it: the free way stays the one thing to do.
-  openNow: button.outline,
-  openNowText: { ...buttonText, color: color.ink },
   linkFailed: { ...font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },

@@ -75,13 +75,10 @@ from api.queries import (
     SEARCH_MEMORIES_QUERY,
     SEARCH_MEMORIES_WITH_LOCATION_QUERY,
     SINGLE_MEMORY_QUERY,
-    SUBSCRIBED_QUERY,
     WALKED_QUERY,
     WALKED_STOPS_QUERY,
-    WALKED_TODAY_QUERY,
 )
 from api.route_solver import ROUTE_LOOP, _plan_route
-from pipeline.config import UNLIMITED_WALKS
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -395,19 +392,6 @@ def _legs_json(legs):
     return [[c.model_dump() for c in leg] for leg in legs] if legs else None
 
 
-def _refuse_second_walk(session, device: str, route_date) -> None:
-    """One free walk a day per account; a subscriber has no limit (docs/10, "A
-    subscription opens the map"). Without it, Walk here and End walk open any
-    pin on the map for free, and there is nothing left to sell."""
-    if UNLIMITED_WALKS:
-        return
-    binds = {"device_id": device, "today": route_date}
-    if session.execute(text(WALKED_TODAY_QUERY), binds).scalar() and not (
-        session.execute(text(SUBSCRIBED_QUERY), binds).scalar()
-    ):
-        raise HTTPException(status_code=403, detail={"reason": "walked_today"})
-
-
 @router.get("/v1/routes/preview", response_model=RouteResponse)
 def preview_route(
     device: str = Query(..., pattern=DEVICE_PATTERN),
@@ -430,7 +414,6 @@ def preview_route(
     loop = loop and not end
     route_date = gate.today()
     with get_session() as session:
-        _refuse_second_walk(session, device, route_date)
         picked, legs, ends = _plan_route(
             session,
             device,
@@ -464,7 +447,6 @@ def accept_route(body: RouteRequest):
             text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
         ).fetchone()
         if row is None:
-            _refuse_second_walk(session, body.device, route_date)
             loop = ROUTE_LOOP if body.loop is None else body.loop
             loop = loop and not body.end
             picked, legs, _ = _plan_route(

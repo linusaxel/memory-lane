@@ -15,8 +15,10 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
     Wikipedia article (`pipeline/links.py`). Locked, `links` is empty
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
-  403 `{reason: "not_on_walk"}` unless the memory is a stop of this account's
-  walk today, or the account is subscribed (`subscriptions`)
+  Spends one of the account's free unlocks, else 1,000 steps, unless it is
+  subscribed or already opened this memory; a refusal for distance spends
+  nothing. 403 `{reason: "no_steps", steps, price}` with nothing to spend
+  (docs/10, "Steps open a memory")
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
   of that length from there would be: about one stop a km. Stores nothing.
@@ -27,11 +29,10 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `{reason: "too_far", min_budget_meters}` when the streets there are longer
   than this walk. `end_lat` and `end_lng`, together, are where a one-way walk
   finishes (it makes the walk one-way, and is stored nowhere); the same
-  `too_far` when this walk cannot reach it. 403 with `{reason: "walked_today"}`
-  when the account has had today's free walk and is not subscribed
+  `too_far` when this walk cannot reach it
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, include?, end?}` - accept it. The
   same solve, stored; one in progress per device, and a second accept gets
-  that walk back until it is ended. The same `walked_today` 403 as the preview. The only stop id the client ever sends is `include`, vetted
+  that walk back until it is ended. The only stop id the client ever sends is `include`, vetted
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;
   204, and 204 again with nothing to end. A walk that opened something stays
   in `walked`; one that opened nothing is deleted. Its unearned stops lock
@@ -74,8 +75,14 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   before they are stored (`api/moderation.py`): 422 `{"reason": "refused"}`
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
-  submission is signed with, which sign-ins are attached, and `subscribed` /
-  `subscribed_until`. The GET creates nothing
+  submission is signed with, which sign-ins are attached, `subscribed` /
+  `subscribed_until`, and what unlocks spend: `free_unlocks`, `steps`,
+  `steps_per_unlock`, and `steps_counted_until`, where the next count starts.
+  The GET creates nothing
+- `POST /v1/me/steps` `{device, since, steps}` - credit the steps the phone
+  counted from `since`, which must be `steps_counted_until`, and move it to
+  now. A stale `since` credits nothing; either way it returns the `Profile`.
+  At most three steps a second over the window
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
   display_name?, link_token?}` - verify a provider ID token and bind this device
   to that account. `display_name` is for Apple, which gives the name to the

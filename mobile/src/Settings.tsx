@@ -116,7 +116,7 @@ export default function Settings({
               <Text style={styles.note}>
                 Subscribed until{' '}
                 {new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}. Open any memory
-                you stand on, walk or no walk.
+                you stand on without spending steps.
               </Text>
               <Pressable
                 style={dim(styles.action)}

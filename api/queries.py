@@ -460,18 +460,41 @@ STREAK_DAYS_QUERY = f"""
     ORDER BY d DESC
 """
 
-# Is this memory a stop of today's walk in progress, on any of this account's
-# devices? What the unlock asks besides the gate, unless the account is
-# subscribed (docs/10, "Only today's walk unlocks"). An ended walk's stops lock
-# again.
-ON_TODAYS_ROUTE_QUERY = f"""
+# Has this account opened this memory already, on any of its devices? Opening
+# it again costs nothing (docs/10, "Steps open a memory").
+EARNED_QUERY = f"""
     SELECT EXISTS (
-        SELECT 1 FROM daily_routes
-        WHERE device_id IN {MY_DEVICES}
-          AND route_date = CAST(:today AS date)
-          AND ended_at IS NULL
-          AND :memory_id = ANY(memory_ids)
+        SELECT 1 FROM unlocks WHERE memory_id = :memory_id AND device_id IN {MY_DEVICES}
     )
+"""
+
+# Pay for one unlock: a free one while any are left, else STEPS_PER_UNLOCK.
+# Each is one conditional UPDATE, so a balance can't go below zero however
+# the unlocks race.
+SPEND_FREE_UNLOCK = """
+    UPDATE users SET free_unlocks = free_unlocks - 1
+    WHERE id = CAST(:user_id AS uuid) AND free_unlocks > 0
+    RETURNING id
+"""
+SPEND_STEPS = """
+    UPDATE users SET steps = steps - :price
+    WHERE id = CAST(:user_id AS uuid) AND steps >= :price
+    RETURNING id
+"""
+
+# Credit the steps the phone counted since the watermark, and move it to now.
+# Only if `since` is still the watermark, so a retried or raced sync is
+# credited once. No more than MAX_STEPS_PER_SECOND over the window: the count
+# is self-reported, like the position.
+CREDIT_STEPS = """
+    UPDATE users
+    SET steps = steps + LEAST(
+            :steps,
+            CAST(:max_rate * EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - steps_counted_until) AS integer)
+        ),
+        steps_counted_until = CURRENT_TIMESTAMP
+    WHERE id = CAST(:user_id AS uuid) AND steps_counted_until = :since
+    RETURNING id
 """
 
 # Is this device's account paid up? A device with no account never is. Only
@@ -480,19 +503,6 @@ SUBSCRIBED_QUERY = """
     SELECT EXISTS (
         SELECT 1 FROM subscriptions s JOIN devices d ON d.user_id = s.user_id
         WHERE d.id = CAST(:device_id AS uuid) AND s.expires_at > CURRENT_TIMESTAMP
-    )
-"""
-
-# Has this account already had today's free walk? Any walk today on any of its
-# devices, bar this device's own in progress. An ended walk that opened nothing
-# was deleted by ROUTE_PRUNE, so it never counts: a bad plan or rain before the
-# first stop does not spend the day.
-WALKED_TODAY_QUERY = f"""
-    SELECT EXISTS (
-        SELECT 1 FROM daily_routes
-        WHERE device_id IN {MY_DEVICES}
-          AND route_date = CAST(:today AS date)
-          AND NOT (device_id = CAST(:device_id AS uuid) AND ended_at IS NULL)
     )
 """
 

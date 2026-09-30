@@ -59,10 +59,16 @@
           "locationAlwaysPermission": false,
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
-          "motionUsagePermission": false
+          "motionUsagePermission": "Memory Lane counts your steps to pay for opening memories. Only the steps since you last opened the app are sent, never your step history."
         }
       ],
       "expo-secure-store",
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Memory Lane counts your steps to pay for opening memories. Only the steps since you last opened the app are sent, never your step history."
+        }
+      ],
       [
         "expo-audio",
         {

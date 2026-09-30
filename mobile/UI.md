@@ -103,8 +103,8 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; × top right
    └─ privacy policy, and what signing out does and does not delete
 
 There are no tabs. Before a walk the map draws what is locked around you; on a
-walk it draws only that walk. Only today's walk unlocks (docs/10, "A map of
-what is locked, and only today's walk unlocks").
+walk it draws only that walk. Any pin you stand on unlocks, for a free unlock
+or steps (docs/10, "Steps open a memory").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -866,9 +866,8 @@ Writing is F5 (file a memory), F20 (report or block) and F21 (be somebody).
 Sign-in is F22, the first flow, and it is Google and Apple only — see
 `src/SignIn.tsx` for why, and for why neither button works in Expo Go.
 
-The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens after
-the peek or You closes, never on top. **Open it now** is an outline beside
-the solid **Walk here**, because the free way stays the one thing to do. No
+The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens from You,
+or when a hold is refused for want of steps, never on top of a sheet. No
 price is ever written in the app; the store's `priceString` is. Without a
 RevenueCat key it says "Subscriptions aren't available right now.", never a
 button that cannot work, and **Not now** is always there (rule 1).

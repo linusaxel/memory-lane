@@ -221,17 +221,37 @@ past_walks() {
   " >/dev/null || infra "could not seed past walks into $DB"
 }
 
-# subscribe-from-the-peek needs a paid-up account with no store. The app
-# mints its account when a name is typed in You, so whichever user turns up
-# first is given a month (the seed's own user was inserted before this).
+# subscribe-when-out-of-steps needs an account with nothing to spend that then
+# pays, with no store. Every account the app mints has no free unlocks, and the
+# one that types a name is given a month. On the name, not on the insert: the
+# refused unlock mints an account too, and paid there it would open.
 subscriber() {
   psql_on "$DB" "
-    CREATE FUNCTION subscriber() RETURNS trigger AS \$\$ BEGIN
-      INSERT INTO subscriptions (user_id, expires_at) VALUES (NEW.id, now() + interval '30 days');
+    CREATE FUNCTION broke() RETURNS trigger AS \$\$ BEGIN
+      NEW.free_unlocks := 0;
       RETURN NEW;
     END \$\$ LANGUAGE plpgsql;
-    CREATE TRIGGER subscriber AFTER INSERT ON users FOR EACH ROW EXECUTE FUNCTION subscriber();
+    CREATE TRIGGER broke BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION broke();
+    CREATE FUNCTION subscriber() RETURNS trigger AS \$\$ BEGIN
+      INSERT INTO subscriptions (user_id, expires_at) VALUES (NEW.id, now() + interval '30 days')
+        ON CONFLICT (user_id) DO NOTHING;
+      RETURN NEW;
+    END \$\$ LANGUAGE plpgsql;
+    CREATE TRIGGER subscriber AFTER UPDATE OF display_name ON users
+      FOR EACH ROW WHEN (NEW.display_name IS NOT NULL) EXECUTE FUNCTION subscriber();
   " >/dev/null || infra "could not seed a subscriber into $DB"
+}
+
+# walk-and-unlock opens four stops, one more than an account's free three, and
+# a simulator walks no steps. The account the first unlock mints has 1,000.
+walker_steps() {
+  psql_on "$DB" "
+    CREATE FUNCTION walker_steps() RETURNS trigger AS \$\$ BEGIN
+      NEW.steps := 1000;
+      RETURN NEW;
+    END \$\$ LANGUAGE plpgsql;
+    CREATE TRIGGER walker_steps BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION walker_steps();
+  " >/dev/null || infra "could not seed steps into $DB"
 }
 
 # A walkable point in central Copenhagen, different every run. The seed is
@@ -391,9 +411,9 @@ for flow in "${SELECTED[@]}"; do
   flow_started=$(date +%s)
   printf '\n\033[1m  ▸ %s\033[0m\n' "$name"
   reset_database "${name%%-*}"
-  [ "$name" = walk-and-unlock ] && yesterday_unlock
+  [ "$name" = walk-and-unlock ] && yesterday_unlock && walker_steps
   [ "$name" = lakes-loop ] && past_walks
-  [ "$name" = subscribe-from-the-peek ] && subscriber
+  [ "$name" = subscribe-when-out-of-steps ] && subscriber
   # launchApp's own relaunch has been seen to no-op under the load of a screen
   # recording, which leaves the flow looking at the previous one's last screen
   # and failing on its first assertion. Killing it first makes every flow a
