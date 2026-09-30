@@ -78,7 +78,7 @@ import StepsPill from './src/StepsPill.tsx';
 import { walletOf } from './src/wallet.ts';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
-import { GlassButton } from './src/Glass.tsx';
+import { GlassButton, GlassGroup } from './src/Glass.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { buttonText, color, font, label, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
@@ -1632,37 +1632,38 @@ export default function App() {
           >
             <Text style={styles.cornerText}>Journal</Text>
           </GlassButton>
-          {/* Any stage, walk or no walk: filing is standing somewhere, not
+          {/* You and Add, one group that merges like a toolbar's on iOS 26.
+              Any stage, walk or no walk: filing is standing somewhere, not
               unlocking. Shown even with no position - the press asks for it. */}
-          <GlassButton
-            place={[styles.corner, styles.you]}
-            style={styles.circle}
-            hitSlop={4}
-            accessibilityRole="button"
-            accessibilityLabel="You and settings"
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              setYouOpen(true);
-            }}
-          >
-            <YouGlyph size={22} color={color.ink} />
-          </GlassButton>
-          <GlassButton
-            place={[styles.corner, styles.add]}
-            style={styles.circle}
-            hitSlop={4}
-            accessibilityRole="button"
-            accessibilityLabel="Add a memory here"
-            onPress={async () => {
-              // Without a fix the sheet says "Waiting for your location" and
-              // holds Post until one arrives, which beats a dead tap.
-              if (!positionRef.current) await goToMyLocation().catch(() => false);
-              Haptics.selectionAsync().catch(() => {});
-              setSubmitOpen(true);
-            }}
-          >
-            <AddGlyph size={26} color={color.ember} plus={color.paper} />
-          </GlassButton>
+          <GlassGroup style={styles.tools}>
+            <GlassButton
+              style={styles.circle}
+              hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel="You and settings"
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                setYouOpen(true);
+              }}
+            >
+              <YouGlyph size={22} color={color.ink} />
+            </GlassButton>
+            <GlassButton
+              style={styles.circle}
+              hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel="Add a memory here"
+              onPress={async () => {
+                // Without a fix the sheet says "Waiting for your location" and
+                // holds Post until one arrives, which beats a dead tap.
+                if (!positionRef.current) await goToMyLocation().catch(() => false);
+                Haptics.selectionAsync().catch(() => {});
+                setSubmitOpen(true);
+              }}
+            >
+              <AddGlyph size={26} color={color.ember} plus={color.paper} />
+            </GlassButton>
+          </GlassGroup>
           {/* Top, between them: what opens memories today. A tap counts again. */}
           {wallet && (
             <StepsPill
@@ -1680,7 +1681,8 @@ export default function App() {
             <GlassButton
               place={styles.walkBar}
               style={styles.pill}
-              tint={color.ember}
+              // One tint in view: Turn on location's, while it shows.
+              tint={position ? color.ember : undefined}
               accessibilityRole="button"
               accessibilityLabel={`On a walk · ${routeUnlockedCount} of ${routeTotal} unlocked.`}
               accessibilityHint="Ends the walk"
@@ -1690,7 +1692,7 @@ export default function App() {
                 else setConfirmEnd(true);
               }}
             >
-              <Text style={styles.walkBarText} numberOfLines={1}>
+              <Text style={position ? styles.walkBarText : styles.cornerText} numberOfLines={1}>
                 On a walk · {routeUnlockedCount} of {routeTotal}
               </Text>
             </GlassButton>
@@ -1825,8 +1827,7 @@ const styles = StyleSheet.create({
   journal: { left: 18 },
   steps: { alignSelf: 'center' },
   walkBar: { position: 'absolute', top: 116, alignSelf: 'center' },
-  you: { right: 70 },
-  add: { right: 18 },
+  tools: { position: 'absolute', top: 64, right: 18, flexDirection: 'row', gap: 8 },
   pill: {
     minHeight: 44,
     paddingHorizontal: 18,

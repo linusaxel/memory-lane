@@ -454,10 +454,9 @@ stack, and an audit of the screens against UI.md. F1, the wallet (the pill
 says what it opens, short of steps is shown and never holdable), shipped the
 same day. In order:
 
-- [ ] **F2 Glass, by the HIG.** Wrap Journal, the steps pill, You and Add in
-      `GlassContainer` (installed `expo-glass-effect`) so they merge; one tint
-      only, the walk bar. Journal reads cyan beside the other three on the
-      simulator: find out why before tinting anything.
+- [x] **F2 Glass, by the HIG.** (2026-10-01) You and Add are one
+      `GlassGroup` and merge; not all four, since the container swallows
+      taps in its gaps. One tint in view. Journal's cyan was the lake under it.
 - [ ] **F3 SF Symbols.** `npx expo install expo-symbols` (beta); replace
       AddGlyph, YouGlyph, HeartGlyph, CloseButton, the ‹ › pager characters,
       the "more" dots and the View-drawn Padlock. Bounce on unlock. The pin

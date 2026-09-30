@@ -559,7 +559,7 @@ an audit of our own screens against `mobile/UI.md`.
 |---|---|
 | `@expo/ui` (SwiftUI in RN, late beta) | **Adopted.** `Text` + `contentTransition('numericText')` is the system's own odometer for the balance. `GlassEffectContainer` and `glassEffectId` morphing are there for later |
 | `expo-symbols` (beta) | **Adopt next** (TODO § Facelift F3): SF Symbols for the seven hand-drawn SVG glyphs, bounce on unlock. The pin stays SVG |
-| `GlassContainer` in the installed `expo-glass-effect` | Adopt (F2): the top controls merge like system bars |
+| `GlassContainer` in the installed `expo-glass-effect` | **Adopted** (F2) round You and Add only: it swallows taps in its gaps, so it wraps controls that touch. Spacing 40 merges an 8pt gap; 12 did nothing visible |
 | RN 0.86 `boxShadow`, `backgroundImage` gradients | Use where an SVG or image is only a shadow or gradient |
 | Reanimated 4 | **Skipped.** Two native deps and a second animation model for what core `Animated` plus one SwiftUI `Text` already do |
 | Live Activities | **Skipped.** A balance is not a bounded, time-limited event. A Lock Screen widget (`expo-widgets`) is sensible after launch (F8) |
