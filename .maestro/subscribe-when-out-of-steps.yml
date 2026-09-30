@@ -3,11 +3,11 @@
 # you stand".
 #
 # e2e/run.sh's `broke` trigger has the account the app mints use up today's
-# free unlocks, and there are no steps on a simulator. Standing on a pin, the ring is on the
-# map with no walk; the hold is refused, and the paywall it opens has nothing to
-# sell on a simulator (no RevenueCat key) and says so, with a way out. Then
-# typing a name mints the account, `subscriber` pays for it, and the same hold
-# opens the memory.
+# free unlocks, and there are no steps on a simulator; typing a name mints it.
+# Standing on a pin, the card says how far off an unlock is instead of offering
+# a ring that would be refused, and Skip the steps opens the paywall. It has
+# nothing to sell on a simulator (no RevenueCat key) and says so, with a way
+# out. Renamed Paid, `subscriber` pays for it, and the ring is there to hold.
 
 appId: ${APP_ID}
 ---
@@ -18,22 +18,29 @@ appId: ${APP_ID}
       LNG: ${BENCH_LNG}
       LOCATION: inuse
 
+# Reading the profile creates nothing; a name mints the account, spent.
+- tapOn: "You and settings"
+- tapOn: "The name your memories are signed with"
+- inputText: "Broke"
+- tapOn: "Close"
+- launchApp:
+    clearState: false
+
 - extendedWaitUntil:
-    visible: "Unlock this memory"
+    visible: "1,000 steps to go · about 10 min walking"
     timeout: 40000
 - assertVisible: "Ringkaféen, dev seed"
-- longPressOn: "Unlock this memory"
+- assertNotVisible: "Unlock this memory"
+- tapOn: "Skip the steps"
 - extendedWaitUntil:
     visible: "Open any memory you stand on"
     timeout: 20000
 - assertVisible: "Subscriptions aren't available right now\\."
 - tapOn: "Not now"
-- extendedWaitUntil:
-    visible: "It takes 1,000 steps\\. You have 0\\."
-    timeout: 10000
 
 - tapOn: "You and settings"
 - tapOn: "The name your memories are signed with"
+- eraseText: 10
 - inputText: "Paid"
 - tapOn: "Close"
 

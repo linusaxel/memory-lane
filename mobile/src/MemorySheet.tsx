@@ -62,6 +62,8 @@ type Props = {
   /** What standing on it costs once the free ones are gone; absent for a
    *  subscriber, who pays nothing there. */
   stepPrice?: number;
+  /** Steps still to walk before standing here opens it; 0 when it can. */
+  stepsShort?: number;
   /** Over the map, in any stage: a card. Over the journal: a page. */
   compact?: boolean;
   /** Absent for extracted memories, and for your own: there is nobody to
@@ -138,6 +140,7 @@ export default function MemorySheet({
   freeLeft = 0,
   onOpenFree,
   stepPrice,
+  stepsShort = 0,
   compact = false,
   onReport,
   reported,
@@ -175,13 +178,18 @@ export default function MemorySheet({
   // A locked memory over the map. Standing on it, the ring is on the map.
   const peeking = locked && compact;
   const openFree = peeking && !withinReach && freeLeft > 0 && !!onOpenFree;
+  const shortNote = `You're ${stepsShort.toLocaleString()} steps short.`;
   const peekNote = withinReach
-    ? "You're right here. Hold the ring on the map to open it."
+    ? stepsShort > 0
+      ? `You're right here. ${shortNote}`
+      : "You're right here. Hold the ring on the map to open it."
     : fromHere == null
       ? 'Turn on location to see how far.'
       : openFree
         ? null
-        : stepPrice
+        : stepPrice && stepsShort > 0
+          ? `Walk within ${Math.round(radius)} m. ${shortNote}`
+          : stepPrice
           ? `Walk within ${Math.round(radius)} m, then open it for ${stepPrice.toLocaleString()} steps.`
           : `Get within ${Math.round(radius)} m to unlock it.`;
   const hearts = memory?.heart_count ?? 0;

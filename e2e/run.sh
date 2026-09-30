@@ -223,8 +223,8 @@ past_walks() {
 
 # subscribe-when-out-of-steps needs an account with nothing to spend that then
 # pays, with no store. Every account the app mints has used today's free
-# unlocks, and the one that types a name is given a month. On the name, not on the insert: the
-# refused unlock mints an account too, and paid there it would open.
+# unlocks (the flow mints it by typing a name, since reading the profile
+# creates nothing), and the one renamed "Paid" is given a month.
 subscriber() {
   psql_on "$DB" "
     CREATE FUNCTION broke() RETURNS trigger AS \$\$ BEGIN
@@ -239,7 +239,7 @@ subscriber() {
       RETURN NEW;
     END \$\$ LANGUAGE plpgsql;
     CREATE TRIGGER subscriber AFTER UPDATE OF display_name ON users
-      FOR EACH ROW WHEN (NEW.display_name IS NOT NULL) EXECUTE FUNCTION subscriber();
+      FOR EACH ROW WHEN (NEW.display_name = 'Paid') EXECUTE FUNCTION subscriber();
   " >/dev/null || infra "could not seed a subscriber into $DB"
 }
 

@@ -74,6 +74,8 @@ import AddGlyph from './src/AddGlyph.tsx';
 import YouGlyph from './src/YouGlyph.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
+import StepsPill from './src/StepsPill.tsx';
+import { walletOf } from './src/wallet.ts';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
@@ -258,6 +260,9 @@ export default function App() {
   const [device, setDevice] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [profile, setProfile] = useState<Profile | null>(null);
+  const wallet = profile && walletOf(profile);
+  // Steps still to walk before standing on a pin opens it; 0 when it can.
+  const short = wallet?.short ?? 0;
   // The gate (docs/10, *Sign-in comes first*). Null until the stored answer is
   // read, so a signed-in launch never flashes the sign-in screen.
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -992,11 +997,11 @@ export default function App() {
   const wasInReach = useRef(false);
   useEffect(() => {
     if (inReach && !wasInReach.current) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      if (!short) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       setOpenAt((open) => (open.some((m) => m.id === ringMemory?.id && m.locked) ? [] : open));
     }
     wasInReach.current = inReach;
-  }, [inReach, ringMemory]);
+  }, [inReach, ringMemory, short]);
   // A refusal belongs to the memory it was for.
   useEffect(() => setUnlockError(null), [ringMemory?.id]);
 
@@ -1102,7 +1107,12 @@ export default function App() {
       .then(async (id) => {
         const who = await fetchProfile(id);
         const after = (await syncSteps(id, who)) ?? who;
-        if (mounted.current) setProfile(after);
+        if (!mounted.current) return;
+        // A walk's worth landing is felt; a stroll to the fridge is not.
+        if (after.steps - who.steps >= 100) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        }
+        setProfile(after);
       })
       .catch(() => {});
   }, []);
@@ -1383,7 +1393,9 @@ export default function App() {
                   break;
                 }
               }
-              const reach = reachOf(group, position, earned);
+              const near = reachOf(group, position, earned);
+              // Short of steps, standing on it opens nothing: never seal (F11).
+              const reach = near === 'unlockable' && short ? 'locked' : near;
               return (
                 <MemoryMarker
                   key={group.key}
@@ -1428,6 +1440,8 @@ export default function App() {
               place={{ bottom: stage === 'map' ? 108 : 44 }}
               busy={unlocking}
               error={unlockError}
+              short={short}
+              onSkip={() => setPaywallOpen(true)}
               cost={
                 !profile || profile.subscribed
                   ? null
@@ -1650,25 +1664,15 @@ export default function App() {
             <AddGlyph size={26} color={color.ember} plus={color.paper} />
           </GlassButton>
           {/* Top, between them: what opens memories today. A tap counts again. */}
-          {profile && (
-            <GlassButton
+          {wallet && (
+            <StepsPill
+              wallet={wallet}
               place={[styles.corner, styles.steps]}
-              style={styles.stepsPill}
-              accessibilityRole="button"
-              accessibilityLabel={`${profile.steps.toLocaleString()} steps, ${profile.free_unlocks} free today.`}
-              accessibilityHint="Counts your steps again"
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 countSteps();
               }}
-            >
-              <Text style={styles.stepsText} numberOfLines={1}>
-                {profile.steps.toLocaleString()} steps
-              </Text>
-              <Text style={styles.stepsNote} numberOfLines={1}>
-                {profile.free_unlocks} free today
-              </Text>
-            </GlassButton>
+            />
           )}
           {/* Under it: the walk's one signal, and how it ends. Nothing left to
               reach, nothing to lose, so no are-you-sure. */}
@@ -1773,6 +1777,7 @@ export default function App() {
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
           freeLeft={profile?.free_unlocks ?? 0}
           stepPrice={profile && !profile.subscribed ? profile.steps_per_unlock : undefined}
+          stepsShort={short}
           onOpenFree={async () => {
             const memory = openMemories[openIndex];
             if (memory && (await unlock(memory))) setRevealId(memory.id);
@@ -1784,6 +1789,7 @@ export default function App() {
           onClose={() => setPaywallOpen(false)}
           device={device}
           onProfile={setProfile}
+          stepPrice={profile?.steps_per_unlock ?? 1000}
         />
 
         <Submit
@@ -1818,15 +1824,6 @@ const styles = StyleSheet.create({
   corner: { position: 'absolute', top: 64 },
   journal: { left: 18 },
   steps: { alignSelf: 'center' },
-  stepsPill: {
-    minHeight: 44,
-    paddingHorizontal: 16,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepsText: { ...label, fontSize: 15, color: color.ink },
-  stepsNote: { ...label, fontSize: 11, color: color.inkSoft },
   walkBar: { position: 'absolute', top: 116, alignSelf: 'center' },
   you: { right: 70 },
   add: { right: 18 },

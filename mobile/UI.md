@@ -42,9 +42,13 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "Journal"                  top left, every stage, preview included. Glass (src/Glass.tsx)
+├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
+│                              thing to know, rolling when it changes: "2 free today" / "4,210 steps";
+│                              none free, "4,210 steps" / "Opens 4"; short, a small ember ring
+│                              filling to the price and "600 to go" / "400 steps". A tap counts again
 ├─ You, Add                   top right, 44pt glass circles (YouGlyph, AddGlyph), every stage.
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
-├─ "On a walk · 2 of 5"       top centre, the corners' capsule tinted ember: the walk's one
+├─ "On a walk · 2 of 5"       under the steps pill, the corners' capsule tinted ember: the walk's one
 │                              signal, and a tap ends it (F34). With stops left, a card
 │                              (EndWalk): "End this walk?", End walk / Keep walking. No system dialog
 ├─ NextStopArrow              ember, on the screen's edge, pointing at the next
@@ -52,9 +56,11 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ "2.4 km to go"             bottom centre, no count (the bar has it); tap zooms out around
 │    you to the next stop; "Next: <place> · 350 m" once started, "Every stop unlocked" when done,
 │    replaced by the unlock ring (src/UnlockHere.tsx) while standing at any stop:
-│    the ring, the place, year or source, "1 attachment waiting", "You made it." A subscriber
-│    gets it on the map before a walk too, above "Plan a walk". Tapping a pin in reach points
-│    it at that pin; the hold opens the sheet on the story
+│    the ring, the place, year or source, "1 attachment waiting", "You made it." and what it
+│    costs. Everyone gets it on the map before a walk too, above "Plan a walk". Tapping a pin
+│    in reach points it at that pin; the hold opens the sheet on the story. Short of steps
+│    there is no ring to hold: the full faded Approach ring, "600 steps to go · about 6 min
+│    walking" and Skip the steps (the paywall)
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
@@ -126,7 +132,9 @@ with no network is never stopped at the gate.
 | `src/Padlock.tsx` | the one symbol, at any size, in any colour |
 | `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
-| `src/UnlockHere.tsx` | the ring over the map, with the place it opens |
+| `src/UnlockHere.tsx` | the ring over the map, with the place it opens; short of steps, how far off |
+| `src/StepsPill.tsx` | the top of the map: what opens memories today, the number rolling (`@expo/ui`) |
+| `src/wallet.ts` | what the pill says and whether standing on a pin can pay. Pure, and unit-tested |
 | `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal: streak, walks, unlocked, and what you filed |
@@ -701,7 +709,9 @@ so the blue location dot lands in the hole rather than disappearing under a
 disc. The badge sits in the corner for the same reason.
 
 **`seal` means openable now, and nothing else.** A seal-coloured pin you
-cannot open is an invitation that refuses you (F11). Locked near, locked far,
+cannot open is an invitation that refuses you (F11). That includes paying:
+with no free one left and short of the price, a pin you stand on stays ember
+and its reach reads `locked` (`short` in `App.tsx`, from `src/wallet.ts`). Locked near, locked far,
 earned and never gated all draw the same ink pin; the difference is in the
 marker's `title` (VoiceOver and Maestro still hear every state from
 `STATE_LABEL`) and in the sheet. `reachOf` in `src/reach.ts` still computes all

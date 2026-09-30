@@ -14,7 +14,7 @@ appId: ${APP_ID}
       LOCATION: inuse
 
 - extendedWaitUntil:
-    visible: "0 steps, 3 free today\\."
+    visible: "3 free today, 0 steps\\."
     timeout: 20000
 - tapOn: "Ringkaféen, dev seed\\. Locked, too far to open\\."
 - extendedWaitUntil:
@@ -26,5 +26,5 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn: "Close"
 - extendedWaitUntil:
-    visible: "0 steps, 2 free today\\."
+    visible: "2 free today, 0 steps\\."
     timeout: 10000

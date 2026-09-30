@@ -76,6 +76,8 @@ export const color = {
  *  name is also in `color`, the values are the same pair. */
 export const solid = (dark: boolean) => ({
   paper: dark ? '#161412' : '#F7F4EE',
+  ink: dark ? '#F2EDE4' : '#1C1917',
+  rule: dark ? '#332E27' : '#E0D9CC',
   ember: dark ? '#F2703F' : '#A8350F',
   /** The darker edge Apple Maps draws round a route. */
   emberCasing: dark ? '#8A2E0C' : '#6E2208',

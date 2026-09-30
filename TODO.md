@@ -447,6 +447,42 @@ Nothing can be bought until the stores exist, so everybody is free.
 
 ---
 
+## Facelift
+
+Researched 2026-10-01 (docs/09 part 9): the step apps, the iOS 26 / Expo 57
+stack, and an audit of the screens against UI.md. F1, the wallet (the pill
+says what it opens, short of steps is shown and never holdable), shipped the
+same day. In order:
+
+- [ ] **F2 Glass, by the HIG.** Wrap Journal, the steps pill, You and Add in
+      `GlassContainer` (installed `expo-glass-effect`) so they merge; one tint
+      only, the walk bar. Journal reads cyan beside the other three on the
+      simulator: find out why before tinting anything.
+- [ ] **F3 SF Symbols.** `npx expo install expo-symbols` (beta); replace
+      AddGlyph, YouGlyph, HeartGlyph, CloseButton, the ‹ › pager characters,
+      the "more" dots and the View-drawn Padlock. Bounce on unlock. The pin
+      stays SVG (one pin, UI.md Markers).
+- [ ] **F4 One of each.** One pill style for `pill`, `bigPill` and
+      `StepsPill`; one floating-card recipe for UnlockHere, Plan and the peek
+      (two fills today); one big-figure token for the six sizes (36, 46, 46,
+      52, 22, 15). Census-breaking literals (5, 1, 11, 28, 32, 36, 40) and
+      UnlockButton's second shadow either tokened or written into UI.md.
+      11pt `dotText` in Memories.tsx is under the 12pt floor.
+- [ ] **F5 Pay along the hold.** The pill counts down the price in step with
+      the ring's fill, so the spend is seen where it happens.
+- [ ] **F6 The free open as an earn.** "Open it now" spends a free one in a
+      single tap with no reveal; give it the rise the ring hands MemorySheet
+      (`revealId`), and the Success haptic.
+- [ ] **F7 Words.** Settings' "how unlocking works" says only "within 20 m":
+      rewrite for three free and steps. The paywall still says "three" (the
+      profile has no free-per-day field). Stale comments in MemorySheet
+      ("serif", "mono", "Ink, not red"). docs/08 still calls Plan a walk the
+      primary action and the walk bar "top centre".
+- [ ] **F8 Lock Screen widget** (`expo-widgets`): the balance and the nearest
+      story. After launch; skip Live Activities.
+
+---
+
 ## Copenhagen journeys
 
 - [ ] **A long walk still falls short where the map runs out.** (checked

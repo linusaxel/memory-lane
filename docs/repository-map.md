@@ -123,6 +123,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Settings.tsx` | You: its own sheet, from the map's top-right corner |
 | `mobile/src/Paywall.tsx` | The subscription sheet (F35). Prices from the store; "not available" without a key |
 | `mobile/src/steps.ts` | Steps walked, from Core Motion, credited to the account. iOS only |
+| `mobile/src/wallet.ts` | What the steps pill says, and whether standing on a pin can pay; `wallet.test.ts` beside it |
+| `mobile/src/StepsPill.tsx` | The steps pill at the top of the map; the number rolls natively (`@expo/ui`) |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: no-ops without a key. Never decides who has paid |
 | `mobile/src/AddGlyph.tsx` | The Add button's icon: a brand pin with a plus |
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |

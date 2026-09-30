@@ -520,3 +520,81 @@ instantiateVariableFont(TTFont(src), dict(wght=700, opsz=36, SOFT=100, WONK=1)) 
 - [It's Nice That on Airbnb 2025](https://www.itsnicethat.com/articles/airbnb-app-redesign-140525) — "fun, alive, and simple", more curved edges
 - [Google Design, Fraunces](https://design.google/library/a-new-take-on-old-style-typeface) — the SOFT and WONK axes
 - [NN/g, Liquid Glass](https://www.nngroup.com/articles/liquid-glass/) — glass over busy content loses contrast
+
+---
+
+# 9. Steps as currency, and the iOS 26 facelift — **researched 2026-10-01, first part shipped**
+
+Once three a day opened from anywhere and the rest cost 1,000 steps (docs/10,
+*Three free a day, then steps where you stand*), the pill at the top said
+"4,000 steps / 0 free today" and nothing about what that bought. A person
+short of steps still got a gold pin and a holdable ring, and only after the
+900 ms hold learned they could not pay: seal said openable and was wrong (F11).
+Three parallel passes: the step-currency apps, the iOS 26 / Expo 57 stack, and
+an audit of our own screens against `mobile/UI.md`.
+
+## What the step apps do
+
+- **Pikmin Bloom** publishes a fixed cost on every seedling (100 to 10,000
+  steps) and petals spent on a Big Flower you have to walk to, at a flat
+  published price. The closest analogue to paying where you stand. Niantic's
+  line: it should "fit in rather than compete for attention".
+- **Pokémon GO** puts the km cost on every egg before you commit, and shows
+  progress outside the app (widget, "nearly hatched" pushes).
+- **Sweatcoin** converts automatically at a published rate and keeps what did
+  not convert: nothing is lost for not opening the app.
+- **WeWard** makes you tap "Validate my steps" before midnight or lose them.
+  A daily ritual, and a chore with loss aversion attached. **Rejected.**
+- **Duolingo** replaced Hearts with Energy because running out was "especially
+  frustrating for beginners"; slack (streak freezes) raised retention. A
+  refusal should be kind and point somewhere.
+- **Game-economy practice**: earned currency should visibly arrive, the exact
+  amount, never more than was earned.
+- **Apple**: Activity rings are for Move, Exercise and Stand only; never draw
+  a look-alike. Haptics consistent, paired with a visual, success for success.
+
+## The stack, as of Expo 57
+
+| | Verdict |
+|---|---|
+| `@expo/ui` (SwiftUI in RN, late beta) | **Adopted.** `Text` + `contentTransition('numericText')` is the system's own odometer for the balance. `GlassEffectContainer` and `glassEffectId` morphing are there for later |
+| `expo-symbols` (beta) | **Adopt next** (TODO § Facelift F3): SF Symbols for the seven hand-drawn SVG glyphs, bounce on unlock. The pin stays SVG |
+| `GlassContainer` in the installed `expo-glass-effect` | Adopt (F2): the top controls merge like system bars |
+| RN 0.86 `boxShadow`, `backgroundImage` gradients | Use where an SVG or image is only a shadow or gradient |
+| Reanimated 4 | **Skipped.** Two native deps and a second animation model for what core `Animated` plus one SwiftUI `Text` already do |
+| Live Activities | **Skipped.** A balance is not a bounded, time-limited event. A Lock Screen widget (`expo-widgets`) is sensible after launch (F8) |
+
+## What shipped first: the wallet
+
+- **The pill says the one thing to know.** Free ones left: "2 free today",
+  the balance under it. None free and enough: "4,210 steps / Opens 4". Short:
+  a small ember ring filling toward the price and "600 to go / 400 steps". A
+  ring and not a bar so it is the same object as the hold, one ring meaning one
+  thing; one ring and ember, never three nested ones, so it is not Activity's.
+  `src/wallet.ts` decides, and is unit-tested.
+- **The big line rolls** (SwiftUI `numericText`), so spending and earning are
+  seen, and a sync that lands 100+ steps is felt (one Light tap). No
+  tap-to-collect, no coins flying.
+- **Short means not openable.** The pin stays ember, the "into range" tap does
+  not fire, and the card on the map shows the full, faded Approach ring with
+  "600 steps to go · about 6 min walking" (100 steps a minute) and **Skip the
+  steps**, which is the paywall. The server's 403 stays as the backstop.
+
+## Not done, and when
+
+TODO.md § Facelift, in order: glass by the HIG (F2), SF Symbols (F3), one of
+each pill, card and figure (F4), paying along the hold (F5), the free open as
+an earn (F6), the words in You (F7), a Lock Screen widget (F8).
+
+## Sources
+
+- [Pikmin Bloom, how to play](https://niantic.helpshift.com/hc/en/23-pikmin-bloom/faq/2854-how-to-play-pikmin-bloom/) and [Big Flowers](https://niantic.helpshift.com/hc/en/23-pikmin-bloom/faq/4878-use-the-flower-petals-to-make-a-big-flower-bloom/)
+- [Pokémon GO, eggs](https://niantic.helpshift.com/hc/en/6-pokemon-go/faq/2358-incubators-hatching-pokemon-eggs/) and [widgets](https://niantic.helpshift.com/hc/en/6-pokemon-go/faq/3405-how-to-add-pokemon-go-widgets-to-your-device-home-screen/)
+- [Sweatcoin, conversion](https://help.sweatco.in/hc/en-us/articles/360012673992)
+- [WeWard, validating steps](https://faq.weward.fr/hc/en-us/articles/28122448171794)
+- [Duolingo, Energy](https://blog.duolingo.com/duolingo-energy/) and [the streak](https://blog.duolingo.com/how-duolingo-streak-builds-habit/)
+- [Game Economist Consulting, currency animations](https://www.gameeconomistconsulting.com/the-best-currency-animations-of-all-time/)
+- [HIG, Activity rings](https://developer.apple.com/design/human-interface-guidelines/activity-rings) and [Playing haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics)
+- [Expo UI](https://docs.expo.dev/versions/latest/sdk/ui/), [modifiers](https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/modifiers/), [expo-symbols](https://docs.expo.dev/versions/latest/sdk/symbols/), [expo-widgets](https://docs.expo.dev/versions/latest/sdk/widgets/)
+- [WWDC25 219, Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/); [Adopting Liquid Glass](https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass)
+- [RN view style props](https://reactnative.dev/docs/view-style-props)

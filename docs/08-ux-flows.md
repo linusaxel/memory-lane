@@ -1095,14 +1095,18 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 ## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
 
 **Who:** a free account standing on a pin with none of today's free unlocks
-left and fewer than 1,000 steps. **Trigger:** the hold on the ring is refused `no_steps`, or
-**Subscribe** in You.
+left and fewer than 1,000 steps. **Trigger:** **Skip the steps** on the card over the
+map, the hold refused `no_steps` (a stale balance), or **Subscribe** in You.
 
 1. On the map, anyone standing on a locked pin gets the ring, walk or no walk.
    Under the place it says what the hold spends: "Free · 3 left today", then
    "1,000 steps · you have 2,340". A subscriber sees nothing there.
-2. A hold with nothing to spend says "It takes 1,000 steps. You have 420." and
-   opens the paywall (`src/Paywall.tsx`): "Open any memory you stand on",
+2. Short of steps there is no ring to hold (docs/09 part 9): the card shows the
+   full, faded approach ring, "580 steps to go · about 6 min walking" and
+   **Skip the steps**, and the pin stays ember. The top pill says "580 to go"
+   beside a ring filling toward the price. If the server still refuses a hold
+   (the phone's balance was stale) it says "It takes 1,000 steps. You have
+   420." Either way the paywall opens (`src/Paywall.tsx`): "Open any memory you stand on",
    monthly and yearly at the store's price, **Restore purchases**, Terms and
    Privacy, and **Not now**.
 3. A purchase or a restore asks the server to read the store back

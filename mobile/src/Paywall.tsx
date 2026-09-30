@@ -23,9 +23,11 @@ type Props = {
   onClose: () => void;
   device: string | null;
   onProfile: (next: Profile) => void;
+  /** The server's price, so this sheet cannot drift from it. */
+  stepPrice: number;
 };
 
-export default function Paywall({ visible, onClose, device, onProfile }: Props) {
+export default function Paywall({ visible, onClose, device, onProfile, stepPrice }: Props) {
   const [offered, setOffered] = useState<PurchasesPackage[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
         <Text style={styles.title}>Open any memory you stand on</Text>
         <Text style={styles.note}>
           Skip the steps: any memory opens the moment you're standing on it. Without a
-          subscription, each one after today's three free costs 1,000 steps.
+          subscription, each one after today's three free costs {stepPrice.toLocaleString()} steps.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (
