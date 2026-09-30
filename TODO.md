@@ -239,6 +239,13 @@ is to `pipeline/extract.py` unless named.
       pipeline.now` again until it logs no "did not answer". Next, the ~20 bars that
       OSM stores as points need an `around` query, which the public server
       times out on. Then check that the ranking reads better.
+- [ ] **Let a visible oddity with a life story pass.** (checked 2026-09-30)
+      The Weather Girls on Richshuset are the north star (docs/04, *The north
+      star*), and `HISTORICAL_SYSTEM_PROMPT`'s static-description rule would
+      reject them. Narrow the rule so that something still visible, working or
+      odd, with a dated history (made, stopped, restored), passes. Add the
+      Weather Girls as a worked pass example. Measure with `python -m
+      pipeline.quality --compare` before it ships.
 
 ---
 
@@ -598,3 +605,6 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
 - **Four off-vocabulary tags.** (checked 2026-09-22) `entertainment`,
   `celebrity`, `theater`, `festival` (15 rows) predate the filter and are
   unfilterable. Map them if a filter ever needs them.
+- **May a card run past 70 words?** (checked 2026-09-30) The Weather Girls
+  post (docs/04, *The north star*) runs ~400 words and earns them. Short stays
+  the default; the founder doesn't mind longer ones when the story carries it.

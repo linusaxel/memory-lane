@@ -300,6 +300,25 @@ The best examples:
 - 4482: staged Boer War footage in the circus building.
 - 4470: an airport rampart against ice-cream eaters.
 
+**The north star: the Weather Girls.** A post by Nicolas Cosedis (Facebook,
+seen 2026-09-30) about the weather station on Richshuset, Rådhuspladsen, is what
+a historical memory should read like. Written as a card:
+
+> A giant neon thermometer runs up the tower above you. At the top, gilded
+> figures by the sculptor Einar Utzon-Frank have told the weather since 1936:
+> a girl on a bicycle in fair weather, and a girl with an umbrella and a small
+> dog in rain. For decades they stood still. In 2024 they were regilded and
+> began to move again.
+
+On the research rubric it scores 10 of 12: site-lock 2, trace 2, incident 1,
+surprise 2, feeling 1, relates 2. It works because you look up and it is still
+there, it still moves, and the then against now is spelled out ("stood still
+for decades"). **Today's archival prompt would drop it.** Its rule "a building
+existing is not something that happened" can't tell static description from a
+visible oddity with a life story (made, broken, restored). The fix is in
+TODO.md, *Make memories worth the walk*. The post runs ~400 words; cards stay at
+40–70, and whether a card may run longer is an open question there.
+
 What sank the rest, roughly how often:
 
 | Failure | Count | Example |
