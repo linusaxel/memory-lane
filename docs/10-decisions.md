@@ -85,8 +85,7 @@ content, the map undimmed above it, and the lock is `Approach` (the ring you
 will hold) beside the distance, "Opens within 20 m" and the minutes on foot.
 
 The presentation is fixed per opening, because a modal cannot change it while
-up. ~~A stack that pages from a peek onto something else grows the card to 92%.~~
-Superseded 2026-09-29 by "An open memory is a card too", below.
+up. A stack that pages from a peek onto something else grows the card to 92%.
 ×, a tap on the map, or pulling the card down closes it. The pull is a
 transparent `ScrollView` with the card at its foot: iOS's own rubber band,
 released past 70 px. A JS `PanResponder` got the touch but never its moves in
@@ -96,9 +95,20 @@ by × or back.
 **Options considered:** a native sheet with detents needs `@expo/ui` or
 react-native-screens and a native rebuild; RN's `Modal` has no detents.
 
+### Only a locked memory floats
+
+Status: Accepted 2026-09-30
+
+A locked memory over the map, before or on a walk, is the floating card in the
+unlock card's footprint: 16 in from each edge, rounded all round, up to 60%
+of the screen. An open story is the tall sheet again, 92% and bottom-attached,
+because a story needs the room and a 60% card made reading it a chore. The
+journal, a page itself, opens either one as a page sheet.
+
 ### An open memory is a card too
 
-Status: Accepted 2026-09-29
+Status: Superseded 2026-09-30 by
+[Only a locked memory floats](#only-a-locked-memory-floats). Accepted 2026-09-29.
 
 Holding the ring swapped a card over the map for a page covering 92% of the
 screen, so unlocking read as leaving the map rather than opening something on

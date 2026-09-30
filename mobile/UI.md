@@ -60,7 +60,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
                                loop · 52 min", the streak, Done. A relaunch does not show it again
 
-MemorySheet (a floating card over the map, max 60%; a pageSheet from the journal) - two compositions, not one with holes in it
+MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a pageSheet from the journal) - two compositions, not one with holes in it
 
   locked                            open
   ├─ place name       26/700        ├─ place name       26/700

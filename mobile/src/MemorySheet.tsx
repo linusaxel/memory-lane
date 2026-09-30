@@ -285,7 +285,10 @@ export default function MemorySheet({
           <View
             style={[
               styles.sheet,
-              compact && [styles.card, { maxHeight: screenHeight * 0.6, marginBottom: 16 + insets.bottom }],
+              compact &&
+                (peeking
+                  ? [styles.card, styles.floating, { maxHeight: screenHeight * 0.6, marginBottom: 16 + insets.bottom }]
+                  : [styles.card, styles.tall, { height: screenHeight * 0.92 }]),
             ]}
           >
             <View style={styles.grabberRow}>
@@ -483,7 +486,7 @@ export default function MemorySheet({
               (peeking && (onWalkHere || (withinReach && onSubscribe))) ||
               (!locked && memory.content) ||
               linkFailed) && (
-              <View style={styles.actions}>
+              <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
                 {/* Without this, every memory but the first at a stacked point is
                     unreachable - and 60% of this corpus sits on a shared point. */}
                 {many && (
@@ -575,16 +578,14 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   sheet: { flex: 1, backgroundColor: color.paper },
   // Paper over the live map, not a dimmed one: the pin you tapped stays in
-  // view above the card. The unlock card's footprint, so the story opens where
-  // the ring was; a long one scrolls inside it.
+  // view above the card. Locked, it floats in the unlock card's footprint; a
+  // story needs the room, so an open one is a tall sheet (docs/10, "Only a
+  // locked memory floats").
   over: { flexGrow: 1, justifyContent: 'flex-end' },
   page: { height: '100%' },
-  card: {
-    flex: 0,
-    marginHorizontal: 16,
-    borderRadius: corner.card,
-    ...lift,
-  },
+  card: { flex: 0, ...lift },
+  floating: { marginHorizontal: 16, borderRadius: corner.card },
+  tall: { borderTopLeftRadius: corner.card, borderTopRightRadius: corner.card },
   grabberRow: { alignItems: 'center', paddingTop: 10 },
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
   heading: { paddingHorizontal: 24, paddingTop: 26 },
