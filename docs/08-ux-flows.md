@@ -1198,7 +1198,7 @@ Answer these and the proposed flows can be written properly.
    - **F16 works with no network.** Reading on the train home is a flow, and an
      iframe is a fetch. A collection that goes blank underground is not one.
    - **The unlock is the product and it is native.** The ring, the haptics, the
-     stamp pressing down onto the page — F7 is animation on a `Animated.Value`,
+     story rising onto the page — F7 is animation on a `Animated.Value`,
      and a WebView is a rectangle you cannot reach into.
    - **The attribution argument has been met natively.** That was the only real
      case for the WebView, and the credit is now a pinned strip the story

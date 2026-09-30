@@ -1683,7 +1683,6 @@ export default function App() {
         />
 
         <MemorySheet
-          earned={!!openMemories[openIndex] && earned.has(openMemories[openIndex].id)}
           // Only your own, and only while it is open: the locked composition
           // has nowhere to put this.
           onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}

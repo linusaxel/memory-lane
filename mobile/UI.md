@@ -814,9 +814,9 @@ budget. Spec, so it does not get re-invented per screen:
   animation and cannot drift out of sync with it.
 - **The burst plays over the request, not after it.** A completed hold fires
   the unlock and the flare in the same frame, so the round trip happens behind
-  something worth watching. The payoff proper is not here — it is the wax
-  stamp coming down in `MemorySheet` as it opens (`revealId`), and this hands
-  off to it.
+  something worth watching. The payoff proper is not here — it is the story
+  rising into `MemorySheet` as it opens (`revealId`), and this hands off to
+  it.
 - **Transform and opacity only.** Those are what `useNativeDriver` can carry;
   an animated colour puts the whole control back on the JS thread for the
   900ms it most needs to be smooth.
@@ -826,7 +826,7 @@ budget. Spec, so it does not get re-invented per screen:
   only to hold a ring was a layer with nothing in it (docs/10, "Unlock on the
   map").
 - **A refusal resets the ring.** Success unmounts the control — the memory is
-  no longer locked, and the sheet opens on it with the stamp — so `busy`
+  no longer locked, and the sheet opens on it — so `busy`
   falling back to false is always a no, and a ring left full beside an error
   reads as "it worked".
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the

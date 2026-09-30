@@ -45,10 +45,6 @@ type Props = {
   revealId?: number | null;
   /** Present only for a memory this account filed. */
   onEdit?: (memory: LocatedMemory) => void;
-  /** This device walked here and opened it. Not the same as "unlocked": most of
-   *  this corpus sits on city centroids and was never gated, and a stamp on one
-   *  of those would claim a walk that never happened. */
-  earned?: boolean;
   /** Say this one mattered. Absent while locked - there is nothing to react
    *  to yet, and the server never sees a heart request the client didn't ask
    *  for. */
@@ -133,7 +129,6 @@ export default function MemorySheet({
   onHeart,
   hearted,
   onEdit,
-  earned,
   onWalkHere,
   compact = false,
   onSubscribe,
@@ -245,14 +240,6 @@ export default function MemorySheet({
   const revealed = {
     opacity: reveal,
     transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
-  };
-
-  // The same value, read as a press rather than a rise: the wax comes down onto
-  // the page. This is the only place the stamp is allowed to move - the pin on
-  // the map carries it afterwards, and markers do not animate.
-  const pressed = {
-    opacity: reveal,
-    transform: [{ scale: reveal.interpolate({ inputRange: [0, 1], outputRange: [2.4, 1] }) }],
   };
 
   return (
@@ -409,12 +396,6 @@ export default function MemorySheet({
                   {/* The summary carries the sheet when nothing is attached, which
                       is every extracted memory; a submission usually brings a
                       photograph and the weight shifts to it. */}
-                  {earned && (
-                    <Animated.View style={[styles.stamp, pressed]}>
-                      <View style={styles.stampMark} />
-                    </Animated.View>
-                  )}
-
                   <Animated.View style={revealed}>
                     {/* The #words are the tags (hashtags.ts): set in the
                         semibold, not a colour, since every colour here already
@@ -621,16 +602,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
-  // The impression, on the page this time: the same ring the pin wears once
-  // this is earned, inked the other way round because the ground is paper.
-  stamp: { alignSelf: 'flex-start', marginBottom: 18 },
-  stampMark: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: color.ink,
-  },
   summary: { ...font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
   hashtag: { ...font.displaySemi },
   waiting: { ...label, color: color.sealDeep },
