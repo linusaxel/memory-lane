@@ -232,6 +232,20 @@ per chunk, with the video's brief as context. Three designs:
 An automatic edit that hurts the best walk is worse than the ~20 errors it
 fixes. What worked is finding them, not fixing them.
 
+**Source triage** (2026-09-30, by hand, on the dev database). The Blue Tower
+pin kept three of Leonora Christina's seven visible scenes: the Mistress's
+screams (4537), the strip search (4540), the wall of her old bridal chamber
+(4542); her landing at the King's Stairs (4541) has its own pin. 4536, 4538,
+4539 and 4543 are hidden, two of them walks. Kunstindustrimuseet and
+Frederikshospitalet, one building 477 m apart as two `llm` pins, are one place
+at Bredgade 68 (DAWA); the two Glud & Marstrand rows, 16 m apart, are one.
+Flyvergrillen 4468/4469 and Glud & Marstrand 4954/4957 are not retellings: two
+stories, and two sabotages two months apart. The travel volumes and Liebenberg
+were already paused; Carl Møller stays, since the new archival prompt found
+its Kasino fires. Visible labelled memories are now 50 walk, 51 maybe, 63
+skip: 30%. The share fell because two walks went; what it bought is one pin
+per building and three scenes, not seven, on one tower.
+
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day

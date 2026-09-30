@@ -211,26 +211,18 @@ is to `pipeline/extract.py` unless named.
       tune`, then report `--half check` against v1's 32% / 96%.
 - [ ] **Summary against its chunk.** (checked 2026-09-30) ~20 factual or
       speech-recognition errors: Tom "Christensen", Vestergade for
-      Vimmelskaftet, lupus called cancer. Measured three ways and not
-      shipped (docs/04, *Summary against its chunk*): Haiku mangles
-      summaries, and Sonnet fixes the real errors but cut the core of 4545
-      and "fixed" names back to what the captions misheard. **Needs your
-      call:** a Sonnet check that only *flags* (stores the unsupported claims
-      for `review`, edits nothing), or park it. Separately, and unmeasured:
-      have the extraction prompt spell known people as they are in print.
+      Vimmelskaftet, lupus called cancer. Automatic fixes damaged walks and
+      the first flag-only prompt flagged 77% (docs/04, *Summary against its
+      chunk*). A verdict prompt that stores only contradictions is built on
+      branch `parked/unsupported-flags`, never run: parked for interest-first
+      work. Most of these are misheard names, which the next item targets.
+      Separately, and unmeasured: have the extraction prompt spell known
+      people as they are in print.
 - [ ] **Then-vs-now from OSM.** (checked 2026-09-29) Almost no summary says
       what stands there now, and `contrast_score` is 0.7 on 11 of 13 Historisk
       Atlas entries. Reverse-geocode the pin for its present-day name and type.
       Write a "now" clause only when OSM confirms it, and score contrast from that
       clause. This answers *Where does "what is there now" come from?*.
-- [ ] **Source triage.** (checked 2026-09-29) Keep Oehlenschläger vol. I, the
-      Copenhagen chapters of Andersen, and Historisk Atlas. Stop Oehlenschläger's
-      travel volumes (48558, 48559) and the Carl Møller and Liebenberg books.
-      Merge Leonora Christina's eight Blue Tower memories into two or three:
-      distinct scenes, so `dedup --memories` rightly leaves them. Also by hand:
-      Frederikshospitalet is two place rows (Kunstindustrimuseet is the same
-      building), and Flyvergrillen 4468/4469 and Glud & Marstrand 4954/4957
-      are retellings the check missed.
 
 ---
 
