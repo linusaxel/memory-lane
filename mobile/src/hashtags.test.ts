@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { hashtagParts, hashtags } from './hashtags.ts';
+import { hashtagParts, hashtags, summaryParts } from './hashtags.ts';
 
 // The server's cases (tests/test_hashtags.py): one list, two parsers.
 const cases: [string, string[]][] = JSON.parse(
@@ -20,4 +20,32 @@ test('the parts put the text back together, the #words marked', () => {
     { text: '#food', tag: true },
     { text: ', then home', tag: false },
   ]);
+});
+
+const STAUNING = { text: 'Thorvald Stauning', url: 'https://en.wikipedia.org/wiki/Thorvald_Stauning' };
+
+test('a linked name is its own run, the rest stays text', () => {
+  assert.deepEqual(summaryParts('Thorvald Stauning walked in.', [STAUNING]), [
+    { text: 'Thorvald Stauning', tag: false, url: STAUNING.url },
+    { text: ' walked in.', tag: false },
+  ]);
+});
+
+test('only the first use is linked, and #tags still show', () => {
+  const parts = summaryParts('#beer with Thorvald Stauning, Thorvald Stauning again', [STAUNING]);
+  assert.equal(parts.filter((p) => p.url).length, 1);
+  assert.deepEqual(parts[0], { text: '#beer', tag: true });
+});
+
+test('a name the text lacks, or one inside an earlier link, is ignored', () => {
+  const parts = summaryParts('Christiansborg Palace', [
+    { text: 'Christiansborg Palace', url: 'a' },
+    { text: 'Palace', url: 'b' },
+    { text: 'Amalienborg', url: 'c' },
+  ]);
+  assert.deepEqual(parts, [{ text: 'Christiansborg Palace', tag: false, url: 'a' }]);
+});
+
+test('no links is the summary as before', () => {
+  assert.deepEqual(summaryParts('Plain.'), [{ text: 'Plain.', tag: false }]);
 });

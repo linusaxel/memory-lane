@@ -86,6 +86,7 @@ MEMORY_COLUMNS = f"""
     m.source_url,
     m.contrast_score,
     m.contrast_note,
+    m.links,
     {ANNIVERSARY},
     p.id as place_id,
     p.name as place_name,

@@ -237,7 +237,7 @@ is to `pipeline/extract.py` unless named.
       Atlas entries. Reverse-geocode the pin for its present-day name and type.
       Write a "now" clause only when OSM confirms it, and score contrast from that
       clause. This answers *Where does "what is there now" come from?*.
-- [ ] **Link the names in a summary.** (added 2026-09-30) Summaries name
+- [x] **Link the names in a summary.** (built 2026-09-30, `pipeline/links.py`) Summaries name
       real people and places ("Thorvald Stauning", "Christiansborg"), and the
       reader can't look them up. At extraction, have the model list the
       notable names it used. Then resolve each one to a Wikidata QID with

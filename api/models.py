@@ -73,6 +73,13 @@ class ContentRef(BaseModel):
     source: Source | None = None
 
 
+class Link(BaseModel):
+    """A name in the summary, exactly as written, and its Wikipedia article."""
+
+    text: str
+    url: str
+
+
 class Memory(BaseModel):
     id: int
     summary: str
@@ -100,6 +107,8 @@ class Memory(BaseModel):
     source_url: str | None = None
     contrast_score: float | None = None
     contrast_note: str | None = None
+    # Empty while locked, like media: the names are part of what it says.
+    links: list[Link] = []
     # Something happened here on today's date. Travels on a locked memory too,
     # like media_count: it is a reason to walk over, and it gives away nothing
     # the pin did not already.

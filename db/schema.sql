@@ -199,6 +199,11 @@ CREATE TABLE memories (
     -- unanswerable. Every query that can emit a summary honours it.
     hidden BOOLEAN NOT NULL DEFAULT FALSE,
 
+    -- The names in the summary that have a Wikipedia article:
+    -- [{"text": "Thorvald Stauning", "url": "https://en.wikipedia.org/..."}].
+    -- Null until pipeline/links.py has looked; [] when it found none.
+    links JSONB,
+
     -- The searchable text of this memory AND the name of the place it is
     -- filed at, stored rather than computed. An expression spanning two
     -- tables cannot be indexed, so search was a sequential scan over the

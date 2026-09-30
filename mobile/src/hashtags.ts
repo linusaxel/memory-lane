@@ -36,6 +36,28 @@ export function hashtagParts(text: string): Part[] {
   return parts;
 }
 
+/** hashtagParts, with each linked name's first use cut out as its own run.
+ *  A name that overlaps an earlier one is left as text. */
+export function summaryParts(
+  text: string,
+  links: { text: string; url: string }[] = [],
+): (Part & { url?: string })[] {
+  const found = links
+    .map((link) => ({ ...link, at: text.indexOf(link.text) }))
+    .filter((link) => link.text && link.at >= 0)
+    .sort((a, b) => a.at - b.at);
+  const parts: (Part & { url?: string })[] = [];
+  let from = 0;
+  for (const link of found) {
+    if (link.at < from) continue;
+    parts.push(...hashtagParts(text.slice(from, link.at)));
+    parts.push({ text: link.text, tag: false, url: link.url });
+    from = link.at + link.text.length;
+  }
+  parts.push(...hashtagParts(text.slice(from)));
+  return parts;
+}
+
 /** The tags the server will store for this text. */
 export function hashtags(text: string): string[] {
   const seen: string[] = [];

@@ -26,7 +26,7 @@ import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration } from './format.ts';
-import { hashtagParts } from './hashtags.ts';
+import { summaryParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Circle, Svg } from 'react-native-svg';
@@ -399,10 +399,20 @@ export default function MemorySheet({
                   <Animated.View style={revealed}>
                     {/* The #words are the tags (hashtags.ts): set in the
                         semibold, not a colour, since every colour here already
-                        means something (UI.md, "One accent"). Not tappable. */}
+                        means something (UI.md, "One accent"). Not tappable.
+                        A linked name is underlined, like every text link. */}
                     <Text style={styles.summary}>
-                      {hashtagParts(memory.summary).map((part, i) =>
-                        part.tag ? (
+                      {summaryParts(memory.summary, memory.links).map((part, i) =>
+                        part.url ? (
+                          <Text
+                            key={i}
+                            style={styles.nameLink}
+                            accessibilityRole="link"
+                            onPress={() => open(part.url!, "Couldn't open that link.")}
+                          >
+                            {part.text}
+                          </Text>
+                        ) : part.tag ? (
                           <Text key={i} style={styles.hashtag}>
                             {part.text}
                           </Text>
@@ -604,6 +614,7 @@ const styles = StyleSheet.create({
   peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   summary: { ...font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
   hashtag: { ...font.displaySemi },
+  nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
   // The strip carries the hairline now, so the three credit variants are just
   // their lines. Pinned above the actions, it is in every screenshot.

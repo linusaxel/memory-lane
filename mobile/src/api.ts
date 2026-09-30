@@ -48,6 +48,8 @@ export type MediaItem = {
 /** Fixed by a CHECK constraint in db/migrations/002_layers.sql. */
 export type Layer = 'historical' | 'friend' | 'stranger';
 
+export type SummaryLink = { text: string; url: string };
+
 export type Memory = {
   id: number;
   /** Empty string while locked. The server never sends it until you are there. */
@@ -96,6 +98,9 @@ export type Memory = {
   /** Set once enough people report it. Only ever true from /v1/me/memories -
    *  every other endpoint drops a hidden memory instead of flagging it. */
   hidden: boolean;
+  /** Names in the summary, exactly as written, and their Wikipedia article.
+   *  Empty while locked: the names are part of what it says. */
+  links?: SummaryLink[];
   /** Only on a locked memory: what it is, never what it says. */
   source_name?: string | null;
   year?: number | null;

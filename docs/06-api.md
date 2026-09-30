@@ -11,6 +11,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
     This endpoint never unlocks. See [Proximity unlock](architecture.md#proximity-unlock).
 - `GET /v1/memories/search?q=coffee&lat=X&lng=Y&radius_km=50` - Full-text search across summaries and place names (location optional)
 - `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory, gated
+  - Open, it carries `links`: names in the summary, exactly as written, with their
+    Wikipedia article (`pipeline/links.py`). Locked, `links` is empty
 - `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
   403 `{reason: "not_on_walk"}` unless the memory is a stop of this account's

@@ -34,6 +34,7 @@ from pipeline.extract import (
     video_brief,
     worth_telling,
 )
+from pipeline.links import link_memories
 from pipeline.queue import (
     QUEUE_AGGREGATE,
     QUEUE_CLASSIFY,
@@ -403,6 +404,14 @@ def task_aggregate_memories(content_id: int):
         save_memories(
             session, content_id, filtered, layer_for(_source_type(redis, content_id)), client
         )
+
+    # Its own session, after the memories are committed: a failed lookup must
+    # not roll them back. What it misses, `python -m pipeline.links` picks up.
+    try:
+        with get_session() as session:
+            link_memories(session, client, content_id=content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Linking names failed; memories are saved")
 
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}
