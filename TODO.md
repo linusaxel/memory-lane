@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A stale queue bills whatever it holds on the next worker run.** 2026-09-30:
+  424 jobs enqueued 2026-09-29 and never run (325 Historisk Atlas stories,
+  9 book chapters, 10 videos) sat behind a one-book re-extraction; `worker
+  --burst` would have billed all of them. Found only by listing Redis. Fix:
+  `worker` prints each queue's size and the contents behind it, and asks,
+  before it starts.
 - **Auto mode blocks `python -m pipeline.transcripts` and dev-database
   writes.** 2026-09-29: Claude Code's permission classifier refused the
   transcript fetch, leaving 105 videos untranscribed until a human ran it.
@@ -202,6 +208,12 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
+- [ ] **Re-extract the other books with the archival prompt.** (checked
+      2026-09-30) Carl Møller went from 8 visible to 12 (docs/04, *Carl Møller
+      re-extracted*). Next Oehlenschläger vol. I (204), Andersen (202) and
+      Leonora Christina (203), one at a time: reset `memories_extracted` for
+      the source, clear stale `extraction:<id>:memories`, enqueue, then
+      `dedup --memories` and read its pairs before hiding any.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
       until grounding lands (the launch-area gate and dedup have). It was measured
       once (docs/04, *Judge v2, measured and parked*): most of the skips it

@@ -1207,8 +1207,10 @@ def save_memories(
             logger.info(f"[content:{content_id}] outside the launch area: {venue} ({lat}, {lng})")
             continue
 
-        if client and has_coords and _told_already(session, client, content_id, mem, lat, lng):
-            continue
+        if client and has_coords:
+            at = _landing(session, venue, lat, lng)
+            if _told_already(session, client, content_id, mem, *at):
+                continue
 
         params = {
             "name": _place_name(venue, locality)
@@ -1286,6 +1288,32 @@ def save_memories(
 def _in_box(lat: float, lng: float, box: tuple) -> bool:
     south, west, north, east = box
     return south <= lat <= north and west <= lng <= east
+
+
+def _landing(session, venue: str | None, lat: float, lng: float) -> tuple[float, float]:
+    """Where the memory will be pinned, so the retelling check looks there: the
+    nearest place of the same venue within 10 km, as _same_venue_nearby snaps
+    it, or its own point. The model put Kasino's King story 1 km from Kasino."""
+    row = (
+        session.execute(
+            text("""
+                SELECT ST_Y(coordinates::geometry) AS lat, ST_X(coordinates::geometry) AS lng
+                FROM places
+                WHERE lower(btrim(venue)) = lower(btrim(:venue)) AND coordinates IS NOT NULL
+                  AND ST_DWithin(
+                      coordinates, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 10000
+                  )
+                ORDER BY ST_Distance(
+                    coordinates, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+                )
+                LIMIT 1
+            """),
+            {"venue": venue, "lat": lat, "lng": lng},
+        ).fetchone()
+        if venue
+        else None
+    )
+    return (row.lat, row.lng) if row else (lat, lng)
 
 
 def _same_venue_nearby(session, params: dict) -> int | None:

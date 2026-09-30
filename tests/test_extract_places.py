@@ -286,3 +286,18 @@ def test_a_better_telling_is_saved_and_hides_the_first(db_session):
         text("SELECT summary FROM memories WHERE NOT hidden ORDER BY id")
     ).scalars()
     assert list(visible) == ["he watched the roof fall"]
+
+
+def test_a_retelling_is_caught_where_it_lands_not_where_the_model_pinned_it(db_session):
+    """2026-09-30: the model pinned Kasino's King story 1 km from the Kasino
+    already saved. The check looked there, found nothing, and the venue snapped
+    the retelling onto the first telling's pin."""
+    from tests.fakes import FakeAnthropic
+
+    same = FakeAnthropic({"reason": "the same King", "same_as": 0, "new_is_better": False})
+    content_id = _content(db_session)
+    save_memories(db_session, content_id, [_structured("the King at the door")])
+    far = _structured("I am the King, he whispered", lat=40.7313, lng=-73.9874)
+    save_memories(db_session, content_id, [far], client=same)
+    assert _saved(db_session) == ["the King at the door"]
+    assert len(same.messages.calls) == 1

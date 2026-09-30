@@ -1375,6 +1375,9 @@ telling for a stranger standing there is kept and the other is hidden.
   labelled duplicates, and a rerun answers the same for free.
 - **150 m.** Two sources put one sabotage 20 m apart. Wider pulls in the next
   building's stories, and a different story at the same spot is never a match.
+- **Where it lands.** A memory whose venue is already a place within 10 km is
+  snapped onto it, so the 150 m is measured from that place, not from the
+  model's pin: Kasino's King story came pinned 1 km off and was saved twice.
 - **It only filters.** A failed or unreadable check saves the memory.
 
 Many distinct stories on one spot (the Blue Tower's eight) are not duplicates,

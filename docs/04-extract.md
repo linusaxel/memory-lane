@@ -243,6 +243,19 @@ months apart. The travel volumes and Liebenberg were already paused; Carl
 Møller stays, since the new archival prompt found its Kasino fires. Visible
 labelled memories are unchanged at 52 walk, 52 maybe, 64 skip: 31%.
 
+**Carl Møller re-extracted with the archival prompt** (2026-09-30, one book
+first, ~100 calls). A founder's exception to *Never re-extract*: its 28
+chapters were reset and run again, the old memories left visible. It saved 8:
+five new scenes (the Charlottenborg torch march, the whale that collapsed on
+twenty guests, the carousel with Tietgen dizzy on a seat-arm, the Kasino
+kitchen fire, Krohn tearing down his own burning set) and three retellings
+the save-time check missed. It missed them because it searched 150 m around
+the model's pin, which was 474-1,020 m from the Studenterforeningen and
+Kasino already saved, and the venue then snapped each one onto the first
+telling's pin. `_landing()` now searches where the memory lands. The three,
+and the old carousel telling, are hidden; Kasino's two `llm` pins are merged
+into the hand-placed one on Amaliegade. The book shows 12 memories, up from 8.
+
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day
