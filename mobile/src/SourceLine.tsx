@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
   avatarEmpty: { borderWidth: 1, borderColor: color.rule },
-  text: { flex: 1, gap: 1 },
+  text: { flex: 1, gap: 2 },
   from: { ...label, fontSize: 12 },
   name: { ...font.displaySemi, fontSize: 16, color: color.ink },
-  title: { ...font.ui, fontSize: 11, lineHeight: 16, color: color.inkFaint },
+  title: { ...font.ui, fontSize: 12, lineHeight: 16, color: color.inkFaint },
 });

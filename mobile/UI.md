@@ -70,10 +70,10 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a pageSheet from the journal) - two compositions, not one with holes in it
 
   locked                            open
-  ├─ place name       26/700        ├─ place name       26/700
+  ├─ place name       30/700        ├─ place name       30/700
   ├─ padlock                        ├─ distance
   │                                 ├─ summary  17/26, #tags semibold
-  ├─ distance         44/700        ├─ photo / recording   if it has any
+  ├─ distance         52/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar; the heart trailing on that line
   ├─ "1 attachment waiting"         │    (a count only, on your own memory)
   │                                 ├─ "Edit this memory"  own submissions only
@@ -249,8 +249,9 @@ of the app and its tracking had drifted three ways before anybody noticed.
 **`input`** is the whole text-field block, which renders in both You and Submit
 and must not drift between them.
 
-**Scale**: 34 display (screen titles) · 30 (place name) · 52 (the distance figure)
-· 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
+**Scale**: 34 display (screen titles) · 30 (place name) · 52 `figure` (the
+gate's distance, the streak, the stats) · 36 `figureSmall` (the peek's
+distance, under its place) · 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
 · 12–15 (everything labelled) · 17 buttons.
 
 
@@ -304,8 +305,16 @@ Match a row; do not add one between two rows.
 | 24 | **the screen gutter.** Collection, You and the sheet all indent by this |
 | 26 | the sheet's section rhythm, and the gap between collection rows |
 
-Anything above 26 is a one-off (36 between the stats, 38 above a You section,
-72 of bottom padding) and stays a literal.
+Anything above 26 is a one-off (28 and 32 above a section or a page's first
+line, 36 between the stats, 38 above a You section, 40 of gate padding, 72 of
+bottom padding) and stays a literal. So is 11 of chip padding in Submit, which
+makes a 40pt chip with the label's line box.
+
+**Four tokens in `theme.ts` carry the rest**: `pill` (44 tall, 16 either side,
+a capsule: every glass control over the map but the one button-sized Turn on
+location), `floating` (`paperRaised`, `card` corner, `lift`: the unlock card,
+Plan's card and the peek, each with its own padding), and `figure` /
+`figureSmall`.
 
 **Corners**, all of them (`radius` in `theme.ts`):
 
@@ -317,9 +326,10 @@ Anything above 26 is a one-off (36 between the stats, 38 above a You section,
 | `pill` | **anything you press**: buttons, chips, the glass controls |
 | half the side | genuinely circular things only: the 84 hold ring, the 44 pager step and glass circles, an avatar, a pin |
 
-**One shadow**, `lift` (`0,4` / 16 / 0.12, `elevation: 4`): the paper cards
-over the map, and the glass controls' fallback. A second one is a rule you have
-not written yet.
+**Two shadows.** `lift` (`0,4` / 16 / 0.12, `elevation: 4`): the paper cards
+over the map, and the glass controls' fallback. And the hold ring's glow
+(`seal`, centred, 14 / 0.5), because the ring is the one thing that asks to be
+touched. A third is a rule you have not written yet.
 
 ## Contrast, measured
 

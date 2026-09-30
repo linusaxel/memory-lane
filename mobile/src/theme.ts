@@ -66,7 +66,7 @@ export const color = {
    *  either. It lives here rather than inline so a palette change reaches it. */
   halo: 'rgba(242,181,58,0.3)',
 
-  /** The two shadows UI.md allows, and the scrim over an uploading photo. */
+  /** `lift`'s shadow, and the scrim over an uploading photo. */
   shadow: '#000',
   scrim: 'rgba(0,0,0,0.35)',
 };
@@ -110,13 +110,44 @@ export const font = {
  *  you press. Circles are half their side and need no token. */
 export const radius = { field: 14, card: 28, pill: 999 };
 
-/** The one shadow, for paper that floats over the map. */
+/** The shadow for paper that floats over the map. The hold ring's seal glow
+ *  is the only other (UI.md, "Spacing, radii and the two shadows"). */
 export const lift = {
   shadowColor: color.shadow,
   shadowOffset: { width: 0, height: 4 },
   shadowRadius: 16,
   shadowOpacity: 0.12,
   elevation: 4,
+};
+
+/** A card over the map: the unlock card, Plan's, the peek. Where it sits and
+ *  its padding are the caller's. */
+export const floating = {
+  backgroundColor: color.paperRaised,
+  borderRadius: radius.card,
+  ...lift,
+};
+
+/** A glass control over the map: Journal, the steps pill, the walk bar. */
+export const pill = {
+  minHeight: 44,
+  paddingHorizontal: 16,
+  borderRadius: radius.pill,
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  gap: 8,
+};
+
+/** The number a screen is about: the distance to a pin, a streak, a stat. The
+ *  peek's distance is the small one, under the place it belongs to. */
+export const figure = { ...font.display, fontSize: 52, color: color.ink, letterSpacing: -1 };
+export const figureSmall = {
+  ...font.display,
+  fontSize: 36,
+  lineHeight: 42,
+  color: color.ink,
+  letterSpacing: -0.5,
 };
 
 /** The app's label voice, wherever a screen names a thing rather than says

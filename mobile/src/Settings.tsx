@@ -25,7 +25,7 @@ import { count } from './format.ts';
 import Padlock from './Padlock.tsx';
 import SignIn from './SignIn.tsx';
 import type { Permission } from './types.ts';
-import { button, buttonText, color, dim, font, input, label } from './theme.ts';
+import { button, buttonText, color, dim, figure, font, input, label } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   title: { ...font.display, fontSize: 34, color: color.ink },
   stats: { flexDirection: 'row', gap: 36, marginTop: 12 },
   stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  statValue: { ...font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
+  statValue: figure,
   statLabel: { ...label, fontSize: 12 },
   statsNote: { ...font.prose, fontSize: 15, color: color.inkFaint, marginTop: 10 },
   section: { marginTop: 38, gap: 12, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },

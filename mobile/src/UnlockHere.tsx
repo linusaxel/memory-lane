@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } fro
 
 import type { LocatedMemory } from './api.ts';
 import Approach from './Approach.tsx';
-import { button, buttonTextSmall, color, font, label, lift, radius } from './theme.ts';
+import { button, buttonTextSmall, color, floating, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
 import { shortfall } from './wallet.ts';
 
@@ -76,9 +76,7 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingHorizontal: 18,
     paddingVertical: 12,
-    borderRadius: radius.card,
-    backgroundColor: color.paperRaised,
-    ...lift,
+    ...floating,
   },
   text: { flex: 1, gap: 4 },
   name: { ...font.display, fontSize: 20, lineHeight: 24, color: color.ink },

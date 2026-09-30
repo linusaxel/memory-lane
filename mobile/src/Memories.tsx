@@ -40,7 +40,7 @@ import { distance, walkDate } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
 import { attention, loadSeen, saveSeen, type Seen } from './seen.ts';
-import { color, dim, font, label } from './theme.ts';
+import { color, dim, figure, font, label } from './theme.ts';
 
 type Props = {
   device: string | null;
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   },
   title: { ...font.display, fontSize: 34, color: color.ink },
   streak: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 18, paddingHorizontal: 24 },
-  streakValue: { ...font.display, fontSize: 46, color: color.ink, letterSpacing: -1 },
+  streakValue: figure,
   streakLabel: { ...label, fontSize: 12 },
   switcher: { flexDirection: 'row', marginTop: 22, paddingHorizontal: 24, gap: 24 },
   switcherItem: { gap: 8 },
@@ -493,12 +493,12 @@ const styles = StyleSheet.create({
     minWidth: 20,
     height: 20,
     borderRadius: 10,
-    paddingHorizontal: 5,
+    paddingHorizontal: 4,
     backgroundColor: color.ember,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dotText: { color: color.paper, ...font.uiBold, fontSize: 11 },
+  dotText: { color: color.paper, ...font.uiBold, fontSize: 12 },
   place: { ...font.displaySemi, fontSize: 19, lineHeight: 26, color: color.ink },
   summary: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   metaRow: { flexDirection: 'row', gap: 10 },

@@ -80,7 +80,7 @@ import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton, GlassGroup } from './src/Glass.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
-import { buttonText, color, font, label, radius, solid } from './src/theme.ts';
+import { buttonText, color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
@@ -1836,16 +1836,11 @@ const styles = StyleSheet.create({
   steps: { alignSelf: 'center' },
   walkBar: { position: 'absolute', top: 116, alignSelf: 'center' },
   tools: { position: 'absolute', top: 64, right: 18, flexDirection: 'row', gap: 8 },
-  pill: {
-    minHeight: 44,
-    paddingHorizontal: 18,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  pill,
+  // The size of a button, not a pill: it is the one thing to do.
   bigPill: {
     minHeight: 52,
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

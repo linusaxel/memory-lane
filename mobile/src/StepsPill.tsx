@@ -9,7 +9,7 @@ import { Platform, StyleSheet, Text, View, useColorScheme, type StyleProp, type 
 import Svg, { Circle } from 'react-native-svg';
 
 import { GlassButton } from './Glass.tsx';
-import { color, label, radius, solid } from './theme.ts';
+import { color, label, pill, solid } from './theme.ts';
 import { HOLD_MS } from './UnlockButton.tsx';
 import { countDown, type Wallet } from './wallet.ts';
 
@@ -91,14 +91,7 @@ export default function StepsPill({ wallet, holding, place, onPress }: Props) {
 }
 
 const styles = StyleSheet.create({
-  pill: {
-    minHeight: 44,
-    paddingHorizontal: 16,
-    borderRadius: radius.pill,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+  pill,
   lines: { alignItems: 'center' },
   figure: { ...label, fontSize: 15, color: color.ink },
   note: { ...label, fontSize: 12, color: color.inkSoft },

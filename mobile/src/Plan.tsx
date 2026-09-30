@@ -20,7 +20,7 @@ import type { WalkAsk } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
-import { button, buttonText, color, dim, font, label, lift, radius } from './theme.ts';
+import { button, buttonText, color, dim, floating, font, label } from './theme.ts';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 
@@ -329,17 +329,14 @@ const styles = StyleSheet.create({
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
   error: { ...font.prose, fontSize: 14, color: color.inkSoft, textAlign: 'center' },
-  // Paper floating over the map: the card corner and the one shadow.
   card: {
     position: 'absolute',
     left: 16,
     right: 16,
     bottom: 26,
-    backgroundColor: color.paperRaised,
-    borderRadius: radius.card,
     padding: 24,
     gap: 10,
-    ...lift,
+    ...floating,
   },
   cardTitle: { ...font.display, fontSize: 23, lineHeight: 30, color: color.ink },
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },

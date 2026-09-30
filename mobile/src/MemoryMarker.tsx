@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     right: 0,
     minWidth: 20,
     height: 20,
-    paddingHorizontal: 5,
+    paddingHorizontal: 4,
     borderRadius: 10,
     borderWidth: 2,
     borderColor: color.paper,
@@ -172,5 +172,5 @@ const styles = StyleSheet.create({
   },
   tagLit: { backgroundColor: color.seal, borderColor: color.sealInk },
   countLit: { color: color.sealInk },
-  count: { color: color.paper, ...font.uiBold, fontSize: 11 },
+  count: { color: color.paper, ...font.uiBold, fontSize: 12 },
 });

@@ -30,7 +30,20 @@ import { summaryParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Circle, Svg } from 'react-native-svg';
-import { button, buttonText, buttonTextSmall, color, dim, font, label, lift, radius as corner } from './theme.ts';
+import {
+  button,
+  buttonText,
+  buttonTextSmall,
+  color,
+  dim,
+  figure,
+  figureSmall,
+  floating as floatingCard,
+  font,
+  label,
+  lift,
+  radius as corner,
+} from './theme.ts';
 import YouGlyph from './YouGlyph.tsx';
 
 type Props = {
@@ -597,7 +610,7 @@ const styles = StyleSheet.create({
   over: { flexGrow: 1, justifyContent: 'flex-end' },
   page: { height: '100%' },
   card: { flex: 0, ...lift },
-  floating: { marginHorizontal: 16, borderRadius: corner.card },
+  floating: { ...floatingCard, marginHorizontal: 16 },
   tall: { borderTopLeftRadius: corner.card, borderTopRightRadius: corner.card },
   grabberRow: { alignItems: 'center', paddingTop: 10 },
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
@@ -606,7 +619,7 @@ const styles = StyleSheet.create({
   place: { ...font.display, fontSize: 30, lineHeight: 36, color: color.ink, paddingRight: 30 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
   meta: { ...label },
-  peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
+  peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
   peek: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 14 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
@@ -620,8 +633,8 @@ const styles = StyleSheet.create({
   tagText: { ...font.displaySemi, fontSize: 13, color: color.inkSoft },
   approach: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   approachText: { flex: 1, gap: 2 },
-  peekFigure: { ...font.display, fontSize: 36, lineHeight: 42, color: color.ink, letterSpacing: -0.5 },
-  gateFigure: { ...font.display, fontSize: 52, color: color.ink, letterSpacing: -1 },
+  peekFigure: figureSmall,
+  gateFigure: figure,
   // A date is not a number. 52px fits "412 m" and wraps "3 May 2031".
   gateNote: {
     ...font.prose,
