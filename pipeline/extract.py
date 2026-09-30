@@ -146,9 +146,12 @@ Return JSON: {"memories": [...]}
 Return {"memories": []} if no memories found."""
 
 HISTORICAL_SYSTEM_PROMPT = """You extract location-based memories from archival text:
-newspaper clippings, local archive entries, venue and concert records, registries.
+newspaper clippings, local archive entries, memoirs, venue and concert records,
+registries.
 
-A memory is something that HAPPENED at a SPECIFIC PHYSICAL LOCATION.
+A memory is something that HAPPENED at a SPECIFIC PHYSICAL LOCATION, told so
+that a stranger standing on that spot, reading it on a phone, gets something
+from being exactly there.
 
 QUALIFIES:
 - Events: "Bowie played this room in 1978, 400 capacity"
@@ -161,6 +164,8 @@ Does NOT qualify - reject these as firmly as you would reject a hypothetical:
   there is no memory here.
 - Architectural or stylistic commentary: "a fine example of the national romantic style"
 - Encyclopaedia facts: "Copenhagen is the capital of Denmark"
+- A visit: "X visited the cathedral", "X dined at the palace". Someone famous
+  passing through is not an event at the place unless something happened there.
 - Anything you are inferring rather than reading. If the text does not say it
   happened, it did not happen. Do not fill gaps with plausible history.
 
@@ -169,28 +174,28 @@ first-person register you would use for someone telling a story about themselves
 no invented emotions, no invented names, no "you can just picture it". Say what
 happened, where, and when, and let the fact carry it.
 
-For each memory, extract:
-- venue: The proper name of the specific place - the business, building, park
-  or landmark. Not a description and not the whole address. This is the field
-  a duplicate check keys on, so two different venues must get different names
-  even when they are close together.
+Fields, in the order you fill them. The first three decide whether there is a
+memory at all; answer them before you name a venue or write a word of summary.
+- place_words: The words of the text that name the place, copied exactly,
+  old spelling included. Code checks they are in the text; a paraphrase is dropped.
+- happened_there: One line - what happened at that place, and nowhere else.
+- spot_test: "pass" if the place is the point, "fail" if the story would be the
+  same pinned anywhere, the text only mentions the place in passing, or it is a
+  visit. Only "pass" is kept, so a "fail" costs nothing.
+- venue: The proper name of the specific place - the business, building, park,
+  street or landmark - as today's local map names it, in the local language,
+  even when the text uses an old or foreign name ("Frauenkirche" is "Vor Frue
+  Kirke", "Friedrichsberger Allee" is "Frederiksberg Allé"). Not a description
+  and not the whole address. This is the field a duplicate check keys on, so
+  two different venues must get different names even when they are close
+  together. If the old name could be two places (Frederiksborg is a castle in
+  Hillerød; Frederiksberg is in Copenhagen), set confidence low.
 - locality: The city or town the venue is in. Always this level - never a
   neighborhood or street, even when the source names one. Consistency matters
   more than specificity: the same venue named in two different records must
   produce the same locality both times.
 - region: State/province and/or country, whichever disambiguates the
   locality. Null only if genuinely unknown.
-
-<example>
-  <venue>Vega</venue>
-  <locality>Copenhagen</locality>
-  <region>Denmark</region>
-  <why>Vesterbro, the neighborhood the source names, is not the locality -
-       Copenhagen is. Keeping locality at the city level is what lets a second
-       archive record naming the same room years later collide with this one
-       instead of minting a new place.</why>
-</example>
-
 - country: ISO 3166 two-letter code of the country the venue is in ("US",
   "DK"). Null only if you genuinely do not know.
 - address: The street and house number, if the text names one, written in
@@ -201,13 +206,16 @@ For each memory, extract:
 - happened_at: ISO date of the EVENT - "1978-06-17", "1978-06", or "1978". Null if
   the text gives no date. This is when it happened, not when it was written about.
 - happened_precision: day | month | year | decade - how much of happened_at to trust
-- summary: 2-4 sentences. What happened, who was involved if named, what the place
-  was at the time. Concrete and sourced, not atmospheric.
-- place_words: The words of the text that name the place, copied exactly. Code
-  checks they are in the text.
-- happened_there: One line - what happened at that place.
-- spot_test: "pass" if the event happened at the place, "fail" if the text only
-  mentions it in passing. Only "pass" is kept.
+- summary: 2-3 sentences, 40-70 words and never more, past tense, written for
+  a stranger who has never read the source:
+  * Lead with the most surprising thing that happened on this spot.
+  * Give every named person a role the first time ("Rahbek, the critic",
+    "Oehlenschläger, the poet, then a boy"). With no name, give a role.
+  * If the text names something still visible from the spot - the avenue's
+    trees, the stage, the stair - put it in.
+  * Tell what happened, not what was written: no "the author describes", "he
+    recalls", "the text says".
+  * One scene. Past 70 words you are summarising the page; cut the setup.
 - attribution: the source as it should be credited on a card, if the text names one
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
@@ -230,6 +238,34 @@ For each memory, extract:
 - contrast_note: one line naming both sides of that gap - "a 400-capacity music
   room above a bicycle shop; a bank branch since 1994". Null if you do not know
   what is there now. Do not guess what is there now.
+
+<examples>
+Real cases, shown with the deciding fields and the summary (the rest omitted).
+
+<example>
+{"place_words": "in der Friedrichsberger Allee",
+ "happened_there": "A grocer hanged himself from a willow and nobody would cut him down.",
+ "spot_test": "pass", "venue": "Frederiksberg Allé", "locality": "Copenhagen",
+ "summary": "A grocer hanged himself from a willow on this avenue, with a note nailed to a linden opposite blaming his unfaithful wife. Oehlenschläger, the poet, then a boy, was brought by his father to see the body, which nobody dared cut down until the district judge came and touched its shoulder."}
+</example>
+
+<example>
+{"place_words": "In =Halberstadt= sah ich zum ersten Mal in meinem Leben ein katholisches Kloster",
+ "happened_there": "Oehlenschläger toured a monastery and nearly missed his coach.",
+ "spot_test": "fail", "venue": "Halberstadt", "summary": "..."}
+Fail: a visit on a journey. Nothing happened to the place; the story would be
+the same at any monastery on the road.
+</example>
+
+<example>
+{"place_words": "Bei dem prächtigen Krönungsfeste war ich auf dem Schlosse Zuschauer",
+ "happened_there": "Oehlenschläger watched the king and queen anointed.",
+ "spot_test": "fail", "venue": "Frederiksborg Slot", "summary": "..."}
+Fail: a spectator at a famous event. And "the castle in a lake" is
+Frederiksborg in Hillerød, not Frederiksberg: never move a place to the
+nearest similar name.
+</example>
+</examples>
 
 Return JSON: {"memories": [...]}
 Return {"memories": []} if no memories found. An empty list is the right answer

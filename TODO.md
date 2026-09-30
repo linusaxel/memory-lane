@@ -200,13 +200,6 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
-- [ ] **The archival prompt, up to the video prompt's level.** (checked
-      2026-09-29) `HISTORICAL_SYSTEM_PROMPT` has none of the summary rules:
-      lead with the surprise, 40–70 words, a role for every name ("Rahbek, the
-      critic"), the visible trace, and worked examples. Add 4545 as a pass, and
-      "X visited here" and a coronation abroad as fails. Venues in their modern
-      local name (Frauenkirche is Vor Frue Kirke), and confidence low where
-      that is uncertain: 4564 put Frederiksborg on Frederiksberg.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
       until grounding lands (the launch-area gate and dedup have). It was measured
       once (docs/04, *Judge v2, measured and parked*): most of the skips it
@@ -373,15 +366,6 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
       the map and the user dot. Waits on the founder's yes and a look on a
       real map; then `theme.ts`, `MemoryMarker.tsx` (needs each stop's opened
       state), `RouteLine` split walked/ahead, `styles.locate`, and UI.md.
-- [x] **Unlock on the map, not in a sheet.** (asked 2026-09-29) In reach, a
-      pin opens a sheet that holds only the place, "within reach", the hold
-      ring and "You made it." Drop that state of `MemorySheet.tsx` and show
-      the ring (`UnlockButton.tsx`) over the map when a pin is unlockable, with
-      a small teaser of the memory's title. A hold opens the sheet on the
-      story. Mind: two in reach at once (the nearest, or ‹ ›); the subscriber
-      peek (`subscribe-from-the-peek.yml`); the e2e flows that hold "Unlock
-      this memory" in the sheet (`.maestro/steps/unlock-stop.yml`); F7 in
-      docs/08-ux-flows.md; and UI.md's layer rules.
 
 ---
 

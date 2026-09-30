@@ -199,6 +199,19 @@ WHERE p.id = m.place_id AND NOT m.hidden
                         ST_MakeEnvelope(12.45, 55.60, 12.66, 55.74, 4326));
 ```
 
+**The archival prompt** (2026-09-30, `quality --compare`, ~40 Sonnet calls).
+`HISTORICAL_SYSTEM_PROMPT` took the video prompt's rules: the three deciding
+fields first, 40–70 words, lead with the surprise, a role for every name, the
+venue in today's local name, a visit fails, and three worked examples (4545 a
+pass; the Halberstadt monastery and the coronation on "the castle in a lake"
+fails). On 15 book chunks it kept 8 against 16. Of the 12 it dropped, 8
+were visits and salons abroad or outside the city (Berlin, Dublin Bay,
+Streit's Hotel, Kronborg) and 4 were thin Copenhagen scenes (Andersen's
+Armida bill, a walk to Frederiksberg). It found 4 the old prompt missed:
+three Kasino carnival fires and Andersen's rent-lowering tears. Venues came out
+Danish ("Det Kongelige Teater"). On 12 Historisk Atlas chunks it kept the
+same 11, in tighter words. Existing memories are not re-extracted.
+
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day
