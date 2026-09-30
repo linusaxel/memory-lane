@@ -19,6 +19,8 @@ export type Wallet = {
   short: number;
   /** How full the next unlock is, 0-1, while short. */
   progress: number;
+  /** What a hold where you stand takes off `figure`. */
+  price: number;
   spoken: string;
 };
 
@@ -31,6 +33,7 @@ export function walletOf(p: Purse): Wallet {
       note: `${steps} steps`,
       short: 0,
       progress: 1,
+      price: p.subscribed ? 0 : 1,
       spoken: `${p.free_unlocks} free today, ${steps} steps.`,
     };
   }
@@ -43,6 +46,7 @@ export function walletOf(p: Purse): Wallet {
       note,
       short: 0,
       progress: 1,
+      price: p.subscribed ? 0 : p.steps_per_unlock,
       spoken: `${steps} steps. ${note}.`,
     };
   }
@@ -53,8 +57,15 @@ export function walletOf(p: Purse): Wallet {
     note: `${steps} steps`,
     short,
     progress: p.steps / p.steps_per_unlock,
+    price: 0,
     spoken: `${short.toLocaleString()} steps until the next one opens. You have ${steps}.`,
   };
+}
+
+/** The figure `t` (0-1) of the way through a hold: down in tenths with the
+ *  ring, so a price of steps ticks and a free one drops only as it fills. */
+export function countDown(figure: number, price: number, t: number): number {
+  return figure - Math.floor((price * Math.floor(t * 10)) / 10);
 }
 
 /** "620 steps to go · about 7 min walking" */

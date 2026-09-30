@@ -4,22 +4,42 @@
 
 import { Host, Text as SwiftText } from '@expo/ui/swift-ui';
 import { Animation, animation, contentTransition, font as swiftFont, foregroundColor } from '@expo/ui/swift-ui/modifiers';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { GlassButton } from './Glass.tsx';
 import { color, label, radius, solid } from './theme.ts';
-import type { Wallet } from './wallet.ts';
+import { HOLD_MS } from './UnlockButton.tsx';
+import { countDown, type Wallet } from './wallet.ts';
 
 const RING = 18;
 const STROKE = 3;
 const ARC = Math.PI * (RING - STROKE);
 
-type Props = { wallet: Wallet; place: StyleProp<ViewStyle>; onPress: () => void };
+type Props = {
+  wallet: Wallet;
+  /** A hold is under way: the price counts down here as the ring fills. */
+  holding: boolean;
+  place: StyleProp<ViewStyle>;
+  onPress: () => void;
+};
 
-export default function StepsPill({ wallet, place, onPress }: Props) {
+export default function StepsPill({ wallet, holding, place, onPress }: Props) {
   const real = solid(useColorScheme() === 'dark');
-  const line = `${wallet.figure.toLocaleString()} ${wallet.unit}`;
+  const [tenths, setTenths] = useState(0);
+  // Held at the hold's start, so the new balance landing before the hold is
+  // let go of does not take the price off twice.
+  const from = useRef(wallet.figure);
+  if (!holding) from.current = wallet.figure;
+  useEffect(() => {
+    setTenths(0);
+    if (!holding) return;
+    const id = setInterval(() => setTenths((t) => Math.min(t + 1, 10)), HOLD_MS / 10);
+    return () => clearInterval(id);
+  }, [holding]);
+  const figure = holding ? countDown(from.current, wallet.price, tenths / 10) : wallet.figure;
+  const line = `${figure.toLocaleString()} ${wallet.unit}`;
   return (
     <GlassButton
       place={place}
@@ -53,7 +73,7 @@ export default function StepsPill({ wallet, place, onPress }: Props) {
                 swiftFont({ design: 'rounded', weight: 'semibold', size: 15 }),
                 foregroundColor(real.ink),
                 contentTransition('numericText'),
-                animation(Animation.spring(), wallet.figure),
+                animation(Animation.spring(), figure),
               ]}
             >
               {line}

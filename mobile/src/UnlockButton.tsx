@@ -16,7 +16,7 @@ import Padlock from './Padlock.tsx';
 import { color, font, label } from './theme.ts';
 
 /** Long enough to feel like a lock turning, short enough not to be a chore. */
-const HOLD_MS = 900;
+export const HOLD_MS = 900;
 
 /** How long the shackle is given to clear the body before the request goes
  *  out and the sheet is allowed to swap. Roughly where the spring has settled;
@@ -49,9 +49,11 @@ const IDLE_MS = 2400;
 type Props = {
   onUnlock: () => void;
   busy?: boolean;
+  /** True while a hold is under way, false when it is let go or refused. */
+  onHold?: (holding: boolean) => void;
 };
 
-export default function UnlockButton({ onUnlock, busy = false }: Props) {
+export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) {
   const fill = useRef(new Animated.Value(0)).current;
   const burst = useRef(new Animated.Value(0)).current;
   const sprung = useRef(new Animated.Value(0)).current;
@@ -108,7 +110,14 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
     timers.current = [];
   };
 
-  useEffect(() => clearTicks, []);
+  useEffect(
+    () => () => {
+      clearTicks();
+      // Walked out of reach mid-hold: the pill must not stay counted down.
+      if (holding.current) onHold?.(false);
+    },
+    [],
+  );
 
   // A refusal leaves this mounted with a full ring, which reads as "it worked"
   // next to an error saying it did not. Success unmounts us instead - the
@@ -116,6 +125,7 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
   const wasBusy = useRef(false);
   useEffect(() => {
     if (wasBusy.current && !busy) {
+      onHold?.(false);
       burst.setValue(0);
       sprung.setValue(0);
       Animated.spring(fill, { toValue: 0, speed: 14, useNativeDriver: true }).start();
@@ -126,6 +136,7 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
   const start = () => {
     if (busy) return;
     holding.current = true;
+    onHold?.(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     quiet();
     Animated.spring(press, { toValue: 1, speed: 40, bounciness: 0, useNativeDriver: true }).start();
@@ -174,6 +185,7 @@ export default function UnlockButton({ onUnlock, busy = false }: Props) {
   const cancel = () => {
     if (!holding.current) return;
     holding.current = false;
+    onHold?.(false);
     clearTicks();
     // Springs back where it was, visibly. Letting go early has to read as "you
     // let go", not as "it refused you" - and no haptic, which would reward it.

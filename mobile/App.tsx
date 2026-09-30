@@ -235,6 +235,7 @@ export default function App() {
   const [hearted, setHearted] = useState<Set<number>>(new Set());
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
+  const [holding, setHolding] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [revealId, setRevealId] = useState<number | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
@@ -1438,6 +1439,7 @@ export default function App() {
               memory={ringMemory}
               place={{ bottom: stage === 'map' ? 108 : 44 }}
               busy={unlocking}
+              onHold={setHolding}
               error={unlockError}
               short={short}
               onSkip={() => setPaywallOpen(true)}
@@ -1450,7 +1452,9 @@ export default function App() {
               }
               onUnlock={async () => {
                 if (walking) setRouteStarted(true);
-                if (!(await unlock(ringMemory))) return;
+                const opened = await unlock(ringMemory);
+                setHolding(false);
+                if (!opened) return;
                 setRevealId(ringMemory.id);
                 setPickedId(null);
                 // Not openGroup: its tap would land on the hold's Success.
@@ -1667,6 +1671,7 @@ export default function App() {
           {wallet && (
             <StepsPill
               wallet={wallet}
+              holding={holding}
               place={[styles.corner, styles.steps]}
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});

@@ -13,6 +13,7 @@ import { shortfall } from './wallet.ts';
 type Props = {
   memory: LocatedMemory;
   onUnlock: () => void;
+  onHold: (holding: boolean) => void;
   busy: boolean;
   error: string | null;
   /** What opening it spends; null for a subscriber. */
@@ -24,7 +25,7 @@ type Props = {
   place?: StyleProp<ViewStyle>;
 };
 
-export default function UnlockHere({ memory, onUnlock, busy, error, cost, short, onSkip, place }: Props) {
+export default function UnlockHere({ memory, onUnlock, onHold, busy, error, cost, short, onSkip, place }: Props) {
   const from = [memory.year, memory.source_name].filter(Boolean).join(' · ');
   const waiting = [
     memory.media_count === 1
@@ -37,7 +38,7 @@ export default function UnlockHere({ memory, onUnlock, busy, error, cost, short,
       {short > 0 ? (
         <Approach meters={0} radius={1} />
       ) : (
-        <UnlockButton onUnlock={onUnlock} busy={busy} />
+        <UnlockButton onUnlock={onUnlock} onHold={onHold} busy={busy} />
       )}
       <View style={styles.text}>
         <Text style={styles.name} numberOfLines={2}>

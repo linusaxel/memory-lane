@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { shortfall, walletOf } from './wallet.ts';
+import { countDown, shortfall, walletOf } from './wallet.ts';
 
 const purse = { subscribed: false, free_unlocks: 0, steps: 0, steps_per_unlock: 1000 };
 
@@ -40,4 +40,11 @@ test('a subscriber is never short where they stand', () => {
 test('the shortfall in minutes rounds up, and never says 0 min', () => {
   assert.equal(shortfall(620), '620 steps to go · about 7 min walking');
   assert.equal(shortfall(5), '5 steps to go · about 1 min walking');
+});
+
+test('a hold pays the price in tenths, and a free one only at the end', () => {
+  assert.equal(countDown(4210, 1000, 0.35), 3910);
+  assert.equal(countDown(4210, 1000, 1), 3210);
+  assert.equal(countDown(3, 1, 0.95), 3);
+  assert.equal(countDown(3, 1, 1), 2);
 });
