@@ -59,6 +59,8 @@ type Props = {
   /** Present only on the map before a walk: a locked memory is a peek, and
    *  walking there is the one way in (F29). */
   onWalkHere?: () => void;
+  /** Over the map, in any stage: a card. Over the journal: a page. */
+  compact?: boolean;
   /** The paywall, offered on the peek to somebody standing on the pin. */
   onSubscribe?: () => void;
   /** Absent for extracted memories, and for your own: there is nobody to
@@ -133,6 +135,7 @@ export default function MemorySheet({
   onEdit,
   earned,
   onWalkHere,
+  compact = false,
   onSubscribe,
   onReport,
   reported,
@@ -140,11 +143,8 @@ export default function MemorySheet({
 }: Props) {
   const memory = memories[index] ?? null;
   const insets = useSafeAreaInsets();
-  // The map before a walk: a card over the map, sized to what it holds, not a
-  // page. Fixed for the whole opening - a modal cannot change how it is
-  // presented while it is up - so a stack that pages onto an open memory
-  // grows the card to a page instead (docs/10, "The peek is a card").
-  const compact = !!onWalkHere;
+  // Over the map, before or on a walk: a card sized to what it holds, not a
+  // page (docs/10, "An open memory is a card too").
   const many = memories.length > 1;
   // openURL rejects when nothing can handle the link - no browser, a
   // locked-down device. The source link says so instead of appearing to do
@@ -170,8 +170,8 @@ export default function MemorySheet({
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
-  // The map's look before a walk. Standing on it, the ring is on the map.
-  const peeking = locked && !!onWalkHere;
+  // A locked memory over the map. Standing on it, the ring is on the map.
+  const peeking = locked && compact;
   const hearts = memory?.heart_count ?? 0;
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
   // Your own memory: you see that it mattered, you cannot say so (api/write.py
@@ -359,11 +359,13 @@ export default function MemorySheet({
                     {fromHere != null && (
                       <Text style={styles.peekFigure}>{distance(fromHere)}</Text>
                     )}
-                    {(fromHere == null || withinReach) && (
+                    {(fromHere == null || withinReach || !onWalkHere) && (
                       <Text style={styles.peekNote}>
                         {fromHere == null
                           ? 'Turn on location to see how far.'
-                          : "You're right here. Make it a stop on today's walk, or open it now."}
+                          : onWalkHere
+                            ? "You're right here. Make it a stop on today's walk, or open it now."
+                            : `Get within ${Math.round(radius)} m to unlock it.`}
                       </Text>
                     )}
                     {(memory.year != null || hearts > 0) && (
@@ -477,7 +479,10 @@ export default function MemorySheet({
               </>
             )}
 
-            {(many || peeking || (!locked && memory.content) || linkFailed) && (
+            {(many ||
+              (peeking && (onWalkHere || (withinReach && onSubscribe))) ||
+              (!locked && memory.content) ||
+              linkFailed) && (
               <View style={styles.actions}>
                 {/* Without this, every memory but the first at a stacked point is
                     unreachable - and 60% of this corpus sits on a shared point. */}
@@ -506,7 +511,7 @@ export default function MemorySheet({
                     </Pressable>
                   </View>
                 )}
-                {peeking && (
+                {peeking && onWalkHere && (
                   <Pressable
                     style={dim(styles.watch)}
                     accessibilityRole="button"

@@ -105,7 +105,9 @@ screen, so unlocking read as leaving the map rather than opening something on
 it. On the map, every `MemorySheet` is now the unlock card's footprint: 16 in
 from each edge, rounded all round, and floating over the undimmed map. It
 grows to fit its content up to 60% of the screen, and a longer story scrolls
-inside the card. On a walk, the next stop stays in view while you read.
+inside the card. This holds in map and walk mode alike, so on a walk the
+next stop stays in view while you read. Only the journal, a page itself,
+opens one as a page sheet.
 
 **Options considered:** a short teaser card you tap to expand. That puts a
 step between the hold and the story, at the payoff.

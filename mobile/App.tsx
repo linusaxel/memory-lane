@@ -1697,6 +1697,7 @@ export default function App() {
           onClose={() => setOpenAt([])}
           position={position}
           revealId={revealId}
+          compact={!journalOpen}
           onHeart={heart}
           // The map's peek: a walk through that pin, drawn at once.
           onWalkHere={
