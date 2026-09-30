@@ -426,25 +426,57 @@ Nothing can be bought until the stores exist, so everybody is free.
       on. The 20 m gate is untouched; only the free tier's limit changes.
       Walks stay, as a plan anyone can ask for, not the only way to open a
       pin. Subscribers are unchanged (`SUBSCRIBED_QUERY`).
+      - Researched 2026-09-30 (Expo source, platform docs, store policy,
+        GDPR, Pikmin Bloom / Pokémon GO / Sweatcoin / Walkr / Stepn): it is
+        feasible in our dev build, and every walking game that works credits
+        pocket steps with the app closed. No app we found spends steps to
+        open something at a place.
       - Decide first, in docs/10: a new entry that supersedes the free-tier
         half of *A subscription opens the map* (the day lock,
         `WALKED_TODAY_QUERY`) and amends *Only today's walk unlocks*. It
-        names the numbers: steps per unlock (start at 1,000?), a daily
-        credit cap, and whether a walk's stops still open free.
-      - Counting: v1 is steps counted with the app open, on both platforms
-        (`expo-sensors` Pedometer `watchStepCount`). iOS can read earlier
-        steps too (`getStepCountAsync`, Motion & Fitness permission, no
-        HealthKit); Android can't without Health Connect. Pocket steps on
-        Android come later, if at all.
-      - Server: a ledger (steps credited, unlocks spent) on the account, a
-        credit endpoint that caps per day, and the unlock checks balance
-        where it checks today's route. Steps are self-reported, like the
-        position; the cap limits what a faked count opens.
+        names the numbers: 1,000 steps an unlock (Pikmin's cheapest
+        seedling, ~10 minutes), a cap on the stored balance (~10k) rather
+        than on steps earned a day (Sweatcoin's daily cap is a top
+        complaint), and whether a walk's stops still open free.
+      - iOS: `expo-sensors` Pedometer `getStepCountAsync(watermark, now)` on
+        app open. Core Motion, no HealthKit: the phone records steps with
+        the app closed, 7 days back, and has no manual entries. Add the
+        plugin with our own `motionPermission` string. Unverified: whether it
+        misses Watch-only steps.
+      - Android: `expo-sensors` can't read history there (it throws). Use
+        `react-native-health-connect` v4 and its config plugin, `READ_STEPS`
+        in `android.permissions`, 30 days back. Health Connect counts steps
+        itself on Android 14+ (developer docs); Niantic says it needs a
+        tracker app, so check on a device. Android 13 and below needs the
+        Health Connect app (`getSdkStatus`). Aggregate with
+        `dataOriginFilter` on the phone's own origin to leave out manual
+        entries. The lighter route, the raw step sensor, keeps no history,
+        so it counts only with the app open.
+      - Store: Apple 5.1.3 covers Core Motion too: the steps give this user
+        a benefit and never reach RevenueCat or analytics; the label is
+        Fitness, linked, app functionality. Apple 5.1.2(i): a denied motion
+        permission must not lock anyone out, so the subscription and today's
+        walk stay as ways in. Play: Health Connect names "games where
+        in-game rewards are directly influenced by real-world physical
+        activity" as an allowed use; it needs the permissions declaration, a
+        privacy-policy rationale screen in the app, and the Health apps
+        declaration (Activity and Fitness). Review time is unpublished.
+      - GDPR: a balance alone is probably not health data; daily step series
+        beside precise location could be (WP29 2015 annex, CJEU C-184/20).
+        So the phone sends only the credit, and the server keeps a balance
+        and a ledger dated to the day, never counts or timestamps. A consent
+        screen before the permission. Add it to the DPIA the location data
+        already needs.
+      - Server: the ledger on the account, a credit endpoint that credits
+        only the rise over what was credited (re-query the last 48 h: Health
+        Connect writes late), and the unlock checks balance where it checks
+        today's route. The balance never goes down except by spending.
       - App: the balance on the map, and the unlock ring asks for steps
-        instead of a walk. Store privacy disclosures add motion data.
+        instead of a walk.
       - Tests: unlock refused below the price, allowed at it, balance spent
-        once under two racing unlocks, credit capped per day. Update the
-        paywall e2e flows that assume one walk a day.
+        once under two racing unlocks, a re-sent credit not counted twice,
+        the balance capped. Update the paywall e2e flows that assume one walk
+        a day.
       - Check it still sells: with dense pins in the centre, the price decides
         how much of the map free covers. Tune it on the corpus before launch.
 
