@@ -270,6 +270,23 @@ def api_client(db_session, monkeypatch, tmp_path):
     return TestClient(api.main.app)
 
 
+def spend_free_today(session, device):
+    """Use up `device`'s account's free unlocks for today, so only standing
+    there, with steps, opens anything."""
+    from sqlalchemy import text
+
+    from api.accounts import user_for_device
+    from api.gate import today
+    from api.models import FREE_PER_DAY
+
+    user_id = user_for_device(session, device)
+    session.execute(
+        text("UPDATE users SET free_day = :d, free_used = :n WHERE id = CAST(:u AS uuid)"),
+        {"d": today(), "n": FREE_PER_DAY, "u": user_id},
+    )
+    session.commit()
+
+
 def give_steps(session, device, steps):
     """Give `device`'s account `steps` to open memories with, past its free ones."""
     from sqlalchemy import text

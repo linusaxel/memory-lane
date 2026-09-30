@@ -1,8 +1,9 @@
 # F35 subscribe, when a free account has nothing left to open a memory with.
-# docs/08-ux-flows.md, docs/10-decisions.md "Steps open a memory".
+# docs/08-ux-flows.md, docs/10-decisions.md "Three free a day, then steps where
+# you stand".
 #
-# e2e/run.sh's `broke` trigger gives the account the app mints no free unlocks,
-# and there are no steps on a simulator. Standing on a pin, the ring is on the
+# e2e/run.sh's `broke` trigger has the account the app mints use up today's
+# free unlocks, and there are no steps on a simulator. Standing on a pin, the ring is on the
 # map with no walk; the hold is refused, and the paywall it opens has nothing to
 # sell on a simulator (no RevenueCat key) and says so, with a way out. Then
 # typing a name mints the account, `subscriber` pays for it, and the same hold

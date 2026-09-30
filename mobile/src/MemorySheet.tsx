@@ -52,9 +52,16 @@ type Props = {
   /** This device already hearted it, one-way and permanent - the glyph fills
    *  and stays filled. */
   hearted?: boolean;
-  /** Present only on the map before a walk: a locked memory is a peek, and
-   *  walking there is the one way in (F29). */
+  /** Present only on the map before a walk: a walk through a locked memory,
+   *  a side way to it now (F29). */
   onWalkHere?: () => void;
+  /** Today's free unlocks left, and opening this one with one, from wherever
+   *  you are (docs/10, "Three free a day, then steps where you stand"). */
+  freeLeft?: number;
+  onOpenFree?: () => void;
+  /** What standing on it costs once the free ones are gone; absent for a
+   *  subscriber, who pays nothing there. */
+  stepPrice?: number;
   /** Over the map, in any stage: a card. Over the journal: a page. */
   compact?: boolean;
   /** Absent for extracted memories, and for your own: there is nobody to
@@ -128,6 +135,9 @@ export default function MemorySheet({
   hearted,
   onEdit,
   onWalkHere,
+  freeLeft = 0,
+  onOpenFree,
+  stepPrice,
   compact = false,
   onReport,
   reported,
@@ -164,6 +174,16 @@ export default function MemorySheet({
   const locked = !!memory?.locked;
   // A locked memory over the map. Standing on it, the ring is on the map.
   const peeking = locked && compact;
+  const openFree = peeking && !withinReach && freeLeft > 0 && !!onOpenFree;
+  const peekNote = withinReach
+    ? "You're right here. Hold the ring on the map to open it."
+    : fromHere == null
+      ? 'Turn on location to see how far.'
+      : openFree
+        ? null
+        : stepPrice
+          ? `Walk within ${Math.round(radius)} m, then open it for ${stepPrice.toLocaleString()} steps.`
+          : `Get within ${Math.round(radius)} m to unlock it.`;
   const hearts = memory?.heart_count ?? 0;
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
   // Your own memory: you see that it mattered, you cannot say so (api/write.py
@@ -346,15 +366,7 @@ export default function MemorySheet({
                     {fromHere != null && (
                       <Text style={styles.peekFigure}>{distance(fromHere)}</Text>
                     )}
-                    {(fromHere == null || withinReach || !onWalkHere) && (
-                      <Text style={styles.peekNote}>
-                        {fromHere == null
-                          ? 'Turn on location to see how far.'
-                          : onWalkHere
-                            ? "You're right here. Hold the ring on the map to open it."
-                            : `Get within ${Math.round(radius)} m to unlock it.`}
-                      </Text>
-                    )}
+                    {peekNote && <Text style={styles.peekNote}>{peekNote}</Text>}
                     {(memory.year != null || hearts > 0) && (
                       <Text style={styles.meta}>
                         {[memory.year, hearts > 0 && heartsText].filter(Boolean).join(' · ')}
@@ -471,7 +483,7 @@ export default function MemorySheet({
             )}
 
             {(many ||
-              (peeking && onWalkHere) ||
+              (peeking && (onWalkHere || openFree)) ||
               (!locked && memory.content) ||
               linkFailed) && (
               <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
@@ -502,14 +514,24 @@ export default function MemorySheet({
                     </Pressable>
                   </View>
                 )}
-                {peeking && onWalkHere && (
+                {openFree && (
                   <Pressable
                     style={dim(styles.watch)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open it now, ${freeLeft} free today`}
+                    onPress={onOpenFree}
+                  >
+                    <Text style={styles.watchText}>Open it now · {freeLeft} free today</Text>
+                  </Pressable>
+                )}
+                {peeking && onWalkHere && (
+                  <Pressable
+                    style={dim(styles.secondary)}
                     accessibilityRole="button"
                     accessibilityLabel="Walk here"
                     onPress={onWalkHere}
                   >
-                    <Text style={styles.watchText}>Walk here</Text>
+                    <Text style={styles.secondaryText}>Walk here</Text>
                   </Pressable>
                 )}
                 {!locked && memory.content && (

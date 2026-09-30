@@ -24,7 +24,7 @@ Read what the change touches, not everything:
 
 ## Architecture constraints
 
-- **Memories are gated by standing there.** Every memory-shaped response goes through `api/gate.py`. See [The gate](docs/10-decisions.md#the-gate)
+- **Memories are gated by standing there,** bar three free a day from anywhere. Every memory-shaped response goes through `api/gate.py`. See [The gate](docs/10-decisions.md#the-gate) and [Three free a day](docs/10-decisions.md#three-free-a-day-then-steps-where-you-stand)
 - **Every memory is public.** Anyone standing at a memory can read it. There is no visibility setting, no private memory and no time seal (`opens_at` is unused). See [Every memory is public](docs/10-decisions.md#every-memory-is-public)
 - **The device UUID is the only credential.** Self-issued, sent in the body, and never a session token. See [Identity](docs/architecture.md#identity)
 - **Google and Apple sign-in only.** See [Google and Apple only](docs/10-decisions.md#google-and-apple-only)

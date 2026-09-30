@@ -195,16 +195,16 @@ export async function fetchNearby(
 
 /** Open one memory, and record that it opened. The server re-checks the
  *  distance and can still say no, so a result that comes back still locked is a
- *  refusal - not a success. */
+ *  refusal - not a success. With no position, only a free unlock can open it. */
 export async function unlockMemory(
   id: number,
-  at: Coordinates,
+  at: Coordinates | null,
   device: string,
 ): Promise<LocatedMemory | null> {
   const memory = await post<Memory>(`/v1/memories/${id}/unlock`, {
     device,
-    lat: at.lat,
-    lng: at.lng,
+    lat: at?.lat,
+    lng: at?.lng,
   });
   return !memory.locked && hasCoordinates(memory) ? memory : null;
 }
@@ -495,8 +495,9 @@ export type Profile = {
   subscribed: boolean;
   /** When it ends or ended, UTC without a zone; null if never subscribed. */
   subscribed_until: string | null;
-  /** What a free account opens memories with: these first, then
-   *  `steps_per_unlock` steps each (docs/10, "Steps open a memory"). */
+  /** Free unlocks left today, from anywhere; then `steps_per_unlock` steps
+   *  each, standing there (docs/10, "Three free a day, then steps where you
+   *  stand"). */
   free_unlocks: number;
   steps: number;
   steps_per_unlock: number;

@@ -13,6 +13,7 @@ from sqlalchemy import text
 import api.media
 from api.accounts import touch_device, user_for_device
 from api.gate import (
+    is_gated,
     meters_between,
     notes_response,
     row_coordinates,
@@ -22,6 +23,7 @@ from api.gate import (
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
+    FREE_PER_DAY,
     STEPS_PER_UNLOCK,
     Coordinates,
     DeviceRequest,
@@ -118,10 +120,14 @@ def refuse_over_quota(used: int, limit: int, what: str) -> None:
         )
 
 
-def pay_for_unlock(session, device: str, memory_id: int) -> None:
-    """A free unlock while any are left, then STEPS_PER_UNLOCK steps; nothing
-    for a subscriber, or for a memory this account has already opened
-    (docs/10, "Steps open a memory"). Refuses 403 `no_steps` with the balance.
+def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
+    """Whether this account may open this memory, paying if it must.
+
+    Already opened, it costs nothing. Standing on it, a subscriber pays
+    nothing; anyone else spends one of today's FREE_PER_DAY, then
+    STEPS_PER_UNLOCK steps, or is refused 403 `no_steps` with the balance.
+    Away from it, only a free one opens it, and False says there is none left
+    (docs/10, "Three free a day, then steps where you stand").
 
     Under the user's row lock, so two presses on one memory are charged once.
     """
@@ -129,14 +135,17 @@ def pay_for_unlock(session, device: str, memory_id: int) -> None:
     session.execute(text(LOCK_USER), {"user_id": user_id})
     binds = {"device_id": device, "memory_id": memory_id}
     if session.execute(text(EARNED_QUERY), binds).scalar():
-        return
-    if session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
-        return
-    if session.execute(text(SPEND_FREE_UNLOCK), {"user_id": user_id}).first():
-        return
+        return True
+    if here and session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
+        return True
+    free = {"user_id": user_id, "today": today(), "per_day": FREE_PER_DAY}
+    if session.execute(text(SPEND_FREE_UNLOCK), free).first():
+        return True
+    if not here:
+        return False
     spend = {"user_id": user_id, "price": STEPS_PER_UNLOCK}
     if session.execute(text(SPEND_STEPS), spend).first():
-        return
+        return True
     steps = session.execute(
         text("SELECT steps FROM users WHERE id = CAST(:user_id AS uuid)"), {"user_id": user_id}
     ).scalar()
@@ -154,6 +163,8 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
     every read goes through - this endpoint cannot return a summary the plain
     read would have withheld - but it is the only one that writes an unlock, and
     unlocking is the one thing in this product that is supposed to be an act.
+    A free unlock is the one way past the distance, and it is recorded first,
+    so what comes back is the memory as the collection reads it.
     """
     with get_session() as session:
         row = session.execute(
@@ -162,16 +173,25 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
         if not row:
             raise HTTPException(status_code=404, detail="Memory not found")
 
-        at = Coordinates(lat=body.lat, lng=body.lng)
+        at = (
+            None
+            if body.lat is None or body.lng is None
+            else Coordinates(lat=body.lat, lng=body.lng)
+        )
         memory = row_to_memory(row, at, include_distance=False)
-        if memory.locked:
+        here = not memory.locked
+        # Nothing to pay for a memory the gate never closes.
+        if is_gated(row) and not pay_for_unlock(session, body.device, memory_id, here):
             # Say how far off, rather than only refusing: the app turns this
             # into "try a few steps nearer".
-            if memory.place.coordinates is not None:
+            if at is not None and memory.place.coordinates is not None:
                 memory.distance_meters = meters_between(at, memory.place.coordinates)
             return memory
+        if not here:
+            # Opened from afar, read at its own spot, as get_unlocks does.
+            memory = row_to_memory(row, row_coordinates(row), include_distance=False)
 
-        pay_for_unlock(session, body.device, memory_id)
+        touch_device(session, body.device)
         session.execute(
             text("""
                 INSERT INTO unlocks (device_id, memory_id)

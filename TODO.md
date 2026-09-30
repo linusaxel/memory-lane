@@ -388,9 +388,10 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
 
 ## Paid map unlock
 
-Decided 2026-09-26 (the founder), changed 2026-09-30: any pin you stand on
-opens for one of three free unlocks, then 1,000 steps; a subscription opens it
-for nothing (docs/10, *Steps open a memory*). Built 2026-09-27: the gate, RevenueCat's webhook and
+Decided 2026-09-26 (the founder), changed 2026-09-30: three memories a day
+open free from anywhere; after that, standing on one costs 1,000 steps, and a
+subscription opens it for nothing (docs/10, *Three free a day, then steps
+where you stand*). Built 2026-09-27: the gate, RevenueCat's webhook and
 read-back (`api/billing.py`), the paywall (F35) and its two e2e flows (docs/10
 *A subscription opens the map*, *RevenueCat sells it; our table decides*).
 Nothing can be bought until the stores exist, so everybody is free.
@@ -421,11 +422,11 @@ Nothing can be bought until the stores exist, so everybody is free.
       `billing.fetch_subscriber` and the app's SDK change, since
       `subscriptions` stays ours.
 - [ ] **Steps on a real iPhone.** (checked 2026-09-30) Built iOS-only
-      (docs/10, *Steps open a memory*): three free unlocks, then 1,000 steps
-      each, from Core Motion via `src/steps.ts`. A simulator has no pedometer,
+      (docs/10, *Three free a day, then steps where you stand*): 1,000 steps
+      an unlock, from Core Motion via `src/steps.ts`. A simulator has no pedometer,
       so nothing has ever counted a real step. On a device: grant Motion &
-      Fitness, walk, reopen, see the balance on the ring rise once; deny it and
-      the free three still open. Unverified: whether Core Motion misses steps
+      Fitness, walk, reopen, see the count at the top of the map rise once;
+      deny it and the free three still open. Unverified: whether Core Motion misses steps
       only a Watch counted.
 - [ ] **Steps on Android.** (checked 2026-09-30) `expo-sensors` can't read
       history there (it throws), so `syncSteps` returns early. Use

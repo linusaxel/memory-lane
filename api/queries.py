@@ -461,19 +461,23 @@ STREAK_DAYS_QUERY = f"""
 """
 
 # Has this account opened this memory already, on any of its devices? Opening
-# it again costs nothing (docs/10, "Steps open a memory").
+# it again costs nothing (docs/10, "Three free a day, then steps where you
+# stand").
 EARNED_QUERY = f"""
     SELECT EXISTS (
         SELECT 1 FROM unlocks WHERE memory_id = :memory_id AND device_id IN {MY_DEVICES}
     )
 """
 
-# Pay for one unlock: a free one while any are left, else STEPS_PER_UNLOCK.
-# Each is one conditional UPDATE, so a balance can't go below zero however
-# the unlocks race.
+# Pay for one unlock: one of today's free ones while any are left, else
+# STEPS_PER_UNLOCK. Each is one conditional UPDATE, so neither can overspend
+# however the unlocks race. A new day starts the count again.
 SPEND_FREE_UNLOCK = """
-    UPDATE users SET free_unlocks = free_unlocks - 1
-    WHERE id = CAST(:user_id AS uuid) AND free_unlocks > 0
+    UPDATE users
+    SET free_used = CASE WHEN free_day = CAST(:today AS date) THEN free_used + 1 ELSE 1 END,
+        free_day = CAST(:today AS date)
+    WHERE id = CAST(:user_id AS uuid)
+      AND (free_day IS DISTINCT FROM CAST(:today AS date) OR free_used < :per_day)
     RETURNING id
 """
 SPEND_STEPS = """

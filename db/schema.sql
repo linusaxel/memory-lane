@@ -125,10 +125,12 @@ CREATE TABLE users (
     -- renders those "Anonymous".
     display_name VARCHAR(60),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- What a free account opens memories with: three on the house, then
-    -- 1,000 steps each. A balance and a watermark, never a day's count
-    -- (docs/10-decisions.md#steps-open-a-memory).
-    free_unlocks INTEGER NOT NULL DEFAULT 3,
+    -- What opens memories: three free a day from anywhere, then 1,000 steps
+    -- each standing there. The day the free ones were counted on and how many
+    -- are used; a balance and a watermark, never a day's step count
+    -- (docs/10-decisions.md#three-free-a-day-then-steps-where-you-stand).
+    free_day DATE,
+    free_used INTEGER NOT NULL DEFAULT 0,
     steps INTEGER NOT NULL DEFAULT 0,
     steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

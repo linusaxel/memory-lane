@@ -15,6 +15,7 @@ from sqlalchemy import text
 
 from api import read, route_solver, streets
 from api.models import Coordinates
+from tests.conftest import spend_free_today
 
 pytestmark = pytest.mark.db
 
@@ -835,6 +836,7 @@ def test_a_second_walk_the_same_day_is_not_refused(client, db_session):
 def test_a_subscriber_opens_what_they_stand_on_and_still_has_to_stand_there(client, db_session):
     memory = _offset(db_session, 1)
     _subscribe(db_session)
+    spend_free_today(db_session, DEVICE)
 
     def unlock(lat):
         return client.post(
@@ -843,4 +845,3 @@ def test_a_subscriber_opens_what_they_stand_on_and_still_has_to_stand_there(clie
 
     assert unlock(LAT + 0.01).json()["locked"], "paid for, but still gated on standing there"
     assert not unlock(LAT + 0.001).json()["locked"]
-    assert client.get(f"/v1/me?device={DEVICE}").json()["free_unlocks"] == 3

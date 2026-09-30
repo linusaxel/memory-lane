@@ -15,7 +15,7 @@ a punishment for leaving.
 import pytest
 from sqlalchemy import text
 
-from tests.conftest import give_steps
+from tests.conftest import give_steps, spend_free_today
 
 pytestmark = pytest.mark.db
 
@@ -76,6 +76,7 @@ def test_standing_there_returns_the_memory_and_records_it(client, memory_id, db_
 
 def test_a_refused_unlock_records_nothing(client, memory_id, db_session):
     """The write is downstream of the gate, not beside it."""
+    spend_free_today(db_session, DEVICE)
     refused = _unlock(client, memory_id, lat=FAR_LAT)
     assert refused["locked"] is True
     assert refused["summary"] == ""
@@ -111,7 +112,7 @@ def test_one_device_cannot_read_anothers_collection(client, memory_id):
 
 
 def _memories(session, n):
-    """n more memories on the same spot, each its own place so none is merged."""
+    """n more memories, each its own place ~100 m apart, so each is gated."""
     ids = []
     for i in range(n):
         place = session.execute(
@@ -119,7 +120,7 @@ def _memories(session, n):
                 "INSERT INTO places (name, place_query, coordinates, precision_meters) "
                 "VALUES (:n, :n, ST_MakePoint(:lng, :lat)::geography, 50) RETURNING id"
             ),
-            {"n": f"Spot {i}", "lat": LAT + 0.00001 * (i + 1), "lng": LNG},
+            {"n": f"Spot {i}", "lat": LAT + 0.001 * (i + 1), "lng": LNG},
         ).scalar()
         ids.append(
             session.execute(
@@ -145,39 +146,54 @@ def _balance(client, device=DEVICE):
     return me["free_unlocks"], me["steps"]
 
 
-def test_three_free_then_a_thousand_steps_each(client, memory_id, db_session):
-    """docs/10, "Steps open a memory"."""
+def test_three_free_a_day_open_from_anywhere(client, memory_id, db_session):
+    """docs/10, "Three free a day, then steps where you stand"."""
     first, second, third, fourth = [memory_id, *_memories(db_session, 3)]
     for m in (first, second, third):
-        assert _press(client, m).status_code == 200
+        opened = _unlock(client, m, lat=None, lng=None)
+        assert opened["locked"] is False
+        assert opened["summary"]
     assert _balance(client) == (0, 0)
 
-    refused = _press(client, fourth)
-    assert refused.status_code == 403
-    assert refused.json()["detail"] == {"reason": "no_steps", "steps": 0, "price": 1000}
+    far = _unlock(client, fourth, lat=FAR_LAT)
+    assert far["locked"] is True, "no free one left, and not standing there"
     assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 3
 
+
+def test_after_the_free_ones_a_thousand_steps_standing_there(client, memory_id, db_session):
+    spend_free_today(db_session, DEVICE)
+    refused = _press(client, memory_id)
+    assert refused.status_code == 403
+    assert refused.json()["detail"] == {"reason": "no_steps", "steps": 0, "price": 1000}
+    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
+
     give_steps(db_session, DEVICE, 1500)
-    assert _press(client, fourth).status_code == 200
+    assert _press(client, memory_id).status_code == 200
     assert _balance(client) == (0, 500)
+
+
+def test_the_free_ones_come_back_the_next_day(client, memory_id, db_session):
+    spend_free_today(db_session, DEVICE)
+    db_session.execute(text("UPDATE users SET free_day = free_day - 1"))
+    db_session.commit()
+    assert _balance(client) == (3, 0)
+    assert _unlock(client, memory_id, lat=FAR_LAT)["locked"] is False
+    assert _balance(client) == (2, 0)
+
+
+def test_standing_there_spends_a_free_one_before_steps(client, memory_id, db_session):
+    give_steps(db_session, DEVICE, 5000)
+    _press(client, memory_id)
+    assert _balance(client) == (2, 5000)
 
 
 def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
     _unlock(client, memory_id)
-    _unlock(client, memory_id)
+    _unlock(client, memory_id, lat=FAR_LAT)
     assert _balance(client) == (2, 0)
 
 
-def test_a_refusal_for_distance_costs_nothing(client, memory_id):
-    far = client.post(
-        f"/v1/memories/{memory_id}/unlock",
-        json={"device": DEVICE, "lat": FAR_LAT, "lng": LNG},
-    )
-    assert far.json()["locked"] is True
-    assert _balance(client) == (3, 0)
-
-
-def test_a_subscriber_spends_nothing(client, memory_id, db_session):
+def test_a_subscriber_standing_there_spends_nothing(client, memory_id, db_session):
     give_steps(db_session, DEVICE, 0)
     db_session.execute(
         text(

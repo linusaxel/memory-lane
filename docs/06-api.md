@@ -13,12 +13,13 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /v1/memories/{id}?at_lat=X&at_lng=Y` - Get single memory, gated
   - Open, it carries `links`: names in the summary, exactly as written, with their
     Wikipedia article (`pipeline/links.py`). Locked, `links` is empty
-- `POST /v1/memories/{id}/unlock` `{device, lat, lng}` - **the unlock.** Same gate,
+- `POST /v1/memories/{id}/unlock` `{device, lat?, lng?}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
-  Spends one of the account's free unlocks, else 1,000 steps, unless it is
-  subscribed or already opened this memory; a refusal for distance spends
-  nothing. 403 `{reason: "no_steps", steps, price}` with nothing to spend
-  (docs/10, "Steps open a memory")
+  One of today's three free unlocks opens it from anywhere, position or not.
+  After those, standing on it costs 1,000 steps (nothing for a subscriber),
+  and away from it answers the locked memory and its distance. Opening one
+  this account already has costs nothing. 403 `{reason: "no_steps", steps,
+  price}` standing there with nothing to spend (docs/10, "Three free a day, then steps where you stand")
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
   of that length from there would be: about one stop a km. Stores nothing.

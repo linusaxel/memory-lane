@@ -192,11 +192,13 @@ class UnlockRequest(BaseModel):
 
     device is a UUID the app generated for itself. The server never issues one,
     so it never hands an identifier to a client that did not already have it.
+    Without a position only a free unlock can open it: that is how one opens
+    from anywhere, location permission or not.
     """
 
     device: str = Field(pattern=DEVICE_PATTERN)
-    lat: float = Field(ge=-90, le=90)
-    lng: float = Field(ge=-180, le=180)
+    lat: float | None = Field(None, ge=-90, le=90)
+    lng: float | None = Field(None, ge=-180, le=180)
 
 
 class UnlocksResponse(BaseModel):
@@ -291,9 +293,8 @@ class MyMemoriesResponse(BaseModel):
     meta: MyMemoriesMeta
 
 
-# docs/10, "Steps open a memory". FREE_UNLOCKS is also the column default in
-# db/schema.sql.
-FREE_UNLOCKS = 3
+# docs/10, "Three free a day, then steps where you stand".
+FREE_PER_DAY = 3
 STEPS_PER_UNLOCK = 1000
 
 
@@ -319,10 +320,11 @@ class Profile(BaseModel):
     # date and reads subscribed=false. docs/10, "A subscription opens the map".
     subscribed: bool = False
     subscribed_until: datetime | None = None
-    # What a free account opens memories with: free ones first, then
-    # steps_per_unlock steps each. Steps count from steps_counted_until (naive
-    # UTC), null until there is a user row. docs/10, "Steps open a memory".
-    free_unlocks: int = FREE_UNLOCKS
+    # What opens memories: free_unlocks left today, from anywhere, then
+    # steps_per_unlock steps each, standing there. Steps count from
+    # steps_counted_until (naive UTC), null until there is a user row.
+    # docs/10, "Three free a day, then steps where you stand".
+    free_unlocks: int = FREE_PER_DAY
     steps: int = 0
     steps_per_unlock: int = STEPS_PER_UNLOCK
     steps_counted_until: datetime | None = None

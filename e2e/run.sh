@@ -222,13 +222,14 @@ past_walks() {
 }
 
 # subscribe-when-out-of-steps needs an account with nothing to spend that then
-# pays, with no store. Every account the app mints has no free unlocks, and the
-# one that types a name is given a month. On the name, not on the insert: the
+# pays, with no store. Every account the app mints has used today's free
+# unlocks, and the one that types a name is given a month. On the name, not on the insert: the
 # refused unlock mints an account too, and paid there it would open.
 subscriber() {
   psql_on "$DB" "
     CREATE FUNCTION broke() RETURNS trigger AS \$\$ BEGIN
-      NEW.free_unlocks := 0;
+      NEW.free_day := (now() AT TIME ZONE 'UTC')::date;
+      NEW.free_used := 3;
       RETURN NEW;
     END \$\$ LANGUAGE plpgsql;
     CREATE TRIGGER broke BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION broke();
@@ -242,7 +243,7 @@ subscriber() {
   " >/dev/null || infra "could not seed a subscriber into $DB"
 }
 
-# walk-and-unlock opens four stops, one more than an account's free three, and
+# walk-and-unlock opens four stops, one more than a day's free three, and
 # a simulator walks no steps. The account the first unlock mints has 1,000.
 walker_steps() {
   psql_on "$DB" "

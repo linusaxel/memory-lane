@@ -103,8 +103,10 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; × top right
    └─ privacy policy, and what signing out does and does not delete
 
 There are no tabs. Before a walk the map draws what is locked around you; on a
-walk it draws only that walk. Any pin you stand on unlocks, for a free unlock
-or steps (docs/10, "Steps open a memory").
+walk it draws only that walk. Three pins a day open from anywhere, from the
+peek; after that, standing on one and 1,000 steps. The top centre is the step
+count and what is free today; the walk is a side way in, so **Plan a walk** is
+a quiet pill and the walk bar sits under the steps (docs/10, "Three free a day, then steps where you stand").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that

@@ -1043,8 +1043,8 @@ export default function App() {
 
   const unlock = useCallback(
     async (memory: LocatedMemory): Promise<boolean> => {
+      // No position is fine: a free unlock opens it from anywhere.
       const at = positionRef.current;
-      if (!at) return false;
 
       setUnlocking(true);
       setUnlockError(null);
@@ -1095,20 +1095,23 @@ export default function App() {
     [unlocked, routeStarted, nextRouteStop, routeShown, earned],
   );
 
+  // Count what was walked, from where the last count stopped.
+  const countSteps = useCallback(() => {
+    deviceId()
+      .then(async (id) => {
+        const who = await fetchProfile(id);
+        const after = (await syncSteps(id, who)) ?? who;
+        if (mounted.current) setProfile(after);
+      })
+      .catch(() => {});
+  }, []);
   // Back in the app, count what was walked while it was away.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state !== 'active') return;
-      deviceId()
-        .then(async (id) => {
-          const who = await fetchProfile(id);
-          const after = (await syncSteps(id, who)) ?? who;
-          if (mounted.current) setProfile(after);
-        })
-        .catch(() => {});
+      if (state === 'active') countSteps();
     });
     return () => sub.remove();
-  }, []);
+  }, [countSteps]);
 
   const heart = useCallback(
     async (memory: LocatedMemory) => {
@@ -1423,7 +1426,7 @@ export default function App() {
                 !profile || profile.subscribed
                   ? null
                   : profile.free_unlocks > 0
-                    ? `Free · ${profile.free_unlocks} left`
+                    ? `Free · ${profile.free_unlocks} left today`
                     : `${profile.steps_per_unlock.toLocaleString()} steps · you have ${profile.steps.toLocaleString()}`
               }
               onUnlock={async () => {
@@ -1512,11 +1515,13 @@ export default function App() {
             </GlassButton>
           )}
 
+          {/* A side way in, not the screen's one button: the free ones and
+              steps are (docs/10, "Three free a day, then steps where you
+              stand"). */}
           {stage === 'map' && (
             <GlassButton
               place={styles.locate}
-              style={styles.bigPill}
-              tint={color.ember}
+              style={styles.pill}
               accessibilityRole="button"
               accessibilityLabel="Plan a walk"
               onPress={() => {
@@ -1527,7 +1532,7 @@ export default function App() {
                 setStage('preview');
               }}
             >
-              <Text style={styles.locateText}>Plan a walk</Text>
+              <Text style={styles.cornerText}>Plan a walk</Text>
             </GlassButton>
           )}
 
@@ -1638,11 +1643,32 @@ export default function App() {
           >
             <AddGlyph size={26} color={color.ember} plus={color.paper} />
           </GlassButton>
-          {/* Top, between them: the walk's one signal, and how it ends.
-              Nothing left to reach, nothing to lose, so no are-you-sure. */}
+          {/* Top, between them: what opens memories today. A tap counts again. */}
+          {profile && (
+            <GlassButton
+              place={[styles.corner, styles.steps]}
+              style={styles.stepsPill}
+              accessibilityRole="button"
+              accessibilityLabel={`${profile.steps.toLocaleString()} steps, ${profile.free_unlocks} free today.`}
+              accessibilityHint="Counts your steps again"
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                countSteps();
+              }}
+            >
+              <Text style={styles.stepsText} numberOfLines={1}>
+                {profile.steps.toLocaleString()} steps
+              </Text>
+              <Text style={styles.stepsNote} numberOfLines={1}>
+                {profile.free_unlocks} free today
+              </Text>
+            </GlassButton>
+          )}
+          {/* Under it: the walk's one signal, and how it ends. Nothing left to
+              reach, nothing to lose, so no are-you-sure. */}
           {walking && !showDone && !confirmEnd && (
             <GlassButton
-              place={[styles.corner, styles.walkBar]}
+              place={styles.walkBar}
               style={styles.pill}
               tint={color.ember}
               accessibilityRole="button"
@@ -1739,6 +1765,12 @@ export default function App() {
               : undefined
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
+          freeLeft={profile?.free_unlocks ?? 0}
+          stepPrice={profile && !profile.subscribed ? profile.steps_per_unlock : undefined}
+          onOpenFree={async () => {
+            const memory = openMemories[openIndex];
+            if (memory && (await unlock(memory))) setRevealId(memory.id);
+          }}
         />
 
         <Paywall
@@ -1779,7 +1811,17 @@ const styles = StyleSheet.create({
   // control; `pill`, `bigPill` and `circle` are its shape.
   corner: { position: 'absolute', top: 64 },
   journal: { left: 18 },
-  walkBar: { alignSelf: 'center' },
+  steps: { alignSelf: 'center' },
+  stepsPill: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepsText: { ...label, fontSize: 15, color: color.ink },
+  stepsNote: { ...label, fontSize: 11, color: color.inkSoft },
+  walkBar: { position: 'absolute', top: 116, alignSelf: 'center' },
   you: { right: 70 },
   add: { right: 18 },
   pill: {

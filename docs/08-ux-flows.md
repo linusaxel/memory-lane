@@ -301,9 +301,11 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 6. The journal works with no network and no position: it renders from what the
    device stored, so a memory you walked to is readable on the train home.
 
-**Any memory you stand on unlocks**, walk or no walk. It spends one of the
-account's three free unlocks, then 1,000 steps; a subscriber spends nothing
-(F35, and docs/10, "Steps open a memory").
+**Three a day open from anywhere**, from a pin's peek: **Open it now · 3 free
+today**. After those, standing on it opens it for 1,000 steps; a subscriber
+standing there spends nothing. The top of the map says what is left: "2,340
+steps · 2 free today", and a tap counts steps again (F35, and docs/10,
+"Three free a day, then steps where you stand").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -1092,12 +1094,12 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 
 ## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
 
-**Who:** a free account standing on a pin with no free unlocks left and fewer
-than 1,000 steps. **Trigger:** the hold on the ring is refused `no_steps`, or
+**Who:** a free account standing on a pin with none of today's free unlocks
+left and fewer than 1,000 steps. **Trigger:** the hold on the ring is refused `no_steps`, or
 **Subscribe** in You.
 
 1. On the map, anyone standing on a locked pin gets the ring, walk or no walk.
-   Under the place it says what the hold spends: "Free · 3 left", then
+   Under the place it says what the hold spends: "Free · 3 left today", then
    "1,000 steps · you have 2,340". A subscriber sees nothing there.
 2. A hold with nothing to spend says "It takes 1,000 steps. You have 420." and
    opens the paywall (`src/Paywall.tsx`): "Open any memory you stand on",

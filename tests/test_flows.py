@@ -31,7 +31,7 @@ from api.route_solver import _path_meters, _route_size
 from api.streets import walking_matrix
 from pipeline.route_bench import START_BOX
 from pipeline.seed_dev import at, seed
-from tests.conftest import give_steps
+from tests.conftest import give_steps, spend_free_today
 
 pytestmark = pytest.mark.db
 
@@ -108,6 +108,8 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     """
     lat, lng = at("reach")
     memory_id = seeded_id(db_session, "reach")
+    spend_free_today(db_session, DEVICE)
+    give_steps(db_session, DEVICE, 1000)
 
     far = read_at(seeded, memory_id, START)
     assert far["locked"] is True

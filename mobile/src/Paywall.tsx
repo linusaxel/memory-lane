@@ -61,7 +61,7 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
         <Text style={styles.title}>Open any memory you stand on</Text>
         <Text style={styles.note}>
           Skip the steps: any memory opens the moment you're standing on it. Without a
-          subscription, each one after your first three costs 1,000 steps.
+          subscription, each one after today's three free costs 1,000 steps.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (

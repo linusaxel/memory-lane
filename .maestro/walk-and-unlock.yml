@@ -65,7 +65,8 @@ appId: ${APP_ID}
     visible: "Stop 2 of 4. ${STOP2}. Locked, too far to open."
     timeout: 40000
 - tapOn: "Stop 2 of 4. ${STOP2}. Locked, too far to open."
-- assertVisible: "Get within 20 m to unlock it\\."
+# Three free a day open it from here; the flow walks there instead.
+- assertVisible: "Open it now, 3 free today"
 # F26: nothing to heart until it is open.
 - assertNotVisible: "Heart this memory.*"
 - tapOn: "Close"

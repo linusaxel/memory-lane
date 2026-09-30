@@ -261,8 +261,10 @@ they have paid, and the position was always self-reported.
 
 ### Steps open a memory
 
-Status: Accepted 2026-09-30. Supersedes *Only today's walk unlocks* and *A
-subscription opens the map*; the gate is untouched.
+Status: **Amended 2026-09-30** by *Three free a day, then steps where you
+stand*: the three free are a day's, and open from anywhere; the steps and how
+they are counted stand. Accepted 2026-09-30. Supersedes *Only today's walk
+unlocks* and *A subscription opens the map*.
 
 The founder: wander anywhere, and spend what you walked. A new account opens
 three memories free; after that each costs 1,000 steps (`FREE_UNLOCKS`,
@@ -297,6 +299,36 @@ window, and nothing else: what it buys is a public story you still have to
 stand on. The balance is on the account, so an anonymous device folded into an
 account at sign-in (`absorb`) brings nothing; the account's own is kept. No cap
 on the stored balance yet: add one if a hoard empties the map in an afternoon.
+
+### Three free a day, then steps where you stand
+
+Status: Accepted 2026-09-30. Amends *Steps open a memory*, and makes the one
+exception to *The gate*.
+
+The founder, the same day: three memories a day open from anywhere, and after
+that each costs 1,000 steps and you have to be there. The walk is a side
+feature, not the way in.
+
+- **Free, from anywhere.** `FREE_PER_DAY` (`api/models.py`), counted on
+  `users.free_day` and `free_used`, so a new day (UTC, as `gate.today()`)
+  starts again. The unlock takes no position for one (`lat`/`lng` optional):
+  location permission or not.
+- **Then steps, standing there.** Away from it with none free, the unlock
+  answers the locked memory and its distance, as before. Standing on it, one
+  of today's free ones goes first, then 1,000 steps, then 403 `no_steps`.
+- **A subscriber** standing on it spends nothing; away from it, the same three
+  a day as anyone.
+
+This is the one way past the 20 m, and it is still the gate's call: the unlock
+records the free one first, then reads the memory at its own spot, exactly as
+`get_unlocks` reads the collection. Nothing else returns a summary from afar.
+What three a day gives away is three stories a day, which a list endpoint would
+not have given: the place is still where the rest are read.
+
+**Consequences:** the map offers the free ones on a pin's peek (**Open it
+now**), the step count sits at the top of the map, and **Plan a walk** is a
+quiet pill, no longer the screen's one button. A memory the gate never closes
+(a shared centroid) costs nothing to open.
 
 ### RevenueCat sells it; our table decides
 
