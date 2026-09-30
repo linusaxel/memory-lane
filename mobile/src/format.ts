@@ -51,3 +51,10 @@ export function walkDate(routeDate: string, locale?: string): string {
     day: 'numeric',
   });
 }
+
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+
+/** A small count in words, as prose writes it: "today's three free". */
+export function count(n: number): string {
+  return WORDS[n] ?? n.toLocaleString();
+}

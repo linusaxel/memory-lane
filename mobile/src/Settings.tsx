@@ -21,6 +21,7 @@ import {
 import { API_BASE, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
 import CloseButton from './CloseButton.tsx';
+import { count } from './format.ts';
 import Padlock from './Padlock.tsx';
 import SignIn from './SignIn.tsx';
 import type { Permission } from './types.ts';
@@ -143,7 +144,9 @@ export default function Settings({
             </Text>
           </Row>
           <Text style={styles.note}>
-            No peeking from the sofa: the story only reaches your phone once you're there.
+            Each day, {count(profile?.free_per_day ?? 3)} open from anywhere. After that, each
+            costs {(profile?.steps_per_unlock ?? 1000).toLocaleString()} steps, and you have to be
+            standing there.
           </Text>
           <Text style={styles.note}>
             A few are only pinned to a city, not a spot. Those are open to everyone.

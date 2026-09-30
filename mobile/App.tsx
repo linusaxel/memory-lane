@@ -1059,9 +1059,8 @@ export default function App() {
         if (!mounted.current) return false;
         if (opened) {
           // This was the last not-yet-earned stop of a started route: the same
-          // success haptic UnlockButton fires for one memory
-          // (src/UnlockButton.tsx:105-107), once more - an affirmation on the
-          // unlock that already happened, not a new mechanic.
+          // Success haptic UnlockButton fires for one memory, once more - an
+          // affirmation on the unlock that already happened, not a new mechanic.
           if (
             routeStarted &&
             nextRouteStop?.id === memory.id &&
@@ -1792,6 +1791,7 @@ export default function App() {
           device={device}
           onProfile={setProfile}
           stepPrice={profile?.steps_per_unlock ?? 1000}
+          freePerDay={profile?.free_per_day ?? 3}
         />
 
         <Submit

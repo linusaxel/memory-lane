@@ -79,9 +79,11 @@ Everything below is one of three sessions. If a flow does not belong to one of
 these, it is probably not a flow.
 
 **Session one — "what is this?"** The map of what is locked around you (F29),
-then **Plan a walk**: pick how far (F1), get asked for location by the button
-that plans it (F8), see the walk on the map and accept it. Decline location and the walk is planned from central Copenhagen instead (F9). Nothing
-is readable yet, and that is the pitch, not a failure.
+the step count at the top. Tap a pin and its peek offers **Open it now**: three
+a day open from anywhere, so the first story is one tap away. After those, a
+memory opens only where it stands. **Plan a walk**, a quiet pill at the bottom,
+draws a walk past a few (F1) and is where location is asked for (F8); decline
+it and the walk is planned from central Copenhagen instead (F9).
 
 **Session two — the first unlock.** The route pill says where the next stop is
 (F25) and the line on the map is the way there. You arrive, the pin turns
@@ -92,7 +94,8 @@ make it worth having got here.
 **Session three — coming back.** The collection has things in it (F15), it works
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
-you, never what it says: the walk is the only way in. The You sheet is where
+you, never what it says: standing there, or one of the day's free ones, is
+the only way in. The You sheet is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -756,8 +759,8 @@ anyone else's collection or the local unlock cache.
    stage; there are no tabs. There is no
    "Near me": the pill recentres, and "Turn on location" shows only while
    there is no position.
-3. **An ember glass bar at the top centre, "On a walk · 0 of 5"**, between
-   Journal and You and Add, is what says this is a walk and not the map: it holds the
+3. **An ember glass bar at the top centre, "On a walk · 0 of 5"**, under the
+   step count, is what says this is a walk and not the map: it holds the
    count, and tapping it ends the walk (F34). Nothing else repeats the count.
    A pill at the bottom centre: "2.4 km to go" — the distance
    still to walk, from where you stand through every stop not yet earned, in
@@ -951,9 +954,10 @@ before an accept lands here; an accepted walk opens on the walk (F25).
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
    who it is from ("From" a source, "Left by" a person, with a glyph), its
    #tags, then the approach ring beside the distance with year · hearts and what
-   is waiting, and **Walk here**, which draws a walk through that pin (F1).
+   is waiting, **Open it now** while today's free ones last, and **Walk
+   here**, which draws a walk through that pin (F1).
    Standing on it, the peek gives way to the ring over the map (F7).
-3. **Plan a walk**, bottom centre, draws a walk (F1).
+3. **Plan a walk**, a quiet pill at the bottom centre, draws a walk (F1).
 
 The peek is a look, not a read: the summary never reaches the phone locked, and
 the peek draws nothing in its place. docs/10, "A locked memory says what it is,
@@ -993,8 +997,8 @@ Why each of these, in `docs/10-decisions.md`, "The walk ends on a card, once".
 **Who:** somebody on a walk who wants out of it: a bad plan, rain, or a walk
 already walked and another in mind.
 
-1. The walk's bar, "On a walk · 2 of 5", top centre between Journal and
-   You and Add (F25).
+1. The walk's bar, "On a walk · 2 of 5", top centre under the step count
+   (F25).
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
    haven't reached will lock again. Anything you've unlocked stays unlocked.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.

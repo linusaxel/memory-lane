@@ -264,6 +264,7 @@ def test_reading_a_profile_creates_nobody(client, db_session):
         "providers": [],
         "subscribed": False,
         "subscribed_until": None,
+        "free_per_day": 3,
         "free_unlocks": 3,
         "steps": 0,
         "steps_per_unlock": 1000,

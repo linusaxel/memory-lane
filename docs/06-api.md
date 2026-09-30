@@ -77,8 +77,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, `subscribed` /
-  `subscribed_until`, and what unlocks spend: `free_unlocks`, `steps`,
-  `steps_per_unlock`, and `steps_counted_until`, where the next count starts.
+  `subscribed_until`, and what unlocks spend: `free_per_day`, `free_unlocks`,
+  `steps`, `steps_per_unlock`, and `steps_counted_until`, where the next count
+  starts.
   The GET creates nothing
 - `POST /v1/me/steps` `{device, since, steps}` - credit the steps the phone
   counted from `since`, which must be `steps_counted_until`, and move it to

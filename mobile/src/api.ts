@@ -498,6 +498,7 @@ export type Profile = {
   /** Free unlocks left today, from anywhere; then `steps_per_unlock` steps
    *  each, standing there (docs/10, "Three free a day, then steps where you
    *  stand"). */
+  free_per_day: number;
   free_unlocks: number;
   steps: number;
   steps_per_unlock: number;

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { distance, duration, walkDate, when } from './format.ts';
+import { count, distance, duration, walkDate, when } from './format.ts';
 
 test('metres below a kilometre, kilometres above', () => {
   assert.equal(distance(420), '420 m');
@@ -55,4 +55,9 @@ test('a clock skewed into the future still says today', () => {
 
 test("a walk's date is the day it was walked, in any timezone", () => {
   assert.equal(walkDate('2026-09-22', 'en-US'), 'Tue, Sep 22');
+});
+
+test('small counts in words, large ones in digits', () => {
+  assert.equal(count(3), 'three');
+  assert.equal(count(12), '12');
 });

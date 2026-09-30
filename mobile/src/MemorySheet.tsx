@@ -598,10 +598,7 @@ const styles = StyleSheet.create({
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
   heading: { paddingHorizontal: 24, paddingTop: 26 },
   body: { paddingHorizontal: 24, paddingTop: 22, paddingBottom: 12 },
-  // The serif is the point: these are stories somebody told, not table rows.
   place: { ...font.display, fontSize: 30, lineHeight: 36, color: color.ink, paddingRight: 30 },
-  // The apparatus speaks in mono. Distances are measurements, so they look like
-  // measurements rather than like more prose.
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
   meta: { ...label },
   peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
@@ -655,10 +652,9 @@ const styles = StyleSheet.create({
   reportText: { ...buttonTextSmall, color: color.ink },
   source: { ...font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
-  // Ink, not red. The seal is the unlock and nothing else gets to wear it.
+  // Ember, not seal: the seal is the unlock and nothing else gets to wear it.
   watch: button.solid,
   watchText: { ...buttonText, color: color.paper },
-  // Beside Walk here, never above it: the free way stays the one thing to do.
   linkFailed: { ...font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
