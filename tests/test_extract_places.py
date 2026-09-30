@@ -50,6 +50,24 @@ def _counts(session):
     )
 
 
+def test_a_pin_outside_the_launch_area_is_not_saved(db_session, monkeypatch):
+    from pipeline import extract
+
+    monkeypatch.setattr(extract, "LAUNCH_BBOX", (55.60, 12.45, 55.74, 12.66))
+    content_id = _content(db_session)
+    save_memories(
+        db_session,
+        content_id,
+        [
+            _memory("Stockholm", place_query="Gamla stan, Stockholm", lat=59.325, lng=18.071),
+            _memory("Nørrebro", place_query="Assistens Kirkegård", lat=55.691, lng=12.550),
+            _memory("unpinned", place_query="somewhere", lat=None, lng=None),
+        ],
+    )
+    saved = db_session.execute(text("SELECT summary FROM memories ORDER BY id")).scalars().all()
+    assert saved == ["Nørrebro", "unpinned"]
+
+
 def test_the_same_place_twice_is_one_row(db_session):
     content_id = _content(db_session)
     save_memories(db_session, content_id, [_memory("first visit")])

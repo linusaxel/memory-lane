@@ -21,6 +21,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 # overrides a variable already set, and the solver tests assert crow-flies
 # metres. A test that wants streets monkeypatches api.streets itself.
 os.environ["ROUTING_URL"] = ""
+# Anywhere: the fakes save Katz's in New York.
+os.environ["LAUNCH_BBOX"] = ""
 
 # Per-process, because more than one pytest run can share this Postgres - two
 # sessions working the same repo, or xdist workers. A fixed name means one run's

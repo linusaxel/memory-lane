@@ -33,6 +33,7 @@ pip install -r requirements.txt
 | `WEBSHARE_PROXY_USERNAME`, `WEBSHARE_PROXY_PASSWORD` | No | Webshare **rotating residential** credentials (not datacenter: those are blocked too). Rotates IP on a block, about 400 KB a transcript. Wins over `TRANSCRIPT_PROXY` |
 | `TRANSCRIPT_DELAY_SECONDS` | No | Mean jittered pause between transcript fetches (default: 1.5, which `screen` needs). A backlog drips from cron instead of bursting into a block: `0 * * * * cd <repo> && TRANSCRIPT_DELAY_SECONDS=45 venv/bin/python -m pipeline.transcripts --limit 3` |
 | `ROUTE_SIZE`, `ROUTE_LOOP` | No | Today's route: how many candidates it draws from, 8 × this (default: 5; a walk aims for about one stop a km), and whether it comes back to where it started unless the request says (default: 1; `0` is one-way). The walk length is the app's slider, sent as `budget_meters`; candidates come from within half of it |
+| `LAUNCH_BBOX` | No | South, west, north, east. An extracted memory pinned outside it is not saved. Default `55.60,12.45,55.74,12.66` (Copenhagen); empty means anywhere |
 | `ROUTING_URL` | No | An OSRM `foot` server. Empty or down means crow-flies × 1.3 and straight lines. Local: `./osrm/build.sh` once, then `docker compose --profile routing up -d osrm` and `ROUTING_URL=http://localhost:5001` |
 | `CORS_ORIGINS` | No | Comma-separated origins (default: `*`). The only lockdown knob |
 | `UNLOCK_RADIUS_METERS` | No | How close you must stand to read a memory (default: 20) |

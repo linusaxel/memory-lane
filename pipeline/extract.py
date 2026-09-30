@@ -14,6 +14,7 @@ from pipeline.config import (
     CHUNK_MINUTES,
     CHUNK_OVERLAP_SECONDS,
     EXTRACTION_MODEL,
+    LAUNCH_BBOX,
 )
 from pipeline.db import get_session
 from pipeline.tags import TAGS
@@ -1072,6 +1073,10 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
             lat, lng, precision, status = hit
             has_coords = True
 
+        if has_coords and LAUNCH_BBOX and not _in_box(lat, lng, LAUNCH_BBOX):
+            logger.info(f"[content:{content_id}] outside the launch area: {venue} ({lat}, {lng})")
+            continue
+
         params = {
             "name": _place_name(venue, locality)
             if structured
@@ -1143,6 +1148,11 @@ def save_memories(session, content_id: int, memories: list[dict], layer: str = "
             continue
 
         _save_memory(session, place_id, content_id, mem, layer)
+
+
+def _in_box(lat: float, lng: float, box: tuple) -> bool:
+    south, west, north, east = box
+    return south <= lat <= north and west <= lng <= east
 
 
 def _same_venue_nearby(session, params: dict) -> int | None:

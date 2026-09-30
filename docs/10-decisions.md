@@ -1333,6 +1333,27 @@ keep or drop by hand.
 - Across three full runs, no labelled "drop" survived. Each run kept 4–5
   memories, down from 9–11.
 
+### One launch area
+
+Status: Accepted, 2026-09-30
+
+An extracted memory pinned outside `LAUNCH_BBOX` (Copenhagen with Frederiksberg
+and Amager, `pipeline/config.py`) is not saved. The corpus read found 32 of 209
+memories abroad or up the coast, all skips, mostly Oehlenschläger's travels. A
+judge reading the summary didn't drop them, and couldn't be expected to.
+
+- **A box, not a prompt.** Where the pin lands is a number; asking a model
+  whether a story is "in Copenhagen" is a guess about the same number.
+- **At save, after the geocoder.** The geocoder can move the model's pin, and
+  `save_memories` is the one path both extraction routes share.
+- **A memory with no point passes.** Nothing says where it is yet, as in
+  `ingest.within()`.
+- **Extraction only.** A memory someone posts where they stand is not gated.
+
+Existing memories outside the box were hidden on the dev database, not
+reviewed as rejects, so the review reject rate still measures quality. The SQL
+is in docs/04, *Corpus read*.
+
 ### One venue, one name per video
 
 Status: Accepted 2026-09-27

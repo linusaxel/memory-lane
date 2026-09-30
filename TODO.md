@@ -200,10 +200,6 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
-- [ ] **Launch-area gate.** (checked 2026-09-29) 32 memories are outside
-      Copenhagen, 10 of 11 from Oehlenschläger's travel volumes. Drop a pin
-      outside a launch box at save time (a config knob), and name the launch area
-      in the Haiku classifier so those chunks never reach Sonnet.
 - [ ] **Duplicates across contents.** (checked 2026-09-29) ~50 memories in
       ~17 clusters: Ditlevsen ×6, the Blue Tower ×8, 4624/4625, and
       Frederikshospitalet on two place rows. `merge_nearby_memories` only
@@ -218,7 +214,7 @@ is to `pipeline/extract.py` unless named.
       local name (Frauenkirche is Vor Frue Kirke), and confidence low where
       that is uncertain: 4564 put Frederiksborg on Frederiksberg.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
-      until the launch-area gate, dedup and grounding land. It was measured
+      until dedup and grounding land (the launch-area gate has). It was measured
       once (docs/04, *Judge v2, measured and parked*): most of the skips it
       keeps fail on place, duplicates or facts, which a judge reading a summary
       can't see. When it comes back, the three drop-gates (`private_person`

@@ -178,6 +178,19 @@ skipped only for `out`, `pin`, `p1000`, `dup` or `hall`. A judge reading a
 summary can't see those. The launch-area gate, the dedup and grounding fix
 them, and the judge is worth retuning after they land.
 
+**The launch-area gate** (2026-09-30, docs/10 *One launch area*). The box
+`55.60,12.45,55.74,12.66` catches all 32 `out` memories and no walk, plus
+Ålebækken ×2 (pinned at 55.80, probably wrongly) and Bakken in Klampenborg.
+The 35 were hidden on the dev database with the SQL below. Visible labelled
+memories are now 52 walk, 54 maybe, 68 skip: 30% worth the walk, up from 25%.
+
+```sql
+UPDATE memories m SET hidden = TRUE FROM places p
+WHERE p.id = m.place_id AND NOT m.hidden
+  AND NOT ST_Intersects(p.coordinates::geometry,
+                        ST_MakeEnvelope(12.45, 55.60, 12.66, 55.74, 4326));
+```
+
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day
