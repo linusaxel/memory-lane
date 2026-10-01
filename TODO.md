@@ -23,13 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **Every aggregate job looks up what is there now for every place in the
-  database.** 2026-10-01: `task_aggregate_memories` calls `look_up(session)`
-  with no `place_id`, so each chapter retried all 50 unlooked places. Overpass
-  refused every one at about 19 s each, so each job used up its 5-minute
-  timeout: 34 one-chunk chapters took about 2 hours instead of minutes. Fix:
-  pass the chapter's own new place ids, and leave the backlog to
-  `python -m pipeline.now`.
 - **`dedup --memories` misses a book's retellings when they sit on different
   place rows.** 2026-10-01: it found none of the dog, grocer or gallows pairs
   in source 204 (Schloss Friedrichsberg against Frederiksberg Slot, and so

@@ -84,9 +84,10 @@ def clause(now: dict) -> str:
     return f"{'Still' if now['same'] else 'Now'} {now['name']}{kind}."
 
 
-def look_up(session, place_id: int | None = None) -> dict:
+def look_up(session, place_id: int | None = None, content_id: int | None = None) -> dict:
     """Store what OSM says on each building-level place not yet looked at, then
-    write the clause onto the extracted memories there. {place_id: now}."""
+    write the clause onto the extracted memories there. {place_id: now}.
+    content_id keeps it to that content's places: the backlog is `main`'s job."""
     rows = session.execute(
         text("""
             SELECT id, venue, name,
@@ -95,9 +96,11 @@ def look_up(session, place_id: int | None = None) -> dict:
             WHERE now IS NULL AND coordinates IS NOT NULL AND precision_meters <= 50
               AND geocode_status IN ('dawa', 'photon', 'wikidata')
               AND (CAST(:place_id AS INTEGER) IS NULL OR id = :place_id)
+              AND (CAST(:content_id AS INTEGER) IS NULL
+                   OR id IN (SELECT place_id FROM memories WHERE content_id = :content_id))
             ORDER BY id
         """),
-        {"place_id": place_id},
+        {"place_id": place_id, "content_id": content_id},
     ).fetchall()
     done = {}
     for n, r in enumerate(rows):

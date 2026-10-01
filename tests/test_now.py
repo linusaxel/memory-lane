@@ -95,7 +95,8 @@ def test_the_clause_replaces_the_models_guess_on_a_building_pin_only(db_session,
     )
     _overpass(monkeypatch, {"name": "Designmuseum Danmark", "tourism": "museum"})
 
-    assert list(now.look_up(db_session).values()) == [
+    assert now.look_up(db_session, content_id=content_id + 1) == {}
+    assert list(now.look_up(db_session, content_id=content_id).values()) == [
         {"name": "Designmuseum Danmark", "kind": "museum", "same": False}
     ]
     assert now.look_up(db_session) == {}

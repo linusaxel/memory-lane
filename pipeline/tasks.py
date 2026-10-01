@@ -415,7 +415,7 @@ def task_aggregate_memories(content_id: int):
         logger.exception(f"[content:{content_id}] Linking names failed; memories are saved")
     try:
         with get_session() as session:
-            look_up(session)
+            look_up(session, content_id=content_id)
     except Exception:
         logger.exception(f"[content:{content_id}] Looking up what is there now failed")
 
