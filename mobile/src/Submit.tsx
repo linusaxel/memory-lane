@@ -41,9 +41,10 @@ import {
   type LocatedMemory,
   type MediaItem,
 } from './api.ts';
+import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
-import { duration } from './format.ts';
-import { button, buttonText, color, dim, font, input, label, radius } from './theme.ts';
+import { duration, happened } from './format.ts';
+import { button, buttonTextSmall, color, dim, label, radius, story } from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
@@ -63,6 +64,8 @@ type Props = {
   editing?: LocatedMemory | null;
   onSaved?: (memory: LocatedMemory) => void;
   onDeleted?: (id: number) => void;
+  /** Who it will be signed by, shown where the open sheet shows it. */
+  author: { name: string; avatar_url?: string | null };
 };
 
 /** An attachment on its way up, or up. `id` arrives when the server has it. */
@@ -84,12 +87,14 @@ export default function Submit({
   editing,
   onSaved,
   onDeleted,
+  author,
 }: Props) {
   const isEditing = !!editing;
   // The title is the place row's name - docs/10, "The title is the place name".
   const [placeName, setPlaceName] = useState('');
   const [summary, setSummary] = useState('');
   const [day, setDay] = useState(() => new Date());
+  const [pickingDay, setPickingDay] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,6 +130,7 @@ export default function Submit({
     setPlaceName('');
     setSummary('');
     setDay(new Date());
+    setPickingDay(false);
     setAttachments([]);
     setError(null);
     setConfirmingDelete(false);
@@ -156,21 +162,17 @@ export default function Submit({
   const told = summary.trim().length > 0;
   const ready =
     (isEditing || !!position) && !!device && named && told && !uploading && !posting;
-
-  const progress = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.spring(progress, {
-      toValue: (told ? 0.5 : 0) + (named ? 0.5 : 0),
-      speed: 12,
-      bounciness: 6,
-      useNativeDriver: true,
-    }).start();
-  }, [named, told, progress]);
-
-  // scaleX and not width: width cannot go on the native driver, and this sits
-  // directly above a text field, which is the worst place in the app to hand
-  // work back to the JS thread.
-  const filling = { transform: [{ scaleX: progress }] };
+  const when = happened(isoDay(day), 'day');
+  const pickDay = () =>
+    Platform.OS === 'ios'
+      ? setPickingDay((open) => !open)
+      : // Android's picker is a dialog, not an inline control.
+        DateTimePickerAndroid.open({
+          value: day,
+          mode: 'date',
+          maximumDate: new Date(),
+          onValueChange: (_, picked) => setDay(picked),
+        });
 
   /** Adds the attachment optimistically, then swaps in the server's copy. The
    *  uri is the identity throughout - ids do not exist yet at insert time. */
@@ -351,143 +353,17 @@ export default function Submit({
         style={styles.sheet}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        {/* The open sheet with nothing in it yet: the same title, byline and
+            story type, in the same places, so what you write is what people
+            standing here will read (docs/10, "Reading and writing are one
+            page"). Cancel and Post are the only chrome. */}
         <View style={styles.bar}>
-          {/* The ×'s width, so the title sits centred. */}
-          <View style={styles.barSpacer} />
-          <Text style={styles.barTitle}>{isEditing ? 'Edit memory' : 'Add a memory'}</Text>
           <CloseButton onPress={onClose} label="Cancel" />
-        </View>
-
-        {/* The rule under the header, doing a second job rather than gaining a
-            neighbour: it fills as the two required fields land and turns seal
-            when the thing can be posted. Same promise the unlock ring makes,
-            and it costs a line rather than adding one. */}
-        <View style={styles.track}>
-          <Animated.View style={[styles.fill, ready && styles.fillReady, filling]} />
-        </View>
-
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <Field label="Title">
-            <TextInput
-              style={styles.input}
-              value={placeName}
-              onChangeText={setPlaceName}
-              placeholder="The night the ferry horn went off"
-              placeholderTextColor={color.inkFaint}
-              maxLength={200}
-              returnKeyType="next"
-            />
-          </Field>
-
-          <Field label="Description">
-            <TextInput
-              style={[styles.input, styles.prose]}
-              value={summary}
-              onChangeText={setSummary}
-              placeholder="We sat here until it got light and nobody wanted to say so. #nightlife"
-              placeholderTextColor={color.inkFaint}
-              multiline
-              maxLength={MAX_SUMMARY}
-              textAlignVertical="top"
-            />
-            {/* Only near the limit: a count from the first letter reads as a nag. */}
-            {summary.length > MAX_SUMMARY - 200 && (
-              <Text style={styles.counter}>{`${summary.length} / ${MAX_SUMMARY}`}</Text>
-            )}
-          </Field>
-
-          <Field label="When">
-            <View style={styles.row}>
-              {Platform.OS === 'ios' ? (
-                <DateTimePicker
-                  value={day}
-                  mode="date"
-                  display="compact"
-                  maximumDate={new Date()}
-                  onValueChange={(_, picked) => setDay(picked)}
-                />
-              ) : (
-                // Android's picker is a dialog, not an inline control.
-                <Secondary
-                  label={isoDay(day)}
-                  onPress={() =>
-                    DateTimePickerAndroid.open({
-                      value: day,
-                      mode: 'date',
-                      maximumDate: new Date(),
-                      onValueChange: (_, picked) => setDay(picked),
-                    })
-                  }
-                />
-              )}
-            </View>
-          </Field>
-
-          <Field label="Photos">
-            <View style={styles.row}>
-              {photos.map((photo) => (
-                <Pressable
-                  key={photo.uri}
-                  style={dim()}
-                  onPress={() =>
-                    setAttachments((current) => current.filter((a) => a.uri !== photo.uri))
-                  }
-                  accessibilityRole="button"
-                  accessibilityLabel="Remove this photo"
-                >
-                  <Image
-                    source={{ uri: photo.item ? mediaUrl(photo.item) : photo.uri }}
-                    style={[styles.thumb, photo.failed && styles.thumbFailed]}
-                  />
-                  {!photo.item && !photo.failed && (
-                    <View style={styles.thumbBusy}>
-                      <ActivityIndicator size="small" color={color.paper} />
-                    </View>
-                  )}
-                  {photo.failed && <Text style={styles.thumbError}>failed</Text>}
-                </Pressable>
-              ))}
-              {photos.length < MAX_PHOTOS && (
-                <>
-                  <Secondary label="Camera" onPress={() => addPhoto(true)} />
-                  <Secondary label="Library" onPress={() => addPhoto(false)} />
-                </>
-              )}
-            </View>
-          </Field>
-
-          {AUDIO && (
-            <Field label="Say it out loud">
-              {sound ? (
-                <View style={styles.row}>
-                  <Text style={styles.recorded}>
-                    {sound.failed ? 'Upload failed' : `Recorded · ${duration(sound.seconds ?? 0)}`}
-                  </Text>
-                  <Secondary
-                    label="Remove"
-                    onPress={() =>
-                      setAttachments((current) => current.filter((a) => a.kind !== 'audio'))
-                    }
-                  />
-                </View>
-              ) : recording.isRecording ? (
-                <View style={styles.row}>
-                  {/* The one red dot in the app that is not the seal doing its
-                      usual job - recording is the other thing worth noticing. */}
-                  <View style={styles.dot} />
-                  <Text style={styles.recorded}>{duration(recording.durationMillis / 1000)}</Text>
-                  <Secondary label="Stop" onPress={stopRecording} />
-                </View>
-              ) : (
-                <Secondary label="Record" onPress={startRecording} />
-              )}
-            </Field>
-          )}
-
           <Pressable
             style={dim([styles.post, !ready && styles.disabled])}
             onPress={post}
             disabled={!ready}
+            hitSlop={4}
             accessibilityRole="button"
             accessibilityLabel={isEditing ? 'Save' : 'Post'}
           >
@@ -495,6 +371,129 @@ export default function Submit({
               {posting ? (isEditing ? 'Saving…' : 'Posting…') : isEditing ? 'Save' : 'Post'}
             </Text>
           </Pressable>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+          <TextInput
+            style={[styles.slot, styles.title]}
+            value={placeName}
+            onChangeText={setPlaceName}
+            placeholder="The night the ferry horn went off"
+            placeholderTextColor={color.inkFaint}
+            accessibilityLabel="Title"
+            testID="title"
+            maxLength={200}
+            multiline
+            submitBehavior="blurAndSubmit"
+            returnKeyType="next"
+          />
+
+          <View style={styles.byline}>
+            <Avatar url={author.avatar_url ?? null} name={author.name} size={20} />
+            <Text style={styles.meta}>
+              <Text style={styles.metaInk}>{author.name}</Text>
+              {' · '}
+              <Text
+                style={styles.metaInk}
+                accessibilityRole="button"
+                accessibilityLabel={`When, ${when?.within} ${when?.year}`}
+                onPress={pickDay}
+              >
+                {when?.within} {when?.year} ▾
+              </Text>
+              {!isEditing && ' · here'}
+            </Text>
+          </View>
+          {pickingDay && (
+            <DateTimePicker
+              value={day}
+              mode="date"
+              display="inline"
+              maximumDate={new Date()}
+              onValueChange={(_, picked) => {
+                setDay(picked);
+                setPickingDay(false);
+              }}
+            />
+          )}
+
+          <TextInput
+            style={[styles.slot, styles.story]}
+            value={summary}
+            onChangeText={setSummary}
+            placeholder="We sat here until it got light and nobody wanted to say so. #nightlife"
+            placeholderTextColor={color.inkFaint}
+            accessibilityLabel="Description"
+            testID="story"
+            multiline
+            maxLength={MAX_SUMMARY}
+            textAlignVertical="top"
+          />
+          {/* Only near the limit: a count from the first letter reads as a nag. */}
+          {summary.length > MAX_SUMMARY - 200 && (
+            <Text style={styles.meta}>{`${summary.length} / ${MAX_SUMMARY}`}</Text>
+          )}
+
+          {/* Where the open sheet shows them, at the size it shows them. */}
+          {photos.map((photo) => (
+            <View key={photo.uri} style={styles.part}>
+              <View>
+                <Image
+                  source={{ uri: photo.item ? mediaUrl(photo.item) : photo.uri }}
+                  style={[styles.photo, photo.failed && styles.photoFailed]}
+                />
+                {!photo.item && !photo.failed && (
+                  <View style={styles.photoBusy}>
+                    <ActivityIndicator size="small" color={color.paper} />
+                  </View>
+                )}
+              </View>
+              <View style={styles.row}>
+                {photo.failed && <Text style={styles.error}>Upload failed</Text>}
+                <Action
+                  label="Remove photo"
+                  onPress={() =>
+                    setAttachments((current) => current.filter((a) => a.uri !== photo.uri))
+                  }
+                />
+              </View>
+            </View>
+          ))}
+          {photos.length < MAX_PHOTOS && (
+            <View style={styles.row}>
+              <Action label="Take photo" onPress={() => addPhoto(true)} />
+              <Action label="Choose photo" onPress={() => addPhoto(false)} />
+            </View>
+          )}
+
+          {AUDIO && (
+            <View style={styles.row}>
+              {sound ? (
+                <>
+                  <Text style={styles.meta}>
+                    {sound.failed ? 'Upload failed' : `Recorded · ${duration(sound.seconds ?? 0)}`}
+                  </Text>
+                  <Action
+                    label="Remove"
+                    onPress={() =>
+                      setAttachments((current) => current.filter((a) => a.kind !== 'audio'))
+                    }
+                  />
+                </>
+              ) : recording.isRecording ? (
+                <>
+                  {/* The one red dot in the app that is not the seal doing its
+                      usual job - recording is the other thing worth noticing. */}
+                  <View style={styles.dot} />
+                  <Text style={styles.meta}>{duration(recording.durationMillis / 1000)}</Text>
+                  <Action label="Stop" onPress={stopRecording} />
+                </>
+              ) : (
+                <Action label="Say it out loud" onPress={startRecording} />
+              )}
+            </View>
+          )}
+
           {error && <Text style={styles.error}>{error}</Text>}
 
           {isEditing && (
@@ -502,9 +501,10 @@ export default function Submit({
               style={dim(styles.delete)}
               onPress={pressDelete}
               disabled={deleting}
+              hitSlop={12}
               accessibilityRole="button"
             >
-              <Text style={styles.deleteText}>
+              <Text style={styles.error}>
                 {deleting
                   ? 'Deleting…'
                   : confirmingDelete
@@ -531,15 +531,6 @@ function isoDay(d: Date): string {
 function localDay(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d);
-}
-
-function Field({ label: name, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.fieldLabel}>{name}</Text>
-      {children}
-    </View>
-  );
 }
 
 /** A chip that answers being touched.
@@ -580,7 +571,8 @@ export function Chip({ label: text, on, onPress }: { label: string; on: boolean;
   );
 }
 
-function Secondary({ label: text, onPress }: { label: string; onPress: () => void }) {
+/** A text action, as a note's Rewrite and Remove are on the open sheet. */
+function Action({ label: text, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable
       onPress={() => {
@@ -588,14 +580,13 @@ function Secondary({ label: text, onPress }: { label: string; onPress: () => voi
         onPress();
       }}
       accessibilityRole="button"
-      style={dim(styles.secondary)}
+      hitSlop={12}
+      style={dim()}
     >
-      <Text style={styles.secondaryText}>{text}</Text>
+      <Text style={styles.action}>{text}</Text>
     </Pressable>
   );
 }
-
-const THUMB = 76;
 
 const styles = StyleSheet.create({
   sheet: { flex: 1, backgroundColor: color.paper },
@@ -605,36 +596,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 18,
-    paddingBottom: 14,
+    paddingBottom: 8,
   },
-  barTitle: { ...font.displaySemi, fontSize: 17, color: color.ink },
-  barSpacer: { width: 30 },
-  post: button.solid,
-  postText: { ...buttonText, color: color.paper },
+  post: { ...button.solid, ...button.small },
+  postText: { ...buttonTextSmall, color: color.paper },
   disabled: { opacity: 0.35 },
 
-  // Full bleed, because it replaces the header's bottom rule rather than
-  // sitting under it.
-  track: { height: 2, backgroundColor: color.rule, overflow: 'hidden' },
-  fill: {
-    height: 2,
-    backgroundColor: color.inkFaint,
-    // Grows from the left rather than from the middle, which is what scaleX
-    // does by default and reads as a bar sliding open.
-    transformOrigin: 'left',
-  },
-  fillReady: { backgroundColor: color.seal },
-  body: { padding: 20, paddingBottom: 56, gap: 26 },
+  // MemorySheet's reading column: 24 in, 8 inside a part, 24 between parts.
+  body: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 56 },
+  // A field with no box: the cursor and the placeholder say it is editable.
+  slot: { padding: 0, margin: 0 },
+  title: story.title,
+  story: { ...story.body, minHeight: 130, marginTop: 24 },
+  byline: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  meta: { ...story.meta, flexShrink: 1 },
+  metaInk: { color: color.ink },
+  part: { gap: 8, marginTop: 24 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16, marginTop: 24 },
+  action: { ...story.meta, color: color.inkSoft },
 
-  field: { gap: 10 },
-  fieldLabel: { ...label, color: color.inkSoft },
-  input: {
-    ...input,
-  },
-  prose: { minHeight: 130, lineHeight: 26 },
-  counter: { ...label, fontSize: 12, textAlign: 'right' },
-
-  row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   chip: {
     borderWidth: 1,
     borderColor: color.rule,
@@ -648,12 +628,10 @@ const styles = StyleSheet.create({
   chipText: { ...label, fontSize: 12, color: color.inkSoft },
   chipTextOn: { color: color.paper },
 
-  secondary: button.outline,
-  secondaryText: { ...buttonText, color: color.ink },
-
-  thumb: { width: THUMB, height: THUMB, borderRadius: radius.field, backgroundColor: color.rule },
-  thumbFailed: { opacity: 0.4 },
-  thumbBusy: {
+  // MemoryMedia's photo, so a photo here is the size it will be read at.
+  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.field, backgroundColor: color.rule },
+  photoFailed: { opacity: 0.4 },
+  photoBusy: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -664,14 +642,8 @@ const styles = StyleSheet.create({
     backgroundColor: color.scrim,
     borderRadius: radius.field,
   },
-  thumbError: { ...label, fontSize: 12, color: color.ember, textAlign: 'center' },
 
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.ember },
-  recorded: { ...font.uiMedium, fontSize: 14, color: color.ink },
-
-  error: { ...font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
-
-  // Same shape as `secondary`, in ember, like Settings' saveFailed line.
-  delete: { ...button.outline, borderColor: color.ember, alignSelf: 'center', marginTop: 12 },
-  deleteText: { ...buttonText, color: color.ember },
+  error: { ...story.meta, color: color.ember },
+  delete: { marginTop: 40, alignSelf: 'flex-start' },
 });

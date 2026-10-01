@@ -16,7 +16,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { AUDIO, mediaUrl, type MediaItem } from './api.ts';
 import { duration } from './format.ts';
-import { color, dim, font, label, radius } from './theme.ts';
+import { color, dim, label, radius } from './theme.ts';
 
 function Recording({ item }: { item: MediaItem }) {
   const player = useAudioPlayer(mediaUrl(item));
@@ -110,10 +110,10 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, marginTop: 22 },
+  wrap: { gap: 8 },
   photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.field, backgroundColor: color.rule },
   photoGone: { alignItems: 'center', justifyContent: 'center' },
-  goneText: { ...label, fontSize: 12, color: color.inkSoft },
+  goneText: { ...label, color: color.inkSoft },
   audio: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -148,6 +148,6 @@ const styles = StyleSheet.create({
   pause: { flexDirection: 'row', gap: 4 },
   bar: { width: 4, height: 16, backgroundColor: color.ember },
   audioText: { gap: 2 },
-  audioLabel: { ...label, fontSize: 12 },
-  audioTime: { ...font.uiMedium, fontSize: 14, color: color.ink },
+  audioLabel: { ...label },
+  audioTime: { ...label, color: color.ink },
 });

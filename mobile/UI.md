@@ -84,20 +84,19 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
 
   locked                            open
   ├─ place name       28/700        ├─ place name       28/700, ⋯ beside the ×
-  ├─ padlock                        ├─ byline  avatar 32 + "Left by Anna" 15, the name semibold
-  │                                 ├─ "17 June 1978 · on this day · 40 m away"  label
-  │                                 ├─ the lede  20/28 semibold: the first sentence, the peak
+  ├─ padlock                        ├─ avatar 20 + "Anna · 17 June 1978 · on this day · 40 m away"  label
+  │                                 ├─ the lede  17/26 semibold: the first sentence, the peak
   │                                 ├─ the rest  17/26, #tags semibold
-  │                                 ├─ "their words"  20/28 semibold, ember rule, "— Mads, at 12:04"
+  │                                 ├─ "their words"  17/26 semibold, ember rule, "— Mads, at 12:04"
   │                                 ├─ "Then and now"  17/26 inkSoft   contrast_note, when known
   ├─ distance         52/700        ├─ photo / recording   if it has any
-  ├─ "Get within 20 m"              ├─ notes  17/26, footer "You  Rewrite  Remove" in label
-  ├─ "1 attachment waiting"         └─ pinned: the button, and the heart trailing it (F11):
-  │                                      a bare count before the glyph, in a slot kept at
-  │  (in reach it is not opened:         zero, so the glyph never moves. The button says
-  └─  the ring is on the map)            where it goes (F12): "Watch from 12:04", "Watch on
-                                         YouTube", "Read it in the book", "Read the 1856
-                                         article", "Read it at Historisk Atlas"
+  ├─ "Get within 20 m"              ├─ "Watch from 12:04 →" ember 17 semibold, the episode under
+  ├─ "1 attachment waiting"         │    it in label; the heart at the right of the same row (F11):
+  │                                 │    a bare count before the glyph, in a slot kept at zero.
+  │  (in reach it is not opened:    │    The link says where it goes (F12): "Watch on YouTube",
+  └─  the ring is on the map)       │    "Read it in the book", "Read the 1856 article"
+                                    └─ notes  17/26, "You  Rewrite  Remove" in label
+                                    Nothing is pinned, bar the pager under a stacked pin.
 
   The open side's byline sits under the place name, above the meta line:
   "Retold from <channel>" with its avatar and the episode or book, or "Left by X".
@@ -259,13 +258,12 @@ ember were one colour under protanopia (docs/09 part 8).
 **Buttons are `button.solid`, `button.quiet` or `button.outline`** from
 `theme.ts`, with `buttonText` inside: 52pt capsules, ember with paper text,
 soft ember with ink text, or a rule outline. A screen adds only where one sits
-(margin, alignSelf), never its own padding or border. An action inside a page
-rather than ending it (Leave note) is the
+(margin, alignSelf), never its own padding or border. Post is the
 same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
-`hitSlop={4}`. Only links to somewhere else stay text: Terms, Privacy, the
-OpenStreetMap credit, Restore purchases. Owner actions are not buttons: a
-note's Rewrite and Remove are `label` text in inkSoft with `hitSlop={12}`, and
-Edit this memory is in ⋯ (docs/10, "The open story is one type scale").
+`hitSlop={4}`. An action inside a page is not a button but `label` text with
+`hitSlop={12}`: inkSoft for Rewrite, Remove and the photo actions, ember for
+Leave note and Delete. Edit this memory is in ⋯ (docs/10, "Reading and writing
+are one page").
 
 ## Type
 
@@ -298,10 +296,10 @@ and Submit and must not drift between them.
 
 **Scale**: 34 display (screen titles) · 28/34 (place name) · 52 `figure` (the
 gate's distance, the streak, the stats) · 36 `figureSmall` (the peek's
-distance, under its place) · 20/28 semibold (the open story's lede and quote)
-· 17/26 prose (the story, then-and-now, notes) · 16/25 prose (body elsewhere)
-· 15 (the byline) · 13 `label` (everything labelled) · 17 buttons. The open
-story uses only 28, 20, 17, 15 and 13.
+distance, under its place) · 17/26 prose (the story, then-and-now, notes)
+· 16/25 prose (body elsewhere) · 13 `label` (everything labelled) · 17
+buttons. A memory, open or being written, is `story` in `theme.ts` and
+nothing else: 28, 17 and 13.
 
 
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
@@ -562,18 +560,18 @@ are not preferences:
   `tests/fixtures/hashtags.json` is read by both tests. Not tappable. The
   placeholder ends in `#nightlife` so the form explains it.
 
-Three things about the shape of it:
+The shape of it is the open sheet's (docs/10, "Reading and writing are one
+page"):
 
-- **Title, Description, When.** In that order, and nothing asks for a name:
-  the account filing it signs it (Settings), and a blank one is Anonymous.
-- **The rule under the header is the progress.** It fills as the two required
-  fields land and turns seal when the thing can be posted - the same promise
-  the unlock ring makes, and it costs a line rather than adding one. No hint
-  text under it: the form is short enough to read as its own checklist.
-- **Every chip answers being touched** - `selectionAsync` and a spring, skipped
-  on mount so the sheet does not flinch as it opens. The tick is the map's
-  selection one, not the unlock's: this is picking, not earning, and it must
-  not borrow that weight.
+- **The same page with empty slots.** The title in `story.title`, the byline
+  ("Anna · 1 October 2026 ▾ · here", the date tappable), the story in
+  `story.body`, photos at the size they are read at. No boxes and no field
+  labels: the placeholder and the cursor say what is editable. Nothing asks
+  for a name: the account signs it (Settings), and a blank one is Anonymous.
+- **Cancel and Post are the only chrome**, the × left and Post right, as in
+  every composer. Post is held until the title and the story are there.
+- **Every other action is text** in the label voice: Take photo, Choose photo,
+  Remove photo, Delete this memory (ember, two taps).
 
 A submission comes back already unlocked and its sheet opens over the map. The
 modal closing is not a confirmation, and it is also the first sight of what a

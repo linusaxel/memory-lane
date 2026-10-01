@@ -2489,6 +2489,40 @@ Subhead 15, Footnote 13):
   Day One and Strava. Supersedes the 36pt capsule for Rewrite, Remove and Edit
   this memory; Leave note keeps it, since it submits a field.
 
+### Reading and writing are one page
+
+Status: Accepted 2026-10-01. Supersedes the sizes in *The open story is one
+type scale* (now three: 28, 17, 13), "The bottom is the button and the heart"
+in *The credit is a byline*, and Submit's labelled fields and progress rule.
+
+The founder: the pinned button and heart looked arbitrary, the sheet was still
+noisy, and adding a memory looked nothing like reading one.
+
+- **No sticky footer on an open story.** Sticky chrome earns its place when it
+  is needed at any point (NN/g, sticky headers), which is a transaction:
+  Airbnb's Reserve, Baymard on buy buttons. The source is followed after
+  reading, so "Watch from 12:04 →" and the heart close the story, the way
+  Podcasts, Instagram, Medium and Substack attach actions to the content. The
+  pager for a stacked pin and the locked card's buttons keep the bar: they are
+  not the story.
+- **Three sizes, one rhythm.** `story` in `theme.ts`: 28/34 title, 17/26
+  everything you read, 13 `label` for everything named. The lede and the quote
+  are the body in semibold, not bigger. 8 inside a part, 24 between parts, and
+  space instead of hairlines (Refactoring UI, "use fewer borders"; HIG Layout:
+  group with one of space, containers or rules).
+- **Who, when and how far are one line** under the title, with a 20pt avatar:
+  "Retold from **Channel** · 1978 · 40 m away". The episode title moves under
+  the source link, where it says which.
+- **Add a memory is that page with empty slots.** Day One merged its read and
+  edit modes into one view in v3; Medium's editor is the published page. The
+  title and story fields are `story.title` and `story.body` with no box, the
+  byline is yours with the date tappable, photos show at reading size, and
+  Cancel and Post are the only chrome. Editability is the placeholder and the
+  cursor (NN/g: users must know what is editable, which a layout change does
+  not help).
+- **Actions inside a page are text**: Rewrite, Remove, Leave note (ember),
+  Take photo, Choose photo, Delete this memory.
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

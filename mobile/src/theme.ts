@@ -158,6 +158,15 @@ export const label = {
   color: color.inkFaint,
 };
 
+/** A memory's own type, read and written alike: Add a memory's fields are the
+ *  open sheet's text with nothing in it yet, so the two cannot drift. Three
+ *  sizes and nothing else (docs/10, "Reading and writing are one page"). */
+export const story = {
+  title: { ...font.display, fontSize: 28, lineHeight: 34, color: color.ink },
+  body: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.ink },
+  meta: label,
+};
+
 /** The text inside a button. Pair with `color.paper` on ember, `color.ink`
  *  on the quiet and outlined ones. */
 export const buttonText = {

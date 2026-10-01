@@ -1884,6 +1884,7 @@ export default function App() {
           onPosted={posted}
           onSaved={saved}
           onDeleted={deleted}
+          author={{ name: displayName.trim() || 'Anonymous', avatar_url: profile?.avatar_url }}
         />
       </View>
     </SafeAreaProvider>

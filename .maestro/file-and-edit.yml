@@ -23,16 +23,17 @@ appId: ${APP_ID}
 # One coordinate, taken from where the phone is. No field asks for it. The
 # text is something this flow can look for again once it sits in a list.
 - tapOn: "Add a memory here"
-- assertVisible: "Add a memory"
+- assertVisible: "Post"
 
-- tapOn: "The night the ferry horn went off"
+# The fields have no box and no label on screen, so the flow finds them by id.
+- tapOn:
+    id: "title"
 - inputText: "The step by the ferry landing"
 
 # The tags are the #words in it (pipeline/tags.py, from_text): no picker.
-- tapOn: "We sat here until it got light.*"
+- tapOn:
+    id: "story"
 - inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after. #food"
-# Tapping the header no longer drops the keyboard, and Post sits under it.
-- hideKeyboard
 - tapOn: "Post"
 
 # One sentence and its #words are one paragraph (hashtags.ts, lede).
@@ -94,21 +95,20 @@ appId: ${APP_ID}
 # accessibility label (Memories.tsx's Row), so the tap needs the wildcard -
 # after the comma, or it lands on the map's own pin for it behind the journal.
 - tapOn: "The step by the ferry landing, .*"
-- assertVisible: "Edit memory"
-- assertVisible: "The step by the ferry landing"
+- assertVisible: "Save"
+- assertVisible: ".*The step by the ferry landing"
 - assertVisible: ".*ferry horn.*"
 
 # Change the place name and save. Post becomes Save while editing - same
-# button, relabelled - and it sits under the keyboard, so hideKeyboard first,
-# as the filing steps above do. Both fields
-# asserted above sit above the fold, so nothing here has scrolled yet.
+# button, relabelled. Both fields asserted above sit above the fold, so
+# nothing here has scrolled yet.
 #
 # eraseText deletes backward from wherever the tap put the cursor. On
 # 2026-09-28 that was the end: 60 clears the whole name, so it is typed whole.
-- tapOn: "The step by the ferry landing"
+- tapOn:
+    id: "title"
 - eraseText: 60
 - inputText: "The jetty by the ferry landing"
-- hideKeyboard
 - tapOn: "Save"
 
 # Back on the journal - onSaved closes the editor the same way onPosted does,
@@ -120,8 +120,8 @@ appId: ${APP_ID}
 - assertNotVisible: "The step by the ferry landing"
 
 - tapOn: "The jetty by the ferry landing, .*"
-- assertVisible: "Edit memory"
-- assertVisible: "The jetty by the ferry landing"
+- assertVisible: "Save"
+- assertVisible: ".*The jetty by the ferry landing"
 - assertVisible: ".*ferry horn.*"
 
 # Delete this memory sits below the fold - scrollUntilVisible rather than

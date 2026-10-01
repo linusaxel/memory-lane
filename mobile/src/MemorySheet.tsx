@@ -43,6 +43,7 @@ import {
   label,
   lift,
   radius as corner,
+  story,
 } from './theme.ts';
 
 type Props = {
@@ -365,6 +366,7 @@ export default function MemorySheet({
   ]
     .filter(Boolean)
     .join(' · ');
+  const after = metaLine && ` · ${metaLine}`;
   const quoteBy = [
     memory?.quote_by,
     started != null && `at ${formatTimestamp(started)}`,
@@ -444,21 +446,25 @@ export default function MemorySheet({
               {/* Who told it, under the name: in every screenshot, and the
                   first thing seen with an AI-written story, which is where
                   the AI Act wants it said (UI.md rule 11). */}
+              {/* Then when, why it is on top, and how far, on the same line:
+                  who and when are one fact about the story. "On this day" has
+                  no accent - the seal means openable and nothing else gets it. */}
               {!locked &&
                 (memory.author ? (
                   <View style={[styles.byline, styles.bylineRow]}>
-                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={32} />
-                    <Text style={styles.bylineFrom} numberOfLines={1}>
-                      Left by <Text style={styles.bylineName}>{memory.author.name}</Text>
+                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={20} />
+                    <Text style={styles.bylineText} numberOfLines={2}>
+                      <Text style={styles.bylineName}>{memory.author.name}</Text>
+                      {after}
                     </Text>
                   </View>
                 ) : memory.content?.source ? (
                   <View style={styles.byline}>
-                    <SourceLine source={memory.content.source} title={memory.content.title} />
+                    <SourceLine source={memory.content.source} after={after} />
                   </View>
-                ) : memory.content?.title ? (
+                ) : memory.content?.title || metaLine ? (
                   <Text style={[styles.meta, styles.byline]} numberOfLines={2}>
-                    Retold from {memory.content.title}
+                    {memory.content?.title ? `Retold from ${memory.content.title}${after}` : metaLine}
                   </Text>
                 ) : null)}
               {/* What it is about, as the #words the open story sets them in
@@ -473,10 +479,9 @@ export default function MemorySheet({
                   ))}
                 </View>
               )}
-              {/* When, then why it is on top, then how far: one line, the
-                  way a byline's date sits under it. "On this day" has no
-                  accent - the seal means openable and nothing else gets it. */}
-              {metaLine !== '' && <Text style={[styles.meta, styles.metaLine]}>{metaLine}</Text>}
+              {locked && memory.anniversary && (
+                <Text style={[styles.meta, styles.byline]}>on this day</Text>
+              )}
             </View>
 
             {/* Two different screens, not one screen with the middle deleted. A
@@ -524,7 +529,7 @@ export default function MemorySheet({
                     first tap on it send rather than only drop the keyboard, and
                     the insets let it scroll clear of the keyboard. */}
                 <ScrollView
-                  contentContainerStyle={styles.body}
+                  contentContainerStyle={[styles.body, { paddingBottom: 24 + insets.bottom }]}
                   keyboardShouldPersistTaps="handled"
                   automaticallyAdjustKeyboardInsets
                 >
@@ -538,8 +543,8 @@ export default function MemorySheet({
                     <Text style={rest ? styles.lede : styles.summary}>{prose(first)}</Text>
                   </Animated.View>
                   {rest !== '' && (
-                    <Animated.View style={rise(1)}>
-                      <Text style={[styles.summary, styles.afterLede]}>{prose(rest)}</Text>
+                    <Animated.View style={[rise(1), styles.afterLede]}>
+                      <Text style={styles.summary}>{prose(rest)}</Text>
                     </Animated.View>
                   )}
                   {memory.quote && (
@@ -558,7 +563,7 @@ export default function MemorySheet({
                       </Pressable>
                     </Animated.View>
                   )}
-                  <Animated.View style={rise(3)}>
+                  <Animated.View style={[rise(3), styles.after]}>
                     {memory.contrast_note && (
                       <View style={styles.now}>
                         <Text style={styles.meta}>Then and now</Text>
@@ -568,19 +573,47 @@ export default function MemorySheet({
 
                     <MemoryMedia media={memory.media} />
 
-                    <Notes memoryId={memory.id} isAuthor={!!onEdit} />
+                    {/* The end of the story, not a bar over it: the way out to
+                        the source and the heart close it, the way a post's
+                        actions sit under the post (docs/10, "Reading and
+                        writing are one page"). */}
+                    {(memory.content || heart) && (
+                      <View style={styles.openRow}>
+                        {memory.content ? (
+                          <Pressable
+                            style={dim(styles.grow)}
+                            hitSlop={12}
+                            accessibilityRole="link"
+                            accessibilityLabel={sourceAction(memory.content).spoken}
+                            // url is already resolved - a document, or the video at the
+                            // right second.
+                            onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                          >
+                            <Text style={styles.watchLink}>{sourceAction(memory.content).text} →</Text>
+                            {memory.content.source && memory.content.title && (
+                              <Text style={styles.meta} numberOfLines={2}>
+                                {memory.content.title}
+                              </Text>
+                            )}
+                          </Pressable>
+                        ) : (
+                          <View style={styles.grow} />
+                        )}
+                        {heart}
+                      </View>
+                    )}
+                    {linkFailed && <Text style={styles.meta}>{linkFailed}</Text>}
 
+                    <Notes memoryId={memory.id} isAuthor={!!onEdit} />
                   </Animated.View>
                 </ScrollView>
 
               </>
             )}
 
-            {(many ||
-              (peeking && (onWalkHere || openFree)) ||
-              (!locked && memory.content) ||
-              heart ||
-              linkFailed) && (
+            {/* Over the story, only what is not the story: the way to the
+                others under this pin, and the locked card's ways in. */}
+            {(many || (peeking && (onWalkHere || openFree))) && (
               <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
                 {/* Without this, every memory but the first at a stacked point is
                     unreachable - and 60% of this corpus sits on a shared point. */}
@@ -631,28 +664,6 @@ export default function MemorySheet({
                     <Text style={styles.secondaryText}>Walk here</Text>
                   </Pressable>
                 )}
-                {/* Pinned under the scroll: only the way out to the source,
-                    and the heart beside it. */}
-                {!locked && (memory.content || heart) && (
-                  <View style={styles.openRow}>
-                    {memory.content ? (
-                      <Pressable
-                        style={dim([styles.watch, styles.grow])}
-                        accessibilityRole="button"
-                        accessibilityLabel={sourceAction(memory.content).spoken}
-                        // url is already resolved - a document, or the video at the
-                        // right second.
-                        onPress={() => open(memory.content!.url, "Couldn't open that link.")}
-                      >
-                        <Text style={styles.watchText}>{sourceAction(memory.content).text}</Text>
-                      </Pressable>
-                    ) : (
-                      <View style={styles.grow} />
-                    )}
-                    {heart}
-                  </View>
-                )}
-                {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
               </View>
             )}
           </View>
@@ -677,9 +688,8 @@ const styles = StyleSheet.create({
   grabberRow: { alignItems: 'center', paddingTop: 10 },
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
   heading: { paddingHorizontal: 24, paddingTop: 26 },
-  body: { paddingHorizontal: 24, paddingTop: 22, paddingBottom: 12 },
-  place: { ...font.display, fontSize: 28, lineHeight: 34, color: color.ink, paddingRight: 30 },
-  metaLine: { marginTop: 10 },
+  body: { paddingHorizontal: 24, paddingTop: 24 },
+  place: { ...story.title, paddingRight: 30 },
   meta: { ...label },
   peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
@@ -706,30 +716,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
-  summary: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.ink },
+  summary: story.body,
   // The peak, set apart the way a standfirst is. The prompt puts it first.
-  lede: { ...font.displaySemi, fontSize: 20, lineHeight: 28, color: color.ink },
-  afterLede: { marginTop: 12 },
+  lede: { ...story.body, ...font.displaySemi },
+  // One rhythm: 8 inside a part, 24 between parts, and no rules between them.
+  afterLede: { marginTop: 8 },
+  after: { marginTop: 24, gap: 24 },
   // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
-  quote: { marginTop: 28, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
-  quoteText: { ...font.displaySemi, fontSize: 20, lineHeight: 28, color: color.ink },
-  now: { marginTop: 28, gap: 4 },
-  nowText: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.inkSoft },
+  quote: { marginTop: 24, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
+  quoteText: { ...story.body, ...font.displaySemi },
+  now: { gap: 8 },
+  nowText: { ...story.body, color: color.inkSoft },
   hashtag: { ...font.displaySemi },
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
-  byline: { gap: 2, marginTop: 12 },
-  bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  bylineFrom: { ...font.prose, fontSize: 15, color: color.inkSoft, flexShrink: 1 },
-  bylineName: { ...font.displaySemi, color: color.ink },
+  byline: { marginTop: 8 },
+  bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bylineText: { ...story.meta, flexShrink: 1 },
+  bylineName: { color: color.ink },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ember, not seal: the seal is the unlock and nothing else gets to wear it.
   watch: button.solid,
   watchText: { ...buttonText, color: color.paper },
-  linkFailed: { ...label, textAlign: 'center' },
+  // Ember, as every link here is: the memory's way out, at the story's size.
+  watchLink: { ...story.body, ...font.displaySemi, color: color.ember },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
-  openRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  openRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   grow: { flex: 1 },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },
   // Two digits' room, kept at zero, so the glyph after it never moves.

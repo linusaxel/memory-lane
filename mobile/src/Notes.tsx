@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { fetchNotes, hideNote, leaveNote, wasRefused, type Note } from './api.ts';
 import { deviceId } from './device.ts';
-import { button, buttonTextSmall, color, dim, font, input, label } from './theme.ts';
+import { color, dim, input, label, story } from './theme.ts';
 
 export const NOTE_MAX = 280;
 
@@ -68,7 +68,7 @@ export default function Notes({ memoryId, isAuthor }: Props) {
 
   return (
     <View style={styles.notes}>
-      {notes.length > 0 && <Text style={styles.heading}>Notes from people who stood here</Text>}
+      {notes.length > 0 && <Text style={styles.heading}>Notes</Text>}
       {notes.map((note) => (
         <View key={note.id} style={styles.note}>
           <Text style={styles.body}>{note.body}</Text>
@@ -131,8 +131,8 @@ export default function Notes({ memoryId, isAuthor }: Props) {
             <Text style={styles.counter}>{NOTE_MAX - draft.length} left</Text>
             <Pressable
               accessibilityRole="button"
-              style={dim([styles.send, !draft.trim() && styles.off])}
-              hitSlop={4}
+              style={dim(!draft.trim() && styles.off)}
+              hitSlop={12}
               disabled={busy || !draft.trim()}
               onPress={send}
             >
@@ -153,17 +153,17 @@ export default function Notes({ memoryId, isAuthor }: Props) {
 }
 
 const styles = StyleSheet.create({
-  notes: { marginTop: 32, gap: 14 },
+  notes: { gap: 16 },
   heading: { ...label },
-  note: { gap: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: color.rule },
-  body: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.ink },
+  note: { gap: 8 },
+  body: story.body,
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   author: { ...label },
   action: { ...label, color: color.inkSoft },
-  send: { ...button.solid, ...button.small },
-  sendText: { ...buttonTextSmall, color: color.paper },
+  // The same text action as Rewrite, in ember: the one thing to do here.
+  sendText: { ...label, color: color.ember },
   off: { opacity: 0.35 },
-  input: { ...input },
-  prose: { minHeight: 90, lineHeight: 24 },
+  input: { ...input, ...story.body },
+  prose: { minHeight: 90 },
   counter: { ...label, flex: 1 },
 });

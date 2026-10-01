@@ -13,15 +13,15 @@ import { useState } from 'react';
 import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Source } from './api.ts';
-import { color, dim, font, label } from './theme.ts';
+import { color, dim, story } from './theme.ts';
 
 type Props = {
   source: Source;
-  /** The episode, when there is one. The channel is who; this is which. */
-  title?: string | null;
+  /** The rest of the sheet's meta line, after the credit: " · 1978 · 40 m away". */
+  after?: string;
 };
 
-export default function SourceLine({ source, title }: Props) {
+export default function SourceLine({ source, after }: Props) {
   // A channel avatar is decoration; if it will not load, fall back to the same
   // empty circle a channel without one gets rather than a grey disc that looks
   // like it is still loading.
@@ -38,16 +38,10 @@ export default function SourceLine({ source, title }: Props) {
       ) : (
         <View style={[styles.avatar, styles.avatarEmpty]} />
       )}
-      <View style={styles.text}>
-        <Text style={styles.from} numberOfLines={1}>
-          Retold from <Text style={styles.name}>{source.name}</Text>
-        </Text>
-        {title ? (
-          <Text style={styles.title} numberOfLines={2}>
-            {title}
-          </Text>
-        ) : null}
-      </View>
+      <Text style={styles.from} numberOfLines={2}>
+        Retold from <Text style={styles.name}>{source.name}</Text>
+        {after}
+      </Text>
     </View>
   );
 
@@ -65,15 +59,13 @@ export default function SourceLine({ source, title }: Props) {
   );
 }
 
-const AVATAR = 32;
+const AVATAR = 20;
 
 const styles = StyleSheet.create({
   // MemorySheet's byline, under the place name.
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
   avatarEmpty: { borderWidth: 1, borderColor: color.rule },
-  text: { flex: 1, gap: 2 },
-  from: { ...font.prose, fontSize: 15, color: color.inkSoft },
-  name: { ...font.displaySemi, color: color.ink },
-  title: { ...label },
+  from: { ...story.meta, flex: 1 },
+  name: { color: color.ink },
 });
