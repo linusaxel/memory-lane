@@ -208,6 +208,13 @@ never found it on the map, because filing opens it for you and the map drew
 locked ones only. Your own pins are drawn too, open: they are where you left
 them, not a corpus to browse, and every other open memory stays off the map.
 
+**Amended 2026-10-01: and what you opened, behind a filter.** The founder
+wanted to see on the map what they had already opened, and to tell the two
+apart. Every memory you opened is drawn too, inside out (paper disc, ember
+eye), and a filter bottom left picks all, locked only or unlocked only.
+Still not a corpus to browse: what you opened you could already read in the
+journal, and locked pins stay unreadable.
+
 ### Only today's walk unlocks
 
 Status: **Superseded 2026-09-30** by *Steps open a memory*: any memory you

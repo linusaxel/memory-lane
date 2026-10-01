@@ -75,7 +75,12 @@ export default function MemoryMarker({
       tracksViewChanges={false}
       onPress={onPress}
     >
-      <Pin lit={lit} next={next && !lit} badge={routePosition || (count > 1 ? count : null)} />
+      <Pin
+        lit={lit}
+        next={next && !lit}
+        open={reach === 'plain' || reach === 'stamped'}
+        badge={routePosition || (count > 1 ? count : null)}
+      />
       {/* An empty tooltip callout, which is how you say "no callout" while
           keeping a title. Setting `title` makes MapKit offer its own bubble:
           system font on a white rounded rect, at odds with everything in
@@ -91,18 +96,19 @@ export default function MemoryMarker({
   );
 }
 
-type PinProps = { lit: boolean; next: boolean; badge: number | null };
+type PinProps = { lit: boolean; next: boolean; open: boolean; badge: number | null };
 
 /** One pin for everything. It lights up only when it can be opened from where
- *  you stand; every other state lives in the title and the sheet. The paper
+ *  you stand, and turns inside out, paper with an ember eye, once you have
+ *  opened it; every other state lives in the title and the sheet. The paper
  *  centre is the point: the pin you can open is the pin you are standing on,
  *  so the blue location dot lands in the hole instead of under a disc. */
-function Pin({ lit, next, badge }: PinProps) {
+function Pin({ lit, next, open, badge }: PinProps) {
   const hop = useHop(next);
   return (
     <Animated.View style={[styles.wrap, lit && styles.halo, hop]}>
-      <View style={[styles.pin, lit && styles.pinLit, next && styles.pinNext]}>
-        <View style={[styles.eye, (lit || next) && styles.eyeLit, lit && styles.onSeal]} />
+      <View style={[styles.pin, open && styles.pinOpen, lit && styles.pinLit, next && styles.pinNext]}>
+        <View style={[styles.eye, open && styles.eyeOpen, (lit || next) && styles.eyeLit, lit && styles.onSeal]} />
       </View>
       {badge !== null && (
         <View
@@ -152,8 +158,10 @@ const styles = StyleSheet.create({
   // Gold is too light for a paper edge, so a lit pin draws in sealInk.
   pinLit: { width: LIT, height: LIT, borderRadius: LIT / 2, backgroundColor: color.seal, borderColor: color.sealInk },
   pinNext: { width: LIT, height: LIT, borderRadius: LIT / 2 },
+  pinOpen: { backgroundColor: color.paper, borderColor: color.ember },
   eye: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.paper },
   eyeLit: { width: 12, height: 12, borderRadius: 6 },
+  eyeOpen: { backgroundColor: color.ember },
   onSeal: { backgroundColor: color.sealInk },
 
   tag: {

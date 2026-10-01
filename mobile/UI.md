@@ -68,6 +68,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              camera follows you; a one-finger drag lets go and this shows until
 │                              tapped. Before a walk, it shows once the map is off you by a sixth
 │                              of the screen. Custom: showsMyLocationButton is Android-only
+├─ the map filter           bottom left, before a walk, a 44pt glass circle opening a native menu:
+│                              All memories / Locked / Unlocked (src/MapFilter.tsx). The glyph fills
+│                              while it hides something
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
@@ -127,11 +130,11 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; × top right
    ├─ location state + action
    └─ privacy policy, and what signing out does and does not delete
 
-There are no tabs. Before a walk the map draws what is locked around you; on a
-walk it draws only that walk. Three pins a day open from anywhere, from the
-peek; after that, standing on one and 1,000 steps. The top centre is the step
-count and what is free today; the walk is a side way in, so **Plan a walk** is
-a quiet pill and the walk card sits at the bottom (docs/10, "Three free a day, then steps where you stand").
+There are no tabs. Before a walk the map draws what is around you, locked and
+unlocked, behind a filter; on a walk it draws only that walk. Three pins a day
+open from anywhere, from the peek; after that, standing on one and 1,000 steps.
+The top centre is the step count and what is free today; the walk is a side way
+in, so **Plan a walk** is a quiet pill and the walk card sits at the bottom (docs/10, "Three free a day, then steps where you stand").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -736,6 +739,7 @@ and to `ember` on 2026-09-27: teal read as water and park.
 | When | Geometry | Tokens |
 |---|---|---|
 | every pin | disc 24, border 2; eye 8 | fill `ember`, edge + eye `paper` |
+| unlocked (`plain`, `stamped`): every memory in it opened | same geometry, inside out | fill `paper`, edge + eye `ember` |
 | `unlockable`: inside the radius **and openable by walking** | disc 32, border 2; eye 12; wash 46 | fill `seal`, edge + eye `sealInk`, wash `halo` |
 | the next stop on today's walk, not yet in reach | disc 32, border 2; eye 12; hops (`useHop`), still under Reduce Motion | fill `ember`, edge + eye `paper`. Size and the hop tell it apart |
 | a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ember`, count `paper` (`seal` with `sealInk` on a lit pin) |
@@ -747,8 +751,9 @@ disc. The badge sits in the corner for the same reason.
 **`seal` means openable now, and nothing else.** A seal-coloured pin you
 cannot open is an invitation that refuses you (F11). That includes paying:
 with no free one left and short of the price, a pin you stand on stays ember
-and its reach reads `locked` (`short` in `App.tsx`, from `src/wallet.ts`). Locked near, locked far,
-earned and never gated all draw the same ink pin; the difference is in the
+and its reach reads `locked` (`short` in `App.tsx`, from `src/wallet.ts`). Locked near and locked
+far draw the same ember pin, and earned and never gated the same paper one
+(2026-10-01, docs/10 "A map of what is locked"); the rest is in the
 marker's `title` (VoiceOver and Maestro still hear every state from
 `STATE_LABEL`) and in the sheet. `reachOf` in `src/reach.ts` still computes all
 five, because the banner and the walk hint need them.

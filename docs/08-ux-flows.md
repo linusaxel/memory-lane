@@ -951,12 +951,12 @@ prove it.
 before an accept lands here; an accepted walk opens on the walk (F25).
 
 1. The map, centred on you, or on central Copenhagen with no position. The
-   pins are the locked memories within 5 km (`MAP_RADIUS_KM`, half the longest
+   pins are the memories within 5 km (`MAP_RADIUS_KM`, half the longest
    walk), from `/v1/memories/nearby`, fetched on arriving and again when a
-   position first comes. Nothing open is drawn but what you filed: an open
-   memory is not a reason to walk, and yours is where you left it. The map
-   refetches when you file, edit or delete one. One you already earned wears
-   its stamp.
+   position first comes, locked and opened both. A glass filter bottom left
+   (`src/MapFilter.tsx`) shows all of them, only the locked or only the
+   unlocked; an unlocked pin is drawn inside out, paper with an ember eye.
+   The map refetches when you file, edit or delete one.
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
    who it is from ("From" a source, "Left by" a person, with a glyph), its
    #tags, then the approach ring beside the distance with year · hearts and what

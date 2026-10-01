@@ -88,6 +88,7 @@ import UnlockHere from './src/UnlockHere.tsx';
 import { buttonText, color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
+import MapFilter, { type MapShows } from './src/MapFilter.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
@@ -223,6 +224,7 @@ export default function App() {
   const [confirmEnd, setConfirmEnd] = useState(false);
   // The locked memories around you, before any walk (F29).
   const [nearby, setNearby] = useState<LocatedMemory[]>([]);
+  const [mapShows, setMapShows] = useState<MapShows>('all');
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   // What was tapped is a point, not a memory: the sheet pages through it.
@@ -730,14 +732,9 @@ export default function App() {
       lng: FALLBACK_REGION.longitude,
     };
     fetchNearby(at, MAP_RADIUS_KM, device, controller.signal)
-      // Locked, and what you filed: what is open without a walk is not a reason
-      // to take one, but your own is where you left it (docs/10, "A map of what
+      // Locked and opened both: MapFilter picks which (docs/10, "A map of what
       // is locked"). mineVersion refetches the moment you file, edit or delete.
-      .then(
-        (found) =>
-          mounted.current &&
-          setNearby(found.filter((memory) => memory.locked || filedBy(memory, me))),
-      )
+      .then((found) => mounted.current && setNearby(found))
       .catch(() => {});
     return () => controller.abort();
   }, [stage, located, me, mineVersion, device]);
@@ -767,8 +764,11 @@ export default function App() {
   // being previewed, or the walk being walked. Nothing off the route is drawn
   // on a walk.
   const nearbyShown = useMemo(
-    () => nearby.map((memory) => unlocked[memory.id] ?? memory),
-    [nearby, unlocked],
+    () =>
+      nearby
+        .map((memory) => unlocked[memory.id] ?? memory)
+        .filter((memory) => mapShows === 'all' || memory.locked === (mapShows === 'locked')),
+    [nearby, unlocked, mapShows],
   );
   const pins = useMemo(
     () =>
@@ -1613,6 +1613,12 @@ export default function App() {
             </GlassButton>
           )}
 
+          {stage === 'map' && (
+            <View style={styles.mapFilter}>
+              <MapFilter shows={mapShows} onShow={setMapShows} />
+            </View>
+          )}
+
           {/* A side way in, not the screen's one button: the free ones and
               steps are (docs/10, "Three free a day, then steps where you
               stand"). */}
@@ -1923,4 +1929,5 @@ const styles = StyleSheet.create({
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
   recenter: { position: 'absolute', right: 18 },
+  mapFilter: { position: 'absolute', left: 18, bottom: 44 },
 });
