@@ -203,7 +203,9 @@ def _print_report(summaries: list[str]):
 def _print_comparison(results: dict[str, list[list[dict]]], chunks):
     for name, per_chunk in results.items():
         print(f"\n== {name}")
-        _print_report([m.get("summary") or "" for kept in per_chunk for m in kept])
+        kept = [m for chunk in per_chunk for m in chunk]
+        _print_report([m.get("summary") or "" for m in kept])
+        print(f"{'with a quote':<22}{sum(1 for m in kept if m.get('quote')):>5}")
 
     for n, (cid, i, _, _) in enumerate(chunks):
         print(f"\n--- content {cid} chunk {i}")
@@ -211,6 +213,8 @@ def _print_comparison(results: dict[str, list[list[dict]]], chunks):
             print(f"  {name}:")
             for m in per_chunk[n] or [{"venue": "(nothing)", "summary": ""}]:
                 print(f"    {m.get('venue')}: {m.get('summary')}")
+                if m.get("quote"):
+                    print(f'      "{m["quote"]}" - {m.get("quote_by") or "?"}')
 
 
 def main():

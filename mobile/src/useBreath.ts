@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing } from 'react-native';
 
-function useReduceMotion() {
+export function useReduceMotion() {
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);

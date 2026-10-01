@@ -95,6 +95,14 @@ export type Memory = {
   anniversary: boolean;
   /** ISO date, or null when the source did not say. */
   happened_at: string | null;
+  /** day | month | year | decade: how much of happened_at to say. */
+  happened_precision?: string | null;
+  /** The place then against now, one line. Null until something knows. */
+  contrast_note?: string | null;
+  /** One line in the teller's own words, checked against the source. Null
+   *  while locked, like the summary. */
+  quote?: string | null;
+  quote_by?: string | null;
   /** Set once enough people report it. Only ever true from /v1/me/memories -
    *  every other endpoint drops a hidden memory instead of flagging it. */
   hidden: boolean;

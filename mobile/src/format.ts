@@ -58,3 +58,25 @@ const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eig
 export function count(n: number): string {
   return WORDS[n] ?? n.toLocaleString();
 }
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+/** When it happened, as much as the source said: the year to set large, and
+ *  the day or month beside it. A decade is "1930s". Read from the ISO string,
+ *  not a Date, which would be the day before anywhere west of Greenwich. */
+export function happened(
+  at: string | null | undefined,
+  precision: string | null | undefined,
+): { year: string; within: string | null } | null {
+  if (!at) return null;
+  const [y, m, d] = at.split('-').map(Number);
+  if (!Number.isFinite(y)) return null;
+  if (precision === 'decade') return { year: `${Math.floor(y / 10) * 10}s`, within: null };
+  const month = MONTHS[m - 1];
+  if (precision === 'day' && month) return { year: String(y), within: `${d} ${month}` };
+  if (precision === 'month' && month) return { year: String(y), within: month };
+  return { year: String(y), within: null };
+}

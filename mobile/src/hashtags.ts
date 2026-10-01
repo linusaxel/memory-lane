@@ -67,3 +67,16 @@ export function hashtags(text: string): string[] {
   }
   return seen.slice(0, MAX_HASHTAGS);
 }
+
+/** The first sentence and the rest, for setting the lede apart. A full stop
+ *  after a word of one or two letters ("St.", "U.S.") does not end one, nor
+ *  does one before a lowercase word. One sentence is all lede. */
+export function lede(text: string): [string, string] {
+  for (const match of text.matchAll(/[.!?](?=\s+[^\sa-zß-ÿ])/g)) {
+    const at = match.index ?? 0;
+    const word = text.slice(0, at).match(new RegExp(`[${WORD}]+$`))?.[0] ?? '';
+    if (match[0] === '.' && word.length <= 2 && !/\d/.test(word)) continue;
+    return [text.slice(0, at + 1), text.slice(at + 1).trim()];
+  }
+  return [text, ''];
+}

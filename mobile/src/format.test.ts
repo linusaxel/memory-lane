@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { count, distance, duration, walkDate, when } from './format.ts';
+import { count, distance, duration, happened, walkDate, when } from './format.ts';
 
 test('metres below a kilometre, kilometres above', () => {
   assert.equal(distance(420), '420 m');
@@ -60,4 +60,13 @@ test("a walk's date is the day it was walked, in any timezone", () => {
 test('small counts in words, large ones in digits', () => {
   assert.equal(count(3), 'three');
   assert.equal(count(12), '12');
+});
+
+test('when it happened says only as much as the source did', () => {
+  assert.deepEqual(happened('1936-06-17', 'day'), { year: '1936', within: '17 June' });
+  assert.deepEqual(happened('1936-06-01', 'month'), { year: '1936', within: 'June' });
+  assert.deepEqual(happened('1936-01-01', 'year'), { year: '1936', within: null });
+  assert.deepEqual(happened('1936-01-01', 'decade'), { year: '1930s', within: null });
+  assert.deepEqual(happened('1936-01-01', null), { year: '1936', within: null });
+  assert.equal(happened(null, 'day'), null);
 });

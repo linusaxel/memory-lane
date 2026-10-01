@@ -39,6 +39,8 @@ For each memory, the LLM extracts:
 | `lng` | Longitude, same. |
 | `timestamp_start` | When place is first mentioned (from [timestamp] markers) |
 | `summary` | 2-4 sentences capturing the story - who, what happened, the vibe. Conversational, not a summary in the report sense. |
+| `quote` | The best line about the moment, verbatim, at most 25 words, in its own language. `grounded()` checks it against the chunk like `place_words`, and an unfound one is set to null without dropping the memory. Shown under the summary ([why](10-decisions.md#the-open-story-has-a-shape)) |
+| `quote_by` | Who said or wrote it, by name, or null |
 | `tags` | 1-5 categories: food, travel, history, culture, adventure, romance, nightlife, nature, art, music, sports, business, personal |
 | `location_precision` | exact (~50m), street (~200m), neighborhood (~1km), city (~10km) |
 | `confidence` | high, medium, or low |
@@ -299,6 +301,27 @@ The best examples:
 - 4528: Andersen praying on the empty Royal Theatre stage.
 - 4482: staged Boer War footage in the circus building.
 - 4470: an airport rampart against ice-cream eaters.
+
+**A line in their words** (2026-10-01, ~125 Sonnet calls). Both prompts
+gained `quote` and `quote_by`, plus "end on what is still visible". Measured
+with `quality --compare` at 20 chunks each:
+
+- **Video:** 12 against 15 kept, which is chunk noise more than prompt: the old
+  prompt kept two Trip Nørrebro stories, and the new one kept two DC Improv
+  ones. The failure checks were flat (anonymous 1, meta 1; over 70 words 0
+  against 1). 10 of 15 kept a quote, and they are the voice the summary
+  cannot be: "der var altså nogle gange hvor man ikke nåede helt hel skinnet
+  hjem" (Jokum Rohde), "This is the nicest man on the planet, Teddy." (Mark
+  Normand).
+- **Archive:** 19 against 19, the same places, every check at 0. The first
+  draft quoted 11 of 19, and nearly all of them were the resistance
+  register's own flat sentences, saying the summary again in Danish. The
+  prompt now says a register has no voice. That left 1 of 19: a saboteur's
+  "nu sprænger bomben".
+- **The Weather Girls card text,** standing in for the post (which is in
+  neither the repo nor the database): kept 3 of 3.
+
+Books were not sampled. They are where a memoirist's quote should show up.
 
 **The north star: the Weather Girls.** A post by Nicolas Cosedis (Facebook,
 seen 2026-09-30) about the weather station on Richshuset, Rådhuspladsen, is what

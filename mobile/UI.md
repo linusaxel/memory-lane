@@ -72,7 +72,11 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   locked                            open
   ├─ place name       30/700        ├─ place name       30/700
   ├─ padlock                        ├─ distance
-  │                                 ├─ summary  17/26, #tags semibold
+  │                                 ├─ the year  44/700, "17 June" beside it   when the source dates it
+  │                                 ├─ the lede  21/30 semibold: the first sentence, the peak
+  │                                 ├─ the rest  19/31, #tags semibold
+  │                                 ├─ "their words"  20/29 semibold, ember rule, "— Mads, at 12:04"
+  │                                 ├─ "Then and now"  16/25 inkSoft   contrast_note, when known
   ├─ distance         52/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar; the heart trailing on that line
   ├─ "1 attachment waiting"         │    (a count only, on your own memory)
@@ -249,7 +253,8 @@ and must not drift between them.
 
 **Scale**: 34 display (screen titles) · 30 (place name) · 52 `figure` (the
 gate's distance, the streak, the stats) · 36 `figureSmall` (the peek's
-distance, under its place) · 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
+distance, under its place) · 44 the open story's year · 21/30 semibold (its lede, and 20/29 its
+quote) · 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
 · 12–15 (everything labelled) · 17 buttons.
 
 
@@ -847,7 +852,10 @@ budget. Spec, so it does not get re-invented per screen:
   the unlock and the flare in the same frame, so the round trip happens behind
   something worth watching. The payoff proper is not here — it is the story
   rising into `MemorySheet` as it opens (`revealId`), and this hands off to
-  it.
+  it: the year, the lede, the rest, the quote, then "Then and now" and the
+  credit, each rising 12 px over 360 ms, 90 ms after the last (720 ms in
+  all, one native-driver value). Reduce Motion keeps the fades and drops the
+  rise. No haptic of its own: the Success has already fired on the hold.
 - **Transform and opacity only.** Those are what `useNativeDriver` can carry;
   an animated colour puts the whole control back on the JS thread for the
   900ms it most needs to be smooth.

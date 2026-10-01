@@ -25,8 +25,9 @@ import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
 import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
-import { distance, duration } from './format.ts';
-import { summaryParts } from './hashtags.ts';
+import { distance, duration, happened } from './format.ts';
+import { lede, summaryParts } from './hashtags.ts';
+import { useReduceMotion } from './useBreath.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -135,6 +136,10 @@ function formatDistance(meters: number | null): string | null {
   return meters == null ? null : distance(meters, { suffix: 'away' });
 }
 
+const RISE_MS = 360;
+const BEAT_MS = 90;
+const REVEAL_MS = RISE_MS + 4 * BEAT_MS;
+
 function formatTimestamp(seconds: number): string {
   return duration(seconds, { hours: true });
 }
@@ -233,8 +238,10 @@ export default function MemorySheet({
 
   // The reveal is the payoff. Swapping the text in place would throw away the
   // only moment the product has - so the content arrives, once, as the sheet
-  // opens on what the hold unlocked.
+  // opens on what the hold unlocked: the year, the lede, the rest, their
+  // words, then what stands here now, each a beat after the last.
   const reveal = useRef(new Animated.Value(1)).current;
+  const still = useReduceMotion();
 
   // Swipe the card down to close it, as a page sheet does. The card sits at
   // the foot of a transparent scroll view, so pulling it down is the native
@@ -255,7 +262,7 @@ export default function MemorySheet({
     reveal.setValue(0);
     Animated.timing(reveal, {
       toValue: 1,
-      duration: 420,
+      duration: REVEAL_MS,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
@@ -276,10 +283,53 @@ export default function MemorySheet({
       <Text style={styles.waiting}>{waitingParts.join(' · ')} waiting</Text>
     ) : null;
 
-  const revealed = {
-    opacity: reveal,
-    transform: [{ translateY: reveal.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  /** The kth beat of the reveal: it rises and fades in RISE_MS, BEAT_MS after
+   *  the one before. With Reduce Motion on, it only fades. */
+  const rise = (k: number) => {
+    const inputRange = [(k * BEAT_MS) / REVEAL_MS, (k * BEAT_MS + RISE_MS) / REVEAL_MS];
+    return {
+      opacity: reveal.interpolate({ inputRange, outputRange: [0, 1], extrapolate: 'clamp' }),
+      transform: [
+        {
+          translateY: reveal.interpolate({
+            inputRange,
+            outputRange: [still ? 0 : 12, 0],
+            extrapolate: 'clamp',
+          }),
+        },
+      ],
+    };
   };
+
+  /* The #words are the tags (hashtags.ts): set in the semibold, not a colour,
+     since every colour here already means something (UI.md, "One accent").
+     Not tappable. A linked name is underlined, like every text link. */
+  const prose = (text: string) =>
+    summaryParts(text, memory?.links).map((part, i) =>
+      part.url ? (
+        <Text
+          key={i}
+          style={styles.nameLink}
+          accessibilityRole="link"
+          onPress={() => open(part.url!, "Couldn't open that link.")}
+        >
+          {part.text}
+        </Text>
+      ) : part.tag ? (
+        <Text key={i} style={styles.hashtag}>
+          {part.text}
+        </Text>
+      ) : (
+        part.text
+      ),
+    );
+  const [first, rest] = lede(memory?.summary ?? '');
+  const when = happened(memory?.happened_at, memory?.happened_precision);
+  const started = memory?.content?.timestamp_start ?? null;
+  const quoteBy = [
+    memory?.quote_by,
+    started != null && `at ${formatTimestamp(started)}`,
+  ].filter(Boolean).join(', ');
 
   return (
     <Modal
@@ -423,31 +473,46 @@ export default function MemorySheet({
                   {/* The summary carries the sheet when nothing is attached, which
                       is every extracted memory; a submission usually brings a
                       photograph and the weight shifts to it. */}
-                  <Animated.View style={revealed}>
-                    {/* The #words are the tags (hashtags.ts): set in the
-                        semibold, not a colour, since every colour here already
-                        means something (UI.md, "One accent"). Not tappable.
-                        A linked name is underlined, like every text link. */}
-                    <Text style={styles.summary}>
-                      {summaryParts(memory.summary, memory.links).map((part, i) =>
-                        part.url ? (
-                          <Text
-                            key={i}
-                            style={styles.nameLink}
-                            accessibilityRole="link"
-                            onPress={() => open(part.url!, "Couldn't open that link.")}
-                          >
-                            {part.text}
-                          </Text>
-                        ) : part.tag ? (
-                          <Text key={i} style={styles.hashtag}>
-                            {part.text}
-                          </Text>
-                        ) : (
-                          part.text
-                        ),
-                      )}
-                    </Text>
+                  {/* docs/10, "The open story has a shape": when, the peak
+                      first, their words, and what you can see now last. */}
+                  {when && (
+                    <Animated.View style={[styles.when, rise(0)]}>
+                      <Text style={styles.year}>{when.year}</Text>
+                      {when.within && <Text style={styles.meta}>{when.within}</Text>}
+                    </Animated.View>
+                  )}
+                  {/* One sentence is not a lede, it is the story. */}
+                  <Animated.View style={rise(1)}>
+                    <Text style={rest ? styles.lede : styles.summary}>{prose(first)}</Text>
+                  </Animated.View>
+                  {rest !== '' && (
+                    <Animated.View style={rise(2)}>
+                      <Text style={[styles.summary, styles.afterLede]}>{prose(rest)}</Text>
+                    </Animated.View>
+                  )}
+                  {memory.quote && (
+                    <Animated.View style={rise(3)}>
+                      {/* Copied from the source and checked against it
+                          (pipeline/extract.py, grounded), never written. A tap
+                          goes to where it was said, like the watch button. */}
+                      <Pressable
+                        style={dim(styles.quote)}
+                        disabled={!memory.content}
+                        accessibilityRole={memory.content ? 'link' : 'text'}
+                        onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                      >
+                        <Text style={styles.quoteText}>“{memory.quote}”</Text>
+                        {quoteBy !== '' && <Text style={styles.meta}>— {quoteBy}</Text>}
+                      </Pressable>
+                    </Animated.View>
+                  )}
+                  <Animated.View style={rise(4)}>
+                    {memory.contrast_note && (
+                      <View style={styles.now}>
+                        <Text style={styles.meta}>Then and now</Text>
+                        <Text style={styles.nowText}>{memory.contrast_note}</Text>
+                      </View>
+                    )}
 
                     <MemoryMedia media={memory.media} />
 
@@ -477,7 +542,7 @@ export default function MemorySheet({
                     is skipped entirely when there is nothing to credit, rather
                     than leaving a stray rule above the buttons. */}
                 {(memory.author || memory.content?.source || memory.content?.title || heart) && (
-                  <Animated.View style={[styles.credit, revealed]}>
+                  <Animated.View style={[styles.credit, rise(4)]}>
                     <View style={styles.creditText}>
                       {memory.author ? (
                         <View style={styles.byline}>
@@ -639,6 +704,16 @@ const styles = StyleSheet.create({
   },
   peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   summary: { ...font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
+  // The peak, set apart the way a standfirst is. The prompt puts it first.
+  lede: { ...font.displaySemi, fontSize: 21, lineHeight: 30, color: color.ink },
+  afterLede: { marginTop: 12 },
+  when: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginBottom: 10 },
+  year: { ...font.display, fontSize: 44, lineHeight: 48, color: color.ink },
+  // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
+  quote: { marginTop: 28, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
+  quoteText: { ...font.displaySemi, fontSize: 20, lineHeight: 29, color: color.ink },
+  now: { marginTop: 28, gap: 4 },
+  nowText: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   hashtag: { ...font.displaySemi },
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },

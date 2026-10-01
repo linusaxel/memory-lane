@@ -103,10 +103,15 @@ class Memory(BaseModel):
     unlock_radius_meters: int | None = None
     layer: str = "historical"
     happened_at: date | None = None
+    # day | month | year | decade: how much of happened_at to print.
+    happened_precision: str | None = None
     attribution: str | None = None
     source_url: str | None = None
     contrast_score: float | None = None
     contrast_note: str | None = None
+    # A line in the teller's own words. Null while locked, like the summary.
+    quote: str | None = None
+    quote_by: str | None = None
     # Empty while locked, like media: the names are part of what it says.
     links: list[Link] = []
     # Something happened here on today's date. Travels on a locked memory too,

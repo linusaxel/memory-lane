@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { hashtagParts, hashtags, summaryParts } from './hashtags.ts';
+import { hashtagParts, hashtags, lede, summaryParts } from './hashtags.ts';
 
 // The server's cases (tests/test_hashtags.py): one list, two parsers.
 const cases: [string, string[]][] = JSON.parse(
@@ -48,4 +48,17 @@ test('a name the text lacks, or one inside an earlier link, is ignored', () => {
 
 test('no links is the summary as before', () => {
   assert.deepEqual(summaryParts('Plain.'), [{ text: 'Plain.', tag: false }]);
+});
+
+test('the lede is the first sentence, not the first full stop', () => {
+  assert.deepEqual(lede('A girl rode a bicycle up the tower. In 2024 she moved again.'), [
+    'A girl rode a bicycle up the tower.',
+    'In 2024 she moved again.',
+  ]);
+  assert.deepEqual(lede('St. Petri burned in 1728. Only the tower stood.'), [
+    'St. Petri burned in 1728.',
+    'Only the tower stood.',
+  ]);
+  assert.deepEqual(lede('It sank, e.g. into the stream. Cracks showed.')[1], 'Cracks showed.');
+  assert.deepEqual(lede('One sentence only.'), ['One sentence only.', '']);
 });

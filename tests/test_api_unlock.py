@@ -80,6 +80,20 @@ def test_the_map_never_serves_a_summary(client, one_memory):
     assert mem["media"] == [] and mem["source_url"] is None and mem["attribution"] is None
 
 
+def test_the_map_never_serves_a_quote(client, db_session, one_memory):
+    db_session.execute(
+        text(
+            "UPDATE memories SET quote = 'it went up like a torch', quote_by = 'Mads' WHERE id = :id"
+        ),
+        {"id": one_memory},
+    )
+    db_session.commit()
+    mem = _nearby(client)
+
+    assert mem["locked"] is True
+    assert mem["quote"] is None and mem["quote_by"] is None
+
+
 def test_a_locked_memory_says_what_it_is_not_what_it_says(client, one_memory):
     """The map's peek: its tags, never its words, not even how many."""
     mem = _nearby(client)

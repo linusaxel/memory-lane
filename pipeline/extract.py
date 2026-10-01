@@ -81,11 +81,20 @@ memory at all; answer them before you name a venue or write a word of summary.
     several of these in a row, so vary the wording.
   * THE VIBE: what made it worth telling - the funny turn, the mishap.
   * If the transcript names something still visible from the spot - the trees
-    out front, the empty lot, the stream under the street - put it in.
+    out front, the empty lot, the stream under the street - end on it: it is
+    what the reader looks up at.
   * Tell what happened, not what was said: the reader does not know there is a
     recording, so no "he describes", "they mentioned", "the speaker", "the host".
   * One idea. Past 70 words you are summarising the conversation; cut the setup
     and keep what happened.
+- quote: The best line about this moment, copied exactly as spoken, at most 25
+  words, in the language it was said in. It is shown in quotation marks under
+  the summary, so it is something someone said about what happened - a punch
+  line, a feeling, a detail - not the words that name the place. Null when no
+  line is worth reading on its own. Code checks it is in the transcript; a
+  paraphrase is dropped.
+- quote_by: Who said it, by name, from the transcript or the brief. Null if
+  you cannot tell.
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city
   (~10km). Only say "exact" when you know the building; if you are giving a
@@ -218,10 +227,18 @@ memory at all; answer them before you name a venue or write a word of summary.
   * Give every named person a role the first time ("Rahbek, the critic",
     "Oehlenschläger, the poet, then a boy"). With no name, give a role.
   * If the text names something still visible from the spot - the avenue's
-    trees, the stage, the stair - put it in.
+    trees, the stage, the stair - end on it: it is what the reader looks up at.
   * Tell what happened, not what was written: no "the author describes", "he
     recalls", "the text says".
   * One scene. Past 70 words you are summarising the page; cut the setup.
+- quote: The best line about this moment, copied exactly from the text, old
+  spelling included, at most 25 words, in its own language. It is shown in
+  quotation marks under the summary, so it is somebody's voice - words a
+  person said or wrote, a memoirist's own line - not the words that name the
+  place. A register or report stating the facts has no voice: null. So is a
+  line that only says again what the summary says. Code checks it is in the
+  text; a paraphrase is dropped.
+- quote_by: Who wrote or said it, by name, if the text tells you. Null otherwise.
 - attribution: the source as it should be credited on a card, if the text names one
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
 - location_precision: exact (~50m), street (~200m), neighborhood (~1km), city (~10km)
@@ -325,6 +342,8 @@ MEMORY_SCHEMA = {
                     "attribution": _NULLABLE_STRING,
                     "contrast_score": {"anyOf": [{"type": "number"}, {"type": "null"}]},
                     "contrast_note": _NULLABLE_STRING,
+                    "quote": _NULLABLE_STRING,
+                    "quote_by": _NULLABLE_STRING,
                 },
                 "required": [
                     "place_words",
@@ -685,7 +704,12 @@ def grounded(memories: list[dict], chunk: str) -> list[dict]:
     invented ski bar - has nothing to quote. See
     docs/10-decisions.md#a-memory-is-decided-before-it-is-written."""
     text_ = _squash(chunk)
-    return [m for m in memories if (q := _squash(m.get("place_words") or "")) and q in text_]
+    kept = [m for m in memories if (q := _squash(m.get("place_words") or "")) and q in text_]
+    # A quote is held to the same rule, but losing it costs only the quote.
+    for m in kept:
+        if not ((q := _squash(m.get("quote") or "")) and q in text_):
+            m["quote"] = m["quote_by"] = None
+    return kept
 
 
 def video_brief(session, client, content_id: int, segments: list, source: str, title) -> str:
@@ -1366,12 +1390,14 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
             INSERT INTO memories (
                 place_id, content_id, timestamp_start, summary, tags,
                 extraction_confidence, layer, happened_at, happened_precision,
-                attribution, source_url, contrast_score, contrast_note
+                attribution, source_url, contrast_score, contrast_note,
+                quote, quote_by
             )
             VALUES (
                 :place_id, :content_id, :ts_start, :summary, :tags,
                 :confidence, :layer, CAST(:happened_at AS DATE), :happened_precision,
-                :attribution, :source_url, :contrast_score, :contrast_note
+                :attribution, :source_url, :contrast_score, :contrast_note,
+                :quote, :quote_by
             )
         """),
         {
@@ -1393,6 +1419,8 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
             "source_url": mem.get("source_url"),
             "contrast_score": _contrast_score(mem),
             "contrast_note": mem.get("contrast_note"),
+            "quote": mem.get("quote"),
+            "quote_by": mem.get("quote_by"),
         },
     )
 

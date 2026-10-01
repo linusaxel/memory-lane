@@ -197,6 +197,10 @@ CREATE TABLE memories (
     contrast_score REAL,
     contrast_note TEXT,
 
+    -- One line in the teller's own words, checked against the source.
+    quote TEXT,
+    quote_by TEXT,
+
     -- Unused since 2026-09-26: the time capsule was removed and every memory
     -- is public (docs/10, "Every memory is public"). Kept so migration 009
     -- still replays against this schema.

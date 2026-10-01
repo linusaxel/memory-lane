@@ -2177,6 +2177,65 @@ an instrument went (`docs/09-visual-design.md` part 8 has the research):
   one soft shadow where it is unavailable. Supersedes "elevation is a rule, not
   a shadow" for things over the map; sheets stay flat.
 
+### The open story has a shape
+
+Status: Accepted 2026-10-01
+
+The opened memory was a place name and one paragraph fading in, and it felt
+flat. The founder asked for better text and a better page, based on research,
+with no pictures yet. The open story is now, top to bottom (`MemorySheet.tsx`,
+the tree in `mobile/UI.md`):
+
+1. **When**: the year, large, when the source dates it (`happened_at`,
+   `happened_precision`).
+2. **The peak first**: the first sentence is set apart as a lede.
+3. **The rest** of the summary.
+4. **Their words**: one line copied from the source.
+5. **Then and now**: `contrast_note`, last.
+
+Each part rises a beat after the one before. Why:
+
+- **Peak and end are what people remember** (Kahneman et al., *Psychological
+  Science* 1993; in interfaces, Cockburn, Quinn & Gutwin, CHI 2015). So the
+  surprising moment comes first and something you can see comes last. Both
+  prompts say "lead with" and now also "end on what is still visible".
+  Metadata is never the ending.
+- **Pointing at what is still there.** The "magic moments" in Riot! 1831 came
+  when the audio matched what visitors could see (Reid et al., ACE 2005, CHI EA
+  2005). Tilden's rule is to relate, not to instruct. It is also why the
+  Weather Girls card works.
+- **One real voice.** A vivid single case outweighs a summary (Zillmann &
+  Brosius, *Exemplification in Communication*, 2000). VoiceMap's writing brief
+  is built on the same idea. Only a verbatim line counts: `grounded()` checks
+  the quote the way it checks `place_words`, and an unfound quote is nulled
+  rather than shown. It stays in its own language.
+- **Concrete, on the point.** Names, dates and sensory detail are recalled
+  better (Sadoski, Goetz & Fritz, *J. Ed. Psych.* 1993). Interesting but
+  irrelevant detail costs recall (Harp & Mayer 1998), so the "Then and now"
+  line comes after the story, not inside it.
+- **Text first, short.** Text gave better recall than audio at an outdoor
+  heritage site (Toumpouri et al., *ACM JOCCH* 2025), and reading while
+  walking is poor (Schildbach & Rukzio, MobileHCI 2010). So the core stays one
+  screen. Audio, if it comes, is optional.
+- **No confetti.** Untappd added a setting to hide its badge cards. Pokémon
+  GO's step effect faded by around week six. Variable reward shades into
+  gambling design (Zendle & Cairns, *PLOS ONE* 2018). The payoff is the words.
+  The Success haptic on the hold is the only celebration.
+
+This answers TODO.md's "which screen shows too much": the date and the
+description are two of the founder's four. The quote and "Then and now" are
+parts of the description. Ember marks the quote, because it is the memory's own
+voice. No new colour was added.
+
+Not done, and each is the founder's call:
+
+- **A serif for the story only** (`'ui-serif'`, New York). It reverses "One
+  font, the map's", so it needs screenshots, not a commit.
+- **A stamp per opened place in the journal**: collecting without variable
+  reward.
+- **Optional listening.**
+- **Pictures.**
+
 ### A streak and a proximity notification, after all
 
 Status: Accepted 2026-09-22

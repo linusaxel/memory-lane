@@ -134,6 +134,18 @@ def test_a_place_the_chunk_never_names_is_dropped():
     assert grounded([said, invented, {"place_words": ""}], chunk) == [said]
 
 
+def test_a_quote_the_chunk_never_says_is_dropped_and_the_memory_kept():
+    from pipeline.extract import grounded
+
+    chunk = "[01:33] Og øh ringkafen her,\n[01:36] den er fra 30'erne. Den sank bare!"
+    said = {"place_words": "ringkafen her", "quote": "Den sank, bare!", "quote_by": "Mads"}
+    invented = {"place_words": "ringkafen her", "quote": "Den druknede", "quote_by": "Mads"}
+    kept = grounded([said, invented], chunk)
+
+    assert [m["quote"] for m in kept] == ["Den sank, bare!", None]
+    assert kept[1]["quote_by"] is None
+
+
 def test_the_brief_reaches_every_chunk():
     from pipeline.extract import source_context
 
