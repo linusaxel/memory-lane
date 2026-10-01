@@ -347,3 +347,14 @@ def test_maestro_flows_still_point_at_the_seed():
             assert any(name.endswith(seeded) for seeded in seeded_names), (
                 f"{flow.name} names {name!r}, which the seed does not plant"
             )
+
+
+def test_the_default_walk_is_as_long_as_walk_and_unlock_walks():
+    """2026-09-27: one stop a km made the 4 km default four stops, and run.sh
+    blamed the environment for the flow that expected five."""
+    km = re.search(
+        r"WALK_KM = \{[^}]*initial: ([\d.]+)", (ROOT / "mobile/src/Plan.tsx").read_text()
+    )
+    flow = (ROOT / ".maestro/walk-and-unlock.yml").read_text()
+    stops = re.search(r'visible: "(\d+) stops · ', flow)
+    assert _route_size(float(km[1]) * 1000) == int(stops[1])

@@ -91,8 +91,8 @@ If nothing qualifies, add nothing.
 
 ```bash
 docker compose up -d                                   # database, Redis, API
-python3 -m venv venv && source venv/bin/activate       # 3.12, not 3.14
-pip install -r requirements.txt -r requirements-dev.txt
+uv venv --python 3.12 venv && source venv/bin/activate  # 3.12, not 3.14; uv, so no pip
+uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.txt
 # Required: ANTHROPIC_API_KEY. Every other knob: docs/01-setup.md, read once in pipeline/config.py
 
 python -m pipeline.sources list                               # where memories come from, ranked

@@ -1,5 +1,6 @@
 """--burst waits out scheduled retries instead of leaving them to bill later,
-and a dead model ID stops the worker before its first job."""
+a dead model ID stops the worker before its first job, and a queue left over
+is shown, and asked about, before any of it runs."""
 
 import os
 
@@ -58,3 +59,39 @@ def test_a_retired_model_id_stops_the_worker_naming_its_variable(monkeypatch):
     monkeypatch.setattr(worker, "EXTRACTION_MODEL", "claude-sonnet-4-20250514")
     with pytest.raises(SystemExit, match="EXTRACTION_MODEL='claude-sonnet-4-20250514'"):
         worker._check()
+
+
+@pytest.fixture
+def queued(monkeypatch):
+    class Job:
+        def __init__(self, content_id):
+            self.kwargs = {"content_id": content_id}
+
+    held = {"classify": [Job(1), Job(1), Job(2)], "extract": []}
+
+    class FakeQueue:
+        def __init__(self, name, connection):
+            self.jobs = held[name]
+
+    monkeypatch.setattr(worker, "get_redis", lambda: None)
+    monkeypatch.setattr(worker, "Queue", FakeQueue)
+    monkeypatch.setattr(
+        worker, "_source_names", lambda ids: {1: "Historisk Atlas", 2: "Carl Møller"}
+    )
+    monkeypatch.setattr(worker.sys.stdin, "isatty", lambda: False)
+    return held
+
+
+def test_queued_jobs_are_shown_by_source_and_refused_without_a_terminal(queued, capsys):
+    with pytest.raises(SystemExit, match="--yes"):
+        worker.confirm_queues(["classify", "extract"])
+    assert capsys.readouterr().out == "classify: 3 jobs: Historisk Atlas 2, Carl Møller 1\n"
+
+
+def test_yes_runs_what_is_queued(queued):
+    worker.confirm_queues(["classify", "extract"], yes=True)
+
+
+def test_empty_queues_run_without_asking(queued):
+    queued["classify"].clear()
+    worker.confirm_queues(["classify", "extract"])

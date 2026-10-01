@@ -52,6 +52,16 @@ def test_the_sidecar_distances_are_used(osrm):
     ]
 
 
+def test_points_off_the_sidecars_map_are_crow_flies(osrm):
+    """2026-09-29: New York on a Copenhagen sidecar snapped every point to one node."""
+    osrm[0][0] = {
+        "code": "Ok",
+        "distances": [[0, 0], [0, 0]],
+        "sources": [{"distance": 6_000_000.0}, {"distance": 6_000_000.0}],
+    }
+    assert streets.street_table([A, B]) == (crow(), None)
+
+
 @pytest.mark.parametrize(
     "answer",
     [OSError("down"), {"code": "NoTable"}, {"code": "Ok", "distances": [[0, None], [1, 0]]}],

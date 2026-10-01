@@ -541,7 +541,8 @@ def log_cache(response) -> None:
     u = response.usage
     logger.info(
         f"{response.model}: cache read {u.cache_read_input_tokens}, "
-        f"write {u.cache_creation_input_tokens}, uncached {u.input_tokens}"
+        f"write {u.cache_creation_input_tokens}, uncached {u.input_tokens}, "
+        f"output {u.output_tokens}"
     )
 
 

@@ -11,9 +11,9 @@
 Use a virtual environment to avoid system package conflicts:
 
 ```bash
-python3 -m venv venv
+uv venv --python 3.12 venv  # uv's venv has no pip
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.txt
 ```
 
 ## Environment Variables
@@ -165,9 +165,9 @@ docker compose up -d
 docker compose exec db pg_isready -U memorylane
 
 # Setup Python environment (first time only)
-python3 -m venv venv
+uv venv --python 3.12 venv
 source venv/bin/activate
-pip install -r requirements.txt
+uv pip install --python venv/bin/python -r requirements.txt
 
 # Run pipeline stages (with venv activated)
 python -m pipeline.ingest       # Poll the active sources

@@ -39,8 +39,13 @@ def street_table(points: list[Coordinates]) -> tuple[list[list[float]], list[flo
         try:
             body = _osrm("table", points, "annotations=distance")
             d = body["distances"]
-            if all(cell is not None for row in d for cell in row):
-                return d, [source["distance"] for source in body["sources"]]
+            snaps = [source["distance"] for source in body["sources"]]
+            # Every point far off the map snaps to one edge node, and d is zeros.
+            if (
+                all(cell is not None for row in d for cell in row)
+                and min(snaps) <= UNLOCK_RADIUS_METERS
+            ):
+                return d, snaps
         except Exception:
             pass
     return [[meters_between(a, b) * ROUTE_CIRCUITY for b in points] for a in points], None

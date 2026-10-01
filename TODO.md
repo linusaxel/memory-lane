@@ -28,12 +28,6 @@ delete an entry when its fix lands.
   from a chunk the same prompt leaves empty 6 times in 8, so the candidate
   read as a regression until it was rerun by hand (~50 extra calls). Fix: a
   `--runs N` that reports how often each chunk keeps something, per prompt.
-- **A stale queue bills whatever it holds on the next worker run.** 2026-09-30:
-  424 jobs enqueued 2026-09-29 and never run (325 Historisk Atlas stories,
-  9 book chapters, 10 videos) sat behind a one-book re-extraction; `worker
-  --burst` would have billed all of them. Found only by listing Redis. Fix:
-  `worker` prints each queue's size and the contents behind it, and asks,
-  before it starts.
 - **Auto mode blocks `python -m pipeline.transcripts` and dev-database
   writes.** 2026-09-29: Claude Code's permission classifier refused the
   transcript fetch, leaving 105 videos untranscribed until a human ran it.
@@ -41,22 +35,6 @@ delete an entry when its fix lands.
   and its undo, each a round-trip through the founder. Fix: Bash allow rules in
   `.claude/settings.json` for `venv/bin/python -m pipeline.*`, or a human runs
   it with `!`.
-- **`sources screen` says only "pass rate: None" when it screened nothing.**
-  2026-09-29: two channels gave that with no reason. One had no long video
-  in the newest nine; the other's only long video had no captions
-  (`transcript_failed`). Finding out took two DB lookups. Fix: `screen` logs
-  how many long videos it found, and how many have no captions.
-- **`walking_matrix` returns zeros off the sidecar's map.** 2026-09-29: a
-  scratch script with the tests' New York `ANCHOR` and `.env`'s `ROUTING_URL`
-  got an all-zero matrix, because OSRM snaps every point to one node at the
-  edge of Copenhagen. The solver picked walks on it without complaint, and it
-  cost a round of misreading. `_plan_route` drops such points by snap, but
-  `walking_matrix` passes the zeros on. Fix: in `street_table`, fall back to
-  crow-flies when every snap is over `UNLOCK_RADIUS_METERS`.
-- **The venv has no pip.** 2026-09-29: AGENTS.md and `docs/01-setup.md` say
-  `pip install -r requirements.txt`, but `venv/` was made by uv, so
-  `venv/bin/pip` and `python -m pip` both fail. Only `loop/verify.sh` names
-  `uv pip install --python venv/bin/python`. Fix: say that in both docs.
 - **Placement has no before/after tool.** 2026-09-28: `quality --compare`
   samples chunks by hash and scores summaries only. A venue-line change is
   judged on the chunks that produced `llm` places, by whether they geocode.
@@ -90,25 +68,11 @@ delete an entry when its fix lands.
   it (the journal's My Memories tab, edit, delete) is checked end to end. It
   cost a second e2e run to prove the break was not the journal change. Fix: find
   what the posted sheet now renders instead, and assert on that.
-- **The venv has no pip.** 2026-09-27: AGENTS.md's quick start says
-  `python3 -m venv` and `pip install`, but `venv/` was made by uv, so
-  `venv/bin/pip` and `python -m pip` both fail; it took three tries to find
-  `uv pip install --python venv/bin/python`. Fix: make the quick start say uv.
-- **A route-size change breaks e2e, and run.sh calls it INFRA.** 2026-09-27:
-  one stop a km made the 4 km default four stops; travel.py exits 3 on anything
-  short of the flows' count, so run.sh rolled 20 starts and blamed the
-  environment. The gate stayed green. Fix: a test in `tests/test_flows.py`
-  that `_route_size(WALK_KM.initial km)` equals the stops walk-and-unlock.yml walks.
 - **A classifier prompt change can't be measured without a throwaway script.**
   2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
   scratch replay. Fix: `classifier_audit --against <old prompt file>` that
   replays stored chunks through both prompts and prints flips per source.
-- **A run's cost can't be read from its log.** 2026-09-27: the worker logs
-  cache read/write/uncached input per call but no output tokens, so three
-  Københavnerliv videos were guessed at $0.30-0.50 each and only the console
-  said $1-2. With $15 of credit, every batch needs a number. Fix: add
-  `usage.output_tokens` to the same `cache read` log line in `pipeline/extract.py`.
 - **A prompt's variance can't be measured without hand-deleting its cache.**
   2026-09-27: `extraction_chunks` is keyed on the exact request, so re-running
   a video on the same prompt returns the stored reply. Six runs of video 534 each
@@ -450,33 +414,9 @@ Nothing can be bought until the stores exist, so everybody is free.
 ## Facelift
 
 Researched 2026-10-01 (docs/09 part 9): the step apps, the iOS 26 / Expo 57
-stack, and an audit of the screens against UI.md. F1, the wallet (the pill
-says what it opens, short of steps is shown and never holdable), shipped the
-same day. In order:
+stack, and an audit of the screens against UI.md. F1 to F7 shipped the same
+day (`git log`). Left:
 
-- [x] **F2 Glass, by the HIG.** (2026-10-01) You and Add are one
-      `GlassGroup` and merge; not all four, since the container swallows
-      taps in its gaps. One tint in view. Journal's cyan was the lake under it.
-- [x] **F3 SF Symbols.** (2026-10-01) `npx expo install expo-symbols` (beta); replace
-      AddGlyph, YouGlyph, HeartGlyph, CloseButton, the ‹ › pager characters,
-      the "more" dots and the View-drawn Padlock. Bounce on unlock. The pin
-      stays SVG (one pin, UI.md Markers).
-- [x] **F4 One of each.** (2026-10-01) One pill style for `pill`, `bigPill` and
-      `StepsPill`; one floating-card recipe for UnlockHere, Plan and the peek
-      (two fills today); one big-figure token for the six sizes (36, 46, 46,
-      52, 22, 15). Census-breaking literals (5, 1, 11, 28, 32, 36, 40) and
-      UnlockButton's second shadow either tokened or written into UI.md.
-      11pt `dotText` in Memories.tsx is under the 12pt floor.
-- [x] **F5 Pay along the hold.** (2026-10-01) The pill counts down the price in step with
-      the ring's fill, so the spend is seen where it happens.
-- [x] **F6 The free open as an earn.** (2026-10-01) "Open it now" spends a free one in a
-      single tap with no reveal; give it the rise the ring hands MemorySheet
-      (`revealId`), and the Success haptic.
-- [x] **F7 Words.** (2026-10-01) Settings' "how unlocking works" says only "within 20 m":
-      rewrite for three free and steps. The paywall still says "three" (the
-      profile has no free-per-day field). Stale comments in MemorySheet
-      ("serif", "mono", "Ink, not red"). docs/08 still calls Plan a walk the
-      primary action and the walk bar "top centre".
 - [ ] **F8 Lock Screen widget** (`expo-widgets`): the balance and the nearest
       story. After launch; skip Live Activities.
 

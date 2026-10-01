@@ -108,6 +108,7 @@ def _ingest_sample(row, sample: int):
             for v in list_channel_videos(row.locator, limit=sample * 3)
             if (v.get("duration_seconds") or 0) >= MIN_VIDEO_MINUTES * 60
         ][:sample]
+        logger.info("%d long video(s) in the newest %d", len(videos), sample * 3)
         ingest_content({"sources": [{"id": row.id, "name": row.name, "videos": videos}]})
         with get_session() as session:
             ids = session.execute(
@@ -117,6 +118,12 @@ def _ingest_sample(row, sample: int):
             ids = list(ids)
         if ids:
             fetch_pending_transcripts(ids)
+        with get_session() as session:
+            failed = session.execute(
+                text("SELECT count(*) FROM content WHERE source_id = :id AND transcript_failed"),
+                {"id": row.id},
+            ).scalar()
+        logger.info("%d without captions", failed)
     elif row.kind in ("text", "book"):
         from crawler.sources import SOURCES
 
@@ -222,7 +229,8 @@ def main():
     args = parser.parse_args()
 
     if args.cmd == "screen":
-        print(f"pass rate: {screen(args.id, args.sample)}")
+        rate = screen(args.id, args.sample)
+        print("nothing screened" if rate is None else f"pass rate: {rate}")
         return
 
     with get_session() as session:
