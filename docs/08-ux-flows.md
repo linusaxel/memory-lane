@@ -831,8 +831,9 @@ badges track each unlock exactly as F7 already does.
    again is not required, only having read it once already.
 2. A tap records the heart server-side and fills the glyph. The count next to
    it - shown only once it is above zero - goes up by one.
-3. It is one-way: tapping an already-hearted memory again is a harmless
-   no-op, same count, same filled glyph. There is no way to un-heart.
+3. A second tap takes it back: the glyph empties and the count drops, for
+   every phone on the account (`DELETE /v1/memories/{id}/heart`). Changed
+   2026-10-01; it used to be one-way.
 4. The filled state survives a relaunch on this device (cached locally,
    `mobile/src/hearted.ts`), and the count survives everywhere - it is part
    of the memory itself, sent even while locked, the same as `media_count`

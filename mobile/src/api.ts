@@ -221,12 +221,21 @@ export async function unlockMemory(
   return !memory.locked && hasCoordinates(memory) ? memory : null;
 }
 
-/** Say this one mattered. One-way: there is no way to un-heart, and hearting
- *  twice from the same device is a harmless no-op that leaves the count
- *  unchanged. No position - unlike unlock, hearting isn't gated by proximity. */
+/** Say this one mattered. Hearting twice from the same device is a harmless
+ *  no-op that leaves the count unchanged. No position - unlike unlock,
+ *  hearting isn't gated by proximity. */
 export async function heartMemory(id: number, device: string): Promise<number> {
   const res = await post<{ heart_count: number }>(`/v1/memories/${id}/heart`, { device });
   return res.heart_count;
+}
+
+/** Take a heart back, for every phone on the account. Returns the new count. */
+export async function unheartMemory(id: number, device: string): Promise<number> {
+  const res = await fetch(`${BASE}/v1/memories/${id}/heart?${new URLSearchParams({ device })}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return ((await res.json()) as { heart_count: number }).heart_count;
 }
 
 /** One visitor's note. Named by id, never by device - a device id is a

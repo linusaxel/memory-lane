@@ -61,8 +61,7 @@ type Props = {
    *  to yet, and the server never sees a heart request the client didn't ask
    *  for. */
   onHeart?: (memory: LocatedMemory) => void;
-  /** This device already hearted it, one-way and permanent - the glyph fills
-   *  and stays filled. */
+  /** This account hearted it: the glyph is filled, and a tap takes it back. */
   hearted?: boolean;
   /** Present only on the map before a walk: a walk through a locked memory,
    *  a side way to it now (F29). */
@@ -228,7 +227,7 @@ export default function MemorySheet({
         style={dim(styles.heart)}
         hitSlop={8}
         accessibilityRole="button"
-        accessibilityLabel={(hearted ? 'Hearted' : 'Heart this memory') + (hearts > 0 ? `, ${heartsText}` : '')}
+        accessibilityLabel={(hearted ? 'Hearted, tap to take it back' : 'Heart this memory') + (hearts > 0 ? `, ${heartsText}` : '')}
         onPress={() => onHeart(memory)}
       >
         <Glyph name={hearted ? 'heart.fill' : 'heart'} size={17} color={color.inkSoft} bounce={hearted} />

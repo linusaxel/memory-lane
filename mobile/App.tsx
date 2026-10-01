@@ -28,6 +28,7 @@ import {
   fetchTodaysRoute,
   fetchUnlocked,
   heartMemory,
+  unheartMemory,
   outOfSteps,
   previewRoute,
   reportMemory,
@@ -45,7 +46,7 @@ import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from 
 import { devLocation } from './src/devLocation.ts';
 import { devOpenMemory, devOpenScreen } from './src/devOpen.ts';
 import { startWatching, stopWatching } from './src/geofence.ts';
-import { loadHearted, rememberHearted } from './src/hearted.ts';
+import { forgetHearted, loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { anyNew } from './src/seen.ts';
 import { FALLBACK_RADIUS_M, reachOf } from './src/reach.ts';
@@ -437,11 +438,12 @@ export default function App() {
         const earned = await fetchUnlocked(id);
         if (!mounted.current || earned.length === 0) return;
         setUnlocked(await mergeUnlocked(earned));
-        // Hearted on another phone of the account, or before a reinstall.
+        // The server's word wins for every memory it sent: hearted or taken
+        // back on another phone of the account, or before a reinstall.
+        const sent = new Set(earned.map((memory) => memory.id));
+        const local = [...(await loadHearted())].filter((id) => !sent.has(id));
         const theirs = earned.filter((memory) => memory.hearted).map((memory) => memory.id);
-        if (theirs.length && mounted.current) {
-          setHearted(await rememberHearted(await loadHearted(), ...theirs));
-        }
+        if (mounted.current) setHearted(await rememberHearted(new Set(local), ...theirs));
       })
       .catch(() => {});
     loadNotifyNearby().then((on) => {
@@ -1149,9 +1151,11 @@ export default function App() {
   const heart = useCallback(
     async (memory: LocatedMemory) => {
       try {
-        const count = await heartMemory(memory.id, await deviceId());
+        // A second tap takes it back.
+        const undo = hearted.has(memory.id);
+        const count = await (undo ? unheartMemory : heartMemory)(memory.id, await deviceId());
         if (!mounted.current) return;
-        setHearted(await rememberHearted(hearted, memory.id));
+        setHearted(await (undo ? forgetHearted : rememberHearted)(hearted, memory.id));
         // openMemories prefers unlocked[id] over openAt's own snapshot, so a
         // memory already in the collection needs patching there too or the
         // sheet would keep showing the stale count.

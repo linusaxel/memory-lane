@@ -2259,7 +2259,9 @@ would be empty for almost everyone. A heart stays anonymous, so there are no
 profiles to build and nothing to moderate. The author sees how many and when
 the last one came, never who. It cannot say "someone stood here", because a
 free open hearts from anywhere. For the person who taps it, a heart is also a
-bookmark: the Hearted filter, read from `/v1/unlocks`.
+bookmark: the Hearted filter, read from `/v1/unlocks`. Hearts were one-way
+until the same day, when the founder asked for undo: a second tap takes it
+back, for the whole account, since that is what `hearted` reports.
 
 ### Rejected approaches, do not retry
 

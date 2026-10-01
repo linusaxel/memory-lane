@@ -22,7 +22,16 @@ export async function loadHearted(): Promise<Set<number>> {
 }
 
 export async function rememberHearted(current: Set<number>, ...ids: number[]): Promise<Set<number>> {
-  const next = new Set([...current, ...ids]);
+  return save(new Set([...current, ...ids]));
+}
+
+export async function forgetHearted(current: Set<number>, id: number): Promise<Set<number>> {
+  const next = new Set(current);
+  next.delete(id);
+  return save(next);
+}
+
+async function save(next: Set<number>): Promise<Set<number>> {
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify([...next]));
   } catch {

@@ -251,7 +251,7 @@ CREATE TABLE unlocks (
 
 CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
 
--- Say this one mattered. One-way like unlocks: no un-hearting. A join table
+-- Say this one mattered. Unlike an unlock, it can be taken back. A join table
 -- rather than a counter column on memories, so one device can't inflate a
 -- count by re-hearting. See db/migrations/015_memory_hearts.sql.
 CREATE TABLE memory_hearts (

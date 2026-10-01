@@ -1,4 +1,4 @@
-"""Hearting a memory: one-way, idempotent per device, no un-hearting.
+"""Hearting a memory: idempotent per device, and the account can take it back.
 
 Mirrors tests/test_api_unlocks.py's shape - same fixture, same device
 constants - since heart_memory is built on the same "device, memory, insert
@@ -155,3 +155,31 @@ def test_the_author_sees_when_the_last_heart_came_never_from_whom(client, memory
     # With its zone: a phone reads a naive timestamp as local time.
     assert _mine(client).json()["memories"][0]["last_hearted_at"].endswith(("Z", "+00:00"))
     assert OTHER_DEVICE not in _mine(client).text
+
+
+def _unheart(client, memory_id, device=DEVICE):
+    return client.delete(f"/v1/memories/{memory_id}/heart?device={device}")
+
+
+def test_a_heart_can_be_taken_back(client, memory_id):
+    _heart(client, memory_id)
+    _heart(client, memory_id, device=OTHER_DEVICE)
+    res = _unheart(client, memory_id)
+    assert res.status_code == 200
+    assert res.json()["heart_count"] == 1, "only this device's heart comes off"
+    assert _unheart(client, memory_id).json()["heart_count"] == 1, "twice is a no-op"
+
+
+def test_taking_back_covers_every_phone_on_the_account(client, memory_id, db_session):
+    """/v1/unlocks says hearted for the account, so undo has to clear it there."""
+    user = db_session.execute(
+        text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
+    ).scalar()
+    for d in (DEVICE, OTHER_DEVICE):
+        db_session.execute(
+            text("INSERT INTO devices (id, user_id) VALUES (CAST(:d AS uuid), :u)"),
+            {"d": d, "u": user},
+        )
+    db_session.commit()
+    _heart(client, memory_id, device=OTHER_DEVICE)
+    assert _unheart(client, memory_id).json()["heart_count"] == 0

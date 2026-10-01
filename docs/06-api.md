@@ -61,8 +61,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `GET /v1/me/memories?device=UUID` - everything this account filed, newest
   first, hidden ones included. `last_hearted_at` is when its newest heart came;
   who gave it is never sent
-- `POST /v1/memories/{id}/heart` `{device}` - one heart per device, and it does
-  not come back off. No position check. Your own memory is a 403
+- `POST /v1/memories/{id}/heart` `{device}` - one heart per device. No position
+  check. Your own memory is a 403. `DELETE /v1/memories/{id}/heart?device=UUID`
+  takes back every heart the account gave it. Both return `heart_count`
 - `POST /v1/memories/{id}/note` `{device, body}` / `GET /v1/memories/{id}/notes?device=UUID`
   - one note per device, 280 characters, rewritten by posting again. Both are
   403 without an unlock; the POST returns the list. `note_count` travels on

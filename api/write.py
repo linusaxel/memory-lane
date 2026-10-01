@@ -45,6 +45,7 @@ from api.queries import (
     MEDIA_ATTACH,
     MEDIA_DETACH_QUERY,
     MEMORY_NOTES_QUERY,
+    MY_DEVICES,
     NOTE_ALLOWED_QUERY,
     NOTE_HIDE_QUERY,
     OWNED_MEMORY_QUERY,
@@ -358,7 +359,7 @@ def submit_memory(body: SubmissionRequest):
 
 @router.post("/v1/memories/{memory_id}/heart", response_model=HeartResponse)
 def heart_memory(memory_id: int, body: DeviceRequest):
-    """Say this one mattered. One heart per device, and it does not come back off.
+    """Say this one mattered. One heart per device; unheart_memory takes it back.
 
     No position: unlike unlock, hearting isn't gated by standing there again -
     only rendered by the app once a memory is already unlocked. Same shape as
@@ -392,6 +393,21 @@ def heart_memory(memory_id: int, body: DeviceRequest):
             text("SELECT COUNT(*) FROM memory_hearts WHERE memory_id = :id"), {"id": memory_id}
         ).scalar()
 
+    return HeartResponse(heart_count=count)
+
+
+@router.delete("/v1/memories/{memory_id}/heart", response_model=HeartResponse)
+def unheart_memory(memory_id: int, device: str = Query(..., pattern=DEVICE_PATTERN)):
+    """Take a heart back: every one this account gave it, since /v1/unlocks
+    reports hearted for the account, not the device. Nothing hearted is a no-op."""
+    with get_session() as session:
+        session.execute(
+            text(f"DELETE FROM memory_hearts WHERE memory_id = :id AND device_id IN {MY_DEVICES}"),
+            {"id": memory_id, "device_id": device},
+        )
+        count = session.execute(
+            text("SELECT COUNT(*) FROM memory_hearts WHERE memory_id = :id"), {"id": memory_id}
+        ).scalar()
     return HeartResponse(heart_count=count)
 
 
