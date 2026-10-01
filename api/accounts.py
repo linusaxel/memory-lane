@@ -113,6 +113,8 @@ def profile_of(session, device: str) -> Profile:
         text("""
             SELECT u.id, u.display_name,
                 (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id) AS submitted,
+                (SELECT COUNT(*) FROM memory_hearts mh JOIN memories m ON m.id = mh.memory_id
+                 WHERE m.user_id = u.id) AS hearts_received,
                 COALESCE(
                     (SELECT array_agg(i.provider ORDER BY i.created_at)
                      FROM identities i WHERE i.user_id = u.id),
@@ -141,6 +143,7 @@ def profile_of(session, device: str) -> Profile:
         user_id=str(row.id),
         display_name=row.display_name,
         submitted=row.submitted,
+        hearts_received=row.hearts_received,
         unlocked=unlocked,
         streak=streak,
         providers=list(row.providers),

@@ -35,6 +35,8 @@ type Props = {
   unlockedCount: number;
   placeCount: number;
   submittedCount: number;
+  /** Every heart on what you filed, all time. */
+  heartsReceived: number;
   /** Empty means Anonymous. Saved as it is typed, so there is no Save button
    *  to forget to press. */
   displayName: string;
@@ -60,6 +62,7 @@ export default function Settings({
   unlockedCount,
   placeCount,
   submittedCount,
+  heartsReceived,
   displayName,
   onDisplayName,
   nameError,
@@ -86,6 +89,9 @@ export default function Settings({
           <Stat value={unlockedCount} label={unlockedCount === 1 ? 'memory' : 'memories'} />
           <Stat value={placeCount} label={placeCount === 1 ? 'place' : 'places'} />
           {submittedCount > 0 && <Stat value={submittedCount} label="added" />}
+          {heartsReceived > 0 && (
+            <Stat value={heartsReceived} label={heartsReceived === 1 ? 'heart' : 'hearts'} />
+          )}
         </View>
         <Text style={styles.statsNote}>
           {unlockedCount === 0
@@ -237,7 +243,7 @@ const styles = StyleSheet.create({
   // The journal's title bar, so the two sheets read as one app.
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { ...font.display, fontSize: 34, color: color.ink },
-  stats: { flexDirection: 'row', gap: 36, marginTop: 12 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 36, rowGap: 16, marginTop: 12 },
   stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   statValue: figure,
   statLabel: { ...label, fontSize: 12 },

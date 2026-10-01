@@ -317,6 +317,8 @@ class Profile(BaseModel):
     user_id: str | None = None
     display_name: str | None = None
     submitted: int = 0
+    # Every heart on what this account filed, all time.
+    hearts_received: int = 0
     unlocked: int = 0
     # Consecutive days, ending today or yesterday, with at least one unlock -
     # computed from `unlocks` on every read, not stored. See

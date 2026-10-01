@@ -1759,6 +1759,7 @@ export default function App() {
           unlockedCount={collected.length}
           placeCount={placesUnlocked}
           submittedCount={profile?.submitted ?? 0}
+          heartsReceived={profile?.hearts_received ?? 0}
           displayName={displayName}
           onDisplayName={rename}
           nameError={nameError}

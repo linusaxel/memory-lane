@@ -111,7 +111,7 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; × top right
 │                              what you hearted
 └─ My Memories                 what you added; a row opens Submit as the editor. "3 hearts ·
                                1 note · last heart yesterday", never who
-   ├─ unlocked / places / added, as numbers
+   ├─ unlocked / places / added / hearts, as numbers; hearts is every one on what you filed
    ├─ your name                what submissions are signed with. Blank = Anonymous
    ├─ account                  which sign-ins, add the other, sign out (back to the gate)
    ├─ how unlocking works      the one place that answers "why can't I read this"

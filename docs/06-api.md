@@ -84,7 +84,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   submission is signed with, which sign-ins are attached, `subscribed` /
   `subscribed_until`, and what unlocks spend: `free_per_day`, `free_unlocks`,
   `steps`, `steps_per_unlock`, and `steps_counted_until`, where the next count
-  starts.
+  starts. `hearts_received` counts every heart on what the account filed.
   The GET creates nothing
 - `POST /v1/me/steps` `{device, since, steps}` - credit the steps the phone
   counted from `since`, which must be `steps_counted_until`, and move it to

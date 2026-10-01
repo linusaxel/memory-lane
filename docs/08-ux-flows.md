@@ -859,6 +859,7 @@ note · last heart yesterday", never who, and a row whose count went up since
 the last look wears "New" (the tab reads "My Memories ·" until you open it).
 The Journal button on the map wears an ember dot until then. The baseline is on
 the phone (`mobile/src/seen.ts`): no push, and no notifications tab.
+The You page counts every heart they ever got (`hearts_received` on `/v1/me`).
 
 **A heart keeps it for you.** Unlocked Memories has a "Hearted" filter that
 shows only what you hearted. `/v1/unlocks` says which, so it survives a

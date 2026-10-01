@@ -183,3 +183,19 @@ def test_taking_back_covers_every_phone_on_the_account(client, memory_id, db_ses
     db_session.commit()
     _heart(client, memory_id, device=OTHER_DEVICE)
     assert _unheart(client, memory_id).json()["heart_count"] == 0
+
+
+def test_the_authors_profile_counts_every_heart_they_got(client, memory_id, db_session):
+    user = db_session.execute(
+        text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
+    ).scalar()
+    db_session.execute(
+        text("INSERT INTO devices (id, user_id) VALUES (CAST(:d AS uuid), :u)"),
+        {"d": DEVICE, "u": user},
+    )
+    db_session.execute(
+        text("UPDATE memories SET user_id = :u WHERE id = :m"), {"u": user, "m": memory_id}
+    )
+    db_session.commit()
+    _heart(client, memory_id, device=OTHER_DEVICE)
+    assert client.get(f"/v1/me?device={DEVICE}").json()["hearts_received"] == 1

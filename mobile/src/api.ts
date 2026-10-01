@@ -506,6 +506,7 @@ export type Profile = {
   user_id: string | null;
   display_name: string | null;
   submitted: number;
+  hearts_received: number;
   unlocked: number;
   /** Consecutive days, ending today or yesterday, with at least one unlock. */
   streak: number;
