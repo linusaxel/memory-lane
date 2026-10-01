@@ -3,13 +3,19 @@ import { test } from 'node:test';
 
 import { countDown, shortfall, walletOf } from './wallet.ts';
 
-const purse = { subscribed: false, free_unlocks: 0, steps: 0, steps_per_unlock: 1000 };
+const purse = { subscribed: false, welcome_unlocks: 0, steps: 0, steps_per_unlock: 1000 };
 
-test('free ones come first, whatever the balance', () => {
-  const w = walletOf({ ...purse, free_unlocks: 2, steps: 4210 });
-  assert.equal(w.figure, 2);
-  assert.equal(w.unit, 'free today');
+test('the welcome one shows while the steps cannot pay', () => {
+  const w = walletOf({ ...purse, welcome_unlocks: 1, steps: 400 });
+  assert.equal(w.figure, 1);
+  assert.equal(w.unit, 'to start');
   assert.equal(w.short, 0);
+});
+
+test('steps that can pay go before the welcome one', () => {
+  const w = walletOf({ ...purse, welcome_unlocks: 1, steps: 4210 });
+  assert.equal(w.unit, 'steps');
+  assert.equal(w.price, 1000);
 });
 
 test('none free: the balance alone', () => {

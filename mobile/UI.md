@@ -42,8 +42,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
-│                              thing to know, rolling when it changes: "2 free today" / "4,210 steps";
-│                              none free, "4,210 steps" alone; short, a small ember ring
+│                              thing to know, rolling when it changes: "1 to start" while steps cannot pay /
+│                              "4,210 steps"; short, a small ember ring
 │                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
 │                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
 │                              what opening one costs, where steps come from, wander or walk

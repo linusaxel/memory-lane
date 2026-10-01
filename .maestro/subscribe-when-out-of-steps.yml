@@ -1,5 +1,5 @@
 # F35 subscribe, when a free account has nothing left to open a memory with.
-# docs/08-ux-flows.md, docs/10-decisions.md "Three free a day, then steps where
+# docs/08-ux-flows.md, docs/10-decisions.md "Pick one to start, then where
 # you stand".
 #
 # e2e/run.sh's `broke` trigger has the account the app mints use up today's

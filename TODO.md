@@ -23,6 +23,17 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`test_route_order` reddens the gate at random.** 2026-10-01:
+  `ROUTE_SEED=3605168176` fails
+  `test_within_budget_repeatable_and_full_as_the_budget_allows` on untouched
+  main, so a gate run went RED on a change that never touched routing, and it
+  took a stash and a replay to prove that. Fix: make that seed pass (or relax
+  the "nothing more fits" check by the circuity margin) and pin it in the test.
+- **The streak and the unlock rules use different clocks.** 2026-10-01:
+  `api/accounts.py` `current_streak(..., date.today())` uses the host's date,
+  but everything else uses UTC `gate.today()`, which is exactly the bug
+  `gate.py` warns about. Fix: pass `today()`.
+
 - **`dedup --memories` misses a book's retellings when they sit on different
   place rows.** 2026-10-01: it found none of the dog, grocer or gallows pairs
   in source 204 (Schloss Friedrichsberg against Frederiksberg Slot, and so

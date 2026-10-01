@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from api import read, route_solver, streets
 from api.models import Coordinates
-from tests.conftest import spend_free_today
+from tests.conftest import give_steps, spend_welcome
 
 pytestmark = pytest.mark.db
 
@@ -442,7 +442,7 @@ def test_a_stop_hidden_after_the_accept_drops_out_of_todays_walk(client, db_sess
 def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_session):
     for n in (1, 2):
         _offset(db_session, n)
-    db_session.commit()
+    give_steps(db_session, DEVICE, 1000)
     stops = [(m["id"], m["place"]["coordinates"]) for m in _route(client).json()["memories"]]
 
     def unlock(memory_id, at):
@@ -458,10 +458,22 @@ def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_s
     assert unlock(*stops[1]) == finished, "set once, never moved"
 
 
+def test_a_stop_opened_from_afar_does_not_finish_the_walk(client, db_session):
+    """The welcome one opens a stop, not the walk: a walk is finished on foot."""
+    _offset(db_session, 1)
+    db_session.commit()
+    [stop] = _route(client).json()["memories"]
+    opened = client.post(
+        f"/v1/memories/{stop['id']}/unlock", json={"device": DEVICE, "lat": LAT + 0.05, "lng": LNG}
+    ).json()
+    assert opened["locked"] is False
+    assert db_session.execute(text("SELECT completed_at FROM daily_routes")).scalar() is None
+
+
 def test_walked_lists_the_accounts_walks_with_earned_stops_open(client, db_session):
     for n in (1, 2):
         _offset(db_session, n)
-    db_session.commit()
+    give_steps(db_session, DEVICE, 1000)
     stops = _route(client).json()["memories"]
     at = stops[0]["place"]["coordinates"]
     client.post(f"/v1/memories/{stops[0]['id']}/unlock", json={"device": DEVICE, **at})
@@ -836,7 +848,7 @@ def test_a_second_walk_the_same_day_is_not_refused(client, db_session):
 def test_a_subscriber_opens_what_they_stand_on_and_still_has_to_stand_there(client, db_session):
     memory = _offset(db_session, 1)
     _subscribe(db_session)
-    spend_free_today(db_session, DEVICE)
+    spend_welcome(db_session, DEVICE)
 
     def unlock(lat):
         return client.post(

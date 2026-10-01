@@ -128,10 +128,11 @@ CREATE TABLE users (
     -- with no memory are what pipeline/sweep.py reaps.
     avatar_path TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- What opens memories: three free a day from anywhere, then 1,000 steps
-    -- each standing there. The day the free ones were counted on and how many
-    -- are used; a balance and a watermark, never a day's step count
-    -- (docs/10-decisions.md#three-free-a-day-then-steps-where-you-stand).
+    -- What opens memories: one welcome unlock from anywhere, then 1,000 steps
+    -- each standing there. How many welcome ones are used; a balance and a
+    -- watermark, never a day's step count
+    -- (docs/10-decisions.md#pick-one-to-start-then-where-you-stand).
+    -- free_day is unread since the free ones stopped being a day's.
     free_day DATE,
     free_used INTEGER NOT NULL DEFAULT 0,
     steps INTEGER NOT NULL DEFAULT 0,

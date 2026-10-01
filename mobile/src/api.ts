@@ -525,11 +525,10 @@ export type Profile = {
   subscribed: boolean;
   /** When it ends or ended, UTC without a zone; null if never subscribed. */
   subscribed_until: string | null;
-  /** Free unlocks left today, from anywhere; then `steps_per_unlock` steps
-   *  each, standing there (docs/10, "Three free a day, then steps where you
-   *  stand"). */
-  free_per_day: number;
-  free_unlocks: number;
+  /** The welcome unlock left, once per account, from anywhere; then
+   *  `steps_per_unlock` steps each, standing there (docs/10, "Pick one to
+   *  start, then where you stand"). */
+  welcome_unlocks: number;
   steps: number;
   steps_per_unlock: number;
   /** Steps count from here, UTC without a zone; null until there is an account. */

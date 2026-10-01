@@ -12,10 +12,9 @@ from sqlalchemy import text
 
 import api.media
 from api.auth import apple_identity, either_identity, google_identity
-from api.gate import today
 from api.models import (
     DEVICE_PATTERN,
-    FREE_PER_DAY,
+    WELCOME_UNLOCKS,
     DeviceRequest,
     Profile,
     ProfileRequest,
@@ -123,14 +122,13 @@ def profile_of(session, device: str) -> Profile:
                 ) AS providers,
                 s.expires_at AS subscribed_until,
                 COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed,
-                CASE WHEN u.free_day = CAST(:today AS date)
-                    THEN GREATEST(:per_day - u.free_used, 0) ELSE :per_day END AS free_unlocks,
+                GREATEST(:welcome - u.free_used, 0) AS welcome_unlocks,
                 u.steps, u.steps_counted_until
             FROM devices d JOIN users u ON d.user_id = u.id
             LEFT JOIN subscriptions s ON s.user_id = u.id
             WHERE d.id = CAST(:device_id AS uuid)
         """),
-        {"device_id": device, "today": today(), "per_day": FREE_PER_DAY},
+        {"device_id": device, "welcome": WELCOME_UNLOCKS},
     ).fetchone()
     unlocked = session.execute(text(UNLOCK_COUNT_QUERY), {"device_id": device}).scalar() or 0
     streak_days = [
@@ -151,7 +149,7 @@ def profile_of(session, device: str) -> Profile:
         providers=list(row.providers),
         subscribed=row.subscribed,
         subscribed_until=row.subscribed_until,
-        free_unlocks=row.free_unlocks,
+        welcome_unlocks=row.welcome_unlocks,
         steps=row.steps,
         steps_counted_until=row.steps_counted_until,
     )

@@ -67,11 +67,12 @@ type Props = {
   /** Present only on the map before a walk: a walk through a locked memory,
    *  a side way to it now (F29). */
   onWalkHere?: () => void;
-  /** Today's free unlocks left, and opening this one with one, from wherever
-   *  you are (docs/10, "Three free a day, then steps where you stand"). */
+  /** The account's welcome unlock, and spending it on this one from wherever
+   *  you are: the first pick, F36 (docs/10, "Pick one to start, then where you
+   *  stand"). */
   freeLeft?: number;
   onOpenFree?: () => void;
-  /** A free open is in flight: one tap spends one. */
+  /** The welcome open is in flight: one tap spends it. */
   opening?: boolean;
   /** What standing on it costs once the free ones are gone; absent for a
    *  subscriber, who pays nothing there. */
@@ -646,12 +647,12 @@ export default function MemorySheet({
                   <Pressable
                     style={dim(styles.watch)}
                     accessibilityRole="button"
-                    accessibilityLabel={`Open it now, ${freeLeft} free today`}
+                    accessibilityLabel="Open this one from here, your first"
                     accessibilityState={{ busy: opening }}
                     disabled={opening}
                     onPress={onOpenFree}
                   >
-                    <Text style={styles.watchText}>Open it now · {freeLeft} free today</Text>
+                    <Text style={styles.watchText}>Open this one from here</Text>
                   </Pressable>
                 )}
                 {peeking && onWalkHere && (

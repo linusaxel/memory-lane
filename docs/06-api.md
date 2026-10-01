@@ -17,11 +17,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
     or null), `happened_at` with `happened_precision`, and `contrast_note`
 - `POST /v1/memories/{id}/unlock` `{device, lat?, lng?}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
-  One of today's three free unlocks opens it from anywhere, position or not.
-  After those, standing on it costs 1,000 steps (nothing for a subscriber),
-  and away from it answers the locked memory and its distance. Opening one
-  this account already has costs nothing. 403 `{reason: "no_steps", steps,
-  price}` standing there with nothing to spend (docs/10, "Three free a day, then steps where you stand")
+  The account's one welcome unlock opens it from anywhere, position or not.
+  Standing on it costs 1,000 steps (nothing for a subscriber), then the
+  welcome one; away from it, with that spent, it answers the locked memory and
+  its distance. Opening one this account already has costs nothing. 403
+  `{reason: "no_steps", steps, price}` standing there with nothing to spend
+  (docs/10, "Pick one to start, then where you stand")
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked.
   Each says `hearted`: this account hearted it, for the journal's Hearted filter
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
@@ -82,7 +83,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, `subscribed` /
-  `subscribed_until`, and what unlocks spend: `free_per_day`, `free_unlocks`,
+  `subscribed_until`, and what unlocks spend: `welcome_unlocks`,
   `steps`, `steps_per_unlock`, and `steps_counted_until`, where the next count
   starts. `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.

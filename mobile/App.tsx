@@ -78,6 +78,7 @@ import EditProfile from './src/EditProfile.tsx';
 import Drawer from './src/Drawer.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
+import FirstPick from './src/FirstPick.tsx';
 import HowItWorks from './src/HowItWorks.tsx';
 import StepsPill from './src/StepsPill.tsx';
 import CloseButton from './src/CloseButton.tsx';
@@ -772,6 +773,23 @@ export default function App() {
         .map((memory) => unlocked[memory.id] ?? memory)
         .filter((memory) => mapShows === 'all' || memory.locked === (mapShows === 'locked')),
     [nearby, unlocked, mapShows],
+  );
+  // F36: until the welcome one is spent, three locked ones near you to choose
+  // from. Hearts first, the corpus has no better quality signal yet.
+  // ponytail: rank on a quality score once extraction stores one.
+  const firstPicks = useMemo(
+    () =>
+      (profile?.welcome_unlocks ?? 0) > 0
+        ? nearby
+            .filter((memory) => memory.locked)
+            .sort(
+              (a, b) =>
+                b.heart_count - a.heart_count ||
+                (a.distance_meters ?? Infinity) - (b.distance_meters ?? Infinity),
+            )
+            .slice(0, 3)
+        : [],
+    [profile, nearby],
   );
   const pins = useMemo(
     () =>
@@ -1535,6 +1553,24 @@ export default function App() {
             </GlassButton>
           )}
 
+          {stage === 'map' && firstPicks.length > 0 && openAt.length === 0 && !journalOpen && (
+            <FirstPick
+              picks={firstPicks}
+              located={!!position}
+              onLocate={() => {
+                if (permission === 'blocked') {
+                  Linking.openSettings();
+                  return;
+                }
+                goToMyLocation().catch(() => false);
+              }}
+              onPick={(memory) => {
+                Haptics.selectionAsync().catch(() => {});
+                setOpenAt([memory]);
+              }}
+            />
+          )}
+
           {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
           {stage === 'preview' && !journalOpen && (
             <Preview
@@ -1843,7 +1879,7 @@ export default function App() {
               : undefined
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
-          freeLeft={profile?.free_unlocks ?? 0}
+          freeLeft={profile?.welcome_unlocks ?? 0}
           stepPrice={profile && !profile.subscribed ? profile.steps_per_unlock : undefined}
           stepsShort={short}
           opening={unlocking}
@@ -1869,7 +1905,6 @@ export default function App() {
           device={device}
           onProfile={setProfile}
           stepPrice={profile?.steps_per_unlock ?? 1000}
-          freePerDay={profile?.free_per_day ?? 3}
         />
 
         <Submit

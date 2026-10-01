@@ -23,8 +23,8 @@ from api.gate import (
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
-    FREE_PER_DAY,
     STEPS_PER_UNLOCK,
+    WELCOME_UNLOCKS,
     Coordinates,
     DeviceRequest,
     HeartResponse,
@@ -52,8 +52,8 @@ from api.queries import (
     PLACE_INSERT,
     ROUTE_COMPLETED_QUERY,
     SINGLE_MEMORY_QUERY,
-    SPEND_FREE_UNLOCK,
     SPEND_STEPS,
+    SPEND_WELCOME_UNLOCK,
     SUBMISSION_INSERT,
     SUBSCRIBED_QUERY,
 )
@@ -125,10 +125,11 @@ def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
     """Whether this account may open this memory, paying if it must.
 
     Already opened, it costs nothing. Standing on it, a subscriber pays
-    nothing; anyone else spends one of today's FREE_PER_DAY, then
-    STEPS_PER_UNLOCK steps, or is refused 403 `no_steps` with the balance.
-    Away from it, only a free one opens it, and False says there is none left
-    (docs/10, "Three free a day, then steps where you stand").
+    nothing; anyone else spends STEPS_PER_UNLOCK steps, then the account's one
+    welcome unlock (a new account on the spot has no steps yet), or is refused
+    403 `no_steps` with the balance. Away from it, only the welcome unlock
+    opens it, and False says it is spent (docs/10, "Pick one to start, then
+    where you stand").
 
     Under the user's row lock, so two presses on one memory are charged once.
     """
@@ -137,15 +138,15 @@ def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
     binds = {"device_id": device, "memory_id": memory_id}
     if session.execute(text(EARNED_QUERY), binds).scalar():
         return True
-    if here and session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
-        return True
-    free = {"user_id": user_id, "today": today(), "per_day": FREE_PER_DAY}
-    if session.execute(text(SPEND_FREE_UNLOCK), free).first():
-        return True
+    welcome = {"user_id": user_id, "welcome": WELCOME_UNLOCKS}
     if not here:
-        return False
+        return session.execute(text(SPEND_WELCOME_UNLOCK), welcome).first() is not None
+    if session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
+        return True
     spend = {"user_id": user_id, "price": STEPS_PER_UNLOCK}
     if session.execute(text(SPEND_STEPS), spend).first():
+        return True
+    if session.execute(text(SPEND_WELCOME_UNLOCK), welcome).first():
         return True
     steps = session.execute(
         text("SELECT steps FROM users WHERE id = CAST(:user_id AS uuid)"), {"user_id": user_id}
@@ -164,8 +165,8 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
     every read goes through - this endpoint cannot return a summary the plain
     read would have withheld - but it is the only one that writes an unlock, and
     unlocking is the one thing in this product that is supposed to be an act.
-    A free unlock is the one way past the distance, and it is recorded first,
-    so what comes back is the memory as the collection reads it.
+    The welcome unlock is the one way past the distance, and it is recorded
+    first, so what comes back is the memory as the collection reads it.
     """
     with get_session() as session:
         row = session.execute(
@@ -201,10 +202,12 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
             """),
             {"device": body.device, "memory_id": memory_id},
         )
-        session.execute(
-            text(ROUTE_COMPLETED_QUERY),
-            {"device_id": body.device, "memory_id": memory_id, "today": today()},
-        )
+        # A walk is finished on foot: the welcome unlock opens a stop, not the walk.
+        if here:
+            session.execute(
+                text(ROUTE_COMPLETED_QUERY),
+                {"device_id": body.device, "memory_id": memory_id, "today": today()},
+            )
 
     return memory
 

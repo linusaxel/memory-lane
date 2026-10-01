@@ -15,7 +15,7 @@ a punishment for leaving.
 import pytest
 from sqlalchemy import text
 
-from tests.conftest import give_steps, spend_free_today
+from tests.conftest import give_steps, spend_welcome
 
 pytestmark = pytest.mark.db
 
@@ -76,7 +76,7 @@ def test_standing_there_returns_the_memory_and_records_it(client, memory_id, db_
 
 def test_a_refused_unlock_records_nothing(client, memory_id, db_session):
     """The write is downstream of the gate, not beside it."""
-    spend_free_today(db_session, DEVICE)
+    spend_welcome(db_session, DEVICE)
     refused = _unlock(client, memory_id, lat=FAR_LAT)
     assert refused["locked"] is True
     assert refused["summary"] == ""
@@ -143,25 +143,24 @@ def _press(client, memory_id):
 
 def _balance(client, device=DEVICE):
     me = client.get(f"/v1/me?device={device}").json()
-    return me["free_unlocks"], me["steps"]
+    return me["welcome_unlocks"], me["steps"]
 
 
-def test_three_free_a_day_open_from_anywhere(client, memory_id, db_session):
-    """docs/10, "Three free a day, then steps where you stand"."""
-    first, second, third, fourth = [memory_id, *_memories(db_session, 3)]
-    for m in (first, second, third):
-        opened = _unlock(client, m, lat=None, lng=None)
-        assert opened["locked"] is False
-        assert opened["summary"]
+def test_one_to_start_opens_from_anywhere(client, memory_id, db_session):
+    """docs/10, "Pick one to start, then where you stand"."""
+    first, second = [memory_id, *_memories(db_session, 1)]
+    opened = _unlock(client, first, lat=None, lng=None)
+    assert opened["locked"] is False
+    assert opened["summary"]
     assert _balance(client) == (0, 0)
 
-    far = _unlock(client, fourth, lat=FAR_LAT)
-    assert far["locked"] is True, "no free one left, and not standing there"
-    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 3
+    far = _unlock(client, second, lat=FAR_LAT)
+    assert far["locked"] is True, "the welcome one is spent, and not standing there"
+    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 1
 
 
-def test_after_the_free_ones_a_thousand_steps_standing_there(client, memory_id, db_session):
-    spend_free_today(db_session, DEVICE)
+def test_after_the_welcome_one_a_thousand_steps_standing_there(client, memory_id, db_session):
+    spend_welcome(db_session, DEVICE)
     refused = _press(client, memory_id)
     assert refused.status_code == 403
     assert refused.json()["detail"] == {"reason": "no_steps", "steps": 0, "price": 1000}
@@ -172,25 +171,21 @@ def test_after_the_free_ones_a_thousand_steps_standing_there(client, memory_id, 
     assert _balance(client) == (0, 500)
 
 
-def test_the_free_ones_come_back_the_next_day(client, memory_id, db_session):
-    spend_free_today(db_session, DEVICE)
-    db_session.execute(text("UPDATE users SET free_day = free_day - 1"))
-    db_session.commit()
-    assert _balance(client) == (3, 0)
-    assert _unlock(client, memory_id, lat=FAR_LAT)["locked"] is False
-    assert _balance(client) == (2, 0)
-
-
-def test_standing_there_spends_a_free_one_before_steps(client, memory_id, db_session):
+def test_standing_there_spends_steps_before_the_welcome_one(client, memory_id, db_session):
     give_steps(db_session, DEVICE, 5000)
     _press(client, memory_id)
-    assert _balance(client) == (2, 5000)
+    assert _balance(client) == (1, 4000)
+
+
+def test_standing_there_with_no_steps_uses_the_welcome_one(client, memory_id, db_session):
+    assert _press(client, memory_id).status_code == 200
+    assert _balance(client) == (0, 0)
 
 
 def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
     _unlock(client, memory_id)
     _unlock(client, memory_id, lat=FAR_LAT)
-    assert _balance(client) == (2, 0)
+    assert _balance(client) == (0, 0)
 
 
 def test_a_subscriber_standing_there_spends_nothing(client, memory_id, db_session):
@@ -205,7 +200,7 @@ def test_a_subscriber_standing_there_spends_nothing(client, memory_id, db_sessio
     )
     db_session.commit()
     assert _press(client, memory_id).status_code == 200
-    assert _balance(client) == (3, 0)
+    assert _balance(client) == (1, 0)
 
 
 def test_steps_are_credited_once_from_the_watermark(client, db_session):

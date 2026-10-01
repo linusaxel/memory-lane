@@ -567,7 +567,9 @@ an audit of our own screens against `mobile/UI.md`.
 
 ## What shipped first: the wallet
 
-- **The pill says the one thing to know.** Free ones left: "2 free today",
+- **The pill says the one thing to know.** (Since 2026-10-01 the free ones are
+  one welcome unlock, "1 to start", shown only while the steps cannot pay.)
+  Free ones left: "2 free today",
   the balance under it. None free and enough: "4,210 steps / Opens 4". Short:
   a small ember ring filling toward the price and "600 to go / 400 steps". A
   ring and not a bar so it is the same object as the hold, one ring meaning one

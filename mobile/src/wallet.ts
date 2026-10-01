@@ -1,5 +1,5 @@
 /** What the steps pill says, and whether standing on a pin can open it
- *  (docs/10, "Three free a day, then steps where you stand"). A .ts so the
+ *  (docs/10, "Pick one to start, then where you stand"). A .ts so the
  *  gate's `node --test` can import it. */
 
 import type { Profile } from './api.ts';
@@ -7,7 +7,7 @@ import type { Profile } from './api.ts';
 /** A brisk walk; only used to turn a shortfall into minutes. */
 export const STEPS_PER_MINUTE = 100;
 
-type Purse = Pick<Profile, 'subscribed' | 'free_unlocks' | 'steps' | 'steps_per_unlock'>;
+type Purse = Pick<Profile, 'subscribed' | 'welcome_unlocks' | 'steps' | 'steps_per_unlock'>;
 
 export type Wallet = {
   /** The pill's big line, and the number in it that rolls. */
@@ -26,15 +26,17 @@ export type Wallet = {
 
 export function walletOf(p: Purse): Wallet {
   const steps = p.steps.toLocaleString();
-  if (p.free_unlocks > 0) {
+  // Standing there, steps go before the welcome one, so it shows only while
+  // the steps cannot pay.
+  if (p.welcome_unlocks > 0 && !p.subscribed && p.steps < p.steps_per_unlock) {
     return {
-      figure: p.free_unlocks,
-      unit: 'free today',
+      figure: p.welcome_unlocks,
+      unit: 'to start',
       note: `${steps} steps`,
       short: 0,
       progress: 1,
-      price: p.subscribed ? 0 : 1,
-      spoken: `${p.free_unlocks} free today, ${steps} steps.`,
+      price: 1,
+      spoken: `${p.welcome_unlocks} to start, ${steps} steps.`,
     };
   }
   if (p.subscribed || p.steps >= p.steps_per_unlock) {

@@ -6,7 +6,6 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Profile } from './api.ts';
 import CloseButton from './CloseButton.tsx';
-import { count } from './format.ts';
 import { color, figure, font, label } from './theme.ts';
 import { STEPS_PER_MINUTE, type Wallet } from './wallet.ts';
 
@@ -19,7 +18,6 @@ type Props = {
 };
 
 export default function HowItWorks({ visible, onClose, wallet, profile, radiusMeters }: Props) {
-  const free = profile?.free_per_day ?? 3;
   const price = profile?.steps_per_unlock ?? 1000;
   const minutes = Math.round(price / STEPS_PER_MINUTE);
   return (
@@ -49,9 +47,9 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
           </Section>
         ) : (
           <>
-            <Section title={`${cap(count(free))} a day are free`}>
-              Open them from anywhere: the sofa, the bus, the other side of town. New ones
-              every morning.
+            <Section title="Your first one is on us">
+              Pick one and open it from anywhere: the sofa, the bus, the other side of town.
+              Just the one.
             </Section>
             <Section title="After that, walking pays">
               Every {price.toLocaleString()} steps, about {minutes} minutes on foot, opens one
@@ -72,8 +70,6 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
     </Modal>
   );
 }
-
-const cap = (word: string) => word[0].toUpperCase() + word.slice(1);
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

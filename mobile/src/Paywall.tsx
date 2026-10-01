@@ -12,7 +12,6 @@ import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'r
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { API_BASE, refreshSubscription, type Profile } from './api.ts';
-import { count } from './format.ts';
 import { buy, plans, restore } from './purchases.ts';
 import { button, buttonText, color, dim, font, label } from './theme.ts';
 
@@ -26,10 +25,9 @@ type Props = {
   onProfile: (next: Profile) => void;
   /** The server's price, so this sheet cannot drift from it. */
   stepPrice: number;
-  freePerDay: number;
 };
 
-export default function Paywall({ visible, onClose, device, onProfile, stepPrice, freePerDay }: Props) {
+export default function Paywall({ visible, onClose, device, onProfile, stepPrice }: Props) {
   const [offered, setOffered] = useState<PurchasesPackage[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +63,7 @@ export default function Paywall({ visible, onClose, device, onProfile, stepPrice
         <Text style={styles.title}>Open any memory you stand on</Text>
         <Text style={styles.note}>
           Skip the steps: any memory opens the moment you're standing on it. Without a
-          subscription, each one after today's {count(freePerDay)} free costs {stepPrice.toLocaleString()} steps.
+          subscription, each one after your first costs {stepPrice.toLocaleString()} steps.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (

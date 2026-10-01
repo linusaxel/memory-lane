@@ -60,9 +60,10 @@ free number. F3 is still proposed and sits at the bottom.
 | F33 | Leave a note | Implemented |
 | F34 | End a walk | Implemented |
 | F35 | Subscribe | Implemented (no store yet) |
+| F36 | Choose your first memory | Implemented |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
-screen — no carousel, no settings anybody
+screen and F36's one card over the map — no carousel, no settings anybody
 has to change (the walk length is the preview card's one slider, part of F1,
 not a setting), no search in the app, no sharing, and no push notifications.
 Each of those is a thing a user does *not* do, and the list is worth as much
@@ -303,11 +304,11 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 6. The journal works with no network and no position: it renders from what the
    device stored, so a memory you walked to is readable on the train home.
 
-**Three a day open from anywhere**, from a pin's peek: **Open it now · 3 free
-today**. After those, standing on it opens it for 1,000 steps; a subscriber
-standing there spends nothing. The top of the map says what is left: "2,340
-steps · 2 free today", and a tap counts steps again (F35, and docs/10,
-"Three free a day, then steps where you stand").
+**One opens from anywhere, once:** the first run's pick (F36), from a pin's
+peek, **Open this one from here**. Otherwise standing on it opens it for 1,000
+steps; a subscriber standing there spends nothing. The top of the map says
+what is left, "2,340 steps", and a tap counts steps again (F35, and docs/10,
+"Pick one to start, then where you stand").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -1114,8 +1115,7 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 
 ## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
 
-**Who:** a free account standing on a pin with none of today's free unlocks
-left and fewer than 1,000 steps. **Trigger:** a tap on the faded lock over the
+**Who:** a free account standing on a pin with its welcome unlock spent and fewer than 1,000 steps. **Trigger:** a tap on the faded lock over the
 map, the hold refused `no_steps` (a stale balance), or **Subscribe** in Settings.
 
 1. On the map, anyone standing on a locked pin gets the lock, walk or no walk.
@@ -1148,6 +1148,27 @@ account yet."
 
 **Done when:** `.maestro/subscribe-when-out-of-steps.yml` passes, and
 `tests/test_api_billing.py` and `tests/test_api_unlocks.py`.
+
+## F36 · Choose your first memory — **Implemented**
+
+**Who:** a new account, most likely at home in bed. **Trigger:** the map, while
+`welcome_unlocks > 0`.
+
+1. A card over the map (`src/FirstPick.tsx`): "Choose one to open from here.
+   The rest open when you stand on them." Without a position it offers **Show
+   the ones near me**, which is what asks for location (F8); until then the
+   three are around the map's centre.
+2. Three locked memories near you, most hearted first, then nearest: each its
+   place, year and distance. A row opens that pin's peek.
+3. The peek's **Open this one from here** spends the welcome unlock and opens
+   the story. The card is gone for good; every one after opens on its spot.
+
+**Why:** [Pick one to start, then where you stand](10-decisions.md#pick-one-to-start-then-where-you-stand).
+
+**Failure:** nothing locked within the map's 5 km: no card, and the welcome
+unlock waits for the first pin stood on with no steps.
+
+**Done when:** `.maestro/first-pick.yml` passes, and `tests/test_api_unlocks.py`.
 
 ## Proposed
 

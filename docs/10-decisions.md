@@ -291,9 +291,9 @@ they have paid, and the position was always self-reported.
 
 ### Steps open a memory
 
-Status: **Amended 2026-09-30** by *Three free a day, then steps where you
-stand*: the three free are a day's, and open from anywhere; the steps and how
-they are counted stand. Accepted 2026-09-30. Supersedes *Only today's walk
+Status: **Amended 2026-10-01** by *Pick one to start, then where you stand*:
+one welcome unlock per account, from anywhere; the steps and how they are
+counted stand. (Amended 2026-09-30 by *Three free a day*, now superseded.) Accepted 2026-09-30. Supersedes *Only today's walk
 unlocks* and *A subscription opens the map*.
 
 The founder: wander anywhere, and spend what you walked. A new account opens
@@ -330,9 +330,54 @@ stand on. The balance is on the account, so an anonymous device folded into an
 account at sign-in (`absorb`) brings nothing; the account's own is kept. No cap
 on the stored balance yet: add one if a hoard empties the map in an afternoon.
 
+### Pick one to start, then where you stand
+
+Status: Accepted 2026-10-01. Supersedes *Three free a day, then steps where you
+stand*, and is now the one exception to *The gate*.
+
+The founder: people install this at home, in bed, so the first session cannot
+be "go somewhere". But three a day from anywhere became a way to use the app
+without ever walking, which is the opposite of what it is for. So the first
+run is one choice: three locked memories near you, and the one you pick opens
+from wherever you are. Every one after it opens where it happened.
+
+- **One, once, from anywhere.** `WELCOME_UNLOCKS` (`api/models.py`), counted
+  on `users.free_used` for the life of the account. `free_day` is no longer
+  read; it stays in the schema because migrations replay on top of it. The
+  unlock takes no position for it.
+- **Standing there, steps first.** A subscriber pays nothing; anyone else
+  spends 1,000 steps, then the welcome one (a new account standing on a pin
+  has no steps yet), then 403 `no_steps`. The old order spent the free one
+  first, burning the one way in from afar on a pin you were already at.
+- **A walk is finished on foot.** The welcome unlock opens a stop, but only an
+  unlock standing there runs `ROUTE_COMPLETED_QUERY`.
+- **The choice is a map state, not a screen** (F36, `mobile/src/FirstPick.tsx`):
+  a card over the map while `welcome_unlocks > 0`, ranked by hearts then
+  distance. Its rows open the ordinary peek, whose **Open this one from here**
+  spends it.
+
+Researched 2026-10-01. Pokémon GO's remote raid passes began as a 2020
+stay-at-home stopgap; by 2023 Niantic said they had "come to dominate the
+experience of playing Pokémon GO in a way we never intended", and capping
+them cost two boycotts. A recurring remote open becomes how people play; one
+gift does not. Detour and Field Trip, both gone, show the other side: a trip
+as the only way in limits how many ever start.
+
+**Options considered:** three once, which is a sampler rather than a choice;
+one a day as a shared "story of the day", which is still a recurring remote
+open; a teaser line on the locked peek to choose on, which would reverse *A
+locked memory says what it is, not what it says*. The place, source, year and
+tags are what the card shows.
+
+**Consequences:** an existing account that ever used a free one has spent its
+welcome. Someone who never leaves the house gets one story, and that is the
+point. No saved list yet: if people come back after the first pick, saving
+pins for a walk (with `geofence.ts` on them) is the next thing.
+
 ### Three free a day, then steps where you stand
 
-Status: Accepted 2026-09-30. Amends *Steps open a memory*, and makes the one
+Status: **Superseded 2026-10-01** by *Pick one to start, then where you
+stand*. Accepted 2026-09-30. Amended *Steps open a memory*, and made the one
 exception to *The gate*.
 
 The founder, the same day: three memories a day open from anywhere, and after
