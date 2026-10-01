@@ -1,4 +1,4 @@
-/** Settings: a sheet of its own, opened from the cog on the map.
+/** Settings: a sheet of its own, opened from the hub.
  *
  * The account, and the answer to "why can I not read this". Every app with a
  * proximity gate needs somewhere to answer that, and a sheet you only see once

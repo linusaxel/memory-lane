@@ -75,7 +75,6 @@ import Memories from './src/Memories.tsx';
 import { EndPick, EndWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import EditProfile from './src/EditProfile.tsx';
-import Avatar from './src/Avatar.tsx';
 import Drawer from './src/Drawer.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
@@ -91,6 +90,7 @@ import UnlockHere from './src/UnlockHere.tsx';
 import { buttonText, color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
+import Hub from './src/Hub.tsx';
 import MapFilter, { type MapShows } from './src/MapFilter.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
@@ -278,6 +278,7 @@ export default function App() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hubOpen, setHubOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
@@ -984,7 +985,8 @@ export default function App() {
     return best;
   }, [withinReach, routePositionById]);
   const onRoute = route.length > 0;
-  const pillSlot = position && { bottom: 44 };
+  // Above the hub, which owns bottom centre.
+  const pillSlot = position && { bottom: 120 };
 
   // The memory the ring on the map opens: the one tapped, else the route stop
   // you are at, else the nearest. docs/10, "Unlock on the map".
@@ -1611,27 +1613,6 @@ export default function App() {
             </View>
           )}
 
-          {/* A side way in, not the screen's one button: the free ones and
-              steps are (docs/10, "Three free a day, then steps where you
-              stand"). */}
-          {stage === 'map' && (
-            <GlassButton
-              place={styles.locate}
-              style={styles.pill}
-              accessibilityRole="button"
-              accessibilityLabel="Plan a walk"
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setWalkTo(null);
-                setWalkToKm(0);
-                setPreview(null);
-                setStage('preview');
-              }}
-            >
-              <Text style={styles.cornerText}>Plan a walk</Text>
-            </GlassButton>
-          )}
-
           {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
           {stage === 'preview' && !journalOpen && (
             <Preview
@@ -1693,57 +1674,7 @@ export default function App() {
           {stage === 'end' && <EndPick onCancel={() => setStage('preview')} />}
           {stage === 'loading' && <View style={styles.cover} />}
 
-          {/* Last, so they sit over the plan page too. Top left the journal,
-              which is you as well; top right settings and filing. Every other overlay
-              lives at the bottom, and none may cover the unlock. */}
-          <GlassButton
-            place={[styles.corner, styles.journal]}
-            style={styles.pill}
-            accessibilityRole="button"
-            accessibilityLabel="Journal"
-            accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              setJournalOpen(true);
-            }}
-          >
-            <Avatar url={profile?.avatar_url} name={displayName} size={22} />
-            <Text style={styles.cornerText}>Journal</Text>
-            {journalNew && <View style={styles.newDot} />}
-          </GlassButton>
-          {/* Settings and Add, two circles. Any stage, walk or no walk: filing
-              is standing somewhere, not unlocking. Add shows even with no
-              position - the press asks for it. */}
-          <View style={styles.tools}>
-            <GlassButton
-              style={styles.circle}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityLabel="Settings"
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setSettingsOpen(true);
-              }}
-            >
-              <Glyph name="gearshape" size={20} weight="medium" color={color.ink} />
-            </GlassButton>
-            <GlassButton
-              style={styles.circle}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityLabel="Add a memory here"
-              onPress={async () => {
-                // Without a fix the sheet says "Waiting for your location" and
-                // holds Post until one arrives, which beats a dead tap.
-                if (!positionRef.current) await goToMyLocation().catch(() => false);
-                Haptics.selectionAsync().catch(() => {});
-                setSubmitOpen(true);
-              }}
-            >
-              <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
-            </GlassButton>
-          </View>
-          {/* Top, between them: what opens memories today. A tap counts again. */}
+          {/* Top centre: what opens memories today. A tap counts again. */}
           {wallet && (
             <StepsPill
               wallet={wallet}
@@ -1755,6 +1686,43 @@ export default function App() {
                 countSteps();
                 setHowOpen(true);
               }}
+            />
+          )}
+          {/* Last, so it sits over every card: the one button (docs/10, "One
+              button, like a Poké Ball"). Not over a card that has its own
+              buttons at the bottom. Add is in it at any stage, walk or no
+              walk: filing is standing somewhere, not unlocking. */}
+          {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
+            <Hub
+              open={hubOpen}
+              onToggle={(next) => {
+                Haptics.selectionAsync().catch(() => {});
+                setHubOpen(next);
+              }}
+              avatarUrl={profile?.avatar_url}
+              name={displayName}
+              news={journalNew}
+              collected={collected.length}
+              nearby={nearby.filter((memory) => (unlocked[memory.id] ?? memory).locked).length}
+              onPlan={
+                stage === 'map'
+                  ? () => {
+                      setWalkTo(null);
+                      setWalkToKm(0);
+                      setPreview(null);
+                      setStage('preview');
+                    }
+                  : null
+              }
+              onJournal={() => setJournalOpen(true)}
+              onAdd={async () => {
+                // Without a fix the sheet says "Waiting for your location" and
+                // holds Post until one arrives, which beats a dead tap.
+                if (!positionRef.current) await goToMyLocation().catch(() => false);
+                setSubmitOpen(true);
+              }}
+              onHow={() => setHowOpen(true)}
+              onSettings={() => setSettingsOpen(true)}
             />
           )}
         </View>
@@ -1903,12 +1871,9 @@ const styles = StyleSheet.create({
   // already accepted - a flash of the plan page would be a lie.
   cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.paper },
   // Glass over the map (src/Glass.tsx). `corner` and friends place a
-  // control; `pill`, `bigPill` and `circle` are its shape.
+  // control; `bigPill` and `circle` are its shape.
   corner: { position: 'absolute', top: 64 },
-  journal: { left: 18 },
   steps: { alignSelf: 'center' },
-  tools: { position: 'absolute', top: 64, right: 18, flexDirection: 'row', gap: 8 },
-  pill,
   // The size of a button, not a pill: it is the one thing to do.
   bigPill: {
     minHeight: 52,
@@ -1918,18 +1883,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  cornerText: { ...label, fontSize: 15, color: color.ink },
-  newDot: { width: 8, height: 8, borderRadius: radius.pill, backgroundColor: color.ember },
-  locate: { position: 'absolute', bottom: 44, alignSelf: 'center' },
+  locate: { position: 'absolute', bottom: 120, alignSelf: 'center' },
   locateText: { ...buttonText, color: color.paper },
   // Directly above "Turn on location" while that shows, in its place after.
-  route: { position: 'absolute', bottom: 100, alignSelf: 'center' },
+  route: { position: 'absolute', bottom: 176, alignSelf: 'center' },
   walkCard: { ...pill, minHeight: 56, paddingLeft: 20, paddingRight: 12, gap: 12, minWidth: 260, maxWidth: 360 },
   walkText: { flex: 1, gap: 2 },
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
   recenter: { position: 'absolute', right: 18 },
-  // Top right, under Settings/Add, where map apps keep the layer button; bottom
-  // left is Apple's logo.
-  mapFilter: { position: 'absolute', top: 116, right: 18 },
+  // Top right, alone: where map apps keep the layer button. Bottom left is
+  // Apple's logo.
+  mapFilter: { position: 'absolute', top: 64, right: 18 },
 });

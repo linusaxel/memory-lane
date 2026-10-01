@@ -1,5 +1,5 @@
 /** The journal's way in: a panel that slides over the map from the left,
- *  opened by the Journal pill or a swipe off the left edge. The map stays in
+ *  opened by the hub's Journal tile or a swipe off the left edge. The map stays in
  *  view at the right, dimmed, so the panel reads as a layer over the world
  *  rather than another page (docs/10-decisions.md, "The journal is a drawer; settings are
  *  the map's").
@@ -23,7 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { color } from './theme.ts';
 
 /** Wide enough to claim a deliberate swipe, narrow enough that the map keeps
- *  its pans; it ends where the Journal pill begins. */
+ *  its pans. */
 const EDGE = 18;
 /** The map left showing at the right of the panel. */
 const PEEK = 44;

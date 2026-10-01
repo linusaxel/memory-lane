@@ -11,5 +11,5 @@ appId: ${APP_ID}
       location: ${LOCATION}
 - runFlow: sign-in.yml
 - extendedWaitUntil:
-    visible: "Plan a walk"
+    visible: "Menu"
     timeout: 40000

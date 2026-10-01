@@ -39,6 +39,7 @@ appId: ${APP_ID}
     visible: "[0-9]+ stops? · .* loop"
     timeout: 40000
 - tapOn: "Back to the map"
+- tapOn: "Menu"
 - tapOn: "Plan a walk"
 
 # The preview: the whole loop on the map, and a decision.
@@ -86,6 +87,7 @@ appId: ${APP_ID}
       LAT: ${START_LAT}
       LNG: ${START_LNG}
       LOCATION: never
+- tapOn: "Menu"
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "Planning from central Copenhagen\\. Turn on location to plan from where you are\\."
@@ -102,6 +104,7 @@ appId: ${APP_ID}
       LAT: 55.605
       LNG: 13.0038
       LOCATION: inuse
+- tapOn: "Menu"
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "No walk within 10 km from here\\."

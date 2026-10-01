@@ -23,7 +23,7 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 MapView (before a walk)        the first screen after sign-in, unless today's walk is accepted
 ├─ you, and the reach circle   centred on you, or central Copenhagen with no position
 ├─ Marker per locked memory    within 5 km (MAP_RADIUS_KM); tap -> MemorySheet's peek
-└─ "Plan a walk"               ember glass capsule, bottom centre -> Preview, drawn at once
+└─ the hub                     bottom centre; its first tile, Plan a walk -> Preview, drawn at once
 
 Preview (src/Plan.tsx)          the map, fitted to the start and every stop. Draw first, adjust after
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
@@ -41,25 +41,26 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ "Journal"                  top left, every stage, preview included. Glass (src/Glass.tsx).
-│                              Your photo, or initial, at 22pt before the word: the journal is
-│                              you too, and the way in to Edit profile. Opens the journal drawer,
-│                              as does a swipe in from the left edge (an 18pt strip, src/Drawer.tsx)
-│                              An 8pt ember dot after the word: a heart or a note came back
-│                              on something you filed, unseen (src/seen.ts)
+├─ the hub ("Menu")           bottom centre, the map and the walk, never over a card with its own
+│                              buttons (Preview, EndWalk, WalkDone). A 64pt glass circle, your photo
+│                              or initial in an ember ring (src/Hub.tsx), like Pokémon GO's Poké
+│                              Ball. A 14pt ember badge: a heart or a note came back on something
+│                              you filed, unseen (src/seen.ts). A tap raises a card over a scrim:
+│                              Plan a walk (ember, full width, before a walk only), then four
+│                              tiles, Journal "28 collected · 71 nearby" (the drawer), Add a memory,
+│                              How it works, Settings. Any tile, the scrim or the button closes it.
+│                              The journal drawer also opens on a swipe in from the left edge (an
+│                              18pt strip, src/Drawer.tsx)
 ├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
 │                              thing to know, rolling when it changes: "2 free today" / "4,210 steps";
 │                              none free, "4,210 steps" alone; short, a small ember ring
 │                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
 │                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
 │                              what opening one costs, where steps come from, wander or walk
-├─ Settings, Add              top right, 44pt glass circles (`gearshape`, an ember `plus`), every
-│                              stage, never merged. Settings opens its sheet; Add files a memory,
-│                              no walk needed. See "Writing"
-├─ the map filter           top right, under Add, before a walk: a 44pt glass circle opening a
-│                              native menu, All memories / Locked / Unlocked (src/MapFilter.tsx).
-│                              The glyph fills while it hides something. Where map apps keep the
-│                              layer button; never bottom left, which is Apple's logo
+├─ the map filter             top right, before a walk: a 44pt glass circle opening a native menu,
+│                              All memories / Locked / Unlocked (src/MapFilter.tsx). The glyph fills
+│                              while it hides something. Where map apps keep the layer button;
+│                              never bottom left, which is Apple's logo
 ├─ the walk card             bottom centre, glass (F9): "Next: <place> · 350 m" over
 │    "2 of 5 · 4.1 km left" (the next stop's number, as on its pin), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
@@ -67,7 +68,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    walking. Never a plain tap. Standing at any stop, the unlock ring (src/UnlockHere.tsx)
 │    takes its place and carries the same second line:
 │    the ring, the place, year or source, "1 attachment waiting" and what it
-│    costs. Everyone gets it on the map before a walk too, above "Plan a walk". Tapping a pin
+│    costs. Everyone gets it on the map before a walk too. Tapping a pin
 │    in reach points it at that pin; the hold opens the sheet on the story. Short of steps
 │    there is no ring to hold: the full faded Approach ring, "600 steps to go · about 6 min
 │    walking" and Skip the steps (the paywall)
@@ -138,7 +139,7 @@ and the account is not (docs/10, "The journal is a drawer; settings are the
 map's"). They open as pageSheet modals, Settings from the map and Edit profile
 over the journal, which stays mounted under it.
 
-Settings (src/Settings.tsx, pageSheet, from the map's ⚙) - "Settings" 34/700, × top right
+Settings (src/Settings.tsx, pageSheet, from the hub's Settings tile) - "Settings" 34/700, × top right
 ├─ Account                     which sign-ins, add the other, sign out (back to the gate),
 │                              delete; the subscription
 ├─ How unlocking works         the one place that answers "why can't I read this"
@@ -153,8 +154,10 @@ Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/70
 There are no tabs on the map. Before a walk the map draws what is around you, locked and
 unlocked, behind a filter; on a walk it draws only that walk. Three pins a day
 open from anywhere, from the peek; after that, standing on one and 1,000 steps.
-The top centre is the step count and what is free today; the walk is a side way
-in, so **Plan a walk** is a quiet pill and the walk card sits at the bottom (docs/10, "Three free a day, then steps where you stand").
+The top centre is the step count and what is free today, the top right the
+filter, and everything else is behind the hub at bottom centre: Plan a walk
+first in it, the walk card above it on a walk (docs/10, "One button, like a
+Poké Ball").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -180,7 +183,7 @@ with no network is never stopped at the gate.
 | `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
-| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
+| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the hub |
 | `src/Drawer.tsx` | the journal's panel from the left: the edge swipe, the spring, the scrim |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
@@ -301,7 +304,7 @@ quote) · 19/31 prose (the summary — the hero when nothing is attached) · 16/
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
-(Journal, Add, the walk card, Center on me, Plan a walk, Turn on
+(the hub, the steps pill, the filter, the walk card, Center on me, Turn on
 location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
 only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
@@ -526,7 +529,7 @@ Each of these exists because something broke or would have been rejected.
 12. **Every view has a way out.** A card over the map dismisses with an × in
     its top-trailing corner, on the title line (Apple Maps' convention, HIG
     Toolbars: a back chevron retraces a hierarchy, a close dismisses a layer).
-    Never a new floating control top left: Journal owns that corner, and it is
+    Never a new floating control top left: it is kept empty, and it is
     the least accurate tap on the screen (Hoober 2017: corner targets need
     ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk

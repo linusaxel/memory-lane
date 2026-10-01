@@ -36,6 +36,7 @@ appId: ${APP_ID}
 
 # F25: plan, preview, accept. The default length is the walk below.
 # F29: the map of what is locked comes first; Plan a walk opens F1.
+- tapOn: "Menu"
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "4 stops · .* loop"
@@ -136,6 +137,7 @@ appId: ${APP_ID}
 # F15 + F31: the journal keeps the walk. Its row opens in place to its five
 # stops, and an earned one opens the same sheet. (F16, the same journal with
 # no network, is not scripted; e2e/README.md has the by-hand recipe.)
+- tapOn: "Menu"
 - tapOn: "Journal"
 - assertVisible: "2 day streak"
 - extendedWaitUntil:
@@ -202,6 +204,7 @@ appId: ${APP_ID}
     timeout: 30000
 - assertNotVisible: "A walk from here"
 - assertNotVisible: "Nice walk\\."
+- tapOn: "Menu"
 - tapOn: "Journal"
 - extendedWaitUntil:
     visible: ".*, 4 memories · .*"
@@ -222,9 +225,10 @@ appId: ${APP_ID}
 - tapOn: "End walk"
 - assertNotVisible: "End this walk\\?"
 - extendedWaitUntil:
-    visible: "Plan a walk"
+    visible: "Menu"
     timeout: 30000
 - assertNotVisible: "End walk"
+- tapOn: "Menu"
 - tapOn: "Plan a walk"
 - waitForAnimationToEnd
 - assertNotVisible: "Open any memory you stand on"

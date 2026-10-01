@@ -444,9 +444,8 @@ lose it" talk. The journal became a left drawer over the map the same day
 of it: quiet by default, loud only for real progress. If everything sparkles,
 nothing feels special. Checked 2026-10-01.
 
-- [ ] **G1 Name the pill.** Does it still say "Journal" now that it opens a
-      drawer that is you too? The option closest to a game is the face alone,
-      with no word.
+- [x] **G1 Name the pill.** Done 2026-10-01 another way: the pill is gone,
+      and your face alone is the hub (docs/10, "One button, like a Poké Ball").
 - [ ] **G2 Trainer-card header.** A level and an XP bar under the name, and
       the streak as a flame chip on the avatar. Decide first what earns XP:
       memories, steps or walks. The streak's place is a past decision, under

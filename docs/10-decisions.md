@@ -864,9 +864,36 @@ The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
 regions are queued and replayed from `onMapReady`.
 
+### One button, like a Poké Ball
+
+Status: Accepted 2026-10-01. Supersedes where *The journal is a drawer;
+settings are the map's* put the controls, and *Three free a day*'s "Plan a
+walk is a quiet pill".
+
+The map had eight floating controls: Journal, the steps pill, Settings, Add,
+the filter, Plan a walk, Center on me and the lock ring. The founder wanted it
+organised like a game. Location games keep three to five controls on the map
+and put one main button at bottom centre: Pokémon GO's Poké Ball, Ingress's
+OPS ring, Wizards Unite's Suitcase. The collection and settings live behind
+it, and the currency stays in view. Niantic built GO "for single-hand use"
+(Hwang, GDC 2017). So the map keeps the steps pill (top centre), the filter
+(top right), Center on me (bottom right) and the lock ring, and everything
+else is behind the hub (`mobile/src/Hub.tsx`): your photo in an ember ring at
+bottom centre, opening a card with Plan a walk first, then Journal, Add a
+memory, How it works and Settings. Bottom left stays Apple's logo, so the
+avatar cannot sit there as GO's does.
+
+**Options considered:** keeping Plan a walk on the map as its own button
+(Pokémon GO's Nearby), and a Jurassic World Alive bottom bar with everything
+visible (NN/g: 89% use when visible against 44% hidden). The founder chose the
+hub. Plan a walk and Add now cost one tap more; the hub would pulse when no
+walk is planned today, if Plan a walk use drops.
+
 ### The journal is a drawer; settings are the map's
 
-Status: Accepted, 2026-10-01
+Status: Accepted, 2026-10-01. Where it put the controls (the Journal pill
+top left, Settings as a cog) is superseded by *One button, like a Poké
+Ball*; the drawer stands.
 
 The founder wanted the app to feel like a game, and a menu that slides over
 the world is how map games keep you on the map. So the journal is a panel
