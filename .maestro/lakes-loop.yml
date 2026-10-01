@@ -23,7 +23,6 @@ appId: ${APP_ID}
       LOCATION: inuse
 
 # F29: the map of what is locked comes first; Plan a walk opens F1.
-- tapOn: "Menu"
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "[0-9]+ stops? · .* loop"
@@ -78,7 +77,6 @@ appId: ${APP_ID}
 
 # F31: the Walks tab opens on the history, and a row opens in place to the
 # memories it earned; the stops it never reached stay out.
-- tapOn: "Menu"
 - tapOn: "Journal"
 - extendedWaitUntil:
     visible: ".*, 5 memories · .*"

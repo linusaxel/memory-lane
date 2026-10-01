@@ -81,8 +81,8 @@ these, it is probably not a flow.
 **Session one — "what is this?"** The map of what is locked around you (F29),
 the step count at the top. Tap a pin and its peek offers **Open it now**: three
 a day open from anywhere, so the first story is one tap away. After those, a
-memory opens only where it stands. **Plan a walk**, first in the hub at the
-bottom, draws a walk past a few (F1) and is where location is asked for (F8); decline
+memory opens only where it stands. **Plan a walk**, the ember pill bottom
+centre, draws a walk past a few (F1) and is where location is asked for (F8); decline
 it and the walk is planned from central Copenhagen instead (F9).
 
 **Session two — the first unlock.** The route pill says where the next stop is
@@ -95,7 +95,7 @@ make it worth having got here.
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
 you, never what it says: standing there, or one of the day's free ones, is
-the only way in. Settings, in the hub, is where
+the only way in. Settings, the cog top right, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -117,7 +117,7 @@ because nothing is reachable before it (docs/10, *Sign-in comes first*).
    walk (F1), and that press is where location is asked for (F8).
 4. On a new phone: sign in, and the collection is there.
 
-Signing out (the hub's Settings → Account) lands back on this screen.
+Signing out (the map's ⚙ → Account) lands back on this screen.
 
 ### Why it is the gate
 
@@ -532,11 +532,11 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, a tile in the hub (your photo, bottom centre), or a swipe in
-   from the left edge, slides the journal in over the map. It is you as well: your
+1. **Journal**, the book bottom left of the map, or a swipe in from the
+   left edge, slides the journal in over the map. It is you as well: your
    photo, name and numbers on top (a tap is Edit profile, F21), then *Walks*,
    *Unlocked Memories* and *My Memories* (F24). Settings is not in it: that is
-   the hub's Settings tile (F17). *Walks* has the streak on top, large
+   the cog top right (F17). *Walks* has the streak on top, large
    (F27).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
@@ -567,7 +567,7 @@ kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
-**Settings** (a tile in the hub) exists because every proximity-gated app needs somewhere to
+**Settings** (the cog on the map) exists because every proximity-gated app needs somewhere to
 answer that, and answering it only inside the sheet that provoked the question
 is too late.
 
@@ -598,8 +598,8 @@ hotspots for anyone who wants them.
 ## F5 · File a memory of your own — **Implemented**
 
 **Who:** somebody standing somewhere something happened to them.
-**Trigger:** **Add a memory** in the hub, on the map and on a walk (not
-over the preview's card). Filing needs no walk.
+**Trigger:** the **Add** pin, bottom right of the map, before a walk and on
+one (not over the preview's card). Filing needs no walk.
 
 1. The press checks for a position first. Without one it asks for location and
    stops — there is nothing to file *at*.
@@ -962,8 +962,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
 1. The map, centred on you, or on central Copenhagen with no position. The
    pins are the memories within 5 km (`MAP_RADIUS_KM`, half the longest
    walk), from `/v1/memories/nearby`, fetched on arriving and again when a
-   position first comes, locked and opened both. A glass filter top right
-   (`src/MapFilter.tsx`) shows all of them, only the locked or only
+   position first comes, locked and opened both. A glass filter top right,
+   left of Settings (`src/MapFilter.tsx`), shows all of them, only the locked or only
    the unlocked; an unlocked pin is drawn inside out, paper with an ember eye.
    The map refetches when you file, edit or delete one.
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
@@ -972,8 +972,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    is waiting, **Open it now** while today's free ones last, and **Walk
    here**, which draws a walk through that pin (F1).
    Standing on it, the peek gives way to the ring over the map (F7).
-3. **Plan a walk**, the first tile in the hub at the bottom centre, draws a
-   walk (F1).
+3. **Plan a walk**, the ember pill bottom centre between Journal and Add,
+   draws a walk (F1).
 
 The peek is a look, not a read: the summary never reaches the phone locked, and
 the peek draws nothing in its place. docs/10, "A locked memory says what it is,

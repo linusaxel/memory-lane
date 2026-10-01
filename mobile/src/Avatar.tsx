@@ -1,5 +1,5 @@
-/** Your face, or your initial, or nobody: one circle at any size. The map's
- *  hub, the journal header, Edit profile and a memory's byline. */
+/** Your face, or your initial, or nobody: one circle at any size. The
+ *  journal header, Edit profile and a memory's byline. */
 
 import { Image, StyleSheet, Text, View } from 'react-native';
 

@@ -864,11 +864,38 @@ The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
 regions are queued and replayed from `onMapReady`.
 
+### Act at the bottom, read at the top
+
+Status: Accepted 2026-10-01. Supersedes *One button, like a Poké Ball*.
+
+The founder loved the hub, but Add a memory and the Journal are core: they
+cannot be two taps away. Rethought from first principles: the bottom is where
+a thumb acts and the top where an eye reads (Hoober: 49% hold the phone in
+one hand, corners are the least accurate taps); one prominent action per
+screen, bottom centre (Pokémon GO's Poké Ball, Apple's "tint only the
+primary"); status you check stays in view; rare things go in corners, never
+core actions. So, by how often each is used:
+
+- Bottom row, edge to edge at 70pt (12pt over Apple's logo): Journal (the
+  hub's book), Plan a walk in ember in the middle, Add. On a walk the walk
+  card takes the middle. Center on me sits above Add.
+- Top: the step count centre, and the two rare ones top right, the filter and
+  Settings. Top left stays empty, the worst tap on the screen.
+- How it works has no button: the step count opens it.
+
+Plan a walk is tinted again, the screen's one loud thing, against *Three free
+a day*'s "a quiet pill": the founder asked for a rethink, and walking is the
+loop the app is named for. Untint it if free and step unlocks become the main
+way in. A version with every button at the top was tried and dropped the same
+day: five buttons do not fit two a side of the step count, and the top is the
+hardest place to reach.
+
 ### One button, like a Poké Ball
 
-Status: Accepted 2026-10-01. Supersedes where *The journal is a drawer;
-settings are the map's* put the controls, and *Three free a day*'s "Plan a
-walk is a quiet pill".
+Status: **Superseded 2026-10-01** by *Act at the bottom, read at the top*. Accepted
+2026-10-01; superseded where *The journal is a drawer; settings are the
+map's* put the controls, and *Three free a day*'s "Plan a walk is a quiet
+pill".
 
 The map had eight floating controls: Journal, the steps pill, Settings, Add,
 the filter, Plan a walk, Center on me and the lock ring. The founder wanted it
@@ -892,8 +919,9 @@ walk is planned today, if Plan a walk use drops.
 ### The journal is a drawer; settings are the map's
 
 Status: Accepted, 2026-10-01. Where it put the controls (the Journal pill
-top left, Settings as a cog) is superseded by *One button, like a Poké
-Ball*; the drawer stands.
+top left, Settings as a cog) was superseded by *One button, like a Poké
+Ball*, itself superseded by *Act at the bottom, read at the top*; the drawer
+stands.
 
 The founder wanted the app to feel like a game, and a menu that slides over
 the world is how map games keep you on the map. So the journal is a panel

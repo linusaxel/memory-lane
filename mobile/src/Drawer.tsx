@@ -1,5 +1,5 @@
 /** The journal's way in: a panel that slides over the map from the left,
- *  opened by the hub's Journal tile or a swipe off the left edge. The map stays in
+ *  opened by the map's Journal button or a swipe off the left edge. The map stays in
  *  view at the right, dimmed, so the panel reads as a layer over the world
  *  rather than another page (docs/10-decisions.md, "The journal is a drawer; settings are
  *  the map's").

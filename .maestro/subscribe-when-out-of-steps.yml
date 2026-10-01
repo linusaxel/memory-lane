@@ -19,7 +19,6 @@ appId: ${APP_ID}
       LOCATION: inuse
 
 # Reading the profile creates nothing; a name mints the account, spent.
-- tapOn: "Menu"
 - tapOn: "Journal"
 - tapOn: "Edit profile"
 - tapOn: "The name your memories are signed with"
@@ -41,7 +40,6 @@ appId: ${APP_ID}
 - assertVisible: "Subscriptions aren't available right now\\."
 - tapOn: "Not now"
 
-- tapOn: "Menu"
 - tapOn: "Journal"
 - tapOn: "Edit profile"
 - tapOn: "The name your memories are signed with"

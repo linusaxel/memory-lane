@@ -445,7 +445,8 @@ of it: quiet by default, loud only for real progress. If everything sparkles,
 nothing feels special. Checked 2026-10-01.
 
 - [x] **G1 Name the pill.** Done 2026-10-01 another way: the pill is gone,
-      and your face alone is the hub (docs/10, "One button, like a Poké Ball").
+      and the journal is the book icon alone (docs/10, "Act at the bottom,
+      read at the top").
 - [ ] **G2 Trainer-card header.** A level and an XP bar under the name, and
       the streak as a flame chip on the avatar. Decide first what earns XP:
       memories, steps or walks. The streak's place is a past decision, under

@@ -25,9 +25,8 @@ appId: ${APP_ID}
 - runFlow: steps/sign-in.yml
 
 - extendedWaitUntil:
-    visible: "Menu"
+    visible: "Plan a walk"
     timeout: 40000
-- tapOn: "Menu"
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "4 stops · .* loop"
@@ -41,7 +40,6 @@ appId: ${APP_ID}
     latitude: ${Number(START_LAT) + 0.02}
     longitude: ${START_LNG}
 
-- tapOn: "Menu"
 - tapOn: "Settings"
 - scrollUntilVisible:
     element: "Notify me when a memory is nearby"

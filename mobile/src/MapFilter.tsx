@@ -1,6 +1,6 @@
 /** Which pins the map draws before a walk: all of them, only what is still
  *  locked, or only what you have opened. A native menu in a glass circle,
- *  top right, under Add. */
+ *  top right, left of Settings. */
 
 import { Button, Host, Image, Menu } from '@expo/ui/swift-ui';
 import { accessibilityLabel, frame } from '@expo/ui/swift-ui/modifiers';
