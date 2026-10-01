@@ -53,6 +53,10 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ You, Add                   top right, 44pt glass circles (`person`, an ember `plus`), every stage,
 │                              two shapes that never merge (the founder, 2026-10-01).
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
+├─ the map filter           top right, under Add, before a walk: a 44pt glass circle opening a
+│                              native menu, All memories / Locked / Unlocked (src/MapFilter.tsx).
+│                              The glyph fills while it hides something. Where map apps keep the
+│                              layer button; never bottom left, which is Apple's logo
 ├─ the walk card             bottom centre, glass (F9): "Next: <place> · 350 m" over
 │    "2 of 5 · 4.1 km left" (the next stop's number, as on its pin), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
@@ -68,9 +72,6 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              camera follows you; a one-finger drag lets go and this shows until
 │                              tapped. Before a walk, it shows once the map is off you by a sixth
 │                              of the screen. Custom: showsMyLocationButton is Android-only
-├─ the map filter           bottom left, before a walk, a 44pt glass circle opening a native menu:
-│                              All memories / Locked / Unlocked (src/MapFilter.tsx). The glyph fills
-│                              while it hides something
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km

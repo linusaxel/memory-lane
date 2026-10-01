@@ -1929,5 +1929,7 @@ const styles = StyleSheet.create({
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
   recenter: { position: 'absolute', right: 18 },
-  mapFilter: { position: 'absolute', left: 18, bottom: 44 },
+  // Top right, under You/Add, where map apps keep the layer button; bottom
+  // left is Apple's logo.
+  mapFilter: { position: 'absolute', top: 116, right: 18 },
 });
