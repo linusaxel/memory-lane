@@ -1,5 +1,6 @@
 /** What the steps pill opens: how the app works, in the words of what you
- *  can see on the map. The balance on top, then the four rules under it. */
+ *  can see on the map. The balance on top, then the rules in the order you
+ *  meet them. */
 
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -7,7 +8,7 @@ import type { Profile } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import { count } from './format.ts';
 import { button, buttonText, color, dim, figure, font, label } from './theme.ts';
-import type { Wallet } from './wallet.ts';
+import { STEPS_PER_MINUTE, type Wallet } from './wallet.ts';
 
 type Props = {
   visible: boolean;
@@ -21,7 +22,8 @@ type Props = {
 
 export default function HowItWorks({ visible, onClose, wallet, profile, radiusMeters, onSubscribe }: Props) {
   const free = profile?.free_per_day ?? 3;
-  const price = (profile?.steps_per_unlock ?? 1000).toLocaleString();
+  const price = profile?.steps_per_unlock ?? 1000;
+  const minutes = Math.round(price / STEPS_PER_MINUTE);
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
@@ -36,22 +38,36 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
           </View>
         )}
 
-        <Section title="Every pin is a story">
-          Something happened right there. It stays locked until you stand within{' '}
-          {Math.round(radiusMeters)} m of it.
+        {/* Each heading is the rule on its own, the line under it a picture
+            or a reason; one number each, said as something you can feel.
+            docs/09 part 11 has the research. */}
+        <Section title="Stand on a pin to read it">
+          Every pin is a memory of something that happened right there. Get within{' '}
+          {Math.round(radiusMeters)} m, about the width of a street, and hold the ring.
         </Section>
-        <Section title="Opening one">
-          {profile?.subscribed
-            ? "You're subscribed: anything you stand on opens."
-            : `Each day, ${count(free)} open free, from anywhere. After that, each costs ${price} steps, and you have to be standing there.`}
+        {profile?.subscribed ? (
+          <Section title="Anything you stand on opens">
+            You're subscribed: every pin you reach opens, as many as you like.
+          </Section>
+        ) : (
+          <>
+            <Section title={`${cap(count(free))} a day are free`}>
+              Open them from anywhere: the sofa, the bus, the other side of town. New ones
+              every morning.
+            </Section>
+            <Section title="After that, walking pays">
+              Every {price.toLocaleString()} steps, about {minutes} minutes on foot, opens one
+              more. You still have to be standing there.
+            </Section>
+          </>
+        )}
+        <Section title="Your phone counts the steps">
+          Your walk to work counts, even with the app closed. Open the app and they land up
+          top.
         </Section>
-        <Section title="Your steps">
-          Your phone counts them, even with the app closed, and they land here when you open
-          it. Only walking counts.
-        </Section>
-        <Section title="Wander, or take a walk">
-          Walk anywhere and open what you pass. Or Plan a walk: a route past a few stories, in
-          order.
+        <Section title="Wander, or let it plan">
+          Walk wherever you like and see what you pass. Or tap Plan a walk for a loop past a
+          few memories.
         </Section>
 
         {profile && !profile.subscribed && (
@@ -63,6 +79,8 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
     </Modal>
   );
 }
+
+const cap = (word: string) => word[0].toUpperCase() + word.slice(1);
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -83,8 +101,9 @@ const styles = StyleSheet.create({
   figure,
   unit: { ...label, fontSize: 12 },
   section: { marginTop: 30, gap: 8, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
-  sectionTitle: { ...label },
-  text: { ...font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
+  // The heading is the rule, so it reads first; the line under it is the why.
+  sectionTitle: { ...font.displaySemi, fontSize: 19, lineHeight: 25, color: color.ink },
+  text: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   action: { ...button.outline, alignSelf: 'flex-start', marginTop: 30 },
   actionText: { ...buttonText, color: color.ink },
 });

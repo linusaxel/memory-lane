@@ -744,3 +744,67 @@ This needs a `kind` on the content payload. `ContentRef` has no
 - Bluesky [PostControls](https://github.com/bluesky-social/social-app/blob/main/src/components/PostControls/index.tsx), [CountWheel](https://github.com/bluesky-social/social-app/blob/main/src/lib/custom-animations/CountWheel.tsx)
 - [SwiftUI numericText](https://developer.apple.com/documentation/swiftui/contenttransition/numerictext(countsdown:))
 - [ChatGPT search citations teardown](https://www.aiuxplayground.com/teardowns/chatgpt/citations)
+
+---
+
+# 11. The How it works copy — **researched and built 2026-10-01**
+
+The steps pill opens How it works (`mobile/src/HowItWorks.tsx`). Its first
+copy was accurate and dry: label headings ("Opening one", "Your steps") over
+terms-page sentences. Rewritten against primary sources and the explainer
+screens of apps that mix walking, places and a soft economy.
+
+## What the sources say
+
+- **Headings carry the rule.** Readers see about the first two words of a line
+  ([NN/g, First 2 words](https://www.nngroup.com/articles/first-2-words-a-signal-for-scanning/)),
+  and useful headings are specific
+  ([NN/g, headings](https://www.nngroup.com/articles/headings-pickup-lines/)).
+  WWDC22 10037: "people don't always read the text on screen in order".
+- **Concrete beats abstract.** Concreteness was "overwhelmingly" the best
+  predictor of comprehension and recall (Sadoski, Goetz & Fritz 1993;
+  Sadoski, Goetz & Rodriguez 2000). So: a street's width, ten minutes on foot.
+- **Second person, conversational.** Ginns, Martin & Marsh (2013) meta-analysis:
+  d = 0.30 retention, 0.54 transfer.
+- **Warm, not jokey.** Casual and moderately enthusiastic tones did best, and
+  irreverence cost trust
+  ([NN/g, tone](https://www.nngroup.com/articles/tone-voice-users/)). Apple:
+  avoid "too cute or clever".
+- **A help screen is pulled, not pushed.** People forget tutorials within
+  seconds ([NN/g](https://www.nngroup.com/articles/onboarding-tutorials/);
+  Andersen et al., CHI 2012), so this sheet is where you come back to, and the
+  rules still show where they happen (the pill, the ring, the peek).
+
+## What the apps do
+
+- **Geocaching** ([guide](https://www.geocaching.com/guide/)): five steps, each
+  a verb and a short line. The GPS limit is a tip, not a warning: "The app will
+  get you within 30 feet (9 meters) of the cache, so look at… the hint".
+- **Duolingo** ([101](https://blog.duolingo.com/duolingo-101-how-to-learn-a-language-on-duolingo)):
+  the cost and the way out in one headline, "Mistakes cost you hearts—but you
+  can earn them back", and the subscription last, in one clause.
+- **Sweatcoin** (help centre): the rate as an equation, "1,000 outdoor steps =
+  0.95 Sweatcoins", and each limit with a human reason.
+- **Pokémon GO, Adventure Sync** ([blog](http://web.archive.org/web/20220710042429/https://nianticlabs.com/blog/adventuresync/)):
+  background counting told as everyday life, "morning commutes, strolls about
+  town on lunch", and "the phone in their pockets".
+- **VoiceMap** (App Store): one analogy carries it, "like podcasts that move
+  with you".
+
+## For us
+
+Five sections in the order you meet them, each a heading that is the rule and
+one or two lines that are the picture or the reason, one number each:
+
+| Heading | Under it |
+|---|---|
+| Stand on a pin to read it | 20 m, "about the width of a street", and hold the ring |
+| Three a day are free | "the sofa, the bus, the other side of town" |
+| After that, walking pays | 1,000 steps, "about 10 minutes on foot" |
+| Your phone counts the steps | "Your walk to work counts, even with the app closed" |
+| Wander, or let it plan | ends on walking, not on a cost |
+
+A subscriber gets "Anything you stand on opens" in place of the middle two.
+Headings are 19 semibold ink, the lines 16/25 inkSoft. Same rules as UI.md
+*Copy*: no "we", no em dashes, no exclamation marks, *memory* for what is
+pinned.
