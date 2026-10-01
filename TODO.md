@@ -549,7 +549,9 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
         |---|---|---|
         | Open a story you are standing at | 1 | Pay-per-episode (Pocket FM, Webtoon) |
         | First open of the day | free | A cyclist arriving with nothing still gets in |
-        | A stop on a planned walk | ½ | Cheaper stops give the walk a reason to exist (W4) |
+        | A stop of today's first walk | free | The walk is the free daily habit (W4) |
+        | The pin you aimed a Walk here at | 1 | You pay for the pick; its other stops are free (W4) |
+        | A stop of a second walk the same day | 1 | Otherwise free walks open every pin (W4) |
         | Reach: 20 m → 60 m for one walk | 3 | Pokémon GO lures and incense, the 80 m radius |
         | Themed walk with a stop only the walk reaches | 99 DKK or 15 | StoryHunt's premium Copenhagen walks, 99 DKK (https://www.storyhunt.io/en/copenhagenlocalwalks) |
 
@@ -560,8 +562,8 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
         applied per UTC day (`gate.today()`). Purchases and the subscription
         go through RevenueCat (consumables on the same offering) and the
         `subscriptions` read-back pattern. The app is never believed.
-      - Keep the existing order: a subscriber pays nothing, then the free open
-        of the day, then an Ember, then the welcome unlock, then 403. Re-derive
+      - Keep the existing order: a subscriber pays nothing, then a stop of
+        today's free walk (W4), then the free open of the day, then an Ember, then the welcome unlock, then 403. Re-derive
         this against *Pick one to start* before building.
 - [ ] **E3 The rules any Ember must meet.** (checked 2026-10-02) Hard
       constraints, not choices.
@@ -695,9 +697,9 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
 
 ### The walk: give it a reason to exist
 
-Today a walk's stops cost the same as any pin. Its only rewards are the streak
-(F27), the finish card and the journal grouping, so "Walk here" to one chosen
-pin beats it. No published A/B tests compare curated routes with free choice.
+Before W4, a walk's stops cost the same as any pin, and its only rewards are the streak
+(F27), the finish card and the journal grouping. So "Walk here" to one chosen
+pin beat it. No published A/B tests compare curated routes with free choice.
 
 - [ ] **W1 A stop only the walk reaches.** (checked 2026-10-02) The strongest
       mechanism found.
@@ -725,7 +727,7 @@ pin beats it. No published A/B tests compare curated routes with free choice.
       - The goal gradient: people speed up near the reward (Kivetz et al.
         2006, https://business.columbia.edu/sites/default/files-efs/pubfiles/1200/goalgradient.pdf).
       - Strong in the lab, untested in walking apps.
-- [ ] **W3 Loose walks: skip and reorder.** (checked 2026-10-02)
+- [ ] **W3 Loose walks: the user shapes the path.** (checked 2026-10-02)
       - In Smith et al. 2019, every participant changed the prescribed route:
         reordered stops, skipped some, took the tram.
       - Free roaming split people too. Some loved it; others hated "the
@@ -733,12 +735,40 @@ pin beats it. No published A/B tests compare curated routes with free choice.
       - So a walk is finished when its stops are opened, in any order, and a
         stop can be dropped without ending the walk. Check
         `ROUTE_COMPLETED_QUERY`.
+      - The founder (2026-10-02): keep the user's control of the walk. Keep
+        what F1 has: the length, **Loop** or **One way**, and **Next walk**.
+        Add reorder and skip on top of it. The one thing the user doesn't
+        choose on a free walk is *which* stops it contains: picking a stop
+        is **Walk here**, and that pin costs (W4). **Next walk** can be used
+        to fish for nearby pins. That's acceptable because the free walk is
+        once a day, but cap rerolls if it becomes how people play.
       - Keep stories short. People found more than 5 minutes too long but
         still wanted more coverage.
-- [ ] **W4 Walk stops at ½ Ember.** (checked 2026-10-02) Part of E2. Makes
-      the walk the cheaper choice. Moderate evidence: economics, plus Nunes &
-      Drèze indirectly. Keep the discount modest, or it undercuts the
-      subscription.
+- [ ] **W4 Today's walk is on us.** (checked 2026-10-02) The founder,
+      2026-10-02: walk stops cost nothing, and that is the incentive. Part of
+      E2.
+      - **One free walk a day per account.** The stops of that day's first
+        **Plan a walk** open for nothing, the "?" stop (W1) included. The
+        app picks the stops, so a free walk can't be aimed at the pin you
+        want.
+      - **A walk that opened nothing doesn't use up the day.** Bring back
+        the old prune, so a bad plan or rain costs nothing.
+      - **Walk here:** the pin you chose costs 1 Ember. The other stops on
+        that walk are free if it is the day's first walk.
+      - **A second walk the same day:** its stops cost 1 Ember each.
+      - **Subscribers:** everything is free on the spot anyway.
+      - **Why the day limit:** without it, free stops plus **Walk here** open
+        every pin for nothing in two taps. docs/10 *A subscription opens the
+        map* (2026-09-26) hit exactly that, and fixed it with a day lock
+        (`WALKED_TODAY_QUERY`, 403 `walked_today`) plus `ROUTE_PRUNE`. Both
+        went in *Steps open a memory*, so this brings back a superseded
+        rule. Say so in docs/10 when it lands. Unlike then, the lock is not
+        on walking: a second walk is allowed, its stops just cost.
+      - **The cost:** about 4 free stories a day is generous, and fewer
+        people will pay. If revenue disappoints, change the number of stops
+        on a free walk, or free walks a week. Don't charge for stops again.
+      - **Evidence:** Webtoon's free Daily Pass, plus the goal gradient (W2).
+        No data on location-gated content.
 - [ ] **W5 A broken streak can be repaired.** (checked 2026-10-02)
       - A broken streak hurts, more so when people blame themselves, and less
         when it can be repaired (Silverman & Barasch, JCR 2023, 7 studies,
