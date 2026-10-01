@@ -419,7 +419,8 @@ colours and a grey, not four colours.
   deuteranopia filter, before committing.
 - `tests/test_palette.py` holds text pairs to 4.5:1; `ember` with `paper` text
   on the button clears it in light (5.2) and needs `ink` text in dark.
-- The logo stays teal until someone redraws it.
+- The logo kept its lane and sun and moved off teal on 2026-10-01: an ember
+  tile, a paper road, a seal sun (`solid().tile/road/sun`).
 
 ## Sources
 

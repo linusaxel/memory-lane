@@ -88,9 +88,9 @@ export const solid = (dark: boolean) => ({
   reachStroke: dark ? 'rgba(245,197,66,0.75)' : 'rgba(176,120,10,0.7)',
   reachFill: dark ? 'rgba(245,197,66,0.12)' : 'rgba(242,181,58,0.14)',
   /** mobile/assets/icon.svg and icon-dark.svg. */
-  tile: dark ? '#0a2b2c' : '#106a6d',
-  road: dark ? '#e9f1ee' : '#f2ede4',
-  sun: '#f2a65a',
+  tile: dark ? '#5e2a18' : '#a8350f',
+  road: dark ? '#f2ede4' : '#f7f4ee',
+  sun: dark ? '#f5c542' : '#f2b53a',
 });
 
 /** One family, SF Pro Rounded: the system's own, so it sits with the map's

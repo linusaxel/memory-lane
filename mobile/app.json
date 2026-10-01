@@ -21,7 +21,7 @@
     "android": {
       "package": "com.PLACEHOLDER.memorylane",
       "adaptiveIcon": {
-        "backgroundColor": "#106A6D",
+        "backgroundColor": "#A8350F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

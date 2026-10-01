@@ -16,7 +16,7 @@ const noBackground = (svg) => svg.replace(/<rect[^>]*\/>/, '');
 const bare = (svg) => svg.replace(/<path[^>]*\/>/, '').replace(/<circle[^>]*\/>/, '');
 const rounded = (svg) => svg.replace('<rect ', `<rect rx="${TILE_RX}" `);
 const white = (svg) => svg.replace(/fill="#[0-9a-f]+"/gi, 'fill="#ffffff"');
-const teal = /<rect[^>]*fill="(#[0-9a-f]+)"/i.exec(light)[1];
+const tile = /<rect[^>]*fill="(#[0-9a-f]+)"/i.exec(light)[1];
 
 // An opaque icon must carry no alpha channel at all (iOS App Store rejects
 // one), not just paint-through opacity.
@@ -35,9 +35,9 @@ async function main() {
   await write(rounded(bare(light)), 1024, 'splash-icon.png');
   await write(rounded(bare(dark)), 1024, 'splash-icon-dark.png');
 
-  // Android adaptive icon: the art over a flat teal layer.
+  // Android adaptive icon: the art over a flat tile layer.
   await write(noBackground(light), 512, 'android-icon-foreground.png');
-  await write(`<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect width="1024" height="1024" fill="${teal}"/></svg>`, 512, 'android-icon-background.png', { opaque: true });
+  await write(`<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><rect width="1024" height="1024" fill="${tile}"/></svg>`, 512, 'android-icon-background.png', { opaque: true });
   await write(white(noBackground(light)), 432, 'android-icon-monochrome.png');
 
   await write(light, 48, 'favicon.png', { opaque: true });
