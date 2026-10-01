@@ -91,7 +91,7 @@ import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
-import MapMenu, { type MapShows } from './src/MapMenu.tsx';
+import AccountMenu, { type MapShows } from './src/AccountMenu.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
@@ -1644,7 +1644,7 @@ export default function App() {
           )}
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
-              read at the top"). Journal top left, the one menu top right. */}
+              read at the top"). Journal top left, you top right. */}
           {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
             <GlassButton
               place={styles.topLeft}
@@ -1663,10 +1663,13 @@ export default function App() {
             </GlassButton>
           )}
           <View style={styles.topRight}>
-            <MapMenu
+            <AccountMenu
+              profile={profile}
+              name={displayName}
               shows={mapShows}
               onShow={setMapShows}
               filter={stage === 'map'}
+              onEditProfile={() => setProfileOpen(true)}
               onSettings={() => {
                 Haptics.selectionAsync().catch(() => {});
                 setSettingsOpen(true);

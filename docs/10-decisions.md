@@ -947,7 +947,10 @@ keeping the ember for the important one. So the map is one frame:
 - Top: Journal left, the step count centre, one ⋯ menu right (the filter
   before a walk, then Settings). Journal leads because its drawer slides in
   from the left (HIG Toolbars: the sidebar button at the leading edge);
-  settings-type things trail, as on Snap Map.
+  settings-type things trail, as on Snap Map. Amended the same day: the ⋯
+  is your photo, as Snap Map's corner is your Bitmoji, and the menu under it
+  opens on you (name, streak and counts, how you are signed in, Edit
+  profile) before the filter and Settings.
 - Bottom, edge to edge at 70pt: Add (an ember `plus` on glass), the one
   ember thing, Center on me. The middle changes: Turn on location on a walk
   with no position, Plan a walk before a walk, the walk card on one. Center

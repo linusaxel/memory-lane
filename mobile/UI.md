@@ -47,11 +47,13 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
 │                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
 │                              what opening one costs, where steps come from, wander or walk
-├─ ⋯ ("More")                 top right, a 44pt glass circle, the one menu (src/MapMenu.tsx): the
-│                              rare ones. A native menu: before a walk "Show on map", All memories
-│                              / Locked / Unlocked, then Settings (`gearshape`), which opens its
-│                              sheet. While the filter hides something the glyph is the filled
-│                              filter one, so a thinned map says why
+├─ you ("You")                top right, your photo or initial (src/Avatar.tsx, 38pt) in a 44pt
+│                              glass circle, and under it a native menu (src/AccountMenu.tsx):
+│                              your name as its title, "3-day streak · 27 opened · 2 filed",
+│                              "Signed in with Apple" or "Not signed in", Edit profile; before a
+│                              walk "Show on map", All memories / Locked / Unlocked; then Settings
+│                              (`gearshape`). While the filter hides something a 16pt ember dot
+│                              with the filter glyph sits on the photo, so a thinned map says why
 ├─ Journal                    top left, a 44pt glass circle, the map and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt ember dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
@@ -144,7 +146,7 @@ and the account is not (docs/10, "The journal is a drawer; settings are the
 map's"). They open as pageSheet modals, Settings from the map and Edit profile
 over the journal, which stays mounted under it.
 
-Settings (src/Settings.tsx, pageSheet, from the map's ⋯ menu) - "Settings" 34/700, × top right
+Settings (src/Settings.tsx, pageSheet, from the menu under your photo) - "Settings" 34/700, × top right
 ├─ Account                     which sign-ins, add the other, sign out (back to the gate),
 │                              delete; the subscription
 ├─ How unlocking works         the one place that answers "why can't I read this"
@@ -161,7 +163,7 @@ unlocked, behind a filter; on a walk it draws only that walk. Three pins a day
 open from anywhere, from the peek; after that, standing on one and 1,000 steps.
 The bottom is where you act, one tap each: Add, the one ember thing (Plan a
 walk, or the walk card on one) and Center on me. The top is where you read:
-the step count, with Journal top left and the ⋯ menu top right (docs/10,
+the step count, with Journal top left and you top right (docs/10,
 "One ember button that changes").
 ```
 
@@ -311,7 +313,7 @@ nothing else: 28, 17 and 13.
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
-(Journal, Plan a walk, Add, the walk card, the steps pill, the ⋯ menu,
+(Journal, Plan a walk, Add, the walk card, the steps pill, you,
 Center on me, Turn on location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
 only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
