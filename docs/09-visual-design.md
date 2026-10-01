@@ -598,3 +598,149 @@ an earn (F6), the words in You (F7), a Lock Screen widget (F8).
 - [Expo UI](https://docs.expo.dev/versions/latest/sdk/ui/), [modifiers](https://docs.expo.dev/versions/latest/sdk/ui/swift-ui/modifiers/), [expo-symbols](https://docs.expo.dev/versions/latest/sdk/symbols/), [expo-widgets](https://docs.expo.dev/versions/latest/sdk/widgets/)
 - [WWDC25 219, Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/); [Adopting Liquid Glass](https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass)
 - [RN view style props](https://reactnative.dev/docs/view-style-props)
+
+---
+
+# 10. The walk, the heart and the credit — **researched 2026-10-01, not built**
+
+The founder, on the simulator: the top "On a walk · 1 of 7" pill and the
+bottom "7.9 km to go" pill don't say what they mean, and there's no recenter.
+The heart jumps when "1 heart" appears. Nobody knows what "Open the source"
+opens, and "From" belongs higher up. The research below is from primary sources
+where a fetch worked. Where it didn't, the text says so. The TODO entries are
+in TODO.md under *Facelift*, F9 to F12.
+
+## One walk element
+
+The common pattern is one element that says what's next and how far it is,
+with progress as a secondary count. End is never what a plain tap on it does.
+
+- **Google's Navigation SDK** has a header for the next step and a footer for
+  ETA and distance left. End is a separate control in the footer.
+- **Apple Maps walking** has one bottom card. A swipe up reveals a red End
+  Route button. This is from the app, not from a document.
+- **VoiceMap** shows the next spot with an "I am here" button, and ending the
+  tour is its own small route-with-✕ control.
+- **HIG, Live Activities:** show what people need at a glance, and make cancel
+  an explicit control.
+
+**For us:**
+- Replace both pills with one bottom card.
+- **Main line:** "Next: \<place\> · 300 m".
+- **Second line:** "2 of 7 · 4.1 km left", or seven dots that fill as stops
+  unlock.
+- **Tap:** fits the route.
+- **End:** a small ✕ on the card's trailing edge, with a confirm.
+- **On arrival:** "You're at \<place\> · Open story".
+- The same content becomes the Live Activity later.
+
+## Recenter
+
+- **Google's Navigation SDK:** "The recenter button appears when the user
+  scrolls the map view, and disappears when the user taps to re-center the
+  map."
+- **`MKUserTrackingButton`:** cycles none → follow → follow with heading. The
+  outline, filled and cone icons are from memory, not the fetched doc.
+- **Placement:** Apple puts it in the top-right control stack, Google at the
+  bottom right above the sheet.
+- **react-native-maps:** `showsMyLocationButton` is Android-only, so iOS needs
+  a custom button that calls `animateCamera`.
+
+**For us:**
+- One location-arrow button, at the bottom right above the walk card.
+- **On a walk:** a pan breaks follow instead of being refused. The pinned
+  camera in `App.tsx` turns scroll off today. The button shows until a tap
+  recenters, which also retires `NextStopArrow`'s "can't drag to look"
+  workaround.
+- **Off a walk:** it shows whenever the map is off-centre.
+- **Heading mode:** skip it until somebody asks for it.
+
+## A heart that does not move
+
+The cause is in `MemorySheet.tsx`. The count text is appended after the glyph
+in a row whose sibling `creditText` has `flex: 1`. So the glyph moves left,
+and a long credit can rewrap.
+
+- **Bluesky** (React Native, `src/components/PostControls/index.tsx`): each
+  control owns a fixed slot, and the glyph is pinned to its leading edge. The
+  count is hidden at 0.
+- `src/lib/custom-animations/CountWheel.tsx` rolls the number in by
+  translateY with a fade over 400 ms. It only does this after a real tap and
+  skips it under reduced motion. The label carries the count: "Like (1 like)".
+- **X, Threads and Instagram:** the count is a bare number in a fixed slot.
+- **Airbnb, Apple Music:** no count at all, only a filled or outline glyph
+  and a bounce.
+- **HIG:** a toggle shows its state through the glyph, and VoiceOver gets a
+  `selected` state, not the state written into the label.
+
+**For us:**
+- Show a bare number, not "1 heart", placed *before* the glyph, so the glyph
+  stays at the edge.
+- Give the number a reserved `minWidth` of about two `tabular-nums` digits,
+  with opacity 0 at zero hearts.
+- Keep the existing bounce. Add a small roll or fade (about 250 ms, skipped
+  under reduce motion).
+- The label is "Heart", with `accessibilityState.selected` and the count as
+  `accessibilityValue`.
+- The owner's read-only variant matches.
+
+## Say where the button goes, and credit at the top
+
+- **NN/g on [information scent](https://www.nngroup.com/articles/information-scent/):**
+  a link says where it takes you. "Source" is a researcher's word, and no
+  consumer product found uses it as a button.
+- **Name the host or the thing:**
+  - YouTube: "Watch on YouTube".
+  - [Europeana](https://leuven2012.europeana.eu/page/edm-mooc-advanced): "View at \<institution\>".
+  - [Google Arts & Culture](https://support.google.com/culturalinstitute/partners/answer/4386229): "Visit \<collection\>'s website".
+  - [Readwise](https://help.readwise.io/article/40-can-i-jump-to-a-highlight-directly-in-the-kindle-app): "View in Kindle".
+- **Credit goes at the top:**
+  - [Apple News](https://support.apple.com/guide/news-publisher/apd7c9ae979c/icloud)
+    shows the publisher's logo on every article.
+  - [NN/g, bylines](https://www.nngroup.com/articles/bylines-for-web-articles/)
+    puts the byline under the headline.
+  - The peek card already shows "From X" under the place name. Only the open
+    card puts it at the bottom.
+- **[AI Act Art 50(4)](https://artificialintelligenceact.eu/transparency-rules-article-50/):**
+  the label must be there "at the latest at first exposure". Small print at
+  the bottom is the example given of what fails.
+
+**For us:**
+- **Byline:** goes in the fixed heading under the place name: "Retold from
+  **\<source\>**" or "Left by **\<name\>**", with the episode or book title on
+  a faint second line. "Retold from" doubles as the AI label, but check it on
+  screenshots first.
+- **Pinned at the bottom:** only the heart and the action.
+- **Screenshots:** a screenshot still keeps the place and the credit together,
+  which is what UI.md rule 11 and docs/10 *Core, not polish* ask for.
+- **Metadata:** the story stops ending on metadata (*The open story has a
+  shape*).
+- **Superseded:** rule 11 and the docs/10 entry get a new wording, with the
+  old one marked Superseded. The server-rendered card takes the same order.
+
+| Kind | Button |
+|---|---|
+| Video, with offset | Watch from 12:04 |
+| Video, no offset | Watch on YouTube |
+| Book | Read it in the book |
+| Newspaper | Read the 1856 article |
+| Archive | Read it at \<host\>, e.g. Historisk Atlas |
+| Unknown | Read the original |
+| Filed by a person | none |
+
+This needs a `kind` on the content payload. `ContentRef` has no
+`source_type`, and `pipeline/ingest.py` stores every text source as
+`archive`, so a book and a newspaper can't be told apart yet. Also a bug:
+`SourceLine.tsx` says "on YouTube" to VoiceOver for books too.
+
+## Sources
+
+- [Google Navigation SDK, controls](https://developers.google.com/maps/documentation/navigation/ios-sdk/controls)
+- [HIG, Live Activities](https://developer.apple.com/design/human-interface-guidelines/live-activities), [Maps](https://developer.apple.com/design/human-interface-guidelines/maps), [Toggles](https://developer.apple.com/design/human-interface-guidelines/toggles), [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons)
+- [MKUserTrackingButton](https://developer.apple.com/documentation/mapkit/mkusertrackingbutton)
+- [Apple Maps walking directions](https://support.apple.com/guide/iphone/get-walking-directions-iph8eae299d1/ios)
+- [VoiceMap 10](https://blog.voicemap.me/2023/05/voicemap-athens-new-version-10-the-best-audio-tour-app/), [stopping a tour](https://support.voicemap.me/can-i-stop-and-resume-my-tour/)
+- [Citymapper Lock Screen navigation](https://content.citymapper.com/i/2553/citymapper-introduces-ios-lock-screen-navigation)
+- Bluesky [PostControls](https://github.com/bluesky-social/social-app/blob/main/src/components/PostControls/index.tsx), [CountWheel](https://github.com/bluesky-social/social-app/blob/main/src/lib/custom-animations/CountWheel.tsx)
+- [SwiftUI numericText](https://developer.apple.com/documentation/swiftui/contenttransition/numerictext(countsdown:))
+- [ChatGPT search citations teardown](https://www.aiuxplayground.com/teardowns/chatgpt/citations)
