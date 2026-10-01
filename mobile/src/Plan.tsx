@@ -18,6 +18,7 @@ import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, Text, View
 
 import type { WalkAsk } from './api.ts';
 import CloseButton from './CloseButton.tsx';
+import Glyph from './Glyph.tsx';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
 import { button, buttonText, color, dim, floating, font, label } from './theme.ts';
@@ -115,7 +116,7 @@ type PreviewProps = {
 };
 
 /** One side of the pages; null keeps the side's space empty. */
-type ArrowProps = { glyph: string; name: string; onPress: (() => void) | null; busy: boolean };
+type ArrowProps = { glyph: 'chevron.left' | 'chevron.right'; name: string; onPress: (() => void) | null; busy: boolean };
 
 function Arrow({ glyph, name, onPress, busy }: ArrowProps) {
   if (!onPress) return <View style={styles.arrow} />;
@@ -127,7 +128,7 @@ function Arrow({ glyph, name, onPress, busy }: ArrowProps) {
       accessibilityRole="button"
       accessibilityLabel={name}
     >
-      <Text style={styles.arrowText}>{glyph}</Text>
+      <Glyph name={glyph} size={24} weight="semibold" color={color.ink} />
     </Pressable>
   );
 }
@@ -171,7 +172,7 @@ export function Preview({
       {/* Pages: the arrows flank what they change. A missing one keeps its
           space, so the line never shifts between walks. */}
       <View style={styles.pages}>
-        {found && <Arrow glyph="‹" name="Previous walk" onPress={onBack} busy={busy} />}
+        {found && <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />}
         <Text style={[styles.cardBody, found && styles.paged]}>
           {stops == null
             ? 'Finding a walk…'
@@ -179,7 +180,7 @@ export function Preview({
               ? `No walk within ${WALK_KM.max} km from here.`
               : `${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
         </Text>
-        {found && <Arrow glyph="›" name="Next walk" onPress={onNext} busy={busy} />}
+        {found && <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />}
       </View>
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
@@ -347,6 +348,5 @@ const styles = StyleSheet.create({
   paged: { flex: 1, textAlign: 'center' },
   // 44pt, Apple's smallest hit target.
   arrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  arrowText: { ...buttonText, fontSize: 32, lineHeight: 36, color: color.ink },
   doneTitle: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
 });

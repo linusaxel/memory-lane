@@ -35,7 +35,7 @@ import {
   type WalkedRoute,
 } from './api.ts';
 import CloseButton from './CloseButton.tsx';
-import Padlock from './Padlock.tsx';
+import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
@@ -446,7 +446,7 @@ function Row({
 function Empty({ text }: { text: string }) {
   return (
     <View style={styles.empty}>
-      <Padlock size={32} color={color.rule} />
+      <Glyph name="lock.fill" size={28} color={color.rule} />
       <Text style={styles.emptyText}>{text}</Text>
     </View>
   );

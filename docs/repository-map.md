@@ -126,13 +126,12 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/wallet.ts` | What the steps pill says, and whether standing on a pin can pay; `wallet.test.ts` beside it |
 | `mobile/src/StepsPill.tsx` | The steps pill at the top of the map; the number rolls natively (`@expo/ui`) |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: no-ops without a key. Never decides who has paid |
-| `mobile/src/AddGlyph.tsx` | The Add button's icon: a brand pin with a plus |
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |
-| `mobile/src/YouGlyph.tsx` | The You button's icon |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
-| `mobile/src/HeartGlyph.tsx`, `Padlock.tsx`, `StartupLogo.tsx` | Drawn marks: the heart, the app's one symbol, the launch logo |
+| `mobile/src/Glyph.tsx` | Every icon, as an SF Symbol (`@expo/ui`) |
+| `mobile/src/StartupLogo.tsx` | The launch logo |
 | `mobile/src/api.ts` | The API client. One fetch, no wrapper library |
 | `mobile/src/device.ts` | This installation's self-issued id |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |

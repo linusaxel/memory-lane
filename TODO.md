@@ -457,22 +457,22 @@ same day. In order:
 - [x] **F2 Glass, by the HIG.** (2026-10-01) You and Add are one
       `GlassGroup` and merge; not all four, since the container swallows
       taps in its gaps. One tint in view. Journal's cyan was the lake under it.
-- [ ] **F3 SF Symbols.** `npx expo install expo-symbols` (beta); replace
+- [x] **F3 SF Symbols.** (2026-10-01) `npx expo install expo-symbols` (beta); replace
       AddGlyph, YouGlyph, HeartGlyph, CloseButton, the ‹ › pager characters,
       the "more" dots and the View-drawn Padlock. Bounce on unlock. The pin
       stays SVG (one pin, UI.md Markers).
-- [ ] **F4 One of each.** One pill style for `pill`, `bigPill` and
+- [x] **F4 One of each.** (2026-10-01) One pill style for `pill`, `bigPill` and
       `StepsPill`; one floating-card recipe for UnlockHere, Plan and the peek
       (two fills today); one big-figure token for the six sizes (36, 46, 46,
       52, 22, 15). Census-breaking literals (5, 1, 11, 28, 32, 36, 40) and
       UnlockButton's second shadow either tokened or written into UI.md.
       11pt `dotText` in Memories.tsx is under the 12pt floor.
-- [ ] **F5 Pay along the hold.** The pill counts down the price in step with
+- [x] **F5 Pay along the hold.** (2026-10-01) The pill counts down the price in step with
       the ring's fill, so the spend is seen where it happens.
-- [ ] **F6 The free open as an earn.** "Open it now" spends a free one in a
+- [x] **F6 The free open as an earn.** (2026-10-01) "Open it now" spends a free one in a
       single tap with no reveal; give it the rise the ring hands MemorySheet
       (`revealId`), and the Success haptic.
-- [ ] **F7 Words.** Settings' "how unlocking works" says only "within 20 m":
+- [x] **F7 Words.** (2026-10-01) Settings' "how unlocking works" says only "within 20 m":
       rewrite for three free and steps. The paywall still says "three" (the
       profile has no free-per-day field). Stale comments in MemorySheet
       ("serif", "mono", "Ink, not red"). docs/08 still calls Plan a walk the

@@ -100,7 +100,13 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "./plugins/withoutBackgroundFetch"
+      "./plugins/withoutBackgroundFetch",
+      [
+        "expo-build-properties",
+        {
+          "ios": { "deploymentTarget": "17.0" }
+        }
+      ]
     ]
   }
 }

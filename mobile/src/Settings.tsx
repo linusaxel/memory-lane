@@ -22,8 +22,8 @@ import { API_BASE, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
 import CloseButton from './CloseButton.tsx';
 import { count } from './format.ts';
-import Padlock from './Padlock.tsx';
 import SignIn from './SignIn.tsx';
+import Glyph from './Glyph.tsx';
 import type { Permission } from './types.ts';
 import { button, buttonText, color, dim, figure, font, input, label } from './theme.ts';
 
@@ -138,7 +138,7 @@ export default function Settings({
 
         <Section title="How unlocking works">
           <Row>
-            <Padlock size={17} color={color.faded} />
+            <Glyph name="lock.fill" size={15} color={color.faded} />
             <Text style={styles.rowText}>
               Memories stay locked until you're within {Math.round(radiusMeters)} m of them.
             </Text>

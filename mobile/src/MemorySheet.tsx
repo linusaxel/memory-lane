@@ -21,15 +21,14 @@ import CloseButton from './CloseButton.tsx';
 import type { Coordinates, LocatedMemory } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
-import HeartGlyph from './HeartGlyph.tsx';
 import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
+import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration } from './format.ts';
 import { summaryParts } from './hashtags.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Circle, Svg } from 'react-native-svg';
 import {
   button,
   buttonText,
@@ -44,7 +43,6 @@ import {
   lift,
   radius as corner,
 } from './theme.ts';
-import YouGlyph from './YouGlyph.tsx';
 
 type Props = {
   /** Everything at the tapped point. One marker can hide a dozen memories. */
@@ -216,7 +214,7 @@ export default function MemorySheet({
     !memory || locked || !onHeart ? null : onEdit ? (
       hearts > 0 && (
         <View style={styles.heart}>
-          <HeartGlyph size={18} color={color.inkSoft} filled />
+          <Glyph name="heart.fill" size={17} color={color.inkSoft} />
           <Text style={styles.heartText}>{heartsText}</Text>
         </View>
       )
@@ -228,7 +226,7 @@ export default function MemorySheet({
         accessibilityLabel={(hearted ? 'Hearted' : 'Heart this memory') + (hearts > 0 ? `, ${heartsText}` : '')}
         onPress={() => onHeart(memory)}
       >
-        <HeartGlyph size={18} color={color.inkSoft} filled={hearted} />
+        <Glyph name={hearted ? 'heart.fill' : 'heart'} size={17} color={color.inkSoft} bounce={hearted} />
         {hearts > 0 && <Text style={styles.heartText}>{heartsText}</Text>}
       </Pressable>
     );
@@ -331,11 +329,7 @@ export default function MemorySheet({
                 accessibilityLabel="More"
                 onPress={() => moreActions(memory, reported, onReport, onBlock)}
               >
-                <Svg width={14} height={4} viewBox="0 0 14 4">
-                  {[2, 7, 12].map((cx) => (
-                    <Circle key={cx} cx={cx} cy={2} r={1.6} fill={color.inkSoft} />
-                  ))}
-                </Svg>
+                <Glyph name="ellipsis" size={14} weight="semibold" color={color.inkSoft} />
               </Pressable>
             )}
 
@@ -345,7 +339,7 @@ export default function MemorySheet({
               </Text>
               {peeking && (memory.author || memory.source_name) && (
                 <View style={styles.peekFrom}>
-                  {memory.author && <YouGlyph size={13} color={color.inkFaint} />}
+                  {memory.author && <Glyph name="person" size={12} color={color.inkFaint} />}
                   <Text style={styles.meta} numberOfLines={1}>
                     {memory.author
                       ? `Left by ${memory.author.name}`
@@ -522,7 +516,7 @@ export default function MemorySheet({
                       disabled={index === 0}
                       onPress={() => onIndex(index - 1)}
                     >
-                      <Text style={styles.stepText}>‹</Text>
+                      <Glyph name="chevron.left" size={17} weight="semibold" color={color.inkSoft} />
                     </Pressable>
                     <Text style={styles.pagerText}>
                       {index + 1} of {memories.length} here
@@ -534,7 +528,7 @@ export default function MemorySheet({
                       disabled={index === memories.length - 1}
                       onPress={() => onIndex(index + 1)}
                     >
-                      <Text style={styles.stepText}>›</Text>
+                      <Glyph name="chevron.right" size={17} weight="semibold" color={color.inkSoft} />
                     </Pressable>
                   </View>
                 )}
@@ -696,7 +690,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepOff: { opacity: 0.3 },
-  stepText: { ...font.ui, fontSize: 22, color: color.inkSoft, lineHeight: 26 },
   close: { position: 'absolute', top: 20, right: 20, zIndex: 1 },
   // CloseButton's circle, one along.
   more: {

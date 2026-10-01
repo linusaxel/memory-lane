@@ -12,15 +12,15 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
-import Padlock from './Padlock.tsx';
+import Glyph from './Glyph.tsx';
 import { color, font, label } from './theme.ts';
 
 /** Long enough to feel like a lock turning, short enough not to be a chore. */
 export const HOLD_MS = 900;
 
-/** How long the shackle is given to clear the body before the request goes
- *  out and the sheet is allowed to swap. Roughly where the spring has settled;
- *  longer is noticeable, shorter and the lock is cut off mid-swing. Against a
+/** How long the lock is given to open and bounce before the request goes
+ *  out and the sheet is allowed to swap. Roughly where the recoil has settled;
+ *  longer is noticeable, shorter and the lock is cut off mid-bounce. Against a
  *  local API the round trip is ~20ms - without this wait the lock never
  *  visibly opens at all. */
 const SNAP_MS = 240;
@@ -65,6 +65,7 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const [assistive, setAssistive] = useState(false);
   const [still, setStill] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     AccessibilityInfo.isScreenReaderEnabled().then(setAssistive);
@@ -128,6 +129,7 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
       onHold?.(false);
       burst.setValue(0);
       sprung.setValue(0);
+      setOpen(false);
       Animated.spring(fill, { toValue: 0, speed: 14, useNativeDriver: true }).start();
     }
     wasBusy.current = busy;
@@ -160,6 +162,7 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
       // Success, not another impact: a three-part pattern is the one signature
       // in the app that means a thing was earned, and nothing else uses it.
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      setOpen(true);
       Animated.parallel([
         release(),
         Animated.timing(burst, {
@@ -168,9 +171,9 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-        // Tension and friction rather than a duration: a shackle is a sprung
-        // piece of steel, and it should overshoot and settle rather than
-        // arrive. High tension, low friction - metal, not rubber.
+        // Tension and friction rather than a duration: a lock is sprung
+        // steel, and it should overshoot and settle rather than arrive. High
+        // tension, low friction - metal, not rubber.
         Animated.spring(sprung, {
           toValue: 1,
           tension: 170,
@@ -227,21 +230,12 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
     transform: [{ scale: burst.interpolate({ inputRange: [0, 1], outputRange: [1, 1.75] }) }],
   };
 
-  // The body swells as it is worked, then recoils once as the shackle leaves
-  // it. Out and back, because a body that stays tilted reads as broken.
+  // The lock swells as it is worked, then recoils once as it opens. Out and
+  // back, because a lock that stays tilted reads as broken.
   const working = {
     transform: [
       { scale: Animated.add(fill.interpolate(SWELL), burst.interpolate(GIVE)) },
       { rotate: sprung.interpolate(RECOIL) },
-    ],
-  };
-
-  // Up and out, hinged on the leg that stays in the body. Both happen at once
-  // and the rotation is what makes it a lock rather than a lid.
-  const shackle = {
-    transform: [
-      { translateY: sprung.interpolate({ inputRange: [0, 1], outputRange: [0, -7] }) },
-      { rotate: sprung.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '38deg'] }) },
     ],
   };
 
@@ -272,11 +266,16 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
             {/* The last quarter. An inner ring brightening and closing in is the
                 lock about to turn, and it arrives with the third haptic. */}
             <Animated.View pointerEvents="none" style={[styles.strain, straining]} />
-            {/* The same padlock the map pins use, so the ring reads as the thing
-                that opens them rather than as a record button. Amber-700 stays
-                readable on both the white rest state and the filled one. */}
+            {/* A lock, so the ring reads as the thing that opens memories rather
+                than as a record button. Amber-700 stays readable on both the
+                white rest state and the filled one. */}
             <Animated.View style={working}>
-              <Padlock size={27} color={color.sealDeep} shackleStyle={shackle} />
+              <Glyph
+                name={open ? 'lock.open.fill' : 'lock.fill'}
+                size={26}
+                color={color.sealDeep}
+                bounce={open}
+              />
             </Animated.View>
           </View>
         </Animated.View>

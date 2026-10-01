@@ -70,11 +70,10 @@ import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
 import { EndPick, EndWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
-import AddGlyph from './src/AddGlyph.tsx';
-import YouGlyph from './src/YouGlyph.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import StepsPill from './src/StepsPill.tsx';
+import Glyph from './src/Glyph.tsx';
 import { walletOf } from './src/wallet.ts';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
@@ -1649,7 +1648,7 @@ export default function App() {
                 setYouOpen(true);
               }}
             >
-              <YouGlyph size={22} color={color.ink} />
+              <Glyph name="person" size={20} weight="medium" color={color.ink} />
             </GlassButton>
             <GlassButton
               style={styles.circle}
@@ -1664,7 +1663,7 @@ export default function App() {
                 setSubmitOpen(true);
               }}
             >
-              <AddGlyph size={26} color={color.ember} plus={color.paper} />
+              <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
             </GlassButton>
           </GlassGroup>
           {/* Top, between them: what opens memories today. A tap counts again. */}

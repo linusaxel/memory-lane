@@ -4,7 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
-import Padlock from './Padlock.tsx';
+import Glyph from './Glyph.tsx';
 import { approachOf } from './reach.ts';
 import { color } from './theme.ts';
 
@@ -42,7 +42,7 @@ export default function Approach({ meters, radius }: Props) {
       <Animated.View
         style={[styles.cover, { transform: [{ scale: fill.interpolate(CLOSE) }] }]}
       />
-      <Padlock size={27} color={color.faded} />
+      <Glyph name="lock.fill" size={24} color={color.faded} />
     </View>
   );
 }

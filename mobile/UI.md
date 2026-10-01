@@ -46,7 +46,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              thing to know, rolling when it changes: "2 free today" / "4,210 steps";
 │                              none free, "4,210 steps" / "Opens 4"; short, a small ember ring
 │                              filling to the price and "600 to go" / "400 steps". A tap counts again
-├─ You, Add                   top right, 44pt glass circles (YouGlyph, AddGlyph), every stage,
+├─ You, Add                   top right, 44pt glass circles (`person`, an ember `plus`), every stage,
 │                              one GlassGroup: on iOS 26 they merge into one shape.
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
 ├─ "On a walk · 2 of 5"       under the steps pill, the corners' capsule tinted ember: the walk's one
@@ -130,7 +130,7 @@ with no network is never stopped at the gate.
 
 | File | What it owns |
 |---|---|
-| `src/Padlock.tsx` | the one symbol, at any size, in any colour |
+| `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. The pin is the one drawn mark |
 | `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/UnlockHere.tsx` | the ring over the map, with the place it opens; short of steps, how far off |
@@ -140,9 +140,7 @@ with no network is never stopped at the gate.
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal: streak, walks, unlocked, and what you filed |
 | `src/Settings.tsx` | You: name, account, how unlocking works. Its own sheet |
-| `src/AddGlyph.tsx` | the Add button: an ember pin with a plus |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |
-| `src/YouGlyph.tsx` | the You button: head and shoulders |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
@@ -206,7 +204,7 @@ to your location dot.
 | `seal` | `#F2B53A` / `#F5C542` | **openable.** The in-reach pin, the reach circle. A fill, never text |
 | `sealInk` | `#2B1D05` / `#1F1605` | anything drawn on seal: a lit pin's edge and eye, the pill's words |
 | `sealSoft` | `#FCEBC2` / `#3E3112` | the ring filling during a hold |
-| `sealDeep` | `#7A4F00` / `#F7D074` | seal as words or a thin mark on paper: the unlock ring, the padlock, "attachments waiting" |
+| `sealDeep` | `#7A4F00` / `#F7D074` | seal as words or a thin mark on paper: the unlock ring, its lock, "attachments waiting" |
 
 Ember and seal differ in lightness on purpose: the earlier ochre `seal` and
 ember were one colour under protanopia (docs/09 part 8).
@@ -801,8 +799,8 @@ this is not a polish pass:
 - Markers carry an `accessibilityLabel` with their state. The callout title says
   *where*; only the colour says whether you can read it, and colour is not
   available to everyone.
-- Every state that colour distinguishes is also written or drawn: the padlock
-  (a shape, read out as "Locked"), "within reach", "Nearest locked memory".
+- Every state that colour distinguishes is also written or drawn: the lock
+  (`lock.fill`, a shape, read out as "Locked"), "within reach", "Nearest locked memory".
 
 ## The unlock control
 
@@ -841,9 +839,10 @@ budget. Spec, so it does not get re-invented per screen:
   `withinReach` gets a new array identity every 5 m, so the effect keys on a
   boolean and a ref, not on the array or its length.
 - **The last quarter strains.** An inner ring fades up and closes in from 78%,
-  arriving with the third tick, and the padlock swells as it is worked. Both
+  arriving with the third tick, and the lock swells as it is worked. Both
   are interpolations of the same value the fill uses, so they cost one
-  animation and cannot drift out of sync with it.
+  animation and cannot drift out of sync with it. On the Success the lock
+  becomes `lock.open.fill`, with the symbol's own bounce.
 - **The burst plays over the request, not after it.** A completed hold fires
   the unlock and the flare in the same frame, so the round trip happens behind
   something worth watching. The payoff proper is not here — it is the story
