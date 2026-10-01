@@ -1858,10 +1858,6 @@ export default function App() {
           wallet={wallet}
           profile={profile}
           radiusMeters={radiusMeters}
-          onSubscribe={() => {
-            setHowOpen(false);
-            setPaywallOpen(true);
-          }}
         />
 
         <Paywall

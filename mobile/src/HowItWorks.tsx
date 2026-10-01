@@ -2,12 +2,12 @@
  *  can see on the map. The balance on top, then the rules in the order you
  *  meet them. */
 
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Profile } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import { count } from './format.ts';
-import { button, buttonText, color, dim, figure, font, label } from './theme.ts';
+import { color, figure, font, label } from './theme.ts';
 import { STEPS_PER_MINUTE, type Wallet } from './wallet.ts';
 
 type Props = {
@@ -16,11 +16,9 @@ type Props = {
   wallet: Wallet | null;
   profile: Profile | null;
   radiusMeters: number;
-  /** Close this and open the paywall: one sheet at a time. */
-  onSubscribe: () => void;
 };
 
-export default function HowItWorks({ visible, onClose, wallet, profile, radiusMeters, onSubscribe }: Props) {
+export default function HowItWorks({ visible, onClose, wallet, profile, radiusMeters }: Props) {
   const free = profile?.free_per_day ?? 3;
   const price = profile?.steps_per_unlock ?? 1000;
   const minutes = Math.round(price / STEPS_PER_MINUTE);
@@ -70,11 +68,6 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
           few memories.
         </Section>
 
-        {profile && !profile.subscribed && (
-          <Pressable style={dim(styles.action)} accessibilityRole="button" onPress={onSubscribe}>
-            <Text style={styles.actionText}>Open everything you stand on</Text>
-          </Pressable>
-        )}
       </ScrollView>
     </Modal>
   );
@@ -104,6 +97,4 @@ const styles = StyleSheet.create({
   // The heading is the rule, so it reads first; the line under it is the why.
   sectionTitle: { ...font.displaySemi, fontSize: 19, lineHeight: 25, color: color.ink },
   text: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
-  action: { ...button.outline, alignSelf: 'flex-start', marginTop: 30 },
-  actionText: { ...buttonText, color: color.ink },
 });
