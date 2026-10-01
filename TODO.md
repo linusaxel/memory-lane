@@ -186,9 +186,9 @@ labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
 - [ ] **Re-extract the other books with the archival prompt.** (checked
-      2026-10-01) Carl Møller went from 8 visible to 12 and Oehlenschläger
-      vol. I from 13 to 22 (docs/04, *Carl Møller re-extracted*). Next
-      Andersen (202) and Leonora Christina (203), one at a time: reset `memories_extracted` for
+      2026-10-01) Carl Møller went from 8 visible to 12, Oehlenschläger
+      vol. I from 13 to 22, and Andersen from 5 to 10 (docs/04, *Carl Møller
+      re-extracted*). Next Leonora Christina (203): reset `memories_extracted` for
       the source, clear stale `extraction:<id>:memories`, enqueue, then
       `dedup --memories` and read its pairs before hiding any.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked

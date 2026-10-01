@@ -271,6 +271,15 @@ book shows 22, up from 13. No German place name survived this time and
 nothing landed abroad, but five pins are still 1000 m guesses (Ulfeldts
 Plads, "city centre", Bakkehuset, Kongens Nytorv twice).
 
+**Andersen re-extracted** (2026-10-01, source 202, 27 chapters, about 8
+minutes). It saved 6, all photon or wikidata pins at 50 m: three theatre
+scenes on his arrival (the playbill he took for a gift, the sausage sandwich
+while he wept at Paul and Virginia, being dragged to the footlights in his
+confirmation coat), two at Admiral Wulff's in Amalienborg, and Thorwaldsen's
+return. The save-time check hid both old tellings these replaced, because
+they were on the same place rows, so nothing was hidden by hand. The book
+shows 10, up from 5.
+
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day

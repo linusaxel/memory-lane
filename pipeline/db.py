@@ -35,6 +35,9 @@ engine = create_engine(
     connect_args={"options": f"-c statement_timeout={config.DB_STATEMENT_TIMEOUT_MS}"},
 )
 SessionLocal = sessionmaker(bind=engine)
+# rq forks a work-horse per job. Without this each child reuses the parent's
+# pooled connection, and the second to prepare a statement on it fails.
+os.register_at_fork(after_in_child=lambda: engine.dispose(close=False))
 
 
 @contextmanager
