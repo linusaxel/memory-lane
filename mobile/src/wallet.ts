@@ -13,7 +13,7 @@ export type Wallet = {
   /** The pill's big line, and the number in it that rolls. */
   figure: number;
   unit: string;
-  /** The pill's small line. */
+  /** The pill's small line; empty for none. */
   note: string;
   /** Steps still to walk before one opens; 0 when one can. */
   short: number;
@@ -38,8 +38,8 @@ export function walletOf(p: Purse): Wallet {
     };
   }
   if (p.subscribed || p.steps >= p.steps_per_unlock) {
-    const opens = Math.floor(p.steps / p.steps_per_unlock);
-    const note = p.subscribed ? 'Unlimited where you stand' : `Opens ${opens}`;
+    // The balance is enough on its own: no "Opens 4" under it (the founder).
+    const note = p.subscribed ? 'Unlimited where you stand' : '';
     return {
       figure: p.steps,
       unit: 'steps',
@@ -47,7 +47,7 @@ export function walletOf(p: Purse): Wallet {
       short: 0,
       progress: 1,
       price: p.subscribed ? 0 : p.steps_per_unlock,
-      spoken: `${steps} steps. ${note}.`,
+      spoken: note ? `${steps} steps. ${note}.` : `${steps} steps.`,
     };
   }
   const short = p.steps_per_unlock - p.steps;

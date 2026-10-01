@@ -12,10 +12,10 @@ test('free ones come first, whatever the balance', () => {
   assert.equal(w.short, 0);
 });
 
-test('none free: the balance, and how many it opens', () => {
+test('none free: the balance alone', () => {
   const w = walletOf({ ...purse, steps: 4210 });
   assert.equal(w.figure, 4210);
-  assert.equal(w.note, 'Opens 4');
+  assert.equal(w.note, '');
   assert.equal(w.short, 0);
 });
 

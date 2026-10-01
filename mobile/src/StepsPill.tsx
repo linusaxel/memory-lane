@@ -82,9 +82,11 @@ export default function StepsPill({ wallet, holding, place, onPress }: Props) {
         ) : (
           <Text style={styles.figure}>{line}</Text>
         )}
-        <Text style={styles.note} numberOfLines={1}>
-          {wallet.note}
-        </Text>
+        {wallet.note !== '' && (
+          <Text style={styles.note} numberOfLines={1}>
+            {wallet.note}
+          </Text>
+        )}
       </View>
     </GlassButton>
   );

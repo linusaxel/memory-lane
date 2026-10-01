@@ -46,7 +46,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              on something you filed, unseen (src/seen.ts)
 ├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
 │                              thing to know, rolling when it changes: "2 free today" / "4,210 steps";
-│                              none free, "4,210 steps" / "Opens 4"; short, a small ember ring
+│                              none free, "4,210 steps" alone; short, a small ember ring
 │                              filling to the price and "600 to go" / "400 steps". A tap counts again
 ├─ You, Add                   top right, 44pt glass circles (`person`, an ember `plus`), every stage,
 │                              two shapes that never merge (the founder, 2026-10-01).
