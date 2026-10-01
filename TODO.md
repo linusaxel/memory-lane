@@ -23,13 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **A system permission dialog left by one e2e run fails every later run at
-  launch.** 2026-10-01: a `hideKeyboard` landed on Choose photo, and the Photos
-  prompt it raised survived into the next two runs, which both died at
-  `steps/launch.yml` "Memory Lane" with no hint why; it cost three reruns and
-  a dig through `~/.maestro/tests` screenshots. Fix: `e2e/run.sh` grants or
-  resets photos/camera/microphone with `xcrun simctl privacy` before launch.
-
 - **`dedup --memories` misses a book's retellings when they sit on different
   place rows.** 2026-10-01: it found none of the dog, grocer or gallows pairs
   in source 204 (Schloss Friedrichsberg against Frederiksberg Slot, and so

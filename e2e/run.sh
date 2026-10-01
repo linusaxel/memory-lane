@@ -431,6 +431,14 @@ for flow in "${SELECTED[@]}"; do
   DATA=$(xcrun simctl get_app_container "$DEVICE" "$APP_ID" data 2>/dev/null)
   [ -n "$DATA" ] && rm -rf "$DATA/Library/Application Support/$APP_ID/RCTAsyncLocalStorage_V1"
 
+  # Granted up front, so no flow can raise a system prompt. One a stray tap
+  # raised (a hideKeyboard landing on Choose photo) outlives the app and sits
+  # over every later flow's launch, which then fails on "Memory Lane" with no
+  # hint why. Location is launch.yml's, per flow.
+  for service in photos camera microphone; do
+    xcrun simctl privacy "$DEVICE" grant "$service" "$APP_ID" >/dev/null 2>&1
+  done
+
   if [ "$RECORD" = 1 ]; then
     rm -f "$OUT/$name.mp4"
     xcrun simctl io "$DEVICE" recordVideo --codec h264 -f "$OUT/$name.mp4" \
