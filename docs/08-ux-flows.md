@@ -531,9 +531,9 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, top left of the map, opens the only other screen. The streak
-   is on top, large (F27); under it *Walks*, *Unlocked Memories* and *My
-   Memories* (F24).
+1. **Journal**, top left of the map, opens the only other screen: *Walks*,
+   *Unlocked Memories* and *My Memories* (F24). *Walks* has the streak on
+   top, large (F27).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
    says so.
@@ -869,7 +869,7 @@ reinstall and covers every phone on the account.
 ## F27 · Keep a streak — **Implemented**
 
 **Who:** someone who walks most days.
-**Trigger:** none - it is the number on top of the journal, not a moment.
+**Trigger:** none - it is the number on top of the journal's *Walks*, not a moment.
 
 1. No counter is stored. `api.accounts.current_streak` reads the distinct
    calendar days this account (this device, or every device on the same

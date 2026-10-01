@@ -1,9 +1,9 @@
 /** The journal: the one screen besides the map, opened from its corner.
- *  The streak on top, once there is one, then three sections behind a
- *  segmented control:
+ *  Three sections behind a segmented control:
  *
- * **Walks** - every walk this account took that opened something, newest
- * first (a walk that opened nothing is deleted, docs/10). A row opens in
+ * **Walks** - the streak, once there is one, then every walk this account
+ * took that opened something, newest first (a walk that opened nothing is
+ * deleted, docs/10). A row opens in
  * place to the memories it earned, strung on a rail in walking order. Cached
  * (route.ts `loadWalked`), so it reads on a train (F16).
  * **Unlocked Memories** - everything earned, newest first, from App.tsx's
@@ -233,16 +233,17 @@ export default function Memories({
         <Text style={styles.title}>Journal</Text>
         <CloseButton onPress={onClose} label="Close journal" />
       </View>
+      <Switcher section={section} onSelect={setSection} filedNew={anyNew} />
       {/* The only number in the app that goes up because you went outside.
-          Nothing at zero: a 0 is not a thing to show off, and the empty walk
-          list already says how to start. */}
-      {streak > 0 && (
+          Under Walks only: it counts days you walked, and means nothing beside
+          the other two. Nothing at zero: a 0 is not a thing to show off, and
+          the empty walk list already says how to start. */}
+      {section === 'walks' && streak > 0 && (
         <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
           <Text style={styles.streakValue}>{streak}</Text>
           <Text style={styles.streakLabel}>{streak === 1 ? 'day in a row' : 'days in a row'}</Text>
         </View>
       )}
-      <Switcher section={section} onSelect={setSection} filedNew={anyNew} />
 
       <FlatList<Item>
         style={styles.list}
