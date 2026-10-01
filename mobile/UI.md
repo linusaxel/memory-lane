@@ -83,15 +83,15 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a pageSheet from the journal) - two compositions, not one with holes in it
 
   locked                            open
-  ├─ place name       30/700        ├─ place name       30/700
-  ├─ padlock                        ├─ distance
-  │                                 ├─ the year  44/700, "17 June" beside it   when the source dates it
-  │                                 ├─ the lede  21/30 semibold: the first sentence, the peak
-  │                                 ├─ the rest  19/31, #tags semibold
-  │                                 ├─ "their words"  20/29 semibold, ember rule, "— Mads, at 12:04"
-  │                                 ├─ "Then and now"  16/25 inkSoft   contrast_note, when known
+  ├─ place name       28/700        ├─ place name       28/700, ⋯ beside the ×
+  ├─ padlock                        ├─ byline  avatar 32 + "Left by Anna" 15, the name semibold
+  │                                 ├─ "17 June 1978 · on this day · 40 m away"  label
+  │                                 ├─ the lede  20/28 semibold: the first sentence, the peak
+  │                                 ├─ the rest  17/26, #tags semibold
+  │                                 ├─ "their words"  20/28 semibold, ember rule, "— Mads, at 12:04"
+  │                                 ├─ "Then and now"  17/26 inkSoft   contrast_note, when known
   ├─ distance         52/700        ├─ photo / recording   if it has any
-  ├─ "Get within 20 m"              ├─ "Edit this memory"  own submissions only
+  ├─ "Get within 20 m"              ├─ notes  17/26, footer "You  Rewrite  Remove" in label
   ├─ "1 attachment waiting"         └─ pinned: the button, and the heart trailing it (F11):
   │                                      a bare count before the glyph, in a slot kept at
   │  (in reach it is not opened:         zero, so the glyph never moves. The button says
@@ -99,8 +99,9 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
                                          YouTube", "Read it in the book", "Read the 1856
                                          article", "Read it at Historisk Atlas"
 
-  The open side's byline sits under the place name, above the distance:
+  The open side's byline sits under the place name, above the meta line:
   "Retold from <channel>" with its avatar and the episode or book, or "Left by X".
+  ⋯ holds Edit this memory on your own, Report and Block on anyone else's.
 
   peek (the map, before a walk: a card over the live map, sized to its content)
   ├─ place name
@@ -259,10 +260,12 @@ ember were one colour under protanopia (docs/09 part 8).
 `theme.ts`, with `buttonText` inside: 52pt capsules, ember with paper text,
 soft ember with ink text, or a rule outline. A screen adds only where one sits
 (margin, alignSelf), never its own padding or border. An action inside a page
-rather than ending it (Leave note, Rewrite, Remove, Edit this memory) is the
+rather than ending it (Leave note) is the
 same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
 `hitSlop={4}`. Only links to somewhere else stay text: Terms, Privacy, the
-OpenStreetMap credit, Restore purchases.
+OpenStreetMap credit, Restore purchases. Owner actions are not buttons: a
+note's Rewrite and Remove are `label` text in inkSoft with `hitSlop={12}`, and
+Edit this memory is in ⋯ (docs/10, "The open story is one type scale").
 
 ## Type
 
@@ -293,11 +296,12 @@ of the app and its tracking had drifted three ways before anybody noticed.
 **`input`** is the whole text-field block, which renders in both Edit profile
 and Submit and must not drift between them.
 
-**Scale**: 34 display (screen titles) · 30 (place name) · 52 `figure` (the
+**Scale**: 34 display (screen titles) · 28/34 (place name) · 52 `figure` (the
 gate's distance, the streak, the stats) · 36 `figureSmall` (the peek's
-distance, under its place) · 44 the open story's year · 21/30 semibold (its lede, and 20/29 its
-quote) · 19/31 prose (the summary — the hero when nothing is attached) · 16/25 prose (body)
-· 12–15 (everything labelled) · 17 buttons.
+distance, under its place) · 20/28 semibold (the open story's lede and quote)
+· 17/26 prose (the story, then-and-now, notes) · 16/25 prose (body elsewhere)
+· 15 (the byline) · 13 `label` (everything labelled) · 17 buttons. The open
+story uses only 28, 20, 17, 15 and 13.
 
 
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
@@ -898,8 +902,8 @@ budget. Spec, so it does not get re-invented per screen:
   the unlock and the flare in the same frame, so the round trip happens behind
   something worth watching. The payoff proper is not here — it is the story
   rising into `MemorySheet` as it opens (`revealId`), and this hands off to
-  it: the year, the lede, the rest, the quote, then "Then and now" and the
-  credit, each rising 12 px over 360 ms, 90 ms after the last (720 ms in
+  it: the lede, the rest, the quote, then "Then and now" and the
+  credit, each rising 12 px over 360 ms, 90 ms after the last (630 ms in
   all, one native-driver value). Reduce Motion keeps the fades and drops the
   rise. No haptic of its own: the Success has already fired on the hold.
 - **Transform and opacity only.** Those are what `useNativeDriver` can carry;

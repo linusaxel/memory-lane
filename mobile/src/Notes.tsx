@@ -72,30 +72,32 @@ export default function Notes({ memoryId, isAuthor }: Props) {
       {notes.map((note) => (
         <View key={note.id} style={styles.note}>
           <Text style={styles.body}>{note.body}</Text>
+          {/* Who, then what you may do, on one grey line: a comment's footer
+              everywhere (docs/10, "The open story is one type scale"). */}
           <View style={styles.row}>
             <Text style={styles.author}>{note.mine ? 'You' : note.author}</Text>
             {note.mine && !editing && (
               <Pressable
                 accessibilityRole="button"
-                style={dim(styles.link)}
-                hitSlop={4}
+                style={dim()}
+                hitSlop={12}
                 onPress={() => {
                   setDraft(note.body);
                   setEditing(true);
                 }}
               >
-                <Text style={styles.linkText}>Rewrite</Text>
+                <Text style={styles.action}>Rewrite</Text>
               </Pressable>
             )}
             {(note.mine || isAuthor) && (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={note.mine ? 'Remove your note' : 'Remove this note'}
-                style={dim(styles.link)}
-                hitSlop={4}
+                style={dim()}
+                hitSlop={12}
                 onPress={() => remove(note)}
               >
-                <Text style={styles.linkText}>Remove</Text>
+                <Text style={styles.action}>Remove</Text>
               </Pressable>
             )}
           </View>
@@ -154,15 +156,14 @@ const styles = StyleSheet.create({
   notes: { marginTop: 32, gap: 14 },
   heading: { ...label },
   note: { gap: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: color.rule },
-  body: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.ink },
+  body: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.ink },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  author: { ...label, fontSize: 12, flex: 1 },
-  link: { ...button.outline, ...button.small },
-  linkText: { ...buttonTextSmall, color: color.ink },
+  author: { ...label },
+  action: { ...label, color: color.inkSoft },
   send: { ...button.solid, ...button.small },
   sendText: { ...buttonTextSmall, color: color.paper },
   off: { opacity: 0.35 },
   input: { ...input },
   prose: { minHeight: 90, lineHeight: 24 },
-  counter: { ...label, fontSize: 12, flex: 1 },
+  counter: { ...label, flex: 1 },
 });

@@ -61,4 +61,5 @@ test('the lede is the first sentence, not the first full stop', () => {
   ]);
   assert.deepEqual(lede('It sank, e.g. into the stream. Cracks showed.')[1], 'Cracks showed.');
   assert.deepEqual(lede('One sentence only.'), ['One sentence only.', '']);
+  assert.deepEqual(lede('A horn woke the dock. #food #harbour'), ['A horn woke the dock. #food #harbour', '']);
 });

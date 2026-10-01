@@ -34,7 +34,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   button,
   buttonText,
-  buttonTextSmall,
   color,
   dim,
   figure,
@@ -91,17 +90,20 @@ type Props = {
   onBlock?: (memory: LocatedMemory) => void;
 };
 
-/** Report and block, behind ⋯ the way a post does it: App Store 1.2 wants both
- *  reachable, not on show. There is no unblock, so block asks first. */
+/** Edit, report and block, behind ⋯ the way a post does it: App Store 1.2
+ *  wants report and block reachable, not on show, and an owner's edit is
+ *  there in every app that has one. There is no unblock, so block asks first. */
 function moreActions(
   memory: LocatedMemory,
   reported: boolean | undefined,
-  onReport: (memory: LocatedMemory) => void,
+  onReport?: (memory: LocatedMemory) => void,
   onBlock?: (memory: LocatedMemory) => void,
+  onEdit?: (memory: LocatedMemory) => void,
 ) {
   const who = memory.author?.name === 'Anonymous' ? 'this person' : memory.author?.name;
   const actions = [
-    reported ? null : { label: 'Report this memory', run: () => onReport(memory) },
+    onEdit ? { label: 'Edit this memory', run: () => onEdit(memory) } : null,
+    reported || !onReport ? null : { label: 'Report this memory', run: () => onReport(memory) },
     onBlock && who
       ? {
           label: `Block ${who}`,
@@ -138,7 +140,7 @@ function formatDistance(meters: number | null): string | null {
 
 const RISE_MS = 360;
 const BEAT_MS = 90;
-const REVEAL_MS = RISE_MS + 4 * BEAT_MS;
+const REVEAL_MS = RISE_MS + 3 * BEAT_MS;
 
 function formatTimestamp(seconds: number): string {
   return duration(seconds, { hours: true });
@@ -211,6 +213,7 @@ export default function MemorySheet({
           : stepPrice
           ? `Walk within ${Math.round(radius)} m, then open it for ${stepPrice.toLocaleString()} steps.`
           : `Get within ${Math.round(radius)} m to unlock it.`;
+  const hasMore = !locked && !!(onReport || onEdit);
   const hearts = memory?.heart_count ?? 0;
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
   // Your own memory: you see that it mattered, you cannot say so (api/write.py
@@ -355,6 +358,13 @@ export default function MemorySheet({
   const [first, rest] = lede(memory?.summary ?? '');
   const when = happened(memory?.happened_at, memory?.happened_precision);
   const started = memory?.content?.timestamp_start ?? null;
+  const metaLine = [
+    !locked && when && [when.within, when.year].filter(Boolean).join(' '),
+    memory?.anniversary && 'on this day',
+    !locked && formatDistance(fromHere ?? memory?.distance_meters ?? null),
+  ]
+    .filter(Boolean)
+    .join(' · ');
   const quoteBy = [
     memory?.quote_by,
     started != null && `at ${formatTimestamp(started)}`,
@@ -400,20 +410,20 @@ export default function MemorySheet({
               <View style={styles.grabber} />
             </View>
             <CloseButton place={styles.close} onPress={onClose} />
-            {!locked && onReport && (
+            {hasMore && (
               <Pressable
                 style={dim(styles.more)}
                 hitSlop={7}
                 accessibilityRole="button"
                 accessibilityLabel="More"
-                onPress={() => moreActions(memory, reported, onReport, onBlock)}
+                onPress={() => moreActions(memory, reported, onReport, onBlock, onEdit)}
               >
                 <Glyph name="ellipsis" size={14} weight="semibold" color={color.inkSoft} />
               </Pressable>
             )}
 
             <View style={styles.heading}>
-              <Text style={[styles.place, !locked && onReport && styles.placeBesideMore]}>
+              <Text style={[styles.place, hasMore && styles.placeBesideMore]}>
                 {memory.place.name}
               </Text>
               {peeking && (memory.author || memory.source_name) && (
@@ -437,18 +447,17 @@ export default function MemorySheet({
               {!locked &&
                 (memory.author ? (
                   <View style={[styles.byline, styles.bylineRow]}>
-                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={36} />
-                    <View>
-                      <Text style={styles.bylineLabel}>Left by</Text>
-                      <Text style={styles.bylineName}>{memory.author.name}</Text>
-                    </View>
+                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={32} />
+                    <Text style={styles.bylineFrom} numberOfLines={1}>
+                      Left by <Text style={styles.bylineName}>{memory.author.name}</Text>
+                    </Text>
                   </View>
                 ) : memory.content?.source ? (
                   <View style={styles.byline}>
                     <SourceLine source={memory.content.source} title={memory.content.title} />
                   </View>
                 ) : memory.content?.title ? (
-                  <Text style={[styles.source, styles.byline]} numberOfLines={2}>
+                  <Text style={[styles.meta, styles.byline]} numberOfLines={2}>
                     Retold from {memory.content.title}
                   </Text>
                 ) : null)}
@@ -464,16 +473,10 @@ export default function MemorySheet({
                   ))}
                 </View>
               )}
-              <View style={styles.metaRow}>
-                {!locked && formatDistance(fromHere ?? memory.distance_meters) && (
-                  <Text style={styles.meta}>
-                    {formatDistance(fromHere ?? memory.distance_meters)}
-                  </Text>
-                )}
-                {/* The server already sorted it to the top; this says why. No
-                    accent - the seal means openable and nothing else gets it. */}
-                {memory.anniversary && <Text style={styles.meta}>on this day</Text>}
-              </View>
+              {/* When, then why it is on top, then how far: one line, the
+                  way a byline's date sits under it. "On this day" has no
+                  accent - the seal means openable and nothing else gets it. */}
+              {metaLine !== '' && <Text style={[styles.meta, styles.metaLine]}>{metaLine}</Text>}
             </View>
 
             {/* Two different screens, not one screen with the middle deleted. A
@@ -530,23 +533,17 @@ export default function MemorySheet({
                       photograph and the weight shifts to it. */}
                   {/* docs/10, "The open story has a shape": when, the peak
                       first, their words, and what you can see now last. */}
-                  {when && (
-                    <Animated.View style={[styles.when, rise(0)]}>
-                      <Text style={styles.year}>{when.year}</Text>
-                      {when.within && <Text style={styles.meta}>{when.within}</Text>}
-                    </Animated.View>
-                  )}
                   {/* One sentence is not a lede, it is the story. */}
-                  <Animated.View style={rise(1)}>
+                  <Animated.View style={rise(0)}>
                     <Text style={rest ? styles.lede : styles.summary}>{prose(first)}</Text>
                   </Animated.View>
                   {rest !== '' && (
-                    <Animated.View style={rise(2)}>
+                    <Animated.View style={rise(1)}>
                       <Text style={[styles.summary, styles.afterLede]}>{prose(rest)}</Text>
                     </Animated.View>
                   )}
                   {memory.quote && (
-                    <Animated.View style={rise(3)}>
+                    <Animated.View style={rise(2)}>
                       {/* Copied from the source and checked against it
                           (pipeline/extract.py, grounded), never written. A tap
                           goes to where it was said, like the watch button. */}
@@ -561,7 +558,7 @@ export default function MemorySheet({
                       </Pressable>
                     </Animated.View>
                   )}
-                  <Animated.View style={rise(4)}>
+                  <Animated.View style={rise(3)}>
                     {memory.contrast_note && (
                       <View style={styles.now}>
                         <Text style={styles.meta}>Then and now</Text>
@@ -573,16 +570,6 @@ export default function MemorySheet({
 
                     <Notes memoryId={memory.id} isAuthor={!!onEdit} />
 
-                    {!locked && onEdit && (
-                      <Pressable
-                        style={dim(styles.report)}
-                        hitSlop={4}
-                        accessibilityRole="button"
-                        onPress={() => onEdit(memory)}
-                      >
-                        <Text style={styles.reportText}>Edit this memory</Text>
-                      </Pressable>
-                    )}
                   </Animated.View>
                 </ScrollView>
 
@@ -691,8 +678,8 @@ const styles = StyleSheet.create({
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
   heading: { paddingHorizontal: 24, paddingTop: 26 },
   body: { paddingHorizontal: 24, paddingTop: 22, paddingBottom: 12 },
-  place: { ...font.display, fontSize: 30, lineHeight: 36, color: color.ink, paddingRight: 30 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 10 },
+  place: { ...font.display, fontSize: 28, lineHeight: 34, color: color.ink, paddingRight: 30 },
+  metaLine: { marginTop: 10 },
   meta: { ...label },
   peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   gate: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, gap: 16 },
@@ -719,34 +706,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
-  summary: { ...font.prose, fontSize: 19, lineHeight: 31, color: color.ink },
+  summary: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.ink },
   // The peak, set apart the way a standfirst is. The prompt puts it first.
-  lede: { ...font.displaySemi, fontSize: 21, lineHeight: 30, color: color.ink },
+  lede: { ...font.displaySemi, fontSize: 20, lineHeight: 28, color: color.ink },
   afterLede: { marginTop: 12 },
-  when: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginBottom: 10 },
-  year: { ...font.display, fontSize: 44, lineHeight: 48, color: color.ink },
   // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
   quote: { marginTop: 28, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
-  quoteText: { ...font.displaySemi, fontSize: 20, lineHeight: 29, color: color.ink },
+  quoteText: { ...font.displaySemi, fontSize: 20, lineHeight: 28, color: color.ink },
   now: { marginTop: 28, gap: 4 },
-  nowText: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
+  nowText: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.inkSoft },
   hashtag: { ...font.displaySemi },
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
   byline: { gap: 2, marginTop: 12 },
   bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  bylineLabel: { ...label, fontSize: 12 },
-  bylineName: { ...font.displaySemi, fontSize: 16, color: color.ink },
-  // Quiet on purpose. It has to be findable and must not be the thing the eye
-  // lands on under somebody's story.
-  report: { ...button.outline, ...button.small, marginTop: 28, alignSelf: 'flex-start' },
-  reportText: { ...buttonTextSmall, color: color.ink },
-  source: { ...font.ui, fontSize: 12, lineHeight: 19, color: color.inkFaint },
+  bylineFrom: { ...font.prose, fontSize: 15, color: color.inkSoft, flexShrink: 1 },
+  bylineName: { ...font.displaySemi, color: color.ink },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ember, not seal: the seal is the unlock and nothing else gets to wear it.
   watch: button.solid,
   watchText: { ...buttonText, color: color.paper },
-  linkFailed: { ...font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
+  linkFailed: { ...label, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
   openRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },

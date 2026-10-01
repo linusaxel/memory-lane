@@ -35,21 +35,24 @@ appId: ${APP_ID}
 - hideKeyboard
 - tapOn: "Post"
 
-# The lede is its own paragraph, so the #food after it is another line.
+# One sentence and its #words are one paragraph (hashtags.ts, lede).
 - extendedWaitUntil:
     visible: ".*ferry horn.*"
     timeout: 40000
-- assertVisible: "#food"
+- assertVisible: ".*after. #food"
 - assertVisible: "The step by the ferry landing"
 # F21: signed Anonymous until you give a name.
 - assertVisible: ".*Anonymous.*"
 
 # F33 from the author's own phone, which is the only one a flow has: the
 # author unlocked it by filing it, so they may sign it. They may not heart it
-# (api/write.py), and are not offered Report or Block. What matters is what
-# comes back in the journal.
+# (api/write.py), and are not offered Report or Block: their ⋯ holds Edit
+# alone. What matters is what comes back in the journal.
 - assertNotVisible: "Heart"
-- assertNotVisible: "More"
+- tapOn: "More"
+- assertVisible: "Edit this memory"
+- assertNotVisible: "Report this memory"
+- tapOn: "Cancel"
 - scrollUntilVisible:
     element:
       id: "note"

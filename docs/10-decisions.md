@@ -2334,7 +2334,8 @@ with no pictures yet. The open story is now, top to bottom (`MemorySheet.tsx`,
 the tree in `mobile/UI.md`):
 
 1. **When**: the year, large, when the source dates it (`happened_at`,
-   `happened_precision`).
+   `happened_precision`). *Superseded 2026-10-01 by "The open story is one
+   type scale": the date is in the meta line under the byline.*
 2. **The peak first**: the first sentence is set apart as a lede.
 3. **The rest** of the summary.
 4. **Their words**: one line copied from the source.
@@ -2458,6 +2459,35 @@ that UI.md rule 11 described before.
   two-digit `tabular-nums` slot kept even at zero (Bluesky's PostControls).
   VoiceOver hears "Heart" with `selected` and the count as its value, not
   the state in the label (HIG, toggles).
+
+### The open story is one type scale
+
+Status: Accepted 2026-10-01. Supersedes "When: the year, large" in *The open
+story has a shape*.
+
+The founder: the open memory was "a mess of different font sizes". It had
+eight (44, 30, 21, 19, 16, 15, 13, 12), the year at 44 was larger than the
+place at 30, and the byline and its meta were two separate stacks. Now five,
+on Apple's own scale (HIG Typography: Title1 28/34, Title3 20/25, Body 17,
+Subhead 15, Footnote 13):
+
+- **28/34** the place, **20/28** the lede and the quote, **17/26** the story,
+  then-and-now and every note, **15** the byline, **13** `label` for
+  everything named. Nothing on the open story is 12 any more. The locked
+  screens' figures (52, 36) are distances, not the story, and stay.
+- **Byline and meta are one block**: avatar 32, "Left by **Anna**" (or
+  "Retold from **Channel**") on one 15 line, then "1 October 2026 · on this
+  day · 40 m away" in `label`. The date is metadata, as on Medium, Substack,
+  Strava and Day One, not a second headline.
+- **Hierarchy by weight and grey before size** (Refactoring UI; Butterick,
+  "use the smallest increment necessary to make a visible difference").
+- **A first sentence followed only by #words is one paragraph** (`lede()` in
+  `hashtags.ts`): a lone `#food` was being set as the story's second paragraph.
+- **Owner actions are not capsules.** A note's footer is one grey line, "You
+  Rewrite Remove", as a comment's is on Instagram and Threads. "Edit this
+  memory" is in ⋯, beside Report and Block for everyone else, as in Journal,
+  Day One and Strava. Supersedes the 36pt capsule for Rewrite, Remove and Edit
+  this memory; Leave note keeps it, since it submits a field.
 
 ### Rejected approaches, do not retry
 

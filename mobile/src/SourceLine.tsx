@@ -39,9 +39,8 @@ export default function SourceLine({ source, title }: Props) {
         <View style={[styles.avatar, styles.avatarEmpty]} />
       )}
       <View style={styles.text}>
-        <Text style={styles.from}>Retold from</Text>
-        <Text style={styles.name} numberOfLines={1}>
-          {source.name}
+        <Text style={styles.from} numberOfLines={1}>
+          Retold from <Text style={styles.name}>{source.name}</Text>
         </Text>
         {title ? (
           <Text style={styles.title} numberOfLines={2}>
@@ -66,7 +65,7 @@ export default function SourceLine({ source, title }: Props) {
   );
 }
 
-const AVATAR = 40;
+const AVATAR = 32;
 
 const styles = StyleSheet.create({
   // MemorySheet's byline, under the place name.
@@ -74,7 +73,7 @@ const styles = StyleSheet.create({
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
   avatarEmpty: { borderWidth: 1, borderColor: color.rule },
   text: { flex: 1, gap: 2 },
-  from: { ...label, fontSize: 12 },
-  name: { ...font.displaySemi, fontSize: 16, color: color.ink },
-  title: { ...font.ui, fontSize: 12, lineHeight: 16, color: color.inkFaint },
+  from: { ...font.prose, fontSize: 15, color: color.inkSoft },
+  name: { ...font.displaySemi, color: color.ink },
+  title: { ...label },
 });

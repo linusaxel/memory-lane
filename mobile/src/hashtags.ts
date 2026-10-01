@@ -70,13 +70,16 @@ export function hashtags(text: string): string[] {
 
 /** The first sentence and the rest, for setting the lede apart. A full stop
  *  after a word of one or two letters ("St.", "U.S.") does not end one, nor
- *  does one before a lowercase word. One sentence is all lede. */
+ *  does one before a lowercase word. One sentence is all lede, and so is one
+ *  followed by nothing but #words. */
 export function lede(text: string): [string, string] {
   for (const match of text.matchAll(/[.!?](?=\s+[^\sa-zß-ÿ])/g)) {
     const at = match.index ?? 0;
     const word = text.slice(0, at).match(new RegExp(`[${WORD}]+$`))?.[0] ?? '';
     if (match[0] === '.' && word.length <= 2 && !/\d/.test(word)) continue;
-    return [text.slice(0, at + 1), text.slice(at + 1).trim()];
+    const rest = text.slice(at + 1).trim();
+    if (hashtagParts(rest).every((p) => p.tag || !p.text.trim())) break;
+    return [text.slice(0, at + 1), rest];
   }
   return [text, ''];
 }
