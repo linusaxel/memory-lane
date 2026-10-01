@@ -46,7 +46,7 @@ export default function StepsPill({ wallet, holding, place, onPress }: Props) {
       style={styles.pill}
       accessibilityRole="button"
       accessibilityLabel={wallet.spoken}
-      accessibilityHint="Counts your steps again"
+      accessibilityHint="How steps and unlocking work"
       onPress={onPress}
     >
       {wallet.short > 0 && (

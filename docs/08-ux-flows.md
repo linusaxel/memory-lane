@@ -291,7 +291,7 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    can see rather than a number to interpret. Walking inside it turns that pin
    into a seal-coloured ring, and the unlock ring comes up over the map in
    the route pill's place: the place name, its year or source, what is
-   waiting, "You made it." No sheet opens first. With two in reach it is the
+   waiting. No sheet opens first. With two in reach it is the
    route stop's, and tapping the other pin points it there instead.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.

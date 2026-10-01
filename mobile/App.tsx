@@ -76,6 +76,7 @@ import { EndPick, EndWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
+import HowItWorks from './src/HowItWorks.tsx';
 import StepsPill from './src/StepsPill.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
@@ -273,6 +274,7 @@ export default function App() {
   const [submitOpen, setSubmitOpen] = useState(false);
   const [youOpen, setYouOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [howOpen, setHowOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
   // server knows (src/purchases.ts).
   useEffect(() => {
@@ -1748,9 +1750,11 @@ export default function App() {
               wallet={wallet}
               holding={holding}
               place={[styles.corner, styles.steps]}
+              // What it means, and a recount behind it.
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 countSteps();
+                setHowOpen(true);
               }}
             />
           )}
@@ -1845,6 +1849,18 @@ export default function App() {
             if (!memory || !(await unlock(memory))) return;
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
             setRevealId(memory.id);
+          }}
+        />
+
+        <HowItWorks
+          visible={howOpen}
+          onClose={() => setHowOpen(false)}
+          wallet={wallet}
+          profile={profile}
+          radiusMeters={radiusMeters}
+          onSubscribe={() => {
+            setHowOpen(false);
+            setPaywallOpen(true);
           }}
         />
 

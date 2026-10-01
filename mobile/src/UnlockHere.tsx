@@ -51,7 +51,9 @@ export default function UnlockHere({ memory, onUnlock, onHold, busy, error, cost
         {waiting.length > 0 && (
           <Text style={styles.waiting}>{waiting.join(' · ')} waiting</Text>
         )}
-        <Text style={styles.note}>{short > 0 ? shortfall(short) : (error ?? 'You made it.')}</Text>
+        {(short > 0 || error) && (
+          <Text style={styles.note}>{short > 0 ? shortfall(short) : error}</Text>
+        )}
         {short > 0 ? (
           <Pressable
             style={[button.quiet, button.small, styles.skip]}

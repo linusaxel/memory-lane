@@ -128,6 +128,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
+| `mobile/src/HowItWorks.tsx` | What the steps pill opens: how pins, steps and walks work |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
 | `mobile/src/Glyph.tsx` | Every icon, as an SF Symbol (`@expo/ui`) |
 | `mobile/src/StartupLogo.tsx` | The launch logo |

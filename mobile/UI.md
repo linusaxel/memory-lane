@@ -47,7 +47,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
 │                              thing to know, rolling when it changes: "2 free today" / "4,210 steps";
 │                              none free, "4,210 steps" alone; short, a small ember ring
-│                              filling to the price and "600 to go" / "400 steps". A tap counts again
+│                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
+│                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
+│                              what opening one costs, where steps come from, wander or walk
 ├─ You, Add                   top right, 44pt glass circles (`person`, an ember `plus`), every stage,
 │                              two shapes that never merge (the founder, 2026-10-01).
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
@@ -57,7 +59,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
 │    walking. Never a plain tap. Standing at any stop, the unlock ring (src/UnlockHere.tsx)
 │    takes its place and carries the same second line:
-│    the ring, the place, year or source, "1 attachment waiting", "You made it." and what it
+│    the ring, the place, year or source, "1 attachment waiting" and what it
 │    costs. Everyone gets it on the map before a walk too, above "Plan a walk". Tapping a pin
 │    in reach points it at that pin; the hold opens the sheet on the story. Short of steps
 │    there is no ring to hold: the full faded Approach ring, "600 steps to go · about 6 min
@@ -552,7 +554,7 @@ simple and a bit of fun; the copy should be too. Rewritten on 2026-09-27
 against Apple's HIG (Writing), NN/g on errors and empty states, and a list of
 the tells that make text read as machine-written.
 
-- **Short, concrete, contracted.** "You made it." "Not quite there. Take a few
+- **Short, concrete, contracted.** "Not quite there. Take a few
   more steps." Second person, active voice, sentence case.
 - **Buttons are verbs that say what happens**: Start walk, Plan a walk,
   Keep walking. Clear beats cute on anything you tap; the personality goes in

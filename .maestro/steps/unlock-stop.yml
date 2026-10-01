@@ -6,7 +6,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "${STOP}"
     timeout: 45000
-- assertVisible: "You made it\\."
+- assertVisible: "Unlock this memory"
 # The hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
 # animation callback fires while the finger is still down, so the press
 # completes the unlock rather than cancelling it.
