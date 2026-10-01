@@ -258,6 +258,19 @@ telling's pin. `_landing()` now searches where the memory lands. The three,
 and the old carousel telling, are hidden; Kasino's two `llm` pins are merged
 into the hand-placed one on Amaliegade. The book shows 12 memories, up from 8.
 
+**Oehlenschläger vol. I re-extracted the same way** (2026-10-01, source 204,
+34 chapters). It saved 13. Nine are new scenes: the boy drilling with a sooty
+toy rifle under the Crown Prince's window ("But where is Adam today?"), the
+comedies at Frederiksberg ended by a rotten apple, fleeing his own
+confirmation, weeping in Elers' Kollegium's library until Ørsted found him,
+Ulfeldt's shame column, the 1796 fire, Bakkehuset, the camphor nymphs on
+Kongens Nytorv and meeting Steffens at Richter's. Four are retellings: the save-time check
+hid the old Christiansborg fire for the new one, and the dog, the grocer
+and the gallows were hidden by hand, keeping the better-placed telling. The
+book shows 22, up from 13. No German place name survived this time and
+nothing landed abroad, but five pins are still 1000 m guesses (Ulfeldts
+Plads, "city centre", Bakkehuset, Kongens Nytorv twice).
+
 Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `p1000` a named site at 1000 m, `wrong` the wrong place, `dup` a near-duplicate,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day

@@ -23,6 +23,21 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Every aggregate job looks up what is there now for every place in the
+  database.** 2026-10-01: `task_aggregate_memories` calls `look_up(session)`
+  with no `place_id`, so each chapter retried all 50 unlooked places. Overpass
+  refused every one at about 19 s each, so each job used up its 5-minute
+  timeout: 34 one-chunk chapters took about 2 hours instead of minutes. Fix:
+  pass the chapter's own new place ids, and leave the backlog to
+  `python -m pipeline.now`.
+- **`dedup --memories` misses a book's retellings when they sit on different
+  place rows.** 2026-10-01: it found none of the dog, grocer or gallows pairs
+  in source 204 (Schloss Friedrichsberg against Frederiksberg Slot, and so
+  on), and Carl Møller had the same problem. They were found by reading 28
+  rows by hand. Also, a hand-hide of the new fire telling left that scene
+  with nothing visible, because the save-time check had already hidden the
+  old one. Fix: compare the memories of one source with each other, whatever
+  place they are on, and show pairs where one side is already hidden.
 - **`quality --compare` shows one draw per chunk, and a chunk varies more
   than a prompt.** 2026-09-30: the stored baseline kept two Andersen memories
   from a chunk the same prompt leaves empty 6 times in 8, so the candidate
@@ -178,9 +193,9 @@ labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
 - [ ] **Re-extract the other books with the archival prompt.** (checked
-      2026-09-30) Carl Møller went from 8 visible to 12 (docs/04, *Carl Møller
-      re-extracted*). Next Oehlenschläger vol. I (204), Andersen (202) and
-      Leonora Christina (203), one at a time: reset `memories_extracted` for
+      2026-10-01) Carl Møller went from 8 visible to 12 and Oehlenschläger
+      vol. I from 13 to 22 (docs/04, *Carl Møller re-extracted*). Next
+      Andersen (202) and Leonora Christina (203), one at a time: reset `memories_extracted` for
       the source, clear stale `extraction:<id>:memories`, enqueue, then
       `dedup --memories` and read its pairs before hiding any.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
