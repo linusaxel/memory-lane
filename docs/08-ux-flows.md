@@ -96,7 +96,7 @@ make it worth having got here.
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
 you, never what it says: standing there, or one of the day's free ones, is
-the only way in. Settings, the cog top right, is where
+the only way in. Settings, in the ⋯ menu top right, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -538,7 +538,7 @@ product is about.
    left edge, slides the journal in over the map. It is you as well: your
    photo, name and numbers on top (a tap is Edit profile, F21), then *Walks*,
    *Unlocked Memories* and *My Memories* (F24). Settings is not in it: that is
-   the cog top right (F17). *Walks* has the streak on top, large
+   in the ⋯ menu top right (F17). *Walks* has the streak on top, large
    (F27).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
@@ -784,8 +784,8 @@ anyone else's collection or the local unlock cache.
    walk (F34).
    **The camera follows you** while there is a position, and a pinch zooms
    without moving the centre. A one-finger drag lets go so you can look
-   around, and **Center on me** (bottom right, above the card) shows until a
-   tap follows you again (F10).
+   around, and **Center on me** (bottom right, beside the card) goes hollow
+   until a tap follows you again (F10).
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    (1–5) in the badge. There is no line while walking: the next unearned
    stop, in route order, hops and is `ember`, and when it is earned the
@@ -964,8 +964,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
 1. The map, centred on you, or on central Copenhagen with no position. The
    pins are the memories within 5 km (`MAP_RADIUS_KM`, half the longest
    walk), from `/v1/memories/nearby`, fetched on arriving and again when a
-   position first comes, locked and opened both. A glass filter top right,
-   left of Settings (`src/MapFilter.tsx`), shows all of them, only the locked or only
+   position first comes, locked and opened both. The ⋯ menu top right
+   (`src/MapMenu.tsx`) shows all of them, only the locked or only
    the unlocked; an unlocked pin is drawn inside out, paper with an ember eye.
    The map refetches when you file, edit or delete one.
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
@@ -974,7 +974,7 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    is waiting, **Open it now** while today's free ones last, and **Walk
    here**, which draws a walk through that pin (F1).
    Standing on it, the peek gives way to the ring over the map (F7).
-3. **Plan a walk**, the ember pill bottom left, Add's equal beside it,
+3. **Plan a walk**, the ember pill bottom centre, between Add and Center on me,
    draws a walk (F1).
 
 The peek is a look, not a read: the summary never reaches the phone locked, and

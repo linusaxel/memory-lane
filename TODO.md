@@ -23,6 +23,10 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The gate says RED, not INFRA, when Docker is down.** 2026-10-01: with the
+  daemon stopped, `./loop/verify.sh` exited 1 with 413 db-test errors, which
+  reads as "fix your code" until you find "Cannot connect to the Docker daemon"
+  in the setup errors. Fix: `docker info` up front in verify.sh, exit 2 if it fails.
 - **`walk-and-unlock` is red on main.** 2026-10-01: after f448aea, stop 3's
   "Stop 3 of 4. Where the night went long, dev seed. Locked, within reach."
   never shows, every run, with or without the bottom-row change, so a layout

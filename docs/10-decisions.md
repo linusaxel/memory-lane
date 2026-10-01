@@ -936,9 +936,34 @@ The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
 regions are queued and replayed from `onMapReady`.
 
+### One ember button that changes
+
+Status: Accepted 2026-10-01. Supersedes *Two equal actions at the bottom*.
+
+The founder found every "where does Plan a walk go" option clunky and asked
+for one or two buttons that change with what you are doing, symmetrical, and
+keeping the ember for the important one. So the map is one frame:
+
+- Top: Journal left, the step count centre, one ⋯ menu right (the filter
+  before a walk, then Settings). Journal leads because its drawer slides in
+  from the left (HIG Toolbars: the sidebar button at the leading edge);
+  settings-type things trail, as on Snap Map.
+- Bottom, edge to edge at 70pt: Add (an ember `plus` on glass), the one
+  ember thing, Center on me. The middle changes: Turn on location on a walk
+  with no position, Plan a walk before a walk, the walk card on one, nothing
+  while the ring shows. Center on me is always there, filled while the map is
+  on you, so the row never loses an end.
+
+Bottom centre is where the field puts its one action (Pokémon GO, Ingress
+moved its ring there "to be easily reached with your thumb", Strava's
+Record); bottom left is Apple's logo and Legal, which the HIG asks not to
+cover all the time. Plan a walk keeps its label: it has no standard symbol
+(NN/g, icon usability). Settings costs a tap more, inside the menu.
+
 ### Two equal actions at the bottom
 
-Status: Accepted 2026-10-01. Supersedes *Act at the bottom, read at the top*
+Status: **Superseded 2026-10-01** by *One ember button that changes*.
+Accepted 2026-10-01. Supersedes *Act at the bottom, read at the top*
 where it put Journal in the bottom row and kept top left empty.
 
 The founder wanted Plan a walk and Add as equals: one hierarchy, one look.

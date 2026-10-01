@@ -116,7 +116,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/UnlockHere.tsx` | The unlock ring over the map, for the memory you stand on |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
 | `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here, inside out once opened |
-| `mobile/src/MapFilter.tsx` | The map's filter: all, locked or unlocked pins |
+| `mobile/src/MapMenu.tsx` | The map's ⋯ menu: all, locked or unlocked pins, then Settings |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |

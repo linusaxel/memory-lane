@@ -47,22 +47,24 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
 │                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
 │                              what opening one costs, where steps come from, wander or walk
-├─ the filter, Settings       top right, 44pt glass circles, the two rare ones. The filter before a
-│                              walk only, left of Settings so Settings never moves: a native menu,
-│                              All memories / Locked / Unlocked (src/MapFilter.tsx), its glyph
-│                              filled while it hides something. Settings (`gearshape`) opens its
-│                              sheet
+├─ ⋯ ("More")                 top right, a 44pt glass circle, the one menu (src/MapMenu.tsx): the
+│                              rare ones. A native menu: before a walk "Show on map", All memories
+│                              / Locked / Unlocked, then Settings (`gearshape`), which opens its
+│                              sheet. While the filter hides something the glyph is the filled
+│                              filter one, so a thinned map says why
 ├─ Journal                    top left, a 44pt glass circle, the map and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt ember dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
 │                              drawer, as does a swipe in from the left edge (src/Drawer.tsx)
 ├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), the map and the
 │                              walk, never over a card with its own buttons (Preview, EndWalk,
-│                              WalkDone). Two equal halves, both ember glass pills: Plan a walk
-│                              (`figure.walk`) -> Preview before a walk, the walk card on one; and
-│                              Add memory (`plus`), which files a memory, no walk needed. While the
-│                              ring takes the walk card's place, Add keeps its half. See "Writing"
-├─ the walk card             the bottom row's left half, glass (F9): "Next: <place> · 350 m" over
+│                              WalkDone). Add, a 44pt glass circle with an ember `plus`, files a
+│                              memory, no walk needed (see "Writing"). Center on me the same circle
+│                              at the other end. Between them the one thing to do, which changes:
+│                              Turn on location (ember) on a walk with no position, Plan a walk
+│                              (ember, `figure.walk`) -> Preview before a walk, the walk card on
+│                              one, nothing while the ring shows
+├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
 │    "2 of 5 · 4.1 km left" (the next stop's number, as on its pin), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
@@ -73,11 +75,12 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    the sheet on the story. Short of steps there is no ring to hold: the faded Approach
 │    ring filling with your steps, "600 steps to go · about 6 min walking" and Skip the
 │    steps (the paywall)
-├─ "Center on me"             bottom right, above Add, a 44pt glass `location.fill` circle (F10). On a walk the
-│                              camera follows you; a one-finger drag lets go and this shows until
-│                              tapped. Before a walk, it shows once the map is off you by a sixth
-│                              of the screen. Custom: showsMyLocationButton is Android-only
-├─ "Turn on location"         bottom centre, above the bottom row, only while there is no position
+├─ "Center on me"             the bottom row's right end, always there (F10). `location.fill`
+│                              while the map is on you, `location` when not: on a walk once a
+│                              one-finger drag lets go of you, before one once the map is off you
+│                              by a sixth of the screen. With no position a tap asks for one.
+│                              Custom: showsMyLocationButton is Android-only
+├─ "Turn on location"         the bottom row's middle, only on a walk with no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
                                loop · 52 min", the streak, Done. A relaunch does not show it again
@@ -140,7 +143,7 @@ and the account is not (docs/10, "The journal is a drawer; settings are the
 map's"). They open as pageSheet modals, Settings from the map and Edit profile
 over the journal, which stays mounted under it.
 
-Settings (src/Settings.tsx, pageSheet, from the map's ⚙) - "Settings" 34/700, × top right
+Settings (src/Settings.tsx, pageSheet, from the map's ⋯ menu) - "Settings" 34/700, × top right
 ├─ Account                     which sign-ins, add the other, sign out (back to the gate),
 │                              delete; the subscription
 ├─ How unlocking works         the one place that answers "why can't I read this"
@@ -155,10 +158,10 @@ Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/70
 There are no tabs on the map. Before a walk the map draws what is around you, locked and
 unlocked, behind a filter; on a walk it draws only that walk. Three pins a day
 open from anywhere, from the peek; after that, standing on one and 1,000 steps.
-The bottom is where you act, one tap each: Plan a walk (or the walk card)
-and Add, equal ember halves. The top is where you read: the step count,
-Journal top left, the filter and Settings top right (docs/10, "Two equal
-actions at the bottom").
+The bottom is where you act, one tap each: Add, the one ember thing (Plan a
+walk, or the walk card on one) and Center on me. The top is where you read:
+the step count, with Journal top left and the ⋯ menu top right (docs/10,
+"One ember button that changes").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -307,9 +310,9 @@ nothing else: 28, 17 and 13.
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
-(Journal, Plan a walk, Add, the walk card, the steps pill, the filter,
-Settings, Center on me, Turn on location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
-only on the prominent controls (Plan a walk and Add), or raised paper with `lift` where glass is
+(Journal, Plan a walk, Add, the walk card, the steps pill, the ⋯ menu,
+Center on me, Turn on location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
+only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
 tint in view**: Plan a walk's before a walk, Turn on location's on one. The walk card is
 untinted: the next stop's pin is the ember on the map. No `GlassContainer`: two circles merging read as

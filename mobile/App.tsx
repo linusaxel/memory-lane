@@ -88,10 +88,10 @@ import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
-import { buttonText, color, font, label, pill, radius, solid } from './src/theme.ts';
+import { color, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
-import MapFilter, { type MapShows } from './src/MapFilter.tsx';
+import MapMenu, { type MapShows } from './src/MapMenu.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
@@ -1037,11 +1037,10 @@ export default function App() {
     0,
     ringHere.findIndex(({ group, index }) => group.memories[index].id === ringMemory?.id),
   );
-  // "Center on me": on a walk once a drag let go; before one, once the map is
-  // off you by more than a sixth of the screen. Never over the ring.
-  const showRecenter =
-    !!position &&
-    !ringFor &&
+  // Center on me's glyph goes hollow: on a walk once a drag let go; before
+  // one, once the map is off you by more than a sixth of the screen.
+  const offYou =
+    !position ||
     (stage === 'walk'
       ? !following && !walkDone
       : stage === 'map' &&
@@ -1547,46 +1546,6 @@ export default function App() {
               }}
             />
           )}
-          {showRecenter && (
-            <GlassButton
-              place={styles.recenter}
-              style={styles.circle}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityLabel="Center on me"
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                const you = positionRef.current;
-                if (stage === 'walk') setFollowing(true);
-                else if (you) flyTo({ ...region, latitude: you.lat, longitude: you.lng });
-              }}
-            >
-              <Glyph name="location.fill" size={18} weight="medium" color={color.ink} />
-            </GlassButton>
-          )}
-
-          {walking && !position && (
-            <GlassButton
-              place={styles.locate}
-              style={styles.bigPill}
-              tint={color.ember}
-              accessibilityRole="button"
-              accessibilityLabel="Turn on location"
-              accessibilityHint="Asks for permission to use your location"
-              onPress={() => {
-                if (permission === 'blocked') {
-                  Linking.openSettings();
-                  return;
-                }
-                goToMyLocation().catch(() => false);
-              }}
-            >
-              {/* Without location nothing can ever unlock, so the button says so
-                  rather than leaving a walk whose stops never open. */}
-              <Text style={styles.locateText}>Turn on location</Text>
-            </GlassButton>
-          )}
-
           {stage === 'map' && firstPicks.length > 0 && openAt.length === 0 && !journalOpen && (
             <FirstPick
               picks={firstPicks}
@@ -1682,8 +1641,7 @@ export default function App() {
           )}
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
-              read at the top"). Top left the Journal, top right the two rare
-              ones. */}
+              read at the top"). Journal top left, the one menu top right. */}
           {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
             <GlassButton
               place={styles.topLeft}
@@ -1702,121 +1660,25 @@ export default function App() {
             </GlassButton>
           )}
           <View style={styles.topRight}>
-            {stage === 'map' && <MapFilter shows={mapShows} onShow={setMapShows} />}
-            <GlassButton
-              style={styles.circle}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityLabel="Settings"
-              onPress={() => {
+            <MapMenu
+              shows={mapShows}
+              onShow={setMapShows}
+              filter={stage === 'map'}
+              onSettings={() => {
                 Haptics.selectionAsync().catch(() => {});
                 setSettingsOpen(true);
               }}
-            >
-              <Glyph name="gearshape" size={20} weight="medium" color={color.ink} />
-            </GlassButton>
+            />
           </View>
-          {/* Two equal halves: Plan a walk before a walk, the walk card on
-              one, and Add. Not over a card with its own buttons at the
-              bottom. Add is there walk or no walk: filing is standing
+          {/* Add, the one ember thing, Center on me (docs/10, "One ember
+              button that changes"). Not over a card with its own buttons at
+              the bottom. Add is there walk or no walk: filing is standing
               somewhere, not unlocking. */}
           {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
             <View style={styles.bottom}>
-              {stage === 'map' && (
-                <GlassButton
-                  place={styles.half}
-                  style={styles.pill}
-                  tint={color.ember}
-                  accessibilityRole="button"
-                  accessibilityLabel="Plan a walk"
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setWalkTo(null);
-                    setWalkToKm(0);
-                    setPreview(null);
-                    setStage('preview');
-                  }}
-                >
-                  <Glyph name="figure.walk" size={16} weight="semibold" color={color.paper} />
-                  <Text style={styles.planText}>Plan a walk</Text>
-                </GlassButton>
-              )}
-              {/* The walk's one card (F9): where next and how far, a tap to see
-                  it, and ✕ to end it. Standing on a stop, UnlockHere takes its
-                  place and carries its progress line. */}
-              {walking && onRoute && !ringMemory && !showDone && !confirmEnd && (
-                <GlassButton
-                  place={styles.half}
-                  style={styles.walkCard}
-                  accessible={false}
-                  onPress={() => {
-                    setRouteStarted(true);
-                    setFollowing(true);
-                    const you = positionRef.current;
-                    if (you) {
-                      // Pinned on you, so zoomed out around you, not refitted.
-                      flyTo(
-                        around(
-                          you,
-                          nextRouteStop
-                            ? [nextRouteStop.place.coordinates]
-                            : routeShown.map((memory) => memory.place.coordinates),
-                          LOCATED_DELTA / 5,
-                        ),
-                      );
-                    } else if (nextRouteStop) {
-                      flyTo({
-                        latitude: nextRouteStop.place.coordinates.lat,
-                        longitude: nextRouteStop.place.coordinates.lng,
-                        latitudeDelta: LOCATED_DELTA,
-                        longitudeDelta: LOCATED_DELTA,
-                      });
-                    } else {
-                      mapRef.current?.fitToCoordinates(
-                        routeShown.map((memory) => ({
-                          latitude: memory.place.coordinates.lat,
-                          longitude: memory.place.coordinates.lng,
-                        })),
-                        { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
-                      );
-                    }
-                  }}
-                >
-                  <View
-                    style={styles.walkText}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={`${routeLabel}. ${routeProgress}.`}
-                    accessibilityHint={
-                      routeDone ? 'Shows the whole walk' : 'Shows you and the next stop'
-                    }
-                  >
-                    <Text style={styles.walkNext} numberOfLines={1}>
-                      {routeLabel}
-                    </Text>
-                    <Text style={styles.walkLeft} numberOfLines={1}>
-                      {routeProgress}
-                    </Text>
-                  </View>
-                  {/* Nothing left to reach, nothing to lose, so no are-you-sure. */}
-                  <CloseButton
-                    label="End walk"
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      if (routeDone) endWalk();
-                      else setConfirmEnd(true);
-                    }}
-                  />
-                </GlassButton>
-              )}
-              {/* Add keeps its half while the ring has the walk card's. */}
-              {stage !== 'map' && !(walking && onRoute && !ringMemory) && (
-                <View style={styles.half} />
-              )}
               <GlassButton
-                place={styles.half}
-                style={styles.pill}
-                tint={color.ember}
+                style={styles.circle}
+                hitSlop={4}
                 accessibilityRole="button"
                 accessibilityLabel="Add a memory here"
                 onPress={async () => {
@@ -1827,8 +1689,136 @@ export default function App() {
                   setSubmitOpen(true);
                 }}
               >
-                <Glyph name="plus" size={16} weight="semibold" color={color.paper} />
-                <Text style={styles.planText}>Add memory</Text>
+                <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
+              </GlassButton>
+              <View style={styles.middle}>
+                {walking && !position && (
+                  <GlassButton
+                    style={styles.pill}
+                    tint={color.ember}
+                    accessibilityRole="button"
+                    accessibilityLabel="Turn on location"
+                    accessibilityHint="Asks for permission to use your location"
+                    onPress={() => {
+                      if (permission === 'blocked') {
+                        Linking.openSettings();
+                        return;
+                      }
+                      goToMyLocation().catch(() => false);
+                    }}
+                  >
+                    {/* Without location nothing can ever unlock, so the button says so
+                        rather than leaving a walk whose stops never open. */}
+                    <Text style={styles.planText}>Turn on location</Text>
+                  </GlassButton>
+                )}
+                {stage === 'map' && (
+                  <GlassButton
+                    style={styles.pill}
+                    tint={color.ember}
+                    accessibilityRole="button"
+                    accessibilityLabel="Plan a walk"
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setWalkTo(null);
+                      setWalkToKm(0);
+                      setPreview(null);
+                      setStage('preview');
+                    }}
+                  >
+                    <Glyph name="figure.walk" size={16} weight="semibold" color={color.paper} />
+                    <Text style={styles.planText}>Plan a walk</Text>
+                  </GlassButton>
+                )}
+                {/* The walk's one card (F9): where next and how far, a tap to see
+                    it, and ✕ to end it. Standing on a stop, UnlockHere takes its
+                    place and carries its progress line. */}
+                {walking && onRoute && !!position && !ringMemory && (
+                  <GlassButton
+                    place={styles.wide}
+                    style={styles.walkCard}
+                    accessible={false}
+                    onPress={() => {
+                      setRouteStarted(true);
+                      setFollowing(true);
+                      const you = positionRef.current;
+                      if (you) {
+                        // Pinned on you, so zoomed out around you, not refitted.
+                        flyTo(
+                          around(
+                            you,
+                            nextRouteStop
+                              ? [nextRouteStop.place.coordinates]
+                              : routeShown.map((memory) => memory.place.coordinates),
+                            LOCATED_DELTA / 5,
+                          ),
+                        );
+                      } else if (nextRouteStop) {
+                        flyTo({
+                          latitude: nextRouteStop.place.coordinates.lat,
+                          longitude: nextRouteStop.place.coordinates.lng,
+                          latitudeDelta: LOCATED_DELTA,
+                          longitudeDelta: LOCATED_DELTA,
+                        });
+                      } else {
+                        mapRef.current?.fitToCoordinates(
+                          routeShown.map((memory) => ({
+                            latitude: memory.place.coordinates.lat,
+                            longitude: memory.place.coordinates.lng,
+                          })),
+                          { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
+                        );
+                      }
+                    }}
+                  >
+                    <View
+                      style={styles.walkText}
+                      accessible
+                      accessibilityRole="button"
+                      accessibilityLabel={`${routeLabel}. ${routeProgress}.`}
+                      accessibilityHint={
+                        routeDone ? 'Shows the whole walk' : 'Shows you and the next stop'
+                      }
+                    >
+                      <Text style={styles.walkNext} numberOfLines={1}>
+                        {routeLabel}
+                      </Text>
+                      <Text style={styles.walkLeft} numberOfLines={1}>
+                        {routeProgress}
+                      </Text>
+                    </View>
+                    {/* Nothing left to reach, nothing to lose, so no are-you-sure. */}
+                    <CloseButton
+                      label="End walk"
+                      onPress={() => {
+                        Haptics.selectionAsync().catch(() => {});
+                        if (routeDone) endWalk();
+                        else setConfirmEnd(true);
+                      }}
+                    />
+                  </GlassButton>
+                )}
+              </View>
+              <GlassButton
+                style={styles.circle}
+                hitSlop={4}
+                accessibilityRole="button"
+                accessibilityLabel="Center on me"
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  const you = positionRef.current;
+                  if (!you) goToMyLocation().catch(() => false);
+                  else if (stage === 'walk') setFollowing(true);
+                  else flyTo({ ...region, latitude: you.lat, longitude: you.lng });
+                }}
+              >
+                {/* Filled while the map is on you, as Apple Maps does. */}
+                <Glyph
+                  name={offYou ? 'location' : 'location.fill'}
+                  size={18}
+                  weight="medium"
+                  color={color.ink}
+                />
               </GlassButton>
             </View>
           )}
@@ -1978,14 +1968,13 @@ const styles = StyleSheet.create({
   // already accepted - a flash of the plan page would be a lie.
   cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.paper },
   // Glass over the map (src/Glass.tsx). `corner` and friends place a
-  // control; `pill`, `bigPill` and `circle` are its shape.
+  // control; `pill` and `circle` are its shape.
   corner: { position: 'absolute', top: 64 },
   steps: { alignSelf: 'center' },
   topLeft: { position: 'absolute', top: 64, left: 18 },
-  // The filter left of Settings, so Settings never moves.
-  topRight: { position: 'absolute', top: 64, right: 18, flexDirection: 'row', gap: 8 },
-  // Edge to edge, two equal halves. At 70, 12pt over Apple's logo and Legal
-  // link (HIG Maps asks 10).
+  topRight: { position: 'absolute', top: 64, right: 18 },
+  // Edge to edge, a circle each end and the ember thing between. At 70, 12pt
+  // over Apple's logo and Legal link (HIG Maps asks 10).
   bottom: {
     position: 'absolute',
     bottom: 70,
@@ -1995,17 +1984,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  half: { flex: 1 },
+  middle: { flex: 1, alignItems: 'center' },
+  wide: { alignSelf: 'stretch' },
   pill,
   planText: { ...label, fontSize: 15, color: color.paper },
-  // The size of a button, not a pill: it is the one thing to do.
-  bigPill: {
-    minHeight: 52,
-    paddingHorizontal: 24,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   newDot: {
     position: 'absolute',
@@ -2018,13 +2000,8 @@ const styles = StyleSheet.create({
     borderColor: color.paper,
     backgroundColor: color.ember,
   },
-  locate: { position: 'absolute', bottom: 134, alignSelf: 'center' },
-  locateText: { ...buttonText, color: color.paper },
-  // Directly above "Turn on location" while that shows, in its place after.
   walkCard: { ...pill, minHeight: 56, paddingLeft: 20, paddingRight: 12, gap: 12 },
   walkText: { flex: 1, gap: 2 },
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
-  // Above Add, clear of the walk card's 56pt.
-  recenter: { position: 'absolute', right: 18, bottom: 134 },
 });
