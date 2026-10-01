@@ -15,9 +15,10 @@ type Props = {
   meters: number | null;
   /** The server's unlock radius, which is where the ring reads full. */
   radius: number;
+  size?: number;
 };
 
-export default function Approach({ meters, radius }: Props) {
+export default function Approach({ meters, radius, size = RING }: Props) {
   const filled = approachOf(meters, radius);
   const fill = useRef(new Animated.Value(filled)).current;
 
@@ -34,15 +35,18 @@ export default function Approach({ meters, radius }: Props) {
   }, [filled, fill]);
 
   return (
-    <View style={styles.ring}>
-      <View style={styles.band} />
+    <View style={[styles.ring, { width: size, height: size, borderRadius: size / 2 }]}>
+      <View style={[styles.band, { borderRadius: size / 2 }]} />
       {/* Paper shrinking over the band is what makes the rim appear. Scaling
           a cover rather than growing a ring, because a border width cannot go
           on the native driver and a transform can. */}
       <Animated.View
-        style={[styles.cover, { transform: [{ scale: fill.interpolate(CLOSE) }] }]}
+        style={[
+          styles.cover,
+          { borderRadius: size / 2, transform: [{ scale: fill.interpolate(CLOSE) }] },
+        ]}
       />
-      <Glyph name="lock.fill" size={24} color={color.faded} />
+      <Glyph name="lock.fill" size={Math.round((size * 2) / 7)} color={color.faded} />
     </View>
   );
 }
@@ -55,9 +59,6 @@ const CLOSE = { inputRange: [0, 1], outputRange: [0.985, 0.72] };
 
 const styles = StyleSheet.create({
   ring: {
-    width: RING,
-    height: RING,
-    borderRadius: RING / 2,
     borderWidth: 3,
     borderColor: color.rule,
     backgroundColor: color.paper,
@@ -71,7 +72,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: RING / 2,
     backgroundColor: color.faded,
   },
   cover: {
@@ -80,7 +80,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: RING / 2,
     backgroundColor: color.paper,
   },
 });

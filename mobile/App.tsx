@@ -1476,26 +1476,14 @@ export default function App() {
 
           </MapView>
 
-          {/* In the same bottom slot every other floating control here shares -
-              never a second region of the screen. Above "Turn on location"
-              while that shows, in its place once there is a position. */}
+          {/* The lock alone, centred over you: you are standing on it. */}
           {ringFor && ringMemory && (
             <UnlockHere
-              memory={ringMemory}
-              place={{ bottom: stage === 'map' ? 108 : 44 }}
               busy={unlocking}
               onHold={setHolding}
               error={unlockError}
               short={short}
               onSkip={() => setPaywallOpen(true)}
-              walk={walking && onRoute ? routeProgress : undefined}
-              cost={
-                !profile || profile.subscribed
-                  ? null
-                  : profile.free_unlocks > 0
-                    ? `Free · ${profile.free_unlocks} left today`
-                    : `${profile.steps_per_unlock.toLocaleString()} steps · you have ${profile.steps.toLocaleString()}`
-              }
               onUnlock={async () => {
                 if (walking) setRouteStarted(true);
                 const opened = await unlock(ringMemory);

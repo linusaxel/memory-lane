@@ -903,15 +903,19 @@ budget. Spec, so it does not get re-invented per screen:
 - **Transform and opacity only.** Those are what `useNativeDriver` can carry;
   an animated colour puts the whole control back on the JS thread for the
   900ms it most needs to be smooth.
-- **It lives on the map, not in a sheet.** `src/UnlockHere.tsx` holds it in
-  the bottom slot the route pill uses, clear of the map attribution (rule 7);
-  it needs no × because walking away takes it away (rule 12). A sheet opening
-  only to hold a ring was a layer with nothing in it (docs/10, "Unlock on the
-  map").
-- **A refusal resets the ring.** Success unmounts the control — the memory is
-  no longer locked, and the sheet opens on it — so `busy`
-  falling back to false is always a no, and a ring left full beside an error
-  reads as "it worked".
+- **It lives on the map, alone, in the middle.** `src/UnlockHere.tsx` centres
+  a 136px ring over the map, over your own dot, because you are standing on
+  it. There are no words: no caption, place, cost or error. The map still pans
+  around it, and it needs no × because walking away takes it away (rule 12).
+  The cost is in the steps pill (docs/10, "The lock alone").
+- **A refusal resets the ring and shakes its head.** Success unmounts the
+  control (the memory is no longer locked, and the sheet opens on it), so
+  `busy` falling back to false is always a no. The ring springs empty, shakes
+  side to side and fires `notificationAsync(Warning)`, and a screen reader is
+  told the reason, since nothing draws it.
+- **Short of steps, the lock is faded.** It is the approach ring at full size,
+  never seal, and a tap opens the paywall. Its label is the shortfall
+  ("580 steps to go · about 6 min walking").
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the
   same 84px circle with a rim that thickens inward as you close — empty at
   three radii (`WARM_MULTIPLIER`, so the sheet and the pin agree about
@@ -937,8 +941,9 @@ file names the gap.
 
 **The button never decides anything.** It asks
 `POST /v1/memories/{id}/unlock` and the server re-measures, so a
-completed hold can still come back refused when GPS has drifted. Say so —
-"Not quite there. Take a few more steps." — rather than leaving a control that looks broken.
+completed hold can still come back refused when GPS has drifted. The head
+shake says so, and VoiceOver hears "Not quite there. Take a few more steps."
+rather than meeting a control that looks broken.
 
 ## Flows
 

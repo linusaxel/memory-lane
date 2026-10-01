@@ -1,19 +1,11 @@
 /** The one playful control in the app - spec in "The unlock control", UI.md. */
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  AccessibilityInfo,
-  Animated,
-  Easing,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 import Glyph from './Glyph.tsx';
-import { color, font, label } from './theme.ts';
+import { color } from './theme.ts';
 
 /** Long enough to feel like a lock turning, short enough not to be a chore. */
 export const HOLD_MS = 900;
@@ -51,15 +43,19 @@ type Props = {
   busy?: boolean;
   /** True while a hold is under way, false when it is let go or refused. */
   onHold?: (holding: boolean) => void;
+  /** Why the last hold was refused. Nothing draws it - the ring shakes its
+   *  head - so a screen reader is told instead. */
+  error?: string | null;
 };
 
-export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) {
+export default function UnlockButton({ onUnlock, busy = false, onHold, error }: Props) {
   const fill = useRef(new Animated.Value(0)).current;
   const burst = useRef(new Animated.Value(0)).current;
   const sprung = useRef(new Animated.Value(0)).current;
   const idle = useRef(new Animated.Value(0)).current;
   const calm = useRef(new Animated.Value(0)).current;
   const press = useRef(new Animated.Value(0)).current;
+  const shake = useRef(new Animated.Value(0)).current;
   const loop = useRef<Animated.CompositeAnimation | null>(null);
   const holding = useRef(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -131,9 +127,20 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
       sprung.setValue(0);
       setOpen(false);
       Animated.spring(fill, { toValue: 0, speed: 14, useNativeDriver: true }).start();
+      // There are no words to say no with, so it shakes its head.
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      Animated.sequence(
+        [-10, 10, -6, 6, 0].map((toValue) =>
+          Animated.timing(shake, { toValue, duration: 64, useNativeDriver: true }),
+        ),
+      ).start();
     }
     wasBusy.current = busy;
-  }, [busy, fill, burst, sprung]);
+  }, [busy, fill, burst, sprung, shake]);
+
+  useEffect(() => {
+    if (error) AccessibilityInfo.announceForAccessibility(error);
+  }, [error]);
 
   const start = () => {
     if (busy) return;
@@ -221,6 +228,7 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
 
   const body = {
     transform: [
+      { translateX: shake },
       { scale: Animated.multiply(idle.interpolate(BREATHE), press.interpolate(SQUISH)) },
     ],
   };
@@ -272,7 +280,7 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
             <Animated.View style={working}>
               <Glyph
                 name={open ? 'lock.open.fill' : 'lock.fill'}
-                size={26}
+                size={44}
                 color={color.sealDeep}
                 bounce={open}
               />
@@ -280,12 +288,11 @@ export default function UnlockButton({ onUnlock, busy = false, onHold }: Props) 
           </View>
         </Animated.View>
       </Pressable>
-      <Text style={styles.caption}>{busy ? 'Unlocking…' : 'Hold to unlock'}</Text>
     </View>
   );
 }
 
-const RING = 84;
+const RING = 136;
 
 /** Not from zero: the press has to be answered in the same frame it happens,
  *  and a disc growing from nothing reads as lag. */
@@ -308,7 +315,7 @@ const RIPPLE_FADE = { inputRange: [0, 1], outputRange: [0.45, 0] };
 const GIVE = { inputRange: [0, 0.35, 1], outputRange: [0, 0.22, 0] };
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 12, paddingVertical: 8 },
+  wrap: { alignItems: 'center' },
   glow: {
     borderRadius: RING / 2,
     backgroundColor: color.paper,
@@ -368,5 +375,4 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: color.seal,
   },
-  caption: { ...label },
 });

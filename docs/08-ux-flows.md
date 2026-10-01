@@ -289,9 +289,8 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    there — and nothing else.
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
-   into a seal-coloured ring, and the unlock ring comes up over the map in
-   the route pill's place: the place name, its year or source, what is
-   waiting. No sheet opens first. With two in reach it is the
+   into a seal-coloured ring, and a big lock comes up alone in the middle of
+   the map, over you, with no words at all. No sheet opens first. With two in reach it is the
    route stop's, and tapping the other pin points it there instead.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
@@ -318,8 +317,9 @@ stands are two different parameters, precisely so that planning from a city
 cannot open it.
 
 **Failure:** the hold completes and the server still refuses, because GPS moved
-in between. The ring says "Not quite there. Take a few more steps.", because a control that
-appears to do nothing is the worse outcome.
+in between. The ring springs empty and shakes its head with a Warning haptic,
+and VoiceOver hears "Not quite there. Take a few more steps.", because a
+control that appears to do nothing is the worse outcome.
 
 **Failure:** location was never granted. The app never fires the system dialog
 at mount — a cold dialog is one tap from a permanent no — and asks from the plan
@@ -522,7 +522,8 @@ interaction at all.
 1. The ring fills, the heavier haptic fires, the request goes.
 2. The server re-measures and says no, because GPS drifted between the press and
    the request.
-3. The ring on the map says **"Not quite there. Take a few more steps."**
+3. The ring on the map springs empty and shakes its head, with a Warning
+   haptic. VoiceOver hears **"Not quite there. Take a few more steps."**
 
 The client decides which control to *show*; the server decides what may be
 *read*, and those can disagree by a few metres. Silence here would read as a
@@ -1113,15 +1114,14 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 ## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
 
 **Who:** a free account standing on a pin with none of today's free unlocks
-left and fewer than 1,000 steps. **Trigger:** **Skip the steps** on the card over the
+left and fewer than 1,000 steps. **Trigger:** a tap on the faded lock over the
 map, the hold refused `no_steps` (a stale balance), or **Subscribe** in Settings.
 
-1. On the map, anyone standing on a locked pin gets the ring, walk or no walk.
-   Under the place it says what the hold spends: "Free · 3 left today", then
-   "1,000 steps · you have 2,340". A subscriber sees nothing there.
-2. Short of steps there is no ring to hold (docs/09 part 9): the card shows the
-   full, faded approach ring, "580 steps to go · about 6 min walking" and
-   **Skip the steps**, and the pin stays ember. The top pill says "580 to go"
+1. On the map, anyone standing on a locked pin gets the lock, walk or no walk.
+   It says nothing about the price; the top pill does.
+2. Short of steps there is no ring to hold (docs/09 part 9): the lock is the
+   full, faded approach ring, labelled "580 steps to go · about 6 min walking"
+   for VoiceOver, a tap on it opens the paywall, and the pin stays ember. The top pill says "580 to go"
    beside a ring filling toward the price. If the server still refuses a hold
    (the phone's balance was stale) it says "It takes 1,000 steps. You have
    420." Either way the paywall opens (`src/Paywall.tsx`): "Open any memory you stand on",

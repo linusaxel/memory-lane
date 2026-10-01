@@ -122,9 +122,32 @@ opens one as a page sheet.
 **Options considered:** a short teaser card you tap to expand. That puts a
 step between the hold and the story, at the payoff.
 
+### The lock alone
+
+Status: Accepted 2026-10-01. Supersedes the card layout in *Unlock on the map*.
+
+In reach, the map shows one thing: a 136px lock in the middle of the screen,
+over your own dot, with no words. The place name, year or source, what is
+waiting, the cost line and the "Hold to unlock" caption are gone. The moment
+the product is about should read like a game's reward and not a form. The
+hold, its haptic tempo and the Success are unchanged.
+
+**Consequences:** with no caption, a quick tap teaches the hold: the ring
+starts to fill and springs back. A refusal (GPS drift, the network, a stale
+`no_steps`) springs the ring empty, shakes it and fires a Warning haptic, and
+VoiceOver is told the reason. The price is only in the steps pill. Short of
+steps, the lock is the faded approach ring at full size, and a tap opens the
+paywall; its accessibility label is the shortfall. On a walk, the stop's
+progress line is not shown while you stand on it.
+
+**Options considered:** three taps to crack it open (Clash Royale, Brawl Stars):
+easier to discover, but unlocking is irreversible and the hold stays. Dimming
+the map behind it: more drama, but it hides where you are standing.
+
 ### Unlock on the map
 
-Status: Accepted 2026-09-29
+Status: Accepted 2026-09-29. The card it describes is **Superseded 2026-10-01**
+by *The lock alone*; the rest stands.
 
 In reach, a pin opened a sheet that held only the place, "within reach", the
 ring and "You made it.": a whole layer to reach one control. The ring now

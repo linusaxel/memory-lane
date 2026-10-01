@@ -2,9 +2,10 @@
 # after that stop's leg. Env: N, STOP (its place name), WORDS (from its summary).
 appId: ${APP_ID}
 ---
-# F7: the ring comes up on the map, named for the stop, with no sheet to open.
+# F7: the stop's pin turns in reach and the lock comes up alone on the map,
+# with no sheet to open.
 - extendedWaitUntil:
-    visible: "${STOP}"
+    visible: "Stop ${N} of 4. ${STOP}. Locked, within reach."
     timeout: 45000
 - assertVisible: "Unlock this memory"
 # The hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
@@ -14,7 +15,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*${WORDS}.*"
     timeout: 30000
-- assertNotVisible: "Hold to unlock"
+- assertNotVisible: "Unlock this memory"
 # F30: never over a memory, which is read first. Only closing the last one
 # shows the whole loop.
 - assertNotVisible: "Nice walk\\."
