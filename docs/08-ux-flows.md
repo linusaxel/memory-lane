@@ -290,9 +290,10 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    there — and nothing else.
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
-   into a seal-coloured ring, and a big lock comes up alone in the middle of
-   the map, over you, with no words at all. No sheet opens first. With two in reach it is the
-   route stop's, and tapping the other pin points it there instead.
+   into a seal-coloured ring, and a big lock comes up low on the map, above
+   Plan a walk and Add, with the place and its year or source under it. No
+   sheet opens first. With two in reach it is the route stop's first, and ‹ ›
+   beside the place (or tapping the other pin) points it at another.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
    while a ring fills, light haptic going in and a heavier one on completion.
    It should feel like a lock turning.
@@ -1115,14 +1116,15 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 
 ## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
 
-**Who:** a free account standing on a pin with its welcome unlock spent and fewer than 1,000 steps. **Trigger:** a tap on the faded lock over the
-map, the hold refused `no_steps` (a stale balance), or **Subscribe** in Settings.
+**Who:** a free account standing on a pin with its welcome unlock spent and fewer than 1,000 steps. **Trigger:** **Skip the steps** under the faded lock, the hold refused `no_steps` (a stale balance), or **Subscribe** in Settings.
 
 1. On the map, anyone standing on a locked pin gets the lock, walk or no walk.
    It says nothing about the price; the top pill does.
 2. Short of steps there is no ring to hold (docs/09 part 9): the lock is the
-   full, faded approach ring, labelled "580 steps to go · about 6 min walking"
-   for VoiceOver, a tap on it opens the paywall, and the pin stays ember. The top pill says "580 to go"
+   faded approach ring, its rim filling with your steps, over "580 steps to go
+   · about 6 min walking" and **Skip the steps**, which opens the paywall. Pacing
+   the block fills it there, and the step that completes it brings the ring to
+   hold. The pin stays ember. The top pill says "580 to go"
    beside a ring filling toward the price. If the server still refuses a hold
    (the phone's balance was stale) it says "It takes 1,000 steps. You have
    420." Either way the paywall opens (`src/Paywall.tsx`): "Open any memory you stand on",

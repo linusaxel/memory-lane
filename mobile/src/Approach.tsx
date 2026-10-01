@@ -15,11 +15,13 @@ type Props = {
   meters: number | null;
   /** The server's unlock radius, which is where the ring reads full. */
   radius: number;
+  /** In place of how close: how full, 0-1, as the steps towards an unlock. */
+  progress?: number;
   size?: number;
 };
 
-export default function Approach({ meters, radius, size = RING }: Props) {
-  const filled = approachOf(meters, radius);
+export default function Approach({ meters, radius, progress, size = RING }: Props) {
+  const filled = progress ?? approachOf(meters, radius);
   const fill = useRef(new Animated.Value(filled)).current;
 
   useEffect(() => {

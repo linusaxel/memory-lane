@@ -26,9 +26,11 @@ delete an entry when its fix lands.
 - **`walk-and-unlock` is red on main.** 2026-10-01: after f448aea, stop 3's
   "Stop 3 of 4. Where the night went long, dev seed. Locked, within reach."
   never shows, every run, with or without the bottom-row change, so a layout
-  change took a baseline run (~6 min) to clear. Fix: find which part of the
-  welcome-unlock change moved stop 3 out of "locked, within reach" and make
-  the flow green again.
+  change took a baseline run (~6 min) to clear. Cause (seen on the failure
+  screenshot): by stop 3 the welcome unlock and yesterday's are spent and a
+  simulator has no steps, so the stop is short ("1,000 steps to go"), not
+  unlockable. Fix: give the flow's account steps, or subscribe it, before the
+  walk.
 - **`test_route_order` reddens the gate at random.** 2026-10-01:
   `ROUTE_SEED=3605168176` fails
   `test_within_budget_repeatable_and_full_as_the_budget_allows` on untouched

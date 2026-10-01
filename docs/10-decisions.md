@@ -122,9 +122,35 @@ opens one as a page sheet.
 **Options considered:** a short teaser card you tap to expand. That puts a
 step between the hold and the story, at the payoff.
 
+### The lock says where
+
+Status: Accepted 2026-10-01. Supersedes *The lock alone* on its words and its
+place; the hold, its haptics and the refusal's shake stand.
+
+With no words, two memories in reach gave no sign which one a hold would
+spend on, and memories sharing a place could not be chosen at all: a pin tap
+points the ring at the first locked one in its group. So under the ring is the
+place and its year or source (a locked memory has no title; the gate is
+unchanged), and with more than one in reach, ‹ › and "2 of 3". The year or
+source is what tells two memories at one place apart. The ring sits low, just
+above Plan a walk and Add, because the middle of a phone is the hardest place
+for a thumb.
+
+**Consequences:** ‹ › step through the memories in reach in a fixed order,
+route stops first, then by id, so a 5 m position update never moves the pick.
+The arrows flank the words, not the ring, so aiming for one cannot start the
+irreversible hold. Short of steps, the faded ring fills with your steps toward
+the price rather than reading full, and **Skip the steps** is a button, not a
+tap on the lock nobody would find; the step that completes it brings the ring
+to hold with a Light haptic.
+
+**Options considered:** swiping the ring between memories: it is the hold's
+target. Cycling by tapping the same pin again: invisible.
+
 ### The lock alone
 
 Status: Accepted 2026-10-01. Supersedes the card layout in *Unlock on the map*.
+**Superseded 2026-10-01** by *The lock says where* on its words and its place.
 
 In reach, the map shows one thing: a 136px lock in the middle of the screen,
 over your own dot, with no words. The place name, year or source, what is
@@ -165,7 +191,8 @@ unlocked (`revealId`). Walking into reach closes a sheet open on that memory.
 
 **Options considered:** ‹ › on the ring to page between memories in reach:
 more control for a case the 20 m radius makes rare, and tapping the pin you
-want already says which.
+want already says which. Wrong for memories sharing a place; *The lock says
+where* adds them.
 
 ### A locked memory says what it is, not what it says
 

@@ -66,13 +66,13 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    "2 of 5 · 4.1 km left" (the next stop's number, as on its pin), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
-│    walking. Never a plain tap. Standing at any stop, the unlock ring (src/UnlockHere.tsx)
-│    takes its place and carries the same second line:
-│    the ring, the place, year or source, "1 attachment waiting" and what it
-│    costs. Everyone gets it on the map before a walk too. Tapping a pin
-│    in reach points it at that pin; the hold opens the sheet on the story. Short of steps
-│    there is no ring to hold: the full faded Approach ring, "600 steps to go · about 6 min
-│    walking" and Skip the steps (the paywall)
+│    walking. Never a plain tap. Standing at any stop, the lock (src/UnlockHere.tsx) takes
+│    its place: the ring low above the bottom row, and under it a card with the place, year
+│    or source, and ‹ › with "2 of 3" when more than one is in reach. Everyone gets it on
+│    the map before a walk too. Tapping a pin in reach points it at that pin; the hold opens
+│    the sheet on the story. Short of steps there is no ring to hold: the faded Approach
+│    ring filling with your steps, "600 steps to go · about 6 min walking" and Skip the
+│    steps (the paywall)
 ├─ "Center on me"             bottom right, above Add, a 44pt glass `location.fill` circle (F10). On a walk the
 │                              camera follows you; a one-finger drag lets go and this shows until
 │                              tapped. Before a walk, it shows once the map is off you by a sixth
@@ -909,19 +909,24 @@ budget. Spec, so it does not get re-invented per screen:
 - **Transform and opacity only.** Those are what `useNativeDriver` can carry;
   an animated colour puts the whole control back on the JS thread for the
   900ms it most needs to be smooth.
-- **It lives on the map, alone, in the middle.** `src/UnlockHere.tsx` centres
-  a 136px ring over the map, over your own dot, because you are standing on
-  it. There are no words: no caption, place, cost or error. The map still pans
-  around it, and it needs no × because walking away takes it away (rule 12).
-  The cost is in the steps pill (docs/10, "The lock alone").
+- **It lives on the map, low, and says where.** `src/UnlockHere.tsx` puts a
+  136px ring just above the bottom row, where a thumb reaches, and under it the
+  place and its year or source, so the hold says what it opens. More than one
+  in reach adds ‹ › and "2 of 3" beside the words, never beside the ring, so a
+  thumb aiming for an arrow cannot start the hold. No caption, cost or error:
+  the cost is in the steps pill. It needs no × because walking away takes it
+  away (rule 12). docs/10, "The lock says where".
 - **A refusal resets the ring and shakes its head.** Success unmounts the
   control (the memory is no longer locked, and the sheet opens on it), so
   `busy` falling back to false is always a no. The ring springs empty, shakes
   side to side and fires `notificationAsync(Warning)`, and a screen reader is
   told the reason, since nothing draws it.
-- **Short of steps, the lock is faded.** It is the approach ring at full size,
-  never seal, and a tap opens the paywall. Its label is the shortfall
-  ("580 steps to go · about 6 min walking").
+- **Short of steps, the lock is faded and fills with steps.** It is the
+  approach ring at full size, never seal, its rim your steps toward the price
+  (`wallet.progress`), so pacing the block fills it on the spot. Under the
+  place: "580 steps to go · about 6 min walking" and **Skip the steps** (the
+  paywall). The step that completes it swaps in the ring to hold, with a Light
+  haptic.
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the
   same 84px circle with a rim that thickens inward as you close — empty at
   three radii (`WARM_MULTIPLIER`, so the sheet and the pin agree about

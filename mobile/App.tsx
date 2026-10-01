@@ -1002,11 +1002,10 @@ export default function App() {
   }, [withinReach, routePositionById]);
   const onRoute = route.length > 0;
 
-  // The memory the ring on the map opens: the one tapped, else the route stop
-  // you are at, else the nearest. docs/10, "Unlock on the map".
-  const [pickedId, setPickedId] = useState<number | null>(null);
-  const ringFor = useMemo(() => {
-    if (!position) return null;
+  // The locked memories in reach, in an order a 5m position update cannot
+  // shuffle under ‹ ›: route stops first, then by id.
+  const ringHere = useMemo(() => {
+    if (!position) return [];
     const here: { group: MemoryGroup; index: number; away: number }[] = [];
     for (const group of withinReach) {
       for (const [index, memory] of group.memories.entries()) {
@@ -1017,12 +1016,27 @@ export default function App() {
         }
       }
     }
-    const picked = here.find(({ group, index }) => group.memories[index].id === pickedId);
+    const stop = (id: number) => routePositionById.get(id) ?? Number.MAX_SAFE_INTEGER;
+    return here.sort((a, b) => {
+      const [x, y] = [a.group.memories[a.index].id, b.group.memories[b.index].id];
+      return stop(x) - stop(y) || x - y;
+    });
+  }, [withinReach, position, routePositionById]);
+  // The memory the ring on the map opens: the one picked, else the route stop
+  // you are at, else the nearest. docs/10, "The lock says where".
+  const [pickedId, setPickedId] = useState<number | null>(null);
+  const ringFor = useMemo(() => {
+    if (!position) return null;
+    const picked = ringHere.find(({ group, index }) => group.memories[index].id === pickedId);
     if (picked) return picked;
     if (stopHere) return stopHere;
-    return here.sort((a, b) => a.away - b.away)[0] ?? null;
-  }, [withinReach, position, pickedId, stopHere]);
+    return [...ringHere].sort((a, b) => a.away - b.away)[0] ?? null;
+  }, [ringHere, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
+  const ringAt = Math.max(
+    0,
+    ringHere.findIndex(({ group, index }) => group.memories[index].id === ringMemory?.id),
+  );
   // "Center on me": on a walk once a drag let go; before one, once the map is
   // off you by more than a sixth of the screen. Never over the ring.
   const showRecenter =
@@ -1047,6 +1061,15 @@ export default function App() {
     }
     wasInReach.current = inReach;
   }, [inReach, ringMemory, short]);
+  // Pacing on the spot fills the faded lock; the step that completes it turns
+  // it into the ring to hold, and that is felt.
+  const wasShort = useRef(short);
+  useEffect(() => {
+    if (inReach && wasShort.current > 0 && short === 0) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
+    wasShort.current = short;
+  }, [inReach, short]);
   // A refusal belongs to the memory it was for.
   useEffect(() => setUnlockError(null), [ringMemory?.id]);
 
@@ -1492,13 +1515,24 @@ export default function App() {
 
           </MapView>
 
-          {/* The lock alone, centred over you: you are standing on it. */}
+          {/* The lock, low where a thumb reaches, and which memory it opens. */}
           {ringFor && ringMemory && (
             <UnlockHere
+              memory={ringMemory}
+              index={ringAt}
+              count={ringHere.length}
+              onStep={(by) => {
+                Haptics.selectionAsync().catch(() => {});
+                const n = ringHere.length;
+                const next = ringHere[(ringAt + by + n) % n];
+                setPickedId(next.group.memories[next.index].id);
+                setUnlockError(null);
+              }}
               busy={unlocking}
               onHold={setHolding}
               error={unlockError}
               short={short}
+              progress={wallet?.progress ?? 0}
               onSkip={() => setPaywallOpen(true)}
               onUnlock={async () => {
                 if (walking) setRouteStarted(true);

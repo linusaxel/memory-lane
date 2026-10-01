@@ -5,7 +5,7 @@
 # e2e/run.sh's `broke` trigger has the account the app mints use up today's
 # free unlocks, and there are no steps on a simulator; typing a name mints it.
 # Standing on a pin, a faded lock stands in for a ring that would be refused.
-# It is labelled with how far off an unlock is, and a tap opens the paywall. It
+# Under it, how far off an unlock is, and Skip the steps opens the paywall. It
 # has nothing to sell on a simulator (no RevenueCat key) and says so, with a way
 # out. Renamed Paid, `subscriber` pays for it, and the ring is there to hold.
 
@@ -33,7 +33,7 @@ appId: ${APP_ID}
     timeout: 40000
 - assertVisible: "Ringkaféen, dev seed\\..*"
 - assertNotVisible: "Unlock this memory"
-- tapOn: "1,000 steps to go · about 10 min walking"
+- tapOn: "Skip the steps"
 - extendedWaitUntil:
     visible: "Open any memory you stand on"
     timeout: 20000
