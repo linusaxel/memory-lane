@@ -390,6 +390,8 @@ where you stand*). Built 2026-09-27: the gate, RevenueCat's webhook and
 read-back (`api/billing.py`), the paywall (F35) and its two e2e flows (docs/10
 *A subscription opens the map*, *RevenueCat sells it; our table decides*).
 Nothing can be bought until the stores exist, so everybody is free.
+Researched 2026-10-02: a currency, the map and the walk, in *Map, walk and
+money* below.
 
 - [ ] **S6 The stores and RevenueCat.** (checked 2026-09-27) Waits on
       `STORE_ACCOUNT` and `DEPLOY` (the webhook needs a public URL). No code:
@@ -439,6 +441,402 @@ Nothing can be bought until the stores exist, so everybody is free.
 - [ ] **A cap on the stored balance?** (checked 2026-09-30) None yet. Add one
       (~10k) if a hoard empties the map in an afternoon; tune the price on the
       corpus before launch, since pins are dense in the centre.
+
+---
+
+## Map, walk and money
+
+Researched 2026-10-02 with eight parallel research passes over primary sources:
+dev blogs, filings, GDC talks, papers, regulator texts and community reactions
+to specific changes. Nothing here is decided. **D** marks a founder decision.
+The other entries follow from those decisions. Nobody has published A/B data
+on any of it, and no app the research found gates story text on standing
+there, so every price below is borrowed from a neighbouring kind of app: tune
+it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
+*Pick one to start, then where you stand*.
+
+### Decide first
+
+- [ ] **E0 D: Are opens paid at all?** (checked 2026-10-02) Today a story
+      opens on the spot for 1,000 steps, or free with the subscription. The
+      research splits.
+      - **Against charging (steps as a toll).** No walking app checked
+        (Pikmin Bloom, Pokémon GO, Walkr, Monster Hunter Now, Dragon Quest
+        Walk) charges steps for something you have already walked to. They
+        *pay* for steps (growth, hatching, fuel) and use being there as the
+        lock.
+        - Adding conditions on top of being there drew the genre's worst
+          backlash. Pokémon GO's 2021 cut of the radius from 80 m back to
+          40 m caused a boycott, and Niantic reversed it
+          (https://www.mcvuk.com/business-news/pokemon-go-reverses-on-its-controversial-pokestop-distance-requirement-changes/).
+          The 2023 remote-raid cap drew 60k+ petition signatures and was
+          framed as a "disability tax"
+          (https://www.techradar.com/news/pokemon-go-raises-the-price-of-remote-raid-passes-inviting-concerns-of-ableism).
+        - A step charge bites the same group: cyclists, bus riders, limited
+          mobility.
+        - Etkin (JCR 2016): showing a step count made people walk more and
+          enjoy it less
+          (https://www.fuqua.duke.edu/duke-fuqua-insights/etkin-counting-steps).
+      - **For charging (walking is the "wait").** Story apps live on
+        wait-or-pay. Kakao Page's CEO: "I will pay to save time"
+        (https://www.koreajoongangdaily.com/business/kakao-proves-japan-has-an-appetite-for-korean-webtoons/10588321).
+        - Pocket FM: $500M a year, $415M of it from users unlocking
+          episodes (https://techcrunch.com/?p=3162605).
+        - Webtoon: paid content was 80.2% of 2023 revenue, at an ARPPU of
+          $11.5 a month from microtransactions
+          (https://www.sec.gov/Archives/edgar/data/1997859/000119312524151708/d396527ds1.htm).
+        - In Memory Lane the walk is the wait, and opening a story is the only
+          thing on sale with real pull.
+      - **Recommendation:** keep opens paid, and fix what made it feel like a
+        toll, which is arriving with nothing to pay. Make the first open of
+        the day free, and earn enough by walking that walkers rarely pay
+        money (E2). If the answer is no, the subscription needs something
+        else to sell (E5), and the step economy goes.
+- [ ] **E1 D: Licensing before money.** (checked 2026-10-02) This blocks any
+      paid open of a DR-derived story, and it matters more than the currency.
+      - **DR treats archive clips as commercial "other business".** The
+        accounting-separation rules stop it giving them away for commercial
+        use, and the quoted price is about 80 DKK a second plus VAT. Sources:
+        Folketing KUU bilag 39
+        (https://www.ft.dk/samling/20211/almdel/KUU/bilag/39/2490051.pdf) and
+        spm 91
+        (https://ft.dk/samling/20211/almdel/kuu/spm/91/svar/1847170/2514752.pdf).
+        Both returned 403, so the figures come from search excerpts: verify
+        them.
+      - **The free DR archive at the Royal Library is narrow.** Its Copydan
+        Arkiv collective licence streams to private citizens on KB's own site
+        "and not in any other way". It excludes AI use, training included,
+        without explicit consent
+        (https://kum.dk/fileadmin/_kum/2_Kulturomraader/Ophavsret/Aftalelicensgodkendelser/Generelle/2025-03-Afgoerelse_om_godkendelse_af_Copydan_Arkiv_iht.____50__stk._4__jf._stk._2.pdf).
+        The pipeline's LLM extraction may clash with that.
+      - **Linking is lawful; framing that gets round access restrictions is
+        not.** CJEU C-466/12 Svensson; C-392/19 VG Bild-Kunst.
+      - A paywall in front of free public-service content would likely be
+        challenged by DR and Copydan, and it would look bad in Denmark.
+      - **Safe defaults:** charge for the walk, the curation or the
+        convenience, never for a DR clip. Link out to DR's own player, or
+        license per clip from DR's sales arm.
+      - Add this to the lawyer's read of docs/10 *The sources' legal footing*
+        (YouTube is already "No, as built").
+      - If it stays open: let Embers buy only stories from sources that are
+        clearly ours to charge for (Gutenberg, user posts, licensed), and keep
+        the rest free on the spot.
+
+### The currency: one, called Embers
+
+- [ ] **E2 Embers: earned by walking, also sold.** (checked 2026-10-02)
+      Depends on E0. Supersedes the 1,000-step price in `api/models.py`
+      (`STEPS_PER_UNLOCK`).
+      - **Earn:** 1 Ember per 1,000 steps, capped at 5 a day; +1 for finishing
+        a walk.
+        - Why a cap: a slow trickle is how Pokémon GO keeps free coins from
+          emptying the shop. Gym coins are capped at 50 a day, down from 100
+          in 2017 (https://pocketmonsters.net/news/4153).
+        - Every walk-to-earn currency that could be cashed out collapsed
+          under inflation: STEPN's GST −99.7%, monthly users 700K → 45K
+          (https://decrypt.co/122460); SWEAT −93%, earning made 400% harder
+          (https://dailycoin.com/sweatcoin-increases-minting-difficulty-as-sweat-economy-sweat-sinks-22/).
+          So Embers are never cashable and never tradeable.
+      - **Buy:** 5 for 29 DKK, 15 for 69 DKK, 40 for 149 DKK, about 3.7–5.8 DKK
+        an open. That sits above Webtoon and Radish (2–3 DKK an episode)
+        because each open costs a walk too. An untested guess.
+      - **At the lock:** offer "Open for 7 DKK" as a direct purchase, so
+        nobody has to buy a pack for one story. This meets the CPC rule
+        against forcing bundles (E3).
+      - **Spends**, all next to being there and none past it:
+
+        | Spend | Cost | Based on |
+        |---|---|---|
+        | Open a story you are standing at | 1 | Pay-per-episode (Pocket FM, Webtoon) |
+        | First open of the day | free | A cyclist arriving with nothing still gets in |
+        | A stop on a planned walk | ½ | Cheaper stops give the walk a reason to exist (W4) |
+        | Reach: 20 m → 60 m for one walk | 3 | Pokémon GO lures and incense, the 80 m radius |
+        | Themed walk with a stop only the walk reaches | 99 DKK or 15 | StoryHunt's premium Copenhagen walks, 99 DKK (https://www.storyhunt.io/en/copenhagenlocalwalks) |
+
+      - **Reach is sold per walk and never taken back.** Players treat range
+        as owed once given; the 80 m reversal above shows it.
+      - **Server:** the balance is Embers on `users`, not steps. `/v1/me/steps`
+        keeps its watermark and converts to Embers on credit. The cap is
+        applied per UTC day (`gate.today()`). Purchases and the subscription
+        go through RevenueCat (consumables on the same offering) and the
+        `subscriptions` read-back pattern. The app is never believed.
+      - Keep the existing order: a subscriber pays nothing, then the free open
+        of the day, then an Ember, then the welcome unlock, then 403. Re-derive
+        this against *Pick one to start* before building.
+- [ ] **E3 The rules any Ember must meet.** (checked 2026-10-02) Hard
+      constraints, not choices.
+      - **Apple 3.1.1:** currency only through IAP; bought currency "may not
+        expire"; loot-box odds disclosed
+        (https://developer.apple.com/app-store/review/guidelines/).
+      - **Apple 3.2.2** allows rewards for in-app actions.
+      - **Apple 5.1.3(i):** Motion & Fitness data is never used for ads,
+        marketing or analytics. Turning steps into credit is not banned, and
+        step-reward apps are live, but that is a reading, not a ruling.
+      - **EU CPC key principles on in-game virtual currencies, 21 Mar 2025**
+        (https://commission.europa.eu/live-work-travel-eu/consumer-rights-and-complaints/enforcement-consumer-protection/coordinated-actions/social-media-online-games-and-search-engines_en;
+        text: https://esportslegal.news/wp-content/uploads/2025/03/Key-principles-on-in-game-virtual-currencies.pdf):
+        - Show the DKK price next to every Ember price, worked out without
+          bulk discounts.
+        - One currency, no exchanges.
+        - Price items in whole Embers, with no leftovers stranded by pack
+          sizes.
+        - A 14-day withdrawal right on unused Embers.
+        - No one-sided change to what an Ember is worth.
+        - Spending off by default for minors, and no "buy now" pressure at
+          children.
+        - Currency earned only in play is out of scope, but Embers are also
+          bought, so all of it applies.
+      - **Denmark:** Forbrugerrådet Tænk reported 17 games, Pokémon GO among
+        them, to Forbrugerombudsmanden on 11 Sep 2024 for showing prices only
+        in virtual currency
+        (https://taenk.dk/presse/forbrugerraadet-taenk-anmelder-17-spil-manipulere-spillerne-med-virtuel-valuta).
+        No ruling has been found yet.
+      - **The Digital Fairness Act:** proposal expected Q3–Q4 2026. It is
+        weighing real-money prices on items bought with currency, and loot
+        boxes. Check whether it has been published before building.
+      - **If the app ever shuts:** refund or convert unspent Embers. Kindle
+        Vella turned unused tokens into gift-card credit
+        (https://www.geekwire.com/2024/amazon-to-shut-down-kindle-vella-serial-book-platform-saying-it-hasnt-caught-on-as-wed-hoped/).
+        Radish let them vanish
+        (https://kcomicsbeat.com/2025/07/03/radish-fiction-to-shut-down-by-end-of-2025/).
+- [ ] **E4 Never sell these.** (checked 2026-10-02) Write each into docs/10
+      when E2 lands, so nobody adds it later.
+      - **Reading from afar.** Pokémon GO's remote raid pass earned well, then
+        "came to dominate the experience… in a way we never intended"
+        (https://techcrunch.com/2023/03/30/pokemon-go-will-raise-the-price-of-remote-raid-passes).
+        Pulling it back cost a boycott and, per AppMagic (disputed by
+        Niantic), a five-year revenue low
+        (https://videogameschronicle.com/news/pokemon-go-developer-denies-that-its-earnings-have-dropped-to-a-five-year-low).
+        This is already the line in *Pick one to start*.
+      - **A second currency.** Choices runs two paid currencies, and players
+        called a quiet 16→22 diamond rise "scummy"
+        (https://www.pocketgamer.biz/how-does-choices-stories-you-play-monetise/).
+      - **Loot boxes or any random paid reward.** Illegal in Belgium (fines up
+        to €800k), and a likely DFA target. The FTC's Genshin settlement
+        ($20m, Jan 2025) covered hidden currency tiers and odds
+        (https://www.ftc.gov/system/files/ftc_gov/pdf/ferguson-cognosphere-concurrence.pdf).
+      - **Countdown offers and one-tap purchases.** The FTC's $245m Epic
+        settlement covered these dark patterns
+        (https://ftc.gov/news-events/news/press-releases/2023/09/ftc-announces-claims-process-fortnite-players-who-were-charged-unwanted-items).
+      - **Step-energy that refills.** Duolingo's switch to Energy raised its
+        metrics, but drew a petition ("two lessons a day")
+        (https://www.change.org/p/duolingo-hearts-not-energy). With a handful
+        of opens a day, an energy pool only reads as a squeeze.
+      - **Selling location or step data.** GDPR, Apple 5.1.3, and it clashes
+        with the device-UUID identity model.
+- [ ] **E5 Memory Lane+ (the subscription).** (checked 2026-10-02)
+      - 49 DKK a month or 349 DKK a year: unlimited opens on the spot, themed
+        walks included, 10 Embers a month.
+      - Benchmarks: Western Europe medians are $8.99 a month and $39.44 a year
+        (https://revenuecat.com/report). Adapty finds Dutch users pay 62% more
+        than US users. No Nordic median was found.
+      - Plan for the subscription to carry about 80% of revenue. At Duolingo
+        it was 81% in FY2024, and in-app purchases only $34.7M in 2023
+        (https://www.sec.gov/Archives/edgar/data/1562088/000156208825000039/q4fy24duolingo12-31x24shar.htm).
+      - Push annual: 44.1% of annual plans are retained after a year, against
+        17.0% of monthly ones (RevenueCat 2025).
+      - Updates S6: add the consumables, and change the entitlement's
+        meaning.
+
+### The map: keep showing every pin
+
+- [ ] **V1 Record why the map shows every locked pin.** (checked 2026-10-02)
+      Decided already (docs/10 *A map of what is locked*); add this evidence
+      to that entry.
+      - Every location app that lasted shows its targets: Ingress, Pokémon GO
+        after the fix, Geocaching, Wandrer, Atlas Obscura.
+      - Pokémon GO's worst-punished change took away "what is near me, and
+        where". The tracker was removed 30 Jul 2016, the rating fell to about
+        1.5★, and players got refunds
+        (https://proof.csmonitor.com/Technology/2016/0802/Pokemon-Go-creators-remove-a-key-feature-risking-users-wrath).
+        Niantic's fix was to show more: Nearby and Sightings
+        (https://www.androidpolice.com/2016/11/23/niantic-ditto-pokemon-go-tweaks-nearby-more-regions/).
+      - Curiosity needs a gap you can feel (Loewenstein 1994) and peaks at
+        partial knowledge (Kang et al. 2009,
+        https://pubmed.ncbi.nlm.nih.gov/19619181/). A hidden pin makes no
+        gap. Place, year, source and tags with no text sits at that peak.
+      - In the field, people plan around a preview but save the content for
+        the spot. In Smith et al. 2019's study of 29 locals on three history
+        tours, "no participants took the opportunity to view the stop-based
+        content in advance"
+        (https://dirkvl.info/wp-content/uploads/2019/11/smith-et-al_chapter-glam.pdf).
+      - Hiding pins until you have steps fails worst at the first session:
+        at home, with 0 steps, on an empty map.
+      - The spoiler research is contested (Leavitt & Christenfeld 2011 vs the
+        failed replications), so build on neither side of it.
+- [ ] **V2 Full detail near you, a glow further out.** (checked 2026-10-02)
+      - The nearest three locks get a strong pin with direction and distance.
+        Further ones thin to soft clusters or areas, as Pokémon GO's
+        "Sightings" do.
+      - Zelda BotW's CEDEC 2017 talk: guides placed everywhere made players
+        feel railroaded, and varying what is visible fixed it
+        (https://gigazine.net/gsc_news/en/20171004-breath-of-the-wild-design-secret).
+        Assassin's Creed's creator apologised for checklist maps
+        (https://gamespot.com/articles/patrice-desilets-creator-of-assassins-creed-has-ap/1100-6470759/).
+      - Risk: a wall of locks reads as a checklist or a paywall (the
+        Geocaching premium-cache resentment).
+      - Fits the one-pin rule ("Pins: one kind").
+- [ ] **V3 "What to look at when you're there" on the peek.** (checked
+      2026-10-02)
+      - Participants in Smith et al. 2019 wanted to be told what to look at,
+        and it helps when GPS wobbles near 20 m. Riot! 1831's immersion broke
+        on GPS error (https://www.roaring-girl.com/work/1831-riot/).
+      - It must stay a pointer to the spot ("the corner doorway, the green
+        tiles"), never a line of the story. *A locked memory says what it is,
+        not what it says* rejected a teaser line.
+      - Needs a new extracted field, so measure it before and after, as
+        docs/04 *Memory quality* requires.
+- [ ] **V4 Later, maybe: fog as a record, not a gate.** (checked 2026-10-02)
+      - Brighten the streets you have walked; the pins stay visible.
+      - Fog of World (4.81★, 3.6K ratings) and Wandrer's untravelled-roads
+        view (https://news.wandrer.earth/2026/01/30/wandrer-untraveled-roads.html)
+        work because the fog covers your own record, not the content.
+      - Could fold into G3/G7.
+
+### The walk: give it a reason to exist
+
+Today a walk's stops cost the same as any pin. Its only rewards are the streak
+(F27), the finish card and the journal grouping, so "Walk here" to one chosen
+pin beats it. No published A/B tests compare curated routes with free choice.
+
+- [ ] **W1 A stop only the walk reaches.** (checked 2026-10-02) The strongest
+      mechanism found.
+      - One stop shows as "?" and is never drawn on the map; it opens when you
+        reach it.
+      - Two cases point the same way. Pokémon GO's Routes is widely disliked,
+        yet Zygarde Cells, which drop only on Routes, kept people walking them
+        (https://mein-mmo.de/en/pokemon-go-trainers-spot-limit-for-a-rare-item-that-is-stupid,1054960).
+        Adventure Lab's bonus cache opens only for finishers
+        (https://www.geocaching.com/geocache/GC9CYAF).
+      - Uncertain rewards motivate more than sure ones (Shen, Fishbach & Hsee
+        2015, https://www.chicagobooth.edu/review/uncertainty-can-improve-motivation),
+        and a resolved tease is a net positive (Ruan, Hsee & Lu 2018).
+      - Server: `api/routes.py` picks the hidden stop from memories not near
+        any other pin. The unlock vets it like any stop. Its locked peek
+        withholds even the place until you are within reach. Avoid a daily
+        cap that turns it into a grind.
+      - The gate is unchanged: it opens standing there, like any stop.
+- [ ] **W2 Start at "1 of 5", with a ring that fills.** (checked 2026-10-02)
+      - Count the stop you are standing at, or the welcome unlock, as the
+        first.
+      - Endowed progress: car-wash cards pre-stamped 2 of 10 were redeemed by
+        34%, against 19% for blank 0 of 8 cards, with the same effort
+        (Nunes & Drèze 2006, https://coglode.com/nuggets/endowed-progress-effect).
+      - The goal gradient: people speed up near the reward (Kivetz et al.
+        2006, https://business.columbia.edu/sites/default/files-efs/pubfiles/1200/goalgradient.pdf).
+      - Strong in the lab, untested in walking apps.
+- [ ] **W3 Loose walks: skip and reorder.** (checked 2026-10-02)
+      - In Smith et al. 2019, every participant changed the prescribed route:
+        reordered stops, skipped some, took the tram.
+      - Free roaming split people too. Some loved it; others hated "the
+        uncertainty" and wanted visited spots marked.
+      - So a walk is finished when its stops are opened, in any order, and a
+        stop can be dropped without ending the walk. Check
+        `ROUTE_COMPLETED_QUERY`.
+      - Keep stories short. People found more than 5 minutes too long but
+        still wanted more coverage.
+- [ ] **W4 Walk stops at ½ Ember.** (checked 2026-10-02) Part of E2. Makes
+      the walk the cheaper choice. Moderate evidence: economics, plus Nunes &
+      Drèze indirectly. Keep the discount modest, or it undercuts the
+      subscription.
+- [ ] **W5 A broken streak can be repaired.** (checked 2026-10-02)
+      - A broken streak hurts, more so when people blame themselves, and less
+        when it can be repaired (Silverman & Barasch, JCR 2023, 7 studies,
+        https://www.colorado.edu/business/faculty-research/2023/04/19/or-track-how-broken-streaks-affect-consumer-decisions).
+      - Duolingo: allowing two Streak Freezes instead of one lifted daily
+        actives by 0.38% (https://blog.duolingo.com/how-duolingo-streak-builds-habit).
+      - A repair could cost Embers: a sink that is not a toll.
+      - Watch for streak anxiety. On its own a streak won't make anyone choose
+        the walk.
+      - Overlaps G5.
+- [ ] **W6 D: Themed walks.** (checked 2026-10-02)
+      - Four stops sharing an era, a person or a source, so the walk tells one
+        story. This is the paid product in E2, E5 and E7.
+      - It reverses docs/10 *Tags come from the text, and a walk has no
+        theme*, so mark that entry Superseded if it goes ahead.
+      - Evidence: moderate and qualitative. Zombies, Run! users rated story as
+        the favourite feature (https://discovery.ucl.ac.uk/id/eprint/10139156/).
+        Questo shows people pay for story walks, not that they keep them.
+
+### Money from outside the player
+
+- [ ] **E6 Pitch commissioned walks to the city.** (checked 2026-10-02)
+      Probably year one's biggest revenue line.
+      - Copenhagen's Budget 2024 set aside 2.1M DKK for "The Copenhagen App".
+        The city runs Copenhagen Local Walks, one co-funded with Frederiksberg.
+        It leads a 35M DKK EU Urban Initiative tourism project (about 5.5M DKK
+        to the administration over 3.5 years from Dec 2024) with Wonderful
+        Copenhagen, Nationalmuseet, Københavns Museum and StoryHunt
+        (https://kk.dk/sites/default/files/agenda/385094d2-b65c-48bb-834c-f898e6c0fc8a/56179e1b-ac0b-422e-a21c-0f3ae234d508-bilag-7_0.pdf).
+      - StoryHunt is the incumbent: 8 free walks for the city, 11 premium at
+        99 DKK.
+      - What the city pays for is free walks that spread tourists out.
+      - Guessed at 50–300K DKK in year one. Needs a sales conversation, not
+        code.
+- [ ] **E7 Premium walks on GetYourGuide / TripAdvisor.** (checked
+      2026-10-02)
+      - Questo sells this way, on revenue share
+        (https://tech.eu/2021/02/18/questo-funding/). Agencies take 20–25%
+        and app stores 15% (VoiceMap's numbers,
+        https://docs.voicemap.me/tour-publishers/dashboard-details/).
+      - Only on public-domain or licensed sources (E1).
+      - Guessed at 20–150K DKK.
+- [ ] **E8 Later: sponsored stops.** (checked 2026-10-02)
+      - Niantic charges "less than $0.50 per daily unique visit", and it
+        works only at McDonald's-scale footfall
+        (https://techcrunch.com/2017/05/31/pokemon-go-sponsorship-price).
+      - Yelp's paying ad locations fell 5% in 2024, mostly restaurants and
+        retail (https://www.sec.gov/Archives/edgar/data/1345016/000134501625000007/yelp-20241231.htm),
+        so small cafés churn.
+      - Nothing found shows per-visit deals working in Copenhagen. Revisit
+        after real traffic, and label it if built.
+- [ ] **Not doing: walk-to-earn with a brand marketplace or offerwall.**
+      (checked 2026-10-02)
+      - WeWard (20M users) and Sweatcoin (about $20M revenue in 2023) work at
+        millions of monthly users. Below about 1M it earns close to nothing.
+        WeWard's founder said blockchain was "simply not economically viable"
+        at 3 million users
+        (https://theunblocked.substack.com/p/weward-sortir-de-la-blockchain-pour).
+      - Delete this entry if the scale ever comes.
+
+### Plan against these numbers
+
+- [ ] **E9 Benchmarks for the business case.** (checked 2026-10-02)
+      - **Download to paid:** 2.0% median (freemium 2.1%, hard paywall 10.7%)
+        (https://revenuecat.com/report).
+      - **Revenue per install at D60:** Health & Fitness $0.66, Gaming $0.14.
+        Travel trials convert best, at 48.7%.
+      - **Ceiling:** Pikmin Bloom made $8.4M (2022), $20.9M (2023), $33.4M
+        (2024) and $100M lifetime, from passes, events and collection, never
+        access
+        (https://www.pocketgamer.biz/pikmin-bloom-hits-100m-after-four-years-as-2025-becomes-its-best-year-yet/).
+        Niantic made about $33 per monthly user a year: an upper bound, not a
+        target.
+      - **No evidence** that adding consumables lifts a non-game subscription
+        app. Hybrid adoption is 10–35% depending on the definition, mostly in
+        games.
+      - The economics research would rather sell single opens in DKK with no
+        currency: less regulation, most of the benefit. The founder wants a
+        currency, which is why E2 is one currency with a direct DKK purchase
+        at the lock.
+
+### The retention risk none of this fixes
+
+- [ ] **Running out of stories.** (checked 2026-10-02)
+      - Detour's users loved it, and it never caught on: "after 4 years… we
+        never got widespread traction"
+        (https://blog.southparkcommons.com/p/andrew-mason-shares-what-hes-learned-about-setting-company-values-and-knowing-when-to-pivot).
+        Each tour took 3–4 months to produce.
+      - Field Trip, Niantic's passive history feed with no goal, shut in 2019
+        (https://www.engadget.com/2019-07-13-niantic-to-shut-down-field-trip.html).
+        Ingress, built on the same places, became the company.
+      - Pokémon GO: 28.5M US daily users in July 2016, under 5M within months
+        (https://www.bgr.com/entertainment/pokemon-go-popularity-2016-users/).
+      - Survivors (VoiceMap, izi.TRAVEL) scaled on content supplied by
+        creators.
+      - Once someone has done the stories near them, nothing above brings
+        them back. That is a matter of corpus density and submissions, the
+        Copenhagen sources sections. Track it as the first retention metric.
 
 ---
 
