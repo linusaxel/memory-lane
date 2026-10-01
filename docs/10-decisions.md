@@ -909,9 +909,24 @@ The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
 regions are queued and replayed from `onMapReady`.
 
+### Two equal actions at the bottom
+
+Status: Accepted 2026-10-01. Supersedes *Act at the bottom, read at the top*
+where it put Journal in the bottom row and kept top left empty.
+
+The founder wanted Plan a walk and Add as equals: one hierarchy, one look.
+The bottom row is now two halves, both ember pills: Plan a walk and Add
+memory. On a walk the walk card takes Plan a walk's half; while the unlock
+ring has it, Add keeps its own half. Journal goes back to the top-left
+corner, a 44pt glass circle opposite Settings. A swipe in from the left edge
+still opens it, so the hard corner tap is not the only way in. Everything
+else in *Act at the bottom, read at the top* stands.
+
 ### Act at the bottom, read at the top
 
-Status: Accepted 2026-10-01. Supersedes *One button, like a Poké Ball*.
+Status: **Superseded 2026-10-01** in part by *Two equal actions at the
+bottom* (Journal top left, Plan a walk and Add as equal ember halves).
+Accepted 2026-10-01. Supersedes *One button, like a Poké Ball*.
 
 The founder loved the hub, but Add a memory and the Journal are core: they
 cannot be two taps away. Rethought from first principles: the bottom is where

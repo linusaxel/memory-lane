@@ -533,7 +533,7 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, the book bottom left of the map, or a swipe in from the
+1. **Journal**, the book top left of the map, or a swipe in from the
    left edge, slides the journal in over the map. It is you as well: your
    photo, name and numbers on top (a tap is Edit profile, F21), then *Walks*,
    *Unlocked Memories* and *My Memories* (F24). Settings is not in it: that is
@@ -973,7 +973,7 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    is waiting, **Open it now** while today's free ones last, and **Walk
    here**, which draws a walk through that pin (F1).
    Standing on it, the peek gives way to the ring over the map (F7).
-3. **Plan a walk**, the ember pill bottom centre between Journal and Add,
+3. **Plan a walk**, the ember pill bottom left, Add's equal beside it,
    draws a walk (F1).
 
 The peek is a look, not a read: the summary never reaches the phone locked, and

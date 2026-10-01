@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`walk-and-unlock` is red on main.** 2026-10-01: after f448aea, stop 3's
+  "Stop 3 of 4. Where the night went long, dev seed. Locked, within reach."
+  never shows, every run, with or without the bottom-row change, so a layout
+  change took a baseline run (~6 min) to clear. Fix: find which part of the
+  welcome-unlock change moved stop 3 out of "locked, within reach" and make
+  the flow green again.
 - **`test_route_order` reddens the gate at random.** 2026-10-01:
   `ROUTE_SEED=3605168176` fails
   `test_within_budget_repeatable_and_full_as_the_budget_allows` on untouched

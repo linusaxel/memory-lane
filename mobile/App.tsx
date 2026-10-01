@@ -1648,7 +1648,25 @@ export default function App() {
           )}
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
-              read at the top"). Top right the two rare ones. */}
+              read at the top"). Top left the Journal, top right the two rare
+              ones. */}
+          {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
+            <GlassButton
+              place={styles.topLeft}
+              style={styles.circle}
+              hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel="Journal"
+              accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                setJournalOpen(true);
+              }}
+            >
+              <Glyph name="book.closed" size={20} weight="medium" color={color.ink} />
+              {journalNew && <View style={styles.newDot} />}
+            </GlassButton>
+          )}
           <View style={styles.topRight}>
             {stage === 'map' && <MapFilter shows={mapShows} onShow={setMapShows} />}
             <GlassButton
@@ -1664,29 +1682,15 @@ export default function App() {
               <Glyph name="gearshape" size={20} weight="medium" color={color.ink} />
             </GlassButton>
           </View>
-          {/* Journal and Add either side of the one thing to do: Plan a walk
-              before a walk, the walk card on one. Not over a card with its
-              own buttons at the bottom. Add is there walk or no walk: filing
-              is standing somewhere, not unlocking. */}
+          {/* Two equal halves: Plan a walk before a walk, the walk card on
+              one, and Add. Not over a card with its own buttons at the
+              bottom. Add is there walk or no walk: filing is standing
+              somewhere, not unlocking. */}
           {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
             <View style={styles.bottom}>
-              <GlassButton
-                style={styles.circle}
-                hitSlop={4}
-                accessibilityRole="button"
-                accessibilityLabel="Journal"
-                accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setJournalOpen(true);
-                }}
-              >
-                <Glyph name="book.closed" size={20} weight="medium" color={color.ink} />
-                {journalNew && <View style={styles.newDot} />}
-              </GlassButton>
               {stage === 'map' && (
                 <GlassButton
-                  place={styles.middle}
+                  place={styles.half}
                   style={styles.pill}
                   tint={color.ember}
                   accessibilityRole="button"
@@ -1708,7 +1712,7 @@ export default function App() {
                   place and carries its progress line. */}
               {walking && onRoute && !ringMemory && !showDone && !confirmEnd && (
                 <GlassButton
-                  place={styles.middle}
+                  place={styles.half}
                   style={styles.walkCard}
                   accessible={false}
                   onPress={() => {
@@ -1771,9 +1775,14 @@ export default function App() {
                   />
                 </GlassButton>
               )}
+              {/* Add keeps its half while the ring has the walk card's. */}
+              {stage !== 'map' && !(walking && onRoute && !ringMemory) && (
+                <View style={styles.half} />
+              )}
               <GlassButton
-                style={styles.circle}
-                hitSlop={4}
+                place={styles.half}
+                style={styles.pill}
+                tint={color.ember}
                 accessibilityRole="button"
                 accessibilityLabel="Add a memory here"
                 onPress={async () => {
@@ -1784,7 +1793,8 @@ export default function App() {
                   setSubmitOpen(true);
                 }}
               >
-                <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
+                <Glyph name="plus" size={16} weight="semibold" color={color.paper} />
+                <Text style={styles.planText}>Add memory</Text>
               </GlassButton>
             </View>
           )}
@@ -1937,10 +1947,11 @@ const styles = StyleSheet.create({
   // control; `pill`, `bigPill` and `circle` are its shape.
   corner: { position: 'absolute', top: 64 },
   steps: { alignSelf: 'center' },
+  topLeft: { position: 'absolute', top: 64, left: 18 },
   // The filter left of Settings, so Settings never moves.
   topRight: { position: 'absolute', top: 64, right: 18, flexDirection: 'row', gap: 8 },
-  // Edge to edge so Journal and Add stay put whatever sits between them. At
-  // 70, 12pt over Apple's logo and Legal link (HIG Maps asks 10).
+  // Edge to edge, two equal halves. At 70, 12pt over Apple's logo and Legal
+  // link (HIG Maps asks 10).
   bottom: {
     position: 'absolute',
     bottom: 70,
@@ -1948,10 +1959,9 @@ const styles = StyleSheet.create({
     right: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 12,
   },
-  middle: { flexShrink: 1 },
+  half: { flex: 1 },
   pill,
   planText: { ...label, fontSize: 15, color: color.paper },
   // The size of a button, not a pill: it is the one thing to do.
@@ -1977,7 +1987,7 @@ const styles = StyleSheet.create({
   locate: { position: 'absolute', bottom: 134, alignSelf: 'center' },
   locateText: { ...buttonText, color: color.paper },
   // Directly above "Turn on location" while that shows, in its place after.
-  walkCard: { ...pill, minHeight: 56, paddingLeft: 20, paddingRight: 12, gap: 12, maxWidth: 280 },
+  walkCard: { ...pill, minHeight: 56, paddingLeft: 20, paddingRight: 12, gap: 12 },
   walkText: { flex: 1, gap: 2 },
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
