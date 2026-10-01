@@ -47,7 +47,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              none free, "4,210 steps" / "Opens 4"; short, a small ember ring
 │                              filling to the price and "600 to go" / "400 steps". A tap counts again
 ├─ You, Add                   top right, 44pt glass circles (`person`, an ember `plus`), every stage,
-│                              one GlassGroup: on iOS 26 they merge into one shape.
+│                              two shapes that never merge (the founder, 2026-10-01).
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
 ├─ "On a walk · 2 of 5"       under the steps pill, the corners' capsule tinted ember: the walk's one
 │                              signal, and a tap ends it (F34). With stops left, a card
@@ -266,10 +266,9 @@ location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
 only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
 tint in view**: the walk bar's, and while Turn on location shows, that one's
-alone. Controls that touch go in one `GlassGroup` (`GlassContainer`, spacing
-40), so they merge like a toolbar's; only ones that touch, because the
-container swallows taps in its gaps, and a gap over the map is a pin nobody can
-tap. Glass takes colour from what is under it: Journal reads cyan over a lake,
+alone. No `GlassContainer`: You and Add merging read as
+one odd shape (the founder, 2026-10-01), and the container swallows taps in
+its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
 and that is the material, not a bug. A glass
 control scales rather than dims when pressed: opacity on a glass view's parent
 stops the effect rendering. Inside sheets, hierarchy is still hairlines and

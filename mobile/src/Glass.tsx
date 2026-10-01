@@ -7,7 +7,7 @@
  *  on a glass view's parent stops the effect rendering.
  */
 
-import { GlassContainer, GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import type { ReactNode } from 'react';
 import {
   Pressable,
@@ -41,18 +41,5 @@ export function GlassButton({ place, style, tint, children, ...press }: Props) {
         <View style={[style, lift, { backgroundColor: tint ?? color.paperRaised }]}>{children}</View>
       )}
     </Pressable>
-  );
-}
-
-/** Glass controls that sit side by side as one group: on iOS 26 they merge
- *  like a toolbar's. Only round controls that touch - the container swallows
- *  taps in its gaps, and a gap over the map is a pin you cannot tap. */
-export function GlassGroup({ style, children }: { style: StyleProp<ViewStyle>; children: ReactNode }) {
-  return GLASS ? (
-    <GlassContainer spacing={40} style={style}>
-      {children}
-    </GlassContainer>
-  ) : (
-    <View style={style}>{children}</View>
   );
 }

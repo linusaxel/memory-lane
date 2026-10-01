@@ -77,7 +77,7 @@ import Glyph from './src/Glyph.tsx';
 import { walletOf } from './src/wallet.ts';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
-import { GlassButton, GlassGroup } from './src/Glass.tsx';
+import { GlassButton } from './src/Glass.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { buttonText, color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
@@ -1634,10 +1634,10 @@ export default function App() {
           >
             <Text style={styles.cornerText}>Journal</Text>
           </GlassButton>
-          {/* You and Add, one group that merges like a toolbar's on iOS 26.
-              Any stage, walk or no walk: filing is standing somewhere, not
-              unlocking. Shown even with no position - the press asks for it. */}
-          <GlassGroup style={styles.tools}>
+          {/* You and Add, two circles that never merge. Any stage, walk or no
+              walk: filing is standing somewhere, not unlocking. Shown even
+              with no position - the press asks for it. */}
+          <View style={styles.tools}>
             <GlassButton
               style={styles.circle}
               hitSlop={4}
@@ -1665,7 +1665,7 @@ export default function App() {
             >
               <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
             </GlassButton>
-          </GlassGroup>
+          </View>
           {/* Top, between them: what opens memories today. A tap counts again. */}
           {wallet && (
             <StepsPill
