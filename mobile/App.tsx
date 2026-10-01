@@ -21,6 +21,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   acceptRoute,
   blockUser,
+  devSteps,
   endRoute,
   fetchMine,
   fetchNearby,
@@ -1391,6 +1392,11 @@ export default function App() {
                     }
                     Haptics.selectionAsync().catch(() => {});
                     setHere(pin ? { lat: pin.lat, lng: pin.lng } : { lat, lng });
+                    // And 500 steps, for testing the steps gate without walking.
+                    deviceId()
+                      .then(devSteps)
+                      .then((who) => mounted.current && setProfile(who))
+                      .catch(() => {});
                   }
                 : undefined
             }

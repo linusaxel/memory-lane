@@ -29,6 +29,7 @@ from api.queries import (
     STREAK_DAYS_QUERY,
     UNLOCK_COUNT_QUERY,
 )
+from pipeline.config import PUBLIC_HOST
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -200,6 +201,23 @@ def credit_steps(body: StepsRequest):
             },
         )
         return profile_of(session, body.device)
+
+
+if not PUBLIC_HOST:
+
+    @router.post("/v1/dev/steps", response_model=Profile)
+    def dev_steps(
+        device: str = Query(..., pattern=DEVICE_PATTERN),
+        steps: int = Query(500, ge=1, le=10_000),
+    ):
+        """Steps for nothing, off the public host only: the app's dev teleport
+        gives 500, so testing the steps gate needs no walking."""
+        with get_session() as session:
+            session.execute(
+                text("UPDATE users SET steps = steps + :s WHERE id = CAST(:u AS uuid)"),
+                {"s": steps, "u": user_for_device(session, device)},
+            )
+            return profile_of(session, device)
 
 
 # Signing in binds devices.user_id and issues no token. api/auth.py verifies the

@@ -558,6 +558,11 @@ export async function creditSteps(device: string, since: string, steps: number):
   return post<Profile>('/v1/me/steps', { device, since, steps });
 }
 
+/** __DEV__ only: 500 free steps, from an endpoint the public host lacks. */
+export async function devSteps(device: string): Promise<Profile> {
+  return post<Profile>(`/v1/dev/steps?${new URLSearchParams({ device })}`, {});
+}
+
 /** An unlock refused for want of steps, with what there is and what it costs:
  *  the paywall's cue. */
 export function outOfSteps(e: unknown): { steps: number; price: number } | null {

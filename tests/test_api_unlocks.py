@@ -267,3 +267,8 @@ def test_unlocking_something_that_does_not_exist_is_a_404(client):
         ).status_code
         == 404
     )
+
+
+def test_the_dev_teleport_gives_five_hundred_steps(client, db_session):
+    give_steps(db_session, DEVICE, 100)
+    assert client.post(f"/v1/dev/steps?device={DEVICE}").json()["steps"] == 600

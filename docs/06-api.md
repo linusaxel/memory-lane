@@ -90,6 +90,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   counted from `since`, which must be `steps_counted_until`, and move it to
   now. A stale `since` credits nothing; either way it returns the `Profile`.
   At most three steps a second over the window
+- `POST /v1/dev/steps?device=&steps=500` - add steps, no cap. Not on the
+  public host (`PUBLIC_HOST`), like `/docs`. The app's dev long-press teleport
+  calls it
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
   display_name?, link_token?}` - verify a provider ID token and bind this device
   to that account. `display_name` is for Apple, which gives the name to the
