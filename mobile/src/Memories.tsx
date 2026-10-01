@@ -36,7 +36,7 @@ import {
 } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
-import { distance, walkDate } from './format.ts';
+import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
 import { attention, loadSeen, saveSeen, type Seen } from './seen.ts';
@@ -52,6 +52,8 @@ type Props = {
   refreshKey: number;
   /** Everything this device has earned, newest first, minus what you filed. */
   unlocked: LocatedMemory[];
+  /** What this device hearted: Unlocked Memories can show only those. */
+  hearted: Set<number>;
   onOpenMine: (memory: LocatedMemory) => void;
   /** An earned stop of a past walk. */
   onOpenStop: (memory: LocatedMemory) => void;
@@ -74,6 +76,7 @@ export default function Memories({
   focused,
   refreshKey,
   unlocked,
+  hearted,
   onOpenMine,
   onOpenStop,
   onClose,
@@ -89,6 +92,7 @@ export default function Memories({
   const [walks, setWalks] = useState<WalkedRoute[]>([]);
   const [walksStatus, setWalksStatus] = useState<Status>('loading');
   const [openWalk, setOpenWalk] = useState<number | null>(null);
+  const [heartedOnly, setHeartedOnly] = useState(false);
   // The baseline as it was when the journal opened, so a row stays "new" for
   // the whole look; the look itself is what moves the baseline on.
   const [seen, setSeen] = useState<Seen | null>(null);
@@ -198,13 +202,18 @@ export default function Memories({
       ? ''
       : `${walks.length} ${walks.length === 1 ? 'walk' : 'walks'}`;
 
-  const unlockedNote = unlocked.length ? `${unlocked.length} unlocked` : '';
+  const shown = heartedOnly ? unlocked.filter((memory) => hearted.has(memory.id)) : unlocked;
+  const unlockedNote = !unlocked.length
+    ? ''
+    : heartedOnly
+      ? `${shown.length} hearted`
+      : `${unlocked.length} unlocked`;
 
   const data: Item[] =
     section === 'mine'
       ? mine.map((memory) => ({ kind: 'mine', memory }))
       : section === 'unlocked'
-        ? unlocked.map((memory) => ({ kind: 'unlocked', memory }))
+        ? shown.map((memory) => ({ kind: 'unlocked', memory }))
         : walks.flatMap((walk, index): Item[] => [
           { kind: 'walk', walk, index },
           ...(openWalk === index
@@ -282,11 +291,24 @@ export default function Memories({
           trailingItem?.kind === 'stop' ? null : <View style={styles.separator} />
         }
         ListHeaderComponent={
-          <Header note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote} />
+          <Header
+            note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote}
+            filter={
+              section === 'unlocked' && unlocked.length > 0
+                ? { on: heartedOnly, toggle: () => setHeartedOnly((on) => !on) }
+                : undefined
+            }
+          />
         }
         ListEmptyComponent={
           section === 'unlocked' ? (
-            <Empty text="Nothing unlocked yet. Walk to a stop and it opens here." />
+            <Empty
+              text={
+                heartedOnly
+                  ? 'Nothing hearted yet. Heart a memory and it waits here.'
+                  : 'Nothing unlocked yet. Walk to a stop and it opens here.'
+              }
+            />
           ) : section === 'walks' ? (
             walksStatus === 'loading' ? (
               <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
@@ -375,19 +397,35 @@ function SwitcherItem({
   );
 }
 
-/** "3 hearts · 1 note": what came back for something you filed. */
+/** "3 hearts · 1 note · last heart yesterday": what came back for something
+ *  you filed. Never who: a heart is anonymous. */
 function reach(m: LocatedMemory): string | undefined {
+  const last = m.last_hearted_at ? when(Date.parse(m.last_hearted_at)) : null;
   const parts = [
     m.heart_count > 0 && (m.heart_count === 1 ? '1 heart' : `${m.heart_count} hearts`),
     m.note_count > 0 && (m.note_count === 1 ? '1 note' : `${m.note_count} notes`),
+    last && `last heart ${last}`,
   ].filter(Boolean);
   return parts.length ? parts.join(' · ') : undefined;
 }
 
-function Header({ note }: { note: string }) {
+function Header({ note, filter }: { note: string; filter?: { on: boolean; toggle: () => void } }) {
   return (
     <View style={styles.header}>
       {!!note && <Text style={styles.sectionNote}>{note}</Text>}
+      {filter && (
+        <Pressable
+          style={dim(styles.filter)}
+          hitSlop={8}
+          onPress={filter.toggle}
+          accessibilityRole="button"
+          accessibilityLabel="Hearted only"
+          accessibilityState={{ selected: filter.on }}
+        >
+          <Glyph name={filter.on ? 'heart.fill' : 'heart'} size={15} color={filter.on ? color.ink : color.inkFaint} />
+          <Text style={[styles.filterText, filter.on && styles.filterTextOn]}>Hearted</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -474,7 +512,16 @@ const styles = StyleSheet.create({
   switcherRuleActive: { backgroundColor: color.ink },
   // Space, not a rule, sets the list off from the switcher: a rule here and
   // another between rows read as a double line.
-  header: { marginTop: 32, paddingHorizontal: 24 },
+  header: {
+    marginTop: 32,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  filter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  filterText: { ...label, color: color.inkFaint },
+  filterTextOn: { color: color.ink },
   sectionNote: { ...font.prose, fontSize: 15, color: color.inkFaint },
   // A ruled entry, like a catalogue card. No nested card, no shadow. The rule
   // sits between rows (`separator`), inset to the text like iOS's own lists,

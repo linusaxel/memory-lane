@@ -119,3 +119,39 @@ def test_you_cannot_heart_your_own_memory(client, memory_id, db_session):
     assert _heart(client, memory_id).status_code == 403
     assert db_session.execute(text("SELECT count(*) FROM memory_hearts")).scalar() == 0
     assert _heart(client, memory_id, device=OTHER_DEVICE).status_code == 200
+
+
+def _unlocks(client):
+    return client.get(f"/v1/unlocks?device={DEVICE}").json()["memories"]
+
+
+def _mine(client):
+    return client.get(f"/v1/me/memories?device={DEVICE}")
+
+
+def test_the_collection_says_which_ones_you_hearted(client, memory_id):
+    client.post(f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, "lat": LAT, "lng": LNG})
+    assert _unlocks(client)[0]["hearted"] is False
+    _heart(client, memory_id, device=OTHER_DEVICE)
+    assert _unlocks(client)[0]["hearted"] is False, "someone else's heart is not yours"
+    _heart(client, memory_id)
+    assert _unlocks(client)[0]["hearted"] is True
+
+
+def test_the_author_sees_when_the_last_heart_came_never_from_whom(client, memory_id, db_session):
+    user = db_session.execute(
+        text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
+    ).scalar()
+    db_session.execute(
+        text("INSERT INTO devices (id, user_id) VALUES (CAST(:d AS uuid), :u)"),
+        {"d": DEVICE, "u": user},
+    )
+    db_session.execute(
+        text("UPDATE memories SET user_id = :u WHERE id = :m"), {"u": user, "m": memory_id}
+    )
+    db_session.commit()
+    assert _mine(client).json()["memories"][0]["last_hearted_at"] is None
+    _heart(client, memory_id, device=OTHER_DEVICE)
+    # With its zone: a phone reads a naive timestamp as local time.
+    assert _mine(client).json()["memories"][0]["last_hearted_at"].endswith(("Z", "+00:00"))
+    assert OTHER_DEVICE not in _mine(client).text

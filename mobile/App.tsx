@@ -22,6 +22,7 @@ import {
   acceptRoute,
   blockUser,
   endRoute,
+  fetchMine,
   fetchNearby,
   fetchProfile,
   fetchTodaysRoute,
@@ -46,6 +47,7 @@ import { devOpenMemory, devOpenScreen } from './src/devOpen.ts';
 import { startWatching, stopWatching } from './src/geofence.ts';
 import { loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
+import { anyNew } from './src/seen.ts';
 import { FALLBACK_RADIUS_M, reachOf } from './src/reach.ts';
 import {
   around,
@@ -229,8 +231,8 @@ export default function App() {
   // of today's route, not the map's own viewport list - see the effect below.
   const [notifyNearby, setNotifyNearbyState] = useState(false);
   const [unlocked, setUnlocked] = useState<Unlocked>({});
-  // Local convenience only, for a heart button that starts filled on
-  // relaunch - the server's memory_hearts row is the durable fact.
+  // The heart button's filled state and the journal's Hearted filter. The
+  // server's memory_hearts row is the durable fact; /v1/unlocks refills this.
   const [hearted, setHearted] = useState<Set<number>>(new Set());
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
@@ -285,6 +287,8 @@ export default function App() {
   const scheme = useColorScheme();
   // The journal is the only other screen, over a map that stays mounted.
   const [journalOpen, setJournalOpen] = useState(false);
+  // A heart or a note came back for something you filed, unseen yet.
+  const [journalNew, setJournalNew] = useState(false);
 
   // Region reports go through the camera, not straight from the map: a move
   // replayed from onMapReady never reports itself and the map still announces
@@ -433,6 +437,11 @@ export default function App() {
         const earned = await fetchUnlocked(id);
         if (!mounted.current || earned.length === 0) return;
         setUnlocked(await mergeUnlocked(earned));
+        // Hearted on another phone of the account, or before a reinstall.
+        const theirs = earned.filter((memory) => memory.hearted).map((memory) => memory.id);
+        if (theirs.length && mounted.current) {
+          setHearted(await rememberHearted(await loadHearted(), ...theirs));
+        }
       })
       .catch(() => {});
     loadNotifyNearby().then((on) => {
@@ -1115,13 +1124,27 @@ export default function App() {
       })
       .catch(() => {});
   }, []);
+  const checkJournal = useCallback(() => {
+    deviceId()
+      .then((id) => fetchMine(id))
+      .then((page) => anyNew(page.memories))
+      .then((fresh) => mounted.current && setJournalNew(fresh))
+      .catch(() => {});
+  }, []);
+  // Asked at launch, and again each time the journal closes: a look at My
+  // Memories there is what clears it.
+  useEffect(() => {
+    if (!journalOpen) checkJournal();
+  }, [journalOpen, checkJournal]);
   // Back in the app, count what was walked while it was away.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') countSteps();
+      if (state !== 'active') return;
+      countSteps();
+      checkJournal();
     });
     return () => sub.remove();
-  }, [countSteps]);
+  }, [countSteps, checkJournal]);
 
   const heart = useCallback(
     async (memory: LocatedMemory) => {
@@ -1627,12 +1650,14 @@ export default function App() {
             style={styles.pill}
             accessibilityRole="button"
             accessibilityLabel="Journal"
+            accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
               setJournalOpen(true);
             }}
           >
             <Text style={styles.cornerText}>Journal</Text>
+            {journalNew && <View style={styles.newDot} />}
           </GlassButton>
           {/* You and Add, two circles that never merge. Any stage, walk or no
               walk: filing is standing somewhere, not unlocking. Shown even
@@ -1709,6 +1734,7 @@ export default function App() {
             focused={journalOpen}
             refreshKey={mineVersion}
             unlocked={unlockedByOthers}
+            hearted={hearted}
             onOpenMine={openEditor}
             onOpenStop={(memory) => {
               setOpenAt([memory]);
@@ -1846,6 +1872,7 @@ const styles = StyleSheet.create({
   },
   circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   cornerText: { ...label, fontSize: 15, color: color.ink },
+  newDot: { width: 8, height: 8, borderRadius: radius.pill, backgroundColor: color.ember },
   walkBarText: { ...label, fontSize: 15, color: color.paper },
   locate: { position: 'absolute', bottom: 44, alignSelf: 'center' },
   locateText: { ...buttonText, color: color.paper },

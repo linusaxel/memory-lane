@@ -2248,6 +2248,19 @@ server, off by default (F28). Background location costs Play's
 background-location declaration and a screencast review, weeks of latency,
 and that was accepted because the notification cannot work without it.
 
+### Hearts come back in the app, anonymous
+
+Status: Accepted 2026-10-01
+
+The founder chose all three. The author hears about a heart in the journal and
+from a dot on the map's Journal button, with no push and no notifications tab:
+nearly every memory comes from the pipeline and has no author to tell, so a tab
+would be empty for almost everyone. A heart stays anonymous, so there are no
+profiles to build and nothing to moderate. The author sees how many and when
+the last one came, never who. It cannot say "someone stood here", because a
+free open hearts from anywhere. For the person who taps it, a heart is also a
+bookmark: the Hearted filter, read from `/v1/unlocks`.
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

@@ -279,7 +279,12 @@ WHERE m.id = :memory_id AND {VISIBLE}
 MY_MEMORIES_QUERY = f"""
 SELECT {MEMORY_COLUMNS},
     m.created_at,
-    m.hidden
+    m.hidden,
+    -- Stored naive, in UTC: sent with its zone so a phone reads it as UTC.
+    (
+        SELECT MAX(hearted_at) AT TIME ZONE 'UTC' FROM memory_hearts mh
+        WHERE mh.memory_id = m.id
+    ) AS last_hearted_at
 {MEMORY_JOIN}
 WHERE m.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
 ORDER BY m.created_at DESC
@@ -435,7 +440,11 @@ WITH earned AS (
     GROUP BY memory_id
 )
 SELECT {MEMORY_COLUMNS},
-    earned.unlocked_at
+    earned.unlocked_at,
+    EXISTS (
+        SELECT 1 FROM memory_hearts mh
+        WHERE mh.memory_id = m.id AND mh.device_id IN {MY_DEVICES}
+    ) AS hearted
 {MEMORY_JOIN}
 JOIN earned ON earned.memory_id = m.id
 WHERE {VISIBLE}

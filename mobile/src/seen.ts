@@ -31,3 +31,10 @@ export async function saveSeen(current: Seen, memories: Memory[]): Promise<void>
     // Shown as new again next time. Harmless.
   }
 }
+
+/** Did anything you filed get a heart or a note since you last looked? The
+ *  map's Journal button says so. */
+export async function anyNew(memories: Memory[]): Promise<boolean> {
+  const seen = await loadSeen();
+  return memories.some((m) => attention(m) > (seen[m.id] ?? 0));
+}

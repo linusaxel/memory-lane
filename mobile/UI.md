@@ -41,7 +41,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ "Journal"                  top left, every stage, preview included. Glass (src/Glass.tsx)
+├─ "Journal"                  top left, every stage, preview included. Glass (src/Glass.tsx).
+│                              An 8pt ember dot after the word: a heart or a note came back
+│                              on something you filed, unseen (src/seen.ts)
 ├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
 │                              thing to know, rolling when it changes: "2 free today" / "4,210 steps";
 │                              none free, "4,210 steps" / "Opens 4"; short, a small ember ring
@@ -105,7 +107,10 @@ Journal (src/Memories.tsx)     opaque, over the mounted map; × top right
 ├─ Walks                       one row per walk that opened something, date and length;
 │                              a row opens in place to its earned stops, numbered on a
 │                              ember rail. An earned one opens the sheet. Cached for the train
-└─ Memories                    what you added; a row opens Submit as the editor
+├─ Unlocked Memories           what you opened; "♡ Hearted" at the right of its count shows only
+│                              what you hearted
+└─ My Memories                 what you added; a row opens Submit as the editor. "3 hearts ·
+                               1 note · last heart yesterday", never who
    ├─ unlocked / places / added, as numbers
    ├─ your name                what submissions are signed with. Blank = Anonymous
    ├─ account                  which sign-ins, add the other, sign out (back to the gate)

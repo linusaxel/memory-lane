@@ -97,6 +97,10 @@ class Memory(BaseModel):
     # a passive signal, not the content the gate protects.
     heart_count: int = 0
     note_count: int = 0
+    # Only on /v1/unlocks: this account hearted it.
+    hearted: bool = False
+    # Only on /v1/me/memories: when the newest heart came, never from whom.
+    last_hearted_at: datetime | None = None
     tags: list[str]
     confidence: str
     locked: bool = False

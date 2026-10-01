@@ -261,8 +261,9 @@ CREATE TABLE memory_hearts (
     PRIMARY KEY (device_id, memory_id)
 );
 
--- Every read here is "count for this memory," never "this device's hearts" -
--- the opposite of idx_unlocks_device above.
+-- Every read here starts from a memory: its count, its newest heart, or
+-- whether this account hearted it (/v1/unlocks). The primary key covers the
+-- last one.
 CREATE INDEX idx_memory_hearts_memory ON memory_hearts(memory_id);
 
 -- A note on a memory, one per device, only from a device that unlocked it. `id`

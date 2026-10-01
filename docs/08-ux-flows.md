@@ -854,9 +854,14 @@ immediately, the state survives closing and reopening the sheet and
 relaunching the app, and a locked memory shows no heart control at all.
 
 **The author hears back.** Every row under Journal → My Memories says "3 hearts · 1
-note", and a row whose count went up since the last look wears "New" (the tab
-reads "Memories ·" until you open it). The baseline is on the phone
-(`mobile/src/seen.ts`): no push, and the server stores nothing new.
+note · last heart yesterday", never who, and a row whose count went up since
+the last look wears "New" (the tab reads "My Memories ·" until you open it).
+The Journal button on the map wears an ember dot until then. The baseline is on
+the phone (`mobile/src/seen.ts`): no push, and no notifications tab.
+
+**A heart keeps it for you.** Unlocked Memories has a "Hearted" filter that
+shows only what you hearted. `/v1/unlocks` says which, so it survives a
+reinstall and covers every phone on the account.
 
 ---
 

@@ -22,7 +22,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   and away from it answers the locked memory and its distance. Opening one
   this account already has costs nothing. 403 `{reason: "no_steps", steps,
   price}` standing there with nothing to spend (docs/10, "Three free a day, then steps where you stand")
-- `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked
+- `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked.
+  Each says `hearted`: this account hearted it, for the journal's Hearted filter
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
   of that length from there would be: about one stop a km. Stores nothing.
   `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`; `again` is "Show me
@@ -58,7 +59,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   or take down something you filed. Ownership is the only check; the delete is
   real, not the report path's hidden flag
 - `GET /v1/me/memories?device=UUID` - everything this account filed, newest
-  first, hidden ones included
+  first, hidden ones included. `last_hearted_at` is when its newest heart came;
+  who gave it is never sent
 - `POST /v1/memories/{id}/heart` `{device}` - one heart per device, and it does
   not come back off. No position check. Your own memory is a 403
 - `POST /v1/memories/{id}/note` `{device, body}` / `GET /v1/memories/{id}/notes?device=UUID`

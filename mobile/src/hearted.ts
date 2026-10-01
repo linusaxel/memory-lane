@@ -5,8 +5,7 @@
  *  unlocked.ts's sharded scheme - hearting only needs to remember membership,
  *  not cache a full memory object per id. A local convenience only: the
  *  server's memory_hearts row is the durable fact, and re-hearting is a
- *  harmless no-op either way, so losing this on reinstall costs nothing but
- *  a reset button state.
+ *  harmless no-op either way. /v1/unlocks refills it after a reinstall.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,8 +21,8 @@ export async function loadHearted(): Promise<Set<number>> {
   }
 }
 
-export async function rememberHearted(current: Set<number>, id: number): Promise<Set<number>> {
-  const next = new Set(current).add(id);
+export async function rememberHearted(current: Set<number>, ...ids: number[]): Promise<Set<number>> {
+  const next = new Set([...current, ...ids]);
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify([...next]));
   } catch {

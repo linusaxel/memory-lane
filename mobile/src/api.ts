@@ -88,6 +88,10 @@ export type Memory = {
   /** How many visitors left a note. Travels locked too; the notes themselves
    *  come from fetchNotes, and only once you have unlocked it. */
   note_count: number;
+  /** Only from fetchUnlocked: this account hearted it. */
+  hearted?: boolean;
+  /** Only from fetchMine: when the newest heart came, never from whom. */
+  last_hearted_at?: string | null;
   /** Something happened here on today's date. Set on locked memories too — it
    *  is a reason to walk over and gives away nothing the pin did not. The
    *  server sorts these to the top, which is the whole of "resurfacing" - the
