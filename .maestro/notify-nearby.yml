@@ -40,7 +40,6 @@ appId: ${APP_ID}
     latitude: ${Number(START_LAT) + 0.02}
     longitude: ${START_LNG}
 
-- tapOn: "Journal"
 - tapOn: "Settings"
 - scrollUntilVisible:
     element: "Notify me when a memory is nearby"

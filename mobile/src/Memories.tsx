@@ -1,9 +1,9 @@
-/** The journal: the one screen besides the map, opened from its corner. It is
- *  you as well: your photo, name and numbers on top (tap them for Edit
- *  profile), a gear for Settings beside the ×, then three sections of what you
- *  did behind a segmented control. Settings are not a fourth: a section is your
- *  own content, and the account is not (docs/10-decisions.md, "The journal is
- *  you; settings behind a gear").
+/** The journal: a drawer over the map (src/Drawer.tsx), opened from its
+ *  corner or the left edge. It is you as well: your photo, name and numbers on
+ *  top (tap them for Edit profile), then three sections of what you did behind
+ *  a segmented control. Settings are not a fourth, and not here: they are the
+ *  map's cog (docs/10-decisions.md, "The journal is a drawer; settings are the
+ *  map's").
  *
  * **Walks** - the streak, once there is one, then every walk this account
  * took that opened something, newest first (a walk that opened nothing is
@@ -17,9 +17,11 @@
  * Pages at `MINE_PAGE_SIZE`.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
+  Animated,
   FlatList,
   Pressable,
   RefreshControl,
@@ -27,6 +29,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -55,7 +58,6 @@ type Props = {
   unlockedCount: number;
   placeCount: number;
   onEditProfile: () => void;
-  onSettings: () => void;
   streak: number;
   /** Refetches each time this turns true: the journal stays mounted. */
   focused: boolean;
@@ -89,7 +91,6 @@ export default function Memories({
   unlockedCount,
   placeCount,
   onEditProfile,
-  onSettings,
   streak,
   focused,
   refreshKey,
@@ -115,12 +116,28 @@ export default function Memories({
   // the whole look; the look itself is what moves the baseline on.
   const [seen, setSeen] = useState<Seen | null>(null);
   const [looked, setLooked] = useState(false);
+  // Header, sections, list: each slides in a beat after the one above it as
+  // the drawer opens, so it arrives rather than appears.
+  const enter = useRef([0, 1, 2].map(() => new Animated.Value(1))).current;
 
   useEffect(() => {
     if (!focused) return;
     setLooked(false);
     loadSeen().then(setSeen);
-  }, [focused]);
+    AccessibilityInfo.isReduceMotionEnabled().then((still) => {
+      if (still) return;
+      enter.forEach((value) => value.setValue(0));
+      Animated.stagger(
+        50,
+        enter.map((value) => Animated.spring(value, { toValue: 1, tension: 80, friction: 10, useNativeDriver: true })),
+      ).start();
+    });
+  }, [focused, enter]);
+
+  const arrive = (index: number) => ({
+    opacity: enter[index],
+    transform: [{ translateX: enter[index].interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }],
+  });
 
   useEffect(() => {
     if (!seen || section !== 'mine' || mineStatus !== 'ready') return;
@@ -247,7 +264,7 @@ export default function Memories({
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 14 }]}>
-      <View style={styles.top}>
+      <Animated.View style={[styles.top, arrive(0)]}>
         <Pressable
           style={dim(styles.who)}
           onPress={onEditProfile}
@@ -264,129 +281,130 @@ export default function Memories({
             </Text>
           </View>
         </Pressable>
-        <Pressable
-          style={dim(styles.gear)}
-          onPress={onSettings}
-          hitSlop={7}
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-        >
-          <Glyph name="gearshape" size={15} weight="semibold" color={color.inkSoft} />
-        </Pressable>
         <CloseButton onPress={onClose} label="Close journal" />
-      </View>
-      <Switcher section={section} onSelect={setSection} filedNew={anyNew} />
-      {/* The only number in the app that goes up because you went outside.
-          Under Walks only: it counts days you walked, and means nothing beside
-          the other two. Nothing at zero: a 0 is not a thing to show off, and
-          the empty walk list already says how to start. */}
-      {section === 'walks' && streak > 0 && (
-        <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
-          <Text style={styles.streakValue}>{streak}</Text>
-          <Text style={styles.streakLabel}>{streak === 1 ? 'day in a row' : 'days in a row'}</Text>
-        </View>
-      )}
+      </Animated.View>
+      <Animated.View style={arrive(1)}>
+        <Switcher
+          section={section}
+          onSelect={(next) => {
+            if (next !== section) Haptics.selectionAsync().catch(() => {});
+            setSection(next);
+          }}
+          filedNew={anyNew}
+        />
+        {/* The only number in the app that goes up because you went outside.
+            Under Walks only: it counts days you walked, and means nothing beside
+            the other two. Nothing at zero: a 0 is not a thing to show off, and
+            the empty walk list already says how to start. */}
+        {section === 'walks' && streak > 0 && (
+          <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
+            <Text style={styles.streakValue}>{streak}</Text>
+            <Text style={styles.streakLabel}>{streak === 1 ? 'day in a row' : 'days in a row'}</Text>
+          </View>
+        )}
+      </Animated.View>
 
-      <FlatList<Item>
-        style={styles.list}
-        contentContainerStyle={styles.body}
-        data={data}
-        // Two walks can share a date: one per device, and an account has several.
-        keyExtractor={(item) =>
-          item.kind === 'walk'
-            ? `walk-${item.index}`
-            : item.kind === 'stop'
-              ? `walk-${item.walk}-${item.memory.id}`
-              : String(item.memory.id)
-        }
-        renderItem={({ item }) =>
-          item.kind === 'walk' ? (
-            <Row
-              place={walkDate(item.walk.route_date)}
-              summary={item.walk.memories.map((memory) => memory.place.name).join(' · ')}
-              // What it opened, never what it missed: every walk here opened something.
-              meta={`${item.walk.earned} ${item.walk.earned === 1 ? 'memory' : 'memories'} · ${distance(item.walk.budget_meters)}`}
-              onPress={() => setOpenWalk((open) => (open === item.index ? null : item.index))}
-            />
-          ) : item.kind === 'stop' || item.kind === 'unlocked' ? (
-            <Row
-              stop={item.kind === 'stop' ? item.stop : undefined}
-              place={item.memory.place.name}
-              summary={item.memory.summary}
-              distance={distanceTo(item.memory)}
-              onPress={() => onOpenStop(item.memory)}
-            />
-          ) : (
-            <Row
-              place={item.memory.place.name}
-              summary={item.memory.summary}
-              distance={distanceTo(item.memory)}
-              meta={reach(item.memory)}
-              badge={item.memory.hidden ? 'Reported' : isNew(item.memory) ? 'New' : undefined}
-              onPress={() => onOpenMine(item.memory)}
-            />
-          )
-        }
-        // Between rows only, never above the first. A stop's rail is its own
-        // delimiter, so nothing is drawn above one.
-        // FlatList can render one with no trailingItem at all.
-        ItemSeparatorComponent={({ trailingItem }: { trailingItem?: Item }) =>
-          trailingItem?.kind === 'stop' ? null : <View style={styles.separator} />
-        }
-        ListHeaderComponent={
-          <Header
-            note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote}
-            filter={
-              section === 'unlocked' && unlocked.length > 0
-                ? { on: heartedOnly, toggle: () => setHeartedOnly((on) => !on) }
-                : undefined
-            }
-          />
-        }
-        ListEmptyComponent={
-          section === 'unlocked' ? (
-            <Empty
-              text={
-                heartedOnly
-                  ? 'Nothing hearted yet. Heart a memory and it waits here.'
-                  : 'Nothing unlocked yet. Walk to a stop and it opens here.'
+      <Animated.View style={[styles.list, arrive(2)]}>
+        <FlatList<Item>
+          contentContainerStyle={styles.body}
+          data={data}
+          // Two walks can share a date: one per device, and an account has several.
+          keyExtractor={(item) =>
+            item.kind === 'walk'
+              ? `walk-${item.index}`
+              : item.kind === 'stop'
+                ? `walk-${item.walk}-${item.memory.id}`
+                : String(item.memory.id)
+          }
+          renderItem={({ item }) =>
+            item.kind === 'walk' ? (
+              <Row
+                place={walkDate(item.walk.route_date)}
+                summary={item.walk.memories.map((memory) => memory.place.name).join(' · ')}
+                // What it opened, never what it missed: every walk here opened something.
+                meta={`${item.walk.earned} ${item.walk.earned === 1 ? 'memory' : 'memories'} · ${distance(item.walk.budget_meters)}`}
+                onPress={() => setOpenWalk((open) => (open === item.index ? null : item.index))}
+              />
+            ) : item.kind === 'stop' || item.kind === 'unlocked' ? (
+              <Row
+                stop={item.kind === 'stop' ? item.stop : undefined}
+                place={item.memory.place.name}
+                summary={item.memory.summary}
+                distance={distanceTo(item.memory)}
+                onPress={() => onOpenStop(item.memory)}
+              />
+            ) : (
+              <Row
+                place={item.memory.place.name}
+                summary={item.memory.summary}
+                distance={distanceTo(item.memory)}
+                meta={reach(item.memory)}
+                badge={item.memory.hidden ? 'Reported' : isNew(item.memory) ? 'New' : undefined}
+                onPress={() => onOpenMine(item.memory)}
+              />
+            )
+          }
+          // Between rows only, never above the first. A stop's rail is its own
+          // delimiter, so nothing is drawn above one.
+          // FlatList can render one with no trailingItem at all.
+          ItemSeparatorComponent={({ trailingItem }: { trailingItem?: Item }) =>
+            trailingItem?.kind === 'stop' ? null : <View style={styles.separator} />
+          }
+          ListHeaderComponent={
+            <Header
+              note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote}
+              filter={
+                section === 'unlocked' && unlocked.length > 0
+                  ? { on: heartedOnly, toggle: () => setHeartedOnly((on) => !on) }
+                  : undefined
               }
             />
-          ) : section === 'walks' ? (
-            walksStatus === 'loading' ? (
+          }
+          ListEmptyComponent={
+            section === 'unlocked' ? (
+              <Empty
+                text={
+                  heartedOnly
+                    ? 'Nothing hearted yet. Heart a memory and it waits here.'
+                    : 'Nothing unlocked yet. Walk to a stop and it opens here.'
+                }
+              />
+            ) : section === 'walks' ? (
+              walksStatus === 'loading' ? (
+                <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+              ) : walksStatus === 'failed' ? (
+                <Empty text="Can't reach Memory Lane right now." />
+              ) : (
+                <Empty text="No walks yet. Unlock a stop and your walk lands here." />
+              )
+            ) : mineStatus === 'loading' ? (
               <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-            ) : walksStatus === 'failed' ? (
+            ) : mineStatus === 'failed' ? (
               <Empty text="Can't reach Memory Lane right now." />
             ) : (
-              <Empty text="No walks yet. Unlock a stop and your walk lands here." />
+              <Empty text="You haven't left a memory yet. Tap the pin up top to leave one right where you are." />
             )
-          ) : mineStatus === 'loading' ? (
-            <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-          ) : mineStatus === 'failed' ? (
-            <Empty text="Can't reach Memory Lane right now." />
-          ) : (
-            <Empty text="You haven't left a memory yet. Tap the pin up top to leave one right where you are." />
-          )
-        }
-        ListFooterComponent={
-          section === 'mine' && loadingMore ? (
-            <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-          ) : null
-        }
-        onEndReached={section === 'mine' ? loadMore : undefined}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          section === 'mine' ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={color.inkFaint}
-              colors={[color.inkFaint]}
-              progressBackgroundColor={color.paper}
-            />
-          ) : undefined
-        }
-      />
+          }
+          ListFooterComponent={
+            section === 'mine' && loadingMore ? (
+              <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+            ) : null
+          }
+          onEndReached={section === 'mine' ? loadMore : undefined}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            section === 'mine' ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={color.inkFaint}
+                colors={[color.inkFaint]}
+                progressBackgroundColor={color.paper}
+              />
+            ) : undefined
+          }
+        />
+      </Animated.View>
     </View>
   );
 }
@@ -560,15 +578,6 @@ const styles = StyleSheet.create({
   whoText: { flex: 1 },
   title: { ...font.display, fontSize: 28, color: color.ink },
   stats: { ...label, fontSize: 12, marginTop: 2 },
-  // CloseButton's circle, so the two read as one pair.
-  gear: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: color.rule,
-  },
   streak: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 18, paddingHorizontal: 24 },
   streakValue: figure,
   streakLabel: { ...label, fontSize: 12 },

@@ -841,9 +841,34 @@ The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
 regions are queued and replayed from `onMapReady`.
 
-### The journal is you; settings behind a gear
+### The journal is a drawer; settings are the map's
 
 Status: Accepted, 2026-10-01
+
+The founder wanted the app to feel like a game, and a menu that slides over
+the world is how map games keep you on the map. So the journal is a panel
+from the left (`mobile/src/Drawer.tsx`), opened by the Journal pill or a swipe
+off the left edge, with the map still in view and dimmed at its right.
+Settings left the journal for a cog on the map: Pokémon GO, Monster Hunter Now
+and Ingress all keep settings apart from the collection.
+
+**Options considered:** a drawer library (`react-native-drawer-layout`). It
+needs gesture-handler and reanimated, which means a native rebuild for one
+panel, so React Native's own Animated and PanResponder are used instead.
+Hidden navigation costs discoverability (NN/g: on mobile, 44-56% used it
+against 89% for visible navigation), which is why the pill stays the main way
+in and the swipe is a bonus. Google Maps dropped its drawer in 2019; this one
+holds the journal, not the app's main task.
+
+**Consequences:** the map loses pans that start in the 18pt strip at its left
+edge. The drawer stays mounted when shut, `display: none` as the journal
+cover was, so it keeps its lists (UI.md rule 9). The game moves still to come
+are in TODO.md, "Feels like a game".
+
+### The journal is you; settings behind a gear
+
+Status: Superseded, 2026-10-01, by "The journal is a drawer; settings are the
+map's". The journal is still you; Settings moved out of it to the map.
 
 The map had two ways in, Journal top left and a You circle top right, to two
 sheets that looked nothing alike. The journal is what you did, so it is you:

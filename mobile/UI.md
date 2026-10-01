@@ -43,7 +43,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "Journal"                  top left, every stage, preview included. Glass (src/Glass.tsx).
 │                              Your photo, or initial, at 22pt before the word: the journal is
-│                              you too, and the only way in to Settings and Edit profile.
+│                              you too, and the way in to Edit profile. Opens the journal drawer,
+│                              as does a swipe in from the left edge (an 18pt strip, src/Drawer.tsx)
 │                              An 8pt ember dot after the word: a heart or a note came back
 │                              on something you filed, unseen (src/seen.ts)
 ├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
@@ -52,8 +53,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
 │                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
 │                              what opening one costs, where steps come from, wander or walk
-├─ Add                        top right, a 44pt glass circle (an ember `plus`), every stage.
-│                              Files a memory, no walk needed. See "Writing"
+├─ Settings, Add              top right, 44pt glass circles (`gearshape`, an ember `plus`), every
+│                              stage, never merged. Settings opens its sheet; Add files a memory,
+│                              no walk needed. See "Writing"
 ├─ the map filter           top right, under Add, before a walk: a 44pt glass circle opening a
 │                              native menu, All memories / Locked / Unlocked (src/MapFilter.tsx).
 │                              The glyph fills while it hides something. Where map apps keep the
@@ -114,11 +116,15 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
 
 Submit (pageSheet modal, from Add) - see Writing
 
-Journal (src/Memories.tsx)     opaque, over the mounted map. The journal is you as well
+Journal (src/Memories.tsx in src/Drawer.tsx)  a panel from the left over the mounted map,
+│                              screen width less 44 (at most 380), the map dimmed by `scrim` at
+│                              its right. Springs in with a little overshoot and a light haptic on
+│                              landing; header, sections and list arrive a beat apart. Swipe it
+│                              left, tap the map or × to close. Reduce Motion: no spring, no
+│                              cascade. The journal is you as well
 ├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
 │                              it "12 memories · 4 places · 2 added · 5 hearts", zeros left out
-│                              but the first. Tapping it opens Edit profile. Then ⚙ and ×,
-│                              two 30pt quiet circles, top right
+│                              but the first. Tapping it opens Edit profile. × top right
 ├─ Walks                       the streak, large (F27; not at 0), then one row per walk that
 │                              opened something, date and length; a row opens in place to its
 │                              earned stops, numbered on an ember rail. Cached for the train
@@ -128,10 +134,11 @@ Journal (src/Memories.tsx)     opaque, over the mounted map. The journal is you 
                                1 note · last heart yesterday", never who
 
 Settings and Edit profile are sections of nothing: a section is what you did,
-and the account is not (docs/10, "The journal is you; settings behind a gear").
-They open as pageSheet modals over the journal, which stays mounted under them.
+and the account is not (docs/10, "The journal is a drawer; settings are the
+map's"). They open as pageSheet modals, Settings from the map and Edit profile
+over the journal, which stays mounted under it.
 
-Settings (src/Settings.tsx, pageSheet, from ⚙) - "Settings" 34/700, × top right
+Settings (src/Settings.tsx, pageSheet, from the map's ⚙) - "Settings" 34/700, × top right
 ├─ Account                     which sign-ins, add the other, sign out (back to the gate),
 │                              delete; the subscription
 ├─ How unlocking works         the one place that answers "why can't I read this"
@@ -173,7 +180,8 @@ with no network is never stopped at the gate.
 | `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
-| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the journal's ⚙ |
+| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
+| `src/Drawer.tsx` | the journal's panel from the left: the edge swipe, the spring, the scrim |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |
@@ -523,7 +531,6 @@ Each of these exists because something broke or would have been rejected.
     ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
     preview, Journal, Settings, Edit profile, a memory's sheet, Add a memory.
-    Journal's ⚙ sits just before its ×, the same circle.
     Always trailing, never leading: a sheet's own action is not a corner
     word but the solid button at the end of the page (Post, Save). A text
     button stays only where it says more than close: Not now on the paywall.

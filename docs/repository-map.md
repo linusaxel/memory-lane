@@ -120,7 +120,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
-| `mobile/src/Settings.tsx` | Settings: its own sheet, from the journal's gear |
+| `mobile/src/Settings.tsx` | Settings: its own sheet, from the cog on the map |
+| `mobile/src/Drawer.tsx` | The journal's panel from the left: edge swipe, spring, scrim |
 | `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
 | `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |
 | `mobile/src/Paywall.tsx` | The subscription sheet (F35). Prices from the store; "not available" without a key |

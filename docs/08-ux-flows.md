@@ -95,7 +95,7 @@ make it worth having got here.
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
 you, never what it says: standing there, or one of the day's free ones, is
-the only way in. Settings, behind the journal's gear, is where
+the only way in. Settings, behind the cog on the map, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -117,7 +117,7 @@ because nothing is reachable before it (docs/10, *Sign-in comes first*).
    walk (F1), and that press is where location is asked for (F8).
 4. On a new phone: sign in, and the collection is there.
 
-Signing out (Journal → ⚙ → Account) lands back on this screen.
+Signing out (the map's ⚙ → Account) lands back on this screen.
 
 ### Why it is the gate
 
@@ -531,10 +531,11 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, top left of the map with your photo in it, opens the only
-   other screen. It is you as well: your photo, name and numbers on top (a tap
-   is Edit profile, F21), ⚙ for Settings (F17), then *Walks*, *Unlocked
-   Memories* and *My Memories* (F24). *Walks* has the streak on top, large
+1. **Journal**, top left of the map with your photo in it, or a swipe in from
+   the left edge, slides the journal in over the map. It is you as well: your
+   photo, name and numbers on top (a tap is Edit profile, F21), then *Walks*,
+   *Unlocked Memories* and *My Memories* (F24). Settings is not in it: that is
+   the cog on the map (F17). *Walks* has the streak on top, large
    (F27).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
@@ -565,7 +566,7 @@ kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
-**Settings** (the journal's ⚙) exists because every proximity-gated app needs somewhere to
+**Settings** (the cog on the map) exists because every proximity-gated app needs somewhere to
 answer that, and answering it only inside the sheet that provoked the question
 is too late.
 

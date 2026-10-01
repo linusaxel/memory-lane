@@ -434,6 +434,50 @@ at the top (docs/10, "One walk card" and "The credit is a byline").
 
 ---
 
+## Feels like a game
+
+The founder wants the app to feel like a game. Researched 2026-10-01 from
+Pokémon GO, Pikmin Bloom, Monster Hunter Now, Zelda's Compendium, Hollow
+Knight's Hunter's Journal, Duolingo's streak milestones and the "Juice it or
+lose it" talk. The journal became a left drawer over the map the same day
+(`src/Drawer.tsx`), with Settings moved to a cog on the map. The rule for all
+of it: quiet by default, loud only for real progress. If everything sparkles,
+nothing feels special. Checked 2026-10-01.
+
+- [ ] **G1 Name the pill.** Does it still say "Journal" now that it opens a
+      drawer that is you too? The option closest to a game is the face alone,
+      with no word.
+- [ ] **G2 Trainer-card header.** A level and an XP bar under the name, and
+      the streak as a flame chip on the avatar. Decide first what earns XP:
+      memories, steps or walks. The streak's place is a past decision, under
+      Walks only (2fcab97), so moving it reverses that.
+- [ ] **G3 Collection grid.** Pokédex-style tiles in three states: unknown
+      ("?"), a silhouette of a locked memory nearby, and opened. Counts like
+      "12 / 40 found in Indre By", scoped by neighbourhood, never one total
+      ("3 / 500" feels hopeless). A place you have heard every story of gets a
+      gold border, as Hollow Knight marks a completed entry.
+- [ ] **G4 Counters that tick up.** After a walk, opening the drawer rolls
+      memories, places and steps up from their old values, with a haptic on
+      each tick, instead of showing them already counted.
+- [ ] **G5 Streak milestones.** At 7, 30 and 100 days, a moment of its own: a
+      burst over the panel, a success haptic and a sound. Ordinary days stay
+      quiet. Frame it around walks, and consider a rest day so a missed day
+      does not punish (Duolingo's guilt design gets mixed reviews).
+- [ ] **G6 A ceremony for something new.** An unseen unlock pulses. The first
+      time it scrolls into view it scales 0.8 → 1.08 → 1 with a shimmer and a
+      soft chime, then the flag clears.
+- [ ] **G7 Today card.** First in Walks, like Pikmin Bloom's Lifelog: today's
+      trace on a mini map, steps, and a week strip with a dot for each day you
+      walked. Past walks below as postcards carrying what they opened.
+- [ ] **G8 Tabs that follow a swipe.** Swipe between Walks, Unlocked and
+      Mine, with the underline tracking the pager rather than jumping.
+- [ ] **G9 Drawer on the UI thread.** The spring runs on React Native's
+      Animated with the native driver, but the drag is JS-driven. Move it to
+      reanimated + gesture-handler if it drops frames on a real phone. That
+      needs a native rebuild.
+
+---
+
 ## Copenhagen journeys
 
 - [ ] **A long walk still falls short where the map runs out.** (checked

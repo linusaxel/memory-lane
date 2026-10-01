@@ -76,6 +76,7 @@ import { EndPick, EndWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import EditProfile from './src/EditProfile.tsx';
 import Avatar from './src/Avatar.tsx';
+import Drawer from './src/Drawer.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import HowItWorks from './src/HowItWorks.tsx';
@@ -1705,7 +1706,7 @@ export default function App() {
           {stage === 'loading' && <View style={styles.cover} />}
 
           {/* Last, so they sit over the plan page too. Top left the journal,
-              which is you as well; top right filing. Every other overlay
+              which is you as well; top right settings and filing. Every other overlay
               lives at the bottom, and none may cover the unlock. */}
           <GlassButton
             place={[styles.corner, styles.journal]}
@@ -1722,10 +1723,22 @@ export default function App() {
             <Text style={styles.cornerText}>Journal</Text>
             {journalNew && <View style={styles.newDot} />}
           </GlassButton>
-          {/* Add. Any stage, walk or no walk: filing is standing somewhere,
-              not unlocking. Shown even with no position - the press asks for
-              it. */}
+          {/* Settings and Add, two circles. Any stage, walk or no walk: filing
+              is standing somewhere, not unlocking. Add shows even with no
+              position - the press asks for it. */}
           <View style={styles.tools}>
+            <GlassButton
+              style={styles.circle}
+              hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                setSettingsOpen(true);
+              }}
+            >
+              <Glyph name="gearshape" size={20} weight="medium" color={color.ink} />
+            </GlassButton>
             <GlassButton
               style={styles.circle}
               hitSlop={4}
@@ -1758,7 +1771,7 @@ export default function App() {
           )}
         </View>
 
-        <View style={[styles.cover, !journalOpen && styles.hidden]}>
+        <Drawer open={journalOpen} onOpen={() => setJournalOpen(true)} onClose={() => setJournalOpen(false)}>
           <Memories
             device={device}
             profile={profile}
@@ -1766,7 +1779,6 @@ export default function App() {
             unlockedCount={collected.length}
             placeCount={placesUnlocked}
             onEditProfile={() => setProfileOpen(true)}
-            onSettings={() => setSettingsOpen(true)}
             streak={profile?.streak ?? 0}
             focused={journalOpen}
             refreshKey={mineVersion}
@@ -1780,7 +1792,7 @@ export default function App() {
             onClose={() => setJournalOpen(false)}
             position={position}
           />
-        </View>
+        </Drawer>
 
         <Settings
           visible={settingsOpen}
@@ -1899,8 +1911,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: color.paper },
   screen: { flex: 1 },
   devDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: color.paperRaised, backgroundColor: color.ember },
-  // display:none rather than unmounting: the map keeps its region and its pins.
-  hidden: { display: 'none' },
   // What the map sits behind while the app finds out whether today's walk is
   // already accepted - a flash of the plan page would be a lie.
   cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.paper },
@@ -1931,7 +1941,7 @@ const styles = StyleSheet.create({
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
   recenter: { position: 'absolute', right: 18 },
-  // Top right, under Add, where map apps keep the layer button; bottom
+  // Top right, under Settings/Add, where map apps keep the layer button; bottom
   // left is Apple's logo.
   mapFilter: { position: 'absolute', top: 116, right: 18 },
 });
