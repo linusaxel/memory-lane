@@ -74,6 +74,8 @@ import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
 import { EndPick, EndWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
+import EditProfile from './src/EditProfile.tsx';
+import Avatar from './src/Avatar.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import HowItWorks from './src/HowItWorks.tsx';
@@ -274,7 +276,8 @@ export default function App() {
   // read, so a signed-in launch never flashes the sign-in screen.
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
-  const [youOpen, setYouOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
@@ -1702,8 +1705,8 @@ export default function App() {
           {stage === 'loading' && <View style={styles.cover} />}
 
           {/* Last, so they sit over the plan page too. Top left the journal,
-              top right you and filing: every other overlay lives at the
-              bottom, and none may cover the unlock. */}
+              which is you as well; top right filing. Every other overlay
+              lives at the bottom, and none may cover the unlock. */}
           <GlassButton
             place={[styles.corner, styles.journal]}
             style={styles.pill}
@@ -1715,25 +1718,14 @@ export default function App() {
               setJournalOpen(true);
             }}
           >
+            <Avatar url={profile?.avatar_url} name={displayName} size={22} />
             <Text style={styles.cornerText}>Journal</Text>
             {journalNew && <View style={styles.newDot} />}
           </GlassButton>
-          {/* You and Add, two circles that never merge. Any stage, walk or no
-              walk: filing is standing somewhere, not unlocking. Shown even
-              with no position - the press asks for it. */}
+          {/* Add. Any stage, walk or no walk: filing is standing somewhere,
+              not unlocking. Shown even with no position - the press asks for
+              it. */}
           <View style={styles.tools}>
-            <GlassButton
-              style={styles.circle}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityLabel="You and settings"
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setYouOpen(true);
-              }}
-            >
-              <Glyph name="person" size={20} weight="medium" color={color.ink} />
-            </GlassButton>
             <GlassButton
               style={styles.circle}
               hitSlop={4}
@@ -1769,6 +1761,12 @@ export default function App() {
         <View style={[styles.cover, !journalOpen && styles.hidden]}>
           <Memories
             device={device}
+            profile={profile}
+            displayName={displayName}
+            unlockedCount={collected.length}
+            placeCount={placesUnlocked}
+            onEditProfile={() => setProfileOpen(true)}
+            onSettings={() => setSettingsOpen(true)}
             streak={profile?.streak ?? 0}
             focused={journalOpen}
             refreshKey={mineVersion}
@@ -1785,19 +1783,12 @@ export default function App() {
         </View>
 
         <Settings
-          visible={youOpen}
-          onClose={() => setYouOpen(false)}
+          visible={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
           onSubscribe={() => {
-            setYouOpen(false);
+            setSettingsOpen(false);
             setPaywallOpen(true);
           }}
-          unlockedCount={collected.length}
-          placeCount={placesUnlocked}
-          submittedCount={profile?.submitted ?? 0}
-          heartsReceived={profile?.hearts_received ?? 0}
-          displayName={displayName}
-          onDisplayName={rename}
-          nameError={nameError}
           device={device}
           profile={profile}
           onProfile={accountChanged}
@@ -1812,6 +1803,17 @@ export default function App() {
           }}
           notifyNearby={notifyNearby}
           onNotifyNearby={handleNotifyNearby}
+        />
+
+        <EditProfile
+          visible={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          device={device}
+          profile={profile}
+          onProfile={accountChanged}
+          displayName={displayName}
+          onDisplayName={rename}
+          nameError={nameError}
         />
 
         <MemorySheet
@@ -1929,7 +1931,7 @@ const styles = StyleSheet.create({
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
   recenter: { position: 'absolute', right: 18 },
-  // Top right, under You/Add, where map apps keep the layer button; bottom
+  // Top right, under Add, where map apps keep the layer button; bottom
   // left is Apple's logo.
   mapFilter: { position: 'absolute', top: 116, right: 18 },
 });

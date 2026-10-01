@@ -95,7 +95,7 @@ make it worth having got here.
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
 you, never what it says: standing there, or one of the day's free ones, is
-the only way in. The You sheet is where
+the only way in. Settings, behind the journal's gear, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -117,7 +117,7 @@ because nothing is reachable before it (docs/10, *Sign-in comes first*).
    walk (F1), and that press is where location is asked for (F8).
 4. On a new phone: sign in, and the collection is there.
 
-Signing out (You → Account) lands back on this screen.
+Signing out (Journal → ⚙ → Account) lands back on this screen.
 
 ### Why it is the gate
 
@@ -531,9 +531,11 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, top left of the map, opens the only other screen: *Walks*,
-   *Unlocked Memories* and *My Memories* (F24). *Walks* has the streak on
-   top, large (F27).
+1. **Journal**, top left of the map with your photo in it, opens the only
+   other screen. It is you as well: your photo, name and numbers on top (a tap
+   is Edit profile, F21), ⚙ for Settings (F17), then *Walks*, *Unlocked
+   Memories* and *My Memories* (F24). *Walks* has the streak on top, large
+   (F27).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
    says so.
@@ -563,17 +565,18 @@ kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
-The journal's **You** section exists because every proximity-gated app needs somewhere to
+**Settings** (the journal's ⚙) exists because every proximity-gated app needs somewhere to
 answer that, and answering it only inside the sheet that provoked the question
 is too late.
 
-1. What this device has done: memories unlocked, places visited.
+1. What this device has done, memories unlocked and places visited, is the
+   journal's header, right above it.
 2. **How unlocking works** — the radius, that the *server* withholds the text,
    and that city-centroid memories are open to everyone because asking somebody
    to walk to a guess would be a lie.
 3. Location state, with the route to Settings.
-4. The name their submissions are signed with, and the sign-in that makes a
-   collection survive a new phone, and signing out — see F22.
+4. The sign-in that makes a collection survive a new phone, and signing out —
+   see F22. The name is Edit profile's (F21).
 
 ## F18 · Stand somewhere with nothing in it — **Removed from the app**
 
@@ -674,14 +677,18 @@ Settings → About → **Contact us** opens the policy at its Contact section.
 ## F21 · Be somebody — **Implemented**
 
 **Who:** anybody who has filed something, or is about to.
-**Trigger:** the You sheet (top right of the map). The submit sheet asks for no
-name: a memory is signed by the account that filed it.
+**Trigger:** Journal → the header (your photo and name) → Edit profile. The
+submit sheet asks for no name: a memory is signed by the account that filed it.
 
 1. A name, saved as it is typed. No Save button to forget to press.
-2. It appears under every memory they file, as "Left by —".
-3. Blank is Anonymous, and clearing it has to keep working: the name is the one
-   thing here other people see.
-4. The You sheet gains a third figure once there is one — how many they have
+2. A photo: Choose photo or Take photo, cropped square, and Remove photo. It
+   uploads as it is picked, through the same checks and EXIF strip as a
+   memory's photo, and replacing it deletes the old file.
+3. Both appear under every memory they file, as "Left by —" with the photo,
+   or the initial without one.
+4. Blank is Anonymous, and clearing it has to keep working: the name and the
+   photo are the things here other people see.
+5. The journal's header gains "added" once there is one — how many they have
    filed, beside how many they unlocked and in how many places.
 
 A name needs no sign-in behind it. A `users` row is a display name and an id
@@ -755,7 +762,7 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. Journal, You and Add sit in the top corners at every
+   no hotspots card. Journal and Add sit in the top corners at every
    stage; there are no tabs. There is no
    "Near me": Center on me recentres, and "Turn on location" shows only while
    there is no position.
@@ -858,7 +865,7 @@ note · last heart yesterday", never who, and a row whose count went up since
 the last look wears "New" (the tab reads "My Memories ·" until you open it).
 The Journal button on the map wears an ember dot until then. The baseline is on
 the phone (`mobile/src/seen.ts`): no push, and no notifications tab.
-The You page counts every heart they ever got (`hearts_received` on `/v1/me`).
+The journal's header counts every heart they ever got (`hearts_received` on `/v1/me`).
 
 **A heart keeps it for you.** Unlocked Memories has a "Hearted" filter that
 shows only what you hearted. `/v1/unlocks` says which, so it survives a
@@ -1106,7 +1113,7 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 
 **Who:** a free account standing on a pin with none of today's free unlocks
 left and fewer than 1,000 steps. **Trigger:** **Skip the steps** on the card over the
-map, the hold refused `no_steps` (a stale balance), or **Subscribe** in You.
+map, the hold refused `no_steps` (a stale balance), or **Subscribe** in Settings.
 
 1. On the map, anyone standing on a locked pin gets the ring, walk or no walk.
    Under the place it says what the hold spends: "Free · 3 left today", then
@@ -1122,7 +1129,7 @@ map, the hold refused `no_steps` (a stale balance), or **Subscribe** in You.
 3. A purchase or a restore asks the server to read the store back
    (`POST /v1/me/subscription`); only its answer opens anything. The sheet
    closes when it says subscribed.
-4. A subscriber's hold spends nothing. You shows "Subscribed until …" and
+4. A subscriber's hold spends nothing. Settings shows "Subscribed until …" and
    **Manage subscription**; signed in and not subscribed, **Subscribe**.
 
 Steps are the phone's own count (Core Motion, iOS only), read when the app

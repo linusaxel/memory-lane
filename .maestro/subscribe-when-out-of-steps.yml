@@ -19,10 +19,12 @@ appId: ${APP_ID}
       LOCATION: inuse
 
 # Reading the profile creates nothing; a name mints the account, spent.
-- tapOn: "You and settings"
+- tapOn: "Journal"
+- tapOn: "Edit profile"
 - tapOn: "The name your memories are signed with"
 - inputText: "Broke"
-- tapOn: "Close"
+- tapOn: "Close profile"
+- tapOn: "Close journal"
 - launchApp:
     clearState: false
 
@@ -38,11 +40,13 @@ appId: ${APP_ID}
 - assertVisible: "Subscriptions aren't available right now\\."
 - tapOn: "Not now"
 
-- tapOn: "You and settings"
+- tapOn: "Journal"
+- tapOn: "Edit profile"
 - tapOn: "The name your memories are signed with"
 - eraseText: 10
 - inputText: "Paid"
-- tapOn: "Close"
+- tapOn: "Close profile"
+- tapOn: "Close journal"
 
 # The profile is read at launch; a relaunch reads the subscription.
 - launchApp:

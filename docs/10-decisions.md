@@ -533,6 +533,21 @@ upload path is a trust boundary in three places — filename, extension, and the
 claim about what the bytes are — and none of the three comes from the client.
 `api/media.py` has the detail.
 
+### A profile photo is public, like the name
+
+Status: Accepted, 2026-10-01
+
+It signs what you file, beside the name, because every memory is public and
+the photo is part of who left it. So it gets what a memory's photo gets:
+`api/media.py`'s checks and EXIF strip, and deletion with the account.
+
+It is `users.avatar_path`, not a `media` row: a row with no memory is what
+`pipeline/sweep.py` reaps, so sweep reads the column as claimed instead.
+Replacing it deletes the old file, and it skips the daily upload quota for
+that reason: one user holds one photo, so a replacement costs the disk
+nothing. Google's picture claim is not used: Apple has none, and it would be a
+fetch from a third party on sign-in.
+
 ### `REPORT_THRESHOLD` is the whole moderation system
 
 Status: Accepted
@@ -825,6 +840,28 @@ still be ready after a mount effect fires.
 The app renders `null` until the two font families load, so a mount effect's
 recentre fires into nothing and leaves everybody at the fallback zoom. Pending
 regions are queued and replayed from `onMapReady`.
+
+### The journal is you; settings behind a gear
+
+Status: Accepted, 2026-10-01
+
+The map had two ways in, Journal top left and a You circle top right, to two
+sheets that looked nothing alike. The journal is what you did, so it is you:
+one button, your photo in it, and on top of the journal your photo, name and
+numbers. Tapping them is Edit profile. Its sections stay what you did: Walks,
+Unlocked Memories, My Memories.
+
+**Options considered:** Account, Settings and About as more sections beside
+those. Rejected: a segmented control switches between views of one thing (HIG,
+Segmented controls), and none of Strava, AllTrails, Komoot, Instagram,
+Duolingo or Day One mixes content and configuration in one row. All of them
+keep sections for your content and put settings behind a gear or a menu, with
+sign out and delete at the bottom of it. Settings is used rarely, and opening
+it is leaving what you were doing (HIG, Settings), so it is a sheet, not a tab.
+
+**Consequences:** Settings and Edit profile are pageSheet modals over the
+journal rather than views inside it. Settings holds a Switch, and a native
+control under the hidden cover has to unmount (UI.md rule 9).
 
 ### Glass was tried and reverted
 

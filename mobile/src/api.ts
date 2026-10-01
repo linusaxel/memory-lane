@@ -38,6 +38,8 @@ export type Author = {
   id: string;
   /** Never empty: the server renders an unnamed submitter "Anonymous". */
   name: string;
+  /** Server-relative, like a MediaItem's; null with no profile photo. */
+  avatar_url?: string | null;
 };
 
 /** A photo or a recording hanging off a memory. */
@@ -124,7 +126,7 @@ export type Memory = {
 
 /** Media urls come back server-relative so the host can change without a
  *  release. Nothing else in the app needs to know where uploads live. */
-export function mediaUrl(item: MediaItem): string {
+export function mediaUrl(item: { url: string }): string {
   return `${BASE}${item.url}`;
 }
 
@@ -509,6 +511,8 @@ export async function fetchWalked(device: string, signal?: AbortSignal): Promise
 export type Profile = {
   user_id: string | null;
   display_name: string | null;
+  /** Server-relative; null with no profile photo. */
+  avatar_url: string | null;
   submitted: number;
   hearts_received: number;
   unlocked: number;
@@ -615,6 +619,24 @@ export async function uploadMedia(
   const res = await fetch(`${BASE}/v1/media`, { method: 'POST', body: form });
   if (!res.ok) throw new Error(`API ${res.status}`);
   return (await res.json()) as MediaItem;
+}
+
+/** Set the profile photo, replacing any before it. Not behind
+ *  REQUEST_TIMEOUT_MS, for the same reason as uploadMedia. */
+export async function uploadAvatar(device: string, uri: string, mime: string): Promise<Profile> {
+  const form = new FormData();
+  form.append('device', device);
+  const file = new File(uri);
+  form.append('file', { name: file.name, type: mime, bytes: () => file.bytes() } as never);
+  const res = await fetch(`${BASE}/v1/me/avatar`, { method: 'POST', body: form });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as Profile;
+}
+
+export async function removeAvatar(device: string): Promise<Profile> {
+  const res = await fetch(`${BASE}/v1/me/avatar?device=${device}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as Profile;
 }
 
 /** File a memory of where you are standing. One coordinate, because it is both

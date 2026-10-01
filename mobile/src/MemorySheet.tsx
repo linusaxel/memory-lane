@@ -23,6 +23,7 @@ import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
 import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
+import Avatar from './Avatar.tsx';
 import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration, happened, sourceAction } from './format.ts';
@@ -417,7 +418,12 @@ export default function MemorySheet({
               </Text>
               {peeking && (memory.author || memory.source_name) && (
                 <View style={styles.peekFrom}>
-                  {memory.author && <Glyph name="person" size={12} color={color.inkFaint} />}
+                  {memory.author &&
+                    (memory.author.avatar_url ? (
+                      <Avatar url={memory.author.avatar_url} name={memory.author.name} size={16} />
+                    ) : (
+                      <Glyph name="person" size={12} color={color.inkFaint} />
+                    ))}
                   <Text style={styles.meta} numberOfLines={1}>
                     {memory.author
                       ? `Left by ${memory.author.name}`
@@ -430,9 +436,12 @@ export default function MemorySheet({
                   the AI Act wants it said (UI.md rule 11). */}
               {!locked &&
                 (memory.author ? (
-                  <View style={styles.byline}>
-                    <Text style={styles.bylineLabel}>Left by</Text>
-                    <Text style={styles.bylineName}>{memory.author.name}</Text>
+                  <View style={[styles.byline, styles.bylineRow]}>
+                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={36} />
+                    <View>
+                      <Text style={styles.bylineLabel}>Left by</Text>
+                      <Text style={styles.bylineName}>{memory.author.name}</Text>
+                    </View>
                   </View>
                 ) : memory.content?.source ? (
                   <View style={styles.byline}>
@@ -725,6 +734,7 @@ const styles = StyleSheet.create({
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
   byline: { gap: 2, marginTop: 12 },
+  bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   bylineLabel: { ...label, fontSize: 12 },
   bylineName: { ...font.displaySemi, fontSize: 16, color: color.ink },
   // Quiet on purpose. It has to be findable and must not be the thing the eye

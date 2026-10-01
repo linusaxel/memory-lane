@@ -42,6 +42,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ "Journal"                  top left, every stage, preview included. Glass (src/Glass.tsx).
+│                              Your photo, or initial, at 22pt before the word: the journal is
+│                              you too, and the only way in to Settings and Edit profile.
 │                              An 8pt ember dot after the word: a heart or a note came back
 │                              on something you filed, unseen (src/seen.ts)
 ├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
@@ -50,9 +52,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
 │                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
 │                              what opening one costs, where steps come from, wander or walk
-├─ You, Add                   top right, 44pt glass circles (`person`, an ember `plus`), every stage,
-│                              two shapes that never merge (the founder, 2026-10-01).
-│                              You opens Settings; Add files a memory, no walk needed. See "Writing"
+├─ Add                        top right, a 44pt glass circle (an ember `plus`), every stage.
+│                              Files a memory, no walk needed. See "Writing"
 ├─ the map filter           top right, under Add, before a walk: a 44pt glass circle opening a
 │                              native menu, All memories / Locked / Unlocked (src/MapFilter.tsx).
 │                              The glyph fills while it hides something. Where map apps keep the
@@ -113,25 +114,36 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
 
 Submit (pageSheet modal, from Add) - see Writing
 
-You (src/Settings.tsx, pageSheet modal, from You) - "You" 34/700, × top right, then the settings
-
-Journal (src/Memories.tsx)     opaque, over the mounted map; × top right
-├─ the streak, large           F27: days in a row with a walk stop unlocked. Not shown at 0
-├─ Walks                       one row per walk that opened something, date and length;
-│                              a row opens in place to its earned stops, numbered on a
-│                              ember rail. An earned one opens the sheet. Cached for the train
+Journal (src/Memories.tsx)     opaque, over the mounted map. The journal is you as well
+├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
+│                              it "12 memories · 4 places · 2 added · 5 hearts", zeros left out
+│                              but the first. Tapping it opens Edit profile. Then ⚙ and ×,
+│                              two 30pt quiet circles, top right
+├─ Walks                       the streak, large (F27; not at 0), then one row per walk that
+│                              opened something, date and length; a row opens in place to its
+│                              earned stops, numbered on an ember rail. Cached for the train
 ├─ Unlocked Memories           what you opened; "♡ Hearted" at the right of its count shows only
 │                              what you hearted
 └─ My Memories                 what you added; a row opens Submit as the editor. "3 hearts ·
                                1 note · last heart yesterday", never who
-   ├─ unlocked / places / added / hearts, as numbers; hearts is every one on what you filed
-   ├─ your name                what submissions are signed with. Blank = Anonymous
-   ├─ account                  which sign-ins, add the other, sign out (back to the gate)
-   ├─ how unlocking works      the one place that answers "why can't I read this"
-   ├─ location state + action
-   └─ privacy policy, and what signing out does and does not delete
 
-There are no tabs. Before a walk the map draws what is around you, locked and
+Settings and Edit profile are sections of nothing: a section is what you did,
+and the account is not (docs/10, "The journal is you; settings behind a gear").
+They open as pageSheet modals over the journal, which stays mounted under them.
+
+Settings (src/Settings.tsx, pageSheet, from ⚙) - "Settings" 34/700, × top right
+├─ Account                     which sign-ins, add the other, sign out (back to the gate),
+│                              delete; the subscription
+├─ How unlocking works         the one place that answers "why can't I read this"
+├─ Location, Notifications     state + action; the Switch is why this is not inside the cover (rule 9)
+└─ About                       privacy policy, contact, OpenStreetMap
+
+Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/700, × top right
+├─ the photo, 112pt            Choose photo / Take photo, square crop; Remove photo. Public,
+│                              like the name: it signs what you file (src/Avatar.tsx)
+└─ Your name                   what submissions are signed with, saved as typed. Blank = Anonymous
+
+There are no tabs on the map. Before a walk the map draws what is around you, locked and
 unlocked, behind a filter; on a walk it draws only that walk. Three pins a day
 open from anywhere, from the peek; after that, standing on one and 1,000 steps.
 The top centre is the step count and what is free today; the walk is a side way
@@ -160,8 +172,10 @@ with no network is never stopped at the gate.
 | `src/wallet.ts` | what the pill says and whether standing on a pin can pay. Pure, and unit-tested |
 | `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
-| `src/Memories.tsx` | the journal: streak, walks, unlocked, and what you filed |
-| `src/Settings.tsx` | You: name, account, how unlocking works. Its own sheet |
+| `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
+| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the journal's ⚙ |
+| `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
+| `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
@@ -266,8 +280,8 @@ of the app and its tracking had drifted three ways before anybody noticed.
 
 **`buttonText`** is 600 at 17, the HIG's Headline size; pair it with
 `color.paper` on ember and `color.ink` on the quiet and outlined buttons.
-**`input`** is the whole text-field block, which renders in both You and Submit
-and must not drift between them.
+**`input`** is the whole text-field block, which renders in both Edit profile
+and Submit and must not drift between them.
 
 **Scale**: 34 display (screen titles) · 30 (place name) · 52 `figure` (the
 gate's distance, the streak, the stats) · 36 `figureSmall` (the peek's
@@ -279,12 +293,12 @@ quote) · 19/31 prose (the summary — the hero when nothing is attached) · 16/
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
-(Journal, You, Add, the walk card, Center on me, Plan a walk, Turn on
+(Journal, Add, the walk card, Center on me, Plan a walk, Turn on
 location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
 only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
 tint in view**: Turn on location's, while it shows. The walk card is
-untinted: the next stop's pin is the ember on the map. No `GlassContainer`: You and Add merging read as
+untinted: the next stop's pin is the ember on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
 and that is the material, not a bug. A glass
@@ -319,14 +333,14 @@ Match a row; do not add one between two rows.
 | 12 | **the most common gap**: sheet actions, section contents, avatar to text |
 | 14 | input and audio-row padding, the meta row's horizontal gap |
 | 16 | the pill's horizontal padding, a floating card's distance from the edge |
-| 18 | a rule to the content under it — a byline, a source line, a You section |
+| 18 | a rule to the content under it — a byline, a source line, a Settings section |
 | 20 | the sheet action bar, Submit's body |
 | 22 | the sheet body's top padding, the empty-area card |
-| 24 | **the screen gutter.** Collection, You and the sheet all indent by this |
+| 24 | **the screen gutter.** Journal, Settings and the sheet all indent by this |
 | 26 | the sheet's section rhythm, and the gap between collection rows |
 
 Anything above 26 is a one-off (28 and 32 above a section or a page's first
-line, 36 between the stats, 38 above a You section, 40 of gate padding, 72 of
+line, 38 above a Settings section, 40 of gate padding, 72 of
 bottom padding) and stays a literal. So is 11 of chip padding in Submit, which
 makes a 40pt chip with the label's line box.
 
@@ -508,7 +522,8 @@ Each of these exists because something broke or would have been rejected.
     the least accurate tap on the screen (Hoober 2017: corner targets need
     ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
-    preview, You, Journal, a memory's sheet, Add a memory.
+    preview, Journal, Settings, Edit profile, a memory's sheet, Add a memory.
+    Journal's ⚙ sits just before its ×, the same circle.
     Always trailing, never leading: a sheet's own action is not a corner
     word but the solid button at the end of the page (Post, Save). A text
     button stays only where it says more than close: Not now on the paywall.
@@ -927,7 +942,7 @@ Writing is F5 (file a memory), F20 (report or block) and F21 (be somebody).
 Sign-in is F22, the first flow, and it is Google and Apple only — see
 `src/SignIn.tsx` for why, and for why neither button works in Expo Go.
 
-The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens from You,
+The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens from Settings,
 or when a hold is refused for want of steps, never on top of a sheet. No
 price is ever written in the app; the store's `priceString` is. Without a
 RevenueCat key it says "Subscriptions aren't available right now.", never a

@@ -85,7 +85,13 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `subscribed_until`, and what unlocks spend: `free_per_day`, `free_unlocks`,
   `steps`, `steps_per_unlock`, and `steps_counted_until`, where the next count
   starts. `hearts_received` counts every heart on what the account filed.
+  `avatar_url` is the profile photo, server-relative, or null.
   The GET creates nothing
+- `POST /v1/me/avatar` (multipart: `device`, `file`) - set the profile photo,
+  deleting the one it replaces; `DELETE /v1/me/avatar?device=UUID` clears it.
+  Both return the `Profile`. Photos only, through `/v1/media`'s checks and
+  EXIF strip; anything else is 415. A memory's `author` carries the same
+  `avatar_url`
 - `POST /v1/me/steps` `{device, since, steps}` - credit the steps the phone
   counted from `since`, which must be `steps_counted_until`, and move it to
   now. A stale `since` credits nothing; either way it returns the `Profile`.
@@ -101,7 +107,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   without it. Every token's `nonce`, `link_token`'s too, must be the SHA-256
   hex of `device`, or 401: a copied token signs in only the phone it was minted for
 - `DELETE /v1/me?device=UUID` - delete the account and everything it made:
-  memories, media, sign-ins, the subscription row, and every device on it with
+  memories, media, the profile photo, sign-ins, the subscription row, and every device on it with
   their unlocks, hearts, notes and walks. 204
 - `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
   there is no token to revoke

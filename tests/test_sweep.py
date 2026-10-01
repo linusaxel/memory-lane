@@ -106,6 +106,23 @@ def test_a_file_with_no_row_is_taken_once_it_is_old(db_session, media_dir):
     assert not stray.exists()
 
 
+def test_a_profile_photo_is_left_alone_however_old(db_session, media_dir):
+    """It has no media row on purpose, so it must not read as a crash."""
+    import os
+    import time
+
+    avatar = media_dir / "face.png"
+    avatar.write_bytes(b"x" * 10)
+    old = time.time() - 3 * 24 * 3600
+    os.utime(avatar, (old, old))
+    db_session.execute(
+        text("INSERT INTO users (id, avatar_path) VALUES (gen_random_uuid(), 'face.png')")
+    )
+
+    assert sweep(db_session, hours=24, apply=True) == (0, 0)
+    assert avatar.exists()
+
+
 def test_a_file_being_written_right_now_is_left_alone(db_session, media_dir):
     """It has no row yet, which is exactly what an upload in flight looks
     like. Age is the only thing that tells them apart."""

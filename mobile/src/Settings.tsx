@@ -1,9 +1,9 @@
-/** You: a sheet of its own, opened from the map's top-right corner.
+/** Settings: a sheet of its own, opened from the journal's gear.
  *
- * Three jobs: say what this device has done, hold the name submissions are
- * signed with, and answer "why can I not read this". Every app with a proximity
- * gate needs somewhere to answer that, and a sheet you only see once you are
- * already frustrated is too late.
+ * The account, and the answer to "why can I not read this". Every app with a
+ * proximity gate needs somewhere to answer that, and a sheet you only see once
+ * you are already frustrated is too late. Who you are (the photo, the name,
+ * the numbers) is the journal's header, not here.
  */
 
 import {
@@ -14,7 +14,6 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
@@ -25,25 +24,13 @@ import { count } from './format.ts';
 import SignIn from './SignIn.tsx';
 import Glyph from './Glyph.tsx';
 import type { Permission } from './types.ts';
-import { button, buttonText, color, dim, figure, font, input, label } from './theme.ts';
+import { button, buttonText, color, dim, font, label } from './theme.ts';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   /** Close this and open the paywall: one sheet at a time. */
   onSubscribe: () => void;
-  unlockedCount: number;
-  placeCount: number;
-  submittedCount: number;
-  /** Every heart on what you filed, all time. */
-  heartsReceived: number;
-  /** Empty means Anonymous. Saved as it is typed, so there is no Save button
-   *  to forget to press. */
-  displayName: string;
-  onDisplayName: (next: string) => void;
-  /** Set when the last save did not land. The field keeps the typed value
-   *  either way, so without this the name looks saved and is not. */
-  nameError: string | null;
   device: string | null;
   profile: Profile | null;
   onProfile: (next: Profile) => void;
@@ -59,13 +46,6 @@ type Props = {
 export default function Settings({
   visible,
   onClose,
-  unlockedCount,
-  placeCount,
-  submittedCount,
-  heartsReceived,
-  displayName,
-  onDisplayName,
-  nameError,
   device,
   profile,
   onProfile,
@@ -82,40 +62,9 @@ export default function Settings({
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
-          <Text style={styles.title}>You</Text>
-          <CloseButton onPress={onClose} />
+          <Text style={styles.title}>Settings</Text>
+          <CloseButton onPress={onClose} label="Close settings" />
         </View>
-        <View style={styles.stats}>
-          <Stat value={unlockedCount} label={unlockedCount === 1 ? 'memory' : 'memories'} />
-          <Stat value={placeCount} label={placeCount === 1 ? 'place' : 'places'} />
-          {submittedCount > 0 && <Stat value={submittedCount} label="added" />}
-          {heartsReceived > 0 && (
-            <Stat value={heartsReceived} label={heartsReceived === 1 ? 'heart' : 'hearts'} />
-          )}
-        </View>
-        <Text style={styles.statsNote}>
-          {unlockedCount === 0
-            ? 'Nothing unlocked yet. Your first walk fixes that.'
-            : 'Everything you unlock stays readable, even back home.'}
-        </Text>
-
-        <Section title="Your name">
-          <Text style={styles.note}>
-            Shown on the memories you leave. Leave it blank to stay anonymous.
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={displayName}
-            onChangeText={onDisplayName}
-            placeholder="Anonymous"
-            placeholderTextColor={color.inkFaint}
-            maxLength={60}
-            autoCapitalize="words"
-            accessibilityLabel="The name your memories are signed with"
-          />
-          {nameError && <Text style={styles.saveFailed}>{nameError}</Text>}
-        </Section>
-
         <Section title="Account">
           <SignIn device={device} profile={profile} onProfile={onProfile} />
           {profile?.subscribed ? (
@@ -215,15 +164,6 @@ export default function Settings({
   );
 }
 
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
@@ -243,11 +183,6 @@ const styles = StyleSheet.create({
   // The journal's title bar, so the two sheets read as one app.
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { ...font.display, fontSize: 34, color: color.ink },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 36, rowGap: 16, marginTop: 12 },
-  stat: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  statValue: figure,
-  statLabel: { ...label, fontSize: 12 },
-  statsNote: { ...font.prose, fontSize: 15, color: color.inkFaint, marginTop: 10 },
   section: { marginTop: 38, gap: 12, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
   sectionTitle: { ...label },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
@@ -255,13 +190,6 @@ const styles = StyleSheet.create({
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   action: { ...button.outline, alignSelf: 'flex-start', marginTop: 6 },
   actionText: { ...buttonText, color: color.ink },
-  input: {
-    ...input,
-  },
-  // Seal, matching Submit's error line. The accent is spoken for by the unlock
-  // everywhere else; an error that failed to save is the one other thing the
-  // app says in red, and splitting that across two treatments would be worse.
-  saveFailed: { ...font.ui, fontSize: 13, lineHeight: 20, color: color.ember },
   link: { alignSelf: 'flex-start' },
   linkText: {
     ...font.uiMedium,

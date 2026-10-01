@@ -1,5 +1,9 @@
-/** The journal: the one screen besides the map, opened from its corner.
- *  Three sections behind a segmented control:
+/** The journal: the one screen besides the map, opened from its corner. It is
+ *  you as well: your photo, name and numbers on top (tap them for Edit
+ *  profile), a gear for Settings beside the ×, then three sections of what you
+ *  did behind a segmented control. Settings are not a fourth: a section is your
+ *  own content, and the account is not (docs/10-decisions.md, "The journal is
+ *  you; settings behind a gear").
  *
  * **Walks** - the streak, once there is one, then every walk this account
  * took that opened something, newest first (a walk that opened nothing is
@@ -11,8 +15,6 @@
  * **My Memories** - what you filed. Always the server's, because it has to
  * show a thing no local cache was told about: one enough people reported.
  * Pages at `MINE_PAGE_SIZE`.
- *
- * You and settings are not here: they have their own corner on the map.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -32,8 +34,10 @@ import {
   fetchWalked,
   type Coordinates,
   type LocatedMemory,
+  type Profile,
   type WalkedRoute,
 } from './api.ts';
+import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate, when } from './format.ts';
@@ -44,6 +48,14 @@ import { color, dim, figure, font, label } from './theme.ts';
 
 type Props = {
   device: string | null;
+  profile: Profile | null;
+  /** As typed, ahead of the profile coming back. */
+  displayName: string;
+  /** Everything earned, your own included, as against `unlocked`. */
+  unlockedCount: number;
+  placeCount: number;
+  onEditProfile: () => void;
+  onSettings: () => void;
   streak: number;
   /** Refetches each time this turns true: the journal stays mounted. */
   focused: boolean;
@@ -72,6 +84,12 @@ type Item =
 
 export default function Memories({
   device,
+  profile,
+  displayName,
+  unlockedCount,
+  placeCount,
+  onEditProfile,
+  onSettings,
   streak,
   focused,
   refreshKey,
@@ -230,7 +248,31 @@ export default function Memories({
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 14 }]}>
       <View style={styles.top}>
-        <Text style={styles.title}>Journal</Text>
+        <Pressable
+          style={dim(styles.who)}
+          onPress={onEditProfile}
+          accessibilityRole="button"
+          accessibilityLabel="Edit profile"
+        >
+          <Avatar url={profile?.avatar_url} name={displayName} size={44} />
+          <View style={styles.whoText}>
+            <Text style={styles.title} numberOfLines={1}>
+              {displayName.trim() || 'Journal'}
+            </Text>
+            <Text style={styles.stats} numberOfLines={1}>
+              {stats(unlockedCount, placeCount, profile)}
+            </Text>
+          </View>
+        </Pressable>
+        <Pressable
+          style={dim(styles.gear)}
+          onPress={onSettings}
+          hitSlop={7}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+        >
+          <Glyph name="gearshape" size={15} weight="semibold" color={color.inkSoft} />
+        </Pressable>
         <CloseButton onPress={onClose} label="Close journal" />
       </View>
       <Switcher section={section} onSelect={setSection} filedNew={anyNew} />
@@ -347,6 +389,18 @@ export default function Memories({
       />
     </View>
   );
+}
+
+/** What Settings' figures used to say, in one line under the name. A count
+ *  that is still zero says nothing, bar the first. */
+function stats(unlocked: number, places: number, profile: Profile | null): string {
+  const parts = [`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'}`];
+  if (places > 0) parts.push(`${places} ${places === 1 ? 'place' : 'places'}`);
+  const added = profile?.submitted ?? 0;
+  if (added > 0) parts.push(`${added} added`);
+  const hearts = profile?.hearts_received ?? 0;
+  if (hearts > 0) parts.push(`${hearts} ${hearts === 1 ? 'heart' : 'hearts'}`);
+  return parts.join(' · ');
 }
 
 function Switcher({
@@ -499,9 +553,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
     paddingHorizontal: 24,
   },
-  title: { ...font.display, fontSize: 34, color: color.ink },
+  who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  whoText: { flex: 1 },
+  title: { ...font.display, fontSize: 28, color: color.ink },
+  stats: { ...label, fontSize: 12, marginTop: 2 },
+  // CloseButton's circle, so the two read as one pair.
+  gear: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.rule,
+  },
   streak: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 18, paddingHorizontal: 24 },
   streakValue: figure,
   streakLabel: { ...label, fontSize: 12 },

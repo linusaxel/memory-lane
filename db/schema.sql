@@ -124,6 +124,9 @@ CREATE TABLE users (
     -- Nullable: contributing without being named is allowed, and the API
     -- renders those "Anonymous".
     display_name VARCHAR(60),
+    -- A photo under MEDIA_DIR, public like the name. Not a media row: those
+    -- with no memory are what pipeline/sweep.py reaps.
+    avatar_path TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     -- What opens memories: three free a day from anywhere, then 1,000 steps
     -- each standing there. The day the free ones were counted on and how many

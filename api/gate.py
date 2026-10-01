@@ -131,7 +131,12 @@ def row_author(row) -> Author | None:
     user_id = getattr(row, "user_id", None)
     if user_id is None:
         return None
-    return Author(id=str(user_id), name=getattr(row, "author_name", None) or "Anonymous")
+    avatar = getattr(row, "author_avatar", None)
+    return Author(
+        id=str(user_id),
+        name=getattr(row, "author_name", None) or "Anonymous",
+        avatar_url=media_url(avatar) if avatar else None,
+    )
 
 
 def notes_response(rows) -> NotesResponse:

@@ -106,6 +106,7 @@ MEMORY_COLUMNS = f"""
     c.published_at,
     m.user_id,
     au.display_name as author_name,
+    au.avatar_path as author_avatar,
     {MEMORY_MEDIA},
     {MEMORY_HEART_COUNT},
     {MEMORY_NOTE_COUNT},

@@ -118,9 +118,11 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here, inside out once opened |
 | `mobile/src/MapFilter.tsx` | The map's filter: all, locked or unlocked pins |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
-| `mobile/src/Memories.tsx` | **The journal.** Streak, past walks, what you filed, and You |
+| `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
-| `mobile/src/Settings.tsx` | You: its own sheet, from the map's top-right corner |
+| `mobile/src/Settings.tsx` | Settings: its own sheet, from the journal's gear |
+| `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
+| `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |
 | `mobile/src/Paywall.tsx` | The subscription sheet (F35). Prices from the store; "not available" without a key |
 | `mobile/src/steps.ts` | Steps walked, from Core Motion, credited to the account. iOS only |
 | `mobile/src/wallet.ts` | What the steps pill says, and whether standing on a pin can pay; `wallet.test.ts` beside it |
