@@ -1033,6 +1033,9 @@ export default function App() {
     return [...ringHere].sort((a, b) => a.away - b.away)[0] ?? null;
   }, [ringHere, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
+  // A hold would open it, so the ring is the one ember thing and the bottom
+  // row's middle goes quiet, still there (docs/10, "One ember button that changes").
+  const ringLive = !!ringFor && !short;
   const ringAt = Math.max(
     0,
     ringHere.findIndex(({ group, index }) => group.memories[index].id === ringMemory?.id),
@@ -1546,7 +1549,7 @@ export default function App() {
               }}
             />
           )}
-          {stage === 'map' && firstPicks.length > 0 && openAt.length === 0 && !journalOpen && (
+          {stage === 'map' && firstPicks.length > 0 && openAt.length === 0 && !journalOpen && !ringFor && (
             <FirstPick
               picks={firstPicks}
               located={!!position}
@@ -1715,7 +1718,7 @@ export default function App() {
                 {stage === 'map' && (
                   <GlassButton
                     style={styles.pill}
-                    tint={color.ember}
+                    tint={ringLive ? undefined : color.ember}
                     accessibilityRole="button"
                     accessibilityLabel="Plan a walk"
                     onPress={() => {
@@ -1726,14 +1729,19 @@ export default function App() {
                       setStage('preview');
                     }}
                   >
-                    <Glyph name="figure.walk" size={16} weight="semibold" color={color.paper} />
-                    <Text style={styles.planText}>Plan a walk</Text>
+                    <Glyph
+                      name="figure.walk"
+                      size={16}
+                      weight="semibold"
+                      color={ringLive ? color.ink : color.paper}
+                    />
+                    <Text style={[styles.planText, ringLive && { color: color.ink }]}>Plan a walk</Text>
                   </GlassButton>
                 )}
                 {/* The walk's one card (F9): where next and how far, a tap to see
-                    it, and ✕ to end it. Standing on a stop, UnlockHere takes its
-                    place and carries its progress line. */}
-                {walking && onRoute && !!position && !ringMemory && (
+                    it, and ✕ to end it. Standing on a stop it stays under the
+                    ring, so the walk can still end there. */}
+                {walking && onRoute && !!position && (
                   <GlassButton
                     place={styles.wide}
                     style={styles.walkCard}

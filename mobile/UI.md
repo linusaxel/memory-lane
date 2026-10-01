@@ -63,13 +63,14 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              at the other end. Between them the one thing to do, which changes:
 │                              Turn on location (ember) on a walk with no position, Plan a walk
 │                              (ember, `figure.walk`) -> Preview before a walk, the walk card on
-│                              one, nothing while the ring shows
+│                              one. It never empties: while a hold would open the ring, Plan a
+│                              walk drops to plain glass (ink) and the walk card stays under it
 ├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
 │    "2 of 5 · 4.1 km left" (the next stop's number, as on its pin), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
-│    walking. Never a plain tap. Standing at any stop, the lock (src/UnlockHere.tsx) takes
-│    its place: the ring low above the bottom row, and under it a card with the place, year
+│    walking. Never a plain tap. Standing at any stop, the lock (src/UnlockHere.tsx) comes
+│    up above it: the ring low above the bottom row, and under it a card with the place, year
 │    or source, and ‹ › with "2 of 3" when more than one is in reach. Everyone gets it on
 │    the map before a walk too. Tapping a pin in reach points it at that pin; the hold opens
 │    the sheet on the story. Short of steps there is no ring to hold: the faded Approach

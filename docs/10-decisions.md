@@ -950,9 +950,19 @@ keeping the ember for the important one. So the map is one frame:
   settings-type things trail, as on Snap Map.
 - Bottom, edge to edge at 70pt: Add (an ember `plus` on glass), the one
   ember thing, Center on me. The middle changes: Turn on location on a walk
-  with no position, Plan a walk before a walk, the walk card on one, nothing
-  while the ring shows. Center on me is always there, filled while the map is
-  on you, so the row never loses an end.
+  with no position, Plan a walk before a walk, the walk card on one. Center
+  on me is always there, filled while the map is on you, so the row never
+  loses an end.
+- The middle never empties, and the ember goes to the one thing that is the
+  moment. Standing where a hold opens a memory, that is the ring: Plan a walk
+  drops to plain glass but stays, and on a walk the card stays under the
+  ring. Short of steps the ring opens nothing, so Plan a walk keeps the ember:
+  walking is how steps come. The welcome pick card steps aside for the ring.
+
+Hiding the middle under the ring, tried first, left two dead ends: the ring
+has no dismiss and stays up while you stand in reach, so in a dense city you
+could never plan a walk from your doorstep, and at a stop the walk card and
+its ✕ were gone, so a walk could not end there.
 
 Bottom centre is where the field puts its one action (Pokémon GO, Ingress
 moved its ring there "to be easily reached with your thumb", Strava's

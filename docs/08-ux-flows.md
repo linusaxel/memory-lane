@@ -792,8 +792,8 @@ anyone else's collection or the local unlock cache.
    one after it takes over. Only the preview draws the loop, washed-out ember under
    the street names (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md
    §3a).
-5. Reaching a stop lights its pin, and the unlock ring takes the walk card's
-   place over the map; a hold opens it. Any stop, in any order — the
+5. Reaching a stop lights its pin, and the unlock ring comes up above the walk card,
+   which stays, so the walk can end there; a hold opens it. Any stop, in any order — the
    numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the card moves on to the next.
