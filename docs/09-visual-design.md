@@ -601,7 +601,7 @@ an earn (F6), the words in You (F7), a Lock Screen widget (F8).
 
 ---
 
-# 10. The walk, the heart and the credit — **researched 2026-10-01, not built**
+# 10. The walk, the heart and the credit — **researched and built 2026-10-01**
 
 The founder, on the simulator: the top "On a walk · 1 of 7" pill and the
 bottom "7.9 km to go" pill don't say what they mean, and there's no recenter.

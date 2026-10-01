@@ -16,6 +16,8 @@ function memory(id: number, name: string, lat: number, lng: number): LocatedMemo
       url: 'https://x',
       timestamp_start: 0,
       source: null,
+      kind: 'video',
+      published_year: null,
     },
     tags: [],
     confidence: 'high',

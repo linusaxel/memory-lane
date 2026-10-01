@@ -22,10 +22,12 @@ type Props = {
    *  only how far off it is and the way round it. */
   short: number;
   onSkip: () => void;
+  /** On a walk, its progress line: this card is the walk card on arrival. */
+  walk?: string;
   place?: StyleProp<ViewStyle>;
 };
 
-export default function UnlockHere({ memory, onUnlock, onHold, busy, error, cost, short, onSkip, place }: Props) {
+export default function UnlockHere({ memory, onUnlock, onHold, busy, error, cost, short, onSkip, walk, place }: Props) {
   const from = [memory.year, memory.source_name].filter(Boolean).join(' · ');
   const waiting = [
     memory.media_count === 1
@@ -45,6 +47,7 @@ export default function UnlockHere({ memory, onUnlock, onHold, busy, error, cost
           {memory.place.name}
         </Text>
         {from !== '' && <Text style={label}>{from}</Text>}
+        {walk && <Text style={label}>{walk}</Text>}
         {waiting.length > 0 && (
           <Text style={styles.waiting}>{waiting.join(' · ')} waiting</Text>
         )}

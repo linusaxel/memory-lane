@@ -1758,7 +1758,7 @@ want to change later, so each one carries its reason:
   are not what the phone's GPS says was walked. Nothing records the track, and
   foreground-only location (UI.md rule 2) could not record it faithfully.
 - **No share button.** Decided, not deferred. A screenshot of the card still
-  works, and the card carries no memory text, so rule 11's credit strip has
+  works, and the card carries no memory text, so rule 11's credit has
   nothing to credit.
 
 ### Street legs stop at the stops
@@ -2262,6 +2262,55 @@ free open hearts from anywhere. For the person who taps it, a heart is also a
 bookmark: the Hearted filter, read from `/v1/unlocks`. Hearts were one-way
 until the same day, when the founder asked for undo: a second tap takes it
 back, for the whole account, since that is what `hearted` reports.
+
+### One walk card, and a drag lets go of the camera
+
+Status: Accepted 2026-10-01 (F9, F10; research in docs/09 part 10).
+Supersedes the walk bar of F25/F34 and the pinned camera of F25.
+
+The walk was two pills that didn't say what they were: "On a walk · 1 of 7"
+at the top, which ended the walk on a plain tap, and "7.9 km to go" at the
+bottom. Now it is one card at the bottom: "Next: <place> · 300 m" over
+"2 of 7 · 4.1 km left". The number is the next stop's, as on its pin. A tap
+zooms out around you and the next stop. Its ✕ ends the walk, and with stops
+left the EndWalk card asks first. That's Google's navigation footer, Apple
+Maps' walking card and VoiceMap: none ends on a plain tap.
+
+- **Arrival is UnlockHere.** Standing on a stop, the ring card takes the walk
+  card's slot and carries its second line. The hold stays the one way to open
+  (*Unlock on the map*). A second "Open story" tap would be a way round it.
+- **The camera follows until you drag.** Before, it was pinned (no pan, no
+  rotate), and `NextStopArrow` pointed at an off-screen stop because you
+  couldn't go and look. Now a one-finger drag stops the follow, and a "Center
+  on me" circle shows until it is tapped (Google's recenter). A pinch is two
+  fingers and keeps following. A drag is caught with `onTouchMove`, because
+  Apple Maps never reports `isGesture` and `onPanDrag` fires on iOS only with
+  scrolling off. `NextStopArrow` is gone.
+- **Off a walk, "Center on me"** shows once the map is off you by more than
+  a sixth of the screen. It's custom: `showsMyLocationButton` is Android-only.
+  No heading mode.
+
+### The credit is a byline, and the button says where it goes
+
+Status: Accepted 2026-10-01 (F11, F12). Supersedes the bottom credit strip
+that UI.md rule 11 described before.
+
+- **Credit at the top.** "Retold from <source>" (with the avatar and the
+  episode or book) or "Left by X" sits under the place name in the fixed
+  heading. A screenshot still keeps the place and the credit together (*Core,
+  not polish*), and the AI-written story is labelled at first exposure, which
+  is what AI Act Art 50(4) asks for. The story no longer ends on metadata
+  (*The open story has a shape*). The server card (`api/card.py`) uses the
+  same order.
+- **The bottom is the button and the heart.** The button names the kind, from
+  `content.kind` (`content.source_type`) and, for a newspaper,
+  `published_year`: Watch from 12:04, Watch on YouTube, Read it in the book,
+  Read the 1856 article, Read it at <source>. "Source" is a researcher's word
+  (NN/g, information scent). `sourceAction` in `mobile/src/format.ts`.
+- **The heart doesn't move.** A bare count goes before the glyph, in a
+  two-digit `tabular-nums` slot kept even at zero (Bluesky's PostControls).
+  VoiceOver hears "Heart" with `selected` and the count as its value, not
+  the state in the label (HIG, toggles).
 
 ### Rejected approaches, do not retry
 

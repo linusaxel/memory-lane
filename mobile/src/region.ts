@@ -88,8 +88,8 @@ export function simplifyPath<T extends { lat: number; lng: number }>(
 }
 
 /** A region centred on `center`, wide enough to show every point in `points`
- *  clear of the overlays at the edges. Walk pins the camera on the person, so
- *  "show me the next stop" zooms out around them rather than refitting. */
+ *  clear of the overlays at the edges. A walk follows the person, so "show me
+ *  the next stop" zooms out around them rather than refitting. */
 export function around(
   center: { lat: number; lng: number },
   points: { lat: number; lng: number }[],
@@ -110,44 +110,4 @@ export function around(
     latitudeDelta: Math.max(lat * 3.6, minDelta),
     longitudeDelta: Math.max(lng * 3.6, minDelta),
   };
-}
-
-export type Inset = { top: number; right: number; bottom: number; left: number };
-
-/** Where on a `width` x `height` north-up map showing `region` the arrow to
- *  `target` sits, and which way it points in degrees clockwise from up; null
- *  while `target` is inside the map less `visible`, what covers its edges. The
- *  arrow is where the line from the centre to the target leaves the map less
- *  `inset`, which also keeps the arrow itself clear of them.
- *
- *  ponytail: degrees are treated as linear across the screen, which Mercator
- *  is not; at street scale the error is under a pixel. */
-export function edgeArrow(
-  region: Region,
-  target: { lat: number; lng: number },
-  width: number,
-  height: number,
-  inset: Inset,
-  visible: Inset = inset,
-): { x: number; y: number; angle: number } | null {
-  const dx = ((target.lng - region.longitude) / region.longitudeDelta) * width;
-  const dy = (-(target.lat - region.latitude) / region.latitudeDelta) * height;
-  const cx = width / 2;
-  const cy = height / 2;
-  const right = width - inset.right - cx;
-  const left = inset.left - cx;
-  const down = height - inset.bottom - cy;
-  const up = inset.top - cy;
-  if (
-    dx >= visible.left - cx &&
-    dx <= width - visible.right - cx &&
-    dy >= visible.top - cy &&
-    dy <= height - visible.bottom - cy
-  )
-    return null;
-  const s = Math.min(
-    dx > 0 ? right / dx : dx < 0 ? left / dx : Infinity,
-    dy > 0 ? down / dy : dy < 0 ? up / dy : Infinity,
-  );
-  return { x: cx + dx * s, y: cy + dy * s, angle: (Math.atan2(dx, -dy) * 180) / Math.PI };
 }

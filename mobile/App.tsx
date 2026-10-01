@@ -76,6 +76,7 @@ import Settings from './src/Settings.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import StepsPill from './src/StepsPill.tsx';
+import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
 import { walletOf } from './src/wallet.ts';
 import Submit from './src/Submit.tsx';
@@ -89,7 +90,6 @@ import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
 import { identify } from './src/purchases.ts';
-import NextStopArrow from './src/NextStopArrow.tsx';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
@@ -834,24 +834,25 @@ export default function App() {
         )
       : null;
   const routeLeft = position ? pathMeters(routePath) : null;
-  // The count is the walk bar's, so the pill says only where and how far.
-  const routeLabel = routeDone
-    ? 'Every stop unlocked'
-    : routeStarted && nextRouteStop
-      ? `Next: ${nextRouteStop.place.name}` +
-        (toNextStop === null ? '' : ` · ${distance(toNextStop)}`)
-      : routeLeft === null
-        ? "Today's walk"
-        : `${distance(routeLeft)} to go`;
+  // The walk card's two lines: where next, then how far through and how far left.
+  const routeLabel =
+    routeDone || !nextRouteStop
+      ? 'Every stop unlocked'
+      : `Next: ${nextRouteStop.place.name}` +
+        (toNextStop === null ? '' : ` · ${distance(toNextStop)}`);
+  const routeProgress =
+    `${nextRouteStop ? (routePositionById.get(nextRouteStop.id) ?? routeUnlockedCount + 1) : routeTotal} of ${routeTotal}` +
+    (routeLeft === null || routeDone ? '' : ` · ${distance(routeLeft)} left`);
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
   const groups = useMemo(() => groupByLocation(pins, precision), [pins, precision]);
 
-  // On the walk the camera is pinned on the person: it follows them, cannot be
-  // dragged off them, and a pinch that drifts the centre is put back. Where the
-  // next stop is off screen, NextStopArrow points the way instead.
-  const pinned = stage === 'walk' && !!position && !walkDone;
+  // On the walk the camera follows the person, and a pinch that drifts the
+  // centre is put back. A drag lets go until "Center on me" (Google's pattern).
+  const [following, setFollowing] = useState(true);
+  useEffect(() => setFollowing(true), [stage]);
+  const pinned = stage === 'walk' && !!position && !walkDone && following;
   useEffect(() => {
     // Never over a flight: `region` is still where it took off, so following
     // from it undid the pill's zoom-out, and a chain of flights each cut short
@@ -999,6 +1000,16 @@ export default function App() {
     return here.sort((a, b) => a.away - b.away)[0] ?? null;
   }, [withinReach, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
+  // "Center on me": on a walk once a drag let go; before one, once the map is
+  // off you by more than a sixth of the screen. Never over the ring.
+  const showRecenter =
+    !!position &&
+    !ringFor &&
+    (stage === 'walk'
+      ? !following && !walkDone
+      : stage === 'map' &&
+        metersBetween(region.latitude, region.longitude, position.lat, position.lng) >
+          region.latitudeDelta * 111_000 * 0.15);
 
   // Reaching a stop is the moment the app is for. The transition, not the
   // state: ringFor gets a new identity on every 5m position update. Light,
@@ -1342,11 +1353,15 @@ export default function App() {
             userInterfaceStyle={scheme === 'dark' ? 'dark' : 'light'}
             customMapStyle={MUTED_ANDROID_STYLE}
             showsPointsOfInterests={false}
-            scrollEnabled={!pinned}
             rotateEnabled={!pinned}
             pitchEnabled={!pinned}
             onRegionChangeComplete={onRegionChangeComplete}
             onMapReady={onMapReady}
+            // A one-finger drag is a look around: stop following. A pinch is
+            // two and keeps it. Apple Maps never reports isGesture.
+            onTouchMove={(e) => {
+              if (pinned && e.nativeEvent.touches.length === 1) setFollowing(false);
+            }}
             onPress={(e) => {
               if (stage !== 'end') return;
               const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
@@ -1449,14 +1464,6 @@ export default function App() {
 
           </MapView>
 
-          {pinned && nextRouteStop && (
-            <NextStopArrow
-              region={region}
-              target={nextRouteStop.place.coordinates}
-              dark={scheme === 'dark'}
-            />
-          )}
-
           {/* In the same bottom slot every other floating control here shares -
               never a second region of the screen. Above "Turn on location"
               while that shows, in its place once there is a position. */}
@@ -1469,6 +1476,7 @@ export default function App() {
               error={unlockError}
               short={short}
               onSkip={() => setPaywallOpen(true)}
+              walk={walking && onRoute ? routeProgress : undefined}
               cost={
                 !profile || profile.subscribed
                   ? null
@@ -1489,25 +1497,17 @@ export default function App() {
               }}
             />
           )}
-          {walking && onRoute && !ringMemory && !showDone && (
+          {/* The walk's one card (F9): where next and how far, a tap to see
+              it, and ✕ to end it. Standing on a stop, UnlockHere takes its
+              place and carries its progress line. */}
+          {walking && onRoute && !ringMemory && !showDone && !confirmEnd && (
             <GlassButton
               place={[styles.route, pillSlot]}
-              style={styles.pill}
-              accessibilityRole="button"
-              accessibilityLabel={
-                routeStarted && nextRouteStop
-                  ? `Next stop: ${nextRouteStop.place.name}.`
-                  : `${routeLabel}.`
-              }
-              accessibilityHint={
-                routeDone
-                  ? 'Shows the whole walk'
-                  : routeStarted
-                    ? 'Centers the map on you and the next stop'
-                    : "Starts today's walk"
-              }
+              style={styles.walkCard}
+              accessible={false}
               onPress={() => {
                 setRouteStarted(true);
+                setFollowing(true);
                 const you = positionRef.current;
                 if (you) {
                   // Pinned on you, so zoomed out around you, not refitted.
@@ -1538,7 +1538,48 @@ export default function App() {
                 }
               }}
             >
-              <Text style={styles.routeText}>{routeLabel}</Text>
+              <View
+                style={styles.walkText}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`${routeLabel}. ${routeProgress}.`}
+                accessibilityHint={
+                  routeDone ? 'Shows the whole walk' : 'Shows you and the next stop'
+                }
+              >
+                <Text style={styles.walkNext} numberOfLines={1}>
+                  {routeLabel}
+                </Text>
+                <Text style={styles.walkLeft} numberOfLines={1}>
+                  {routeProgress}
+                </Text>
+              </View>
+              {/* Nothing left to reach, nothing to lose, so no are-you-sure. */}
+              <CloseButton
+                label="End walk"
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  if (routeDone) endWalk();
+                  else setConfirmEnd(true);
+                }}
+              />
+            </GlassButton>
+          )}
+          {showRecenter && (
+            <GlassButton
+              place={[styles.recenter, { bottom: walking && onRoute && position ? 120 : 44 }]}
+              style={styles.circle}
+              hitSlop={4}
+              accessibilityRole="button"
+              accessibilityLabel="Center on me"
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                const you = positionRef.current;
+                if (stage === 'walk') setFollowing(true);
+                else if (you) flyTo({ ...region, latitude: you.lat, longitude: you.lng });
+              }}
+            >
+              <Glyph name="location.fill" size={18} weight="medium" color={color.ink} />
             </GlassButton>
           )}
 
@@ -1707,28 +1748,6 @@ export default function App() {
               }}
             />
           )}
-          {/* Under it: the walk's one signal, and how it ends. Nothing left to
-              reach, nothing to lose, so no are-you-sure. */}
-          {walking && !showDone && !confirmEnd && (
-            <GlassButton
-              place={styles.walkBar}
-              style={styles.pill}
-              // One tint in view: Turn on location's, while it shows.
-              tint={position ? color.ember : undefined}
-              accessibilityRole="button"
-              accessibilityLabel={`On a walk · ${routeUnlockedCount} of ${routeTotal} unlocked.`}
-              accessibilityHint="Ends the walk"
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                if (routeDone) endWalk();
-                else setConfirmEnd(true);
-              }}
-            >
-              <Text style={position ? styles.walkBarText : styles.cornerText} numberOfLines={1}>
-                On a walk · {routeUnlockedCount} of {routeTotal}
-              </Text>
-            </GlassButton>
-          )}
         </View>
 
         <View style={[styles.cover, !journalOpen && styles.hidden]}>
@@ -1864,7 +1883,6 @@ const styles = StyleSheet.create({
   corner: { position: 'absolute', top: 64 },
   journal: { left: 18 },
   steps: { alignSelf: 'center' },
-  walkBar: { position: 'absolute', top: 116, alignSelf: 'center' },
   tools: { position: 'absolute', top: 64, right: 18, flexDirection: 'row', gap: 8 },
   pill,
   // The size of a button, not a pill: it is the one thing to do.
@@ -1878,10 +1896,13 @@ const styles = StyleSheet.create({
   circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   cornerText: { ...label, fontSize: 15, color: color.ink },
   newDot: { width: 8, height: 8, borderRadius: radius.pill, backgroundColor: color.ember },
-  walkBarText: { ...label, fontSize: 15, color: color.paper },
   locate: { position: 'absolute', bottom: 44, alignSelf: 'center' },
   locateText: { ...buttonText, color: color.paper },
   // Directly above "Turn on location" while that shows, in its place after.
   route: { position: 'absolute', bottom: 100, alignSelf: 'center' },
-  routeText: { ...label, fontSize: 15, color: color.ink },
+  walkCard: { ...pill, minHeight: 56, paddingLeft: 20, paddingRight: 12, gap: 12, minWidth: 260, maxWidth: 360 },
+  walkText: { flex: 1, gap: 2 },
+  walkNext: { ...label, fontSize: 15, color: color.ink },
+  walkLeft: { ...label, fontSize: 13 },
+  recenter: { position: 'absolute', right: 18 },
 });

@@ -3,7 +3,6 @@ import { test } from 'node:test';
 
 import {
   around,
-  edgeArrow,
   metersBetween,
   pathMeters,
   simplifyPath,
@@ -53,64 +52,14 @@ test('a hop between sidewalks is smoothed, a street corner is kept', () => {
   assert.deepEqual(drawn, [path[0], path[3], path[4]]);
 });
 
-const VIEW = { latitude: 40.748, longitude: -73.985, latitudeDelta: 0.01, longitudeDelta: 0.01 };
-const NONE = { top: 0, right: 0, bottom: 0, left: 0 };
-
-test('no arrow for a stop already on screen', () => {
-  assert.equal(edgeArrow(VIEW, { lat: 40.749, lng: -73.984 }, 400, 800, NONE), null);
-});
-
-test('a stop due east is an arrow on the right edge, pointing right', () => {
-  const arrow = edgeArrow(VIEW, { lat: 40.748, lng: -73.97 }, 400, 800, NONE);
-  assert.ok(arrow);
-  assert.equal(arrow.x, 400);
-  assert.equal(arrow.y, 400);
-  assert.equal(arrow.angle, 90);
-});
-
-test('a stop north-west leaves by whichever edge the line crosses first', () => {
-  // Twice as far north as west, on a screen twice as tall as wide: the corner.
-  const arrow = edgeArrow(VIEW, { lat: 40.758, lng: -73.995 }, 400, 800, NONE);
-  assert.ok(arrow);
-  assert.ok(Math.abs(arrow.x) < 1e-9 && Math.abs(arrow.y) < 1e-9);
-  // Up and to the left, steeper than 45 because the screen is tall.
-  assert.ok(Math.abs(arrow.angle - (Math.atan2(-1, 2) * 180) / Math.PI) < 1e-9);
-});
-
-test('the inset is the edge: a stop under the pill still gets its arrow', () => {
-  const underPill = { lat: 40.7445, lng: -73.985 };
-  assert.equal(edgeArrow(VIEW, underPill, 400, 800, NONE), null);
-  const arrow = edgeArrow(VIEW, underPill, 400, 800, { ...NONE, bottom: 160 });
-  assert.ok(arrow);
-  assert.equal(arrow.y, 640);
-  assert.equal(arrow.angle, 180);
-});
-
-test('a stop in the arrow margin is on screen: no arrow', () => {
-  // 20pt in from the right edge: inside the arrow's margin, clear of the chrome.
-  const nearEdge = { lat: 40.748, lng: -73.985 + 0.01 * (180 / 400) };
-  const margin = { top: 135, right: 25, bottom: 115, left: 25 };
-  const chrome = { top: 110, right: 0, bottom: 90, left: 0 };
-  assert.ok(edgeArrow(VIEW, nearEdge, 400, 800, margin));
-  assert.equal(edgeArrow(VIEW, nearEdge, 400, 800, margin, chrome), null);
-  // Once it is off screen, the arrow still sits inside the margin.
-  const off = edgeArrow(VIEW, { lat: 40.748, lng: -73.97 }, 400, 800, margin, chrome);
-  assert.ok(off);
-  assert.equal(off.x, 375);
-});
-
 test('around keeps you in the middle and the stop inside the frame', () => {
   const you = { lat: 40.748, lng: -73.985 };
   const r = around(you, [{ lat: 40.758, lng: -73.98 }], 0.002);
   assert.equal(r.latitude, you.lat);
   assert.equal(r.longitude, you.lng);
-  assert.equal(edgeArrow(r, { lat: 40.758, lng: -73.98 }, 400, 800, NONE), null);
-  // The worst case, a stop out on the diagonal, stays clear of Add (top
-  // right, down to ~110pt on a 400x800 map) and the pill (bottom ~90pt).
-  const corner = { lat: 40.758, lng: -73.975 };
-  const framed = around(you, [corner], 0.002);
-  const clear = { top: 150, right: 0, bottom: 130, left: 0 };
-  assert.equal(edgeArrow(framed, corner, 400, 800, clear), null);
+  // The stop sits well inside half the frame, clear of the overlays at the edges.
+  assert.ok(0.01 / (r.latitudeDelta / 2) < 0.6);
+  assert.ok(0.005 / (r.longitudeDelta / 2) < 0.6);
   assert.equal(around(you, [you], 0.002).latitudeDelta, 0.002);
 });
 

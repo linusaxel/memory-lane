@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { count, distance, duration, happened, walkDate, when } from './format.ts';
+import { count, distance, duration, happened, sourceAction, walkDate, when } from './format.ts';
 
 test('metres below a kilometre, kilometres above', () => {
   assert.equal(distance(420), '420 m');
@@ -69,4 +69,30 @@ test('when it happened says only as much as the source did', () => {
   assert.deepEqual(happened('1936-01-01', 'decade'), { year: '1930s', within: null });
   assert.deepEqual(happened('1936-01-01', null), { year: '1936', within: null });
   assert.equal(happened(null, 'day'), null);
+});
+
+test('the source button says where it goes', () => {
+  const ref = {
+    id: 1,
+    title: null,
+    url: 'https://www.youtube.com/watch?v=abc&t=724',
+    timestamp_start: 724,
+    source: null,
+    kind: 'video',
+    published_year: null,
+  };
+  assert.deepEqual(sourceAction(ref), {
+    text: 'Watch from 12:04',
+    spoken: 'Watch from 12:04 into the video',
+  });
+  assert.equal(sourceAction({ ...ref, timestamp_start: null }).text, 'Watch on YouTube');
+  const page = { ...ref, timestamp_start: null, url: 'https://historiskatlas.dk/Kanonkuglehuset' };
+  assert.equal(sourceAction({ ...page, kind: 'book' }).text, 'Read it in the book');
+  assert.equal(sourceAction({ ...page, kind: 'newspaper', published_year: 1856 }).text, 'Read the 1856 article');
+  assert.equal(sourceAction({ ...page, kind: 'archive' }).text, 'Read it at historiskatlas.dk');
+  assert.equal(
+    sourceAction({ ...page, kind: 'archive', source: { name: 'Historisk Atlas', url: null, icon_url: null } }).text,
+    'Read it at Historisk Atlas',
+  );
+  assert.equal(sourceAction({ ...page, kind: null }).text, 'Read the original');
 });

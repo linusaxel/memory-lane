@@ -27,6 +27,10 @@ export type ContentRef = {
   timestamp_start: number | null;
   /** Null for the handful of videos whose channel the config never names. */
   source: Source | null;
+  /** content.source_type: video, book, newspaper or archive. Names the button. */
+  kind: string | null;
+  /** Only a newspaper's is said: "Read the 1856 article". */
+  published_year: number | null;
 };
 
 /** Who filed a memory, when a person did rather than a transcript. */

@@ -102,6 +102,8 @@ MEMORY_COLUMNS = f"""
     c.source_name,
     c.source_url as source_channel_url,
     c.source_icon_url,
+    c.source_type,
+    c.published_at,
     m.user_id,
     au.display_name as author_name,
     {MEMORY_MEDIA},

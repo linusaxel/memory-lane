@@ -241,12 +241,15 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
     content = None
     if getattr(row, "content_id", None) is not None:
         href, started = source_link(row)
+        published = getattr(row, "published_at", None)
         content = ContentRef(
             id=row.content_id,
             title=row.content_title,
             url=href or row.content_url,
             timestamp_start=started,
             source=row_source(row),
+            kind=getattr(row, "source_type", None),
+            published_year=published.year if published else None,
         )
 
     media = row_media(row)

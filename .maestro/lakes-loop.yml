@@ -72,7 +72,7 @@ appId: ${APP_ID}
 # Accepting is what registers the device, and with it the past walks.
 - tapOn: "Start this walk"
 - extendedWaitUntil:
-    visible: "On a walk · .* of 10 unlocked\\."
+    visible: "Next: .*\\. .* of 10.*"
     timeout: 40000
 
 # F31: the Walks tab opens on the history, and a row opens in place to the
@@ -95,7 +95,7 @@ appId: ${APP_ID}
     direction: DOWN
     centerElement: true
 - tapOn: "Stop \\d+, Sankt Jørgens Sø 7, dev seed, .*"
-- assertVisible: "Heart this memory"
+- assertVisible: "Heart"
 - tapOn: "Close"
 - tapOn: "Close journal"
-- assertVisible: "On a walk · .* of 10 unlocked\\."
+- assertVisible: "Next: .*\\. .* of 10.*"

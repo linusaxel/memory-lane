@@ -116,7 +116,6 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/UnlockHere.tsx` | The unlock ring over the map, for the memory you stand on |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
 | `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here |
-| `mobile/src/NextStopArrow.tsx` | The way to the next stop, on the screen edge, while it is off screen |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal.** Streak, past walks, what you filed, and You |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
@@ -141,14 +140,14 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative |
 | `mobile/src/reach.ts` | Which locked pins can be opened from where you stand (unit tested) |
 | `mobile/src/cluster.ts` | Group memories that share a map point (unit tested) |
-| `mobile/src/region.ts` | Metres, paths and the next-stop arrow (unit tested) |
+| `mobile/src/region.ts` | Metres, paths and framing a walk (unit tested) |
 | `mobile/src/useMapCamera.ts` | Owns the map ref and every camera move |
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification: the native wrapper, the pure region maths, the opt-in flag |
 | `mobile/src/theme.ts` | Every colour and typeface. Never a hex or font name anywhere else |
 | `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
-| `mobile/src/format.ts` | How numbers are written on screen |
+| `mobile/src/format.ts` | How numbers are written on screen, and what the source button says |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/types.ts` | Types more than one screen needs |
 | `mobile/src/Crashed.tsx` | What a render error shows instead of a blank screen, around the whole app |

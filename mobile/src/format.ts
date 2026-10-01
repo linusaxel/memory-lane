@@ -6,6 +6,8 @@
  * drifted apart and a third shipped an "Invalid Date".
  */
 
+import type { ContentRef } from './api.ts';
+
 /** One decimal below 10 km, none above: "1.4 km" is a decision and "6181.0 km"
  *  is a spreadsheet. */
 export function distance(meters: number, { suffix = '' }: { suffix?: string } = {}): string {
@@ -79,4 +81,29 @@ export function happened(
   if (precision === 'day' && month) return { year: String(y), within: `${d} ${month}` };
   if (precision === 'month' && month) return { year: String(y), within: month };
   return { year: String(y), within: null };
+}
+
+/** What the button out to the source says: where it goes, never "Open the
+ *  source" (docs/09 part 10). `spoken` is for VoiceOver, where "Watch from
+ *  12:04" out of context is a time of day. */
+export function sourceAction(content: ContentRef): { text: string; spoken: string } {
+  const at = content.timestamp_start;
+  const host = content.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0];
+  const text =
+    content.kind === 'video'
+      ? at != null
+        ? `Watch from ${duration(at, { hours: true })}`
+        : /youtube\.com|youtu\.be/.test(host)
+          ? 'Watch on YouTube'
+          : 'Watch the video'
+      : content.kind === 'book'
+        ? 'Read it in the book'
+        : content.kind === 'newspaper'
+          ? content.published_year
+            ? `Read the ${content.published_year} article`
+            : 'Read the article'
+          : content.kind === 'archive'
+            ? `Read it at ${content.source?.name ?? host}`
+            : 'Read the original';
+  return { text, spoken: at != null && content.kind === 'video' ? `${text} into the video` : text };
 }

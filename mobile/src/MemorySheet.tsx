@@ -25,7 +25,7 @@ import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
 import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
-import { distance, duration, happened } from './format.ts';
+import { distance, duration, happened, sourceAction } from './format.ts';
 import { lede, summaryParts } from './hashtags.ts';
 import { useReduceMotion } from './useBreath.ts';
 import { metersBetween } from './region.ts';
@@ -214,24 +214,54 @@ export default function MemorySheet({
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
   // Your own memory: you see that it mattered, you cannot say so (api/write.py
   // heart_memory refuses it too). onEdit is only passed for your own.
+  // The number sits before the glyph in a slot kept even at zero, so the glyph
+  // never moves when it changes (Bluesky's like control, docs/09 part 10).
+  const countIn = useRef(new Animated.Value(1)).current;
+  const still = useReduceMotion();
+  const shownHearts = useRef(hearts);
+  useEffect(() => {
+    if (shownHearts.current === hearts) return;
+    shownHearts.current = hearts;
+    if (still) return;
+    countIn.setValue(0);
+    Animated.timing(countIn, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+  }, [hearts, still, countIn]);
+  const heartCount = (
+    <Animated.Text
+      style={[
+        styles.heartText,
+        {
+          opacity: hearts > 0 ? countIn : 0,
+          transform: [{ translateY: countIn.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
+        },
+      ]}
+    >
+      {hearts}
+    </Animated.Text>
+  );
   const heart =
     !memory || locked || !onHeart ? null : onEdit ? (
-      hearts > 0 && (
-        <View style={styles.heart}>
-          <Glyph name="heart.fill" size={17} color={color.inkSoft} />
-          <Text style={styles.heartText}>{heartsText}</Text>
-        </View>
-      )
+      <View
+        style={styles.heart}
+        accessible
+        accessibilityLabel="Hearts"
+        accessibilityValue={{ text: heartsText }}
+      >
+        {heartCount}
+        <Glyph name="heart.fill" size={17} color={color.inkSoft} />
+      </View>
     ) : (
       <Pressable
         style={dim(styles.heart)}
         hitSlop={8}
         accessibilityRole="button"
-        accessibilityLabel={(hearted ? 'Hearted, tap to take it back' : 'Heart this memory') + (hearts > 0 ? `, ${heartsText}` : '')}
+        accessibilityLabel="Heart"
+        accessibilityState={{ selected: !!hearted }}
+        accessibilityValue={hearts > 0 ? { text: heartsText } : undefined}
         onPress={() => onHeart(memory)}
       >
+        {heartCount}
         <Glyph name={hearted ? 'heart.fill' : 'heart'} size={17} color={color.inkSoft} bounce={hearted} />
-        {hearts > 0 && <Text style={styles.heartText}>{heartsText}</Text>}
       </Pressable>
     );
 
@@ -240,7 +270,6 @@ export default function MemorySheet({
   // opens on what the hold unlocked: the year, the lede, the rest, their
   // words, then what stands here now, each a beat after the last.
   const reveal = useRef(new Animated.Value(1)).current;
-  const still = useReduceMotion();
 
   // Swipe the card down to close it, as a page sheet does. The card sits at
   // the foot of a transparent scroll view, so pulling it down is the native
@@ -396,6 +425,24 @@ export default function MemorySheet({
                   </Text>
                 </View>
               )}
+              {/* Who told it, under the name: in every screenshot, and the
+                  first thing seen with an AI-written story, which is where
+                  the AI Act wants it said (UI.md rule 11). */}
+              {!locked &&
+                (memory.author ? (
+                  <View style={styles.byline}>
+                    <Text style={styles.bylineLabel}>Left by</Text>
+                    <Text style={styles.bylineName}>{memory.author.name}</Text>
+                  </View>
+                ) : memory.content?.source ? (
+                  <View style={styles.byline}>
+                    <SourceLine source={memory.content.source} title={memory.content.title} />
+                  </View>
+                ) : memory.content?.title ? (
+                  <Text style={[styles.source, styles.byline]} numberOfLines={2}>
+                    Retold from {memory.content.title}
+                  </Text>
+                ) : null)}
               {/* What it is about, as the #words the open story sets them in
                   (UI.md, "Tags are the #words"): under the name they belong
                   to, not in the apparatus line. Not tappable. */}
@@ -530,43 +577,13 @@ export default function MemorySheet({
                   </Animated.View>
                 </ScrollView>
 
-                {/* Pinned, not scrolled. A screenshot is the only way geo-gated
-                    content travels - you cannot share it by linking to it,
-                    because you had to be there - and until now a long story
-                    pushed the credit off the bottom of the frame. The place name
-                    was already fixed above the scroll; this is the other half of
-                    the same rule, and it is the legal posture as much as the
-                    design one. The three variants gave up their own top rules to
-                    the strip, which now carries the one hairline - so the strip
-                    is skipped entirely when there is nothing to credit, rather
-                    than leaving a stray rule above the buttons. */}
-                {(memory.author || memory.content?.source || memory.content?.title || heart) && (
-                  <Animated.View style={[styles.credit, rise(4)]}>
-                    <View style={styles.creditText}>
-                      {memory.author ? (
-                        <View style={styles.byline}>
-                          <Text style={styles.bylineLabel}>Left by</Text>
-                          <Text style={styles.bylineName}>{memory.author.name}</Text>
-                        </View>
-                      ) : memory.content?.source ? (
-                        <SourceLine source={memory.content.source} title={memory.content.title} />
-                      ) : (
-                        memory.content?.title && (
-                          <Text style={styles.source} numberOfLines={2}>
-                            {memory.content.title}
-                          </Text>
-                        )
-                      )}
-                    </View>
-                    {heart}
-                  </Animated.View>
-                )}
               </>
             )}
 
             {(many ||
               (peeking && (onWalkHere || openFree)) ||
               (!locked && memory.content) ||
+              heart ||
               linkFailed) && (
               <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
                 {/* Without this, every memory but the first at a stacked point is
@@ -618,35 +635,26 @@ export default function MemorySheet({
                     <Text style={styles.secondaryText}>Walk here</Text>
                   </Pressable>
                 )}
-                {!locked && memory.content && (
-                  <Pressable
-                    style={dim(styles.watch)}
-                    accessibilityRole="button"
-                    // Says where it goes, not what it reads. "Watch at 12:04" out of
-                    // context is a time of day.
-                    accessibilityLabel={
-                      memory.content.timestamp_start === null
-                        ? 'Open the source'
-                        : `Watch this moment, ${formatTimestamp(memory.content.timestamp_start)} into the video`
-                    }
-                    accessibilityHint={
-                      memory.content.timestamp_start === null
-                        ? 'Opens the source this memory came from'
-                        : 'Opens the source video at that second'
-                    }
-                    // url is already resolved - a document, or the video at the
-                    // right second.
-                    onPress={() => open(memory.content!.url, "Couldn't open that link.")}
-                  >
-                    <Text style={styles.watchText}>
-                      {/* An offset only exists when the source is a recording. An
-                          archival document has none, and "Watch at 0:00" against a
-                          newspaper is a time the source never had. */}
-                      {memory.content.timestamp_start === null
-                        ? 'Open the source'
-                        : `Watch at ${formatTimestamp(memory.content.timestamp_start)}`}
-                    </Text>
-                  </Pressable>
+                {/* Pinned under the scroll: only the way out to the source,
+                    and the heart beside it. */}
+                {!locked && (memory.content || heart) && (
+                  <View style={styles.openRow}>
+                    {memory.content ? (
+                      <Pressable
+                        style={dim([styles.watch, styles.grow])}
+                        accessibilityRole="button"
+                        accessibilityLabel={sourceAction(memory.content).spoken}
+                        // url is already resolved - a document, or the video at the
+                        // right second.
+                        onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                      >
+                        <Text style={styles.watchText}>{sourceAction(memory.content).text}</Text>
+                      </Pressable>
+                    ) : (
+                      <View style={styles.grow} />
+                    )}
+                    {heart}
+                  </View>
                 )}
                 {linkFailed && <Text style={styles.linkFailed}>{linkFailed}</Text>}
               </View>
@@ -716,20 +724,7 @@ const styles = StyleSheet.create({
   hashtag: { ...font.displaySemi },
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
-  // The strip carries the hairline now, so the three credit variants are just
-  // their lines. Pinned above the actions, it is in every screenshot.
-  credit: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 4,
-    borderTopWidth: 1,
-    borderTopColor: color.rule,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  creditText: { flex: 1 },
-  byline: { gap: 2 },
+  byline: { gap: 2, marginTop: 12 },
   bylineLabel: { ...label, fontSize: 12 },
   bylineName: { ...font.displaySemi, fontSize: 16, color: color.ink },
   // Quiet on purpose. It has to be findable and must not be the thing the eye
@@ -744,8 +739,11 @@ const styles = StyleSheet.create({
   linkFailed: { ...font.ui, fontSize: 12, color: color.inkFaint, textAlign: 'center' },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
+  openRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  grow: { flex: 1 },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },
-  heartText: { ...label, color: color.inkSoft },
+  // Two digits' room, kept at zero, so the glyph after it never moves.
+  heartText: { ...label, color: color.inkSoft, minWidth: 22, textAlign: 'right', fontVariant: ['tabular-nums'] },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   pagerText: {
     ...label,

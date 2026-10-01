@@ -71,6 +71,11 @@ class ContentRef(BaseModel):
     # "Watch at 12:04" and an invented "Watch at 0:00".
     timestamp_start: float | None = None
     source: Source | None = None
+    # content.source_type (video, book, newspaper, archive): what the app's
+    # button says, "Watch from 12:04" or "Read it in the book".
+    kind: str | None = None
+    # Only a newspaper's is said: "Read the 1856 article".
+    published_year: int | None = None
 
 
 class Link(BaseModel):

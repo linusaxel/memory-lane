@@ -39,7 +39,7 @@ export default function SourceLine({ source, title }: Props) {
         <View style={[styles.avatar, styles.avatarEmpty]} />
       )}
       <View style={styles.text}>
-        <Text style={styles.from}>From</Text>
+        <Text style={styles.from}>Retold from</Text>
         <Text style={styles.name} numberOfLines={1}>
           {source.name}
         </Text>
@@ -59,7 +59,7 @@ export default function SourceLine({ source, title }: Props) {
       style={dim()}
       onPress={() => Linking.openURL(source.url!).catch(() => {})}
       accessibilityRole="link"
-      accessibilityLabel={`From ${source.name} on YouTube`}
+      accessibilityLabel={`Retold from ${source.name}`}
     >
       {body}
     </Pressable>
@@ -69,8 +69,7 @@ export default function SourceLine({ source, title }: Props) {
 const AVATAR = 40;
 
 const styles = StyleSheet.create({
-  // No separator of its own: it sits in MemorySheet's pinned credit strip,
-  // which carries the one hairline for all three credit variants.
+  // MemorySheet's byline, under the place name.
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
   avatarEmpty: { borderWidth: 1, borderColor: color.rule },

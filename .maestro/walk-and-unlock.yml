@@ -43,16 +43,17 @@ appId: ${APP_ID}
 - tapOn: "Start this walk"
 
 - extendedWaitUntil:
-    visible: "On a walk · 0 of 4 unlocked\\."
+    visible: "Next: .*\\. 1 of 4.*"
     timeout: 40000
 
-# A walk can be ended any time; with stops still to reach, it asks first.
-- tapOn: "On a walk.*"
+# A walk can be ended any time, from the card's ✕; with stops still to
+# reach, it asks first.
+- tapOn: "End walk"
 - assertVisible: "End this walk\\?"
 - assertVisible: "The 4 stops you haven't reached will lock again\\. Anything you've unlocked stays unlocked\\."
 - tapOn: "Keep walking"
 - assertNotVisible: "End this walk\\?"
-- assertVisible: "On a walk · 0 of 4 unlocked\\."
+- assertVisible: "Next: .*\\. 1 of 4.*"
 
 # "Turn on location" shows until there is a position, so its going is the fix.
 # Waiting on it means a slow fix reads as a slow fix, not as a locked stop.
@@ -68,7 +69,7 @@ appId: ${APP_ID}
 # Three free a day open it from here; the flow walks there instead.
 - assertVisible: "Open it now, 3 free today"
 # F26: nothing to heart until it is open.
-- assertNotVisible: "Heart this memory.*"
+- assertNotVisible: "Heart"
 - tapOn: "Close"
 
 # F25 + F13 + F7, four times: walk today's route in order, 1 -> 4, whichever
@@ -106,9 +107,9 @@ appId: ${APP_ID}
       N: "3"
       STOP: "${STOP3}"
       WORDS: "${WORDS3}"
-# Three earned, stop 4 out of reach: the pill points on.
+# Three earned, stop 4 out of reach: the card points on.
 - extendedWaitUntil:
-    visible: "Next stop: ${STOP4}\\."
+    visible: "Next: ${STOP4}.*"
     timeout: 30000
 
 - runFlow: ../e2e/out/legs/4.yml
@@ -129,7 +130,7 @@ appId: ${APP_ID}
 - tapOn: "Done"
 
 - extendedWaitUntil:
-    visible: "On a walk · 4 of 4 unlocked\\."
+    visible: "Every stop unlocked\\. 4 of 4\\."
     timeout: 30000
 
 # F15 + F31: the journal keeps the walk. Its row opens in place to its five
@@ -148,14 +149,16 @@ appId: ${APP_ID}
 - tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible: ".*${WORDS1}.*"
 # F26: the heart fills and the count goes up, and both outlive the sheet.
-- tapOn: "Heart this memory"
+- tapOn: "Heart"
 - extendedWaitUntil:
-    visible: "Hearted, 1 heart"
+    visible:
+      text: "Heart"
+      selected: true
     timeout: 30000
 # F33: one note each, and posting again rewrites it rather than adding one.
 # Return sends, because on a long memory the send link is under the keyboard.
-# Centred, because Maestro calls the field visible while the pinned "Left by"
-# footer still covers it, and the tap would land on the footer.
+# Centred, because Maestro calls the field visible while the pinned heart and
+# button still cover it, and the tap would land on them.
 - scrollUntilVisible:
     element:
       id: "note"
@@ -181,7 +184,9 @@ appId: ${APP_ID}
 - assertNotVisible: "Stood here at dawn\\."
 - tapOn: "Close"
 - tapOn: "Stop \\d+, ${STOP1}, .*"
-- assertVisible: "Hearted, 1 heart"
+- assertVisible:
+    text: "Heart"
+    selected: true
 # The note is the server's now, under the summary and whatever is attached.
 - scrollUntilVisible:
     element: "Stood here twice\\."
@@ -193,7 +198,7 @@ appId: ${APP_ID}
 # on the walked route, not on a planned one.
 - launchApp
 - extendedWaitUntil:
-    visible: "On a walk · 4 of 4 unlocked\\."
+    visible: "Every stop unlocked\\. 4 of 4\\."
     timeout: 30000
 - assertNotVisible: "A walk from here"
 - assertNotVisible: "Nice walk\\."
@@ -204,20 +209,22 @@ appId: ${APP_ID}
 - tapOn: ".*, 4 memories · .*"
 # F26: and the heart outlives the process.
 - tapOn: "Stop \\d+, ${STOP1}, .*"
-- assertVisible: "Hearted, 1 heart"
+- assertVisible:
+    text: "Heart"
+    selected: true
 - tapOn: "Close"
 - tapOn: "Close journal"
-- assertVisible: "On a walk · 4 of 4 unlocked\\."
+- assertVisible: "Every stop unlocked\\. 4 of 4\\."
 
 # Ending a walked walk loses nothing, so it does not ask. The map, and
 # Plan a walk, and a second walk the same day is not the paywall's: a walk
 # is a plan now, and its stops cost steps (docs/10, "Steps open a memory").
-- tapOn: "On a walk.*"
+- tapOn: "End walk"
 - assertNotVisible: "End this walk\\?"
 - extendedWaitUntil:
     visible: "Plan a walk"
     timeout: 30000
-- assertNotVisible: "On a walk.*"
+- assertNotVisible: "End walk"
 - tapOn: "Plan a walk"
 - waitForAnimationToEnd
 - assertNotVisible: "Open any memory you stand on"

@@ -162,7 +162,9 @@ body{min-height:100svh;display:flex;flex-direction:column;
    and a left-border accent is the card tell this palette exists to avoid. */
 .contrast{margin:0;padding-top:14px;border-top:1px solid var(--rule);
   font-size:16px;line-height:25px;color:var(--muted)}
-.credit{margin-top:4px;padding-top:14px;border-top:1px solid var(--rule);
+/* Under the place name, as a byline: the first thing seen with the story,
+   which is where the AI Act wants the label (docs/09 part 10). */
+.credit{margin:0;
   font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:12px;line-height:19px;color:var(--muted);display:flex;
   flex-wrap:wrap;gap:6px}
@@ -237,11 +239,11 @@ def render_card(row) -> str:
 <article class="card">
   <span class="layer">{escape(row.layer or "historical")}</span>
   <h1 class="place">{place}</h1>
+  <p class="credit">{credit_html}</p>
   {when_html}
   {photo_html}
   <p class="summary">{summary}</p>
   {contrast_html}
-  <p class="credit">{credit_html}</p>
 </article>
 </body></html>"""
 
@@ -268,8 +270,8 @@ def render_locked_card(row, radius_meters: int) -> str:
 <article class="card">
   <span class="layer">{label}</span>
   <h1 class="place">{place}</h1>
-  <p class="summary">{withheld}</p>
   <p class="credit">{credit}</p>
+  <p class="summary">{withheld}</p>
 </article>
 </body></html>"""
 

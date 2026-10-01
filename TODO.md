@@ -428,42 +428,9 @@ day (`git log`). Left:
 - [ ] **F8 Lock Screen widget** (`expo-widgets`): the balance and the nearest
       story. After launch; skip Live Activities.
 
-From the founder on the simulator, 2026-10-01. Researched the same day
-(docs/09 part 10). Nothing is built yet.
-
-- [ ] **F9 One walk card, not two pills.** (checked 2026-10-01) Today
-      "On a walk · 1 of 7" sits at the top and ends the walk when tapped,
-      while "7.9 km to go" sits at the bottom and fits the route. Neither
-      says what it is. Replace both with one bottom card: "Next: <place> ·
-      300 m" over "2 of 7 · 4.1 km left". A tap fits the route, and a ✕ on
-      the card ends the walk after a confirm, never a plain tap. On arrival
-      it reads "You're at <place> · Open story". `App.tsx` (`routeLabel`,
-      `styles.walkBar`), UI.md, and the walk flows in `.maestro/`.
-- [ ] **F10 A recenter button.** (checked 2026-10-01) One location arrow at
-      the bottom right, above the walk card. On a walk, a pan breaks follow
-      instead of being refused, the button shows until it is tapped, and
-      `NextStopArrow`'s workaround can go. Off a walk, it shows whenever the
-      map is off-centre. It's a custom button (`showsMyLocationButton` is
-      Android-only). No heading mode.
-- [ ] **F11 The heart does not move.** (checked 2026-10-01) The glyph moves
-      left when "1 heart" is appended, and a long credit can rewrap
-      (`MemorySheet.tsx`, `styles.heart` next to the `flex: 1` credit). Show
-      a bare number before the glyph, in a reserved `tabular-nums` width that
-      is invisible at 0. Keep the bounce and add a fade or roll, skipped
-      under reduce motion. VoiceOver gets "Heart" plus `selected`. The
-      owner's read-only variant matches. This is Bluesky's CountWheel
-      pattern.
-- [ ] **F12 Credit at the top, and a button that says where it goes.**
-      (checked 2026-10-01) Move "From" into the fixed heading as a byline,
-      "Retold from **<source>**" or "Left by **<name>**", which doubles as
-      the AI Act Art 50 label. Pin only the heart and the action at the
-      bottom. Replace "Open the source" with a label per kind: Watch from
-      12:04, Watch on YouTube, Read it in the book, Read the 1856 article,
-      Read it at <host>. First, the API needs a `kind` on `content`:
-      `ingest.py` stores every text source as `archive`. Supersede UI.md
-      rule 11 and the docs/10 credit-strip wording, and change the
-      server-rendered card to the same order. Also fix `SourceLine.tsx`,
-      which says "on YouTube" to VoiceOver for books.
+F9 to F12, from the founder on the simulator (docs/09 part 10), shipped the
+same day: one walk card, Center on me, a heart that stays put, and the credit
+at the top (docs/10, "One walk card" and "The credit is a byline").
 
 ---
 

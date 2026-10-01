@@ -33,7 +33,7 @@ appId: ${APP_ID}
     timeout: 40000
 - tapOn: "Start this walk"
 - extendedWaitUntil:
-    visible: "On a walk · 0 of 4 unlocked\\."
+    visible: "Next: .*\\. 1 of 4.*"
     timeout: 40000
 
 - setLocation:

@@ -51,19 +51,21 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ You, Add                   top right, 44pt glass circles (`person`, an ember `plus`), every stage,
 │                              two shapes that never merge (the founder, 2026-10-01).
 │                              You opens Settings; Add files a memory, no walk needed. See "Writing"
-├─ "On a walk · 2 of 5"       under the steps pill, the corners' capsule tinted ember: the walk's one
-│                              signal, and a tap ends it (F34). With stops left, a card
-│                              (EndWalk): "End this walk?", End walk / Keep walking. No system dialog
-├─ NextStopArrow              ember, on the screen's edge, pointing at the next
-│                              stop while it is off screen (src/NextStopArrow.tsx)
-├─ "2.4 km to go"             bottom centre, no count (the bar has it); tap zooms out around
-│    you to the next stop; "Next: <place> · 350 m" once started, "Every stop unlocked" when done,
-│    replaced by the unlock ring (src/UnlockHere.tsx) while standing at any stop:
+├─ the walk card             bottom centre, glass (F9): "Next: <place> · 350 m" over
+│    "2 of 5 · 4.1 km left" (the next stop's number, as on its pin), "Every stop unlocked"
+│    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
+│    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
+│    walking. Never a plain tap. Standing at any stop, the unlock ring (src/UnlockHere.tsx)
+│    takes its place and carries the same second line:
 │    the ring, the place, year or source, "1 attachment waiting", "You made it." and what it
 │    costs. Everyone gets it on the map before a walk too, above "Plan a walk". Tapping a pin
 │    in reach points it at that pin; the hold opens the sheet on the story. Short of steps
 │    there is no ring to hold: the full faded Approach ring, "600 steps to go · about 6 min
 │    walking" and Skip the steps (the paywall)
+├─ "Center on me"             bottom right, a 44pt glass `location.fill` circle (F10). On a walk the
+│                              camera follows you; a one-finger drag lets go and this shows until
+│                              tapped. Before a walk, it shows once the map is off you by a sixth
+│                              of the screen. Custom: showsMyLocationButton is Android-only
 ├─ "Turn on location"         bottom centre, below the pill, only while there is no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
@@ -80,11 +82,16 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   │                                 ├─ "their words"  20/29 semibold, ember rule, "— Mads, at 12:04"
   │                                 ├─ "Then and now"  16/25 inkSoft   contrast_note, when known
   ├─ distance         52/700        ├─ photo / recording   if it has any
-  ├─ "Get within 20 m"              ├─ "Left by X", or the channel and avatar; the heart trailing on that line
-  ├─ "1 attachment waiting"         │    (a count only, on your own memory)
-  │                                 ├─ "Edit this memory"  own submissions only
-  │  (in reach it is not opened:    └─ "Watch at 12:04"  ink, YouTube at the second
-  └─  the ring is on the map)
+  ├─ "Get within 20 m"              ├─ "Edit this memory"  own submissions only
+  ├─ "1 attachment waiting"         └─ pinned: the button, and the heart trailing it (F11):
+  │                                      a bare count before the glyph, in a slot kept at
+  │  (in reach it is not opened:         zero, so the glyph never moves. The button says
+  └─  the ring is on the map)            where it goes (F12): "Watch from 12:04", "Watch on
+                                         YouTube", "Read it in the book", "Read the 1856
+                                         article", "Read it at Historisk Atlas"
+
+  The open side's byline sits under the place name, above the distance:
+  "Retold from <channel>" with its avatar and the episode or book, or "Left by X".
 
   peek (the map, before a walk: a card over the live map, sized to its content)
   ├─ place name
@@ -122,7 +129,7 @@ There are no tabs. Before a walk the map draws what is locked around you; on a
 walk it draws only that walk. Three pins a day open from anywhere, from the
 peek; after that, standing on one and 1,000 steps. The top centre is the step
 count and what is free today; the walk is a side way in, so **Plan a walk** is
-a quiet pill and the walk bar sits under the steps (docs/10, "Three free a day, then steps where you stand").
+a quiet pill and the walk card sits at the bottom (docs/10, "Three free a day, then steps where you stand").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -266,12 +273,12 @@ quote) · 19/31 prose (the summary — the hero when nothing is attached) · 16/
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
-(Journal, You, Add, the walk bar, the distance pill, Plan a walk, Turn on
+(Journal, You, Add, the walk card, Center on me, Plan a walk, Turn on
 location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
 only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
-tint in view**: the walk bar's, and while Turn on location shows, that one's
-alone. No `GlassContainer`: You and Add merging read as
+tint in view**: Turn on location's, while it shows. The walk card is
+untinted: the next stop's pin is the ember on the map. No `GlassContainer`: You and Add merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
 and that is the material, not a bug. A glass
@@ -456,7 +463,8 @@ Each of these exists because something broke or would have been rejected.
 6. **`content.url` is already resolved.** The server points it at the document,
    or at the video's right second. Never rebuild a YouTube URL by hand.
    `content.timestamp_start` is null when the source is not a recording, and the
-   button says "Open the source" instead of naming a second that does not exist.
+   button names the kind instead of a second that does not exist
+   (`sourceAction` in `src/format.ts`).
 7. **Never cover the map attribution.** The Apple Maps logo and Legal link in
    the bottom-left corner are a condition of using the map and have to stay
    visible and tappable. A floating tally in that corner is what made this a
@@ -477,14 +485,16 @@ Each of these exists because something broke or would have been rejected.
     reports, so move the camera and let it
     report back; the hook also reports a long flight itself, which
     never lands audibly. See `docs/10-decisions.md#the-app`.
-11. **The credit never scrolls.** Place name above the scroll, credit pinned
-    below it, story in between. Geo-gated content cannot be shared by linking
-    to it — you had to be there — so a screenshot is the only way it travels,
-    and a screenshot that has lost the attribution is both a broken
-    distribution channel and a broken legal posture. `styles.credit` in
-    `MemorySheet.tsx` is that strip; it carries the one hairline, so the three
-    credit variants inside it have none of their own. Anything new that can
-    appear under a summary goes *in* the scroll, not between the two.
+11. **The credit never scrolls.** Place name and its byline above the scroll
+    ("Retold from <source>" or "Left by X"), the button and the heart pinned
+    below it, story in between (F12, 2026-10-01; the credit was a pinned strip
+    at the bottom before). Geo-gated content cannot be shared by linking to it
+    — you had to be there — so a screenshot is the only way it travels, and a
+    screenshot that has lost the attribution is both a broken distribution
+    channel and a broken legal posture. Up top it is also the first thing seen
+    with an AI-written story, which is where AI Act Art 50 wants it said.
+    `api/card.py` puts it in the same place. Anything new that can appear
+    under a summary goes *in* the scroll.
 12. **Every view has a way out.** A card over the map dismisses with an × in
     its top-trailing corner, on the title line (Apple Maps' convention, HIG
     Toolbars: a back chevron retraces a hierarchy, a close dismisses a layer).

@@ -93,3 +93,12 @@ def test_a_video_offset_survives_to_the_response():
     memory = row_to_memory(Row(timestamp_start=847.5))
     assert memory.content.timestamp_start == 847.5
     assert memory.content.url == "https://youtube.com/watch?v=abc123&t=847"
+
+
+def test_the_kind_and_a_newspapers_year_reach_the_response():
+    """The app's button names the kind: "Read the 1856 article", not "Open the source"."""
+    from datetime import datetime
+
+    memory = row_to_memory(Row(source_type="newspaper", published_at=datetime(1856, 3, 4)))
+    assert memory.content.kind == "newspaper"
+    assert memory.content.published_year == 1856

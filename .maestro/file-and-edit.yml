@@ -35,9 +35,11 @@ appId: ${APP_ID}
 - hideKeyboard
 - tapOn: "Post"
 
+# The lede is its own paragraph, so the #food after it is another line.
 - extendedWaitUntil:
-    visible: ".*ferry horn.* #food"
+    visible: ".*ferry horn.*"
     timeout: 40000
+- assertVisible: "#food"
 - assertVisible: "The step by the ferry landing"
 # F21: signed Anonymous until you give a name.
 - assertVisible: ".*Anonymous.*"
@@ -46,7 +48,7 @@ appId: ${APP_ID}
 # author unlocked it by filing it, so they may sign it. They may not heart it
 # (api/write.py), and are not offered Report or Block. What matters is what
 # comes back in the journal.
-- assertNotVisible: "Heart this memory"
+- assertNotVisible: "Heart"
 - assertNotVisible: "More"
 - scrollUntilVisible:
     element:

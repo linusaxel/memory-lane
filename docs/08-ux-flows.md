@@ -757,38 +757,37 @@ anyone else's collection or the local unlock cache.
    nothing off the route is fetched or drawn, and there is no reach banner and
    no hotspots card. Journal, You and Add sit in the top corners at every
    stage; there are no tabs. There is no
-   "Near me": the pill recentres, and "Turn on location" shows only while
+   "Near me": Center on me recentres, and "Turn on location" shows only while
    there is no position.
-3. **An ember glass bar at the top centre, "On a walk · 0 of 5"**, under the
-   step count, is what says this is a walk and not the map: it holds the
-   count, and tapping it ends the walk (F34). Nothing else repeats the count.
-   A pill at the bottom centre: "2.4 km to go" — the distance
-   still to walk, from where you stand through every stop not yet earned, in
-   order, and back to where the walk started on a loop (the preview's
-   choice, stored as `daily_routes.loop`), so the walk home counts. Along the streets between stops
-   when a routing server is running (`ROUTING_URL`), straight from you to the
-   next stop, and said plainly as a distance, never as minutes. Tapping it starts the
-   route and zooms out around you until the next stop is on screen (flies to
-   the stop with no position, frames the whole route once it is walked);
-   after that the pill reads "Next: <place> · 350 m".
-   **The camera is pinned on you** while there is a position: it follows you,
-   the map does not pan or rotate, and a pinch zooms without moving the
-   centre. While the next stop is off screen, an ember arrow on the edge
-   of the screen points the way to it.
+3. **One walk card at the bottom centre** says this is a walk and not the
+   map (F9, docs/10 "One walk card"): "Next: <place> · 350 m" over "1 of 5 ·
+   2.4 km left". The number is the next stop's, as on its pin. The distance is
+   what is still to walk, from where you stand through every stop not yet
+   earned, in order, and back to where the walk started on a loop (the
+   preview's choice, stored as `daily_routes.loop`), so the walk home counts.
+   It follows the streets between stops when a routing server is running
+   (`ROUTING_URL`), otherwise it's straight from you to the next stop. It is
+   said plainly as a distance, never as minutes. Tapping the card zooms out
+   around you until the next stop is on screen (it flies to the stop with no
+   position, and frames the whole route once it is walked). Its ✕ ends the
+   walk (F34).
+   **The camera follows you** while there is a position, and a pinch zooms
+   without moving the centre. A one-finger drag lets go so you can look
+   around, and **Center on me** (bottom right, above the card) shows until a
+   tap follows you again (F10).
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    (1–5) in the badge. There is no line while walking: the next unearned
    stop, in route order, hops and is `ember`, and when it is earned the
    one after it takes over. Only the preview draws the loop, washed-out ember under
    the street names (`mobile/src/RouteLine.tsx`, docs/09-visual-design.md
    §3a).
-5. Reaching a stop lights its pin, and the unlock ring takes the pill's
+5. Reaching a stop lights its pin, and the unlock ring takes the walk card's
    place over the map; a hold opens it. Any stop, in any order — the
    numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
    The badge and the hop drop away the moment it is earned, the
-   numbers on the rest do not shift, and the pill's count and distance move.
-6. The last stop earned, the bar reads "On a walk · 5 of 5", the pill
-   reads "Every stop unlocked" and a tap fits
-   the map to the whole walk. No confetti — the success haptic on that final
+   numbers on the rest do not shift, and the card moves on to the next.
+6. The last stop earned, the card reads "Every stop unlocked" over "5 of 5",
+   and a tap fits the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
 **One walk at a time.** `POST /v1/routes/today` stores the first accept with
@@ -810,12 +809,12 @@ one exception, opt-in, and it watches only this walk's stops.
 
 **A sparse area gets an honestly shorter route, not a padded one.** Fewer than
 five walkable memories within the length means a route of two or three, and
-the card and the pill say so — "0 of 2" rather than pretending a fifth stop
+the walk card says so — "1 of 2" rather than pretending a fifth stop
 exists. None at all is F1's "No walk within 10 km from here", and an empty walk is
 never stored.
 
 **Done when:** an accepted walk shows exactly its stops and nothing else,
-survives a relaunch the same day unchanged, and the pill's count and the map's
+survives a relaunch the same day unchanged, and the walk card's count and the map's
 badges track each unlock exactly as F7 already does.
 
 ---
@@ -990,8 +989,8 @@ The last stop unlocks and the day should feel finished.
 3. The card reads "Nice walk.", then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
    another day), then the streak once it is more than one day (F27).
-4. Done goes back to the map, pinned on you again, with the pill at
-   "Every stop unlocked" under the bar's "On a walk · 5 of 5".
+4. Done goes back to the map, following you again, with the walk card at
+   "Every stop unlocked".
 
 It shows once per walk, and nothing stores that it did: it follows the unlock
 that finished the walk in this session, so a relaunch on a walked day lands on
@@ -1004,8 +1003,8 @@ Why each of these, in `docs/10-decisions.md`, "The walk ends on a card, once".
 **Who:** somebody on a walk who wants out of it: a bad plan, rain, or a walk
 already walked and another in mind.
 
-1. The walk's bar, "On a walk · 2 of 5", top centre under the step count
-   (F25).
+1. The ✕ ("End walk") on the walk card, at the bottom (F25, F9). Never a
+   plain tap on the card.
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
    haven't reached will lock again. Anything you've unlocked stays unlocked.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.
