@@ -967,7 +967,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    walk), from `/v1/memories/nearby`, fetched on arriving and again when a
    position first comes, locked and opened both. The menu under your photo
    top right (`src/AccountMenu.tsx`) shows all of them, only the locked or only
-   the unlocked; an unlocked pin is drawn inside out, paper with an ember eye.
+   the unlocked; a locked memory is an ember padlock, an opened one the same
+   padlock open and paper (mobile/UI.md, One pin).
    The map refetches when you file, edit or delete one.
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
    who it is from ("From" a source, "Left by" a person, with a glyph), its

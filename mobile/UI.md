@@ -183,7 +183,7 @@ with no network is never stopped at the gate.
 | File | What it owns |
 |---|---|
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. The pin is the one drawn mark |
-| `src/MemoryMarker.tsx` | a padlock while locked, lit when it can be opened from here; the paper pin once opened |
+| `src/MemoryMarker.tsx` | one padlock, lit when it can be opened from here, open once opened |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/UnlockHere.tsx` | the ring over the map, with the place it opens; out of keys, the way to one |
 | `src/KeysPill.tsx` | the top of the map: what opens memories, the number rolling (`@expo/ui`) |
@@ -767,8 +767,10 @@ A locked memory draws a small padlock: an `ember` shackle over a 16×13
 lock instead of pins"). It changes for one reason only — **it can be opened
 from where you stand**, and on a route day only if it is one of the route's
 stops (F25) — and then it scales 1.35 in gold `seal` with `sealInk`, over a
-`halo` wash. Opened, it is the pin: a 24px `paper` disc, `ember` edge and
-eye. That is the whole visual language. Simplified 2026-09-23
+`halo` wash. Opened, the same lock opens: its shackle lifts 3px with the left
+leg still in the body, and the body turns `paper` with an `ember` edge and
+keyhole, quiet beside the ones still waiting. That is the whole visual
+language. Simplified 2026-09-23
 from five ink states, a round-or-folded-card shape per layer and a ranked
 corner slot of padlock and tag glyph: it was a legend nobody should need.
 The resting disc went from `ink` to teal on 2026-09-26 (black read as grim),
@@ -777,15 +779,13 @@ and to `ember` on 2026-09-27: teal read as water and park.
 | When | Geometry | Tokens |
 |---|---|---|
 | locked | shackle 10×8, stroke 2.5; body 16×13, radius 3, border 1.5; keyhole 3×5 | shackle + body `ember`, edge + keyhole `paper` |
-| unlocked (`plain`, `stamped`): every memory in it opened | disc 24, border 2; eye 8 | fill `paper`, edge + eye `ember` |
+| unlocked (`plain`, `stamped`): every memory in it opened | the lock, shackle lifted 3, left leg joined | shackle `ember`; body `paper`, edge + keyhole `ember` |
 | `unlockable`: inside the radius **and openable by walking** | the lock, scale 1.35; wash 46 | body `seal`, shackle + edge + keyhole `sealInk`, wash `halo` |
 | the next stop on today's walk, not yet in reach | the lock, scale 1.35; hops (`useHop`), still under Reduce Motion | as locked. Size and the hop tell it apart |
 | a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ember`, count `paper` (`seal` with `sealInk` on a lit pin) |
 | locked, off a walk (`opacityOf`) | same pin, fading with distance | opacity 1 to 500 m, down to 0.3 at 3 km, in tenths |
 
-**The eye is the point.** An opened pin is often the one you are standing on,
-so the blue location dot lands in the hole rather than disappearing under a
-disc. The badge sits in the corner for the same reason.
+**The badge sits in the corner** so the blue location dot is never under it.
 
 **`seal` means openable now, and nothing else.** A seal-coloured pin you
 cannot open is an invitation that refuses you (F11). That includes paying:
@@ -794,7 +794,7 @@ stays an ember lock and its reach reads `locked` (`blocked` in `App.tsx`, from
 `src/wallet.ts`). Locked near and locked
 far draw the same ember lock, bar a fade with distance (2026-10-02:
 full detail near you, a glow further out, so the map reads as where to go
-next rather than a checklist), and earned and never gated the same paper one
+next rather than a checklist), and earned and never gated the same open one
 (2026-10-01, docs/10 "A map of what is locked"); the rest is in the
 marker's `title` (VoiceOver and Maestro still hear every state from
 `STATE_LABEL`) and in the sheet. `reachOf` in `src/reach.ts` still computes all

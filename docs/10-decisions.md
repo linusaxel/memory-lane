@@ -263,7 +263,9 @@ wanted to see on the map what they had already opened, and to tell the two
 apart. Every memory you opened is drawn too, inside out (paper disc, ember
 eye), and a filter bottom left picks all, locked only or unlocked only.
 Still not a corpus to browse: what you opened you could already read in the
-journal, and locked pins stay unreadable.
+journal, and locked pins stay unreadable. Since 2026-10-02 the two are a
+closed and an open padlock (the founder: "a mini lock instead of pins";
+mobile/UI.md, One pin).
 
 **Why every pin shows (researched 2026-10-02).** Every location app that
 lasted shows its targets: Ingress, Geocaching, Wandrer, Atlas Obscura, and
