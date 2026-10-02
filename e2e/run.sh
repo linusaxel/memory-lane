@@ -172,74 +172,14 @@ reset_database() {
     || infra "could not drop the bridge from $DB"
 }
 
-# F27's streak needs a walk stop unlocked yesterday, by a device id the app has
-# not minted yet. So whichever device turns up first is given a one-stop walk
-# yesterday and its unlock, of a memory at 0,0: never a route candidate, never
-# on screen, and no stop's date moves.
-yesterday_unlock() {
-  psql_on "$DB" "
-    WITH p AS (INSERT INTO places (name, place_query, coordinates)
-               VALUES ('Yesterday', 'e2e yesterday', ST_MakePoint(0, 0)::geography) RETURNING id)
-    INSERT INTO memories (place_id, content_id, summary)
-      SELECT p.id, (SELECT id FROM content LIMIT 1), 'Unlocked yesterday.' FROM p;
-    CREATE FUNCTION yesterday() RETURNS trigger AS \$\$ BEGIN
-      INSERT INTO unlocks (device_id, memory_id, unlocked_at)
-        SELECT NEW.id, m.id, now() - interval '1 day' FROM memories m
-        JOIN places p ON p.id = m.place_id WHERE p.place_query = 'e2e yesterday';
-      INSERT INTO daily_routes (device_id, route_date, memory_ids)
-        SELECT NEW.id, (now() - interval '1 day')::date, ARRAY[m.id] FROM memories m
-        JOIN places p ON p.id = m.place_id WHERE p.place_query = 'e2e yesterday';
-      RETURN NEW;
-    END \$\$ LANGUAGE plpgsql;
-    CREATE TRIGGER yesterday AFTER INSERT ON devices FOR EACH ROW EXECUTE FUNCTION yesterday();
-  " >/dev/null || infra "could not seed yesterday's unlock into $DB"
-}
-
-# F31's history for lakes-loop, the same way: whichever device turns up first
-# walked the south end three days ago (5 of 5) and gave up two days ago (2 of
-# 5; the two it had already earned). A device turns up on Accept, so the
-# preview before it is planned without this history.
-past_walks() {
-  psql_on "$DB" "
-    CREATE FUNCTION past_walks() RETURNS trigger AS \$\$
-    DECLARE
-      walked int[] := ARRAY(SELECT m.id FROM unnest(ARRAY['Sortedams Sø 4', 'Peblinge Sø 5',
-          'Sankt Jørgens Sø 6', 'Sankt Jørgens Sø 7', 'Sankt Jørgens Sø 8']) WITH ORDINALITY n(name, i)
-        JOIN places p ON p.name = n.name || ', dev seed' JOIN memories m ON m.place_id = p.id ORDER BY n.i);
-      abandoned int[] := ARRAY(SELECT m.id FROM unnest(ARRAY['Peblinge Sø 5', 'Sortedams Sø 4',
-          'Sortedams Sø 3', 'Sortedams Sø 2', 'Sortedams Sø 1']) WITH ORDINALITY n(name, i)
-        JOIN places p ON p.name = n.name || ', dev seed' JOIN memories m ON m.place_id = p.id ORDER BY n.i);
-    BEGIN
-      INSERT INTO unlocks (device_id, memory_id, unlocked_at)
-        SELECT NEW.id, unnest(walked), now() - interval '3 days';
-      INSERT INTO daily_routes (device_id, route_date, memory_ids, completed_at) VALUES
-        (NEW.id, (now() - interval '3 days')::date, walked, now() - interval '3 days'),
-        (NEW.id, (now() - interval '2 days')::date, abandoned, NULL);
-      RETURN NEW;
-    END \$\$ LANGUAGE plpgsql;
-    CREATE TRIGGER past_walks AFTER INSERT ON devices FOR EACH ROW EXECUTE FUNCTION past_walks();
-  " >/dev/null || infra "could not seed past walks into $DB"
-}
-
-# subscribe-when-out-of-keys needs an account with nothing to spend that then
-# pays, with no store. Every account the app mints has used its welcome
-# unlock (the flow mints it by typing a name, since reading the profile
-# creates nothing), and the one renamed "Paid" is given a month.
-subscriber() {
-  psql_on "$DB" "
-    CREATE FUNCTION broke() RETURNS trigger AS \$\$ BEGIN
-      NEW.free_used := 1;
-      RETURN NEW;
-    END \$\$ LANGUAGE plpgsql;
-    CREATE TRIGGER broke BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION broke();
-    CREATE FUNCTION subscriber() RETURNS trigger AS \$\$ BEGIN
-      INSERT INTO subscriptions (user_id, expires_at) VALUES (NEW.id, now() + interval '30 days')
-        ON CONFLICT (user_id) DO NOTHING;
-      RETURN NEW;
-    END \$\$ LANGUAGE plpgsql;
-    CREATE TRIGGER subscriber AFTER UPDATE OF display_name ON users
-      FOR EACH ROW WHEN (NEW.display_name = 'Paid') EXECUTE FUNCTION subscriber();
-  " >/dev/null || infra "could not seed a subscriber into $DB"
+# A flow that needs more than the seed (a streak, a history, a subscriber) has
+# it in e2e/sql/<flow>.sql, applied after the reset. Mostly triggers on the
+# device or user the app has not minted yet.
+flow_sql() {
+  local sql="e2e/sql/$1.sql"
+  [ -f "$sql" ] || return 0
+  docker compose exec -T db psql -q -v ON_ERROR_STOP=1 -U memorylane -d "$DB" < "$sql" >/dev/null \
+    || infra "could not apply $sql to $DB"
 }
 
 # A walkable point in central Copenhagen, different every run. The seed is
@@ -399,9 +339,7 @@ for flow in "${SELECTED[@]}"; do
   flow_started=$(date +%s)
   printf '\n\033[1m  ▸ %s\033[0m\n' "$name"
   reset_database "${name%%-*}"
-  [ "$name" = walk-and-unlock ] && yesterday_unlock
-  [ "$name" = lakes-loop ] && past_walks
-  [ "$name" = subscribe-when-out-of-keys ] && subscriber
+  flow_sql "$name"
   # launchApp's own relaunch has been seen to no-op under the load of a screen
   # recording, which leaves the flow looking at the previous one's last screen
   # and failing on its first assertion. Killing it first makes every flow a
@@ -418,10 +356,10 @@ for flow in "${SELECTED[@]}"; do
   DATA=$(xcrun simctl get_app_container "$DEVICE" "$APP_ID" data 2>/dev/null)
   [ -n "$DATA" ] && rm -rf "$DATA/Library/Application Support/$APP_ID/RCTAsyncLocalStorage_V1"
 
-  # Granted up front, so no flow can raise a system prompt. One a stray tap
-  # raised (a hideKeyboard landing on Choose photo) outlives the app and sits
-  # over every later flow's launch, which then fails on "Memory Lane" with no
-  # hint why. Location is launch.yml's, per flow.
+  # Granted up front, because a system prompt left unanswered outlives the app
+  # and sits over every later flow's launch, which then fails on "Memory Lane"
+  # with no hint why. iOS 26 still asks for full photo access; file-and-edit
+  # answers it. Location is launch.yml's, per flow.
   for service in photos camera microphone; do
     xcrun simctl privacy "$DEVICE" grant "$service" "$APP_ID" >/dev/null 2>&1
   done

@@ -116,7 +116,7 @@ simulator just shows an empty map, which reads as "the app is broken".
 
 The first run of this suite found two crashes-or-worse in the app — a Fabric
 mounting crash in react-native-maps and an F19 that never rendered at all.
-Both are fixed; `e2e/README.md` keeps the diagnosis, because the second one is
+Both are fixed; `e2e/README.md`'s git history keeps the diagnosis, because the second one is
 the kind of thing that comes back.
 
 ## Spending a few cents on purpose

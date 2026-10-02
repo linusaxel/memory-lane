@@ -68,6 +68,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `e2e/run.sh` | **Watch the flows happen.** Drives the real app on a simulator; `--record` leaves an mp4 |
 | `e2e/travel.py` | Writes the walk flow's legs and stop names for the seeded start |
+| `e2e/sql/` | What a flow needs beyond the seed (a streak, past walks, a subscriber), applied by flow name |
 | `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/walk_labels.json` | Walk/maybe/skip for all 209 memories as of 2026-09-29 (docs/04, *Corpus read*): what a judge change is measured against |
