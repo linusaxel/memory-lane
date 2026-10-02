@@ -1676,6 +1676,32 @@ IP for a while on the first day (`OVERPASS_URL` takes a mirror). A place it
 did not answer for is looked at again next run. Credit is the same line in
 Settings → About as the geocodes.
 
+### The recent past is a memory; the present is not yet
+
+Status: Accepted 2026-10-02
+
+Something that happened here last month is a memory if it is dated, told in
+the past tense, and about a business, a public body or a production. Examples:
+"In October 2026 Zentropa filmed a feature about H.C. Andersen inside this
+theatre", or "The flood channel opened in May 2026". It stays true in 2030, so it
+ages into history and never needs re-checking. Anything that is only true now
+("until Sunday", "opens 2029") is a second card type that expires. That type
+is designed but not built (TODO.md, *Now on a spot*). Pins stay one kind either
+way.
+
+- **Never:** opening hours, prices or offers (promotion), private people,
+  police or crime items, and push about nearby things. Citizen and Nextdoor
+  show that crime feeds breed fear; Field Trip's nearby cards became noise.
+- **Not a story on its own:** "X opened here". The labels call a bare chain of
+  openings `desc`. A recent fact carries a card when it has its own hook (a film
+  shoot) or rides on a story already at the spot.
+
+**Options considered:** read Copenhagen's outdoor-seating permits as openings
+(docs/04, *Now, 2026-10-02*). The layer holds current permits only, and they
+renew in December waves, so one snapshot can't tell a new restaurant from a
+renewal. In a sample of 10 off-season permits, 0 were confirmed openings: a
+pub from 1870, a supermarket, a hair salon, a café under new owners.
+
 ### Summary quality is measured, not asserted
 
 Status: Accepted

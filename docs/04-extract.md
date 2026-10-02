@@ -493,6 +493,47 @@ The ship bar was no walk lost on both runs, and it failed. Chunks stay. The fair
 next measurement is chunked against whole under today's prompt, both drawn
 twice. A middle course is also open, such as 15-minute chunks.
 
+### Now, 2026-10-02
+
+What does a person on a spot want that isn't history? Mostly "what's new or
+different here": 72% of mobile information needs are triggered by place or
+activity ([Sohn et al., CHI 2008](https://researchcommons.waikato.ac.nz/handle/10289/3657)).
+Feeds of public records failed: EveryBlock gave permits and crimes by block and
+closed in 2013, Patch lost over $300M, and Field Trip's nearby cards closed in
+2019. Change told as a story has worked
+([NYC storefronts](https://www.smithsonianmag.com/arts-culture/new-york-storefront-comparison-photos-180950376/)).
+The decision is in docs/10, *The recent past is a memory*.
+
+**KK's street-use permits** (`wfs-kbhkort.kk.dk/k101/ows`, layer
+`raaden_over_vej_events_anonym_aktuelt`, Open Data DK terms, attribution).
+On 2026-10-02 the layer held 9,344 current permits with dates and polygons:
+
+- **Outdoor seating (3,237), not openings.** Starts come in December renewal
+  waves (349 in Dec 2024, 660 in Dec 2025), and the layer holds no history.
+  None of 10 off-season starts checked by hand turned out to be an opening:
+  Café Malmö (a seamen's pub from 1870), Salling Kultorvet, Holberg no 19, a
+  bike shop and a hair salon (shop displays share the type), and Balders Plads
+  ApS (new owners of Soundtrack Café, CVR December 2025). Phoebe on Pilestræde
+  may be new. An opening needs our own snapshots diffed over months, or CVR's
+  registration date.
+- **Film shoots (223 permits, about 36 productions), the find.** Each names
+  the producer and often the film and the exact address:
+  - Zentropa filming inside Det Kongelige Teater "for a feature film about
+    HCA" (Nov 2026), where memory 4528 already has Andersen praying on the
+    empty stage;
+  - Miso Film shooting *Lyden af succes* at Ewaldsgade 3 and Hejrevej 26;
+  - DR and TV 2 at the opening of the Folketing.
+
+  These are dated, past tense once shot, and the thing that set-jetting tours
+  sell. Productions sometimes park at one address and film at another, so read
+  the description for the real spot.
+- **Street events (187), for the expiring type.** Grønt Marked, Byens Lopper,
+  an artwork on the ramparts in front of SMK.
+
+**Foursquare OS Places** (Apache 2.0, monthly, `date_created`/`date_closed`)
+is gated on Hugging Face behind a login and wasn't probed. Its `date_created`
+is when Foursquare learned of a place, not when it opened.
+
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps
 - THE VIBE: Emotions, humor, what made it memorable

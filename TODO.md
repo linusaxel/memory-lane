@@ -251,6 +251,24 @@ From the research (docs/04, *Research, 2026-10-02*), in order:
 - [ ] **Public-domain memoirs** from Runeberg/ADL (*Mit Livs Eventyr*, Nexø)
       through the existing book path.
 - [ ] **Batches API** before any whole-channel run: half price.
+- [ ] **Now on a spot** (docs/10, *The recent past is a memory*; docs/04,
+      *Now, 2026-10-02*). In order:
+      1. **Film shoots from the KK permits.** Snapshot the `Filmoptagelse`
+         permits weekly. Once a shoot has happened, it becomes a dated card
+         at the address it names ("filmer på Rysensteensgade 3"), not the
+         parking base. Attach it to the story already there (the Andersen
+         feature at Det Kongelige Teater). Credit Open Data DK.
+      2. **Snapshot the seating permits weekly.** A restaurant name the
+         address hasn't had before is a candidate opening. Check it against
+         CVR's registration date (`distribution.virk.dk`, free on request)
+         before it counts.
+      3. **The "now" line for bars.** The current seating permit names
+         what trades at a point that OSM's `is_in` can't see. Measure on the
+         ~20 places `now.py` leaves blank.
+      4. **Expiring cards, designed not built.** Street events ("until
+         Sunday") and `anlaegsprojekter` ("opens 2029"). Open questions:
+         `expires_at` set from the permit's end date, a re-check job, the
+         sheet label, and whether the walk may route to one.
 - [ ] **Check Haiku 4.5's retirement date.** Research read "not sooner than
       2026-10-15" on the models page; `CLASSIFIER_MODEL` defaults to it.
 
