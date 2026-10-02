@@ -824,15 +824,64 @@ rejects and why are rows now: `python -m pipeline.sources list`.
       data CC0); about famous people, not personal memories. OSM memorial
       plaques: 108 in the centre (ODbL). Both fit the text-source path in
       `crawler/sources.py`.
-- [ ] **Architecture, building history and the city still being built.**
-      (2026-10-02) Not yet researched. Two kinds of story for a spot: what
-      stood here and who built it, and what is coming (planned metro
-      stations, Nordhavn, Lynetteholm). Candidates to check for terms and
-      coordinates: Slots- og Kulturstyrelsen's FBB register (listed and
-      worth-preserving buildings), plandata.dk local plans, Metroselskabet
-      and By & Havn project pages. Catch: a planned project is news, not a
-      memory, and goes stale; decide whether it is a card at all, or a
-      different kind of pin.
+- [ ] **Architecture and building history.** (researched 2026-10-02, live
+      fetches of primary sites) Verdicts:
+      - **FBB, yes.** 1,029 protection cases in København (filter "Aktuel
+        status: Aktiv"; the count includes repealed ones). The case pages
+        `kulturarv.dk/fbb/sagvis.pub?sag=N` carry real text: architect,
+        dates, cultural-historical value (Børsen: Steenwinckel 1619-31,
+        Eigtved's ramp 1745, listed 1918). Dry, but enough for the
+        archival prompt. Bulk INSPIRE GML (`FrededeBygninger.gml.gz`) is
+        CC0 but points only, CRS mislabelled EPSG:4936 (it is UTM32). Text
+        only by scraping, Latin-1, session search; terms allow it ("kan
+        anvendes til de fleste formål uden styrelsens godkendelse", robots
+        `all`). Email cfk@slks.dk once for commercial use.
+      - **Wikidata, yes as the spine.** CC0. 556 items within 5 km of
+        Rådhuspladsen with architect (P84) or heritage (P1435); 419 with
+        an architect. Names, architects, dates, good coordinates; little
+        story. Wikipedia prose is BY-SA.
+      - **Fund og Fortidsminder, partly.** Nightly GeoPackage `FF.zip`,
+        "No conditions apply"; `begivenhed.fritekst` has 828 København
+        texts over 300 chars (Jarmers Tårn). Mostly prehistoric finds.
+        Bulk file only: the site bans harvesting.
+      - **BBR (Datafordeler), partly.** Free login; year built and use,
+        no text. Enrichment.
+      - **No:** Stadsarkiv byggesager and kbhbilleder (scraping banned,
+        datasets for research only), arkitekturbilleder.dk (CC BY-NC-SA).
+      Path: FBB building IDs → scrape case pages throttled → join Wikidata
+      for architect and date → `crawler/fbb.py` as a text source.
+- [ ] **The city still being built.** (researched 2026-10-02) Verdicts:
+      - **KK WFS, yes, the best one.** `wfs-kbhkort.kk.dk/k101/ows`, no
+        key, CC BY 4.0 (opendata.dk). Layer `anlaegsprojekter`: 226
+        projects with description and start/opening dates (dry civil
+        works text, e.g. Strandboulevarden cloudburst, in use 2029-03).
+        `projekt_punkt_oversigtskort`: the 8 M5 stations as exact points.
+        Skip `gravetilladelser` (3,019 dig permits, noise) and `metro`
+        (last updated 2013).
+      - **plandata.dk, partly.** WFS `geoserver.plandata.dk/geoserver/wfs`,
+        CC BY 4.0 ("For alle datalag, der indeholder kommunernes
+        planlægning … CC BY 4.0"). komnr=101: 798 adopted local plans, 10
+        proposals, 120 planned traffic items (Metrostation Nordhavn C,
+        Levantkaj). Polygons in EPSG:25832; the story ("formål") is only
+        in the linked PDF.
+      - **Metroselskabet and By & Havn, reference only.** No licence on
+        either site, no coordinates. Facts to check against: M5 stage 1
+        (6 stations) 2036, Refshaleøen and Lynetteholm 2045; M4 to Ydre
+        Nordhavn (Levantkaj, Nordsø Plads) 2032. Lynetteholm's ring closed
+        17 June 2026, filling runs ~25 years, first 8 ha open ~2029. M5
+        construction bill: in consultation Dec 2025, passage unconfirmed.
+      - **Historical shorelines and fills: no** open vector layer; old
+        maps are rasters only.
+      Roughly 250 CC BY future pins from KK plus plandata. **Decide first:**
+      a planned project is a dated fact that expires, not a memory. It
+      needs a status and a plan id re-checked against the source, and
+      turns into history once built or cancelled. Every planned-building
+      AR app (Rotterdam SARA, Oslo on Layar) died of staleness; Stockholm
+      växer survives by carrying the city's own status label. Pins stay
+      one kind, so this is a second card type or nothing. Exception:
+      Lynetteholm and Nordhavn told as history in progress fit today.
+      Comparable apps: DAC's guide (~300 expert points, unmaintained since
+      2023) and VoiceMap (paid tours, 50-65% to authors).
 - [ ] **Set up the Webshare proxy.** (2026-09-27) The code is in;
       transcripts stay capped at ~40 a day until this is done.
       1. Buy Webshare's **rotating residential** plan (~$3.50/GB, ~2,500
