@@ -39,6 +39,7 @@ import {
   type Profile,
   type TodaysRoute,
   type WalkAsk,
+  type WalkedRoute,
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
@@ -68,7 +69,8 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { EndPick, EndWalk, Preview, WALK_KM, WalkDone, type Reward } from './src/Plan.tsx';
+import { EndPick, EndWalk, PastWalk, Preview, WALK_KM, WalkDone, type Reward } from './src/Plan.tsx';
+import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
 import EditProfile from './src/EditProfile.tsx';
 import Drawer from './src/Drawer.tsx';
@@ -268,6 +270,9 @@ export default function App() {
   }, [profile?.user_id]);
   // What finishing today's walk earned: the closing card says so.
   const [reward, setReward] = useState<Reward | null>(null);
+  // A past walk tapped in Your walks, drawn on the map in place of today's
+  // pins until Done. A look: nothing on it opens that was not earned.
+  const [pastWalk, setPastWalk] = useState<WalkedRoute | null>(null);
   // Set to open Submit as an editor for this memory instead of a blank form.
   // Null means Submit is either closed or filing something new.
   const [editingMemory, setEditingMemory] = useState<LocatedMemory | null>(null);
@@ -714,12 +719,14 @@ export default function App() {
   // walked. Nothing off the route is ever drawn.
   const pins = useMemo(
     () =>
-      stage === 'preview' || stage === 'end'
-        ? (preview?.memories ?? [])
-        : stage === 'walk'
-          ? routeShown
-          : [],
-    [stage, preview, routeShown],
+      pastWalk
+        ? pastWalk.memories
+        : stage === 'preview' || stage === 'end'
+          ? (preview?.memories ?? [])
+          : stage === 'walk'
+            ? routeShown
+            : [],
+    [pastWalk, stage, preview, routeShown],
   );
   // The background watch tracks today's route, not the map's panned viewport -
   // bounded (ROUTE_SIZE, well under the OS's ~20-region cap), already "nearby
@@ -741,17 +748,22 @@ export default function App() {
   // out, and the rest keep their numbers. A preview numbers every stop.
   const routePositionById = useMemo(() => {
     const map = new Map<number, number>();
-    const walking = stage === 'walk';
+    const walking = stage === 'walk' && !pastWalk;
+  // On a past walk, a stop shows what you read there and nothing you did not.
+  const openEarned = (group: MemoryGroup) => {
+    setOpenAt(group.memories.filter((memory) => earned.has(memory.id)));
+    setOpenIndex(0);
+  };
     pins.forEach((memory, i) => {
       if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
     });
     return map;
-  }, [pins, earned, stage]);
+  }, [pins, earned, stage, pastWalk]);
   // Only a stop of today's walk opens (docs/10, "A walk planner, nothing
   // else"); a preview's stops are not yet a walk.
   const onTodaysWalk = useCallback(
-    (id: number) => stage === 'walk' && routePositionById.has(id),
-    [stage, routePositionById],
+    (id: number) => stage === 'walk' && !pastWalk && routePositionById.has(id),
+    [stage, pastWalk, routePositionById],
   );
   const routeUnlockedCount = useMemo(
     () => routeShown.filter((memory) => earned.has(memory.id)).length,
@@ -799,7 +811,7 @@ export default function App() {
   // centre is put back. A drag lets go until "Center on me" (Google's pattern).
   const [following, setFollowing] = useState(true);
   useEffect(() => setFollowing(true), [stage]);
-  const pinned = stage === 'walk' && !!position && !walkDone && following;
+  const pinned = stage === 'walk' && !pastWalk && !!position && !walkDone && following;
   useEffect(() => {
     // Never over a flight: `region` is still where it took off, so following
     // from it undid the pill's zoom-out, and a chain of flights each cut short
@@ -829,6 +841,14 @@ export default function App() {
     // A stop earned on an earlier day would make this a count of days.
     return span < 12 * 3600_000 ? Math.max(1, Math.round(span / 60_000)) : null;
   }, [showDone, routeShown, unlocked]);
+  const pastPath = useMemo(() => (pastWalk ? walkPath(pastWalk) : []), [pastWalk]);
+  useEffect(() => {
+    if (pastPath.length === 0) return;
+    mapRef.current?.fitToCoordinates(
+      pastPath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
+      { edgePadding: { top: 120, right: 60, bottom: 260, left: 60 }, animated: true },
+    );
+  }, [pastPath, mapRef]);
   useEffect(() => {
     if (donePath.length < 2) return;
     mapRef.current?.fitToCoordinates(
@@ -894,10 +914,10 @@ export default function App() {
   // Only on a walk, and only its stops are drawn, so only they are in reach.
   const withinReach = useMemo(
     () =>
-      stage === 'walk'
+      stage === 'walk' && !pastWalk
         ? groups.filter((group) => reachOf(group, position, earned) === 'unlockable')
         : [],
-    [stage, groups, position, earned],
+    [stage, pastWalk, groups, position, earned],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
   // Filing unlocks what you filed; the journal keeps that under My Memories.
@@ -1259,7 +1279,12 @@ export default function App() {
     [device],
   );
 
-  const walking = stage === 'walk';
+  const walking = stage === 'walk' && !pastWalk;
+  // On a past walk, a stop shows what you read there and nothing you did not.
+  const openEarned = (group: MemoryGroup) => {
+    setOpenAt(group.memories.filter((memory) => earned.has(memory.id)));
+    setOpenIndex(0);
+  };
 
   if (!logoDone) {
     return (
@@ -1394,10 +1419,11 @@ export default function App() {
               </Marker>
             )}
 
-            {stage === 'preview' && previewPath.length > 1 && (
+            {stage === 'preview' && !pastWalk && previewPath.length > 1 && (
               <RouteLine path={previewPath} dark={scheme === 'dark'} />
             )}
             {donePath.length > 1 && <RouteLine path={donePath} dark={scheme === 'dark'} />}
+            {pastPath.length > 1 && <RouteLine path={pastPath} dark={scheme === 'dark'} />}
 
             {groups.map((group) => {
               // The first of a group's memories that is also a route stop -
@@ -1425,7 +1451,9 @@ export default function App() {
                   routeSize={walking ? routeTotal : pins.length}
                   // A preview is a look, not a walk: its stops open once accepted.
                   onPress={() =>
-                    !walking
+                    pastWalk
+                      ? openEarned(group)
+                      : !walking
                       ? undefined
                       : group.spanMeters > CLUSTER_SPAN_M
                         ? zoomTo(group)
@@ -1467,7 +1495,7 @@ export default function App() {
             />
           )}
           {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
-          {stage === 'preview' && !journalOpen && (
+          {stage === 'preview' && !journalOpen && !pastWalk && (
             <Preview
               stops={preview ? preview.memories : null}
               meters={pathMeters(previewPath)}
@@ -1585,7 +1613,16 @@ export default function App() {
           {/* On a walk: Add, the walk card, Center on me (docs/10, "One
               ember button that changes"). Not over a card with its own
               buttons at the bottom. */}
-          {stage === 'walk' && !confirmEnd && !showDone && (
+          {pastWalk && (
+            <PastWalk
+              walk={pastWalk}
+              onDone={() => {
+                setPastWalk(null);
+                setFollowing(true);
+              }}
+            />
+          )}
+          {stage === 'walk' && !confirmEnd && !showDone && !pastWalk && (
             <View style={styles.bottom}>
               {addButton}
               <View style={styles.middle}>
@@ -1784,6 +1821,10 @@ export default function App() {
           profile={profile}
           device={device}
           radiusMeters={radiusMeters}
+          onOpenWalk={(walk) => {
+            setHowOpen(false);
+            setPastWalk(walk);
+          }}
         />
 
         <Paywall

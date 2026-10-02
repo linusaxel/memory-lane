@@ -287,7 +287,9 @@ earned by effort, "think of WoW, Naxx". Research notes and sources:
   account brings its walks and nothing needs moving.
 - **Your walks are the collection.** Every walk is a card drawn as its own
   shape (`src/WalkCard.tsx`), in Your walks and on the journal's walk rows,
-  and the finish card shows the new one. It is something you did, not a
+  and the finish card shows the new one. Tapping a card draws that walk on
+  the map in place of today's pins (`PastWalk` in `src/Plan.tsx`) until Done:
+  a look, so a stop shows only what was read there and nothing unlocks. It is something you did, not a
   trinket: generic keepsakes (one walk in three, by surprise) shipped the
   same day and were cut by the founder for this. The shape is the planned
   walk through its stops (`daily_routes.legs`), not a GPS track: the start is

@@ -15,9 +15,9 @@ import Slider from '@react-native-community/slider';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { Coordinates, LocatedMemory, WalkAsk } from './api.ts';
+import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Glyph from './Glyph.tsx';
-import { distance } from './format.ts';
+import { distance, walkDate } from './format.ts';
 import { Chip } from './Submit.tsx';
 import { button, buttonText, color, dim, floating, font, label } from './theme.ts';
 import { WalkShape } from './WalkCard.tsx';
@@ -398,6 +398,29 @@ export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, o
       {reward && <Text style={label}>{`+${reward.xp} XP`}</Text>}
       {reward?.level && <Text style={label}>{`Level ${reward.level}`}</Text>}
       {streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>}
+      <Pressable
+        style={dim(styles.primary)}
+        onPress={onDone}
+        accessibilityRole="button"
+        accessibilityLabel="Done"
+      >
+        <Text style={styles.primaryText}>Done</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+/** A past walk, drawn on the map behind it: when, and what it came to.
+ *  Opened from its card in Your walks. */
+export function PastWalk({ walk, onDone }: { walk: WalkedRoute; onDone: () => void }) {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle} accessibilityRole="header" testID="past-walk">
+        {walkDate(walk.route_date)}
+      </Text>
+      <Text style={styles.cardBody}>
+        {`${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'} · ${distance(walk.budget_meters)}`}
+      </Text>
       <Pressable
         style={dim(styles.primary)}
         onPress={onDone}

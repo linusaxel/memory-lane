@@ -218,3 +218,14 @@ appId: ${APP_ID}
 - assertNotVisible: "End walk"
 - assertVisible:
     id: "more-walks"
+
+# The walk is kept: its card in Your walks shows it on the map again.
+- tapOn: "Level.*"
+- tapOn:
+    id: "walk-card"
+    index: 0
+- assertVisible:
+    id: "past-walk"
+- tapOn: "Done"
+- assertVisible:
+    id: "more-walks"

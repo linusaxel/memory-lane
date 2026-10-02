@@ -16,10 +16,12 @@ type Props = {
   onClose: () => void;
   profile: Profile | null;
   device: string | null;
+  /** A card tapped: show that walk on the map. */
+  onOpenWalk: (walk: WalkedRoute) => void;
   radiusMeters: number;
 };
 
-export default function HowItWorks({ visible, onClose, profile, device, radiusMeters }: Props) {
+export default function HowItWorks({ visible, onClose, profile, device, radiusMeters, onOpenWalk }: Props) {
   // The journal's cache first, so it reads offline, then the server's.
   const [walks, setWalks] = useState<WalkedRoute[]>([]);
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function HowItWorks({ visible, onClose, profile, device, radiusMe
         </Text>
         <View style={styles.shelf}>
           {walks.map((walk, i) => (
-            <WalkCard key={i} walk={walk} size={card} />
+            <WalkCard key={i} walk={walk} size={card} onPress={() => onOpenWalk(walk)} />
           ))}
         </View>
 

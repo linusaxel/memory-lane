@@ -3,12 +3,12 @@
  *  memories wait for a level"). The shape is the planned walk through its
  *  stops; the start is never stored, so it begins at the first stop. */
 
-import { StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import Svg, { Circle, Polyline } from 'react-native-svg';
 
 import type { Coordinates, WalkedRoute } from './api.ts';
 import { distance, walkDate } from './format.ts';
-import { color, font, label, solid } from './theme.ts';
+import { color, dim, font, label, solid } from './theme.ts';
 
 /** The street shape through every stop, or straight lines without one. */
 export function walkPath(walk: WalkedRoute): Coordinates[] {
@@ -52,23 +52,26 @@ export function WalkShape({ path, size }: { path: Coordinates[]; size: number })
   );
 }
 
-type Props = { walk: WalkedRoute; size: number };
+type Props = { walk: WalkedRoute; size: number; onPress: () => void };
 
-export default function WalkCard({ walk, size }: Props) {
+export default function WalkCard({ walk, size, onPress }: Props) {
   const day = walkDate(walk.route_date);
   const km = distance(walk.budget_meters);
   return (
-    <View
-      style={[styles.card, { width: size }]}
-      accessible
+    <Pressable
+      style={dim([styles.card, { width: size }])}
+      onPress={onPress}
+      accessibilityRole="button"
       accessibilityLabel={`${day}: ${walk.earned} memories, ${km}.`}
+      accessibilityHint="Shows the walk on the map"
+      testID="walk-card"
     >
       <WalkShape path={walkPath(walk)} size={size - 2} />
       <View style={styles.under}>
         <Text style={styles.day}>{day}</Text>
         <Text style={styles.meta}>{`${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'} · ${km}`}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
