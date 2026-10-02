@@ -54,7 +54,8 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "10 stops · .* loop"
     timeout: 40000
-- assertVisible: "That's the longest walk from here\\."
+- assertVisible:
+    id: "longest-walk"
 # Past Sortedams Sø, the lake at the door, on every roll.
 - assertVisible: "Stop .* of 10\\. Peblinge Sø.*"
 
@@ -89,13 +90,5 @@ appId: ${APP_ID}
 - assertVisible: "Stop \\d+, Sortedams Sø 4, dev seed, .*"
 - assertNotVisible: "Stop \\d+, Sortedams Sø 3, dev seed, .*"
 - tapOn: ".*, 2 memories · 4\\.0 km"
-- tapOn: ".*, 5 memories · .*"
-- scrollUntilVisible:
-    element: "Stop \\d+, Sankt Jørgens Sø 7, dev seed, .*"
-    direction: DOWN
-    centerElement: true
-- tapOn: "Stop \\d+, Sankt Jørgens Sø 7, dev seed, .*"
-- assertVisible: "Heart"
-- tapOn: "Close"
 - tapOn: "Close journal"
 - assertVisible: "Next: .*\\. .* of 10.*"

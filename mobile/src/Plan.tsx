@@ -173,7 +173,10 @@ export function Preview({
           space, so the line never shifts between walks. */}
       <View style={styles.pages}>
         {found && <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />}
-        <Text style={[styles.cardBody, found && styles.paged]}>
+        <Text
+          style={[styles.cardBody, found && styles.paged]}
+          testID={stops === 0 ? 'no-walk' : undefined}
+        >
           {stops == null
             ? 'Finding a walk…'
             : stops === 0
@@ -185,9 +188,13 @@ export function Preview({
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
       )}
-      {short && <Text style={styles.cardBody}>That's the longest walk from here.</Text>}
+      {short && (
+        <Text style={styles.cardBody} testID="longest-walk">
+          That's the longest walk from here.
+        </Text>
+      )}
       {fallback && (
-        <Text style={styles.cardBody}>
+        <Text style={styles.cardBody} testID="planning-from-centre">
           Planning from central Copenhagen. Turn on location to plan from where you are.
         </Text>
       )}
@@ -259,7 +266,7 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
       <Text style={styles.cardTitle} accessibilityRole="header">
         End this walk?
       </Text>
-      <Text style={styles.cardBody}>
+      <Text style={styles.cardBody} testID="end-walk-warning">
         {`${
           left === 1
             ? "The stop you haven't reached will lock again."
@@ -303,7 +310,7 @@ export function WalkDone({ stops, meters, loop, minutes, streak, keyEarned, onDo
         : ` · ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
   return (
     <View style={styles.card} accessibilityViewIsModal>
-      <Text style={styles.doneTitle} accessibilityRole="header">
+      <Text style={styles.doneTitle} accessibilityRole="header" testID="walk-done">
         Nice walk.
       </Text>
       <Text style={styles.cardBody}>

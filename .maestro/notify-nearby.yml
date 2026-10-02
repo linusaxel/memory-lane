@@ -27,14 +27,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Plan a walk"
     timeout: 40000
-- tapOn: "Plan a walk"
-- extendedWaitUntil:
-    visible: "4 stops · .* loop"
-    timeout: 40000
-- tapOn: "Start this walk"
-- extendedWaitUntil:
-    visible: "Next: .*\\. 1 of 4.*"
-    timeout: 40000
+- runFlow: steps/start-walk.yml
 
 - setLocation:
     latitude: ${Number(START_LAT) + 0.02}
@@ -79,5 +72,6 @@ appId: ${APP_ID}
     point: 50%, 10%
 # Back where it was left: the app's own settings sheet, still open.
 - extendedWaitUntil:
-    visible: "Tell me when a memory I haven't unlocked is nearby\\."
+    visible:
+      id: "notify-nearby"
     timeout: 20000

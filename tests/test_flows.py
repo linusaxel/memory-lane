@@ -353,6 +353,7 @@ def test_the_default_walk_is_as_long_as_walk_and_unlock_walks():
     km = re.search(
         r"WALK_KM = \{[^}]*initial: ([\d.]+)", (ROOT / "mobile/src/Plan.tsx").read_text()
     )
-    flow = (ROOT / ".maestro/walk-and-unlock.yml").read_text()
+    # walk-and-unlock.yml plans and accepts it through this step.
+    flow = (ROOT / ".maestro/steps/start-walk.yml").read_text()
     stops = re.search(r'visible: "(\d+) stops · ', flow)
     assert _route_size(float(km[1]) * 1000) == int(stops[1])

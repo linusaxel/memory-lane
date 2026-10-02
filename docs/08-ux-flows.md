@@ -1176,7 +1176,7 @@ cannot find: "Nothing bought on this account yet."
 **Failure:** nothing locked within the map's 5 km: no card, and the welcome
 unlock waits for the first pin stood on with no keys.
 
-**Done when:** `.maestro/first-pick.yml` passes, and `tests/test_api_unlocks.py`.
+**Done when:** `.maestro/first-run.yml` passes, and `tests/test_api_unlocks.py`.
 
 ## Proposed
 

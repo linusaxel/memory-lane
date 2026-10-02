@@ -1,0 +1,13 @@
+# Sign as NAME, then relaunch: the profile, and so the subscription, is read
+# at launch. run.sh's `broke` and `subscriber` triggers key off the name.
+appId: ${APP_ID}
+---
+- tapOn: "Journal"
+- tapOn: "Edit profile"
+- tapOn: "The name your memories are signed with"
+- eraseText: 10
+- inputText: ${NAME}
+- tapOn: "Close profile"
+- tapOn: "Close journal"
+- launchApp:
+    clearState: false

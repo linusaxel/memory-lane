@@ -72,7 +72,7 @@ export default function Paywall({ visible, onClose, device, onProfile, keys }: P
         </Text>
 
         {packs.length === 0 ? (
-          <Text style={styles.note}>Keys aren't available right now.</Text>
+          <Text style={styles.note} testID="keys-unavailable">Keys aren't available right now.</Text>
         ) : (
           <View style={styles.plans}>
             {packs.map((pack) => {
@@ -97,7 +97,7 @@ export default function Paywall({ visible, onClose, device, onProfile, keys }: P
 
         <Text style={styles.heading}>Or every memory, always</Text>
         {offered === null ? null : offered.length === 0 ? (
-          <Text style={styles.note}>Subscriptions aren't available right now.</Text>
+          <Text style={styles.note} testID="subscriptions-unavailable">Subscriptions aren't available right now.</Text>
         ) : (
           <View style={styles.plans}>
             {offered.map((plan, i) => (

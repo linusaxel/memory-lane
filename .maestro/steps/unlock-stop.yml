@@ -18,5 +18,6 @@ appId: ${APP_ID}
 - assertNotVisible: "Unlock this memory"
 # F30: never over a memory, which is read first. Only closing the last one
 # shows the whole loop.
-- assertNotVisible: "Nice walk\\."
+- assertNotVisible:
+    id: "walk-done"
 - tapOn: "Close"

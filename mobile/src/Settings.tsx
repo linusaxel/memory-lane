@@ -124,6 +124,7 @@ export default function Settings({
           <Row>
             <Text style={styles.rowText}>Tell me when a memory I haven't unlocked is nearby.</Text>
             <Switch
+              testID="notify-nearby"
               value={notifyNearby}
               onValueChange={onNotifyNearby}
               accessibilityLabel="Notify me when a memory is nearby"

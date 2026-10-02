@@ -34,23 +34,15 @@ appId: ${APP_ID}
       LNG: ${START_LNG}
       LOCATION: inuse
 
-# F25: plan, preview, accept. The default length is the walk below.
 # F29: the map of what is locked comes first; Plan a walk opens F1.
-- tapOn: "Plan a walk"
-- extendedWaitUntil:
-    visible: "4 stops · .* loop"
-    timeout: 40000
-- tapOn: "Start this walk"
-
-- extendedWaitUntil:
-    visible: "Next: .*\\. 1 of 4.*"
-    timeout: 40000
+- runFlow: steps/start-walk.yml
 
 # A walk can be ended any time, from the card's ✕; with stops still to
 # reach, it asks first.
 - tapOn: "End walk"
 - assertVisible: "End this walk\\?"
-- assertVisible: "The 4 stops you haven't reached will lock again\\. Anything you've unlocked stays unlocked\\."
+- assertVisible:
+    id: "end-walk-warning"
 - tapOn: "Keep walking"
 - assertNotVisible: "End this walk\\?"
 - assertVisible: "Next: .*\\. 1 of 4.*"
@@ -122,7 +114,8 @@ appId: ${APP_ID}
 
 # F30: closing the last memory shows the whole loop and what it came to, once.
 - extendedWaitUntil:
-    visible: "Nice walk\\."
+    visible:
+      id: "walk-done"
     timeout: 30000
 - assertVisible: "4 memories · .* loop · .* min"
 # Every stop opened for nothing, and finishing earned a key.
@@ -185,15 +178,6 @@ appId: ${APP_ID}
 - assertVisible: "Stood here twice\\."
 - assertNotVisible: "Stood here at dawn\\."
 - tapOn: "Close"
-- tapOn: "Stop \\d+, ${STOP1}, .*"
-- assertVisible:
-    text: "Heart"
-    selected: true
-# The note is the server's now, under the summary and whatever is attached.
-- scrollUntilVisible:
-    element: "Stood here twice\\."
-    direction: DOWN
-- tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the
 # whole assertion. And the walk stands until it is ended: the relaunch lands
@@ -203,17 +187,22 @@ appId: ${APP_ID}
     visible: "Every stop unlocked\\. 4 of 4\\."
     timeout: 30000
 - assertNotVisible: "A walk from here"
-- assertNotVisible: "Nice walk\\."
+- assertNotVisible:
+    id: "walk-done"
 - tapOn: "Journal"
 - extendedWaitUntil:
     visible: ".*, 4 memories · .*"
     timeout: 30000
 - tapOn: ".*, 4 memories · .*"
-# F26: and the heart outlives the process.
+# F26 + F33: the heart and the note outlive the sheet and the process. The
+# note is the server's now, under the summary and whatever is attached.
 - tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible:
     text: "Heart"
     selected: true
+- scrollUntilVisible:
+    element: "Stood here twice\\."
+    direction: DOWN
 - tapOn: "Close"
 - tapOn: "Close journal"
 - assertVisible: "Every stop unlocked\\. 4 of 4\\."

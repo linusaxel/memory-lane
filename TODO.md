@@ -64,7 +64,7 @@ delete an entry when its fix lands.
   says "run prebuild --clean" when it differs.
 
 - **Checking a preview-card change means minutes-long e2e flows.** 2026-09-27:
-  the four flows that touch planning (look-around, lakes-loop, walk-and-unlock,
+  the four flows that touch planning (first-run, lakes-loop, walk-and-unlock,
   notify-nearby) take 100-160 s each, and notify-nearby minutes more. Each one
   signs in from a cleared launch and walks a whole scenario, so re-checking one
   card string cost about 10 minutes, and the founder called it far too long.
@@ -90,11 +90,6 @@ delete an entry when its fix lands.
   today's style (2 spaces, single quotes, trailing commas), add `prettier --check`
   to `loop/verify.sh`, and do one reformat commit listed in `.git-blame-ignore-revs`.
   Then drop the "never run `npx prettier`" rule in AGENTS.md.
-
-- **The e2e flows assert on whole sentences of copy.** 2026-09-27: a copy pass
-  had to hand-edit seven `.maestro/*.yml` files and regex-escape every changed
-  sentence, and a missed one fails a 10-minute run. Fix: give the gate notes and
-  card titles a `testID` and assert on that, keeping prose matches for labels only.
 
 ---
 
