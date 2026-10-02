@@ -265,6 +265,25 @@ eye), and a filter bottom left picks all, locked only or unlocked only.
 Still not a corpus to browse: what you opened you could already read in the
 journal, and locked pins stay unreadable.
 
+**Why every pin shows (researched 2026-10-02).** Every location app that
+lasted shows its targets: Ingress, Geocaching, Wandrer, Atlas Obscura, and
+Pokémon GO after it learned this the hard way. On 30 Jul 2016 it removed its
+tracker, and with it "what is near me, and where". The rating fell to about
+1.5★ and players were refunded
+(https://proof.csmonitor.com/Technology/2016/0802/Pokemon-Go-creators-remove-a-key-feature-risking-users-wrath).
+Niantic fixed it by showing more, with Nearby and Sightings
+(https://www.androidpolice.com/2016/11/23/niantic-ditto-pokemon-go-tweaks-nearby-more-regions/).
+Curiosity needs a gap you can feel (Loewenstein 1994), and it peaks at partial
+knowledge (Kang et al. 2009, https://pubmed.ncbi.nlm.nih.gov/19619181/). A
+hidden pin makes no gap; a peek with place, year, source and tags but no text
+sits at the peak. People plan around a preview and save the content for the
+spot. Of 29 locals on three history tours, "no participants took the
+opportunity to view the stop-based content in advance" (Smith et al. 2019,
+https://dirkvl.info/wp-content/uploads/2019/11/smith-et-al_chapter-glam.pdf).
+Hiding pins fails worst on the first session: at home, with an empty map. The
+spoiler research is contested (Leavitt & Christenfeld 2011 against the failed
+replications), so this decision doesn't rest on it.
+
 ### Only today's walk unlocks
 
 Status: **Superseded 2026-09-30** by *Steps open a memory*: any memory you

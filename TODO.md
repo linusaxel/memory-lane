@@ -539,30 +539,6 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
 
 ### The map: keep showing every pin
 
-- [ ] **V1 Record why the map shows every locked pin.** (checked 2026-10-02)
-      Decided already (docs/10 *A map of what is locked*); add this evidence
-      to that entry.
-      - Every location app that lasted shows its targets: Ingress, Pokémon GO
-        after the fix, Geocaching, Wandrer, Atlas Obscura.
-      - Pokémon GO's worst-punished change took away "what is near me, and
-        where". The tracker was removed 30 Jul 2016, the rating fell to about
-        1.5★, and players got refunds
-        (https://proof.csmonitor.com/Technology/2016/0802/Pokemon-Go-creators-remove-a-key-feature-risking-users-wrath).
-        Niantic's fix was to show more: Nearby and Sightings
-        (https://www.androidpolice.com/2016/11/23/niantic-ditto-pokemon-go-tweaks-nearby-more-regions/).
-      - Curiosity needs a gap you can feel (Loewenstein 1994) and peaks at
-        partial knowledge (Kang et al. 2009,
-        https://pubmed.ncbi.nlm.nih.gov/19619181/). A hidden pin makes no
-        gap. Place, year, source and tags with no text sits at that peak.
-      - In the field, people plan around a preview but save the content for
-        the spot. In Smith et al. 2019's study of 29 locals on three history
-        tours, "no participants took the opportunity to view the stop-based
-        content in advance"
-        (https://dirkvl.info/wp-content/uploads/2019/11/smith-et-al_chapter-glam.pdf).
-      - Hiding pins until you have steps fails worst at the first session:
-        at home, with 0 steps, on an empty map.
-      - The spoiler research is contested (Leavitt & Christenfeld 2011 vs the
-        failed replications), so build on neither side of it.
 - [ ] **V2 Full detail near you, a glow further out.** (checked 2026-10-02)
       - The nearest three locks get a strong pin with direction and distance.
         Further ones thin to soft clusters or areas, as Pokémon GO's
