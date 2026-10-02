@@ -1,5 +1,6 @@
-/** What a coordinate looks like on the map: one pin, lit when it can be opened
- *  from here - see "One pin" in mobile/UI.md. */
+/** What a coordinate looks like on the map: a padlock while locked, lit when it
+ *  can be opened from here, and a paper pin once opened - see "One pin" in
+ *  mobile/UI.md. */
 
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Callout, Marker } from 'react-native-maps';
@@ -103,18 +104,26 @@ export default function MemoryMarker({
 
 type PinProps = { lit: boolean; next: boolean; open: boolean; opacity: number; badge: number | null };
 
-/** One pin for everything. It lights up only when it can be opened from where
- *  you stand, and turns inside out, paper with an ember eye, once you have
- *  opened it; every other state lives in the title and the sheet. The paper
- *  centre is the point: the pin you can open is the pin you are standing on,
- *  so the blue location dot lands in the hole instead of under a disc. */
+/** A locked memory is a small padlock; it lights up gold only when it can be
+ *  opened from where you stand. Once opened it turns into the paper pin with an
+ *  ember eye, so the blue location dot lands in the hole. Every other state
+ *  lives in the title and the sheet. */
 function Pin({ lit, next, open, opacity, badge }: PinProps) {
   const hop = useHop(next);
   return (
     <Animated.View style={[styles.wrap, lit && styles.halo, { opacity }, hop]}>
-      <View style={[styles.pin, open && styles.pinOpen, lit && styles.pinLit, next && styles.pinNext]}>
-        <View style={[styles.eye, open && styles.eyeOpen, (lit || next) && styles.eyeLit, lit && styles.onSeal]} />
-      </View>
+      {open ? (
+        <View style={[styles.pin, styles.pinOpen]}>
+          <View style={[styles.eye, styles.eyeOpen]} />
+        </View>
+      ) : (
+        <View style={[styles.lock, (lit || next) && styles.lockBig]}>
+          <View style={[styles.shackle, lit && styles.shackleLit]} />
+          <View style={[styles.body, lit && styles.bodyLit]}>
+            <View style={[styles.keyhole, lit && styles.onSeal]} />
+          </View>
+        </View>
+      )}
       {badge !== null && (
         <View
           style={[
@@ -132,7 +141,6 @@ function Pin({ lit, next, open, opacity, badge }: PinProps) {
 }
 
 const PIN = 24;
-const LIT = 32;
 
 /** The count sits in fixed, non-clipping circles as small as 20px - there is
  *  no room in there for the OS's largest accessibility text sizes, which can
@@ -160,14 +168,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Gold is too light for a paper edge, so a lit pin draws in sealInk.
-  pinLit: { width: LIT, height: LIT, borderRadius: LIT / 2, backgroundColor: color.seal, borderColor: color.sealInk },
-  pinNext: { width: LIT, height: LIT, borderRadius: LIT / 2 },
   pinOpen: { backgroundColor: color.paper, borderColor: color.ember },
   eye: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.paper },
-  eyeLit: { width: 12, height: 12, borderRadius: 6 },
   eyeOpen: { backgroundColor: color.ember },
   onSeal: { backgroundColor: color.sealInk },
+
+  // The padlock: a shackle over a body, drawn rather than a glyph, because a
+  // marker snapshots its view once (tracksViewChanges is off).
+  lock: { alignItems: 'center' },
+  // The next stop and a lock you can open read bigger, not just brighter.
+  lockBig: { transform: [{ scale: 1.35 }] },
+  shackle: {
+    width: 10,
+    height: 8,
+    borderWidth: 2.5,
+    borderBottomWidth: 0,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    borderColor: color.ember,
+  },
+  shackleLit: { borderColor: color.sealInk },
+  // Gold is too light for a paper edge, so a lit lock draws in sealInk.
+  body: {
+    width: 16,
+    height: 13,
+    borderRadius: 3,
+    borderWidth: 1.5,
+    borderColor: color.paper,
+    backgroundColor: color.ember,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bodyLit: { backgroundColor: color.seal, borderColor: color.sealInk },
+  keyhole: { width: 3, height: 5, borderRadius: 1.5, backgroundColor: color.paper },
 
   tag: {
     position: 'absolute',
