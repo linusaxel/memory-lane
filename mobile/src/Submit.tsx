@@ -439,6 +439,7 @@ export default function Submit({
             <View key={photo.uri} style={styles.part}>
               <View>
                 <Image
+                  testID={photo.item ? 'photo' : 'photo-uploading'}
                   source={{ uri: photo.item ? mediaUrl(photo.item) : photo.uri }}
                   style={[styles.photo, photo.failed && styles.photoFailed]}
                 />

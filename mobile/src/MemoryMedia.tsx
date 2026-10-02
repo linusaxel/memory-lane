@@ -96,6 +96,7 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
         ) : (
           <Image
             key={photo.id}
+            testID="photo"
             source={{ uri: mediaUrl(photo) }}
             style={styles.photo}
             onError={() => setFailed((current) => [...current, photo.id])}

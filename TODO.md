@@ -49,12 +49,6 @@ delete an entry when its fix lands.
   That took a throwaway script (baseline read free from `extraction_chunks`,
   candidate billed, both run through `geocode.place`). Fix: a `--places` mode
   on `pipeline.quality` doing just that.
-- **No flow attaches a photo, so uploads broke unseen.** 2026-09-28: SDK 57's
-  global `expo/fetch` refuses React Native's `{ uri }` FormData part, and every
-  photo and recording failed on the phone without a request reaching the API.
-  Maestro can drive the system picker (tap "Library", "Allow Full Access", a
-  cell by `point`), so it is testable. Fix: in `file-and-edit.yml`, attach the
-  simulator's first stock photo before Post and assert its image on the card.
 - **A damaged Pods tree fails as a link error.** 2026-09-28: the simulator slice
   of `Pods/React-Core-prebuilt/React.xcframework` had lost its `React` binary,
   so every build died on `ld: framework 'React' not found` and run.sh said

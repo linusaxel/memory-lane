@@ -34,6 +34,31 @@ appId: ${APP_ID}
 - tapOn:
     id: "story"
 - inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after. #food"
+
+# A photo, which no other flow attaches: SDK 57's expo/fetch once refused the
+# { uri } FormData part and every upload failed without reaching the API.
+# iOS 26 asks for full access despite run.sh's simctl grant; left unanswered,
+# that prompt outlives the app and fails the next launch on "Memory Lane".
+# hideKeyboard fails on the multi-line story; a scroll gets past it.
+- scrollUntilVisible:
+    element: "Choose photo"
+    direction: DOWN
+- tapOn: "Choose photo"
+- tapOn:
+    text: "Allow Full Access"
+    optional: true
+# The picker slides up slowly, and runs out of process, so Maestro can't
+# wait on its text; tapping before it lands hits the sheet.
+- waitForAnimationToEnd:
+    timeout: 5000
+# The first stock photo, top left of the grid.
+- tapOn:
+    point: "17%,30%"
+# Post stays disabled until the upload is back; the id only says photo then.
+- extendedWaitUntil:
+    visible:
+      id: "photo"
+    timeout: 30000
 - tapOn: "Post"
 
 # One sentence and its #words are one paragraph (hashtags.ts, lede).
@@ -44,6 +69,9 @@ appId: ${APP_ID}
 - assertVisible: "The step by the ferry landing"
 # F21: signed Anonymous until you give a name.
 - assertVisible: ".*Anonymous.*"
+# The card's photo is the API's copy, not the phone's file.
+- assertVisible:
+    id: "photo"
 
 # F33 from the author's own phone, which is the only one a flow has: the
 # author unlocked it by filing it, so they may sign it. They may not heart it
