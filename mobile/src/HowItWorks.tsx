@@ -1,4 +1,4 @@
-/** What the steps pill opens: how the app works, in the words of what you
+/** What the keys pill opens: how the app works, in the words of what you
  *  can see on the map. The balance on top, then the rules in the order you
  *  meet them. */
 
@@ -7,7 +7,7 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { Profile } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import { color, figure, font, label } from './theme.ts';
-import { STEPS_PER_MINUTE, type Wallet } from './wallet.ts';
+import type { Wallet } from './wallet.ts';
 
 type Props = {
   visible: boolean;
@@ -18,8 +18,6 @@ type Props = {
 };
 
 export default function HowItWorks({ visible, onClose, wallet, profile, radiusMeters }: Props) {
-  const price = profile?.steps_per_unlock ?? 1000;
-  const minutes = Math.round(price / STEPS_PER_MINUTE);
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
@@ -30,7 +28,9 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
         {wallet && (
           <View style={styles.now}>
             <Text style={styles.figure}>{wallet.figure.toLocaleString()}</Text>
-            <Text style={styles.unit}>{wallet.unit}</Text>
+            <Text style={styles.unit}>
+              {wallet.starting ? 'to start' : wallet.figure === 1 ? 'key' : 'keys'}
+            </Text>
           </View>
         )}
 
@@ -51,20 +51,16 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
               Pick one and open it from anywhere: the sofa, the bus, the other side of town.
               Just the one.
             </Section>
-            <Section title="After that, walking pays">
-              Every {price.toLocaleString()} steps, about {minutes} minutes on foot, opens one
-              more. You still have to be standing there.
+            <Section title="Today's walk is on us">
+              Tap Plan a walk for a loop past a few memories. Every stop on it opens for
+              nothing, and finishing it earns a key. One walk a day.
+            </Section>
+            <Section title="A key opens the rest">
+              Wander off the walk and any memory you stand on opens with a key. You still have
+              to be standing there.
             </Section>
           </>
         )}
-        <Section title="Your phone counts the steps">
-          Your walk to work counts, even with the app closed. Open the app and they land up
-          top.
-        </Section>
-        <Section title="Wander, or let it plan">
-          Walk wherever you like and see what you pass. Or tap Plan a walk for a loop past a
-          few memories.
-        </Section>
 
       </ScrollView>
     </Modal>

@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from api import read, route_solver, streets
 from api.models import Coordinates
-from tests.conftest import give_steps, spend_welcome
+from tests.conftest import spend_welcome
 
 pytestmark = pytest.mark.db
 
@@ -442,7 +442,7 @@ def test_a_stop_hidden_after_the_accept_drops_out_of_todays_walk(client, db_sess
 def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_session):
     for n in (1, 2):
         _offset(db_session, n)
-    give_steps(db_session, DEVICE, 1000)
+    db_session.commit()
     stops = [(m["id"], m["place"]["coordinates"]) for m in _route(client).json()["memories"]]
 
     def unlock(memory_id, at):
@@ -473,7 +473,7 @@ def test_a_stop_opened_from_afar_does_not_finish_the_walk(client, db_session):
 def test_walked_lists_the_accounts_walks_with_earned_stops_open(client, db_session):
     for n in (1, 2):
         _offset(db_session, n)
-    give_steps(db_session, DEVICE, 1000)
+    db_session.commit()
     stops = _route(client).json()["memories"]
     at = stops[0]["place"]["coordinates"]
     client.post(f"/v1/memories/{stops[0]['id']}/unlock", json={"device": DEVICE, **at})
@@ -835,14 +835,66 @@ def _walk_one_stop(client):
     _end(client)
 
 
-def test_a_second_walk_the_same_day_is_not_refused(client, db_session):
+def _keys(client):
+    return client.get(f"/v1/me?device={DEVICE}").json()["keys"]
+
+
+def _finish(client):
+    for stop in _route(client).json()["memories"]:
+        at = stop["place"]["coordinates"]
+        assert client.post(
+            f"/v1/memories/{stop['id']}/unlock", json={"device": DEVICE, **at}
+        ).is_success
+
+
+def test_a_second_walk_the_same_day_is_refused(client, db_session):
+    """docs/10, "Keys open a lock, and today's walk is free": its stops are
+    free, so a second walk would open any pin for nothing."""
     for n in range(1, 9):
         _offset(db_session, n)
     db_session.commit()
     _walk_one_stop(client)
 
-    assert _preview(client).is_success
+    for refused in (_preview(client), _route(client)):
+        assert refused.status_code == 403
+        assert refused.json()["detail"] == {"reason": "walked_today"}
+
+
+def test_a_walk_that_opened_nothing_gives_the_day_back(client, db_session):
+    for n in range(1, 9):
+        _offset(db_session, n)
+    db_session.commit()
+    _route(client)
+    _end(client)
     assert _route(client).is_success
+
+
+def test_a_subscriber_walks_again(client, db_session):
+    for n in range(1, 9):
+        _offset(db_session, n)
+    _subscribe(db_session)
+    _walk_one_stop(client)
+    assert _route(client).is_success
+
+
+def test_finishing_a_walk_earns_a_key_once_a_day(client, db_session):
+    for n in range(1, 9):
+        _offset(db_session, n)
+    _subscribe(db_session)
+    spend_welcome(db_session, DEVICE)
+    _finish(client)
+    assert _keys(client) == 1, "every stop free, and a key for the last"
+    _end(client)
+    _finish(client)
+    assert _keys(client) == 1, "a subscriber's second walk earns nothing"
+
+
+def test_a_walk_left_unfinished_earns_no_key(client, db_session):
+    for n in (1, 2):
+        _offset(db_session, n)
+    db_session.commit()
+    _walk_one_stop(client)
+    assert _keys(client) == 0
 
 
 def test_a_subscriber_opens_what_they_stand_on_and_still_has_to_stand_there(client, db_session):

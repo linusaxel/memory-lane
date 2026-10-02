@@ -9,7 +9,6 @@ import Approach from './Approach.tsx';
 import Glyph from './Glyph.tsx';
 import { button, buttonTextSmall, color, floating, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
-import { shortfall } from './wallet.ts';
 
 type Props = {
   memory: LocatedMemory;
@@ -21,12 +20,12 @@ type Props = {
   onHold: (holding: boolean) => void;
   busy: boolean;
   error: string | null;
-  /** Steps still to walk before this opens. Then there is no ring to hold,
-   *  only the steps filling towards it and the way round them. */
-  short: number;
-  /** How full the next unlock is, 0-1, while short. */
-  progress: number;
-  onSkip: () => void;
+  /** Out of keys, off today's walk: no ring to hold, only the way to a key. */
+  blocked: boolean;
+  /** One key, in the store's own price ("7,00 kr"); null when the store has
+   *  none to sell, and the button opens the paywall instead. */
+  keyPrice: string | null;
+  onGetKey: () => void;
 };
 
 export default function UnlockHere({
@@ -38,16 +37,16 @@ export default function UnlockHere({
   onHold,
   busy,
   error,
-  short,
-  progress,
-  onSkip,
+  blocked,
+  keyPrice,
+  onGetKey,
 }: Props) {
   const from = [memory.year, memory.source_name].filter(Boolean).join(' · ');
   const many = count > 1;
   return (
     <View style={styles.stack} pointerEvents="box-none">
-      {short > 0 ? (
-        <Approach meters={null} radius={1} progress={progress} size={136} />
+      {blocked ? (
+        <Approach meters={null} radius={1} progress={0} size={136} />
       ) : (
         <UnlockButton onUnlock={onUnlock} onHold={onHold} busy={busy} error={error} />
       )}
@@ -64,17 +63,21 @@ export default function UnlockHere({
               {[from, many && `${index + 1} of ${count}`].filter(Boolean).join(' · ')}
             </Text>
           )}
-          {short > 0 && (
+          {blocked && (
             <>
-              <Text style={styles.short}>{shortfall(short)}</Text>
+              <Text style={styles.short}>Out of keys</Text>
               <Pressable
                 style={[button.quiet, button.small, styles.skip]}
                 hitSlop={4}
                 accessibilityRole="button"
-                onPress={onSkip}
+                disabled={busy}
+                onPress={onGetKey}
               >
-                <Text style={styles.skipText}>Skip the steps</Text>
+                <Text style={styles.skipText}>
+                  {keyPrice ? `Open for ${keyPrice}` : 'Get keys'}
+                </Text>
               </Pressable>
+              {error && <Text style={styles.short}>{error}</Text>}
             </>
           )}
         </View>

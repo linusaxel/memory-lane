@@ -39,13 +39,19 @@ notification is generated on your device, and nothing is sent anywhere beyond th
 nearby-memories check the map already makes. Turning it off stops the check immediately.</p>
 
 <h2>Steps</h2>
-<p>Opening a memory costs steps once the day's three free ones are used. On an iPhone,
-if you grant Motion &amp; Fitness permission, the app reads the step count your phone
-already keeps and sends us one number: the steps since it last counted. We store only
-your balance and when it was last counted, never a day-by-day history, never alongside
-your location, and never share it with anyone. It pays for opening memories and nothing
-else. Without the permission the app still works; you keep three free a day and a
-subscription opens memories without steps. Deleting your account deletes the balance.</p>
+<p>On an iPhone, if you grant Motion &amp; Fitness permission, the app reads the step
+count your phone already keeps and sends us one number: the steps since it last counted.
+We store only your running total and when it was last counted, never a day-by-day
+history, never alongside your location, and never share it with anyone. It is shown in
+your journal and pays for nothing. Without the permission the app works the same.
+Deleting your account deletes the total.</p>
+
+<h2>Keys</h2>
+<p>A memory you stand on opens with a key, unless it is a stop of today's walk, which
+opens for nothing. Finishing a walk earns a key, and keys can be bought in the app
+through the App Store or Google Play. We store how many you have and the store's
+transaction id for each pack bought, so it is counted once. Bought keys never expire.
+Deleting your account deletes both.</p>
 
 <h2>Accounts</h2>
 <p>Memory Lane asks you to sign in before you use it. We never ask for a password,

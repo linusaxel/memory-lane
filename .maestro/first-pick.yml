@@ -24,6 +24,6 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn: "Close"
 - extendedWaitUntil:
-    visible: "1,000 steps until the next one opens\\. You have 0\\."
+    visible: "No keys\\. Free on today's walk\\."
     timeout: 10000
 - assertNotVisible: "Choose one to open from here"

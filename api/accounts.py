@@ -123,7 +123,7 @@ def profile_of(session, device: str) -> Profile:
                 s.expires_at AS subscribed_until,
                 COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed,
                 GREATEST(:welcome - u.free_used, 0) AS welcome_unlocks,
-                u.steps, u.steps_counted_until
+                u.steps, u.steps_counted_until, u.keys
             FROM devices d JOIN users u ON d.user_id = u.id
             LEFT JOIN subscriptions s ON s.user_id = u.id
             WHERE d.id = CAST(:device_id AS uuid)
@@ -152,6 +152,7 @@ def profile_of(session, device: str) -> Profile:
         welcome_unlocks=row.welcome_unlocks,
         steps=row.steps,
         steps_counted_until=row.steps_counted_until,
+        keys=row.keys,
     )
 
 
@@ -248,17 +249,14 @@ def credit_steps(body: StepsRequest):
 
 if not PUBLIC_HOST:
 
-    @router.post("/v1/dev/steps", response_model=Profile)
-    def dev_steps(
-        device: str = Query(..., pattern=DEVICE_PATTERN),
-        steps: int = Query(500, ge=1, le=10_000),
-    ):
-        """Steps for nothing, off the public host only: the app's dev teleport
-        gives 500, so testing the steps gate needs no walking."""
+    @router.post("/v1/dev/keys", response_model=Profile)
+    def dev_keys(device: str = Query(..., pattern=DEVICE_PATTERN)):
+        """A key for nothing, off the public host only: the app's dev long
+        press, so testing what a key opens needs no walk and no store."""
         with get_session() as session:
             session.execute(
-                text("UPDATE users SET steps = steps + :s WHERE id = CAST(:u AS uuid)"),
-                {"s": steps, "u": user_for_device(session, device)},
+                text("UPDATE users SET keys = keys + 1 WHERE id = CAST(:u AS uuid)"),
+                {"u": user_for_device(session, device)},
             )
             return profile_of(session, device)
 
@@ -302,6 +300,20 @@ def absorb(session, old_user: str, new_user: str) -> None:
             ON CONFLICT (user_id) DO UPDATE
                 SET expires_at = GREATEST(subscriptions.expires_at, EXCLUDED.expires_at)
         """),
+        {"new": new_user, "old": old_user},
+    )
+    # Keys too, and the packs that bought them, or the cascade drops both.
+    session.execute(
+        text("""
+            UPDATE users SET keys = keys + (SELECT keys FROM users WHERE id = CAST(:old AS uuid))
+            WHERE id = CAST(:new AS uuid)
+        """),
+        {"new": new_user, "old": old_user},
+    )
+    session.execute(
+        text(
+            "UPDATE key_purchases SET user_id = CAST(:new AS uuid) WHERE user_id = CAST(:old AS uuid)"
+        ),
         {"new": new_user, "old": old_user},
     )
     session.execute(text("DELETE FROM users WHERE id = CAST(:id AS uuid)"), {"id": old_user})

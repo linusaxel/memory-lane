@@ -128,15 +128,15 @@ CREATE TABLE users (
     -- with no memory are what pipeline/sweep.py reaps.
     avatar_path TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- What opens memories: one welcome unlock from anywhere, then 1,000 steps
-    -- each standing there. How many welcome ones are used; a balance and a
-    -- watermark, never a day's step count
-    -- (docs/10-decisions.md#pick-one-to-start-then-where-you-stand).
-    -- free_day is unread since the free ones stopped being a day's.
+    -- What opens memories: one welcome unlock from anywhere, then a key each
+    -- standing there (docs/10-decisions.md#keys-open-a-lock-and-todays-walk-is-free).
+    -- Steps are a lifetime total and a watermark, never a day's count, and buy
+    -- nothing. free_day is unread since the free ones stopped being a day's.
     free_day DATE,
     free_used INTEGER NOT NULL DEFAULT 0,
     steps INTEGER NOT NULL DEFAULT 0,
-    steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    keys INTEGER NOT NULL DEFAULT 0 CHECK (keys >= 0)
 );
 
 -- How a person proves they are the same person on a new phone. Google and
@@ -318,6 +318,15 @@ CREATE UNIQUE INDEX daily_routes_in_progress
 CREATE TABLE subscriptions (
     user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     expires_at TIMESTAMP NOT NULL
+);
+
+-- Every key pack the store sold, by its transaction id, so a webhook retry or
+-- a second read-back credits it once. See db/migrations/037_keys.sql.
+CREATE TABLE key_purchases (
+    transaction_id TEXT PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    keys INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- An authored walk, served by GET /v1/routes/{id} once published. A join

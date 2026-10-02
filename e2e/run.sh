@@ -221,7 +221,7 @@ past_walks() {
   " >/dev/null || infra "could not seed past walks into $DB"
 }
 
-# subscribe-when-out-of-steps needs an account with nothing to spend that then
+# subscribe-when-out-of-keys needs an account with nothing to spend that then
 # pays, with no store. Every account the app mints has used its welcome
 # unlock (the flow mints it by typing a name, since reading the profile
 # creates nothing), and the one renamed "Paid" is given a month.
@@ -240,18 +240,6 @@ subscriber() {
     CREATE TRIGGER subscriber AFTER UPDATE OF display_name ON users
       FOR EACH ROW WHEN (NEW.display_name = 'Paid') EXECUTE FUNCTION subscriber();
   " >/dev/null || infra "could not seed a subscriber into $DB"
-}
-
-# walk-and-unlock opens four stops, one more than a day's free three, and
-# a simulator walks no steps. The account the first unlock mints has 1,000.
-walker_steps() {
-  psql_on "$DB" "
-    CREATE FUNCTION walker_steps() RETURNS trigger AS \$\$ BEGIN
-      NEW.steps := 1000;
-      RETURN NEW;
-    END \$\$ LANGUAGE plpgsql;
-    CREATE TRIGGER walker_steps BEFORE INSERT ON users FOR EACH ROW EXECUTE FUNCTION walker_steps();
-  " >/dev/null || infra "could not seed steps into $DB"
 }
 
 # A walkable point in central Copenhagen, different every run. The seed is
@@ -411,9 +399,9 @@ for flow in "${SELECTED[@]}"; do
   flow_started=$(date +%s)
   printf '\n\033[1m  ▸ %s\033[0m\n' "$name"
   reset_database "${name%%-*}"
-  [ "$name" = walk-and-unlock ] && yesterday_unlock && walker_steps
+  [ "$name" = walk-and-unlock ] && yesterday_unlock
   [ "$name" = lakes-loop ] && past_walks
-  [ "$name" = subscribe-when-out-of-steps ] && subscriber
+  [ "$name" = subscribe-when-out-of-keys ] && subscriber
   # launchApp's own relaunch has been seen to no-op under the load of a screen
   # recording, which leaves the flow looking at the previous one's last screen
   # and failing on its first assertion. Killing it first makes every flow a

@@ -15,7 +15,8 @@ a punishment for leaving.
 import pytest
 from sqlalchemy import text
 
-from tests.conftest import give_steps, spend_welcome
+from api.gate import today
+from tests.conftest import give_keys, spend_welcome
 
 pytestmark = pytest.mark.db
 
@@ -143,7 +144,30 @@ def _press(client, memory_id):
 
 def _balance(client, device=DEVICE):
     me = client.get(f"/v1/me?device={device}").json()
-    return me["welcome_unlocks"], me["steps"]
+    return me["welcome_unlocks"], me["keys"]
+
+
+def _subscribe(db_session, device=DEVICE):
+    db_session.execute(
+        text(
+            "INSERT INTO subscriptions (user_id, expires_at) "
+            "SELECT user_id, CURRENT_TIMESTAMP + INTERVAL '1 day' FROM devices "
+            "WHERE id = CAST(:d AS uuid)"
+        ),
+        {"d": device},
+    )
+    db_session.commit()
+
+
+def _on_todays_walk(db_session, memory_id, device=DEVICE):
+    db_session.execute(
+        text(
+            "INSERT INTO daily_routes (device_id, route_date, memory_ids) "
+            "VALUES (CAST(:d AS uuid), :today, ARRAY[CAST(:m AS integer)])"
+        ),
+        {"d": device, "today": today(), "m": memory_id},
+    )
+    db_session.commit()
 
 
 def test_one_to_start_opens_from_anywhere(client, memory_id, db_session):
@@ -159,27 +183,51 @@ def test_one_to_start_opens_from_anywhere(client, memory_id, db_session):
     assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 1
 
 
-def test_after_the_welcome_one_a_thousand_steps_standing_there(client, memory_id, db_session):
+def test_after_the_welcome_one_a_key_standing_there(client, memory_id, db_session):
+    """docs/10, "Keys open a lock, and today's walk is free"."""
     spend_welcome(db_session, DEVICE)
     refused = _press(client, memory_id)
     assert refused.status_code == 403
-    assert refused.json()["detail"] == {"reason": "no_steps", "steps": 0, "price": 1000}
+    assert refused.json()["detail"] == {"reason": "no_keys", "keys": 0}
     assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
 
-    give_steps(db_session, DEVICE, 1500)
+    give_keys(db_session, DEVICE, 2)
     assert _press(client, memory_id).status_code == 200
-    assert _balance(client) == (0, 500)
+    assert _balance(client) == (0, 1)
 
 
-def test_standing_there_spends_steps_before_the_welcome_one(client, memory_id, db_session):
-    give_steps(db_session, DEVICE, 5000)
+def test_a_key_never_opens_one_from_afar(client, memory_id, db_session):
+    spend_welcome(db_session, DEVICE)
+    give_keys(db_session, DEVICE, 3)
+    assert _unlock(client, memory_id, lat=FAR_LAT)["locked"] is True
+    assert _balance(client) == (0, 3)
+
+
+def test_standing_there_spends_a_key_before_the_welcome_one(client, memory_id, db_session):
+    give_keys(db_session, DEVICE, 5)
     _press(client, memory_id)
-    assert _balance(client) == (1, 4000)
+    assert _balance(client) == (1, 4)
 
 
-def test_standing_there_with_no_steps_uses_the_welcome_one(client, memory_id, db_session):
+def test_standing_there_with_no_keys_uses_the_welcome_one(client, memory_id, db_session):
     assert _press(client, memory_id).status_code == 200
     assert _balance(client) == (0, 0)
+
+
+def test_a_stop_of_todays_walk_opens_for_nothing(client, memory_id, db_session):
+    give_keys(db_session, DEVICE, 1)
+    _on_todays_walk(db_session, memory_id)
+    assert _press(client, memory_id).status_code == 200
+    assert _balance(client) == (1, 2), "nothing spent, and a key for finishing the walk"
+
+
+def test_an_ended_walks_stop_costs_a_key_again(client, memory_id, db_session):
+    give_keys(db_session, DEVICE, 1)
+    _on_todays_walk(db_session, memory_id)
+    db_session.execute(text("UPDATE daily_routes SET ended_at = CURRENT_TIMESTAMP"))
+    db_session.commit()
+    _press(client, memory_id)
+    assert _balance(client) == (1, 0)
 
 
 def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
@@ -189,22 +237,14 @@ def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
 
 
 def test_a_subscriber_standing_there_spends_nothing(client, memory_id, db_session):
-    give_steps(db_session, DEVICE, 0)
-    db_session.execute(
-        text(
-            "INSERT INTO subscriptions (user_id, expires_at) "
-            "SELECT user_id, CURRENT_TIMESTAMP + INTERVAL '1 day' FROM devices "
-            "WHERE id = CAST(:d AS uuid)"
-        ),
-        {"d": DEVICE},
-    )
-    db_session.commit()
+    give_keys(db_session, DEVICE, 0)
+    _subscribe(db_session)
     assert _press(client, memory_id).status_code == 200
     assert _balance(client) == (1, 0)
 
 
-def test_steps_are_credited_once_from_the_watermark(client, db_session):
-    give_steps(db_session, DEVICE, 0)
+def test_steps_are_counted_once_from_the_watermark_and_buy_nothing(client, db_session):
+    give_keys(db_session, DEVICE, 0)
     db_session.execute(
         text(
             "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '1 hour' "
@@ -222,12 +262,13 @@ def test_steps_are_credited_once_from_the_watermark(client, db_session):
 
     after = credit(2400)
     assert after["steps"] == 2400
+    assert after["keys"] == 0
     assert after["steps_counted_until"] > since
     assert credit(2400)["steps"] == 2400, "a retry from the old watermark counts nothing"
 
 
 def test_steps_faster_than_anyone_walks_are_capped(client, db_session):
-    give_steps(db_session, DEVICE, 0)
+    give_keys(db_session, DEVICE, 0)
     db_session.execute(
         text(
             "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '10 seconds' "
@@ -264,6 +305,6 @@ def test_unlocking_something_that_does_not_exist_is_a_404(client):
     )
 
 
-def test_the_dev_teleport_gives_five_hundred_steps(client, db_session):
-    give_steps(db_session, DEVICE, 100)
-    assert client.post(f"/v1/dev/steps?device={DEVICE}").json()["steps"] == 600
+def test_the_dev_long_press_gives_a_key(client, db_session):
+    give_keys(db_session, DEVICE, 1)
+    assert client.post(f"/v1/dev/keys?device={DEVICE}").json()["keys"] == 2

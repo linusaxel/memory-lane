@@ -97,7 +97,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/streets.py` | Walking metres and street shapes for today's route, from OSRM. Crow-flies × 1.3 without it |
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
-| `api/billing.py` | Who has paid: RevenueCat's webhook and the read-back that writes `subscriptions` |
+| `api/billing.py` | Who has paid: RevenueCat's webhook and the read-back that writes `subscriptions` and credits key packs once (`key_purchases`) |
 | `api/privacy.py` | The privacy policy both app stores require, served from here. Its #contact is the app's Contact row |
 | `api/moderation.py` | Screens a post, note or name by local rules before it is public (App Store 1.2) |
 | `api/blocked_words.txt` | The words `moderation.py` refuses: LDNOOBW English and Danish, pruned |
@@ -124,16 +124,16 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Drawer.tsx` | The journal's panel from the left: edge swipe, spring, scrim |
 | `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
 | `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |
-| `mobile/src/Paywall.tsx` | The subscription sheet (F35). Prices from the store; "not available" without a key |
-| `mobile/src/steps.ts` | Steps walked, from Core Motion, credited to the account. iOS only |
-| `mobile/src/wallet.ts` | What the steps pill says, and whether standing on a pin can pay; `wallet.test.ts` beside it |
-| `mobile/src/StepsPill.tsx` | The steps pill at the top of the map; the number rolls natively (`@expo/ui`) |
-| `mobile/src/purchases.ts` | RevenueCat, and nothing else: no-ops without a key. Never decides who has paid |
+| `mobile/src/Paywall.tsx` | Key packs and the subscription (F35). Prices from the store; "not available" without a RevenueCat key |
+| `mobile/src/steps.ts` | Steps walked, from Core Motion, counted on the account for the journal. Buys nothing. iOS only |
+| `mobile/src/wallet.ts` | What the keys pill says, and whether standing on a pin off today's walk can pay; `wallet.test.ts` beside it |
+| `mobile/src/KeysPill.tsx` | The keys pill at the top of the map; the number rolls natively (`@expo/ui`) |
+| `mobile/src/purchases.ts` | RevenueCat, and nothing else: the plans and the key packs, no-ops without a key. Never decides who has paid |
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/FirstPick.tsx` | F36: the first run's one choice, three locked memories near you and the one that opens from anywhere |
-| `mobile/src/HowItWorks.tsx` | What the steps pill opens: how pins, steps and walks work |
+| `mobile/src/HowItWorks.tsx` | What the keys pill opens: how pins, keys and walks work |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
 | `mobile/src/Glyph.tsx` | Every icon, as an SF Symbol (`@expo/ui`) |
 | `mobile/src/StartupLogo.tsx` | The launch logo |

@@ -316,9 +316,80 @@ client-side gate (TODO.md S3). Until then nothing writes it and everybody is
 free. A subscriber with a spoofed GPS opens every pin from a sofa, not five:
 they have paid, and the position was always self-reported.
 
+### Keys open a lock, and today's walk is free
+
+Status: Accepted 2026-10-02. Supersedes *Steps open a memory* (its Core Motion
+count and watermark stand, as a stat). Amends *Pick one to start*, *A walk can
+be ended* and *RevenueCat sells it*. Brings back the day lock of *A
+subscription opens the map*, for a new reason.
+
+The founder: no step toll, a walk worth taking, and something to sell. One
+walk a day opens for nothing and earns a key; a key opens one memory you
+stand on anywhere else; keys can be bought. Researched 2026-10-02 from primary
+sources (the TODO.md history of *Map, walk and money* has the whole of it):
+no walking game found charges steps for a place you already walked to, and
+story apps live on "wait or pay", Kakao's "I will pay to save time". Here the
+walk is the wait.
+
+- **The order at a pin you stand on** (`api/write.py` `pay_for_unlock`):
+  already yours, then a subscriber, then a stop of today's walk
+  (`ON_TODAYS_ROUTE_QUERY`, any of the account's devices, not ended), all
+  free; then a key (`SPEND_KEY`), then the welcome unlock, then 403
+  `{reason: "no_keys", keys: 0}`. The walk stop comes before the welcome one,
+  so a new account never spends its one open from afar on a stop that was
+  free. Away from it, only the welcome unlock opens anything, as before. A key
+  never gets past the 20 m.
+- **One walk a day per account, bar a subscriber** (`_refuse_second_walk`,
+  `WALKED_TODAY_QUERY`, 403 `walked_today` at preview and accept). Without it,
+  free stops and **Walk here** open any pin for nothing in two taps: the hole
+  *A subscription opens the map* closed the first time. A walk that opened
+  nothing is deleted when it ends (*A walk that opened nothing is deleted*),
+  so it gives the day back. `UNLIMITED_WALKS=1` lifts it off the public host,
+  which `docker-compose.yml` does for the simulator. **Walk here** is the
+  day's walk too, and its pin opens free: aiming leaks one chosen pin a day,
+  which is accepted.
+- **Finishing earns a key, once a day** (`CREDIT_WALK_KEY`, run when
+  `ROUTE_COMPLETED_QUERY` marks the walk done). A subscriber's second walk
+  earns nothing: one a stop would leave nobody needing to buy, and one a day
+  is the slow trickle Pokémon GO's 50-coin cap is.
+- **Bought keys are credited once** (`api/billing.py` `credit_keys`). The
+  store's consumables are `keys_1`, `keys_5`, `keys_15` and `keys_40`
+  (`KEY_PRODUCTS`); every read-back of the subscriber, webhook or app,
+  inserts each RevenueCat transaction id into `key_purchases` and adds only
+  what was new. The app is never believed, as for the subscription. A refunded
+  pack is not taken back yet (a `ponytail:` note in `credit_keys`).
+- **Steps buy nothing.** `/v1/me/steps` keeps its watermark and cap, and
+  `users.steps` becomes a lifetime total, shown in the journal. Subscribers
+  count steps too now.
+- **The app** (`src/wallet.ts`, `src/KeysPill.tsx`, `src/UnlockHere.tsx`): the
+  pill reads "1 to start", then "3 keys", and out of keys "No keys · Free on
+  today's walk". Out of keys off the walk, the lock is faded and offers **Open
+  for** the store's price of one key, or **Get keys** (the paywall) when the
+  store has none. The paywall sells packs, then the subscription. The finish
+  card says "+1 key". No price is written by the app: every one is the store's
+  `priceString`.
+
+**Never sold, and why:** reading from afar (Pokémon GO's remote raid pass
+"came to dominate the experience… in a way we never intended", and pulling it
+back cost a boycott); a second currency (Choices' two drew "scummy" over a
+quiet price rise); anything random for money (loot boxes are illegal in
+Belgium); keys that expire (Apple 3.1.1); a refilling energy pool (Duolingo's
+drew a petition); step or location data. Every key price is shown in the
+store's own currency, and refunded or converted if the app ever shuts (the EU
+CPC network's 2025 principles on in-game currencies).
+
+**Consequences:** existing step balances were not converted; everybody starts
+at 0 keys, which costs nothing before launch. Someone who walks daily gets
+about four stories and a key a day free. If that is too generous, tune stops
+per walk, then keys per finish, then pack prices, never a price on walk stops.
+Nothing can be bought until the stores exist (TODO.md S6), and the paywall says
+so.
+
 ### Steps open a memory
 
-Status: **Amended 2026-10-01** by *Pick one to start, then where you stand*:
+Status: **Superseded 2026-10-02** by *Keys open a lock, and today's walk is
+free*: a key opens a memory, not steps; how steps are counted stands, as a
+stat. Amended 2026-10-01 by *Pick one to start, then where you stand*:
 one welcome unlock per account, from anywhere; the steps and how they are
 counted stand. (Amended 2026-09-30 by *Three free a day*, now superseded.) Accepted 2026-09-30. Supersedes *Only today's walk
 unlocks* and *A subscription opens the map*.
@@ -360,7 +431,9 @@ on the stored balance yet: add one if a hoard empties the map in an afternoon.
 ### Pick one to start, then where you stand
 
 Status: Accepted 2026-10-01. Supersedes *Three free a day, then steps where you
-stand*, and is now the one exception to *The gate*.
+stand*, and is now the one exception to *The gate*. **Amended 2026-10-02** by
+*Keys open a lock, and today's walk is free*: standing there, a key replaces
+the steps below, and a stop of today's walk comes first, free.
 
 The founder: people install this at home, in bed, so the first session cannot
 be "go somewhere". But three a day from anywhere became a way to use the app
@@ -435,6 +508,8 @@ quiet pill, no longer the screen's one button. A memory the gate never closes
 ### RevenueCat sells it; our table decides
 
 Status: Accepted 2026-09-27 (the founder's pick of the two in TODO.md S3).
+**Amended 2026-10-02** by *Keys open a lock, and today's walk is free*: the same
+read-back credits key packs, each once, through `key_purchases`.
 
 RevenueCat takes both stores' purchases, renewals, refunds and grace periods
 behind one SDK and one webhook, and is free until $2.5k a month of revenue.
@@ -1918,7 +1993,8 @@ rain, the whole day's. **End walk** ends today's walk at any point, and the map
 comes back with Plan a walk on it. The rule is now one walk *in progress* per
 device, not one a day. **Amended 2026-09-26** by *A subscription opens the
 map*: one free walk a day per account again, but ending one that opened
-nothing gives the day back.
+nothing gives the day back. That lock went on 2026-09-30 and came back on
+2026-10-02 with *Keys open a lock, and today's walk is free*.
 
 - `daily_routes` gains `ended_at` and an `id`, and `(device_id, route_date)` is
   a partial unique index over rows not ended (migration 027). Accept still

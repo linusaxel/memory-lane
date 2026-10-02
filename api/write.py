@@ -23,7 +23,6 @@ from api.gate import (
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
-    STEPS_PER_UNLOCK,
     WELCOME_UNLOCKS,
     Coordinates,
     DeviceRequest,
@@ -40,6 +39,7 @@ from api.models import (
 )
 from api.moderation import screen
 from api.queries import (
+    CREDIT_WALK_KEY,
     DELETE_ORPHAN_SUBMITTED_PLACE,
     EARNED_QUERY,
     MEDIA_ATTACH,
@@ -48,11 +48,12 @@ from api.queries import (
     MY_DEVICES,
     NOTE_ALLOWED_QUERY,
     NOTE_HIDE_QUERY,
+    ON_TODAYS_ROUTE_QUERY,
     OWNED_MEMORY_QUERY,
     PLACE_INSERT,
     ROUTE_COMPLETED_QUERY,
     SINGLE_MEMORY_QUERY,
-    SPEND_STEPS,
+    SPEND_KEY,
     SPEND_WELCOME_UNLOCK,
     SUBMISSION_INSERT,
     SUBSCRIBED_QUERY,
@@ -124,12 +125,11 @@ def refuse_over_quota(used: int, limit: int, what: str) -> None:
 def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
     """Whether this account may open this memory, paying if it must.
 
-    Already opened, it costs nothing. Standing on it, a subscriber pays
-    nothing; anyone else spends STEPS_PER_UNLOCK steps, then the account's one
-    welcome unlock (a new account on the spot has no steps yet), or is refused
-    403 `no_steps` with the balance. Away from it, only the welcome unlock
-    opens it, and False says it is spent (docs/10, "Pick one to start, then
-    where you stand").
+    Already opened, it costs nothing. Standing on it, a subscriber or a stop of
+    today's walk pays nothing; anyone else spends a key, then the account's one
+    welcome unlock (a new account on the spot has no keys yet), or is refused
+    403 `no_keys`. Away from it, only the welcome unlock opens it, and False
+    says it is spent (docs/10, "Keys open a lock, and today's walk is free").
 
     Under the user's row lock, so two presses on one memory are charged once.
     """
@@ -143,18 +143,13 @@ def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
         return session.execute(text(SPEND_WELCOME_UNLOCK), welcome).first() is not None
     if session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
         return True
-    spend = {"user_id": user_id, "price": STEPS_PER_UNLOCK}
-    if session.execute(text(SPEND_STEPS), spend).first():
+    if session.execute(text(ON_TODAYS_ROUTE_QUERY), {**binds, "today": today()}).scalar():
+        return True
+    if session.execute(text(SPEND_KEY), {"user_id": user_id}).first():
         return True
     if session.execute(text(SPEND_WELCOME_UNLOCK), welcome).first():
         return True
-    steps = session.execute(
-        text("SELECT steps FROM users WHERE id = CAST(:user_id AS uuid)"), {"user_id": user_id}
-    ).scalar()
-    raise HTTPException(
-        status_code=403,
-        detail={"reason": "no_steps", "steps": steps, "price": STEPS_PER_UNLOCK},
-    )
+    raise HTTPException(status_code=403, detail={"reason": "no_keys", "keys": 0})
 
 
 @router.post("/v1/memories/{memory_id}/unlock", response_model=Memory)
@@ -202,12 +197,20 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
             """),
             {"device": body.device, "memory_id": memory_id},
         )
-        # A walk is finished on foot: the welcome unlock opens a stop, not the walk.
+        # A walk is finished on foot: the welcome unlock opens a stop, not the
+        # walk. Finishing one earns a key.
         if here:
-            session.execute(
-                text(ROUTE_COMPLETED_QUERY),
-                {"device_id": body.device, "memory_id": memory_id, "today": today()},
-            )
+            walk = {"device_id": body.device, "memory_id": memory_id, "today": today()}
+            finished = session.execute(text(ROUTE_COMPLETED_QUERY), walk).first()
+            if finished:
+                session.execute(
+                    text(CREDIT_WALK_KEY),
+                    {
+                        **walk,
+                        "user_id": user_for_device(session, body.device),
+                        "route_id": finished.id,
+                    },
+                )
 
     return memory
 

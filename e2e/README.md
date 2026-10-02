@@ -137,7 +137,7 @@ Named after `docs/08-ux-flows.md`, which is the specification.
 | `file-and-edit.yml` | F5 file your own, F21 be somebody, F24 manage what you filed, and the author hearing back (hearts, notes, "New") |
 | `notify-nearby.yml` | F28 the nearby notification, with the app in the background, and its banner bringing the app back |
 | `first-pick.yml` | F36 the first run's one choice: the welcome unlock from anywhere, from a pin's peek, and the card gone after |
-| `subscribe-when-out-of-steps.yml` | F35 the paywall when an unlock is refused for want of steps, then the same pin opening once the account has paid |
+| `subscribe-when-out-of-keys.yml` | F35 the paywall when an unlock is refused for want of a key, then the same pin opening once the account has paid |
 
 Six journeys rather than one file per id: every flow pays a fresh database
 and a cold start, and the old per-id files performed the same unlock three

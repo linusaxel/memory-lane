@@ -484,18 +484,57 @@ EARNED_QUERY = f"""
     )
 """
 
-# Pay for one unlock: one of today's free ones while any are left, else
-# STEPS_PER_UNLOCK. Each is one conditional UPDATE, so neither can overspend
-# however the unlocks race. A new day starts the count again.
+# Pay for one unlock: the welcome one, or a key. Each is one conditional
+# UPDATE, so neither can overspend however the unlocks race.
 SPEND_WELCOME_UNLOCK = """
     UPDATE users SET free_used = free_used + 1
     WHERE id = CAST(:user_id AS uuid) AND free_used < :welcome
     RETURNING id
 """
-SPEND_STEPS = """
-    UPDATE users SET steps = steps - :price
-    WHERE id = CAST(:user_id AS uuid) AND steps >= :price
+SPEND_KEY = """
+    UPDATE users SET keys = keys - 1
+    WHERE id = CAST(:user_id AS uuid) AND keys >= 1
     RETURNING id
+"""
+
+# Is this memory a stop of today's walk in progress, on any of this account's
+# devices? Standing on one opens it for nothing (docs/10, "Keys open a lock,
+# and today's walk is free"). An ended walk's stops cost a key again.
+ON_TODAYS_ROUTE_QUERY = f"""
+    SELECT EXISTS (
+        SELECT 1 FROM daily_routes
+        WHERE device_id IN {MY_DEVICES}
+          AND route_date = CAST(:today AS date)
+          AND ended_at IS NULL
+          AND :memory_id = ANY(memory_ids)
+    )
+"""
+
+# Has this account already had today's walk? Any walk today on any of its
+# devices, bar this device's own in progress. An ended walk that opened nothing
+# was deleted by ROUTE_PRUNE, so it never counts: a bad plan or rain before the
+# first stop does not spend the day.
+WALKED_TODAY_QUERY = f"""
+    SELECT EXISTS (
+        SELECT 1 FROM daily_routes
+        WHERE device_id IN {MY_DEVICES}
+          AND route_date = CAST(:today AS date)
+          AND NOT (device_id = CAST(:device_id AS uuid) AND ended_at IS NULL)
+    )
+"""
+
+# A key for finishing a walk, one a day: a subscriber may walk again, and the
+# second walk earns nothing. Run after ROUTE_COMPLETED_QUERY marked :route_id.
+CREDIT_WALK_KEY = f"""
+    UPDATE users SET keys = keys + 1
+    WHERE id = CAST(:user_id AS uuid)
+      AND NOT EXISTS (
+          SELECT 1 FROM daily_routes
+          WHERE device_id IN {MY_DEVICES}
+            AND route_date = CAST(:today AS date)
+            AND completed_at IS NOT NULL
+            AND id <> :route_id
+      )
 """
 
 # Credit the steps the phone counted since the watermark, and move it to now.
@@ -580,6 +619,7 @@ WHERE r.device_id = CAST(:device_id AS uuid)
       WHERE m.id = ANY(r.memory_ids) AND {VISIBLE}
         AND m.id NOT IN (SELECT memory_id FROM unlocks WHERE device_id IN {MY_DEVICES})
   )
+RETURNING r.id
 """
 
 # Every walk this account took that opened something, newest first - across

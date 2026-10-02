@@ -1,5 +1,6 @@
-/** The subscription: any pin you stand on opens without a walk, and walks are
- *  not one a day (F35, docs/10 "A subscription opens the map").
+/** Keys, and the subscription: a key opens one memory you stand on; a
+ *  subscription opens every one, and walks are not one a day (F35, docs/10
+ *  "Keys open a lock, and today's walk is free").
  *
  *  Prices come from the store, never from here. Without a RevenueCat key
  *  (the simulator, e2e) there is nothing to sell and it says so: never a
@@ -12,7 +13,7 @@ import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'r
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { API_BASE, refreshSubscription, type Profile } from './api.ts';
-import { buy, plans, restore } from './purchases.ts';
+import { buy, keyPacks, plans, restore } from './purchases.ts';
 import { button, buttonText, color, dim, font, label } from './theme.ts';
 
 // Apple's standard licence, which App Review accepts in place of our own terms.
@@ -23,12 +24,13 @@ type Props = {
   onClose: () => void;
   device: string | null;
   onProfile: (next: Profile) => void;
-  /** The server's price, so this sheet cannot drift from it. */
-  stepPrice: number;
+  /** Keys before this sheet opened, so a pack bought is seen landing. */
+  keys: number;
 };
 
-export default function Paywall({ visible, onClose, device, onProfile, stepPrice }: Props) {
+export default function Paywall({ visible, onClose, device, onProfile, keys }: Props) {
   const [offered, setOffered] = useState<PurchasesPackage[] | null>(null);
+  const [packs, setPacks] = useState<PurchasesPackage[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,6 +40,9 @@ export default function Paywall({ visible, onClose, device, onProfile, stepPrice
     plans()
       .then(setOffered)
       .catch(() => setOffered([]));
+    keyPacks()
+      .then(setPacks)
+      .catch(() => setPacks([]));
   }, [visible]);
 
   const settle = async (pay: () => Promise<boolean>) => {
@@ -48,8 +53,8 @@ export default function Paywall({ visible, onClose, device, onProfile, stepPrice
       if (!(await pay())) return;
       const who = await refreshSubscription(device);
       onProfile(who);
-      if (who.subscribed) onClose();
-      else setError('No subscription on this account yet.');
+      if (who.subscribed || who.keys > keys) onClose();
+      else setError('Nothing bought on this account yet.');
     } catch {
       setError("That didn't go through. Try again.");
     } finally {
@@ -62,10 +67,35 @@ export default function Paywall({ visible, onClose, device, onProfile, stepPrice
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Text style={styles.title}>Open any memory you stand on</Text>
         <Text style={styles.note}>
-          Skip the steps: any memory opens the moment you're standing on it. Without a
-          subscription, each one after your first costs {stepPrice.toLocaleString()} steps.
+          Today's walk opens for nothing, and finishing it earns a key. Anywhere else, a
+          key opens one memory you're standing on.
         </Text>
 
+        {packs.length === 0 ? (
+          <Text style={styles.note}>Keys aren't available right now.</Text>
+        ) : (
+          <View style={styles.plans}>
+            {packs.map((pack) => {
+              const n = Number(pack.product.identifier.split('_')[1]);
+              return (
+                <Pressable
+                  key={pack.identifier}
+                  style={dim(styles.outline)}
+                  disabled={busy}
+                  accessibilityRole="button"
+                  onPress={() => settle(() => buy(pack))}
+                >
+                  <Text style={styles.outlineText}>
+                    {`${n} ${n === 1 ? 'key' : 'keys'} · ${pack.product.priceString}`}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            <Text style={styles.fine}>Bought keys never expire.</Text>
+          </View>
+        )}
+
+        <Text style={styles.heading}>Or every memory, always</Text>
         {offered === null ? null : offered.length === 0 ? (
           <Text style={styles.note}>Subscriptions aren't available right now.</Text>
         ) : (
@@ -133,6 +163,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 24, paddingTop: 36, paddingBottom: 72, gap: 18 },
   title: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
   note: { ...font.prose, fontSize: 17, lineHeight: 27, color: color.inkFaint },
+  heading: { ...font.displaySemi, fontSize: 19, lineHeight: 25, color: color.ink, marginTop: 12 },
   plans: { gap: 12, marginTop: 12 },
   solid: { ...button.solid },
   solidText: { ...buttonText, color: color.paper },

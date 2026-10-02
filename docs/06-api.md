@@ -18,11 +18,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `POST /v1/memories/{id}/unlock` `{device, lat?, lng?}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
   The account's one welcome unlock opens it from anywhere, position or not.
-  Standing on it costs 1,000 steps (nothing for a subscriber), then the
-  welcome one; away from it, with that spent, it answers the locked memory and
-  its distance. Opening one this account already has costs nothing. 403
-  `{reason: "no_steps", steps, price}` standing there with nothing to spend
-  (docs/10, "Pick one to start, then where you stand")
+  Standing on it, a subscriber or a stop of today's walk pays nothing; anyone
+  else spends a key, then the welcome one. Away from it, with that spent, it
+  answers the locked memory and its distance. Opening one this account already
+  has costs nothing. 403 `{reason: "no_keys", keys: 0}` standing there with
+  nothing to spend. Finishing today's walk with it credits a key, once a day
+  (docs/10, "Keys open a lock, and today's walk is free")
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked.
   Each says `hearted`: this account hearted it, for the journal's Hearted filter
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
@@ -34,15 +35,17 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `{reason: "too_far", min_budget_meters}` when the streets there are longer
   than this walk. `end_lat` and `end_lng`, together, are where a one-way walk
   finishes (it makes the walk one-way, and is stored nowhere); the same
-  `too_far` when this walk cannot reach it
+  `too_far` when this walk cannot reach it. 403 `{reason: "walked_today"}` when
+  the account already walked today and is not subscribed
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, include?, end?}` - accept it. The
-  same solve, stored; one in progress per device, and a second accept gets
-  that walk back until it is ended. The only stop id the client ever sends is `include`, vetted
+  same solve, stored; one a day per account (403 `walked_today`, bar a
+  subscriber), one in progress per device, and a second accept gets that walk
+  back until it is ended. The only stop id the client ever sends is `include`, vetted
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;
   204, and 204 again with nothing to end. A walk that opened something stays
   in `walked`; one that opened nothing is deleted. Its unearned stops lock
-  again, and another can be accepted if it opened nothing or the account is
-  subscribed
+  again (to a key), and another can be accepted if it opened nothing or the
+  account is subscribed
 - `GET /v1/routes/today?device=UUID` - today's walk in progress, or 404. Only reads
 - `GET /v1/routes/walked?device=UUID` - every walk the account took that
   opened something, newest first: earned stops open, `earned` of `size`, `completed_at`
@@ -83,9 +86,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, `subscribed` /
-  `subscribed_until`, and what unlocks spend: `welcome_unlocks`,
-  `steps`, `steps_per_unlock`, and `steps_counted_until`, where the next count
-  starts. `hearts_received` counts every heart on what the account filed.
+  `subscribed_until`, and what unlocks spend: `welcome_unlocks` and `keys`.
+  `steps` is every step counted, for the journal, and `steps_counted_until`
+  where the next count starts. `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.
   The GET creates nothing
 - `POST /v1/me/avatar` (multipart: `device`, `file`) - set the profile photo,
@@ -93,13 +96,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   Both return the `Profile`. Photos only, through `/v1/media`'s checks and
   EXIF strip; anything else is 415. A memory's `author` carries the same
   `avatar_url`
-- `POST /v1/me/steps` `{device, since, steps}` - credit the steps the phone
+- `POST /v1/me/steps` `{device, since, steps}` - add the steps the phone
   counted from `since`, which must be `steps_counted_until`, and move it to
   now. A stale `since` credits nothing; either way it returns the `Profile`.
-  At most three steps a second over the window
-- `POST /v1/dev/steps?device=&steps=500` - add steps, no cap. Not on the
-  public host (`PUBLIC_HOST`), like `/docs`. The app's dev long-press teleport
-  calls it
+  At most three steps a second over the window. They buy nothing
+- `POST /v1/dev/keys?device=` - add a key. Not on the public host
+  (`PUBLIC_HOST`), like `/docs`. The app's dev long-press teleport calls it
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
   display_name?, link_token?}` - verify a provider ID token and bind this device
   to that account. `display_name` is for Apple, which gives the name to the
@@ -108,17 +110,20 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   without it. Every token's `nonce`, `link_token`'s too, must be the SHA-256
   hex of `device`, or 401: a copied token signs in only the phone it was minted for
 - `DELETE /v1/me?device=UUID` - delete the account and everything it made:
-  memories, media, the profile photo, sign-ins, the subscription row, and every device on it with
+  memories, media, the profile photo, sign-ins, the subscription row, its keys and the
+  packs that bought them, and every device on it with
   their unlocks, hearts, notes and walks. 204
 - `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
   there is no token to revoke
 - `POST /v1/me/subscription` `{device}` - read this account's subscription
-  back from RevenueCat now and return the `Profile` (`subscribed`,
-  `subscribed_until`). The app calls it after a purchase or a restore. 503
+  and key packs back from RevenueCat now and return the `Profile`
+  (`subscribed`, `subscribed_until`, `keys`). Each pack is credited once, by
+  its transaction id. The app calls it after a purchase or a restore. 503
   without `REVENUECAT_API_KEY`
 - `POST /v1/billing/revenuecat` - RevenueCat's webhook, `Authorization: Bearer
   <REVENUECAT_WEBHOOK_SECRET>`. 401 on a wrong secret, 503 without one. Any
-  event re-reads that subscriber; an unknown `app_user_id` is 200 and ignored
+  event re-reads that subscriber, keys included; an unknown `app_user_id` is
+  200 and ignored
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
 - `GET /v1/stats` - Database statistics
 - `GET /v1/memories/{id}/card` - the server-rendered share card. Gates itself

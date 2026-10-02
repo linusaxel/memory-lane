@@ -125,6 +125,8 @@ appId: ${APP_ID}
     visible: "Nice walk\\."
     timeout: 30000
 - assertVisible: "4 memories · .* loop · .* min"
+# Every stop opened for nothing, and finishing earned a key.
+- assertVisible: "\\+1 key"
 # F27: e2e/run.sh gave this device an unlock yesterday, so today makes two.
 - assertVisible: "2 days in a row"
 - tapOn: "Done"
@@ -216,9 +218,9 @@ appId: ${APP_ID}
 - tapOn: "Close journal"
 - assertVisible: "Every stop unlocked\\. 4 of 4\\."
 
-# Ending a walked walk loses nothing, so it does not ask. The map, and
-# Plan a walk, and a second walk the same day is not the paywall's: a walk
-# is a plan now, and its stops cost steps (docs/10, "Steps open a memory").
+# Ending a walked walk loses nothing, so it does not ask. The map, and Plan a
+# walk, and a second walk the same day is refused: its stops would be free
+# too (docs/10, "Keys open a lock, and today's walk is free").
 - tapOn: "End walk"
 - assertNotVisible: "End this walk\\?"
 - extendedWaitUntil:
@@ -226,5 +228,6 @@ appId: ${APP_ID}
     timeout: 30000
 - assertNotVisible: "End walk"
 - tapOn: "Plan a walk"
-- waitForAnimationToEnd
-- assertNotVisible: "Open any memory you stand on"
+- extendedWaitUntil:
+    visible: "Today's walk is done\\. There's another tomorrow\\."
+    timeout: 20000

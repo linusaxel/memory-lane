@@ -1,77 +1,56 @@
-/** What the steps pill says, and whether standing on a pin can open it
- *  (docs/10, "Pick one to start, then where you stand"). A .ts so the
+/** What the keys pill says, and whether standing on a pin can open it
+ *  (docs/10, "Keys open a lock, and today's walk is free"). A .ts so the
  *  gate's `node --test` can import it. */
 
 import type { Profile } from './api.ts';
 
-/** A brisk walk; only used to turn a shortfall into minutes. */
-export const STEPS_PER_MINUTE = 100;
-
-type Purse = Pick<Profile, 'subscribed' | 'welcome_unlocks' | 'steps' | 'steps_per_unlock'>;
+type Purse = Pick<Profile, 'subscribed' | 'welcome_unlocks' | 'keys'>;
 
 export type Wallet = {
-  /** The pill's big line, and the number in it that rolls. */
+  /** The pill's number, and the one that rolls. */
   figure: number;
-  unit: string;
-  /** The pill's small line; empty for none. */
+  /** The figure counts the welcome one, not keys. */
+  starting: boolean;
+  /** What the pill says under the figure; empty for none. */
   note: string;
-  /** Steps still to walk before one opens; 0 when one can. */
-  short: number;
-  /** How full the next unlock is, 0-1, while short. */
-  progress: number;
-  /** What a hold where you stand takes off `figure`. */
+  /** Standing on a pin off today's walk opens it. A stop of today's walk
+   *  always does. */
+  open: boolean;
+  /** What a hold where you stand takes off `figure`, off the walk. */
   price: number;
   spoken: string;
 };
 
+/** "1 to start", "1 key", "3 keys". */
+export function lineOf(w: Pick<Wallet, 'starting'>, figure: number): string {
+  if (w.starting) return `${figure} to start`;
+  return `${figure} ${figure === 1 ? 'key' : 'keys'}`;
+}
+
+// Standing there, a key goes before the welcome one, so it shows only while
+// there are no keys.
+function starting(p: Purse): boolean {
+  return p.welcome_unlocks > 0 && !p.subscribed && p.keys === 0;
+}
+
 export function walletOf(p: Purse): Wallet {
-  const steps = p.steps.toLocaleString();
-  // Standing there, steps go before the welcome one, so it shows only while
-  // the steps cannot pay.
-  if (p.welcome_unlocks > 0 && !p.subscribed && p.steps < p.steps_per_unlock) {
-    return {
-      figure: p.welcome_unlocks,
-      unit: 'to start',
-      note: `${steps} steps`,
-      short: 0,
-      progress: 1,
-      price: 1,
-      spoken: `${p.welcome_unlocks} to start, ${steps} steps.`,
-    };
+  if (starting(p)) {
+    const line = lineOf({ starting: true }, p.welcome_unlocks);
+    return { figure: p.welcome_unlocks, starting: true, note: '', open: true, price: 1, spoken: `${line}.` };
   }
-  if (p.subscribed || p.steps >= p.steps_per_unlock) {
-    // The balance is enough on its own: no "Opens 4" under it (the founder).
-    const note = p.subscribed ? 'Unlimited where you stand' : '';
-    return {
-      figure: p.steps,
-      unit: 'steps',
-      note,
-      short: 0,
-      progress: 1,
-      price: p.subscribed ? 0 : p.steps_per_unlock,
-      spoken: note ? `${steps} steps. ${note}.` : `${steps} steps.`,
-    };
+  const keys = { figure: p.keys, starting: false };
+  const line = lineOf(keys, p.keys);
+  if (p.subscribed) {
+    const note = 'Unlimited where you stand';
+    return { ...keys, note, open: true, price: 0, spoken: `${line}. ${note}.` };
   }
-  const short = p.steps_per_unlock - p.steps;
-  return {
-    figure: short,
-    unit: 'to go',
-    note: `${steps} steps`,
-    short,
-    progress: p.steps / p.steps_per_unlock,
-    price: 0,
-    spoken: `${short.toLocaleString()} steps until the next one opens. You have ${steps}.`,
-  };
+  if (p.keys > 0) return { ...keys, note: '', open: true, price: 1, spoken: `${line}.` };
+  const note = "Free on today's walk";
+  return { ...keys, note, open: false, price: 0, spoken: `No keys. ${note}.` };
 }
 
-/** The figure `t` (0-1) of the way through a hold: down in tenths with the
- *  ring, so a price of steps ticks and a free one drops only as it fills. */
+/** The figure at the end of a hold: down by the price only as the ring
+ *  completes, never part way. */
 export function countDown(figure: number, price: number, t: number): number {
-  return figure - Math.floor((price * Math.floor(t * 10)) / 10);
-}
-
-/** "620 steps to go · about 7 min walking" */
-export function shortfall(short: number): string {
-  const minutes = Math.max(1, Math.ceil(short / STEPS_PER_MINUTE));
-  return `${short.toLocaleString()} steps to go · about ${minutes} min walking`;
+  return t >= 1 ? figure - price : figure;
 }

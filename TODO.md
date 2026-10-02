@@ -27,14 +27,6 @@ delete an entry when its fix lands.
   daemon stopped, `./loop/verify.sh` exited 1 with 413 db-test errors, which
   reads as "fix your code" until you find "Cannot connect to the Docker daemon"
   in the setup errors. Fix: `docker info` up front in verify.sh, exit 2 if it fails.
-- **`walk-and-unlock` is red on main.** 2026-10-01: after f448aea, stop 3's
-  "Stop 3 of 4. Where the night went long, dev seed. Locked, within reach."
-  never shows, every run, with or without the bottom-row change, so a layout
-  change took a baseline run (~6 min) to clear. Cause (seen on the failure
-  screenshot): by stop 3 the welcome unlock and yesterday's are spent and a
-  simulator has no steps, so the stop is short ("1,000 steps to go"), not
-  unlockable. Fix: give the flow's account steps, or subscribe it, before the
-  walk.
 - **`test_route_order` reddens the gate at random.** 2026-10-01:
   `ROUTE_SEED=3605168176` fails
   `test_within_budget_repeatable_and_full_as_the_budget_allows` on untouched
@@ -383,10 +375,10 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
 
 ## Paid map unlock
 
-Decided 2026-09-26 (the founder), changed 2026-09-30: three memories a day
-open free from anywhere; after that, standing on one costs 1,000 steps, and a
-subscription opens it for nothing (docs/10, *Three free a day, then steps
-where you stand*). Built 2026-09-27: the gate, RevenueCat's webhook and
+Decided 2026-09-26 (the founder), changed 2026-10-02: one walk a day opens
+for nothing and earns a key, a key opens any other memory you stand on, and a
+subscription opens everything (docs/10, *Keys open a lock, and today's walk is
+free*). Built 2026-09-27: the gate, RevenueCat's webhook and
 read-back (`api/billing.py`), the paywall (F35) and its two e2e flows (docs/10
 *A subscription opens the map*, *RevenueCat sells it; our table decides*).
 Nothing can be bought until the stores exist, so everybody is free.
@@ -397,7 +389,9 @@ money* below.
       `STORE_ACCOUNT` and `DEPLOY` (the webhook needs a public URL). No code:
       - App Store Connect: the Paid Apps agreement, banking and tax (without
         them no product loads); one subscription group, monthly and yearly,
-        auto-renewing, no introductory offer; an In-App Purchase key for
+        auto-renewing, no introductory offer; four consumables `keys_1`,
+        `keys_5`, `keys_15`, `keys_40` (api/billing.py `KEY_PRODUCTS`), the
+        one key at about 7 DKK and packs at 29, 69 and 149 DKK; an In-App Purchase key for
         RevenueCat; App Store Server Notifications to RevenueCat; a sandbox
         tester.
       - Play Console: the same two subscriptions; a service-account JSON for
@@ -409,8 +403,11 @@ money* below.
         `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `_ANDROID_KEY` (eas.json).
       - Both listings and privacy disclosures name the subscription and
         purchases; the review note says how to reach the paywall.
+      - RevenueCat's `default` offering carries the four key packages beside
+        monthly and annual: the app finds them by product id.
       - Then on a real device: buy monthly, see the row, open a pin from the
-        map, cancel in the sandbox, see it lapse. Nothing has ever called
+        map, cancel in the sandbox, see it lapse. Buy a key at the lock and
+        see it open the pin. Nothing has ever called
         RevenueCat for real: the tests patch `billing.fetch_subscriber`.
 - [ ] **Revisit RevenueCat when its fee outgrows two integrations.** Free
       under $2.5k/month, then 1% of gross (before VAT and the store cut). When
@@ -418,7 +415,7 @@ money* below.
       Developer API direct, or RevenueCat blocks something we need, leave: only
       `billing.fetch_subscriber` and the app's SDK change, since
       `subscriptions` stays ours.
-- [ ] **Steps on a real iPhone.** (checked 2026-09-30) Once keys (E2) land,
+- [ ] **Steps on a real iPhone.** (checked 2026-09-30) Since keys (2026-10-02),
       steps are a journal stat and buy nothing; the check below still
       stands. Built iOS-only
       (docs/10, *Three free a day, then steps where you stand*): 1,000 steps
@@ -447,8 +444,10 @@ money* below.
 
 Researched 2026-10-02 with eight parallel research passes over primary sources:
 dev blogs, filings, GDC talks, papers, regulator texts and community reactions
-to specific changes. Nothing here is decided. **D** marks a founder decision.
-The other entries follow from those decisions. Nobody has published A/B data
+to specific changes. **D** marks a founder decision. Keys shipped 2026-10-02
+(docs/10, *Keys open a lock, and today's walk is free*); their entries (E0,
+E2, E4, W4) are gone from here, and the research behind them is in this
+file's history at 34961a2. Nobody has published A/B data
 on any of it, and no app the research found gates story text on standing
 there, so every price below is borrowed from a neighbouring kind of app: tune
 it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
@@ -456,41 +455,6 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
 
 ### Decide first
 
-- [x] **E0 Are opens paid at all? Yes, with keys (E2).** Decided by the
-      founder 2026-10-02: walk stops are free (W4) and opens outside the
-      walk cost a key. The research behind it is below. Today a story
-      opens on the spot for 1,000 steps, or free with the subscription. The
-      research splits.
-      - **Against charging (steps as a toll).** No walking app checked
-        (Pikmin Bloom, Pokémon GO, Walkr, Monster Hunter Now, Dragon Quest
-        Walk) charges steps for something you have already walked to. They
-        *pay* for steps (growth, hatching, fuel) and use being there as the
-        lock.
-        - Adding conditions on top of being there drew the genre's worst
-          backlash. Pokémon GO's 2021 cut of the radius from 80 m back to
-          40 m caused a boycott, and Niantic reversed it
-          (https://www.mcvuk.com/business-news/pokemon-go-reverses-on-its-controversial-pokestop-distance-requirement-changes/).
-          The 2023 remote-raid cap drew 60k+ petition signatures and was
-          framed as a "disability tax"
-          (https://www.techradar.com/news/pokemon-go-raises-the-price-of-remote-raid-passes-inviting-concerns-of-ableism).
-        - A step charge bites the same group: cyclists, bus riders, limited
-          mobility.
-        - Etkin (JCR 2016): showing a step count made people walk more and
-          enjoy it less
-          (https://www.fuqua.duke.edu/duke-fuqua-insights/etkin-counting-steps).
-      - **For charging (walking is the "wait").** Story apps live on
-        wait-or-pay. Kakao Page's CEO: "I will pay to save time"
-        (https://www.koreajoongangdaily.com/business/kakao-proves-japan-has-an-appetite-for-korean-webtoons/10588321).
-        - Pocket FM: $500M a year, $415M of it from users unlocking
-          episodes (https://techcrunch.com/?p=3162605).
-        - Webtoon: paid content was 80.2% of 2023 revenue, at an ARPPU of
-          $11.5 a month from microtransactions
-          (https://www.sec.gov/Archives/edgar/data/1997859/000119312524151708/d396527ds1.htm).
-        - In Memory Lane the walk is the wait, and opening a story is the only
-          thing on sale with real pull.
-      - **What was chosen:** keep opens paid, but take the toll off walking.
-        The day's walk is free, finishing it earns a key, and steps buy
-        nothing (E2, W4).
 - [ ] **E1 D: Licensing before money.** (checked 2026-10-02) This blocks any
       paid open of a DR-derived story, and it matters more than the currency.
       - **DR treats archive clips as commercial "other business".** The
@@ -521,64 +485,9 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
         clearly ours to charge for (Gutenberg, user posts, licensed), and keep
         the rest free on the spot.
 
-### The currency: one, called keys
+### The currency: keys
 
-- [ ] **E2 Keys: one key opens one lock.** (checked 2026-10-02) Decided by
-      the founder 2026-10-02. The name fits the padlock pins. Supersedes the
-      1,000-step price (`STEPS_PER_UNLOCK` in `api/models.py`).
-      - **Earn:** +1 key for finishing the day's walk (W4), so one a day at
-        most. Steps earn nothing: they become a stat in the journal ("6.2 km
-        · 8,400 steps").
-        - **Why one a day, not one a stop:** about 4 stops at a key each
-          would leave nobody needing to buy. Giving the key for finishing
-          uses the goal gradient (W2).
-        - **Why a slow trickle:** Pokémon GO caps gym coins at 50 a day, down
-          from 100 in 2017, so free coins never empty the shop
-          (https://pocketmonsters.net/news/4153).
-        - **Why steps stopped being money:** no walking app charges steps for
-          a place you have already walked to (E0). Every walk-to-earn
-          currency that could be cashed out collapsed under inflation:
-          STEPN's GST −99.7%, monthly users 700K → 45K
-          (https://decrypt.co/122460); SWEAT −93%, earning made 400% harder
-          (https://dailycoin.com/sweatcoin-increases-minting-difficulty-as-sweat-economy-sweat-sinks-22/).
-          Keys are never cashable and never tradeable.
-      - **Buy:** 5 for 29 DKK, 15 for 69 DKK, 40 for 149 DKK, about 3.7–5.8
-        DKK a key. That sits above Webtoon and Radish (2–3 DKK an episode)
-        because each open costs a walk too. An untested guess.
-      - **At the lock:** "Open for 7 DKK" is a direct purchase of a single
-        key, so nobody has to buy a pack for one story. This meets the CPC
-        rule against forcing bundles (E3).
-      - **What opens what.** You always stand within 20 m; a key never opens a
-        memory from afar.
-
-        | Where | Cost | Why |
-        |---|---|---|
-        | A stop of today's walk, the "?" stop and a Walk here pin included | free | The walk is the free daily habit (W4) |
-        | Any other memory you stand at | 1 key | Pay-per-episode (Pocket FM, Webtoon), with the walk as the "wait" |
-        | Out of keys, at the lock | 7 DKK | A single key bought on the spot |
-        | A subscriber, anywhere they stand | free | E5 |
-
-      - **Later, priced in keys, not part of the first build:**
-        - **Reach** (20 m → 60 m for one walk), from Pokémon GO's lures,
-          incense and 80 m radius. If sold, sell it per walk and never take
-          it back: players treat range as owed once given (the 80 m reversal
-          in E0).
-        - **Themed walks** (W6), from StoryHunt's 99 DKK premium Copenhagen
-          walks (https://www.storyhunt.io/en/copenhagenlocalwalks).
-      - **Server:**
-        - A `keys` balance on `users`. The steps balance and its price go;
-          `/v1/me/steps` and its watermark stay, for the stat.
-        - Credit a key where `ROUTE_COMPLETED_QUERY` marks the walk done.
-        - Spend it in `api/write.py` `pay_for_unlock`, keeping that
-          function's rule of charging only once the gate has opened.
-        - Purchases go through RevenueCat (consumables on the same offering)
-          and the `subscriptions` read-back pattern. The app is never
-          believed.
-        - The order at a pin you stand on: subscriber free → a stop of
-          today's walk free → 1 key → the welcome unlock → 403 `no_keys`,
-          answered with the 7 DKK purchase. Re-derive this against *Pick one
-          to start* before building.
-- [ ] **E3 The rules keys must meet.** (checked 2026-10-02) Hard
+- [ ] **E3 The rules keys must meet before the store sells one.** (checked 2026-10-02) Hard
       constraints, not choices.
       - **Apple 3.1.1:** currency only through IAP; bought currency "may not
         expire"; loot-box odds disclosed
@@ -614,31 +523,6 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
         (https://www.geekwire.com/2024/amazon-to-shut-down-kindle-vella-serial-book-platform-saying-it-hasnt-caught-on-as-wed-hoped/).
         Radish let them vanish
         (https://kcomicsbeat.com/2025/07/03/radish-fiction-to-shut-down-by-end-of-2025/).
-- [ ] **E4 Never sell these.** (checked 2026-10-02) Write each into docs/10
-      when E2 lands, so nobody adds it later.
-      - **Reading from afar.** Pokémon GO's remote raid pass earned well, then
-        "came to dominate the experience… in a way we never intended"
-        (https://techcrunch.com/2023/03/30/pokemon-go-will-raise-the-price-of-remote-raid-passes).
-        Pulling it back cost a boycott and, per AppMagic (disputed by
-        Niantic), a five-year revenue low
-        (https://videogameschronicle.com/news/pokemon-go-developer-denies-that-its-earnings-have-dropped-to-a-five-year-low).
-        This is already the line in *Pick one to start*.
-      - **A second currency.** Choices runs two paid currencies, and players
-        called a quiet 16→22 diamond rise "scummy"
-        (https://www.pocketgamer.biz/how-does-choices-stories-you-play-monetise/).
-      - **Loot boxes or any random paid reward.** Illegal in Belgium (fines up
-        to €800k), and a likely DFA target. The FTC's Genshin settlement
-        ($20m, Jan 2025) covered hidden currency tiers and odds
-        (https://www.ftc.gov/system/files/ftc_gov/pdf/ferguson-cognosphere-concurrence.pdf).
-      - **Countdown offers and one-tap purchases.** The FTC's $245m Epic
-        settlement covered these dark patterns
-        (https://ftc.gov/news-events/news/press-releases/2023/09/ftc-announces-claims-process-fortnite-players-who-were-charged-unwanted-items).
-      - **Step-energy that refills.** Duolingo's switch to Energy raised its
-        metrics, but drew a petition ("two lessons a day")
-        (https://www.change.org/p/duolingo-hearts-not-energy). With a handful
-        of opens a day, an energy pool only reads as a squeeze.
-      - **Selling location or step data.** GDPR, Apple 5.1.3, and it clashes
-        with the device-UUID identity model.
 - [ ] **E5 Memory Lane+ (the subscription).** (checked 2026-10-02)
       - 49 DKK a month or 349 DKK a year: every memory you stand at opens
         without a key, and themed walks are included.
@@ -710,7 +594,7 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
 
 ### The walk: give it a reason to exist
 
-Before W4, a walk's stops cost the same as any pin, and its only rewards are the streak
+Before keys, a walk's stops cost the same as any pin, and its only rewards were the streak
 (F27), the finish card and the journal grouping. So "Walk here" to one chosen
 pin beat it. No published A/B tests compare curated routes with free choice.
 
@@ -752,36 +636,11 @@ pin beat it. No published A/B tests compare curated routes with free choice.
         what F1 has: the length, **Loop** or **One way**, and **Next walk**.
         Add reorder and skip on top of it. The one thing the user doesn't
         choose on a free walk is *which* stops it contains: picking a stop
-        is **Walk here**, which uses the day's one walk (W4). **Next walk** can
+        is **Walk here**, which uses the day's one walk. **Next walk** can
         be used to fish for nearby pins. That's acceptable because the walk
         is once a day, but cap rerolls if it becomes how people play.
       - Keep stories short. People found more than 5 minutes too long but
         still wanted more coverage.
-- [ ] **W4 Today's walk is on us.** (checked 2026-10-02) The founder,
-      2026-10-02: walk stops cost nothing, and that is the incentive. Part of
-      E2.
-      - **One walk a day per account.** No second walk at all. **Plan a
-        walk** and **Walk here** both count as it.
-      - **Every stop opens free** when you stand on it: the "?" stop (W1) and
-        the pin a Walk here was aimed at included. Aiming leaks at most one
-        chosen pin a day, which is acceptable.
-      - **Finishing earns +1 key** (E2). Finished means the last stop left
-        is opened; skipped stops don't block it (W3).
-      - **A walk that opened nothing doesn't use up the day.** Bring back
-        the old prune, so a bad plan or rain costs nothing.
-      - **Subscribers:** everything is free on the spot anyway.
-      - **Why the day limit:** without it, free stops plus **Walk here** open
-        every pin for nothing in two taps. docs/10 *A subscription opens the
-        map* (2026-09-26) hit exactly that, and fixed it with a day lock
-        (`WALKED_TODAY_QUERY`, 403 `walked_today`) plus `ROUTE_PRUNE`. Both
-        went in *Steps open a memory*, so this brings back a superseded
-        rule. Say so in docs/10 when it lands.
-      - **The cost:** about 4 free stories plus a key a day is generous, and
-        fewer people will pay. If revenue disappoints, change the number of
-        stops on a walk, then keys per finish, then pack prices. Don't
-        charge for walk stops again.
-      - **Evidence:** Webtoon's free Daily Pass, plus the goal gradient (W2).
-        No data on location-gated content.
 - [ ] **W5 A broken streak can be repaired.** (checked 2026-10-02)
       - A broken streak hurts, more so when people blame themselves, and less
         when it can be repaired (Silverman & Barasch, JCR 2023, 7 studies,
@@ -794,7 +653,7 @@ pin beat it. No published A/B tests compare curated routes with free choice.
       - Overlaps G5.
 - [ ] **W6 D: Themed walks.** (checked 2026-10-02)
       - Four stops sharing an era, a person or a source, so the walk tells one
-        story. This is the paid product in E2, E5 and E7.
+        story. This is the paid product in E5 and E7.
       - It reverses docs/10 *Tags come from the text, and a walk has no
         theme*, so mark that entry Superseded if it goes ahead.
       - Evidence: moderate and qualitative. Zombies, Run! users rated story as

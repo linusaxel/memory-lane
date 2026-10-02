@@ -418,6 +418,8 @@ function stats(unlocked: number, places: number, profile: Profile | null): strin
   if (added > 0) parts.push(`${added} added`);
   const hearts = profile?.hearts_received ?? 0;
   if (hearts > 0) parts.push(`${hearts} ${hearts === 1 ? 'heart' : 'hearts'}`);
+  const steps = profile?.steps ?? 0;
+  if (steps > 0) parts.push(`${steps.toLocaleString()} steps`);
   return parts.join(' · ');
 }
 

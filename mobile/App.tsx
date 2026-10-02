@@ -11,6 +11,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
+import type { PurchasesPackage } from 'react-native-purchases';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
@@ -21,7 +22,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   acceptRoute,
   blockUser,
-  devSteps,
+  devKeys,
   endRoute,
   fetchMine,
   fetchNearby,
@@ -30,12 +31,14 @@ import {
   fetchUnlocked,
   heartMemory,
   unheartMemory,
-  outOfSteps,
+  outOfKeys,
   previewRoute,
   reportMemory,
   saveDisplayName,
+  refreshSubscription,
   unlockMemory,
   walkHereRefusal,
+  walkedToday,
   wasRefused,
   type Coordinates,
   type LocatedMemory,
@@ -80,7 +83,7 @@ import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import FirstPick from './src/FirstPick.tsx';
 import HowItWorks from './src/HowItWorks.tsx';
-import StepsPill from './src/StepsPill.tsx';
+import KeysPill from './src/KeysPill.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
 import { walletOf } from './src/wallet.ts';
@@ -95,7 +98,7 @@ import AccountMenu, { type MapShows } from './src/AccountMenu.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
-import { identify } from './src/purchases.ts';
+import { buy, identify, keyPacks } from './src/purchases.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
@@ -271,8 +274,6 @@ export default function App() {
   const [displayName, setDisplayName] = useState('');
   const [profile, setProfile] = useState<Profile | null>(null);
   const wallet = profile && walletOf(profile);
-  // Steps still to walk before standing on a pin opens it; 0 when it can.
-  const short = wallet?.short ?? 0;
   // The gate (docs/10, *Sign-in comes first*). Null until the stored answer is
   // read, so a signed-in launch never flashes the sign-in screen.
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -283,9 +284,16 @@ export default function App() {
   const [howOpen, setHowOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
   // server knows (src/purchases.ts).
+  // One key, bought at the lock; null until the store has it (src/purchases.ts).
+  const [keyOne, setKeyOne] = useState<PurchasesPackage | null>(null);
   useEffect(() => {
-    identify(profile?.user_id ?? null).catch(() => {});
+    identify(profile?.user_id ?? null)
+      .then(keyPacks)
+      .then((packs) => setKeyOne(packs.find((p) => p.product.identifier === 'keys_1') ?? null))
+      .catch(() => {});
   }, [profile?.user_id]);
+  // Finishing today's walk earned a key: the closing card says so.
+  const [keyEarned, setKeyEarned] = useState(false);
   // Set to open Submit as an editor for this memory instead of a blank form.
   // Null means Submit is either closed or filing something new.
   const [editingMemory, setEditingMemory] = useState<LocatedMemory | null>(null);
@@ -649,7 +657,9 @@ export default function App() {
     } catch (e) {
       if (!mounted.current) return;
       const refusal = walkHereRefusal(e);
-      if (refusal?.reason === 'too_far') {
+      if (walkedToday(e)) {
+        setPlanError("Today's walk is done. There's another tomorrow.");
+      } else if (refusal?.reason === 'too_far') {
         const km = Math.ceil(refusal.min_budget_meters / 1000 / WALK_KM.step) * WALK_KM.step;
         setWalkToKm(km);
         setPlanError(`${planKm} km is too short from here. Try ${km} km or more.`);
@@ -717,8 +727,13 @@ export default function App() {
       setPreview(null);
       setWalkTo(null);
       setStage('walk');
-    } catch {
-      if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
+    } catch (e) {
+      if (!mounted.current) return;
+      setPlanError(
+        walkedToday(e)
+          ? "Today's walk is done. There's another tomorrow."
+          : "Can't reach Memory Lane right now.",
+      );
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
@@ -830,6 +845,12 @@ export default function App() {
     });
     return map;
   }, [pins, earned, stage]);
+  // A stop of today's walk opens for nothing (docs/10, "Keys open a lock, and
+  // today's walk is free"); a preview's stops are not yet a walk.
+  const onTodaysWalk = useCallback(
+    (id: number) => stage === 'walk' && routePositionById.has(id),
+    [stage, routePositionById],
+  );
   const routeUnlockedCount = useMemo(
     () => routeShown.filter((memory) => earned.has(memory.id)).length,
     [routeShown, earned],
@@ -1033,9 +1054,11 @@ export default function App() {
     return [...ringHere].sort((a, b) => a.away - b.away)[0] ?? null;
   }, [ringHere, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
+  // Out of keys and off today's walk: standing on it opens nothing.
+  const blocked = !!ringMemory && !!wallet && !wallet.open && !onTodaysWalk(ringMemory.id);
   // A hold would open it, so the ring is the one ember thing and the bottom
   // row's middle goes quiet, still there (docs/10, "One ember button that changes").
-  const ringLive = !!ringFor && !short;
+  const ringLive = !!ringFor && !blocked;
   const ringAt = Math.max(
     0,
     ringHere.findIndex(({ group, index }) => group.memories[index].id === ringMemory?.id),
@@ -1058,20 +1081,11 @@ export default function App() {
   const wasInReach = useRef(false);
   useEffect(() => {
     if (inReach && !wasInReach.current) {
-      if (!short) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      if (!blocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       setOpenAt((open) => (open.some((m) => m.id === ringMemory?.id && m.locked) ? [] : open));
     }
     wasInReach.current = inReach;
-  }, [inReach, ringMemory, short]);
-  // Pacing on the spot fills the faded lock; the step that completes it turns
-  // it into the ring to hold, and that is felt.
-  const wasShort = useRef(short);
-  useEffect(() => {
-    if (inReach && wasShort.current > 0 && short === 0) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    }
-    wasShort.current = short;
-  }, [inReach, short]);
+  }, [inReach, ringMemory, blocked]);
   // A refusal belongs to the memory it was for.
   useEffect(() => setUnlockError(null), [ringMemory?.id]);
 
@@ -1131,18 +1145,25 @@ export default function App() {
           // This was the last not-yet-earned stop of a started route: the same
           // Success haptic UnlockButton fires for one memory, once more - an
           // affirmation on the unlock that already happened, not a new mechanic.
-          if (
+          const finished =
             routeStarted &&
             nextRouteStop?.id === memory.id &&
-            routeShown.every((stop) => stop.id === memory.id || earned.has(stop.id))
-          ) {
+            routeShown.every((stop) => stop.id === memory.id || earned.has(stop.id));
+          if (finished) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            setKeyEarned(false);
             setWalkDone(true);
           }
-          // What it cost, and the streak the walk's card shows, counting today.
+          // What it cost, the key a finished walk earned, and the streak the
+          // walk's card shows, counting today.
+          const keysBefore = profile?.keys ?? 0;
           deviceId()
             .then(fetchProfile)
-            .then((who) => mounted.current && setProfile(who))
+            .then((who) => {
+              if (!mounted.current) return;
+              setProfile(who);
+              if (finished) setKeyEarned(who.keys > keysBefore);
+            })
             .catch(() => {});
           setUnlocked(await rememberUnlocked(unlocked, opened));
           return true;
@@ -1153,11 +1174,8 @@ export default function App() {
         }
       } catch (e) {
         if (!mounted.current) return false;
-        const short = outOfSteps(e);
-        if (short) {
-          setUnlockError(
-            `It takes ${short.price.toLocaleString()} steps. You have ${short.steps.toLocaleString()}.`,
-          );
+        if (outOfKeys(e)) {
+          setUnlockError('Out of keys.');
           setPaywallOpen(true);
         } else {
           setUnlockError("Can't reach Memory Lane right now.");
@@ -1167,7 +1185,32 @@ export default function App() {
       }
       return false;
     },
-    [unlocked, routeStarted, nextRouteStop, routeShown, earned],
+    [unlocked, routeStarted, nextRouteStop, routeShown, earned, profile?.keys],
+  );
+
+  // One key from the store, then the memory it was bought for.
+  const buyKeyAndOpen = useCallback(
+    async (memory: LocatedMemory) => {
+      if (!keyOne) {
+        setPaywallOpen(true);
+        return false;
+      }
+      setUnlocking(true);
+      setUnlockError(null);
+      try {
+        if (!(await buy(keyOne))) return false;
+        const who = await refreshSubscription(await deviceId());
+        if (!mounted.current) return false;
+        setProfile(who);
+      } catch {
+        if (mounted.current) setUnlockError("That didn't go through. Try again.");
+        return false;
+      } finally {
+        if (mounted.current) setUnlocking(false);
+      }
+      return unlock(memory);
+    },
+    [keyOne, unlock],
   );
 
   // Count what was walked, from where the last count stopped.
@@ -1439,9 +1482,9 @@ export default function App() {
                     }
                     Haptics.selectionAsync().catch(() => {});
                     setHere(pin ? { lat: pin.lat, lng: pin.lng } : { lat, lng });
-                    // And 500 steps, for testing the steps gate without walking.
+                    // And a key, for testing what one opens without a walk.
                     deviceId()
-                      .then(devSteps)
+                      .then(devKeys)
                       .then((who) => mounted.current && setProfile(who))
                       .catch(() => {});
                   }
@@ -1488,8 +1531,12 @@ export default function App() {
                 }
               }
               const near = reachOf(group, position, earned);
-              // Short of steps, standing on it opens nothing: never seal (F11).
-              const reach = near === 'unlockable' && short ? 'locked' : near;
+              // Out of keys off today's walk, standing on it opens nothing:
+              // never seal (F11).
+              const reach =
+                near === 'unlockable' && wallet && !wallet.open && routePosition == null
+                  ? 'locked'
+                  : near;
               return (
                 <MemoryMarker
                   key={group.key}
@@ -1533,9 +1580,13 @@ export default function App() {
               busy={unlocking}
               onHold={setHolding}
               error={unlockError}
-              short={short}
-              progress={wallet?.progress ?? 0}
-              onSkip={() => setPaywallOpen(true)}
+              blocked={blocked}
+              keyPrice={keyOne?.product.priceString ?? null}
+              onGetKey={async () => {
+                if (!(await buyKeyAndOpen(ringMemory))) return;
+                setRevealId(ringMemory.id);
+                setPickedId(null);
+              }}
               onUnlock={async () => {
                 if (walking) setRouteStarted(true);
                 const opened = await unlock(ringMemory);
@@ -1621,6 +1672,7 @@ export default function App() {
               loop={!!routeHome}
               minutes={doneMinutes}
               streak={profile?.streak ?? 0}
+              keyEarned={keyEarned}
               onDone={() => setWalkDone(false)}
             />
           )}
@@ -1628,11 +1680,12 @@ export default function App() {
           {stage === 'end' && <EndPick onCancel={() => setStage('preview')} />}
           {stage === 'loading' && <View style={styles.cover} />}
 
-          {/* Top centre: what opens memories today. A tap counts again. */}
+          {/* Top centre: what opens memories. A tap counts steps again. */}
           {wallet && (
-            <StepsPill
+            <KeysPill
               wallet={wallet}
               holding={holding}
+              price={ringMemory && onTodaysWalk(ringMemory.id) ? 0 : wallet.price}
               place={[styles.corner, styles.steps]}
               // What it means, and a recount behind it.
               onPress={() => {
@@ -1925,8 +1978,15 @@ export default function App() {
           }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
           freeLeft={profile?.welcome_unlocks ?? 0}
-          stepPrice={profile && !profile.subscribed ? profile.steps_per_unlock : undefined}
-          stepsShort={short}
+          cost={
+            openMemories[openIndex] && onTodaysWalk(openMemories[openIndex].id)
+              ? 'free'
+              : (profile?.keys ?? 0) > 0 && !profile?.subscribed
+                ? 'key'
+                : wallet?.open
+                  ? 'free'
+                  : 'none'
+          }
           opening={unlocking}
           onOpenFree={async () => {
             const memory = openMemories[openIndex];
@@ -1949,7 +2009,7 @@ export default function App() {
           onClose={() => setPaywallOpen(false)}
           device={device}
           onProfile={setProfile}
-          stepPrice={profile?.steps_per_unlock ?? 1000}
+          keys={profile?.keys ?? 0}
         />
 
         <Submit

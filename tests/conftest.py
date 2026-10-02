@@ -272,7 +272,7 @@ def api_client(db_session, monkeypatch, tmp_path):
 
 def spend_welcome(session, device):
     """Use up `device`'s account's welcome unlock, so only standing there, with
-    steps, opens anything."""
+    a key, opens anything."""
     from sqlalchemy import text
 
     from api.accounts import user_for_device
@@ -286,14 +286,14 @@ def spend_welcome(session, device):
     session.commit()
 
 
-def give_steps(session, device, steps):
-    """Give `device`'s account `steps` to open memories with, past its free ones."""
+def give_keys(session, device, keys):
+    """Give `device`'s account `keys` to open memories with, past its welcome one."""
     from sqlalchemy import text
 
     from api.accounts import user_for_device
 
     user_id = user_for_device(session, device)
     session.execute(
-        text("UPDATE users SET steps = :s WHERE id = CAST(:u AS uuid)"), {"s": steps, "u": user_id}
+        text("UPDATE users SET keys = :k WHERE id = CAST(:u AS uuid)"), {"k": keys, "u": user_id}
     )
     session.commit()

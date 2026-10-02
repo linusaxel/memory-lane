@@ -75,10 +75,13 @@ from api.queries import (
     SEARCH_MEMORIES_QUERY,
     SEARCH_MEMORIES_WITH_LOCATION_QUERY,
     SINGLE_MEMORY_QUERY,
+    SUBSCRIBED_QUERY,
     WALKED_QUERY,
     WALKED_STOPS_QUERY,
+    WALKED_TODAY_QUERY,
 )
 from api.route_solver import ROUTE_LOOP, _plan_route
+from pipeline.config import UNLIMITED_WALKS
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -388,6 +391,19 @@ def _route_response(
     )
 
 
+def _refuse_second_walk(session, device: str, route_date) -> None:
+    """One walk a day per account; a subscriber has no limit (docs/10, "Keys
+    open a lock, and today's walk is free"). A walk's stops are free, so
+    without it Walk here and End walk open any pin on the map for nothing."""
+    if UNLIMITED_WALKS:
+        return
+    binds = {"device_id": device, "today": route_date}
+    if session.execute(text(WALKED_TODAY_QUERY), binds).scalar() and not (
+        session.execute(text(SUBSCRIBED_QUERY), binds).scalar()
+    ):
+        raise HTTPException(status_code=403, detail={"reason": "walked_today"})
+
+
 def _legs_json(legs):
     return [[c.model_dump() for c in leg] for leg in legs] if legs else None
 
@@ -414,6 +430,7 @@ def preview_route(
     loop = loop and not end
     route_date = gate.today()
     with get_session() as session:
+        _refuse_second_walk(session, device, route_date)
         picked, legs, ends = _plan_route(
             session,
             device,
@@ -432,9 +449,9 @@ def preview_route(
 
 @router.post("/v1/routes/today", response_model=RouteResponse)
 def accept_route(body: RouteRequest):
-    """Accept today's walk. One in progress per device: the first accept is
-    stored and every later one gets it back, whatever it asked for, until
-    POST /v1/routes/today/end ends it.
+    """Accept today's walk. One a day per account, bar a subscriber, and one in
+    progress per device: the first accept is stored and every later one gets it
+    back, whatever it asked for, until POST /v1/routes/today/end ends it.
 
     An empty walk is not stored: stored, it would pin the whole day to
     "nothing here" even after the device reaches somewhere stocked. Nor is an
@@ -447,6 +464,7 @@ def accept_route(body: RouteRequest):
             text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
         ).fetchone()
         if row is None:
+            _refuse_second_walk(session, body.device, route_date)
             loop = ROUTE_LOOP if body.loop is None else body.loop
             loop = loop and not body.end
             picked, legs, _ = _plan_route(

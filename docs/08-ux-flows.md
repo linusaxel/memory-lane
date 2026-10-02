@@ -59,7 +59,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F31 | Look back at a walk | Implemented |
 | F33 | Leave a note | Implemented |
 | F34 | End a walk | Implemented |
-| F35 | Subscribe | Implemented (no store yet) |
+| F35 | Buy keys, or subscribe | Implemented (no store yet) |
 | F36 | Choose your first memory | Implemented |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
@@ -80,9 +80,9 @@ Everything below is one of three sessions. If a flow does not belong to one of
 these, it is probably not a flow.
 
 **Session one — "what is this?"** The map of what is locked around you (F29),
-the step count at the top. Tap a pin and its peek offers **Open it now**: three
-a day open from anywhere, so the first story is one tap away. After those, a
-memory opens only where it stands. **Plan a walk**, the ember pill bottom
+the keys at the top. Tap a pin and its peek offers **Open this one from here**:
+one opens from anywhere (F36), so the first story is one tap away. After that,
+a memory opens only where it stands: free on today's walk, a key anywhere else. **Plan a walk**, the ember pill bottom
 centre, draws a walk past a few (F1) and is where location is asked for (F8); decline
 it and the walk is planned from central Copenhagen instead (F9).
 
@@ -95,8 +95,7 @@ make it worth having got here.
 **Session three — coming back.** The collection has things in it (F15), it works
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
-you, never what it says: standing there, or one of the day's free ones, is
-the only way in. Settings, under your photo top right, is where
+you, never what it says: standing there is the only way in. Settings, under your photo top right, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -195,9 +194,10 @@ somebody can hand their old phone in and still have everything they walked for.
 3. **Start walk** is `POST /v1/routes/today` with the same position, length and
    loop, and lands on the walk (F25).
 
-**Accepting starts the walk.** It stands until it is ended (F34). Another the
-same day needs a subscription, unless the first opened nothing (docs/10,
-*A subscription opens the map*). A relaunch after accepting skips this
+**Accepting starts the walk.** It stands until it is ended (F34). One a day:
+another the same day needs a subscription, unless the first opened nothing,
+and is otherwise refused with "Today's walk is done. There's another tomorrow."
+(docs/10, *Keys open a lock, and today's walk is free*). A relaunch after accepting skips this
 page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length — the card moves the
@@ -306,10 +306,10 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    device stored, so a memory you walked to is readable on the train home.
 
 **One opens from anywhere, once:** the first run's pick (F36), from a pin's
-peek, **Open this one from here**. Otherwise standing on it opens it for 1,000
-steps; a subscriber standing there spends nothing. The top of the map says
-what is left, "2,340 steps", and a tap counts steps again (F35, and docs/10,
-"Pick one to start, then where you stand").
+peek, **Open this one from here**. Otherwise standing on it opens it: for
+nothing on today's walk or for a subscriber, for a key anywhere else. The top
+of the map says what is left, "3 keys", and a tap counts steps again (F35, and
+docs/10, "Keys open a lock, and today's walk is free").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -794,14 +794,15 @@ anyone else's collection or the local unlock cache.
    §3a).
 5. Reaching a stop lights its pin, and the unlock ring comes up above the walk card,
    which stays, so the walk can end there; a hold opens it. Any stop, in any order — the
-   numbers suggest a walk, they do not enforce one. Unlocking is F7, unchanged.
+   numbers suggest a walk, they do not enforce one. Unlocking is F7, and a stop
+   costs nothing.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the card moves on to the next.
 6. The last stop earned, the card reads "Every stop unlocked" over "5 of 5",
    and a tap fits the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
-**One walk at a time.** `POST /v1/routes/today` stores the first accept with
+**One walk a day, one at a time.** `POST /v1/routes/today` stores the first accept with
 `ON CONFLICT DO NOTHING`; a second accept, from anywhere, at any length, gets
 the first walk back until it is ended (F34). `GET /v1/routes/today` only reads
 — 404 until something is accepted, or once it is ended — and is how a relaunch
@@ -971,8 +972,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
    who it is from ("From" a source, "Left by" a person, with a glyph), its
    #tags, then the approach ring beside the distance with year · hearts and what
-   is waiting, **Open it now** while today's free ones last, and **Walk
-   here**, which draws a walk through that pin (F1).
+   is waiting, **Open this one from here** while the welcome one lasts (F36),
+   and **Walk here**, which draws a walk through that pin (F1).
    Standing on it, the peek gives way to the ring over the map (F7).
 3. **Plan a walk**, the ember pill bottom centre, between Add and Center on me,
    draws a walk (F1).
@@ -985,7 +986,8 @@ Until 2026-09-26 this flow was removed: a map of every memory under the
 viewport, where nothing opened, made the corpus a thing to browse and to
 "complete". Locked pins cannot be read, so that rule survives: see docs/10, "A
 map of what is locked, and only today's walk unlocks". Since 2026-09-30 any of
-them opens when you stand on it, for steps (docs/10, "Steps open a memory").
+them opens when you stand on it, for a key (docs/10, "Keys open a lock, and
+today's walk is free").
 
 `App.tsx` (`stage === 'map'`, `fetchNearby`), `src/MemorySheet.tsx` (`onWalkHere`).
 
@@ -1000,7 +1002,8 @@ The last stop unlocks and the day should feel finished.
    loop.
 3. The card reads "Nice walk.", then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
-   another day), then the streak once it is more than one day (F27).
+   another day), then "+1 key" when finishing earned one (once a day), then
+   the streak once it is more than one day (F27).
 4. Done goes back to the map, following you again, with the walk card at
    "Every stop unlocked".
 
@@ -1020,11 +1023,12 @@ already walked and another in mind.
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
    haven't reached will lock again. Anything you've unlocked stays unlocked.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.
-3. Ended, the map of what is locked comes back (F29) with **Plan a walk**, and
-   another walk can be planned the same day.
+3. Ended, the map of what is locked comes back (F29) with **Plan a walk**.
+   Another walk the same day is only for a subscriber, or when the ended one
+   opened nothing.
 
 The ended walk stays in the journal (F31) with what it earned, and still counts
-for the streak (F27). A walk that earned nothing is deleted as it ends. Its unearned stops cannot be unlocked any more (F14).
+for the streak (F27). A walk that earned nothing is deleted as it ends. Its unearned stops are no longer free: they cost a key, like any pin.
 Offline, the card says "Can't reach Memory Lane right now." and the walk goes on.
 
 `App.tsx` (`endWalk`, `confirmEnd`), `src/Plan.tsx` (`EndWalk`),
@@ -1114,41 +1118,42 @@ note fails to send: "That didn't send. Try again.", the draft kept.
 replaces the first, the author can remove it, and a device that never unlocked
 it gets 403 from both routes. `tests/test_api_notes.py`.
 
-## F35 · Subscribe — **Implemented** (no store yet: TODO.md S6)
+## F35 · Buy keys, or subscribe — **Implemented** (no store yet: TODO.md S6)
 
-**Who:** a free account standing on a pin with its welcome unlock spent and fewer than 1,000 steps. **Trigger:** **Skip the steps** under the faded lock, the hold refused `no_steps` (a stale balance), or **Subscribe** in Settings.
+**Who:** a free account standing on a pin off today's walk with its welcome
+unlock spent and no keys. **Trigger:** **Open for …** or **Get keys** under the
+faded lock, a hold refused `no_keys` (a stale balance), or **Subscribe** in
+Settings.
 
 1. On the map, anyone standing on a locked pin gets the lock, walk or no walk.
    It says nothing about the price; the top pill does.
-2. Short of steps there is no ring to hold (docs/09 part 9): the lock is the
-   faded approach ring, its rim filling with your steps, over "580 steps to go
-   · about 6 min walking" and **Skip the steps**, which opens the paywall. Pacing
-   the block fills it there, and the step that completes it brings the ring to
-   hold. The pin stays ember. The top pill says "580 to go"
-   beside a ring filling toward the price. If the server still refuses a hold
-   (the phone's balance was stale) it says "It takes 1,000 steps. You have
-   420." Either way the paywall opens (`src/Paywall.tsx`): "Open any memory you stand on",
-   monthly and yearly at the store's price, **Restore purchases**, Terms and
-   Privacy, and **Not now**.
+2. Out of keys there is no ring to hold: the lock is the faded approach ring,
+   over "Out of keys" and **Open for** the store's price of one key, which buys
+   it and opens the memory. With no key product (the simulator), **Get keys**
+   opens the paywall instead. The pin stays ember. The top pill says "0 keys"
+   over "Free on today's walk". If the server still refuses a hold it says
+   "Out of keys." and the paywall opens (`src/Paywall.tsx`): "Open any memory
+   you stand on", key packs at the store's price, then monthly and yearly,
+   **Restore purchases**, Terms and Privacy, and **Not now**.
 3. A purchase or a restore asks the server to read the store back
    (`POST /v1/me/subscription`); only its answer opens anything. The sheet
-   closes when it says subscribed.
+   closes when it says subscribed, or when there are more keys than before.
 4. A subscriber's hold spends nothing. Settings shows "Subscribed until …" and
    **Manage subscription**; signed in and not subscribed, **Subscribe**.
 
-Steps are the phone's own count (Core Motion, iOS only), read when the app
-opens or comes back, and credited from where the last count stopped.
+Keys come from finishing a walk (one a day) and from the store, and never
+expire.
 
-**Why:** [Steps open a memory](10-decisions.md#steps-open-a-memory)
+**Why:** [Keys open a lock, and today's walk is free](10-decisions.md#keys-open-a-lock-and-todays-walk-is-free)
 and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it-our-table-decides).
 
-**Failure:** no RevenueCat key or no offerings (the simulator, e2e): "Subscriptions
-aren't available right now." and **Not now**. The person backs out of the
-store's sheet: nothing is said. Anything else: "That didn't go through. Try
-again." A purchase the server cannot find: "No subscription on this
-account yet."
+**Failure:** no RevenueCat key or no offerings (the simulator, e2e): "Keys
+aren't available right now.", "Subscriptions aren't available right now." and
+**Not now**. The person backs out of the store's sheet: nothing is said.
+Anything else: "That didn't go through. Try again." A purchase the server
+cannot find: "Nothing bought on this account yet."
 
-**Done when:** `.maestro/subscribe-when-out-of-steps.yml` passes, and
+**Done when:** `.maestro/subscribe-when-out-of-keys.yml` passes, and
 `tests/test_api_billing.py` and `tests/test_api_unlocks.py`.
 
 ## F36 · Choose your first memory — **Implemented**
@@ -1168,7 +1173,7 @@ account yet."
 **Why:** [Pick one to start, then where you stand](10-decisions.md#pick-one-to-start-then-where-you-stand).
 
 **Failure:** nothing locked within the map's 5 km: no card, and the welcome
-unlock waits for the first pin stood on with no steps.
+unlock waits for the first pin stood on with no keys.
 
 **Done when:** `.maestro/first-pick.yml` passes, and `tests/test_api_unlocks.py`.
 

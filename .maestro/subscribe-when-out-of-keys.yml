@@ -1,13 +1,13 @@
-# F35 subscribe, when a free account has nothing left to open a memory with.
-# docs/08-ux-flows.md, docs/10-decisions.md "Pick one to start, then where
-# you stand".
+# F35 keys and the subscription, when a free account has nothing left to open
+# a memory with. docs/08-ux-flows.md, docs/10-decisions.md "Keys open a lock,
+# and today's walk is free".
 #
-# e2e/run.sh's `broke` trigger has the account the app mints use up today's
-# free unlocks, and there are no steps on a simulator; typing a name mints it.
-# Standing on a pin, a faded lock stands in for a ring that would be refused.
-# Under it, how far off an unlock is, and Skip the steps opens the paywall. It
-# has nothing to sell on a simulator (no RevenueCat key) and says so, with a way
-# out. Renamed Paid, `subscriber` pays for it, and the ring is there to hold.
+# e2e/run.sh's `broke` trigger has the account the app mints use up its
+# welcome unlock, and it has no keys; typing a name mints it. Standing on a pin
+# off any walk, a faded lock stands in for a ring that would be refused. Under
+# it, "Out of keys", and Get keys opens the paywall. It has nothing to sell on
+# a simulator (no RevenueCat key) and says so, with a way out. Renamed Paid,
+# `subscriber` pays for it, and the ring is there to hold.
 
 appId: ${APP_ID}
 ---
@@ -29,14 +29,15 @@ appId: ${APP_ID}
     clearState: false
 
 - extendedWaitUntil:
-    visible: "1,000 steps to go · about 10 min walking"
+    visible: "Out of keys"
     timeout: 40000
 - assertVisible: "Ringkaféen, dev seed\\..*"
 - assertNotVisible: "Unlock this memory"
-- tapOn: "Skip the steps"
+- tapOn: "Get keys"
 - extendedWaitUntil:
     visible: "Open any memory you stand on"
     timeout: 20000
+- assertVisible: "Keys aren't available right now\\."
 - assertVisible: "Subscriptions aren't available right now\\."
 - tapOn: "Not now"
 

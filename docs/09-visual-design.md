@@ -526,6 +526,10 @@ instantiateVariableFont(TTFont(src), dict(wght=700, opsz=36, SOFT=100, WONK=1)) 
 
 # 9. Steps as currency, and the iOS 26 facelift — **researched 2026-10-01, first part shipped**
 
+**Superseded 2026-10-02** for the economy: keys replaced steps as what opens a
+memory (docs/10, *Keys open a lock, and today's walk is free*). The pill and
+lock below describe the step version; the facelift parts stand.
+
 Once three a day opened from anywhere and the rest cost 1,000 steps (docs/10,
 *Three free a day, then steps where you stand*), the pill at the top said
 "4,000 steps / 0 free today" and nothing about what that bought. A person
@@ -751,6 +755,9 @@ This needs a `kind` on the content payload. `ContentRef` has no
 ---
 
 # 11. The How it works copy — **researched and built 2026-10-01**
+
+**Superseded 2026-10-02** in its step sections: How it works now explains the
+free walk and keys. The research on how to write it stands.
 
 The steps pill opens How it works (`mobile/src/HowItWorks.tsx`). Its first
 copy was accurate and dry: label headings ("Opening one", "Your steps") over

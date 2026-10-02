@@ -12,7 +12,7 @@ database and streets, and writes:
                        every segment however short
   e2e/out/legs/env     STOPn / WORDSn: each stop's name, and words from its summary;
                        BENCH_LAT / BENCH_LNG: the bench, stood on from the map
-                       with no walk (subscribe-from-the-peek)
+                       with no walk (subscribe-when-out-of-keys)
 
 The 4 km default is four stops, and run.sh leaves the seed only four in reach,
 so every device and every `again` gets the same four in the same order.

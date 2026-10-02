@@ -1,56 +1,40 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { countDown, shortfall, walletOf } from './wallet.ts';
+import { countDown, lineOf, walletOf } from './wallet.ts';
 
-const purse = { subscribed: false, welcome_unlocks: 0, steps: 0, steps_per_unlock: 1000 };
+const purse = { subscribed: false, welcome_unlocks: 0, keys: 0 };
 
-test('the welcome one shows while the steps cannot pay', () => {
-  const w = walletOf({ ...purse, welcome_unlocks: 1, steps: 400 });
-  assert.equal(w.figure, 1);
-  assert.equal(w.unit, 'to start');
-  assert.equal(w.short, 0);
+test('the welcome one shows while there are no keys', () => {
+  const w = walletOf({ ...purse, welcome_unlocks: 1 });
+  assert.equal(lineOf(w, w.figure), '1 to start');
+  assert.equal(w.open, true);
 });
 
-test('steps that can pay go before the welcome one', () => {
-  const w = walletOf({ ...purse, welcome_unlocks: 1, steps: 4210 });
-  assert.equal(w.unit, 'steps');
-  assert.equal(w.price, 1000);
+test('keys go before the welcome one', () => {
+  const w = walletOf({ ...purse, welcome_unlocks: 1, keys: 3 });
+  assert.equal(lineOf(w, w.figure), '3 keys');
+  assert.equal(w.price, 1);
 });
 
-test('none free: the balance alone', () => {
-  const w = walletOf({ ...purse, steps: 4210 });
-  assert.equal(w.figure, 4210);
-  assert.equal(w.note, '');
-  assert.equal(w.short, 0);
+test('one key is singular', () => {
+  assert.equal(lineOf(walletOf({ ...purse, keys: 1 }), 1), '1 key');
 });
 
-test('exactly the price is enough', () => {
-  assert.equal(walletOf({ ...purse, steps: 1000 }).short, 0);
+test('none left: closed off the walk, and says the walk is free', () => {
+  const w = walletOf(purse);
+  assert.equal(w.open, false);
+  assert.equal(w.note, "Free on today's walk");
 });
 
-test('short: what is left to walk, and how far along', () => {
-  const w = walletOf({ ...purse, steps: 400 });
-  assert.equal(w.figure, 600);
-  assert.equal(w.unit, 'to go');
-  assert.equal(w.short, 600);
-  assert.equal(w.progress, 0.4);
+test('a subscriber always opens, and pays nothing', () => {
+  const w = walletOf({ ...purse, subscribed: true });
+  assert.equal(w.open, true);
+  assert.equal(w.price, 0);
 });
 
-test('a subscriber is never short where they stand', () => {
-  const w = walletOf({ ...purse, subscribed: true, steps: 0 });
-  assert.equal(w.short, 0);
-  assert.equal(w.unit, 'steps');
-});
-
-test('the shortfall in minutes rounds up, and never says 0 min', () => {
-  assert.equal(shortfall(620), '620 steps to go · about 7 min walking');
-  assert.equal(shortfall(5), '5 steps to go · about 1 min walking');
-});
-
-test('a hold pays the price in tenths, and a free one only at the end', () => {
-  assert.equal(countDown(4210, 1000, 0.35), 3910);
-  assert.equal(countDown(4210, 1000, 1), 3210);
+test('a hold takes the key only as the ring completes', () => {
   assert.equal(countDown(3, 1, 0.95), 3);
   assert.equal(countDown(3, 1, 1), 2);
+  assert.equal(countDown(3, 0, 1), 3);
 });

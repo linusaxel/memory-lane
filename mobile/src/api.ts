@@ -521,16 +521,17 @@ export type Profile = {
   /** Which sign-ins are attached, oldest first. Empty means this is still just
    *  a device: everything works, but a new phone would start empty. */
   providers: ('google' | 'apple')[];
-  /** Paid up now: any pin stood on opens without spending steps. */
+  /** Paid up now: any pin stood on opens without spending a key. */
   subscribed: boolean;
   /** When it ends or ended, UTC without a zone; null if never subscribed. */
   subscribed_until: string | null;
-  /** The welcome unlock left, once per account, from anywhere; then
-   *  `steps_per_unlock` steps each, standing there (docs/10, "Pick one to
-   *  start, then where you stand"). */
+  /** The welcome unlock left, once per account, from anywhere; then a key
+   *  each, standing there, and today's walk for nothing (docs/10, "Keys open a
+   *  lock, and today's walk is free"). */
   welcome_unlocks: number;
+  keys: number;
+  /** Every step counted, for the journal. Buys nothing. */
   steps: number;
-  steps_per_unlock: number;
   /** Steps count from here, UTC without a zone; null until there is an account. */
   steps_counted_until: string | null;
 };
@@ -549,30 +550,33 @@ export async function fetchProfile(device: string, signal?: AbortSignal): Promis
   return get<Profile>('/v1/me', new URLSearchParams({ device }), signal);
 }
 
-/** Ask the server to read this account's subscription back from the store,
- *  straight after a purchase or a restore, rather than wait for the webhook. */
+/** Ask the server to read this account's subscription and keys back from the
+ *  store, straight after a purchase or a restore, rather than wait for the
+ *  webhook. */
 export async function refreshSubscription(device: string): Promise<Profile> {
   return post<Profile>('/v1/me/subscription', { device });
 }
 
-/** Credit the steps walked since `since`, the profile's watermark. A stale
+/** Count the steps walked since `since`, the profile's watermark. A stale
  *  `since` credits nothing, and the profile that comes back has the new one. */
 export async function creditSteps(device: string, since: string, steps: number): Promise<Profile> {
   return post<Profile>('/v1/me/steps', { device, since, steps });
 }
 
-/** __DEV__ only: 500 free steps, from an endpoint the public host lacks. */
-export async function devSteps(device: string): Promise<Profile> {
-  return post<Profile>(`/v1/dev/steps?${new URLSearchParams({ device })}`, {});
+/** __DEV__ only: a free key, from an endpoint the public host lacks. */
+export async function devKeys(device: string): Promise<Profile> {
+  return post<Profile>(`/v1/dev/keys?${new URLSearchParams({ device })}`, {});
 }
 
-/** An unlock refused for want of steps, with what there is and what it costs:
- *  the paywall's cue. */
-export function outOfSteps(e: unknown): { steps: number; price: number } | null {
-  const detail = (e as ApiError)?.detail as
-    | { reason?: string; steps: number; price: number }
-    | undefined;
-  return detail?.reason === 'no_steps' ? detail : null;
+/** An unlock refused for want of a key: the paywall's cue. */
+export function outOfKeys(e: unknown): boolean {
+  return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'no_keys';
+}
+
+/** A walk refused because today's is already walked (one a day, bar a
+ *  subscriber). */
+export function walkedToday(e: unknown): boolean {
+  return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'walked_today';
 }
 
 /** Text the screening refused (api/moderation.py), as against a failure that

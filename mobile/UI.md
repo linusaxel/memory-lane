@@ -41,12 +41,12 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ the steps pill             top centre, every stage (src/StepsPill.tsx, src/wallet.ts). The one
-│                              thing to know, rolling when it changes: "1 to start" while steps cannot pay /
-│                              "4,210 steps"; short, a small ember ring
-│                              filling to the price and "600 to go" / "400 steps". A tap recounts and opens
-│                              How it works (src/HowItWorks.tsx): the balance, then what a pin is,
-│                              what opening one costs, where steps come from, wander or walk
+├─ the keys pill              top centre, every stage (src/KeysPill.tsx, src/wallet.ts). The one
+│                              thing to know, rolling when it changes: "1 to start" while there are no keys /
+│                              "3 keys", an ember key before it; out of keys "0 keys" over "Free on
+│                              today's walk". A tap recounts steps and opens How it works
+│                              (src/HowItWorks.tsx): the balance, then what a pin is, the free walk,
+│                              what a key opens
 ├─ you ("You")                top right, your photo or initial (src/Avatar.tsx, 38pt) in a 44pt
 │                              glass circle, and under it a native menu (src/AccountMenu.tsx):
 │                              your name as its title, "3-day streak · 27 opened · 2 filed",
@@ -75,9 +75,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    up above it: the ring low above the bottom row, and under it a card with the place, year
 │    or source, and ‹ › with "2 of 3" when more than one is in reach. Everyone gets it on
 │    the map before a walk too. Tapping a pin in reach points it at that pin; the hold opens
-│    the sheet on the story. Short of steps there is no ring to hold: the faded Approach
-│    ring filling with your steps, "600 steps to go · about 6 min walking" and Skip the
-│    steps (the paywall)
+│    the sheet on the story. Out of keys off today's walk there is no ring to hold:
+│    the faded Approach ring, "Out of keys", and Open for the store's price of one key
+│    (Get keys, the paywall, when the store has none)
 ├─ "Center on me"             the bottom row's right end, always there (F10). `location.fill`
 │                              while the map is on you, `location` when not: on a walk once a
 │                              one-finger drag lets go of you, before one once the map is off you
@@ -159,11 +159,12 @@ Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/70
 └─ Your name                   what submissions are signed with, saved as typed. Blank = Anonymous
 
 There are no tabs on the map. Before a walk the map draws what is around you, locked and
-unlocked, behind a filter; on a walk it draws only that walk. Three pins a day
-open from anywhere, from the peek; after that, standing on one and 1,000 steps.
+unlocked, behind a filter; on a walk it draws only that walk. One pin opens
+from anywhere, from the peek; after that, standing on one: free on today's walk,
+a key anywhere else.
 The bottom is where you act, one tap each: Add, the one ember thing (Plan a
 walk, or the walk card on one) and Center on me. The top is where you read:
-the step count, with Journal top left and you top right (docs/10,
+the keys, with Journal top left and you top right (docs/10,
 "One ember button that changes").
 ```
 
@@ -184,8 +185,8 @@ with no network is never stopped at the gate.
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. The pin is the one drawn mark |
 | `src/MemoryMarker.tsx` | one pin, lit when it can be opened from here |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
-| `src/UnlockHere.tsx` | the ring over the map, with the place it opens; short of steps, how far off |
-| `src/StepsPill.tsx` | the top of the map: what opens memories today, the number rolling (`@expo/ui`) |
+| `src/UnlockHere.tsx` | the ring over the map, with the place it opens; out of keys, the way to one |
+| `src/KeysPill.tsx` | the top of the map: what opens memories, the number rolling (`@expo/ui`) |
 | `src/wallet.ts` | what the pill says and whether standing on a pin can pay. Pure, and unit-tested |
 | `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
@@ -313,7 +314,7 @@ nothing else: 28, 17 and 13.
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
-(Journal, Plan a walk, Add, the walk card, the steps pill, you,
+(Journal, Plan a walk, Add, the walk card, the keys pill, you,
 Center on me, Turn on location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
 only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
@@ -785,8 +786,9 @@ disc. The badge sits in the corner for the same reason.
 
 **`seal` means openable now, and nothing else.** A seal-coloured pin you
 cannot open is an invitation that refuses you (F11). That includes paying:
-with no free one left and short of the price, a pin you stand on stays ember
-and its reach reads `locked` (`short` in `App.tsx`, from `src/wallet.ts`). Locked near and locked
+with no free one left and out of keys, a pin you stand on off today's walk
+stays ember and its reach reads `locked` (`blocked` in `App.tsx`, from
+`src/wallet.ts`). Locked near and locked
 far draw the same ember pin, and earned and never gated the same paper one
 (2026-10-01, docs/10 "A map of what is locked"); the rest is in the
 marker's `title` (VoiceOver and Maestro still hear every state from
@@ -920,19 +922,18 @@ budget. Spec, so it does not get re-invented per screen:
   place and its year or source, so the hold says what it opens. More than one
   in reach adds ‹ › and "2 of 3" beside the words, never beside the ring, so a
   thumb aiming for an arrow cannot start the hold. No caption, cost or error:
-  the cost is in the steps pill. It needs no × because walking away takes it
+  the cost is in the keys pill. It needs no × because walking away takes it
   away (rule 12). docs/10, "The lock says where".
 - **A refusal resets the ring and shakes its head.** Success unmounts the
   control (the memory is no longer locked, and the sheet opens on it), so
   `busy` falling back to false is always a no. The ring springs empty, shakes
   side to side and fires `notificationAsync(Warning)`, and a screen reader is
   told the reason, since nothing draws it.
-- **Short of steps, the lock is faded and fills with steps.** It is the
-  approach ring at full size, never seal, its rim your steps toward the price
-  (`wallet.progress`), so pacing the block fills it on the spot. Under the
-  place: "580 steps to go · about 6 min walking" and **Skip the steps** (the
-  paywall). The step that completes it swaps in the ring to hold, with a Light
-  haptic.
+- **Out of keys, the lock is faded.** It is the approach ring at full size,
+  never seal and empty. Under the place: "Out of keys" and **Open for** the
+  store's price of one key, which buys it and opens the memory, or **Get keys**
+  (the paywall) when the store has none. A stop of today's walk is never out
+  of keys.
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the
   same 84px circle with a rim that thickens inward as you close — empty at
   three radii (`WARM_MULTIPLIER`, so the sheet and the pin agree about
@@ -972,7 +973,8 @@ Sign-in is F22, the first flow, and it is Google and Apple only — see
 `src/SignIn.tsx` for why, and for why neither button works in Expo Go.
 
 The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens from Settings,
-or when a hold is refused for want of steps, never on top of a sheet. No
-price is ever written in the app; the store's `priceString` is. Without a
-RevenueCat key it says "Subscriptions aren't available right now.", never a
-button that cannot work, and **Not now** is always there (rule 1).
+or when a hold is refused for want of a key, never on top of a sheet. Key
+packs first, then the subscription. No price is ever written in the app; the
+store's `priceString` is. Without a RevenueCat key it says "Keys aren't
+available right now." and "Subscriptions aren't available right now.", never
+a button that cannot work, and **Not now** is always there (rule 1).

@@ -237,6 +237,8 @@ type WalkDoneProps = {
   /** First unlock to last, or null when they were not all earned today. */
   minutes: number | null;
   streak: number;
+  /** Finishing earned a key: not a subscriber's second walk of the day. */
+  keyEarned: boolean;
   onDone: () => void;
 };
 
@@ -292,7 +294,7 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
 }
 
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
-export function WalkDone({ stops, meters, loop, minutes, streak, onDone }: WalkDoneProps) {
+export function WalkDone({ stops, meters, loop, minutes, streak, keyEarned, onDone }: WalkDoneProps) {
   const took =
     minutes === null
       ? ''
@@ -307,6 +309,7 @@ export function WalkDone({ stops, meters, loop, minutes, streak, onDone }: WalkD
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
+      {keyEarned && <Text style={label}>+1 key</Text>}
       {streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>}
       <Pressable
         style={dim(styles.primary)}

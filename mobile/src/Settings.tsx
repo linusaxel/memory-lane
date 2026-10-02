@@ -71,7 +71,7 @@ export default function Settings({
               <Text style={styles.note}>
                 Subscribed until{' '}
                 {new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}. Open any memory
-                you stand on without spending steps.
+                you stand on without spending a key.
               </Text>
               <Pressable
                 style={dim(styles.action)}
@@ -98,9 +98,9 @@ export default function Settings({
             </Text>
           </Row>
           <Text style={styles.note}>
-            Your first one opens from anywhere. After that, each costs{' '}
-            {(profile?.steps_per_unlock ?? 1000).toLocaleString()} steps, and you have to be
-            standing there.
+            Your first one opens from anywhere. After that you have to be standing there:
+            today's walk opens for nothing, and anywhere else costs a key. Finishing a walk
+            earns one.
           </Text>
           <Text style={styles.note}>
             A few are only pinned to a city, not a spot. Those are open to everyone.

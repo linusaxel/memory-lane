@@ -310,7 +310,6 @@ class MyMemoriesResponse(BaseModel):
 
 # docs/10, "Pick one to start, then where you stand".
 WELCOME_UNLOCKS = 1
-STEPS_PER_UNLOCK = 1000
 
 
 class Profile(BaseModel):
@@ -339,12 +338,13 @@ class Profile(BaseModel):
     subscribed: bool = False
     subscribed_until: datetime | None = None
     # What opens memories: welcome_unlocks left, once per account, from
-    # anywhere, then steps_per_unlock steps each, standing there. Steps count
-    # from steps_counted_until (naive UTC), null until there is a user row.
-    # docs/10, "Pick one to start, then where you stand".
+    # anywhere, then a key each, standing there; today's walk opens for
+    # nothing. Steps are a lifetime total for the journal and buy nothing,
+    # counted from steps_counted_until (naive UTC), null until there is a user
+    # row. docs/10, "Keys open a lock, and today's walk is free".
     welcome_unlocks: int = WELCOME_UNLOCKS
+    keys: int = 0
     steps: int = 0
-    steps_per_unlock: int = STEPS_PER_UNLOCK
     steps_counted_until: datetime | None = None
 
 
