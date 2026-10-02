@@ -824,6 +824,15 @@ rejects and why are rows now: `python -m pipeline.sources list`.
       data CC0); about famous people, not personal memories. OSM memorial
       plaques: 108 in the centre (ODbL). Both fit the text-source path in
       `crawler/sources.py`.
+- [ ] **Architecture, building history and the city still being built.**
+      (2026-10-02) Not yet researched. Two kinds of story for a spot: what
+      stood here and who built it, and what is coming (planned metro
+      stations, Nordhavn, Lynetteholm). Candidates to check for terms and
+      coordinates: Slots- og Kulturstyrelsen's FBB register (listed and
+      worth-preserving buildings), plandata.dk local plans, Metroselskabet
+      and By & Havn project pages. Catch: a planned project is news, not a
+      memory, and goes stale; decide whether it is a card at all, or a
+      different kind of pin.
 - [ ] **Set up the Webshare proxy.** (2026-09-27) The code is in;
       transcripts stay capped at ~40 a day until this is done.
       1. Buy Webshare's **rotating residential** plan (~$3.50/GB, ~2,500
