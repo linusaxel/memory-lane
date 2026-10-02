@@ -1,6 +1,6 @@
 # UI guide
 
-For agents working in `mobile/`. One map, one journal, the modals and one mechanic; this file
+For agents working in `mobile/`. A walk planner: one map, one journal, the modals and one mechanic; this file
 says what it looks like, why, and how to check you did not break it.
 
 Read this before changing anything under `mobile/src/` or `App.tsx`.
@@ -8,8 +8,9 @@ Read this before changing anything under `mobile/src/` or `App.tsx`.
 ## The app today
 
 Four stages, one map, four modals. The stage is plain state in `App.tsx`
-(`'loading' | 'map' | 'plan' | 'preview' | 'walk'`); the map stays mounted through all
-of them (rule 9).
+(`'loading' | 'end' | 'preview' | 'walk'`); the planner (`preview`) is home, and
+the map stays mounted through all of them (rule 9). There is no map of what is
+locked (docs/10, "A walk planner, nothing else").
 
 ```
 SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed in
@@ -20,64 +21,57 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 ├─ "Continue with Google"      outlined; absent without a client id
 └─ "Skip (dev build)"          __DEV__ only, so a release bundle has none
 
-MapView (before a walk)        the first screen after sign-in, unless today's walk is accepted
-├─ you, and the reach circle   centred on you, or central Copenhagen with no position
-├─ Marker per locked memory    within 5 km (MAP_RADIUS_KM); tap -> MemorySheet's peek
-└─ the bottom row              "Plan a walk" (ember) -> Preview, drawn at once, and Add, equal halves
-
-Preview (src/Plan.tsx)          the map, fitted to the start and every stop. Draw first, adjust after
+Preview (src/Plan.tsx)          home: the first screen after sign-in, unless today's walk is accepted,
+│                              and where ending a walk lands. The map, fitted to the start and every
+│                              stop. Draw first, adjust after. Journal and Add top left, keys top
+│                              centre, you top right; no bottom row
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
 └─ card (Preview)              every change on it redraws the walk
-   ├─ "A walk from here"        23/700, the × trailing; "A walk through <place>" from Walk here
-   ├─ ‹ "4 stops · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left; "Finding a walk…" first; "No walk within 10 km from here."
+   ├─ "A walk from here"        23/700; nothing to close back to
+   ├─ ‹ "4 memories · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left; "Finding a walk…" first; "No walk within 10 km from here."
+   ├─ the list                  a row per stop in walk order: ember number, place 16/700, "1978 · Vega
+   │                            Archive · #music #nightlife", a padlock. Four rows, then it scrolls
    ├─ "Nothing at 4 km; this is the nearest."   an empty length moved up to one with a walk
-   ├─ "Planning from central Copenhagen…"   with no position
+   ├─ "Planning from central Copenhagen." + Use my location   with no position; the location ask
    ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
    ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
-   └─ Start walk
+   └─ Start walk; walked out (one a day, F35), the card is "Today's walk is done" + More walks
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ the keys pill              top centre, every stage (src/KeysPill.tsx, src/wallet.ts). The one
-│                              thing to know, rolling when it changes: "1 to start" while there are no keys /
-│                              "3 keys", an ember key before it; out of keys "0 keys" over "Free on
-│                              today's walk". A tap recounts steps and opens How it works
-│                              (src/HowItWorks.tsx): the balance, then what a pin is, the free walk,
-│                              what a key opens
+├─ the keys pill              top centre, every stage (src/KeysPill.tsx): "3 keys", an ember key
+│                              before it, rolling when it changes. One per finished walk; they open
+│                              nothing yet. A tap recounts steps and opens How it works
+│                              (src/HowItWorks.tsx): the keys, then planning, standing there,
+│                              finishing for a key, one walk a day
 ├─ you ("You")                top right, your photo or initial (src/Avatar.tsx, 38pt) in a 44pt
 │                              glass circle, and under it a native menu (src/AccountMenu.tsx):
 │                              your name as its title, "3-day streak · 27 opened · 2 filed",
-│                              "Signed in with Apple" or "Not signed in", Edit profile; before a
-│                              walk "Show on map", All memories / Locked (the default) /
-│                              Unlocked; then Settings (`gearshape`). Off the default a 16pt ember dot
-│                              with the filter glyph sits on the photo, so a thinned map says why
-├─ Journal                    top left, a 44pt glass circle, the map and the walk, never over a
+│                              "Signed in with Apple" or "Not signed in", Edit profile, then
+│                              Settings (`gearshape`)
+├─ Journal                    top left, a 44pt glass circle, the planner and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt ember dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
 │                              drawer, as does a swipe in from the left edge (src/Drawer.tsx)
-├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), the map and the
-│                              walk, never over a card with its own buttons (Preview, EndWalk,
+├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), on the walk only,
+│                              never over a card with its own buttons (Preview, EndWalk,
 │                              WalkDone). Add, a 44pt glass circle with an ember `plus`, files a
 │                              memory, no walk needed (see "Writing"). Center on me the same circle
 │                              at the other end. Between them the one thing to do, which changes:
-│                              Turn on location (ember) on a walk with no position, Plan a walk
-│                              (ember, `figure.walk`) -> Preview before a walk, the walk card on
-│                              one. It never empties: while a hold would open the ring, Plan a
-│                              walk drops to plain glass (ink) and the walk card stays under it
+│                              Turn on location (ember) with no position, else the walk card.
+│                              While a hold would open the ring the walk card stays under it
 ├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
 │    "2 of 5 · 4.1 km left" (the next stop's number, as on its pin), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
 │    walking. Never a plain tap. Standing at any stop, the lock (src/UnlockHere.tsx) comes
 │    up above it: the ring low above the bottom row, and under it a card with the place, year
-│    or source, and ‹ › with "2 of 3" when more than one is in reach. Everyone gets it on
-│    the map before a walk too. Tapping a pin in reach points it at that pin; the hold opens
-│    the sheet on the story. Out of keys off today's walk there is no ring to hold:
-│    the faded Approach ring, "Out of keys", and Open for the store's price of one key
-│    (Get keys, the paywall, when the store has none)
+│    or source, and ‹ › with "2 of 3" when more than one is in reach. Only a stop of the
+│    walk in progress gets it. Tapping a pin in reach points it at that pin; the hold opens
+│    the sheet on the story
 ├─ "Center on me"             the bottom row's right end, always there (F10). `location.fill`
 │                              while the map is on you, `location` when not: on a walk once a
 │                              one-finger drag lets go of you, before one once the map is off you
@@ -110,14 +104,13 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   "Retold from <channel>" with its avatar and the episode or book, or "Left by X".
   ⋯ holds Edit this memory on your own, Report and Block on anyone else's.
 
-  peek (the map, before a walk: a card over the live map, sized to its content)
+  peek (a walk's stop, not yet reached: a card over the live map, sized to its content)
   ├─ place name
   ├─ "From Vega Archive", or a person glyph + "Left by Anna"   who, directly under the name
   ├─ #music  #nightlife      every tag, outline pills in displaySemi, under the name
   ├─ Approach ring  +  "472 m"  36/700      the lock as the distance still to go
   │                    "1978 · 12 hearts"   the year off the source line: it is when, not when published
-  │                    "1 attachment waiting"
-  └─ "Walk here"              ink, in the bottom bar; opens Plan for a walk through that pin (F1)
+  └─                   "1 attachment waiting"
 
   The locked side says how many attachments are waiting and never which. A
   photograph of the place is the memory as much as the text is.
@@ -158,12 +151,10 @@ Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/70
 │                              like the name: it signs what you file (src/Avatar.tsx)
 └─ Your name                   what submissions are signed with, saved as typed. Blank = Anonymous
 
-There are no tabs on the map. Before a walk the map draws what is around you, locked and
-unlocked, behind a filter; on a walk it draws only that walk. One pin opens
-from anywhere, from the peek; after that, standing on one: free on today's walk,
-a key anywhere else.
-The bottom is where you act, one tap each: Add, the one ember thing (Plan a
-walk, or the walk card on one) and Center on me. The top is where you read:
+There are no tabs on the map, and no map of what is locked: the planner draws the walk it
+offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
+On a walk the bottom is where you act, one tap each: Add, the walk card and Center on me;
+in the planner the card's own buttons are. The top is where you read:
 the keys, with Journal top left and you top right (docs/10,
 "One ember button that changes").
 ```
@@ -185,10 +176,9 @@ with no network is never stopped at the gate.
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. The pin is the one drawn mark |
 | `src/MemoryMarker.tsx` | one padlock, lit when it can be opened from here, open once opened |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
-| `src/UnlockHere.tsx` | the ring over the map, with the place it opens; out of keys, the way to one |
-| `src/KeysPill.tsx` | the top of the map: what opens memories, the number rolling (`@expo/ui`) |
-| `src/wallet.ts` | what the pill says and whether standing on a pin can pay. Pure, and unit-tested |
-| `src/Plan.tsx` | the preview card: a walk drawn at once, its length and shape, then accept |
+| `src/UnlockHere.tsx` | the ring over the map, with the place it opens |
+| `src/KeysPill.tsx` | the top of the map: keys earned, the number rolling (`@expo/ui`) |
+| `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
 | `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
@@ -314,11 +304,11 @@ nothing else: 28, 17 and 13.
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
-(Journal, Plan a walk, Add, the walk card, the keys pill, you,
+(Journal, Add, the walk card, the keys pill, you,
 Center on me, Turn on location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
 only on the one prominent control, or raised paper with `lift` where glass is
 unavailable. Never glass on a sheet or a card, never glass on glass. **One
-tint in view**: Plan a walk's before a walk, Turn on location's on one. The walk card is
+tint in view**: Turn on location's, on a walk with no position. The walk card is
 untinted: the next stop's pin is the ember on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
@@ -595,7 +585,7 @@ the tells that make text read as machine-written.
 
 - **Short, concrete, contracted.** "Not quite there. Take a few
   more steps." Second person, active voice, sentence case.
-- **Buttons are verbs that say what happens**: Start walk, Plan a walk,
+- **Buttons are verbs that say what happens**: Start walk, More walks,
   Keep walking. Clear beats cute on anything you tap; the personality goes in
   the line above the button.
 - **Errors say what happened and what to do.** "That didn't save. Try again in
@@ -788,10 +778,8 @@ and to `ember` on 2026-09-27: teal read as water and park.
 **The badge sits in the corner** so the blue location dot is never under it.
 
 **`seal` means openable now, and nothing else.** A seal-coloured pin you
-cannot open is an invitation that refuses you (F11). That includes paying:
-with no free one left and out of keys, a pin you stand on off today's walk
-stays an ember lock and its reach reads `locked` (`blocked` in `App.tsx`, from
-`src/wallet.ts`). Locked near and locked
+cannot open is an invitation that refuses you (F11). Only a walk's stops are
+ever drawn, so every pin in reach can be opened. Locked near and locked
 far draw the same ember lock, bar a fade with distance (2026-10-02:
 full detail near you, a glow further out, so the map reads as where to go
 next rather than a checklist), and earned and never gated the same open one
@@ -840,8 +828,9 @@ measuring to it would say "walk a kilometre" while you stand on the thing.
 Never `requestForegroundPermissionsAsync` on mount. That fires a system dialog
 with no context, and one tap makes it permanent — it is the pattern every guide
 names as the mistake, and the reported gap is roughly 30% opt-in cold against
-65% after a primer. "Plan a walk" (or a pin's "Walk here") is the ask: a press
-with a reason, walks start from where you are, and only then the system dialog.
+65% after a primer. The planner opens at launch and never asks: without a yes
+it plans from central Copenhagen, and its **Use my location** is the ask, a
+press with a reason; then the walk is planned again from where you are.
 `getForegroundPermissionsAsync` runs first so somebody who already said yes is
 never asked twice, and a hard refusal (`canAskAgain === false`) swaps the button
 for **Open Settings**, which is the only route back.
@@ -927,18 +916,13 @@ budget. Spec, so it does not get re-invented per screen:
   place and its year or source, so the hold says what it opens. More than one
   in reach adds ‹ › and "2 of 3" beside the words, never beside the ring, so a
   thumb aiming for an arrow cannot start the hold. No caption, cost or error:
-  the cost is in the keys pill. It needs no × because walking away takes it
+  a stop of the walk costs nothing. It needs no × because walking away takes it
   away (rule 12). docs/10, "The lock says where".
 - **A refusal resets the ring and shakes its head.** Success unmounts the
   control (the memory is no longer locked, and the sheet opens on it), so
   `busy` falling back to false is always a no. The ring springs empty, shakes
   side to side and fires `notificationAsync(Warning)`, and a screen reader is
   told the reason, since nothing draws it.
-- **Out of keys, the lock is faded.** It is the approach ring at full size,
-  never seal and empty. Under the place: "Out of keys" and **Open for** the
-  store's price of one key, which buys it and opens the memory, or **Get keys**
-  (the paywall) when the store has none. A stop of today's walk is never out
-  of keys.
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the
   same 84px circle with a rim that thickens inward as you close — empty at
   three radii (`WARM_MULTIPLIER`, so the sheet and the pin agree about

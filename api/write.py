@@ -23,7 +23,6 @@ from api.gate import (
 from api.media import media_url, save_upload
 from api.models import (
     DEVICE_PATTERN,
-    WELCOME_UNLOCKS,
     Coordinates,
     DeviceRequest,
     HeartResponse,
@@ -53,10 +52,7 @@ from api.queries import (
     PLACE_INSERT,
     ROUTE_COMPLETED_QUERY,
     SINGLE_MEMORY_QUERY,
-    SPEND_KEY,
-    SPEND_WELCOME_UNLOCK,
     SUBMISSION_INSERT,
-    SUBSCRIBED_QUERY,
 )
 from pipeline.db import get_session
 from pipeline.tags import from_text as hashtags
@@ -123,33 +119,24 @@ def refuse_over_quota(used: int, limit: int, what: str) -> None:
 
 
 def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
-    """Whether this account may open this memory, paying if it must.
+    """Whether this account may open this memory.
 
-    Already opened, it costs nothing. Standing on it, a subscriber or a stop of
-    today's walk pays nothing; anyone else spends a key, then the account's one
-    welcome unlock (a new account on the spot has no keys yet), or is refused
-    403 `no_keys`. Away from it, only the welcome unlock opens it, and False
-    says it is spent (docs/10, "Keys open a lock, and today's walk is free").
+    Already opened, it is theirs. Otherwise only a stop of today's walk in
+    progress opens, and only standing on it; anything else is refused 403
+    `not_on_walk` (docs/10, "A walk planner, nothing else").
 
-    Under the user's row lock, so two presses on one memory are charged once.
+    Under the user's row lock, so two presses on one memory record one unlock.
     """
     user_id = user_for_device(session, device)
     session.execute(text(LOCK_USER), {"user_id": user_id})
     binds = {"device_id": device, "memory_id": memory_id}
     if session.execute(text(EARNED_QUERY), binds).scalar():
         return True
-    welcome = {"user_id": user_id, "welcome": WELCOME_UNLOCKS}
     if not here:
-        return session.execute(text(SPEND_WELCOME_UNLOCK), welcome).first() is not None
-    if session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
-        return True
+        return False
     if session.execute(text(ON_TODAYS_ROUTE_QUERY), {**binds, "today": today()}).scalar():
         return True
-    if session.execute(text(SPEND_KEY), {"user_id": user_id}).first():
-        return True
-    if session.execute(text(SPEND_WELCOME_UNLOCK), welcome).first():
-        return True
-    raise HTTPException(status_code=403, detail={"reason": "no_keys", "keys": 0})
+    raise HTTPException(status_code=403, detail={"reason": "not_on_walk"})
 
 
 @router.post("/v1/memories/{memory_id}/unlock", response_model=Memory)
@@ -160,8 +147,6 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
     every read goes through - this endpoint cannot return a summary the plain
     read would have withheld - but it is the only one that writes an unlock, and
     unlocking is the one thing in this product that is supposed to be an act.
-    The welcome unlock is the one way past the distance, and it is recorded
-    first, so what comes back is the memory as the collection reads it.
     """
     with get_session() as session:
         row = session.execute(
@@ -185,7 +170,7 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
                 memory.distance_meters = meters_between(at, memory.place.coordinates)
             return memory
         if not here:
-            # Opened from afar, read at its own spot, as get_unlocks does.
+            # Already earned, read at its own spot, as get_unlocks does.
             memory = row_to_memory(row, row_coordinates(row), include_distance=False)
 
         touch_device(session, body.device)
@@ -197,20 +182,18 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
             """),
             {"device": body.device, "memory_id": memory_id},
         )
-        # A walk is finished on foot: the welcome unlock opens a stop, not the
-        # walk. Finishing one earns a key.
-        if here:
-            walk = {"device_id": body.device, "memory_id": memory_id, "today": today()}
-            finished = session.execute(text(ROUTE_COMPLETED_QUERY), walk).first()
-            if finished:
-                session.execute(
-                    text(CREDIT_WALK_KEY),
-                    {
-                        **walk,
-                        "user_id": user_for_device(session, body.device),
-                        "route_id": finished.id,
-                    },
-                )
+        # Finishing today's walk earns a key.
+        walk = {"device_id": body.device, "memory_id": memory_id, "today": today()}
+        finished = session.execute(text(ROUTE_COMPLETED_QUERY), walk).first()
+        if finished:
+            session.execute(
+                text(CREDIT_WALK_KEY),
+                {
+                    **walk,
+                    "user_id": user_for_device(session, body.device),
+                    "route_id": finished.id,
+                },
+            )
 
     return memory
 

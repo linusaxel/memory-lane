@@ -1,14 +1,14 @@
 # Memory Lane
 
-Real stories pinned to the places they happened, from travel shows, podcasts
-and people who were there. Each day the app plans a short walk past a few, and
-a story only opens once you are standing on its spot.
+**A walk planner with memories along the way.** One free walk a day past real
+stories pinned to the places they happened, from travel shows, podcasts and
+people who were there. A story only opens on the walk, standing on its spot.
 
 **Shape:** a Python pipeline and a FastAPI server over PostGIS, plus an Expo app,
 in one repo with no other services ([architecture](docs/architecture.md)).
 Four things a newcomer must not break:
 
-- A memory is gated: you read it by standing there ([why](docs/10-decisions.md#the-gate))
+- A memory is gated: you read it by standing there, on a walk ([why](docs/10-decisions.md#the-gate))
 - The self-issued device UUID is the only credential ([why](docs/10-decisions.md#no-session-tokens-signed-in-or-not))
 - Sign-in is Google and Apple only ([why](docs/10-decisions.md#google-and-apple-only))
 - The summary is the product, and it is measured ([why](docs/10-decisions.md#summary-quality-is-measured-not-asserted))

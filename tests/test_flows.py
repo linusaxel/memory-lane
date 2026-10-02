@@ -31,7 +31,7 @@ from api.route_solver import _path_meters, _route_size
 from api.streets import walking_matrix
 from pipeline.route_bench import START_BOX
 from pipeline.seed_dev import at, seed
-from tests.conftest import give_keys, spend_welcome
+from tests.conftest import on_walk
 
 pytestmark = pytest.mark.db
 
@@ -108,8 +108,7 @@ def test_f7_refused_at_300m_then_earned_by_standing_there(seeded, db_session):
     """
     lat, lng = at("reach")
     memory_id = seeded_id(db_session, "reach")
-    spend_welcome(db_session, DEVICE)
-    give_keys(db_session, DEVICE, 1)
+    on_walk(db_session, DEVICE, memory_id)
 
     far = read_at(seeded, memory_id, START)
     assert far["locked"] is True
@@ -139,6 +138,7 @@ def test_f15_the_collection_is_this_device_and_not_another(seeded, db_session):
     """F15: unlocking is permanent, and it is permanent for one device."""
     lat, lng = at("reach")
     memory_id = seeded_id(db_session, "reach")
+    on_walk(db_session, DEVICE, memory_id)
     seeded.post(f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, "lat": lat, "lng": lng})
 
     mine = seeded.get("/v1/unlocks", params={"device": DEVICE}).json()["memories"]
@@ -355,5 +355,5 @@ def test_the_default_walk_is_as_long_as_walk_and_unlock_walks():
     )
     # walk-and-unlock.yml plans and accepts it through this step.
     flow = (ROOT / ".maestro/steps/start-walk.yml").read_text()
-    stops = re.search(r'visible: "(\d+) stops · ', flow)
+    stops = re.search(r'visible: "(\d+) memories · ', flow)
     assert _route_size(float(km[1]) * 1000) == int(stops[1])

@@ -8,7 +8,7 @@ Memory Lane
 
 ## Subtitle / short description (max 30)
 
-Stories from where you stand
+A walk planner with memories
 
 ## Category
 
@@ -16,15 +16,17 @@ Travel (secondary: Entertainment)
 
 ## Description
 
-Memory Lane pins real stories to the places they happened, some from travel
-shows and podcasts and some left by people who were there. Each day it plans
-a short walk past a few of them, and you can only read a story once you're
-standing on its spot. It's meant to make a familiar walk feel new, because the
-ordinary corner you pass every day turns out to have a story.
+Memory Lane is a walk planner with memories along the way. Each day it plans
+a walk past real stories pinned to the places they happened, some from travel
+shows and podcasts and some left by people who were there, and a story only
+opens once you're standing on its spot. It's meant to make a familiar walk
+feel new, because the ordinary corner you pass every day turns out to have a
+story.
 
-Pick how far you feel like going. Memory Lane plans a loop past a handful of stories
-near you. Walk to each pin, hold to unlock, and read what happened right where
-you're standing.
+Pick how far you feel like going. Memory Lane plans a loop past about one
+story a kilometre and lists what each is about. Not taken with them? Ask for
+another walk. Then walk to each stop, hold to unlock, and read what happened
+right where you're standing.
 
 Most stories come with the moment they were told. Tap once and the video opens
 at that exact second.
@@ -33,17 +35,17 @@ Leave your own, too. Stand where something happened to you, write it down, add
 a photo or say it out loud, and it waits there for whoever walks by next.
 
 • A new walk every day, as long or short as you like
-• Stories unlock only when you're standing on the spot
+• See what's on it before you go, or try another
+• Stories unlock only on a walk, standing on the spot
 • Jump to the second the story is told
 • Leave your own, with a photo or a voice recording
-• Keep a streak, and reread anything you've unlocked
+• Finish a walk for a key, keep a streak, and reread anything you've unlocked
 
-One walk a day is free. A subscription opens any story you stand on, walk or
-no walk.
+One walk a day is free. A subscription plans as many as you like.
 
 ## Keywords (iOS, max 100 chars, comma separated)
 
-travel,map,stories,nearby,places,podcast,city,guide,explore,local
+walk,walking,stories,history,nearby,places,podcast,city,guide,explore,local
 
 ## Support URL
 

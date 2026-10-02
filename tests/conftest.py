@@ -270,24 +270,27 @@ def api_client(db_session, monkeypatch, tmp_path):
     return TestClient(api.main.app)
 
 
-def spend_welcome(session, device):
-    """Use up `device`'s account's welcome unlock, so only standing there, with
-    a key, opens anything."""
+def on_walk(session, device, *memory_ids):
+    """Make `memory_ids` the stops of `device`'s walk in progress today, the
+    only thing standing there opens (docs/10, "A walk planner, nothing else")."""
     from sqlalchemy import text
 
     from api.accounts import user_for_device
-    from api.models import WELCOME_UNLOCKS
+    from api.gate import today
 
-    user_id = user_for_device(session, device)
+    user_for_device(session, device)
     session.execute(
-        text("UPDATE users SET free_used = :n WHERE id = CAST(:u AS uuid)"),
-        {"n": WELCOME_UNLOCKS, "u": user_id},
+        text("""
+            INSERT INTO daily_routes (device_id, route_date, memory_ids)
+            VALUES (CAST(:d AS uuid), :today, CAST(:m AS integer[]))
+        """),
+        {"d": device, "today": today(), "m": list(memory_ids)},
     )
     session.commit()
 
 
 def give_keys(session, device, keys):
-    """Give `device`'s account `keys` to open memories with, past its welcome one."""
+    """Set `device`'s account's key count."""
     from sqlalchemy import text
 
     from api.accounts import user_for_device

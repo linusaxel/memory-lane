@@ -11,7 +11,6 @@ import {
   useColorScheme,
 } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
-import type { PurchasesPackage } from 'react-native-purchases';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
@@ -25,19 +24,15 @@ import {
   devKeys,
   endRoute,
   fetchMine,
-  fetchNearby,
   fetchProfile,
   fetchTodaysRoute,
   fetchUnlocked,
   heartMemory,
   unheartMemory,
-  outOfKeys,
   previewRoute,
   reportMemory,
   saveDisplayName,
-  refreshSubscription,
   unlockMemory,
-  walkHereRefusal,
   walkedToday,
   wasRefused,
   type Coordinates,
@@ -60,7 +55,6 @@ import {
   metersBetween,
   pathMeters,
   type Region,
-  walkFloorKm,
 } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { clearRoute, loadRoute, saveRoute } from './src/route.ts';
@@ -81,12 +75,10 @@ import EditProfile from './src/EditProfile.tsx';
 import Drawer from './src/Drawer.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
-import FirstPick from './src/FirstPick.tsx';
 import HowItWorks from './src/HowItWorks.tsx';
 import KeysPill from './src/KeysPill.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
-import { walletOf } from './src/wallet.ts';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
@@ -94,11 +86,11 @@ import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
-import AccountMenu, { MAP_SHOWS_DEFAULT, type MapShows } from './src/AccountMenu.tsx';
+import AccountMenu from './src/AccountMenu.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
-import { buy, identify, keyPacks } from './src/purchases.ts';
+import { identify } from './src/purchases.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 
@@ -118,10 +110,6 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 const ROLLS = 1_000_000;
 
 const planKey = (km: number, ask: WalkAsk) => `${km}|${ask.loop}|${ask.end?.lat},${ask.end?.lng}`;
-
-/** How far the map looks before a walk: half the longest walk, which is as far
- *  out as any walk can reach (docs/10, "The search radius is half the length"). */
-const MAP_RADIUS_KM = WALK_KM.max / 2;
 
 const FALLBACK_REGION: Region = {
   latitude: 55.67886,
@@ -183,10 +171,11 @@ function pathThrough(
 
 const NONE = new Set<number>();
 
-/** The map of what is locked, then plan the walk, preview it, walk it.
- *  `loading` is the moment before the device knows whether it already accepted
- *  today's walk. */
-type Stage = 'loading' | 'map' | 'end' | 'preview' | 'walk';
+/** Plan the walk, then walk it: the planner is home, and there is no map of
+ *  what is locked (docs/10, "A walk planner, nothing else"). `loading` is the
+ *  moment before the device knows whether it already accepted today's walk;
+ *  `end` waits for the tap where a one-way walk finishes. */
+type Stage = 'loading' | 'end' | 'preview' | 'walk';
 
 /** Whether `me` filed this. Both sides have to be a real id: an extracted
  *  memory's author is null and a signed-out profile's user_id is undefined,
@@ -220,19 +209,12 @@ export default function App() {
   const [shownAt, setShownAt] = useState(0);
   // The length that came back empty, when the card moved to the nearest that doesn't.
   const [emptyAt, setEmptyAt] = useState<number | null>(null);
-  // "Walk here": the memory every planned walk passes, and the length the
-  // server said reaches it, once it has said so (0 until then).
-  const [walkTo, setWalkTo] = useState<LocatedMemory | null>(null);
-  const [walkToKm, setWalkToKm] = useState(0);
-  // Its own length, from the floor, so it leaves "Plan a walk"'s alone.
-  const [hereKm, setHereKm] = useState(WALK_KM.min);
   // "End walk" was tapped with stops still to reach: the are-you-sure card.
   const [confirmEnd, setConfirmEnd] = useState(false);
-  // The locked memories around you, before any walk (F29).
-  const [nearby, setNearby] = useState<LocatedMemory[]>([]);
-  const [mapShows, setMapShows] = useState<MapShows>(MAP_SHOWS_DEFAULT);
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
+  // Today's free walk is walked: the planner offers the subscription.
+  const [walkedOut, setWalkedOut] = useState(false);
   // What was tapped is a point, not a memory: the sheet pages through it.
   const [openAt, setOpenAt] = useState<LocatedMemory[]>([]);
   const [openIndex, setOpenIndex] = useState(0);
@@ -247,7 +229,6 @@ export default function App() {
   const [hearted, setHearted] = useState<Set<number>>(new Set());
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
-  const [holding, setHolding] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [revealId, setRevealId] = useState<number | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
@@ -273,7 +254,6 @@ export default function App() {
   const [device, setDevice] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [profile, setProfile] = useState<Profile | null>(null);
-  const wallet = profile && walletOf(profile);
   // The gate (docs/10, *Sign-in comes first*). Null until the stored answer is
   // read, so a signed-in launch never flashes the sign-in screen.
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
@@ -284,13 +264,8 @@ export default function App() {
   const [howOpen, setHowOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
   // server knows (src/purchases.ts).
-  // One key, bought at the lock; null until the store has it (src/purchases.ts).
-  const [keyOne, setKeyOne] = useState<PurchasesPackage | null>(null);
   useEffect(() => {
-    identify(profile?.user_id ?? null)
-      .then(keyPacks)
-      .then((packs) => setKeyOne(packs.find((p) => p.product.identifier === 'keys_1') ?? null))
-      .catch(() => {});
+    identify(profile?.user_id ?? null).catch(() => {});
   }, [profile?.user_id]);
   // Finishing today's walk earned a key: the closing card says so.
   const [keyEarned, setKeyEarned] = useState(false);
@@ -506,7 +481,7 @@ export default function App() {
     [],
   );
 
-  /** Forget today's walk, on screen and in the cache: the map comes back. */
+  /** Forget today's walk, on screen and in the cache: the planner comes back. */
   const dropRoute = useCallback(() => {
     setRoute([]);
     setRouteSize(null);
@@ -517,7 +492,8 @@ export default function App() {
     setWalkDone(false);
     setConfirmEnd(false);
     clearRoute();
-    setStage('map');
+    setPreview(null);
+    setStage('preview');
   }, []);
 
   // Whether today's walk was already accepted: the cached copy first, so a
@@ -548,12 +524,12 @@ export default function App() {
           dropRoute();
         }
       } catch {
-        if (mounted.current && !cached) setStage('map');
+        if (mounted.current && !cached) setStage('preview');
       }
     })();
   }, [device, takeRoute, dropRoute]);
 
-  /** End today's walk and go back to the map, where another can be planned. */
+  /** End today's walk and go back to the planner. */
   const endWalk = useCallback(async () => {
     if (!device) return;
     setPlanBusy(true);
@@ -568,22 +544,15 @@ export default function App() {
     }
   }, [device, dropRoute]);
 
-  // The shortest walk that reaches the "Walk here" memory and the end: the
-  // estimates from where you are, or what the server said, whichever is
-  // longest. It lifts the length without changing the one chosen, which comes
-  // back with the pin gone.
+  // The shortest walk that reaches a one-way walk's end, estimated from where
+  // you are. It lifts the length without changing the one chosen.
   const walkFloor = useMemo(() => {
+    if (!walkAsk.end) return WALK_KM.min;
     const from = position ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
-    const crow = (to: Coordinates) => metersBetween(from.lat, from.lng, to.lat, to.lng);
-    const floors = [WALK_KM.min, walkToKm];
-    if (walkTo) {
-      floors.push(walkFloorKm(crow(walkTo.place.coordinates), walkAsk.loop, WALK_KM.step));
-    }
-    if (walkAsk.end) floors.push(endFloorKm(crow(walkAsk.end), WALK_KM.step));
-    return Math.max(...floors);
-  }, [walkTo, walkToKm, position, walkAsk.loop, walkAsk.end]);
-  const askedKm = walkTo ? hereKm : walkKm;
-  const planKm = walkFloor <= WALK_KM.max ? Math.max(askedKm, walkFloor) : askedKm;
+    const crow = metersBetween(from.lat, from.lng, walkAsk.end.lat, walkAsk.end.lng);
+    return Math.max(WALK_KM.min, endFloorKm(crow, WALK_KM.step));
+  }, [position, walkAsk.end]);
+  const planKm = walkFloor <= WALK_KM.max ? Math.max(walkKm, walkFloor) : walkKm;
 
   // The length and shape of the walk on the card, once it is drawn.
   const plannedKey = useRef<string | null>(null);
@@ -592,12 +561,17 @@ export default function App() {
     setPlanBusy(true);
     setPlanError(null);
     let from = positionRef.current;
-    if (!from && (await goToMyLocation().catch(() => false))) from = positionRef.current;
+    // Asked only once it was said yes to: the planner opens at launch, and a
+    // dialog then would be cold (UI.md, "Asking for location"). Otherwise the
+    // card's Use my location is the ask.
+    if (!from && permission === 'granted' && (await goToMyLocation().catch(() => false))) {
+      from = positionRef.current;
+    }
     const fallback = !from;
     const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
     try {
       const plan = (km: number) =>
-        previewRoute(device, anchor, km * 1000, walkAsk, next, walkTo?.id ?? null);
+        previewRoute(device, anchor, km * 1000, walkAsk, next);
       const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
       const last = shown[shown.length - 1]?.walk ?? null;
       let km = planKm;
@@ -637,7 +611,7 @@ export default function App() {
         }
       }
       if (!mounted.current) return;
-      if (km !== planKm) (walkTo ? setHereKm : setWalkKm)(km);
+      if (km !== planKm) setWalkKm(km);
       plannedKey.current = planKey(km, walkAsk);
       setAgain(next);
       const only = another && ids(walk) === ids(last);
@@ -653,32 +627,22 @@ export default function App() {
       setPlanFrom(anchor);
       setPlanFallback(fallback);
       setPreview(walk);
+      setWalkedOut(false);
       setStage('preview');
     } catch (e) {
       if (!mounted.current) return;
-      const refusal = walkHereRefusal(e);
-      if (walkedToday(e)) {
-        setPlanError("Today's walk is done. There's another tomorrow.");
-      } else if (refusal?.reason === 'too_far') {
-        const km = Math.ceil(refusal.min_budget_meters / 1000 / WALK_KM.step) * WALK_KM.step;
-        setWalkToKm(km);
-        setPlanError(`${planKm} km is too short from here. Try ${km} km or more.`);
-      } else if (refusal) {
-        setWalkTo(null);
-        setPlanError("That one won't fit on a walk from here.");
-      } else {
-        setPlanError("Can't reach Memory Lane right now.");
-      }
+      if (walkedToday(e)) setWalkedOut(true);
+      else setPlanError("Can't reach Memory Lane right now.");
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, goToMyLocation, planKm, walkFloor, walkAsk, shown, walkTo]);
+  }, [device, goToMyLocation, permission, planKm, walkFloor, walkAsk, shown]);
 
   /** Back, or on again, through the walks the card has shown. */
   const showAt = (i: number) => {
     const entry = shown[i];
     if (!entry) return;
-    if (entry.km !== planKm) (walkTo ? setHereKm : setWalkKm)(entry.km);
+    if (entry.km !== planKm) setWalkKm(entry.km);
     plannedKey.current = planKey(entry.km, walkAsk);
     setShownAt(i);
     setAgain(entry.again);
@@ -692,7 +656,9 @@ export default function App() {
   // not for what is already drawn: a length Next walk moved to.
   const planWalkRef = useRef(planWalk);
   planWalkRef.current = planWalk;
-  const planning = stage === 'preview';
+  // Not before the silent permission check has answered: a plan then would
+  // start from central Copenhagen for somebody who already said yes.
+  const planning = stage === 'preview' && permission !== 'unknown';
   useEffect(() => {
     if (!planning) {
       plannedKey.current = null;
@@ -703,60 +669,26 @@ export default function App() {
     }
   }, [planning, planKm, walkAsk]);
 
-  const backToMap = () => {
-    setPlanError(null);
-    setWalkTo(null);
-    setStage('map');
-  };
-
   const acceptWalk = useCallback(async () => {
     if (!device || !planFrom) return;
     setPlanBusy(true);
     setPlanError(null);
     try {
-      const walk = await acceptRoute(
-        device,
-        planFrom,
-        planKm * 1000,
-        walkAsk,
-        again,
-        walkTo?.id ?? null,
-      );
+      const walk = await acceptRoute(device, planFrom, planKm * 1000, walkAsk, again);
       if (!mounted.current) return;
       takeRoute(walk, planFrom, walkAsk.end);
       setPreview(null);
-      setWalkTo(null);
       setStage('walk');
     } catch (e) {
       if (!mounted.current) return;
-      setPlanError(
-        walkedToday(e)
-          ? "Today's walk is done. There's another tomorrow."
-          : "Can't reach Memory Lane right now.",
-      );
+      if (walkedToday(e)) setWalkedOut(true);
+      else setPlanError("Can't reach Memory Lane right now.");
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, planFrom, planKm, walkAsk, again, takeRoute, walkTo]);
+  }, [device, planFrom, planKm, walkAsk, again, takeRoute]);
 
-  // Once on the map, and again when a position first arrives: by where you
-  // are, never by viewport, so panning fetches nothing (UI.md rule 3).
-  const located = !!position;
   const me = profile?.user_id;
-  useEffect(() => {
-    if (stage !== 'map') return;
-    const controller = new AbortController();
-    const at = positionRef.current ?? {
-      lat: FALLBACK_REGION.latitude,
-      lng: FALLBACK_REGION.longitude,
-    };
-    fetchNearby(at, MAP_RADIUS_KM, device, controller.signal)
-      // Locked and opened both: MapFilter picks which (docs/10, "A map of what
-      // is locked"). mineVersion refetches the moment you file, edit or delete.
-      .then((found) => mounted.current && setNearby(found))
-      .catch(() => {});
-    return () => controller.abort();
-  }, [stage, located, me, mineVersion, device]);
 
   // The preview's zoom: the whole walk, its start and any end, clear of the card.
   useEffect(() => {
@@ -779,43 +711,16 @@ export default function App() {
     () => route.map((memory) => unlocked[memory.id] ?? memory),
     [route, unlocked],
   );
-  // The only pins there are: what is locked around you on the map, the walk
-  // being previewed, or the walk being walked. Nothing off the route is drawn
-  // on a walk.
-  const nearbyShown = useMemo(
-    () =>
-      nearby
-        .map((memory) => unlocked[memory.id] ?? memory)
-        .filter((memory) => mapShows === 'all' || memory.locked === (mapShows === 'locked')),
-    [nearby, unlocked, mapShows],
-  );
-  // F36: until the welcome one is spent, three locked ones near you to choose
-  // from. Hearts first, the corpus has no better quality signal yet.
-  // ponytail: rank on a quality score once extraction stores one.
-  const firstPicks = useMemo(
-    () =>
-      (profile?.welcome_unlocks ?? 0) > 0
-        ? nearby
-            .filter((memory) => memory.locked)
-            .sort(
-              (a, b) =>
-                b.heart_count - a.heart_count ||
-                (a.distance_meters ?? Infinity) - (b.distance_meters ?? Infinity),
-            )
-            .slice(0, 3)
-        : [],
-    [profile, nearby],
-  );
+  // The only pins there are: the walk being previewed, or the walk being
+  // walked. Nothing off the route is ever drawn.
   const pins = useMemo(
     () =>
-      stage === 'map' || stage === 'end'
-        ? nearbyShown
-        : stage === 'preview'
-          ? (preview?.memories ?? [])
-          : stage === 'walk'
-            ? routeShown
-            : [],
-    [stage, nearbyShown, preview, routeShown],
+      stage === 'preview' || stage === 'end'
+        ? (preview?.memories ?? [])
+        : stage === 'walk'
+          ? routeShown
+          : [],
+    [stage, preview, routeShown],
   );
   // The background watch tracks today's route, not the map's panned viewport -
   // bounded (ROUTE_SIZE, well under the OS's ~20-region cap), already "nearby
@@ -837,16 +742,14 @@ export default function App() {
   // out, and the rest keep their numbers. A preview numbers every stop.
   const routePositionById = useMemo(() => {
     const map = new Map<number, number>();
-    // The map before a walk has no route: nothing on it is a stop.
-    if (stage === 'map' || stage === 'end') return map;
-    const walking = stage !== 'preview';
+    const walking = stage === 'walk';
     pins.forEach((memory, i) => {
       if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
     });
     return map;
   }, [pins, earned, stage]);
-  // A stop of today's walk opens for nothing (docs/10, "Keys open a lock, and
-  // today's walk is free"); a preview's stops are not yet a walk.
+  // Only a stop of today's walk opens (docs/10, "A walk planner, nothing
+  // else"); a preview's stops are not yet a walk.
   const onTodaysWalk = useCallback(
     (id: number) => stage === 'walk' && routePositionById.has(id),
     [stage, routePositionById],
@@ -989,11 +892,10 @@ export default function App() {
     setSubmitOpen(false);
   }, [notification, openMemory]);
 
-  // Whatever you stand on opens, walk or no walk: free ones first, then steps
-  // (docs/10, "Steps open a memory").
+  // Only on a walk, and only its stops are drawn, so only they are in reach.
   const withinReach = useMemo(
     () =>
-      stage === 'walk' || stage === 'map'
+      stage === 'walk'
         ? groups.filter((group) => reachOf(group, position, earned) === 'unlockable')
         : [],
     [stage, groups, position, earned],
@@ -1032,7 +934,11 @@ export default function App() {
       for (const [index, memory] of group.memories.entries()) {
         const { lat, lng } = memory.place.coordinates;
         const away = metersBetween(position.lat, position.lng, lat, lng);
-        if (memory.locked && away <= (memory.unlock_radius_meters ?? FALLBACK_RADIUS_M)) {
+        if (
+          memory.locked &&
+          onTodaysWalk(memory.id) &&
+          away <= (memory.unlock_radius_meters ?? FALLBACK_RADIUS_M)
+        ) {
           here.push({ group, index, away });
         }
       }
@@ -1042,7 +948,7 @@ export default function App() {
       const [x, y] = [a.group.memories[a.index].id, b.group.memories[b.index].id];
       return stop(x) - stop(y) || x - y;
     });
-  }, [withinReach, position, routePositionById]);
+  }, [withinReach, position, routePositionById, onTodaysWalk]);
   // The memory the ring on the map opens: the one picked, else the route stop
   // you are at, else the nearest. docs/10, "The lock says where".
   const [pickedId, setPickedId] = useState<number | null>(null);
@@ -1054,24 +960,12 @@ export default function App() {
     return [...ringHere].sort((a, b) => a.away - b.away)[0] ?? null;
   }, [ringHere, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
-  // Out of keys and off today's walk: standing on it opens nothing.
-  const blocked = !!ringMemory && !!wallet && !wallet.open && !onTodaysWalk(ringMemory.id);
-  // A hold would open it, so the ring is the one ember thing and the bottom
-  // row's middle goes quiet, still there (docs/10, "One ember button that changes").
-  const ringLive = !!ringFor && !blocked;
   const ringAt = Math.max(
     0,
     ringHere.findIndex(({ group, index }) => group.memories[index].id === ringMemory?.id),
   );
-  // Center on me's glyph goes hollow: on a walk once a drag let go; before
-  // one, once the map is off you by more than a sixth of the screen.
-  const offYou =
-    !position ||
-    (stage === 'walk'
-      ? !following && !walkDone
-      : stage === 'map' &&
-        metersBetween(region.latitude, region.longitude, position.lat, position.lng) >
-          region.latitudeDelta * 111_000 * 0.15);
+  // Center on me's glyph goes hollow once a drag let go of you.
+  const offYou = !position || (!following && !walkDone);
 
   // Reaching a stop is the moment the app is for. The transition, not the
   // state: ringFor gets a new identity on every 5m position update. Light,
@@ -1081,11 +975,11 @@ export default function App() {
   const wasInReach = useRef(false);
   useEffect(() => {
     if (inReach && !wasInReach.current) {
-      if (!blocked) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       setOpenAt((open) => (open.some((m) => m.id === ringMemory?.id && m.locked) ? [] : open));
     }
     wasInReach.current = inReach;
-  }, [inReach, ringMemory, blocked]);
+  }, [inReach, ringMemory]);
   // A refusal belongs to the memory it was for.
   useEffect(() => setUnlockError(null), [ringMemory?.id]);
 
@@ -1133,7 +1027,6 @@ export default function App() {
 
   const unlock = useCallback(
     async (memory: LocatedMemory): Promise<boolean> => {
-      // No position is fine: a free unlock opens it from anywhere.
       const at = positionRef.current;
 
       setUnlocking(true);
@@ -1154,8 +1047,8 @@ export default function App() {
             setKeyEarned(false);
             setWalkDone(true);
           }
-          // What it cost, the key a finished walk earned, and the streak the
-          // walk's card shows, counting today.
+          // The key a finished walk earned, and the streak the walk's card
+          // shows, counting today.
           const keysBefore = profile?.keys ?? 0;
           deviceId()
             .then(fetchProfile)
@@ -1174,43 +1067,13 @@ export default function App() {
         }
       } catch (e) {
         if (!mounted.current) return false;
-        if (outOfKeys(e)) {
-          setUnlockError('Out of keys.');
-          setPaywallOpen(true);
-        } else {
-          setUnlockError("Can't reach Memory Lane right now.");
-        }
+        setUnlockError("Can't reach Memory Lane right now.");
       } finally {
         if (mounted.current) setUnlocking(false);
       }
       return false;
     },
     [unlocked, routeStarted, nextRouteStop, routeShown, earned, profile?.keys],
-  );
-
-  // One key from the store, then the memory it was bought for.
-  const buyKeyAndOpen = useCallback(
-    async (memory: LocatedMemory) => {
-      if (!keyOne) {
-        setPaywallOpen(true);
-        return false;
-      }
-      setUnlocking(true);
-      setUnlockError(null);
-      try {
-        if (!(await buy(keyOne))) return false;
-        const who = await refreshSubscription(await deviceId());
-        if (!mounted.current) return false;
-        setProfile(who);
-      } catch {
-        if (mounted.current) setUnlockError("That didn't go through. Try again.");
-        return false;
-      } finally {
-        if (mounted.current) setUnlocking(false);
-      }
-      return unlock(memory);
-    },
-    [keyOne, unlock],
   );
 
   // Count what was walked, from where the last count stopped.
@@ -1295,7 +1158,6 @@ export default function App() {
       return;
     }
     if (!mounted.current) return;
-    setNearby((current) => current.filter((m) => m.author?.id !== author));
     setOpenAt([]);
   }, []);
 
@@ -1421,6 +1283,26 @@ export default function App() {
     );
   }
 
+  // Add, one tap from the planner and the walk alike: filing is standing
+  // somewhere, not unlocking.
+  const addButton = (
+    <GlassButton
+      style={styles.circle}
+      hitSlop={4}
+      accessibilityRole="button"
+      accessibilityLabel="Add a memory here"
+      onPress={async () => {
+        // Without a fix the sheet says "Waiting for your location" and
+        // holds Post until one arrives, which beats a dead tap.
+        if (!positionRef.current) await goToMyLocation().catch(() => false);
+        Haptics.selectionAsync().catch(() => {});
+        setSubmitOpen(true);
+      }}
+    >
+      <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
+    </GlassButton>
+  );
+
   return (
     <SafeAreaProvider>
       <View style={styles.container}>
@@ -1458,7 +1340,6 @@ export default function App() {
               const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
               Haptics.selectionAsync().catch(() => {});
               setWalkAsk((ask) => ({ ...ask, end: { lat, lng } }));
-              setWalkToKm(0);
               setStage('preview');
             }}
             // Teleport, under __DEV__ only: the pinned position ignores the
@@ -1482,7 +1363,7 @@ export default function App() {
                     }
                     Haptics.selectionAsync().catch(() => {});
                     setHere(pin ? { lat: pin.lat, lng: pin.lng } : { lat, lng });
-                    // And a key, for testing what one opens without a walk.
+                    // And a key, for testing the pill without a walk.
                     deviceId()
                       .then(devKeys)
                       .then((who) => mounted.current && setProfile(who))
@@ -1530,13 +1411,7 @@ export default function App() {
                   break;
                 }
               }
-              const near = reachOf(group, position, earned);
-              // Out of keys off today's walk, standing on it opens nothing:
-              // never seal (F11).
-              const reach =
-                near === 'unlockable' && wallet && !wallet.open && routePosition == null
-                  ? 'locked'
-                  : near;
+              const reach = reachOf(group, position, earned);
               return (
                 <MemoryMarker
                   key={group.key}
@@ -1551,7 +1426,7 @@ export default function App() {
                   routeSize={walking ? routeTotal : pins.length}
                   // A preview is a look, not a walk: its stops open once accepted.
                   onPress={() =>
-                    !walking && stage !== 'map'
+                    !walking
                       ? undefined
                       : group.spanMeters > CLUSTER_SPAN_M
                         ? zoomTo(group)
@@ -1579,19 +1454,10 @@ export default function App() {
                 setUnlockError(null);
               }}
               busy={unlocking}
-              onHold={setHolding}
               error={unlockError}
-              blocked={blocked}
-              keyPrice={keyOne?.product.priceString ?? null}
-              onGetKey={async () => {
-                if (!(await buyKeyAndOpen(ringMemory))) return;
-                setRevealId(ringMemory.id);
-                setPickedId(null);
-              }}
               onUnlock={async () => {
                 if (walking) setRouteStarted(true);
                 const opened = await unlock(ringMemory);
-                setHolding(false);
                 if (!opened) return;
                 setRevealId(ringMemory.id);
                 setPickedId(null);
@@ -1601,41 +1467,27 @@ export default function App() {
               }}
             />
           )}
-          {stage === 'map' && firstPicks.length > 0 && openAt.length === 0 && !journalOpen && !ringFor && (
-            <FirstPick
-              picks={firstPicks}
-              located={!!position}
-              onLocate={() => {
+          {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
+          {stage === 'preview' && !journalOpen && (
+            <Preview
+              stops={preview ? preview.memories : null}
+              meters={pathMeters(previewPath)}
+              km={planKm}
+              onKm={setWalkKm}
+              ask={walkAsk}
+              onAsk={setWalkAsk}
+              floorKm={walkFloor}
+              onPickEnd={() => setStage('end')}
+              fallback={planFallback}
+              onLocate={async () => {
                 if (permission === 'blocked') {
                   Linking.openSettings();
                   return;
                 }
-                goToMyLocation().catch(() => false);
+                if (await goToMyLocation().catch(() => false)) {
+                  planWalk(Math.floor(Math.random() * ROLLS));
+                }
               }}
-              onPick={(memory) => {
-                Haptics.selectionAsync().catch(() => {});
-                setOpenAt([memory]);
-              }}
-            />
-          )}
-
-          {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
-          {stage === 'preview' && !journalOpen && (
-            <Preview
-              stops={preview ? preview.memories.length : null}
-              meters={pathMeters(previewPath)}
-              km={planKm}
-              onKm={walkTo ? setHereKm : setWalkKm}
-              ask={walkAsk}
-              onAsk={(ask) => {
-                setWalkAsk(ask);
-                // The server's length was for the other shape of walk.
-                setWalkToKm(0);
-              }}
-              floorKm={walkFloor}
-              onPickEnd={() => setStage('end')}
-              fallback={planFallback}
-              through={walkTo?.place.name ?? null}
               busy={planBusy}
               error={planError}
               onAccept={acceptWalk}
@@ -1649,7 +1501,8 @@ export default function App() {
               onBack={shownAt > 0 ? () => showAt(shownAt - 1) : null}
               walkNumber={shownAt + 1}
               emptyAt={emptyAt}
-              onMap={backToMap}
+              walkedOut={walkedOut}
+              onSubscribe={() => setPaywallOpen(true)}
             />
           )}
 
@@ -1681,12 +1534,10 @@ export default function App() {
           {stage === 'end' && <EndPick onCancel={() => setStage('preview')} />}
           {stage === 'loading' && <View style={styles.cover} />}
 
-          {/* Top centre: what opens memories. A tap counts steps again. */}
-          {wallet && (
+          {/* Top centre: keys earned. A tap counts steps again. */}
+          {profile && (
             <KeysPill
-              wallet={wallet}
-              holding={holding}
-              price={ringMemory && onTodaysWalk(ringMemory.id) ? 0 : wallet.price}
+              keys={profile.keys}
               place={[styles.corner, styles.steps]}
               // What it means, and a recount behind it.
               onPress={() => {
@@ -1699,7 +1550,7 @@ export default function App() {
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
               read at the top"). Journal top left, you top right. */}
-          {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
+          {(stage === 'preview' || stage === 'walk') && !confirmEnd && !showDone && (
             <GlassButton
               place={styles.topLeft}
               style={styles.circle}
@@ -1716,13 +1567,13 @@ export default function App() {
               {journalNew && <View style={styles.newDot} />}
             </GlassButton>
           )}
+          {/* The planner has no bottom row (its card is there), so Add sits
+              beside Journal. */}
+          {stage === 'preview' && !journalOpen && <View style={styles.topLeftSecond}>{addButton}</View>}
           <View style={styles.topRight}>
             <AccountMenu
               profile={profile}
               name={displayName}
-              shows={mapShows}
-              onShow={setMapShows}
-              filter={stage === 'map'}
               onEditProfile={() => setProfileOpen(true)}
               onSettings={() => {
                 Haptics.selectionAsync().catch(() => {});
@@ -1730,27 +1581,12 @@ export default function App() {
               }}
             />
           </View>
-          {/* Add, the one ember thing, Center on me (docs/10, "One ember
-              button that changes"). Not over a card with its own buttons at
-              the bottom. Add is there walk or no walk: filing is standing
-              somewhere, not unlocking. */}
-          {(stage === 'map' || stage === 'walk') && !confirmEnd && !showDone && (
+          {/* On a walk: Add, the walk card, Center on me (docs/10, "One
+              ember button that changes"). Not over a card with its own
+              buttons at the bottom. */}
+          {stage === 'walk' && !confirmEnd && !showDone && (
             <View style={styles.bottom}>
-              <GlassButton
-                style={styles.circle}
-                hitSlop={4}
-                accessibilityRole="button"
-                accessibilityLabel="Add a memory here"
-                onPress={async () => {
-                  // Without a fix the sheet says "Waiting for your location" and
-                  // holds Post until one arrives, which beats a dead tap.
-                  if (!positionRef.current) await goToMyLocation().catch(() => false);
-                  Haptics.selectionAsync().catch(() => {});
-                  setSubmitOpen(true);
-                }}
-              >
-                <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
-              </GlassButton>
+              {addButton}
               <View style={styles.middle}>
                 {walking && !position && (
                   <GlassButton
@@ -1770,29 +1606,6 @@ export default function App() {
                     {/* Without location nothing can ever unlock, so the button says so
                         rather than leaving a walk whose stops never open. */}
                     <Text style={styles.planText}>Turn on location</Text>
-                  </GlassButton>
-                )}
-                {stage === 'map' && (
-                  <GlassButton
-                    style={styles.pill}
-                    tint={ringLive ? undefined : color.ember}
-                    accessibilityRole="button"
-                    accessibilityLabel="Plan a walk"
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      setWalkTo(null);
-                      setWalkToKm(0);
-                      setPreview(null);
-                      setStage('preview');
-                    }}
-                  >
-                    <Glyph
-                      name="figure.walk"
-                      size={16}
-                      weight="semibold"
-                      color={ringLive ? color.ink : color.paper}
-                    />
-                    <Text style={[styles.planText, ringLive && { color: color.ink }]}>Plan a walk</Text>
                   </GlassButton>
                 )}
                 {/* The walk's one card (F9): where next and how far, a tap to see
@@ -1873,8 +1686,7 @@ export default function App() {
                   Haptics.selectionAsync().catch(() => {});
                   const you = positionRef.current;
                   if (!you) goToMyLocation().catch(() => false);
-                  else if (stage === 'walk') setFollowing(true);
-                  else flyTo({ ...region, latitude: you.lat, longitude: you.lng });
+                  else setFollowing(true);
                 }}
               >
                 {/* Filled while the map is on you, as Apple Maps does. */}
@@ -1962,45 +1774,13 @@ export default function App() {
           revealId={revealId}
           compact={!journalOpen}
           onHeart={heart}
-          // The map's peek: a walk through that pin, drawn at once.
-          onWalkHere={
-            stage === 'map'
-              ? () => {
-                  setWalkTo(openMemories[openIndex] ?? null);
-                  setWalkToKm(0);
-                  // From the floor: the shortest walk that reaches it.
-                  setHereKm(WALK_KM.min);
-                  setPlanError(null);
-                  setPreview(null);
-                  setOpenAt([]);
-                  setStage('preview');
-                }
-              : undefined
-          }
           hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
-          freeLeft={profile?.welcome_unlocks ?? 0}
-          cost={
-            openMemories[openIndex] && onTodaysWalk(openMemories[openIndex].id)
-              ? 'free'
-              : (profile?.keys ?? 0) > 0 && !profile?.subscribed
-                ? 'key'
-                : wallet?.open
-                  ? 'free'
-                  : 'none'
-          }
-          opening={unlocking}
-          onOpenFree={async () => {
-            const memory = openMemories[openIndex];
-            if (!memory || !(await unlock(memory))) return;
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-            setRevealId(memory.id);
-          }}
         />
 
         <HowItWorks
           visible={howOpen}
           onClose={() => setHowOpen(false)}
-          wallet={wallet}
+          keys={profile?.keys ?? 0}
           profile={profile}
           radiusMeters={radiusMeters}
         />
@@ -2010,7 +1790,6 @@ export default function App() {
           onClose={() => setPaywallOpen(false)}
           device={device}
           onProfile={setProfile}
-          keys={profile?.keys ?? 0}
         />
 
         <Submit
@@ -2044,6 +1823,7 @@ const styles = StyleSheet.create({
   corner: { position: 'absolute', top: 64 },
   steps: { alignSelf: 'center' },
   topLeft: { position: 'absolute', top: 64, left: 18 },
+  topLeftSecond: { position: 'absolute', top: 64, left: 74 },
   topRight: { position: 'absolute', top: 64, right: 18 },
   // Edge to edge, a circle each end and the ember thing between. At 70, 12pt
   // over Apple's logo and Legal link (HIG Maps asks 10).

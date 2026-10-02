@@ -1,23 +1,21 @@
-/** What the keys pill opens: how the app works, in the words of what you
- *  can see on the map. The balance on top, then the rules in the order you
- *  meet them. */
+/** What the keys pill opens: how the app works, in the order you meet it.
+ *  The keys on top, then the rules (docs/10, "A walk planner, nothing else"). */
 
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Profile } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import { color, figure, font, label } from './theme.ts';
-import type { Wallet } from './wallet.ts';
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  wallet: Wallet | null;
+  keys: number;
   profile: Profile | null;
   radiusMeters: number;
 };
 
-export default function HowItWorks({ visible, onClose, wallet, profile, radiusMeters }: Props) {
+export default function HowItWorks({ visible, onClose, keys, profile, radiusMeters }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
@@ -25,42 +23,31 @@ export default function HowItWorks({ visible, onClose, wallet, profile, radiusMe
           <Text style={styles.title}>How it works</Text>
           <CloseButton onPress={onClose} />
         </View>
-        {wallet && (
-          <View style={styles.now}>
-            <Text style={styles.figure}>{wallet.figure.toLocaleString()}</Text>
-            <Text style={styles.unit}>
-              {wallet.starting ? 'to start' : wallet.figure === 1 ? 'key' : 'keys'}
-            </Text>
-          </View>
-        )}
+        <View style={styles.now}>
+          <Text style={styles.figure}>{keys.toLocaleString()}</Text>
+          <Text style={styles.unit}>{keys === 1 ? 'key' : 'keys'}</Text>
+        </View>
 
         {/* Each heading is the rule on its own, the line under it a picture
             or a reason; one number each, said as something you can feel.
             docs/09 part 11 has the research. */}
-        <Section title="Stand on a pin to read it">
-          Every pin is a memory of something that happened right there. Get within{' '}
-          {Math.round(radiusMeters)} m, about the width of a street, and hold the ring.
+        <Section title="Plan a walk">
+          Memory Lane plans a walk past memories near you, about one a kilometre. The list
+          shows what each one is about. Don't like them? Try another walk.
         </Section>
-        {profile?.subscribed ? (
-          <Section title="Anything you stand on opens">
-            You're subscribed: every pin you reach opens, as many as you like.
-          </Section>
-        ) : (
-          <>
-            <Section title="Your first one is on us">
-              Pick one and open it from anywhere: the sofa, the bus, the other side of town.
-              Just the one.
-            </Section>
-            <Section title="Today's walk is on us">
-              Tap Plan a walk for a loop past a few memories. Every stop on it opens for
-              nothing, and finishing it earns a key. One walk a day.
-            </Section>
-            <Section title="A key opens the rest">
-              Wander off the walk and any memory you stand on opens with a key. You still have
-              to be standing there.
-            </Section>
-          </>
-        )}
+        <Section title="Stand there to read it">
+          Every stop is a memory of something that happened right there. Get within{' '}
+          {Math.round(radiusMeters)} m, about the width of a street, and hold the ring.
+          Memories only open on a walk.
+        </Section>
+        <Section title="Finish it for a key">
+          Reach every stop and you earn a key. What keys open is coming soon.
+        </Section>
+        <Section title={profile?.subscribed ? 'Walk as much as you like' : 'One walk a day'}>
+          {profile?.subscribed
+            ? "You're subscribed: plan a new walk whenever you finish one."
+            : 'Your first walk each day is free. Subscribe for as many as you like.'}
+        </Section>
 
       </ScrollView>
     </Modal>

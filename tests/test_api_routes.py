@@ -15,7 +15,6 @@ from sqlalchemy import text
 
 from api import read, route_solver, streets
 from api.models import Coordinates
-from tests.conftest import spend_welcome
 
 pytestmark = pytest.mark.db
 
@@ -458,18 +457,6 @@ def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_s
     assert unlock(*stops[1]) == finished, "set once, never moved"
 
 
-def test_a_stop_opened_from_afar_does_not_finish_the_walk(client, db_session):
-    """The welcome one opens a stop, not the walk: a walk is finished on foot."""
-    _offset(db_session, 1)
-    db_session.commit()
-    [stop] = _route(client).json()["memories"]
-    opened = client.post(
-        f"/v1/memories/{stop['id']}/unlock", json={"device": DEVICE, "lat": LAT + 0.05, "lng": LNG}
-    ).json()
-    assert opened["locked"] is False
-    assert db_session.execute(text("SELECT completed_at FROM daily_routes")).scalar() is None
-
-
 def test_walked_lists_the_accounts_walks_with_earned_stops_open(client, db_session):
     for n in (1, 2):
         _offset(db_session, n)
@@ -640,88 +627,6 @@ def test_another_day_or_show_me_another_is_a_different_walk_as_good(
     assert [m["id"] for m in accepted["memories"]] == shown
 
 
-def _include(client, memory_id, **extra):
-    params = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=4000&include={memory_id}"
-    return client.get(
-        f"/v1/routes/preview?{params}" + "".join(f"&{k}={v}" for k, v in extra.items())
-    )
-
-
-def test_walk_here_puts_that_memory_on_the_walk_and_the_accept_agrees(client, db_session):
-    ids = [_offset(db_session, n) for n in range(1, 9)]
-    db_session.commit()
-    plain = {m["id"] for m in _preview(client).json()["memories"]}
-    pin = next(i for i in ids if i not in plain)
-
-    preview = [m["id"] for m in _include(client, pin).json()["memories"]]
-    assert pin in preview and len(preview) == 4
-    accepted = client.post(
-        "/v1/routes/today",
-        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "include": pin},
-    ).json()
-    assert [m["id"] for m in accepted["memories"]] == preview
-
-
-def test_walk_here_refuses_what_could_never_be_a_stop(client, db_session):
-    _offset(db_session, 1)
-    earned, hidden, far = _offset(db_session, 2), _offset(db_session, 3), _offset(db_session, 30)
-    db_session.execute(text("UPDATE memories SET hidden = TRUE WHERE id = :m"), {"m": hidden})
-    db_session.execute(
-        text("INSERT INTO devices (id) VALUES (CAST(:d AS uuid)) ON CONFLICT (id) DO NOTHING"),
-        {"d": DEVICE},
-    )
-    db_session.execute(
-        text("INSERT INTO unlocks (device_id, memory_id) VALUES (CAST(:d AS uuid), :m)"),
-        {"d": DEVICE, "m": earned},
-    )
-    db_session.commit()
-
-    for pin in (earned, hidden, far, far + 1000):
-        refused = _include(client, pin)
-        assert refused.status_code == 422, pin
-        assert refused.json()["detail"] == {"reason": "not_a_stop"}
-        accepted = client.post(
-            "/v1/routes/today",
-            json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 4000, "include": pin},
-        )
-        assert accepted.status_code == 422
-    assert _stored(db_session) == 0
-
-
-def test_walk_here_is_never_the_stop_the_cleanup_drops(client, db_session, on_streets):
-    """The layout of the out-and-back test above, but stop 2 was asked for."""
-    ids = {n: _offset(db_session, n) for n in range(1, 7)}
-    db_session.commit()
-    spur = Coordinates(lat=LAT + 0.002, lng=LNG)
-    stub = Coordinates(lat=LAT + 0.002, lng=LNG + 0.0004)
-    on_streets(
-        lambda points: [[a, stub, b] if spur in (a, b) else [a, b] for a, b in pairwise(points)]
-    )
-
-    assert ids[2] in [m["id"] for m in _include(client, ids[2]).json()["memories"]]
-
-
-def test_walk_here_too_far_by_street_says_how_long_a_walk_reaches_it(
-    client, db_session, monkeypatch
-):
-    pin = _offset(db_session, 4)
-    db_session.commit()
-
-    def table(points):
-        # The crow says 445m, so it is within half of 1km; the streets say half as far again.
-        return [[read.meters_between(a, b) * 1.5 for b in points] for a in points], [0.0] * len(
-            points
-        )
-
-    monkeypatch.setattr(route_solver, "street_table", table)
-    params = f"device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=1000&include={pin}"
-    refused = client.get(f"/v1/routes/preview?{params}")
-    assert refused.status_code == 422
-    detail = refused.json()["detail"]
-    assert detail["reason"] == "too_far"
-    assert 1300 < detail["min_budget_meters"] < 1400
-
-
 def _end(client):
     return client.post("/v1/routes/today/end", json={"device": DEVICE})
 
@@ -881,7 +786,6 @@ def test_finishing_a_walk_earns_a_key_once_a_day(client, db_session):
     for n in range(1, 9):
         _offset(db_session, n)
     _subscribe(db_session)
-    spend_welcome(db_session, DEVICE)
     _finish(client)
     assert _keys(client) == 1, "every stop free, and a key for the last"
     _end(client)
@@ -895,17 +799,3 @@ def test_a_walk_left_unfinished_earns_no_key(client, db_session):
     db_session.commit()
     _walk_one_stop(client)
     assert _keys(client) == 0
-
-
-def test_a_subscriber_opens_what_they_stand_on_and_still_has_to_stand_there(client, db_session):
-    memory = _offset(db_session, 1)
-    _subscribe(db_session)
-    spend_welcome(db_session, DEVICE)
-
-    def unlock(lat):
-        return client.post(
-            f"/v1/memories/{memory}/unlock", json={"device": DEVICE, "lat": lat, "lng": LNG}
-        )
-
-    assert unlock(LAT + 0.01).json()["locked"], "paid for, but still gated on standing there"
-    assert not unlock(LAT + 0.001).json()["locked"]

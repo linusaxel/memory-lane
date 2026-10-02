@@ -94,7 +94,6 @@ def _choose_walks(
     budget_meters: float,
     loop: bool,
     at: Coordinates,
-    include: int | None = None,
     end: Coordinates | None = None,
 ) -> list[list[int]]:
     """Up to ROUTE_SHORTLIST walks of up to `size` stops from the anchor `at`
@@ -124,8 +123,6 @@ def _choose_walks(
     Each of stranger/other is guaranteed min(available, size // 2) stops, which
     is what the strict alternation before this gave, and still never comes up
     short when one layer runs dry or is out of budget.
-    `include`, a memory id, is on every walk returned ("Walk here"). Every
-    walk starts from it; _plan_route has already vetted that it fits alone.
     `end` is where a one-way walk finishes. `d` already walks to it where a
     loop walks home (column 0, `_plan_route`), so `loop` is true; only the
     map's turns need to know where it is.
@@ -134,7 +131,6 @@ def _choose_walks(
     actually differ."""
     nodes = range(1, len(candidates) + 1)
     size = min(size, len(candidates))
-    must = {i for i in nodes if include is not None and candidates[i - 1].id == include}
     prize = {i: 1 + (getattr(candidates[i - 1], "contrast_score", None) or 0) for i in nodes}
     stranger = {i: candidates[i - 1].layer == "stranger" for i in nodes}
     quota = {k: min(sum(v == k for v in stranger.values()), size // 2) for k in (True, False)}
@@ -154,9 +150,6 @@ def _choose_walks(
         return d[prev][c] + d[c][nxt] - d[prev][nxt]
 
     def fill(walk, banned=frozenset()):
-        for c in must - set(walk):
-            if len(walk) < size:
-                walk.insert(min(range(len(walk) + 1), key=lambda at: cost(walk, c, at)), c)
         while len(walk) < size:
             room = budget_meters - _path_meters(walk, d, loop)
             options = [
@@ -271,15 +264,6 @@ def _choose_walks(
                     for j in range(1, size + 1)
                 ]
             walk: list[int] = []
-            for c in must:
-                # It stands in for the target nearest it.
-                del targets[
-                    min(
-                        range(len(targets)),
-                        key=lambda j: (x[c] - targets[j][0]) ** 2 + (y[c] - targets[j][1]) ** 2,
-                    )
-                ]
-                walk.append(c)
             for tx, ty in targets:
                 free = [i for i in nodes if i not in walk]
                 free = [i for i in free if fits(walk, i)] or free
@@ -312,8 +296,7 @@ def _choose_walks(
             list(s)
             for k in range(1, size + 1)
             for s in itertools.combinations(nodes, k)
-            if must <= set(s)
-            and _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget_meters
+            if _path_meters(_walking_order(list(s), d, loop), d, loop) <= budget_meters
         ]
     if size:
         for k in range(ROUTE_HEADINGS):
@@ -321,14 +304,12 @@ def _choose_walks(
                 walk = shaped(offset + 2 * math.pi * k / ROUTE_HEADINGS, around)
                 if walk:
                     walks.append(fill(_walking_order(walk, d, loop)))
-    walks = [w for w in walks if must <= set(w)]
     best = min(walks, key=score)
-    for _ in range(ROUTE_SHAKES if len(best) > len(must) else 0):
+    for _ in range(ROUTE_SHAKES if best else 0):
         # Refilled with the dropped stops allowed back, a greedy fill puts the
         # same cheap stop straight back and never reaches a better one further out.
         # Then again with them allowed, for one that fits on the end after all.
-        free = [i for i in best if i not in must]
-        drop = set(rng.sample(free, rng.randint(1, min(2, len(free)))))
+        drop = set(rng.sample(best, rng.randint(1, min(2, len(best)))))
         trial = fill(fill([i for i in best if i not in drop], drop))
         if score(trial) < score(best):
             best = trial
@@ -449,7 +430,6 @@ def _plan_route(
     route_date,
     loop: bool = ROUTE_LOOP,
     again: int = 0,
-    include: int | None = None,
     end: Coordinates | None = None,
 ):
     """The walk this device would get from `at` today: (stops in order,
@@ -467,10 +447,6 @@ def _plan_route(
       docstring. The app rolls `again` afresh for every plan and steps it for
       "Show me another", so a plan differs whenever there is another as good.
 
-    `include` is a memory the walk must pass ("Walk here"). The candidates
-    query puts it first if it may be a stop at all; 422 if it may not, or no
-    walk of this length reaches it.
-
     `end` is where a one-way walk finishes, sent with each request and stored
     nowhere. A stop on a walk that long is within half of it of the midway
     point, so candidates come from there. 422 too_far if the end is out of reach."""
@@ -485,7 +461,6 @@ def _plan_route(
             "radius_meters": budget_meters / 2,
             "device_id": device,
             "limit": ROUTE_POOL,
-            "include": include,
         },
     ).fetchall()
     candidates = _spread(_one_per_place(candidates), budget_meters)
@@ -509,16 +484,6 @@ def _plan_route(
         rows = [0] + [i + 1 for i in keep]
         d = [[d[a][b] for b in rows] for a in rows]
     closed = loop or end is not None
-    if include is not None:
-        # Beyond half the length is not_a_stop too: the app floors the slider
-        # at twice the crow's distance, so that is a position that moved.
-        if not candidates or candidates[0].id != include:
-            raise HTTPException(status_code=422, detail={"reason": "not_a_stop"})
-        if (reach := _path_meters([1], d, closed)) > budget_meters:
-            raise HTTPException(
-                status_code=422,
-                detail={"reason": "too_far", "min_budget_meters": math.ceil(reach)},
-            )
     seed = f"{device}:{route_date}"
 
     solve_for = budget_meters
@@ -537,7 +502,6 @@ def _plan_route(
             solve_for,
             closed,
             at,
-            include,
             end,
         )
         return [[nodes[i - 1] for i in _walking_order(p, dd, closed)] for p in shortlist]
@@ -617,8 +581,6 @@ def _plan_route(
             break
         trials = []
         for stop in order:
-            if candidates[stop - 1].id == include:
-                continue
             trial = walk(banned | {stop})
             if len(trial) < len(order):
                 continue

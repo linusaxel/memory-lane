@@ -469,8 +469,24 @@ there, so every price below is borrowed from a neighbouring kind of app: tune
 it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
 *Pick one to start, then where you stand*.
 
+**2026-10-03: the app became a walk planner** (docs/10, *A walk planner,
+nothing else*): no map browsing, only a walk's stops open, a subscription buys
+more walks, and keys are earned only and never sold. So E3 applies only if
+keys are ever sold again, E5's "opens without a key" is now "more walks a
+day", and *The map: keep showing every pin* is moot.
+
 ### Decide first
 
+- [ ] **K1 D: What a key does.** (2026-10-03) One is earned per finished walk
+      and it opens nothing yet. Rules it must keep: never sold (so a random
+      reward stays clear of Apple 3.1.1 odds and the Belgian/Dutch loot-box
+      rulings), and never a summary off the spot. Researched against Pokémon
+      GO, Pikmin Bloom, Monster Hunter Now, Ingress, Duolingo, Animal Crossing,
+      Zelda, Hades, Genshin and Strava. The founder turned these down:
+      - keep a previewed memory for the next walk
+      - a surprise open of an off-route memory passed on a walk
+      - a streak shield
+      - an extra walk today
 - [ ] **E1 D: Licensing before money.** (checked 2026-10-02) This blocks any
       paid open of a DR-derived story, and it matters more than the currency.
       - **DR treats archive clips as commercial "other business".** The

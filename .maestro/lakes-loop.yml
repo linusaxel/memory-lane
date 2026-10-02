@@ -22,10 +22,9 @@ appId: ${APP_ID}
       LNG: 12.5759
       LOCATION: inuse
 
-# F29: the map of what is locked comes first; Plan a walk opens F1.
-- tapOn: "Plan a walk"
+# F1: the planner is home and draws a walk at once.
 - extendedWaitUntil:
-    visible: "[0-9]+ stops? · .* loop"
+    visible: "[0-9]+ memor(y|ies) · .* loop"
     timeout: 40000
 
 # One way, ending where the map is tapped: anywhere near the start is within
@@ -37,7 +36,7 @@ appId: ${APP_ID}
     point: "50%,30%"
 - assertVisible: "Ends where you tapped"
 - extendedWaitUntil:
-    visible: "[0-9]+ stops? · [0-9.]+ k?m"
+    visible: "[0-9]+ memor(y|ies) · [0-9.]+ k?m"
     timeout: 40000
 - tapOn: "Loop"
 - assertNotVisible: "Ends where you tapped"
@@ -52,7 +51,7 @@ appId: ${APP_ID}
     text: "10 km"
     above: "Walk length"
 - extendedWaitUntil:
-    visible: "10 stops · .* loop"
+    visible: "10 memories · .* loop"
     timeout: 40000
 - assertVisible:
     id: "longest-walk"
@@ -67,7 +66,7 @@ appId: ${APP_ID}
       - tapOn: "Next walk"
       - waitForAnimationToEnd
 - assertVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
-- assertVisible: "[0-9]+ stops · .* loop"
+- assertVisible: "[0-9]+ memories · .* loop"
 - assertVisible: "Next walk"
 
 # Accepting is what registers the device, and with it the past walks.

@@ -8,6 +8,8 @@ once" pattern as unlock and report.
 import pytest
 from sqlalchemy import text
 
+from tests.conftest import on_walk
+
 pytestmark = pytest.mark.db
 
 LAT, LNG = 55.6759, 12.5655
@@ -129,7 +131,8 @@ def _mine(client):
     return client.get(f"/v1/me/memories?device={DEVICE}")
 
 
-def test_the_collection_says_which_ones_you_hearted(client, memory_id):
+def test_the_collection_says_which_ones_you_hearted(client, memory_id, db_session):
+    on_walk(db_session, DEVICE, memory_id)
     client.post(f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, "lat": LAT, "lng": LNG})
     assert _unlocks(client)[0]["hearted"] is False
     _heart(client, memory_id, device=OTHER_DEVICE)

@@ -19,7 +19,7 @@ appId: ${APP_ID}
       LNG: ${START_LNG}
       LOCATION: inuse
 
-# Add (bottom right) is there from the map on: filing needs no walk.
+# Add (top left, beside Journal) is there from the planner on: filing needs no walk.
 # One coordinate, taken from where the phone is. No field asks for it. The
 # text is something this flow can look for again once it sits in a list.
 - tapOn: "Add a memory here"
@@ -97,9 +97,8 @@ appId: ${APP_ID}
 - hideKeyboard
 - tapOn: "Close"
 
-# Back on the map, it is not a pin: the map shows only what is locked by
-# default (AccountMenu's MAP_SHOWS_DEFAULT), and what you filed is open. It
-# comes back in the journal below.
+# Back on the planner, it is not a pin: only the walk's stops are drawn, and
+# what you filed is open. It comes back in the journal below.
 - assertNotVisible: "The step by the ferry landing.*\\. (Unlocked, in your collection|Open)\\."
 
 # The tab says something came back before it is opened, and the row says what.

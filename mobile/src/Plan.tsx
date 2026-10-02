@@ -1,23 +1,21 @@
-/** A walk, drawn first and adjusted after. "Plan a walk" (F29) and a pin's
- *  "Walk here" both go straight to a walk on the map; the card under it holds
- *  the length and the shape, and any change redraws the walk. From "Walk here"
- *  every walk passes that memory, and the length starts at the shortest walk
- *  that reaches it. A one-way walk can end at a spot tapped on the map
- *  (EndPick), asked for per walk and stored nowhere. docs/10, "Draw first,
- *  adjust after".
+/** The planner, which is the home screen: a walk drawn on the map, and a
+ *  card listing what its memories are of, with the length and the shape.
+ *  Any change redraws the walk; ‹ › trade it for another. A one-way walk can
+ *  end at a spot tapped on the map (EndPick), asked for per walk and stored
+ *  nowhere. docs/10, "A walk planner, nothing else" and "Draw first, adjust
+ *  after".
  *
- *  The press that opened it is the location ask: a press with a reason, so the
- *  system dialog it may raise is never cold (UI.md, "Asking for location").
+ *  Opening it is the location ask: the card under the dialog says why
+ *  (UI.md, "Asking for location").
  *  Refused, the walk is planned from central Copenhagen and the card says so -
  *  never a dead end (rule 1).
  */
 
 import Slider from '@react-native-community/slider';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { WalkAsk } from './api.ts';
-import CloseButton from './CloseButton.tsx';
+import type { LocatedMemory, WalkAsk } from './api.ts';
 import Glyph from './Glyph.tsx';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
@@ -84,8 +82,9 @@ export function EndPick({ onCancel }: { onCancel: () => void }) {
 }
 
 type PreviewProps = {
-  /** Null until the first walk comes back. */
-  stops: number | null;
+  /** In walk order, locked: what each is of, never what it says. Null until
+   *  the first walk comes back. */
+  stops: LocatedMemory[] | null;
   meters: number;
   /** What the slider asked for. */
   km: number;
@@ -98,8 +97,8 @@ type PreviewProps = {
   onPickEnd: () => void;
   /** Planned from central Copenhagen because there was no position to plan from. */
   fallback: boolean;
-  /** "Walk here": the place on every walk shown, or null. */
-  through: string | null;
+  /** The location ask, a press with a reason; then the walk is planned again. */
+  onLocate: () => void;
   busy: boolean;
   error: string | null;
   onAccept: () => void;
@@ -112,7 +111,9 @@ type PreviewProps = {
   walkNumber: number;
   /** The asked length, when it had no walk and the card moved to the nearest. */
   emptyAt: number | null;
-  onMap: () => void;
+  /** Today's free walk is walked: the card offers the subscription instead. */
+  walkedOut: boolean;
+  onSubscribe: () => void;
 };
 
 /** One side of the pages; null keeps the side's space empty. */
@@ -143,7 +144,7 @@ export function Preview({
   floorKm,
   onPickEnd,
   fallback,
-  through,
+  onLocate,
   busy,
   error,
   onAccept,
@@ -151,7 +152,8 @@ export function Preview({
   onBack,
   walkNumber,
   emptyAt,
-  onMap,
+  walkedOut,
+  onSubscribe,
 }: PreviewProps) {
   // Said, not focused: the arrows keep VoiceOver where it is (WAI carousels).
   const stepped = useRef(false);
@@ -159,32 +161,48 @@ export function Preview({
     if (stepped.current) AccessibilityInfo.announceForAccessibility(`Walk ${walkNumber}`);
     stepped.current = true;
   }, [walkNumber]);
-  const found = stops != null && stops > 0;
+  if (walkedOut) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Today's walk is done</Text>
+        <Text style={styles.cardBody}>There's another tomorrow. Or subscribe for as many as you like.</Text>
+        <Pressable
+          style={dim(styles.primary)}
+          onPress={onSubscribe}
+          accessibilityRole="button"
+          testID="more-walks"
+        >
+          <Text style={styles.primaryText}>More walks</Text>
+        </Pressable>
+      </View>
+    );
+  }
+  const count = stops?.length ?? null;
+  const found = count != null && count > 0;
   const short = found && meters < ROUTE_FILL * km * 1000;
   const unreachable = floorKm > WALK_KM.max;
   // Up to the slider's grid, so a floor of 2.3 km does not shift every step.
   const min = Math.min(Math.ceil(Math.max(WALK_KM.min, floorKm) / WALK_KM.step) * WALK_KM.step, WALK_KM.max);
   return (
     <View style={styles.card}>
-      <Text style={[styles.cardTitle, styles.besideClose]}>
-        {through ? `A walk through ${through}` : 'A walk from here'}
-      </Text>
+      <Text style={styles.cardTitle}>A walk from here</Text>
       {/* Pages: the arrows flank what they change. A missing one keeps its
           space, so the line never shifts between walks. */}
       <View style={styles.pages}>
         {found && <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />}
         <Text
           style={[styles.cardBody, found && styles.paged]}
-          testID={stops === 0 ? 'no-walk' : undefined}
+          testID={count === 0 ? 'no-walk' : undefined}
         >
-          {stops == null
+          {count == null
             ? 'Finding a walk…'
-            : stops === 0
+            : count === 0
               ? `No walk within ${WALK_KM.max} km from here.`
-              : `${stops} ${stops === 1 ? 'stop' : 'stops'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
+              : `${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
         </Text>
         {found && <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />}
       </View>
+      {found && stops && <Stops stops={stops} />}
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
       )}
@@ -194,9 +212,19 @@ export function Preview({
         </Text>
       )}
       {fallback && (
-        <Text style={styles.cardBody} testID="planning-from-centre">
-          Planning from central Copenhagen. Turn on location to plan from where you are.
-        </Text>
+        <View style={styles.from}>
+          <Text style={[styles.cardBody, styles.grow]} testID="planning-from-centre">
+            Planning from central Copenhagen.
+          </Text>
+          <Pressable
+            style={dim([styles.secondary, button.small])}
+            onPress={onLocate}
+            accessibilityRole="button"
+            accessibilityHint="Plans the walk from where you are"
+          >
+            <Text style={styles.secondaryText}>Use my location</Text>
+          </Pressable>
+        </View>
       )}
       {unreachable ? (
         <Text style={styles.cardBody}>{`The nearest walk from here is over ${WALK_KM.max} km.`}</Text>
@@ -232,8 +260,46 @@ export function Preview({
         )}
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
-      <CloseButton place={styles.close} onPress={onMap} disabled={busy} label="Back to the map" />
     </View>
+  );
+}
+
+/** What the walk passes, in order: the place, when, whose story, a tag or
+ *  two. All of it is on a locked memory already (api/gate.py locked_memory). */
+function Stops({ stops }: { stops: LocatedMemory[] }) {
+  return (
+    <ScrollView style={styles.stops} testID="walk-stops">
+      {stops.map((memory, i) => {
+        const about = [
+          memory.year,
+          memory.source_name,
+          memory.tags
+            .slice(0, 2)
+            .map((tag) => `#${tag}`)
+            .join(' '),
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        return (
+          <View key={memory.id} style={styles.stop} accessible accessibilityLabel={`Stop ${i + 1}, ${memory.place.name}. ${about}`}>
+            <View style={styles.number}>
+              <Text style={styles.numberText}>{i + 1}</Text>
+            </View>
+            <View style={styles.stopText}>
+              <Text style={styles.stopName} numberOfLines={1}>
+                {memory.place.name}
+              </Text>
+              {about !== '' && (
+                <Text style={label} numberOfLines={1}>
+                  {about}
+                </Text>
+              )}
+            </View>
+            <Glyph name="lock.fill" size={13} color={color.inkFaint} />
+          </View>
+        );
+      })}
+    </ScrollView>
   );
 }
 
@@ -351,9 +417,15 @@ const styles = StyleSheet.create({
   },
   cardTitle: { ...font.display, fontSize: 23, lineHeight: 30, color: color.ink },
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
-  // Apple's close: top trailing on the card, on the title line (UI.md, rule 12).
-  close: { position: 'absolute', top: 20, right: 20 },
-  besideClose: { paddingRight: 36 },
+  from: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  grow: { flex: 1 },
+  // Four rows in view, the rest a scroll away: the map behind still shows the walk.
+  stops: { maxHeight: 4 * 52, flexGrow: 0 },
+  stop: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52 },
+  number: { width: 26, height: 26, borderRadius: 13, backgroundColor: color.ember, alignItems: 'center', justifyContent: 'center' },
+  numberText: { ...font.uiBold, fontSize: 13, color: color.paper },
+  stopText: { flex: 1, gap: 2 },
+  stopName: { ...font.uiBold, fontSize: 16, color: color.ink },
   pages: { flexDirection: 'row', alignItems: 'center' },
   paged: { flex: 1, textAlign: 'center' },
   // 44pt, Apple's smallest hit target.

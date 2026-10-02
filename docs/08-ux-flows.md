@@ -54,16 +54,16 @@ free number. F3 is still proposed and sits at the bottom.
 | F26 | Heart a memory | Implemented |
 | F27 | Keep a streak | Implemented |
 | F28 | Get notified near a memory | Implemented |
-| F29 | See what is locked around you | Implemented |
+| F29 | See what is locked around you | Removed from the app |
 | F30 | Finish a walk | Implemented |
 | F31 | Look back at a walk | Implemented |
 | F33 | Leave a note | Implemented |
 | F34 | End a walk | Implemented |
-| F35 | Buy keys, or subscribe | Implemented (no store yet) |
-| F36 | Choose your first memory | Implemented |
+| F35 | Subscribe for more walks | Implemented (no store yet) |
+| F36 | Choose your first memory | Removed from the app |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
-screen and F36's one card over the map — no carousel, no settings anybody
+screen, no map to browse — no carousel, no settings anybody
 has to change (the walk length is the preview card's one slider, part of F1,
 not a setting), no search in the app, no sharing, and no push notifications.
 Each of those is a thing a user does *not* do, and the list is worth as much
@@ -79,12 +79,11 @@ that is allowed to interrupt somebody who is not looking at it.
 Everything below is one of three sessions. If a flow does not belong to one of
 these, it is probably not a flow.
 
-**Session one — "what is this?"** The map of what is locked around you (F29),
-the keys at the top. Tap a pin and its peek offers **Open this one from here**:
-one opens from anywhere (F36), so the first story is one tap away. After that,
-a memory opens only where it stands: free on today's walk, a key anywhere else. **Plan a walk**, the ember pill bottom
-centre, draws a walk past a few (F1) and is where location is asked for (F8); decline
-it and the walk is planned from central Copenhagen instead (F9).
+**Session one — "what is this?"** The planner (F1): a walk drawn on the map
+and the list of what its memories are of, the keys at the top. Try another
+walk until the list appeals, then Start walk. A memory opens only on a walk,
+standing on it. The planner is where location is asked for (F8); decline it
+and the walk is planned from central Copenhagen instead (F9).
 
 **Session two — the first unlock.** The route pill says where the next stop is
 (F25) and the line on the map is the way there. You arrive, the pin turns
@@ -108,13 +107,13 @@ out, and on a new phone.
 because nothing is reachable before it (docs/10, *Sign-in comes first*).
 
 1. The logo lands (StartupLogo) and the page grows around it: the name, one line
-   ("The corner you pass every day has a story. Walk there to read it."), Apple's
+   ("A walk planner with memories along the way. One walk a day, free."), Apple's
    own control and Continue with Google. Nothing else — no carousel, no email
    field, no password, no magic link.
 2. The provider's sheet, then back. The app sends the ID token it was given and
    is told who that makes it.
-3. The map of what is locked around you (F29). Its **Plan a walk** draws a
-   walk (F1), and that press is where location is asked for (F8).
+3. The planner (F1), which draws a walk at once and is where location is
+   asked for (F8).
 4. On a new phone: sign in, and the collection is there.
 
 Signing out (the map's ⚙ → Account) lands back on this screen.
@@ -168,37 +167,37 @@ somebody can hand their old phone in and still have everything they walked for.
 
 ## F1 · Plan today's walk — **Implemented**
 
-**Who:** someone who opened the app and has not accepted a walk today.
+**Who:** anyone signed in without a walk in progress. The planner is home:
+every launch without one lands here (docs/10, *A walk planner, nothing else*).
 
-1. **Plan a walk** on the map (F29), or **Walk here** on a pin's peek, draws a
-   walk at once: no question first (docs/10, *Draw first, adjust after*). The
-   press asks for location if it has to (F8), then `GET /v1/routes/preview`
-   with that position, the length in metres, `loop` and the pin's `include`.
-   The preview stores nothing.
+1. The app draws a walk at once: no question first (docs/10, *Draw first,
+   adjust after*). It asks for location if it has to (F8), then
+   `GET /v1/routes/preview` with that position, the length in metres and
+   `loop`. The preview stores nothing.
 2. The preview is the map, fitted to the start and every stop
    (`fitToCoordinates`), with the stops numbered and the loop drawn. Preview
    pins do not open: it is a look, not a walk. The card (`mobile/src/Plan.tsx`)
-   reads "A walk from here", then "4 stops · 3.8 km loop", then the length:
+   reads "A walk from here", then "4 memories · 3.8 km loop" between ‹ ›
+   (another walk, F32), then **the list**: each stop numbered in walk order,
+   its place, and year · source · two #tags, with a padlock; four rows in
+   view, the rest a scroll away. All of it is what a locked memory already
+   says (docs/10, *A locked memory says what it is*). Then the length:
    one slider, 1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`), about one
    stop a km. Under it **Loop** or **One way**. No theme: tags are open since
    2026-09-26 (docs/10, *Tags come from the text*). One way adds **Pick where
    it ends**: the map, a card saying to tap it, and the tap is the end ("Ends
    where you tapped"; a second tap lets it go), with the slider at least the
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
-   slider only on release. The × returns to the map.
-   From **Walk here**, every walk passes that pin: the card reads "A walk
-   through Blågårdsgade", and the length starts at the shortest walk that
-   reaches it, twice the crow's distance (×1.3 on a loop, for the streets and
-   the way back; `walkFloorKm` in `src/region.ts`). It has its own length:
-   Plan a walk's is left alone. Next walk never drops the pin.
+   slider only on release. There is nothing to close back to. Journal is top
+   left and the keys top centre.
 3. **Start walk** is `POST /v1/routes/today` with the same position, length and
    loop, and lands on the walk (F25).
 
 **Accepting starts the walk.** It stands until it is ended (F34). One a day:
-another the same day needs a subscription, unless the first opened nothing,
-and is otherwise refused with "Today's walk is done. There's another tomorrow."
-(docs/10, *Keys open a lock, and today's walk is free*). A relaunch after accepting skips this
-page and goes straight to the walk.
+another the same day needs a subscription, unless the first opened nothing.
+Walked out, the card reads "Today's walk is done", "There's another tomorrow.
+Or subscribe for as many as you like." and **More walks** opens the paywall
+(F35). A relaunch after accepting skips this page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length — the card moves the
 slider up to the nearest length that has a walk and says "Nothing at 4 km; this
@@ -208,15 +207,10 @@ out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
 the ask (`ROUTE_FILL`) adds "That's the longest walk from here." No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
 unreachable — the card says "Can't reach Memory Lane right now." under the
-button, and any change retries. From Walk here: the streets are longer than
-the estimate, and the server's shortest length lifts the slider and the walk
-is drawn again at it; further than 10 km reaches, "The nearest walk from
-here is over 10 km." and no button; the pin can no longer be a stop (earned,
-hidden), "That memory can't be on a walk from here." and the plan goes on
-without it.
+button, and any change retries.
 
-**Done when:** Plan a walk shows a whole walk on the map, a change to the card
-redraws it, and Accept makes it today's.
+**Done when:** launch shows a whole walk on the map and its list, a change to
+the card redraws both, and Start walk makes it today's.
 
 ## F2 · Read one memory and go to its source — **Implemented**
 
@@ -291,7 +285,7 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
    into a seal-coloured ring, and a big lock comes up low on the map, above
-   Plan a walk and Add, with the place and its year or source under it. No
+   the walk card and Add, with the place and its year or source under it. No
    sheet opens first. With two in reach it is the route stop's first, and ‹ ›
    beside the place (or tapping the other pin) points it at another.
 3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
@@ -305,11 +299,10 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 6. The journal works with no network and no position: it renders from what the
    device stored, so a memory you walked to is readable on the train home.
 
-**One opens from anywhere, once:** the first run's pick (F36), from a pin's
-peek, **Open this one from here**. Otherwise standing on it opens it: for
-nothing on today's walk or for a subscriber, for a key anywhere else. The top
-of the map says what is left, "3 keys", and a tap counts steps again (F35, and
-docs/10, "Keys open a lock, and today's walk is free").
+**Only on a walk:** only a stop of the walk in progress opens, and only
+standing on it; nothing else is drawn, so nothing else can be stood on. The
+top of the map says the keys earned, "3 keys", and a tap counts steps again
+(docs/10, "A walk planner, nothing else").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -435,10 +428,10 @@ mechanic.
 
 **Who:** somebody on their first launch, who has not been asked yet.
 
-1. They have signed in (F22), looked at the map (F29, centred on central
-   Copenhagen until there is a position). Nothing has been asked.
-2. **Plan a walk** (or a pin's **Walk here**) is the ask: walks start from
-   where you are. The system dialog comes from that press, never from launch.
+1. They have signed in (F22). Nothing has been asked.
+2. The planner opening is the ask: walks start from where you are, and the
+   card under the dialog says "Finding a walk…". Since 2026-10-03 the planner
+   is home, so this comes straight after sign-in rather than from a press.
 3. Granted → the walk is planned from here. Declined → planned from central Copenhagen
    (F9).
 
@@ -454,8 +447,8 @@ away.
 central Copenhagen without a dialog; on the walk, **Turn on location** opens Settings,
 which is the only route back.
 
-**Done when:** after F22, a first launch shows the map and no system
-dialog, and Plan a walk or Walk here is the only thing that can raise one.
+**Done when:** after F22, the planner is the only thing that raises the
+dialog.
 
 ## F9 · Use the app without location — **Implemented**
 
@@ -584,9 +577,8 @@ is too late.
 
 ## F18 · Stand somewhere with nothing in it — **Removed from the app**
 
-"No memories here yet" was the old nearby map's empty state. The map before a
-walk (F29) just draws no pins, and Plan a walk leads to the preview's "No walk
-that long from here" (F1).
+"No memories here yet" was the old nearby map's empty state. The planner says
+"No walk within 10 km from here." (F1).
 
 ## F19 · Be somewhere else entirely — **Removed from the app**
 
@@ -957,40 +949,12 @@ prove it.
 
 ---
 
-## F29 · See what is locked around you — **Implemented**
+## F29 · See what is locked around you — **Removed from the app**
 
-**Who:** somebody signed in who has not accepted a walk today. Every launch
-before an accept lands here; an accepted walk opens on the walk (F25).
-
-1. The map, centred on you, or on central Copenhagen with no position. The
-   pins are the memories within 5 km (`MAP_RADIUS_KM`, half the longest
-   walk), from `/v1/memories/nearby`, fetched on arriving and again when a
-   position first comes, locked and opened both. The menu under your photo
-   top right (`src/AccountMenu.tsx`) shows only the locked by default (what you
-   opened is in the Journal), or all of them, or only the unlocked; a locked memory is an ember padlock, an opened one the same
-   padlock open and paper (mobile/UI.md, One pin).
-   The map refetches when you file, edit or delete one.
-2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
-   who it is from ("From" a source, "Left by" a person, with a glyph), its
-   #tags, then the approach ring beside the distance with year · hearts and what
-   is waiting, **Open this one from here** while the welcome one lasts (F36),
-   and **Walk here**, which draws a walk through that pin (F1).
-   Standing on it, the peek gives way to the ring over the map (F7).
-3. **Plan a walk**, the ember pill bottom centre, between Add and Center on me,
-   draws a walk (F1).
-
-The peek is a look, not a read: the summary never reaches the phone locked, and
-the peek draws nothing in its place. docs/10, "A locked memory says what it is,
-not what it says".
-
-Until 2026-09-26 this flow was removed: a map of every memory under the
-viewport, where nothing opened, made the corpus a thing to browse and to
-"complete". Locked pins cannot be read, so that rule survives: see docs/10, "A
-map of what is locked, and only today's walk unlocks". Since 2026-09-30 any of
-them opens when you stand on it, for a key (docs/10, "Keys open a lock, and
-today's walk is free").
-
-`App.tsx` (`stage === 'map'`, `fetchNearby`), `src/MemorySheet.tsx` (`onWalkHere`).
+Removed 2026-10-03: there is no map of what is locked, and no peek of a pin
+that is not on your walk. The planner's list (F1) is the one look at what is
+locked, and only at the stops of a walk. docs/10, "A walk planner, nothing
+else".
 
 ## F30 · Finish a walk — **Implemented**
 
@@ -1024,12 +988,12 @@ already walked and another in mind.
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
    haven't reached will lock again. Anything you've unlocked stays unlocked.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.
-3. Ended, the map of what is locked comes back (F29) with **Plan a walk**.
-   Another walk the same day is only for a subscriber, or when the ended one
-   opened nothing.
+3. Ended, the planner comes back (F1). Another walk the same day is only for
+   a subscriber, or when the ended one opened nothing; otherwise it offers
+   **More walks** (F35).
 
 The ended walk stays in the journal (F31) with what it earned, and still counts
-for the streak (F27). A walk that earned nothing is deleted as it ends. Its unearned stops are no longer free: they cost a key, like any pin.
+for the streak (F27). A walk that earned nothing is deleted as it ends. Its unearned stops lock again until a walk passes them.
 Offline, the card says "Can't reach Memory Lane right now." and the walk goes on.
 
 `App.tsx` (`endWalk`, `confirmEnd`), `src/Plan.tsx` (`EndWalk`),
@@ -1119,64 +1083,38 @@ note fails to send: "That didn't send. Try again.", the draft kept.
 replaces the first, the author can remove it, and a device that never unlocked
 it gets 403 from both routes. `tests/test_api_notes.py`.
 
-## F35 · Buy keys, or subscribe — **Implemented** (no store yet: TODO.md S6)
+## F35 · Subscribe for more walks — **Implemented** (no store yet: TODO.md S6)
 
-**Who:** a free account standing on a pin off today's walk with its welcome
-unlock spent and no keys. **Trigger:** **Open for …** or **Get keys** under the
-faded lock, a hold refused `no_keys` (a stale balance), or **Subscribe** in
-Settings.
+**Who:** a free account that walked today. **Trigger:** **More walks** on the
+planner once today's walk is walked (F1), or **Subscribe** in Settings.
 
-1. On the map, anyone standing on a locked pin gets the lock, walk or no walk.
-   It says nothing about the price; the top pill does.
-2. Out of keys there is no ring to hold: the lock is the faded approach ring,
-   over "Out of keys" and **Open for** the store's price of one key, which buys
-   it and opens the memory. With no key product (the simulator), **Get keys**
-   opens the paywall instead. The pin stays ember. The top pill says "0 keys"
-   over "Free on today's walk". If the server still refuses a hold it says
-   "Out of keys." and the paywall opens (`src/Paywall.tsx`): "Open any memory
-   you stand on", key packs at the store's price, then monthly and yearly,
-   **Restore purchases**, Terms and Privacy, and **Not now**.
-3. A purchase or a restore asks the server to read the store back
-   (`POST /v1/me/subscription`); only its answer opens anything. The sheet
-   closes when it says subscribed, or when there are more keys than before.
-4. A subscriber's hold spends nothing. Settings shows "Subscribed until …" and
-   **Manage subscription**; signed in and not subscribed, **Subscribe**.
+1. The paywall (`src/Paywall.tsx`): "More than one walk a day", monthly and
+   yearly at the store's price, **Restore purchases**, Terms and Privacy, and
+   **Not now**.
+2. A purchase or a restore asks the server to read the store back
+   (`POST /v1/me/subscription`); only its answer counts. The sheet closes when
+   it says subscribed, and the planner plans again.
+3. Settings shows "Subscribed until …" and **Manage subscription**; signed in
+   and not subscribed, **Subscribe**.
 
-Keys come from finishing a walk (one a day) and from the store, and never
-expire.
+Keys are not sold: one comes from finishing a walk, once a day.
 
-**Why:** [Keys open a lock, and today's walk is free](10-decisions.md#keys-open-a-lock-and-todays-walk-is-free)
+**Why:** [A walk planner, nothing else](10-decisions.md#a-walk-planner-nothing-else)
 and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it-our-table-decides).
 
-**Failure:** no RevenueCat key or no offerings (the simulator, e2e): "Keys
-aren't available right now.", "Subscriptions aren't available right now." and
-**Not now**. The person backs out of the store's sheet: nothing is said.
-Anything else: "That didn't go through. Try again." A purchase the server
-cannot find: "Nothing bought on this account yet."
+**Failure:** no RevenueCat key or no offerings (the simulator, e2e):
+"Subscriptions aren't available right now." and **Not now**. The person backs
+out of the store's sheet: nothing is said. Anything else: "That didn't go
+through. Try again." A purchase the server cannot find: "Nothing bought on
+this account yet."
 
-**Done when:** `.maestro/subscribe-when-out-of-keys.yml` passes, and
-`tests/test_api_billing.py` and `tests/test_api_unlocks.py`.
+**Done when:** `.maestro/subscribe-when-walked-out.yml` passes, and
+`tests/test_api_billing.py` and `tests/test_api_routes.py`.
 
-## F36 · Choose your first memory — **Implemented**
+## F36 · Choose your first memory — **Removed from the app**
 
-**Who:** a new account, most likely at home in bed. **Trigger:** the map, while
-`welcome_unlocks > 0`.
-
-1. A card over the map (`src/FirstPick.tsx`): "Choose one to open from here.
-   The rest open when you stand on them." Without a position it offers **Show
-   the ones near me**, which is what asks for location (F8); until then the
-   three are around the map's centre.
-2. Three locked memories near you, most hearted first, then nearest: each its
-   place, year and distance. A row opens that pin's peek.
-3. The peek's **Open this one from here** spends the welcome unlock and opens
-   the story. The card is gone for good; every one after opens on its spot.
-
-**Why:** [Pick one to start, then where you stand](10-decisions.md#pick-one-to-start-then-where-you-stand).
-
-**Failure:** nothing locked within the map's 5 km: no card, and the welcome
-unlock waits for the first pin stood on with no keys.
-
-**Done when:** `.maestro/first-run.yml` passes, and `tests/test_api_unlocks.py`.
+Removed 2026-10-03 with the welcome unlock: the first memory opens on the
+first walk, like every other. docs/10, "A walk planner, nothing else".
 
 ## Proposed
 

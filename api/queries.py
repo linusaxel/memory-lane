@@ -484,19 +484,6 @@ EARNED_QUERY = f"""
     )
 """
 
-# Pay for one unlock: the welcome one, or a key. Each is one conditional
-# UPDATE, so neither can overspend however the unlocks race.
-SPEND_WELCOME_UNLOCK = """
-    UPDATE users SET free_used = free_used + 1
-    WHERE id = CAST(:user_id AS uuid) AND free_used < :welcome
-    RETURNING id
-"""
-SPEND_KEY = """
-    UPDATE users SET keys = keys - 1
-    WHERE id = CAST(:user_id AS uuid) AND keys >= 1
-    RETURNING id
-"""
-
 # Is this memory a stop of today's walk in progress, on any of this account's
 # devices? Standing on one opens it for nothing (docs/10, "Keys open a lock,
 # and today's walk is free"). An ended walk's stops cost a key again.
@@ -553,7 +540,7 @@ CREDIT_STEPS = """
 """
 
 # Is this device's account paid up? A device with no account never is. Only
-# the store's webhook writes the row (docs/10, "A subscription opens the map").
+# the store's webhook writes the row (docs/10, "A walk planner, nothing else").
 SUBSCRIBED_QUERY = """
     SELECT EXISTS (
         SELECT 1 FROM subscriptions s JOIN devices d ON d.user_id = s.user_id
@@ -583,11 +570,9 @@ WHERE
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
--- The included memory first, so the pool limit, one-per-place and the spread
--- all keep it; its absence from the top means it may not be a stop. A stack's
--- memories share one distance; the id makes which one stands for the place
--- the same on every call, so a preview and its accept agree.
-ORDER BY COALESCE(m.id = CAST(:include AS integer), false) DESC, distance_meters ASC, m.id ASC
+-- A stack's memories share one distance; the id makes which one stands for
+-- the place the same on every call, so a preview and its accept agree.
+ORDER BY distance_meters ASC, m.id ASC
 LIMIT :limit
 """
 

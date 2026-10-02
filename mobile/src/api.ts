@@ -190,30 +190,9 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
   }
 }
 
-/** What the map draws before a walk: the locked memories around you. No
- *  position goes with this, so nothing unlocks from here. */
-export async function fetchNearby(
-  at: Coordinates,
-  radiusKm: number,
-  device: string | null,
-  signal?: AbortSignal,
-): Promise<LocatedMemory[]> {
-  const params = new URLSearchParams({
-    lat: String(at.lat),
-    lng: String(at.lng),
-    radius_km: String(radiusKm),
-    limit: '100',
-  });
-  // Only so the server can leave out whoever this account blocked.
-  if (device) params.set('device', device);
-  const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
-  // A null-coordinate marker crashes react-native-maps (UI.md rule 5).
-  return (body.memories ?? []).filter(hasCoordinates);
-}
-
 /** Open one memory, and record that it opened. The server re-checks the
  *  distance and can still say no, so a result that comes back still locked is a
- *  refusal - not a success. With no position, only a free unlock can open it. */
+ *  refusal - not a success. Only a stop of today's walk, stood on, opens. */
 export async function unlockMemory(
   id: number,
   at: Coordinates | null,
@@ -378,26 +357,13 @@ export async function fetchTodaysRoute(
  *  where a one-way walk finishes; the server stores it nowhere. */
 export type WalkAsk = { loop: boolean; end: Coordinates | null };
 
-/** Why a walk was refused: too short to reach `include` (and the length that
- *  would), or `include` cannot be a stop at all. Null for anything else. */
-export function walkHereRefusal(
-  e: unknown,
-): { reason: 'too_far'; min_budget_meters: number } | { reason: 'not_a_stop' } | null {
-  const detail = (e as ApiError)?.detail as { reason?: string } | undefined;
-  return detail?.reason === 'too_far' || detail?.reason === 'not_a_stop'
-    ? (detail as ReturnType<typeof walkHereRefusal>)
-    : null;
-}
-
-/** The walk a `budgetMeters` walk from `at` would be. Stores nothing.
- *  `include` is "Walk here": a memory every walk passes. */
+/** The walk a `budgetMeters` walk from `at` would be. Stores nothing. */
 export async function previewRoute(
   device: string,
   at: Coordinates,
   budgetMeters: number,
   ask: WalkAsk,
   again: number,
-  include: number | null,
   signal?: AbortSignal,
 ): Promise<TodaysRoute> {
   const params = new URLSearchParams({
@@ -408,7 +374,6 @@ export async function previewRoute(
     loop: String(ask.loop),
     again: String(again),
   });
-  if (include !== null) params.set('include', String(include));
   if (ask.end) {
     params.set('end_lat', String(ask.end.lat));
     params.set('end_lng', String(ask.end.lng));
@@ -424,7 +389,6 @@ export async function acceptRoute(
   budgetMeters: number,
   ask: WalkAsk,
   again: number,
-  include: number | null,
 ): Promise<TodaysRoute> {
   return toRoute(
     await post<RouteBody>('/v1/routes/today', {
@@ -434,7 +398,6 @@ export async function acceptRoute(
       budget_meters: budgetMeters,
       loop: ask.loop,
       again,
-      include,
       end: ask.end,
     }),
   );
@@ -521,14 +484,12 @@ export type Profile = {
   /** Which sign-ins are attached, oldest first. Empty means this is still just
    *  a device: everything works, but a new phone would start empty. */
   providers: ('google' | 'apple')[];
-  /** Paid up now: any pin stood on opens without spending a key. */
+  /** Paid up now: as many walks a day as they like. */
   subscribed: boolean;
   /** When it ends or ended, UTC without a zone; null if never subscribed. */
   subscribed_until: string | null;
-  /** The welcome unlock left, once per account, from anywhere; then a key
-   *  each, standing there, and today's walk for nothing (docs/10, "Keys open a
-   *  lock, and today's walk is free"). */
-  welcome_unlocks: number;
+  /** One per finished walk; they open nothing yet (docs/10, "A walk
+   *  planner, nothing else"). */
   keys: number;
   /** Every step counted, for the journal. Buys nothing. */
   steps: number;
@@ -550,7 +511,7 @@ export async function fetchProfile(device: string, signal?: AbortSignal): Promis
   return get<Profile>('/v1/me', new URLSearchParams({ device }), signal);
 }
 
-/** Ask the server to read this account's subscription and keys back from the
+/** Ask the server to read this account's subscription back from the
  *  store, straight after a purchase or a restore, rather than wait for the
  *  webhook. */
 export async function refreshSubscription(device: string): Promise<Profile> {
@@ -566,11 +527,6 @@ export async function creditSteps(device: string, since: string, steps: number):
 /** __DEV__ only: a free key, from an endpoint the public host lacks. */
 export async function devKeys(device: string): Promise<Profile> {
   return post<Profile>(`/v1/dev/keys?${new URLSearchParams({ device })}`, {});
-}
-
-/** An unlock refused for want of a key: the paywall's cue. */
-export function outOfKeys(e: unknown): boolean {
-  return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'no_keys';
 }
 
 /** A walk refused because today's is already walked (one a day, bar a

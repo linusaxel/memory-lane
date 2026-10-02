@@ -263,7 +263,7 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
         <LogoTile size={120} />
         <Text style={styles.title}>Memory Lane</Text>
         <Text style={styles.tagline}>
-          The corner you pass every day has a story. Walk there to read it.
+          A walk planner with memories along the way. One walk a day, free.
         </Text>
       </View>
 

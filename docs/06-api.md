@@ -17,34 +17,29 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
     or null), `happened_at` with `happened_precision`, and `contrast_note`
 - `POST /v1/memories/{id}/unlock` `{device, lat?, lng?}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
-  The account's one welcome unlock opens it from anywhere, position or not.
-  Standing on it, a subscriber or a stop of today's walk pays nothing; anyone
-  else spends a key, then the welcome one. Away from it, with that spent, it
-  answers the locked memory and its distance. Opening one this account already
-  has costs nothing. 403 `{reason: "no_keys", keys: 0}` standing there with
-  nothing to spend. Finishing today's walk with it credits a key, once a day
-  (docs/10, "Keys open a lock, and today's walk is free")
+  Only a stop of the walk in progress opens, and only standing on it; away
+  from it, it answers the locked memory and its distance. Opening one this
+  account already has always works. 403 `{reason: "not_on_walk"}` standing on
+  anything else, subscriber or not. Finishing today's walk with it credits a
+  key, once a day (docs/10, "A walk planner, nothing else")
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked.
   Each says `hearted`: this account hearted it, for the journal's Hearted filter
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
   of that length from there would be: about one stop a km. Stores nothing.
   `budget_meters` is 1000–10000; `loop` defaults to `ROUTE_LOOP`; `again` is "Show me
-  another" (F32), another walk as good; `include=<memory_id>` is "Walk here",
-  a memory every walk passes. 422 with
-  `detail: {reason: "not_a_stop"}` when it could not be a stop, or
-  `{reason: "too_far", min_budget_meters}` when the streets there are longer
-  than this walk. `end_lat` and `end_lng`, together, are where a one-way walk
-  finishes (it makes the walk one-way, and is stored nowhere); the same
-  `too_far` when this walk cannot reach it. 403 `{reason: "walked_today"}` when
+  another" (F32), another walk as good. `end_lat` and `end_lng`, together, are
+  where a one-way walk finishes (it makes the walk one-way, and is stored
+  nowhere); 422 `{reason: "too_far", min_budget_meters}` when this walk cannot
+  reach it. 403 `{reason: "walked_today"}` when
   the account already walked today and is not subscribed
-- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, include?, end?}` - accept it. The
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, end?}` - accept it. The
   same solve, stored; one a day per account (403 `walked_today`, bar a
   subscriber), one in progress per device, and a second accept gets that walk
-  back until it is ended. The only stop id the client ever sends is `include`, vetted
+  back until it is ended. The client never names a stop
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;
   204, and 204 again with nothing to end. A walk that opened something stays
   in `walked`; one that opened nothing is deleted. Its unearned stops lock
-  again (to a key), and another can be accepted if it opened nothing or the
+  again, and another can be accepted if it opened nothing or the
   account is subscribed
 - `GET /v1/routes/today?device=UUID` - today's walk in progress, or 404. Only reads
 - `GET /v1/routes/walked?device=UUID` - every walk the account took that
@@ -86,7 +81,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, `subscribed` /
-  `subscribed_until`, and what unlocks spend: `welcome_unlocks` and `keys`.
+  `subscribed_until`, and `keys`, one per finished walk.
   `steps` is every step counted, for the journal, and `steps_counted_until`
   where the next count starts. `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.
@@ -116,13 +111,12 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
 - `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
   there is no token to revoke
 - `POST /v1/me/subscription` `{device}` - read this account's subscription
-  and key packs back from RevenueCat now and return the `Profile`
-  (`subscribed`, `subscribed_until`, `keys`). Each pack is credited once, by
-  its transaction id. The app calls it after a purchase or a restore. 503
+  back from RevenueCat now and return the `Profile` (`subscribed`,
+  `subscribed_until`). The app calls it after a purchase or a restore. 503
   without `REVENUECAT_API_KEY`
 - `POST /v1/billing/revenuecat` - RevenueCat's webhook, `Authorization: Bearer
   <REVENUECAT_WEBHOOK_SECRET>`. 401 on a wrong secret, 503 without one. Any
-  event re-reads that subscriber, keys included; an unknown `app_user_id` is
+  event re-reads that subscriber; an unknown `app_user_id` is
   200 and ignored
 - `GET /v1/places/nearby?lat=X&lng=Y&radius_km=10` - Get places with memory counts
 - `GET /v1/stats` - Database statistics

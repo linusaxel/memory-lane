@@ -133,32 +133,13 @@ def test_absorbing_an_anonymous_user_keeps_the_longer_subscription(db_session):
     assert [(u, e.year) for u, e in rows] == [(new, 2099)]
 
 
-def test_a_key_pack_is_credited_once(client, db_session, revenuecat):
-    device, user = _account(db_session)
-    bought[user] = {
-        "keys_5": [{"id": "t1"}],
-        "keys_1": [{"id": "t2"}],
-        "something_else": [{"id": "t3"}],
-    }
-    assert client.post("/v1/me/subscription", json={"device": device}).json()["keys"] == 6
-    assert _event(client, user).status_code == 200
-    assert _me(client, device)["keys"] == 6, "a webhook after the read-back adds nothing"
-
-    bought[user]["keys_15"] = [{"id": "t4"}]
-    _event(client, user)
-    assert _me(client, device)["keys"] == 21
-
-
 def test_absorbing_an_anonymous_user_keeps_its_keys(db_session):
     _, old = _account(db_session)
     _, new = _account(db_session)
     db_session.execute(text("UPDATE users SET keys = 3 WHERE id = CAST(:u AS uuid)"), {"u": old})
     db_session.execute(text("UPDATE users SET keys = 2 WHERE id = CAST(:u AS uuid)"), {"u": new})
-    billing.credit_keys(db_session, old, [("t1", 5)])
     accounts.absorb(db_session, old, new)
     keys = db_session.execute(
         text("SELECT keys FROM users WHERE id = CAST(:u AS uuid)"), {"u": new}
     ).scalar()
-    assert keys == 10
-    owner = db_session.execute(text("SELECT user_id::text FROM key_purchases")).scalar()
-    assert owner == new, "the pack moves with them, so it is never credited twice"
+    assert keys == 5

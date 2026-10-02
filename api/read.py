@@ -392,9 +392,9 @@ def _route_response(
 
 
 def _refuse_second_walk(session, device: str, route_date) -> None:
-    """One walk a day per account; a subscriber has no limit (docs/10, "Keys
-    open a lock, and today's walk is free"). A walk's stops are free, so
-    without it Walk here and End walk open any pin on the map for nothing."""
+    """One walk a day per account; a subscriber has no limit (docs/10, "A walk
+    planner, nothing else"). A walk's stops are the only thing that opens, so
+    without it End walk and plan again would open any memory for nothing."""
     if UNLIMITED_WALKS:
         return
     binds = {"device_id": device, "today": route_date}
@@ -416,7 +416,6 @@ def preview_route(
     budget_meters: int = Query(..., ge=ROUTE_BUDGET_MIN_METERS, le=ROUTE_BUDGET_MAX_METERS),
     loop: bool = Query(ROUTE_LOOP),
     again: int = Query(0, ge=0, le=ROUTE_AGAIN_MAX),
-    include: int | None = Query(None, ge=1),
     end_lat: float | None = Query(None, ge=-90, le=90),
     end_lng: float | None = Query(None, ge=-180, le=180),
 ):
@@ -439,7 +438,6 @@ def preview_route(
             route_date,
             loop,
             again,
-            include,
             end,
         )
     return _route_response(
@@ -475,7 +473,6 @@ def accept_route(body: RouteRequest):
                 route_date,
                 loop,
                 body.again,
-                body.include,
                 body.end,
             )
             if not picked:

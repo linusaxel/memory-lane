@@ -259,8 +259,6 @@ class RouteRequest(BaseModel):
     loop: bool | None = None
     # Times "Show me another" was tapped. The accept sends the preview's.
     again: int = Field(0, ge=0, le=ROUTE_AGAIN_MAX)
-    # A memory the walk must pass ("Walk here"). The accept sends the preview's.
-    include: int | None = Field(None, ge=1)
     # Where a one-way walk finishes; it makes the walk one-way. Never stored.
     end: Coordinates | None = None
 
@@ -308,10 +306,6 @@ class MyMemoriesResponse(BaseModel):
     meta: MyMemoriesMeta
 
 
-# docs/10, "Pick one to start, then where you stand".
-WELCOME_UNLOCKS = 1
-
-
 class Profile(BaseModel):
     """What this device is, to the extent it is anybody.
 
@@ -334,15 +328,13 @@ class Profile(BaseModel):
     # still only a device: everything works, but a new phone starts empty.
     providers: list[str] = []
     # Paid up now, and until when (naive UTC). A lapsed subscription keeps its
-    # date and reads subscribed=false. docs/10, "A subscription opens the map".
+    # date and reads subscribed=false. docs/10, "A walk planner, nothing else".
     subscribed: bool = False
     subscribed_until: datetime | None = None
-    # What opens memories: welcome_unlocks left, once per account, from
-    # anywhere, then a key each, standing there; today's walk opens for
-    # nothing. Steps are a lifetime total for the journal and buy nothing,
-    # counted from steps_counted_until (naive UTC), null until there is a user
-    # row. docs/10, "Keys open a lock, and today's walk is free".
-    welcome_unlocks: int = WELCOME_UNLOCKS
+    # Keys are earned, one per finished walk, and open nothing yet. Steps are
+    # a lifetime total for the journal and buy nothing, counted from
+    # steps_counted_until (naive UTC), null until there is a user row.
+    # docs/10, "A walk planner, nothing else".
     keys: int = 0
     steps: int = 0
     steps_counted_until: datetime | None = None

@@ -15,8 +15,7 @@ a punishment for leaving.
 import pytest
 from sqlalchemy import text
 
-from api.gate import today
-from tests.conftest import give_keys, spend_welcome
+from tests.conftest import give_keys, on_walk
 
 pytestmark = pytest.mark.db
 
@@ -56,6 +55,8 @@ def memory_id(db_session):
         {"p": place, "c": content},
     ).scalar()
     db_session.commit()
+    give_keys(db_session, DEVICE, 0)
+    on_walk(db_session, DEVICE, memory)
     return memory
 
 
@@ -77,7 +78,6 @@ def test_standing_there_returns_the_memory_and_records_it(client, memory_id, db_
 
 def test_a_refused_unlock_records_nothing(client, memory_id, db_session):
     """The write is downstream of the gate, not beside it."""
-    spend_welcome(db_session, DEVICE)
     refused = _unlock(client, memory_id, lat=FAR_LAT)
     assert refused["locked"] is True
     assert refused["summary"] == ""
@@ -142,9 +142,8 @@ def _press(client, memory_id):
     )
 
 
-def _balance(client, device=DEVICE):
-    me = client.get(f"/v1/me?device={device}").json()
-    return me["welcome_unlocks"], me["keys"]
+def _keys(client, device=DEVICE):
+    return client.get(f"/v1/me?device={device}").json()["keys"]
 
 
 def _subscribe(db_session, device=DEVICE):
@@ -159,88 +158,52 @@ def _subscribe(db_session, device=DEVICE):
     db_session.commit()
 
 
-def _on_todays_walk(db_session, memory_id, device=DEVICE):
-    db_session.execute(
-        text(
-            "INSERT INTO daily_routes (device_id, route_date, memory_ids) "
-            "VALUES (CAST(:d AS uuid), :today, ARRAY[CAST(:m AS integer)])"
-        ),
-        {"d": device, "today": today(), "m": memory_id},
+def test_only_a_stop_of_todays_walk_opens(client, memory_id, db_session):
+    """docs/10, "A walk planner, nothing else": standing on a memory that is
+    not a stop of the walk in progress opens nothing, keys or no keys."""
+    (off_walk,) = _memories(db_session, 1)
+    give_keys(db_session, DEVICE, 3)
+    refused = client.post(
+        f"/v1/memories/{off_walk}/unlock",
+        json={"device": DEVICE, "lat": LAT + 0.001, "lng": LNG},
     )
-    db_session.commit()
-
-
-def test_one_to_start_opens_from_anywhere(client, memory_id, db_session):
-    """docs/10, "Pick one to start, then where you stand"."""
-    first, second = [memory_id, *_memories(db_session, 1)]
-    opened = _unlock(client, first, lat=None, lng=None)
-    assert opened["locked"] is False
-    assert opened["summary"]
-    assert _balance(client) == (0, 0)
-
-    far = _unlock(client, second, lat=FAR_LAT)
-    assert far["locked"] is True, "the welcome one is spent, and not standing there"
-    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 1
-
-
-def test_after_the_welcome_one_a_key_standing_there(client, memory_id, db_session):
-    """docs/10, "Keys open a lock, and today's walk is free"."""
-    spend_welcome(db_session, DEVICE)
-    refused = _press(client, memory_id)
     assert refused.status_code == 403
-    assert refused.json()["detail"] == {"reason": "no_keys", "keys": 0}
+    assert refused.json()["detail"] == {"reason": "not_on_walk"}
+    assert _keys(client) == 3
     assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
 
-    give_keys(db_session, DEVICE, 2)
-    assert _press(client, memory_id).status_code == 200
-    assert _balance(client) == (0, 1)
+
+def test_nothing_opens_from_afar(client, memory_id, db_session):
+    assert _unlock(client, memory_id, lat=None, lng=None)["locked"] is True
+    assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
 
 
-def test_a_key_never_opens_one_from_afar(client, memory_id, db_session):
-    spend_welcome(db_session, DEVICE)
-    give_keys(db_session, DEVICE, 3)
-    assert _unlock(client, memory_id, lat=FAR_LAT)["locked"] is True
-    assert _balance(client) == (0, 3)
-
-
-def test_standing_there_spends_a_key_before_the_welcome_one(client, memory_id, db_session):
-    give_keys(db_session, DEVICE, 5)
-    _press(client, memory_id)
-    assert _balance(client) == (1, 4)
-
-
-def test_standing_there_with_no_keys_uses_the_welcome_one(client, memory_id, db_session):
-    assert _press(client, memory_id).status_code == 200
-    assert _balance(client) == (0, 0)
-
-
-def test_a_stop_of_todays_walk_opens_for_nothing(client, memory_id, db_session):
+def test_a_stop_of_todays_walk_opens_and_finishing_earns_a_key(client, memory_id, db_session):
     give_keys(db_session, DEVICE, 1)
-    _on_todays_walk(db_session, memory_id)
     assert _press(client, memory_id).status_code == 200
-    assert _balance(client) == (1, 2), "nothing spent, and a key for finishing the walk"
+    assert _keys(client) == 2, "nothing spent, and a key for finishing the walk"
 
 
-def test_an_ended_walks_stop_costs_a_key_again(client, memory_id, db_session):
-    give_keys(db_session, DEVICE, 1)
-    _on_todays_walk(db_session, memory_id)
+def test_an_ended_walks_stop_does_not_open(client, memory_id, db_session):
     db_session.execute(text("UPDATE daily_routes SET ended_at = CURRENT_TIMESTAMP"))
     db_session.commit()
-    _press(client, memory_id)
-    assert _balance(client) == (1, 0)
+    assert _press(client, memory_id).json()["detail"] == {"reason": "not_on_walk"}
+
+
+def test_a_subscriber_off_the_walk_is_refused_too(client, memory_id, db_session):
+    (off_walk,) = _memories(db_session, 1)
+    give_keys(db_session, DEVICE, 0)
+    _subscribe(db_session)
+    refused = client.post(
+        f"/v1/memories/{off_walk}/unlock",
+        json={"device": DEVICE, "lat": LAT + 0.001, "lng": LNG},
+    )
+    assert refused.status_code == 403
 
 
 def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
     _unlock(client, memory_id)
-    _unlock(client, memory_id, lat=FAR_LAT)
-    assert _balance(client) == (0, 0)
-
-
-def test_a_subscriber_standing_there_spends_nothing(client, memory_id, db_session):
-    give_keys(db_session, DEVICE, 0)
-    _subscribe(db_session)
-    assert _press(client, memory_id).status_code == 200
-    assert _balance(client) == (1, 0)
+    assert _unlock(client, memory_id, lat=FAR_LAT)["locked"] is False
 
 
 def test_steps_are_counted_once_from_the_watermark_and_buy_nothing(client, db_session):

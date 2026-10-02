@@ -17,7 +17,7 @@
 #     from the MKAnnotation's `title` - not from `accessibilityLabel`, which
 #     iOS ignores on a Marker. Tapping a pin therefore means naming its state
 #     as well as its place, and the pin turning is directly assertable.
-#  3. F25: the app opens on the map (F29), and Plan a walk opens F1. The walk below is the 4 km default,
+#  3. F25: the app opens on the planner (F1). The walk below is the 4 km default,
 #     previewed and accepted from the start position; its titles carry a
 #     "Stop N of 4." prefix. `tests/test_api_routes.py` is what pins the
 #     selection and ordering rules down; this file just has to agree with them.
@@ -34,7 +34,7 @@ appId: ${APP_ID}
       LNG: ${START_LNG}
       LOCATION: inuse
 
-# F29: the map of what is locked comes first; Plan a walk opens F1.
+# F1: the planner is home and draws the walk; Start walk takes it.
 - runFlow: steps/start-walk.yml
 
 # A walk can be ended any time, from the card's ✕; with stops still to
@@ -58,8 +58,8 @@ appId: ${APP_ID}
     visible: "Stop 2 of 4. ${STOP2}. Locked, too far to open."
     timeout: 40000
 - tapOn: "Stop 2 of 4. ${STOP2}. Locked, too far to open."
-# The welcome one opens it from here; the flow walks there instead.
-- assertVisible: "Open this one from here, your first"
+# Only standing there opens it (docs/10, "A walk planner, nothing else").
+- assertVisible: "Get within .* m to unlock it\\."
 # F26: nothing to heart until it is open.
 - assertNotVisible: "Heart"
 - tapOn: "Close"
@@ -207,16 +207,14 @@ appId: ${APP_ID}
 - tapOn: "Close journal"
 - assertVisible: "Every stop unlocked\\. 4 of 4\\."
 
-# Ending a walked walk loses nothing, so it does not ask. The map, and Plan a
-# walk, and a second walk the same day is refused: its stops would be free
-# too (docs/10, "Keys open a lock, and today's walk is free").
+# Ending a walked walk loses nothing, so it does not ask. The planner comes
+# back, walked out: a second walk the same day is a subscriber's (docs/10,
+# "A walk planner, nothing else").
 - tapOn: "End walk"
 - assertNotVisible: "End this walk\\?"
 - extendedWaitUntil:
-    visible: "Plan a walk"
+    visible: "Today's walk is done"
     timeout: 30000
 - assertNotVisible: "End walk"
-- tapOn: "Plan a walk"
-- extendedWaitUntil:
-    visible: "Today's walk is done\\. There's another tomorrow\\."
-    timeout: 20000
+- assertVisible:
+    id: "more-walks"

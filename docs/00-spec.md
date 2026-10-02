@@ -5,11 +5,12 @@
 The product in plain words, for anything public-facing (store listing, a
 landing page, a pitch). Keep it word for word.
 
-> Memory Lane pins real stories to the places they happened, some from travel
-> shows and podcasts and some left by people who were there. Each day it plans
-> a short walk past a few of them, and you can only read a story once you're
-> standing on its spot. It's meant to make a familiar walk feel new, because the
-> ordinary corner you pass every day turns out to have a story.
+> Memory Lane is a walk planner with memories along the way. Each day it plans
+> a walk past real stories pinned to the places they happened, some from travel
+> shows and podcasts and some left by people who were there, and a story only
+> opens once you're standing on its spot. It's meant to make a familiar walk
+> feel new, because the ordinary corner you pass every day turns out to have a
+> story.
 
 ## Overview
 

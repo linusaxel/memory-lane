@@ -5,11 +5,12 @@ For any agent (Claude Code, Codex, Cursor) or person working in this repo.
 
 ## Project
 
-**Memory Lane** extracts location-based memories from video transcripts and
-makes them queryable by geographic proximity. A story opens only once you stand
-on its spot, and the app plans a daily walk past a few.
+**Memory Lane** is a walk planner with memories along the way. The pipeline
+extracts location-based memories from video transcripts; the app plans one
+free walk a day past about one a kilometre, and a story opens only on that
+walk, standing on its spot. A subscription buys more walks a day.
 
-Pipeline: `Content URLs → Transcripts → LLM Extraction (with coords) → Query API → Expo app`
+Pipeline: `Content URLs → Transcripts → LLM Extraction (with coords) → Query API → Expo app (the walk planner)`
 
 ## Before making changes
 
@@ -24,7 +25,7 @@ Read what the change touches, not everything:
 
 ## Architecture constraints
 
-- **Memories are gated by standing there,** bar one welcome unlock from anywhere. Every memory-shaped response goes through `api/gate.py`. See [The gate](docs/10-decisions.md#the-gate) and [Pick one to start](docs/10-decisions.md#pick-one-to-start-then-where-you-stand)
+- **Memories open only on a walk, standing there.** No map browsing, no welcome unlock. Every memory-shaped response goes through `api/gate.py`. See [The gate](docs/10-decisions.md#the-gate) and [A walk planner, nothing else](docs/10-decisions.md#a-walk-planner-nothing-else)
 - **Every memory is public.** Anyone standing at a memory can read it. There is no visibility setting, no private memory and no time seal (`opens_at` is unused). See [Every memory is public](docs/10-decisions.md#every-memory-is-public)
 - **The device UUID is the only credential.** Self-issued, sent in the body, and never a session token. See [Identity](docs/architecture.md#identity)
 - **Google and Apple sign-in only.** See [Google and Apple only](docs/10-decisions.md#google-and-apple-only)

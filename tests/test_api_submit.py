@@ -31,6 +31,7 @@ import api.write as write
 from pipeline.extract import HISTORICAL_SYSTEM_PROMPT, SYSTEM_PROMPT
 from pipeline.tags import TAGS
 from pipeline.tags import clean as extract_clean
+from tests.conftest import on_walk
 
 pytestmark = pytest.mark.db
 
@@ -194,6 +195,7 @@ def test_filing_next_to_a_memory_does_not_unlock_it(client, db_session):
 def test_standing_there_still_opens_it(client, db_session):
     memory = submit(client)
     walker = device()
+    on_walk(db_session, walker, memory["id"])
     opened = client.post(
         f"/v1/memories/{memory['id']}/unlock",
         json={"device": walker, "lat": LAT, "lng": LNG},
@@ -266,7 +268,6 @@ def test_reading_a_profile_creates_nobody(client, db_session):
         "providers": [],
         "subscribed": False,
         "subscribed_until": None,
-        "welcome_unlocks": 1,
         "keys": 0,
         "steps": 0,
         "steps_counted_until": None,

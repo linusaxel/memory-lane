@@ -223,20 +223,6 @@ def test_a_ring_round_the_start_is_walked_round_not_along_one_side():
         assert _path_meters(chosen, d, True) >= ROUTE_FILL * 10000, seed
 
 
-def test_an_included_stop_is_on_every_walk_returned(route_seed):
-    rng = random.Random(route_seed + 7)
-    for i in range(30):
-        picks = [stop(str(n), rng.uniform(-20, 20)) for n in range(12)]
-        for n, p in enumerate(picks):
-            p.id = n
-        pin = rng.randrange(len(picks))
-        d = crow(picks)
-        if _path_meters([pin + 1], d, True) > 4000:
-            continue
-        walks = _choose_walks(picks, 5, d, str(i), 4000, True, ANCHOR, pin)
-        assert walks and all(pin + 1 in w for w in walks)
-
-
 def test_stops_are_spread_along_the_walk_before_prize():
     # Two prized stops 42m apart, or one of them and a plain one halfway.
     picks = [stop("half", 3), stop("far", 6, contrast=1), stop("next", 6.5, contrast=1)]
@@ -268,6 +254,6 @@ def test_a_walk_to_an_end_spreads_its_stops_along_the_way():
     # As _plan_route builds it: column 0 is metres to the end, not home.
     d = [[row[-1], *row[1:-1]] for row in m[:-1]]
     for seed in "abcdef":
-        for walk in _choose_walks(picks, 4, d, seed, 4000, True, ANCHOR, None, end):
+        for walk in _choose_walks(picks, 4, d, seed, 4000, True, ANCHOR, end):
             legs = [d[a][b] for a, b in itertools.pairwise([0, *walk, 0])]
             assert max(legs) < 2 * sum(legs) / len(legs), (seed, walk)

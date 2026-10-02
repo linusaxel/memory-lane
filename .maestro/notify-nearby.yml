@@ -25,7 +25,7 @@ appId: ${APP_ID}
 - runFlow: steps/sign-in.yml
 
 - extendedWaitUntil:
-    visible: "Plan a walk"
+    visible: "Journal"
     timeout: 40000
 - runFlow: steps/start-walk.yml
 

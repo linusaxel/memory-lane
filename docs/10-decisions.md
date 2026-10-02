@@ -241,9 +241,39 @@ other.
 server half. That leaves a gate branch nothing can reach and a feature the docs
 would still have to explain.
 
+### A walk planner, nothing else
+
+Status: Accepted 2026-10-03. Supersedes *A map of what is locked*, *Keys open
+a lock, and today's walk is free* and *Pick one to start, then where you
+stand*, and the Walk here parts of *Preview, then accept* and *Draw first,
+adjust after*.
+
+The founder: "a walk planner with memories along the way". The walk is the
+whole app; without one there is nothing to do.
+
+- **Home is the planner.** Launch, ending a walk and every fallback land on
+  the walk preview: the route on the map, and a list of what each stop is of
+  (place, year, source, tags; what `gate.locked_memory` already serves). ‹ ›
+  trades the walk for another. There is no map of what is locked, no peek of
+  an unplanned pin and no Walk here.
+- **Only a stop of the walk in progress opens,** standing on it. No welcome
+  unlock, no key spend, no subscriber exception: anything else is 403
+  `not_on_walk` (`api/write.py` `pay_for_unlock`). Earned stays earned.
+- **One walk a day free; a subscription buys more walks** and nothing else
+  (`_refuse_second_walk`). Walked out, the planner offers it.
+- **Keys are earned, never sold:** one per finished walk, once a day
+  (`CREDIT_WALK_KEY`). What a key does is not decided yet (TODO.md). The rule
+  it must keep: it never yields a summary off the spot. Not selling keys keeps
+  any random reward out of loot-box rules (Apple 3.1.1, Belgium/Netherlands).
+  The key packs are gone from the app and the webhook; `key_purchases` stays
+  as history.
+
+`GET /v1/memories/nearby` stays: the embed (`api/embed.py`) reads it, and it
+never served a summary. `POST /v1/dev/keys` stays off the public host.
+
 ### A map of what is locked, and only today's walk unlocks
 
-Status: Accepted 2026-09-26. Supersedes the "no map of everything" clause below.
+Status: **Superseded 2026-10-03** by *A walk planner, nothing else*. Accepted 2026-09-26. Supersedes the "no map of everything" clause below.
 
 After sign-in the app opens on a map of the locked memories around you (F29),
 and a walk is how you open any of them. A corpus you can browse is a corpus you
@@ -339,7 +369,9 @@ they have paid, and the position was always self-reported.
 
 ### Keys open a lock, and today's walk is free
 
-Status: Accepted 2026-10-02. Supersedes *Steps open a memory* (its Core Motion
+Status: **Superseded 2026-10-03** by *A walk planner, nothing else*: keys
+are earned only and open nothing yet, and only a walk's stops open.
+Accepted 2026-10-02. Supersedes *Steps open a memory* (its Core Motion
 count and watermark stand, as a stat). Amends *Pick one to start*, *A walk can
 be ended* and *RevenueCat sells it*. Brings back the day lock of *A
 subscription opens the map*, for a new reason.
@@ -451,8 +483,9 @@ on the stored balance yet: add one if a hoard empties the map in an afternoon.
 
 ### Pick one to start, then where you stand
 
-Status: Accepted 2026-10-01. Supersedes *Three free a day, then steps where you
-stand*, and is now the one exception to *The gate*. **Amended 2026-10-02** by
+Status: **Superseded 2026-10-03** by *A walk planner, nothing else*: there is
+no welcome unlock. Accepted 2026-10-01. Supersedes *Three free a day, then
+steps where you stand*, and was the one exception to *The gate*. **Amended 2026-10-02** by
 *Keys open a lock, and today's walk is free*: standing there, a key replaces
 the steps below, and a stop of today's walk comes first, free.
 
@@ -2007,6 +2040,9 @@ budget. So the accept carries no memory ids, and there is nothing from the
 client to validate or trust — a device cannot accept a stop the solver would
 not have picked.
 
+**Superseded 2026-10-03** by *A walk planner, nothing else*: there is no Walk
+here, so the client names no stop at all and the amendment below is history.
+
 **Amended 2026-09-26: at most one, and the server vets it.** "Walk here" on a
 pin (Map first, M5) sends `include=<memory_id>` with the preview and the accept.
 It is vetted by the same `ROUTE_CANDIDATES_QUERY` that decides every other stop:
@@ -2384,7 +2420,7 @@ same way, they went a little more even (max 1.63 → 1.60) but fresh fell from
 
 ### Draw first, adjust after
 
-Status: Accepted 2026-09-27
+Status: Accepted 2026-09-27. **Amended 2026-10-03** by *A walk planner, nothing else*: Walk here is gone, and the card is home, with no ✕ back to a map.
 
 "Plan a walk" and a pin's "Walk here" both draw a walk at once. The
 "How far today?" page that used to come first is gone, and the slider, Loop /
@@ -2516,7 +2552,8 @@ The founder's call: a consumer subscription is probably the most realistic
 revenue, so it is the lead track, not the second one. The historical layer
 still sells to tourism boards, audio-guide companies and city archives
 (embeddable maps, delivered corpora), alongside it. No pricing, tier or
-paywall is decided; nothing is built yet. The social layer earns nothing on
+paywall was decided then; it is now *A walk planner, nothing else*: more
+walks a day, through RevenueCat. The social layer earns nothing on
 its own. Local-business seeded memories are a later option and must be marked.
 
 ~~Near-term revenue is the historical layer: embeddable maps and delivered

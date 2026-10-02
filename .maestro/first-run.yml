@@ -1,17 +1,17 @@
-# A first run: F29 the map and its peek + M6 walk here + F1 plan a walk (loop,
-# one way) + F32 show me another + F8 be asked for location + F36 the one
-# choice, then F8 refused and F1 nothing walkable. docs/08-ux-flows.md
+# A first run: F1 the planner is home (loop, one way, its list) + F32 another
+# walk + F8 be asked for location, then F8 refused and F1 nothing walkable.
+# docs/08-ux-flows.md
 #
 # No walk is accepted, so no route row is written and the three launches can
 # share one database.
 
 appId: ${APP_ID}
 ---
-# ---- F8 + F36 + F1 + M6
+# ---- F8 + F1
 #
-# The first screen is ours, not a system dialog: the map, and over it the
-# first run's one choice (F36), which also asks for location, by a button
-# with a reason (F8). Until a pick is made, the card covers the lower map.
+# The first screen is ours, not a system dialog: the planner, drawing a walk
+# from central Copenhagen, and its Use my location is the ask, a press with a
+# reason (F8).
 - runFlow:
     file: steps/launch.yml
     env:
@@ -19,23 +19,25 @@ appId: ${APP_ID}
       LNG: ${START_LNG}
       LOCATION: unset
 - extendedWaitUntil:
-    visible: "Choose one to open from here"
-    timeout: 20000
-- tapOn: "Show the ones near me"
+    visible:
+      id: "planning-from-centre"
+    timeout: 40000
+- tapOn: "Use my location"
 - tapOn:
     text: "Allow While Using App"
     optional: true
 
-# F1: Plan a walk, under the card. The preview is the whole loop on the map,
-# and a decision.
-- tapOn: "Plan a walk"
+# F1: drawn again from here. The whole loop on the map, its list, and a decision.
 - extendedWaitUntil:
-    visible: "4 stops · .* loop"
+    visible: "4 memories · .* loop"
     timeout: 40000
 - assertVisible: "Start this walk"
 - assertNotVisible:
     id: "planning-from-centre"
-# A preview is a look: its pins carry their stop numbers already.
+- assertVisible:
+    id: "walk-stops"
+# Each row is a stop, numbered as its pin is: what it is of, never what it says.
+- assertVisible: "Stop 1, .*"
 - assertVisible: "Stop 1 of 4\\. .*"
 
 # F32: › is another walk as good, or one of a similar length, still a preview.
@@ -44,57 +46,25 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Previous walk"
     timeout: 40000
-- assertVisible: "[0-9]+ stops · .* loop"
+- assertVisible: "[0-9]+ memories · .* loop"
 - assertVisible: "Start this walk"
 # Pages: back to the first, which has no ‹.
 - tapOn: "Previous walk"
 - extendedWaitUntil:
     notVisible: "Previous walk"
     timeout: 5000
-- assertVisible: "4 stops · .* loop"
+- assertVisible: "4 memories · .* loop"
 
 # One way redraws in place: the same four stops' worth, ending somewhere new.
 - tapOn: "One way"
 - extendedWaitUntil:
-    visible: "[0-9]+ stops · [0-9.]+ k?m"
+    visible: "[0-9]+ memories · [0-9.]+ k?m"
     timeout: 40000
-- assertNotVisible: "[0-9]+ stops · .* loop"
+- assertNotVisible: "[0-9]+ memories · .* loop"
 - tapOn: "Loop"
-- tapOn: "Back to the map"
-
-# F29 + M6: a pin opens the peek, bars and no summary, and Walk here opens F1
-# for a walk through that pin. Ringkaféen sits above the card.
-- tapOn: "Ringkaféen, dev seed\\. Locked, too far to open\\."
-- extendedWaitUntil:
-    visible: "Walk here"
-    timeout: 10000
-- tapOn: "Walk here"
-# Drawn at once, and every walk names the pin it passes.
-- extendedWaitUntil:
-    visible: "A walk through .*"
-    timeout: 40000
-- extendedWaitUntil:
-    visible: "[0-9]+ stops? · .* loop"
-    timeout: 40000
-- tapOn: "Back to the map"
-
-# F36: every look above left the welcome unlock unspent. The same pin opens
-# from anywhere, with no walk and without standing there, and then the choice
-# is gone (docs/10, "Pick one to start, then where you stand").
-- tapOn: "Ringkaféen, dev seed\\. Locked, too far to open\\."
-- extendedWaitUntil:
-    visible: "Open this one from here, your first"
-    timeout: 10000
-- tapOn: "Open this one from here, your first"
-- extendedWaitUntil:
-    visible: ".*Lygteå.*"
-    timeout: 30000
-- tapOn: "Close"
-# No keys left, and the walk is still free.
-- extendedWaitUntil:
-    visible: "No keys\\. Free on today's walk\\."
-    timeout: 10000
-- assertNotVisible: "Choose one to open from here"
+# There is nothing to go back to: the planner is home.
+- assertNotVisible: "Back to the map"
+- assertNotVisible: "Plan a walk"
 
 # ---- F8, refused
 #
@@ -105,7 +75,6 @@ appId: ${APP_ID}
       LAT: ${START_LAT}
       LNG: ${START_LNG}
       LOCATION: never
-- tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible:
       id: "planning-from-centre"
@@ -113,7 +82,7 @@ appId: ${APP_ID}
 
 # ---- F1, nothing walkable
 #
-# From Malmö there is nothing within any length of walk. The preview says so
+# From Malmö there is nothing within any length of walk. The planner says so
 # and offers the slider back, rather than accepting an empty day. Not
 # Copenhagen: `seed_dev --routes lakes` plants the lakes there.
 - runFlow:
@@ -122,7 +91,6 @@ appId: ${APP_ID}
       LAT: 55.605
       LNG: 13.0038
       LOCATION: inuse
-- tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible:
       id: "no-walk"

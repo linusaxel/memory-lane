@@ -40,17 +40,6 @@ export async function plans(): Promise<PurchasesPackage[]> {
   return [current?.monthly, current?.annual].filter((p): p is PurchasesPackage => !!p);
 }
 
-/** The key packs, smallest first: every package whose product is `keys_N`
- *  (api/billing.py KEY_PRODUCTS). Empty until the store has them. */
-export async function keyPacks(): Promise<PurchasesPackage[]> {
-  if (!ready()) return [];
-  const current = (await Purchases.getOfferings()).current;
-  const size = (p: PurchasesPackage) => Number(p.product.identifier.split('_')[1]);
-  return (current?.availablePackages ?? [])
-    .filter((p) => /^keys_\d+$/.test(p.product.identifier))
-    .sort((a, b) => size(a) - size(b));
-}
-
 /** False when the person backed out of the store's sheet: not an error. */
 export async function buy(plan: PurchasesPackage): Promise<boolean> {
   try {

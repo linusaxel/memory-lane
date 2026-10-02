@@ -1,0 +1,42 @@
+# F35 the subscription, when a free account has walked today. docs/08-ux-flows.md,
+# docs/10-decisions.md "A walk planner, nothing else".
+#
+# e2e/sql/subscribe-when-walked-out.sql gives the device an ended walk today
+# once a name mints it, so the planner is walked out and offers More walks. The paywall has nothing
+# to sell on a simulator (no RevenueCat key) and says so, with a way out.
+# Renamed Paid, `subscriber` pays for it, and the planner plans again.
+
+appId: ${APP_ID}
+---
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: ${START_LAT}
+      LNG: ${START_LNG}
+      LOCATION: inuse
+
+# Reading creates nothing, so a name mints the device, and the trigger walks it.
+- runFlow:
+    file: steps/rename.yml
+    env:
+      NAME: "Walker"
+- extendedWaitUntil:
+    visible: "Today's walk is done"
+    timeout: 40000
+- tapOn:
+    id: "more-walks"
+- extendedWaitUntil:
+    visible: "More than one walk a day"
+    timeout: 20000
+- assertVisible:
+    id: "subscriptions-unavailable"
+- tapOn: "Not now"
+
+- runFlow:
+    file: steps/rename.yml
+    env:
+      NAME: "Paid"
+- extendedWaitUntil:
+    visible: "4 memories · .* loop"
+    timeout: 40000
+- assertVisible: "Start this walk"

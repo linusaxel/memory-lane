@@ -32,8 +32,6 @@ import { useReduceMotion } from './useBreath.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  button,
-  buttonText,
   color,
   dim,
   figure,
@@ -64,19 +62,6 @@ type Props = {
   onHeart?: (memory: LocatedMemory) => void;
   /** This account hearted it: the glyph is filled, and a tap takes it back. */
   hearted?: boolean;
-  /** Present only on the map before a walk: a walk through a locked memory,
-   *  a side way to it now (F29). */
-  onWalkHere?: () => void;
-  /** The account's welcome unlock, and spending it on this one from wherever
-   *  you are: the first pick, F36 (docs/10, "Pick one to start, then where you
-   *  stand"). */
-  freeLeft?: number;
-  onOpenFree?: () => void;
-  /** The welcome open is in flight: one tap spends it. */
-  opening?: boolean;
-  /** What standing on it costs: 'free' on today's walk or for a subscriber,
-   *  'key' with one to spend, 'none' out of keys. */
-  cost?: 'free' | 'key' | 'none';
   /** Over the map, in any stage: a card. Over the journal: a page. */
   compact?: boolean;
   /** Absent for extracted memories, and for your own: there is nobody to
@@ -156,11 +141,6 @@ export default function MemorySheet({
   onHeart,
   hearted,
   onEdit,
-  onWalkHere,
-  freeLeft = 0,
-  onOpenFree,
-  opening = false,
-  cost = 'free',
   compact = false,
   onReport,
   reported,
@@ -197,20 +177,11 @@ export default function MemorySheet({
   const locked = !!memory?.locked;
   // A locked memory over the map. Standing on it, the ring is on the map.
   const peeking = locked && compact;
-  const openFree = peeking && !withinReach && freeLeft > 0 && !!onOpenFree;
   const peekNote = withinReach
-    ? cost === 'none'
-      ? "You're right here. You're out of keys."
-      : "You're right here. Hold the ring on the map to open it."
+    ? "You're right here. Hold the ring on the map to open it."
     : fromHere == null
       ? 'Turn on location to see how far.'
-      : openFree
-        ? null
-        : cost === 'none'
-          ? `Walk within ${Math.round(radius)} m. You're out of keys, but today's walk is free.`
-          : cost === 'key'
-            ? `Walk within ${Math.round(radius)} m, then open it with a key.`
-            : `Get within ${Math.round(radius)} m to unlock it.`;
+      : `Get within ${Math.round(radius)} m to unlock it.`;
   const hasMore = !locked && !!(onReport || onEdit);
   const hearts = memory?.heart_count ?? 0;
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
@@ -609,8 +580,8 @@ export default function MemorySheet({
             )}
 
             {/* Over the story, only what is not the story: the way to the
-                others under this pin, and the locked card's ways in. */}
-            {(many || (peeking && (onWalkHere || openFree))) && (
+                others under this pin. */}
+            {many && (
               <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
                 {/* Without this, every memory but the first at a stacked point is
                     unreachable - and 60% of this corpus sits on a shared point. */}
@@ -638,28 +609,6 @@ export default function MemorySheet({
                       <Glyph name="chevron.right" size={17} weight="semibold" color={color.inkSoft} />
                     </Pressable>
                   </View>
-                )}
-                {openFree && (
-                  <Pressable
-                    style={dim(styles.watch)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Open this one from here, your first"
-                    accessibilityState={{ busy: opening }}
-                    disabled={opening}
-                    onPress={onOpenFree}
-                  >
-                    <Text style={styles.watchText}>Open this one from here</Text>
-                  </Pressable>
-                )}
-                {peeking && onWalkHere && (
-                  <Pressable
-                    style={dim(styles.secondary)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Walk here"
-                    onPress={onWalkHere}
-                  >
-                    <Text style={styles.secondaryText}>Walk here</Text>
-                  </Pressable>
                 )}
               </View>
             )}
@@ -732,13 +681,8 @@ const styles = StyleSheet.create({
   bylineText: { ...story.meta, flexShrink: 1 },
   bylineName: { color: color.ink },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
-  // Ember, not seal: the seal is the unlock and nothing else gets to wear it.
-  watch: button.solid,
-  watchText: { ...buttonText, color: color.paper },
   // Ember, as every link here is: the memory's way out, at the story's size.
   watchLink: { ...story.body, ...font.displaySemi, color: color.ember },
-  secondary: button.quiet,
-  secondaryText: { ...buttonText, color: color.ink },
   openRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   grow: { flex: 1 },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },

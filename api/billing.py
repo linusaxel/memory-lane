@@ -32,9 +32,6 @@ ENTITLEMENT = "map"
 REVENUECAT_URL = "https://api.revenuecat.com/v1/subscribers/"
 # A grant with no end (a promotional lifetime from the RevenueCat dashboard).
 FOREVER = datetime(9999, 1, 1)
-# The store's consumables, and how many keys each is. docs/10, "Keys open a
-# lock, and today's walk is free".
-KEY_PRODUCTS = {"keys_1": 1, "keys_5": 5, "keys_15": 15, "keys_40": 40}
 
 
 def fetch_subscriber(app_user_id: str) -> dict:
@@ -60,45 +57,11 @@ def expires_at(subscriber: dict) -> datetime | None:
     return ends.astimezone(UTC).replace(tzinfo=None)
 
 
-def key_packs(subscriber: dict) -> list[tuple[str, int]]:
-    """Every key pack RevenueCat says was bought: (transaction id, keys)."""
-    bought = subscriber.get("subscriber", {}).get("non_subscriptions", {})
-    return [
-        (purchase["id"], KEY_PRODUCTS[product])
-        for product, purchases in bought.items()
-        if product in KEY_PRODUCTS
-        for purchase in purchases
-    ]
-
-
-def credit_keys(session, user_id: str, packs: list[tuple[str, int]]) -> None:
-    """Add each pack not credited before. The transaction id is the key, so a
-    webhook retry or a second read-back adds nothing."""
-    # ponytail: a refunded pack is not taken back; add it on the CANCELLATION
-    # event if refunds show up.
-    for transaction_id, keys in packs:
-        new = session.execute(
-            text("""
-                INSERT INTO key_purchases (transaction_id, user_id, keys)
-                VALUES (:t, CAST(:u AS uuid), :k)
-                ON CONFLICT (transaction_id) DO NOTHING
-                RETURNING keys
-            """),
-            {"t": transaction_id, "u": user_id, "k": keys},
-        ).scalar()
-        if new:
-            session.execute(
-                text("UPDATE users SET keys = keys + :k WHERE id = CAST(:u AS uuid)"),
-                {"k": new, "u": user_id},
-            )
-
-
 def sync(session, user_id: str) -> None:
-    """Make this user's row say what RevenueCat says, and credit new keys."""
+    """Make this user's row say what RevenueCat says."""
     if not config.REVENUECAT_API_KEY:
         raise HTTPException(status_code=503, detail="Subscriptions are not configured")
     subscriber = fetch_subscriber(user_id)
-    credit_keys(session, user_id, key_packs(subscriber))
     ends = expires_at(subscriber)
     if ends is None:
         session.execute(
