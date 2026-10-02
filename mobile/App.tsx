@@ -94,7 +94,7 @@ import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
-import AccountMenu, { type MapShows } from './src/AccountMenu.tsx';
+import AccountMenu, { MAP_SHOWS_DEFAULT, type MapShows } from './src/AccountMenu.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
@@ -230,7 +230,7 @@ export default function App() {
   const [confirmEnd, setConfirmEnd] = useState(false);
   // The locked memories around you, before any walk (F29).
   const [nearby, setNearby] = useState<LocatedMemory[]>([]);
-  const [mapShows, setMapShows] = useState<MapShows>('all');
+  const [mapShows, setMapShows] = useState<MapShows>(MAP_SHOWS_DEFAULT);
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   // What was tapped is a point, not a memory: the sheet pages through it.

@@ -51,8 +51,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              glass circle, and under it a native menu (src/AccountMenu.tsx):
 │                              your name as its title, "3-day streak · 27 opened · 2 filed",
 │                              "Signed in with Apple" or "Not signed in", Edit profile; before a
-│                              walk "Show on map", All memories / Locked / Unlocked; then Settings
-│                              (`gearshape`). While the filter hides something a 16pt ember dot
+│                              walk "Show on map", All memories / Locked (the default) /
+│                              Unlocked; then Settings (`gearshape`). Off the default a 16pt ember dot
 │                              with the filter glyph sits on the photo, so a thinned map says why
 ├─ Journal                    top left, a 44pt glass circle, the map and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt ember dot: a heart

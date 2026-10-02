@@ -15,6 +15,9 @@ import { color, lift } from './theme';
 
 export type MapShows = 'all' | 'locked' | 'unlocked';
 
+/** What you already opened is in the Journal; the map is for what is left. */
+export const MAP_SHOWS_DEFAULT: MapShows = 'locked';
+
 const CHOICES: { value: MapShows; label: string }[] = [
   { value: 'all', label: 'All memories' },
   { value: 'locked', label: 'Locked' },
@@ -37,7 +40,7 @@ type Props = {
 };
 
 export default function AccountMenu({ profile, name, shows, onShow, filter, onEditProfile, onSettings }: Props) {
-  const thinned = filter && shows !== 'all';
+  const thinned = filter && shows !== MAP_SHOWS_DEFAULT;
   const numbers = [
     profile?.streak ? `${profile.streak}-day streak` : null,
     `${profile?.unlocked ?? 0} opened`,

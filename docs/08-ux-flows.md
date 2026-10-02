@@ -966,8 +966,8 @@ before an accept lands here; an accepted walk opens on the walk (F25).
    pins are the memories within 5 km (`MAP_RADIUS_KM`, half the longest
    walk), from `/v1/memories/nearby`, fetched on arriving and again when a
    position first comes, locked and opened both. The menu under your photo
-   top right (`src/AccountMenu.tsx`) shows all of them, only the locked or only
-   the unlocked; a locked memory is an ember padlock, an opened one the same
+   top right (`src/AccountMenu.tsx`) shows only the locked by default (what you
+   opened is in the Journal), or all of them, or only the unlocked; a locked memory is an ember padlock, an opened one the same
    padlock open and paper (mobile/UI.md, One pin).
    The map refetches when you file, edit or delete one.
 2. Tap a pin: **the peek**, a card over the map rather than a page. Place,
