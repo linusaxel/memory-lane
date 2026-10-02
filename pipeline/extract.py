@@ -552,6 +552,7 @@ def _request(
     user: str,
     schema: dict = MEMORY_SCHEMA,
     context: str = "",
+    max_tokens: int = 2000,
 ) -> str | None:
     """The model's raw reply, or None for an error no retry will fix.
 
@@ -570,7 +571,7 @@ def _request(
     try:
         response = client.messages.create(
             model=EXTRACTION_MODEL,
-            max_tokens=2000,
+            max_tokens=max_tokens,
             # The system prompt is ~1.2k tokens and is resent for every chunk -
             # 22 chunks a video, 55 videos. Cached reads cost 10% of input and a
             # write costs 1.25x, so this pays for itself on the second chunk.
@@ -641,6 +642,7 @@ def extract_chunk_stored(
     chunk: str,
     system_prompt: str = SYSTEM_PROMPT,
     context: str = "",
+    max_tokens: int = 2000,
 ) -> list[dict]:
     """extract_memories_from_chunk, paid for once per exact request.
 
@@ -651,13 +653,28 @@ def extract_chunk_stored(
     """
     user = USER_PROMPT_TEMPLATE.format(chunk=chunk)
     raw = _stored_request(
-        session, client, content_id, chunk_index, system_prompt, user, context=context
+        session,
+        client,
+        content_id,
+        chunk_index,
+        system_prompt,
+        user,
+        context=context,
+        max_tokens=max_tokens,
     )
     return [] if raw is None else grounded(parse_memories(raw), chunk)
 
 
 def _stored_request(
-    session, client, content_id, chunk_index, system_prompt, user, schema=MEMORY_SCHEMA, context=""
+    session,
+    client,
+    content_id,
+    chunk_index,
+    system_prompt,
+    user,
+    schema=MEMORY_SCHEMA,
+    context="",
+    max_tokens=2000,
 ) -> str | None:
     key_schema = json.dumps(schema, sort_keys=True)
     # context + user is the message as it was before it was split in two, so
@@ -670,7 +687,7 @@ def _stored_request(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
     ).scalar()
     if raw is None:
-        raw = _request(client, system_prompt, user, schema, context)
+        raw = _request(client, system_prompt, user, schema, context, max_tokens)
         if raw is None:
             return None
         session.execute(

@@ -400,8 +400,98 @@ Then against now, the contrast the product ranks by, is almost never stated,
 and `contrast_score` looks like a default (0.7 on 11 of the 13 Historisk Atlas
 entries).
 
-**None of it has been run against real credits** (the account balance is empty),
-so the numbers above are still the current state.
+The books were re-extracted on real credits (2026-10-01, above); the rest of the
+corpus is as labelled.
+
+### Research, 2026-10-02
+
+Three questions: what makes the next 30% of memories worth the walk, which
+sources have more such stories, and what the literature says about the
+technique. The ranked fixes are in TODO.md, *Make memories worth the walk*.
+
+**The two biggest failures are made by chunking.** "Name never introduced"
+(~50) and near-duplicates (~50) both come from reading a video four minutes
+at a time. The brief patches the first; merge, the save-time check and the
+venue folding patch the second. A Sonnet-class model reads a whole episode
+(8–15k tokens) in one cached call, and Anthropic's long-context guidance is the
+document first, the instructions after, and quotes asked for
+([long-context tips](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/long-context-tips)).
+That is measured below, *A video read whole*.
+
+**Technique.**
+- Generate more candidates than you need, then rank them. Highlight detection
+  lets the model rank candidates and pick real transcript sentences rather than
+  commit up front (RankCut, [IUI'26](https://www2.informatik.uni-hamburg.de/wtm/publications/2026/SLCWBW26/iui26_Shah-et-al.pdf)).
+  Today's judge applies an absolute bar per video, so a dull video still ships
+  its least dull story.
+- Judge pairwise, in both orders, and keep only the verdicts that agree. About
+  a third of judge verdicts flip with order
+  ([Zheng et al. 2023](https://arxiv.org/abs/2306.05685)). Judges also prefer
+  longer text ([length-controlled AlpacaEval](https://arxiv.org/abs/2404.04475)),
+  which the 40–70 word cap already blocks.
+- Calibrate the judge on a person's labels. Off-the-shelf judges agree with
+  people on story quality about 73% of the time at best
+  ([LitBench](https://arxiv.org/pdf/2507.00769v1)), and the criteria only become
+  clear once you read outputs ("criteria drift",
+  [Shankar et al. 2024](https://arxiv.org/abs/2404.12272)). Our labels were made
+  by agents, and `memory_reviews` holds no rows.
+- Never take coordinates from the model. On land grants, the best LLM had a mean
+  error of 23 km ([arXiv 2508.08266](https://arxiv.org/abs/2508.08266)). What
+  works is to fetch candidates from a gazetteer and let the model choose between
+  them, resolving all of a text's places together
+  ([Hu et al.](https://ceur-ws.org/Vol-3969/paper6.pdf)). The geocode chain
+  filters single hits; it does not offer a choice.
+- The Citations API can't be combined with a JSON schema (400), so a quote
+  checked in code (`grounded()`) remains the right tool.
+- Batches are half price and stack with caching
+  ([batch processing](https://platform.claude.com/docs/en/build-with-claude/batch-processing)).
+
+**Sources.**
+- The craft rule from audio tours: tell them what they can't see, and people
+  rather than places
+  ([VoiceMap, Darbyshire](https://blog.voicemap.me/2026/03/how-to-tell-a-story-15-script-tips-from-tom-darbyshire/)).
+  Detour, Autio and HearHere all paid editors. Their moat was curation, and their
+  weakness was coverage outside the hero cities.
+- Wikipedia (da GeoSearch hits 500 articles within 500 m of Rådhuspladsen) and
+  Wikidata (P625, inception, significant event) are dense but encyclopedic.
+  Alone they fail as `desc`; as enrichment they supply the then-against-now line
+  that is almost never stated.
+- Public-domain memoirs (Runeberg, ADL) are legally clean, and books already
+  give the most walks (20). The Stadsarkiv's erindringer are still the prize,
+  blocked on permission. YouTube is "No, as built" (docs/10), so it is for
+  finding stories, not a backbone.
+- OSM `inscription=*` and plaques are cheap. Open Plaques is thin in the
+  Nordics. HMDB and Atlas Obscura forbid commercial reuse.
+
+**A video read whole, measured and not shipped** (2026-10-02, `quality --whole
+5 --runs 2`, 40 Sonnet calls, ~300k tokens in, 70k out, roughly $1–2). The five
+videos with the most labels (544, 545, 546, 592, 584) were each read as one
+chunk, with the same prompt, brief, filter and judge, and nothing was saved. The
+other side is the labelled memories, which are one draw of the 4-minute chunks
+under older prompts, so the writing checks favour whichever side has the newer
+prompt.
+
+| | Chunked (labelled) | Whole, run 0 | Whole, run 1 |
+|---|---|---|---|
+| Kept | 57 | 39 | 31 |
+| Walks found again | 15 of 15 | 13 of 15 | 11 of 15 |
+| Anonymous, meta or "someone" | 10 | 5 | 1 |
+
+- **It reads less.** It keeps a third to a half fewer memories, and from one draw
+  to the next a video swings from 5 to 12, or from 14 to 8. That is the
+  long-context loss the literature warns about: one reply has to cover an hour.
+- **It loses walks.** Almindelig Hospital was missed on both runs, and
+  Alexandra, Metropol, Trianglen/Nyvartov and Sundholm were each missed on one.
+- **It writes cleaner,** but it reads cleaner partly because the prompt is
+  newer than the labels.
+- **It didn't remove duplicates.** Run 0 of 546 kept "Sankt Jørgens Hospital
+  site" twice. Misheard names survive too ("Ørsundshospitalet").
+- It found a few stories the chunks missed (Grand Teatret, Café Heimdal and
+  Café Ægir on both runs, Søkvesthuset).
+
+The ship bar was no walk lost on both runs, and it failed. Chunks stay. The fair
+next measurement is chunked against whole under today's prompt, both drawn
+twice. A middle course is also open, such as 15-minute chunks.
 
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps

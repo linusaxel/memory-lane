@@ -3,6 +3,7 @@
     python -m pipeline.quality
     python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10]
     python -m pipeline.quality --labels [tests/fixtures/walk_labels.json] [--half tune|check]
+    python -m pipeline.quality --whole [5] [--runs 2]
 
 Run it before and after any prompt change; extraction costs money and you get
 one shot. Baseline in docs/04-extract.md, reasoning in
@@ -20,6 +21,12 @@ judge sees the place name and summary only: happened_there is not stored. It
 bills the judge once per content per pass; a rerun on unchanged code is free,
 so before and after a judge change only the change is paid for. --half tune
 takes even content ids and --half check odd: tune a judge on one, report the other.
+
+--whole reads the labelled videos with the most labels as one chunk each, the
+same prompt, filter and judge, and prints what it keeps beside what the
+4-minute chunks kept: walks found again, failure checks, duplicates. It saves
+no memory. One extractor call per video per run plus the judge, stored at
+chunk_index -5, so a rerun is free; --runs draws again to show the noise.
 """
 
 import argparse
@@ -34,9 +41,11 @@ from pipeline.config import ANTHROPIC_API_KEY
 from pipeline.db import get_session
 from pipeline.extract import (
     _judge,
+    _same_story,
     chunk_transcript,
     extract_chunk_stored,
     filter_low_confidence,
+    merge_nearby_memories,
     prompt_for,
     source_context,
     video_brief,
@@ -180,6 +189,98 @@ def score_labels(kept: dict[int, bool], labels: list[dict]) -> dict:
     }
 
 
+# A whole video's memories at once; 2000 tokens holds about six.
+WHOLE_INDEX = -5
+WHOLE_MAX_TOKENS = 16000
+
+
+def labelled_videos(session, labels: list[dict], n: int) -> list:
+    """The n video contents with the most labelled memories, each with its
+    labelled memories as {id, verdict, venue, summary}."""
+    verdict = {m["id"]: m["verdict"] for m in labels}
+    rows = session.execute(
+        text("""
+            SELECT m.content_id, m.id, p.name, m.summary
+            FROM memories m
+            JOIN places p ON p.id = m.place_id
+            JOIN content c ON c.id = m.content_id
+            WHERE m.id = ANY(:ids) AND COALESCE(c.source_type, 'video') = 'video'
+            ORDER BY m.id
+        """),
+        {"ids": list(verdict)},
+    ).fetchall()
+    by_content: dict[int, list] = {}
+    for r in rows:
+        by_content.setdefault(r.content_id, []).append(
+            {"id": r.id, "verdict": verdict[r.id], "venue": r.name, "summary": r.summary}
+        )
+    return sorted(by_content.items(), key=lambda kv: (-len(kv[1]), kv[0]))[:n]
+
+
+def read_whole(session, client, content_id: int, run: int = 0) -> list[dict]:
+    """One video as one chunk, through the pipeline's merge, filter and judge.
+    Saves nothing. Run 0 is the plain request; a later run differs only by a
+    line in the context, so it is a fresh draw that is also stored."""
+    r = session.execute(
+        text("""
+            SELECT c.title, c.source_name, t.segments
+            FROM content c JOIN transcripts t ON t.content_id = c.id WHERE c.id = :id
+        """),
+        {"id": content_id},
+    ).one()
+    segments = r.segments if isinstance(r.segments, list) else json.loads(r.segments)
+    whole = "\n".join(chunk_transcript(segments, chunk_minutes=10**6))
+    brief = video_brief(session, client, content_id, segments, r.source_name, r.title)
+    context = source_context(r.source_name, r.title, brief) + (f"\n(read {run})" if run else "")
+    memories = extract_chunk_stored(
+        session,
+        client,
+        content_id,
+        WHOLE_INDEX,
+        whole,
+        prompt_for("video"),
+        context,
+        max_tokens=WHOLE_MAX_TOKENS,
+    )
+    kept = filter_low_confidence(merge_nearby_memories(memories))
+    return worth_telling(session, client, content_id, kept)
+
+
+def found(labelled: dict, memories: list[dict]) -> bool:
+    """A labelled memory is found again by its venue or its story."""
+    place = (labelled["venue"] or "").split(",")[0].strip().lower()
+    return any(
+        ((v := (m.get("venue") or "").strip().lower()) and (v in place or place in v))
+        or _same_story(labelled, m)
+        for m in memories
+    )
+
+
+def duplicates(memories: list[dict]) -> int:
+    """Pairs that tell one story, whatever venue each names."""
+    return sum(_same_story(a, b) for i, a in enumerate(memories) for b in memories[i + 1 :])
+
+
+def score_whole(labelled: list[dict], memories: list[dict]) -> dict:
+    """Pure: walks found again, failure checks and duplicates, both sides."""
+    walks = [m for m in labelled if m["verdict"] == "walk"]
+
+    def side(ms):
+        s = [m.get("summary") or "" for m in ms]
+        return {
+            "kept": len(ms),
+            "checks": dict((n, c) for n, c, _ in report(s)),
+            "dups": duplicates(ms),
+        }
+
+    return {
+        "walks": len(walks),
+        "walks_found": sum(found(w, memories) for w in walks),
+        "chunked": side(labelled),
+        "whole": side(memories),
+    }
+
+
 def _print_labels(score: dict):
     print(f"{'':<10}{'kept':>6}{'dropped':>9}")
     for v, (dropped, kept) in score["verdicts"].items():
@@ -217,6 +318,25 @@ def _print_comparison(results: dict[str, list[list[dict]]], chunks):
                     print(f'      "{m["quote"]}" - {m.get("quote_by") or "?"}')
 
 
+def _print_whole(results):
+    for content_id, labelled, runs in results:
+        print(f"\n=== content {content_id}")
+        for run, memories in enumerate(runs):
+            sc = score_whole(labelled, memories)
+            print(f"  run {run}: walks found {sc['walks_found']}/{sc['walks']}")
+            for name in ("chunked", "whole"):
+                side = sc[name]
+                bad = {k: v for k, v in side["checks"].items() if v}
+                print(f"    {name:<8} kept {side['kept']:>3}  dups {side['dups']}  {bad or ''}")
+        print("  chunked (labelled):")
+        for m in labelled:
+            print(f"    [{m['verdict']}] {m['venue']}: {m['summary']}")
+        for run, memories in enumerate(runs):
+            print(f"  whole, run {run}:")
+            for m in memories or [{"venue": "(nothing)", "summary": ""}]:
+                print(f"    {m.get('venue')}: {m.get('summary')}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compare", metavar="PROMPT_FILE", help="a candidate system prompt")
@@ -229,7 +349,21 @@ def main():
     parser.add_argument(
         "--half", choices=("tune", "check"), help="--labels on even or odd content ids only"
     )
+    parser.add_argument("--whole", nargs="?", type=int, const=5, metavar="VIDEOS")
+    parser.add_argument("--runs", type=int, default=1, help="--whole draws per video")
     args = parser.parse_args()
+
+    if args.whole:
+        with open("tests/fixtures/walk_labels.json") as f:
+            labels = json.load(f)["memories"]
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        with get_session() as session:
+            results = [
+                (cid, labelled, [read_whole(session, client, cid, r) for r in range(args.runs)])
+                for cid, labelled in labelled_videos(session, labels, args.whole)
+            ]
+        _print_whole(results)
+        return
 
     if args.labels:
         with open(args.labels) as f:

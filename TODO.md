@@ -232,6 +232,28 @@ is to `pipeline/extract.py` unless named.
       OSM stores as points need an `around` query, which the public server
       times out on. Then check that the ranking reads better.
 
+From the research (docs/04, *Research, 2026-10-02*), in order:
+
+- [ ] **A video read whole: measured, not shipped.** (checked 2026-10-02)
+      It kept a third fewer memories and lost a walk on both runs (docs/04,
+      *A video read whole*). Before trying again, draw today's chunked prompt
+      twice on the same five videos, since the labels come from older prompts,
+      and try 15-minute chunks as the middle course.
+- [ ] **Rank, don't bar.** A pairwise judge, both orders, over a video's
+      candidates (and later a neighbourhood's), in place of `worth_telling`'s
+      absolute bar.
+- [ ] **40 labels by a person.** `python -m pipeline.review` has 0 rows; the
+      judge is tuned on agent labels. Calibrate before trusting a new judge.
+- [ ] **Pins by choice.** Give the model a geocoder's top 5 (Photon,
+      Wikidata P625) and let it choose, for the 55 `llm` places.
+- [ ] **Then against now from Wikidata.** Inception, demolition and
+      significant events for the linked place, as the contrast line.
+- [ ] **Public-domain memoirs** from Runeberg/ADL (*Mit Livs Eventyr*, Nexø)
+      through the existing book path.
+- [ ] **Batches API** before any whole-channel run: half price.
+- [ ] **Check Haiku 4.5's retirement date.** Research read "not sooner than
+      2026-10-15" on the models page; `CLASSIFIER_MODEL` defaults to it.
+
 ---
 
 ## Phase 0 — Design questions
