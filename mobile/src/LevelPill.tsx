@@ -28,7 +28,7 @@ export default function LevelPill({ level, into, place, onPress }: Props) {
       style={styles.pill}
       accessibilityRole="button"
       accessibilityLabel={`${line}, ${Math.round(into * 100)}% to the next.`}
-      accessibilityHint="Your walks, levels and keepsakes"
+      accessibilityHint="Your level and every walk"
       onPress={onPress}
     >
       <Glyph name="figure.walk" size={15} color={real.ember} />

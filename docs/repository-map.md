@@ -99,7 +99,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/billing.py` | Who has paid: RevenueCat's webhook and the read-back that writes `subscriptions`. `key_purchases` is history |
-| `api/progression.py` | XP, level, keepsakes and the rare tier, counted from finished walks and never stored or sold |
+| `api/progression.py` | XP, level and the rare tier, counted from finished walks and never stored or sold |
 | `api/privacy.py` | The privacy policy both app stores require, served from here. Its #contact is the app's Contact row |
 | `api/moderation.py` | Screens a post, note or name by local rules before it is public (App Store 1.2) |
 | `api/blocked_words.txt` | The words `moderation.py` refuses: LDNOOBW English and Danish, pruned |
@@ -133,7 +133,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
-| `mobile/src/HowItWorks.tsx` | What the level pill opens: level, XP, the keepsake shelf, then how walks work |
+| `mobile/src/HowItWorks.tsx` | What the level pill opens: level, XP, every walk as a card, then how walks work |
+| `mobile/src/WalkCard.tsx` | A past walk as a card, drawn as its shape (`react-native-svg`); `WalkShape` for the finish card and journal rows |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
 | `mobile/src/Glyph.tsx` | Every icon, as an SF Symbol (`@expo/ui`) |
 | `mobile/src/StartupLogo.tsx` | The launch logo |

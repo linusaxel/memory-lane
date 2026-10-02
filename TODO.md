@@ -478,7 +478,7 @@ day", and *The map: keep showing every pin* is moot.
 ### Decide first
 
 - [x] **K1 D: What a key does.** Decided 2026-10-03: nothing, keys are gone;
-      walks earn XP and keepsakes instead (docs/10, *Walks earn XP; rare
+      walks earn XP and are kept as cards instead (docs/10, *Walks earn XP; rare
       memories wait for a level*). Was: one is earned per finished walk
       and it opens nothing yet. Rules it must keep: never sold (so a random
       reward stays clear of Apple 3.1.1 odds and the Belgian/Dutch loot-box

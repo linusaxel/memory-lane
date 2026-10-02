@@ -495,23 +495,10 @@ export type Profile = {
   level: number;
   xp_level: number;
   xp_next: number;
-  /** What walks left, one entry per kind, and how many kinds there are. */
-  items: Item[];
-  items_total: number;
   /** Every step counted, for the journal. Buys nothing. */
   steps: number;
   /** Steps count from here, UTC without a zone; null until there is an account. */
   steps_counted_until: string | null;
-};
-
-export type Item = {
-  /** Its place in the server's list, so the shelf can leave gaps for the rest. */
-  index: number;
-  name: string;
-  /** An SF Symbol name. */
-  glyph: string;
-  line: string;
-  count: number;
 };
 
 export type Draft = {

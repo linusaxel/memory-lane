@@ -48,8 +48,8 @@ Deleting your account deletes the total.</p>
 
 <h2>Walks and levels</h2>
 <p>A memory opens only as a stop of a walk the app planned, standing there. Finished
-walks earn experience and now and then a keepsake; both are worked out from the walks
-we already keep and are never stored on their own, and none of it can be bought.
+walks earn experience, worked out from the walks we already keep and never stored on
+its own, and it cannot be bought. Your walks are shown back to you as their shapes.
 Deleting your account deletes the walks. If you once bought keys, we keep the store's
 transaction id for each pack until you delete your account.</p>
 

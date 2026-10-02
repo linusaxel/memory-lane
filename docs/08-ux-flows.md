@@ -302,7 +302,7 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 **Only on a walk:** only a stop of the walk in progress opens, and only
 standing on it; nothing else is drawn, so nothing else can be stood on. The
 top of the map says your level, "Level 3" over a thin XP bar, and a tap
-opens your walks (level, XP, keepsakes, how it works) and counts steps again
+opens Your walks (level, XP, every walk drawn as a card, how it works) and counts steps again
 (docs/10, "Walks earn XP; rare memories wait for a level").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
@@ -966,10 +966,11 @@ The last stop unlocks and the day should feel finished.
 2. Closing its sheet shows the closing card. The camera stops following you,
    and the map fits the whole walk, drawn from the start and back home on a
    loop.
-3. The card reads "Nice walk.", then "5 memories · 4.1 km loop · 52 min" (the
+3. The card reads "Nice walk." beside the walk's shape, the card it becomes in
+   Your walks, then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
-   another day), then "+60 XP" when finishing earned it (once a day), "Level 3" when it
-   reached one and "Found: Tram ticket" when it left a keepsake, then
+   another day), then "+60 XP" when finishing earned it (once a day) and "Level 3" when it
+   reached one, then
    the streak once it is more than one day (F27).
 4. Done goes back to the map, following you again, with the walk card at
    "Every stop unlocked".
@@ -1099,7 +1100,7 @@ planner once today's walk is walked (F1), or **Subscribe** in Settings.
 3. Settings shows "Subscribed until …" and **Manage subscription**; signed in
    and not subscribed, **Subscribe**.
 
-XP, levels and keepsakes are not sold: they come from finishing a walk, once a day.
+XP and levels are not sold: they come from finishing a walk, once a day.
 
 **Why:** [A walk planner, nothing else](10-decisions.md#a-walk-planner-nothing-else)
 and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it-our-table-decides).

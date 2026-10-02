@@ -22,7 +22,7 @@ from api.models import (
     StepsRequest,
 )
 from api.moderation import screen
-from api.progression import ITEMS, XP_STEP, level, progress_of
+from api.progression import XP_STEP, level, xp_of
 from api.queries import (
     CREDIT_STEPS,
     DELETE_ORPHAN_SUBMITTED_PLACE,
@@ -134,14 +134,12 @@ def profile_of(session, device: str) -> Profile:
         r.d for r in session.execute(text(STREAK_DAYS_QUERY), {"device_id": device}).fetchall()
     ]
     streak = current_streak(streak_days, api.gate.today())
-    xp, items = progress_of(session, device)
+    xp = xp_of(session, device)
     earned = {
         "xp": xp,
         "level": level(xp),
         "xp_level": XP_STEP * (level(xp) - 1) ** 2,
         "xp_next": XP_STEP * level(xp) ** 2,
-        "items": items,
-        "items_total": len(ITEMS),
     }
 
     if not row:

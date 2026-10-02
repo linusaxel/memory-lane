@@ -15,11 +15,12 @@ import Slider from '@react-native-community/slider';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { Item, LocatedMemory, WalkAsk } from './api.ts';
+import type { Coordinates, LocatedMemory, WalkAsk } from './api.ts';
 import Glyph from './Glyph.tsx';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
 import { button, buttonText, color, dim, floating, font, label } from './theme.ts';
+import { WalkShape } from './WalkCard.tsx';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 
@@ -313,6 +314,8 @@ type WalkDoneProps = {
   /** What finishing earned, once the profile is back; null for a
    *  subscriber's second walk of the day, which earns nothing. */
   reward: Reward | null;
+  /** The walk drawn whole, for the card it becomes in Your walks. */
+  path: Coordinates[];
   onDone: () => void;
 };
 
@@ -320,7 +323,6 @@ export type Reward = {
   xp: number;
   /** The level reached, when this walk reached one. */
   level: number | null;
-  item: Item | null;
 };
 
 type EndWalkProps = {
@@ -375,7 +377,7 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
 }
 
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
-export function WalkDone({ stops, meters, loop, minutes, streak, reward, onDone }: WalkDoneProps) {
+export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, onDone }: WalkDoneProps) {
   const took =
     minutes === null
       ? ''
@@ -384,15 +386,17 @@ export function WalkDone({ stops, meters, loop, minutes, streak, reward, onDone 
         : ` · ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
   return (
     <View style={styles.card} accessibilityViewIsModal>
-      <Text style={styles.doneTitle} accessibilityRole="header" testID="walk-done">
-        Nice walk.
-      </Text>
+      <View style={styles.doneTop}>
+        <Text style={styles.doneTitle} accessibilityRole="header" testID="walk-done">
+          Nice walk.
+        </Text>
+        <WalkShape path={path} size={56} />
+      </View>
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
       {reward && <Text style={label}>{`+${reward.xp} XP`}</Text>}
       {reward?.level && <Text style={label}>{`Level ${reward.level}`}</Text>}
-      {reward?.item && <Text style={label}>{`Found: ${reward.item.name}`}</Text>}
       {streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>}
       <Pressable
         style={dim(styles.primary)}
@@ -407,6 +411,7 @@ export function WalkDone({ stops, meters, loop, minutes, streak, reward, onDone 
 }
 
 const styles = StyleSheet.create({
+  doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   value: { ...font.uiBold, fontSize: 22, color: color.ink, marginTop: 4 },
   slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },

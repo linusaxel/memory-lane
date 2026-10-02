@@ -45,7 +45,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ the level pill             top centre, every stage (src/LevelPill.tsx): "Level 3", an ember
 │                              walker before it, a thin XP bar under it, rolling when it changes.
 │                              A tap recounts steps and opens Your walks (src/HowItWorks.tsx):
-│                              level and XP, the keepsake shelf (blanks for the unfound), then
+│                              level and XP, every walk as a card drawn as its shape (src/WalkCard.tsx), then
 │                              planning, standing there, finishing to level up, one walk a day
 ├─ you ("You")                top right, your photo or initial (src/Avatar.tsx, 38pt) in a 44pt
 │                              glass circle, and under it a native menu (src/AccountMenu.tsx):
@@ -178,6 +178,7 @@ with no network is never stopped at the gate.
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/UnlockHere.tsx` | the ring over the map, with the place it opens |
 | `src/LevelPill.tsx` | the top of the map: your level and an XP bar, the number rolling (`@expo/ui`) |
+| `src/WalkCard.tsx` | a past walk drawn as its shape: the cards in Your walks, the finish card's and journal rows' small shape |
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |

@@ -37,7 +37,9 @@ Finch, Orna and Walkr have no public revenue figures.
 - An expected reward for doing something people already enjoy lowers their
   interest in it (128 studies, d ≈ −0.4,
   [Deci, Koestner & Ryan 1999](https://depts.washington.edu/techdocs/papers/deciExtrinsicRewardsAndIntrinsicMotivation99.pdf)).
-  An unexpected one does not. So: XP always, a keepsake sometimes.
+  An unexpected one does not. So: XP always, and no loot that is owed per walk.
+  (Surprise keepsakes shipped and were cut the same day for walk cards: your
+  own walks, drawn, are the collection.)
 - Points, levels and leaderboards on their own are roughly neutral for
   motivation ([Mekler et al. 2017](https://glassmanlab.seas.harvard.edu/annotated_works/mekler17.pdf)).
   When a reward feels out of place, motivation falls
@@ -77,4 +79,4 @@ that empties a newcomer's walk.
 **If and when to charge:** a subscription for convenience (more walks, offline
 city packs, narration, walk history), annual first, with the paywall after the
 first opened memory. Cosmetics at a shown price, never in random boxes. Never
-sell XP, levels, keepsakes or the rare tier.
+sell XP, levels or the rare tier.

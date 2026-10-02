@@ -285,25 +285,27 @@ earned by effort, "think of WoW, Naxx". Research notes and sources:
   one walk a day (`FINISHED_WALKS_QUERY`, `api/progression.py`), like the
   streak. Level n+1 at 50·n². Across `MY_DEVICES`, so a merged anonymous
   account brings its walks and nothing needs moving.
-- **A keepsake now and then, never every walk.** One walk in three, by a
-  hash of the walk, and always on a level up. An expected reward for an
-  activity people already enjoy lowers interest in it (Deci, Koestner & Ryan
-  1999); a surprise does not. Keepsakes are cosmetic and do nothing. `ITEMS`
-  is append-only: a drop is an index into it.
+- **Your walks are the collection.** Every walk is a card drawn as its own
+  shape (`src/WalkCard.tsx`), in Your walks and on the journal's walk rows,
+  and the finish card shows the new one. It is something you did, not a
+  trinket: generic keepsakes (one walk in three, by surprise) shipped the
+  same day and were cut by the founder for this. The shape is the planned
+  walk through its stops (`daily_routes.legs`), not a GPS track: the start is
+  never stored and location is foreground only (UI.md rule 2).
 - **The rare tier is earned, never bought.** Memories with
   `contrast_score >= 0.9` (about a tenth) join a planned walk only from level
   4. Effort-gating like Naxx, but small: Blizzard's 40-man Naxx was seen by
   few and re-released for everyone, and a neighbourhood has few memories. The
   gate itself is unchanged: a rare stop opens standing on it, for anyone
   whose walk passed it.
-- **Nothing here is sold.** Not XP, a level, a keepsake or the rare tier. Paid
+- **Nothing here is sold.** Not XP, a level or the rare tier. Paid
   random items bring odds disclosure (Apple 3.1.1, Google Play), a Belgian ban
   and the EU Digital Fairness Act; selling access is what Pokémon GO's remote
   raid passes and Wizards Unite's energy were punished for. Money is decided
   later, and a subscription for convenience is the research's lead.
 
 Rejected: equipment that changes which or how many memories you get, an
-inventory cap, loot on every walk, stat screens. Walk-shape perks (+1 stop, a
+inventory cap, loot on every walk, generic keepsakes, stat screens. Walk-shape perks (+1 stop, a
 preferred layer) wait for retention data.
 
 ### A map of what is locked, and only today's walk unlocks

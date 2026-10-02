@@ -46,6 +46,7 @@ import Glyph from './Glyph.tsx';
 import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
+import { WalkShape, walkPath } from './WalkCard.tsx';
 import { attention, loadSeen, saveSeen, type Seen } from './seen.ts';
 import { color, dim, figure, font, label } from './theme.ts';
 
@@ -321,6 +322,7 @@ export default function Memories({
               <Row
                 place={walkDate(item.walk.route_date)}
                 summary={item.walk.memories.map((memory) => memory.place.name).join(' · ')}
+                shape={walkPath(item.walk)}
                 // What it opened, never what it missed: every walk here opened something.
                 meta={`${item.walk.earned} ${item.walk.earned === 1 ? 'memory' : 'memories'} · ${distance(item.walk.budget_meters)}`}
                 onPress={() => setOpenWalk((open) => (open === item.index ? null : item.index))}
@@ -512,6 +514,7 @@ function Row({
   meta,
   badge,
   stop,
+  shape,
   onPress,
 }: {
   place: string;
@@ -521,16 +524,23 @@ function Row({
   badge?: string;
   /** A stop, under its walk: its place in the walk, on the rail. */
   stop?: number;
+  /** A walk: its shape, drawn small at the right. */
+  shape?: Coordinates[];
   onPress?: () => void;
 }) {
   return (
     <Pressable
-      style={dim([styles.row, stop !== undefined && styles.stop])}
+      style={dim([styles.row, stop !== undefined && styles.stop, shape && styles.withShape])}
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={[stop && `Stop ${stop}`, place, distance, meta, badge].filter(Boolean).join(', ')}
     >
+      {shape && (
+        <View style={styles.shape}>
+          <WalkShape path={shape} size={52} />
+        </View>
+      )}
       {stop !== undefined && (
         <>
           <View style={styles.rail} />
@@ -606,6 +616,8 @@ const styles = StyleSheet.create({
   // sits between rows (`separator`), inset to the text like iOS's own lists,
   // and the padding is even so it belongs to neither row.
   row: { gap: 6, paddingHorizontal: 24, paddingVertical: 18 },
+  withShape: { paddingRight: 24 + 52 + 12 },
+  shape: { position: 'absolute', right: 24, top: 18 },
   separator: { height: StyleSheet.hairlineWidth, marginHorizontal: 24, backgroundColor: color.rule },
   // A walk's stops hang off one rail, numbered like the map's route badges,
   // instead of each being ruled off as its own entry. Rows sit edge to edge,

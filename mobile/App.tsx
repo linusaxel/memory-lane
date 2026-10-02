@@ -1055,11 +1055,9 @@ export default function App() {
               if (!mounted.current) return;
               setProfile(who);
               if (finished && before && who.xp > before.xp) {
-                const had = new Map(before.items.map((item) => [item.index, item.count]));
                 setReward({
                   xp: who.xp - before.xp,
                   level: who.level > before.level ? who.level : null,
-                  item: who.items.find((item) => item.count > (had.get(item.index) ?? 0)) ?? null,
                 });
               }
             })
@@ -1528,6 +1526,7 @@ export default function App() {
               minutes={doneMinutes}
               streak={profile?.streak ?? 0}
               reward={reward}
+              path={donePath}
               onDone={() => setWalkDone(false)}
             />
           )}
@@ -1783,6 +1782,7 @@ export default function App() {
           visible={howOpen}
           onClose={() => setHowOpen(false)}
           profile={profile}
+          device={device}
           radiusMeters={radiusMeters}
         />
 

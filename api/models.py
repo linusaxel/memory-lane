@@ -306,17 +306,6 @@ class MyMemoriesResponse(BaseModel):
     meta: MyMemoriesMeta
 
 
-class Item(BaseModel):
-    """A keepsake a finished walk left. Index is its place in
-    api.progression.ITEMS, so the app can draw what is still to find."""
-
-    index: int
-    name: str
-    glyph: str
-    line: str
-    count: int
-
-
 class Profile(BaseModel):
     """What this device is, to the extent it is anybody.
 
@@ -348,8 +337,6 @@ class Profile(BaseModel):
     level: int = 1
     xp_level: int = 0
     xp_next: int = 50
-    items: list[Item] = []
-    items_total: int = 0
     # Steps are a lifetime total for the journal and buy nothing, counted from
     # steps_counted_until (naive UTC), null until there is a user row.
     steps: int = 0
