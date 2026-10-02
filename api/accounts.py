@@ -10,6 +10,7 @@ from datetime import date, timedelta
 from fastapi import APIRouter, Form, HTTPException, Query, Response, UploadFile
 from sqlalchemy import text
 
+import api.gate
 import api.media
 from api.auth import apple_identity, either_identity, google_identity
 from api.models import (
@@ -134,7 +135,7 @@ def profile_of(session, device: str) -> Profile:
     streak_days = [
         r.d for r in session.execute(text(STREAK_DAYS_QUERY), {"device_id": device}).fetchall()
     ]
-    streak = current_streak(streak_days, date.today())
+    streak = current_streak(streak_days, api.gate.today())
 
     if not row:
         return Profile(unlocked=unlocked, streak=streak)

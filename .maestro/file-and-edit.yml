@@ -69,11 +69,10 @@ appId: ${APP_ID}
 - hideKeyboard
 - tapOn: "Close"
 
-# Back on the map, it is a pin: the map draws what is locked and what you
-# filed, and this was the one that never showed.
-- extendedWaitUntil:
-    visible: "The step by the ferry landing.*\\. (Unlocked, in your collection|Open)\\."
-    timeout: 30000
+# Back on the map, it is not a pin: the map shows only what is locked by
+# default (AccountMenu's MAP_SHOWS_DEFAULT), and what you filed is open. It
+# comes back in the journal below.
+- assertNotVisible: "The step by the ferry landing.*\\. (Unlocked, in your collection|Open)\\."
 
 # The tab says something came back before it is opened, and the row says what.
 - tapOn: "Journal"

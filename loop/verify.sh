@@ -34,8 +34,10 @@ $PY -m ruff check . >/dev/null || { echo "GATE=RED ruff check"; FAIL=1; }
 $PY -m ruff format --check . >/dev/null || { echo "GATE=RED not formatted - run: venv/bin/python -m ruff format ."; FAIL=1; }
 
 # --- 3. database, if any test needs it -------------------------------------
-# Only pay the Docker cost when a test is actually marked `db`.
-if $PY -m pytest --collect-only -q -m db 2>/dev/null | grep -q '::'; then
+# Only pay the Docker cost when a test is actually marked `db`. Not `grep -q`:
+# it quits at the first match, pytest dies of SIGPIPE, pipefail fails the
+# test, and the Docker checks below were skipped every run.
+if $PY -m pytest --collect-only -q -m db 2>/dev/null | grep '::' >/dev/null; then
   docker info >/dev/null 2>&1 || { echo "GATE=INFRA Docker is not running - a human must start Docker Desktop"; exit 2; }
   docker compose up -d --wait db >/dev/null 2>&1 || { echo "GATE=INFRA db service failed to start"; exit 2; }
   for _ in $(seq 1 30); do

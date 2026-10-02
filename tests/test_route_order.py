@@ -107,7 +107,16 @@ def test_the_budget_caps_the_walk_not_the_count():
 
 
 def test_within_budget_repeatable_and_full_as_the_budget_allows(route_seed):
-    rng = random.Random(route_seed + 1)
+    within_budget_and_full(random.Random(route_seed + 1))
+
+
+def test_a_leftover_that_would_starve_a_layer_stays_out():
+    # Instance 69: two historical stops, one out of reach. A fifth stranger
+    # fits the budget but leaves no slot for the historical share.
+    within_budget_and_full(random.Random(3605168176 + 1))
+
+
+def within_budget_and_full(rng):
     for i in range(100):
         picks = [
             SimpleNamespace(
@@ -123,13 +132,22 @@ def test_within_budget_repeatable_and_full_as_the_budget_allows(route_seed):
         assert walk <= 4000
         assert len(set(map(id, chosen))) == len(chosen) <= 5
         assert chosen == choose(picks, 5, str(i), 4000, False)
-        # Short of five means no leftover could even be tacked onto the end.
+        # Short of five means no leftover could even be tacked onto the end,
+        # bar one that would leave a layer short of its share.
         if len(chosen) < 5:
             last = chosen[-1] if chosen else ANCHOR
             for c in picks:
-                if all(c is not s for s in chosen):
+                if all(c is not s for s in chosen) and not starves_a_layer(picks, [*chosen, c]):
                     extra = meters_between(Coordinates(lat=last.lat, lng=last.lng), c)
                     assert walk + extra * ROUTE_CIRCUITY > 4000
+
+
+def starves_a_layer(picks, walk, size=5):
+    missing = sum(
+        max(0, min(sum(p.layer == k for p in picks), size // 2) - sum(s.layer == k for s in walk))
+        for k in ("stranger", "historical")
+    )
+    return missing > size - len(walk)
 
 
 def test_a_loop_counts_the_walk_home():

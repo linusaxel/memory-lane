@@ -23,21 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **The gate says RED, not INFRA, when Docker is down.** 2026-10-01: with the
-  daemon stopped, `./loop/verify.sh` exited 1 with 413 db-test errors, which
-  reads as "fix your code" until you find "Cannot connect to the Docker daemon"
-  in the setup errors. Fix: `docker info` up front in verify.sh, exit 2 if it fails.
-- **`test_route_order` reddens the gate at random.** 2026-10-01:
-  `ROUTE_SEED=3605168176` fails
-  `test_within_budget_repeatable_and_full_as_the_budget_allows` on untouched
-  main, so a gate run went RED on a change that never touched routing, and it
-  took a stash and a replay to prove that. Fix: make that seed pass (or relax
-  the "nothing more fits" check by the circuity margin) and pin it in the test.
-- **The streak and the unlock rules use different clocks.** 2026-10-01:
-  `api/accounts.py` `current_streak(..., date.today())` uses the host's date,
-  but everything else uses UTC `gate.today()`, which is exactly the bug
-  `gate.py` warns about. Fix: pass `today()`.
-
 - **`dedup --memories` misses a book's retellings when they sit on different
   place rows.** 2026-10-01: it found none of the dog, grocer or gallows pairs
   in source 204 (Schloss Friedrichsberg against Frederiksberg Slot, and so
@@ -76,6 +61,13 @@ delete an entry when its fix lands.
   "xcodebuild failed". A clean `build/` did not help and wiped the codegen
   output `pod install` keeps there; about 20 minutes to find. Fix: a run.sh
   preflight that the binary exists, else "rm -rf mobile/ios/Pods/React-Core-prebuilt && pod install".
+  2026-10-02, the same trap twice more: codegen sources missing from
+  `mobile/ios/build/generated` (fixed by `pod install`), then a `mobile/ios`
+  generated before 4205124 still copying the four deleted fonts (fixed by
+  `npx expo prebuild --platform ios --clean`, then `pod install`). Both
+  surfaced only as "xcodebuild failed" after a several-minute build. Fix,
+  widened: run.sh stamps a hash of app.json + package.json at prebuild, and
+  says "run prebuild --clean" when it differs.
 
 - **Checking a preview-card change means minutes-long e2e flows.** 2026-09-27:
   the four flows that touch planning (look-around, lakes-loop, walk-and-unlock,
@@ -86,11 +78,6 @@ delete an entry when its fix lands.
   another) that the long flows stop re-asserting, so a card change is checked
   in under a minute.
 
-- **file-and-edit.yml is red on main.** 2026-09-27: after Post, the flow's
-  `".*ferry horn.* #food"` never shows, on a clean `main` too, so nothing after
-  it (the journal's My Memories tab, edit, delete) is checked end to end. It
-  cost a second e2e run to prove the break was not the journal change. Fix: find
-  what the posted sheet now renders instead, and assert on that.
 - **A classifier prompt change can't be measured without a throwaway script.**
   2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
