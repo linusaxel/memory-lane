@@ -289,14 +289,9 @@ def on_walk(session, device, *memory_ids):
     session.commit()
 
 
-def give_keys(session, device, keys):
-    """Set `device`'s account's key count."""
-    from sqlalchemy import text
-
+def give_user(session, device):
+    """Give `device` an account row, as its first write would."""
     from api.accounts import user_for_device
 
-    user_id = user_for_device(session, device)
-    session.execute(
-        text("UPDATE users SET keys = :k WHERE id = CAST(:u AS uuid)"), {"k": keys, "u": user_id}
-    )
+    user_for_device(session, device)
     session.commit()

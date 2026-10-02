@@ -38,7 +38,6 @@ from api.models import (
 )
 from api.moderation import screen
 from api.queries import (
-    CREDIT_WALK_KEY,
     DELETE_ORPHAN_SUBMITTED_PLACE,
     EARNED_QUERY,
     MEDIA_ATTACH,
@@ -182,18 +181,11 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
             """),
             {"device": body.device, "memory_id": memory_id},
         )
-        # Finishing today's walk earns a key.
-        walk = {"device_id": body.device, "memory_id": memory_id, "today": today()}
-        finished = session.execute(text(ROUTE_COMPLETED_QUERY), walk).first()
-        if finished:
-            session.execute(
-                text(CREDIT_WALK_KEY),
-                {
-                    **walk,
-                    "user_id": user_for_device(session, body.device),
-                    "route_id": finished.id,
-                },
-            )
+        # Finishing today's walk is what XP counts (api.progression).
+        session.execute(
+            text(ROUTE_COMPLETED_QUERY),
+            {"device_id": body.device, "memory_id": memory_id, "today": today()},
+        )
 
     return memory
 

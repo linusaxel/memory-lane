@@ -30,6 +30,9 @@ PARAMS = {
     "tag": None,
     # None means no "Walk here" pin.
     "query": "coffee",
+    # The route's rare tier, closed: its full predicate.
+    "rare_open": False,
+    "rare_score": 0.9,
     "memory_id": 1,
     "place_id": 1,
     "content_id": 1,

@@ -14,6 +14,7 @@ import pytest
 from sqlalchemy import text
 
 from api import read, route_solver, streets
+from api.accounts import touch_device
 from api.models import Coordinates
 
 pytestmark = pytest.mark.db
@@ -740,8 +741,8 @@ def _walk_one_stop(client):
     _end(client)
 
 
-def _keys(client):
-    return client.get(f"/v1/me?device={DEVICE}").json()["keys"]
+def _xp(client):
+    return client.get(f"/v1/me?device={DEVICE}").json()["xp"]
 
 
 def _finish(client):
@@ -782,15 +783,16 @@ def test_a_subscriber_walks_again(client, db_session):
     assert _route(client).is_success
 
 
-def test_finishing_a_walk_earns_a_key_once_a_day(client, db_session):
+def test_finishing_a_walk_earns_xp_once_a_day(client, db_session):
     for n in range(1, 9):
         _offset(db_session, n)
     _subscribe(db_session)
     _finish(client)
-    assert _keys(client) == 1, "every stop free, and a key for the last"
+    first = _xp(client)
+    assert first > 0
     _end(client)
     _finish(client)
-    assert _keys(client) == 1, "a subscriber's second walk earns nothing"
+    assert _xp(client) == first, "a subscriber's second walk earns nothing"
 
 
 def test_a_walk_left_unfinished_earns_no_key(client, db_session):
@@ -798,4 +800,29 @@ def test_a_walk_left_unfinished_earns_no_key(client, db_session):
         _offset(db_session, n)
     db_session.commit()
     _walk_one_stop(client)
-    assert _keys(client) == 0
+    assert _xp(client) == 0
+
+
+def test_a_rare_memory_joins_a_walk_from_its_level(client, db_session):
+    """docs/10, "Walks earn XP; rare memories wait for a level"."""
+    rare = _offset(db_session, 1)
+    _offset(db_session, 2)
+    db_session.execute(text("UPDATE memories SET contrast_score = 0.95 WHERE id = :m"), {"m": rare})
+    db_session.commit()
+
+    def stops():
+        return [m["id"] for m in _preview(client).json()["memories"]]
+
+    assert rare not in stops()
+    touch_device(db_session, DEVICE)
+    # Yesterday's walk of 41 stops and 4 km: 450 XP, level 4.
+    db_session.execute(
+        text(
+            "INSERT INTO daily_routes (device_id, route_date, memory_ids, completed_at) "
+            "VALUES (CAST(:d AS uuid), CURRENT_DATE - 1, CAST(:m AS integer[]), CURRENT_TIMESTAMP)"
+        ),
+        {"d": DEVICE, "m": list(range(1, 42))},
+    )
+    db_session.commit()
+    assert client.get(f"/v1/me?device={DEVICE}").json()["level"] == 4
+    assert rare in stops()

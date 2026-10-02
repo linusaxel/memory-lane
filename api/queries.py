@@ -510,19 +510,15 @@ WALKED_TODAY_QUERY = f"""
     )
 """
 
-# A key for finishing a walk, one a day: a subscriber may walk again, and the
-# second walk earns nothing. Run after ROUTE_COMPLETED_QUERY marked :route_id.
-CREDIT_WALK_KEY = f"""
-    UPDATE users SET keys = keys + 1
-    WHERE id = CAST(:user_id AS uuid)
-      AND NOT EXISTS (
-          SELECT 1 FROM daily_routes
-          WHERE device_id IN {MY_DEVICES}
-            AND route_date = CAST(:today AS date)
-            AND completed_at IS NOT NULL
-            AND id <> :route_id
-      )
+# Every finished walk this account took, oldest first, one a day: a
+# subscriber's second walk earns nothing more (api.progression).
+FINISHED_WALKS_QUERY = f"""
+    SELECT DISTINCT ON (route_date) id, cardinality(memory_ids) AS stops, budget_meters
+    FROM daily_routes
+    WHERE device_id IN {MY_DEVICES} AND completed_at IS NOT NULL
+    ORDER BY route_date, completed_at
 """
+
 
 # Credit the steps the phone counted since the watermark, and move it to now.
 # Only if `since` is still the watermark, so a retried or raced sync is
@@ -549,12 +545,13 @@ SUBSCRIBED_QUERY = """
 """
 
 # Today's route candidates: nearby, not already earned, and actually worth the
-# walk. Three predicates that exist nowhere else in this file:
+# walk. Four predicates that exist nowhere else in this file:
 #   - not already unlocked - the inverse of DEVICE_UNLOCKS_QUERY's `earned` CTE,
 #     over the same MY_DEVICES so a second phone on one account sees the same
 #     route rather than re-discovering what its sibling already earned.
 #   - only walk-to-unlock memories - a centroid a route sent you to would open
 #     the moment you arrived, which is not a stop, it is scenery.
+#   - a rare one only once :rare_open (api.progression.RARE_LEVEL).
 # Ordered by distance and not CONTRAST_ORDER on purpose: a route is where to
 # walk next, not a feed to rank.
 ROUTE_CANDIDATES_QUERY = f"""
@@ -570,6 +567,7 @@ WHERE
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
+    AND (:rare_open OR m.contrast_score IS NULL OR m.contrast_score < :rare_score)
 -- A stack's memories share one distance; the id makes which one stands for
 -- the place the same on every call, so a preview and its accept agree.
 ORDER BY distance_meters ASC, m.id ASC

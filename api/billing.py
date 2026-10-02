@@ -1,6 +1,6 @@
-"""Who has paid. RevenueCat sells the subscription and the keys; this writes
-`subscriptions`, which the unlock and the walk limit read, and credits each key
-pack once through `key_purchases`.
+"""Who has paid. RevenueCat sells the subscription; this writes
+`subscriptions`, which the walk limit reads. `key_purchases` is history from
+when keys were sold.
 
 Every event is treated as "something changed for this user": the subscriber is
 read back from RevenueCat and the row made to match. Duplicate, late or
@@ -106,7 +106,7 @@ def revenuecat_webhook(body: dict, authorization: str = Header("")):
 
 @router.post("/v1/me/subscription", response_model=Profile)
 def refresh_subscription(body: DeviceRequest):
-    """Read this account's subscription and keys back now. The app calls it
+    """Read this account's subscription back now. The app calls it
     straight after a purchase or a restore, so an unlock a second later is not
     refused while the webhook is still on its way."""
     with get_session() as session:

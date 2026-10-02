@@ -118,8 +118,8 @@ appId: ${APP_ID}
       id: "walk-done"
     timeout: 30000
 - assertVisible: "4 memories · .* loop · .* min"
-# Every stop opened for nothing, and finishing earned a key.
-- assertVisible: "\\+1 key"
+# Every stop opened for nothing, and finishing earned XP.
+- assertVisible: "\\+[0-9]+ XP"
 # F27: e2e/run.sh gave this device an unlock yesterday, so today makes two.
 - assertVisible: "2 days in a row"
 - tapOn: "Done"

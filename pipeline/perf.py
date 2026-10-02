@@ -197,6 +197,8 @@ def main() -> None:
                 "limit": ROUTE_POOL,
                 "tag": None,
                 "include": None,
+                "rare_open": True,
+                "rare_score": 1,
             },
             5,
         ),

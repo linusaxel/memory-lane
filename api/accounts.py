@@ -22,13 +22,13 @@ from api.models import (
     StepsRequest,
 )
 from api.moderation import screen
+from api.progression import ITEMS, XP_STEP, level, progress_of
 from api.queries import (
     CREDIT_STEPS,
     DELETE_ORPHAN_SUBMITTED_PLACE,
     STREAK_DAYS_QUERY,
     UNLOCK_COUNT_QUERY,
 )
-from pipeline.config import PUBLIC_HOST
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -122,7 +122,7 @@ def profile_of(session, device: str) -> Profile:
                 ) AS providers,
                 s.expires_at AS subscribed_until,
                 COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed,
-                u.steps, u.steps_counted_until, u.keys
+                u.steps, u.steps_counted_until
             FROM devices d JOIN users u ON d.user_id = u.id
             LEFT JOIN subscriptions s ON s.user_id = u.id
             WHERE d.id = CAST(:device_id AS uuid)
@@ -134,9 +134,18 @@ def profile_of(session, device: str) -> Profile:
         r.d for r in session.execute(text(STREAK_DAYS_QUERY), {"device_id": device}).fetchall()
     ]
     streak = current_streak(streak_days, api.gate.today())
+    xp, items = progress_of(session, device)
+    earned = {
+        "xp": xp,
+        "level": level(xp),
+        "xp_level": XP_STEP * (level(xp) - 1) ** 2,
+        "xp_next": XP_STEP * level(xp) ** 2,
+        "items": items,
+        "items_total": len(ITEMS),
+    }
 
     if not row:
-        return Profile(unlocked=unlocked, streak=streak)
+        return Profile(unlocked=unlocked, streak=streak, **earned)
     return Profile(
         user_id=str(row.id),
         display_name=row.display_name,
@@ -150,7 +159,7 @@ def profile_of(session, device: str) -> Profile:
         subscribed_until=row.subscribed_until,
         steps=row.steps,
         steps_counted_until=row.steps_counted_until,
-        keys=row.keys,
+        **earned,
     )
 
 
@@ -245,20 +254,6 @@ def credit_steps(body: StepsRequest):
         return profile_of(session, body.device)
 
 
-if not PUBLIC_HOST:
-
-    @router.post("/v1/dev/keys", response_model=Profile)
-    def dev_keys(device: str = Query(..., pattern=DEVICE_PATTERN)):
-        """A key for nothing, off the public host only: the app's dev long
-        press, so testing what a key opens needs no walk and no store."""
-        with get_session() as session:
-            session.execute(
-                text("UPDATE users SET keys = keys + 1 WHERE id = CAST(:u AS uuid)"),
-                {"u": user_for_device(session, device)},
-            )
-            return profile_of(session, device)
-
-
 # Signing in binds devices.user_id and issues no token. api/auth.py verifies the
 # ID tokens; docs/10-decisions.md#identity has the why.
 
@@ -300,14 +295,7 @@ def absorb(session, old_user: str, new_user: str) -> None:
         """),
         {"new": new_user, "old": old_user},
     )
-    # Keys too, and the packs that bought them, or the cascade drops both.
-    session.execute(
-        text("""
-            UPDATE users SET keys = keys + (SELECT keys FROM users WHERE id = CAST(:old AS uuid))
-            WHERE id = CAST(:new AS uuid)
-        """),
-        {"new": new_user, "old": old_user},
-    )
+    # The key packs once bought, kept as history, or the cascade drops them.
     session.execute(
         text(
             "UPDATE key_purchases SET user_id = CAST(:new AS uuid) WHERE user_id = CAST(:old AS uuid)"

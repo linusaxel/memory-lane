@@ -306,6 +306,17 @@ class MyMemoriesResponse(BaseModel):
     meta: MyMemoriesMeta
 
 
+class Item(BaseModel):
+    """A keepsake a finished walk left. Index is its place in
+    api.progression.ITEMS, so the app can draw what is still to find."""
+
+    index: int
+    name: str
+    glyph: str
+    line: str
+    count: int
+
+
 class Profile(BaseModel):
     """What this device is, to the extent it is anybody.
 
@@ -331,11 +342,16 @@ class Profile(BaseModel):
     # date and reads subscribed=false. docs/10, "A walk planner, nothing else".
     subscribed: bool = False
     subscribed_until: datetime | None = None
-    # Keys are earned, one per finished walk, and open nothing yet. Steps are
-    # a lifetime total for the journal and buy nothing, counted from
+    # Counted from finished walks on every read, never stored or sold:
+    # api.progression. This level starts at xp_level, the next at xp_next.
+    xp: int = 0
+    level: int = 1
+    xp_level: int = 0
+    xp_next: int = 50
+    items: list[Item] = []
+    items_total: int = 0
+    # Steps are a lifetime total for the journal and buy nothing, counted from
     # steps_counted_until (naive UTC), null until there is a user row.
-    # docs/10, "A walk planner, nothing else".
-    keys: int = 0
     steps: int = 0
     steps_counted_until: datetime | None = None
 

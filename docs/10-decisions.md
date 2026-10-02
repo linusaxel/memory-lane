@@ -261,7 +261,8 @@ whole app; without one there is nothing to do.
   `not_on_walk` (`api/write.py` `pay_for_unlock`). Earned stays earned.
 - **One walk a day free; a subscription buys more walks** and nothing else
   (`_refuse_second_walk`). Walked out, the planner offers it.
-- **Keys are earned, never sold:** one per finished walk, once a day
+- **Keys are earned, never sold** (amended 2026-10-03 by *Walks earn XP;
+  rare memories wait for a level*: keys are gone): one per finished walk, once a day
   (`CREDIT_WALK_KEY`). What a key does is not decided yet (TODO.md). The rule
   it must keep: it never yields a summary off the spot. Not selling keys keeps
   any random reward out of loot-box rules (Apple 3.1.1, Belgium/Netherlands).
@@ -270,6 +271,40 @@ whole app; without one there is nothing to do.
 
 `GET /v1/memories/nearby` stays: the embed (`api/embed.py`) reads it, and it
 never served a summary. `POST /v1/dev/keys` stays off the public host.
+
+### Walks earn XP; rare memories wait for a level
+
+Status: Accepted 2026-10-03. Amends the Keys bullet of *A walk planner,
+nothing else*: there are no keys.
+
+The founder: give loot and XP after walks, RPG-style, with "certain access"
+earned by effort, "think of WoW, Naxx". Research notes and sources:
+`docs/research-progression.md`.
+
+- **XP every finished walk, counted, never stored.** Ten a stop, ten a km,
+  one walk a day (`FINISHED_WALKS_QUERY`, `api/progression.py`), like the
+  streak. Level n+1 at 50·n². Across `MY_DEVICES`, so a merged anonymous
+  account brings its walks and nothing needs moving.
+- **A keepsake now and then, never every walk.** One walk in three, by a
+  hash of the walk, and always on a level up. An expected reward for an
+  activity people already enjoy lowers interest in it (Deci, Koestner & Ryan
+  1999); a surprise does not. Keepsakes are cosmetic and do nothing. `ITEMS`
+  is append-only: a drop is an index into it.
+- **The rare tier is earned, never bought.** Memories with
+  `contrast_score >= 0.9` (about a tenth) join a planned walk only from level
+  4. Effort-gating like Naxx, but small: Blizzard's 40-man Naxx was seen by
+  few and re-released for everyone, and a neighbourhood has few memories. The
+  gate itself is unchanged: a rare stop opens standing on it, for anyone
+  whose walk passed it.
+- **Nothing here is sold.** Not XP, a level, a keepsake or the rare tier. Paid
+  random items bring odds disclosure (Apple 3.1.1, Google Play), a Belgian ban
+  and the EU Digital Fairness Act; selling access is what Pokémon GO's remote
+  raid passes and Wizards Unite's energy were punished for. Money is decided
+  later, and a subscription for convenience is the research's lead.
+
+Rejected: equipment that changes which or how many memories you get, an
+inventory cap, loot on every walk, stat screens. Walk-shape perks (+1 stop, a
+preferred layer) wait for retention data.
 
 ### A map of what is locked, and only today's walk unlocks
 

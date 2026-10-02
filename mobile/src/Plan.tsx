@@ -15,7 +15,7 @@ import Slider from '@react-native-community/slider';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { LocatedMemory, WalkAsk } from './api.ts';
+import type { Item, LocatedMemory, WalkAsk } from './api.ts';
 import Glyph from './Glyph.tsx';
 import { distance } from './format.ts';
 import { Chip } from './Submit.tsx';
@@ -310,9 +310,17 @@ type WalkDoneProps = {
   /** First unlock to last, or null when they were not all earned today. */
   minutes: number | null;
   streak: number;
-  /** Finishing earned a key: not a subscriber's second walk of the day. */
-  keyEarned: boolean;
+  /** What finishing earned, once the profile is back; null for a
+   *  subscriber's second walk of the day, which earns nothing. */
+  reward: Reward | null;
   onDone: () => void;
+};
+
+export type Reward = {
+  xp: number;
+  /** The level reached, when this walk reached one. */
+  level: number | null;
+  item: Item | null;
 };
 
 type EndWalkProps = {
@@ -367,7 +375,7 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
 }
 
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
-export function WalkDone({ stops, meters, loop, minutes, streak, keyEarned, onDone }: WalkDoneProps) {
+export function WalkDone({ stops, meters, loop, minutes, streak, reward, onDone }: WalkDoneProps) {
   const took =
     minutes === null
       ? ''
@@ -382,7 +390,9 @@ export function WalkDone({ stops, meters, loop, minutes, streak, keyEarned, onDo
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
-      {keyEarned && <Text style={label}>+1 key</Text>}
+      {reward && <Text style={label}>{`+${reward.xp} XP`}</Text>}
+      {reward?.level && <Text style={label}>{`Level ${reward.level}`}</Text>}
+      {reward?.item && <Text style={label}>{`Found: ${reward.item.name}`}</Text>}
       {streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>}
       <Pressable
         style={dim(styles.primary)}

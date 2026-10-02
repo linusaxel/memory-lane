@@ -15,7 +15,7 @@ a punishment for leaving.
 import pytest
 from sqlalchemy import text
 
-from tests.conftest import give_keys, on_walk
+from tests.conftest import give_user, on_walk
 
 pytestmark = pytest.mark.db
 
@@ -55,7 +55,7 @@ def memory_id(db_session):
         {"p": place, "c": content},
     ).scalar()
     db_session.commit()
-    give_keys(db_session, DEVICE, 0)
+    give_user(db_session, DEVICE)
     on_walk(db_session, DEVICE, memory)
     return memory
 
@@ -142,8 +142,8 @@ def _press(client, memory_id):
     )
 
 
-def _keys(client, device=DEVICE):
-    return client.get(f"/v1/me?device={device}").json()["keys"]
+def _xp(client, device=DEVICE):
+    return client.get(f"/v1/me?device={device}").json()["xp"]
 
 
 def _subscribe(db_session, device=DEVICE):
@@ -160,16 +160,15 @@ def _subscribe(db_session, device=DEVICE):
 
 def test_only_a_stop_of_todays_walk_opens(client, memory_id, db_session):
     """docs/10, "A walk planner, nothing else": standing on a memory that is
-    not a stop of the walk in progress opens nothing, keys or no keys."""
+    not a stop of the walk in progress opens nothing."""
     (off_walk,) = _memories(db_session, 1)
-    give_keys(db_session, DEVICE, 3)
+    give_user(db_session, DEVICE)
     refused = client.post(
         f"/v1/memories/{off_walk}/unlock",
         json={"device": DEVICE, "lat": LAT + 0.001, "lng": LNG},
     )
     assert refused.status_code == 403
     assert refused.json()["detail"] == {"reason": "not_on_walk"}
-    assert _keys(client) == 3
     assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
 
 
@@ -178,10 +177,10 @@ def test_nothing_opens_from_afar(client, memory_id, db_session):
     assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
 
 
-def test_a_stop_of_todays_walk_opens_and_finishing_earns_a_key(client, memory_id, db_session):
-    give_keys(db_session, DEVICE, 1)
+def test_a_stop_of_todays_walk_opens_and_finishing_earns_xp(client, memory_id):
+    assert _xp(client) == 0
     assert _press(client, memory_id).status_code == 200
-    assert _keys(client) == 2, "nothing spent, and a key for finishing the walk"
+    assert _xp(client) == 10 + 40, "a stop and a 4 km walk"
 
 
 def test_an_ended_walks_stop_does_not_open(client, memory_id, db_session):
@@ -192,7 +191,7 @@ def test_an_ended_walks_stop_does_not_open(client, memory_id, db_session):
 
 def test_a_subscriber_off_the_walk_is_refused_too(client, memory_id, db_session):
     (off_walk,) = _memories(db_session, 1)
-    give_keys(db_session, DEVICE, 0)
+    give_user(db_session, DEVICE)
     _subscribe(db_session)
     refused = client.post(
         f"/v1/memories/{off_walk}/unlock",
@@ -207,7 +206,7 @@ def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
 
 
 def test_steps_are_counted_once_from_the_watermark_and_buy_nothing(client, db_session):
-    give_keys(db_session, DEVICE, 0)
+    give_user(db_session, DEVICE)
     db_session.execute(
         text(
             "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '1 hour' "
@@ -225,13 +224,13 @@ def test_steps_are_counted_once_from_the_watermark_and_buy_nothing(client, db_se
 
     after = credit(2400)
     assert after["steps"] == 2400
-    assert after["keys"] == 0
+    assert after["xp"] == 0
     assert after["steps_counted_until"] > since
     assert credit(2400)["steps"] == 2400, "a retry from the old watermark counts nothing"
 
 
 def test_steps_faster_than_anyone_walks_are_capped(client, db_session):
-    give_keys(db_session, DEVICE, 0)
+    give_user(db_session, DEVICE)
     db_session.execute(
         text(
             "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '10 seconds' "
@@ -266,8 +265,3 @@ def test_unlocking_something_that_does_not_exist_is_a_404(client):
         ).status_code
         == 404
     )
-
-
-def test_the_dev_long_press_gives_a_key(client, db_session):
-    give_keys(db_session, DEVICE, 1)
-    assert client.post(f"/v1/dev/keys?device={DEVICE}").json()["keys"] == 2

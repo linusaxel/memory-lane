@@ -488,13 +488,30 @@ export type Profile = {
   subscribed: boolean;
   /** When it ends or ended, UTC without a zone; null if never subscribed. */
   subscribed_until: string | null;
-  /** One per finished walk; they open nothing yet (docs/10, "A walk
-   *  planner, nothing else"). */
-  keys: number;
+  /** Counted from finished walks, never stored or sold (docs/10, "Walks
+   *  earn XP; rare memories wait for a level"). This level started at
+   *  xp_level; the next starts at xp_next. */
+  xp: number;
+  level: number;
+  xp_level: number;
+  xp_next: number;
+  /** What walks left, one entry per kind, and how many kinds there are. */
+  items: Item[];
+  items_total: number;
   /** Every step counted, for the journal. Buys nothing. */
   steps: number;
   /** Steps count from here, UTC without a zone; null until there is an account. */
   steps_counted_until: string | null;
+};
+
+export type Item = {
+  /** Its place in the server's list, so the shelf can leave gaps for the rest. */
+  index: number;
+  name: string;
+  /** An SF Symbol name. */
+  glyph: string;
+  line: string;
+  count: number;
 };
 
 export type Draft = {
@@ -522,11 +539,6 @@ export async function refreshSubscription(device: string): Promise<Profile> {
  *  `since` credits nothing, and the profile that comes back has the new one. */
 export async function creditSteps(device: string, since: string, steps: number): Promise<Profile> {
   return post<Profile>('/v1/me/steps', { device, since, steps });
-}
-
-/** __DEV__ only: a free key, from an endpoint the public host lacks. */
-export async function devKeys(device: string): Promise<Profile> {
-  return post<Profile>(`/v1/dev/keys?${new URLSearchParams({ device })}`, {});
 }
 
 /** A walk refused because today's is already walked (one a day, bar a

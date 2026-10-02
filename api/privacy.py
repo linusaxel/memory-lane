@@ -46,12 +46,12 @@ history, never alongside your location, and never share it with anyone. It is sh
 your journal and pays for nothing. Without the permission the app works the same.
 Deleting your account deletes the total.</p>
 
-<h2>Keys</h2>
-<p>A memory you stand on opens with a key, unless it is a stop of today's walk, which
-opens for nothing. Finishing a walk earns a key, and keys can be bought in the app
-through the App Store or Google Play. We store how many you have and the store's
-transaction id for each pack bought, so it is counted once. Bought keys never expire.
-Deleting your account deletes both.</p>
+<h2>Walks and levels</h2>
+<p>A memory opens only as a stop of a walk the app planned, standing there. Finished
+walks earn experience and now and then a keepsake; both are worked out from the walks
+we already keep and are never stored on their own, and none of it can be bought.
+Deleting your account deletes the walks. If you once bought keys, we keep the store's
+transaction id for each pack until you delete your account.</p>
 
 <h2>Accounts</h2>
 <p>Memory Lane asks you to sign in before you use it. We never ask for a password,

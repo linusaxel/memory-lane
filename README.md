@@ -61,6 +61,7 @@ See [docs/repository-map.md](docs/repository-map.md). Run the tests with `./loop
 | [09-visual-design.md](docs/09-visual-design.md) | Why the app looks the way it does, and what was rejected |
 | [10-decisions.md](docs/10-decisions.md) | The calls where the obvious alternative is wrong |
 | [11-memory-types.md](docs/11-memory-types.md) | What a memory is and isn't: layer vs. tag vs. confidence |
+| [research-progression.md](docs/research-progression.md) | XP, loot and money in walking games: what lasted, with sources |
 | [mobile/UI.md](mobile/UI.md) | Design tokens and app constraints |
 
 The API's endpoint list lives in [06-api.md](docs/06-api.md).

@@ -80,7 +80,7 @@ Everything below is one of three sessions. If a flow does not belong to one of
 these, it is probably not a flow.
 
 **Session one — "what is this?"** The planner (F1): a walk drawn on the map
-and the list of what its memories are of, the keys at the top. Try another
+and the list of what its memories are of, your level at the top. Try another
 walk until the list appeals, then Start walk. A memory opens only on a walk,
 standing on it. The planner is where location is asked for (F8); decline it
 and the walk is planned from central Copenhagen instead (F9).
@@ -189,7 +189,7 @@ every launch without one lands here (docs/10, *A walk planner, nothing else*).
    where you tapped"; a second tap lets it go), with the slider at least the
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
    slider only on release. There is nothing to close back to. Journal is top
-   left and the keys top centre.
+   left and your level top centre.
 3. **Start walk** is `POST /v1/routes/today` with the same position, length and
    loop, and lands on the walk (F25).
 
@@ -301,8 +301,9 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 
 **Only on a walk:** only a stop of the walk in progress opens, and only
 standing on it; nothing else is drawn, so nothing else can be stood on. The
-top of the map says the keys earned, "3 keys", and a tap counts steps again
-(docs/10, "A walk planner, nothing else").
+top of the map says your level, "Level 3" over a thin XP bar, and a tap
+opens your walks (level, XP, keepsakes, how it works) and counts steps again
+(docs/10, "Walks earn XP; rare memories wait for a level").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -967,7 +968,8 @@ The last stop unlocks and the day should feel finished.
    loop.
 3. The card reads "Nice walk.", then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
-   another day), then "+1 key" when finishing earned one (once a day), then
+   another day), then "+60 XP" when finishing earned it (once a day), "Level 3" when it
+   reached one and "Found: Tram ticket" when it left a keepsake, then
    the streak once it is more than one day (F27).
 4. Done goes back to the map, following you again, with the walk card at
    "Every stop unlocked".
@@ -1097,7 +1099,7 @@ planner once today's walk is walked (F1), or **Subscribe** in Settings.
 3. Settings shows "Subscribed until …" and **Manage subscription**; signed in
    and not subscribed, **Subscribe**.
 
-Keys are not sold: one comes from finishing a walk, once a day.
+XP, levels and keepsakes are not sold: they come from finishing a walk, once a day.
 
 **Why:** [A walk planner, nothing else](10-decisions.md#a-walk-planner-nothing-else)
 and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it-our-table-decides).

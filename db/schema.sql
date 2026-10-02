@@ -128,15 +128,13 @@ CREATE TABLE users (
     -- with no memory are what pipeline/sweep.py reaps.
     avatar_path TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- What opens memories: one welcome unlock from anywhere, then a key each
-    -- standing there (docs/10-decisions.md#keys-open-a-lock-and-todays-walk-is-free).
-    -- Steps are a lifetime total and a watermark, never a day's count, and buy
+    -- free_day and free_used are unread, from the welcome unlock. XP is
+    -- counted from walks, not stored (api/progression.py). Steps are a lifetime total and a watermark, never a day's count, and buy
     -- nothing. free_day is unread since the free ones stopped being a day's.
     free_day DATE,
     free_used INTEGER NOT NULL DEFAULT 0,
     steps INTEGER NOT NULL DEFAULT 0,
-    steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    keys INTEGER NOT NULL DEFAULT 0 CHECK (keys >= 0)
+    steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- How a person proves they are the same person on a new phone. Google and

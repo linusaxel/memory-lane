@@ -131,15 +131,3 @@ def test_absorbing_an_anonymous_user_keeps_the_longer_subscription(db_session):
     accounts.absorb(db_session, old, new)
     rows = db_session.execute(text("SELECT user_id::text, expires_at FROM subscriptions")).all()
     assert [(u, e.year) for u, e in rows] == [(new, 2099)]
-
-
-def test_absorbing_an_anonymous_user_keeps_its_keys(db_session):
-    _, old = _account(db_session)
-    _, new = _account(db_session)
-    db_session.execute(text("UPDATE users SET keys = 3 WHERE id = CAST(:u AS uuid)"), {"u": old})
-    db_session.execute(text("UPDATE users SET keys = 2 WHERE id = CAST(:u AS uuid)"), {"u": new})
-    accounts.absorb(db_session, old, new)
-    keys = db_session.execute(
-        text("SELECT keys FROM users WHERE id = CAST(:u AS uuid)"), {"u": new}
-    ).scalar()
-    assert keys == 5

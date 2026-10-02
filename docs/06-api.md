@@ -20,8 +20,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   Only a stop of the walk in progress opens, and only standing on it; away
   from it, it answers the locked memory and its distance. Opening one this
   account already has always works. 403 `{reason: "not_on_walk"}` standing on
-  anything else, subscriber or not. Finishing today's walk with it credits a
-  key, once a day (docs/10, "A walk planner, nothing else")
+  anything else, subscriber or not. Finishing today's walk with it sets
+  `completed_at`, which XP counts (docs/10, "Walks earn XP; rare memories
+  wait for a level")
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked.
   Each says `hearted`: this account hearted it, for the journal's Hearted filter
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
@@ -81,7 +82,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, `subscribed` /
-  `subscribed_until`, and `keys`, one per finished walk.
+  `subscribed_until`, and `xp` / `level` / `xp_level` / `xp_next` / `items` /
+  `items_total`, counted from finished walks on every read (`api/progression.py`).
   `steps` is every step counted, for the journal, and `steps_counted_until`
   where the next count starts. `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.
@@ -95,8 +97,6 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   counted from `since`, which must be `steps_counted_until`, and move it to
   now. A stale `since` credits nothing; either way it returns the `Profile`.
   At most three steps a second over the window. They buy nothing
-- `POST /v1/dev/keys?device=` - add a key. Not on the public host
-  (`PUBLIC_HOST`), like `/docs`. The app's dev long-press teleport calls it
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
   display_name?, link_token?}` - verify a provider ID token and bind this device
   to that account. `display_name` is for Apple, which gives the name to the
@@ -105,8 +105,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   without it. Every token's `nonce`, `link_token`'s too, must be the SHA-256
   hex of `device`, or 401: a copied token signs in only the phone it was minted for
 - `DELETE /v1/me?device=UUID` - delete the account and everything it made:
-  memories, media, the profile photo, sign-ins, the subscription row, its keys and the
-  packs that bought them, and every device on it with
+  memories, media, the profile photo, sign-ins, the subscription row, the key packs
+  once bought, and every device on it with
   their unlocks, hearts, notes and walks. 204
 - `POST /v1/auth/signout` `{device}` - unlink the device. Deletes nothing, and
   there is no token to revoke

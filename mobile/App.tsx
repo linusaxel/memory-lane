@@ -21,7 +21,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   acceptRoute,
   blockUser,
-  devKeys,
   endRoute,
   fetchMine,
   fetchProfile,
@@ -69,14 +68,14 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { EndPick, EndWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
+import { EndPick, EndWalk, Preview, WALK_KM, WalkDone, type Reward } from './src/Plan.tsx';
 import Settings from './src/Settings.tsx';
 import EditProfile from './src/EditProfile.tsx';
 import Drawer from './src/Drawer.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import HowItWorks from './src/HowItWorks.tsx';
-import KeysPill from './src/KeysPill.tsx';
+import LevelPill, { levelInto } from './src/LevelPill.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
@@ -267,8 +266,8 @@ export default function App() {
   useEffect(() => {
     identify(profile?.user_id ?? null).catch(() => {});
   }, [profile?.user_id]);
-  // Finishing today's walk earned a key: the closing card says so.
-  const [keyEarned, setKeyEarned] = useState(false);
+  // What finishing today's walk earned: the closing card says so.
+  const [reward, setReward] = useState<Reward | null>(null);
   // Set to open Submit as an editor for this memory instead of a blank form.
   // Null means Submit is either closed or filing something new.
   const [editingMemory, setEditingMemory] = useState<LocatedMemory | null>(null);
@@ -1044,18 +1043,25 @@ export default function App() {
             routeShown.every((stop) => stop.id === memory.id || earned.has(stop.id));
           if (finished) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-            setKeyEarned(false);
+            setReward(null);
             setWalkDone(true);
           }
-          // The key a finished walk earned, and the streak the walk's card
+          // What a finished walk earned, and the streak the walk's card
           // shows, counting today.
-          const keysBefore = profile?.keys ?? 0;
+          const before = profile;
           deviceId()
             .then(fetchProfile)
             .then((who) => {
               if (!mounted.current) return;
               setProfile(who);
-              if (finished) setKeyEarned(who.keys > keysBefore);
+              if (finished && before && who.xp > before.xp) {
+                const had = new Map(before.items.map((item) => [item.index, item.count]));
+                setReward({
+                  xp: who.xp - before.xp,
+                  level: who.level > before.level ? who.level : null,
+                  item: who.items.find((item) => item.count > (had.get(item.index) ?? 0)) ?? null,
+                });
+              }
             })
             .catch(() => {});
           setUnlocked(await rememberUnlocked(unlocked, opened));
@@ -1073,7 +1079,7 @@ export default function App() {
       }
       return false;
     },
-    [unlocked, routeStarted, nextRouteStop, routeShown, earned, profile?.keys],
+    [unlocked, routeStarted, nextRouteStop, routeShown, earned, profile],
   );
 
   // Count what was walked, from where the last count stopped.
@@ -1363,11 +1369,6 @@ export default function App() {
                     }
                     Haptics.selectionAsync().catch(() => {});
                     setHere(pin ? { lat: pin.lat, lng: pin.lng } : { lat, lng });
-                    // And a key, for testing the pill without a walk.
-                    deviceId()
-                      .then(devKeys)
-                      .then((who) => mounted.current && setProfile(who))
-                      .catch(() => {});
                   }
                 : undefined
             }
@@ -1526,7 +1527,7 @@ export default function App() {
               loop={!!routeHome}
               minutes={doneMinutes}
               streak={profile?.streak ?? 0}
-              keyEarned={keyEarned}
+              reward={reward}
               onDone={() => setWalkDone(false)}
             />
           )}
@@ -1534,10 +1535,11 @@ export default function App() {
           {stage === 'end' && <EndPick onCancel={() => setStage('preview')} />}
           {stage === 'loading' && <View style={styles.cover} />}
 
-          {/* Top centre: keys earned. A tap counts steps again. */}
+          {/* Top centre: your level. A tap counts steps again. */}
           {profile && (
-            <KeysPill
-              keys={profile.keys}
+            <LevelPill
+              level={profile.level}
+              into={levelInto(profile)}
               place={[styles.corner, styles.steps]}
               // What it means, and a recount behind it.
               onPress={() => {
@@ -1780,7 +1782,6 @@ export default function App() {
         <HowItWorks
           visible={howOpen}
           onClose={() => setHowOpen(false)}
-          keys={profile?.keys ?? 0}
           profile={profile}
           radiusMeters={radiusMeters}
         />

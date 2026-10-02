@@ -5,7 +5,7 @@
 --   docker compose exec -T db psql -U memorylane -d memorylane -v ON_ERROR_STOP=1 \
 --     < db/migrations/037_keys.sql
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS keys INTEGER NOT NULL DEFAULT 0 CHECK (keys >= 0);
+-- users.keys was added here; 038_xp_not_keys.sql drops it again.
 
 CREATE TABLE IF NOT EXISTS key_purchases (
     transaction_id TEXT PRIMARY KEY,

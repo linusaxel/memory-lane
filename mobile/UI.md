@@ -23,7 +23,7 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 
 Preview (src/Plan.tsx)          home: the first screen after sign-in, unless today's walk is accepted,
 │                              and where ending a walk lands. The map, fitted to the start and every
-│                              stop. Draw first, adjust after. Journal and Add top left, keys top
+│                              stop. Draw first, adjust after. Journal and Add top left, level top
 │                              centre, you top right; no bottom row
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
@@ -42,11 +42,11 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ the keys pill              top centre, every stage (src/KeysPill.tsx): "3 keys", an ember key
-│                              before it, rolling when it changes. One per finished walk; they open
-│                              nothing yet. A tap recounts steps and opens How it works
-│                              (src/HowItWorks.tsx): the keys, then planning, standing there,
-│                              finishing for a key, one walk a day
+├─ the level pill             top centre, every stage (src/LevelPill.tsx): "Level 3", an ember
+│                              walker before it, a thin XP bar under it, rolling when it changes.
+│                              A tap recounts steps and opens Your walks (src/HowItWorks.tsx):
+│                              level and XP, the keepsake shelf (blanks for the unfound), then
+│                              planning, standing there, finishing to level up, one walk a day
 ├─ you ("You")                top right, your photo or initial (src/Avatar.tsx, 38pt) in a 44pt
 │                              glass circle, and under it a native menu (src/AccountMenu.tsx):
 │                              your name as its title, "3-day streak · 27 opened · 2 filed",
@@ -155,7 +155,7 @@ There are no tabs on the map, and no map of what is locked: the planner draws th
 offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
 On a walk the bottom is where you act, one tap each: Add, the walk card and Center on me;
 in the planner the card's own buttons are. The top is where you read:
-the keys, with Journal top left and you top right (docs/10,
+your level, with Journal top left and you top right (docs/10,
 "One ember button that changes").
 ```
 
@@ -177,7 +177,7 @@ with no network is never stopped at the gate.
 | `src/MemoryMarker.tsx` | one padlock, lit when it can be opened from here, open once opened |
 | `src/UnlockButton.tsx` | the hold, the ring, the haptics |
 | `src/UnlockHere.tsx` | the ring over the map, with the place it opens |
-| `src/KeysPill.tsx` | the top of the map: keys earned, the number rolling (`@expo/ui`) |
+| `src/LevelPill.tsx` | the top of the map: your level and an XP bar, the number rolling (`@expo/ui`) |
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
