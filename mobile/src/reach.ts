@@ -64,6 +64,18 @@ export function reachOf(
   return away <= radius * WARM_MULTIPLIER ? 'warm' : 'locked';
 }
 
+/** Past this, a locked pin draws soft: about twelve minutes on
+ *  foot, the distance a pin is still worth setting out for. */
+export const NEAR_WALK_M = 1000;
+
+/** Whether a pin is too far to matter yet. Only a locked one, and never
+ *  without a position: with nothing to measure from, nothing is far. */
+export function isFar(group: MemoryGroup, position: Coordinates | null): boolean {
+  const locked = group.memories.filter((memory) => memory.locked);
+  if (!position || locked.length === 0) return false;
+  return metersToNearest(position, locked) > NEAR_WALK_M;
+}
+
 /** How much of the walk is behind you, 0 to 1, for the ring on the sheet.
  *
  *  Full at the radius, because that is where the thing opens. Empty at three

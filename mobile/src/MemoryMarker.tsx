@@ -33,6 +33,8 @@ type Props = {
   /** The next stop on today's walk: it hops in `route` blue until it is in
    *  reach, when `lit` takes over and it turns seal. */
   next?: boolean;
+  /** A locked pin past a short walk: drawn soft, so the near ones lead. */
+  far?: boolean;
 };
 
 export default function MemoryMarker({
@@ -43,6 +45,7 @@ export default function MemoryMarker({
   routeSize = 0,
   lit,
   next = false,
+  far = false,
 }: Props) {
   const count = group.memories.length;
 
@@ -52,7 +55,7 @@ export default function MemoryMarker({
       // tracksViewChanges is off for the frame cost, so the marker only
       // repaints when React gives it a new identity - which is exactly when
       // its state changed.
-      key={`${group.key}:${reach}:${lit}:${next}:${routePosition ?? ''}`}
+      key={`${group.key}:${reach}:${lit}:${next}:${far}:${routePosition ?? ''}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
       // Put the middle of the pin on the point it names. iOS centres a custom
       // view already; Android defaults to bottom-centre whatever you draw, so
@@ -79,6 +82,7 @@ export default function MemoryMarker({
         lit={lit}
         next={next && !lit}
         open={reach === 'plain' || reach === 'stamped'}
+        far={far}
         badge={routePosition || (count > 1 ? count : null)}
       />
       {/* An empty tooltip callout, which is how you say "no callout" while
@@ -96,17 +100,17 @@ export default function MemoryMarker({
   );
 }
 
-type PinProps = { lit: boolean; next: boolean; open: boolean; badge: number | null };
+type PinProps = { lit: boolean; next: boolean; open: boolean; far: boolean; badge: number | null };
 
 /** One pin for everything. It lights up only when it can be opened from where
  *  you stand, and turns inside out, paper with an ember eye, once you have
  *  opened it; every other state lives in the title and the sheet. The paper
  *  centre is the point: the pin you can open is the pin you are standing on,
  *  so the blue location dot lands in the hole instead of under a disc. */
-function Pin({ lit, next, open, badge }: PinProps) {
+function Pin({ lit, next, open, far, badge }: PinProps) {
   const hop = useHop(next);
   return (
-    <Animated.View style={[styles.wrap, lit && styles.halo, hop]}>
+    <Animated.View style={[styles.wrap, lit && styles.halo, far && styles.far, hop]}>
       <View style={[styles.pin, open && styles.pinOpen, lit && styles.pinLit, next && styles.pinNext]}>
         <View style={[styles.eye, open && styles.eyeOpen, (lit || next) && styles.eyeLit, lit && styles.onSeal]} />
       </View>
@@ -144,6 +148,7 @@ const styles = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center', width: 46, height: 46 },
   // A soft glow so the lit pin is findable before you can read it.
   halo: { borderRadius: 23, backgroundColor: color.halo },
+  far: { opacity: 0.45 },
 
   pin: {
     width: PIN,

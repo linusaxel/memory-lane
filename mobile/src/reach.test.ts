@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import type { LocatedMemory } from './api.ts';
 import type { MemoryGroup } from './cluster.ts';
-import { approachOf, reachOf } from './reach.ts';
+import { approachOf, isFar, reachOf } from './reach.ts';
 
 const HERE = { lat: 55.6759, lng: 12.5655 };
 
@@ -121,4 +121,12 @@ test('no position is no progress, not full progress', () => {
   // itself full because it divided by nothing would be a lie about the gate.
   assert.equal(approachOf(null, 150), 0);
   assert.equal(approachOf(100, 0), 0);
+});
+
+test('a locked pin past a short walk is far; opened ones and no position never are', () => {
+  const twoKm: [number, number] = [HERE.lat + 0.018, HERE.lng];
+  assert.equal(isFar(group(...twoKm, [true]), HERE), true);
+  assert.equal(isFar(group(...MIDDLE, [true]), HERE), false);
+  assert.equal(isFar(group(...twoKm, [false]), HERE), false);
+  assert.equal(isFar(group(...twoKm, [true]), null), false);
 });

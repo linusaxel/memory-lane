@@ -539,18 +539,6 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
 
 ### The map: keep showing every pin
 
-- [ ] **V2 Full detail near you, a glow further out.** (checked 2026-10-02)
-      - The nearest three locks get a strong pin with direction and distance.
-        Further ones thin to soft clusters or areas, as Pokémon GO's
-        "Sightings" do.
-      - Zelda BotW's CEDEC 2017 talk: guides placed everywhere made players
-        feel railroaded, and varying what is visible fixed it
-        (https://gigazine.net/gsc_news/en/20171004-breath-of-the-wild-design-secret).
-        Assassin's Creed's creator apologised for checklist maps
-        (https://gamespot.com/articles/patrice-desilets-creator-of-assassins-creed-has-ap/1100-6470759/).
-      - Risk: a wall of locks reads as a checklist or a paywall (the
-        Geocaching premium-cache resentment).
-      - Fits the one-pin rule ("Pins: one kind").
 - [ ] **V3 "What to look at when you're there" on the peek.** (checked
       2026-10-02)
       - Participants in Smith et al. 2019 wanted to be told what to look at,

@@ -779,6 +779,7 @@ and to `ember` on 2026-09-27: teal read as water and park.
 | `unlockable`: inside the radius **and openable by walking** | disc 32, border 2; eye 12; wash 46 | fill `seal`, edge + eye `sealInk`, wash `halo` |
 | the next stop on today's walk, not yet in reach | disc 32, border 2; eye 12; hops (`useHop`), still under Reduce Motion | fill `ember`, edge + eye `paper`. Size and the hop tell it apart |
 | a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ember`, count `paper` (`seal` with `sealInk` on a lit pin) |
+| locked, more than a short walk away (`isFar`, 1 km), off a walk | same pin, soft | opacity 0.45 |
 
 **The eye is the point.** The pin you can open is the pin you are standing on,
 so the blue location dot lands in the hole rather than disappearing under a
@@ -789,7 +790,9 @@ cannot open is an invitation that refuses you (F11). That includes paying:
 with no free one left and out of keys, a pin you stand on off today's walk
 stays ember and its reach reads `locked` (`blocked` in `App.tsx`, from
 `src/wallet.ts`). Locked near and locked
-far draw the same ember pin, and earned and never gated the same paper one
+far draw the same ember pin, bar softness past 1 km (2026-10-02:
+full detail near you, a glow further out, so the map reads as where to go
+next rather than a checklist), and earned and never gated the same paper one
 (2026-10-01, docs/10 "A map of what is locked"); the rest is in the
 marker's `title` (VoiceOver and Maestro still hear every state from
 `STATE_LABEL`) and in the sheet. `reachOf` in `src/reach.ts` still computes all
