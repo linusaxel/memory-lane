@@ -418,7 +418,9 @@ money* below.
       Developer API direct, or RevenueCat blocks something we need, leave: only
       `billing.fetch_subscriber` and the app's SDK change, since
       `subscriptions` stays ours.
-- [ ] **Steps on a real iPhone.** (checked 2026-09-30) Built iOS-only
+- [ ] **Steps on a real iPhone.** (checked 2026-09-30) Once keys (E2) land,
+      steps are a journal stat and buy nothing; the check below still
+      stands. Built iOS-only
       (docs/10, *Three free a day, then steps where you stand*): 1,000 steps
       an unlock, from Core Motion via `src/steps.ts`. A simulator has no pedometer,
       so nothing has ever counted a real step. On a device: grant Motion &
@@ -438,9 +440,6 @@ money* below.
 - [ ] **Store disclosures for steps.** (checked 2026-09-30) App Privacy:
       Fitness, linked to you, app functionality, not tracking. Add the step
       count to the DPIA the location data already needs.
-- [ ] **A cap on the stored balance?** (checked 2026-09-30) None yet. Add one
-      (~10k) if a hoard empties the map in an afternoon; tune the price on the
-      corpus before launch, since pins are dense in the centre.
 
 ---
 
@@ -457,7 +456,9 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
 
 ### Decide first
 
-- [ ] **E0 D: Are opens paid at all?** (checked 2026-10-02) Today a story
+- [x] **E0 Are opens paid at all? Yes, with keys (E2).** Decided by the
+      founder 2026-10-02: walk stops are free (W4) and opens outside the
+      walk cost a key. The research behind it is below. Today a story
       opens on the spot for 1,000 steps, or free with the subscription. The
       research splits.
       - **Against charging (steps as a toll).** No walking app checked
@@ -487,11 +488,9 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
           (https://www.sec.gov/Archives/edgar/data/1997859/000119312524151708/d396527ds1.htm).
         - In Memory Lane the walk is the wait, and opening a story is the only
           thing on sale with real pull.
-      - **Recommendation:** keep opens paid, and fix what made it feel like a
-        toll, which is arriving with nothing to pay. Make the first open of
-        the day free, and earn enough by walking that walkers rarely pay
-        money (E2). If the answer is no, the subscription needs something
-        else to sell (E5), and the step economy goes.
+      - **What was chosen:** keep opens paid, but take the toll off walking.
+        The day's walk is free, finishing it earns a key, and steps buy
+        nothing (E2, W4).
 - [ ] **E1 D: Licensing before money.** (checked 2026-10-02) This blocks any
       paid open of a DR-derived story, and it matters more than the currency.
       - **DR treats archive clips as commercial "other business".** The
@@ -518,54 +517,68 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
         license per clip from DR's sales arm.
       - Add this to the lawyer's read of docs/10 *The sources' legal footing*
         (YouTube is already "No, as built").
-      - If it stays open: let Embers buy only stories from sources that are
+      - If it stays open: let keys buy only stories from sources that are
         clearly ours to charge for (Gutenberg, user posts, licensed), and keep
         the rest free on the spot.
 
-### The currency: one, called Embers
+### The currency: one, called keys
 
-- [ ] **E2 Embers: earned by walking, also sold.** (checked 2026-10-02)
-      Depends on E0. Supersedes the 1,000-step price in `api/models.py`
-      (`STEPS_PER_UNLOCK`).
-      - **Earn:** 1 Ember per 1,000 steps, capped at 5 a day; +1 for finishing
-        a walk.
-        - Why a cap: a slow trickle is how Pokémon GO keeps free coins from
-          emptying the shop. Gym coins are capped at 50 a day, down from 100
-          in 2017 (https://pocketmonsters.net/news/4153).
-        - Every walk-to-earn currency that could be cashed out collapsed
-          under inflation: STEPN's GST −99.7%, monthly users 700K → 45K
+- [ ] **E2 Keys: one key opens one lock.** (checked 2026-10-02) Decided by
+      the founder 2026-10-02. The name fits the padlock pins. Supersedes the
+      1,000-step price (`STEPS_PER_UNLOCK` in `api/models.py`).
+      - **Earn:** +1 key for finishing the day's walk (W4), so one a day at
+        most. Steps earn nothing: they become a stat in the journal ("6.2 km
+        · 8,400 steps").
+        - **Why one a day, not one a stop:** about 4 stops at a key each
+          would leave nobody needing to buy. Giving the key for finishing
+          uses the goal gradient (W2).
+        - **Why a slow trickle:** Pokémon GO caps gym coins at 50 a day, down
+          from 100 in 2017, so free coins never empty the shop
+          (https://pocketmonsters.net/news/4153).
+        - **Why steps stopped being money:** no walking app charges steps for
+          a place you have already walked to (E0). Every walk-to-earn
+          currency that could be cashed out collapsed under inflation:
+          STEPN's GST −99.7%, monthly users 700K → 45K
           (https://decrypt.co/122460); SWEAT −93%, earning made 400% harder
           (https://dailycoin.com/sweatcoin-increases-minting-difficulty-as-sweat-economy-sweat-sinks-22/).
-          So Embers are never cashable and never tradeable.
-      - **Buy:** 5 for 29 DKK, 15 for 69 DKK, 40 for 149 DKK, about 3.7–5.8 DKK
-        an open. That sits above Webtoon and Radish (2–3 DKK an episode)
+          Keys are never cashable and never tradeable.
+      - **Buy:** 5 for 29 DKK, 15 for 69 DKK, 40 for 149 DKK, about 3.7–5.8
+        DKK a key. That sits above Webtoon and Radish (2–3 DKK an episode)
         because each open costs a walk too. An untested guess.
-      - **At the lock:** offer "Open for 7 DKK" as a direct purchase, so
-        nobody has to buy a pack for one story. This meets the CPC rule
-        against forcing bundles (E3).
-      - **Spends**, all next to being there and none past it:
+      - **At the lock:** "Open for 7 DKK" is a direct purchase of a single
+        key, so nobody has to buy a pack for one story. This meets the CPC
+        rule against forcing bundles (E3).
+      - **What opens what.** You always stand within 20 m; a key never opens a
+        memory from afar.
 
-        | Spend | Cost | Based on |
+        | Where | Cost | Why |
         |---|---|---|
-        | Open a story you are standing at | 1 | Pay-per-episode (Pocket FM, Webtoon) |
-        | First open of the day | free | A cyclist arriving with nothing still gets in |
-        | A stop of today's first walk | free | The walk is the free daily habit (W4) |
-        | The pin you aimed a Walk here at | 1 | You pay for the pick; its other stops are free (W4) |
-        | A stop of a second walk the same day | 1 | Otherwise free walks open every pin (W4) |
-        | Reach: 20 m → 60 m for one walk | 3 | Pokémon GO lures and incense, the 80 m radius |
-        | Themed walk with a stop only the walk reaches | 99 DKK or 15 | StoryHunt's premium Copenhagen walks, 99 DKK (https://www.storyhunt.io/en/copenhagenlocalwalks) |
+        | A stop of today's walk, the "?" stop and a Walk here pin included | free | The walk is the free daily habit (W4) |
+        | Any other memory you stand at | 1 key | Pay-per-episode (Pocket FM, Webtoon), with the walk as the "wait" |
+        | Out of keys, at the lock | 7 DKK | A single key bought on the spot |
+        | A subscriber, anywhere they stand | free | E5 |
 
-      - **Reach is sold per walk and never taken back.** Players treat range
-        as owed once given; the 80 m reversal above shows it.
-      - **Server:** the balance is Embers on `users`, not steps. `/v1/me/steps`
-        keeps its watermark and converts to Embers on credit. The cap is
-        applied per UTC day (`gate.today()`). Purchases and the subscription
-        go through RevenueCat (consumables on the same offering) and the
-        `subscriptions` read-back pattern. The app is never believed.
-      - Keep the existing order: a subscriber pays nothing, then a stop of
-        today's free walk (W4), then the free open of the day, then an Ember, then the welcome unlock, then 403. Re-derive
-        this against *Pick one to start* before building.
-- [ ] **E3 The rules any Ember must meet.** (checked 2026-10-02) Hard
+      - **Later, priced in keys, not part of the first build:**
+        - **Reach** (20 m → 60 m for one walk), from Pokémon GO's lures,
+          incense and 80 m radius. If sold, sell it per walk and never take
+          it back: players treat range as owed once given (the 80 m reversal
+          in E0).
+        - **Themed walks** (W6), from StoryHunt's 99 DKK premium Copenhagen
+          walks (https://www.storyhunt.io/en/copenhagenlocalwalks).
+      - **Server:**
+        - A `keys` balance on `users`. The steps balance and its price go;
+          `/v1/me/steps` and its watermark stay, for the stat.
+        - Credit a key where `ROUTE_COMPLETED_QUERY` marks the walk done.
+        - Spend it in `api/write.py` `pay_for_unlock`, keeping that
+          function's rule of charging only once the gate has opened.
+        - Purchases go through RevenueCat (consumables on the same offering)
+          and the `subscriptions` read-back pattern. The app is never
+          believed.
+        - The order at a pin you stand on: subscriber free → a stop of
+          today's walk free → 1 key → the welcome unlock → 403 `no_keys`,
+          answered with the 7 DKK purchase. Re-derive this against *Pick one
+          to start* before building.
+- [ ] **E3 The rules keys must meet.** (checked 2026-10-02) Hard
       constraints, not choices.
       - **Apple 3.1.1:** currency only through IAP; bought currency "may not
         expire"; loot-box odds disclosed
@@ -577,16 +590,16 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
       - **EU CPC key principles on in-game virtual currencies, 21 Mar 2025**
         (https://commission.europa.eu/live-work-travel-eu/consumer-rights-and-complaints/enforcement-consumer-protection/coordinated-actions/social-media-online-games-and-search-engines_en;
         text: https://esportslegal.news/wp-content/uploads/2025/03/Key-principles-on-in-game-virtual-currencies.pdf):
-        - Show the DKK price next to every Ember price, worked out without
+        - Show the DKK price next to every key price, worked out without
           bulk discounts.
         - One currency, no exchanges.
-        - Price items in whole Embers, with no leftovers stranded by pack
+        - Price items in whole keys, with no leftovers stranded by pack
           sizes.
-        - A 14-day withdrawal right on unused Embers.
-        - No one-sided change to what an Ember is worth.
+        - A 14-day withdrawal right on unused keys.
+        - No one-sided change to what a key is worth.
         - Spending off by default for minors, and no "buy now" pressure at
           children.
-        - Currency earned only in play is out of scope, but Embers are also
+        - Currency earned only in play is out of scope, but keys are also
           bought, so all of it applies.
       - **Denmark:** Forbrugerrådet Tænk reported 17 games, Pokémon GO among
         them, to Forbrugerombudsmanden on 11 Sep 2024 for showing prices only
@@ -596,7 +609,7 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
       - **The Digital Fairness Act:** proposal expected Q3–Q4 2026. It is
         weighing real-money prices on items bought with currency, and loot
         boxes. Check whether it has been published before building.
-      - **If the app ever shuts:** refund or convert unspent Embers. Kindle
+      - **If the app ever shuts:** refund or convert unspent keys. Kindle
         Vella turned unused tokens into gift-card credit
         (https://www.geekwire.com/2024/amazon-to-shut-down-kindle-vella-serial-book-platform-saying-it-hasnt-caught-on-as-wed-hoped/).
         Radish let them vanish
@@ -627,8 +640,8 @@ it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
       - **Selling location or step data.** GDPR, Apple 5.1.3, and it clashes
         with the device-UUID identity model.
 - [ ] **E5 Memory Lane+ (the subscription).** (checked 2026-10-02)
-      - 49 DKK a month or 349 DKK a year: unlimited opens on the spot, themed
-        walks included, 10 Embers a month.
+      - 49 DKK a month or 349 DKK a year: every memory you stand at opens
+        without a key, and themed walks are included.
       - Benchmarks: Western Europe medians are $8.99 a month and $39.44 a year
         (https://revenuecat.com/report). Adapty finds Dutch users pay 62% more
         than US users. No Nordic median was found.
@@ -739,34 +752,34 @@ pin beat it. No published A/B tests compare curated routes with free choice.
         what F1 has: the length, **Loop** or **One way**, and **Next walk**.
         Add reorder and skip on top of it. The one thing the user doesn't
         choose on a free walk is *which* stops it contains: picking a stop
-        is **Walk here**, and that pin costs (W4). **Next walk** can be used
-        to fish for nearby pins. That's acceptable because the free walk is
-        once a day, but cap rerolls if it becomes how people play.
+        is **Walk here**, which uses the day's one walk (W4). **Next walk** can
+        be used to fish for nearby pins. That's acceptable because the walk
+        is once a day, but cap rerolls if it becomes how people play.
       - Keep stories short. People found more than 5 minutes too long but
         still wanted more coverage.
 - [ ] **W4 Today's walk is on us.** (checked 2026-10-02) The founder,
       2026-10-02: walk stops cost nothing, and that is the incentive. Part of
       E2.
-      - **One free walk a day per account.** The stops of that day's first
-        **Plan a walk** open for nothing, the "?" stop (W1) included. The
-        app picks the stops, so a free walk can't be aimed at the pin you
-        want.
+      - **One walk a day per account.** No second walk at all. **Plan a
+        walk** and **Walk here** both count as it.
+      - **Every stop opens free** when you stand on it: the "?" stop (W1) and
+        the pin a Walk here was aimed at included. Aiming leaks at most one
+        chosen pin a day, which is acceptable.
+      - **Finishing earns +1 key** (E2). Finished means the last stop left
+        is opened; skipped stops don't block it (W3).
       - **A walk that opened nothing doesn't use up the day.** Bring back
         the old prune, so a bad plan or rain costs nothing.
-      - **Walk here:** the pin you chose costs 1 Ember. The other stops on
-        that walk are free if it is the day's first walk.
-      - **A second walk the same day:** its stops cost 1 Ember each.
       - **Subscribers:** everything is free on the spot anyway.
       - **Why the day limit:** without it, free stops plus **Walk here** open
         every pin for nothing in two taps. docs/10 *A subscription opens the
         map* (2026-09-26) hit exactly that, and fixed it with a day lock
         (`WALKED_TODAY_QUERY`, 403 `walked_today`) plus `ROUTE_PRUNE`. Both
         went in *Steps open a memory*, so this brings back a superseded
-        rule. Say so in docs/10 when it lands. Unlike then, the lock is not
-        on walking: a second walk is allowed, its stops just cost.
-      - **The cost:** about 4 free stories a day is generous, and fewer
-        people will pay. If revenue disappoints, change the number of stops
-        on a free walk, or free walks a week. Don't charge for stops again.
+        rule. Say so in docs/10 when it lands.
+      - **The cost:** about 4 free stories plus a key a day is generous, and
+        fewer people will pay. If revenue disappoints, change the number of
+        stops on a walk, then keys per finish, then pack prices. Don't
+        charge for walk stops again.
       - **Evidence:** Webtoon's free Daily Pass, plus the goal gradient (W2).
         No data on location-gated content.
 - [ ] **W5 A broken streak can be repaired.** (checked 2026-10-02)
@@ -775,7 +788,7 @@ pin beat it. No published A/B tests compare curated routes with free choice.
         https://www.colorado.edu/business/faculty-research/2023/04/19/or-track-how-broken-streaks-affect-consumer-decisions).
       - Duolingo: allowing two Streak Freezes instead of one lifted daily
         actives by 0.38% (https://blog.duolingo.com/how-duolingo-streak-builds-habit).
-      - A repair could cost Embers: a sink that is not a toll.
+      - A repair could cost a key: a sink that is not a toll.
       - Watch for streak anxiety. On its own a streak won't make anyone choose
         the walk.
       - Overlaps G5.
@@ -847,8 +860,8 @@ pin beat it. No published A/B tests compare curated routes with free choice.
         games.
       - The economics research would rather sell single opens in DKK with no
         currency: less regulation, most of the benefit. The founder wants a
-        currency, which is why E2 is one currency with a direct DKK purchase
-        at the lock.
+        currency, which is why E2 is one token, keys, with a direct DKK
+        purchase at the lock.
 
 ### The retention risk none of this fixes
 
