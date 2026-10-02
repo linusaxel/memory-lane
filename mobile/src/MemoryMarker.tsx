@@ -33,8 +33,9 @@ type Props = {
   /** The next stop on today's walk: it hops in `route` blue until it is in
    *  reach, when `lit` takes over and it turns seal. */
   next?: boolean;
-  /** A locked pin past a short walk: drawn soft, so the near ones lead. */
-  far?: boolean;
+  /** How solid the pin draws: a locked one fades with distance, so the near
+   *  ones lead. */
+  opacity?: number;
 };
 
 export default function MemoryMarker({
@@ -45,7 +46,7 @@ export default function MemoryMarker({
   routeSize = 0,
   lit,
   next = false,
-  far = false,
+  opacity = 1,
 }: Props) {
   const count = group.memories.length;
 
@@ -55,7 +56,7 @@ export default function MemoryMarker({
       // tracksViewChanges is off for the frame cost, so the marker only
       // repaints when React gives it a new identity - which is exactly when
       // its state changed.
-      key={`${group.key}:${reach}:${lit}:${next}:${far}:${routePosition ?? ''}`}
+      key={`${group.key}:${reach}:${lit}:${next}:${opacity}:${routePosition ?? ''}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
       // Put the middle of the pin on the point it names. iOS centres a custom
       // view already; Android defaults to bottom-centre whatever you draw, so
@@ -82,7 +83,7 @@ export default function MemoryMarker({
         lit={lit}
         next={next && !lit}
         open={reach === 'plain' || reach === 'stamped'}
-        far={far}
+        opacity={opacity}
         badge={routePosition || (count > 1 ? count : null)}
       />
       {/* An empty tooltip callout, which is how you say "no callout" while
@@ -100,17 +101,17 @@ export default function MemoryMarker({
   );
 }
 
-type PinProps = { lit: boolean; next: boolean; open: boolean; far: boolean; badge: number | null };
+type PinProps = { lit: boolean; next: boolean; open: boolean; opacity: number; badge: number | null };
 
 /** One pin for everything. It lights up only when it can be opened from where
  *  you stand, and turns inside out, paper with an ember eye, once you have
  *  opened it; every other state lives in the title and the sheet. The paper
  *  centre is the point: the pin you can open is the pin you are standing on,
  *  so the blue location dot lands in the hole instead of under a disc. */
-function Pin({ lit, next, open, far, badge }: PinProps) {
+function Pin({ lit, next, open, opacity, badge }: PinProps) {
   const hop = useHop(next);
   return (
-    <Animated.View style={[styles.wrap, lit && styles.halo, far && styles.far, hop]}>
+    <Animated.View style={[styles.wrap, lit && styles.halo, { opacity }, hop]}>
       <View style={[styles.pin, open && styles.pinOpen, lit && styles.pinLit, next && styles.pinNext]}>
         <View style={[styles.eye, open && styles.eyeOpen, (lit || next) && styles.eyeLit, lit && styles.onSeal]} />
       </View>
@@ -148,7 +149,6 @@ const styles = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center', width: 46, height: 46 },
   // A soft glow so the lit pin is findable before you can read it.
   halo: { borderRadius: 23, backgroundColor: color.halo },
-  far: { opacity: 0.45 },
 
   pin: {
     width: PIN,

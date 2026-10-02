@@ -53,7 +53,7 @@ import { startWatching, stopWatching } from './src/geofence.ts';
 import { forgetHearted, loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { anyNew } from './src/seen.ts';
-import { FALLBACK_RADIUS_M, isFar, reachOf } from './src/reach.ts';
+import { FALLBACK_RADIUS_M, opacityOf, reachOf } from './src/reach.ts';
 import {
   around,
   endFloorKm,
@@ -1546,7 +1546,7 @@ export default function App() {
                   next={
                     walking && group.memories.some((memory) => memory.id === nextRouteStop?.id)
                   }
-                  far={!walking && routePosition == null && isFar(group, position)}
+                  opacity={walking || routePosition != null ? 1 : opacityOf(group, position)}
                   routePosition={routePosition}
                   routeSize={walking ? routeTotal : pins.length}
                   // A preview is a look, not a walk: its stops open once accepted.

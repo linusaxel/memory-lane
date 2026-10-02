@@ -64,16 +64,21 @@ export function reachOf(
   return away <= radius * WARM_MULTIPLIER ? 'warm' : 'locked';
 }
 
-/** Past this, a locked pin draws soft: about twelve minutes on
- *  foot, the distance a pin is still worth setting out for. */
-export const NEAR_WALK_M = 1000;
+/** A locked pin fades with distance: whole within a short walk, then softer
+ *  step by step, down to a floor that still reads as a pin. */
+export const FADE_FROM_M = 500;
+export const FADE_TO_M = 3000;
+export const FADE_FLOOR = 0.3;
 
-/** Whether a pin is too far to matter yet. Only a locked one, and never
- *  without a position: with nothing to measure from, nothing is far. */
-export function isFar(group: MemoryGroup, position: Coordinates | null): boolean {
+/** How solid a pin draws, FADE_FLOOR to 1. Only a locked one fades, and never
+ *  without a position: with nothing to measure from, nothing is far. In tenths,
+ *  because a marker repaints only when its key changes. */
+export function opacityOf(group: MemoryGroup, position: Coordinates | null): number {
   const locked = group.memories.filter((memory) => memory.locked);
-  if (!position || locked.length === 0) return false;
-  return metersToNearest(position, locked) > NEAR_WALK_M;
+  if (!position || locked.length === 0) return 1;
+  const away = metersToNearest(position, locked);
+  const t = Math.min(1, Math.max(0, (away - FADE_FROM_M) / (FADE_TO_M - FADE_FROM_M)));
+  return Math.round((1 - t * (1 - FADE_FLOOR)) * 10) / 10;
 }
 
 /** How much of the walk is behind you, 0 to 1, for the ring on the sheet.

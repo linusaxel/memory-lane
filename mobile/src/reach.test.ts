@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import type { LocatedMemory } from './api.ts';
 import type { MemoryGroup } from './cluster.ts';
-import { approachOf, isFar, reachOf } from './reach.ts';
+import { approachOf, opacityOf, reachOf } from './reach.ts';
 
 const HERE = { lat: 55.6759, lng: 12.5655 };
 
@@ -123,10 +123,13 @@ test('no position is no progress, not full progress', () => {
   assert.equal(approachOf(100, 0), 0);
 });
 
-test('a locked pin past a short walk is far; opened ones and no position never are', () => {
-  const twoKm: [number, number] = [HERE.lat + 0.018, HERE.lng];
-  assert.equal(isFar(group(...twoKm, [true]), HERE), true);
-  assert.equal(isFar(group(...MIDDLE, [true]), HERE), false);
-  assert.equal(isFar(group(...twoKm, [false]), HERE), false);
-  assert.equal(isFar(group(...twoKm, [true]), null), false);
+test('a locked pin fades with distance; opened ones and no position never do', () => {
+  const km = (n: number): [number, number] => [HERE.lat + 0.009 * n, HERE.lng];
+  assert.equal(opacityOf(group(...MIDDLE, [true]), HERE), 1);
+  const one = opacityOf(group(...km(1), [true]), HERE);
+  const two = opacityOf(group(...km(2), [true]), HERE);
+  assert.ok(one < 1 && two < one, `${one} then ${two}`);
+  assert.equal(opacityOf(group(...km(10), [true]), HERE), 0.3);
+  assert.equal(opacityOf(group(...km(10), [false]), HERE), 1);
+  assert.equal(opacityOf(group(...km(10), [true]), null), 1);
 });
