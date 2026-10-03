@@ -39,4 +39,4 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "4 memories · .* loop"
     timeout: 40000
-- assertVisible: "Start this walk"
+- assertVisible: "See the stops"

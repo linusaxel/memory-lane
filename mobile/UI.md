@@ -22,21 +22,25 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 └─ "Skip (dev build)"          __DEV__ only, so a release bundle has none
 
 Preview (src/Plan.tsx)          home: the first screen after sign-in, unless today's walk is accepted,
-│                              and where ending a walk lands. The map, fitted to the start and every
-│                              stop. Draw first, adjust after. Journal and Add top left, level top
+│                              and where ending a walk lands. The map, fitted to the drawn walk above
+│                              the measured card. Draw first, adjust after. Journal and Add top left, level top
 │                              centre, you top right; no bottom row
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
-└─ card (Preview)              every change on it redraws the walk
+└─ card (Preview)              two steps; every change on it redraws the walk
    ├─ "A walk from here"        23/700; nothing to close back to
-   ├─ ‹ "4 memories · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left; "Finding a walk…" first; "No walk within 10 km from here."
-   ├─ the list                  a row per stop in walk order: ember number, place 16/700, "1978 · Vega
-   │                            Archive · #music #nightlife", a padlock. Four rows, then it scrolls
+   ├─ "4 memories · 3.8 km loop"   "Finding a walk…" first; "No walk within 10 km from here."
    ├─ "Nothing at 4 km; this is the nearest."   an empty length moved up to one with a walk
    ├─ "Planning from central Copenhagen." + Use my location   with no position; the location ask
    ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
    ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
-   └─ Start walk; walked out (one a day, F35), the card is "Today's walk is done" + More walks
+   ├─ See the stops             primary; step two, the map refits above the taller card
+   │  ├─ ‹ Back                 to step one ("Back to the length")
+   │  ├─ ‹ "4 memories · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left
+   │  ├─ the list               a row per stop in walk order: ember number, place 16/700, "1978 · Vega
+   │  │                         Archive · #music #nightlife", a padlock. Four rows, then it scrolls
+   │  └─ Start walk
+   └─ walked out (one a day, F35), the card is "Today's walk is done" + More walks
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
 │                              position the camera is pinned on you: it follows,

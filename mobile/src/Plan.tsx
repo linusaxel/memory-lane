@@ -1,5 +1,6 @@
 /** The planner, which is the home screen: a walk drawn on the map, and a
- *  card listing what its memories are of, with the length and the shape.
+ *  card in two steps - the length and the shape, then what its memories are
+ *  of, paged between walks, and Start.
  *  Any change redraws the walk; ‹ › trade it for another. A one-way walk can
  *  end at a spot tapped on the map (EndPick), asked for per walk and stored
  *  nowhere. docs/10, "A walk planner, nothing else" and "Draw first, adjust
@@ -14,7 +15,7 @@
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, type LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Glyph from './Glyph.tsx';
@@ -116,6 +117,8 @@ type PreviewProps = {
   /** Today's free walk is walked: the card offers the subscription instead. */
   walkedOut: boolean;
   onSubscribe: () => void;
+  /** The card's height, so the map fits the walk into what is left above it. */
+  onHeight: (height: number) => void;
 };
 
 /** One side of the pages; null keeps the side's space empty. */
@@ -156,7 +159,11 @@ export function Preview({
   emptyAt,
   walkedOut,
   onSubscribe,
+  onHeight,
 }: PreviewProps) {
+  // Two steps: the length and the shape with the walk drawn behind, then its
+  // stops, paged between walks, and Start.
+  const [listing, setListing] = useState(false);
   // Said, not focused: the arrows keep VoiceOver where it is (WAI carousels).
   const stepped = useRef(false);
   useEffect(() => {
@@ -185,26 +192,55 @@ export function Preview({
   const unreachable = floorKm > WALK_KM.max;
   // Up to the slider's grid, so a floor of 2.3 km does not shift every step.
   const min = Math.min(Math.ceil(Math.max(WALK_KM.min, floorKm) / WALK_KM.step) * WALK_KM.step, WALK_KM.max);
-  return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>A walk from here</Text>
-      {/* Pages: the arrows flank what they change. A missing one keeps its
-          space, so the line never shifts between walks. */}
-      <View style={styles.pages}>
-        {found && <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />}
-        <Text
-          style={[styles.cardBody, found && styles.paged]}
-          testID={count === 0 ? 'no-walk' : undefined}
+  const measure = (e: LayoutChangeEvent) => onHeight(e.nativeEvent.layout.height);
+  if (listing && found && stops) {
+    return (
+      <View style={styles.card} onLayout={measure}>
+        <Pressable
+          style={dim(styles.back)}
+          onPress={() => setListing(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Back to the length"
         >
-          {count == null
-            ? 'Finding a walk…'
-            : count === 0
-              ? `No walk within ${WALK_KM.max} km from here.`
-              : `${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
-        </Text>
-        {found && <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />}
+          <Glyph name="chevron.left" size={17} weight="semibold" color={color.ink} />
+          <Text style={styles.secondaryText}>Back</Text>
+        </Pressable>
+        {/* Pages: the arrows flank what they change. A missing one keeps its
+            space, so the line never shifts between walks. */}
+        <View style={styles.pages}>
+          <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />
+          <Text style={[styles.cardBody, styles.paged]}>{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
+          <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />
+        </View>
+        <Stops stops={stops} />
+        <Pressable
+          style={dim(styles.primary)}
+          onPress={onAccept}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Start this walk"
+          accessibilityHint="You can end it any time."
+        >
+          {busy ? (
+            <ActivityIndicator color={color.paper} />
+          ) : (
+            <Text style={styles.primaryText}>Start walk</Text>
+          )}
+        </Pressable>
+        {error && <Text style={styles.error}>{error}</Text>}
       </View>
-      {found && stops && <Stops stops={stops} />}
+    );
+  }
+  return (
+    <View style={styles.card} onLayout={measure}>
+      <Text style={styles.cardTitle}>A walk from here</Text>
+      <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
+        {count == null
+          ? 'Finding a walk…'
+          : count === 0
+            ? `No walk within ${WALK_KM.max} km from here.`
+            : `${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
+      </Text>
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
       )}
@@ -249,16 +285,14 @@ export function Preview({
       </View>
       <Pressable
         style={dim(styles.primary)}
-        onPress={onAccept}
+        onPress={() => setListing(true)}
         disabled={busy || !found}
         accessibilityRole="button"
-        accessibilityLabel="Start this walk"
-        accessibilityHint="You can end it any time."
       >
         {busy ? (
           <ActivityIndicator color={color.paper} />
         ) : (
-          <Text style={styles.primaryText}>Start walk</Text>
+          <Text style={styles.primaryText}>See the stops</Text>
         )}
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
@@ -493,6 +527,7 @@ const styles = StyleSheet.create({
   numberText: { ...font.uiBold, fontSize: 13, color: color.paper },
   stopText: { flex: 1, gap: 2 },
   stopName: { ...font.uiBold, fontSize: 16, color: color.ink },
+  back: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', minHeight: 44, marginTop: -10 },
   pages: { flexDirection: 'row', alignItems: 'center' },
   paged: { flex: 1, textAlign: 'center' },
   // 44pt, Apple's smallest hit target.

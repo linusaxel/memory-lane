@@ -174,14 +174,12 @@ every launch without one lands here (docs/10, *A walk planner, nothing else*).
    adjust after*). It asks for location if it has to (F8), then
    `GET /v1/routes/preview` with that position, the length in metres and
    `loop`. The preview stores nothing.
-2. The preview is the map, fitted to the start and every stop
-   (`fitToCoordinates`), with the stops numbered and the loop drawn. Preview
-   pins do not open: it is a look, not a walk. The card (`mobile/src/Plan.tsx`)
-   reads "A walk from here", then "4 memories · 3.8 km loop" between ‹ ›
-   (another walk, F32), then **the list**: each stop numbered in walk order,
-   its place, and year · source · two #tags, with a padlock; four rows in
-   view, the rest a scroll away. All of it is what a locked memory already
-   says (docs/10, *A locked memory says what it is*). Then the length:
+2. The preview is the map, fitted to the drawn walk above the card
+   (`fitToCoordinates`, padded by the card's measured height), with the stops
+   numbered and the loop drawn. Preview pins do not open: it is a look, not a
+   walk. The card (`mobile/src/Plan.tsx`) is two steps (docs/10, *The planner
+   is two steps*). Step one reads "A walk from here", then "4 memories ·
+   3.8 km loop", then the length:
    one slider, 1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`), about one
    stop a km. Under it **Loop** or **One way**. No theme: tags are open since
    2026-09-26 (docs/10, *Tags come from the text*). One way adds **Pick where
@@ -189,8 +187,13 @@ every launch without one lands here (docs/10, *A walk planner, nothing else*).
    where you tapped"; a second tap lets it go), with the slider at least the
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
    slider only on release. There is nothing to close back to. Journal is top
-   left and your level top centre.
-3. **Start walk** is `POST /v1/routes/today` with the same position, length and
+   left and your level top centre. **See the stops** is step two: ‹ Back,
+   "4 memories · 3.8 km loop" between ‹ › (another walk, F32), then **the
+   list**: each stop numbered in walk order, its place, and year · source ·
+   two #tags, with a padlock; four rows in view, the rest a scroll away. All
+   of it is what a locked memory already says (docs/10, *A locked memory says
+   what it is*).
+3. **Start walk**, on step two, is `POST /v1/routes/today` with the same position, length and
    loop, and lands on the walk (F25).
 
 **Accepting starts the walk.** It stands until it is ended (F34). One a day:
@@ -209,8 +212,8 @@ the ask (`ROUTE_FILL`) adds "That's the longest walk from here." No position
 unreachable — the card says "Can't reach Memory Lane right now." under the
 button, and any change retries.
 
-**Done when:** launch shows a whole walk on the map and its list, a change to
-the card redraws both, and Start walk makes it today's.
+**Done when:** launch shows a whole walk on the map above the card, See the
+stops lists it, a change to the card redraws it, and Start walk makes it today's.
 
 ## F2 · Read one memory and go to its source — **Implemented**
 

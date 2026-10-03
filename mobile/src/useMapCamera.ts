@@ -33,7 +33,7 @@
  * from the map's own region.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type MapView from 'react-native-maps';
 
 import { metersBetween, type Region } from './region.ts';
@@ -54,6 +54,8 @@ export function useMapCamera(onRegionSettled: (region: Region) => void) {
   // Tracked, not inferred from mapRef.current: the ref is set the moment
   // MapView renders, which is before the native map will accept a camera move.
   const ready = useRef(false);
+  // The same, for effects that must wait for it (a fit is dropped before it).
+  const [mapReady, setMapReady] = useState(false);
   const pending = useRef<Region | null>(null);
   // Where the camera was last told to go, while it is still on its way.
   const flying = useRef<Region | null>(null);
@@ -103,6 +105,7 @@ export function useMapCamera(onRegionSettled: (region: Region) => void) {
 
   const onMapReady = useCallback(() => {
     ready.current = true;
+    setMapReady(true);
     const queued = pending.current;
     if (!queued) return;
     pending.current = null;
@@ -135,5 +138,5 @@ export function useMapCamera(onRegionSettled: (region: Region) => void) {
   /** Whether a commanded flight has yet to land. */
   const inFlight = useCallback(() => flying.current !== null, []);
 
-  return { mapRef, flyTo, inFlight, onMapReady, onRegionChangeComplete };
+  return { mapRef, mapReady, flyTo, inFlight, onMapReady, onRegionChangeComplete };
 }

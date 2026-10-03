@@ -196,6 +196,7 @@ export default function App() {
   const [stage, setStage] = useState<Stage>('loading');
   const [walkKm, setWalkKm] = useState(WALK_KM.initial);
   const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, end: null });
+  const [previewCardHeight, setPreviewCardHeight] = useState(0);
   // Where the previewed walk starts, and whether that is central
   // Copenhagen standing in for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
@@ -293,7 +294,7 @@ export default function App() {
   // Region reports go through the camera, not straight from the map: a move
   // replayed from onMapReady never reports itself and the map still announces
   // where it was born. See src/useMapCamera.ts.
-  const { mapRef, flyTo, inFlight, onMapReady, onRegionChangeComplete } =
+  const { mapRef, mapReady, flyTo, inFlight, onMapReady, onRegionChangeComplete } =
     useMapCamera(setRegion);
   const mounted = useRef(true);
   // Read by callbacks that must not be rebuilt every time the person moves.
@@ -697,17 +698,18 @@ export default function App() {
 
   const me = profile?.user_id;
 
-  // The preview's zoom: the whole walk, its start and any end, clear of the card.
+  // The preview's zoom: the whole drawn walk, its start and any end, clear of
+  // the card as it is measured, so folding its list away gives the map room.
   useEffect(() => {
-    if (stage !== 'preview' || !preview || !planFrom) return;
+    if (stage !== 'preview' || !mapReady || !preview || !planFrom || !previewCardHeight) return;
     const end = !preview.loop && walkAsk.end ? [walkAsk.end] : [];
     mapRef.current?.fitToCoordinates(
-      [planFrom, ...preview.memories.map((memory) => memory.place.coordinates), ...end].map(
+      [planFrom, ...preview.memories.map((memory) => memory.place.coordinates), ...end, ...previewPath].map(
         (c) => ({ latitude: c.lat, longitude: c.lng }),
       ),
-      { edgePadding: { top: 100, right: 60, bottom: 300, left: 60 }, animated: true },
+      { edgePadding: { top: 100, right: 60, bottom: previewCardHeight + 50, left: 60 }, animated: true },
     );
-  }, [stage, preview, planFrom, mapRef, walkAsk.end]);
+  }, [stage, mapReady, preview, planFrom, mapRef, walkAsk.end, previewPath, previewCardHeight]);
 
   // Ids, not memories: reachOf only asks whether this device walked to it, and
   // a Set keeps that an O(1) question inside three passes over every group.
@@ -1557,6 +1559,7 @@ export default function App() {
               emptyAt={emptyAt}
               walkedOut={walkedOut}
               onSubscribe={() => setPaywallOpen(true)}
+              onHeight={setPreviewCardHeight}
             />
           )}
 

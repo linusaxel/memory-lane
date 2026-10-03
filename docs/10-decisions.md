@@ -272,6 +272,25 @@ whole app; without one there is nothing to do.
 `GET /v1/memories/nearby` stays: the embed (`api/embed.py`) reads it, and it
 never served a summary. `POST /v1/dev/keys` stays off the public host.
 
+### The planner is two steps
+
+Status: Accepted 2026-10-03. Amends *Draw first, adjust after*: the walk is
+still drawn first, but its list is a step away.
+
+One card held the stop list, the slider, the shape and Start, about 600pt,
+and the fit left it a fixed 300, so the walk it planned drew behind it. Now
+step one is the length and the shape with the walk drawn live above it, and
+**See the stops** is step two: ‹ › between walks, the list and Start walk.
+The fit pads by the card's measured height and covers the drawn path, so each
+step frames the walk in what is left. Overview first, details on demand
+(Shneiderman 1996); pad the camera by the sheet so the fit frames what is
+visible (Google Maps SDK, map padding).
+
+**Options considered, 2026-10-03:** each stop's name in a pill over its pin,
+and no list (the founder found the map too noisy); one card whose list folds
+with a swipe (open, it left the map about 120pt, too little to read a walk
+from, and the pins clustered).
+
 ### Walks earn XP; rare memories wait for a level
 
 Status: Accepted 2026-10-03. Amends the Keys bullet of *A walk planner,
@@ -2535,7 +2554,7 @@ same way, they went a little more even (max 1.63 → 1.60) but fresh fell from
 
 ### Draw first, adjust after
 
-Status: Accepted 2026-09-27. **Amended 2026-10-03** by *A walk planner, nothing else*: Walk here is gone, and the card is home, with no ✕ back to a map.
+Status: Accepted 2026-09-27. **Amended 2026-10-03** by *A walk planner, nothing else*: Walk here is gone, and the card is home, with no ✕ back to a map. **Amended 2026-10-03** by *The planner is two steps*: the stop list and Start are a step past the length.
 
 "Plan a walk" and a pin's "Walk here" both draw a walk at once. The
 "How far today?" page that used to come first is gone, and the slider, Loop /

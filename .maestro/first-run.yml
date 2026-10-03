@@ -27,18 +27,22 @@ appId: ${APP_ID}
     text: "Allow While Using App"
     optional: true
 
-# F1: drawn again from here. The whole loop on the map, its list, and a decision.
+# F1: drawn again from here. The whole loop on the map, then its list, and a decision.
 - extendedWaitUntil:
     visible: "4 memories · .* loop"
     timeout: 40000
-- assertVisible: "Start this walk"
 - assertNotVisible:
     id: "planning-from-centre"
+- assertVisible: "Stop 1 of 4\\. .*"
+# Step two is the stops: each row numbered as its pin is, what it is of,
+# never what it says.
+- assertNotVisible:
+    id: "walk-stops"
+- tapOn: "See the stops"
 - assertVisible:
     id: "walk-stops"
-# Each row is a stop, numbered as its pin is: what it is of, never what it says.
 - assertVisible: "Stop 1, .*"
-- assertVisible: "Stop 1 of 4\\. .*"
+- assertVisible: "Start this walk"
 
 # F32: › is another walk as good, or one of a similar length, still a preview.
 - assertNotVisible: "Previous walk"
@@ -54,6 +58,9 @@ appId: ${APP_ID}
     notVisible: "Previous walk"
     timeout: 5000
 - assertVisible: "4 memories · .* loop"
+- tapOn: "Back to the length"
+- assertNotVisible:
+    id: "walk-stops"
 
 # One way redraws in place: the same four stops' worth, ending somewhere new.
 - tapOn: "One way"

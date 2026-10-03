@@ -23,6 +23,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Map fits pad by a guessed card height.** 2026-10-03: the planner's
+  `fitToCoordinates` left a fixed 300pt for a card of about 600, so the walk
+  it planned drew behind it, and launch dropped the fit entirely because it
+  ran before `onMapReady`. PastWalk (260), WalkDone (300) and the walk's
+  recentre (160) still guess. Fix: each passes its card's `onLayout` height
+  and waits on `mapReady`, as the planner's Preview now does.
+
 - **Seeing a UI change mid-flow means screenshotting by hand.** 2026-10-03:
   the walk card and finish card only appear mid-`walk-and-unlock`, and Metro
   is down once run.sh exits, so checking the stamps and the milestone took a

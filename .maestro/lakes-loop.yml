@@ -58,6 +58,7 @@ appId: ${APP_ID}
 # Past Sortedams Sø, the lake at the door, on every roll.
 - assertVisible: "Stop .* of 10\\. Peblinge Sø.*"
 
+- tapOn: "See the stops"
 - repeat:
     while:
       notVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
