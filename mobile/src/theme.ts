@@ -96,6 +96,9 @@ export const solid = (dark: boolean) => ({
   tile: dark ? '#5e2a18' : '#a8350f',
   road: dark ? '#f2ede4' : '#f7f4ee',
   sun: dark ? '#f5c542' : '#f2b53a',
+  /** The glass over the map, warmed: paper in light, a dark ember in dark,
+   *  thin enough that the map still shows through. A tint, so a real colour. */
+  frost: dark ? 'rgba(58,34,25,0.35)' : 'rgba(246,226,206,0.45)',
 });
 
 /** One family, SF Pro Rounded: the system's own, so it sits with the map's

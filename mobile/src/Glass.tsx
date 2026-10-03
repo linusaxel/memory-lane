@@ -3,43 +3,61 @@
  *
  *  Only for the navigation layer over the map - never a sheet or a card, and
  *  never glass on glass (docs/09-visual-design.md part 8). `place` positions
- *  it, `style` is its shape. It scales rather than dims when pressed: opacity
- *  on a glass view's parent stops the effect rendering.
+ *  it, `style` is its shape. The glass is warmed with `frost`, so it reads as
+ *  paper and not as cold white. A press squishes it and springs it back with
+ *  a little overshoot; it never dims: opacity on a glass view's parent stops
+ *  the effect rendering.
  */
 
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import {
+  Animated,
   Pressable,
   View,
-  type ColorValue,
+  useColorScheme,
   type PressableProps,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 
-import { color, lift } from './theme';
+import { color, lift, solid } from './theme';
 
 const GLASS = isLiquidGlassAvailable();
 
 type Props = Omit<PressableProps, 'style' | 'children'> & {
   place?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
-  /** The one prominent control in view. Apple: tint only what matters. */
-  tint?: ColorValue;
   children: ReactNode;
 };
 
-export function GlassButton({ place, style, tint, children, ...press }: Props) {
+export function GlassButton({ place, style, children, onPressIn, onPressOut, ...press }: Props) {
+  const frost = solid(useColorScheme() === 'dark').frost;
+  const scale = useRef(new Animated.Value(1)).current;
+  const to = (toValue: number, bounciness: number) =>
+    Animated.spring(scale, { toValue, speed: 40, bounciness, useNativeDriver: true }).start();
   return (
-    <Pressable {...press} style={({ pressed }) => [place, pressed && { transform: [{ scale: 0.96 }] }]}>
-      {GLASS ? (
-        <GlassView style={style} glassEffectStyle="regular" tintColor={tint} isInteractive>
-          {children}
-        </GlassView>
-      ) : (
-        <View style={[style, lift, { backgroundColor: tint ?? color.paperRaised }]}>{children}</View>
-      )}
+    <Pressable
+      {...press}
+      style={place}
+      onPressIn={(e) => {
+        to(0.92, 0);
+        onPressIn?.(e);
+      }}
+      onPressOut={(e) => {
+        to(1, 14);
+        onPressOut?.(e);
+      }}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>
+        {GLASS ? (
+          <GlassView style={style} glassEffectStyle="regular" tintColor={frost} isInteractive>
+            {children}
+          </GlassView>
+        ) : (
+          <View style={[style, lift, { backgroundColor: color.paperRaised }]}>{children}</View>
+        )}
+      </Animated.View>
     </Pressable>
   );
 }

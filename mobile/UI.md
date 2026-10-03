@@ -336,9 +336,11 @@ walk or Turn on location, is not glass but `button.solid` with its lip
 untinted: the next stop's pin is the ember on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
-and that is the material, not a bug. A glass
-control scales rather than dims when pressed: opacity on a glass view's parent
-stops the effect rendering. Inside sheets, hierarchy is still hairlines and
+and that is the material, not a bug. Every glass control is warmed by
+`solid().frost`, a thin paper tint (a dark ember one in dark mode), so it
+reads as frosted paper and not as cold white (2026-10-03). A glass
+control squishes to 0.92 and springs back with a little overshoot rather than
+dimming: opacity on a glass view's parent stops the effect rendering. Inside sheets, hierarchy is still hairlines and
 weight.
 
 **The map is muted on purpose.** `mutedStandard` on iOS, a style array on

@@ -508,7 +508,9 @@ instantiateVariableFont(TTFont(src), dict(wght=700, opsz=36, SOFT=100, WONK=1)) 
   2026-10-03** on buttons and chips, a 4pt ledge in a deeper step of the fill
   that the press sinks onto (the founder: the app felt sterile). Cards and the
   glass controls are next, once it has been lived with.
-- Springs on every press: if the instant scale feels cheap on a device.
+- Springs on every press: **shipped on the glass controls 2026-10-03**, a
+  squish to 0.92 and an overshooting spring back, with the glass warmed by a
+  thin paper tint (`frost`). Buttons sink onto their lip instead.
 
 ## Sources
 

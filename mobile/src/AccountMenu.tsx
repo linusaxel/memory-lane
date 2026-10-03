@@ -5,11 +5,11 @@
 import { Button, Host, Menu, RNHostView, Section } from '@expo/ui/swift-ui';
 import { accessibilityLabel, disabled } from '@expo/ui/swift-ui/modifiers';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useColorScheme } from 'react-native';
 
 import type { Profile } from './api.ts';
 import Avatar from './Avatar.tsx';
-import { color, lift } from './theme';
+import { color, lift, solid } from './theme';
 
 const PROVIDER = { apple: 'Apple', google: 'Google' } as const;
 
@@ -24,6 +24,7 @@ type Props = {
 };
 
 export default function AccountMenu({ profile, name, onEditProfile, onSettings, onBoard }: Props) {
+  const frost = solid(useColorScheme() === 'dark').frost;
   const numbers = [
     profile?.streak ? `${profile.streak}-day streak` : null,
     `${profile?.unlocked ?? 0} opened`,
@@ -57,7 +58,7 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings, 
     </Host>
   );
   return GLASS ? (
-    <GlassView style={styles.circle} glassEffectStyle="regular" isInteractive>
+    <GlassView style={styles.circle} glassEffectStyle="regular" tintColor={frost} isInteractive>
       {menu}
     </GlassView>
   ) : (
