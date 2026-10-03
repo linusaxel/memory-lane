@@ -26,6 +26,7 @@ import Approach from './Approach.tsx';
 import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
 import Avatar from './Avatar.tsx';
+import Flourish from './Flourish.tsx';
 import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration, happened, sourceAction } from './format.ts';
@@ -518,7 +519,7 @@ export default function MemorySheet({
                     </Animated.View>
                   )}
                   <Animated.View style={rise(0)}>
-                    <Text style={rest ? styles.lede : styles.summary}>{prose(first)}</Text>
+                    <Text style={styles.summary}>{prose(first)}</Text>
                   </Animated.View>
                   {rest !== '' && (
                     <Animated.View style={[rise(1), styles.afterLede]}>
@@ -544,8 +545,8 @@ export default function MemorySheet({
                   <Animated.View style={[rise(3), styles.after]}>
                     {memory.contrast_note && (
                       <View style={styles.now}>
-                        <Text style={styles.meta}>Then and now</Text>
-                        <Text style={styles.nowText}>{memory.contrast_note}</Text>
+                        <Flourish />
+                        <Text style={styles.summary}>{memory.contrast_note}</Text>
                       </View>
                     )}
 
@@ -582,6 +583,7 @@ export default function MemorySheet({
                     )}
                     {linkFailed && <Text style={styles.meta}>{linkFailed}</Text>}
 
+                    <Flourish />
                     <Notes memoryId={memory.id} isAuthor={!!onEdit} />
                   </Animated.View>
                 </ScrollView>
@@ -675,16 +677,13 @@ const styles = StyleSheet.create({
   summary: story.body,
   epic: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   epicText: { ...label, color: color.ember },
-  // The peak, set apart the way a standfirst is. The prompt puts it first.
-  lede: { ...story.body, ...font.displaySemi },
   // One rhythm: 8 inside a part, 24 between parts, and no rules between them.
   afterLede: { marginTop: 8 },
   after: { marginTop: 24, gap: 24 },
   // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
   quote: { marginTop: 24, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
-  quoteText: { ...story.body, ...font.displaySemi },
-  now: { gap: 8 },
-  nowText: { ...story.body, color: color.inkSoft },
+  quoteText: story.body,
+  now: { gap: 24 },
   hashtag: { ...font.displaySemi },
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
@@ -694,7 +693,7 @@ const styles = StyleSheet.create({
   bylineName: { color: color.ink },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   // Ember, as every link here is: the memory's way out, at the story's size.
-  watchLink: { ...story.body, ...font.displaySemi, color: color.ember },
+  watchLink: { ...story.body, color: color.ember },
   openRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   grow: { flex: 1 },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },

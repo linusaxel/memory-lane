@@ -2970,7 +2970,8 @@ noisy, and adding a memory looked nothing like reading one.
 - **Three sizes, one rhythm.** `story` in `theme.ts`: 28/34 title, 17/26
   everything you read, 13 `label` for everything named. The lede and the quote
   are the body in semibold, not bigger. 8 inside a part, 24 between parts, and
-  space instead of hairlines (Refactoring UI, "use fewer borders"; HIG Layout:
+  space instead of hairlines. *The semibold and the bare space are superseded
+  2026-10-03 by "The open story is one voice".* (Refactoring UI, "use fewer borders"; HIG Layout:
   group with one of space, containers or rules).
 - **Who, when and how far are one line** under the title, with a 20pt avatar:
   "Retold from **Channel** · 1978 · 40 m away". The episode title moves under
@@ -2985,7 +2986,26 @@ noisy, and adding a memory looked nothing like reading one.
 - **Actions inside a page are text**: Rewrite, Remove, Leave note (ember),
   Take photo, Choose photo, Delete this memory.
 
-### Rejected approaches, do not retry
+### The open story is one voice
+
+Status: Accepted 2026-10-03. Supersedes the semibold lede and quote, and
+"space instead of hairlines", in *Reading and writing are one page*.
+
+The founder: the open memory was still cluttered with different formattings,
+and could use an ornamental divider. Three sizes had become six looks: a
+semibold lede, the regular body, a grey then-and-now under its own label, a
+semibold quote, a semibold link, and a "280 left" from the first keystroke.
+
+- **Everything you read is `story.body`**: ink, regular. The lede is still its
+  own paragraph and its own reveal beat, just not bold. The quote keeps the
+  ember rule as its only mark; the link keeps ember. #words stay semibold
+  (UI.md, "Tags are the #words").
+- **A flourish, where a label was** (`Flourish.tsx`): a hairline tapering to
+  two curls and a leaf, in `inkFaint`. Once before then-and-now, replacing its
+  "Then and now" label, and once before the notes. So the page reads: the
+  story ❦ what stands here now ❦ what walkers left. Never a third.
+- **The note counter shows in the last 40 characters only.**
+
 
 Status: Rejected
 

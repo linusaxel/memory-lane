@@ -128,7 +128,10 @@ export default function Notes({ memoryId, isAuthor }: Props) {
             testID="note"
           />
           <View style={styles.row}>
-            <Text style={styles.counter}>{NOTE_MAX - draft.length} left</Text>
+            {/* Only near the end: a number that counts down from the first key is noise. */}
+            <Text style={styles.counter}>
+              {draft.length > NOTE_MAX - 40 ? `${NOTE_MAX - draft.length} left` : ''}
+            </Text>
             <Pressable
               accessibilityRole="button"
               style={dim(!draft.trim() && styles.off)}
