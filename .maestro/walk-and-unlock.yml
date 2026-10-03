@@ -116,8 +116,11 @@ appId: ${APP_ID}
 - assertVisible: "3 memories · .* loop · .* min"
 # Every stop opened for nothing, and finishing earned XP.
 - assertVisible: "\\+[0-9]+ XP"
-# F27: e2e/run.sh gave this device an unlock yesterday, so today makes two.
-- assertVisible: "2 days in a row"
+# F27 + G5: e2e/sql gave this device a walk on each of the six days before,
+# so today makes seven, a milestone with its own moment.
+- assertVisible:
+    id: "streak-milestone"
+- assertVisible: "7 days in a row"
 - tapOn: "Done"
 
 - extendedWaitUntil:
@@ -128,7 +131,7 @@ appId: ${APP_ID}
 # stops, and an earned one opens the same sheet. (F16, the same journal with
 # no network, is not scripted; e2e/README.md has the by-hand recipe.)
 - tapOn: "Journal"
-- assertVisible: "2 day streak"
+- assertVisible: "7 day streak"
 - extendedWaitUntil:
     visible: ".*, 3 memories · .*"
     timeout: 30000

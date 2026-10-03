@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Seeing a UI change mid-flow means screenshotting by hand.** 2026-10-03:
+  the walk card and finish card only appear mid-`walk-and-unlock`, and Metro
+  is down once run.sh exits, so checking the stamps and the milestone took a
+  background `simctl io screenshot` loop every few seconds, then reading
+  frames by guesswork, over three 145 s runs. Fix: `takeScreenshot` steps at
+  the walk card and the finish card, saved under `e2e/out/`.
 - **`dedup --memories` misses a book's retellings when they sit on different
   place rows.** 2026-10-01: it found none of the dog, grocer or gallows pairs
   in source 204 (Schloss Friedrichsberg against Frederiksberg Slot, and so
@@ -670,10 +676,13 @@ shape, is the collection (e3aa671).
 - [ ] **G4 Counters that tick up.** After a walk, opening the drawer rolls
       memories, places and steps up from their old values, with a haptic on
       each tick, instead of showing them already counted.
-- [ ] **G5 Streak milestones.** At 7, 30 and 100 days, a moment of its own: a
-      burst over the panel, a success haptic and a sound. Ordinary days stay
-      quiet. Frame it around walks, and consider a rest day so a missed day
-      does not punish (Duolingo's guilt design gets mixed reviews).
+- [ ] **G5 Streak milestones: the sound and a rest day.** (checked
+      2026-10-03) The 7/30/100 moment shipped with a flame and a haptic
+      (`Milestone` in `src/Plan.tsx`), no sound. A chime needs a bundled
+      asset and an audio session set to mix, or it stops the podcast a
+      walker is listening to. A rest day, so a missed day does not
+      punish, is undecided (Duolingo's guilt design gets mixed reviews; the
+      founder turned down a streak shield as a reward).
 - [ ] **G6 A ceremony for something new.** An unseen unlock pulses. The first
       time it scrolls into view it scales 0.8 → 1.08 → 1 with a shimmer and a
       soft chime, then the flag clears.

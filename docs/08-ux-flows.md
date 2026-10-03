@@ -896,7 +896,9 @@ reinstall and covers every phone on the account.
 3. No stop yesterday *and* none today breaks it back to zero; none yet
    *today* does not, since the day is not over.
 4. Shown large at the top of the journal (`Memories.tsx`), and on the closing
-   card once it is more than one day (F30).
+   card once it is more than one day (F30). At 7, 30 and 100 days that line
+   is a moment of its own: it springs in with a flame and a second success
+   haptic (`Milestone` in `src/Plan.tsx`). Every other day stays quiet.
 
 **Not a notification.** Nothing is pushed when a streak would break; it is a
 truer number the next time the app is opened, same as F25's route pill. This

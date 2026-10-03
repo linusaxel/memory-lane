@@ -12,8 +12,9 @@
  */
 
 import Slider from '@react-native-community/slider';
+import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Glyph from './Glyph.tsx';
@@ -397,7 +398,11 @@ export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, o
       </Text>
       {reward && <Text style={label}>{`+${reward.xp} XP`}</Text>}
       {reward?.level && <Text style={label}>{`Level ${reward.level}`}</Text>}
-      {streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>}
+      {MILESTONES.includes(streak) ? (
+        <Milestone streak={streak} />
+      ) : (
+        streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>
+      )}
       <Pressable
         style={dim(styles.primary)}
         onPress={onDone}
@@ -407,6 +412,28 @@ export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, o
         <Text style={styles.primaryText}>Done</Text>
       </Pressable>
     </View>
+  );
+}
+
+// Quiet by default, loud only here: an ordinary day's streak is one line.
+const MILESTONES = [7, 30, 100];
+
+/** A streak milestone's own moment on the finish card: it springs in with a
+ *  flame and a second success haptic. Still, under Reduce Motion. */
+function Milestone({ streak }: { streak: number }) {
+  const scale = useRef(new Animated.Value(0.8)).current;
+  useEffect(() => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    AccessibilityInfo.isReduceMotionEnabled().then((still) => {
+      if (still) scale.setValue(1);
+      else Animated.spring(scale, { toValue: 1, speed: 8, bounciness: 14, useNativeDriver: true }).start();
+    });
+  }, [scale]);
+  return (
+    <Animated.View style={[styles.milestone, { transform: [{ scale }] }]} testID="streak-milestone">
+      <Glyph name="flame.fill" size={22} color={color.ember} bounce={streak} />
+      <Text style={styles.milestoneText}>{`${streak} days in a row`}</Text>
+    </Animated.View>
   );
 }
 
@@ -435,6 +462,8 @@ export function PastWalk({ walk, onDone }: { walk: WalkedRoute; onDone: () => vo
 
 const styles = StyleSheet.create({
   doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  milestone: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
+  milestoneText: { ...font.uiBold, fontSize: 18, color: color.ink },
   value: { ...font.uiBold, fontSize: 22, color: color.ink, marginTop: 4 },
   slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },

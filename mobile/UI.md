@@ -83,7 +83,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ "Turn on location"         the bottom row's middle, only on a walk with no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
-                               loop · 52 min", the streak, Done. A relaunch does not show it again
+                               loop · 52 min", the streak, Done. At 7, 30 and 100 days the streak
+                               springs in with an ember flame and a second success haptic; any
+                               other day it is one quiet line. A relaunch does not show it again
 
 MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a pageSheet from the journal) - two compositions, not one with holes in it
 

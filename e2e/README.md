@@ -27,7 +27,7 @@ never touched.
 The database is rebuilt **before every flow**. `clearState: true` keeps the
 keychain, so the device id survives (correctly, see `docs/architecture.md`), and
 only a fresh database makes each flow a stranger. A flow needing more than the
-seed has `e2e/sql/<flow>.sql`, applied after the reset: yesterday's unlock for
+seed has `e2e/sql/<flow>.sql`, applied after the reset: six days of walks for
 the streak, past walks for the lakes, a walked-out-then-paid account. Each is a
 trigger on the device or user the app has not minted yet. Signing in and
 planning mint neither (reads create nothing), so a flow whose trigger must fire
