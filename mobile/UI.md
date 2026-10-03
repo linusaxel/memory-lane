@@ -96,7 +96,7 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   locked                            open
   ├─ place name       28/700        ├─ place name       28/700, ⋯ beside the ×
   ├─ padlock                        ├─ "17 June 1978 · on this day"  17 inkSoft, its own line
-  │                                 ├─ avatar 20 + "Left by Anna" / "Retold from X"  label
+  │                                 ├─ avatar 20 (none if none) + "Left by Anna" / "Retold from X ↗"  label
   │                                 ├─ ❦ the one flourish: byline above, story below
   │                                 ├─ the lede  17/26: the first sentence, the peak, own paragraph
   │                                 ├─ the rest  17/26, #tags semibold
@@ -105,7 +105,7 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   ├─ distance         52/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ the heart, alone at the right (F11): a bare count
   ├─ "1 attachment waiting"         │    before the glyph, in a slot kept at zero
-  │                                 └─ notes  17/26, "You  Rewrite  Remove" in label
+  │                                 └─ ❦ then notes  17/26, "You  Rewrite  Remove" in label
   │  (in reach it is not opened:
   └─  the ring is on the map)
                                     Nothing is pinned, bar the pager under a stacked pin.
@@ -198,7 +198,7 @@ with no network is never stopped at the gate.
 | `src/Drawer.tsx` | the journal's panel from the left: the edge swipe, the spring, the scrim |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
-| `src/Flourish.tsx` | the leaf-and-curls divider, once on an open story: between the byline and the story |
+| `src/Flourish.tsx` | the leaf-and-curls divider, twice on an open story: under the byline, before the notes |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |

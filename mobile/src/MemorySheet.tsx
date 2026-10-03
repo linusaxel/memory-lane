@@ -448,6 +448,7 @@ export default function MemorySheet({
                   >
                     <Text style={styles.meta} numberOfLines={2}>
                       Retold from {memory.content.title}
+                      <Text style={styles.out}> ↗</Text>
                     </Text>
                   </Pressable>
                 ) : null)}
@@ -584,6 +585,7 @@ export default function MemorySheet({
                         "One source, one flourish"). */}
                     {heart && <View style={styles.heartRow}>{heart}</View>}
 
+                    <Flourish />
                     <Notes memoryId={memory.id} isAuthor={!!onEdit} />
                   </Animated.View>
                 </ScrollView>
@@ -646,7 +648,7 @@ const styles = StyleSheet.create({
   grabberRow: { alignItems: 'center', paddingTop: 10 },
   grabber: { width: 40, height: 4, borderRadius: 2, backgroundColor: color.rule },
   heading: { paddingHorizontal: 24, paddingTop: 26 },
-  body: { paddingHorizontal: 24, paddingTop: 24 },
+  body: { paddingHorizontal: 24, paddingTop: 20 },
   place: { ...story.title, paddingRight: 30 },
   meta: { ...label },
   peekFrom: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
@@ -689,14 +691,15 @@ const styles = StyleSheet.create({
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
   date: { ...story.body, color: color.inkSoft, marginTop: 4 },
-  byline: { marginTop: 12 },
-  flourish: { marginTop: 24 },
+  byline: { marginTop: 8 },
+  flourish: { marginTop: 20 },
   bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bylineText: { ...story.meta, flexShrink: 1 },
   bylineName: { color: color.ink },
+  out: { color: color.ember },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   heartRow: { alignItems: 'flex-end' },
-  heart: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },
+  heart: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   // Two digits' room, kept at zero, so the glyph after it never moves.
   heartText: { ...label, color: color.inkSoft, minWidth: 22, textAlign: 'right', fontVariant: ['tabular-nums'] },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },

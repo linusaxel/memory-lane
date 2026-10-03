@@ -25,24 +25,24 @@ type Props = {
 };
 
 export default function SourceLine({ source, url = source.url ?? undefined, spoken }: Props) {
-  // A channel avatar is decoration; if it will not load, fall back to the same
-  // empty circle a channel without one gets rather than a grey disc that looks
-  // like it is still loading.
+  // A channel avatar is decoration; with none, or one that will not load, the
+  // credit stands alone - an empty circle read as a missing picture.
   const [iconFailed, setIconFailed] = useState(false);
 
   const body = (
     <View style={styles.row}>
-      {source.icon_url && !iconFailed ? (
+      {source.icon_url && !iconFailed && (
         <Image
           source={{ uri: source.icon_url }}
           style={styles.avatar}
           onError={() => setIconFailed(true)}
         />
-      ) : (
-        <View style={[styles.avatar, styles.avatarEmpty]} />
       )}
       <Text style={styles.from} numberOfLines={2}>
         Retold from <Text style={styles.name}>{source.name}</Text>
+        {/* Ember, as every link here is, and pointing out: it leaves the app.
+            Inside the text, so it follows the last word when the name wraps. */}
+        {url && <Text style={styles.out}> ↗</Text>}
       </Text>
     </View>
   );
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   // MemorySheet's byline, under the place name.
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
-  avatarEmpty: { borderWidth: 1, borderColor: color.rule },
   from: { ...story.meta, flex: 1 },
   name: { color: color.ink },
+  out: { color: color.ember },
 });

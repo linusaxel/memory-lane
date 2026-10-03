@@ -3025,6 +3025,8 @@ at the end.
   the old link is gone: the credit and the date say which.
 - **One flourish**, between the byline and the story: the apparatus above it,
   the reading below. Then-and-now is the story's last paragraph, unlabelled.
+  *Superseded 2026-10-03: a second flourish before the notes, by the founder;
+  see "The date is the story's, the byline the source's".*
 - **The heart closes the story** alone, at the right.
 
 ### The date is the story's, the byline the source's
@@ -3050,6 +3052,13 @@ and make the quote and then-and-now say what they are, after markdown.
   `quote.opening` in ember, no quote marks (Butterick, block quotations).
   Then and now is `clock.arrow.circlepath` with a `rule` bar: ember stays the
   source's own voice. No tint, no new size.
+- **The credit shows it is a link**: an ember ↗ inside the text, so it
+  follows the last word when the name wraps. A source with no avatar shows
+  none; the empty circle read as a missing picture.
+- **Two flourishes**: under the byline, and before the notes, so the page is
+  who told it ❦ the story ❦ what walkers left.
+- **One rhythm**: title, date and byline sit tight (4, 8), each flourish has
+  20 either side, the story's parts 24.
 
 ### Rejected approaches, do not retry
 
