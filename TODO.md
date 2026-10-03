@@ -526,6 +526,31 @@ Read them first if anything is ever sold but the subscription.
       - Push annual: 44.1% of annual plans are retained after a year, against
         17.0% of monthly ones (RevenueCat 2025).
 
+From a Mobbin talk on ~3,000 paywalls (2026-10-03). Already shipped: the finish
+card's link, the outcome line, yearly first with its price a month, "No
+commitment", and the › (4e5e9e1). Ruled out: trials, exit-intent offers, fake
+urgency, and pop-ups (docs/08 F35).
+
+- [ ] **The paywall pitches your own walks.** (checked 2026-10-03) Opal's "8
+      years of your life back" took trial starts from 7% to 17%. Ours is the
+      profile already on hand: "23 km walked, 41 memories opened, 7 days in a
+      row." One line over the plans in `Paywall.tsx`, from `Profile`, with no
+      new endpoint. Hide it until the first finished walk.
+- [ ] **A "save X%" badge on yearly.** (checked 2026-10-03) Waits on S6's real
+      prices. Compute it from the two store products' `price` (never a
+      hard-coded number), and show it only when it rounds to 10% or more.
+- [ ] **Paywall experiments.** (checked 2026-10-03) Waits on S6. The talk's
+      main point: design tests move the most, and there is no best paywall.
+      Use RevenueCat Experiments (offerings A/B) before building anything of
+      our own. First test: copy, with the stats line against the outcome line.
+- [ ] **Measure retention and LTV, not just conversion.** (checked 2026-10-03)
+      Waits on S6. From `subscriptions`: renewals by plan and by cohort month,
+      and how many second walks subscribers actually take. Without second
+      walks, the product is selling something nobody uses.
+- [ ] **Social proof on the paywall.** (checked 2026-10-03) After launch,
+      once there is a store rating worth showing: the rating and one real
+      review. Never invent it.
+
 ### The walk: give it a reason to exist
 
 The walk is the whole app now, so it no longer competes with Walk here.
