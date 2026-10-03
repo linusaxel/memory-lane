@@ -1233,6 +1233,105 @@ tasks:
       the card, which is marked ponytail: the real fix is a flex column with
       map.invalidateSize() on toggle, worth doing when there is a customer.
 
+  # -- N1 -- next batch, planned 2026-10-03 from TODO.md ----------------------
+
+  - id: N1-01
+    goal: "Haiku 4.5's retirement date is read from Anthropic's models/deprecations
+      page and written into TODO.md. If it retires before 2027-01-01,
+      CLASSIFIER_MODEL defaults to the current Haiku and docs/01-setup.md says so."
+    verify: "venv/bin/python -m pytest -q tests/test_classifier.py"
+    touches: [pipeline/config.py, docs/01-setup.md, TODO.md, tests/test_classifier.py]
+    state: todo
+    attempts: 0
+    note: "Time-boxed: research read 'not sooner than 2026-10-15'. A model swap
+      changes verdicts, so the human reruns classifier_audit afterwards (credits)."
+
+  - id: N1-02
+    goal: "Every extracted memory's card says it was summarised by AI, in the
+      app (beside the credit) and on the web card (api/card.py). A submitted
+      memory is a person's own words and carries no label. AI Act Art 50(4)."
+    verify: "venv/bin/python -m pytest -q tests/test_card.py"
+    touches: [api/card.py, tests/test_card.py, mobile/src/SourceLine.tsx,
+      mobile/src/MemorySheet.tsx, mobile/UI.md, docs/10-decisions.md]
+    state: todo
+    attempts: 0
+    note: "One quiet line, part of the byline (docs/10 'The credit is a byline'),
+      never a badge. TODO.md Launch readiness, the corpus's legal footing."
+
+  - id: N1-03
+    goal: "`dedup --memories` also compares the memories of one source with each
+      other, whatever place row they sit on, and lists pairs where one side is
+      already hidden."
+    verify: "venv/bin/python -m pytest -q tests/test_dedup.py"
+    touches: [pipeline/dedup.py, tests/test_dedup.py, TODO.md]
+    state: todo
+    attempts: 0
+    note: "TODO.md Friction, 2026-10-01: it found none of source 204's dog, grocer
+      or gallows pairs (Schloss Friedrichsberg vs Frederiksberg Slot). Delete
+      that Friction entry when this lands."
+
+  - id: N1-04
+    goal: "`pipeline.quality --compare --runs N` draws each sampled chunk N times
+      per prompt, unstored, and reports how often each chunk keeps something,
+      per prompt."
+    verify: "venv/bin/python -m pytest -q tests/test_quality_compare.py"
+    touches: [pipeline/quality.py, tests/test_quality_compare.py, docs/04-extract.md, TODO.md]
+    state: todo
+    attempts: 0
+    note: "Closes two Friction entries (one draw per chunk; variance needs a
+      hand-deleted cache). --runs exists today for --whole only: widen it, do not
+      add a second flag. Tests use tests/fakes.py, never the API."
+
+  - id: N1-05
+    goal: "Leonora Christina (source 203) is re-extracted with the archival
+      prompt, dedup's pairs are read, and docs/04 records visible before/after."
+    verify: "MANUAL"
+    touches: [docs/04-extract.md, TODO.md]
+    depends_on: [N1-03]
+    state: blocked
+    blocked_on: human
+    gate: API_CREDITS
+    attempts: 0
+    note: "Bills cents. Run: reset memories_extracted for source 203, clear stale
+      extraction:203:memories, `python -m pipeline.enqueue` its items, `python -m
+      pipeline.worker --burst`, then `python -m pipeline.dedup --memories` and read
+      the pairs before hiding any. Wait for N1-03 so cross-place retellings show."
+
+  - id: N1-06
+    goal: "e2e/run.sh stamps a hash of mobile/app.json + mobile/package.json at
+      prebuild and, when it differs, stops before xcodebuild with 'run npx expo
+      prebuild --platform ios --clean, then pod install'. It also checks the React
+      binary in Pods/React-Core-prebuilt exists."
+    verify: "venv/bin/python -m pytest -q tests/test_harness.py"
+    touches: [e2e/run.sh, e2e/README.md, tests/test_harness.py, TODO.md]
+    state: todo
+    attempts: 0
+    note: "TODO.md Friction, 'A damaged Pods tree fails as a link error': hit
+      three times, each behind a several-minute build. Delete that entry when
+      this lands."
+
+  - id: N1-07
+    goal: "walk-and-unlock.yml takes a screenshot at the walk card and at the
+      finish card, saved under e2e/out/ (git-ignored), so a UI change mid-flow
+      can be seen without a hand-run simctl loop."
+    verify: "./e2e/run.sh walk-and-unlock"
+    touches: [.maestro/walk-and-unlock.yml, e2e/README.md, .gitignore, TODO.md]
+    state: todo
+    attempts: 0
+    note: "TODO.md Friction, 2026-10-03 ('Seeing a UI change mid-flow'). Maestro's
+      takeScreenshot step; no recording (--record stays off). Delete the entry
+      when this lands."
+
+  - id: N1-08
+    goal: "After a walk, opening the drawer rolls memories, places and steps up
+      from their previous values with a light haptic per tick (TODO.md G4)."
+    verify: "./e2e/run.sh walk-and-unlock"
+    touches: [mobile/src/Memories.tsx, mobile/src/Drawer.tsx, mobile/UI.md, TODO.md]
+    state: todo
+    attempts: 0
+    note: "Previous values in memory only, not storage: a fresh launch shows the
+      counts settled. Only real progress ticks; an unchanged count is still."
+
 inbox: []
   # Ideas noticed while working. NOT executable. A human promotes one into `tasks:`
   # or deletes it. This is the ONLY legal outlet for scope creep.

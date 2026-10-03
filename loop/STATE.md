@@ -1,58 +1,22 @@
-# LOOP STATE — TERMINAL. Every TASKS.yaml task is `done` or `blocked` on a
-# human gate, and TODO.md's founder-brainstorm list has no buildable item left.
+# LOOP STATE — batch N1 queued 2026-10-03. Not terminal.
 
 ```
-updated:  2026-09-23 (t38, TERMINATE)
-branch:   loop/autopilot   — NOT pushed. `main` is behind by this whole session.
-gate:     GREEN, 568 pytest + 69 node tests, commit be67e45.
-status:   TASKS.yaml: 49 done, 10 blocked (all NEEDS_DECISION / a named human
-          gate), 0 todo, 0 doing, inbox empty. TODO.md's "Ideas — founder
-          brainstorm, unvetted" section: every remaining line is either [x]
-          done, a Resolved note that says no build is implied, or an explicit
-          pointer at one of the same NEEDS_DECISION items below. There is
-          nothing left for the loop to build without a human decision, an
-          account, a device, or a card number.
+updated:  2026-10-03 (planned by hand, on main)
+branch:   loop/autopilot, fast-forwarded to main the same day.
+gate:     run it first, as STEP 1 says.
+status:   N1-01 .. N1-08 added. N1-05 is parked on API_CREDITS from the start
+          (it bills); the rest are todo.
 ```
 
-**`TODO.md` is the roadmap and the source of truth.** This file is the loop's
-orientation doc and does not compete with it. Where they disagree, TODO.md
-wins and this file is stale.
+**`TODO.md` is the roadmap and the source of truth.** Everything below the
+next heading was written 2026-09-23, before the walk planner (docs/10, *A walk
+planner, nothing else*). Where it disagrees with TODO.md or docs/10, it is
+stale.
 
-## Why this is the stopping point, not another pause
+## Next concrete action
 
-STEP 2 of the loop's own procedure says: pick the first `todo`, or the first
-`doing`; skip every `blocked` task unconditionally; if nothing is left that is
-`todo` or `doing`, go to STEP 6 (terminate). That condition is met, and has
-been re-verified twice in this session after a false alarm (see "Do not
-redo" below) — this is not a guess.
-
-## What this whole session added (chronological, oldest first)
-
-TASKS.yaml's own backlog (t0–t29, 2026-09-20 to 21): full crawler → ingest →
-transcripts → extraction → API → mobile app → store config pipeline; the
-layer/contrast/tag system; proximity unlock; submissions with photo and
-audio; sign-in; anniversaries; the daily route; the embed and
-card. See `loop/JOURNAL.md` t0–t29 for the one-line-per-tick record, or prior
-`STATE.md` revisions in git history for longer summaries.
-
-TODO.md's untracked founder-brainstorm list (t30–t38, 2026-09-22 to 23), once
-TASKS.yaml ran dry:
-
-| Commit | What |
-|---|---|
-| `27ddff9` | Static logo mark |
-| `caba568` | Animated startup logo |
-| `6584fdb` | Tab bar delimiters |
-| `1daec1e` | Start-route affordance |
-| `a0b5caa` | Route-complete moment (haptic) |
-| `e52e956` | Configurable route distance (`GET /v1/routes/today?radius_meters=`) |
-| `eb6060b` | Heart/favorite a memory |
-| `d316427` | Streak counter (F27) — computed from `unlocks`, not stored |
-| `f6f8a7b` | Proximity notification (F28) — opt-in background geofencing over today's route |
-| `be67e45` | Warm accent — `seal` moved from stamp red to a warm ochre |
-
-Full detail on any of these is in `loop/JOURNAL.md`'s per-tick lines or the
-commit itself; no need to re-derive it by reading code.
+Pick N1-01 (Haiku 4.5's retirement date, time-sensitive), then go in order.
+N1-07 and N1-08 are proven on the simulator with `./e2e/run.sh walk-and-unlock`.
 
 ## What works right now
 
