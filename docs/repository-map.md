@@ -96,6 +96,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/write.py` | Unlock, media, submissions, reports |
 | `api/accounts.py` | `/v1/me`, `/v1/auth/*` and the city board (`/v1/board`) |
 | `api/my_data.py` | A copy of one person's data, for a GDPR request. A CLI, not a route |
+| `api/metrics.py` | D1/D7 return, walks, opens per walk and stories left, from the tables. A CLI, not a route |
 | `api/card.py` | The server-rendered card. Gates itself |
 | `api/story.py` | A story's words without its markdown, for the card. Mirrors `story.ts` |
 | `api/embed.py` | The embeddable map. Off when `ENABLE_EMBED=0` |
@@ -147,6 +148,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/device.ts` | This installation's self-issued id |
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/hearted.ts` | Which memories this device has hearted |
+| `mobile/src/link.ts` | `openLink`: every link opens in an in-app browser sheet |
 | `mobile/src/seen.ts` | The hearts and notes each of your memories had when you last looked |
 | `mobile/src/Flourish.tsx` | The ornamental divider between an open story's parts |
 | `mobile/src/Notes.tsx` | The notes under an open memory (F33) |

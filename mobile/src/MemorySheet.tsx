@@ -4,7 +4,6 @@ import {
   Alert,
   Animated,
   Easing,
-  Linking,
   Modal,
   Platform,
   Pressable,
@@ -25,6 +24,7 @@ import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
 import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
+import { openLink } from './link.ts';
 import Avatar from './Avatar.tsx';
 import Flourish from './Flourish.tsx';
 import Glyph from './Glyph.tsx';
@@ -155,14 +155,14 @@ export default function MemorySheet({
   // Over the map, before or on a walk: a card sized to what it holds, not a
   // page (docs/10, "An open memory is a card too").
   const many = memories.length > 1;
-  // openURL rejects when nothing can handle the link - no browser, a
+  // openLink rejects when nothing can show the link - no browser, a
   // locked-down device. The source link says so instead of appearing to do
   // nothing.
   const [linkFailed, setLinkFailed] = useState<string | null>(null);
 
   const open = (url: string, whenNothingOpens: string) => {
     setLinkFailed(null);
-    Linking.openURL(url).catch(() => setLinkFailed(whenNothingOpens));
+    openLink(url).catch(() => setLinkFailed(whenNothingOpens));
   };
 
   // distance_meters is measured from the map centre, which is not where the

@@ -7,7 +7,6 @@
  */
 
 import {
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -19,6 +18,7 @@ import {
 
 import { API_BASE, setOnBoard, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
+import { openLink } from './link.ts';
 import CloseButton from './CloseButton.tsx';
 import SignIn from './SignIn.tsx';
 import Glyph from './Glyph.tsx';
@@ -157,21 +157,21 @@ export default function Settings({
           <Pressable
             style={dim(styles.link)}
             accessibilityRole="link"
-            onPress={() => Linking.openURL(`${API_BASE}/privacy`).catch(() => {})}
+            onPress={() => openLink(`${API_BASE}/privacy`).catch(() => {})}
           >
             <Text style={styles.linkText}>Privacy policy</Text>
           </Pressable>
           <Pressable
             style={dim(styles.link)}
             accessibilityRole="link"
-            onPress={() => Linking.openURL(`${API_BASE}/privacy#contact`).catch(() => {})}
+            onPress={() => openLink(`${API_BASE}/privacy#contact`).catch(() => {})}
           >
             <Text style={styles.linkText}>Contact us</Text>
           </Pressable>
           <Pressable
             style={dim(styles.link)}
             accessibilityRole="link"
-            onPress={() => Linking.openURL('https://www.openstreetmap.org/copyright').catch(() => {})}
+            onPress={() => openLink('https://www.openstreetmap.org/copyright').catch(() => {})}
           >
             <Text style={styles.linkText}>Places © OpenStreetMap contributors</Text>
           </Pressable>

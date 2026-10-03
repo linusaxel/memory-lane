@@ -10,9 +10,10 @@
  */
 
 import { useState } from 'react';
-import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Source } from './api.ts';
+import { openLink } from './link.ts';
 import { color, dim, story } from './theme.ts';
 
 type Props = {
@@ -52,7 +53,7 @@ export default function SourceLine({ source, url = source.url ?? undefined, spok
   return (
     <Pressable
       style={dim()}
-      onPress={() => Linking.openURL(url).catch(() => {})}
+      onPress={() => openLink(url).catch(() => {})}
       accessibilityRole="link"
       accessibilityLabel={spoken ?? `Retold from ${source.name}`}
     >

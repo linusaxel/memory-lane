@@ -211,6 +211,8 @@ export default function App() {
     saveChoices({ themes: ask.themes, from: ask.from, until: ask.until });
   }, []);
   const [previewCardHeight, setPreviewCardHeight] = useState(0);
+  const [pastCardHeight, setPastCardHeight] = useState(0);
+  const [doneCardHeight, setDoneCardHeight] = useState(0);
   // Where the previewed walk starts, and whether that is central
   // Copenhagen standing in for a position we could not have.
   const [planFrom, setPlanFrom] = useState<Coordinates | null>(null);
@@ -914,20 +916,21 @@ export default function App() {
     return span < 12 * 3600_000 ? Math.max(1, Math.round(span / 60_000)) : null;
   }, [showDone, routeShown, unlocked]);
   const pastPath = useMemo(() => (pastWalk ? walkPath(pastWalk) : []), [pastWalk]);
+  // Both clear their card as it is measured, as the preview's fit does.
   useEffect(() => {
-    if (pastPath.length === 0) return;
+    if (pastPath.length === 0 || !mapReady || !pastCardHeight) return;
     mapRef.current?.fitToCoordinates(
       pastPath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
-      { edgePadding: { top: 120, right: 60, bottom: 260, left: 60 }, animated: true },
+      { edgePadding: { top: 120, right: 60, bottom: pastCardHeight + 50, left: 60 }, animated: true },
     );
-  }, [pastPath, mapRef]);
+  }, [pastPath, mapRef, mapReady, pastCardHeight]);
   useEffect(() => {
-    if (donePath.length < 2) return;
+    if (donePath.length < 2 || !mapReady || !doneCardHeight) return;
     mapRef.current?.fitToCoordinates(
       donePath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
-      { edgePadding: { top: 80, right: 60, bottom: 300, left: 60 }, animated: true },
+      { edgePadding: { top: 80, right: 60, bottom: doneCardHeight + 50, left: 60 }, animated: true },
     );
-  }, [donePath, mapRef]);
+  }, [donePath, mapRef, mapReady, doneCardHeight]);
   const mine = !!openMemories[openIndex] && filedBy(openMemories[openIndex], me);
 
   // EXPO_PUBLIC_DEV_OPEN_SCREEN, under __DEV__ only. The submit sheet is three
@@ -1684,6 +1687,7 @@ export default function App() {
               reward={reward}
               path={donePath}
               onDone={() => setWalkDone(false)}
+              onHeight={setDoneCardHeight}
               onMore={
                 profile?.user_id && !profile.subscribed
                   ? () => {
@@ -1773,6 +1777,7 @@ export default function App() {
           {pastWalk && (
             <PastWalk
               walk={pastWalk}
+              onHeight={setPastCardHeight}
               onDone={() => {
                 setPastWalk(null);
                 setFollowing(true);
@@ -2011,6 +2016,7 @@ export default function App() {
           visible={paywallOpen}
           onClose={() => setPaywallOpen(false)}
           device={device}
+          profile={profile}
           onProfile={setProfile}
         />
 

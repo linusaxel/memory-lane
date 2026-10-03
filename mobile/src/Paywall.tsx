@@ -10,7 +10,6 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -22,6 +21,7 @@ import type { PurchasesPackage } from 'react-native-purchases';
 
 import { API_BASE, refreshSubscription, type Profile } from './api.ts';
 import { buy, plans, restore } from './purchases.ts';
+import { openLink } from './link.ts';
 import { button, buttonText, color, dim, font, label } from './theme.ts';
 
 // Apple's standard licence, which App Review accepts in place of our own terms.
@@ -31,14 +31,28 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   device: string | null;
+  profile: Profile | null;
   onProfile: (next: Profile) => void;
 };
 
-export default function Paywall({ visible, onClose, device, onProfile }: Props) {
+/** The pitch is your own walking so far, once there is any: xp counts only
+ *  finished walks. A count still at zero says nothing. */
+function soFar(profile: Profile | null): string | null {
+  if (!profile || profile.xp <= 0) return null;
+  const parts: string[] = [];
+  const { unlocked, streak, steps } = profile;
+  if (unlocked > 0) parts.push(`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'} opened`);
+  if (streak > 1) parts.push(`${streak} days in a row`);
+  if (steps > 0) parts.push(`${steps.toLocaleString()} steps`);
+  return parts.length ? `So far: ${parts.join(' · ')}.` : null;
+}
+
+export default function Paywall({ visible, onClose, device, profile, onProfile }: Props) {
   const [offered, setOffered] = useState<PurchasesPackage[] | null>(null);
   // Which button is paying: it spins while the others wait.
   const [paying, setPaying] = useState<string | null>(null);
   const busy = paying != null;
+  const pitch = soFar(profile);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,6 +84,11 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Text style={styles.title}>More than one walk a day</Text>
+        {pitch && (
+          <Text style={styles.fine} testID="paywall-so-far">
+            {pitch}
+          </Text>
+        )}
         <Text style={styles.note}>
           Another loop past memories you haven't heard yet, whenever the day leaves
           room. See the stops before you go, and lean a walk towards the themes
@@ -134,14 +153,14 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
           <Pressable
             style={dim(styles.link)}
             accessibilityRole="link"
-            onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
+            onPress={() => openLink(TERMS_URL).catch(() => {})}
           >
             <Text style={styles.linkText}>Terms of use</Text>
           </Pressable>
           <Pressable
             style={dim(styles.link)}
             accessibilityRole="link"
-            onPress={() => Linking.openURL(`${API_BASE}/privacy`).catch(() => {})}
+            onPress={() => openLink(`${API_BASE}/privacy`).catch(() => {})}
           >
             <Text style={styles.linkText}>Privacy policy</Text>
           </Pressable>

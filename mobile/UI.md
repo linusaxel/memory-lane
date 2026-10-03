@@ -890,10 +890,11 @@ foreground only). Walking into range has to change the map by itself.
 
 ## A link that can fail
 
-`Linking.openURL` rejects when nothing on the device can handle the link — no
-browser, a managed device. The watch link goes through a helper in
-`MemorySheet` that catches it and says so. A control that
-silently does nothing is the failure people blame on themselves.
+Every link goes through `openLink` (`src/link.ts`): an in-app Safari sheet
+with Close, so a source credit or the privacy page never throws a walker out
+of the app mid-walk. It rejects when nothing can show the link — a managed
+device. The watch link catches that in `MemorySheet` and says so. A control
+that silently does nothing is the failure people blame on themselves.
 
 ## Accessibility
 

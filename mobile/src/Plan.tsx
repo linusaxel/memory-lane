@@ -460,6 +460,8 @@ type WalkDoneProps = {
   /** The walk drawn whole, for the card it becomes in Your walks. */
   path: Coordinates[];
   onDone: () => void;
+  /** The card as measured, so the map's fit clears it. */
+  onHeight: (height: number) => void;
   /** The paywall, for a signed-in account without a subscription; unset
    *  hides the link. Never a pop-up: Done stays the one tap. */
   onMore?: () => void;
@@ -523,7 +525,18 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
 }
 
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
-export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, onDone, onMore }: WalkDoneProps) {
+export function WalkDone({
+  stops,
+  meters,
+  loop,
+  minutes,
+  streak,
+  reward,
+  path,
+  onDone,
+  onHeight,
+  onMore,
+}: WalkDoneProps) {
   const took =
     minutes === null
       ? ''
@@ -531,7 +544,7 @@ export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, o
         ? ` · ${minutes} min`
         : ` · ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
   return (
-    <View style={styles.card} accessibilityViewIsModal>
+    <View style={styles.card} accessibilityViewIsModal onLayout={(e) => onHeight(e.nativeEvent.layout.height)}>
       <View style={styles.doneTop}>
         <Text style={styles.doneTitle} accessibilityRole="header" testID="walk-done">
           Nice walk.
@@ -589,9 +602,17 @@ function Milestone({ streak }: { streak: number }) {
 
 /** A past walk, drawn on the map behind it: when, and what it came to.
  *  Opened from its card in Your walks. */
-export function PastWalk({ walk, onDone }: { walk: WalkedRoute; onDone: () => void }) {
+export function PastWalk({
+  walk,
+  onDone,
+  onHeight,
+}: {
+  walk: WalkedRoute;
+  onDone: () => void;
+  onHeight: (height: number) => void;
+}) {
   return (
-    <View style={styles.card}>
+    <View style={styles.card} onLayout={(e) => onHeight(e.nativeEvent.layout.height)}>
       <Text style={styles.cardTitle} accessibilityRole="header" testID="past-walk">
         {walkDate(walk.route_date)}
       </Text>

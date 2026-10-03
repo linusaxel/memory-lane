@@ -30,21 +30,6 @@ delete an entry when its fix lands.
   "of" and "my" into the story). It took four e2e runs, about 8 minutes, to
   see. Fix: an e2e/README note: put controls Maestro taps while typing at the
   top of a sheet, never pinned to the bottom.
-- **e2e reuses a stale native build after a native patch.** 2026-10-03:
-  `./e2e/run.sh` rebuilds only when `Podfile.lock` changes. A patch-package edit
-  to native code (`patches/react-native-maps*`, the polyline's `strokeEnd`)
-  doesn't change it, so the sim keeps running the old native code and a new
-  prop is silently ignored. It cost a rebuild cycle, and we only found it by
-  knowing to pass `--build`. Fix: run.sh also hashes `mobile/patches/` into its
-  rebuild check.
-
-- **Map fits pad by a guessed card height.** 2026-10-03: the planner's
-  `fitToCoordinates` left a fixed 300pt for a card of about 600, so the walk
-  it planned drew behind it, and launch dropped the fit entirely because it
-  ran before `onMapReady`. PastWalk (260), WalkDone (300) and the walk's
-  recentre (160) still guess. Fix: each passes its card's `onLayout` height
-  and waits on `mapReady`, as the planner's Preview now does.
-
 - **Seeing a UI change mid-flow means screenshotting by hand.** 2026-10-03:
   the walk card and finish card only appear mid-`walk-and-unlock`, and Metro
   is down once run.sh exits, so checking the stamps and the milestone took a
@@ -174,8 +159,8 @@ public launch that the rest of this file doesn't track. Blockers first.
 From a talk on launching an app (2026-10-03): set up a waitlist before
 building, measure why people leave before you have users, let votes pick the
 roadmap, give the store screenshots days, and launch only once beta users come
-back. Adapted to the rules here. 1, 2 and 7 come first; the rest wait on
-`DEPLOY` or `STORE_ACCOUNT`.
+back. Adapted to the rules here. 1 and 7 come first; the rest wait on
+`DEPLOY` or `STORE_ACCOUNT`. Retention (2) is built: `python -m api.metrics`.
 
 - [ ] **1. A waitlist page, now.** (checked 2026-10-03) One screenshot and an
       email field. It tells you whether anyone wants the app and fills the
@@ -183,13 +168,6 @@ back. Adapted to the rules here. 1, 2 and 7 come first; the rest wait on
       (`STORE_ACCOUNT`). Serve it from the API beside `/privacy`
       (`api/privacy.py`), not Framer. Opt-in emails get their own table and
       are never matched to `identities`. Needs `DEPLOY`.
-- [ ] **2. Retention from the tables we have.** (checked 2026-10-03) No
-      PostHog: it breaks the "no collected data" privacy manifest and needs
-      consent. `python -m api.metrics` instead: D1 and D7 return by `devices`
-      cohort, walks per user (`daily_routes`), unlocks per walk (`unlocks`),
-      and stories left near each user, the first retention metric under *The
-      retention risk none of this fixes*. Before the beta, so the beta can
-      say whether people come back.
 - [ ] **3. A feedback row in Settings.** (checked 2026-10-03) Not on the map:
       core actions stay one tap. A mailto `CONTACT_EMAIL` first; a vote board
       (UserJot, Canny, both paid) once mail outruns reading it. The talk's
@@ -197,8 +175,8 @@ back. Adapted to the rules here. 1, 2 and 7 come first; the rest wait on
 - [ ] **4. Lifecycle nudges, after launch, probably push.** (checked
       2026-10-03) The talk drips email through Loops. Sign-in emails are often
       Apple relays with no marketing consent, so the local version is a push
-      to a user idle for 7 days: "there's a walk near you". Wait for 2 to show
-      where people drop off.
+      to a user idle for 7 days: "there's a walk near you". Wait for
+      `api.metrics` to show where people drop off.
 - [ ] **5. The store listing: give the screenshots 3–4 days.** (checked
       2026-10-03) Apple boosts a new app for its first week or two, once. Lead
       with the story cards; title, subtitle and keywords in Danish and
@@ -207,8 +185,8 @@ back. Adapted to the rules here. 1, 2 and 7 come first; the rest wait on
 - [ ] **6. A landing page from the listing's assets.** (checked 2026-10-03)
       About a week, tuned after launch. The waitlist page becomes it, plus
       store badges.
-- [ ] **7. The launch bar.** (checked 2026-10-03) Launch when the beta comes
-      back for days, read from 2 over the closed-testing cohort. People gone
+- [ ] **7. The launch bar.** (checked 2026-10-04) Launch when the beta comes
+      back for days, read from `python -m api.metrics` over the closed-testing cohort. People gone
       after a day means not yet.
 - [ ] **8. Launch day.** (checked 2026-10-03) Email the waitlist; post in
       r/copenhagen, Danish local-history groups and press, and Product Hunt.
@@ -309,8 +287,6 @@ From the research (docs/04, *Research, 2026-10-02*), in order:
          Sunday") and `anlaegsprojekter` ("opens 2029"). Open questions:
          `expires_at` set from the permit's end date, a re-check job, the
          sheet label, and whether the walk may route to one.
-- [ ] **Check Haiku 4.5's retirement date.** Research read "not sooner than
-      2026-10-15" on the models page; `CLASSIFIER_MODEL` defaults to it.
 
 ---
 
@@ -583,11 +559,6 @@ card's link, the outcome line, yearly first with its price a month, "No
 commitment", and the › (4e5e9e1). Ruled out: trials, exit-intent offers, fake
 urgency, and pop-ups (docs/08 F35).
 
-- [ ] **The paywall pitches your own walks.** (checked 2026-10-03) Opal's "8
-      years of your life back" took trial starts from 7% to 17%. Ours is the
-      profile already on hand: "23 km walked, 41 memories opened, 7 days in a
-      row." One line over the plans in `Paywall.tsx`, from `Profile`, with no
-      new endpoint. Hide it until the first finished walk.
 - [ ] **A "save X%" badge on yearly.** (checked 2026-10-03) Waits on S6's real
       prices. Compute it from the two store products' `price` (never a
       hard-coded number), and show it only when it rounds to 10% or more.
@@ -851,26 +822,6 @@ game: quiet by default; refine what exists rather than add.
       Commission one base style from an illustrator (a few hundred), derive
       the rest; a product about hand-told memories should not look
       one-prompted. Bar: nobody asks which prompt made it.
-- [ ] **C6 Links open in the app, not out of it.** (founder, 2026-10-03)
-      Every link today calls `Linking.openURL`, which throws you into
-      Safari or YouTube mid-walk:
-      - the source credit (`SourceLine.tsx`, `MemorySheet.tsx`'s `open`)
-      - privacy, contact and OpenStreetMap (`Settings.tsx`)
-      - terms and privacy (`Paywall.tsx`)
-
-      Use `WebBrowser.openBrowserAsync` instead. `expo-web-browser` is
-      already installed (`SignIn.tsx`), so this needs no new dependency and
-      no rebuild. It opens a sheet inside the app (`SFSafariViewController`)
-      with Done to come back, and plays a YouTube link at its timestamp.
-      `presentationStyle: pageSheet` keeps the map visible behind it.
-      `controlsColor: ember`; `dismissButtonStyle: 'close'` matches rule 12.
-      Two catches:
-      - Keep MemorySheet's "nothing opens" message for when the promise
-        rejects (rule "A link that can fail").
-      - Store review wants terms and privacy reachable. A sheet satisfies
-        that.
-
-      Update UI.md "A link that can fail".
 
 ---
 

@@ -263,9 +263,11 @@ curl -fsS "http://localhost:$API_PORT/" >/dev/null 2>&1 \
 say "3/5  app"
 # A new native module (a pod) is invisible to Metro: the installed binary runs
 # the new JS and dies on the missing module. So a Podfile.lock that differs
-# from the one last built is a rebuild.
-BUILT_LOCK=mobile/ios/build/Podfile.lock.built
-cmp -s mobile/ios/Podfile.lock "$BUILT_LOCK" || BUILD=1
+# from the one last built is a rebuild. So is a native patch-package edit
+# (mobile/patches), which changes compiled code without touching the lock.
+BUILT_STAMP=mobile/ios/build/native.built
+NATIVE=$(cat mobile/ios/Podfile.lock mobile/patches/* 2>/dev/null | shasum)
+[ "$NATIVE" = "$(cat "$BUILT_STAMP" 2>/dev/null)" ] || BUILD=1
 if [ "$BUILD" = 1 ] || ! xcrun simctl get_app_container "$DEVICE" "$APP_ID" >/dev/null 2>&1; then
   echo "     building $APP_ID (several minutes)"
   (cd mobile/ios && xcodebuild \
@@ -276,7 +278,7 @@ if [ "$BUILD" = 1 ] || ! xcrun simctl get_app_container "$DEVICE" "$APP_ID" >/de
   APP=$(find mobile/ios/build/Build/Products -maxdepth 2 -name "MemoryLane.app" | head -1)
   [ -z "$APP" ] && infra "the build produced no MemoryLane.app"
   xcrun simctl install "$DEVICE" "$APP" || infra "could not install $APP"
-  cp mobile/ios/Podfile.lock "$BUILT_LOCK"
+  echo "$NATIVE" > "$BUILT_STAMP"
   echo "     installed"
 else
   echo "     $APP_ID already installed"
