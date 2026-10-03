@@ -96,21 +96,23 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   locked                            open
   ├─ place name       28/700        ├─ place name       28/700, ⋯ beside the ×
   ├─ padlock                        ├─ avatar 20 + "Anna · 17 June 1978 · on this day · 40 m away"  label
+  │                                 ├─ ❦ the one flourish: byline above, story below
   │                                 ├─ the lede  17/26: the first sentence, the peak, own paragraph
   │                                 ├─ the rest  17/26, #tags semibold
   │                                 ├─ "their words"  17/26, ember rule, "— Mads, at 12:04"
-  │                                 ├─ ❦ then contrast_note  17/26, when known (Flourish, no label)
+  │                                 ├─ contrast_note  17/26, the last paragraph, when known
   ├─ distance         52/700        ├─ photo / recording   if it has any
-  ├─ "Get within 20 m"              ├─ "Watch from 12:04 →" ember 17, the episode under
-  ├─ "1 attachment waiting"         │    it in label; the heart at the right of the same row (F11):
-  │                                 │    a bare count before the glyph, in a slot kept at zero.
-  │  (in reach it is not opened:    │    The link says where it goes (F12): "Watch on YouTube",
-  └─  the ring is on the map)       │    "Read it in the book", "Read the 1856 article"
-                                    └─ ❦ then notes  17/26, "You  Rewrite  Remove" in label
+  ├─ "Get within 20 m"              ├─ the heart, alone at the right (F11): a bare count
+  ├─ "1 attachment waiting"         │    before the glyph, in a slot kept at zero
+  │                                 └─ notes  17/26, "You  Rewrite  Remove" in label
+  │  (in reach it is not opened:
+  └─  the ring is on the map)
                                     Nothing is pinned, bar the pager under a stacked pin.
 
   The open side's byline sits under the place name, above the meta line:
-  "Retold from <channel>" with its avatar and the episode or book, or "Left by X".
+  "Retold from <channel>" with its avatar, or "Left by X". The credit is the one source
+  link: a tap opens the passage or the video at the right second (F12's wording is what
+  VoiceOver hears).
   ⋯ holds Edit this memory on your own, Report and Block on anyone else's.
 
   peek (a walk's stop, not yet reached: a card over the live map, sized to its content)
@@ -195,7 +197,7 @@ with no network is never stopped at the gate.
 | `src/Drawer.tsx` | the journal's panel from the left: the edge swipe, the spring, the scrim |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
-| `src/Flourish.tsx` | the leaf-and-curls divider an open story uses twice: before then-and-now, before the notes |
+| `src/Flourish.tsx` | the leaf-and-curls divider, once on an open story: between the byline and the story |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |

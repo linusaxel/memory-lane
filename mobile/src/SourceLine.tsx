@@ -19,9 +19,14 @@ type Props = {
   source: Source;
   /** The rest of the sheet's meta line, after the credit: " · 1978 · 40 m away". */
   after?: string;
+  /** Where a tap goes, when it is more exact than the channel: the passage, or
+   *  the video at the right second. The credit is the story's only source link. */
+  url?: string;
+  /** What VoiceOver hears for that tap: "Read it in the book". */
+  spoken?: string;
 };
 
-export default function SourceLine({ source, after }: Props) {
+export default function SourceLine({ source, after, url = source.url ?? undefined, spoken }: Props) {
   // A channel avatar is decoration; if it will not load, fall back to the same
   // empty circle a channel without one gets rather than a grey disc that looks
   // like it is still loading.
@@ -45,14 +50,14 @@ export default function SourceLine({ source, after }: Props) {
     </View>
   );
 
-  if (!source.url) return body;
+  if (!url) return body;
 
   return (
     <Pressable
       style={dim()}
-      onPress={() => Linking.openURL(source.url!).catch(() => {})}
+      onPress={() => Linking.openURL(url).catch(() => {})}
       accessibilityRole="link"
-      accessibilityLabel={`Retold from ${source.name}`}
+      accessibilityLabel={spoken ?? `Retold from ${source.name}`}
     >
       {body}
     </Pressable>

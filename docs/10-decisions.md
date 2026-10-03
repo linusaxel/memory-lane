@@ -2966,7 +2966,8 @@ noisy, and adding a memory looked nothing like reading one.
   reading, so "Watch from 12:04 →" and the heart close the story, the way
   Podcasts, Instagram, Medium and Substack attach actions to the content. The
   pager for a stacked pin and the locked card's buttons keep the bar: they are
-  not the story.
+  not the story. *The source link at the end is superseded 2026-10-03 by "One
+  source, one flourish": the byline is the link.*
 - **Three sizes, one rhythm.** `story` in `theme.ts`: 28/34 title, 17/26
   everything you read, 13 `label` for everything named. The lede and the quote
   are the body in semibold, not bigger. 8 inside a part, 24 between parts, and
@@ -3003,9 +3004,29 @@ semibold quote, a semibold link, and a "280 left" from the first keystroke.
 - **A flourish, where a label was** (`Flourish.tsx`): a hairline tapering to
   two curls and a leaf, in `inkFaint`. Once before then-and-now, replacing its
   "Then and now" label, and once before the notes. So the page reads: the
-  story ❦ what stands here now ❦ what walkers left. Never a third.
+  story ❦ what stands here now ❦ what walkers left. Never a third. *Superseded
+  2026-10-03 by "One source, one flourish": one, under the byline.*
 - **The note counter shows in the last 40 characters only.**
 
+### One source, one flourish
+
+Status: Accepted 2026-10-03. Supersedes the flourish placement in *The open
+story is one voice*, and the source link closing the story in *Reading and
+writing are one page* and *The credit is a byline*.
+
+The founder: one flourish, under the title and the source; and the source
+was said twice, "Retold from …" under the title and "Read it in the book →"
+at the end.
+
+- **The byline is the source link.** A tap opens `content.url`, the passage or
+  the video at the right second, not the channel page; VoiceOver hears
+  `sourceAction().spoken` ("Read it in the book"). The episode title under
+  the old link is gone: the credit and the date say which.
+- **One flourish**, between the byline and the story: the apparatus above it,
+  the reading below. Then-and-now is the story's last paragraph, unlabelled.
+- **The heart closes the story** alone, at the right.
+
+### Rejected approaches, do not retry
 
 Status: Rejected
 

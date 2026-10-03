@@ -433,13 +433,36 @@ export default function MemorySheet({
                   </View>
                 ) : memory.content?.source ? (
                   <View style={styles.byline}>
-                    <SourceLine source={memory.content.source} after={after} />
+                    <SourceLine
+                      source={memory.content.source}
+                      after={after}
+                      url={memory.content.url}
+                      spoken={sourceAction(memory.content).spoken}
+                    />
                   </View>
-                ) : memory.content?.title || metaLine ? (
+                ) : memory.content?.title ? (
+                  <Pressable
+                    style={dim(styles.byline)}
+                    accessibilityRole="link"
+                    accessibilityLabel={sourceAction(memory.content).spoken}
+                    onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                  >
+                    <Text style={styles.meta} numberOfLines={2}>
+                      Retold from {memory.content.title}
+                      {after}
+                    </Text>
+                  </Pressable>
+                ) : metaLine ? (
                   <Text style={[styles.meta, styles.byline]} numberOfLines={2}>
-                    {memory.content?.title ? `Retold from ${memory.content.title}${after}` : metaLine}
+                    {metaLine}
                   </Text>
                 ) : null)}
+                {linkFailed && <Text style={[styles.meta, styles.byline]}>{linkFailed}</Text>}
+                {!locked && (
+                  <View style={styles.flourish}>
+                    <Flourish />
+                  </View>
+                )}
               {/* What it is about, as the #words the open story sets them in
                   (UI.md, "Tags are the #words"): under the name they belong
                   to, not in the apparatus line. Not tappable. */}
@@ -544,46 +567,16 @@ export default function MemorySheet({
                   )}
                   <Animated.View style={[rise(3), styles.after]}>
                     {memory.contrast_note && (
-                      <View style={styles.now}>
-                        <Flourish />
-                        <Text style={styles.summary}>{memory.contrast_note}</Text>
-                      </View>
+                      <Text style={styles.summary}>{memory.contrast_note}</Text>
                     )}
 
                     <MemoryMedia media={memory.media} />
 
-                    {/* The end of the story, not a bar over it: the way out to
-                        the source and the heart close it, the way a post's
-                        actions sit under the post (docs/10, "Reading and
-                        writing are one page"). */}
-                    {(memory.content || heart) && (
-                      <View style={styles.openRow}>
-                        {memory.content ? (
-                          <Pressable
-                            style={dim(styles.grow)}
-                            hitSlop={12}
-                            accessibilityRole="link"
-                            accessibilityLabel={sourceAction(memory.content).spoken}
-                            // url is already resolved - a document, or the video at the
-                            // right second.
-                            onPress={() => open(memory.content!.url, "Couldn't open that link.")}
-                          >
-                            <Text style={styles.watchLink}>{sourceAction(memory.content).text} →</Text>
-                            {memory.content.source && memory.content.title && (
-                              <Text style={styles.meta} numberOfLines={2}>
-                                {memory.content.title}
-                              </Text>
-                            )}
-                          </Pressable>
-                        ) : (
-                          <View style={styles.grow} />
-                        )}
-                        {heart}
-                      </View>
-                    )}
-                    {linkFailed && <Text style={styles.meta}>{linkFailed}</Text>}
+                    {/* The heart closes the story, the way a post's actions
+                        sit under the post; the source is the byline (docs/10,
+                        "One source, one flourish"). */}
+                    {heart && <View style={styles.heartRow}>{heart}</View>}
 
-                    <Flourish />
                     <Notes memoryId={memory.id} isAuthor={!!onEdit} />
                   </Animated.View>
                 </ScrollView>
@@ -683,19 +676,16 @@ const styles = StyleSheet.create({
   // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
   quote: { marginTop: 24, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
   quoteText: story.body,
-  now: { gap: 24 },
   hashtag: { ...font.displaySemi },
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
   byline: { marginTop: 8 },
+  flourish: { marginTop: 24 },
   bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bylineText: { ...story.meta, flexShrink: 1 },
   bylineName: { color: color.ink },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
-  // Ember, as every link here is: the memory's way out, at the story's size.
-  watchLink: { ...story.body, color: color.ember },
-  openRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
-  grow: { flex: 1 },
+  heartRow: { alignItems: 'flex-end' },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8 },
   // Two digits' room, kept at zero, so the glyph after it never moves.
   heartText: { ...label, color: color.inkSoft, minWidth: 22, textAlign: 'right', fontVariant: ['tabular-nums'] },
