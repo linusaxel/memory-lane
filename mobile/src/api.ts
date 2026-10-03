@@ -193,6 +193,27 @@ async function get<T>(path: string, params: URLSearchParams, signal?: AbortSigna
   }
 }
 
+/** What the home map draws: the locked memories around you, faded. No
+ *  position goes with this, so nothing unlocks from here. */
+export async function fetchNearby(
+  at: Coordinates,
+  radiusKm: number,
+  device: string | null,
+  signal?: AbortSignal,
+): Promise<LocatedMemory[]> {
+  const params = new URLSearchParams({
+    lat: String(at.lat),
+    lng: String(at.lng),
+    radius_km: String(radiusKm),
+    limit: '100',
+  });
+  // Only so the server can leave out whoever this account blocked.
+  if (device) params.set('device', device);
+  const body = await get<{ memories?: Memory[] }>('/v1/memories/nearby', params, signal);
+  // A null-coordinate marker crashes react-native-maps (UI.md rule 5).
+  return (body.memories ?? []).filter(hasCoordinates);
+}
+
 /** Open one memory, and record that it opened. The server re-checks the
  *  distance and can still say no, so a result that comes back still locked is a
  *  refusal - not a success. Only a stop of today's walk, stood on, opens. */

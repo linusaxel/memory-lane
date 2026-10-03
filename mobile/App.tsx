@@ -32,6 +32,7 @@ import {
   previewRoute,
   reportMemory,
   saveDisplayName,
+  fetchNearby,
   unlockMemory,
   walkedToday,
   wasRefused,
@@ -113,6 +114,11 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 const ROLLS = 1_000_000;
 
 const planKey = (km: number, ask: WalkAsk) => `${km}|${ask.loop}|${ask.end?.lat},${ask.end?.lng}`;
+
+/** How far around you the home map draws locked pins: half the longest walk. */
+const MAP_RADIUS_KM = WALK_KM.max / 2;
+/** A pin on the home map: there, but not yours to open until a walk passes it. */
+const FADED_PIN = 0.4;
 
 const FALLBACK_REGION: Region = {
   latitude: 55.67886,
@@ -296,6 +302,8 @@ export default function App() {
   // Bumped after a post, a save or a delete so the journal's Filed section
   // refetches without being closed and opened again.
   const [mineVersion, setMineVersion] = useState(0);
+  // The locked memories around you, for the home map.
+  const [nearby, setNearby] = useState<LocatedMemory[]>([]);
   // Only the handful of values the palette cannot carry need this: the map's
   // own appearance, and theme.ts `solid` for its overlays.
   const scheme = useColorScheme();
@@ -716,6 +724,21 @@ export default function App() {
   }, [device, planFrom, planKm, walkAsk, again, takeRoute]);
 
   const me = profile?.user_id;
+  // On the home map, and again when a position first arrives: by where you
+  // are, never by viewport, so panning fetches nothing (UI.md rule 3).
+  const located = !!position;
+  useEffect(() => {
+    if (stage !== 'map') return;
+    const controller = new AbortController();
+    const at = positionRef.current ?? {
+      lat: FALLBACK_REGION.latitude,
+      lng: FALLBACK_REGION.longitude,
+    };
+    fetchNearby(at, MAP_RADIUS_KM, device, controller.signal)
+      .then((found) => mounted.current && setNearby(found))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [stage, located, me, device]);
 
   const stopsShown = revealed.walk === preview ? revealed.count : 0;
 
@@ -749,8 +772,10 @@ export default function App() {
     () => route.map((memory) => unlocked[memory.id] ?? memory),
     [route, unlocked],
   );
-  // The only pins there are: the walk being previewed, or the walk being
-  // walked. Nothing off the route is ever drawn.
+  // The only pins there are: what is locked around you on the home map,
+  // faded; the walk being previewed; or the walk being walked. Nothing off the
+  // route is drawn once a walk is planned (docs/10, "The map shows what is
+  // locked, faded").
   const pins = useMemo(
     () =>
       pastWalk
@@ -759,8 +784,10 @@ export default function App() {
           ? (preview?.memories ?? [])
           : stage === 'walk'
             ? routeShown
-            : [],
-    [pastWalk, stage, preview, routeShown],
+            : stage === 'map'
+              ? nearby.filter((memory) => memory.locked && !earned.has(memory.id))
+              : [],
+    [pastWalk, stage, preview, routeShown, nearby, earned],
   );
   // The background watch tracks today's route, not the map's panned viewport -
   // bounded (ROUTE_SIZE, well under the OS's ~20-region cap), already "nearby
@@ -1507,7 +1534,13 @@ export default function App() {
                   next={
                     walking && group.memories.some((memory) => memory.id === nextRouteStop?.id)
                   }
-                  opacity={walking || routePosition != null ? 1 : opacityOf(group, position)}
+                  opacity={
+                    stage === 'map' && !pastWalk
+                      ? FADED_PIN
+                      : walking || routePosition != null
+                        ? 1
+                        : opacityOf(group, position)
+                  }
                   routePosition={routePosition}
                   routeSize={walking ? routeTotal : pins.length}
                   // A preview is a look, not a walk: its stops open once accepted.

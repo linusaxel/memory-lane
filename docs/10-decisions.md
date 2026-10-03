@@ -281,12 +281,27 @@ Status: Accepted 2026-10-03. Amends the *Home is the planner* bullet of
 The founder: a map view before the planner, and a way out of the planner
 from any step. Launch, ending a walk and every fallback now land on the map:
 you, the streets, Journal, Add and **Plan a walk**. Each planner card has an
-× back to it. The map draws no pins, so the rest of *A walk planner, nothing
-else* stands: nothing off a walk is shown, and only today's walk opens.
+× back to it. ~~The map draws no pins, so the rest of *A walk planner, nothing
+else* stands: nothing off a walk is shown, and only today's walk opens.~~
+(Amended 2026-10-03 by *The map shows what is locked, faded*.)
 
 **Option considered:** the map with every nearby memory as a locked pin.
 Rejected because it brings back the superseded *A map of what is locked*, with
-pins that never open.
+pins that never open. (Taken after all, faded: see below.)
+
+### The map shows what is locked, faded
+
+Status: Accepted 2026-10-03. Amends *A map before the planner*.
+
+The founder: the map view should show the locked memories, faded out to say
+they are locked. An empty map gives you no reason to plan a walk; the reasons
+are in *Why every pin shows* under the superseded *A map of what is locked*.
+The home map (`stage === 'map'`) draws every locked memory within
+`MAP_RADIUS_KM` of you (`GET /v1/memories/nearby`, which never served a
+summary) at `FADED_PIN` opacity. A faded pin never lights and a tap does
+nothing: no peek, no sheet. What you opened is not drawn. Once a walk is
+previewed or walked, only its stops are drawn, and only a stop of the walk in
+progress opens, standing on it (`not_on_walk`), as before.
 
 ### The planner is two steps
 

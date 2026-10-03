@@ -737,7 +737,7 @@ The app's stages (`App.tsx`'s `Stage`) must stay distinct:
 | Stage | Shows | Leaves by |
 |---|---|---|
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → map |
-| map | you, the streets, Journal, Add and Plan a walk. No pins | Plan a walk → preview |
+| map | you, the streets, Journal, Add and Plan a walk; the locked memories around you, faded, that do not open | Plan a walk → preview |
 | preview | the walk on the map, the card with its length and shape | Start walk → walk; × (any step) → map |
 | walk | today's stops, the pill | nothing - the day is locked |
 
@@ -789,12 +789,14 @@ and to `ember` on 2026-09-27: teal read as water and park.
 | the next stop on today's walk, not yet in reach | the lock, scale 1.35; hops (`useHop`), still under Reduce Motion | as locked. Size and the hop tell it apart |
 | a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ember`, count `paper` (`seal` with `sealInk` on a lit pin) |
 | locked, off a walk (`opacityOf`) | same pin, fading with distance | opacity 1 to 500 m, down to 0.3 at 3 km, in tenths |
+| locked, on the home map (`FADED_PIN`) | same pin, never lit, a tap does nothing | opacity 0.4 |
 
 **The badge sits in the corner** so the blue location dot is never under it.
 
 **`seal` means openable now, and nothing else.** A seal-coloured pin you
 cannot open is an invitation that refuses you (F11). Only a walk's stops are
-ever drawn, so every pin in reach can be opened. Locked near and locked
+ever drawn at full strength, and the home map's faded pins never light, so
+every lit pin can be opened. Locked near and locked
 far draw the same ember lock, bar a fade with distance (2026-10-02:
 full detail near you, a glow further out, so the map reads as where to go
 next rather than a checklist), and earned and never gated the same open one
