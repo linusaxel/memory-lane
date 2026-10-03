@@ -33,11 +33,12 @@ export async function identify(userId: string | null): Promise<void> {
   else if (!(await Purchases.isAnonymous())) await Purchases.logOut();
 }
 
-/** Monthly and yearly, in the store's own currency and wording. */
+/** Yearly then monthly, in the store's own currency and wording. Yearly
+ *  leads: it is the solid button on the paywall. */
 export async function plans(): Promise<PurchasesPackage[]> {
   if (!ready()) return [];
   const current = (await Purchases.getOfferings()).current;
-  return [current?.monthly, current?.annual].filter((p): p is PurchasesPackage => !!p);
+  return [current?.annual, current?.monthly].filter((p): p is PurchasesPackage => !!p);
 }
 
 /** False when the person backed out of the store's sheet: not an error. */

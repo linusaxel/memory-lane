@@ -1103,11 +1103,15 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 ## F35 · Subscribe for more walks — **Implemented** (no store yet: TODO.md S6)
 
 **Who:** a free account that walked today. **Trigger:** **More walks** on the
-planner once today's walk is walked (F1), or **Subscribe** in Settings.
+planner once today's walk is walked (F1), **Another walk today ›** under
+**Done** on the finish card (signed in, not subscribed; never a pop-up), or
+**Subscribe** in Settings.
 
-1. The paywall (`src/Paywall.tsx`): "More than one walk a day", monthly and
-   yearly at the store's price, **Restore purchases**, Terms and Privacy, and
-   **Not now**.
+1. The paywall (`src/Paywall.tsx`): "More than one walk a day" and what it
+   buys, yearly first (solid, with the store's price a month) then monthly,
+   "No commitment … cancel anytime", **Restore purchases**, Terms and
+   Privacy, and **Not now**. No trial, no exit-intent offer, no countdown:
+   the free walk each day is the trial.
 2. A purchase or a restore asks the server to read the store back
    (`POST /v1/me/subscription`); only its answer counts. The sheet closes when
    it says subscribed, and the planner plans again.
@@ -1125,7 +1129,7 @@ out of the store's sheet: nothing is said. Anything else: "That didn't go
 through. Try again." A purchase the server cannot find: "Nothing bought on
 this account yet."
 
-**Done when:** `.maestro/subscribe-when-walked-out.yml` passes, and
+**Done when:** `.maestro/subscribe-when-walked-out.yml` and the finish-card check in `.maestro/walk-and-unlock.yml` pass, and
 `tests/test_api_billing.py` and `tests/test_api_routes.py`.
 
 ## F36 · Choose your first memory — **Removed from the app**

@@ -352,6 +352,9 @@ type WalkDoneProps = {
   /** The walk drawn whole, for the card it becomes in Your walks. */
   path: Coordinates[];
   onDone: () => void;
+  /** The paywall, for a signed-in account without a subscription; unset
+   *  hides the link. Never a pop-up: Done stays the one tap. */
+  onMore?: () => void;
 };
 
 export type Reward = {
@@ -412,7 +415,7 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
 }
 
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
-export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, onDone }: WalkDoneProps) {
+export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, onDone, onMore }: WalkDoneProps) {
   const took =
     minutes === null
       ? ''
@@ -445,6 +448,11 @@ export function WalkDone({ stops, meters, loop, minutes, streak, reward, path, o
       >
         <Text style={styles.primaryText}>Done</Text>
       </Pressable>
+      {onMore && (
+        <Pressable style={dim(styles.secondary)} onPress={onMore} accessibilityRole="button" testID="walk-done-more">
+          <Text style={styles.secondaryText}>Another walk today ›</Text>
+        </Pressable>
+      )}
     </View>
   );
 }

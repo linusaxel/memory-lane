@@ -34,6 +34,12 @@ appId: ${APP_ID}
       LNG: ${START_LNG}
       LOCATION: inuse
 
+# A name mints the account, so the finish card offers F35's paywall below.
+- runFlow:
+    file: steps/rename.yml
+    env:
+      NAME: "Walker"
+
 # F1: the planner is home and draws the walk; Start walk takes it.
 - runFlow: steps/start-walk.yml
 
@@ -121,6 +127,9 @@ appId: ${APP_ID}
 - assertVisible:
     id: "streak-milestone"
 - assertVisible: "7 days in a row"
+# F35: signed in, not subscribed: a quiet way to the paywall, never a pop-up.
+- assertVisible:
+    id: "walk-done-more"
 - tapOn: "Done"
 
 - extendedWaitUntil:

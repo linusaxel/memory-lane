@@ -60,8 +60,8 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Text style={styles.title}>More than one walk a day</Text>
         <Text style={styles.note}>
-          Your first walk each day is free. Subscribe to plan another whenever you finish
-          one.
+          Another loop past memories you haven't heard yet, whenever the day leaves
+          room. Your first walk each day stays free.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (
@@ -77,12 +77,17 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
                 onPress={() => settle(() => buy(plan))}
               >
                 <Text style={i === 0 ? styles.solidText : styles.outlineText}>
-                  {`${plan.packageType === 'ANNUAL' ? 'Yearly' : 'Monthly'} · ${plan.product.priceString}`}
+                  {`${plan.packageType === 'ANNUAL' ? 'Yearly' : 'Monthly'} · ${plan.product.priceString} ›`}
                 </Text>
+                {plan.packageType === 'ANNUAL' && plan.product.pricePerMonthString && (
+                  <Text style={i === 0 ? styles.solidSub : styles.fine}>
+                    {`${plan.product.pricePerMonthString} a month`}
+                  </Text>
+                )}
               </Pressable>
             ))}
             <Text style={styles.fine}>
-              Renews automatically. Cancel anytime in your store settings.
+              No commitment. Renews automatically; cancel anytime in your store settings.
             </Text>
             <Pressable
               style={dim(styles.link)}
@@ -134,6 +139,7 @@ const styles = StyleSheet.create({
   plans: { gap: 12, marginTop: 12 },
   solid: { ...button.solid },
   solidText: { ...buttonText, color: color.paper },
+  solidSub: { ...label, fontSize: 12, color: color.paper },
   outline: { ...button.outline },
   outlineText: { ...buttonText, color: color.ink },
   quiet: { ...button.quiet, marginTop: 6 },

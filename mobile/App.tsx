@@ -1586,6 +1586,14 @@ export default function App() {
               reward={reward}
               path={donePath}
               onDone={() => setWalkDone(false)}
+              onMore={
+                profile?.user_id && !profile.subscribed
+                  ? () => {
+                      setWalkDone(false);
+                      setPaywallOpen(true);
+                    }
+                  : undefined
+              }
             />
           )}
 

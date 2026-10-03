@@ -972,8 +972,9 @@ Sign-in is F22, the first flow, and it is Google and Apple only — see
 `src/SignIn.tsx` for why, and for why neither button works in Expo Go.
 
 The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens from Settings,
-or when a hold is refused for want of a key, never on top of a sheet. Key
-packs first, then the subscription. No price is ever written in the app; the
-store's `priceString` is. Without a RevenueCat key it says "Keys aren't
-available right now." and "Subscriptions aren't available right now.", never
-a button that cannot work, and **Not now** is always there (rule 1).
+the walked-out planner's **More walks**, or the finish card's quiet
+**Another walk today ›**, never on top of a sheet and never by itself. Yearly
+first and solid, monthly outlined. No price is ever written in the app; the
+store's `priceString` and `pricePerMonthString` are. Without a RevenueCat key
+it says "Subscriptions aren't available right now.", never a button that
+cannot work, and **Not now** is always there (rule 1).
