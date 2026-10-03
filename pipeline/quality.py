@@ -1,7 +1,7 @@
 """How good are the summaries, as a number.
 
     python -m pipeline.quality
-    python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10]
+    python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10] [--runs 3]
     python -m pipeline.quality --labels [tests/fixtures/walk_labels.json] [--half tune|check]
     python -m pipeline.quality --whole [5] [--runs 2]
 
@@ -13,7 +13,8 @@ docs/10-decisions.md#summary-quality-is-measured-not-asserted.
 stable sample of transcript chunks, scores both, and prints them side by side
 for a person to pick. It bills the extractor per chunk per prompt (~$0.003),
 once: replies land in extraction_chunks, so a rerun, or a baseline the pipeline
-already ran, is free.
+already ran, is free. A chunk varies more than a prompt, so --runs N draws each
+chunk N times per prompt and prints how often each keeps something.
 
 --labels re-judges the stored memories the corpus read labelled walk, maybe or
 skip, through the pipeline's own judge, and prints what it keeps of each. The
@@ -126,13 +127,28 @@ def sample_chunks(session, n: int, source_type: str = "video", client=None) -> l
     ]
 
 
-def compare(session, client, prompts: dict[str, str], chunks) -> dict[str, list[list[dict]]]:
-    """Each prompt's kept memories, per chunk, in the order of `chunks`."""
+def compare(
+    session, client, prompts: dict[str, str], chunks, runs: int = 1
+) -> dict[str, list[list[list[dict]]]]:
+    """Each prompt's kept memories, per chunk in the order of `chunks`, per run.
+    Run 0 is the plain request; a later run differs only by a line in the
+    context, as in read_whole, so it is a fresh draw that is also stored."""
     return {
         name: [
-            filter_low_confidence(
-                extract_chunk_stored(session, client, cid, i, chunk, prompt, context)
-            )
+            [
+                filter_low_confidence(
+                    extract_chunk_stored(
+                        session,
+                        client,
+                        cid,
+                        i,
+                        chunk,
+                        prompt,
+                        context + (f"\n(read {run})" if run else ""),
+                    )
+                )
+                for run in range(runs)
+            ]
             for cid, i, chunk, context in chunks
         ]
         for name, prompt in prompts.items()
@@ -301,18 +317,19 @@ def _print_report(summaries: list[str]):
         print(f"{name:<22}{count:>5}  ({count * 100 // max(total, 1)}%)   {why}")
 
 
-def _print_comparison(results: dict[str, list[list[dict]]], chunks):
+def _print_comparison(results: dict[str, list[list[list[dict]]]], chunks):
     for name, per_chunk in results.items():
         print(f"\n== {name}")
-        kept = [m for chunk in per_chunk for m in chunk]
+        kept = [m for runs in per_chunk for m in runs[0]]
         _print_report([m.get("summary") or "" for m in kept])
         print(f"{'with a quote':<22}{sum(1 for m in kept if m.get('quote')):>5}")
 
     for n, (cid, i, _, _) in enumerate(chunks):
         print(f"\n--- content {cid} chunk {i}")
         for name, per_chunk in results.items():
-            print(f"  {name}:")
-            for m in per_chunk[n] or [{"venue": "(nothing)", "summary": ""}]:
+            runs = per_chunk[n]
+            print(f"  {name}: keeps something in {sum(map(bool, runs))}/{len(runs)} runs")
+            for m in runs[0] or [{"venue": "(nothing)", "summary": ""}]:
                 print(f"    {m.get('venue')}: {m.get('summary')}")
                 if m.get("quote"):
                     print(f'      "{m["quote"]}" - {m.get("quote_by") or "?"}')
@@ -350,7 +367,7 @@ def main():
         "--half", choices=("tune", "check"), help="--labels on even or odd content ids only"
     )
     parser.add_argument("--whole", nargs="?", type=int, const=5, metavar="VIDEOS")
-    parser.add_argument("--runs", type=int, default=1, help="--whole draws per video")
+    parser.add_argument("--runs", type=int, default=1, help="draws per chunk (--compare, --whole)")
     args = parser.parse_args()
 
     if args.whole:
@@ -391,7 +408,7 @@ def main():
         with get_session() as session:
             chunks = sample_chunks(session, args.sample, args.source_type, client)
             results = compare(
-                session, client, {"baseline": baseline, "candidate": candidate}, chunks
+                session, client, {"baseline": baseline, "candidate": candidate}, chunks, args.runs
             )
         _print_comparison(results, chunks)
         return

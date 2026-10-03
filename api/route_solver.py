@@ -46,12 +46,25 @@ def _route_size(budget_meters: float) -> int:
 ROUTE_LOOP = os.getenv("ROUTE_LOOP", "1") != "0"
 
 
+# A memory nobody scored (a walker's own post) counts as the corpus's middle.
+UNSCORED_WALK = 6
+
+
+def _prize(c) -> float:
+    """Led by the walk rubric (pipeline/walk_score.py, 0-12), contrast only
+    breaking ties: contrast_score is mostly a default. docs/10-decisions.md
+    #a-walk-picks-its-stops-by-the-rubric."""
+    walk = getattr(c, "walk_score", None)
+    contrast = getattr(c, "contrast_score", None) or 0
+    return 1 + (UNSCORED_WALK if walk is None else walk) / 6 + contrast / 10
+
+
 def _one_per_place(candidates: list) -> list:
     """The map groups pins by coordinate, not by memory - `stack` in
     pipeline/seed_dev.py is three memories on one place. Two of them picked as
     separate route stops would be one pin asked to show two different numbers,
-    which is not renderable. Keeping the first (nearest, since the query is
-    already distance-ordered) per `place_id` makes a route stop a place, the
+    which is not renderable. Keeping the first (nearest, then best scored,
+    as the query orders them) per `place_id` makes a route stop a place, the
     same unit the pin already is."""
     seen: set[int] = set()
     out = []
@@ -100,8 +113,7 @@ def _choose_walks(
     """Up to ROUTE_SHORTLIST walks of up to `size` stops from the anchor `at`
     within `budget_meters`, best first, ranked by stage 1 of the module
     docstring. ROUTE_FILL is why a long slider gets a long walk, not the five
-    nearest stops in a knot. A stop's prize is 1 + contrast_score, so an
-    unscored one is worth 1.
+    nearest stops in a knot. A stop's prize is `_prize`.
 
     A turn back is a turn under SHARP_TURN_DEGREES on the map, at a stop or,
     for a loop, at the anchor. That is all a straight-line map can say; a
@@ -132,7 +144,7 @@ def _choose_walks(
     actually differ."""
     nodes = range(1, len(candidates) + 1)
     size = min(size, len(candidates))
-    prize = {i: 1 + (getattr(candidates[i - 1], "contrast_score", None) or 0) for i in nodes}
+    prize = {i: _prize(candidates[i - 1]) for i in nodes}
     stranger = {i: candidates[i - 1].layer == "stranger" for i in nodes}
     quota = {k: min(sum(v == k for v in stranger.values()), size // 2) for k in (True, False)}
 

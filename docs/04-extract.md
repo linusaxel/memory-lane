@@ -33,7 +33,7 @@ For each memory, the LLM extracts:
 |-------|-------------|
 | `place_name` | Human-readable name (e.g., "Cafe de Flore, Paris") |
 | `place_query` | Dedup key and search string (e.g., "Cafe de Flore Saint-Germain Paris France"). A unique index makes this the identity of a place. |
-| `country` | ISO 3166 two-letter code. Routes to national geocoders (DAWA for `DK`) |
+| `country` | ISO 3166 two-letter code. Routes to national geocoders (none since DAWA was retired) |
 | `address` | Street and number if the source names one, in today's spelling. With `venue`, what the geocoders place; `lat`/`lng` is the fallback ([why](10-decisions.md#the-llm-names-the-place-free-geocoders-place-it)) |
 | `lat` | Latitude, estimated by the model. A memory without coordinates is filtered out of every API query. |
 | `lng` | Longitude, same. |

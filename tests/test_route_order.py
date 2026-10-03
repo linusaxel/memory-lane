@@ -22,13 +22,14 @@ ANCHOR = Coordinates(lat=40.75, lng=-73.99)
 STEP = 0.001
 
 
-def stop(name, east, layer="historical", contrast=None):
+def stop(name, east, layer="historical", contrast=None, walk=None):
     return SimpleNamespace(
         name=name,
         lat=ANCHOR.lat,
         lng=ANCHOR.lng + east * STEP,
         layer=layer,
         contrast_score=contrast,
+        walk_score=walk,
     )
 
 
@@ -90,6 +91,12 @@ def test_a_striking_stop_further_out_beats_a_dull_one_nearby():
     picks = [stop("dull", 1), stop("striking", 5, contrast=0.9)]
     assert names(choose(picks, 1, "seed", 4000, False)) == ["striking"]
     assert names(choose(picks, 1, "seed", 400, False)) == ["dull"]
+
+
+def test_the_better_story_wins_at_the_same_distance():
+    # One each way, the same walk: the rubric decides, and beats contrast.
+    picks = [stop("dull", -5, walk=5, contrast=1), stop("told", 5, walk=9)]
+    assert names(choose(picks, 1, "seed", 4000, False)) == ["told"]
 
 
 def test_each_layer_keeps_its_share_even_when_it_costs_metres():

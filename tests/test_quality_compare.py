@@ -69,7 +69,7 @@ def test_the_comparison_scores_each_side_and_reruns_free(db_session):
     assert len(client.calls) == 2 * len(chunks)
 
     def flagged(name):
-        summaries = [m["summary"] for kept in results[name] for m in kept]
+        summaries = [m["summary"] for runs in results[name] for m in runs[0]]
         return {check: n for check, n, _ in report(summaries)}
 
     assert flagged("baseline")["anonymous subject"] == len(chunks)
@@ -77,6 +77,20 @@ def test_the_comparison_scores_each_side_and_reruns_free(db_session):
 
     compare(db_session, client, {"baseline": "OLD", "candidate": "NEW"}, chunks)
     assert len(client.calls) == 2 * len(chunks), "a rerun must read extraction_chunks back"
+
+
+@pytest.mark.db
+def test_runs_are_fresh_draws_and_each_is_stored(db_session):
+    _video_with_chunks(db_session, 2)
+    chunks = sample_chunks(db_session, 10)
+    client = _ByPrompt()
+
+    results = compare(db_session, client, {"baseline": "OLD"}, chunks, runs=3)
+    assert len(client.calls) == 3 * len(chunks)
+    assert all(len(runs) == 3 for runs in results["baseline"])
+
+    compare(db_session, client, {"baseline": "OLD"}, chunks, runs=3)
+    assert len(client.calls) == 3 * len(chunks)
 
 
 @pytest.mark.db

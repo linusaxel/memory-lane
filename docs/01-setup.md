@@ -54,7 +54,7 @@ no dev database fallback, no `/docs`, the embed off.
 The app has its own, baked in at dev-server start - see `mobile/.env.example`.
 
 Note: there is no geocoding stage. During extraction Claude names the place and
-`pipeline/geocode.py` places it with free geocoders (DAWA, Photon, Wikidata, no
+`pipeline/geocode.py` places it with free geocoders (Photon, Wikidata, no
 keys); Claude's own coordinate is the fallback.
 
 ## Database

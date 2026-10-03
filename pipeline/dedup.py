@@ -8,6 +8,12 @@ docs/10-decisions.md#place-dedup-matches-on-names-not-coordinates.
 content, with the same check save_memories makes (one stored Sonnet call per
 memory that has neighbours, so a rerun is free). --apply hides the weaker
 telling of each pair.
+
+--memories --source N compares one source's memories with each other wherever
+their places sit, hidden ones included: a book retells a scene on a place row
+of another name (Schloss Friedrichsberg, Frederiksberg Slot). A pair whose
+better side is hidden is printed, never applied: hiding the other would leave
+the scene with nothing visible.
 """
 
 import argparse
@@ -263,22 +269,59 @@ def memory_repeats(session, client) -> list[tuple[int, int]]:
     return pairs
 
 
-def _memories(apply: bool):
+def source_repeats(session, client, source_id: int) -> list[tuple[int, int]]:
+    """(better, repeat) pairs within one source, hidden memories included,
+    each memory against every earlier one of the source whatever its place."""
+    rows = session.execute(
+        text("""
+            SELECT m.id, m.content_id, p.name AS venue, m.summary
+            FROM memories m
+            JOIN places p ON p.id = m.place_id
+            JOIN content c ON c.id = m.content_id
+            WHERE c.source_id = :s
+            ORDER BY m.id
+        """),
+        {"s": source_id},
+    ).fetchall()
+    pairs, repeats = [], set()
+    for n, r in enumerate(rows):
+        earlier = [e for e in rows[:n] if e.id not in repeats]
+        hit = earlier and same_event(
+            session, client, r.content_id, r._asdict(), [e._asdict() for e in earlier]
+        )
+        if hit:
+            i, better = hit
+            kept, drop = (r.id, earlier[i].id) if better else (earlier[i].id, r.id)
+            pairs.append((kept, drop))
+            repeats.add(drop)
+    return pairs
+
+
+def _memories(apply: bool, source_id: int | None):
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     with get_session() as session:
-        pairs = memory_repeats(session, client)
-        summary = dict(session.execute(text("SELECT id, summary FROM memories")).fetchall())
+        if source_id is None:
+            pairs = memory_repeats(session, client)
+        else:
+            pairs = source_repeats(session, client, source_id)
+        rows = session.execute(text("SELECT id, summary, hidden FROM memories")).fetchall()
+        summary = {r.id: r.summary for r in rows}
+        hidden = {r.id for r in rows if r.hidden}
+
+        def mark(i):
+            return " (hidden)" if i in hidden else ""
+
         for kept, repeat in pairs:
-            print(f"  keep [{kept}] {summary[kept][:100]}")
-            print(f"  drop [{repeat}] {summary[repeat][:100]}\n")
+            print(f"  keep [{kept}]{mark(kept)} {summary[kept][:100]}")
+            print(f"  drop [{repeat}]{mark(repeat)} {summary[repeat][:100]}\n")
         print(f"{len(pairs)} repeats")
-        if apply and pairs:
+        drops = [r for k, r in pairs if k not in hidden and r not in hidden]
+        if apply and drops:
             session.execute(
-                text("UPDATE memories SET hidden = TRUE WHERE id = ANY(:ids)"),
-                {"ids": [r for _, r in pairs]},
+                text("UPDATE memories SET hidden = TRUE WHERE id = ANY(:ids)"), {"ids": drops}
             )
             session.commit()
-            print(f"{len(pairs)} hidden")
+            print(f"{len(drops)} hidden")
         elif not apply:
             print("nothing changed - pass --apply to hide them")
 
@@ -292,10 +335,13 @@ def main():
         help="apply just these reviewed pairs, instead of every proposal",
     )
     parser.add_argument("--memories", action="store_true", help="retold memories, not places")
+    parser.add_argument(
+        "--source", type=int, metavar="ID", help="--memories within one source, any place"
+    )
     args = parser.parse_args()
 
     if args.memories:
-        _memories(args.apply)
+        _memories(args.apply, args.source)
         return
 
     with get_session() as session:

@@ -1,6 +1,6 @@
 """Review extracted memories by hand; the verdicts are the known-good set.
 
-    python -m pipeline.review                          # the next 20 unreviewed
+    python -m pipeline.review                          # 20 unreviewed, spread over sources
     python -m pipeline.review --accept 12,13 --reject 14
     python -m pipeline.review --edit 15 "Mark and Joe got thrown out of Katz's."
     python -m pipeline.review --stats                  # edit rate by extraction month
@@ -30,7 +30,7 @@ def unreviewed(session, limit: int):
             JOIN places p ON p.id = m.place_id
             LEFT JOIN memory_reviews r ON r.memory_id = m.id
             WHERE m.content_id IS NOT NULL AND NOT m.hidden AND r.id IS NULL
-            ORDER BY m.id
+            ORDER BY md5(m.id::text)
             LIMIT :n
         """),
         {"n": limit},

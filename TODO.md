@@ -44,19 +44,6 @@ delete an entry when its fix lands.
   background `simctl io screenshot` loop every few seconds, then reading
   frames by guesswork, over three 145 s runs. Fix: `takeScreenshot` steps at
   the walk card and the finish card, saved under `e2e/out/`.
-- **`dedup --memories` misses a book's retellings when they sit on different
-  place rows.** 2026-10-01: it found none of the dog, grocer or gallows pairs
-  in source 204 (Schloss Friedrichsberg against Frederiksberg Slot, and so
-  on), and Carl Møller had the same problem. They were found by reading 28
-  rows by hand. Also, a hand-hide of the new fire telling left that scene
-  with nothing visible, because the save-time check had already hidden the
-  old one. Fix: compare the memories of one source with each other, whatever
-  place they are on, and show pairs where one side is already hidden.
-- **`quality --compare` shows one draw per chunk, and a chunk varies more
-  than a prompt.** 2026-09-30: the stored baseline kept two Andersen memories
-  from a chunk the same prompt leaves empty 6 times in 8, so the candidate
-  read as a regression until it was rerun by hand (~50 extra calls). Fix: a
-  `--runs N` that reports how often each chunk keeps something, per prompt.
 - **Auto mode blocks `python -m pipeline.transcripts` and dev-database
   writes.** 2026-09-29: Claude Code's permission classifier refused the
   transcript fetch, leaving 105 videos untranscribed until a human ran it.
@@ -89,12 +76,6 @@ delete an entry when its fix lands.
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
   scratch replay. Fix: `classifier_audit --against <old prompt file>` that
   replays stored chunks through both prompts and prints flips per source.
-- **A prompt's variance can't be measured without hand-deleting its cache.**
-  2026-09-27: `extraction_chunks` is keyed on the exact request, so re-running
-  a video on the same prompt returns the stored reply. Six runs of video 534 each
-  needed a psql `DELETE` of its rows first. Fix: a `--runs N` on
-  `pipeline.quality` that calls `extract_memories_from_chunk` unstored and
-  prints each run's survivors.
 - **`mobile/` has no formatter, so every edit is hand-indented.** 2026-09-27:
   wrapping the sheet's credit strip in a row meant re-indenting fifteen JSX lines
   by hand, and the same session left a stray `</Pressable>` that only the
@@ -107,20 +88,17 @@ delete an entry when its fix lands.
 
 ## Known defects
 
-- [ ] **Most places are still the model's guess.** (checked 2026-09-28)
-      55 of 132 venue places are `llm` now (32 video, 20 book, 3 archive).
-      Most are gone rather than misnamed: closed cinemas (Palladium, Vester
-      Bio), hospitals (Sundholm, Frederikshospitalet), cafés (HH Café,
-      Chickegrill). OSM has no such point. A "name it as the local map does,
-      in the local language" venue line was measured on the 53 chunks behind
-      them and not shipped: placed went 17 → 24 of kept, but kept fell 102 →
-      88. Most gains are a street or a district standing in for the
-      venue (Strøget, Kødbyen, "Frederiksberg"), and it misnamed two addresses
-      (Toldbodgade → "Topgade 77"). Its real wins: Vor Frue Kirke,
-      Assistens Kirkegård, Amalienborg, Gustav-Adolf-Gedenkstein. The book
-      prompt kept German names either way (Friedrichshospital). Next: a
-      closed place is a Wikidata or historical-map lookup, not a prompt
-      fix; decide whether an `llm`-only pin is served at all.
+- [ ] **51 places are still the model's guess.** (checked 2026-10-03)
+      `python -m pipeline.repin --choose --apply` placed 7 of 58 visible
+      `llm` places (3 addresses by the chain, 4 by the model's pick from the
+      map's points). The rest are gone rather than misnamed: closed cinemas,
+      factories, hospitals. A "name it as the local map does, in the local
+      language" venue line was measured on the 53 chunks behind them and not
+      shipped: placed went 17 → 24 of kept, but kept fell 102 → 88, most gains
+      a street or district standing in for the venue, and it misnamed two
+      addresses (Toldbodgade → "Topgade 77"). A closed place is a Wikidata or
+      historical-map lookup, not a prompt fix. Left: decide whether a 1000 m
+      `llm` pin is planned on a walk at all (25 places).
 
 - [ ] **Prompt caching: only the classifier is left uncached.** Measured
       2026-09-27 on videos 535-537 (one burst worker): chunk 1 writes ~4.3k
@@ -232,8 +210,6 @@ From the research (docs/04, *Research, 2026-10-02*), in order:
       absolute bar.
 - [ ] **40 labels by a person.** `python -m pipeline.review` has 0 rows; the
       judge is tuned on agent labels. Calibrate before trusting a new judge.
-- [ ] **Pins by choice.** Give the model a geocoder's top 5 (Photon,
-      Wikidata P625) and let it choose, for the 55 `llm` places.
 - [ ] **Then against now from Wikidata.** Inception, demolition and
       significant events for the linked place, as the contrast line.
 - [ ] **Public-domain memoirs** from Runeberg/ADL (*Mit Livs Eventyr*, Nexø)

@@ -94,7 +94,7 @@ def look_up(session, place_id: int | None = None, content_id: int | None = None)
                    ST_Y(coordinates::geometry) AS lat, ST_X(coordinates::geometry) AS lng
             FROM places
             WHERE now IS NULL AND coordinates IS NOT NULL AND precision_meters <= 50
-              AND geocode_status IN ('dawa', 'photon', 'wikidata')
+              AND geocode_status IN ('dawa', 'photon', 'wikidata', 'chosen')
               AND (CAST(:place_id AS INTEGER) IS NULL OR id = :place_id)
               AND (CAST(:content_id AS INTEGER) IS NULL
                    OR id IN (SELECT place_id FROM memories WHERE content_id = :content_id))

@@ -5,7 +5,7 @@ Every geocoder here answers something for almost any query, so one guard,
 `place()`, judges all of them. The traps it exists for, found live 2026-09-26:
 - Photon: "Blaagaardsgade 12" -> Moltkes Palæ, another building. The name must match.
 - Photon: CBGB (closed 2006) -> the centre of New York. A city is not a place.
-- DAWA: "Nonexistentgade 999" -> Vestergade 9, Nibe. The street must match.
+- DAWA (retired): "Nonexistentgade 999" -> Vestergade 9, Nibe. The street must match.
 - Copenhagen renumbered its houses in 1859: an old number is not today's.
 """
 
@@ -70,24 +70,6 @@ def _get_json(url: str):
 
 def _q(text: str, locality: str | None) -> str:
     return f"{text}, {locality}" if locality else text
-
-
-class Dawa:
-    """Danish public addresses. Free, no key, Denmark only."""
-
-    source = "dawa"
-    handles = frozenset({"address"})
-    countries = frozenset({"DK"})
-
-    def search(self, text, locality, near):
-        params = {"q": _q(text, locality), "fuzzy": "", "struktur": "mini", "per_side": 3}
-        rows = _get_json(
-            f"https://api.dataforsyningen.dk/adresser?{urllib.parse.urlencode(params)}"
-        )
-        return [
-            Hit(r["y"], r["x"], None, r["vejnavn"], r["husnr"], "house", self.source)
-            for r in rows or []
-        ]
 
 
 class Photon:
@@ -179,7 +161,9 @@ class Wikidata:
         return hits
 
 
-GEOCODERS: list[Geocoder] = [Dawa(), Photon(), Wikidata()]
+# DAWA, the Danish address API, answers 410 Gone since its 2025 retirement;
+# OSM imported the same register, so Photon places Danish addresses.
+GEOCODERS: list[Geocoder] = [Photon(), Wikidata()]
 
 
 def _same(a: str | None, b: str | None) -> bool:

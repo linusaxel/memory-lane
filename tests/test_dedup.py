@@ -154,3 +154,46 @@ def test_memory_repeats_keeps_the_first_telling_of_each(db_session):
 
     pairs = memory_repeats(db_session, FakeAnthropic({"reason": "same", "same_as": 0}))
     assert pairs == [(ids[0], ids[1]), (ids[0], ids[2])], "a repeat is never kept against"
+
+
+@pytest.mark.db
+def test_a_source_is_compared_with_itself_whatever_the_place(db_session):
+    """Schloss Friedrichsberg and Frederiksberg Slot are 2 km apart as pinned;
+    the per-source check still pairs them, and sees a hidden telling."""
+    from sqlalchemy import text
+
+    from pipeline.dedup import source_repeats
+    from pipeline.extract import save_memories
+    from tests.fakes import FakeAnthropic
+
+    source_id = db_session.execute(
+        text(
+            "INSERT INTO sources (kind, locator, name) "
+            "VALUES ('text', 'gutenberg:1', 'A book') RETURNING id"
+        )
+    ).scalar()
+    content_id = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, source_id, source_type) "
+            "VALUES ('https://example.org/book', 'text', :s, 'book') RETURNING id"
+        ),
+        {"s": source_id},
+    ).scalar()
+    save_memories(
+        db_session,
+        content_id,
+        [
+            {
+                "place_name": "Schloss Friedrichsberg",
+                "lat": 55.6727,
+                "lng": 12.5272,
+                "summary": "a",
+            },
+            {"place_name": "Frederiksberg Slot", "lat": 55.6900, "lng": 12.5272, "summary": "b"},
+        ],
+    )
+    ids = db_session.execute(text("SELECT id FROM memories ORDER BY id")).scalars().all()
+    db_session.execute(text("UPDATE memories SET hidden = TRUE WHERE id = :i"), {"i": ids[0]})
+
+    fake = FakeAnthropic({"reason": "same", "same_as": 0})
+    assert source_repeats(db_session, fake, source_id) == [(ids[0], ids[1])]

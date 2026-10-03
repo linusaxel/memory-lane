@@ -43,7 +43,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/runeberg.py` | Nordic public-domain books from Projekt Runeberg, same query shape: `<work key> <word>` |
 | `pipeline/ingest.py` | Polls the `active` channels in `sources` into `content`; `--video <url> --to <id>` adds one; `--source <name> --query <q>` runs a text source |
 | `pipeline/sources.py` | **The source funnel:** `list` (yield per source), `discover` (YouTube search over Copenhagen), `screen` (Haiku only), `set`, `add` |
-| `pipeline/geocode.py` | **Places what the model names:** DAWA, Photon, Wikidata behind one guard, `place()` |
+| `pipeline/geocode.py` | **Places what the model names:** Photon, Wikidata behind one guard, `place()` |
 | `pipeline/transcripts.py` | Fetches YouTube transcripts via youtube-transcript-api |
 | `pipeline/extract.py` | **Core logic** - Claude extracts memories + coordinates (sequential) |
 | `pipeline/tasks.py` | RQ tasks for parallel extraction with Haiku pre-filter |
@@ -52,6 +52,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/queue.py` | Redis/RQ queue setup |
 | `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change; `--compare` scores a candidate prompt against the current one on the same chunks; `--labels` re-judges the labelled memories and prints what the judge keeps of each verdict |
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
+| `pipeline/repin.py` | Places still on the model's guess (`llm`): the geocoder chain again, free; `--choose` lets the model pick one of the map's points, never a coordinate of its own |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Fixtures for an empty database**: e2e's, the tests', route_bench's. Refuses one holding real content |
 | `pipeline/walk_score.py` | Scores each extracted summary on the walk rubric (0-12) into `memories.walk_score`, which decides what is epic. Runs after aggregation; `--all` is the backfill. Bills a little |

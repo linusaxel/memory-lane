@@ -375,6 +375,26 @@ nothing.
 - **Still earned, never bought.** Epics join a walk only from level 4, as the
   rare tier did, and nothing about them is sold or random-for-money.
 
+### A walk picks its stops by the rubric
+
+Status: Accepted 2026-10-03.
+
+A stop's prize in the solver was `1 + contrast_score`, and contrast is
+mostly a default, so a walk picked stops with no regard to how good the
+story was. `walk_score` existed for epics but was never backfilled.
+
+- **The prize is the rubric.** `_prize` in `api/route_solver.py` is
+  `1 + walk_score / 6 + contrast_score / 10`; an unscored memory (a walker's
+  post) counts as 6. Two memories on one place: the better scored stands for
+  it.
+- **It ranks, it doesn't bar.** On the 209 labels, walks average 7.1 and
+  skips 5.6 (r = 0.45 against the hand total): too weak for a cut-off. A
+  floor at 3 or less would drop 22 skips and 2 walks; not taken.
+- **Measured** on the dev map, 60 plans each: mean score of the stops
+  planned 6.32 → 6.59, labelled walks 27% → 29%. Small, because prize ranks
+  after stop count, layer mix and shape. `route_bench`: spur 44% → 43%, p95
+  1112 → 1110 ms, unchanged.
+
 ### A city board, by opens
 
 Status: Accepted 2026-10-03. Reverses "stat screens" in *Walks earn XP; rare
@@ -1781,7 +1801,7 @@ So `save_memories` hands `address`, `venue`, `locality` and `country` to
 
 | Geocoder | What it knows | Licence |
 |---|---|---|
-| DAWA | Danish addresses (`country == "DK"` only) | Danish public data, free |
+| ~~DAWA~~ | Danish addresses. Removed 2026-10-03: it answers 410 Gone; Photon (OSM imported the same register) places them | was Danish public data |
 | Photon (`PHOTON_URL`) | OpenStreetMap: addresses and venues worldwide | Free; public server ~1 req/s, self-host a country extract for more |
 | Wikidata | Notable places, including closed ones (CBGB) | CC0 |
 

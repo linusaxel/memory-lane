@@ -51,7 +51,7 @@ flowchart LR
 ### LLM extraction (`pipeline/extract.py`, sequential)
 - Transcripts split into 4-min chunks with 30s overlap
 - Claude extracts: place_name, place_query, lat, lng, summary, tags, confidence
-- The LLM names the place; free geocoders (DAWA, Photon, Wikidata) place it (`pipeline/geocode.py`). The LLM's coordinate is the fallback
+- The LLM names the place; free geocoders (Photon, Wikidata) place it (`pipeline/geocode.py`). The LLM's coordinate is the fallback
 - Low confidence memories filtered out
 - Nearby same-place memories merged (within 60s)
 
