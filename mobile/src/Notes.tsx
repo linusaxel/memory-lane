@@ -3,11 +3,12 @@
  *  needs the same. One each, no replies. See
  *  docs/10-decisions.md#notes-are-gated-like-a-purchase. */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { fetchNotes, hideNote, leaveNote, wasRefused, type Note } from './api.ts';
 import { deviceId } from './device.ts';
+import { when } from './format.ts';
 import { color, dim, input, label, story } from './theme.ts';
 
 export const NOTE_MAX = 280;
@@ -16,9 +17,12 @@ type Props = {
   memoryId: number;
   /** This account filed the memory, so it may take down anyone's note. */
   isAuthor: boolean;
+  /** The memory's heart: the section's header row, with the count of notes
+   *  beside it (docs/10, "The heart heads the notes"). */
+  heart?: ReactNode;
 };
 
-export default function Notes({ memoryId, isAuthor }: Props) {
+export default function Notes({ memoryId, isAuthor, heart }: Props) {
   const [notes, setNotes] = useState<Note[] | null>(null);
   const [draft, setDraft] = useState('');
   const [editing, setEditing] = useState(false);
@@ -39,7 +43,7 @@ export default function Notes({ memoryId, isAuthor }: Props) {
     };
   }, [memoryId]);
 
-  if (notes === null) return null;
+  if (notes === null) return heart ? <View style={styles.row}>{heart}</View> : null;
   const mine = notes.find((n) => n.mine);
   const writing = !mine || editing;
 
@@ -66,16 +70,72 @@ export default function Notes({ memoryId, isAuthor }: Props) {
     }
   };
 
+  const composer = writing && (
+    <View style={styles.note}>
+      <TextInput
+        style={styles.input}
+        value={draft}
+        onChangeText={setDraft}
+        placeholder="You were here. Leave a note."
+        placeholderTextColor={color.inkFaint}
+        multiline
+        maxLength={NOTE_MAX}
+        textAlignVertical="top"
+        // Return sends: a note has no paragraphs, and the send link below
+        // is under the keyboard on a long memory.
+        returnKeyType="send"
+        submitBehavior="blurAndSubmit"
+        onSubmitEditing={() => draft.trim() && !busy && send()}
+        // Rewrite means "let me type": straight into the field, cursor at the end.
+        autoFocus={editing}
+        accessibilityLabel="Your note"
+        // The placeholder goes once Rewrite fills the field, so the flows
+        // find it by id.
+        testID="note"
+      />
+      {/* One line at rest, growing as you type; the send link arrives with
+          something to send (docs/10, "The notes are a thread"). */}
+      {(draft.trim() !== '' || editing) && (
+        <View style={styles.row}>
+          {/* Only near the end: a number that counts down from the first key is noise. */}
+          <Text style={styles.grow}>
+            {draft.length > NOTE_MAX - 40 ? `${NOTE_MAX - draft.length} left` : ''}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            style={dim(!draft.trim() && styles.off)}
+            hitSlop={12}
+            disabled={busy || !draft.trim()}
+            onPress={send}
+          >
+            <Text style={styles.sendText}>{mine ? 'Save note' : 'Leave note'}</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.notes}>
-      {notes.length > 0 && <Text style={styles.heading}>Notes</Text>}
+      {(heart || notes.length > 0) && (
+        <View style={styles.row}>
+          {heart}
+          {notes.length > 0 && (
+            <Text style={styles.heading}>{notes.length === 1 ? '1 note' : `${notes.length} notes`}</Text>
+          )}
+        </View>
+      )}
+      {composer}
       {notes.map((note) => (
         <View key={note.id} style={styles.note}>
-          <Text style={styles.body}>{note.body}</Text>
-          {/* Who, then what you may do, on one grey line: a comment's footer
-              everywhere (docs/10, "The open story is one type scale"). */}
+          {/* Who and when above what they wrote, as a review or a reply
+              does; your own controls at the far end of the same line. */}
           <View style={styles.row}>
-            <Text style={styles.author}>{note.mine ? 'You' : note.author}</Text>
+            <Text style={styles.grow} numberOfLines={1}>
+              {[note.mine ? 'You' : note.author, when(Date.parse(note.created_at))]
+                .filter(Boolean)
+                .join(' · ')}
+            </Text>
             {note.mine && !editing && (
               <Pressable
                 accessibilityRole="button"
@@ -101,53 +161,11 @@ export default function Notes({ memoryId, isAuthor }: Props) {
               </Pressable>
             )}
           </View>
+          <Text style={styles.body}>{note.body}</Text>
         </View>
       ))}
-
-      {writing && (
-        <>
-          <TextInput
-            style={[styles.input, styles.prose]}
-            value={draft}
-            onChangeText={setDraft}
-            placeholder="You were here. Leave a note."
-            placeholderTextColor={color.inkFaint}
-            multiline
-            maxLength={NOTE_MAX}
-            textAlignVertical="top"
-            // Return sends: a note has no paragraphs, and the send link below
-            // is under the keyboard on a long memory.
-            returnKeyType="send"
-            submitBehavior="blurAndSubmit"
-            onSubmitEditing={() => draft.trim() && !busy && send()}
-            // Rewrite means "let me type": straight into the field, cursor at the end.
-            autoFocus={editing}
-            accessibilityLabel="Your note"
-            // The placeholder goes once Rewrite fills the field, so the flows
-            // find it by id.
-            testID="note"
-          />
-          <View style={styles.row}>
-            {/* Only near the end: a number that counts down from the first key is noise. */}
-            <Text style={styles.counter}>
-              {draft.length > NOTE_MAX - 40 ? `${NOTE_MAX - draft.length} left` : ''}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              style={dim(!draft.trim() && styles.off)}
-              hitSlop={12}
-              disabled={busy || !draft.trim()}
-              onPress={send}
-            >
-              <Text style={styles.sendText}>
-                {mine ? 'Save note' : 'Leave note'}
-              </Text>
-            </Pressable>
-          </View>
-        </>
-      )}
       {failed && (
-        <Text style={styles.counter}>
+        <Text style={styles.heading}>
           {failed === 'refused' ? "That note can't be posted here." : "That didn't send. Try again."}
         </Text>
       )}
@@ -156,17 +174,15 @@ export default function Notes({ memoryId, isAuthor }: Props) {
 }
 
 const styles = StyleSheet.create({
-  notes: { gap: 16 },
+  notes: { gap: 20 },
   heading: { ...label },
   note: { gap: 8 },
   body: story.body,
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  author: { ...label },
+  grow: { ...label, flex: 1 },
   action: { ...label, color: color.inkSoft },
   // The same text action as Rewrite, in ember: the one thing to do here.
   sendText: { ...label, color: color.ember },
   off: { opacity: 0.35 },
   input: { ...input, ...story.body },
-  prose: { minHeight: 90 },
-  counter: { ...label, flex: 1 },
 });

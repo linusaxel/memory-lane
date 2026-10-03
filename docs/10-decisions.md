@@ -3027,7 +3027,8 @@ at the end.
   the reading below. Then-and-now is the story's last paragraph, unlabelled.
   *Superseded 2026-10-03: a second flourish before the notes, by the founder;
   see "The date is the story's, the byline the source's".*
-- **The heart closes the story** alone, at the right.
+- **The heart closes the story** alone, at the right. *Superseded 2026-10-03
+  by "The heart heads the notes".*
 
 ### The date is the story's, the byline the source's
 
@@ -3059,6 +3060,29 @@ and make the quote and then-and-now say what they are, after markdown.
   who told it ❦ the story ❦ what walkers left.
 - **One rhythm**: title, date and byline sit tight (4, 8), each flourish has
   20 either side, the story's parts 24.
+
+### The heart heads the notes
+
+Status: Accepted 2026-10-03. Supersedes "The heart closes the story" in *One
+source, one flourish*.
+
+The founder: the heart looked misplaced, alone at the right under the story,
+and the notes could look better. No reading app sets a heart alone at the
+right; Threads, Instagram and Substack put it left, glyph first. Asked
+whether it belongs with the notes, the founder chose the notes.
+
+- **The heart is the notes' header row**, under the second flourish: "♡ 1
+  2 notes". Hearts and notes are both what walkers give back, so the page is
+  who told it ❦ the story ❦ what walkers did here, and the story ends on what
+  you can see (*The open story has a shape*). As the section's header it reads
+  as the memory's heart, not a note's. The glyph comes first, so it never
+  moves when the count changes.
+- **The composer comes first and is one line**, growing as you type, as
+  Substack's and YouTube's do; "Leave note" arrives with something to send.
+  The 90pt empty box made the page look unfinished.
+- **Each note is who and when, then what they wrote**: "Anna · 2 days ago"
+  in `label`, Rewrite and Remove at the far end of that line, then the note
+  in 17/26, as reviews and replies set it. Space between notes, no rules.
 
 ### Rejected approaches, do not retry
 

@@ -190,8 +190,9 @@ export default function MemorySheet({
   const heartsText = hearts === 1 ? '1 heart' : `${hearts} hearts`;
   // Your own memory: you see that it mattered, you cannot say so (api/write.py
   // heart_memory refuses it too). onEdit is only passed for your own.
-  // The number sits before the glyph in a slot kept even at zero, so the glyph
-  // never moves when it changes (Bluesky's like control, docs/09 part 10).
+  // The glyph first and the count after it, so the glyph never moves when the
+  // count changes. It heads the notes: what walkers gave back, under the
+  // second flourish (docs/10, "The heart heads the notes").
   const countIn = useRef(new Animated.Value(1)).current;
   const still = useReduceMotion();
   const shownHearts = useRef(hearts);
@@ -223,8 +224,8 @@ export default function MemorySheet({
         accessibilityLabel="Hearts"
         accessibilityValue={{ text: heartsText }}
       >
-        {heartCount}
         <Glyph name="heart.fill" size={17} color={color.inkSoft} />
+        {heartCount}
       </View>
     ) : (
       <Pressable
@@ -236,8 +237,8 @@ export default function MemorySheet({
         accessibilityValue={hearts > 0 ? { text: heartsText } : undefined}
         onPress={() => onHeart(memory)}
       >
-        {heartCount}
         <Glyph name={hearted ? 'heart.fill' : 'heart'} size={17} color={color.inkSoft} bounce={hearted} />
+        {heartCount}
       </Pressable>
     );
 
@@ -580,13 +581,9 @@ export default function MemorySheet({
 
                     <MemoryMedia media={memory.media} />
 
-                    {/* The heart closes the story, the way a post's actions
-                        sit under the post; the source is the byline (docs/10,
-                        "One source, one flourish"). */}
-                    {heart && <View style={styles.heartRow}>{heart}</View>}
 
                     <Flourish />
-                    <Notes memoryId={memory.id} isAuthor={!!onEdit} />
+                    <Notes memoryId={memory.id} isAuthor={!!onEdit} heart={heart} />
                   </Animated.View>
                 </ScrollView>
 
@@ -698,10 +695,8 @@ const styles = StyleSheet.create({
   bylineName: { color: color.ink },
   out: { color: color.ember },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
-  heartRow: { alignItems: 'flex-end' },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  // Two digits' room, kept at zero, so the glyph after it never moves.
-  heartText: { ...label, color: color.inkSoft, minWidth: 22, textAlign: 'right', fontVariant: ['tabular-nums'] },
+  heartText: { ...label, color: color.inkSoft, fontVariant: ['tabular-nums'] },
   pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
   pagerText: {
     ...label,

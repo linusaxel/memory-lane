@@ -103,9 +103,9 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   │                                 ├─ "their words"  callout: ember bar, ❝ "Mads, at 12:04" label, 17/26
   │                                 ├─ then and now  callout: rule bar, clock icon, "Then and now" label, 17/26
   ├─ distance         52/700        ├─ photo / recording   if it has any
-  ├─ "Get within 20 m"              ├─ the heart, alone at the right (F11): a bare count
-  ├─ "1 attachment waiting"         │    before the glyph, in a slot kept at zero
-  │                                 └─ ❦ then notes  17/26, "You  Rewrite  Remove" in label
+  ├─ "Get within 20 m"              └─ ❦ then the notes: "♡ 1  2 notes" header (F11, glyph first),
+  ├─ "1 attachment waiting"              a one-line composer that grows, then each note as
+  │                                      "Anna · 2 days ago  Rewrite Remove" label over 17/26
   │  (in reach it is not opened:
   └─  the ring is on the map)
                                     Nothing is pinned, bar the pager under a stacked pin.
