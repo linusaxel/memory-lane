@@ -294,7 +294,9 @@ earned by effort, "think of WoW, Naxx". Research notes and sources:
   same day and were cut by the founder for this. The shape is the planned
   walk through its stops (`daily_routes.legs`), not a GPS track: the start is
   never stored and location is foreground only (UI.md rule 2).
-- **The rare tier is earned, never bought.** Memories with
+- **The rare tier is earned, never bought.** **Superseded 2026-10-03** on its
+  signal by *Epic memories: scored by rubric, kept by hearts, hidden until
+  opened*; the level gate stays. Memories with
   `contrast_score >= 0.9` (about a tenth) join a planned walk only from level
   4. Effort-gating like Naxx, but small: Blizzard's 40-man Naxx was seen by
   few and re-released for everyone, and a neighbourhood has few memories. The
@@ -309,6 +311,53 @@ earned by effort, "think of WoW, Naxx". Research notes and sources:
 Rejected: equipment that changes which or how many memories you get, an
 inventory cap, loot on every walk, generic keepsakes, stat screens. Walk-shape perks (+1 stop, a
 preferred layer) wait for retention data.
+
+### Epic memories: scored by rubric, kept by hearts, hidden until opened
+
+Status: Accepted 2026-10-03. Supersedes the rare tier's signal in *Walks earn
+XP; rare memories wait for a level*; its level-4 gate stays.
+
+Variable reward magnitude: every memory is a reward, so some have to be
+bigger, and you can't know which until you are standing there. The rare
+tier was meant to be that, but `contrast_score` reads like a default (0.7 on
+11 of 13 Historisk Atlas entries, `docs/04-extract.md`), so it picked
+nothing.
+
+- **The rubric picks it.** `pipeline/walk_score.py` scores each extracted
+  summary on the research walk rubric (six criteria, 0-2 each) into
+  `memories.walk_score`. 11 or 12 is epic. It scores the finished summary in
+  its own call, so the extraction prompt and its summaries are untouched.
+- **Hearts keep or drop it.** From 20 opens, hearts per open decide:
+  0.3 or more promotes one the rubric missed, under 0.1 demotes one it
+  overrated (`EPIC_EXPR` in `api/queries.py`). The rates are guesses until
+  real ones exist.
+- **Hidden until it opens.** `epic` is false on a locked memory, so a
+  planned walk can't tell which stop it is. It opens with its own haptic and
+  an "Epic" line on the sheet. No epic pin: pins are one kind.
+- **Still earned, never bought.** Epics join a walk only from level 4, as the
+  rare tier did, and nothing about them is sold or random-for-money.
+
+### A city board, by opens
+
+Status: Accepted 2026-10-03. Reverses "stat screens" in *Walks earn XP; rare
+memories wait for a level*, and puts names where *Hearts come back in the
+app, anonymous* had none.
+
+The founder's call, "for now": who opened the most memories in Copenhagen.
+`GET /v1/board`: distinct memories each account opened within 15 km of the
+centre this calendar month, top 20 plus your own row, by display name
+("Anonymous" when blank), opened from the account menu. The monthly reset
+keeps it winnable (Strava's segments). `users.on_board` and a Settings
+toggle take you off it.
+
+**Options considered:** "you're the 3rd to stand here" (no to the
+framing), a weekly neighbourhood board (people walk across neighbourhoods).
+
+**Consequences:** it counts quantity, the failure LinkedIn, Foursquare and
+Google News retired badges for (Mekler 2017 in
+`docs/research-progression.md`), and a subscriber walks more often, so pays
+toward rank. Revisit with data: if the board's top is all subscribers, or
+opens rise while hearts per open fall, count walks or cap a day's opens.
 
 ### A stop can be dropped
 

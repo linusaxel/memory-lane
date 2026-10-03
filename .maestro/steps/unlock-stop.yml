@@ -16,6 +16,19 @@ appId: ${APP_ID}
     visible: ".*${WORDS}.*"
     timeout: 30000
 - assertNotVisible: "Unlock this memory"
+# docs/10, "Epic memories": e2e/sql/walk-and-unlock.sql makes stop 1 epic.
+- runFlow:
+    when:
+      true: ${N == '1'}
+    commands:
+      - assertVisible:
+          id: "epic"
+- runFlow:
+    when:
+      true: ${N != '1'}
+    commands:
+      - assertNotVisible:
+          id: "epic"
 # F30: never over a memory, which is read first. Only closing the last one
 # shows the whole loop.
 - assertNotVisible:

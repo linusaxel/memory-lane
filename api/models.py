@@ -119,6 +119,8 @@ class Memory(BaseModel):
     source_url: str | None = None
     contrast_score: float | None = None
     contrast_note: str | None = None
+    # False while locked, so a walk can't tell which stop is epic until it opens.
+    epic: bool = False
     # A line in the teller's own words. Null while locked, like the summary.
     quote: str | None = None
     quote_by: str | None = None
@@ -337,6 +339,8 @@ class Profile(BaseModel):
     level: int = 1
     xp_level: int = 0
     xp_next: int = 50
+    # On the city board by display name. Off leaves it.
+    on_board: bool = True
     # Steps are a lifetime total for the journal and buy nothing, counted from
     # steps_counted_until (naive UTC), null until there is a user row.
     steps: int = 0
@@ -351,6 +355,27 @@ class StepsRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
     since: datetime
     steps: int = Field(ge=0, le=1_000_000)
+
+
+class BoardRow(BaseModel):
+    rank: int
+    # "Anonymous" when unnamed, like a byline.
+    display_name: str
+    avatar_url: str | None = None
+    opens: int
+    mine: bool = False
+
+
+class BoardResponse(BaseModel):
+    """docs/10, "A city board, by opens"."""
+
+    city: str
+    rows: list[BoardRow]
+
+
+class BoardRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+    on_board: bool
 
 
 class ProfileRequest(BaseModel):

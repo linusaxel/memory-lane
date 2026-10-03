@@ -72,6 +72,28 @@ ANNIVERSARY = """(
             = to_char((now() AT TIME ZONE 'utc')::date, 'MM-DD')
     ) as anniversary"""
 
+# Epic: the rubric picks it, then hearts keep or drop it. Below
+# EPIC_MIN_OPENS opens only walk_score counts. From there, hearts per open
+# promote a memory the rubric missed and demote one it overrated
+# (docs/10-decisions.md#epic-memories-scored-by-rubric-kept-by-hearts-hidden-until-opened).
+# ponytail: the rates are guesses; tune them once real hearts-per-open exist.
+EPIC_SCORE = 11
+EPIC_MIN_OPENS = 20
+EPIC_PROMOTE = 0.3
+EPIC_DEMOTE = 0.1
+EPIC_EXPR = f"""(
+        WITH n AS (
+            SELECT (SELECT COUNT(*) FROM unlocks uo WHERE uo.memory_id = m.id) AS opens,
+                   (SELECT COUNT(*) FROM memory_hearts he WHERE he.memory_id = m.id) AS hearts
+        )
+        SELECT CASE
+            WHEN n.opens < {EPIC_MIN_OPENS} THEN COALESCE(m.walk_score >= {EPIC_SCORE}, FALSE)
+            ELSE n.hearts >= {EPIC_PROMOTE} * n.opens
+                OR (COALESCE(m.walk_score >= {EPIC_SCORE}, FALSE)
+                    AND n.hearts >= {EPIC_DEMOTE} * n.opens)
+        END FROM n
+    )"""
+
 # Every column a memory-shaped response needs. row_to_memory reads the row by
 # name, so a query is free to append distance, rank or unlocked_at.
 MEMORY_COLUMNS = f"""
@@ -110,7 +132,8 @@ MEMORY_COLUMNS = f"""
     {MEMORY_MEDIA},
     {MEMORY_HEART_COUNT},
     {MEMORY_NOTE_COUNT},
-    {COORDINATE_IS_UNIQUE}"""
+    {COORDINATE_IS_UNIQUE},
+    {EPIC_EXPR} as epic"""
 
 # Both LEFT: a submitted memory has no content, an extracted one has no author.
 # `au` and not `u` because DEVICE_UNLOCKS_QUERY owns `u` for the unlocks table.
@@ -551,7 +574,7 @@ SUBSCRIBED_QUERY = """
 #     route rather than re-discovering what its sibling already earned.
 #   - only walk-to-unlock memories - a centroid a route sent you to would open
 #     the moment you arrived, which is not a stop, it is scenery.
-#   - a rare one only once :rare_open (api.progression.RARE_LEVEL).
+#   - an epic one only once :epic_open (api.progression.EPIC_LEVEL).
 # Ordered by distance and not CONTRAST_ORDER on purpose: a route is where to
 # walk next, not a feed to rank.
 ROUTE_CANDIDATES_QUERY = f"""
@@ -567,7 +590,7 @@ WHERE
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
-    AND (:rare_open OR m.contrast_score IS NULL OR m.contrast_score < :rare_score)
+    AND (:epic_open OR NOT {EPIC_EXPR})
 -- A stack's memories share one distance; the id makes which one stands for
 -- the place the same on every call, so a preview and its accept agree.
 ORDER BY distance_meters ASC, m.id ASC
@@ -759,3 +782,30 @@ WHERE id = :place_id
 """
 
 # Closed list: free text would be a tag soup of one-offs within a week.
+
+# The city board: distinct memories each account opened inside the city this
+# calendar month (UTC), ranked. Per account, not per device, so a second phone
+# adds nothing. Only accounts still on_board. A monthly reset keeps it winnable
+# (docs/10-decisions.md#a-city-board-by-opens).
+BOARD_QUERY = """
+WITH counts AS (
+    SELECT d.user_id, COUNT(DISTINCT un.memory_id) AS opens
+    FROM unlocks un
+    JOIN devices d ON d.id = un.device_id
+    JOIN users u ON u.id = d.user_id
+    JOIN memories m ON m.id = un.memory_id
+    JOIN places p ON p.id = m.place_id
+    WHERE u.on_board
+      AND un.unlocked_at >= date_trunc('month', now() AT TIME ZONE 'utc')
+      AND ST_DWithin(p.coordinates, ST_MakePoint(:city_lng, :city_lat)::geography, :city_radius)
+    GROUP BY d.user_id
+), ranked AS (
+    SELECT user_id, opens, RANK() OVER (ORDER BY opens DESC) AS rank FROM counts
+)
+SELECT r.rank, r.opens, u.display_name, u.avatar_path,
+    u.id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid)) AS mine
+FROM ranked r JOIN users u ON u.id = r.user_id
+WHERE r.rank <= :top
+   OR u.id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid))
+ORDER BY r.rank, u.id
+"""

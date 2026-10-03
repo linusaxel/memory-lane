@@ -127,6 +127,8 @@ CREATE TABLE users (
     -- A photo under MEDIA_DIR, public like the name. Not a media row: those
     -- with no memory are what pipeline/sweep.py reaps.
     avatar_path TEXT,
+    -- Shown on the city board by display name. Off leaves the board.
+    on_board BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     -- free_day and free_used are unread, from the welcome unlock. XP is
     -- counted from walks, not stored (api/progression.py). Steps are a lifetime total and a watermark, never a day's count, and buy
@@ -199,6 +201,10 @@ CREATE TABLE memories (
     contrast_score REAL,
     contrast_note TEXT,
 
+    -- The walk rubric (docs/04-extract.md): six criteria, 0-2 each. 11 or 12
+    -- makes it epic until hearts say otherwise (api/progression.py).
+    walk_score SMALLINT CHECK (walk_score BETWEEN 0 AND 12),
+
     -- One line in the teller's own words, checked against the source.
     quote TEXT,
     quote_by TEXT,
@@ -252,6 +258,8 @@ CREATE TABLE unlocks (
 );
 
 CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
+-- Opens per memory, for the epic rule's hearts-per-open.
+CREATE INDEX idx_unlocks_memory ON unlocks(memory_id);
 
 -- Say this one mattered. Unlike an unlock, it can be taken back. A join table
 -- rather than a counter column on memories, so one device can't inflate a

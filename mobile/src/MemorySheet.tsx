@@ -17,6 +17,8 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
+import * as Haptics from 'expo-haptics';
+
 import CloseButton from './CloseButton.tsx';
 import type { Coordinates, LocatedMemory } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
@@ -259,6 +261,8 @@ export default function MemorySheet({
   useEffect(() => {
     if (!memory || memory.locked || memory.id !== revealId || arrived.current === revealId) return;
     arrived.current = revealId;
+    // Quiet by default, loud only here: an epic one arrives with its own haptic.
+    if (memory.epic) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
     reveal.setValue(0);
     Animated.timing(reveal, {
@@ -507,6 +511,12 @@ export default function MemorySheet({
                   {/* docs/10, "The open story has a shape": when, the peak
                       first, their words, and what you can see now last. */}
                   {/* One sentence is not a lede, it is the story. */}
+                  {memory.epic && (
+                    <Animated.View style={[rise(0), styles.epic]} testID="epic">
+                      <Glyph name="sparkles" size={18} color={color.ember} bounce={memory.id === revealId} />
+                      <Text style={styles.epicText}>Epic</Text>
+                    </Animated.View>
+                  )}
                   <Animated.View style={rise(0)}>
                     <Text style={rest ? styles.lede : styles.summary}>{prose(first)}</Text>
                   </Animated.View>
@@ -663,6 +673,8 @@ const styles = StyleSheet.create({
   },
   peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   summary: story.body,
+  epic: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+  epicText: { ...label, color: color.ember },
   // The peak, set apart the way a standfirst is. The prompt puts it first.
   lede: { ...story.body, ...font.displaySemi },
   // One rhythm: 8 inside a part, 24 between parts, and no rules between them.

@@ -1,5 +1,6 @@
 /** You, top right: your photo or initial in a glass circle, and under it a
- *  native menu. Your name, your numbers and Edit profile, then Settings. */
+ *  native menu. Your name, your numbers and Edit profile, then the board and
+ *  Settings. */
 
 import { Button, Host, Menu, RNHostView, Section } from '@expo/ui/swift-ui';
 import { accessibilityLabel, disabled } from '@expo/ui/swift-ui/modifiers';
@@ -19,9 +20,10 @@ type Props = {
   name: string;
   onEditProfile: () => void;
   onSettings: () => void;
+  onBoard: () => void;
 };
 
-export default function AccountMenu({ profile, name, onEditProfile, onSettings }: Props) {
+export default function AccountMenu({ profile, name, onEditProfile, onSettings, onBoard }: Props) {
   const numbers = [
     profile?.streak ? `${profile.streak}-day streak` : null,
     `${profile?.unlocked ?? 0} opened`,
@@ -49,6 +51,7 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings }
           <Button label={signedIn} systemImage="person.badge.key" modifiers={[disabled(true)]} />
           <Button label="Edit profile" systemImage="person.crop.circle" onPress={onEditProfile} />
         </Section>
+        <Button label="Board" systemImage="list.number" onPress={onBoard} />
         <Button label="Settings" systemImage="gearshape" onPress={onSettings} />
       </Menu>
     </Host>

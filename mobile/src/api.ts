@@ -113,6 +113,9 @@ export type Memory = {
    *  while locked, like the summary. */
   quote?: string | null;
   quote_by?: string | null;
+  /** One of the best stories. False while locked, so a walk can't tell which
+   *  stop it is until it opens (docs/10, "Epic memories"). */
+  epic?: boolean;
   /** Set once enough people report it. Only ever true from /v1/me/memories -
    *  every other endpoint drops a hidden memory instead of flagging it. */
   hidden: boolean;
@@ -505,7 +508,36 @@ export type Profile = {
   steps: number;
   /** Steps count from here, UTC without a zone; null until there is an account. */
   steps_counted_until: string | null;
+  /** On the city board by display name. */
+  on_board: boolean;
 };
+
+export type BoardRow = {
+  rank: number;
+  display_name: string;
+  avatar_url: string | null;
+  opens: number;
+  mine: boolean;
+};
+
+/** This month's city board: memories opened in the city (docs/10, "A city
+ *  board, by opens"). */
+export async function fetchBoard(
+  device: string,
+  signal?: AbortSignal,
+): Promise<{ city: string; rows: BoardRow[] }> {
+  return get('/v1/board', new URLSearchParams({ device }), signal);
+}
+
+export async function setOnBoard(device: string, onBoard: boolean): Promise<Profile> {
+  const res = await fetch(`${BASE}/v1/me/board`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ device, on_board: onBoard }),
+  });
+  if (!res.ok) throw await refused(res);
+  return (await res.json()) as Profile;
+}
 
 export type Draft = {
   place_name: string;

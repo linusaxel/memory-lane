@@ -54,6 +54,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Fixtures for an empty database**: e2e's, the tests', route_bench's. Refuses one holding real content |
+| `pipeline/walk_score.py` | Scores each extracted summary on the walk rubric (0-12) into `memories.walk_score`, which decides what is epic. Runs after aggregation; `--all` is the backfill. Bills a little |
 | `pipeline/links.py` | Links the names in a summary to Wikipedia via Wikidata, only on one exact match. Runs after aggregation; alone, it is the backfill. Bills a little |
 | `pipeline/now.py` | Asks OpenStreetMap what a building-level pin stands inside today, and writes the "now" side of its contrast from that. Runs after aggregation on that content's places; alone, it is the backfill. Free |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
@@ -91,7 +92,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/read.py` | The read endpoints |
 | `api/route_solver.py` | **Today's walk.** Which stops, what order; its docstring is how a walk is ranked |
 | `api/write.py` | Unlock, media, submissions, reports |
-| `api/accounts.py` | `/v1/me` and `/v1/auth/*` |
+| `api/accounts.py` | `/v1/me`, `/v1/auth/*` and the city board (`/v1/board`) |
 | `api/my_data.py` | A copy of one person's data, for a GDPR request. A CLI, not a route |
 | `api/card.py` | The server-rendered card. Gates itself |
 | `api/embed.py` | The embeddable map. Off when `ENABLE_EMBED=0` |
@@ -123,6 +124,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/Settings.tsx` | Settings: its own sheet, from the cog on the map |
+| `mobile/src/Board.tsx` | The city board: this month's top openers, a sheet from the account menu |
 | `mobile/src/Drawer.tsx` | The journal's panel from the left: edge swipe, spring, scrim |
 | `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
 | `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |

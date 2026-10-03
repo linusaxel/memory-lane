@@ -15,6 +15,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
     Wikipedia article (`pipeline/links.py`). Locked, `links` is empty
   - Open, it also carries `quote` and `quote_by` (a line copied from the source,
     or null), `happened_at` with `happened_precision`, and `contrast_note`
+  - `epic` is true on an open epic memory and always false locked, so a walk
+    can't tell which stop it is (docs/10, "Epic memories")
 - `POST /v1/memories/{id}/unlock` `{device, lat?, lng?}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
   Only a stop of the walk in progress opens, and only standing on it; away
@@ -90,8 +92,14 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `items_total`, counted from finished walks on every read (`api/progression.py`).
   `steps` is every step counted, for the journal, and `steps_counted_until`
   where the next count starts. `hearts_received` counts every heart on what the account filed.
-  `avatar_url` is the profile photo, server-relative, or null.
+  `avatar_url` is the profile photo, server-relative, or null. `on_board` says
+  whether the account shows on the city board.
   The GET creates nothing
+- `GET /v1/board?device=UUID` - this month's city board: `{city, rows}`, each
+  row `{rank, display_name, avatar_url, opens, mine}`. The top 20 plus your own
+  row, counting distinct memories an account opened in the city (docs/10, "A
+  city board, by opens"). `PUT /v1/me/board` `{device, on_board}` leaves or
+  rejoins it and returns the `Profile`
 - `POST /v1/me/avatar` (multipart: `device`, `file`) - set the profile photo,
   deleting the one it replaces; `DELETE /v1/me/avatar?device=UUID` clears it.
   Both return the `Profile`. Photos only, through `/v1/media`'s checks and

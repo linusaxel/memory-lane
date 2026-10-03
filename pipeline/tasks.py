@@ -43,6 +43,7 @@ from pipeline.queue import (
     get_queue,
     get_redis,
 )
+from pipeline.walk_score import score_memories
 
 logger = logging.getLogger(__name__)
 
@@ -413,6 +414,11 @@ def task_aggregate_memories(content_id: int):
             link_memories(session, client, content_id=content_id)
     except Exception:
         logger.exception(f"[content:{content_id}] Linking names failed; memories are saved")
+    try:
+        with get_session() as session:
+            score_memories(session, client, content_id=content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Walk scoring failed; memories are saved")
     try:
         with get_session() as session:
             look_up(session, content_id=content_id)

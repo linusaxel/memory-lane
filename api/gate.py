@@ -290,6 +290,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         source_url=getattr(row, "source_url", None),
         contrast_score=getattr(row, "contrast_score", None),
         contrast_note=getattr(row, "contrast_note", None),
+        epic=bool(getattr(row, "epic", False)),
         quote=getattr(row, "quote", None),
         quote_by=getattr(row, "quote_by", None),
         links=getattr(row, "links", None) or [],

@@ -17,7 +17,7 @@ import {
   View,
 } from 'react-native';
 
-import { API_BASE, type Profile } from './api.ts';
+import { API_BASE, setOnBoard, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
 import CloseButton from './CloseButton.tsx';
 import SignIn from './SignIn.tsx';
@@ -99,7 +99,7 @@ export default function Settings({
           </Row>
           <Text style={styles.note}>
             A memory opens only on a walk, standing there. Finishing a walk earns XP, and
-            from level 4 the rarest stories can join your walks.
+            from level 4 epic stories can join your walks. You find out which when it opens.
           </Text>
           <Text style={styles.note}>
             A few are only pinned to a city, not a spot. Those are open to everyone.
@@ -133,6 +133,22 @@ export default function Settings({
             This needs location in the background, only to check whether you're near a memory you
             haven't unlocked. Your position is never stored.
           </Text>
+        </Section>
+
+        <Section title="Board">
+          <Row>
+            <Text style={styles.rowText}>Show me on the city board.</Text>
+            <Switch
+              testID="on-board"
+              value={profile?.on_board ?? true}
+              disabled={!device || !profile?.user_id}
+              onValueChange={(next) => {
+                if (device) setOnBoard(device, next).then(onProfile).catch(() => {});
+              }}
+              accessibilityLabel="Show me on the city board"
+            />
+          </Row>
+          <Text style={styles.note}>By your name and photo, with how many memories you opened this month.</Text>
         </Section>
 
         <Section title="About">

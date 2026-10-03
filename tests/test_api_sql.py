@@ -30,9 +30,8 @@ PARAMS = {
     "tag": None,
     # None means no "Walk here" pin.
     "query": "coffee",
-    # The route's rare tier, closed: its full predicate.
-    "rare_open": False,
-    "rare_score": 0.9,
+    # The route's epic tier, closed: its full predicate.
+    "epic_open": False,
     "memory_id": 1,
     "place_id": 1,
     "content_id": 1,
@@ -43,6 +42,10 @@ PARAMS = {
     "device": "00000000-0000-0000-0000-000000000000",
     "ids": [1],
     "today": "2026-09-22",
+    "city_lat": 55.6761,
+    "city_lng": 12.5683,
+    "city_radius": 15000,
+    "top": 20,
 }
 
 QUERIES = sorted(

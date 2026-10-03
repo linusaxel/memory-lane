@@ -27,7 +27,7 @@ from sqlalchemy import text
 
 from api.gate import UNLOCK_RADIUS_METERS, meters_between
 from api.models import Coordinates
-from api.progression import RARE_LEVEL, RARE_SCORE, level, xp_of
+from api.progression import EPIC_LEVEL, level, xp_of
 from api.queries import ROUTE_CANDIDATES_QUERY
 from api.streets import crossings, retraced_meters, street_legs, street_table
 
@@ -462,8 +462,7 @@ def _plan_route(
             "radius_meters": budget_meters / 2,
             "device_id": device,
             "limit": ROUTE_POOL,
-            "rare_open": level(xp_of(session, device)) >= RARE_LEVEL,
-            "rare_score": RARE_SCORE,
+            "epic_open": level(xp_of(session, device)) >= EPIC_LEVEL,
         },
     ).fetchall()
     candidates = _spread(_one_per_place(candidates), budget_meters)

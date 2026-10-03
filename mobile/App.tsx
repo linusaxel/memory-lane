@@ -73,6 +73,7 @@ import Memories from './src/Memories.tsx';
 import { EndPick, EndWalk, PastWalk, Preview, WALK_KM, WalkDone, type Reward } from './src/Plan.tsx';
 import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
+import Board from './src/Board.tsx';
 import EditProfile from './src/EditProfile.tsx';
 import Drawer from './src/Drawer.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
@@ -261,6 +262,7 @@ export default function App() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
@@ -1633,6 +1635,10 @@ export default function App() {
                 Haptics.selectionAsync().catch(() => {});
                 setSettingsOpen(true);
               }}
+              onBoard={() => {
+                Haptics.selectionAsync().catch(() => {});
+                setBoardOpen(true);
+              }}
             />
           </View>
           {/* On a walk: Add, the walk card, Center on me (docs/10, "One
@@ -1811,6 +1817,8 @@ export default function App() {
             position={position}
           />
         </Drawer>
+
+        <Board visible={boardOpen} onClose={() => setBoardOpen(false)} device={device} />
 
         <Settings
           visible={settingsOpen}
