@@ -700,6 +700,42 @@ shape, is the collection (e3aa671).
 
 ---
 
+## Craft
+
+From a talk on premium feel (2026-10-03): there are levels to feedback (none,
+a toast, an animation, a refined one), AI's first output is the starting line,
+and most craft goes unnoticed until it is missing. Same rule as Feels like a
+game: quiet by default; refine what exists rather than add.
+
+- [ ] **C1 Find the silent changes.** (checked 2026-10-03) List every state
+      change that happens with no feedback and name its level. Known: the
+      planned route appears whole (`RouteLine.tsx`); the 1.5 s plan wait is a
+      bare spinner (`Plan.tsx`). Most should stay quiet; fix the ones a walker
+      would miss.
+- [ ] **C2 The route draws itself.** (checked 2026-10-03) On a new plan the
+      line grows from you along the walk over ~600 ms, then the stops pop in
+      order. Polyline strokes can't animate natively: grow the coordinate
+      slice; Reduce Motion shows it whole. Measure frames on a phone first.
+- [ ] **C3 An inline camera in Add.** (checked 2026-10-03) `Submit.tsx` opens
+      the full-screen system camera (`launchCameraAsync`). Put an
+      `expo-camera` `CameraView` in the sheet instead, opening from the camera
+      button, with the shot shrinking into the attachment chip (ChatGPT's
+      inline camera). Needs `expo-camera` and a native rebuild; keep the
+      picker for the library.
+- [ ] **C4 Then and now, lined up.** (checked 2026-10-03) Standing at a memory
+      with an archival photo, the C3 camera ghosts the old photo over the
+      viewfinder at ~40% so the walker can match it (rephotography). Open:
+      where the "now" photo goes, a reply on the memory or the walker's own
+      memory. Founder's call.
+- [ ] **C5 Illustrations, hand-drawn.** (checked 2026-10-03) The app has none
+      (`mobile/assets` is icons and splash). Places that want one: the empty
+      walk list (`Memories.tsx`), sign-in, the paywall, the finish card.
+      Commission one base style from an illustrator (a few hundred), derive
+      the rest; a product about hand-told memories should not look
+      one-prompted. Bar: nobody asks which prompt made it.
+
+---
+
 ## Copenhagen journeys
 
 - [ ] **A long walk still falls short where the map runs out.** (checked
@@ -915,6 +951,8 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
       `.aab`. F28's background location also needs the App Store Connect and
       Play privacy disclosures updated, and a real device confirming
       delivery.
+- [ ] **`ILLUSTRATOR`** (checked 2026-10-03) — pick an artist for C5's base
+      style, a few hundred. And decide C4: where a "now" photo goes.
 
 ---
 
