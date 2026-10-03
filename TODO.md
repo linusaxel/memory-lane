@@ -350,13 +350,10 @@ live requests. Order is priority.
 
 ## Map first
 
-Decided 2026-09-26 (the founder's ramble): after sign-in the app opens on a
-map of what is locked around you, and a walk is how you open any of it. Each
-step ships and stands on its own; in order. M1, M2 and M4 shipped 2026-09-26
-(F29, docs/10 *A map of what is locked*); M5 and M6 (Walk here plans a walk
-through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the route-blue
-"On a walk · 2 of 5" bar, F25); M7 went with the day lock (docs/10
-*A walk can be ended*).
+The map of what is locked (2026-09-26) went with the walk planner on
+2026-10-03 (docs/10, *A walk planner, nothing else*): the planner is home and
+only a walk's stops are drawn. What is left here is the walk on the map.
+(checked 2026-10-03)
 
 - [ ] **M3 A direction arrow on the user dot.** (checked 2026-09-26:
       react-native-maps 1.29.8 has no heading or tracking-mode prop, so no code
@@ -391,23 +388,19 @@ through that pin) and M9 (End walk, F34) shipped the same day, then M8 (the rout
 
 ## Paid map unlock
 
-Decided 2026-09-26 (the founder), changed 2026-10-02: one walk a day opens
-for nothing and earns a key, a key opens any other memory you stand on, and a
-subscription opens everything (docs/10, *Keys open a lock, and today's walk is
-free*). Built 2026-09-27: the gate, RevenueCat's webhook and
-read-back (`api/billing.py`), the paywall (F35) and its two e2e flows (docs/10
-*A subscription opens the map*, *RevenueCat sells it; our table decides*).
-Nothing can be bought until the stores exist, so everybody is free.
-Researched 2026-10-02: a currency, the map and the walk, in *Map, walk and
-money* below.
+Since 2026-10-03 (docs/10, *A walk planner, nothing else*): one walk a day is
+free and a subscription buys more walks a day. Nothing else is sold; keys are
+gone. Built 2026-09-27: the gate, RevenueCat's webhook and read-back
+(`api/billing.py`), the paywall (F35) and its e2e flow
+(`subscribe-when-walked-out.yml`; docs/10 *RevenueCat sells it; our table
+decides*). Nothing can be bought until the stores exist, so everybody is free.
+(checked 2026-10-03)
 
-- [ ] **S6 The stores and RevenueCat.** (checked 2026-09-27) Waits on
+- [ ] **S6 The stores and RevenueCat.** (checked 2026-10-03) Waits on
       `STORE_ACCOUNT` and `DEPLOY` (the webhook needs a public URL). No code:
       - App Store Connect: the Paid Apps agreement, banking and tax (without
         them no product loads); one subscription group, monthly and yearly,
-        auto-renewing, no introductory offer; four consumables `keys_1`,
-        `keys_5`, `keys_15`, `keys_40` (api/billing.py `KEY_PRODUCTS`), the
-        one key at about 7 DKK and packs at 29, 69 and 149 DKK; an In-App Purchase key for
+        auto-renewing, no introductory offer; an In-App Purchase key for
         RevenueCat; App Store Server Notifications to RevenueCat; a sandbox
         tester.
       - Play Console: the same two subscriptions; a service-account JSON for
@@ -419,27 +412,22 @@ money* below.
         `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `_ANDROID_KEY` (eas.json).
       - Both listings and privacy disclosures name the subscription and
         purchases; the review note says how to reach the paywall.
-      - RevenueCat's `default` offering carries the four key packages beside
-        monthly and annual: the app finds them by product id.
-      - Then on a real device: buy monthly, see the row, open a pin from the
-        map, cancel in the sandbox, see it lapse. Buy a key at the lock and
-        see it open the pin. Nothing has ever called
-        RevenueCat for real: the tests patch `billing.fetch_subscriber`.
+      - Then on a real device: buy monthly, see the row, plan a second walk
+        the same day, cancel in the sandbox, see it lapse. Nothing has ever
+        called RevenueCat for real: the tests patch `billing.fetch_subscriber`.
 - [ ] **Revisit RevenueCat when its fee outgrows two integrations.** Free
       under $2.5k/month, then 1% of gross (before VAT and the store cut). When
       that fee passes what it costs to keep the App Store Server API and Play
       Developer API direct, or RevenueCat blocks something we need, leave: only
       `billing.fetch_subscriber` and the app's SDK change, since
       `subscriptions` stays ours.
-- [ ] **Steps on a real iPhone.** (checked 2026-09-30) Since keys (2026-10-02),
-      steps are a journal stat and buy nothing; the check below still
-      stands. Built iOS-only
-      (docs/10, *Three free a day, then steps where you stand*): 1,000 steps
-      an unlock, from Core Motion via `src/steps.ts`. A simulator has no pedometer,
-      so nothing has ever counted a real step. On a device: grant Motion &
-      Fitness, walk, reopen, see the count at the top of the map rise once;
-      deny it and the free three still open. Unverified: whether Core Motion misses steps
-      only a Watch counted.
+- [ ] **Steps on a real iPhone.** (checked 2026-10-03) Steps are a journal
+      stat and buy nothing. Built iOS-only, from Core Motion via
+      `src/steps.ts`. A simulator has no pedometer, so nothing has ever
+      counted a real step. On a device: grant Motion & Fitness, walk, reopen,
+      see the journal's step count rise once; deny it and walks still plan
+      and open. Unverified: whether Core Motion misses steps only a Watch
+      counted.
 - [ ] **Steps on Android.** (checked 2026-09-30) `expo-sensors` can't read
       history there (it throws), so `syncSteps` returns early. Use
       `react-native-health-connect` v4 and its config plugin, `READ_STEPS` in
@@ -460,36 +448,24 @@ money* below.
 
 Researched 2026-10-02 with eight parallel research passes over primary sources:
 dev blogs, filings, GDC talks, papers, regulator texts and community reactions
-to specific changes. **D** marks a founder decision. Keys shipped 2026-10-02
-(docs/10, *Keys open a lock, and today's walk is free*); their entries (E0,
-E2, E4, W4) are gone from here, and the research behind them is in this
-file's history at 34961a2. Nobody has published A/B data
-on any of it, and no app the research found gates story text on standing
-there, so every price below is borrowed from a neighbouring kind of app: tune
-it on real data. Checked 2026-10-02 against docs/10 *Steps open a memory* and
-*Pick one to start, then where you stand*.
+to specific changes. **D** marks a founder decision. Nobody has published A/B
+data on any of it, so every price below is borrowed from a neighbouring kind
+of app: tune it on real data. The research behind entries already gone is in
+this file's history at 34961a2.
 
 **2026-10-03: the app became a walk planner** (docs/10, *A walk planner,
 nothing else*): no map browsing, only a walk's stops open, a subscription buys
-more walks, and keys are earned only and never sold. So E3 applies only if
-keys are ever sold again, E5's "opens without a key" is now "more walks a
-day", and *The map: keep showing every pin* is moot.
+more walks, and keys are gone: walks earn XP and are kept as cards (docs/10,
+*Walks earn XP; rare memories wait for a level*). Anything a walk earns stays
+unsold, so a random reward stays clear of Apple 3.1.1 odds and the
+Belgian/Dutch loot-box rulings, and never opens a summary off the spot. The
+founder turned down: keeping a previewed memory for the next walk, a surprise
+open of an off-route memory passed on a walk, a streak shield, and an extra
+walk today as a reward. (checked 2026-10-03)
 
 ### Decide first
 
-- [x] **K1 D: What a key does.** Decided 2026-10-03: nothing, keys are gone;
-      walks earn XP and are kept as cards instead (docs/10, *Walks earn XP; rare
-      memories wait for a level*). Was: one is earned per finished walk
-      and it opens nothing yet. Rules it must keep: never sold (so a random
-      reward stays clear of Apple 3.1.1 odds and the Belgian/Dutch loot-box
-      rulings), and never a summary off the spot. Researched against Pokémon
-      GO, Pikmin Bloom, Monster Hunter Now, Ingress, Duolingo, Animal Crossing,
-      Zelda, Hades, Genshin and Strava. The founder turned these down:
-      - keep a previewed memory for the next walk
-      - a surprise open of an off-route memory passed on a walk
-      - a streak shield
-      - an extra walk today
-- [ ] **E1 D: Licensing before money.** (checked 2026-10-02) This blocks any
+- [ ] **E1 D: Licensing before money.** (checked 2026-10-03) This blocks any
       paid open of a DR-derived story, and it matters more than the currency.
       - **DR treats archive clips as commercial "other business".** The
         accounting-separation rules stop it giving them away for commercial
@@ -515,51 +491,20 @@ day", and *The map: keep showing every pin* is moot.
         license per clip from DR's sales arm.
       - Add this to the lawyer's read of docs/10 *The sources' legal footing*
         (YouTube is already "No, as built").
-      - If it stays open: let keys buy only stories from sources that are
-        clearly ours to charge for (Gutenberg, user posts, licensed), and keep
-        the rest free on the spot.
+      - If it stays open: let paid walks plan only stories from sources that
+        are clearly ours to charge for (Gutenberg, user posts, licensed), and
+        keep the rest on the free walk.
 
-### The currency: keys
+### The subscription
 
-- [ ] **E3 The rules keys must meet before the store sells one.** (checked 2026-10-02) Hard
-      constraints, not choices.
-      - **Apple 3.1.1:** currency only through IAP; bought currency "may not
-        expire"; loot-box odds disclosed
-        (https://developer.apple.com/app-store/review/guidelines/).
-      - **Apple 3.2.2** allows rewards for in-app actions.
-      - **Apple 5.1.3(i):** Motion & Fitness data is never used for ads,
-        marketing or analytics. Turning steps into credit is not banned, and
-        step-reward apps are live, but that is a reading, not a ruling.
-      - **EU CPC key principles on in-game virtual currencies, 21 Mar 2025**
-        (https://commission.europa.eu/live-work-travel-eu/consumer-rights-and-complaints/enforcement-consumer-protection/coordinated-actions/social-media-online-games-and-search-engines_en;
-        text: https://esportslegal.news/wp-content/uploads/2025/03/Key-principles-on-in-game-virtual-currencies.pdf):
-        - Show the DKK price next to every key price, worked out without
-          bulk discounts.
-        - One currency, no exchanges.
-        - Price items in whole keys, with no leftovers stranded by pack
-          sizes.
-        - A 14-day withdrawal right on unused keys.
-        - No one-sided change to what a key is worth.
-        - Spending off by default for minors, and no "buy now" pressure at
-          children.
-        - Currency earned only in play is out of scope, but keys are also
-          bought, so all of it applies.
-      - **Denmark:** Forbrugerrådet Tænk reported 17 games, Pokémon GO among
-        them, to Forbrugerombudsmanden on 11 Sep 2024 for showing prices only
-        in virtual currency
-        (https://taenk.dk/presse/forbrugerraadet-taenk-anmelder-17-spil-manipulere-spillerne-med-virtuel-valuta).
-        No ruling has been found yet.
-      - **The Digital Fairness Act:** proposal expected Q3–Q4 2026. It is
-        weighing real-money prices on items bought with currency, and loot
-        boxes. Check whether it has been published before building.
-      - **If the app ever shuts:** refund or convert unspent keys. Kindle
-        Vella turned unused tokens into gift-card credit
-        (https://www.geekwire.com/2024/amazon-to-shut-down-kindle-vella-serial-book-platform-saying-it-hasnt-caught-on-as-wed-hoped/).
-        Radish let them vanish
-        (https://kcomicsbeat.com/2025/07/03/radish-fiction-to-shut-down-by-end-of-2025/).
-- [ ] **E5 Memory Lane+ (the subscription).** (checked 2026-10-02)
-      - 49 DKK a month or 349 DKK a year: every memory you stand at opens
-        without a key, and themed walks are included.
+Keys are not sold, so the rules a bought currency must meet (Apple 3.1.1, the
+EU CPC key principles of 21 Mar 2025, Forbrugerrådet Tænk's 2024 complaint,
+the Digital Fairness Act) are in this file's history at 487651e, entry E3.
+Read them first if anything is ever sold but the subscription.
+
+- [ ] **E5 Memory Lane+ (the subscription).** (checked 2026-10-03)
+      - 49 DKK a month or 349 DKK a year: more walks a day, and themed walks
+        are included.
       - Benchmarks: Western Europe medians are $8.99 a month and $39.44 a year
         (https://revenuecat.com/report). Adapty finds Dutch users pay 62% more
         than US users. No Nordic median was found.
@@ -568,13 +513,15 @@ day", and *The map: keep showing every pin* is moot.
         (https://www.sec.gov/Archives/edgar/data/1562088/000156208825000039/q4fy24duolingo12-31x24shar.htm).
       - Push annual: 44.1% of annual plans are retained after a year, against
         17.0% of monthly ones (RevenueCat 2025).
-      - Updates S6: add the consumables, and change the entitlement's
-        meaning.
 
-### The map: keep showing every pin
+### The walk: give it a reason to exist
 
-- [ ] **V3 "What to look at when you're there" on the peek.** (checked
-      2026-10-02)
+The walk is the whole app now, so it no longer competes with Walk here.
+These make one worth finishing. No published A/B tests compare curated routes
+with free choice. (checked 2026-10-03)
+
+- [ ] **V3 "What to look at when you're there" on a stop.** (checked
+      2026-10-03)
       - Participants in Smith et al. 2019 wanted to be told what to look at,
         and it helps when GPS wobbles near 20 m. Riot! 1831's immersion broke
         on GPS error (https://www.roaring-girl.com/work/1831-riot/).
@@ -583,21 +530,9 @@ day", and *The map: keep showing every pin* is moot.
         not what it says* rejected a teaser line.
       - Needs a new extracted field, so measure it before and after, as
         docs/04 *Memory quality* requires.
-- [ ] **V4 Later, maybe: fog as a record, not a gate.** (checked 2026-10-02)
-      - Brighten the streets you have walked; the pins stay visible.
-      - Fog of World (4.81★, 3.6K ratings) and Wandrer's untravelled-roads
-        view (https://news.wandrer.earth/2026/01/30/wandrer-untraveled-roads.html)
-        work because the fog covers your own record, not the content.
-      - Could fold into G3/G7.
-
-### The walk: give it a reason to exist
-
-Before keys, a walk's stops cost the same as any pin, and its only rewards were the streak
-(F27), the finish card and the journal grouping. So "Walk here" to one chosen
-pin beat it. No published A/B tests compare curated routes with free choice.
-
-- [ ] **W1 A stop only the walk reaches.** (checked 2026-10-02) The strongest
-      mechanism found.
+- [ ] **W1 A hidden stop.** (checked 2026-10-03) The strongest mechanism
+      found. Level 4's rare memories (`api/progression.py`) are a first
+      walk-only surprise; see whether they carry it before building this.
       - One stop shows as "?" and is never drawn on the map; it opens when you
         reach it.
       - Two cases point the same way. Pokémon GO's Routes is widely disliked,
@@ -608,8 +543,8 @@ pin beat it. No published A/B tests compare curated routes with free choice.
       - Uncertain rewards motivate more than sure ones (Shen, Fishbach & Hsee
         2015, https://www.chicagobooth.edu/review/uncertainty-can-improve-motivation),
         and a resolved tease is a net positive (Ruan, Hsee & Lu 2018).
-      - Server: `api/routes.py` picks the hidden stop from memories not near
-        any other pin. The unlock vets it like any stop. Its locked peek
+      - Server: `api/route_solver.py` picks the hidden stop from memories not
+        near any other stop. The unlock vets it like any stop. The preview
         withholds even the place until you are within reach. Avoid a daily
         cap that turns it into a grind.
       - The gate is unchanged: it opens standing there, like any stop.
@@ -639,13 +574,14 @@ pin beat it. No published A/B tests compare curated routes with free choice.
         is once a day, but cap rerolls if it becomes how people play.
       - Keep stories short. People found more than 5 minutes too long but
         still wanted more coverage.
-- [ ] **W5 A broken streak can be repaired.** (checked 2026-10-02)
+- [ ] **W5 A broken streak can be repaired.** (checked 2026-10-03)
       - A broken streak hurts, more so when people blame themselves, and less
         when it can be repaired (Silverman & Barasch, JCR 2023, 7 studies,
         https://www.colorado.edu/business/faculty-research/2023/04/19/or-track-how-broken-streaks-affect-consumer-decisions).
       - Duolingo: allowing two Streak Freezes instead of one lifted daily
         actives by 0.38% (https://blog.duolingo.com/how-duolingo-streak-builds-habit).
-      - A repair could cost a key: a sink that is not a toll.
+      - The founder turned down a streak shield as a walk's reward
+        (2026-10-03); a repair is a different thing, but ask first.
       - Watch for streak anxiety. On its own a streak won't make anyone choose
         the walk.
       - Overlaps G5.
@@ -716,9 +652,8 @@ pin beat it. No published A/B tests compare curated routes with free choice.
         app. Hybrid adoption is 10–35% depending on the definition, mostly in
         games.
       - The economics research would rather sell single opens in DKK with no
-        currency: less regulation, most of the benefit. The founder wants a
-        currency, which is why E2 is one token, keys, with a direct DKK
-        purchase at the lock.
+        currency: less regulation, most of the benefit. Since 2026-10-03
+        neither is sold; the subscription is the only product.
 
 ### The retention risk none of this fixes
 
@@ -763,20 +698,10 @@ Knight's Hunter's Journal, Duolingo's streak milestones and the "Juice it or
 lose it" talk. The journal became a left drawer over the map the same day
 (`src/Drawer.tsx`), with Settings moved to a cog on the map. The rule for all
 of it: quiet by default, loud only for real progress. If everything sparkles,
-nothing feels special. Checked 2026-10-01.
+nothing feels special. Checked 2026-10-03: the level pill and its sheet are
+the trainer card (d4f416a), and Your walks, one card per walk drawn as its
+shape, is the collection (e3aa671).
 
-- [x] **G1 Name the pill.** Done 2026-10-01 another way: the pill is gone,
-      and the journal is the book icon alone (docs/10, "Act at the bottom,
-      read at the top").
-- [ ] **G2 Trainer-card header.** A level and an XP bar under the name, and
-      the streak as a flame chip on the avatar. Decide first what earns XP:
-      memories, steps or walks. The streak's place is a past decision, under
-      Walks only (2fcab97), so moving it reverses that.
-- [ ] **G3 Collection grid.** Pokédex-style tiles in three states: unknown
-      ("?"), a silhouette of a locked memory nearby, and opened. Counts like
-      "12 / 40 found in Indre By", scoped by neighbourhood, never one total
-      ("3 / 500" feels hopeless). A place you have heard every story of gets a
-      gold border, as Hollow Knight marks a completed entry.
 - [ ] **G4 Counters that tick up.** After a walk, opening the drawer rolls
       memories, places and steps up from their old values, with a haptic on
       each tick, instead of showing them already counted.
@@ -789,7 +714,9 @@ nothing feels special. Checked 2026-10-01.
       soft chime, then the flag clears.
 - [ ] **G7 Today card.** First in Walks, like Pikmin Bloom's Lifelog: today's
       trace on a mini map, steps, and a week strip with a dot for each day you
-      walked. Past walks below as postcards carrying what they opened.
+      walked, above the walk cards. Maybe later, fog as a record: brighten
+      the streets you have walked, as Fog of World and Wandrer's untravelled
+      roads do, never hiding content.
 - [ ] **G8 Tabs that follow a swipe.** Swipe between Walks, Unlocked and
       Mine, with the underline tracking the pager rather than jumping.
 - [ ] **G9 Drawer on the UI thread.** The spring runs on React Native's
