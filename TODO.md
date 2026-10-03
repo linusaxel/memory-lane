@@ -851,6 +851,26 @@ game: quiet by default; refine what exists rather than add.
       Commission one base style from an illustrator (a few hundred), derive
       the rest; a product about hand-told memories should not look
       one-prompted. Bar: nobody asks which prompt made it.
+- [ ] **C6 Links open in the app, not out of it.** (founder, 2026-10-03)
+      Every link today calls `Linking.openURL`, which throws you into
+      Safari or YouTube mid-walk:
+      - the source credit (`SourceLine.tsx`, `MemorySheet.tsx`'s `open`)
+      - privacy, contact and OpenStreetMap (`Settings.tsx`)
+      - terms and privacy (`Paywall.tsx`)
+
+      Use `WebBrowser.openBrowserAsync` instead. `expo-web-browser` is
+      already installed (`SignIn.tsx`), so this needs no new dependency and
+      no rebuild. It opens a sheet inside the app (`SFSafariViewController`)
+      with Done to come back, and plays a YouTube link at its timestamp.
+      `presentationStyle: pageSheet` keeps the map visible behind it.
+      `controlsColor: ember`; `dismissButtonStyle: 'close'` matches rule 12.
+      Two catches:
+      - Keep MemorySheet's "nothing opens" message for when the promise
+        rejects (rule "A link that can fail").
+      - Store review wants terms and privacy reachable. A sheet satisfies
+        that.
+
+      Update UI.md "A link that can fail".
 
 ---
 
