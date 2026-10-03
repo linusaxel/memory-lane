@@ -424,7 +424,7 @@ export default function MemorySheet({
                     onPress={() => open(memory.content!.url, "Couldn't open that link.")}
                   >
                     <Text style={styles.meta} numberOfLines={2}>
-                      Retold from {memory.content.title}
+                      Retold by AI from {memory.content.title}
                       <Text style={styles.out}> ↗</Text>
                     </Text>
                   </Pressable>

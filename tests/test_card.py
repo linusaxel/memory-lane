@@ -237,3 +237,15 @@ def test_preview_text_cannot_break_out_of_the_attribute():
 
     assert 'onload="alert(1)"' not in html
     assert "<script>" not in html
+
+
+# -- the AI label ---------------------------------------------------------------
+
+
+def test_a_retold_story_says_ai_retold_it_and_a_post_says_who_left_it():
+    """AI Act Art 50(4): the label sits in the byline, the first thing seen."""
+    assert "Retold by AI from Tuesdays with Stories #500" in render_card(Row())
+    assert "Retold by AI from" in render_locked_card(Row(), 150)
+    post = Row(user_id="9f0c", author_name="Lise", content_title=None, content_url=None)
+    assert "Left by Lise" in render_card(post)
+    assert "AI" not in render_card(post).split('class="credit">')[1].split("</p>")[0]

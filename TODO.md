@@ -106,7 +106,6 @@ public launch that the rest of this file doesn't track. Blockers first.
       - Historisk Atlas: ingest only CC BY, BY-SA and PD stories.
       - A report and takedown route on every memory (DSA Arts 16/17), for
         privacy, defamation and copyright alike.
-      - Label summaries AI-generated (AI Act Art 50(4), in force now).
       - Suppress health, crime and WWII politics about private people, and
         place private people at the street, not the door.
       - A written legitimate-interest assessment and a DPIA.

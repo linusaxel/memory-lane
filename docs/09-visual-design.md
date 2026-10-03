@@ -718,10 +718,10 @@ and a long credit can rewrap.
   the bottom is the example given of what fails.
 
 **For us:**
-- **Byline:** goes in the fixed heading under the place name: "Retold from
-  **\<source\>**" or "Left by **\<name\>**", with the episode or book title on
-  a faint second line. "Retold from" doubles as the AI label, but check it on
-  screenshots first.
+- **Byline:** goes in the fixed heading under the place name: "Retold by AI
+  from **\<source\>**" or "Left by **\<name\>**", with the episode or book
+  title on a faint second line. "Retold from" alone never said AI, so the
+  label says it outright (2026-10-04).
 - **Pinned at the bottom:** only the heart and the action.
 - **Screenshots:** a screenshot still keeps the place and the credit together,
   which is what UI.md rule 11 and docs/10 *Core, not polish* ask for.

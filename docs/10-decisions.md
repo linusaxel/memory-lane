@@ -3010,11 +3010,12 @@ Maps' walking card and VoiceMap: none ends on a plain tap.
 Status: Accepted 2026-10-01 (F11, F12). Supersedes the bottom credit strip
 that UI.md rule 11 described before.
 
-- **Credit at the top.** "Retold from <source>" (with the avatar and the
+- **Credit at the top.** "Retold by AI from <source>" (with the avatar and the
   episode or book) or "Left by X" sits under the place name in the fixed
   heading. A screenshot still keeps the place and the credit together (*Core,
   not polish*), and the AI-written story is labelled at first exposure, which
-  is what AI Act Art 50(4) asks for. The story no longer ends on metadata
+  is what AI Act Art 50(4) asks for. "Retold from" alone never said AI, so
+  since 2026-10-04 the byline says it. The story no longer ends on metadata
   (*The open story has a shape*). The server card (`api/card.py`) uses the
   same order.
 - **The bottom is the button and the heart.** The button names the kind, from

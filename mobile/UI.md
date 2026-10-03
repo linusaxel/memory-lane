@@ -96,7 +96,7 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   locked                            open
   ├─ place name       28/700        ├─ place name       28/700, ⋯ beside the ×
   ├─ padlock                        ├─ "17 June 1978 · on this day"  17 inkSoft, its own line
-  │                                 ├─ avatar 20 (none if none) + "Left by Anna" / "Retold from X ↗"  label
+  │                                 ├─ avatar 20 (none if none) + "Left by Anna" / "Retold by AI from X ↗"  label
   │                                 ├─ ❦ the one flourish: byline above, story below
   │                                 ├─ the lede  17/26: the first sentence, the peak, own paragraph
   │                                 ├─ the rest  17/26, #tags semibold
@@ -111,7 +111,7 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
                                     Nothing is pinned, bar the pager under a stacked pin.
 
   The open side's byline sits under the place name, above the meta line:
-  "Retold from <channel>" with its avatar, or "Left by X". The credit is the one source
+  "Retold by AI from <channel>" with its avatar, or "Left by X". The credit is the one source
   link: a tap opens the passage or the video at the right second (F12's wording is what
   VoiceOver hears).
   ⋯ holds Edit this memory on your own, Report and Block on anyone else's.
@@ -543,7 +543,7 @@ Each of these exists because something broke or would have been rejected.
     report back; the hook also reports a long flight itself, which
     never lands audibly. See `docs/10-decisions.md#the-app`.
 11. **The credit never scrolls.** Place name and its byline above the scroll
-    ("Retold from <source>" or "Left by X"), the button and the heart pinned
+    ("Retold by AI from <source>" or "Left by X"), the button and the heart pinned
     below it, story in between (F12, 2026-10-01; the credit was a pinned strip
     at the bottom before). Geo-gated content cannot be shared by linking to it
     — you had to be there — so a screenshot is the only way it travels, and a

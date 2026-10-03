@@ -40,7 +40,7 @@ export default function SourceLine({ source, url = source.url ?? undefined, spok
         />
       )}
       <Text style={styles.from} numberOfLines={2}>
-        Retold from <Text style={styles.name}>{source.name}</Text>
+        Retold by AI from <Text style={styles.name}>{source.name}</Text>
         {/* Ember, as every link here is, and pointing out: it leaves the app.
             Inside the text, so it follows the last word when the name wraps. */}
         {url && <Text style={styles.out}> ↗</Text>}
@@ -55,7 +55,7 @@ export default function SourceLine({ source, url = source.url ?? undefined, spok
       style={dim()}
       onPress={() => openLink(url).catch(() => {})}
       accessibilityRole="link"
-      accessibilityLabel={spoken ?? `Retold from ${source.name}`}
+      accessibilityLabel={spoken ?? `Retold by AI from ${source.name}`}
     >
       {body}
     </Pressable>

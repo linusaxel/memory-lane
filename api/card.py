@@ -109,6 +109,14 @@ def credit_line(row) -> str:
     return "Source unknown"
 
 
+def byline(row) -> str:
+    """The credit as the card shows it: "Left by" a person, or "Retold by AI
+    from" a source, which is the label AI Act Art 50(4) wants at first sight."""
+    if getattr(row, "user_id", None) is not None and not row.attribution:
+        return f"Left by {credit_line(row)}"
+    return f"Retold by AI from {credit_line(row)}"
+
+
 def source_href(row) -> str | None:
     """Where this memory's source opens. The rule lives in api/gate.py, because
     the API emits the same link and the two used to disagree about it."""
@@ -212,7 +220,7 @@ def preview_tags(place: str, description: str) -> str:
 def render_card(row) -> str:
     place = escape(row.place_name or "Unknown place")
     summary = escape(plain(row.summary or ""))
-    credit = escape(credit_line(row))
+    credit = escape(byline(row))
     when = format_happened(row.happened_at, row.happened_precision)
     href = source_href(row)
 
@@ -254,7 +262,7 @@ def render_locked_card(row, radius_meters: int) -> str:
     credit line survives, because attribution is the point of rendering this
     server-side and is no less owed for a memory you have not earned yet."""
     place = escape(row.place_name or "Unknown place")
-    credit = escape(credit_line(row))
+    credit = escape(byline(row))
 
     label = "locked"
     withheld = f"Something happened here. Stand within {radius_meters} m of it to read it."
