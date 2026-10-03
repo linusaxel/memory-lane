@@ -23,46 +23,17 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **The e2e simulator's keyboard covers the bottom of a sheet, and a
-  KeyboardAvoidingView in a page sheet doesn't lift it.** 2026-10-03: a
-  toolbar at the bottom of `Submit.tsx` sat under the keyboard, and with the
-  hardware keyboard the suggestion strip still took Maestro's taps (they typed
-  "of" and "my" into the story). It took four e2e runs, about 8 minutes, to
-  see. Fix: an e2e/README note: put controls Maestro taps while typing at the
-  top of a sheet, never pinned to the bottom.
-- **Seeing a UI change mid-flow means screenshotting by hand.** 2026-10-03:
-  the walk card and finish card only appear mid-`walk-and-unlock`, and Metro
-  is down once run.sh exits, so checking the stamps and the milestone took a
-  background `simctl io screenshot` loop every few seconds, then reading
-  frames by guesswork, over three 145 s runs. Fix: `takeScreenshot` steps at
-  the walk card and the finish card, saved under `e2e/out/`.
-- **Auto mode blocks `python -m pipeline.transcripts` and dev-database
-  writes.** 2026-09-29: Claude Code's permission classifier refused the
-  transcript fetch, leaving 105 videos untranscribed until a human ran it.
-  2026-09-30: it refused a hand triage (merge two places, hide four memories)
-  and its undo, each a round-trip through the founder. Fix: Bash allow rules in
-  `.claude/settings.json` for `venv/bin/python -m pipeline.*`, or a human runs
-  it with `!`.
+- **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
+  permission classifier refused a hand triage (merge two places, hide four
+  memories) and its undo, each a round-trip through the founder. The free
+  pipeline commands are allowed in `.claude/settings.json` since 2026-10-04;
+  writes stay a prompt on purpose. Fix: a human runs them with `!`.
 - **Placement has no before/after tool.** 2026-09-28: `quality --compare`
   samples chunks by hash and scores summaries only. A venue-line change is
   judged on the chunks that produced `llm` places, by whether they geocode.
   That took a throwaway script (baseline read free from `extraction_chunks`,
   candidate billed, both run through `geocode.place`). Fix: a `--places` mode
   on `pipeline.quality` doing just that.
-- **A damaged Pods tree fails as a link error.** 2026-09-28: the simulator slice
-  of `Pods/React-Core-prebuilt/React.xcframework` had lost its `React` binary,
-  so every build died on `ld: framework 'React' not found` and run.sh said
-  "xcodebuild failed". A clean `build/` did not help and wiped the codegen
-  output `pod install` keeps there; about 20 minutes to find. Fix: a run.sh
-  preflight that the binary exists, else "rm -rf mobile/ios/Pods/React-Core-prebuilt && pod install".
-  2026-10-02, the same trap twice more: codegen sources missing from
-  `mobile/ios/build/generated` (fixed by `pod install`), then a `mobile/ios`
-  generated before 4205124 still copying the four deleted fonts (fixed by
-  `npx expo prebuild --platform ios --clean`, then `pod install`). Both
-  surfaced only as "xcodebuild failed" after a several-minute build. Fix,
-  widened: run.sh stamps a hash of app.json + package.json at prebuild, and
-  says "run prebuild --clean" when it differs.
-
 - **A classifier prompt change can't be measured without a throwaway script.**
   2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line

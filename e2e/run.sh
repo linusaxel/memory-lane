@@ -268,6 +268,15 @@ say "3/5  app"
 BUILT_STAMP=mobile/ios/build/native.built
 NATIVE=$(cat mobile/ios/Podfile.lock mobile/patches/* 2>/dev/null | shasum)
 [ "$NATIVE" = "$(cat "$BUILT_STAMP" 2>/dev/null)" ] || BUILD=1
+# A damaged Pods tree or a stale prebuild fails minutes into xcodebuild as a
+# link or copy error. Say which, up front.
+[ -f mobile/ios/Pods/React-Core-prebuilt/React.xcframework/ios-arm64_x86_64-simulator/React.framework/React ] \
+  || infra "React binary missing: rm -rf mobile/ios/Pods/React-Core-prebuilt && (cd mobile/ios && pod install)"
+PREBUILD_STAMP=mobile/ios/build/prebuild.stamp
+PREBUILD=$(cat mobile/app.json mobile/package.json | shasum)
+[ -f "$PREBUILD_STAMP" ] || echo "$PREBUILD" > "$PREBUILD_STAMP"
+[ "$PREBUILD" = "$(cat "$PREBUILD_STAMP")" ] \
+  || infra "app.json or package.json changed since prebuild: (cd mobile && npx expo prebuild --platform ios --clean) && (cd mobile/ios && pod install), then rm $PREBUILD_STAMP"
 if [ "$BUILD" = 1 ] || ! xcrun simctl get_app_container "$DEVICE" "$APP_ID" >/dev/null 2>&1; then
   echo "     building $APP_ID (several minutes)"
   (cd mobile/ios && xcodebuild \
@@ -384,7 +393,8 @@ for flow in "${SELECTED[@]}"; do
   # FLOW_TIMEOUT is not going to.
   #
   # macOS ships no `timeout`, hence the poll.
-  "$MAESTRO" test --device "$DEVICE" "${ENV_ARGS[@]}" "$flow" &
+  "$MAESTRO" test --device "$DEVICE" --debug-output "$OUT/shots" --flatten-debug-output \
+    "${ENV_ARGS[@]}" "$flow" &
   maestro_pid=$!
   waited=0
   while kill -0 "$maestro_pid" 2>/dev/null; do

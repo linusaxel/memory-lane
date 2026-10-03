@@ -99,10 +99,14 @@ Each of these cost an afternoon.
     bottom of the screen. Fix the warning.
 11. **The first-pick card covers the lower map** until the welcome unlock is
     spent. Tap a pin above it, or pick first.
+12. **The keyboard covers the bottom of a sheet.** A `KeyboardAvoidingView` in
+    a page sheet does not lift it, and the suggestion strip takes taps meant
+    for what is under it. Put controls a flow taps while typing at the top of
+    the sheet.
 
-To see a screen mid-flow, add `- takeScreenshot: name` for one run; it lands in
-`~/.maestro/tests/<timestamp>/<flow>/takeScreenshot/name.png`. Failure
-screenshots are in the same folder.
+To see a screen mid-flow, add `- takeScreenshot: name`; it lands in
+`e2e/out/shots/<flow>/takeScreenshot/name.png`, beside the failure screenshots and Maestro's
+logs. `walk-and-unlock` keeps two: `walk-card` and `finish-card`.
 
 Coordinates and `dev seed` names in the YAML are held against `seed_dev.py` by
 `tests/test_flows.py::test_maestro_flows_still_point_at_the_seed`: when they

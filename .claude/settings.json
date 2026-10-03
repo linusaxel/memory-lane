@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv/bin/python -m pipeline.sources:*)",
+      "Bash(venv/bin/python -m pipeline.ingest:*)",
+      "Bash(venv/bin/python -m pipeline.transcripts:*)",
+      "Bash(venv/bin/python -m pipeline.enqueue --status:*)"
+    ]
+  }
+}

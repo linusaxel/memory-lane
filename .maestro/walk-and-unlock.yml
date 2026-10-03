@@ -52,6 +52,7 @@ appId: ${APP_ID}
 - tapOn: "Keep walking"
 - assertNotVisible: "End this walk\\?"
 - assertVisible: "Next: .*\\. 1 of 4.*"
+- takeScreenshot: walk-card
 
 # "Turn on location" shows until there is a position, so its going is the fix.
 # Waiting on it means a slow fix reads as a slow fix, not as a locked stop.
@@ -127,6 +128,7 @@ appId: ${APP_ID}
 - assertVisible:
     id: "streak-milestone"
 - assertVisible: "7 days in a row"
+- takeScreenshot: finish-card
 # F35: signed in, not subscribed: a quiet way to the paywall, never a pop-up.
 - assertVisible:
     id: "walk-done-more"
