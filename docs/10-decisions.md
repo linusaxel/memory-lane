@@ -297,6 +297,9 @@ One card held the stop list, the slider, the shape and Start, about 600pt,
 and the fit left it a fixed 300, so the walk it planned drew behind it. Now
 step one is the length and the shape with the walk drawn live above it, and
 **See the stops** is step two: ‹ › between walks, the list and Start walk.
+(Amended 2026-10-03, the founder: ‹ › moved to step one, flanking the walk's
+line, so you page between walks while you can still see the whole walk.
+Step two is only the stops and Start walk.)
 The fit pads by the card's measured height and covers the drawn path, so each
 step frames the walk in what is left. Overview first, details on demand
 (Shneiderman 1996); pad the camera by the sheet so the fit frames what is

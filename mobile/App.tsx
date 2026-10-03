@@ -1471,15 +1471,6 @@ export default function App() {
                 fillColor={solid(scheme === 'dark').reachFill}
               />
             )}
-            {DEV_PINNED && position && (
-              <Marker
-                coordinate={{ latitude: position.lat, longitude: position.lng }}
-                anchor={{ x: 0.5, y: 0.5 }}
-                tracksViewChanges={false}
-              >
-                <View style={styles.devDot} />
-              </Marker>
-            )}
 
             {stage === 'preview' && !pastWalk && fittedFor === preview && previewPath.length > 1 && (
               <RouteLine
@@ -1534,6 +1525,17 @@ export default function App() {
                 />
               );
             })}
+            {DEV_PINNED && position && (
+              <Marker
+                coordinate={{ latitude: position.lat, longitude: position.lng }}
+                anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={false}
+                // Over the pins: a walk starts where you stand, on stop 1.
+                zIndex={1000}
+              >
+                <View style={styles.devDot} />
+              </Marker>
+            )}
 
           </MapView>
 

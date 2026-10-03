@@ -211,13 +211,6 @@ export function Preview({
           <Glyph name="chevron.left" size={17} weight="semibold" color={color.ink} />
           <Text style={styles.secondaryText}>Back</Text>
         </Pressable>
-        {/* Pages: the arrows flank what they change. A missing one keeps its
-            space, so the line never shifts between walks. */}
-        <View style={styles.pages}>
-          <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />
-          <Text style={[styles.cardBody, styles.paged]}>{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
-          <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />
-        </View>
         <Stops stops={stops} />
         <Pressable
           style={dim(styles.primary)}
@@ -241,13 +234,19 @@ export function Preview({
   return (
     <View style={styles.card} onLayout={measure}>
       <Text style={styles.cardTitle}>A walk from here</Text>
-      <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
-        {count == null
-          ? 'Finding a walk…'
-          : count === 0
-            ? `No walk within ${WALK_KM.max} km from here.`
-            : `${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}
-      </Text>
+      {found ? (
+        // Pages: the arrows flank what they change. A missing one keeps its
+        // space, so the line never shifts between walks.
+        <View style={styles.pages}>
+          <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />
+          <Text style={[styles.cardBody, styles.paged]}>{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
+          <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />
+        </View>
+      ) : (
+        <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
+          {count == null ? 'Finding a walk…' : `No walk within ${WALK_KM.max} km from here.`}
+        </Text>
+      )}
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
       )}

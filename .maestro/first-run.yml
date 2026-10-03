@@ -46,6 +46,11 @@ appId: ${APP_ID}
     id: "walk-stops"
 - assertVisible: "Stop 1, .*"
 - assertVisible: "Start this walk"
+# Step two is only the stops: paging between walks is step one's.
+- assertNotVisible: "Next walk"
+- tapOn: "Back to the length"
+- assertNotVisible:
+    id: "walk-stops"
 
 # F32: › is another walk as good, or one of a similar length, still a preview.
 - assertNotVisible: "Previous walk"
@@ -54,16 +59,13 @@ appId: ${APP_ID}
     visible: "Previous walk"
     timeout: 40000
 - assertVisible: "[0-9]+ memories · .* loop"
-- assertVisible: "Start this walk"
+- assertVisible: "See the stops"
 # Pages: back to the first, which has no ‹.
 - tapOn: "Previous walk"
 - extendedWaitUntil:
     notVisible: "Previous walk"
     timeout: 5000
 - assertVisible: "4 memories · .* loop"
-- tapOn: "Back to the length"
-- assertNotVisible:
-    id: "walk-stops"
 
 # One way redraws in place: the same four stops' worth, ending somewhere new.
 - tapOn: "One way"

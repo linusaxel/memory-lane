@@ -187,10 +187,10 @@ from any step (docs/10, *A map before the planner*).
    it ends**: the map, a card saying to tap it, and the tap is the end ("Ends
    where you tapped"; a second tap lets it go), with the slider at least the
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
-   slider only on release. There is nothing to close back to. Journal is top
-   left and your level top centre. **See the stops** is step two: ‹ Back,
-   "4 memories · 3.8 km loop" between ‹ › (another walk, F32), then **the
-   list**: each stop numbered in walk order, its place, and year · source ·
+   slider only on release. × closes it back to the map, from either step.
+   Journal is top left and your level top centre. "4 memories · 3.8 km loop"
+   sits between ‹ › (another walk, F32). **See the stops** is step two: ‹ Back,
+   then **the list**: each stop numbered in walk order, its place, and year · source ·
    two #tags, with a padlock; four rows in view, the rest a scroll away. All
    of it is what a locked memory already says (docs/10, *A locked memory says
    what it is*).
@@ -1041,7 +1041,7 @@ stop, not out and home: the start is never stored (docs/10 § Routes).
 ## F32 · Next walk — **Implemented**
 
 **Who:** somebody on the preview (F1) who wants a different walk of the same
-length. **Trigger:** › (Next walk), right of the stops line.
+length. **Trigger:** › (Next walk), right of the walk's line on step one.
 
 1. The preview is replanned with `again` one higher, from the same length,
    loop. A different walk comes back whenever there is another as
