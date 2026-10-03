@@ -174,10 +174,10 @@ def test_a_book_is_cut_to_the_windows_that_name_the_place():
 def test_a_runeberg_zip_reads_as_its_pages_in_order_without_page_numbers():
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as z:
-        z.writestr("Metadata", "TITLE: Minder\nLANGUAGE: da\n")
+        z.writestr("Metadata", "TITLE: Første Minder\nLANGUAGE: da\n".encode("latin-1"))
         z.writestr("Pages/0011.txt", "11\nog saa til Nyhavn.")
         z.writestr("Pages/0010.txt", "10\nJeg boede paa Amagertorv")
         z.writestr("Pages.lst", "0010|10")
     title, language, text = book(buf.getvalue())
-    assert (title, language) == ("Minder", "da")
+    assert (title, language) == ("Første Minder", "da"), "older works write Latin-1"
     assert text == "Jeg boede paa Amagertorv\n\nog saa til Nyhavn."

@@ -1267,6 +1267,10 @@ def save_memories(
         locality = (mem.get("locality") or "").strip() or None
         region = (mem.get("region") or "").strip() or None
         structured = bool(venue and locality)
+        if venue and locality and venue.casefold() == locality.casefold():
+            # The city is no spot: Wollstonecraft's execution pinned on "Copenhagen".
+            logger.info(f"[content:{content_id}] the venue is the city: {venue}")
+            continue
 
         precision = precision_to_meters(mem.get("location_precision", "street"))
         status = "llm"
@@ -1309,6 +1313,7 @@ def save_memories(
         }
 
         place_id = _same_venue_nearby(session, params) if venue and has_coords else None
+        place_id = place_id or _same_item(session, params)
         if place_id:
             _save_memory(session, place_id, content_id, mem, layer)
             continue
@@ -1432,6 +1437,25 @@ def _same_venue_nearby(session, params: dict) -> int | None:
             {**params, "id": row.id},
         )
     return row.id
+
+
+def _same_item(session, params: dict) -> int | None:
+    """A place already on this Wikidata point under another name: "Blue Tower"
+    and "Blåtårn". The point is the item's own, so two names on it are one
+    place. Not for an address point: two bars can share a building."""
+    if params["status"] != "wikidata":
+        return None
+    return session.execute(
+        text("""
+            SELECT id FROM places
+            WHERE geocode_status = 'wikidata'
+              AND ST_DWithin(
+                  coordinates, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, 10
+              )
+            LIMIT 1
+        """),
+        params,
+    ).scalar()
 
 
 def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str):

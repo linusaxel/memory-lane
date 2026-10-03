@@ -14,6 +14,7 @@ from pipeline.config import (
     CLASSIFIER_MODEL,
 )
 from pipeline.db import get_session
+from pipeline.dedup import hide_repeats
 from pipeline.extract import (
     PENDING_EXTRACTION,
     BillingError,
@@ -424,6 +425,17 @@ def task_aggregate_memories(content_id: int):
             look_up(session, content_id=content_id)
     except Exception:
         logger.exception(f"[content:{content_id}] Looking up what is there now failed")
+    try:
+        with get_session() as session:
+            book = session.execute(
+                text("SELECT source_id FROM content WHERE id = :id AND source_type = 'book'"),
+                {"id": content_id},
+            ).scalar()
+            if book:
+                hidden = hide_repeats(session, client, book)
+                logger.info(f"[content:{content_id}] Retellings hidden in the book: {hidden}")
+    except Exception:
+        logger.exception(f"[content:{content_id}] The book's retelling check failed")
 
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}

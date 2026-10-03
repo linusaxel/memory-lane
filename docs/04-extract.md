@@ -632,6 +632,36 @@ Charlottenborg, Andersen at Bakkehus). One run each: the judge flips between
 runs. The `spot_test` change is unmeasured: `quality --compare` on book chunks
 is next (TODO, *The place test*).
 
+### The place test applied, 2026-10-03
+
+- **`spot_test` measured.** `quality --compare --source-type book --sample 20`,
+  the prompt before fdde988 against after: 11 kept each. The new one dropped a
+  district standing in for a venue (Hauch's home, "Frederiksberg") and two
+  stories only set at theirs (Fichte at Hufeland's, Jenny Lind in Hamburg); it
+  added one of the same kind (Ryge's walk to Frederiksberg). Noise, not a loss.
+- **The visible books re-judged.** `quality --visible --source-type book`
+  (new) runs the judge over what is shown and prints what it drops: 52 of 70.
+  Of the 36 labelled, 20 were skip, 8 maybe and 8 walk. 34 hidden after a read
+  (`review --reject`): the 20 skips, 6 maybes and 8 unlabelled stories only set
+  where they sit. Kept: the 8 walks, two badly pinned ones, and 8 unlabelled
+  where the place is the point (Andersen at the theatre, Thorvaldsen's return).
+- **Blue Tower is one place:** 4324 and 4325 merged into Wikidata's Blåtårn
+  (5383), on the footprint in Christiansborg's paving. The user pin was 200 m
+  off. `save_memories` now reuses a place on the same Wikidata point (docs/10,
+  *Place dedup matches on names*), and a book's retellings are hidden after
+  each of its contents is extracted (`dedup.hide_repeats`), so neither is a
+  hand step any more.
+- **Two books through the pipeline,** about $1: Wollstonecraft's 9 remaining
+  Copenhagen windows (source 11, now rejected: an execution outside the city
+  pinned on "Copenhagen", a ramparts walk, both hidden) and Brandes, *Levned*
+  I (source 231, 49 windows, 4 kept: Christian IX blowing kisses from the
+  Christiansborg balcony to cries of "Leve Grundloven!", Lehmann forcing the
+  palace gate, the 1862 students greeted on Frue Plads, the gala at the
+  theatre). A venue that is the city is no longer saved (`save_memories`).
+  Runeberg's 1905 Danish spells it "Kjøbenhavn": "København" found 0 of 49.
+
+The visible corpus went from 192 to 162 memories.
+
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps
 - THE VIBE: Emotions, humor, what made it memorable

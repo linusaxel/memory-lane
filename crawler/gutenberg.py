@@ -6,13 +6,31 @@ Sweden and Norway are not billed. Headings differ in every book, so the text is
 packed into windows of whole paragraphs instead of split on chapters.
 """
 
+import http.client
 import re
+import time
 import urllib.request
 
 URL = "https://www.gutenberg.org/cache/epub/{id}/pg{id}.txt"
 # ponytail: a guess, about 2k tokens; one window is one extraction chunk.
 WINDOW_CHARS = 8000
 LANGUAGES = {"English": "en", "Danish": "da", "German": "de", "French": "fr"}
+
+
+def download(url: str, user_agent: str | None = None, tries: int = 3) -> bytes:
+    """The whole body, retried: both sites drop connections and cut bodies short."""
+    headers = {"User-Agent": user_agent} if user_agent else {}
+    for attempt in range(tries):
+        try:
+            with urllib.request.urlopen(
+                urllib.request.Request(url, headers=headers), timeout=120
+            ) as r:
+                return r.read()
+        except (OSError, http.client.HTTPException):
+            if attempt == tries - 1:
+                raise
+            time.sleep(5 * (attempt + 1))
+    raise AssertionError("unreachable")
 
 
 def _header(raw: str, field: str) -> str | None:
@@ -47,8 +65,7 @@ class Gutenberg:
 
     def fetch(self, query: str, limit: int):
         book_id, _, word = query.partition(" ")
-        with urllib.request.urlopen(URL.format(id=int(book_id)), timeout=60) as r:
-            raw = r.read().decode("utf-8-sig")
+        raw = download(URL.format(id=int(book_id))).decode("utf-8-sig")
         title = _header(raw, "Title") or f"Gutenberg #{book_id}"
         language = LANGUAGES.get(_header(raw, "Language") or "", "en")
         for n, text in enumerate(windows(raw, word.strip() or None)[:limit], 1):

@@ -23,12 +23,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **`quality --labels` runs eight minutes in silence.** 2026-10-03: a full
-  re-judge is ~130 Sonnet calls with no progress line, and its output is
-  usually piped through `tail`, so how far it had got was asked three times
-  and could only be guessed from `extraction_chunks`. Fix: print
-  `content n/N` to stderr per judged content.
-
 - **e2e reuses a stale native build after a native patch.** 2026-10-03:
   `./e2e/run.sh` rebuilds only when `Podfile.lock` changes. A patch-package edit
   to native code (`patches/react-native-maps*`, the polyline's `strokeEnd`)
@@ -104,7 +98,8 @@ delete an entry when its fix lands.
       a street or district standing in for the venue, and it misnamed two
       addresses (Toldbodgade → "Topgade 77"). A closed place is a Wikidata or
       historical-map lookup, not a prompt fix. Left: decide whether a 1000 m
-      `llm` pin is planned on a walk at all (25 places).
+      `llm` pin is planned on a walk at all (25 places, among them 5615,
+      Andersen on "the ramparts", which no spot can hold).
 
 - [ ] **Prompt caching: only the classifier is left uncached.** Measured
       2026-09-27 on videos 535-537 (one burst worker): chunk 1 writes ~4.3k
@@ -174,21 +169,14 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
-- [ ] **The place test: decide, then apply.** (checked 2026-10-03)
-      `only_here` and `spot_test` now ask a same-kind swap (docs/04, *The
-      place test*): stories merely set at their place went from 14 kept to 3
-      of 22, precision 30% to 35%, recall 93% to 81%. Next: decide whether a
-      pass rule for "a famous person meets the place's own purpose" (the king
-      at Charlottenborg, Andersen at Bakkehus) earns another ~150 judge calls;
-      run `quality --compare --source-type book` on the new `spot_test`; then
-      re-judge the visible book memories and hide (never delete) what it
-      drops, after reading the list.
-- [ ] **The Blue Tower is two places.** (checked 2026-10-03) 4324/4325 "Blue
-      Tower, Copenhagen Castle" (`user`) and 5383 "Blåtårn" (`wikidata`), 206 m
-      apart, hold 8 visible Leonora stories between them: re-extraction forked
-      the place, since places match by name. Merge after checking the paving
-      marker. Repin 5611 (the pier landing, pinned on the castle) and 5615
-      (Andersen on the ramparts, `llm` at 1000 m) to their scenes.
+- [ ] **The place test: a pass rule for the famous at a place's purpose.**
+      (checked 2026-10-03) Applied: `quality --visible --source-type book`
+      re-judged the 70 visible book memories and dropped 52; 34 are hidden
+      after a read (docs/04, *The place test applied*). It would also have
+      dropped 8 labelled walks (the king guiding Riis at Charlottenborg, the
+      king at Kasino's door, Bakkehus's roses), kept by hand. Decide whether
+      "a famous person meets the place's own purpose" earns another ~150
+      judge calls; measure with `quality --labels`.
 - [ ] **Re-extract the paused books with the archival prompt.** (checked
       2026-10-03) Carl Møller went from 8 visible to 12, Oehlenschläger
       vol. I from 13 to 22, Andersen from 5 to 10, Leonora Christina from 8 to
@@ -197,8 +185,8 @@ is to `pipeline/extract.py` unless named.
       if they earn it. The recipe: set `memories_extracted = false` for the
       source's content, delete the Redis keys `extraction:<id>` and
       `extraction:<id>:memories`, enqueue each, `pipeline.worker --burst
-      --yes`, then `dedup --memories --source <id>` and read its pairs before
-      hiding any.
+      --yes`. A book's retellings are hidden as each content finishes
+      (`dedup.hide_repeats`); read the worker's "Retellings hidden" lines.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
       until grounding lands (the launch-area gate and dedup have). It was measured
       once (docs/04, *Judge v2, measured and parked*): most of the skips it
@@ -244,8 +232,10 @@ From the research (docs/04, *Research, 2026-10-02*), in order:
       Baring none (docs/04, *Corpus work*). Nexø has no free digital text, and
       *Mit Livs Eventyr* retells source 202. Gutenberg's own search
       (`gutenberg.org/ebooks/search/?query=copenhagen`) works when gutendex is
-      down. Worth a look: Johanne Luise Heiberg's *Et Liv gjenoplevet*, Georg
-      Brandes' *Reminiscences* (neither found on Gutenberg yet).
+      down. Brandes' *Levned* I added 4 (source 231); volumes 2 and 3 are
+      `runeberg:gblevned/2` and `/3`, queried as `Kjøbenhavn`, the old
+      spelling. Heiberg's *Et Liv gjenoplevet* is only on tekster.kb.dk (ADL),
+      which needs its own fetch.
 - [ ] **Batches API** before any whole-channel run: half price.
 - [ ] **Now on a spot** (docs/10, *The recent past is a memory*; docs/04,
       *Now, 2026-10-02*). In order:
@@ -845,10 +835,6 @@ rejects and why are rows now: `python -m pipeline.sources list`.
       Kvarter (155) 0.32, not yet trialled. Rejected Peter Jensen (152, a DR
       radio archive). Paused Kgs. Enghave (176, no captions, waits on Whisper).
       Foreningen Gadeliv was never a row.
-- [ ] **Trial the Wollstonecraft letters** (source 11). (checked 2026-09-27)
-      Screened 3 of 3 windows passing. `enqueue` one part, then judge: the
-      historical prompt reads a first-person memoir, and 1795 street names may
-      not geocode.
 - [ ] **One-off videos.** (checked 2026-09-27) Andrew Schulz "Dropping In #20"
       (Copenhagen) and Ari Shaffir "You Be Trippin'" with Iain Stirling
       (Denmark): `ingest --video … --to <id>` under their channels.

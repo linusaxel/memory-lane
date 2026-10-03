@@ -1603,7 +1603,7 @@ because nothing checked. `sports` was renamed to the singular `sport` in place
 
 ### Place dedup matches on names, not coordinates
 
-Status: Accepted, amended 2026-09-23
+Status: Accepted, amended 2026-09-23 and 2026-10-03
 
 `db/migrations/001_places_unique.sql` stopped the same exact `place_query`
 minting a new row. What it cannot catch is one venue described two ways:
@@ -1658,6 +1658,14 @@ half, and none is a tuning problem:
 Merge mechanics follow `001_places_unique.sql`: repoint `memories.place_id`
 first, then delete orphans guarded by `NOT EXISTS`. `memories.place_id` is
 `ON DELETE CASCADE`, and an unguarded delete eats memory rows.
+
+**2026-10-03 amendment: one exception on coordinates.** "Blue Tower" and
+"Blåtårn" were two places with eight Leonora Christina stories between them,
+because a re-extraction named the tower in Danish. When the geocoder places a
+venue at a Wikidata item, `save_memories` reuses a place already on a Wikidata
+point within 10 m (`_same_item`, `pipeline/extract.py`). That point is the
+item's own, not a guess, so two names on it are one place. Address points from
+Photon are left out, since two bars can share a building.
 
 ### The coordinates are mostly guesses, and they do not admit it
 

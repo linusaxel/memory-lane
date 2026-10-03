@@ -4,6 +4,7 @@
     python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10] [--runs 3]
     python -m pipeline.quality --labels [tests/fixtures/walk_labels.json] [--half tune|check]
     python -m pipeline.quality --whole [5] [--runs 2]
+    python -m pipeline.quality --visible [--source-type book]
 
 Run it before and after any prompt change; extraction costs money and you get
 one shot. Baseline in docs/04-extract.md, reasoning in
@@ -23,6 +24,10 @@ bills the judge once per content per pass; a rerun on unchanged code is free,
 so before and after a judge change only the change is paid for. --half tune
 takes even content ids and --half check odd: tune a judge on one, report the other.
 
+--visible re-judges every memory still shown from one source type, the same
+way, and prints the ones the judge now drops. It hides nothing: read the list,
+then `pipeline.review --reject` what should go.
+
 --whole reads the labelled videos with the most labels as one chunk each, the
 same prompt, filter and judge, and prints what it keeps beside what the
 4-minute chunks kept: walks found again, failure checks, duplicates. It saves
@@ -34,6 +39,7 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 
 import anthropic
 from sqlalchemy import text
@@ -175,7 +181,8 @@ def replay_labels(session, client, ids, half=None) -> tuple[dict[int, bool], lis
     for r in rows:
         by_content.setdefault(r.content_id, []).append(r)
     kept, failed = {}, []
-    for content_id, group in by_content.items():
+    for n, (content_id, group) in enumerate(by_content.items(), 1):
+        print(f"content {n}/{len(by_content)}", file=sys.stderr)
         memories = [{"id": r.id, "venue": r.name, "summary": r.summary} for r in group]
         survivors = {m["id"] for m in worth_telling(session, client, content_id, memories)}
         kept |= {m["id"]: m["id"] in survivors for m in memories}
@@ -183,6 +190,21 @@ def replay_labels(session, client, ids, half=None) -> tuple[dict[int, bool], lis
         if _judge(session, client, content_id, memories, list(range(len(memories)))) is None:
             failed.append(content_id)
     return kept, failed
+
+
+def visible(session, source_type: str) -> list:
+    """(id, place, summary) of every memory still shown from this source type."""
+    return session.execute(
+        text("""
+            SELECT m.id, p.name AS place, m.summary
+            FROM memories m
+            JOIN places p ON p.id = m.place_id
+            JOIN content c ON c.id = m.content_id
+            WHERE NOT m.hidden AND COALESCE(c.source_type, 'video') = :source_type
+            ORDER BY m.id
+        """),
+        {"source_type": source_type},
+    ).fetchall()
 
 
 def score_labels(kept: dict[int, bool], labels: list[dict]) -> dict:
@@ -366,6 +388,9 @@ def main():
     parser.add_argument(
         "--half", choices=("tune", "check"), help="--labels on even or odd content ids only"
     )
+    parser.add_argument(
+        "--visible", action="store_true", help="re-judge what --source-type shows now"
+    )
     parser.add_argument("--whole", nargs="?", type=int, const=5, metavar="VIDEOS")
     parser.add_argument("--runs", type=int, default=1, help="draws per chunk (--compare, --whole)")
     args = parser.parse_args()
@@ -380,6 +405,19 @@ def main():
                 for cid, labelled in labelled_videos(session, labels, args.whole)
             ]
         _print_whole(results)
+        return
+
+    if args.visible:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        with get_session() as session:
+            rows = visible(session, args.source_type)
+            kept, failed = replay_labels(session, client, [r.id for r in rows])
+        if failed:
+            raise SystemExit(f"the judge failed on contents {failed}: no verdict")
+        dropped = [r for r in rows if not kept[r.id]]
+        print(f"dropped {len(dropped)} of {len(rows)}")
+        for r in dropped:
+            print(f"\n{r.id}  {r.place}\n  {r.summary}")
         return
 
     if args.labels:

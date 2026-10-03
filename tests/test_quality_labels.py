@@ -5,7 +5,7 @@ import json
 import pytest
 from sqlalchemy import text
 
-from pipeline.quality import read_whole, replay_labels, score_labels, score_whole
+from pipeline.quality import read_whole, replay_labels, score_labels, score_whole, visible
 from tests.fakes import FakeAnthropic
 
 QUESTIONS = ("only_here", "breach", "consequence", "visible_now", "so_what", "stands_alone")
@@ -84,6 +84,24 @@ def test_a_failed_judge_is_reported_not_scored_as_keeping_everything(db_session)
 
     kept, failed = replay_labels(db_session, FakeAnthropic({"not": "verdicts"}), [memory])
     assert (kept, failed) == ({memory: True}, [content])
+
+
+@pytest.mark.db
+def test_visible_is_what_one_source_type_still_shows(db_session):
+    content = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id, source_type) "
+            "VALUES ('https://www.gutenberg.org/ebooks/1#1', 'gutenberg', 'g1', 'book') "
+            "RETURNING id"
+        )
+    ).scalar()
+    shown = _memory(db_session, content, "Blåtårn", "Kept in the tower.")
+    hidden = _memory(db_session, content, "Kastellet", "Held in a cell.")
+    db_session.execute(text("UPDATE memories SET hidden = TRUE WHERE id = :id"), {"id": hidden})
+    db_session.commit()
+
+    assert [r.id for r in visible(db_session, "book")] == [shown]
+    assert shown not in [r.id for r in visible(db_session, "video")]
 
 
 @pytest.mark.db

@@ -162,7 +162,7 @@ def test_a_source_is_compared_with_itself_whatever_the_place(db_session):
     the per-source check still pairs them, and sees a hidden telling."""
     from sqlalchemy import text
 
-    from pipeline.dedup import source_repeats
+    from pipeline.dedup import hide_repeats, source_repeats
     from pipeline.extract import save_memories
     from tests.fakes import FakeAnthropic
 
@@ -197,3 +197,7 @@ def test_a_source_is_compared_with_itself_whatever_the_place(db_session):
 
     fake = FakeAnthropic({"reason": "same", "same_as": 0})
     assert source_repeats(db_session, fake, source_id) == [(ids[0], ids[1])]
+
+    assert hide_repeats(db_session, fake, source_id) == [], "the better telling is hidden"
+    db_session.execute(text("UPDATE memories SET hidden = FALSE WHERE id = :i"), {"i": ids[0]})
+    assert hide_repeats(db_session, fake, source_id) == [ids[1]]

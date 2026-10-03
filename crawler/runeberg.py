@@ -7,10 +7,9 @@ The query is the work key, optionally followed by a word, as for Gutenberg:
 
 import io
 import re
-import urllib.request
 import zipfile
 
-from crawler.gutenberg import windows
+from crawler.gutenberg import download, windows
 
 URL = "https://runeberg.org/download.pl?mode=txtzip&work={work}"
 USER_AGENT = "memory-lane/1.0 (+https://github.com/linusaxel/memory-lane)"
@@ -20,7 +19,11 @@ def book(data: bytes) -> tuple[str | None, str | None, str]:
     """Title, language and the pages joined in order, from a Runeberg zip.
     A page opens with its printed page number, which is dropped."""
     with zipfile.ZipFile(io.BytesIO(data)) as z:
-        meta = z.read("Metadata").decode("utf-8", "replace")
+        raw = z.read("Metadata")
+        try:
+            meta = raw.decode("utf-8")
+        except UnicodeDecodeError:  # older works write it in Latin-1
+            meta = raw.decode("latin-1")
         pages = sorted(n for n in z.namelist() if re.fullmatch(r"Pages/\d+\.txt", n))
         text = "\n\n".join(
             re.sub(r"\A\s*\d+\s*\n", "", z.read(n).decode("utf-8", "replace")) for n in pages
@@ -40,9 +43,7 @@ class Runeberg:
 
     def fetch(self, query: str, limit: int):
         work, _, word = query.partition(" ")
-        request = urllib.request.Request(URL.format(work=work), headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(request, timeout=120) as r:
-            title, language, text = book(r.read())
+        title, language, text = book(download(URL.format(work=work), USER_AGENT))
         title = title or work
         for n, chunk in enumerate(windows(text, word.strip() or None)[:limit], 1):
             yield {

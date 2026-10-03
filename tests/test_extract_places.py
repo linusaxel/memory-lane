@@ -301,3 +301,34 @@ def test_a_retelling_is_caught_where_it_lands_not_where_the_model_pinned_it(db_s
     save_memories(db_session, content_id, [far], client=same)
     assert _saved(db_session) == ["the King at the door"]
     assert len(same.messages.calls) == 1
+
+
+def test_two_names_on_one_wikidata_point_are_one_place(db_session, monkeypatch):
+    """2026-10-03: "Blue Tower" and "Blåtårn" were two places with eight
+    Leonora stories between them, because places matched by name only."""
+    from pipeline import extract
+
+    monkeypatch.setattr(extract.geocode, "place", lambda *a: (55.6753, 12.5783, 50, "wikidata"))
+    content_id = _content(db_session)
+    save_memories(
+        db_session,
+        content_id,
+        [
+            _memory("the tower", venue="Blue Tower", locality="Copenhagen"),
+            _memory("the cell", venue="Blåtårn", locality="Copenhagen"),
+        ],
+    )
+    assert _counts(db_session) == (1, 2)
+
+
+def test_a_venue_that_is_the_city_is_not_saved(db_session):
+    content_id = _content(db_session)
+    save_memories(
+        db_session,
+        content_id,
+        [
+            _memory("an execution", venue="Copenhagen", locality="Copenhagen"),
+            _memory("the tower", venue="Blåtårn", locality="Copenhagen"),
+        ],
+    )
+    assert _saved(db_session) == ["the tower"]

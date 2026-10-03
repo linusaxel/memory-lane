@@ -297,6 +297,26 @@ def source_repeats(session, client, source_id: int) -> list[tuple[int, int]]:
     return pairs
 
 
+def hide_repeats(session, client, source_id: int) -> list[int]:
+    """Hide the weaker telling of each pair within a book, where both are
+    visible. Run after each of its contents is extracted: a book retells a
+    scene across chapters, on places of different names."""
+    pairs = source_repeats(session, client, source_id)
+    hidden = set(
+        session.execute(
+            text("SELECT id FROM memories WHERE hidden AND id = ANY(:ids)"),
+            {"ids": [i for pair in pairs for i in pair]},
+        ).scalars()
+    )
+    drops = [r for k, r in pairs if k not in hidden and r not in hidden]
+    if drops:
+        session.execute(
+            text("UPDATE memories SET hidden = TRUE WHERE id = ANY(:ids)"), {"ids": drops}
+        )
+        session.commit()
+    return drops
+
+
 def _memories(apply: bool, source_id: int | None):
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     with get_session() as session:
