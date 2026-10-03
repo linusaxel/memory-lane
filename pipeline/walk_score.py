@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 CRITERIA = ("site_lock", "visible_trace", "incident", "surprise", "feeling", "relates")
 
-PROMPT = """The text is a short story told to someone standing at a place. Score it
+PROMPT = """The text is a place, then a short story told to someone standing there. Score it
 on six criteria, each 0, 1 or 2:
 
 - site_lock: 2 if it happened at this doorway, 0 if only "in the city".
@@ -65,7 +65,7 @@ def walk_score(client, summary: str) -> int | None:
 
 
 UNSCORED = """
-    SELECT m.id, m.summary FROM memories m
+    SELECT m.id, p.name, m.summary FROM memories m JOIN places p ON p.id = m.place_id
     WHERE m.walk_score IS NULL AND m.user_id IS NULL
       AND (CAST(:content_id AS INTEGER) IS NULL OR m.content_id = :content_id)
       AND (CAST(:memory_id AS INTEGER) IS NULL OR m.id = :memory_id)
@@ -81,7 +81,7 @@ def score_memories(session, client, content_id: int | None = None, memory_id: in
     ).fetchall()
     done = {}
     for r in rows:
-        score = walk_score(client, r.summary)
+        score = walk_score(client, f"{r.name}: {r.summary}")
         if score is None:
             continue
         session.execute(

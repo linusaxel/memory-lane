@@ -2028,6 +2028,12 @@ Four choices shape how it works:
 
 It is cached at `chunk_index = -2` like the brief.
 
+**Amended 2026-10-03.** `only_here` was "swap in another place's name: does
+the story become false or pointless?" For documented history a swap always
+makes it false, so every memoir story passed, however little it needed the
+spot. It is now a same-kind swap: moved to another prison, hall or street,
+does it lose something? docs/04, *The place test*.
+
 **Tuned against labels, not intuition.** 16 stories from video 534 were labelled
 keep or drop by hand.
 - The first judge, with a bar of 3 of the 4 optional criteria, agreed on 12.

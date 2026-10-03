@@ -23,6 +23,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`quality --labels` runs eight minutes in silence.** 2026-10-03: a full
+  re-judge is ~130 Sonnet calls with no progress line, and its output is
+  usually piped through `tail`, so how far it had got was asked three times
+  and could only be guessed from `extraction_chunks`. Fix: print
+  `content n/N` to stderr per judged content.
+
 - **e2e reuses a stale native build after a native patch.** 2026-10-03:
   `./e2e/run.sh` rebuilds only when `Podfile.lock` changes. A patch-package edit
   to native code (`patches/react-native-maps*`, the polyline's `strokeEnd`)
@@ -168,6 +174,21 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
+- [ ] **The place test: decide, then apply.** (checked 2026-10-03)
+      `only_here` and `spot_test` now ask a same-kind swap (docs/04, *The
+      place test*): stories merely set at their place went from 14 kept to 3
+      of 22, precision 30% to 35%, recall 93% to 81%. Next: decide whether a
+      pass rule for "a famous person meets the place's own purpose" (the king
+      at Charlottenborg, Andersen at Bakkehus) earns another ~150 judge calls;
+      run `quality --compare --source-type book` on the new `spot_test`; then
+      re-judge the visible book memories and hide (never delete) what it
+      drops, after reading the list.
+- [ ] **The Blue Tower is two places.** (checked 2026-10-03) 4324/4325 "Blue
+      Tower, Copenhagen Castle" (`user`) and 5383 "Blåtårn" (`wikidata`), 206 m
+      apart, hold 8 visible Leonora stories between them: re-extraction forked
+      the place, since places match by name. Merge after checking the paving
+      marker. Repin 5611 (the pier landing, pinned on the castle) and 5615
+      (Andersen on the ramparts, `llm` at 1000 m) to their scenes.
 - [ ] **Re-extract the paused books with the archival prompt.** (checked
       2026-10-03) Carl Møller went from 8 visible to 12, Oehlenschläger
       vol. I from 13 to 22, Andersen from 5 to 10, Leonora Christina from 8 to

@@ -285,7 +285,8 @@ Flags: `out` outside Copenhagen, `pin` a street, district or shared centroid,
 `ctx` a name or speaker never introduced, `desc` no incident, `adv` present-day
 promotion, `priv` a private person's death, health or crime, `hall` a likely
 factual error, `stale` relative time, `obsc` only for specialists, `german` a
-German place name left in.
+German place name left in, `set` only set at its place (any place of the kind
+would tell it the same; added 2026-10-03).
 
 The verdicts used five criteria from 0 to 2 each: site, surprise, story, trace
 and standalone. A total of 7 or more with no disqualifying flag was a walk, 5–6
@@ -597,6 +598,39 @@ Not shipped, and no field added. A summary does not know what stands there
 now, so the model fills the gap. Next time, ground it: only places whose OSM
 `now` says the same place still stands (`places.now->>'same'`), and give the
 model OSM's tags and Wikidata's description of the building, not the story.
+
+### The place test, 2026-10-03
+
+Half of the day's batch (Leonora Christina, Riis) only happened to be *set* at
+its place: guards' abuse in the Blue Tower, La Rosche in the witch-cell, a
+Mistress of the Robes' screams. Any prison would tell them the same. The
+judge's `only_here` asked "swap in another place's name: does it become false
+or pointless?", and for documented history a swap always makes it false, so
+every memoir story passed. `walk_score` scored the summary without the place
+name, and the labels marked three of these stories `walk`.
+
+- **Labels:** a `set` flag (only set there) on 19 labelled book memories and
+  today's 10; 4537, 4540 and 4543 moved from walk to skip. AI read, not a person.
+- **Judge:** `only_here` is now a same-kind swap: moved to another prison, hall
+  or street, does it lose something? Two examples, written fresh so they are
+  not in the labels: Kongens Nytorv's sagging lead statue (yes), a Kastellet
+  cell (no). `spot_test` asks the same, and a venue must be a spot a walker can
+  stand at ("the ramparts" is not).
+- **`walk_score`** now scores "place: summary".
+
+| `quality --labels` | `set` kept | precision | recall |
+|---|---|---|---|
+| Before | 14 of 22 | 30% | 93% |
+| "About the wall, gate, stair" | 3 of 22 | 34% | 74% |
+| Same-kind swap (shipped) | 3 of 22 | 35% | 81% |
+
+The first wording cut the hanged grocer on the avenue, Andersen on the empty
+stage and the Kierkegaard plaque, so it was replaced. The shipped one still
+drops 6 more walks than before; some are fair under the new bar (the horse fall
+on the Esplanade, the bridge swim), some are not (the king guiding Riis at
+Charlottenborg, Andersen at Bakkehus). One run each: the judge flips between
+runs. The `spot_test` change is unmeasured: `quality --compare` on book chunks
+is next (TODO, *The place test*).
 
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps

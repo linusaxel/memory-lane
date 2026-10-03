@@ -196,7 +196,10 @@ memory at all; answer them before you name a venue or write a word of summary.
 - happened_there: One line - what happened at that place, and nowhere else.
 - spot_test: "pass" if the place is the point, "fail" if the story would be the
   same pinned anywhere, the text only mentions the place in passing, or it is a
-  visit. Only "pass" is kept, so a "fail" costs nothing.
+  visit. Moved to another place of the same kind, would it tell the same? A
+  story the place only holds - how a prisoner was treated in a cell, a dinner
+  in a hall - fails however true; one this place's own feature, purpose or
+  history is part of passes. Only "pass" is kept, so a "fail" costs nothing.
 - venue: The proper name of the specific place - the business, building, park,
   street or landmark - as today's local map names it, in the local language,
   even when the text uses an old or foreign name ("Frauenkirche" is "Vor Frue
@@ -204,7 +207,9 @@ memory at all; answer them before you name a venue or write a word of summary.
   and not the whole address. This is the field a duplicate check keys on, so
   two different venues must get different names even when they are close
   together. If the old name could be two places (Frederiksborg is a castle in
-  Hillerød; Frederiksberg is in Copenhagen), set confidence low.
+  Hillerød; Frederiksberg is in Copenhagen), set confidence low. It is a spot
+  a walker can stand at: "the ramparts", "the city walls" or a district is no
+  venue unless the text names the stretch.
 - locality: The city or town the venue is in. Always this level - never a
   neighborhood or street, even when the source names one. Consistency matters
   more than specificity: the same venue named in two different records must
@@ -287,6 +292,14 @@ the same at any monastery on the road.
 Fail: a spectator at a famous event. And "the castle in a lake" is
 Frederiksborg in Hillerød, not Frederiksberg: never move a place to the
 nearest similar name.
+</example>
+
+<example>
+{"place_words": "in the citadel, where I lay that winter",
+ "happened_there": "A captured officer was kept on bread and water and wrote letters never sent.",
+ "spot_test": "fail", "venue": "Kastellet", "summary": "..."}
+Fail: set inside. The hardship is the officer's; any fortress's cell would
+tell it the same.
 </example>
 </examples>
 
@@ -762,9 +775,13 @@ Each will be read by a stranger standing at the spot, on a phone. Judge every
 candidate on its own merits; it is fine, and common, for most to fail.
 
 For each candidate, write a one-line note first, then answer yes or no:
-- only_here: Swap in another place's name. Does the story become false or
-  pointless? Yes means the place is the point. Where someone lives or grew up
-  is about them, not the place: no.
+- only_here: Move it to another place of the same kind - another prison, hall,
+  bar or street. Does it lose something? Yes when this place's own feature,
+  purpose or history is part of it: the national stage on the day it stood
+  empty, the willow on this avenue, the plaque on this wall. No when the place
+  only holds the people - how a prisoner was treated in a cell, a dinner in a
+  hall, a talk in a room - however true. Where someone lives or grew up is
+  about them, not the place: no.
 - breach: Does it depart from what normally happens at this kind of place or
   event? A crawl starting, a round bought, a drunk mishap is what normally
   happens: no.
@@ -797,6 +814,21 @@ Maskot: "Maskot is where Trip Nørrebro always starts. A few drinks go down here
 before the group sets off."
 note: a routine starting point; any bar could be it.
 only_here no, breach no, consequence no, visible_now no, so_what no,
+stands_alone yes
+</example>
+<example>
+Kongens Nytorv: "The king's statue in the middle of the square was cast in lead
+in 1688 for want of bronze. It sagged under its own weight, was propped up
+with iron for centuries, and was finally recast in bronze in 1946."
+note: the thing in front of you nearly collapsed - you look up at it.
+only_here yes, breach yes, consequence yes, visible_now yes, so_what yes,
+stands_alone yes
+</example>
+<example>
+Kastellet: "A captured officer was held in a cell here through one winter,
+given bread and water, and wrote letters to his wife that were never sent."
+note: a hard captivity, but any fortress's cell would tell it the same.
+only_here no, breach no, consequence no, visible_now no, so_what yes,
 stands_alone yes
 </example>
 <example>

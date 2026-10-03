@@ -1020,7 +1020,9 @@
    "id": 4529,
    "verdict": "maybe",
    "total": 6,
-   "flags": []
+   "flags": [
+    "set"
+   ]
   },
   {
    "id": 4530,
@@ -1075,15 +1077,17 @@
    "verdict": "skip",
    "total": 3,
    "flags": [
-    "desc"
+    "desc",
+    "set"
    ]
   },
   {
    "id": 4537,
-   "verdict": "walk",
+   "verdict": "skip",
    "total": 8,
    "flags": [
-    "dup"
+    "dup",
+    "set"
    ]
   },
   {
@@ -1099,15 +1103,17 @@
    "verdict": "maybe",
    "total": 5,
    "flags": [
-    "dup"
+    "dup",
+    "set"
    ]
   },
   {
    "id": 4540,
-   "verdict": "walk",
+   "verdict": "skip",
    "total": 8,
    "flags": [
-    "dup"
+    "dup",
+    "set"
    ]
   },
   {
@@ -1128,10 +1134,11 @@
   },
   {
    "id": 4543,
-   "verdict": "walk",
+   "verdict": "skip",
    "total": 7,
    "flags": [
-    "dup"
+    "dup",
+    "set"
    ]
   },
   {
@@ -1172,7 +1179,8 @@
    "verdict": "skip",
    "total": 4,
    "flags": [
-    "desc"
+    "desc",
+    "set"
    ]
   },
   {
@@ -1220,7 +1228,8 @@
    "verdict": "skip",
    "total": 4,
    "flags": [
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
@@ -1328,7 +1337,8 @@
    "total": 3,
    "flags": [
     "p1000",
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
@@ -1350,14 +1360,17 @@
    "verdict": "maybe",
    "total": 5,
    "flags": [
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
    "id": 4571,
    "verdict": "maybe",
    "total": 6,
-   "flags": []
+   "flags": [
+    "set"
+   ]
   },
   {
    "id": 4572,
@@ -1378,7 +1391,8 @@
    "verdict": "skip",
    "total": 4,
    "flags": [
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
@@ -1386,7 +1400,8 @@
    "verdict": "maybe",
    "total": 5,
    "flags": [
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
@@ -1394,7 +1409,8 @@
    "verdict": "skip",
    "total": 2,
    "flags": [
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
@@ -1407,7 +1423,9 @@
    "id": 4578,
    "verdict": "skip",
    "total": 4,
-   "flags": []
+   "flags": [
+    "set"
+   ]
   },
   {
    "id": 4579,
@@ -1423,7 +1441,8 @@
    "total": 4,
    "flags": [
     "p1000",
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
@@ -1448,7 +1467,8 @@
    "total": 3,
    "flags": [
     "pin",
-    "obsc"
+    "obsc",
+    "set"
    ]
   },
   {
@@ -1498,7 +1518,8 @@
    "total": 4,
    "flags": [
     "dup",
-    "hall"
+    "hall",
+    "set"
    ]
   },
   {
@@ -1583,7 +1604,8 @@
    "verdict": "skip",
    "total": 6,
    "flags": [
-    "pin"
+    "pin",
+    "set"
    ]
   },
   {
@@ -1676,6 +1698,86 @@
    "total": 5,
    "flags": [
     "dup"
+   ]
+  },
+  {
+   "id": 5606,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "desc",
+    "dup"
+   ]
+  },
+  {
+   "id": 5607,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 5608,
+   "verdict": "skip",
+   "total": 4,
+   "flags": [
+    "set",
+    "dup"
+   ]
+  },
+  {
+   "id": 5609,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "set",
+    "dup"
+   ]
+  },
+  {
+   "id": 5610,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 5611,
+   "verdict": "walk",
+   "total": 7,
+   "flags": [
+    "pin"
+   ]
+  },
+  {
+   "id": 5612,
+   "verdict": "walk",
+   "total": 8,
+   "flags": [
+    "dup"
+   ]
+  },
+  {
+   "id": 5613,
+   "verdict": "skip",
+   "total": 5,
+   "flags": [
+    "set",
+    "dup"
+   ]
+  },
+  {
+   "id": 5614,
+   "verdict": "walk",
+   "total": 8,
+   "flags": []
+  },
+  {
+   "id": 5615,
+   "verdict": "maybe",
+   "total": 6,
+   "flags": [
+    "p1000"
    ]
   }
  ]
