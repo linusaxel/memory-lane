@@ -11,6 +11,7 @@
 import {
   DynamicColorIOS,
   Platform,
+  StyleSheet,
   type PressableStateCallbackType,
   type StyleProp,
   type ViewStyle,
@@ -43,6 +44,10 @@ export const color = {
   ember: dual('#A8350F', '#F2703F'),
   /** The quiet button's fill: ember, barely. */
   emberSoft: dual('#F6E2D8', '#3A2219'),
+  /** The ledge under an ember button or chip: ember, a step down. */
+  emberDeep: dual('#7A260A', '#B5502A'),
+  /** The ledge under the quiet button. */
+  emberSoftDeep: dual('#E8C9B9', '#2A1810'),
 
   /** Openable now, and nothing else: the in-reach pin, the reach circle, the
    *  unlock ring. Bright gold, because ember beside the old ochre was one
@@ -182,22 +187,23 @@ export const buttonTextSmall = { ...font.uiBold, fontSize: 15 };
  *  A link to somewhere else (Terms, a credit) stays a link. */
 const buttonBox = {
   borderWidth: 1.5,
+  borderBottomWidth: 4,
   borderColor: 'transparent',
   borderRadius: radius.pill,
   minHeight: 52,
-  paddingVertical: 14,
+  paddingVertical: 12,
   paddingHorizontal: 24,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 };
 export const button = {
   /** The one thing to do. Text in paper. */
-  solid: { ...buttonBox, backgroundColor: color.ember },
+  solid: { ...buttonBox, backgroundColor: color.ember, borderBottomColor: color.emberDeep },
   /** The way back, next to a solid one. Text in ink. */
-  quiet: { ...buttonBox, backgroundColor: color.emberSoft },
+  quiet: { ...buttonBox, backgroundColor: color.emberSoft, borderBottomColor: color.emberSoftDeep },
   /** An action standing on its own. Text in ink. */
   outline: { ...buttonBox, borderColor: color.rule },
-  small: { minHeight: 36, paddingVertical: 7, paddingHorizontal: 16 },
+  small: { minHeight: 36, borderBottomWidth: 3, paddingVertical: 6, paddingHorizontal: 16 },
 };
 
 /** A text field. The display-name input renders twice - You and Submit - and
@@ -212,6 +218,25 @@ export const input = {
   fontSize: 17,
   color: color.ink,
   backgroundColor: color.paperRaised,
+};
+
+/** How a pressed thing gives. A button or chip with a ledge (a bottom border
+ *  over 2) sinks onto it: the border thins and the top margin takes up the
+ *  difference, so the box keeps its size and nothing beside it moves. Anything
+ *  else gives a little. Glass scales on its own (src/Glass.tsx). */
+export const sunk = (base?: StyleProp<ViewStyle>): ViewStyle => {
+  const f = StyleSheet.flatten(base) ?? {};
+  const lip = f.borderBottomWidth ?? 0;
+  if (lip <= 2) return { opacity: 0.85, transform: [{ scale: 0.97 }] };
+  const drop = lip - 1.5;
+  const top = f.marginTop ?? f.marginVertical ?? f.margin ?? 0;
+  // A minHeight or height would hold the box at size, so they shrink too.
+  return {
+    borderBottomWidth: 1.5,
+    marginTop: (typeof top === 'number' ? top : 0) + drop,
+    ...(typeof f.minHeight === 'number' && { minHeight: f.minHeight - drop }),
+    ...(typeof f.height === 'number' && { height: f.height - drop }),
+  };
 };
 
 /** Every Pressable in the app gives a little while it is held.
@@ -229,5 +254,5 @@ export const dim =
   (base?: StyleProp<ViewStyle>) =>
   ({ pressed }: PressableStateCallbackType): StyleProp<ViewStyle> => [
     base,
-    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+    pressed && sunk(base),
   ];

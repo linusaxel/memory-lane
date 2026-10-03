@@ -477,7 +477,8 @@ done, and blue left to the map. Capsule buttons (52pt, ember or a soft ember
 tint), 28 on cards over the map, 14 on fields. Soft Fraunces for stories,
 Figtree for everything you read to use the app. `src/Glass.tsx` on the map
 controls, paper and one shadow without it. Presses give a little (scale 0.97)
-instead of dimming. The hop was already hand-tuned squash and stretch, and
+instead of dimming; since 2026-10-03 a button or chip sinks onto its ledge
+instead. The hop was already hand-tuned squash and stretch, and
 stayed.
 
 ## Cutting the soft Fraunces
@@ -503,8 +504,10 @@ instantiateVariableFont(TTFont(src), dict(wght=700, opsz=36, SOFT=100, WONK=1)) 
 ## Not done, and when
 
 - Static-image markers: when the pin count makes the map stutter.
-- A signature object (Airbnb's 3D icons, Duolingo's lip): once this has been
-  lived with.
+- A signature object (Airbnb's 3D icons, Duolingo's lip): **the lip shipped
+  2026-10-03** on buttons and chips, a 4pt ledge in a deeper step of the fill
+  that the press sinks onto (the founder: the app felt sterile). Cards and the
+  glass controls are next, once it has been lived with.
 - Springs on every press: if the instant scale feels cheap on a device.
 
 ## Sources

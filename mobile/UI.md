@@ -260,6 +260,8 @@ to your location dot.
 |---|---|---|
 | `ember` | `#A8350F` / `#F2703F` | **a memory, and the way to it.** Every pin, the next stop (bigger, hops), the preview's line (washed out: `solid().line`), the walk's bar, the primary button, errors |
 | `emberSoft` | `#F6E2D8` / `#3A2219` | the quiet button's fill |
+| `emberDeep` | `#7A260A` / `#B5502A` | the ledge under an ember button or chip. A mark, never text |
+| `emberSoftDeep` | `#E8C9B9` / `#2A1810` | the ledge under the quiet button |
 | `seal` | `#F2B53A` / `#F5C542` | **openable.** The in-reach pin, the reach circle. A fill, never text |
 | `sealInk` | `#2B1D05` / `#1F1605` | anything drawn on seal: a lit pin's edge and eye, the pill's words |
 | `sealSoft` | `#FCEBC2` / `#3E3112` | the ring filling during a hold |
@@ -270,7 +272,12 @@ ember were one colour under protanopia (docs/09 part 8).
 
 **Buttons are `button.solid`, `button.quiet` or `button.outline`** from
 `theme.ts`, with `buttonText` inside: 52pt capsules, ember with paper text,
-soft ember with ink text, or a rule outline. A screen adds only where one sits
+soft ember with ink text, or a rule outline. Each sits on a 4pt ledge of its
+own colour (`emberDeep`, `emberSoftDeep`, `rule`; 3pt on `small` and on a
+chip), and pressed it sinks onto it: `sunk()` in `theme.ts` thins the bottom
+border and adds the difference to the top margin, so nothing beside it moves.
+`dim()` does this for any style with a ledge; a Pressable whose style is on a
+child (Submit's `Chip`) calls `sunk` itself. A screen adds only where one sits
 (margin, alignSelf), never its own padding or border. Post is the
 same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
 `hitSlop={4}`. An action inside a page is not a button but `label` text with
@@ -388,7 +395,8 @@ Plan's card and the peek, each with its own padding), and `figure` /
 **Two shadows.** `lift` (`0,4` / 16 / 0.12, `elevation: 4`): the paper cards
 over the map, and the glass controls' fallback. And the hold ring's glow
 (`seal`, centred, 14 / 0.5), because the ring is the one thing that asks to be
-touched. A third is a rule you have not written yet.
+touched. A third is a rule you have not written yet. The buttons' ledge is a
+border, not a shadow.
 
 ## Contrast, measured
 

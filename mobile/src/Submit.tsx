@@ -44,7 +44,7 @@ import {
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
 import { duration, happened } from './format.ts';
-import { button, buttonTextSmall, color, dim, label, radius, story } from './theme.ts';
+import { button, buttonTextSmall, color, dim, label, radius, story, sunk } from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
@@ -563,11 +563,14 @@ export function Chip({ label: text, on, onPress }: { label: string; on: boolean;
       }}
       accessibilityRole="button"
       accessibilityState={{ selected: on }}
-      style={dim()}
     >
-      <Animated.View style={[styles.chip, on && styles.chipOn, { transform: [{ scale: pop }] }]}>
-        <Text style={[styles.chipText, on && styles.chipTextOn]}>{text}</Text>
-      </Animated.View>
+      {({ pressed }) => (
+        <Animated.View
+          style={[styles.chip, on && styles.chipOn, pressed && sunk(styles.chip), { transform: [{ scale: pop }] }]}
+        >
+          <Text style={[styles.chipText, on && styles.chipTextOn]}>{text}</Text>
+        </Animated.View>
+      )}
     </Pressable>
   );
 }
@@ -623,9 +626,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     // 40 tall with the label's line box, and the row gap keeps neighbours
     // from stealing the edges of the target.
-    paddingVertical: 11,
+    paddingTop: 11,
+    paddingBottom: 9,
+    borderBottomWidth: 3,
   },
-  chipOn: { backgroundColor: color.ember, borderColor: color.ember },
+  chipOn: { backgroundColor: color.ember, borderColor: color.ember, borderBottomColor: color.emberDeep },
   chipText: { ...label, fontSize: 12, color: color.inkSoft },
   chipTextOn: { color: color.paper },
 
