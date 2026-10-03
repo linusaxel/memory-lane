@@ -86,7 +86,7 @@ import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
-import { color, font, label, pill, solid } from './src/theme.ts';
+import { button, buttonText, color, dim, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import AccountMenu from './src/AccountMenu.tsx';
@@ -178,7 +178,7 @@ const NONE = new Set<number>();
  *  what is locked (docs/10, "A walk planner, nothing else"). `loading` is the
  *  moment before the device knows whether it already accepted today's walk;
  *  `end` waits for the tap where a one-way walk finishes. */
-type Stage = 'loading' | 'end' | 'preview' | 'walk';
+type Stage = 'loading' | 'map' | 'end' | 'preview' | 'walk';
 
 /** Whether `me` filed this. Both sides have to be a real id: an extracted
  *  memory's author is null and a signed-out profile's user_id is undefined,
@@ -207,8 +207,15 @@ export default function App() {
   // "Next walk" came back unchanged: that was the only walk that long.
   const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
-  // Once its line is drawn, a preview's stops land one by one, in walk order.
-  const [drawnFor, setDrawnFor] = useState<TodaysRoute | null>(null);
+  // A new walk draws once the camera has landed on it, not under the flight.
+  const fitting = useRef<TodaysRoute | null>(null);
+  const [fittedFor, setFittedFor] = useState<TodaysRoute | null>(null);
+  const settleFit = useCallback(() => {
+    if (!fitting.current) return;
+    setFittedFor(fitting.current);
+    fitting.current = null;
+  }, []);
+  // How many of a preview's stops its line has reached as it draws.
   const [revealed, setRevealed] = useState<{ walk: TodaysRoute | null; count: number }>({
     walk: null,
     count: 0,
@@ -473,6 +480,12 @@ export default function App() {
     [preview, planFrom, walkAsk.end],
   );
 
+  // Memoised: a new array would start the line drawing again.
+  const previewStops = useMemo(
+    () => preview?.memories.map((memory) => memory.place.coordinates) ?? [],
+    [preview],
+  );
+
   /** Make `walk` today's route, on screen and in the local cache. `start` is
    *  where it was planned from and `end` where a one-way one finishes - the
    *  server stores neither. */
@@ -507,7 +520,7 @@ export default function App() {
     setConfirmEnd(false);
     clearRoute();
     setPreview(null);
-    setStage('preview');
+    setStage('map');
   }, []);
 
   // Whether today's walk was already accepted: the cached copy first, so a
@@ -538,7 +551,7 @@ export default function App() {
           dropRoute();
         }
       } catch {
-        if (mounted.current && !cached) setStage('preview');
+        if (mounted.current && !cached) setStage('map');
       }
     })();
   }, [device, takeRoute, dropRoute]);
@@ -642,7 +655,6 @@ export default function App() {
       setPlanFallback(fallback);
       setPreview(walk);
       setWalkedOut(false);
-      setStage('preview');
     } catch (e) {
       if (!mounted.current) return;
       if (walkedToday(e)) setWalkedOut(true);
@@ -705,16 +717,6 @@ export default function App() {
 
   const me = profile?.user_id;
 
-  useEffect(() => {
-    if (!drawnFor) return;
-    let count = 0;
-    const timer = setInterval(() => {
-      count += 1;
-      setRevealed({ walk: drawnFor, count });
-      if (count >= drawnFor.memories.length) clearInterval(timer);
-    }, 90);
-    return () => clearInterval(timer);
-  }, [drawnFor]);
   const stopsShown = revealed.walk === preview ? revealed.count : 0;
 
   // The preview's zoom: the whole drawn walk, its start and any end, clear of
@@ -722,13 +724,21 @@ export default function App() {
   useEffect(() => {
     if (stage !== 'preview' || !mapReady || !preview || !planFrom || !previewCardHeight) return;
     const end = !preview.loop && walkAsk.end ? [walkAsk.end] : [];
+    // The map says when it lands (onRegionChangeComplete); a fit that does
+    // not move it says nothing, so a timer stands in.
+    const landing = fitting.current === preview || fittedFor !== preview;
+    if (landing) fitting.current = preview;
     mapRef.current?.fitToCoordinates(
       [planFrom, ...preview.memories.map((memory) => memory.place.coordinates), ...end, ...previewPath].map(
         (c) => ({ latitude: c.lat, longitude: c.lng }),
       ),
       { edgePadding: { top: 100, right: 60, bottom: previewCardHeight + 50, left: 60 }, animated: true },
     );
-  }, [stage, mapReady, preview, planFrom, mapRef, walkAsk.end, previewPath, previewCardHeight]);
+    if (!landing) return;
+    const timer = setTimeout(settleFit, 900);
+    return () => clearTimeout(timer);
+    // Not on fittedFor: landing is not a reason to fit again.
+  }, [stage, mapReady, preview, planFrom, mapRef, walkAsk.end, previewPath, previewCardHeight, settleFit]);
 
   // Ids, not memories: reachOf only asks whether this device walked to it, and
   // a Set keeps that an O(1) question inside three passes over every group.
@@ -1406,7 +1416,10 @@ export default function App() {
             showsPointsOfInterests={false}
             rotateEnabled={!pinned}
             pitchEnabled={!pinned}
-            onRegionChangeComplete={onRegionChangeComplete}
+            onRegionChangeComplete={(landed) => {
+              onRegionChangeComplete(landed);
+              settleFit();
+            }}
             onMapReady={onMapReady}
             // A one-finger drag is a look around: stop following. A pinch is
             // two and keeps it. Apple Maps never reports isGesture.
@@ -1468,12 +1481,13 @@ export default function App() {
               </Marker>
             )}
 
-            {stage === 'preview' && !pastWalk && previewPath.length > 1 && (
+            {stage === 'preview' && !pastWalk && fittedFor === preview && previewPath.length > 1 && (
               <RouteLine
                 path={previewPath}
                 dark={scheme === 'dark'}
                 draw
-                onDrawn={() => setDrawnFor(preview)}
+                stops={previewStops}
+                onReach={(count) => setRevealed({ walk: preview, count })}
                 dim={planBusy}
               />
             )}
@@ -1587,6 +1601,19 @@ export default function App() {
               walkedOut={walkedOut}
               onSubscribe={() => setPaywallOpen(true)}
               onHeight={setPreviewCardHeight}
+              onClose={() => {
+                setPreview(null);
+                setStage('map');
+                const you = positionRef.current;
+                if (you) {
+                  flyTo({
+                    latitude: you.lat,
+                    longitude: you.lng,
+                    latitudeDelta: LOCATED_DELTA,
+                    longitudeDelta: LOCATED_DELTA,
+                  });
+                }
+              }}
             />
           )}
 
@@ -1644,7 +1671,7 @@ export default function App() {
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
               read at the top"). Journal top left, you top right. */}
-          {(stage === 'preview' || stage === 'walk') && !confirmEnd && !showDone && (
+          {(stage === 'map' || stage === 'preview' || stage === 'walk') && !confirmEnd && !showDone && (
             <GlassButton
               place={styles.topLeft}
               style={styles.circle}
@@ -1663,7 +1690,24 @@ export default function App() {
           )}
           {/* The planner has no bottom row (its card is there), so Add sits
               beside Journal. */}
-          {stage === 'preview' && !journalOpen && <View style={styles.topLeftSecond}>{addButton}</View>}
+          {(stage === 'map' || stage === 'preview') && !journalOpen && (
+            <View style={styles.topLeftSecond}>{addButton}</View>
+          )}
+          {/* Home: the map, you on it, and one way into the planner. */}
+          {stage === 'map' && !journalOpen && !pastWalk && (
+            <View style={styles.bottom}>
+              <Pressable
+                style={dim([button.solid, styles.grow])}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setStage('preview');
+                }}
+                accessibilityRole="button"
+              >
+                <Text style={styles.planWalkText}>Plan a walk</Text>
+              </Pressable>
+            </View>
+          )}
           <View style={styles.topRight}>
             <AccountMenu
               profile={profile}
@@ -1976,6 +2020,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   middle: { flex: 1, alignItems: 'center' },
+  grow: { flex: 1 },
+  planWalkText: { ...buttonText, color: color.paper },
   wide: { alignSelf: 'stretch' },
   pill,
   planText: { ...label, fontSize: 15, color: color.paper },

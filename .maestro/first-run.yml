@@ -1,4 +1,4 @@
-# A first run: F1 the planner is home (loop, one way, its list) + F32 another
+# A first run: F1 the planner from the map (loop, one way, its list, ×) + F32 another
 # walk + F8 be asked for location, then F8 refused and F1 nothing walkable.
 # docs/08-ux-flows.md
 #
@@ -9,8 +9,8 @@ appId: ${APP_ID}
 ---
 # ---- F8 + F1
 #
-# The first screen is ours, not a system dialog: the planner, drawing a walk
-# from central Copenhagen, and its Use my location is the ask, a press with a
+# The first screen is ours, not a system dialog: the map, and from its Plan a
+# walk the planner, drawing a walk from central Copenhagen, and its Use my location is the ask, a press with a
 # reason (F8).
 - runFlow:
     file: steps/launch.yml
@@ -33,7 +33,10 @@ appId: ${APP_ID}
     timeout: 40000
 - assertNotVisible:
     id: "planning-from-centre"
-- assertVisible: "Stop 1 of 4\\. .*"
+# The stops land as the line draws through them.
+- extendedWaitUntil:
+    visible: "Stop 4 of 4\\. .*"
+    timeout: 5000
 # Step two is the stops: each row numbered as its pin is, what it is of,
 # never what it says.
 - assertNotVisible:
@@ -69,9 +72,13 @@ appId: ${APP_ID}
     timeout: 40000
 - assertNotVisible: "[0-9]+ memories · .* loop"
 - tapOn: "Loop"
-# There is nothing to go back to: the planner is home.
-- assertNotVisible: "Back to the map"
-- assertNotVisible: "Plan a walk"
+# × goes back to the map from any step, and Plan a walk plans again.
+- tapOn: "Close the planner"
+- assertNotVisible: "A walk from here"
+- tapOn: "Plan a walk"
+- extendedWaitUntil:
+    visible: "4 memories · .* loop"
+    timeout: 40000
 
 # ---- F8, refused
 #

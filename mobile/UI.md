@@ -733,7 +733,8 @@ The app's stages (`App.tsx`'s `Stage`) must stay distinct:
 | Stage | Shows | Leaves by |
 |---|---|---|
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → map |
-| preview | the walk on the map, the card with its length and shape | Start walk → walk; × → map |
+| map | you, the streets, Journal, Add and Plan a walk. No pins | Plan a walk → preview |
+| preview | the walk on the map, the card with its length and shape | Start walk → walk; × (any step) → map |
 | walk | today's stops, the pill | nothing - the day is locked |
 
 A failed request on the preview leaves you there with "Can't reach Memory
@@ -824,14 +825,18 @@ known flicker source in react-native-maps. Markers set `tracksViewChanges={false
 for the frame cost and are keyed `` `${group.key}:${reach}` ``, so they repaint
 exactly when their state changes and never otherwise.
 
-**A new walk draws itself, then its stops land in order.** `RouteLine`'s
-`draw` grows the preview's line from you along its length over 600 ms,
-eased out: 24 longer slices of the fill alone, the edge added once it is
-whole (each Polyline prop change is an overlay rebuild). Then the stops
-mount one every 90 ms in walk order (`stopsShown` in `App.tsx`). Mounting,
-not animating, so the rule above holds. While a re-plan is on its way the
-old line fades to 40% (`dim`). Reduce Motion draws it whole. Only the
-preview draws: a finished or past walk is already known.
+**A new walk draws itself, like a loading bar filling.** Once the camera's
+fit has landed (never under the flight), `RouteLine`'s `draw` traces the
+preview's line from you over 1.2 s: one curve, at a speed even along the
+route's distance (not its points), starting at a third of its speed and
+finishing a little faster. Progress that accelerates feels fastest, and a
+slow tail slowest (Harrison et al., UIST 2007). It moves the polyline's
+`strokeEnd` (patched into react-native-maps), so no overlay is rebuilt per
+frame. Each stop mounts when the tip is 50 ms short of it (`onReach`, at the
+stop's nearest point on the line). Mounting, not animating, so the rule
+above holds. While a re-plan is on its way the old line fades to 40%
+(`dim`). Reduce Motion draws it whole. Only the preview draws: a finished
+or past walk is already known.
 
 A group is locked if any memory in it is — anything left to open outranks
 anything already earned, because a marker with something behind a gate is an

@@ -167,8 +167,9 @@ somebody can hand their old phone in and still have everything they walked for.
 
 ## F1 · Plan today's walk — **Implemented**
 
-**Who:** anyone signed in without a walk in progress. The planner is home:
-every launch without one lands here (docs/10, *A walk planner, nothing else*).
+**Who:** anyone signed in without a walk in progress. Every launch without
+one lands on the map, and its **Plan a walk** opens the planner; × leaves it
+from any step (docs/10, *A map before the planner*).
 
 1. The app draws a walk at once: no question first (docs/10, *Draw first,
    adjust after*). It asks for location if it has to (F8), then

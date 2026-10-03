@@ -55,8 +55,11 @@ appId: ${APP_ID}
     timeout: 40000
 - assertVisible:
     id: "longest-walk"
-# Past Sortedams Sø, the lake at the door, on every roll.
-- assertVisible: "Stop .* of 10\\. Peblinge Sø.*"
+# Past Sortedams Sø, the lake at the door, on every roll. The stops land as
+# the line draws through them.
+- extendedWaitUntil:
+    visible: "Stop .* of 10\\. Peblinge Sø.*"
+    timeout: 5000
 
 - tapOn: "See the stops"
 - repeat:

@@ -7,12 +7,14 @@
  *  overlay (AIRMapPolyline.m, `update`). theme.ts `solid`, because a Polyline
  *  takes a real colour.
  *
- *  `draw` grows a new walk from you along its length (UI.md, Motion). A stroke
- *  can't animate natively, so each step is a longer slice: STEPS rebuilds of
- *  the fill only, and the edge lands once the line is whole.
+ *  `draw` traces a new walk from you like a loading bar filling, and
+ *  `onReach` says how many `stops` its tip has passed, so each pin lands as
+ *  the line gets to it (UI.md, "A new walk draws itself"). The patch's
+ *  `strokeEnd` moves without rebuilding the overlay.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Easing } from 'react-native';
 import { Polyline } from 'react-native-maps';
 
 import type { Coordinates } from './api.ts';
@@ -20,21 +22,27 @@ import { metersBetween, simplifyPath } from './region.ts';
 import { solid } from './theme.ts';
 import { useReduceMotion } from './useBreath.ts';
 
-const DRAW_MS = 600;
-// ponytail: one overlay rebuild per step; fewer steps if a phone drops frames.
-const STEPS = 24;
+// One flow, well under 1.5 s. Speeding up a little toward the end: progress
+// that accelerates feels fastest, and a slow tail slowest (Harrison et al.,
+// "Rethinking the Progress Bar", UIST 2007).
+const DRAW_MS = 1200;
+const ease = Easing.bezier(0.3, 0.1, 0.7, 0.6);
+// A pin lands a beat before the tip, so the two arrive together.
+const LEAD_MS = 50;
 
 type Props = {
   path: Coordinates[];
   dark: boolean;
-  /** Grow it in from the start, then call onDrawn. */
+  /** Trace it in from the start. */
   draw?: boolean;
-  onDrawn?: () => void;
+  /** The walk's stops in order, for onReach. */
+  stops?: Coordinates[];
+  onReach?: (count: number) => void;
   /** A new walk is on its way: this one fades back. */
   dim?: boolean;
 };
 
-export default function RouteLine({ path, dark, draw, onDrawn, dim }: Props) {
+export default function RouteLine({ path, dark, draw, stops = [], onReach, dim }: Props) {
   const reduceMotion = useReduceMotion();
   const { line, lineCasing } = solid(dark);
   // Memoised: a fresh array makes react-native-maps rebuild the overlay.
@@ -51,70 +59,79 @@ export default function RouteLine({ path, dark, draw, onDrawn, dim }: Props) {
       along,
     };
   }, [path]);
+  const total = along[along.length - 1] || 1;
 
-  const [step, setStep] = useState(draw ? 0 : STEPS);
+  // How far along the line each stop is, as a fraction: where it sits nearest
+  // the line, searched on from the stop before, so a loop that passes stop 1
+  // again on the way home still reaches it first.
+  const stopAt = useMemo(() => {
+    let from = 0;
+    return stops.map((stop) => {
+      // Flat metres around the stop: a few km, so the curve does not matter.
+      const k = Math.cos((stop.lat * Math.PI) / 180);
+      const xy = coordinates.map((at) => [
+        (at.longitude - stop.lng) * 111320 * k,
+        (at.latitude - stop.lat) * 111320,
+      ]);
+      const hits = xy.slice(1).map(([bx, by], i) => {
+        const [ax, ay] = xy[i];
+        const [dx, dy] = [bx - ax, by - ay];
+        const f = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / (dx * dx + dy * dy || 1)));
+        return { i, f, off: i < from ? Infinity : Math.hypot(ax + dx * f, ay + dy * f) };
+      });
+      const nearest = Math.min(...hits.map((hit) => hit.off));
+      // The first pass about as near as the nearest, not a later one.
+      const hit = hits.find((h) => h.off <= nearest + 15);
+      if (!hit) return 0;
+      from = hit.i;
+      return (along[hit.i] + (along[hit.i + 1] - along[hit.i]) * hit.f) / total;
+    });
+  }, [stops, coordinates, along, total]);
+
+  const reachRef = useRef(onReach);
+  reachRef.current = onReach;
+  const [drawn, setDrawn] = useState(draw ? 0 : 1);
   useEffect(() => {
     if (!draw || reduceMotion) {
-      setStep(STEPS);
-      if (draw) onDrawn?.();
+      setDrawn(1);
+      reachRef.current?.(stopAt.length);
       return;
     }
-    setStep(0);
     const start = Date.now();
+    let told = -1;
     let frame = requestAnimationFrame(function tick() {
       const t = Math.min(1, (Date.now() - start) / DRAW_MS);
-      // Ease out: quick from you, settling as it reaches the far end.
-      setStep(Math.round((1 - (1 - t) ** 3) * STEPS));
+      setDrawn(ease(t));
+      const ahead = ease(Math.min(1, t + LEAD_MS / DRAW_MS));
+      const count = stopAt.filter((at) => at <= ahead).length;
+      if (count !== told) reachRef.current?.((told = count));
       if (t < 1) frame = requestAnimationFrame(tick);
-      else onDrawn?.();
     });
     return () => cancelAnimationFrame(frame);
-    // A new walk is a new path; onDrawn changing is not a reason to redraw.
-  }, [coordinates, draw, reduceMotion]);
+  }, [stopAt, draw, reduceMotion]);
 
-  const shown = useMemo(() => {
-    if (step >= STEPS) return coordinates;
-    const reach = (step / STEPS) * along[along.length - 1];
-    const i = along.findIndex((meters) => meters > reach);
-    if (i < 1) return coordinates;
-    const [a, b] = [coordinates[i - 1], coordinates[i]];
-    const k = (reach - along[i - 1]) / (along[i] - along[i - 1] || 1);
-    return [
-      ...coordinates.slice(0, i),
-      {
-        latitude: a.latitude + (b.latitude - a.latitude) * k,
-        longitude: a.longitude + (b.longitude - a.longitude) * k,
-      },
-    ];
-  }, [coordinates, along, step]);
-
+  // Nothing at 0: a round cap would sit there as a dot.
+  if (coordinates.length < 2 || drawn === 0) return null;
   // #RRGGBB + 66: the same colour at 40%.
   const fade = (hex: string) => (dim ? `${hex}66` : hex);
-  // Keyed on whole: both remount together, so the edge is added under the
-  // fill rather than on top of it.
-  const whole = step >= STEPS;
   return (
     <>
-      {whole && (
-        <Polyline
-          key="edge"
-          coordinates={shown}
-          strokeWidth={9}
-          strokeColor={fade(lineCasing)}
-          lineCap="round"
-          lineJoin="round"
-        />
-      )}
-      {shown.length > 1 && (
-        <Polyline
-          key={`fill-${whole}`}
-          coordinates={shown}
-          strokeWidth={6}
-          strokeColor={fade(line)}
-          lineCap="round"
-          lineJoin="round"
-        />
-      )}
+      <Polyline
+        coordinates={coordinates}
+        strokeEnd={drawn}
+        strokeWidth={9}
+        strokeColor={fade(lineCasing)}
+        lineCap="round"
+        lineJoin="round"
+      />
+      <Polyline
+        coordinates={coordinates}
+        strokeEnd={drawn}
+        strokeWidth={6}
+        strokeColor={fade(line)}
+        lineCap="round"
+        lineJoin="round"
+      />
     </>
   );
 }

@@ -215,11 +215,15 @@ appId: ${APP_ID}
 - tapOn: "Close journal"
 - assertVisible: "Every stop unlocked\\. 3 of 3\\."
 
-# Ending a walked walk loses nothing, so it does not ask. The planner comes
-# back, walked out: a second walk the same day is a subscriber's (docs/10,
-# "A walk planner, nothing else").
+# Ending a walked walk loses nothing, so it does not ask. The map comes back,
+# and its planner is walked out: a second walk the same day is a subscriber's
+# (docs/10, "A walk planner, nothing else").
 - tapOn: "End walk"
 - assertNotVisible: "End this walk\\?"
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 30000
+- tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "Today's walk is done"
     timeout: 30000

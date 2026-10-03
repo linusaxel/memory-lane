@@ -251,7 +251,8 @@ adjust after*.
 The founder: "a walk planner with memories along the way". The walk is the
 whole app; without one there is nothing to do.
 
-- **Home is the planner.** Launch, ending a walk and every fallback land on
+- **Home is the planner.** (Amended 2026-10-03 by *A map before the
+  planner*: home is the map, and the planner opens from it.) Launch, ending a walk and every fallback land on
   the walk preview: the route on the map, and a list of what each stop is of
   (place, year, source, tags; what `gate.locked_memory` already serves). ‹ ›
   trades the walk for another. There is no map of what is locked, no peek of
@@ -271,6 +272,21 @@ whole app; without one there is nothing to do.
 
 `GET /v1/memories/nearby` stays: the embed (`api/embed.py`) reads it, and it
 never served a summary. `POST /v1/dev/keys` stays off the public host.
+
+### A map before the planner
+
+Status: Accepted 2026-10-03. Amends the *Home is the planner* bullet of
+*A walk planner, nothing else*.
+
+The founder: a map view before the planner, and a way out of the planner
+from any step. Launch, ending a walk and every fallback now land on the map:
+you, the streets, Journal, Add and **Plan a walk**. Each planner card has an
+× back to it. The map draws no pins, so the rest of *A walk planner, nothing
+else* stands: nothing off a walk is shown, and only today's walk opens.
+
+**Option considered:** the map with every nearby memory as a locked pin.
+Rejected because it brings back the superseded *A map of what is locked*, with
+pins that never open.
 
 ### The planner is two steps
 

@@ -11,3 +11,7 @@ appId: ${APP_ID}
 - tapOn: "Close journal"
 - launchApp:
     clearState: false
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 40000
+- tapOn: "Plan a walk"

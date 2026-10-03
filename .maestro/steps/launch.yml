@@ -1,5 +1,5 @@
 # Stand at LAT,LNG, open a cleared install with LOCATION permission, sign in,
-# and wait for the planner. notify-nearby.yml launches by hand: it needs notifications.
+# and open the planner. notify-nearby.yml launches by hand: it needs notifications.
 appId: ${APP_ID}
 ---
 - setLocation:
@@ -10,7 +10,8 @@ appId: ${APP_ID}
     permissions:
       location: ${LOCATION}
 - runFlow: sign-in.yml
-# The planner is home, walked out or not; Journal is on it either way.
+# The map is home; Plan a walk opens the planner, walked out or not.
 - extendedWaitUntil:
-    visible: "Journal"
+    visible: "Plan a walk"
     timeout: 40000
+- tapOn: "Plan a walk"

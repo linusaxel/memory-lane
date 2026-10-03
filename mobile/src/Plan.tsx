@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, type LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
+import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
 import { Chip } from './Submit.tsx';
@@ -119,6 +120,8 @@ type PreviewProps = {
   onSubscribe: () => void;
   /** The card's height, so the map fits the walk into what is left above it. */
   onHeight: (height: number) => void;
+  /** Back to the map, from any step. */
+  onClose: () => void;
 };
 
 /** One side of the pages; null keeps the side's space empty. */
@@ -160,6 +163,7 @@ export function Preview({
   walkedOut,
   onSubscribe,
   onHeight,
+  onClose,
 }: PreviewProps) {
   // Two steps: the length and the shape with the walk drawn behind, then its
   // stops, paged between walks, and Start.
@@ -170,6 +174,7 @@ export function Preview({
     if (stepped.current) AccessibilityInfo.announceForAccessibility(`Walk ${walkNumber}`);
     stepped.current = true;
   }, [walkNumber]);
+  const close = <CloseButton label="Close the planner" onPress={onClose} place={styles.close} />;
   if (walkedOut) {
     return (
       <View style={styles.card}>
@@ -183,6 +188,7 @@ export function Preview({
         >
           <Text style={styles.primaryText}>More walks</Text>
         </Pressable>
+        {close}
       </View>
     );
   }
@@ -228,6 +234,7 @@ export function Preview({
           )}
         </Pressable>
         {error && <Text style={styles.error}>{error}</Text>}
+        {close}
       </View>
     );
   }
@@ -296,6 +303,7 @@ export function Preview({
         )}
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
+      {close}
     </View>
   );
 }
@@ -524,6 +532,7 @@ const styles = StyleSheet.create({
     gap: 10,
     ...floating,
   },
+  close: { position: 'absolute', top: 16, right: 16 },
   cardTitle: { ...font.display, fontSize: 23, lineHeight: 30, color: color.ink },
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   from: { flexDirection: 'row', alignItems: 'center', gap: 12 },

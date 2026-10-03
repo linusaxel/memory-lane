@@ -23,6 +23,14 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **e2e reuses a stale native build after a native patch.** 2026-10-03:
+  `./e2e/run.sh` rebuilds only when `Podfile.lock` changes. A patch-package edit
+  to native code (`patches/react-native-maps*`, the polyline's `strokeEnd`)
+  doesn't change it, so the sim keeps running the old native code and a new
+  prop is silently ignored. It cost a rebuild cycle, and we only found it by
+  knowing to pass `--build`. Fix: run.sh also hashes `mobile/patches/` into its
+  rebuild check.
+
 - **Map fits pad by a guessed card height.** 2026-10-03: the planner's
   `fitToCoordinates` left a fixed 300pt for a card of about 600, so the walk
   it planned drew behind it, and launch dropped the fit entirely because it
