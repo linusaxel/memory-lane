@@ -1,6 +1,8 @@
 /** The one way a layer closes: an × in a quiet circle, top trailing
- *  (UI.md, rule 12). 30pt drawn, 44pt to the finger. */
+ *  (UI.md, rule 12). 30pt drawn, 44pt to the finger. The same circle with
+ *  another `icon` is the walk card's skip and a story's ⋯. */
 
+import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import Glyph from './Glyph.tsx';
 import { color, dim } from './theme.ts';
@@ -11,9 +13,10 @@ type Props = {
   label?: string;
   disabled?: boolean;
   place?: StyleProp<ViewStyle>;
+  icon?: ComponentProps<typeof Glyph>['name'];
 };
 
-export default function CloseButton({ onPress, label = 'Close', disabled, place }: Props) {
+export default function CloseButton({ onPress, label = 'Close', disabled, place, icon = 'xmark' }: Props) {
   return (
     <Pressable
       style={dim([styles.circle, place])}
@@ -23,7 +26,7 @@ export default function CloseButton({ onPress, label = 'Close', disabled, place 
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Glyph name="xmark" size={13} weight="semibold" color={color.inkSoft} />
+      <Glyph name={icon} size={13} weight="semibold" color={color.inkSoft} />
     </Pressable>
   );
 }

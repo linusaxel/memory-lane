@@ -1784,9 +1784,8 @@ export default function App() {
               {addButton}
               <View style={styles.middle}>
                 {walking && !position && (
-                  <GlassButton
-                    style={styles.pill}
-                    tint={color.ember}
+                  <Pressable
+                    style={dim([button.solid, styles.locate])}
                     accessibilityRole="button"
                     accessibilityLabel="Turn on location"
                     accessibilityHint="Asks for permission to use your location"
@@ -1800,8 +1799,8 @@ export default function App() {
                   >
                     {/* Without location nothing can ever unlock, so the button says so
                         rather than leaving a walk whose stops never open. */}
-                    <Text style={styles.planText}>Turn on location</Text>
-                  </GlassButton>
+                    <Text style={styles.planWalkText}>Turn on location</Text>
+                  </Pressable>
                 )}
                 {/* The walk's one card (F9): where next and how far, a tap to see
                     it, and ✕ to end it. Standing on a stop it stays under the
@@ -1873,18 +1872,14 @@ export default function App() {
                     </View>
                     {/* Past a stop that is shut, or not worth it, without ending the walk. */}
                     {!routeDone && routeShown.length > 1 && (
-                      <Pressable
-                        style={styles.skip}
-                        hitSlop={7}
-                        accessibilityRole="button"
-                        accessibilityLabel="Skip this stop"
+                      <CloseButton
+                        icon="forward.end"
+                        label="Skip this stop"
                         onPress={() => {
                           Haptics.selectionAsync().catch(() => {});
                           skipNext();
                         }}
-                      >
-                        <Glyph name="forward.end" size={13} weight="semibold" color={color.inkSoft} />
-                      </Pressable>
+                      />
                     )}
                     {/* Nothing left to reach, nothing to lose, so no are-you-sure. */}
                     <CloseButton
@@ -2067,8 +2062,7 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   planWalkText: { ...buttonText, color: color.paper },
   wide: { alignSelf: 'stretch' },
-  pill,
-  planText: { ...label, fontSize: 15, color: color.paper },
+  locate: { alignSelf: 'stretch' },
   circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   newDot: {
     position: 'absolute',
@@ -2089,12 +2083,4 @@ const styles = StyleSheet.create({
   walkCount: { flexShrink: 1, marginLeft: 4 },
   stamp: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.rule },
   stamped: { backgroundColor: color.ember },
-  skip: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: color.rule,
-  },
 });

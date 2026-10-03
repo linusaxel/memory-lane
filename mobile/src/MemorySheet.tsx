@@ -388,15 +388,12 @@ export default function MemorySheet({
             </View>
             <CloseButton place={styles.close} onPress={onClose} />
             {hasMore && (
-              <Pressable
-                style={dim(styles.more)}
-                hitSlop={7}
-                accessibilityRole="button"
-                accessibilityLabel="More"
+              <CloseButton
+                place={styles.more}
+                icon="ellipsis"
+                label="More"
                 onPress={() => moreActions(memory, reported, onReport, onBlock, onEdit)}
-              >
-                <Glyph name="ellipsis" size={14} weight="semibold" color={color.inkSoft} />
-              </Pressable>
+              />
             )}
 
             <View style={styles.heading}>
@@ -710,24 +707,14 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
+    borderBottomWidth: 3,
     borderColor: color.rule,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepOff: { opacity: 0.3 },
   close: { position: 'absolute', top: 20, right: 20, zIndex: 1 },
-  // CloseButton's circle, one along.
-  more: {
-    position: 'absolute',
-    top: 20,
-    right: 58,
-    zIndex: 1,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: color.rule,
-  },
+  // One along from the ×.
+  more: { position: 'absolute', top: 20, right: 58, zIndex: 1 },
   placeBesideMore: { paddingRight: 68 },
 });

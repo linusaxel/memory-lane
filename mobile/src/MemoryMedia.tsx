@@ -16,7 +16,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
 import { AUDIO, mediaUrl, type MediaItem } from './api.ts';
 import { duration } from './format.ts';
-import { color, dim, label, radius } from './theme.ts';
+import { color, label, radius, sunk } from './theme.ts';
 
 function Recording({ item }: { item: MediaItem }) {
   const player = useAudioPlayer(mediaUrl(item));
@@ -28,7 +28,7 @@ function Recording({ item }: { item: MediaItem }) {
 
   return (
     <Pressable
-      style={dim(styles.audio)}
+      style={styles.audio}
       accessibilityRole="button"
       accessibilityLabel={status.playing ? 'Pause the recording' : 'Play the recording'}
       onPress={() => {
@@ -42,22 +42,26 @@ function Recording({ item }: { item: MediaItem }) {
         player.play();
       }}
     >
-      <View style={styles.glyph}>
-        {status.playing ? (
-          <View style={styles.pause}>
-            <View style={styles.bar} />
-            <View style={styles.bar} />
+      {({ pressed }) => (
+        <>
+          <View style={[styles.glyph, pressed && sunk(styles.glyph)]}>
+            {status.playing ? (
+              <View style={styles.pause}>
+                <View style={styles.bar} />
+                <View style={styles.bar} />
+              </View>
+            ) : (
+              <View style={styles.play} />
+            )}
           </View>
-        ) : (
-          <View style={styles.play} />
-        )}
-      </View>
-      <View style={styles.audioText}>
-        <Text style={styles.audioLabel}>In their voice</Text>
-        <Text style={styles.audioTime}>
-          {status.playing ? `${duration(status.currentTime)} / ${duration(length)}` : duration(length)}
-        </Text>
-      </View>
+          <View style={styles.audioText}>
+            <Text style={styles.audioLabel}>In their voice</Text>
+            <Text style={styles.audioTime}>
+              {status.playing ? `${duration(status.currentTime)} / ${duration(length)}` : duration(length)}
+            </Text>
+          </View>
+        </>
+      )}
     </Pressable>
   );
 }
@@ -129,8 +133,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: color.ember,
+    borderBottomWidth: 3,
+    borderBottomColor: color.emberDeep,
+    backgroundColor: color.ember,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -144,10 +149,10 @@ const styles = StyleSheet.create({
     borderLeftWidth: 13,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderLeftColor: color.ember,
+    borderLeftColor: color.paper,
   },
   pause: { flexDirection: 'row', gap: 4 },
-  bar: { width: 4, height: 16, backgroundColor: color.ember },
+  bar: { width: 4, height: 16, backgroundColor: color.paper },
   audioText: { gap: 2 },
   audioLabel: { ...label },
   audioTime: { ...label, color: color.ink },

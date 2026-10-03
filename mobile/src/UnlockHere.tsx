@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { LocatedMemory } from './api.ts';
 import Glyph from './Glyph.tsx';
-import { color, floating, font, label } from './theme.ts';
+import { color, dim, floating, font, label } from './theme.ts';
 import UnlockButton from './UnlockButton.tsx';
 
 type Props = {
@@ -61,7 +61,7 @@ type ArrowProps = { glyph: 'chevron.left' | 'chevron.right'; name: string; onPre
 function Arrow({ glyph, name, onPress }: ArrowProps) {
   return (
     <Pressable
-      style={styles.arrow}
+      style={dim(styles.arrow)}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={name}

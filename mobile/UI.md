@@ -199,7 +199,7 @@ with no network is never stopped at the gate.
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
 | `src/Flourish.tsx` | the leaf-and-curls divider, twice on an open story: under the byline, before the notes |
-| `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12) |
+| `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12); with another `icon`, the walk card's skip and a story's ⋯ |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
@@ -277,7 +277,9 @@ own colour (`emberDeep`, `emberSoftDeep`, `rule`; 3pt on `small` and on a
 chip), and pressed it sinks onto it: `sunk()` in `theme.ts` thins the bottom
 border and adds the difference to the top margin, so nothing beside it moves.
 `dim()` does this for any style with a ledge; a Pressable whose style is on a
-child (Submit's `Chip`) calls `sunk` itself. A screen adds only where one sits
+child (Submit's `Chip`) calls `sunk` itself. Two circles take a 3pt lip as well:
+a story's ‹ › pager step (rule) and a recording's play disc (ember on
+`emberDeep`). A screen adds only where one sits
 (margin, alignSelf), never its own padding or border. Post is the
 same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
 `hitSlop={4}`. An action inside a page is not a button but `label` text with
@@ -326,10 +328,11 @@ nothing else: 28, 17 and 13.
 
 **Glass over the map, flat inside sheets.** The controls floating over the map
 (Journal, Add, the walk card, the keys pill, you,
-Center on me, Turn on location) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass, tinted
-only on the one prominent control, or raised paper with `lift` where glass is
-unavailable. Never glass on a sheet or a card, never glass on glass. **One
-tint in view**: Turn on location's, on a walk with no position. The walk card is
+Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
+or raised paper with `lift` where glass is unavailable. Never glass on a sheet
+or a card, never glass on glass. The one ember thing in the bottom row, Plan a
+walk or Turn on location, is not glass but `button.solid` with its lip
+(2026-10-03): a ledge under glass reads as a shadow glued on. The walk card is
 untinted: the next stop's pin is the ember on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
@@ -377,8 +380,7 @@ bottom padding) and stays a literal. So is 11 of chip padding in Submit, which
 makes a 40pt chip with the label's line box.
 
 **Four tokens in `theme.ts` carry the rest**: `pill` (44 tall, 16 either side,
-a capsule: every glass control over the map but the one button-sized Turn on
-location), `floating` (`paperRaised`, `card` corner, `lift`: the unlock card,
+a capsule: every glass control over the map), `floating` (`paperRaised`, `card` corner, `lift`: the unlock card,
 Plan's card and the peek, each with its own padding), and `figure` /
 `figureSmall`.
 
