@@ -58,7 +58,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   today's. 404 while it is a draft. Nothing writes these yet but SQL
 - `POST /v1/memories` `{device, lat, lng, place_name, summary, ...}` -
   **file your own memory.** Its tags are the #words in `summary`
-  (`pipeline/tags.py`, `from_text`); a `tags` field is ignored. One coordinate: it is both where you are and where
+  (`pipeline/tags.py`, `from_text`); a `tags` field is ignored. `summary` may
+  carry a little markdown, photos placed as `![caption](photo:<media id> s|m|l left|center|right)`
+  (`mobile/src/story.ts`; docs/10, *A story has a little markdown*). One coordinate: it is both where you are and where
   the memory goes. Lands in the `stranger` layer, gated like everything else,
   and records the unlock for the person who filed it
 - `POST /v1/media` (multipart: `device`, `file`, optional `duration_seconds`) -

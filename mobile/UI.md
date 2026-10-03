@@ -593,8 +593,16 @@ page"):
   for a name: the account signs it (Settings), and a blank one is Anonymous.
 - **Cancel and Post are the only chrome**, the × left and Post right, as in
   every composer. Post is held until the title and the story are there.
-- **Every other action is text** in the label voice: Take photo, Choose photo,
-  Remove photo, Delete this memory (ember, two taps).
+- **Every other action is text** in the label voice: the toolbar's B, I,
+  Heading, Quote, Divider, Photo, Camera, ↑ ↓ and Preview, a photo's S M L
+  and Left Center Right, Remove photo, Delete this memory (ember, two taps).
+- **The story is blocks** (docs/10, "A story has a little markdown"): a
+  paragraph, a heading, a quote, a divider, a photo. Markdown typed works as
+  well as the toolbar: a blank line starts a block, `## ` and `> ` turn it,
+  `---` is a divider, and the marks stay in, faint. Backspace in an empty
+  block takes it away. ↑ ↓ move the block being written, or a tapped photo.
+  The toolbar sits under the bar, never over the keyboard. Preview is
+  `StoryBody`, the open sheet's own layout, wrap and all.
 
 A submission comes back already unlocked and its sheet opens over the map. The
 modal closing is not a confirmation, and it is also the first sight of what a

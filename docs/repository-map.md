@@ -76,6 +76,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `tests/fixtures/walk_labels.json` | Walk/maybe/skip for all 209 memories as of 2026-09-29 (docs/04, *Corpus read*): what a judge change is measured against |
 | `tests/test_quality_labels.py` | `quality --labels` scores the judge against the labels and reruns free |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
+| `tests/fixtures/story.json` | Story markdown cases both parsers are held to (`test_story.py`, `story.test.ts`) |
 | `tests/test_public_host.py` | What Railway's host turns off (`/docs`, the embed, the dev database fallback), and the health check |
 | `tests/fakes.py` | `FakeAnthropic` and friends: the suite never spends credits or touches the network |
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
@@ -96,6 +97,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/accounts.py` | `/v1/me`, `/v1/auth/*` and the city board (`/v1/board`) |
 | `api/my_data.py` | A copy of one person's data, for a GDPR request. A CLI, not a route |
 | `api/card.py` | The server-rendered card. Gates itself |
+| `api/story.py` | A story's words without its markdown, for the card. Mirrors `story.ts` |
 | `api/embed.py` | The embeddable map. Off when `ENABLE_EMBED=0` |
 | `api/streets.py` | Walking metres and street shapes for today's route, from OSRM. Crow-flies × 1.3 without it |
 | `api/media.py` | What an upload is allowed to be, and where it lands |
@@ -161,6 +163,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen, and what the source button says |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
+| `mobile/src/story.ts` | A story's little markdown: blocks, marks, placed photos |
+| `mobile/src/StoryBody.tsx` | A story laid out as written, photos wrapped; the sheet and Preview |
 | `mobile/src/types.ts` | Types more than one screen needs |
 | `mobile/src/Crashed.tsx` | What a render error shows instead of a blank screen, around the whole app |
 | `mobile/src/devLocation.ts`, `devOpen.ts` | Dev only: a told position, a screen opened on launch |

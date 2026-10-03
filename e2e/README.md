@@ -51,7 +51,7 @@ id joins the journey it belongs to; a step two flows share goes in
 | `first-run.yml` | F1 the planner is home and its list (and nothing walkable, and refused location), F8 be asked for location, F32 show me another |
 | `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F30 finish, F27 the streak, F15 reread, F26 heart, F33 a note rewritten, F31 the walk in the journal |
 | `lakes-loop.yml` | F1 the whole slider round the lakes, the longest walk, F32 until the far lake, F31 past walks |
-| `file-and-edit.yml` | F5 file your own with a photo, F21 be somebody, F24 manage what you filed, the author hearing back |
+| `file-and-edit.yml` | F5 file your own: the story's markdown, every toolbar block, a placed and wrapped photo, ↑ reorder, Preview; F21 be somebody, F24 manage what you filed, the author hearing back |
 | `notify-nearby.yml` | F28 the nearby notification with the app in the background |
 | `subscribe-when-walked-out.yml` | F35 the paywall once today's walk is walked, then a walk once paid |
 

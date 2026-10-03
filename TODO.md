@@ -23,6 +23,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The e2e simulator's keyboard covers the bottom of a sheet, and a
+  KeyboardAvoidingView in a page sheet doesn't lift it.** 2026-10-03: a
+  toolbar at the bottom of `Submit.tsx` sat under the keyboard, and with the
+  hardware keyboard the suggestion strip still took Maestro's taps (they typed
+  "of" and "my" into the story). It took four e2e runs, about 8 minutes, to
+  see. Fix: an e2e/README note: put controls Maestro taps while typing at the
+  top of a sheet, never pinned to the bottom.
 - **e2e reuses a stale native build after a native patch.** 2026-10-03:
   `./e2e/run.sh` rebuilds only when `Podfile.lock` changes. A patch-package edit
   to native code (`patches/react-native-maps*`, the polyline's `strokeEnd`)

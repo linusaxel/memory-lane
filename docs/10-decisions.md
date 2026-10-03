@@ -955,6 +955,39 @@ Extracted memories keep their place name as the heading.
 **Options considered:** A title beside the place name: two headings for one
 card, and one more field on a form the founder asked to shrink.
 
+### A story has a little markdown
+
+Status: Accepted (2026-10-03)
+
+A filed story can be laid out: `**bold**`, `*italic*`, `## heading`,
+`> quote`, `---` for a divider (drawn as the Flourish), and a photo placed
+where it is written, `![caption](photo:42 s left)`: a third, a half or full
+width, left, centre or right. A small photo to one side has the next
+paragraph wrap round it. All of it lives in `summary`. `mobile/src/story.ts`
+is the parser, `StoryBody.tsx` reads it, and `api/story.py` mirrors its
+`plain()` for the share card.
+
+It stays one string because every extracted memory, and everything filed
+before, is a summary with no marks: one paragraph, read exactly as before (on
+2026-10-03, none of 256 had a mark in them). A photo is a token, not a
+layout table, so the order of words and photos is one thing that cannot
+disagree with itself. A token whose id is not the memory's own media is
+dropped, so nothing needs validating server-side. Media the text does not
+place still renders after it.
+
+The editor is native blocks, one borderless field each, with the marks left
+in faint as they are typed (iA Writer, Bear). The toolbar sits under Cancel
+and Post, not over the keyboard: a KeyboardAvoidingView in a page sheet
+measures from the sheet and left a bottom bar under the keyboard, and over
+the keyboard a hardware keyboard's suggestion strip still covers it.
+
+**Options considered:** A WebView rich-text editor (TipTap): true WYSIWYG,
+but new native dependencies and a web page inside the app. A rich-text
+column, or a JSON document: a migration, and two shapes of summary for every
+reader. A plain markdown box with a Preview: cheapest, but not an editor.
+Drag to reorder: needs gesture-handler and reanimated; ↑ and ↓ move the
+block being written.
+
 ### Tags come from the text, and a walk has no theme
 
 Status: Accepted 2026-09-26. Supersedes the submission half of *One tag

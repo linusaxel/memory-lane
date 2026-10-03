@@ -619,11 +619,17 @@ one (not over the preview's card). Filing needs no walk.
 4. **When**: a date, today unless changed, from the platform's own picker.
 5. **Tags** are the #words written in the description, as on X (`#food`):
    there is no picker, and the server reads them from the text.
-6. **Photos** from the camera or the library, up to four, and one **recording**
+6. **Layout**: the description is blocks, laid out from a toolbar under
+   Cancel and Post or typed as markdown: **bold**, *italic*, a heading, a
+   quote, a divider, and each photo where it goes, a third, a half or full
+   width, left, centre or right, captioned; a small photo to one side has
+   the next paragraph wrap round it. ↑ ↓ move a block, and Preview shows it
+   as it will read (docs/10, *A story has a little markdown*).
+7. **Photos** from the camera or the library, up to four, and one **recording**
    up to three minutes. Each one uploads the moment it is taken, so the wait is
    spent composing rather than watching a spinner after Post — and a failed
    upload costs the text nothing.
-7. Post. The memory comes back already unlocked and its sheet opens on top of
+8. Post. The memory comes back already unlocked and its sheet opens on top of
    the map: the modal closing is not a confirmation, and this is also the first
    sight of what anybody else will find here.
 

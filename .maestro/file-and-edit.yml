@@ -31,18 +31,34 @@ appId: ${APP_ID}
 - inputText: "The step by the ferry landing"
 
 # The tags are the #words in it (pipeline/tags.py, from_text): no picker.
+# The marks are typed as markdown and set as they will read (story.ts).
 - tapOn:
     id: "story"
-- inputText: "A ferry horn woke the whole dock and nobody could stop laughing about it after. #food"
+- inputText: "A ferry horn woke the whole dock. It was **loud** and *long*, and nobody could stop laughing about it after. #food"
+
+# The story is blocks (docs/10, "A story has a little markdown"). A blank
+# line starts the next; Heading turns it into one.
+- pressKey: Enter
+- pressKey: Enter
+- tapOn:
+    id: "toolbar-heading"
+- inputText: "The horn"
+
+# Divider drops a flourish and a paragraph under it; Quote turns that.
+- tapOn:
+    id: "toolbar-divider"
+- tapOn:
+    id: "toolbar-quote"
+- inputText: "Somebody do it again"
+# Reordered: ↑ moves the block being written, the quote up past the divider.
+- tapOn:
+    id: "block-up"
 
 # A photo, which no other flow attaches: SDK 57's expo/fetch once refused the
 # { uri } FormData part and every upload failed without reaching the API.
 # iOS 26 asks for full access despite run.sh's simctl grant; left unanswered,
 # that prompt outlives the app and fails the next launch on "Memory Lane".
-# hideKeyboard fails on the multi-line story; a scroll gets past it.
-- scrollUntilVisible:
-    element: "Choose photo"
-    direction: DOWN
+# It goes in under the quote, picked, the editor scrolled to it.
 - tapOn: "Choose photo"
 - tapOn:
     text: "Allow Full Access"
@@ -59,6 +75,33 @@ appId: ${APP_ID}
     visible:
       id: "photo"
     timeout: 30000
+
+# A third of the column, on the left: the paragraph after it wraps it.
+- tapOn:
+    id: "photo-size-s"
+- tapOn:
+    id: "photo-left"
+- tapOn:
+    id: "block-p"
+- inputText: "We stayed on the step until the first ferry came in, and the man who blew the horn waved at us from the bridge as if we had been waiting for him all along, which by then we had. "
+# B with nothing selected leaves a pair to type into.
+- tapOn:
+    id: "toolbar-bold"
+- inputText: "proud"
+- tapOn:
+    id: "caption"
+- inputText: "The dock at dawn"
+
+# Preview is the open sheet's own layout: the marks are gone, the words stay.
+- tapOn:
+    id: "preview"
+- assertVisible: "The horn"
+- assertVisible: ".*It was loud and long.*"
+- assertNotVisible: ".*\\*\\*.*"
+- assertVisible: "The dock at dawn"
+- assertVisible: ".*proud.*"
+- tapOn:
+    id: "preview"
 - tapOn: "Post"
 
 # One sentence and its #words are one paragraph (hashtags.ts, lede).
@@ -67,11 +110,20 @@ appId: ${APP_ID}
     timeout: 40000
 - assertVisible: ".*after. #food"
 - assertVisible: "The step by the ferry landing"
+# Every block the editor made, set as it read in Preview.
+- assertVisible: "The horn"
+- assertVisible: "Somebody do it again"
+- assertNotVisible: ".*\\*\\*.*"
 # F21: signed Anonymous until you give a name.
 - assertVisible: ".*Anonymous.*"
-# The card's photo is the API's copy, not the phone's file.
+# The card's photo is the API's copy, not the phone's file, captioned and
+# wrapped by the paragraph after it.
+- scrollUntilVisible:
+    element: "The dock at dawn"
+    direction: DOWN
 - assertVisible:
     id: "photo"
+- assertVisible: ".*proud.*"
 
 # F33 from the author's own phone, which is the only one a flow has: the
 # author unlocked it by filing it, so they may sign it. They may not heart it
@@ -129,8 +181,19 @@ appId: ${APP_ID}
 # button, relabelled. Both fields asserted above sit above the fold, so
 # nothing here has scrolled yet.
 #
-# eraseText deletes backward from wherever the tap put the cursor. On
-# 2026-09-28 that was the end: 60 clears the whole name, so it is typed whole.
+# eraseText deletes backward from wherever the tap put the cursor, so the
+# name is cleared twice (below) and typed whole.
+# The photo comes back where it was put; L makes it full width again. First,
+# while no keyboard covers the photo's controls.
+- tapOn:
+    id: "photo"
+- tapOn:
+    id: "photo-size-l"
+- tapOn:
+    id: "title"
+- eraseText: 60
+# A two-line title puts the tap's caret mid-text, so what was after it is
+# left; on one short line the tap lands past its end.
 - tapOn:
     id: "title"
 - eraseText: 60

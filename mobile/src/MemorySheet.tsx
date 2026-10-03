@@ -30,7 +30,8 @@ import Flourish from './Flourish.tsx';
 import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration, happened, sourceAction } from './format.ts';
-import { lede, summaryParts } from './hashtags.ts';
+import { photoIds } from './story.ts';
+import StoryBody from './StoryBody.tsx';
 import { useReduceMotion } from './useBreath.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -308,29 +309,7 @@ export default function MemorySheet({
     };
   };
 
-  /* The #words are the tags (hashtags.ts): set in the semibold, not a colour,
-     since every colour here already means something (UI.md, "One accent").
-     Not tappable. A linked name is underlined, like every text link. */
-  const prose = (text: string) =>
-    summaryParts(text, memory?.links).map((part, i) =>
-      part.url ? (
-        <Text
-          key={i}
-          style={styles.nameLink}
-          accessibilityRole="link"
-          onPress={() => open(part.url!, "Couldn't open that link.")}
-        >
-          {part.text}
-        </Text>
-      ) : part.tag ? (
-        <Text key={i} style={styles.hashtag}>
-          {part.text}
-        </Text>
-      ) : (
-        part.text
-      ),
-    );
-  const [first, rest] = lede(memory?.summary ?? '');
+  const placed = photoIds(memory?.summary ?? '');
   const when = happened(memory?.happened_at, memory?.happened_precision);
   const started = memory?.content?.timestamp_start ?? null;
   // When it happened, not when it was posted: its own line under the title,
@@ -534,14 +513,19 @@ export default function MemorySheet({
                       <Text style={styles.epicText}>Epic</Text>
                     </Animated.View>
                   )}
-                  <Animated.View style={rise(0)}>
-                    <Text style={styles.summary}>{prose(first)}</Text>
-                  </Animated.View>
-                  {rest !== '' && (
-                    <Animated.View style={[rise(1), styles.afterLede]}>
-                      <Text style={styles.summary}>{prose(rest)}</Text>
-                    </Animated.View>
-                  )}
+                  {/* The #words are the tags, in the semibold, and a linked
+                      name is underlined (StoryBody). */}
+                  <StoryBody
+                    summary={memory.summary}
+                    media={memory.media}
+                    links={memory.links}
+                    onLink={(url) => open(url, "Couldn't open that link.")}
+                    part={(i, node) => (
+                      <Animated.View key={i} style={rise(Math.min(i, 1))}>
+                        {node}
+                      </Animated.View>
+                    )}
+                  />
                   {memory.quote && (
                     <Animated.View style={rise(2)}>
                       {/* Copied from the source and checked against it
@@ -576,7 +560,7 @@ export default function MemorySheet({
                       </View>
                     )}
 
-                    <MemoryMedia media={memory.media} />
+                    <MemoryMedia media={memory.media.filter((m) => !placed.includes(m.id))} />
 
 
                     <Flourish />
@@ -674,15 +658,12 @@ const styles = StyleSheet.create({
   epic: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
   epicText: { ...label, color: color.ember },
   // One rhythm: 8 inside a part, 24 between parts, and no rules between them.
-  afterLede: { marginTop: 8 },
   after: { marginTop: 24, gap: 24 },
   // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
   callout: { paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
   calloutQuiet: { borderLeftColor: color.rule },
   calloutTitle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   quote: { marginTop: 24 },
-  hashtag: { ...font.displaySemi },
-  nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
   date: { ...story.body, color: color.inkSoft, marginTop: 4 },
   byline: { marginTop: 8 },

@@ -15,6 +15,7 @@ from sqlalchemy import text
 from api.gate import UNLOCK_RADIUS_METERS, is_locked, source_link, viewer_position
 from api.media import media_url
 from api.queries import COORDINATE_IS_UNIQUE
+from api.story import plain
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -157,7 +158,7 @@ body{min-height:100svh;display:flex;flex-direction:column;
   font-size:12px;color:var(--muted);margin:0}
 /* 19/31, the same size the app's sheet gives it, because it is the same
    sentence and it is the reason anybody opened this. */
-.summary{font-size:19px;line-height:31px;margin:0}
+.summary{font-size:19px;line-height:31px;margin:0;white-space:pre-line}
 /* A rule above, not a coloured bar down the left: elevation here is a hairline,
    and a left-border accent is the card tell this palette exists to avoid. */
 .contrast{margin:0;padding-top:14px;border-top:1px solid var(--rule);
@@ -210,7 +211,7 @@ def preview_tags(place: str, description: str) -> str:
 
 def render_card(row) -> str:
     place = escape(row.place_name or "Unknown place")
-    summary = escape(row.summary or "")
+    summary = escape(plain(row.summary or ""))
     credit = escape(credit_line(row))
     when = format_happened(row.happened_at, row.happened_precision)
     href = source_href(row)
@@ -232,7 +233,7 @@ def render_card(row) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{place} - Memory Lane</title>
 <meta name="color-scheme" content="light dark">
-{preview_tags(row.place_name or "Unknown place", row.summary or "")}
+{preview_tags(row.place_name or "Unknown place", plain(row.summary or ""))}
 <link rel="stylesheet" href="{FONT_HREF}">
 <style>{CARD_CSS}</style>
 </head><body>

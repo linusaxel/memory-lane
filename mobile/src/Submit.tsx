@@ -16,6 +16,7 @@ import {
   Text,
   TextInput,
   View,
+  type TextStyle,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
@@ -43,8 +44,12 @@ import {
 } from './api.ts';
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
+import Flourish from './Flourish.tsx';
 import { duration, happened } from './format.ts';
-import { button, buttonTextSmall, color, dim, label, radius, story, sunk } from './theme.ts';
+import { hashtagParts } from './hashtags.ts';
+import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
+import StoryBody from './StoryBody.tsx';
+import { button, buttonTextSmall, color, dim, font, label, radius, story, sunk } from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
@@ -78,6 +83,28 @@ type Attachment = {
   failed?: boolean;
 };
 
+/** One block of the story being written (story.ts). A photo is known by its
+ *  attachment's uri until Post, because the id arrives with the upload. */
+type Item = { key: string } & (
+  | { kind: 'p' | 'h' | 'quote'; text: string }
+  | { kind: 'divider' }
+  | { kind: 'photo'; uri: string; size: Size; place: Place; caption: string }
+);
+type TextItem = Extract<Item, { kind: 'p' | 'h' | 'quote' }>;
+
+let keys = 0;
+const key = () => String(++keys);
+const empty = (): Item => ({ key: key(), kind: 'p', text: '' });
+
+/** The written blocks as items, a photo's id swapped for its attachment uri. */
+function toItems(story: Block[], uriOf: (id: number) => string | undefined): Item[] {
+  return story.flatMap((b): Item[] => {
+    if (b.kind !== 'photo') return [{ key: key(), ...b }];
+    const uri = uriOf(b.id);
+    return uri ? [{ key: key(), kind: 'photo', uri, size: b.size, place: b.place, caption: b.caption }] : [];
+  });
+}
+
 export default function Submit({
   visible,
   position,
@@ -92,7 +119,17 @@ export default function Submit({
   const isEditing = !!editing;
   // The title is the place row's name - docs/10, "The title is the place name".
   const [placeName, setPlaceName] = useState('');
-  const [summary, setSummary] = useState('');
+  const [items, setItems] = useState<Item[]>(() => [empty()]);
+  // The block the toolbar acts on: the text being typed in, or a tapped photo.
+  const [current, setCurrent] = useState<string | null>(null);
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
+  // Set for one render after B or I, to put the caret between the marks.
+  const [caret, setCaret] = useState<{ key: string; at: number } | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const inputs = useRef(new Map<string, TextInput>());
+  const scroll = useRef<ScrollView>(null);
+  // A block added at the end is scrolled to once it has a height.
+  const toEnd = useRef(false);
   const [day, setDay] = useState(() => new Date());
   const [pickingDay, setPickingDay] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -128,7 +165,9 @@ export default function Submit({
   useEffect(() => {
     if (visible) return;
     setPlaceName('');
-    setSummary('');
+    setItems([empty()]);
+    setCurrent(null);
+    setPreviewing(false);
     setDay(new Date());
     setPickingDay(false);
     setAttachments([]);
@@ -141,16 +180,24 @@ export default function Submit({
   useEffect(() => {
     if (!visible || !editing) return;
     setPlaceName(editing.place.name);
-    setSummary(editing.summary);
     setDay(editing.happened_at ? localDay(editing.happened_at) : new Date());
-    setAttachments(
-      editing.media.map((item) => ({
-        uri: mediaUrl(item),
-        kind: item.kind,
-        seconds: item.duration_seconds ?? undefined,
-        item,
-      })),
+    const filed = editing.media.map((item) => ({
+      uri: mediaUrl(item),
+      kind: item.kind,
+      seconds: item.duration_seconds ?? undefined,
+      item,
+    }));
+    setAttachments(filed);
+    // A photo the text does not place (anything filed before it could) goes
+    // at the end, full width, where it was read before.
+    const written = toItems(blocks(editing.summary), (id) => filed.find((a) => a.item.id === id)?.uri);
+    const unplaced = filed.filter(
+      (a) => a.kind === 'photo' && !written.some((i) => i.kind === 'photo' && i.uri === a.uri),
     );
+    setItems([
+      ...(written.length ? written : [empty()]),
+      ...unplaced.map((a): Item => ({ key: key(), kind: 'photo', uri: a.uri, size: 'l', place: 'center', caption: '' })),
+    ]);
     // Keyed on the id, not the object: App.tsx hands this a fresh reference
     // on every render, and re-running on that would fight anything typed.
   }, [visible, editing?.id]);
@@ -158,10 +205,23 @@ export default function Submit({
   const photos = attachments.filter((a) => a.kind === 'photo');
   const sound = attachments.find((a) => a.kind === 'audio');
   const uploading = attachments.some((a) => !a.item && !a.failed);
+  const summary = serialize(
+    items.flatMap((i): Block[] => {
+      if (i.kind !== 'photo') return [i];
+      const id = attachments.find((a) => a.uri === i.uri)?.item?.id;
+      return id ? [{ kind: 'photo', id, size: i.size, place: i.place, caption: i.caption }] : [];
+    }),
+  );
   const named = placeName.trim().length > 0;
-  const told = summary.trim().length > 0;
+  const told = plain(summary).trim().length > 0;
   const ready =
-    (isEditing || !!position) && !!device && named && told && !uploading && !posting;
+    (isEditing || !!position) &&
+    !!device &&
+    named &&
+    told &&
+    summary.length <= MAX_SUMMARY &&
+    !uploading &&
+    !posting;
   const when = happened(isoDay(day), 'day');
   const pickDay = () =>
     Platform.OS === 'ios'
@@ -230,6 +290,8 @@ export default function Submit({
     const picked = result.canceled ? null : result.assets[0];
     if (!picked) return;
 
+    // Where the writer is, at the size it will be read at until they say.
+    insert({ key: key(), kind: 'photo', uri: picked.uri, size: 'l', place: 'center', caption: '' });
     // The picker keeps a PNG a PNG, so the type is what it says it wrote.
     await attach({ uri: picked.uri, kind: 'photo' }, picked.mimeType ?? 'image/jpeg');
   };
@@ -274,6 +336,144 @@ export default function Submit({
     // stopRecording is deliberately not a dependency: it is rebuilt every
     // render, and the re-entry that used to allow is handled by `stopping`.
   }, [recording.isRecording, recording.durationMillis]);
+
+  // The editor (UI.md, "Writing"): markdown typed or tapped, a block at a time.
+  const focus = (k: string) => setTimeout(() => inputs.current.get(k)?.focus(), 0);
+  const patch = (k: string, change: Partial<Item>) =>
+    setItems((list) => list.map((i) => (i.key === k ? ({ ...i, ...change } as Item) : i)));
+
+  /** New blocks after the current one, or at the end. The story always ends
+   *  in text, so there is somewhere to keep writing after a photo. */
+  const insert = (...added: Item[]) => {
+    setItems((list) => {
+      const i = list.findIndex((it) => it.key === current);
+      const where = i < 0 ? list.length : i + 1;
+      toEnd.current = where >= list.length - 1;
+      const next = [...list.slice(0, where), ...added, ...list.slice(where)];
+      return isText(next[next.length - 1]) ? next : [...next, empty()];
+    });
+    setCurrent(added[0].key);
+  };
+
+  /** A blank line ends a block and what follows is blocks of its own, so a
+   *  pasted story lays itself out. A paragraph that starts with `## ` or `> `
+   *  becomes a heading or a quote, and `---` a divider. */
+  const write = (item: TextItem, text: string) => {
+    let head = text;
+    let tail: string | null = null;
+    const blank = text.match(/\n[ \t]*\n/);
+    if (blank) {
+      head = text.slice(0, blank.index);
+      tail = text.slice(blank.index! + blank[0].length);
+    } else if (item.kind === 'h' && text.includes('\n')) {
+      // A heading is one line; Return starts the paragraph under it.
+      head = text.slice(0, text.indexOf('\n'));
+      tail = text.slice(text.indexOf('\n') + 1);
+    }
+    let next: Item = { ...item, text: head };
+    if (item.kind === 'p' && head.startsWith('## ')) next = { key: item.key, kind: 'h', text: head.slice(3) };
+    else if (item.kind === 'p' && head.startsWith('> ')) next = { key: item.key, kind: 'quote', text: head.slice(2) };
+    else if (item.kind === 'p' && /^-{3,}$/.test(head)) {
+      next = { key: item.key, kind: 'divider' };
+      tail ??= '';
+    }
+    if (tail === null) {
+      setItems((list) => list.map((i) => (i.key === item.key ? next : i)));
+      return;
+    }
+    const after = toItems(blocks(tail), () => undefined);
+    const added = after.length && isText(after[after.length - 1]) ? after : [...after, empty()];
+    setItems((list) => list.flatMap((i) => (i.key === item.key ? [next, ...added] : [i])));
+    const last = added[added.length - 1];
+    setCurrent(last.key);
+    focus(last.key);
+  };
+
+  /** Backspace in an empty block: a heading or quote turns back into a
+   *  paragraph, and an empty paragraph goes, the caret to the text before. */
+  const back = (item: TextItem) => {
+    if (item.text !== '') return;
+    if (item.kind !== 'p') return patch(item.key, { kind: 'p' });
+    const i = items.findIndex((it) => it.key === item.key);
+    const before = items.slice(0, i).reverse().find(isText);
+    if (!before) return;
+    setItems((list) => list.filter((it) => it.key !== item.key));
+    setCurrent(before.key);
+    focus(before.key);
+  };
+
+  /** **, or *, around what is selected, or a pair to type into. */
+  const mark = (m: string) => {
+    const item = items.find((i) => i.key === current);
+    if (!item || !isText(item)) return;
+    const { start, end } = selection;
+    const text = item.text.slice(0, start) + m + item.text.slice(start, end) + m + item.text.slice(end);
+    patch(item.key, { text });
+    setCaret({ key: item.key, at: end + m.length * (start === end ? 1 : 2) });
+  };
+
+  /** Heading and Quote turn the block being written, or start one. */
+  const turn = (kind: 'h' | 'quote') => {
+    const item = items.find((i) => i.key === current);
+    if (item && isText(item)) return patch(item.key, { kind: item.kind === kind ? 'p' : kind });
+    const added: Item = { key: key(), kind, text: '' };
+    insert(added);
+    focus(added.key);
+  };
+
+  const divider = () => {
+    const after = empty();
+    insert({ key: key(), kind: 'divider' }, after);
+    setCurrent(after.key);
+    focus(after.key);
+  };
+
+  const move = (by: -1 | 1) => {
+    const i = items.findIndex((it) => it.key === current);
+    const j = i + by;
+    if (i < 0 || j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    setItems(next);
+  };
+
+  const remove = (item: Item) => {
+    if (item.kind === 'photo') setAttachments((list) => list.filter((a) => a.uri !== item.uri));
+    setItems((list) => {
+      const next = list.filter((i) => i.key !== item.key);
+      return next.some(isText) ? next : [...next, empty()];
+    });
+    setCurrent(null);
+  };
+
+  // The marks, the blocks, and a look at how it will read.
+  // Text, like every action on this screen.
+  const tools = (
+    <View style={styles.toolbar}>
+      {!previewing && (
+        <>
+          <Action label="B" spoken="Bold" testID="toolbar-bold" style={styles.bold} onPress={() => mark('**')} />
+          <Action label="I" spoken="Italic" testID="toolbar-italic" style={styles.italic} onPress={() => mark('*')} />
+          <Action label="Heading" testID="toolbar-heading" onPress={() => turn('h')} />
+          <Action label="Quote" testID="toolbar-quote" onPress={() => turn('quote')} />
+          <Action label="Divider" testID="toolbar-divider" onPress={divider} />
+          {photos.length < MAX_PHOTOS && (
+            <>
+              <Action label="Photo" spoken="Choose photo" onPress={() => addPhoto(false)} />
+              <Action label="Camera" spoken="Take photo" onPress={() => addPhoto(true)} />
+            </>
+          )}
+          <Action label="↑" spoken="Move up" testID="block-up" onPress={() => move(-1)} />
+          <Action label="↓" spoken="Move down" testID="block-down" onPress={() => move(1)} />
+        </>
+      )}
+      <Action
+        label={previewing ? 'Back to writing' : 'Preview'}
+        testID="preview"
+        onPress={() => setPreviewing((p) => !p)}
+      />
+    </View>
+  );
 
   const post = async () => {
     if (!device || (!isEditing && !position)) return;
@@ -372,8 +572,21 @@ export default function Submit({
             </Text>
           </Pressable>
         </View>
+        {/* Under the bar, not over the keyboard: up here nothing covers it,
+            a software keyboard or a hardware one's suggestion strip. */}
+        {tools}
 
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          ref={scroll}
+          style={styles.scroll}
+          contentContainerStyle={styles.body}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => {
+            if (!toEnd.current) return;
+            toEnd.current = false;
+            scroll.current?.scrollToEnd();
+          }}
+        >
           <TextInput
             style={[styles.slot, styles.title]}
             value={placeName}
@@ -417,54 +630,154 @@ export default function Submit({
             />
           )}
 
-          <TextInput
-            style={[styles.slot, styles.story]}
-            value={summary}
-            onChangeText={setSummary}
-            placeholder="We sat here until it got light and nobody wanted to say so. #nightlife"
-            placeholderTextColor={color.inkFaint}
-            accessibilityLabel="Description"
-            testID="story"
-            multiline
-            maxLength={MAX_SUMMARY}
-            textAlignVertical="top"
-          />
+          {/* The story, a block at a time: what is typed here is what
+              StoryBody sets on the open sheet, and Preview shows it so. */}
+          <View style={styles.blocks}>
+            {previewing ? (
+              <StoryBody summary={summary} media={attachments.flatMap((a) => (a.item ? [a.item] : []))} />
+            ) : (
+              items.map((item, n) => {
+                const on = item.key === current;
+                if (item.kind === 'divider') {
+                  return (
+                    <View key={item.key}>
+                      <Pressable
+                        onPress={() => setCurrent(item.key)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Divider"
+                        style={[styles.divider, on && styles.dividerOn]}
+                      >
+                        <Flourish />
+                      </Pressable>
+                      {on && (
+                        <View style={styles.row}>
+                          <Action label="Remove divider" onPress={() => remove(item)} />
+                        </View>
+                      )}
+                    </View>
+                  );
+                }
+                if (item.kind === 'photo') {
+                  const upload = attachments.find((a) => a.uri === item.uri);
+                  return (
+                    <View key={item.key} style={styles.part}>
+                      <View style={[styles[item.place], { width: WIDTH[item.size] }]}>
+                        <Pressable
+                          onPress={() => setCurrent(item.key)}
+                          accessibilityRole="button"
+                          accessibilityLabel="Photo"
+                          testID={upload?.item ? 'photo' : 'photo-uploading'}
+                        >
+                          <Image
+                            source={{ uri: upload?.item ? mediaUrl(upload.item) : item.uri }}
+                            style={[styles.photo, upload?.failed && styles.photoFailed, on && styles.photoOn]}
+                          />
+                          {!upload?.item && !upload?.failed && (
+                            <View style={styles.photoBusy}>
+                              <ActivityIndicator size="small" color={color.paper} />
+                            </View>
+                          )}
+                        </Pressable>
+                        <TextInput
+                          style={[styles.slot, styles.caption]}
+                          value={item.caption}
+                          onChangeText={(caption) => patch(item.key, { caption: caption.replace(/\n/g, ' ') })}
+                          onFocus={() => setCurrent(item.key)}
+                          placeholder="Caption"
+                          placeholderTextColor={color.inkFaint}
+                          accessibilityLabel="Caption"
+                          testID="caption"
+                          maxLength={140}
+                        />
+                      </View>
+                      {upload?.failed && <Text style={styles.error}>Upload failed</Text>}
+                      {on && (
+                        <View style={styles.row}>
+                          {(['s', 'm', 'l'] as const).map((size) => (
+                            <Chip
+                              key={size}
+                              label={size.toUpperCase()}
+                              on={item.size === size}
+                              testID={`photo-size-${size}`}
+                              onPress={() => patch(item.key, { size })}
+                            />
+                          ))}
+                          {(['left', 'center', 'right'] as const).map((place) => (
+                            <Chip
+                              key={place}
+                              label={place[0].toUpperCase() + place.slice(1)}
+                              on={item.place === place}
+                              testID={`photo-${place}`}
+                              onPress={() => patch(item.key, { place })}
+                            />
+                          ))}
+                          <Action label="Remove photo" onPress={() => remove(item)} />
+                        </View>
+                      )}
+                    </View>
+                  );
+                }
+                const first = items.findIndex(isText) === n;
+                return (
+                  <TextInput
+                    key={item.key}
+                    ref={(input) => {
+                      if (input) inputs.current.set(item.key, input);
+                      else inputs.current.delete(item.key);
+                    }}
+                    style={[styles.slot, styles[item.kind], first && items.length === 1 && styles.alone]}
+                    onChangeText={(text) => write(item, text)}
+                    onKeyPress={(e) => e.nativeEvent.key === 'Backspace' && back(item)}
+                    onFocus={() => setCurrent(item.key)}
+                    onSelectionChange={(e) => {
+                      setSelection(e.nativeEvent.selection);
+                      if (caret) setCaret(null);
+                    }}
+                    selection={caret?.key === item.key ? { start: caret.at, end: caret.at } : undefined}
+                    placeholder={
+                      first
+                        ? 'We sat here until it got light and nobody wanted to say so. #nightlife'
+                        : item.kind === 'h'
+                          ? 'Heading'
+                          : item.kind === 'quote'
+                            ? 'What somebody said'
+                            : undefined
+                    }
+                    placeholderTextColor={color.inkFaint}
+                    accessibilityLabel={item.kind === 'h' ? 'Heading' : item.kind === 'quote' ? 'Quote' : 'Description'}
+                    testID={first ? 'story' : `block-${item.kind}`}
+                    multiline
+                    scrollEnabled={false}
+                    textAlignVertical="top"
+                  >
+                    {/* The marks stay where they were typed, faint, and what
+                        they mark is set as it will read. */}
+                    {inline(item.text, true).map((run, i) => (
+                      <Text
+                        key={i}
+                        style={[run.mark && styles.mark, run.bold && styles.bold, run.italic && styles.italic]}
+                      >
+                        {run.mark
+                          ? run.text
+                          : hashtagParts(run.text).map((part, j) =>
+                              part.tag ? (
+                                <Text key={j} style={styles.hashtag}>
+                                  {part.text}
+                                </Text>
+                              ) : (
+                                part.text
+                              ),
+                            )}
+                      </Text>
+                    ))}
+                  </TextInput>
+                );
+              })
+            )}
+          </View>
           {/* Only near the limit: a count from the first letter reads as a nag. */}
           {summary.length > MAX_SUMMARY - 200 && (
             <Text style={styles.meta}>{`${summary.length} / ${MAX_SUMMARY}`}</Text>
-          )}
-
-          {/* Where the open sheet shows them, at the size it shows them. */}
-          {photos.map((photo) => (
-            <View key={photo.uri} style={styles.part}>
-              <View>
-                <Image
-                  testID={photo.item ? 'photo' : 'photo-uploading'}
-                  source={{ uri: photo.item ? mediaUrl(photo.item) : photo.uri }}
-                  style={[styles.photo, photo.failed && styles.photoFailed]}
-                />
-                {!photo.item && !photo.failed && (
-                  <View style={styles.photoBusy}>
-                    <ActivityIndicator size="small" color={color.paper} />
-                  </View>
-                )}
-              </View>
-              <View style={styles.row}>
-                {photo.failed && <Text style={styles.error}>Upload failed</Text>}
-                <Action
-                  label="Remove photo"
-                  onPress={() =>
-                    setAttachments((current) => current.filter((a) => a.uri !== photo.uri))
-                  }
-                />
-              </View>
-            </View>
-          ))}
-          {photos.length < MAX_PHOTOS && (
-            <View style={styles.row}>
-              <Action label="Take photo" onPress={() => addPhoto(true)} />
-              <Action label="Choose photo" onPress={() => addPhoto(false)} />
-            </View>
           )}
 
           {AUDIO && (
@@ -515,6 +828,7 @@ export default function Submit({
             </Pressable>
           )}
         </ScrollView>
+
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -541,7 +855,17 @@ function localDay(iso: string): Date {
  *  recoloured. The tick is `selectionAsync`, the same one the map uses when a
  *  pin opens: this is picking, not confirming, and it must not borrow the
  *  weight of the unlock. */
-export function Chip({ label: text, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+export function Chip({
+  label: text,
+  on,
+  testID,
+  onPress,
+}: {
+  label: string;
+  on: boolean;
+  testID?: string;
+  onPress: () => void;
+}) {
   const pop = useRef(new Animated.Value(1)).current;
   const first = useRef(true);
 
@@ -563,6 +887,7 @@ export function Chip({ label: text, on, onPress }: { label: string; on: boolean;
       }}
       accessibilityRole="button"
       accessibilityState={{ selected: on }}
+      testID={testID}
     >
       {({ pressed }) => (
         <Animated.View
@@ -576,7 +901,19 @@ export function Chip({ label: text, on, onPress }: { label: string; on: boolean;
 }
 
 /** A text action, as a note's Rewrite and Remove are on the open sheet. */
-function Action({ label: text, onPress }: { label: string; onPress: () => void }) {
+function Action({
+  label: text,
+  spoken,
+  testID,
+  style,
+  onPress,
+}: {
+  label: string;
+  spoken?: string;
+  testID?: string;
+  style?: TextStyle;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       onPress={() => {
@@ -584,13 +921,21 @@ function Action({ label: text, onPress }: { label: string; onPress: () => void }
         onPress();
       }}
       accessibilityRole="button"
+      accessibilityLabel={spoken}
+      testID={testID}
       hitSlop={12}
       style={dim()}
     >
-      <Text style={styles.action}>{text}</Text>
+      <Text style={[styles.action, style]}>{text}</Text>
     </Pressable>
   );
 }
+
+function isText(item: Item | undefined): item is TextItem {
+  return item?.kind === 'p' || item?.kind === 'h' || item?.kind === 'quote';
+}
+
+const WIDTH = { s: '33.3%', m: '50%', l: '100%' } as const;
 
 const styles = StyleSheet.create({
   sheet: { flex: 1, backgroundColor: color.paper },
@@ -611,7 +956,35 @@ const styles = StyleSheet.create({
   // A field with no box: the cursor and the placeholder say it is editable.
   slot: { padding: 0, margin: 0 },
   title: story.title,
-  story: { ...story.body, minHeight: 130, marginTop: 24 },
+  // Ends at the toolbar, so nothing scrolls in under it.
+  scroll: { flex: 1 },
+  blocks: { gap: 16, marginTop: 24 },
+  p: story.body,
+  h: { ...story.body, ...font.display },
+  quote: { ...story.body, paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.rule },
+  alone: { minHeight: 130 },
+  mark: { color: color.inkFaint },
+  bold: { ...font.display },
+  italic: { fontStyle: 'italic' },
+  hashtag: { ...font.displaySemi },
+  divider: { paddingVertical: 4, borderRadius: radius.field },
+  dividerOn: { backgroundColor: color.rule },
+  caption: { ...story.meta, color: color.inkSoft, marginTop: 6 },
+  left: { alignSelf: 'flex-start' },
+  center: { alignSelf: 'center' },
+  right: { alignSelf: 'flex-end' },
+  photoOn: { borderWidth: 2, borderColor: color.ember },
+  toolbar: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 18,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: color.rule,
+    backgroundColor: color.paper,
+  },
   byline: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   meta: { ...story.meta, flexShrink: 1 },
   metaInk: { color: color.ink },
