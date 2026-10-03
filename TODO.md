@@ -169,6 +169,53 @@ public launch that the rest of this file doesn't track. Blockers first.
 
 ---
 
+## Launch playbook
+
+From a talk on launching an app (2026-10-03): set up a waitlist before
+building, measure why people leave before you have users, let votes pick the
+roadmap, give the store screenshots days, and launch only once beta users come
+back. Adapted to the rules here. 1, 2 and 7 come first; the rest wait on
+`DEPLOY` or `STORE_ACCOUNT`.
+
+- [ ] **1. A waitlist page, now.** (checked 2026-10-03) One screenshot and an
+      email field. It tells you whether anyone wants the app and fills the
+      beta: Play's personal account wants 12 testers for 14 days
+      (`STORE_ACCOUNT`). Serve it from the API beside `/privacy`
+      (`api/privacy.py`), not Framer. Opt-in emails get their own table and
+      are never matched to `identities`. Needs `DEPLOY`.
+- [ ] **2. Retention from the tables we have.** (checked 2026-10-03) No
+      PostHog: it breaks the "no collected data" privacy manifest and needs
+      consent. `python -m api.metrics` instead: D1 and D7 return by `devices`
+      cohort, walks per user (`daily_routes`), unlocks per walk (`unlocks`),
+      and stories left near each user, the first retention metric under *The
+      retention risk none of this fixes*. Before the beta, so the beta can
+      say whether people come back.
+- [ ] **3. A feedback row in Settings.** (checked 2026-10-03) Not on the map:
+      core actions stay one tap. A mailto `CONTACT_EMAIL` first; a vote board
+      (UserJot, Canny, both paid) once mail outruns reading it. The talk's
+      point: what gets the votes is what you would never have guessed.
+- [ ] **4. Lifecycle nudges, after launch, probably push.** (checked
+      2026-10-03) The talk drips email through Loops. Sign-in emails are often
+      Apple relays with no marketing consent, so the local version is a push
+      to a user idle for 7 days: "there's a walk near you". Wait for 2 to show
+      where people drop off.
+- [ ] **5. The store listing: give the screenshots 3–4 days.** (checked
+      2026-10-03) Apple boosts a new app for its first week or two, once. Lead
+      with the story cards; title, subtitle and keywords in Danish and
+      English. Capture them from the e2e simulator flows so they stay current.
+      Needs `STORE_ACCOUNT`.
+- [ ] **6. A landing page from the listing's assets.** (checked 2026-10-03)
+      About a week, tuned after launch. The waitlist page becomes it, plus
+      store badges.
+- [ ] **7. The launch bar.** (checked 2026-10-03) Launch when the beta comes
+      back for days, read from 2 over the closed-testing cohort. People gone
+      after a day means not yet.
+- [ ] **8. Launch day.** (checked 2026-10-03) Email the waitlist; post in
+      r/copenhagen, Danish local-history groups and press, and Product Hunt.
+      Start a week ahead so it lands inside Apple's boost.
+
+---
+
 ## Make memories worth the walk
 
 A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
