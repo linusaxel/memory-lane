@@ -63,15 +63,6 @@ delete an entry when its fix lands.
   widened: run.sh stamps a hash of app.json + package.json at prebuild, and
   says "run prebuild --clean" when it differs.
 
-- **Checking a preview-card change means minutes-long e2e flows.** 2026-09-27:
-  the four flows that touch planning (first-run, lakes-loop, walk-and-unlock,
-  notify-nearby) take 100-160 s each, and notify-nearby minutes more. Each one
-  signs in from a cleared launch and walks a whole scenario, so re-checking one
-  card string cost about 10 minutes, and the founder called it far too long.
-  Fix: a short `plan-card.yml` (sign in, Plan a walk, drag, One way, Show me
-  another) that the long flows stop re-asserting, so a card change is checked
-  in under a minute.
-
 - **A classifier prompt change can't be measured without a throwaway script.**
   2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
