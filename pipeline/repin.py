@@ -7,7 +7,9 @@
 Most were extracted before the chain existed (docs/10-decisions.md
 #the-llm-names-the-place-free-geocoders-place-it), so the free pass comes
 first. What it can't place, --choose shows the model the stories told there
-and up to ten map candidates (Photon and Wikidata, near its guess), one small
+and the map's candidates (Photon, Wikidata by label, and Wikidata's full-text
+search near its guess, which finds "Frederiksberg Gardens" where the label
+search wants "Frederiksberg Garden"), one small
 call a place. It may pick one or none, never a coordinate of its own: a pick
 is stored as `geocode_status='chosen'` at the candidate's own point.
 """
@@ -15,11 +17,22 @@ is stored as `geocode_status='chosen'` at the candidate's own point.
 import argparse
 import json
 import logging
+import urllib.parse
 
 from sqlalchemy import text
 
 from pipeline.extract import _request
-from pipeline.geocode import MAX_KM_FROM_GUESS, PRECISION_M, Photon, Wikidata, _km, place, unbracket
+from pipeline.geocode import (
+    MAX_KM_FROM_GUESS,
+    PRECISION_M,
+    Hit,
+    Photon,
+    Wikidata,
+    _get_json,
+    _km,
+    place,
+    unbracket,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,22 +62,68 @@ CHOOSE_SCHEMA = {
 }
 
 
+# Full-text matches kept, nearest the guess first by Wikidata's own ranking.
+NEAR_KM = 3
+
+
+def wikidata_near(name: str, near: tuple) -> list[Hit]:
+    """Items whose text matches the name within NEAR_KM of the guess: a
+    story's English name is rarely an item's label prefix."""
+    q = urllib.parse.urlencode(
+        {
+            "action": "query",
+            "list": "search",
+            "srsearch": f"{name} nearcoord:{NEAR_KM}km,{near[0]},{near[1]}",
+            "srlimit": 5,
+            "format": "json",
+        }
+    )
+    ids = [
+        r["title"]
+        for r in ((_get_json(f"{Wikidata.API}?{q}") or {}).get("query") or {}).get("search", [])
+    ]
+    if not ids:
+        return []
+    q = urllib.parse.urlencode(
+        {
+            "action": "wbgetentities",
+            "ids": "|".join(ids),
+            "props": "claims|labels",
+            "languages": "en|da",
+            "format": "json",
+        }
+    )
+    entities = (_get_json(f"{Wikidata.API}?{q}") or {}).get("entities", {})
+    hits = []
+    for i in ids:
+        e = entities.get(i, {})
+        coord = e.get("claims", {}).get("P625")
+        if not coord or "datavalue" not in coord[0]["mainsnak"]:
+            continue
+        v = coord[0]["mainsnak"]["datavalue"]["value"]
+        labels = e.get("labels", {})
+        label = (labels.get("en") or labels.get("da") or {}).get("value")
+        hits.append(Hit(v["latitude"], v["longitude"], label, None, None, "poi", "wikidata"))
+    return hits
+
+
 def candidates(name: str, locality: str | None, near: tuple) -> list:
     """Photon's and Wikidata's points for the name, near the guess, one each. Points
     only: a street's point is anywhere along it, and Gammel Toldbod picked as
     Toldbodgade landed 600 m from the door."""
     seen, out = set(), []
-    for g in (Photon(), Wikidata()):
-        for hit in g.search(unbracket(name), locality, near):
-            key = (round(hit.lat, 4), round(hit.lng, 4))
-            if (
-                hit.kind not in ("poi", "house")
-                or key in seen
-                or _km(near, (hit.lat, hit.lng)) > MAX_KM_FROM_GUESS
-            ):
-                continue
-            seen.add(key)
-            out.append(hit)
+    name = unbracket(name)
+    found = [*Photon().search(name, locality, near), *Wikidata().search(name, locality, near)]
+    for hit in [*found, *wikidata_near(name, near)]:
+        key = (round(hit.lat, 4), round(hit.lng, 4))
+        if (
+            hit.kind not in ("poi", "house")
+            or key in seen
+            or _km(near, (hit.lat, hit.lng)) > MAX_KM_FROM_GUESS
+        ):
+            continue
+        seen.add(key)
+        out.append(hit)
     return out
 
 

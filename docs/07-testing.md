@@ -126,4 +126,4 @@ the kind of thing that comes back.
   instead, extract one video through the queue path:
   `python -m pipeline.enqueue --video <content_id>` (then `--status <id>`).
 - The extraction prompt is in `extract.py:SYSTEM_PROMPT` - tweak for better results
-- Check `geocode_status` column: 'llm' means coordinates from extraction, 'dawa' / 'photon' / 'wikidata' name the geocoder that placed it, 'pending' means missing
+- Check `geocode_status` column: 'llm' means coordinates from extraction, 'dawa' / 'photon' / 'wikidata' name the geocoder that placed it, 'chosen' a map point the model picked (`pipeline/repin.py`), 'pending' means missing

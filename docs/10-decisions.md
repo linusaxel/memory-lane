@@ -1818,7 +1818,11 @@ the trap each rule exists for (all found live, 2026-09-26):
   before 1900 is street-level: cities renumbered (Copenhagen in 1859).
 
 No surviving hit keeps the model's coordinate as `'llm'`. `geocode_status`
-records which geocoder placed a pin: `dawa`, `photon`, `wikidata`.
+records which geocoder placed a pin: `dawa`, `photon`, `wikidata`. Since
+2026-10-03 also `chosen`: for a place still on `llm`, `pipeline/repin.py`
+shows the model the stories and the map's points near its guess, and it may
+pick one or none, never a coordinate of its own (docs/04, *Corpus work,
+2026-10-03*).
 
 Amended 2026-09-27, after the first Danish extraction (content 534) left 14 of
 20 places on the model's guess, most of them on Photon under a slightly

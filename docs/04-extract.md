@@ -536,6 +536,68 @@ On 2026-10-02 the layer held 9,344 current permits with dates and polygons:
 is gated on Hugging Face behind a login and wasn't probed. Its `date_created`
 is when Foursquare learned of a place, not when it opened.
 
+### Corpus work, 2026-10-03
+
+One session's changes to the dev corpus, about $3 of credits in all.
+
+- **Walk scores for everything.** `python -m pipeline.walk_score --all`
+  scored the 236 extracted memories (none had been). Against the 209 labels,
+  walks average 7.1 and skips 5.6 (r = 0.45 with the hand total). The route
+  now ranks by it: docs/10, *A walk picks its stops by the rubric*.
+- **DAWA is gone.** `api.dataforsyningen.dk/adresser` answers 410 Gone, so
+  every Danish address lookup since its retirement had failed quietly to
+  the model's coordinate. Removed from the chain; Photon places the same
+  addresses (OSM imported the Danish register).
+- **Pins re-placed** with `python -m pipeline.repin --choose --apply`. Of 58
+  `llm` places with a visible memory, the chain placed 3 addresses for free
+  and the model's pick from the map's points placed 9 more (Vestre Hospital
+  is Rudolph Berghs Hospital, Frauenkirche is Vor Frue Kirke, the Royal
+  Danish Theatre is Gamle Scene). Each pick was checked on a map. Two traps:
+  a street is never a candidate (Gammel Toldbod picked as Toldbodgade landed
+  600 m off), and Wikidata's label search is prefix-only, so the full-text
+  search near the guess (`nearcoord:`) finds "Frederiksberg Gardens". 47 are
+  left, nearly all demolished cinemas, factories and hospitals.
+- **What stands there now** for every building-level pin:
+  `python -m pipeline.now` looked at 31 places with no refusal and
+  confirmed 17.
+- **Leonora Christina re-extracted** (source 203, 14 chapters). It saved 8.
+  `dedup --memories --source 203` then paired 7, read by hand: 5 retellings
+  hidden (the Mistress of the Robes, the pier, the betrothal day, La Rosche,
+  the governor's gate), one kept as a different scene (the Dark cell), one
+  already hidden. The book shows 10, up from 8.
+- **Two new public-domain books** through the Gutenberg path, Copenhagen
+  windows only: Jacob Riis, *The Making of an American* (10 windows, 2 kept:
+  the stranger at Charlottenborg who was the king, schoolboys saluting
+  Andersen on the ramparts) and Maurice Baring, *The Puppet Show of Memory*
+  (15 windows, none kept: legation society, not scenes). Nexø's memoirs are
+  public domain since 2025 but have no free digital text; Andersen's *Mit
+  Livs Eventyr* would mostly retell source 202.
+
+The visible corpus went from 188 to 192 memories.
+
+### What to look at, 2026-10-03
+
+TODO V3 wants a line telling a walker where to look. It was tried on 40
+visible memories (a stable sample, `md5(id || 'look')`): one Sonnet call
+each, given the place name and the summary, asked for at most 12 words
+pointing at something visible now, with no people, events or dates.
+
+- **About 6 were real:** Kaj Nielsen's bull wrestlers on Palads, Vor Frue's
+  spire, Blåtårn's footprint marked in the Christiansborg paving, the
+  Sjæleboderne sign.
+- **About 15 were filler:** "notice the facade above the entrance".
+- **About 14 were invented,** mostly at places that are gone: the "vintage
+  marquee" of the closed Løvebiografen, Chickegrill's "red curtains", graffiti
+  at Lorterenden.
+- **A few leaked the story:** "find the framed portrait", "the bar counter's
+  mortar joints".
+- 4 were empty, as asked when nothing is visible.
+
+Not shipped, and no field added. A summary does not know what stands there
+now, so the model fills the gap. Next time, ground it: only places whose OSM
+`now` says the same place still stands (`places.now->>'same'`), and give the
+model OSM's tags and Wikidata's description of the building, not the story.
+
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps
 - THE VIBE: Emotions, humor, what made it memorable

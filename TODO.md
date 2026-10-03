@@ -136,7 +136,9 @@ public launch that the rest of this file doesn't track. Blockers first.
       Researched source by source in docs/10, *The sources' legal footing*;
       a Danish lawyer still reads it before launch. The blockers:
       - YouTube: written permission per channel, drop the Webshare proxy,
-        delete a transcript once it is extracted. Or drop the channels.
+        delete a transcript once it is extracted. Or drop the channels. The
+        email is drafted (`docs/permission-request.md`); build the transcript
+        delete before the first channel says yes, since the email promises it.
       - Historisk Atlas: ingest only CC BY, BY-SA and PD stories.
       - A report and takedown route on every memory (DSA Arts 16/17), for
         privacy, defamation and copyright alike.
@@ -166,12 +168,16 @@ A hand read of all 209 memories (docs/04, *Corpus read, 2026-09-29*) found
 labels before and after (`python -m pipeline.quality --labels`). Every change
 is to `pipeline/extract.py` unless named.
 
-- [ ] **Re-extract the other books with the archival prompt.** (checked
-      2026-10-01) Carl Møller went from 8 visible to 12, Oehlenschläger
-      vol. I from 13 to 22, and Andersen from 5 to 10 (docs/04, *Carl Møller
-      re-extracted*). Next Leonora Christina (203): reset `memories_extracted` for
-      the source, clear stale `extraction:<id>:memories`, enqueue, then
-      `dedup --memories` and read its pairs before hiding any.
+- [ ] **Re-extract the paused books with the archival prompt.** (checked
+      2026-10-03) Carl Møller went from 8 visible to 12, Oehlenschläger
+      vol. I from 13 to 22, Andersen from 5 to 10, Leonora Christina from 8 to
+      10 (docs/04, *Carl Møller re-extracted* and *Corpus work, 2026-10-03*).
+      Left: the paused Oehlenschläger volumes (206-208) and Liebenberg (210),
+      if they earn it. The recipe: set `memories_extracted = false` for the
+      source's content, delete the Redis keys `extraction:<id>` and
+      `extraction:<id>:memories`, enqueue each, `pipeline.worker --burst
+      --yes`, then `dedup --memories --source <id>` and read its pairs before
+      hiding any.
 - [ ] **Judge v2 on the research rubric.** (checked 2026-09-30) Parked
       until grounding lands (the launch-area gate and dedup have). It was measured
       once (docs/04, *Judge v2, measured and parked*): most of the skips it
@@ -190,13 +196,11 @@ is to `pipeline/extract.py` unless named.
       work. Most of these are misheard names, which the next item targets.
       Separately, and unmeasured: have the extraction prompt spell known
       people as they are in print.
-- [ ] **Then-vs-now: finish the backfill, then the points.** (checked
-      2026-09-30) `pipeline/now.py` is built (docs/10, *What is there now comes
-      from OSM, not the model*). The first run looked at 14 places and confirmed
-      4 before overpass-api.de started refusing this IP. Run `python -m
-      pipeline.now` again until it logs no "did not answer". Next, the ~20 bars that
-      OSM stores as points need an `around` query, which the public server
-      times out on. Then check that the ranking reads better.
+- [ ] **Then-vs-now: the points.** (checked 2026-10-03) The backfill is
+      done: `pipeline.now` looked at 31 places with no refusal and confirmed 17
+      (docs/04, *Corpus work*). Left: the ~20 bars that OSM stores as points
+      need an `around` query, which the public server times out on. Then check
+      that the ranking reads better.
 
 From the research (docs/04, *Research, 2026-10-02*), in order:
 
@@ -208,12 +212,19 @@ From the research (docs/04, *Research, 2026-10-02*), in order:
 - [ ] **Rank, don't bar.** A pairwise judge, both orders, over a video's
       candidates (and later a neighbourhood's), in place of `worth_telling`'s
       absolute bar.
-- [ ] **40 labels by a person.** `python -m pipeline.review` has 0 rows; the
-      judge is tuned on agent labels. Calibrate before trusting a new judge.
+- [ ] **40 labels by a person.** (checked 2026-10-03) `memory_reviews` has 0
+      rows; the judge and `walk_score` are tuned on agent labels. Run
+      `python -m pipeline.review --limit 40`: it now draws a stable spread
+      across sources (14 Københavnerliv, 10 Glimt, 15 books), then
+      `--accept` / `--reject` the ids. A reject hides the memory.
 - [ ] **Then against now from Wikidata.** Inception, demolition and
       significant events for the linked place, as the contrast line.
-- [ ] **Public-domain memoirs** from Runeberg/ADL (*Mit Livs Eventyr*, Nexø)
-      through the existing book path.
+- [ ] **More public-domain memoirs.** (checked 2026-10-03) Riis added 2 and
+      Baring none (docs/04, *Corpus work*). Nexø has no free digital text, and
+      *Mit Livs Eventyr* retells source 202. Gutenberg's own search
+      (`gutenberg.org/ebooks/search/?query=copenhagen`) works when gutendex is
+      down. Worth a look: Johanne Luise Heiberg's *Et Liv gjenoplevet*, Georg
+      Brandes' *Reminiscences* (neither found on Gutenberg yet).
 - [ ] **Batches API** before any whole-channel run: half price.
 - [ ] **Now on a spot** (docs/10, *The recent past is a memory*; docs/04,
       *Now, 2026-10-02*). In order:
@@ -543,6 +554,10 @@ with free choice. (checked 2026-10-03)
         not what it says* rejected a teaser line.
       - Needs a new extracted field, so measure it before and after, as
         docs/04 *Memory quality* requires.
+      - Tried 2026-10-03 from the summary alone (docs/04, *What to look at*):
+        about 6 of 40 real, 14 invented at places that are gone, a few leaks.
+        Next: only where OSM confirms the place still stands, given OSM and
+        Wikidata's description of the building instead of the story.
 - [ ] **W1 A hidden stop.** (checked 2026-10-03) The strongest mechanism
       found. Level 4's rare memories (`api/progression.py`) are a first
       walk-only surprise; see whether they carry it before building this.
@@ -822,9 +837,6 @@ rejects and why are rows now: `python -m pipeline.sources list`.
         track at each timestamp is the coordinate, no geocoding. A product
         feature, not a source.
       - Podcasts: RSS plus local Whisper into `transcripts`, never DR.
-      - Public-domain memoirs (Andersen's *Mit Livs Eventyr*, Nexø's
-        *Erindringer*): Runeberg / ADL, after the Wollstonecraft trial says
-        whether books pay. Needs historical street names.
       - Politiets Registerblade (1890–1923): who lived at each address. Filler.
       - Film locations (DFI, fan lists): already placed, very stop-worthy.
       - Prompt at a thin spot: "Were you ever here?" opens the submit sheet.
@@ -858,7 +870,10 @@ rejects and why are rows now: `python -m pipeline.sources list`.
       - **No:** Stadsarkiv byggesager and kbhbilleder (scraping banned,
         datasets for research only), arkitekturbilleder.dk (CC BY-NC-SA).
       Path: FBB building IDs → scrape case pages throttled → join Wikidata
-      for architect and date → `crawler/fbb.py` as a text source.
+      for architect and date → `crawler/fbb.py` as a text source. Checked
+      2026-10-03: `sagvis.pub?sag=N` answers "Systemfejl" outside a search
+      session, even with the start page's cookie, so the crawler has to
+      drive the search form first.
 - [ ] **The city still being built.** (researched 2026-10-02) Verdicts:
       - **KK WFS, yes, the best one.** `wfs-kbhkort.kk.dk/k101/ows`, no
         key, CC BY 4.0 (opendata.dk). Layer `anlaegsprojekter`: 226
@@ -1014,6 +1029,10 @@ They cost money or need an account. Full detail in `loop/STATE.md`.
 - **Four off-vocabulary tags.** (checked 2026-09-22) `entertainment`,
   `celebrity`, `theater`, `festival` (15 rows) predate the filter and are
   unfilterable. Map them if a filter ever needs them.
+- **A floor on `walk_score`?** (checked 2026-10-03) Ranking by it moved
+  planned stops only slightly (docs/10, *A walk picks its stops by the
+  rubric*). Leaving 3 or less off walks would drop 22 labelled skips and 2
+  walks. A bar, which the research argues against; the founder's call.
 - **May a card run past 70 words?** (checked 2026-09-30) The Weather Girls
   post (docs/04, *The north star*) runs ~400 words and earns them. Short stays
   the default; the founder doesn't mind longer ones when the story carries it.
