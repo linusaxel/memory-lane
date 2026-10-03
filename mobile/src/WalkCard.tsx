@@ -69,7 +69,9 @@ export default function WalkCard({ walk, size, onPress }: Props) {
       <WalkShape path={walkPath(walk)} size={size - 2} />
       <View style={styles.under}>
         <Text style={styles.day}>{day}</Text>
-        <Text style={styles.meta}>{`${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'} · ${km}`}</Text>
+        <Text
+          style={styles.meta}
+        >{`${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'} · ${km}`}</Text>
       </View>
     </Pressable>
   );

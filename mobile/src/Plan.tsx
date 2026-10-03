@@ -17,7 +17,17 @@
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, type LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  Animated,
+  type LayoutChangeEvent,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import CloseButton from './CloseButton.tsx';
@@ -32,8 +42,24 @@ export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 /** pipeline/tags.py TAGS, the vocabulary a walk can lean on; a test holds the
  *  two to the same list. */
 export const THEMES = [
-  'personal', 'travel', 'business', 'nightlife', 'culture', 'adventure', 'comedy', 'food', 'drink',
-  'nature', 'music', 'art', 'history', 'sport', 'romance', 'family', 'work', 'strange',
+  'personal',
+  'travel',
+  'business',
+  'nightlife',
+  'culture',
+  'adventure',
+  'comedy',
+  'food',
+  'drink',
+  'nature',
+  'music',
+  'art',
+  'history',
+  'sport',
+  'romance',
+  'family',
+  'work',
+  'strange',
 ];
 
 /** Where a range of years can start and end; null is either way open. */
@@ -140,7 +166,12 @@ type PreviewProps = {
 };
 
 /** One side of the pages; null keeps the side's space empty. */
-type ArrowProps = { glyph: 'chevron.left' | 'chevron.right'; name: string; onPress: (() => void) | null; busy: boolean };
+type ArrowProps = {
+  glyph: 'chevron.left' | 'chevron.right';
+  name: string;
+  onPress: (() => void) | null;
+  busy: boolean;
+};
 
 function Arrow({ glyph, name, onPress, busy }: ArrowProps) {
   if (!onPress) return <View style={styles.arrow} />;
@@ -195,7 +226,9 @@ export function Preview({
     return (
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Today's walk is done</Text>
-        <Text style={styles.cardBody}>There's another tomorrow. Or subscribe for as many as you like.</Text>
+        <Text style={styles.cardBody}>
+          There's another tomorrow. Or subscribe for as many as you like.
+        </Text>
         <Pressable
           style={dim(styles.primary)}
           onPress={onSubscribe}
@@ -213,7 +246,10 @@ export function Preview({
   const short = found && meters < ROUTE_FILL * km * 1000;
   const unreachable = floorKm > WALK_KM.max;
   // Up to the slider's grid, so a floor of 2.3 km does not shift every step.
-  const min = Math.min(Math.ceil(Math.max(WALK_KM.min, floorKm) / WALK_KM.step) * WALK_KM.step, WALK_KM.max);
+  const min = Math.min(
+    Math.ceil(Math.max(WALK_KM.min, floorKm) / WALK_KM.step) * WALK_KM.step,
+    WALK_KM.max,
+  );
   const measure = (e: LayoutChangeEvent) => onHeight(e.nativeEvent.layout.height);
   const back = (
     <Pressable
@@ -268,7 +304,10 @@ export function Preview({
                 label={`#${theme}`}
                 on={on}
                 onPress={() =>
-                  onAsk({ ...ask, themes: on ? ask.themes.filter((t) => t !== theme) : [...ask.themes, theme] })
+                  onAsk({
+                    ...ask,
+                    themes: on ? ask.themes.filter((t) => t !== theme) : [...ask.themes, theme],
+                  })
                 }
               />
             );
@@ -282,7 +321,11 @@ export function Preview({
               label={year == null ? 'Any year' : String(year)}
               on={ask.from === year}
               onPress={() =>
-                onAsk({ ...ask, from: year, until: year != null && ask.until != null && ask.until <= year ? null : ask.until })
+                onAsk({
+                  ...ask,
+                  from: year,
+                  until: year != null && ask.until != null && ask.until <= year ? null : ask.until,
+                })
               }
             />
           ))}
@@ -332,7 +375,9 @@ export function Preview({
         // space, so the line never shifts between walks.
         <View style={styles.pages}>
           <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />
-          <Text style={[styles.cardBody, styles.paged]}>{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
+          <Text
+            style={[styles.cardBody, styles.paged]}
+          >{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
           <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />
         </View>
       ) : (
@@ -364,7 +409,9 @@ export function Preview({
         </View>
       )}
       {unreachable ? (
-        <Text style={styles.cardBody}>{`The nearest walk from here is over ${WALK_KM.max} km.`}</Text>
+        <Text
+          style={styles.cardBody}
+        >{`The nearest walk from here is over ${WALK_KM.max} km.`}</Text>
       ) : (
         // Keyed, so a length the server lifted resets the label; never mid-drag,
         // since only a release changes km.
@@ -425,7 +472,12 @@ function Stops({ stops }: { stops: LocatedMemory[] }) {
           .filter(Boolean)
           .join(' · ');
         return (
-          <View key={memory.id} style={styles.stop} accessible accessibilityLabel={`Stop ${i + 1}, ${memory.place.name}. ${about}`}>
+          <View
+            key={memory.id}
+            style={styles.stop}
+            accessible
+            accessibilityLabel={`Stop ${i + 1}, ${memory.place.name}. ${about}`}
+          >
             <View style={styles.number}>
               <Text style={styles.numberText}>{i + 1}</Text>
             </View>
@@ -544,7 +596,11 @@ export function WalkDone({
         ? ` · ${minutes} min`
         : ` · ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
   return (
-    <View style={styles.card} accessibilityViewIsModal onLayout={(e) => onHeight(e.nativeEvent.layout.height)}>
+    <View
+      style={styles.card}
+      accessibilityViewIsModal
+      onLayout={(e) => onHeight(e.nativeEvent.layout.height)}
+    >
       <View style={styles.doneTop}>
         <Text style={styles.doneTitle} accessibilityRole="header" testID="walk-done">
           Nice walk.
@@ -570,7 +626,12 @@ export function WalkDone({
         <Text style={styles.primaryText}>Done</Text>
       </Pressable>
       {onMore && (
-        <Pressable style={dim(styles.secondary)} onPress={onMore} accessibilityRole="button" testID="walk-done-more">
+        <Pressable
+          style={dim(styles.secondary)}
+          onPress={onMore}
+          accessibilityRole="button"
+          testID="walk-done-more"
+        >
           <Text style={styles.secondaryText}>Another walk today ›</Text>
         </Pressable>
       )}
@@ -589,7 +650,13 @@ function Milestone({ streak }: { streak: number }) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     AccessibilityInfo.isReduceMotionEnabled().then((still) => {
       if (still) scale.setValue(1);
-      else Animated.spring(scale, { toValue: 1, speed: 8, bounciness: 14, useNativeDriver: true }).start();
+      else
+        Animated.spring(scale, {
+          toValue: 1,
+          speed: 8,
+          bounciness: 14,
+          useNativeDriver: true,
+        }).start();
     });
   }, [scale]);
   return (
@@ -659,15 +726,35 @@ const styles = StyleSheet.create({
   from: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   grow: { flex: 1 },
   extras: { flexDirection: 'row', gap: 8 },
-  extra: { ...button.small, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  extra: {
+    ...button.small,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
   // Four rows in view, the rest a scroll away: the map behind still shows the walk.
   stops: { maxHeight: 4 * 52, flexGrow: 0 },
   stop: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52 },
-  number: { width: 26, height: 26, borderRadius: 13, backgroundColor: color.ember, alignItems: 'center', justifyContent: 'center' },
+  number: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: color.ember,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   numberText: { ...font.uiBold, fontSize: 13, color: color.paper },
   stopText: { flex: 1, gap: 2 },
   stopName: { ...font.uiBold, fontSize: 16, color: color.ink },
-  back: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', minHeight: 44, marginTop: -10 },
+  back: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    marginTop: -10,
+  },
   pages: { flexDirection: 'row', alignItems: 'center' },
   paged: { flex: 1, textAlign: 'center' },
   // 44pt, Apple's smallest hit target.

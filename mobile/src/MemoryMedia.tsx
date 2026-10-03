@@ -57,7 +57,9 @@ function Recording({ item }: { item: MediaItem }) {
           <View style={styles.audioText}>
             <Text style={styles.audioLabel}>In their voice</Text>
             <Text style={styles.audioTime}>
-              {status.playing ? `${duration(status.currentTime)} / ${duration(length)}` : duration(length)}
+              {status.playing
+                ? `${duration(status.currentTime)} / ${duration(length)}`
+                : duration(length)}
             </Text>
           </View>
         </>
@@ -116,7 +118,12 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
-  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.field, backgroundColor: color.rule },
+  photo: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: radius.field,
+    backgroundColor: color.rule,
+  },
   photoGone: { alignItems: 'center', justifyContent: 'center' },
   goneText: { ...label, color: color.inkSoft },
   audio: {

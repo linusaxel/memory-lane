@@ -20,15 +20,7 @@ type Props = {
   error: string | null;
 };
 
-export default function UnlockHere({
-  memory,
-  index,
-  count,
-  onStep,
-  onUnlock,
-  busy,
-  error,
-}: Props) {
+export default function UnlockHere({ memory, index, count, onStep, onUnlock, busy, error }: Props) {
   const from = [memory.year, memory.source_name].filter(Boolean).join(' · ');
   const many = count > 1;
   return (
@@ -48,9 +40,7 @@ export default function UnlockHere({
             </Text>
           )}
         </View>
-        {many && (
-          <Arrow glyph="chevron.right" name="Next memory here" onPress={() => onStep(1)} />
-        )}
+        {many && <Arrow glyph="chevron.right" name="Next memory here" onPress={() => onStep(1)} />}
       </View>
     </View>
   );

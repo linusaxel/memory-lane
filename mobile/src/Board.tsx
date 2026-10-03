@@ -26,7 +26,12 @@ export default function Board({ visible, onClose, device }: Props) {
   }, [visible, device]);
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
           <Text style={styles.title}>{board?.city ?? 'Board'}</Text>

@@ -218,7 +218,9 @@ export default function MemorySheet({
         styles.heartText,
         {
           opacity: hearts > 0 ? countIn : 0,
-          transform: [{ translateY: countIn.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
+          transform: [
+            { translateY: countIn.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) },
+          ],
         },
       ]}
     >
@@ -246,7 +248,12 @@ export default function MemorySheet({
         accessibilityValue={hearts > 0 ? { text: heartsText } : undefined}
         onPress={() => onHeart(memory)}
       >
-        <Glyph name={hearted ? 'heart.fill' : 'heart'} size={17} color={color.inkSoft} bounce={hearted} />
+        <Glyph
+          name={hearted ? 'heart.fill' : 'heart'}
+          size={17}
+          color={color.inkSoft}
+          bounce={hearted}
+        />
         {heartCount}
       </Pressable>
     );
@@ -273,7 +280,8 @@ export default function MemorySheet({
     if (!memory || memory.locked || memory.id !== revealId || arrived.current === revealId) return;
     arrived.current = revealId;
     // Quiet by default, loud only here: an epic one arrives with its own haptic.
-    if (memory.epic) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    if (memory.epic)
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
     reveal.setValue(0);
     Animated.timing(reveal, {
@@ -329,10 +337,9 @@ export default function MemorySheet({
   ]
     .filter(Boolean)
     .join(' · ');
-  const quoteBy = [
-    memory?.quote_by,
-    started != null && `at ${formatTimestamp(started)}`,
-  ].filter(Boolean).join(', ');
+  const quoteBy = [memory?.quote_by, started != null && `at ${formatTimestamp(started)}`]
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <Modal
@@ -366,7 +373,11 @@ export default function MemorySheet({
               styles.sheet,
               compact &&
                 (peeking
-                  ? [styles.card, styles.floating, { maxHeight: screenHeight * 0.6, marginBottom: 16 + insets.bottom }]
+                  ? [
+                      styles.card,
+                      styles.floating,
+                      { maxHeight: screenHeight * 0.6, marginBottom: 16 + insets.bottom },
+                    ]
                   : [styles.card, styles.tall, { height: screenHeight * 0.92 }]),
             ]}
           >
@@ -379,7 +390,9 @@ export default function MemorySheet({
                 place={styles.more}
                 icon="ellipsis"
                 label="More"
-                onPress={() => moreActions(memory, reported, setAsking, !!onReport, !!onBlock, onEdit)}
+                onPress={() =>
+                  moreActions(memory, reported, setAsking, !!onReport, !!onBlock, onEdit)
+                }
               />
             )}
 
@@ -396,9 +409,7 @@ export default function MemorySheet({
                       <Glyph name="person" size={12} color={color.inkFaint} />
                     ))}
                   <Text style={styles.meta} numberOfLines={1}>
-                    {memory.author
-                      ? `Left by ${memory.author.name}`
-                      : `From ${memory.source_name}`}
+                    {memory.author ? `Left by ${memory.author.name}` : `From ${memory.source_name}`}
                   </Text>
                 </View>
               )}
@@ -437,12 +448,12 @@ export default function MemorySheet({
                     </Text>
                   </Pressable>
                 ) : null)}
-                {linkFailed && <Text style={[styles.meta, styles.byline]}>{linkFailed}</Text>}
-                {!locked && (
-                  <View style={styles.flourish}>
-                    <Flourish />
-                  </View>
-                )}
+              {linkFailed && <Text style={[styles.meta, styles.byline]}>{linkFailed}</Text>}
+              {!locked && (
+                <View style={styles.flourish}>
+                  <Flourish />
+                </View>
+              )}
               {/* What it is about, as the #words the open story sets them in
                   (UI.md, "Tags are the #words"): under the name they belong
                   to, not in the apparatus line. Not tappable. */}
@@ -527,9 +538,7 @@ export default function MemorySheet({
                 {/* In reach, the ring is on the map and this is not open. */}
                 <Approach meters={fromHere} radius={radius} />
                 <Text style={styles.gateFigure}>
-                  {position == null
-                    ? '—'
-                    : formatDistance(fromHere)?.replace(' away', '')}
+                  {position == null ? '—' : formatDistance(fromHere)?.replace(' away', '')}
                 </Text>
                 <Text style={styles.gateNote}>
                   {position == null
@@ -556,7 +565,12 @@ export default function MemorySheet({
                   {/* One sentence is not a lede, it is the story. */}
                   {memory.epic && (
                     <Animated.View style={[rise(0), styles.epic]} testID="epic">
-                      <Glyph name="sparkles" size={18} color={color.ember} bounce={memory.id === revealId} />
+                      <Glyph
+                        name="sparkles"
+                        size={18}
+                        color={color.ember}
+                        bounce={memory.id === revealId}
+                      />
                       <Text style={styles.epicText}>Epic</Text>
                     </Animated.View>
                   )}
@@ -609,19 +623,22 @@ export default function MemorySheet({
 
                     <MemoryMedia media={memory.media.filter((m) => !placed.includes(m.id))} />
 
-
                     <Flourish />
                     <Notes memoryId={memory.id} isAuthor={!!onEdit} heart={heart} />
                   </Animated.View>
                 </ScrollView>
-
               </>
             )}
 
             {/* Over the story, only what is not the story: the way to the
                 others under this pin. */}
             {many && (
-              <View style={[styles.actions, compact && !peeking && { paddingBottom: 20 + insets.bottom }]}>
+              <View
+                style={[
+                  styles.actions,
+                  compact && !peeking && { paddingBottom: 20 + insets.bottom },
+                ]}
+              >
                 {/* Without this, every memory but the first at a stacked point is
                     unreachable - and 60% of this corpus sits on a shared point. */}
                 {many && (
@@ -633,7 +650,12 @@ export default function MemorySheet({
                       disabled={index === 0}
                       onPress={() => onIndex(index - 1)}
                     >
-                      <Glyph name="chevron.left" size={17} weight="semibold" color={color.inkSoft} />
+                      <Glyph
+                        name="chevron.left"
+                        size={17}
+                        weight="semibold"
+                        color={color.inkSoft}
+                      />
                     </Pressable>
                     <Text style={styles.pagerText}>
                       {index + 1} of {memories.length} here
@@ -645,7 +667,12 @@ export default function MemorySheet({
                       disabled={index === memories.length - 1}
                       onPress={() => onIndex(index + 1)}
                     >
-                      <Glyph name="chevron.right" size={17} weight="semibold" color={color.inkSoft} />
+                      <Glyph
+                        name="chevron.right"
+                        size={17}
+                        weight="semibold"
+                        color={color.inkSoft}
+                      />
                     </Pressable>
                   </View>
                 )}

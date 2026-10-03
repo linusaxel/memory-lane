@@ -16,7 +16,13 @@ type Props = {
 export default function Avatar({ url, name, size }: Props) {
   const circle = { width: size, height: size, borderRadius: size / 2 };
   if (url) {
-    return <Image source={{ uri: mediaUrl({ url }) }} style={[styles.circle, circle]} accessibilityIgnoresInvertColors />;
+    return (
+      <Image
+        source={{ uri: mediaUrl({ url }) }}
+        style={[styles.circle, circle]}
+        accessibilityIgnoresInvertColors
+      />
+    );
   }
   const initial = name && name !== 'Anonymous' ? name.trim().charAt(0).toUpperCase() : '';
   return (
@@ -31,6 +37,11 @@ export default function Avatar({ url, name, size }: Props) {
 }
 
 const styles = StyleSheet.create({
-  circle: { alignItems: 'center', justifyContent: 'center', backgroundColor: color.rule, overflow: 'hidden' },
+  circle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.rule,
+    overflow: 'hidden',
+  },
   initial: { ...font.uiBold, color: color.inkSoft },
 });

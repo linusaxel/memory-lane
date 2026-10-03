@@ -255,7 +255,4 @@ export const sunk = (base?: StyleProp<ViewStyle>): ViewStyle => {
  */
 export const dim =
   (base?: StyleProp<ViewStyle>) =>
-  ({ pressed }: PressableStateCallbackType): StyleProp<ViewStyle> => [
-    base,
-    pressed && sunk(base),
-  ];
+  ({ pressed }: PressableStateCallbackType): StyleProp<ViewStyle> => [base, pressed && sunk(base)];

@@ -121,7 +121,9 @@ export default function Notes({ memoryId, isAuthor, heart }: Props) {
         <View style={styles.row}>
           {heart}
           {notes.length > 0 && (
-            <Text style={styles.heading}>{notes.length === 1 ? '1 note' : `${notes.length} notes`}</Text>
+            <Text style={styles.heading}>
+              {notes.length === 1 ? '1 note' : `${notes.length} notes`}
+            </Text>
           )}
         </View>
       )}
@@ -166,7 +168,9 @@ export default function Notes({ memoryId, isAuthor, heart }: Props) {
       ))}
       {failed && (
         <Text style={styles.heading}>
-          {failed === 'refused' ? "That note can't be posted here." : "That didn't send. Try again."}
+          {failed === 'refused'
+            ? "That note can't be posted here."
+            : "That didn't send. Try again."}
         </Text>
       )}
     </View>

@@ -3,8 +3,22 @@
  *  wait for a level"). */
 
 import { Host, Text as SwiftText } from '@expo/ui/swift-ui';
-import { Animation, animation, contentTransition, font as swiftFont, foregroundColor } from '@expo/ui/swift-ui/modifiers';
-import { Platform, StyleSheet, Text, View, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Animation,
+  animation,
+  contentTransition,
+  font as swiftFont,
+  foregroundColor,
+} from '@expo/ui/swift-ui/modifiers';
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+  useColorScheme,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import type { Profile } from './api.ts';
 import { GlassButton } from './Glass.tsx';

@@ -134,10 +134,7 @@ export async function rememberUnlocked(
  *  would bump an edited memory to the top of the Unlocked tab as if it had
  *  just been earned again. Never touches the index - the id was already on it
  *  the moment it entered `current`. */
-export async function updateUnlocked(
-  current: Unlocked,
-  memory: LocatedMemory,
-): Promise<Unlocked> {
+export async function updateUnlocked(current: Unlocked, memory: LocatedMemory): Promise<Unlocked> {
   const existing = current[memory.id];
   const item: UnlockedMemory = { ...memory, unlocked_at: existing?.unlocked_at ?? Date.now() };
   const next = { ...current, [memory.id]: item };

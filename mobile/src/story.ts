@@ -45,7 +45,8 @@ export function serialize(story: Block[]): string {
   return story
     .map((b) => {
       if (b.kind === 'divider') return '---';
-      if (b.kind === 'photo') return `![${b.caption.replace(/\n/g, ' ')}](photo:${b.id} ${b.size} ${b.place})`;
+      if (b.kind === 'photo')
+        return `![${b.caption.replace(/\n/g, ' ')}](photo:${b.id} ${b.size} ${b.place})`;
       const text = b.text.trim();
       if (!text) return '';
       if (b.kind === 'h') return `## ${text.replace(/\n/g, ' ')}`;
@@ -80,7 +81,11 @@ export function inline(text: string, marks = false): Run[] {
 export function plain(md: string): string {
   return blocks(md)
     .flatMap((b) => (b.kind === 'p' || b.kind === 'h' || b.kind === 'quote' ? [b.text] : []))
-    .map((text) => inline(text).map((r) => r.text).join(''))
+    .map((text) =>
+      inline(text)
+        .map((r) => r.text)
+        .join(''),
+    )
     .join('\n\n');
 }
 

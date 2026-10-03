@@ -46,7 +46,11 @@ export default function EditProfile({
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setPhotoError(fromCamera ? 'Allow camera access in Settings to take a photo.' : 'Allow photo access in Settings to choose one.');
+      setPhotoError(
+        fromCamera
+          ? 'Allow camera access in Settings to take a photo.'
+          : 'Allow photo access in Settings to choose one.',
+      );
       return;
     }
     // As Submit's addPhoto: re-encoded, and a JPEG rather than a HEIC.
@@ -55,7 +59,8 @@ export default function EditProfile({
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
-      preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      preferredAssetRepresentationMode:
+        ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
     };
     const result = fromCamera
       ? await ImagePicker.launchCameraAsync(options)
@@ -87,8 +92,17 @@ export default function EditProfile({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.top}>
           <Text style={styles.title}>Profile</Text>
           <CloseButton onPress={onClose} label="Close profile" />
@@ -97,15 +111,30 @@ export default function EditProfile({
         <View style={styles.photo}>
           <Avatar url={profile?.avatar_url} name={displayName} size={112} />
           <View style={styles.actions}>
-            <Pressable style={dim(styles.action)} onPress={() => choose(false)} disabled={busy} accessibilityRole="button">
+            <Pressable
+              style={dim(styles.action)}
+              onPress={() => choose(false)}
+              disabled={busy}
+              accessibilityRole="button"
+            >
               <Text style={styles.actionText}>Choose photo</Text>
             </Pressable>
-            <Pressable style={dim(styles.action)} onPress={() => choose(true)} disabled={busy} accessibilityRole="button">
+            <Pressable
+              style={dim(styles.action)}
+              onPress={() => choose(true)}
+              disabled={busy}
+              accessibilityRole="button"
+            >
               <Text style={styles.actionText}>Take photo</Text>
             </Pressable>
           </View>
           {profile?.avatar_url && (
-            <Pressable style={dim(styles.link)} onPress={remove} disabled={busy} accessibilityRole="button">
+            <Pressable
+              style={dim(styles.link)}
+              onPress={remove}
+              disabled={busy}
+              accessibilityRole="button"
+            >
               <Text style={styles.linkText}>Remove photo</Text>
             </Pressable>
           )}
@@ -144,7 +173,13 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 10 },
   action: { ...button.outline },
   actionText: { ...buttonText, color: color.ink },
-  section: { marginTop: 38, gap: 12, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
+  section: {
+    marginTop: 38,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: color.rule,
+    paddingTop: 18,
+  },
   sectionTitle: { ...label },
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   input: { ...input },

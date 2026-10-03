@@ -1,12 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import {
-  around,
-  metersBetween,
-  pathMeters,
-  simplifyPath,
-} from './region.ts';
+import { around, metersBetween, pathMeters, simplifyPath } from './region.ts';
 
 test('a point is no distance from itself', () => {
   assert.equal(metersBetween(55.6759, 12.5655, 55.6759, 12.5655), 0);
@@ -61,4 +56,3 @@ test('around keeps you in the middle and the stop inside the frame', () => {
   assert.ok(0.005 / (r.longitudeDelta / 2) < 0.6);
   assert.equal(around(you, [you], 0.002).latitudeDelta, 0.002);
 });
-

@@ -72,7 +72,9 @@ export default function Drawer({ open, onOpen, onClose, children }: Props) {
       toValue: to,
       velocity,
       useNativeDriver: true,
-      ...(to === 1 ? { tension: 70, friction: 9 } : { tension: 90, friction: 12, overshootClamping: true }),
+      ...(to === 1
+        ? { tension: 70, friction: 9 }
+        : { tension: 90, friction: 12, overshootClamping: true }),
     }).start(done);
   };
 
@@ -86,7 +88,9 @@ export default function Drawer({ open, onOpen, onClose, children }: Props) {
   const drag = (from: 0 | 1) =>
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
-        Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5 && (from === 0 ? g.dx > 0 : g.dx < 0),
+        Math.abs(g.dx) > 10 &&
+        Math.abs(g.dx) > Math.abs(g.dy) * 1.5 &&
+        (from === 0 ? g.dx > 0 : g.dx < 0),
       onMoveShouldSetPanResponderCapture: (_, g) =>
         from === 1 && g.dx < -10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
       onPanResponderGrant: () => {
@@ -118,7 +122,11 @@ export default function Drawer({ open, onOpen, onClose, children }: Props) {
   const panel = useRef(drag(1)).current;
 
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-width, 0] });
-  const scrim = progress.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' });
+  const scrim = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   return (
     <>
@@ -146,7 +154,14 @@ export default function Drawer({ open, onOpen, onClose, children }: Props) {
 const styles = StyleSheet.create({
   hidden: { display: 'none' },
   edge: { position: 'absolute', top: 0, bottom: 0, left: 0, width: EDGE },
-  scrim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.scrim },
+  scrim: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: color.scrim,
+  },
   panel: {
     position: 'absolute',
     top: 0,

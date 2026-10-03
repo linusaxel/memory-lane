@@ -16,7 +16,13 @@ type Props = {
   icon?: ComponentProps<typeof Glyph>['name'];
 };
 
-export default function CloseButton({ onPress, label = 'Close', disabled, place, icon = 'xmark' }: Props) {
+export default function CloseButton({
+  onPress,
+  label = 'Close',
+  disabled,
+  place,
+  icon = 'xmark',
+}: Props) {
   return (
     <Pressable
       style={dim([styles.circle, place])}

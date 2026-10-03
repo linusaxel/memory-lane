@@ -6,15 +6,7 @@
  * the numbers) is the journal's header, not here.
  */
 
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { API_BASE, setOnBoard, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
@@ -58,7 +50,12 @@ export default function Settings({
   const granted = permission === 'granted';
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
           <Text style={styles.title}>Settings</Text>
@@ -72,8 +69,7 @@ export default function Settings({
                 {profile.subscribed_until
                   ? `Subscribed until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
                   : 'Subscribed.'}{' '}
-                Plan as many
-                walks a day as you like.
+                Plan as many walks a day as you like.
               </Text>
               <Pressable
                 style={dim(styles.action)}
@@ -85,7 +81,11 @@ export default function Settings({
             </>
           ) : (
             profile?.user_id && (
-              <Pressable style={dim(styles.action)} onPress={onSubscribe} accessibilityRole="button">
+              <Pressable
+                style={dim(styles.action)}
+                onPress={onSubscribe}
+                accessibilityRole="button"
+              >
                 <Text style={styles.actionText}>Subscribe</Text>
               </Pressable>
             )
@@ -100,8 +100,8 @@ export default function Settings({
             </Text>
           </Row>
           <Text style={styles.note}>
-            A memory opens only on a walk, standing there. Finishing a walk earns XP, and
-            from level 4 epic stories can join your walks. You find out which when it opens.
+            A memory opens only on a walk, standing there. Finishing a walk earns XP, and from level
+            4 epic stories can join your walks. You find out which when it opens.
           </Text>
           <Text style={styles.note}>
             A few are only pinned to a city, not a spot. Those are open to everyone.
@@ -114,7 +114,11 @@ export default function Settings({
               ? "On. Used to tell when you're close to a memory, and never stored."
               : "Off. You'll need it to unlock anything."}
           </Text>
-          <Pressable style={dim(styles.action)} onPress={onRequestLocation} accessibilityRole="button">
+          <Pressable
+            style={dim(styles.action)}
+            onPress={onRequestLocation}
+            accessibilityRole="button"
+          >
             <Text style={styles.actionText}>
               {granted ? 'Manage in Settings' : 'Turn on location'}
             </Text>
@@ -145,12 +149,17 @@ export default function Settings({
               value={profile?.on_board ?? true}
               disabled={!device || !profile?.user_id}
               onValueChange={(next) => {
-                if (device) setOnBoard(device, next).then(onProfile).catch(() => {});
+                if (device)
+                  setOnBoard(device, next)
+                    .then(onProfile)
+                    .catch(() => {});
               }}
               accessibilityLabel="Show me on the city board"
             />
           </Row>
-          <Text style={styles.note}>By your name and photo, with how many memories you opened this month.</Text>
+          <Text style={styles.note}>
+            By your name and photo, with how many memories you opened this month.
+          </Text>
         </Section>
 
         <Section title="About">
@@ -200,7 +209,13 @@ const styles = StyleSheet.create({
   // The journal's title bar, so the two sheets read as one app.
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { ...font.display, fontSize: 34, color: color.ink },
-  section: { marginTop: 38, gap: 12, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
+  section: {
+    marginTop: 38,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: color.rule,
+    paddingTop: 18,
+  },
   sectionTitle: { ...label },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   rowText: { flex: 1, ...font.prose, fontSize: 17, lineHeight: 27, color: color.ink },

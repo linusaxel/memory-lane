@@ -61,7 +61,10 @@ const HOUR = 60 * 60 * 1000;
 const NOTHING = { last: 0, byId: {} };
 
 test('the first memory you walk into notifies', () => {
-  assert.deepEqual(mayNotify('1', 10 * HOUR, NOTHING), { last: 10 * HOUR, byId: { '1': 10 * HOUR } });
+  assert.deepEqual(mayNotify('1', 10 * HOUR, NOTHING), {
+    last: 10 * HOUR,
+    byId: { '1': 10 * HOUR },
+  });
 });
 
 test('a cluster entered at once notifies once', () => {

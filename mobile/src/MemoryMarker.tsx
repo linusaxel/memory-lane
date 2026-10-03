@@ -101,7 +101,13 @@ export default function MemoryMarker({
   );
 }
 
-type PinProps = { lit: boolean; next: boolean; open: boolean; opacity: number; badge: number | null };
+type PinProps = {
+  lit: boolean;
+  next: boolean;
+  open: boolean;
+  opacity: number;
+  badge: number | null;
+};
 
 /** Every memory is a small padlock. It lights up gold only when it can be
  *  opened from where you stand, and once opened it swings its shackle up and
@@ -119,13 +125,11 @@ function Pin({ lit, next, open, opacity, badge }: PinProps) {
         </View>
       </View>
       {badge !== null && (
-        <View
-          style={[
-            styles.tag,
-            lit ? styles.tagLit : null,
-          ]}
-        >
-          <Text style={[styles.count, lit && styles.countLit]} maxFontSizeMultiplier={MARKER_FONT_SCALE}>
+        <View style={[styles.tag, lit ? styles.tagLit : null]}>
+          <Text
+            style={[styles.count, lit && styles.countLit]}
+            maxFontSizeMultiplier={MARKER_FONT_SCALE}
+          >
             {badge}
           </Text>
         </View>
@@ -170,7 +174,14 @@ const styles = StyleSheet.create({
   // Lifted clear of the body; `leg` keeps the left one in it, as a real open
   // padlock's is.
   shackleOpen: { marginBottom: 3 },
-  leg: { position: 'absolute', left: 3, top: 7, width: 2.5, height: 5, backgroundColor: color.ember },
+  leg: {
+    position: 'absolute',
+    left: 3,
+    top: 7,
+    width: 2.5,
+    height: 5,
+    backgroundColor: color.ember,
+  },
   // Gold is too light for a paper edge, so a lit lock draws in sealInk.
   body: {
     width: 16,

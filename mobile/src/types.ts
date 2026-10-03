@@ -7,4 +7,3 @@
 
 /** 'blocked' is the one that cannot be fixed by asking again - only Settings. */
 export type Permission = 'unknown' | 'granted' | 'denied' | 'blocked';
-

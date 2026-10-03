@@ -67,6 +67,13 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings, 
 }
 
 const styles = StyleSheet.create({
-  circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  circle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
   face: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 });

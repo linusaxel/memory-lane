@@ -52,13 +52,7 @@ import { forgetHearted, loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { anyNew } from './src/seen.ts';
 import { FALLBACK_RADIUS_M, opacityOf, reachOf } from './src/reach.ts';
-import {
-  around,
-  endFloorKm,
-  metersBetween,
-  pathMeters,
-  type Region,
-} from './src/region.ts';
+import { around, endFloorKm, metersBetween, pathMeters, type Region } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
 import { clearRoute, loadChoices, loadRoute, saveChoices, saveRoute } from './src/route.ts';
 import {
@@ -72,7 +66,15 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { EndPick, EndWalk, PastWalk, Preview, WALK_KM, WalkDone, type Reward } from './src/Plan.tsx';
+import {
+  EndPick,
+  EndWalk,
+  PastWalk,
+  Preview,
+  WALK_KM,
+  WalkDone,
+  type Reward,
+} from './src/Plan.tsx';
 import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
 import Board from './src/Board.tsx';
@@ -203,7 +205,13 @@ export default function App() {
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
   const [stage, setStage] = useState<Stage>('loading');
   const [walkKm, setWalkKm] = useState(WALK_KM.initial);
-  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, end: null, themes: [], from: null, until: null });
+  const [walkAsk, setWalkAsk] = useState<WalkAsk>({
+    loop: true,
+    end: null,
+    themes: [],
+    from: null,
+    until: null,
+  });
   useEffect(() => {
     loadChoices().then((kept) => kept && setWalkAsk((ask) => ({ ...ask, ...kept })));
   }, []);
@@ -602,86 +610,88 @@ export default function App() {
 
   // The length and shape of the walk on the card, once it is drawn.
   const plannedKey = useRef<string | null>(null);
-  const planWalk = useCallback(async (next: number, another = false) => {
-    if (!device) return;
-    setPlanBusy(true);
-    setPlanError(null);
-    let from = positionRef.current;
-    // Asked only once it was said yes to: the planner opens at launch, and a
-    // dialog then would be cold (UI.md, "Asking for location"). Otherwise the
-    // card's Use my location is the ask.
-    if (!from && permission === 'granted' && (await goToMyLocation().catch(() => false))) {
-      from = positionRef.current;
-    }
-    const fallback = !from;
-    const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
-    try {
-      const plan = (km: number) =>
-        previewRoute(device, anchor, km * 1000, walkAsk, next);
-      const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
-      const last = shown[shown.length - 1]?.walk ?? null;
-      let km = planKm;
-      let walk = await plan(km);
-      // Never "the only walk": the same one back offers the nearest other
-      // length, and the slider moves to say so. Never "no walk" either: an
-      // empty length moves up to the nearest that has one. The longest first,
-      // so nothing within reach at all costs one request, not eighteen.
-      // ponytail: up to eighteen previews in a row; a server-side "nearest walk" if it drags.
-      const empty = !another && walk.memories.length === 0 && km < WALK_KM.max;
-      if (empty) {
-        const longest = await plan(WALK_KM.max);
-        if (longest.memories.length > 0) {
-          for (let up = km + WALK_KM.step; up <= WALK_KM.max; up += WALK_KM.step) {
-            const other = up === WALK_KM.max ? longest : await plan(up);
-            if (other.memories.length > 0) {
-              km = up;
+  const planWalk = useCallback(
+    async (next: number, another = false) => {
+      if (!device) return;
+      setPlanBusy(true);
+      setPlanError(null);
+      let from = positionRef.current;
+      // Asked only once it was said yes to: the planner opens at launch, and a
+      // dialog then would be cold (UI.md, "Asking for location"). Otherwise the
+      // card's Use my location is the ask.
+      if (!from && permission === 'granted' && (await goToMyLocation().catch(() => false))) {
+        from = positionRef.current;
+      }
+      const fallback = !from;
+      const anchor = from ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
+      try {
+        const plan = (km: number) => previewRoute(device, anchor, km * 1000, walkAsk, next);
+        const ids = (route: TodaysRoute | null) => route?.memories.map((m) => m.id).join();
+        const last = shown[shown.length - 1]?.walk ?? null;
+        let km = planKm;
+        let walk = await plan(km);
+        // Never "the only walk": the same one back offers the nearest other
+        // length, and the slider moves to say so. Never "no walk" either: an
+        // empty length moves up to the nearest that has one. The longest first,
+        // so nothing within reach at all costs one request, not eighteen.
+        // ponytail: up to eighteen previews in a row; a server-side "nearest walk" if it drags.
+        const empty = !another && walk.memories.length === 0 && km < WALK_KM.max;
+        if (empty) {
+          const longest = await plan(WALK_KM.max);
+          if (longest.memories.length > 0) {
+            for (let up = km + WALK_KM.step; up <= WALK_KM.max; up += WALK_KM.step) {
+              const other = up === WALK_KM.max ? longest : await plan(up);
+              if (other.memories.length > 0) {
+                km = up;
+                walk = other;
+                break;
+              }
+            }
+          }
+        }
+        if (another && ids(walk) === ids(last)) {
+          const low = Math.max(WALK_KM.min, walkFloor);
+          const tried = new Set([km]);
+          for (const step of [-0.5, 0.5, -1, 1, -1.5, 1.5]) {
+            const nearby = Math.min(Math.max(planKm + step, low), WALK_KM.max);
+            if (tried.has(nearby)) continue;
+            tried.add(nearby);
+            const other = await plan(nearby);
+            if (ids(other) !== ids(last)) {
+              km = nearby;
               walk = other;
               break;
             }
           }
         }
-      }
-      if (another && ids(walk) === ids(last)) {
-        const low = Math.max(WALK_KM.min, walkFloor);
-        const tried = new Set([km]);
-        for (const step of [-0.5, 0.5, -1, 1, -1.5, 1.5]) {
-          const nearby = Math.min(Math.max(planKm + step, low), WALK_KM.max);
-          if (tried.has(nearby)) continue;
-          tried.add(nearby);
-          const other = await plan(nearby);
-          if (ids(other) !== ids(last)) {
-            km = nearby;
-            walk = other;
-            break;
-          }
+        if (!mounted.current) return;
+        if (km !== planKm) setWalkKm(km);
+        plannedKey.current = planKey(km, walkAsk);
+        setAgain(next);
+        const only = another && ids(walk) === ids(last);
+        setOnlyWalk(only);
+        if (!another) {
+          setShown([{ again: next, km, walk }]);
+          setShownAt(0);
+          setEmptyAt(empty && km !== planKm ? planKm : null);
+        } else if (!only) {
+          setShown([...shown, { again: next, km, walk }]);
+          setShownAt(shown.length);
         }
+        setPlanFrom(anchor);
+        setPlanFallback(fallback);
+        setPreview(walk);
+        setWalkedOut(false);
+      } catch (e) {
+        if (!mounted.current) return;
+        if (walkedToday(e)) setWalkedOut(true);
+        else setPlanError("Can't reach Memory Lane right now.");
+      } finally {
+        if (mounted.current) setPlanBusy(false);
       }
-      if (!mounted.current) return;
-      if (km !== planKm) setWalkKm(km);
-      plannedKey.current = planKey(km, walkAsk);
-      setAgain(next);
-      const only = another && ids(walk) === ids(last);
-      setOnlyWalk(only);
-      if (!another) {
-        setShown([{ again: next, km, walk }]);
-        setShownAt(0);
-        setEmptyAt(empty && km !== planKm ? planKm : null);
-      } else if (!only) {
-        setShown([...shown, { again: next, km, walk }]);
-        setShownAt(shown.length);
-      }
-      setPlanFrom(anchor);
-      setPlanFallback(fallback);
-      setPreview(walk);
-      setWalkedOut(false);
-    } catch (e) {
-      if (!mounted.current) return;
-      if (walkedToday(e)) setWalkedOut(true);
-      else setPlanError("Can't reach Memory Lane right now.");
-    } finally {
-      if (mounted.current) setPlanBusy(false);
-    }
-  }, [device, goToMyLocation, permission, planKm, walkFloor, walkAsk, shown]);
+    },
+    [device, goToMyLocation, permission, planKm, walkFloor, walkAsk, shown],
+  );
 
   /** Back, or on again, through the walks the card has shown. */
   const showAt = (i: number) => {
@@ -763,16 +773,32 @@ export default function App() {
     const landing = fitting.current === preview || fittedFor !== preview;
     if (landing) fitting.current = preview;
     mapRef.current?.fitToCoordinates(
-      [planFrom, ...preview.memories.map((memory) => memory.place.coordinates), ...end, ...previewPath].map(
-        (c) => ({ latitude: c.lat, longitude: c.lng }),
-      ),
-      { edgePadding: { top: 100, right: 60, bottom: previewCardHeight + 50, left: 60 }, animated: true },
+      [
+        planFrom,
+        ...preview.memories.map((memory) => memory.place.coordinates),
+        ...end,
+        ...previewPath,
+      ].map((c) => ({ latitude: c.lat, longitude: c.lng })),
+      {
+        edgePadding: { top: 100, right: 60, bottom: previewCardHeight + 50, left: 60 },
+        animated: true,
+      },
     );
     if (!landing) return;
     const timer = setTimeout(settleFit, 900);
     return () => clearTimeout(timer);
     // Not on fittedFor: landing is not a reason to fit again.
-  }, [stage, mapReady, preview, planFrom, mapRef, walkAsk.end, previewPath, previewCardHeight, settleFit]);
+  }, [
+    stage,
+    mapReady,
+    preview,
+    planFrom,
+    mapRef,
+    walkAsk.end,
+    previewPath,
+    previewCardHeight,
+    settleFit,
+  ]);
 
   // Ids, not memories: reachOf only asks whether this device walked to it, and
   // a Set keeps that an O(1) question inside three passes over every group.
@@ -821,11 +847,11 @@ export default function App() {
   const routePositionById = useMemo(() => {
     const map = new Map<number, number>();
     const walking = stage === 'walk' && !pastWalk;
-  // On a past walk, a stop shows what you read there and nothing you did not.
-  const openEarned = (group: MemoryGroup) => {
-    setOpenAt(group.memories.filter((memory) => earned.has(memory.id)));
-    setOpenIndex(0);
-  };
+    // On a past walk, a stop shows what you read there and nothing you did not.
+    const openEarned = (group: MemoryGroup) => {
+      setOpenAt(group.memories.filter((memory) => earned.has(memory.id)));
+      setOpenIndex(0);
+    };
     pins.forEach((memory, i) => {
       if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
     });
@@ -922,14 +948,20 @@ export default function App() {
     if (pastPath.length === 0 || !mapReady || !pastCardHeight) return;
     mapRef.current?.fitToCoordinates(
       pastPath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
-      { edgePadding: { top: 120, right: 60, bottom: pastCardHeight + 50, left: 60 }, animated: true },
+      {
+        edgePadding: { top: 120, right: 60, bottom: pastCardHeight + 50, left: 60 },
+        animated: true,
+      },
     );
   }, [pastPath, mapRef, mapReady, pastCardHeight]);
   useEffect(() => {
     if (donePath.length < 2 || !mapReady || !doneCardHeight) return;
     mapRef.current?.fitToCoordinates(
       donePath.map((c) => ({ latitude: c.lat, longitude: c.lng })),
-      { edgePadding: { top: 80, right: 60, bottom: doneCardHeight + 50, left: 60 }, animated: true },
+      {
+        edgePadding: { top: 80, right: 60, bottom: doneCardHeight + 50, left: 60 },
+        animated: true,
+      },
     );
   }, [donePath, mapRef, mapReady, doneCardHeight]);
   const mine = !!openMemories[openIndex] && filedBy(openMemories[openIndex], me);
@@ -955,9 +987,7 @@ export default function App() {
   // the tap or it is a second code path that can disagree with the product.
   const openMemory = useCallback(
     (id: number): boolean => {
-      const group = groups.find((g) =>
-        g.memories.some((memory) => memory.id === id),
-      );
+      const group = groups.find((g) => g.memories.some((memory) => memory.id === id));
       if (!group) return false;
       setOpenAt(group.memories);
       setOpenIndex(group.memories.findIndex((memory) => memory.id === id));
@@ -1006,8 +1036,7 @@ export default function App() {
   // suggestion: take another way round and whichever stop you reach is the one
   // to open.
   const stopHere = useMemo(() => {
-    let best: { group: MemoryGroup; index: number; position: number; name: string } | null =
-      null;
+    let best: { group: MemoryGroup; index: number; position: number; name: string } | null = null;
     for (const group of withinReach) {
       for (const [index, memory] of group.memories.entries()) {
         const at = routePositionById.get(memory.id);
@@ -1292,7 +1321,11 @@ export default function App() {
       // id the sheet below would take their own memory for a stranger's.
       setProfile((who) =>
         who
-          ? { ...who, submitted: who.submitted + 1, user_id: who.user_id ?? memory.author?.id ?? null }
+          ? {
+              ...who,
+              submitted: who.submitted + 1,
+              user_id: who.user_id ?? memory.author?.id ?? null,
+            }
           : who,
       );
       setMineVersion((v) => v + 1);
@@ -1385,11 +1418,7 @@ export default function App() {
   };
 
   if (!logoDone) {
-    return (
-      <StartupLogo
-        onDone={() => setLogoDone(true)}
-      />
-    );
+    return <StartupLogo onDone={() => setLogoDone(true)} />;
   }
 
   if (signedIn === null) return null;
@@ -1481,7 +1510,8 @@ export default function App() {
               __DEV__
                 ? (e) => {
                     const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
-                    const slop = (region.latitudeDelta * 111_000 * 24) / Dimensions.get('window').height;
+                    const slop =
+                      (region.latitudeDelta * 111_000 * 24) / Dimensions.get('window').height;
                     let pin: { lat: number; lng: number } | null = null;
                     let best = slop;
                     for (const group of groups) {
@@ -1511,16 +1541,19 @@ export default function App() {
               />
             )}
 
-            {stage === 'preview' && !pastWalk && fittedFor === preview && previewPath.length > 1 && (
-              <RouteLine
-                path={previewPath}
-                dark={scheme === 'dark'}
-                draw
-                stops={previewStops}
-                onReach={(count) => setRevealed({ walk: preview, count })}
-                dim={planBusy}
-              />
-            )}
+            {stage === 'preview' &&
+              !pastWalk &&
+              fittedFor === preview &&
+              previewPath.length > 1 && (
+                <RouteLine
+                  path={previewPath}
+                  dark={scheme === 'dark'}
+                  draw
+                  stops={previewStops}
+                  onReach={(count) => setRevealed({ walk: preview, count })}
+                  dim={planBusy}
+                />
+              )}
             {donePath.length > 1 && <RouteLine path={donePath} dark={scheme === 'dark'} />}
             {pastPath.length > 1 && <RouteLine path={pastPath} dark={scheme === 'dark'} />}
 
@@ -1535,7 +1568,8 @@ export default function App() {
                   break;
                 }
               }
-              if (stage === 'preview' && !pastWalk && (routePosition ?? 0) > stopsShown) return null;
+              if (stage === 'preview' && !pastWalk && (routePosition ?? 0) > stopsShown)
+                return null;
               const reach = reachOf(group, position, earned);
               return (
                 <MemoryMarker
@@ -1543,9 +1577,7 @@ export default function App() {
                   group={group}
                   reach={reach}
                   lit={walking && reach === 'unlockable'}
-                  next={
-                    walking && group.memories.some((memory) => memory.id === nextRouteStop?.id)
-                  }
+                  next={walking && group.memories.some((memory) => memory.id === nextRouteStop?.id)}
                   opacity={
                     stage === 'map' && !pastWalk
                       ? FADED_PIN
@@ -1560,12 +1592,12 @@ export default function App() {
                     pastWalk
                       ? openEarned(group)
                       : !walking
-                      ? undefined
-                      : group.spanMeters > CLUSTER_SPAN_M
-                        ? zoomTo(group)
-                        : withinReach.includes(group)
-                          ? pickRing(group)
-                          : openGroup(group)
+                        ? undefined
+                        : group.spanMeters > CLUSTER_SPAN_M
+                          ? zoomTo(group)
+                          : withinReach.includes(group)
+                            ? pickRing(group)
+                            : openGroup(group)
                   }
                 />
               );
@@ -1581,7 +1613,6 @@ export default function App() {
                 <View style={styles.devDot} />
               </Marker>
             )}
-
           </MapView>
 
           {/* The lock, low where a thumb reaches, and which memory it opens. */}
@@ -1720,23 +1751,25 @@ export default function App() {
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
               read at the top"). Journal top left, you top right. */}
-          {(stage === 'map' || stage === 'preview' || stage === 'walk') && !confirmEnd && !showDone && (
-            <GlassButton
-              place={styles.topLeft}
-              style={styles.circle}
-              hitSlop={4}
-              accessibilityRole="button"
-              accessibilityLabel="Journal"
-              accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setJournalOpen(true);
-              }}
-            >
-              <Glyph name="book.closed" size={20} weight="medium" color={color.ink} />
-              {journalNew && <View style={styles.newDot} />}
-            </GlassButton>
-          )}
+          {(stage === 'map' || stage === 'preview' || stage === 'walk') &&
+            !confirmEnd &&
+            !showDone && (
+              <GlassButton
+                place={styles.topLeft}
+                style={styles.circle}
+                hitSlop={4}
+                accessibilityRole="button"
+                accessibilityLabel="Journal"
+                accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setJournalOpen(true);
+                }}
+              >
+                <Glyph name="book.closed" size={20} weight="medium" color={color.ink} />
+                {journalNew && <View style={styles.newDot} />}
+              </GlassButton>
+            )}
           {/* The planner has no bottom row (its card is there), so Add sits
               beside Journal. */}
           {(stage === 'map' || stage === 'preview') && !journalOpen && (
@@ -1844,7 +1877,10 @@ export default function App() {
                             latitude: memory.place.coordinates.lat,
                             longitude: memory.place.coordinates.lng,
                           })),
-                          { edgePadding: { top: 80, right: 80, bottom: 160, left: 80 }, animated: true },
+                          {
+                            edgePadding: { top: 80, right: 80, bottom: 160, left: 80 },
+                            animated: true,
+                          },
                         );
                       }
                     }}
@@ -1923,7 +1959,11 @@ export default function App() {
           )}
         </View>
 
-        <Drawer open={journalOpen} onOpen={() => setJournalOpen(true)} onClose={() => setJournalOpen(false)}>
+        <Drawer
+          open={journalOpen}
+          onOpen={() => setJournalOpen(true)}
+          onClose={() => setJournalOpen(false)}
+        >
           <Memories
             device={device}
             profile={profile}
@@ -2043,10 +2083,24 @@ export default function App() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: color.paper },
   screen: { flex: 1 },
-  devDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 3, borderColor: color.paperRaised, backgroundColor: color.ember },
+  devDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 3,
+    borderColor: color.paperRaised,
+    backgroundColor: color.ember,
+  },
   // What the map sits behind while the app finds out whether today's walk is
   // already accepted - a flash of the plan page would be a lie.
-  cover: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: color.paper },
+  cover: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: color.paper,
+  },
   // Glass over the map (src/Glass.tsx). `corner` and friends place a
   // control; `pill` and `circle` are its shape.
   corner: { position: 'absolute', top: 64 },
@@ -2070,7 +2124,13 @@ const styles = StyleSheet.create({
   planWalkText: { ...buttonText, color: color.paper },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
-  circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  circle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   newDot: {
     position: 'absolute',
     top: 4,

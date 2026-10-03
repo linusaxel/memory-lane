@@ -53,8 +53,18 @@ export function useHop(active: boolean) {
   return {
     transform: [
       { translateY: hop.interpolate({ inputRange: [0, 1, 2, 3], outputRange: [0, -10, 0, 0] }) },
-      { scaleX: hop.interpolate({ inputRange: [0, 1, 2, 2.4, 3], outputRange: [1, 0.94, 1.12, 1, 1] }) },
-      { scaleY: hop.interpolate({ inputRange: [0, 1, 2, 2.4, 3], outputRange: [1, 1.08, 0.86, 1, 1] }) },
+      {
+        scaleX: hop.interpolate({
+          inputRange: [0, 1, 2, 2.4, 3],
+          outputRange: [1, 0.94, 1.12, 1, 1],
+        }),
+      },
+      {
+        scaleY: hop.interpolate({
+          inputRange: [0, 1, 2, 2.4, 3],
+          outputRange: [1, 1.08, 0.86, 1, 1],
+        }),
+      },
     ],
   };
 }

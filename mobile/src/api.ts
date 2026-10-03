@@ -1,7 +1,6 @@
 /** Memory Lane API client. One fetch, no wrapper library. */
 import { File } from 'expo-file-system';
 
-
 export const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 const BASE = API_BASE;
 /** Recording and playback of a memory's voice. Off unless `EXPO_PUBLIC_AUDIO=1`. */
@@ -369,7 +368,9 @@ export async function fetchTodaysRoute(
   signal?: AbortSignal,
 ): Promise<TodaysRoute | null> {
   try {
-    return toRoute(await get<RouteBody>('/v1/routes/today', new URLSearchParams({ device }), signal));
+    return toRoute(
+      await get<RouteBody>('/v1/routes/today', new URLSearchParams({ device }), signal),
+    );
   } catch (e) {
     if (e instanceof Error && e.message === 'API 404') return null;
     throw e;
@@ -446,7 +447,11 @@ export type ReportReason = 'privacy' | 'defamation' | 'copyright' | 'other';
 /** Say this should not be here. Enough signed-in accounts and it stops being
  *  served to anybody until someone reviews it; a legal reason from one
  *  signed-in account is enough. */
-export async function reportMemory(id: number, device: string, reason: ReportReason): Promise<void> {
+export async function reportMemory(
+  id: number,
+  device: string,
+  reason: ReportReason,
+): Promise<void> {
   await post(`/v1/memories/${id}/report`, { device, reason });
 }
 

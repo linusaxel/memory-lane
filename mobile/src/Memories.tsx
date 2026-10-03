@@ -130,14 +130,18 @@ export default function Memories({
       enter.forEach((value) => value.setValue(0));
       Animated.stagger(
         50,
-        enter.map((value) => Animated.spring(value, { toValue: 1, tension: 80, friction: 10, useNativeDriver: true })),
+        enter.map((value) =>
+          Animated.spring(value, { toValue: 1, tension: 80, friction: 10, useNativeDriver: true }),
+        ),
       ).start();
     });
   }, [focused, enter]);
 
   const arrive = (index: number) => ({
     opacity: enter[index],
-    transform: [{ translateX: enter[index].interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) }],
+    transform: [
+      { translateX: enter[index].interpolate({ inputRange: [0, 1], outputRange: [-24, 0] }) },
+    ],
   });
 
   useEffect(() => {
@@ -251,17 +255,26 @@ export default function Memories({
       : section === 'unlocked'
         ? shown.map((memory) => ({ kind: 'unlocked', memory }))
         : walks.flatMap((walk, index): Item[] => [
-          { kind: 'walk', walk, index },
-          ...(openWalk === index
-            ? walk.memories
-                .map((memory, at): Item => ({ kind: 'stop', memory, walk: index, stop: at + 1 }))
-                .filter((item) => item.kind === 'stop' && !item.memory.locked)
-            : []),
-        ]);
+            { kind: 'walk', walk, index },
+            ...(openWalk === index
+              ? walk.memories
+                  .map((memory, at): Item => ({ kind: 'stop', memory, walk: index, stop: at + 1 }))
+                  .filter((item) => item.kind === 'stop' && !item.memory.locked)
+              : []),
+          ]);
 
   // Live, not stored: neither list carries a meaningful distance_meters.
   const distanceTo = (item: LocatedMemory) =>
-    position ? distance(metersBetween(position.lat, position.lng, item.place.coordinates.lat, item.place.coordinates.lng)) : undefined;
+    position
+      ? distance(
+          metersBetween(
+            position.lat,
+            position.lng,
+            item.place.coordinates.lat,
+            item.place.coordinates.lng,
+          ),
+        )
+      : undefined;
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + 14 }]}>
@@ -300,7 +313,9 @@ export default function Memories({
         {section === 'walks' && streak > 0 && (
           <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
             <Text style={styles.streakValue}>{streak}</Text>
-            <Text style={styles.streakLabel}>{streak === 1 ? 'day in a row' : 'days in a row'}</Text>
+            <Text style={styles.streakLabel}>
+              {streak === 1 ? 'day in a row' : 'days in a row'}
+            </Text>
           </View>
         )}
       </Animated.View>
@@ -354,7 +369,9 @@ export default function Memories({
           }
           ListHeaderComponent={
             <Header
-              note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote}
+              note={
+                section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote
+              }
               filter={
                 section === 'unlocked' && unlocked.length > 0
                   ? { on: heartedOnly, toggle: () => setHeartedOnly((on) => !on) }
@@ -499,7 +516,11 @@ function Header({ note, filter }: { note: string; filter?: { on: boolean; toggle
           accessibilityLabel="Hearted only"
           accessibilityState={{ selected: filter.on }}
         >
-          <Glyph name={filter.on ? 'heart.fill' : 'heart'} size={15} color={filter.on ? color.ink : color.inkFaint} />
+          <Glyph
+            name={filter.on ? 'heart.fill' : 'heart'}
+            size={15}
+            color={filter.on ? color.ink : color.inkFaint}
+          />
           <Text style={[styles.filterText, filter.on && styles.filterTextOn]}>Hearted</Text>
         </Pressable>
       )}
@@ -534,7 +555,9 @@ function Row({
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
-      accessibilityLabel={[stop && `Stop ${stop}`, place, distance, meta, badge].filter(Boolean).join(', ')}
+      accessibilityLabel={[stop && `Stop ${stop}`, place, distance, meta, badge]
+        .filter(Boolean)
+        .join(', ')}
     >
       {shape && (
         <View style={styles.shape}>
@@ -590,7 +613,13 @@ const styles = StyleSheet.create({
   whoText: { flex: 1 },
   title: { ...font.display, fontSize: 28, color: color.ink },
   stats: { ...label, fontSize: 12, marginTop: 2 },
-  streak: { flexDirection: 'row', alignItems: 'baseline', gap: 10, marginTop: 18, paddingHorizontal: 24 },
+  streak: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 10,
+    marginTop: 18,
+    paddingHorizontal: 24,
+  },
   streakValue: figure,
   streakLabel: { ...label, fontSize: 12 },
   switcher: { flexDirection: 'row', marginTop: 22, paddingHorizontal: 24, gap: 24 },
@@ -618,12 +647,23 @@ const styles = StyleSheet.create({
   row: { gap: 6, paddingHorizontal: 24, paddingVertical: 18 },
   withShape: { paddingRight: 24 + 52 + 12 },
   shape: { position: 'absolute', right: 24, top: 18 },
-  separator: { height: StyleSheet.hairlineWidth, marginHorizontal: 24, backgroundColor: color.rule },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: 24,
+    backgroundColor: color.rule,
+  },
   // A walk's stops hang off one rail, numbered like the map's route badges,
   // instead of each being ruled off as its own entry. Rows sit edge to edge,
   // so the rail runs unbroken from the first stop to the last.
   stop: { paddingLeft: 60, paddingTop: 16, paddingBottom: 10 },
-  rail: { position: 'absolute', left: 33, top: 0, bottom: 0, width: 1, backgroundColor: color.rule },
+  rail: {
+    position: 'absolute',
+    left: 33,
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: color.rule,
+  },
   dot: {
     position: 'absolute',
     left: 24,

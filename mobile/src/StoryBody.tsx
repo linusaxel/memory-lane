@@ -35,7 +35,12 @@ export default function StoryBody({ summary, media, links, onLink, part = (_, n)
       <Text key={r} style={[run.bold && styles.bold, run.italic && styles.italic]}>
         {summaryParts(run.text, links).map((p, i) =>
           p.url ? (
-            <Text key={i} style={styles.link} accessibilityRole="link" onPress={() => onLink?.(p.url!)}>
+            <Text
+              key={i}
+              style={styles.link}
+              accessibilityRole="link"
+              onPress={() => onLink?.(p.url!)}
+            >
               {p.text}
             </Text>
           ) : p.tag ? (
@@ -58,18 +63,28 @@ export default function StoryBody({ summary, media, links, onLink, part = (_, n)
       const floats = b.size !== 'l' && b.place !== 'center';
       if (floats && next?.kind === 'p' && width > 0) {
         nodes.push(
-          <Wrap key={i} block={b} item={item} runs={inline(next.text)} width={width} words={words} />,
+          <Wrap
+            key={i}
+            block={b}
+            item={item}
+            runs={inline(next.text)}
+            width={width}
+            words={words}
+          />,
         );
         i++;
       } else {
-        nodes.push(
-          <Figure key={i} block={b} item={item} width={width} style={styles[b.place]} />,
-        );
+        nodes.push(<Figure key={i} block={b} item={item} width={width} style={styles[b.place]} />);
       }
       continue;
     }
     if (b.kind === 'divider') nodes.push(<Flourish key={i} />);
-    else if (b.kind === 'h') nodes.push(<Text key={i} style={styles.heading} accessibilityRole="header">{words(inline(b.text))}</Text>);
+    else if (b.kind === 'h')
+      nodes.push(
+        <Text key={i} style={styles.heading} accessibilityRole="header">
+          {words(inline(b.text))}
+        </Text>,
+      );
     else if (b.kind === 'quote')
       nodes.push(
         <View key={i} style={styles.quote}>
@@ -85,7 +100,12 @@ export default function StoryBody({ summary, media, links, onLink, part = (_, n)
           {rest !== '' && <Text style={styles.body}>{words(inline(rest))}</Text>}
         </View>,
       );
-    } else nodes.push(<Text key={i} style={styles.body}>{words(inline(b.text))}</Text>);
+    } else
+      nodes.push(
+        <Text key={i} style={styles.body}>
+          {words(inline(b.text))}
+        </Text>,
+      );
   }
 
   return (
@@ -113,7 +133,10 @@ function Figure({
   const [failed, setFailed] = useState(false);
   const w = width * FRACTION[block.size];
   return (
-    <View style={[{ width: w || '100%' }, styles.figure, style]} onLayout={(e) => onLayout?.(e.nativeEvent.layout.height)}>
+    <View
+      style={[{ width: w || '100%' }, styles.figure, style]}
+      onLayout={(e) => onLayout?.(e.nativeEvent.layout.height)}
+    >
       {failed ? (
         <View style={[styles.photo, styles.gone]}>
           <Text style={styles.goneText}>Photo didn't load</Text>
@@ -216,7 +239,12 @@ const styles = StyleSheet.create({
   left: { alignSelf: 'flex-start' },
   center: { alignSelf: 'center' },
   right: { alignSelf: 'flex-end' },
-  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.field, backgroundColor: color.rule },
+  photo: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: radius.field,
+    backgroundColor: color.rule,
+  },
   gone: { alignItems: 'center', justifyContent: 'center' },
   goneText: { ...label, color: color.inkSoft },
   caption: { ...story.meta, color: color.inkSoft },

@@ -14,7 +14,13 @@ test('reads the same tags the server stores', () => {
 });
 
 test('the parts put the text back together, the #words marked', () => {
-  for (const [text] of cases) assert.equal(hashtagParts(text).map((p) => p.text).join(''), text);
+  for (const [text] of cases)
+    assert.equal(
+      hashtagParts(text)
+        .map((p) => p.text)
+        .join(''),
+      text,
+    );
   assert.deepEqual(hashtagParts('Tacos #food, then home'), [
     { text: 'Tacos ', tag: false },
     { text: '#food', tag: true },
@@ -22,7 +28,10 @@ test('the parts put the text back together, the #words marked', () => {
   ]);
 });
 
-const STAUNING = { text: 'Thorvald Stauning', url: 'https://en.wikipedia.org/wiki/Thorvald_Stauning' };
+const STAUNING = {
+  text: 'Thorvald Stauning',
+  url: 'https://en.wikipedia.org/wiki/Thorvald_Stauning',
+};
 
 test('a linked name is its own run, the rest stays text', () => {
   assert.deepEqual(summaryParts('Thorvald Stauning walked in.', [STAUNING]), [
@@ -61,5 +70,8 @@ test('the lede is the first sentence, not the first full stop', () => {
   ]);
   assert.deepEqual(lede('It sank, e.g. into the stream. Cracks showed.')[1], 'Cracks showed.');
   assert.deepEqual(lede('One sentence only.'), ['One sentence only.', '']);
-  assert.deepEqual(lede('A horn woke the dock. #food #harbour'), ['A horn woke the dock. #food #harbour', '']);
+  assert.deepEqual(lede('A horn woke the dock. #food #harbour'), [
+    'A horn woke the dock. #food #harbour',
+    '',
+  ]);
 });

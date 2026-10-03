@@ -81,7 +81,12 @@ export default function Paywall({ visible, onClose, device, profile, onProfile }
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Text style={styles.title}>More than one walk a day</Text>
         {pitch && (
@@ -90,13 +95,15 @@ export default function Paywall({ visible, onClose, device, profile, onProfile }
           </Text>
         )}
         <Text style={styles.note}>
-          Another loop past memories you haven't heard yet, whenever the day leaves
-          room. See the stops before you go, and lean a walk towards the themes
-          and years you like. Your first walk each day stays free.
+          Another loop past memories you haven't heard yet, whenever the day leaves room. See the
+          stops before you go, and lean a walk towards the themes and years you like. Your first
+          walk each day stays free.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (
-          <Text style={styles.note} testID="subscriptions-unavailable">Subscriptions aren't available right now.</Text>
+          <Text style={styles.note} testID="subscriptions-unavailable">
+            Subscriptions aren't available right now.
+          </Text>
         ) : (
           <View style={styles.plans}>
             {offered.map((plan, i) => (

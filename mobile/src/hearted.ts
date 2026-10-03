@@ -21,7 +21,10 @@ export async function loadHearted(): Promise<Set<number>> {
   }
 }
 
-export async function rememberHearted(current: Set<number>, ...ids: number[]): Promise<Set<number>> {
+export async function rememberHearted(
+  current: Set<number>,
+  ...ids: number[]
+): Promise<Set<number>> {
   return save(new Set([...current, ...ids]));
 }
 

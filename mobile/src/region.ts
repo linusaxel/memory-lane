@@ -24,8 +24,7 @@ export function metersBetween(aLat: number, aLng: number, bLat: number, bLng: nu
   const lat2 = toRad(bLat);
   const dLat = lat2 - lat1;
   const dLng = toRad(bLng - aLng);
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * 6371000 * Math.asin(Math.sqrt(h));
 }
 

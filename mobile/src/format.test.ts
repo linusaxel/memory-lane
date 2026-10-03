@@ -88,10 +88,17 @@ test('the source button says where it goes', () => {
   assert.equal(sourceAction({ ...ref, timestamp_start: null }).text, 'Watch on YouTube');
   const page = { ...ref, timestamp_start: null, url: 'https://historiskatlas.dk/Kanonkuglehuset' };
   assert.equal(sourceAction({ ...page, kind: 'book' }).text, 'Read it in the book');
-  assert.equal(sourceAction({ ...page, kind: 'newspaper', published_year: 1856 }).text, 'Read the 1856 article');
+  assert.equal(
+    sourceAction({ ...page, kind: 'newspaper', published_year: 1856 }).text,
+    'Read the 1856 article',
+  );
   assert.equal(sourceAction({ ...page, kind: 'archive' }).text, 'Read it at historiskatlas.dk');
   assert.equal(
-    sourceAction({ ...page, kind: 'archive', source: { name: 'Historisk Atlas', url: null, icon_url: null } }).text,
+    sourceAction({
+      ...page,
+      kind: 'archive',
+      source: { name: 'Historisk Atlas', url: null, icon_url: null },
+    }).text,
     'Read it at Historisk Atlas',
   );
   assert.equal(sourceAction({ ...page, kind: null }).text, 'Read the original');

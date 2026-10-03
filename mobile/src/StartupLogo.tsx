@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { AccessibilityInfo, Animated, Easing, StyleSheet, View, useColorScheme } from 'react-native';
+import {
+  AccessibilityInfo,
+  Animated,
+  Easing,
+  StyleSheet,
+  View,
+  useColorScheme,
+} from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 

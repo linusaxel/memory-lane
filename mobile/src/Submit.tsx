@@ -101,7 +101,9 @@ function toItems(story: Block[], uriOf: (id: number) => string | undefined): Ite
   return story.flatMap((b): Item[] => {
     if (b.kind !== 'photo') return [{ key: key(), ...b }];
     const uri = uriOf(b.id);
-    return uri ? [{ key: key(), kind: 'photo', uri, size: b.size, place: b.place, caption: b.caption }] : [];
+    return uri
+      ? [{ key: key(), kind: 'photo', uri, size: b.size, place: b.place, caption: b.caption }]
+      : [];
   });
 }
 
@@ -190,13 +192,23 @@ export default function Submit({
     setAttachments(filed);
     // A photo the text does not place (anything filed before it could) goes
     // at the end, full width, where it was read before.
-    const written = toItems(blocks(editing.summary), (id) => filed.find((a) => a.item.id === id)?.uri);
+    const written = toItems(
+      blocks(editing.summary),
+      (id) => filed.find((a) => a.item.id === id)?.uri,
+    );
     const unplaced = filed.filter(
       (a) => a.kind === 'photo' && !written.some((i) => i.kind === 'photo' && i.uri === a.uri),
     );
     setItems([
       ...(written.length ? written : [empty()]),
-      ...unplaced.map((a): Item => ({ key: key(), kind: 'photo', uri: a.uri, size: 'l', place: 'center', caption: '' })),
+      ...unplaced.map((a): Item => ({
+        key: key(),
+        kind: 'photo',
+        uri: a.uri,
+        size: 'l',
+        place: 'center',
+        caption: '',
+      })),
     ]);
     // Keyed on the id, not the object: App.tsx hands this a fresh reference
     // on every render, and re-running on that would fight anything typed.
@@ -242,9 +254,7 @@ export default function Submit({
     try {
       const item = await uploadMedia(device, draft.uri, mime, draft.seconds);
       if (!mounted.current) return;
-      setAttachments((current) =>
-        current.map((a) => (a.uri === draft.uri ? { ...a, item } : a)),
-      );
+      setAttachments((current) => current.map((a) => (a.uri === draft.uri ? { ...a, item } : a)));
     } catch (e) {
       if (!mounted.current) return;
       setAttachments((current) =>
@@ -270,7 +280,11 @@ export default function Submit({
       ? await ImagePicker.requestCameraPermissionsAsync()
       : await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError(fromCamera ? 'Allow camera access in Settings to take a photo.' : 'Allow photo access in Settings to add one.');
+      setError(
+        fromCamera
+          ? 'Allow camera access in Settings to take a photo.'
+          : 'Allow photo access in Settings to add one.',
+      );
       return;
     }
 
@@ -282,7 +296,8 @@ export default function Submit({
       // A HEIC is handed back as-is, and uncompressed, unless the picker is
       // asked for the compatible representation: then it is a JPEG and
       // `quality` applies. iOS only; Android returns JPEG already.
-      preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      preferredAssetRepresentationMode:
+        ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
     };
     const result = fromCamera
       ? await ImagePicker.launchCameraAsync(options)
@@ -371,8 +386,10 @@ export default function Submit({
       tail = text.slice(text.indexOf('\n') + 1);
     }
     let next: Item = { ...item, text: head };
-    if (item.kind === 'p' && head.startsWith('## ')) next = { key: item.key, kind: 'h', text: head.slice(3) };
-    else if (item.kind === 'p' && head.startsWith('> ')) next = { key: item.key, kind: 'quote', text: head.slice(2) };
+    if (item.kind === 'p' && head.startsWith('## '))
+      next = { key: item.key, kind: 'h', text: head.slice(3) };
+    else if (item.kind === 'p' && head.startsWith('> '))
+      next = { key: item.key, kind: 'quote', text: head.slice(2) };
     else if (item.kind === 'p' && /^-{3,}$/.test(head)) {
       next = { key: item.key, kind: 'divider' };
       tail ??= '';
@@ -407,7 +424,8 @@ export default function Submit({
     const item = items.find((i) => i.key === current);
     if (!item || !isText(item)) return;
     const { start, end } = selection;
-    const text = item.text.slice(0, start) + m + item.text.slice(start, end) + m + item.text.slice(end);
+    const text =
+      item.text.slice(0, start) + m + item.text.slice(start, end) + m + item.text.slice(end);
     patch(item.key, { text });
     setCaret({ key: item.key, at: end + m.length * (start === end ? 1 : 2) });
   };
@@ -452,8 +470,20 @@ export default function Submit({
     <View style={styles.toolbar}>
       {!previewing && (
         <>
-          <Action label="B" spoken="Bold" testID="toolbar-bold" style={styles.bold} onPress={() => mark('**')} />
-          <Action label="I" spoken="Italic" testID="toolbar-italic" style={styles.italic} onPress={() => mark('*')} />
+          <Action
+            label="B"
+            spoken="Bold"
+            testID="toolbar-bold"
+            style={styles.bold}
+            onPress={() => mark('**')}
+          />
+          <Action
+            label="I"
+            spoken="Italic"
+            testID="toolbar-italic"
+            style={styles.italic}
+            onPress={() => mark('*')}
+          />
           <Action label="Heading" testID="toolbar-heading" onPress={() => turn('h')} />
           <Action label="Quote" testID="toolbar-quote" onPress={() => turn('quote')} />
           <Action label="Divider" testID="toolbar-divider" onPress={divider} />
@@ -634,7 +664,10 @@ export default function Submit({
               StoryBody sets on the open sheet, and Preview shows it so. */}
           <View style={styles.blocks}>
             {previewing ? (
-              <StoryBody summary={summary} media={attachments.flatMap((a) => (a.item ? [a.item] : []))} />
+              <StoryBody
+                summary={summary}
+                media={attachments.flatMap((a) => (a.item ? [a.item] : []))}
+              />
             ) : (
               items.map((item, n) => {
                 const on = item.key === current;
@@ -670,7 +703,11 @@ export default function Submit({
                         >
                           <Image
                             source={{ uri: upload?.item ? mediaUrl(upload.item) : item.uri }}
-                            style={[styles.photo, upload?.failed && styles.photoFailed, on && styles.photoOn]}
+                            style={[
+                              styles.photo,
+                              upload?.failed && styles.photoFailed,
+                              on && styles.photoOn,
+                            ]}
                           />
                           {!upload?.item && !upload?.failed && (
                             <View style={styles.photoBusy}>
@@ -681,7 +718,9 @@ export default function Submit({
                         <TextInput
                           style={[styles.slot, styles.caption]}
                           value={item.caption}
-                          onChangeText={(caption) => patch(item.key, { caption: caption.replace(/\n/g, ' ') })}
+                          onChangeText={(caption) =>
+                            patch(item.key, { caption: caption.replace(/\n/g, ' ') })
+                          }
                           onFocus={() => setCurrent(item.key)}
                           placeholder="Caption"
                           placeholderTextColor={color.inkFaint}
@@ -725,7 +764,11 @@ export default function Submit({
                       if (input) inputs.current.set(item.key, input);
                       else inputs.current.delete(item.key);
                     }}
-                    style={[styles.slot, styles[item.kind], first && items.length === 1 && styles.alone]}
+                    style={[
+                      styles.slot,
+                      styles[item.kind],
+                      first && items.length === 1 && styles.alone,
+                    ]}
                     onChangeText={(text) => write(item, text)}
                     onKeyPress={(e) => e.nativeEvent.key === 'Backspace' && back(item)}
                     onFocus={() => setCurrent(item.key)}
@@ -733,7 +776,9 @@ export default function Submit({
                       setSelection(e.nativeEvent.selection);
                       if (caret) setCaret(null);
                     }}
-                    selection={caret?.key === item.key ? { start: caret.at, end: caret.at } : undefined}
+                    selection={
+                      caret?.key === item.key ? { start: caret.at, end: caret.at } : undefined
+                    }
                     placeholder={
                       first
                         ? 'We sat here until it got light and nobody wanted to say so. #nightlife'
@@ -744,7 +789,13 @@ export default function Submit({
                             : undefined
                     }
                     placeholderTextColor={color.inkFaint}
-                    accessibilityLabel={item.kind === 'h' ? 'Heading' : item.kind === 'quote' ? 'Quote' : 'Description'}
+                    accessibilityLabel={
+                      item.kind === 'h'
+                        ? 'Heading'
+                        : item.kind === 'quote'
+                          ? 'Quote'
+                          : 'Description'
+                    }
                     testID={first ? 'story' : `block-${item.kind}`}
                     multiline
                     scrollEnabled={false}
@@ -755,7 +806,11 @@ export default function Submit({
                     {inline(item.text, true).map((run, i) => (
                       <Text
                         key={i}
-                        style={[run.mark && styles.mark, run.bold && styles.bold, run.italic && styles.italic]}
+                        style={[
+                          run.mark && styles.mark,
+                          run.bold && styles.bold,
+                          run.italic && styles.italic,
+                        ]}
                       >
                         {run.mark
                           ? run.text
@@ -828,7 +883,6 @@ export default function Submit({
             </Pressable>
           )}
         </ScrollView>
-
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -891,7 +945,12 @@ export function Chip({
     >
       {({ pressed }) => (
         <Animated.View
-          style={[styles.chip, on && styles.chipOn, pressed && sunk(styles.chip), { transform: [{ scale: pop }] }]}
+          style={[
+            styles.chip,
+            on && styles.chipOn,
+            pressed && sunk(styles.chip),
+            { transform: [{ scale: pop }] },
+          ]}
         >
           <Text style={[styles.chipText, on && styles.chipTextOn]}>{text}</Text>
         </Animated.View>
@@ -1003,12 +1062,21 @@ const styles = StyleSheet.create({
     paddingBottom: 9,
     borderBottomWidth: 3,
   },
-  chipOn: { backgroundColor: color.ember, borderColor: color.ember, borderBottomColor: color.emberDeep },
+  chipOn: {
+    backgroundColor: color.ember,
+    borderColor: color.ember,
+    borderBottomColor: color.emberDeep,
+  },
   chipText: { ...label, fontSize: 12, color: color.inkSoft },
   chipTextOn: { color: color.paper },
 
   // MemoryMedia's photo, so a photo here is the size it will be read at.
-  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.field, backgroundColor: color.rule },
+  photo: {
+    width: '100%',
+    aspectRatio: 4 / 3,
+    borderRadius: radius.field,
+    backgroundColor: color.rule,
+  },
   photoFailed: { opacity: 0.4 },
   photoBusy: {
     position: 'absolute',

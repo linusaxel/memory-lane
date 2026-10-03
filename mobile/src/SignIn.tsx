@@ -58,11 +58,7 @@ const GOOGLE = {
 const PROVIDER_NAME = { google: 'Google', apple: 'Apple' } as const;
 
 /** True only when this build could actually complete a Google sign-in. */
-const GOOGLE_CONFIGURED = !!(
-  GOOGLE.iosClientId ||
-  GOOGLE.androidClientId ||
-  GOOGLE.webClientId
-);
+const GOOGLE_CONFIGURED = !!(GOOGLE.iosClientId || GOOGLE.androidClientId || GOOGLE.webClientId);
 
 const KEY = 'memorylane.signed-in.v1';
 
@@ -98,7 +94,9 @@ function useAppleAvailable() {
   const [available, setAvailable] = useState(false);
   useEffect(() => {
     if (Platform.OS !== 'ios') return;
-    AppleAuthentication.isAvailableAsync().then(setAvailable).catch(() => {});
+    AppleAuthentication.isAvailableAsync()
+      .then(setAvailable)
+      .catch(() => {});
   }, []);
   return available;
 }
@@ -354,8 +352,8 @@ export default function SignIn({ device, profile, onProfile }: Props) {
       </Pressable>
       {confirmingDelete && (
         <Text style={styles.note}>
-          Your memories, photos, notes and sign-ins are deleted for good. A
-          subscription is cancelled in the App Store or Google Play, not here.
+          Your memories, photos, notes and sign-ins are deleted for good. A subscription is
+          cancelled in the App Store or Google Play, not here.
         </Text>
       )}
       <Pressable style={dim(styles.action)} onPress={remove} accessibilityRole="button">
