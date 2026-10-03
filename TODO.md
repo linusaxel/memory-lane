@@ -563,9 +563,19 @@ with free choice. (checked 2026-10-03)
       - Watch for streak anxiety. On its own a streak won't make anyone choose
         the walk.
       - Overlaps G5.
-- [ ] **W6 D: Themed walks.** (checked 2026-10-02)
-      - Four stops sharing an era, a person or a source, so the walk tells one
-        story. This is the paid product in E5 and E7.
+- [ ] **W6 D: Themed walks, picked by subscribers.** (checked 2026-10-03)
+      - Memory Lane+ (E5) unlocks a theme picker on the plan card: historical,
+        architectural, romantic, friends-only and so on. The planner fills
+        the walk only with memories carrying that theme; free walks stay
+        untagged. This is the paid product in E5 and E7.
+      - Themes map to `pipeline/tags.py`: `history` and `romance` exist;
+        architecture needs a new tag (and re-tagging, which needs credits).
+        A theme with too few stops in reach says so and falls back.
+      - Friends-only needs a friend graph that doesn't exist: `layer='friend'`
+        has no writer. It means memories by people you know, never private
+        ones (docs/10 *Every memory is public*).
+      - The original idea, four stops sharing an era, a person or a source so
+        the walk tells one story, is the richer version of a theme.
       - It reverses docs/10 *Tags come from the text, and a walk has no
         theme*, so mark that entry Superseded if it goes ahead.
       - Evidence: moderate and qualitative. Zombies, Run! users rated story as
