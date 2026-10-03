@@ -65,7 +65,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              Turn on location (ember) with no position, else the walk card.
 │                              While a hold would open the ring the walk card stays under it
 ├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
-│    "2 of 5 · 4.1 km left" (stops opened, plus one), "Every stop unlocked"
+│    ●●○○○ "4.1 km left" (an ember stamp per stop opened, filled from the left, never a ring,
+│    which is the hold's; VoiceOver hears "2 of 5", stops opened plus one), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; ⏭ ("Skip this stop") drops
 │    the next stop without ending the walk; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep

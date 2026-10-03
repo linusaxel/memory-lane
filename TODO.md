@@ -539,15 +539,6 @@ with free choice. (checked 2026-10-03)
         withholds even the place until you are within reach. Avoid a daily
         cap that turns it into a grind.
       - The gate is unchanged: it opens standing there, like any stop.
-- [ ] **W2 Start at "1 of 5", with a ring that fills.** (checked 2026-10-02)
-      - Count the stop you are standing at, or the welcome unlock, as the
-        first.
-      - Endowed progress: car-wash cards pre-stamped 2 of 10 were redeemed by
-        34%, against 19% for blank 0 of 8 cards, with the same effort
-        (Nunes & Drèze 2006, https://coglode.com/nuggets/endowed-progress-effect).
-      - The goal gradient: people speed up near the reward (Kivetz et al.
-        2006, https://business.columbia.edu/sites/default/files-efs/pubfiles/1200/goalgradient.pdf).
-      - Strong in the lab, untested in walking apps.
 - [ ] **W5 A broken streak can be repaired.** (checked 2026-10-03)
       - A broken streak hurts, more so when people blame themselves, and less
         when it can be repaired (Silverman & Barasch, JCR 2023, 7 studies,

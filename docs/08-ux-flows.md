@@ -765,9 +765,10 @@ anyone else's collection or the local unlock cache.
    "Near me": Center on me recentres, and "Turn on location" shows only while
    there is no position.
 3. **One walk card at the bottom centre** says this is a walk and not the
-   map (F9, docs/10 "One walk card"): "Next: <place> · 350 m" over "1 of 5 ·
-   2.4 km left". The number counts the stops opened, plus one, since they
-   open in any order; the pins keep their route numbers. The distance is
+   map (F9, docs/10 "One walk card"): "Next: <place> · 350 m" over a stamp
+   per stop, ember once opened and filled from the left, and "2.4 km left".
+   VoiceOver hears "1 of 5": the stops opened, plus one, since they open in
+   any order; the pins keep their route numbers. The distance is
    what is still to walk, from where you stand through every stop not yet
    earned, in order, and back to where the walk started on a loop (the
    preview's choice, stored as `daily_routes.loop`), so the walk home counts.
@@ -799,7 +800,7 @@ anyone else's collection or the local unlock cache.
    costs nothing.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the card moves on to the next.
-6. The last stop earned, the card reads "Every stop unlocked" over "5 of 5",
+6. The last stop earned, the card reads "Every stop unlocked" over five full stamps,
    and a tap fits the map to the whole walk. No confetti — the success haptic on that final
    unlock is the whole celebration.
 

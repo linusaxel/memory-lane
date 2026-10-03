@@ -800,11 +800,12 @@ export default function App() {
       ? 'Every stop unlocked'
       : `Next: ${nextRouteStop.place.name}` +
         (toNextStop === null ? '' : ` · ${distance(toNextStop)}`);
+  const routeLeftText = routeLeft === null || routeDone ? '' : `${distance(routeLeft)} left`;
+  // Stops open in any order, so this counts what is opened, not where the
+  // next stop sits in the route. Said to VoiceOver; the card shows it as stamps.
   const routeProgress =
-    // Stops open in any order, so this counts what is opened, not where the
-    // next stop sits in the route.
     `${nextRouteStop ? routeUnlockedCount + 1 : routeTotal} of ${routeTotal}` +
-    (routeLeft === null || routeDone ? '' : ` · ${distance(routeLeft)} left`);
+    (routeLeftText && ` · ${routeLeftText}`);
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
   const precision = precisionFor(region.latitudeDelta);
@@ -1723,9 +1724,19 @@ export default function App() {
                       <Text style={styles.walkNext} numberOfLines={1}>
                         {routeLabel}
                       </Text>
-                      <Text style={styles.walkLeft} numberOfLines={1}>
-                        {routeProgress}
-                      </Text>
+                      <View style={styles.walkRow}>
+                        {/* A stamp card, filled as stops open. Not a ring:
+                            the ring is the hold's (UI.md). */}
+                        {routeShown.map((memory, i) => (
+                          <View
+                            key={memory.id}
+                            style={[styles.stamp, i < routeUnlockedCount && styles.stamped]}
+                          />
+                        ))}
+                        <Text style={[styles.walkLeft, styles.walkCount]} numberOfLines={1}>
+                          {routeLeftText}
+                        </Text>
+                      </View>
                     </View>
                     {/* Past a stop that is shut, or not worth it, without ending the walk. */}
                     {!routeDone && routeShown.length > 1 && (
@@ -1937,6 +1948,10 @@ const styles = StyleSheet.create({
   walkText: { flex: 1, gap: 2 },
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
+  walkRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  walkCount: { flexShrink: 1, marginLeft: 4 },
+  stamp: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.rule },
+  stamped: { backgroundColor: color.ember },
   skip: {
     width: 30,
     height: 30,
