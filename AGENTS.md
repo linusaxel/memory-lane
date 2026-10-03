@@ -39,14 +39,11 @@ Read what the change touches, not everything:
 - Never serve a summary without the gate. A new route that emits one gates itself, as `api/card.py` does.
 - Never match or link accounts on email.
 - Never issue a session token, and never add a password sign-in.
-- Never hand-format or hand-align. `pyproject.toml` decides.
+- Never hand-format or hand-align. `pyproject.toml` decides, and `mobile/.prettierrc` for the app.
 - Never let a test touch the network or spend credits (`tests/fakes.py`, the `live`/`credits` markers).
 - Never delete a decision that changed. Mark it `Superseded` in `docs/10-decisions.md`.
 
 ## Development rules
-
-`mobile/` has no formatter: match the indentation by hand, and never run
-`npx prettier`, which downloads one with no config and rewrites whole files.
 
 ### Run the gate
 
@@ -62,10 +59,11 @@ not the gate's. Check `$?` on the gate itself, or a red gate reads as green.
 ```
 
 It runs compileall, ruff check + format --check, pytest, and the app's
-typecheck. If it reports RED because of formatting:
+typecheck and Prettier check. If it reports RED because of formatting:
 
 ```bash
 venv/bin/python -m ruff format .
+(cd mobile && npm run format)   # the app: the Prettier pinned in mobile/package.json
 ```
 
 Style is not a matter of taste here - `pyproject.toml` decides and the gate

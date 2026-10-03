@@ -82,6 +82,8 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `db/schema.sql` | PostgreSQL + PostGIS schema |
 | `db/migrations/` | SQL for databases that already exist, applied by `pipeline.migrate` |
 | `pyproject.toml` | Ruff config. `./loop/verify.sh` enforces it |
+| `mobile/.prettierrc` | The app's Prettier config. `./loop/verify.sh` enforces it |
+| `.git-blame-ignore-revs` | The app's one reformat commit, so `git blame` skips it |
 
 ## `api/`
 

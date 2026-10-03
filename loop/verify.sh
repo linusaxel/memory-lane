@@ -55,6 +55,7 @@ $PY -m pytest -q -m "not credits and not live" || FAIL=1
 # --- 5. the app, once it exists --------------------------------------------
 if [ -f mobile/tsconfig.json ]; then
   ( cd mobile && npm run --silent typecheck ) || FAIL=1
+  ( cd mobile && npm run --silent format:check ) || FAIL=1
   for t in mobile/src/*.test.ts; do
     [ -e "$t" ] || continue
     ( cd mobile && node --test "src/$(basename "$t")" ) || FAIL=1

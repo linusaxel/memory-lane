@@ -7,7 +7,8 @@ enforced or argued, rather than restating it. For worked cases, see
 ## Python
 
 - **Style is [`pyproject.toml`](../pyproject.toml)'s, and the gate enforces it.** Never hand-align.
-  Red on formatting means `venv/bin/python -m ruff format .`.
+  Red on formatting means `venv/bin/python -m ruff format .`, or for the app
+  `(cd mobile && npm run format)` (`mobile/.prettierrc`).
 - **`except (A, B):` stays exploded.** See [why](10-decisions.md#except-a-b-stays-exploded).
 - **Every SQL string lives in [`api/queries.py`](../api/queries.py).** [`tests/test_api_sql.py`](../tests/test_api_sql.py)
   EXPLAINs every `*_QUERY` constant against the real schema, so a query outside that file is a query nobody checks.

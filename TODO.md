@@ -39,13 +39,6 @@ delete an entry when its fix lands.
   the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
   scratch replay. Fix: `classifier_audit --against <old prompt file>` that
   replays stored chunks through both prompts and prints flips per source.
-- **`mobile/` has no formatter, so every edit is hand-indented.** 2026-09-27:
-  wrapping the sheet's credit strip in a row meant re-indenting fifteen JSX lines
-  by hand, and the same session left a stray `</Pressable>` that only the
-  typecheck caught. Fix: pin Prettier as a devDependency with a config matching
-  today's style (2 spaces, single quotes, trailing commas), add `prettier --check`
-  to `loop/verify.sh`, and do one reformat commit listed in `.git-blame-ignore-revs`.
-  Then drop the "never run `npx prettier`" rule in AGENTS.md.
 
 ---
 
