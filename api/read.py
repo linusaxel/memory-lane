@@ -87,7 +87,7 @@ from api.queries import (
     WALKED_TODAY_QUERY,
 )
 from api.route_solver import ROUTE_LOOP, _plan_route
-from pipeline.config import UNLIMITED_WALKS
+from pipeline.config import DEV_SUBSCRIBED, UNLIMITED_WALKS
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -408,7 +408,7 @@ def _route_response(
 def _shaped(session, device: str, tags, years):
     """A subscriber's themes and years, or none for anyone else: shaping the
     walk is what a subscription buys (docs/10, "Subscribers shape the walk")."""
-    if session.execute(text(SUBSCRIBED_QUERY), {"device_id": device}).scalar():
+    if DEV_SUBSCRIBED or session.execute(text(SUBSCRIBED_QUERY), {"device_id": device}).scalar():
         return {"tags": tags, "years": years}
     return {}
 

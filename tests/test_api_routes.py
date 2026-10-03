@@ -13,7 +13,7 @@ from itertools import pairwise
 import pytest
 from sqlalchemy import text
 
-from api import progression, queries, read, route_solver, streets
+from api import accounts, progression, queries, read, route_solver, streets
 from api.accounts import touch_device
 from api.models import Coordinates
 
@@ -994,3 +994,12 @@ def test_a_theme_outside_the_vocabulary_is_refused(client, db_session):
         ).status_code
         == 422
     )
+
+
+def test_the_local_api_can_make_every_device_a_subscriber(client, db_session, monkeypatch):
+    monkeypatch.setattr(read, "DEV_SUBSCRIBED", True)
+    monkeypatch.setattr(accounts, "DEV_SUBSCRIBED", True)
+    _, north = _themed_pair(db_session)
+    db_session.commit()
+    assert client.get(f"/v1/me?device={DEVICE}").json()["subscribed"]
+    assert _shaped_ids(client, "&tags=history", tags=["history"]) == [north]

@@ -357,7 +357,10 @@ things, all of them on the planner card:
 The server heeds `tags` and the years only when `SUBSCRIBED_QUERY` is true
 (`api/read.py` `_shaped`), and drops them silently otherwise. The app keeps the
 choices on the phone (`mobile/src/route.ts` `loadChoices`), not on the
-account: no migration, and nothing to sync for a filter.
+account: no migration, and nothing to sync for a filter. The local API runs
+every device as a subscriber (`DEV_SUBSCRIBED`, on in `docker-compose.yml`),
+so the simulator always shows these; `DEV_SUBSCRIBED=0` shows the free
+planner. The e2e API never sets it.
 
 **Options considered:** themes as a filter (an empty walk wherever the theme
 is rare); choices on the account (a column and an endpoint for something a

@@ -69,8 +69,10 @@ export default function Settings({
           {profile?.subscribed ? (
             <>
               <Text style={styles.note}>
-                Subscribed until{' '}
-                {new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}. Plan as many
+                {profile.subscribed_until
+                  ? `Subscribed until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
+                  : 'Subscribed.'}{' '}
+                Plan as many
                 walks a day as you like.
               </Text>
               <Pressable

@@ -33,6 +33,7 @@ from api.queries import (
     STREAK_DAYS_QUERY,
     UNLOCK_COUNT_QUERY,
 )
+from pipeline.config import DEV_SUBSCRIBED
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -147,7 +148,7 @@ def profile_of(session, device: str) -> Profile:
     }
 
     if not row:
-        return Profile(unlocked=unlocked, streak=streak, **earned)
+        return Profile(unlocked=unlocked, streak=streak, subscribed=DEV_SUBSCRIBED, **earned)
     return Profile(
         user_id=str(row.id),
         display_name=row.display_name,
@@ -157,7 +158,7 @@ def profile_of(session, device: str) -> Profile:
         unlocked=unlocked,
         streak=streak,
         providers=list(row.providers),
-        subscribed=row.subscribed,
+        subscribed=DEV_SUBSCRIBED or row.subscribed,
         subscribed_until=row.subscribed_until,
         steps=row.steps,
         steps_counted_until=row.steps_counted_until,

@@ -76,6 +76,8 @@ OVERPASS_URL = (os.getenv("OVERPASS_URL") or "https://overpass-api.de/api/interp
 # Lift the one walk a day, so the simulator can plan again after one walk.
 # Never on the public host, whatever it is set to.
 UNLIMITED_WALKS = not PUBLIC_HOST and os.getenv("UNLIMITED_WALKS") == "1"
+# Every device a subscriber, so the simulator sees the subscriber planner.
+DEV_SUBSCRIBED = not PUBLIC_HOST and os.getenv("DEV_SUBSCRIBED") == "1"
 
 # The address the privacy policy gives for questions and data requests. Unset,
 # the policy says one is coming rather than inventing one.

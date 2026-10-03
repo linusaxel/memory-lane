@@ -30,6 +30,8 @@ services:
       ROUTING_URL: http://osrm:5000
       # More than one walk a day (pipeline/config.py). 0 to see the day lock.
       UNLIMITED_WALKS: ${UNLIMITED_WALKS:-1}
+      # Every device is a subscriber (pipeline/config.py). 0 to see the free planner.
+      DEV_SUBSCRIBED: ${DEV_SUBSCRIBED:-1}
     volumes:
       # Uploaded photos and recordings. A bind mount rather than a named volume:
       # it survives a rebuild just the same, and it lets the host see the files -
