@@ -48,6 +48,9 @@ ROUTE_LOOP = os.getenv("ROUTE_LOOP", "1") != "0"
 
 # A memory nobody scored (a walker's own post) counts as the corpus's middle.
 UNSCORED_WALK = 6
+# A subscriber's theme, worth half the walk rubric's range: it leans the walk
+# without emptying it where the theme is rare.
+PREFERRED_PRIZE = 1
 
 
 def _prize(c) -> float:
@@ -56,7 +59,8 @@ def _prize(c) -> float:
     #a-walk-picks-its-stops-by-the-rubric."""
     walk = getattr(c, "walk_score", None)
     contrast = getattr(c, "contrast_score", None) or 0
-    return 1 + (UNSCORED_WALK if walk is None else walk) / 6 + contrast / 10
+    preferred = PREFERRED_PRIZE if getattr(c, "preferred", False) else 0
+    return 1 + (UNSCORED_WALK if walk is None else walk) / 6 + contrast / 10 + preferred
 
 
 def _one_per_place(candidates: list) -> list:
@@ -444,6 +448,8 @@ def _plan_route(
     loop: bool = ROUTE_LOOP,
     again: int = 0,
     end: Coordinates | None = None,
+    tags: list[str] = (),
+    years: tuple[int | None, int | None] = (None, None),
 ):
     """The walk this device would get from `at` today: (stops in order,
     stop-to-stop street legs, {out, home} street legs touching `at`). Seeded
@@ -462,7 +468,10 @@ def _plan_route(
 
     `end` is where a one-way walk finishes, sent with each request and stored
     nowhere. A stop on a walk that long is within half of it of the midway
-    point, so candidates come from there. 422 too_far if the end is out of reach."""
+    point, so candidates come from there. 422 too_far if the end is out of reach.
+
+    `tags` and `years` are a subscriber's: memories with one of the tags weigh
+    more, and a range leaves out every memory outside it."""
     if end:
         loop = False
     centre = Coordinates(lat=(at.lat + end.lat) / 2, lng=(at.lng + end.lng) / 2) if end else at
@@ -475,6 +484,9 @@ def _plan_route(
             "device_id": device,
             "limit": ROUTE_POOL,
             "epic_open": level(xp_of(session, device)) >= EPIC_LEVEL,
+            "tags": list(tags),
+            "year_from": years[0],
+            "year_to": years[1],
         },
     ).fetchall()
     candidates = _spread(_one_per_place(candidates), budget_meters)

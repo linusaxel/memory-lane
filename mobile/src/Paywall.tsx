@@ -72,7 +72,8 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
         <Text style={styles.title}>More than one walk a day</Text>
         <Text style={styles.note}>
           Another loop past memories you haven't heard yet, whenever the day leaves
-          room. Your first walk each day stays free.
+          room. See the stops before you go, and lean a walk towards the themes
+          and years you like. Your first walk each day stays free.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (

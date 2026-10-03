@@ -114,7 +114,7 @@ The endpoint list is [06-api.md](06-api.md).
 | File | Purpose |
 |------|---------|
 | `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, the pill recentres |
-| `mobile/src/Plan.tsx` | **The planner, home.** The walk card: its list of memories, length, shape and Start walk |
+| `mobile/src/Plan.tsx` | **The planner, home.** The walk card: length, shape and Start walk; for a subscriber, its list of memories and themes and years |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
 | `mobile/src/UnlockHere.tsx` | The unlock ring over the map, for the memory you stand on |
@@ -148,7 +148,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/seen.ts` | The hearts and notes each of your memories had when you last looked |
 | `mobile/src/Flourish.tsx` | The ornamental divider between an open story's parts |
 | `mobile/src/Notes.tsx` | The notes under an open memory (F33) |
-| `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative |
+| `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative. Also a subscriber's themes and years, kept on the phone |
 | `mobile/src/reach.ts` | Which locked pins can be opened from where you stand (unit tested) |
 | `mobile/src/cluster.ts` | Group memories that share a map point (unit tested) |
 | `mobile/src/region.ts` | Metres, paths and framing a walk (unit tested) |

@@ -34,8 +34,11 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   where a one-way walk finishes (it makes the walk one-way, and is stored
   nowhere); 422 `{reason: "too_far", min_budget_meters}` when this walk cannot
   reach it. 403 `{reason: "walked_today"}` when
-  the account already walked today and is not subscribed
-- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, end?}` - accept it. The
+  the account already walked today and is not subscribed. A subscriber's
+  `tags` (repeated, from `pipeline/tags.py` `TAGS`, else 422) lean the walk
+  towards memories carrying one, and `year_from`/`year_to` (inclusive) leave
+  out memories outside them or with no year; anyone else's are ignored
+- `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, end?, tags?, year_from?, year_to?}` - accept it. The
   same solve, stored; one a day per account (403 `walked_today`, bar a
   subscriber), one in progress per device, and a second accept gets that walk
   back until it is ended. The client never names a stop

@@ -8,7 +8,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { Coordinates, LocatedMemory, WalkedRoute } from './api.ts';
+import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 
 const KEY = 'memorylane.route.v1';
 
@@ -77,4 +77,23 @@ export async function saveWalked(walks: WalkedRoute[]): Promise<void> {
   } catch {
     // Same bargain as saveRoute.
   }
+}
+
+const CHOICES_KEY = 'memorylane.walk-choices.v1';
+
+/** A subscriber's themes and years: kept on this phone, and sent with every
+ *  plan. Not the loop or the end, which are asked for per walk. */
+export type WalkChoices = Pick<WalkAsk, 'themes' | 'from' | 'until'>;
+
+export async function loadChoices(): Promise<WalkChoices | null> {
+  try {
+    const raw = await AsyncStorage.getItem(CHOICES_KEY);
+    return raw ? (JSON.parse(raw) as WalkChoices) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveChoices(choices: WalkChoices): Promise<void> {
+  await AsyncStorage.setItem(CHOICES_KEY, JSON.stringify(choices)).catch(() => {});
 }

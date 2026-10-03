@@ -30,6 +30,8 @@ from api.models import (
     ROUTE_AGAIN_MAX,
     ROUTE_BUDGET_MAX_METERS,
     ROUTE_BUDGET_MIN_METERS,
+    YEAR_MAX,
+    YEAR_MIN,
     AuthoredRouteResponse,
     Coordinates,
     DeviceRequest,
@@ -49,6 +51,7 @@ from api.models import (
     SearchResponse,
     SkipRequest,
     Stats,
+    Theme,
     UnlocksResponse,
     WalkedMeta,
     WalkedResponse,
@@ -402,6 +405,14 @@ def _route_response(
     )
 
 
+def _shaped(session, device: str, tags, years):
+    """A subscriber's themes and years, or none for anyone else: shaping the
+    walk is what a subscription buys (docs/10, "Subscribers shape the walk")."""
+    if session.execute(text(SUBSCRIBED_QUERY), {"device_id": device}).scalar():
+        return {"tags": tags, "years": years}
+    return {}
+
+
 def _refuse_second_walk(session, device: str, route_date) -> None:
     """One walk a day per account; a subscriber has no limit (docs/10, "A walk
     planner, nothing else"). A walk's stops are the only thing that opens, so
@@ -429,6 +440,9 @@ def preview_route(
     again: int = Query(0, ge=0, le=ROUTE_AGAIN_MAX),
     end_lat: float | None = Query(None, ge=-90, le=90),
     end_lng: float | None = Query(None, ge=-180, le=180),
+    tags: tuple[Theme, ...] = Query(()),
+    year_from: int | None = Query(None, ge=YEAR_MIN, le=YEAR_MAX),
+    year_to: int | None = Query(None, ge=YEAR_MIN, le=YEAR_MAX),
 ):
     """The walk POST /v1/routes/today would store, stored nowhere. A device that
     already accepted today's walk still gets a preview; accepting returns the
@@ -450,6 +464,7 @@ def preview_route(
             loop,
             again,
             end,
+            **_shaped(session, device, tags, (year_from, year_to)),
         )
     return _route_response(
         route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), loop, ends
@@ -485,6 +500,7 @@ def accept_route(body: RouteRequest):
                 loop,
                 body.again,
                 body.end,
+                **_shaped(session, body.device, body.tags, (body.year_from, body.year_to)),
             )
             if not picked:
                 return _route_response(route_date, [], [], body.budget_meters, None, loop)

@@ -184,20 +184,24 @@ the planner*).
    is two steps*). Step one reads "A walk from here", then "4 memories ·
    3.8 km loop", then the length:
    one slider, 1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`), about one
-   stop a km. Under it **Loop** or **One way**. No theme: tags are open since
-   2026-09-26 (docs/10, *Tags come from the text*). One way adds **Pick where
+   stop a km. Under it **Loop** or **One way**. One way adds **Pick where
    it ends**: the map, a card saying to tap it, and the tap is the end ("Ends
    where you tapped"; a second tap lets it go), with the slider at least the
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
    slider only on release. × closes it back to the map, from either step.
    Journal is top left and your level top centre. "4 memories · 3.8 km loop"
-   sits between ‹ › (another walk, F32). **See the stops** is step two: ‹ Back,
+   sits between ‹ › (another walk, F32). For a subscriber, **See the stops**
+   is step two: ‹ Back,
    then **the list**: each stop numbered in walk order, its place, and year · source ·
    two #tags, with a padlock; four rows in view, the rest a scroll away. All
    of it is what a locked memory already says (docs/10, *A locked memory says
-   what it is*).
-3. **Start walk**, on step two, is `POST /v1/routes/today` with the same position, length and
-   loop, and lands on the walk (F25).
+   what it is*). Beside it, **Themes and years** (or what is chosen, "#history
+   1900–now") opens a third step: chips for the 18 themes, which lean the walk,
+   and a From and an Until for its years, kept on the phone (docs/10,
+   *Subscribers shape the walk*). A free walker's step one has **Start walk**
+   instead, and both of those padlocked: either opens the paywall (F35).
+3. **Start walk**, on step two (step one, free), is `POST /v1/routes/today` with the same
+   position, length, loop, themes and years, and lands on the walk (F25).
 
 **Accepting starts the walk.** It stands until it is ended (F34). One a day:
 another the same day needs a subscription, unless the first opened nothing.
@@ -216,7 +220,7 @@ unreachable — the card says "Can't reach Memory Lane right now." under the
 button, and any change retries.
 
 **Done when:** launch shows a whole walk on the map above the card, See the
-stops lists it, a change to the card redraws it, and Start walk makes it today's.
+stops lists it for a subscriber and opens the paywall for anyone else, a change to the card redraws it, and Start walk makes it today's.
 
 ## F2 · Read one memory and go to its source — **Implemented**
 
@@ -1105,13 +1109,14 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 
 ## F35 · Subscribe for more walks — **Implemented** (no store yet: TODO.md S6)
 
-**Who:** a free account that walked today. **Trigger:** **More walks** on the
-planner once today's walk is walked (F1), **Another walk today ›** under
+**Who:** a free account. **Trigger:** **More walks** on the
+planner once today's walk is walked (F1), the padlocked **See the stops** or
+**Themes and years** on the planner (F1), **Another walk today ›** under
 **Done** on the finish card (signed in, not subscribed; never a pop-up), or
 **Subscribe** in Settings.
 
 1. The paywall (`src/Paywall.tsx`): "More than one walk a day" and what it
-   buys, yearly first (solid, with the store's price a month) then monthly,
+   buys (more walks, the stops before you go, themes and years), yearly first (solid, with the store's price a month) then monthly,
    "No commitment … cancel anytime", **Restore purchases**, Terms and
    Privacy, and **Not now**. No trial, no exit-intent offer, no countdown:
    the free walk each day is the trial.

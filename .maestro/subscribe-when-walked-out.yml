@@ -39,4 +39,8 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "4 memories · .* loop"
     timeout: 40000
-- assertVisible: "See the stops"
+# Paid: step two, the stops, opens.
+- tapOn: "See the stops"
+- assertVisible:
+    id: "walk-stops"
+- assertVisible: "Stop 1, .*"

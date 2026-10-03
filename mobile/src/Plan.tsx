@@ -1,6 +1,8 @@
 /** The planner, which is the home screen: a walk drawn on the map, and a
  *  card in two steps - the length and the shape, then what its memories are
- *  of, paged between walks, and Start.
+ *  of, paged between walks, and Start. The second step, and a third for
+ *  themes and years, are a subscriber's: a free walker starts from the first
+ *  (docs/10, "Subscribers shape the walk").
  *  Any change redraws the walk; ‹ › trade it for another. A one-way walk can
  *  end at a spot tapped on the map (EndPick), asked for per walk and stored
  *  nowhere. docs/10, "A walk planner, nothing else" and "Draw first, adjust
@@ -26,6 +28,17 @@ import { button, buttonText, color, dim, floating, font, label } from './theme.t
 import { WalkShape } from './WalkCard.tsx';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
+
+/** pipeline/tags.py TAGS, the vocabulary a walk can lean on; a test holds the
+ *  two to the same list. */
+export const THEMES = [
+  'personal', 'travel', 'business', 'nightlife', 'culture', 'adventure', 'comedy', 'food', 'drink',
+  'nature', 'music', 'art', 'history', 'sport', 'romance', 'family', 'work', 'strange',
+];
+
+/** Where a range of years can start and end; null is either way open. */
+const FROM_YEARS = [null, 1600, 1700, 1800, 1900, 1950, 2000];
+const UNTIL_YEARS = [1700, 1800, 1900, 1950, 2000, null];
 
 /** api/route_solver.py ROUTE_FILL: under this share of the ask, the map ran out. */
 const ROUTE_FILL = 0.8;
@@ -95,6 +108,8 @@ type PreviewProps = {
   onKm: (km: number) => void;
   ask: WalkAsk;
   onAsk: (ask: WalkAsk) => void;
+  /** Sees the stops before starting, and picks themes and years. */
+  subscribed: boolean;
   /** The shortest walk that reaches the pin and the end; over WALK_KM.max, none does. */
   floorKm: number;
   /** Go to the map to tap where a one-way walk ends. */
@@ -149,6 +164,7 @@ export function Preview({
   onKm,
   ask,
   onAsk,
+  subscribed,
   floorKm,
   onPickEnd,
   fallback,
@@ -167,7 +183,7 @@ export function Preview({
 }: PreviewProps) {
   // Two steps: the length and the shape with the walk drawn behind, then its
   // stops, paged between walks, and Start.
-  const [listing, setListing] = useState(false);
+  const [step, setStep] = useState<'stops' | 'choices' | null>(null);
   // Said, not focused: the arrows keep VoiceOver where it is (WAI carousels).
   const stepped = useRef(false);
   useEffect(() => {
@@ -199,38 +215,115 @@ export function Preview({
   // Up to the slider's grid, so a floor of 2.3 km does not shift every step.
   const min = Math.min(Math.ceil(Math.max(WALK_KM.min, floorKm) / WALK_KM.step) * WALK_KM.step, WALK_KM.max);
   const measure = (e: LayoutChangeEvent) => onHeight(e.nativeEvent.layout.height);
-  if (listing && found && stops) {
+  const back = (
+    <Pressable
+      style={dim(styles.back)}
+      onPress={() => setStep(null)}
+      accessibilityRole="button"
+      accessibilityLabel="Back to the length"
+    >
+      <Glyph name="chevron.left" size={17} weight="semibold" color={color.ink} />
+      <Text style={styles.secondaryText}>Back</Text>
+    </Pressable>
+  );
+  const start = (
+    <Pressable
+      style={dim(styles.primary)}
+      onPress={onAccept}
+      disabled={busy || !found}
+      accessibilityRole="button"
+      accessibilityLabel="Start this walk"
+      accessibilityHint="You can end it any time."
+    >
+      {busy ? (
+        <ActivityIndicator color={color.paper} />
+      ) : (
+        <Text style={styles.primaryText}>Start walk</Text>
+      )}
+    </Pressable>
+  );
+  if (step === 'stops' && found && stops) {
     return (
       <View style={styles.card} onLayout={measure}>
-        <Pressable
-          style={dim(styles.back)}
-          onPress={() => setListing(false)}
-          accessibilityRole="button"
-          accessibilityLabel="Back to the length"
-        >
-          <Glyph name="chevron.left" size={17} weight="semibold" color={color.ink} />
-          <Text style={styles.secondaryText}>Back</Text>
-        </Pressable>
+        {back}
         <Stops stops={stops} />
-        <Pressable
-          style={dim(styles.primary)}
-          onPress={onAccept}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityLabel="Start this walk"
-          accessibilityHint="You can end it any time."
-        >
-          {busy ? (
-            <ActivityIndicator color={color.paper} />
-          ) : (
-            <Text style={styles.primaryText}>Start walk</Text>
-          )}
-        </Pressable>
+        {start}
         {error && <Text style={styles.error}>{error}</Text>}
         {close}
       </View>
     );
   }
+  if (step === 'choices') {
+    const until = UNTIL_YEARS.filter((year) => year == null || ask.from == null || year > ask.from);
+    return (
+      <View style={styles.card} onLayout={measure} testID="walk-choices">
+        {back}
+        <Text style={styles.cardBody}>Lean the walk towards</Text>
+        <View style={styles.chips}>
+          {THEMES.map((theme) => {
+            const on = ask.themes.includes(theme);
+            return (
+              <Chip
+                key={theme}
+                label={`#${theme}`}
+                on={on}
+                onPress={() =>
+                  onAsk({ ...ask, themes: on ? ask.themes.filter((t) => t !== theme) : [...ask.themes, theme] })
+                }
+              />
+            );
+          })}
+        </View>
+        <Text style={styles.cardBody}>Memories from</Text>
+        <View style={styles.chips}>
+          {FROM_YEARS.map((year) => (
+            <Chip
+              key={`from-${year}`}
+              label={year == null ? 'Any year' : String(year)}
+              on={ask.from === year}
+              onPress={() =>
+                onAsk({ ...ask, from: year, until: year != null && ask.until != null && ask.until <= year ? null : ask.until })
+              }
+            />
+          ))}
+        </View>
+        <Text style={styles.cardBody}>Until</Text>
+        <View style={styles.chips}>
+          {until.map((year) => (
+            <Chip
+              key={`until-${year}`}
+              label={year == null ? 'Now' : String(year)}
+              on={ask.until === year}
+              onPress={() => onAsk({ ...ask, until: year })}
+            />
+          ))}
+        </View>
+        {close}
+      </View>
+    );
+  }
+  const chosen = [
+    ...ask.themes.map((t) => `#${t}`),
+    ask.from != null || ask.until != null ? `${ask.from ?? '…'}–${ask.until ?? 'now'}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  // A free walker sees what a subscription would add, padlocked; tapping it
+  // is the paywall.
+  const extra = (text: string, onPress: () => void) => (
+    <Pressable
+      style={dim([styles.secondary, styles.grow, styles.extra])}
+      onPress={subscribed ? onPress : onSubscribe}
+      disabled={busy}
+      accessibilityRole="button"
+      accessibilityHint={subscribed ? undefined : 'Part of a subscription'}
+    >
+      {!subscribed && <Glyph name="lock.fill" size={13} color={color.ink} />}
+      <Text style={styles.secondaryText} numberOfLines={1}>
+        {text}
+      </Text>
+    </Pressable>
+  );
   return (
     <View style={styles.card} onLayout={measure}>
       <Text style={styles.cardTitle}>A walk from here</Text>
@@ -289,18 +382,26 @@ export function Preview({
           />
         )}
       </View>
-      <Pressable
-        style={dim(styles.primary)}
-        onPress={() => setListing(true)}
-        disabled={busy || !found}
-        accessibilityRole="button"
-      >
-        {busy ? (
-          <ActivityIndicator color={color.paper} />
-        ) : (
-          <Text style={styles.primaryText}>See the stops</Text>
-        )}
-      </Pressable>
+      {subscribed ? (
+        <Pressable
+          style={dim(styles.primary)}
+          onPress={() => setStep('stops')}
+          disabled={busy || !found}
+          accessibilityRole="button"
+        >
+          {busy ? (
+            <ActivityIndicator color={color.paper} />
+          ) : (
+            <Text style={styles.primaryText}>See the stops</Text>
+          )}
+        </Pressable>
+      ) : (
+        start
+      )}
+      <View style={styles.extras}>
+        {!subscribed && extra('See the stops', () => {})}
+        {extra(subscribed && chosen ? chosen : 'Themes and years', () => setStep('choices'))}
+      </View>
       {error && <Text style={styles.error}>{error}</Text>}
       {close}
     </View>
@@ -536,6 +637,8 @@ const styles = StyleSheet.create({
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   from: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   grow: { flex: 1 },
+  extras: { flexDirection: 'row', gap: 8 },
+  extra: { ...button.small, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   // Four rows in view, the rest a scroll away: the map behind still shows the walk.
   stops: { maxHeight: 4 * 52, flexGrow: 0 },
   stop: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52 },

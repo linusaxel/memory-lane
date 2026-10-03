@@ -575,11 +575,15 @@ SUBSCRIBED_QUERY = """
 #   - only walk-to-unlock memories - a centroid a route sent you to would open
 #     the moment you arrived, which is not a stop, it is scenery.
 #   - an epic one only once :epic_open (api.progression.EPIC_LEVEL).
+#   - a subscriber's year range, if any: no year is out of every range.
+# `preferred` is a subscriber's theme: it leans the walk, never filters it
+# (docs/10, "Subscribers shape the walk").
 # Ordered by distance and not CONTRAST_ORDER on purpose: a route is where to
 # walk next, not a feed to rank.
 ROUTE_CANDIDATES_QUERY = f"""
 SELECT {MEMORY_COLUMNS},
     m.walk_score,
+    m.tags && CAST(:tags AS varchar[]) AS preferred,
     {DISTANCE}
 {MEMORY_JOIN}
 WHERE
@@ -592,10 +596,12 @@ WHERE
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
     AND (:epic_open OR NOT {EPIC_EXPR})
--- A stack's memories share one distance: the best scored stands for the
--- place, and the id makes that the same on every call, so a preview and its
--- accept agree.
-ORDER BY distance_meters ASC, m.walk_score DESC NULLS LAST, m.id ASC
+    AND (CAST(:year_from AS integer) IS NULL OR EXTRACT(YEAR FROM m.happened_at) >= :year_from)
+    AND (CAST(:year_to AS integer) IS NULL OR EXTRACT(YEAR FROM m.happened_at) <= :year_to)
+-- A stack's memories share one distance: the preferred, then the best scored
+-- stands for the place, and the id makes that the same on every call, so a
+-- preview and its accept agree.
+ORDER BY distance_meters ASC, preferred DESC, m.walk_score DESC NULLS LAST, m.id ASC
 LIMIT :limit
 """
 

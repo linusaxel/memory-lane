@@ -32,6 +32,9 @@ PARAMS = {
     "query": "coffee",
     # The route's epic tier, closed: its full predicate.
     "epic_open": False,
+    # A subscriber's year range, set: its full predicate.
+    "year_from": 1900,
+    "year_to": 1999,
     "memory_id": 1,
     "place_id": 1,
     "content_id": 1,

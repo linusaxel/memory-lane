@@ -261,7 +261,9 @@ whole app; without one there is nothing to do.
   unlock, no key spend, no subscriber exception: anything else is 403
   `not_on_walk` (`api/write.py` `pay_for_unlock`). Earned stays earned.
 - **One walk a day free; a subscription buys more walks** and nothing else
-  (`_refuse_second_walk`). Walked out, the planner offers it.
+  (`_refuse_second_walk`). Walked out, the planner offers it. (Amended
+  2026-10-03 by *Subscribers shape the walk*: it also buys seeing the stops
+  before you go, and themes and years.)
 - **Keys are earned, never sold** (amended 2026-10-03 by *Walks earn XP;
   rare memories wait for a level*: keys are gone): one per finished walk, once a day
   (`CREDIT_WALK_KEY`). What a key does is not decided yet (TODO.md). The rule
@@ -318,12 +320,48 @@ Step two is only the stops and Start walk.)
 The fit pads by the card's measured height and covers the drawn path, so each
 step frames the walk in what is left. Overview first, details on demand
 (Shneiderman 1996); pad the camera by the sheet so the fit frames what is
-visible (Google Maps SDK, map padding).
+visible (Google Maps SDK, map padding). (Amended 2026-10-03 by *Subscribers
+shape the walk*: step two is a subscriber's.)
 
 **Options considered, 2026-10-03:** each stop's name in a pill over its pin,
 and no list (the founder found the map too noisy); one card whose list folds
 with a swipe (open, it left the map about 120pt, too little to read a walk
 from, and the pins clustered).
+
+### Subscribers shape the walk
+
+Status: Accepted 2026-10-03. Amends *A walk planner, nothing else* (a
+subscription buys more than walks), *The planner is two steps* (step two is
+a subscriber's) and supersedes the theme half of *Tags come from the text,
+and a walk has no theme*.
+
+The founder: customising the walk planner is a subscriber feature. Three
+things, all of them on the planner card:
+
+- **See the stops.** Step two, the list of what each stop is of, is a
+  subscriber's. A free walker's step one has **Start walk**, and a padlocked
+  See the stops that opens the paywall. Only the app gates it: the same peek
+  shows on the walk, so there is nothing for the server to keep back.
+- **Themes lean the walk.** Picked from the extractor's closed vocabulary
+  (`pipeline/tags.py` `TAGS`, mirrored as `THEMES` in `mobile/src/Plan.tsx`),
+  sent as `tags` on preview and accept. A memory carrying one is
+  `preferred`: it stands for its place and is worth `PREFERRED_PRIZE` more to
+  the solver. Lean, not filter, so a rare theme still gives a full walk.
+  A submission's open hashtags never match, which is fine: it leans, and they
+  are still on the walk.
+- **Years filter the walk.** `year_from`/`year_to` (inclusive) leave out every
+  memory outside the range, and every memory with no `happened_at`. On
+  2026-10-03 33 of 162 memories had a year, so a range often gives a short walk
+  or the nearest length that has one.
+
+The server heeds `tags` and the years only when `SUBSCRIBED_QUERY` is true
+(`api/read.py` `_shaped`), and drops them silently otherwise. The app keeps the
+choices on the phone (`mobile/src/route.ts` `loadChoices`), not on the
+account: no migration, and nothing to sync for a filter.
+
+**Options considered:** themes as a filter (an empty walk wherever the theme
+is rare); choices on the account (a column and an endpoint for something a
+second phone can pick again in a tap).
 
 ### Walks earn XP; rare memories wait for a level
 
@@ -935,6 +973,8 @@ its tags are kept and shown nowhere but the locked peek.
 With open tags there is nothing fixed to theme a walk on, so the theme went
 too: no chips on the plan page, no `tag` on `/v1/routes/preview` or
 `/v1/routes/today`, and `SUBMISSION_TAGS` is gone from both ends.
+(Superseded 2026-10-03 by *Subscribers shape the walk*: a subscriber leans a
+walk on the extractor's closed tags.)
 
 ### Media lives on a disk, not in object storage
 

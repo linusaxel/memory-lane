@@ -37,18 +37,14 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Stop 4 of 4\\. .*"
     timeout: 5000
-# Step two is the stops: each row numbered as its pin is, what it is of,
-# never what it says.
-- assertNotVisible:
-    id: "walk-stops"
-- tapOn: "See the stops"
-- assertVisible:
-    id: "walk-stops"
-- assertVisible: "Stop 1, .*"
+# Step two, the stops, is a subscriber's: a free walker starts from step one,
+# and the padlocked See the stops is the paywall.
 - assertVisible: "Start this walk"
-# Step two is only the stops: paging between walks is step one's.
-- assertNotVisible: "Next walk"
-- tapOn: "Back to the length"
+- tapOn: "See the stops"
+- extendedWaitUntil:
+    visible: "More than one walk a day"
+    timeout: 20000
+- tapOn: "Not now"
 - assertNotVisible:
     id: "walk-stops"
 

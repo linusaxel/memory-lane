@@ -5,8 +5,16 @@ that used to force a function-level import.
 """
 
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+from pipeline.tags import TAGS
+
+# A subscriber's theme: the extractor's closed vocabulary, the one a walk can
+# lean on (docs/10, "Subscribers shape the walk").
+Theme = Literal[*TAGS]
+YEAR_MIN, YEAR_MAX = 1, 2100
 
 
 class Coordinates(BaseModel):
@@ -263,6 +271,10 @@ class RouteRequest(BaseModel):
     again: int = Field(0, ge=0, le=ROUTE_AGAIN_MAX)
     # Where a one-way walk finishes; it makes the walk one-way. Never stored.
     end: Coordinates | None = None
+    # A subscriber's, ignored for anyone else. The accept sends the preview's.
+    tags: list[Theme] = []
+    year_from: int | None = Field(None, ge=YEAR_MIN, le=YEAR_MAX)
+    year_to: int | None = Field(None, ge=YEAR_MIN, le=YEAR_MAX)
 
 
 class RouteResponse(BaseModel):

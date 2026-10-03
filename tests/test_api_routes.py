@@ -922,3 +922,75 @@ def test_epic_is_the_rubric_then_hearts(db_session, score, opens, hearts, epic):
         text(f"SELECT {queries.EPIC_EXPR} FROM memories m WHERE m.id = :m"), {"m": memory}
     ).scalar()
     assert got is epic
+
+
+def _shape(session, memory_id, tags, year):
+    session.execute(
+        text(
+            "UPDATE memories SET tags = CAST(:t AS varchar[]), "
+            "happened_at = make_date(:y, 6, 1) WHERE id = :id"
+        ),
+        {"t": tags, "y": year, "id": memory_id},
+    )
+
+
+def _shaped_ids(client, query="", **body):
+    preview = client.get(
+        f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=1000{query}"
+    )
+    accepted = client.post(
+        "/v1/routes/today",
+        json={"device": DEVICE, "lat": LAT, "lng": LNG, "budget_meters": 1000, **body},
+    )
+    ids = [m["id"] for m in preview.json()["memories"]]
+    assert ids == [m["id"] for m in accepted.json()["memories"]], "accept plans the preview"
+    return ids
+
+
+def _themed_pair(session):
+    """Two stops as good as each other, ~100m either side of the start: a 1km
+    walk takes one, and only the theme tells them apart."""
+    south = _historical(
+        session, _place(session, "South", LAT - 0.001, LNG), "south", "https://e.invalid/s"
+    )
+    north = _historical(
+        session, _place(session, "North", LAT + 0.001, LNG), "north", "https://e.invalid/n"
+    )
+    _shape(session, south, ["music"], 1930)
+    _shape(session, north, ["history"], 1990)
+    return south, north
+
+
+def test_a_subscribers_theme_and_years_shape_the_walk(client, db_session):
+    south, north = _themed_pair(db_session)
+    _subscribe(db_session)
+    assert _shaped_ids(client, "&tags=history", tags=["history"]) == [north]
+    _end(client)
+    assert _shaped_ids(client, "&tags=music", tags=["music"]) == [south]
+    _end(client)
+
+    undated = _offset(db_session, 2)
+    db_session.commit()
+    walk = _shaped_ids(client, "&year_from=1980&year_to=1999", year_from=1980, year_to=1999)
+    assert walk == [north], "out of range and undated are left out"
+    assert undated not in walk
+
+
+def test_a_non_subscribers_theme_and_years_change_nothing(client, db_session):
+    _themed_pair(db_session)
+    db_session.commit()
+    plain = [m["id"] for m in _preview(client, budget_meters=1000).json()["memories"]]
+    for query in ("&tags=history", "&tags=music", "&year_from=2000"):
+        shaped = client.get(
+            f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=1000{query}"
+        )
+        assert [m["id"] for m in shaped.json()["memories"]] == plain
+
+
+def test_a_theme_outside_the_vocabulary_is_refused(client, db_session):
+    assert (
+        client.get(
+            f"/v1/routes/preview?device={DEVICE}&lat={LAT}&lng={LNG}&budget_meters=1000&tags=smørrebrød"
+        ).status_code
+        == 422
+    )

@@ -378,8 +378,16 @@ export async function fetchTodaysRoute(
 
 /** How the walk is asked for, beyond its length. Preview and accept must send
  *  the same, or the accept plans a different walk from the one shown. `end` is
- *  where a one-way walk finishes; the server stores it nowhere. */
-export type WalkAsk = { loop: boolean; end: Coordinates | null };
+ *  where a one-way walk finishes; the server stores it nowhere. `themes` lean
+ *  the walk and `from`/`until` bound its years (until excluded); the server
+ *  heeds them for a subscriber only (docs/10, "Subscribers shape the walk"). */
+export type WalkAsk = {
+  loop: boolean;
+  end: Coordinates | null;
+  themes: string[];
+  from: number | null;
+  until: number | null;
+};
 
 /** The walk a `budgetMeters` walk from `at` would be. Stores nothing. */
 export async function previewRoute(
@@ -402,6 +410,9 @@ export async function previewRoute(
     params.set('end_lat', String(ask.end.lat));
     params.set('end_lng', String(ask.end.lng));
   }
+  for (const theme of ask.themes) params.append('tags', theme);
+  if (ask.from != null) params.set('year_from', String(ask.from));
+  if (ask.until != null) params.set('year_to', String(ask.until - 1));
   return toRoute(await get<RouteBody>('/v1/routes/preview', params, signal));
 }
 
@@ -423,6 +434,9 @@ export async function acceptRoute(
       loop: ask.loop,
       again,
       end: ask.end,
+      tags: ask.themes,
+      year_from: ask.from,
+      year_to: ask.until == null ? null : ask.until - 1,
     }),
   );
 }

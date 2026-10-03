@@ -71,7 +71,6 @@ appId: ${APP_ID}
 - assertVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
 - assertVisible: "[0-9]+ memories · .* loop"
 - assertVisible: "Next walk"
-- tapOn: "See the stops"
 
 # Accepting is what registers the device, and with it the past walks.
 - tapOn: "Start this walk"

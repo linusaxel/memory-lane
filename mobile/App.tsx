@@ -59,7 +59,7 @@ import {
   type Region,
 } from './src/region.ts';
 import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
-import { clearRoute, loadRoute, saveRoute } from './src/route.ts';
+import { clearRoute, loadChoices, loadRoute, saveChoices, saveRoute } from './src/route.ts';
 import {
   forgetUnlocked,
   inUnlockOrder,
@@ -113,7 +113,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
  *  it for "Next walk" taps. */
 const ROLLS = 1_000_000;
 
-const planKey = (km: number, ask: WalkAsk) => `${km}|${ask.loop}|${ask.end?.lat},${ask.end?.lng}`;
+const planKey = (km: number, ask: WalkAsk) =>
+  `${km}|${ask.loop}|${ask.end?.lat},${ask.end?.lng}|${ask.themes}|${ask.from}|${ask.until}`;
 
 /** How far around you the home map draws locked pins: half the longest walk. */
 const MAP_RADIUS_KM = WALK_KM.max / 2;
@@ -201,7 +202,14 @@ export default function App() {
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
   const [stage, setStage] = useState<Stage>('loading');
   const [walkKm, setWalkKm] = useState(WALK_KM.initial);
-  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, end: null });
+  const [walkAsk, setWalkAsk] = useState<WalkAsk>({ loop: true, end: null, themes: [], from: null, until: null });
+  useEffect(() => {
+    loadChoices().then((kept) => kept && setWalkAsk((ask) => ({ ...ask, ...kept })));
+  }, []);
+  const askWalk = useCallback((ask: WalkAsk) => {
+    setWalkAsk(ask);
+    saveChoices({ themes: ask.themes, from: ask.from, until: ask.until });
+  }, []);
   const [previewCardHeight, setPreviewCardHeight] = useState(0);
   // Where the previewed walk starts, and whether that is central
   // Copenhagen standing in for a position we could not have.
@@ -1607,7 +1615,8 @@ export default function App() {
               km={planKm}
               onKm={setWalkKm}
               ask={walkAsk}
-              onAsk={setWalkAsk}
+              onAsk={askWalk}
+              subscribed={!!profile?.subscribed}
               floorKm={walkFloor}
               onPickEnd={() => setStage('end')}
               fallback={planFallback}

@@ -3,10 +3,11 @@ the same cases, so the app highlights exactly what the server stores."""
 
 import json
 import pathlib
+import re
 
 import pytest
 
-from pipeline.tags import from_text
+from pipeline.tags import TAGS, from_text
 
 CASES = json.loads((pathlib.Path(__file__).parent / "fixtures/hashtags.json").read_text())
 
@@ -14,3 +15,11 @@ CASES = json.loads((pathlib.Path(__file__).parent / "fixtures/hashtags.json").re
 @pytest.mark.parametrize(("text", "tags"), CASES)
 def test_hashtags(text, tags):
     assert from_text(text) == tags
+
+
+def test_the_planners_themes_are_the_extractors_tags():
+    """mobile/src/Plan.tsx THEMES is what a subscriber can lean a walk on; the
+    API refuses anything outside pipeline/tags.py TAGS."""
+    plan = (pathlib.Path(__file__).parents[1] / "mobile/src/Plan.tsx").read_text()
+    block = plan.split("export const THEMES = [", 1)[1].split("];", 1)[0]
+    assert tuple(re.findall(r"'(\w+)'", block)) == TAGS
