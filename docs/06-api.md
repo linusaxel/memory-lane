@@ -81,9 +81,11 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   every memory, locked too
 - `DELETE /v1/memories/{id}/notes/{note_id}?device=UUID` - hide a note: your
   own, or anyone's on a memory you filed
-- `POST /v1/memories/{id}/report` `{device, reason}` - REPORT_THRESHOLD distinct
-  signed-in accounts and the memory stops being served by every endpoint. A
-  device with no Google or Apple sign-in is recorded and not counted.
+- `POST /v1/memories/{id}/report` `{device, reason}` - `reason` is `privacy`,
+  `defamation`, `copyright`, `other` or null. REPORT_THRESHOLD distinct
+  signed-in accounts and the memory stops being served by every endpoint; one
+  signed-in account is enough with any reason but `other`. A device with no
+  Google or Apple sign-in is recorded and not counted.
   `python -m api.moderate` lists what is hidden and reinstates it
 - `POST /v1/users/{id}/block` `{device}` - that person's memories and notes are
   gone for every device on this account: nearby (pass `device`), unlock, the

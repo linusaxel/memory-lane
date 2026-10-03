@@ -455,6 +455,14 @@ REPORTING_ACCOUNTS = """
       AND EXISTS (SELECT 1 FROM identities i WHERE i.user_id = d.user_id)
 """
 
+# A claim about the law, not a dislike: one signed-in account is enough. See
+# docs/10-decisions.md#a-legal-report-hides-at-once.
+LEGAL_REASONS = {"privacy", "defamation", "copyright"}
+SIGNED_IN_DEVICE = """
+    SELECT 1 FROM devices d JOIN identities i ON i.user_id = d.user_id
+    WHERE d.id = CAST(:device AS uuid) LIMIT 1
+"""
+
 
 @router.post("/v1/memories/{memory_id}/report", response_model=ReportResponse)
 def report_memory(memory_id: int, body: ReportRequest):
@@ -463,7 +471,8 @@ def report_memory(memory_id: int, body: ReportRequest):
     One report per device, counted rather than acted on individually, and at
     REPORT_THRESHOLD the memory stops being served by every endpoint at once.
     Only signed-in accounts count: a device id is self-issued, so three of them
-    are one person. A reviewer reinstates with `python -m api.moderate`.
+    are one person. A legal reason from one of them hides it at once.
+    A reviewer reinstates with `python -m api.moderate`.
     The row stays: a takedown that destroys the evidence makes the next dispute
     unanswerable.
     """
@@ -486,7 +495,10 @@ def report_memory(memory_id: int, body: ReportRequest):
         )
         count = session.execute(text(REPORTING_ACCOUNTS), {"id": memory_id}).scalar()
 
-        hidden = count >= REPORT_THRESHOLD
+        hidden = count >= REPORT_THRESHOLD or (
+            body.reason in LEGAL_REASONS
+            and session.execute(text(SIGNED_IN_DEVICE), {"device": body.device}).scalar() == 1
+        )
         if hidden:
             session.execute(
                 text("UPDATE memories SET hidden = TRUE WHERE id = :id"), {"id": memory_id}

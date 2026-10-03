@@ -533,6 +533,51 @@ def test_devices_without_a_sign_in_cannot_take_a_memory_down(client):
     assert last == {"reports": 0, "hidden": False}
 
 
+def test_a_signed_in_legal_report_hides_it_at_once(client, db_session):
+    mid = submit(client)["id"]
+    hit = client.post(
+        f"/v1/memories/{mid}/report", json={"device": signed_in(db_session), "reason": "privacy"}
+    )
+    assert hit.json() == {"reports": 1, "hidden": True}
+    assert client.get(f"/v1/memories/{mid}").status_code == 404
+
+
+def test_an_anonymous_legal_report_only_counts(client):
+    """Or one self-issued uuid could take down anything."""
+    mid = submit(client)["id"]
+    hit = client.post(
+        f"/v1/memories/{mid}/report", json={"device": device(), "reason": "copyright"}
+    )
+    assert hit.json() == {"reports": 0, "hidden": False}
+
+
+def test_a_retold_memory_with_no_author_can_be_reported(client, db_session):
+    place = db_session.execute(
+        text(
+            "INSERT INTO places (name, place_query, coordinates, precision_meters) "
+            "VALUES ('p', 'q', ST_MakePoint(:lng, :lat)::geography, 50) RETURNING id"
+        ),
+        {"lat": LAT, "lng": LNG},
+    ).scalar()
+    mid = db_session.execute(
+        text(
+            "INSERT INTO memories (place_id, summary, extraction_confidence) "
+            "VALUES (:p, 's', 'high') RETURNING id"
+        ),
+        {"p": place},
+    ).scalar()
+    hit = client.post(
+        f"/v1/memories/{mid}/report", json={"device": signed_in(db_session), "reason": "defamation"}
+    )
+    assert hit.json()["hidden"] is True
+
+
+def test_a_reason_off_the_list_is_refused(client):
+    mid = submit(client)["id"]
+    hit = client.post(f"/v1/memories/{mid}/report", json={"device": device(), "reason": "meh"})
+    assert hit.status_code == 422
+
+
 def test_a_blocked_author_is_gone_for_the_blocker_only(client, db_session):
     author, walker = device(), device()
     memory = submit(client, device=author)

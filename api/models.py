@@ -431,7 +431,8 @@ class MemoryEditRequest(BaseModel):
 
 class ReportRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
-    reason: str | None = Field(None, max_length=40)
+    # None is what builds before 2026-10-04 send.
+    reason: Literal["privacy", "defamation", "copyright", "other"] | None = None
 
 
 class ReportResponse(BaseModel):

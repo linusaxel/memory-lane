@@ -19,7 +19,7 @@ import {
 import * as Haptics from 'expo-haptics';
 
 import CloseButton from './CloseButton.tsx';
-import type { Coordinates, LocatedMemory } from './api.ts';
+import type { Coordinates, LocatedMemory, ReportReason } from './api.ts';
 import MemoryMedia from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
 import Notes from './Notes.tsx';
@@ -68,42 +68,47 @@ type Props = {
   hearted?: boolean;
   /** Over the map, in any stage: a card. Over the journal: a page. */
   compact?: boolean;
-  /** Absent for extracted memories, and for your own: there is nobody to
-   *  report a podcast to, and reporting yourself is not a real control. */
-  onReport?: (memory: LocatedMemory) => void;
+  /** Absent only for your own: reporting yourself is not a real control.
+   *  A retold story is reportable too (DSA Arts 16/17). */
+  onReport?: (memory: LocatedMemory, reason: ReportReason) => void;
   /** Already reported from this device, so the control says so instead of
    *  offering a second press that does nothing. */
   reported?: boolean;
-  /** Present exactly when onReport is: blocking hides everything its author
+  /** Only for what a person filed: blocking hides everything its author
    *  posted, on every phone on this account. */
   onBlock?: (memory: LocatedMemory) => void;
 };
 
+/** What a report says. The first three hide it at once (docs/10, "A legal
+ *  report hides at once"). */
+const REASONS: { reason: ReportReason; label: string }[] = [
+  { reason: 'privacy', label: 'It shares private information' },
+  { reason: 'defamation', label: "It's false or defamatory" },
+  { reason: 'copyright', label: 'It uses my work without permission' },
+  { reason: 'other', label: "It shouldn't be here for another reason" },
+];
+
+function blockee(memory: LocatedMemory) {
+  return memory.author?.name === 'Anonymous' ? 'this person' : memory.author?.name;
+}
+
 /** Edit, report and block, behind ⋯ the way a post does it: App Store 1.2
  *  wants report and block reachable, not on show, and an owner's edit is
- *  there in every app that has one. There is no unblock, so block asks first. */
+ *  there in every app that has one. Report and block go on in the sheet,
+ *  not a dialog: this app raises none of its own. */
 function moreActions(
   memory: LocatedMemory,
   reported: boolean | undefined,
-  onReport?: (memory: LocatedMemory) => void,
-  onBlock?: (memory: LocatedMemory) => void,
+  ask: (what: 'report' | 'block') => void,
+  canReport: boolean,
+  canBlock: boolean,
   onEdit?: (memory: LocatedMemory) => void,
 ) {
-  const who = memory.author?.name === 'Anonymous' ? 'this person' : memory.author?.name;
+  const who = blockee(memory);
   const actions = [
     onEdit ? { label: 'Edit this memory', run: () => onEdit(memory) } : null,
-    reported || !onReport ? null : { label: 'Report this memory', run: () => onReport(memory) },
-    onBlock && who
-      ? {
-          label: `Block ${who}`,
-          destructive: true,
-          run: () =>
-            Alert.alert(`Block ${who}?`, 'You will not see anything they post.', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Block', style: 'destructive', onPress: () => onBlock(memory) },
-            ]),
-        }
-      : null,
+    reported || !canReport ? null : { label: 'Report this memory', run: () => ask('report') },
+    canBlock && who ? { label: `Block ${who}`, destructive: true, run: () => ask('block') } : null,
   ].filter((a) => a !== null);
   if (actions.length === 0) return;
   if (Platform.OS === 'ios') {
@@ -159,6 +164,9 @@ export default function MemorySheet({
   // locked-down device. The source link says so instead of appearing to do
   // nothing.
   const [linkFailed, setLinkFailed] = useState<string | null>(null);
+  // Report or block, asked in the sheet. Another memory asks afresh.
+  const [asking, setAsking] = useState<'report' | 'block' | null>(null);
+  useEffect(() => setAsking(null), [memory?.id]);
 
   const open = (url: string, whenNothingOpens: string) => {
     setLinkFailed(null);
@@ -371,7 +379,7 @@ export default function MemorySheet({
                 place={styles.more}
                 icon="ellipsis"
                 label="More"
-                onPress={() => moreActions(memory, reported, onReport, onBlock, onEdit)}
+                onPress={() => moreActions(memory, reported, setAsking, !!onReport, !!onBlock, onEdit)}
               />
             )}
 
@@ -451,6 +459,45 @@ export default function MemorySheet({
                 <Text style={[styles.meta, styles.byline]}>on this day</Text>
               )}
             </View>
+
+            {asking && (
+              <View style={styles.ask} testID="ask">
+                <Text style={styles.askTitle} accessibilityRole="header">
+                  {asking === 'report' ? 'Why should it come down?' : `Block ${blockee(memory)}?`}
+                </Text>
+                {asking === 'block' && (
+                  <Text style={styles.meta}>You will not see anything they post.</Text>
+                )}
+                {(asking === 'report'
+                  ? REASONS.map(({ reason, label: text }) => ({
+                      text,
+                      run: () => onReport?.(memory, reason),
+                    }))
+                  : [{ text: 'Block', run: () => onBlock?.(memory) }]
+                ).map(({ text, run }) => (
+                  <Pressable
+                    key={text}
+                    style={dim(styles.askChoice)}
+                    accessibilityRole="button"
+                    onPress={() => {
+                      setAsking(null);
+                      run();
+                    }}
+                  >
+                    <Text style={[styles.askText, asking === 'block' && styles.askDestructive]}>
+                      {text}
+                    </Text>
+                  </Pressable>
+                ))}
+                <Pressable
+                  style={dim(styles.askChoice)}
+                  accessibilityRole="button"
+                  onPress={() => setAsking(null)}
+                >
+                  <Text style={styles.askCancel}>Cancel</Text>
+                </Pressable>
+              </View>
+            )}
 
             {/* Two different screens, not one screen with the middle deleted. A
                 locked memory has nothing to scroll, so it gets a centred
@@ -694,6 +741,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepOff: { opacity: 0.3 },
+  ask: {
+    marginHorizontal: 24,
+    marginTop: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: color.rule,
+    borderRadius: corner.card,
+    gap: 4,
+  },
+  askTitle: { ...font.displaySemi, fontSize: 16, color: color.ink, marginBottom: 4 },
+  askChoice: { paddingVertical: 10 },
+  askText: { ...font.prose, fontSize: 16, color: color.ink },
+  askDestructive: { color: color.ember },
+  askCancel: { ...font.prose, fontSize: 16, color: color.inkSoft },
   close: { position: 'absolute', top: 20, right: 20, zIndex: 1 },
   // One along from the ×.
   more: { position: 'absolute', top: 20, right: 58, zIndex: 1 },

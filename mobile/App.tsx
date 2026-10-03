@@ -38,6 +38,7 @@ import {
   wasRefused,
   type Coordinates,
   type LocatedMemory,
+  type ReportReason,
   type Profile,
   type TodaysRoute,
   type WalkAsk,
@@ -1264,11 +1265,11 @@ export default function App() {
   // Reported from this device already. Local only: the server counts accounts,
   // and this stops the control offering a second press that does nothing.
   const [reported, setReported] = useState<Set<number>>(new Set());
-  const report = useCallback(async (memory: LocatedMemory) => {
+  const report = useCallback(async (memory: LocatedMemory, reason: ReportReason) => {
     // Optimistic: it is idempotent per device, and a report that says it landed
     // beats one that silently did not.
     setReported((current) => new Set(current).add(memory.id));
-    reportMemory(memory.id, await deviceId()).catch(() => {});
+    reportMemory(memory.id, await deviceId(), reason).catch(() => {});
   }, []);
   const block = useCallback(async (memory: LocatedMemory) => {
     const author = memory.author?.id;
@@ -1985,8 +1986,8 @@ export default function App() {
           // Only your own, and only while it is open: the locked composition
           // has nowhere to put this.
           onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}
-          // Only what a person filed, and not your own.
-          onReport={openMemories[openIndex]?.author && !mine ? report : undefined}
+          // Anything but your own; block only what a person filed.
+          onReport={!mine ? report : undefined}
           reported={reported.has(openMemories[openIndex]?.id ?? -1)}
           onBlock={openMemories[openIndex]?.author && !mine ? block : undefined}
           memories={openMemories}

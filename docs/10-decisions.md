@@ -1176,6 +1176,26 @@ contact, for anything people post. Each one here, and the trap it avoids:
 The report button came back for this: it was removed from the app on
 2026-09-22 with nothing depending on its absence.
 
+### A legal report hides at once
+
+Status: Accepted 2026-10-04
+
+DSA Arts 16 and 17 want a notice route on everything we host, and for our own
+summaries we have no hosting shield at all (*The sources' legal footing*). So:
+
+- **Every memory is reportable**, a retold story as much as a post. Only
+  your own is not.
+- **A report gives a reason**: privacy, defamation, copyright or other, picked
+  in the sheet (no system dialog). `reports.reason` is what `api.moderate`
+  shows the reviewer.
+- **Privacy, defamation and copyright hide it on the first report** from a
+  signed-in account, until `python -m api.moderate --restore`. A libel or a
+  leaked address left up for the two more reports the threshold waits on is
+  the worse mistake; a wrong hide is one restore.
+- **An anonymous legal report only counts**, toward `REPORT_THRESHOLD`, as
+  before (*Posts are screened, reports need an account*): one self-issued
+  uuid must not hide anything.
+
 ### Posts are screened by rules, not a model
 
 Status: Accepted 2026-09-29. Supersedes the first bullet of *Posts are

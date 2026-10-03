@@ -441,10 +441,13 @@ export async function acceptRoute(
   );
 }
 
+export type ReportReason = 'privacy' | 'defamation' | 'copyright' | 'other';
+
 /** Say this should not be here. Enough signed-in accounts and it stops being
- *  served to anybody until someone reviews it. */
-export async function reportMemory(id: number, device: string): Promise<void> {
-  await post(`/v1/memories/${id}/report`, { device, reason: null });
+ *  served to anybody until someone reviews it; a legal reason from one
+ *  signed-in account is enough. */
+export async function reportMemory(id: number, device: string, reason: ReportReason): Promise<void> {
+  await post(`/v1/memories/${id}/report`, { device, reason });
 }
 
 /** Never see this person's memories or notes again, on any phone on this

@@ -104,8 +104,6 @@ public launch that the rest of this file doesn't track. Blockers first.
         email is drafted (`docs/permission-request.md`); build the transcript
         delete before the first channel says yes, since the email promises it.
       - Historisk Atlas: ingest only CC BY, BY-SA and PD stories.
-      - A report and takedown route on every memory (DSA Arts 16/17), for
-        privacy, defamation and copyright alike.
       - Suppress health, crime and WWII politics about private people, and
         place private people at the street, not the door.
       - A written legitimate-interest assessment and a DPIA.
@@ -763,8 +761,6 @@ game: quiet by default; refine what exists rather than add.
       - The paywall spins in the button being paid with.
       Quiet on purpose: chips, the level-lift text, Use my location, the stamp
       fill, the "Next:" label, notes, the journal.
-      Still open: Block raises `Alert.alert` (`MemorySheet.tsx`), against the
-      no-system-dialog rule.
 - [x] **C2 The route draws itself.** (done 2026-10-03, UI.md "A new walk
       draws itself". Frames measured in the simulator only: watch it on a phone.) On a new plan the
       line grows from you along the walk over ~600 ms, then the stops pop in
