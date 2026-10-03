@@ -824,6 +824,15 @@ known flicker source in react-native-maps. Markers set `tracksViewChanges={false
 for the frame cost and are keyed `` `${group.key}:${reach}` ``, so they repaint
 exactly when their state changes and never otherwise.
 
+**A new walk draws itself, then its stops land in order.** `RouteLine`'s
+`draw` grows the preview's line from you along its length over 600 ms,
+eased out: 24 longer slices of the fill alone, the edge added once it is
+whole (each Polyline prop change is an overlay rebuild). Then the stops
+mount one every 90 ms in walk order (`stopsShown` in `App.tsx`). Mounting,
+not animating, so the rule above holds. While a re-plan is on its way the
+old line fades to 40% (`dim`). Reduce Motion draws it whole. Only the
+preview draws: a finished or past walk is already known.
+
 A group is locked if any memory in it is — anything left to open outranks
 anything already earned, because a marker with something behind a gate is an
 invitation and not a souvenir. `reachOf()` in `src/reach.ts` measures from the

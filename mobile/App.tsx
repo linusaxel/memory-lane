@@ -207,6 +207,12 @@ export default function App() {
   // "Next walk" came back unchanged: that was the only walk that long.
   const [onlyWalk, setOnlyWalk] = useState(false);
   const [preview, setPreview] = useState<TodaysRoute | null>(null);
+  // Once its line is drawn, a preview's stops land one by one, in walk order.
+  const [drawnFor, setDrawnFor] = useState<TodaysRoute | null>(null);
+  const [revealed, setRevealed] = useState<{ walk: TodaysRoute | null; count: number }>({
+    walk: null,
+    count: 0,
+  });
   // Every walk this card has shown since the last fresh plan, and which is on
   // screen: ‹ steps back through them, and › steps on again before asking.
   const [shown, setShown] = useState<{ again: number; km: number; walk: TodaysRoute }[]>([]);
@@ -687,6 +693,7 @@ export default function App() {
       takeRoute(walk, planFrom, walkAsk.end);
       setPreview(null);
       setStage('walk');
+      Haptics.selectionAsync().catch(() => {});
     } catch (e) {
       if (!mounted.current) return;
       if (walkedToday(e)) setWalkedOut(true);
@@ -697,6 +704,18 @@ export default function App() {
   }, [device, planFrom, planKm, walkAsk, again, takeRoute]);
 
   const me = profile?.user_id;
+
+  useEffect(() => {
+    if (!drawnFor) return;
+    let count = 0;
+    const timer = setInterval(() => {
+      count += 1;
+      setRevealed({ walk: drawnFor, count });
+      if (count >= drawnFor.memories.length) clearInterval(timer);
+    }, 90);
+    return () => clearInterval(timer);
+  }, [drawnFor]);
+  const stopsShown = revealed.walk === preview ? revealed.count : 0;
 
   // The preview's zoom: the whole drawn walk, its start and any end, clear of
   // the card as it is measured, so folding its list away gives the map room.
@@ -1119,6 +1138,7 @@ export default function App() {
    *  owed finishes the walk, as earning it would. */
   const skipNext = useCallback(async () => {
     if (!device || !nextRouteStop) return;
+    setPlanError(null);
     try {
       const walk = await skipStop(device, nextRouteStop.id);
       if (!mounted.current) return;
@@ -1449,7 +1469,13 @@ export default function App() {
             )}
 
             {stage === 'preview' && !pastWalk && previewPath.length > 1 && (
-              <RouteLine path={previewPath} dark={scheme === 'dark'} />
+              <RouteLine
+                path={previewPath}
+                dark={scheme === 'dark'}
+                draw
+                onDrawn={() => setDrawnFor(preview)}
+                dim={planBusy}
+              />
             )}
             {donePath.length > 1 && <RouteLine path={donePath} dark={scheme === 'dark'} />}
             {pastPath.length > 1 && <RouteLine path={pastPath} dark={scheme === 'dark'} />}
@@ -1465,6 +1491,7 @@ export default function App() {
                   break;
                 }
               }
+              if (stage === 'preview' && !pastWalk && (routePosition ?? 0) > stopsShown) return null;
               const reach = reachOf(group, position, earned);
               return (
                 <MemoryMarker
@@ -1751,7 +1778,8 @@ export default function App() {
                           />
                         ))}
                         <Text style={[styles.walkLeft, styles.walkCount]} numberOfLines={1}>
-                          {routeLeftText}
+                          {/* A skip or an end that failed says so here, not on a card that is gone. */}
+                          {planError ?? routeLeftText}
                         </Text>
                       </View>
                     </View>

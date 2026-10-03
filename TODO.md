@@ -724,22 +724,34 @@ a toast, an animation, a refined one), AI's first output is the starting line,
 and most craft goes unnoticed until it is missing. Same rule as Feels like a
 game: quiet by default; refine what exists rather than add.
 
-- [ ] **C1 Find the silent changes.** (checked 2026-10-03) List every state
-      change that happens with no feedback and name its level. Known: the
-      planned route appears whole (`RouteLine.tsx`); the 1.5 s plan wait is a
-      bare spinner (`Plan.tsx`). Most should stay quiet; fix the ones a walker
-      would miss.
-- [ ] **C2 The route draws itself.** (checked 2026-10-03) On a new plan the
+- [x] **C1 Find the silent changes.** (done 2026-10-03) Fixed the ones a
+      walker would miss:
+      - A failed skip or end mid-walk wrote `planError` to no card. It now shows
+        on the walk card.
+      - A re-plan dims the old line.
+      - Start walk gives a selection haptic.
+      - The paywall spins in the button being paid with.
+      Quiet on purpose: chips, the level-lift text, Use my location, the stamp
+      fill, the "Next:" label, notes, the journal.
+      Still open: Block raises `Alert.alert` (`MemorySheet.tsx`), against the
+      no-system-dialog rule.
+- [x] **C2 The route draws itself.** (done 2026-10-03, UI.md "A new walk
+      draws itself". Frames measured in the simulator only: watch it on a phone.) On a new plan the
       line grows from you along the walk over ~600 ms, then the stops pop in
       order. Polyline strokes can't animate natively: grow the coordinate
       slice; Reduce Motion shows it whole. Measure frames on a phone first.
-- [ ] **C3 An inline camera in Add.** (checked 2026-10-03) `Submit.tsx` opens
+- [ ] **C3 An inline camera in Add.** (deferred 2026-10-03 until C4 has
+      archival photos to ghost. As written it also breaks docs/10 "Reading and
+      writing are one page", which says photos show at reading size and
+      actions are text. Keep both if it comes back.) `Submit.tsx` opens
       the full-screen system camera (`launchCameraAsync`). Put an
       `expo-camera` `CameraView` in the sheet instead, opening from the camera
       button, with the shot shrinking into the attachment chip (ChatGPT's
       inline camera). Needs `expo-camera` and a native rebuild; keep the
       picker for the library.
-- [ ] **C4 Then and now, lined up.** (checked 2026-10-03) Standing at a memory
+- [ ] **C4 Then and now, lined up.** (blocked 2026-10-03: no memory has an
+      image. That needs an image on historical memories, plus kbhbilleder
+      access, which is `ask first`.) Standing at a memory
       with an archival photo, the C3 camera ghosts the old photo over the
       viewfinder at ~40% so the walker can match it (rephotography). Open:
       where the "now" photo goes, a reply on the memory or the walker's own

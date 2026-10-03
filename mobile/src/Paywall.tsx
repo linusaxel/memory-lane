@@ -8,7 +8,16 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { API_BASE, refreshSubscription, type Profile } from './api.ts';
@@ -27,7 +36,9 @@ type Props = {
 
 export default function Paywall({ visible, onClose, device, onProfile }: Props) {
   const [offered, setOffered] = useState<PurchasesPackage[] | null>(null);
-  const [busy, setBusy] = useState(false);
+  // Which button is paying: it spins while the others wait.
+  const [paying, setPaying] = useState<string | null>(null);
+  const busy = paying != null;
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,9 +49,9 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
       .catch(() => setOffered([]));
   }, [visible]);
 
-  const settle = async (pay: () => Promise<boolean>) => {
+  const settle = async (which: string, pay: () => Promise<boolean>) => {
     if (!device) return;
-    setBusy(true);
+    setPaying(which);
     setError(null);
     try {
       if (!(await pay())) return;
@@ -51,7 +62,7 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
     } catch {
       setError("That didn't go through. Try again.");
     } finally {
-      setBusy(false);
+      setPaying(null);
     }
   };
 
@@ -74,11 +85,15 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
                 style={dim(i === 0 ? styles.solid : styles.outline)}
                 disabled={busy}
                 accessibilityRole="button"
-                onPress={() => settle(() => buy(plan))}
+                onPress={() => settle(plan.identifier, () => buy(plan))}
               >
-                <Text style={i === 0 ? styles.solidText : styles.outlineText}>
-                  {`${plan.packageType === 'ANNUAL' ? 'Yearly' : 'Monthly'} · ${plan.product.priceString} ›`}
-                </Text>
+                {paying === plan.identifier ? (
+                  <ActivityIndicator color={i === 0 ? color.paper : color.ink} />
+                ) : (
+                  <Text style={i === 0 ? styles.solidText : styles.outlineText}>
+                    {`${plan.packageType === 'ANNUAL' ? 'Yearly' : 'Monthly'} · ${plan.product.priceString} ›`}
+                  </Text>
+                )}
                 {plan.packageType === 'ANNUAL' && plan.product.pricePerMonthString && (
                   <Text style={i === 0 ? styles.solidSub : styles.fine}>
                     {`${plan.product.pricePerMonthString} a month`}
@@ -94,13 +109,17 @@ export default function Paywall({ visible, onClose, device, onProfile }: Props) 
               disabled={busy}
               accessibilityRole="button"
               onPress={() =>
-                settle(async () => {
+                settle('restore', async () => {
                   await restore();
                   return true;
                 })
               }
             >
-              <Text style={styles.linkText}>Restore purchases</Text>
+              {paying === 'restore' ? (
+                <ActivityIndicator color={color.inkSoft} />
+              ) : (
+                <Text style={styles.linkText}>Restore purchases</Text>
+              )}
             </Pressable>
           </View>
         )}
