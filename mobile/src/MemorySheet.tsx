@@ -332,14 +332,15 @@ export default function MemorySheet({
   const [first, rest] = lede(memory?.summary ?? '');
   const when = happened(memory?.happened_at, memory?.happened_precision);
   const started = memory?.content?.timestamp_start ?? null;
-  const metaLine = [
-    !locked && when && [when.within, when.year].filter(Boolean).join(' '),
+  // When it happened, not when it was posted: its own line under the title,
+  // never in the byline. No distance: an open story is one you stand on
+  // (docs/10, "The date is the story's, the byline the source's").
+  const dateLine = [
+    when && [when.within, when.year].filter(Boolean).join(' '),
     memory?.anniversary && 'on this day',
-    !locked && formatDistance(fromHere ?? memory?.distance_meters ?? null),
   ]
     .filter(Boolean)
     .join(' · ');
-  const after = metaLine && ` · ${metaLine}`;
   const quoteBy = [
     memory?.quote_by,
     started != null && `at ${formatTimestamp(started)}`,
@@ -416,26 +417,24 @@ export default function MemorySheet({
                   </Text>
                 </View>
               )}
+              {/* "On this day" has no accent - the seal means openable and
+                  nothing else gets it. */}
+              {!locked && dateLine !== '' && <Text style={styles.date}>{dateLine}</Text>}
               {/* Who told it, under the name: in every screenshot, and the
                   first thing seen with an AI-written story, which is where
                   the AI Act wants it said (UI.md rule 11). */}
-              {/* Then when, why it is on top, and how far, on the same line:
-                  who and when are one fact about the story. "On this day" has
-                  no accent - the seal means openable and nothing else gets it. */}
               {!locked &&
                 (memory.author ? (
                   <View style={[styles.byline, styles.bylineRow]}>
                     <Avatar url={memory.author.avatar_url} name={memory.author.name} size={20} />
                     <Text style={styles.bylineText} numberOfLines={2}>
-                      <Text style={styles.bylineName}>{memory.author.name}</Text>
-                      {after}
+                      Left by <Text style={styles.bylineName}>{memory.author.name}</Text>
                     </Text>
                   </View>
                 ) : memory.content?.source ? (
                   <View style={styles.byline}>
                     <SourceLine
                       source={memory.content.source}
-                      after={after}
                       url={memory.content.url}
                       spoken={sourceAction(memory.content).spoken}
                     />
@@ -449,13 +448,8 @@ export default function MemorySheet({
                   >
                     <Text style={styles.meta} numberOfLines={2}>
                       Retold from {memory.content.title}
-                      {after}
                     </Text>
                   </Pressable>
-                ) : metaLine ? (
-                  <Text style={[styles.meta, styles.byline]} numberOfLines={2}>
-                    {metaLine}
-                  </Text>
                 ) : null)}
                 {linkFailed && <Text style={[styles.meta, styles.byline]}>{linkFailed}</Text>}
                 {!locked && (
@@ -554,20 +548,33 @@ export default function MemorySheet({
                       {/* Copied from the source and checked against it
                           (pipeline/extract.py, grounded), never written. A tap
                           goes to where it was said, like the watch button. */}
+                      {/* A callout, as GitHub's > [!NOTE] is: the bar, then a
+                          title row that says what the box is. No quote marks
+                          in a block quote (Butterick). */}
                       <Pressable
-                        style={dim(styles.quote)}
+                        style={dim([styles.callout, styles.quote])}
                         disabled={!memory.content}
                         accessibilityRole={memory.content ? 'link' : 'text'}
                         onPress={() => open(memory.content!.url, "Couldn't open that link.")}
                       >
-                        <Text style={styles.quoteText}>“{memory.quote}”</Text>
-                        {quoteBy !== '' && <Text style={styles.meta}>— {quoteBy}</Text>}
+                        <View style={styles.calloutTitle}>
+                          <Glyph name="quote.opening" size={13} color={color.ember} />
+                          <Text style={styles.meta}>{quoteBy || 'In their words'}</Text>
+                        </View>
+                        <Text style={styles.summary}>{memory.quote}</Text>
                       </Pressable>
                     </Animated.View>
                   )}
                   <Animated.View style={[rise(3), styles.after]}>
+                    {/* The same callout, in grey: ember is the source's own voice. */}
                     {memory.contrast_note && (
-                      <Text style={styles.summary}>{memory.contrast_note}</Text>
+                      <View style={[styles.callout, styles.calloutQuiet]}>
+                        <View style={styles.calloutTitle}>
+                          <Glyph name="clock.arrow.circlepath" size={13} color={color.inkFaint} />
+                          <Text style={styles.meta}>Then and now</Text>
+                        </View>
+                        <Text style={styles.summary}>{memory.contrast_note}</Text>
+                      </View>
                     )}
 
                     <MemoryMedia media={memory.media} />
@@ -674,12 +681,15 @@ const styles = StyleSheet.create({
   afterLede: { marginTop: 8 },
   after: { marginTop: 24, gap: 24 },
   // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
-  quote: { marginTop: 24, paddingLeft: 16, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
-  quoteText: story.body,
+  callout: { paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
+  calloutQuiet: { borderLeftColor: color.rule },
+  calloutTitle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  quote: { marginTop: 24 },
   hashtag: { ...font.displaySemi },
   nameLink: { textDecorationLine: 'underline' },
   waiting: { ...label, color: color.sealDeep },
-  byline: { marginTop: 8 },
+  date: { ...story.body, color: color.inkSoft, marginTop: 4 },
+  byline: { marginTop: 12 },
   flourish: { marginTop: 24 },
   bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bylineText: { ...story.meta, flexShrink: 1 },

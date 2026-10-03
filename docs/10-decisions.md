@@ -2976,7 +2976,8 @@ noisy, and adding a memory looked nothing like reading one.
   group with one of space, containers or rules).
 - **Who, when and how far are one line** under the title, with a 20pt avatar:
   "Retold from **Channel** · 1978 · 40 m away". The episode title moves under
-  the source link, where it says which.
+  the source link, where it says which. *Superseded 2026-10-03 by "The date
+  is the story's, the byline the source's".*
 - **Add a memory is that page with empty slots.** Day One merged its read and
   edit modes into one view in v3; Medium's editor is the published page. The
   title and story fields are `story.title` and `story.body` with no box, the
@@ -3025,6 +3026,30 @@ at the end.
 - **One flourish**, between the byline and the story: the apparatus above it,
   the reading below. Then-and-now is the story's last paragraph, unlabelled.
 - **The heart closes the story** alone, at the right.
+
+### The date is the story's, the byline the source's
+
+Status: Accepted 2026-10-03. Supersedes "Who, when and how far are one line"
+in *Reading and writing are one page*, the unlabelled then-and-now in *One
+source, one flourish*, and the quote's "— Mads, at 12:04" footer.
+
+The founder: drop the distance, give the date its own line under the title,
+and make the quote and then-and-now say what they are, after markdown.
+
+- **No distance on an open story.** It opens only where you stand, so it
+  always read "0 m away". The locked screens keep it: there it changes.
+- **The date is a deck under the title**, 17 `inkSoft`, with "on this day".
+  In a byline a date reads as when it was posted (Medium, Substack); under the
+  title it is when it happened, as Wikipedia's short description and a museum
+  label's tombstone line put an event's date with its subject. The byline is
+  then only who: "Retold from **X**", "Left by **Anna**".
+- **The quote and then-and-now are callouts**, GitHub's `> [!NOTE]` anatomy
+  (also Obsidian, MkDocs Material, Docusaurus): a 3px bar and a title row,
+  icon plus `label`, over body text. A bare bar is the ambiguous `>`
+  blockquote. The quote's title is who said it ("Mads, at 12:04"),
+  `quote.opening` in ember, no quote marks (Butterick, block quotations).
+  Then and now is `clock.arrow.circlepath` with a `rule` bar: ember stays the
+  source's own voice. No tint, no new size.
 
 ### Rejected approaches, do not retry
 

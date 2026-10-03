@@ -17,8 +17,6 @@ import { color, dim, story } from './theme.ts';
 
 type Props = {
   source: Source;
-  /** The rest of the sheet's meta line, after the credit: " · 1978 · 40 m away". */
-  after?: string;
   /** Where a tap goes, when it is more exact than the channel: the passage, or
    *  the video at the right second. The credit is the story's only source link. */
   url?: string;
@@ -26,7 +24,7 @@ type Props = {
   spoken?: string;
 };
 
-export default function SourceLine({ source, after, url = source.url ?? undefined, spoken }: Props) {
+export default function SourceLine({ source, url = source.url ?? undefined, spoken }: Props) {
   // A channel avatar is decoration; if it will not load, fall back to the same
   // empty circle a channel without one gets rather than a grey disc that looks
   // like it is still loading.
@@ -45,7 +43,6 @@ export default function SourceLine({ source, after, url = source.url ?? undefine
       )}
       <Text style={styles.from} numberOfLines={2}>
         Retold from <Text style={styles.name}>{source.name}</Text>
-        {after}
       </Text>
     </View>
   );

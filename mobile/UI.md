@@ -95,12 +95,13 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
 
   locked                            open
   ├─ place name       28/700        ├─ place name       28/700, ⋯ beside the ×
-  ├─ padlock                        ├─ avatar 20 + "Anna · 17 June 1978 · on this day · 40 m away"  label
+  ├─ padlock                        ├─ "17 June 1978 · on this day"  17 inkSoft, its own line
+  │                                 ├─ avatar 20 + "Left by Anna" / "Retold from X"  label
   │                                 ├─ ❦ the one flourish: byline above, story below
   │                                 ├─ the lede  17/26: the first sentence, the peak, own paragraph
   │                                 ├─ the rest  17/26, #tags semibold
-  │                                 ├─ "their words"  17/26, ember rule, "— Mads, at 12:04"
-  │                                 ├─ contrast_note  17/26, the last paragraph, when known
+  │                                 ├─ "their words"  callout: ember bar, ❝ "Mads, at 12:04" label, 17/26
+  │                                 ├─ then and now  callout: rule bar, clock icon, "Then and now" label, 17/26
   ├─ distance         52/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              ├─ the heart, alone at the right (F11): a bare count
   ├─ "1 attachment waiting"         │    before the glyph, in a slot kept at zero
