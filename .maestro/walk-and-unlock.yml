@@ -1,5 +1,5 @@
 # F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
-# loop 1 -> 4 -> F30 finish it (F27 streak) -> F15/F31 reread it in the
+# loop 1 -> 3, skip 4 (W3) -> F30 finish it (F27 streak) -> F15/F31 reread it in the
 # journal (F26 heart it, F33 leave a note).
 # docs/08-ux-flows.md
 #
@@ -104,20 +104,16 @@ appId: ${APP_ID}
     visible: "Next: ${STOP4}.*"
     timeout: 30000
 
-- runFlow: ../e2e/out/legs/4.yml
-- runFlow:
-    file: steps/unlock-stop.yml
-    env:
-      N: "4"
-      STOP: "${STOP4}"
-      WORDS: "${WORDS4}"
+# W3: stop 4 is dropped, not walked. The last one owed, so dropping it
+# finishes the walk as opening it would.
+- tapOn: "Skip this stop"
 
-# F30: closing the last memory shows the whole loop and what it came to, once.
+# F30: the finish shows the whole loop and what it came to, once.
 - extendedWaitUntil:
     visible:
       id: "walk-done"
     timeout: 30000
-- assertVisible: "4 memories · .* loop · .* min"
+- assertVisible: "3 memories · .* loop · .* min"
 # Every stop opened for nothing, and finishing earned XP.
 - assertVisible: "\\+[0-9]+ XP"
 # F27: e2e/run.sh gave this device an unlock yesterday, so today makes two.
@@ -125,18 +121,18 @@ appId: ${APP_ID}
 - tapOn: "Done"
 
 - extendedWaitUntil:
-    visible: "Every stop unlocked\\. 4 of 4\\."
+    visible: "Every stop unlocked\\. 3 of 3\\."
     timeout: 30000
 
-# F15 + F31: the journal keeps the walk. Its row opens in place to its five
+# F15 + F31: the journal keeps the walk. Its row opens in place to its
 # stops, and an earned one opens the same sheet. (F16, the same journal with
 # no network, is not scripted; e2e/README.md has the by-hand recipe.)
 - tapOn: "Journal"
 - assertVisible: "2 day streak"
 - extendedWaitUntil:
-    visible: ".*, 4 memories · .*"
+    visible: ".*, 3 memories · .*"
     timeout: 30000
-- tapOn: ".*, 4 memories · .*"
+- tapOn: ".*, 3 memories · .*"
 # A stop row's label is "Stop N, <place>, <distance>"; the walk row's names no stop.
 - extendedWaitUntil:
     visible: "Stop \\d+, ${STOP1}, .*"
@@ -184,16 +180,16 @@ appId: ${APP_ID}
 # on the walked route, not on a planned one.
 - launchApp
 - extendedWaitUntil:
-    visible: "Every stop unlocked\\. 4 of 4\\."
+    visible: "Every stop unlocked\\. 3 of 3\\."
     timeout: 30000
 - assertNotVisible: "A walk from here"
 - assertNotVisible:
     id: "walk-done"
 - tapOn: "Journal"
 - extendedWaitUntil:
-    visible: ".*, 4 memories · .*"
+    visible: ".*, 3 memories · .*"
     timeout: 30000
-- tapOn: ".*, 4 memories · .*"
+- tapOn: ".*, 3 memories · .*"
 # F26 + F33: the heart and the note outlive the sheet and the process. The
 # note is the server's now, under the summary and whatever is attached.
 - tapOn: "Stop \\d+, ${STOP1}, .*"
@@ -205,7 +201,7 @@ appId: ${APP_ID}
     direction: DOWN
 - tapOn: "Close"
 - tapOn: "Close journal"
-- assertVisible: "Every stop unlocked\\. 4 of 4\\."
+- assertVisible: "Every stop unlocked\\. 3 of 3\\."
 
 # Ending a walked walk loses nothing, so it does not ask. The planner comes
 # back, walked out: a second walk the same day is a subscriber's (docs/10,

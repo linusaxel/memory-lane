@@ -310,6 +310,33 @@ Rejected: equipment that changes which or how many memories you get, an
 inventory cap, loot on every walk, generic keepsakes, stat screens. Walk-shape perks (+1 stop, a
 preferred layer) wait for retention data.
 
+### A stop can be dropped
+
+Status: Accepted 2026-10-03.
+
+In Smith et al. 2019 every participant changed the prescribed route:
+reordered stops, skipped some, took the tram. Stops already open in any
+order, so reordering is just walking them that way. **Skip this stop** on the
+walk card drops the next one without ending the walk
+(`POST /v1/routes/today/skip`).
+
+- **It leaves `daily_routes.memory_ids`,** rather than being marked in a new
+  column. Then completion (`ROUTE_COMPLETED_QUERY`), XP
+  (`cardinality(memory_ids)`, so a dropped stop earns nothing), the gate
+  (`ON_TODAYS_ROUTE_QUERY`: it locks again) and the stop count all follow
+  with no change. The journal never shows it was on the walk.
+- **The two street legs through it are joined,** so the walk still follows
+  streets, past the dropped spot (`_legs_without` in `api/read.py`). A fresh
+  solve without it would need the start, which is never stored.
+- **Not an opened stop, and not the walk's only one.** Dropping the last stop
+  owed finishes the walk. To be rid of every stop, end the walk (F34).
+- The walk card's count is stops opened plus one, not the next stop's route
+  number: open 2 and 3 first and it reads "3 of 5", not "1 of 5".
+
+**Options considered:** a per-stop drop from its pin. The walk card is where
+the walk is steered, and the next stop is the one in the way; add the pin
+only if people want to drop one further on.
+
 ### A map of what is locked, and only today's walk unlocks
 
 Status: **Superseded 2026-10-03** by *A walk planner, nothing else*. Accepted 2026-09-26. Supersedes the "no map of everything" clause below.

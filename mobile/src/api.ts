@@ -445,6 +445,12 @@ export async function endRoute(device: string): Promise<void> {
   }
 }
 
+/** Drop a stop from today's walk without ending it; the walk comes back
+ *  without it. Refused for an opened stop or the walk's only one. */
+export async function skipStop(device: string, memoryId: number): Promise<TodaysRoute> {
+  return toRoute(await post<RouteBody>('/v1/routes/today/skip', { device, memory_id: memoryId }));
+}
+
 /** A walk this account accepted on some day, finished or not. Earned stops
  *  come back open. The start was never stored, so it draws stop to stop. */
 export type WalkedRoute = TodaysRoute & {

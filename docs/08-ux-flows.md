@@ -766,7 +766,8 @@ anyone else's collection or the local unlock cache.
    there is no position.
 3. **One walk card at the bottom centre** says this is a walk and not the
    map (F9, docs/10 "One walk card"): "Next: <place> · 350 m" over "1 of 5 ·
-   2.4 km left". The number is the next stop's, as on its pin. The distance is
+   2.4 km left". The number counts the stops opened, plus one, since they
+   open in any order; the pins keep their route numbers. The distance is
    what is still to walk, from where you stand through every stop not yet
    earned, in order, and back to where the walk started on a loop (the
    preview's choice, stored as `daily_routes.loop`), so the walk home counts.
@@ -775,7 +776,13 @@ anyone else's collection or the local unlock cache.
    said plainly as a distance, never as minutes. Tapping the card zooms out
    around you until the next stop is on screen (it flies to the stop with no
    position, and frames the whole route once it is walked). Its ✕ ends the
-   walk (F34).
+   walk (F34). Beside it, **Skip this stop** drops the next stop from the
+   walk without ending it: shut, out of the way, or not worth it. The walk
+   goes on to the one after, and is finished without it (and earns as a walk
+   of one stop fewer). An opened stop, or the walk's only one, can't be
+   dropped. Dropping the last stop owed finishes the walk, as earning it
+   would (F30). `POST /v1/routes/today/skip`; docs/10, "A stop can be
+   dropped".
    **The camera follows you** while there is a position, and a pinch zooms
    without moving the centre. A one-finger drag lets go so you can look
    around, and **Center on me** (bottom right, beside the card) goes hollow

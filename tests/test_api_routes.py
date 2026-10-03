@@ -13,7 +13,7 @@ from itertools import pairwise
 import pytest
 from sqlalchemy import text
 
-from api import read, route_solver, streets
+from api import progression, read, route_solver, streets
 from api.accounts import touch_device
 from api.models import Coordinates
 
@@ -456,6 +456,47 @@ def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_s
     finished = unlock(*stops[1])
     assert finished is not None
     assert unlock(*stops[1]) == finished, "set once, never moved"
+
+
+def _skip(client, memory_id):
+    return client.post("/v1/routes/today/skip", json={"device": DEVICE, "memory_id": memory_id})
+
+
+def test_a_dropped_stop_leaves_the_walk_and_can_finish_it(client, db_session):
+    for n in (1, 2, 3):
+        _offset(db_session, n)
+    db_session.commit()
+    stops = [(m["id"], m["place"]["coordinates"]) for m in _route(client).json()["memories"]]
+    client.post(f"/v1/memories/{stops[0][0]}/unlock", json={"device": DEVICE, **stops[0][1]})
+    _skip(client, stops[1][0])
+    walk = _skip(client, stops[2][0]).json()
+    assert [m["id"] for m in walk["memories"]] == [stops[0][0]]
+    assert walk["meta"]["size"] == 1
+    assert db_session.execute(text("SELECT completed_at FROM daily_routes")).scalar()
+    assert _xp(client) == progression.walk_xp(1, 4000)
+
+
+def test_an_opened_stop_a_stranger_or_the_last_stop_is_not_dropped(client, db_session):
+    for n in (1, 2):
+        _offset(db_session, n)
+    db_session.commit()
+    assert _skip(client, 1).status_code == 404, "no walk yet"
+    stops = [(m["id"], m["place"]["coordinates"]) for m in _route(client).json()["memories"]]
+    client.post(f"/v1/memories/{stops[0][0]}/unlock", json={"device": DEVICE, **stops[0][1]})
+    assert _skip(client, stops[0][0]).json()["detail"] == {"reason": "already_opened"}
+    assert _skip(client, 999999).json()["detail"] == {"reason": "not_on_walk"}
+    db_session.execute(text("DELETE FROM unlocks"))
+    db_session.commit()
+    _skip(client, stops[0][0])
+    assert _skip(client, stops[1][0]).json()["detail"] == {"reason": "last_stop"}
+
+
+@pytest.mark.parametrize(
+    ("i", "joined"),
+    [(0, [[1, 2], [2, 3]]), (1, [[0, 1, 2], [2, 3]]), (3, [[0, 1], [1, 2]])],
+)
+def test_dropping_a_stop_joins_the_legs_through_it(i, joined):
+    assert read._legs_without([[0, 1], [1, 2], [2, 3]], i) == joined
 
 
 def test_walked_lists_the_accounts_walks_with_earned_stops_open(client, db_session):

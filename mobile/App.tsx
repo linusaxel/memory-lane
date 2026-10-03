@@ -22,6 +22,7 @@ import {
   acceptRoute,
   blockUser,
   endRoute,
+  skipStop,
   fetchMine,
   fetchProfile,
   fetchTodaysRoute,
@@ -800,7 +801,9 @@ export default function App() {
       : `Next: ${nextRouteStop.place.name}` +
         (toNextStop === null ? '' : ` · ${distance(toNextStop)}`);
   const routeProgress =
-    `${nextRouteStop ? (routePositionById.get(nextRouteStop.id) ?? routeUnlockedCount + 1) : routeTotal} of ${routeTotal}` +
+    // Stops open in any order, so this counts what is opened, not where the
+    // next stop sits in the route.
+    `${nextRouteStop ? routeUnlockedCount + 1 : routeTotal} of ${routeTotal}` +
     (routeLeft === null || routeDone ? '' : ` · ${distance(routeLeft)} left`);
   // Banded, so panning inside one zoom level does not regroup: `region` changes
   // on every gesture, ahead of the fetch debounce.
@@ -1044,6 +1047,35 @@ export default function App() {
     });
   };
 
+  /** The profile again, after a stop. `finished`: that was the walk's last
+   *  stop, so the same Success haptic UnlockButton fires for one memory, once
+   *  more, and the finish card shows what the walk earned and the streak,
+   *  counting today. */
+  const refreshProfile = useCallback(
+    (finished: boolean) => {
+      if (finished) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        setReward(null);
+        setWalkDone(true);
+      }
+      const before = profile;
+      deviceId()
+        .then(fetchProfile)
+        .then((who) => {
+          if (!mounted.current) return;
+          setProfile(who);
+          if (finished && before && who.xp > before.xp) {
+            setReward({
+              xp: who.xp - before.xp,
+              level: who.level > before.level ? who.level : null,
+            });
+          }
+        })
+        .catch(() => {});
+    },
+    [profile],
+  );
+
   const unlock = useCallback(
     async (memory: LocatedMemory): Promise<boolean> => {
       const at = positionRef.current;
@@ -1054,34 +1086,12 @@ export default function App() {
         const opened = await unlockMemory(memory.id, at, await deviceId());
         if (!mounted.current) return false;
         if (opened) {
-          // This was the last not-yet-earned stop of a started route: the same
-          // Success haptic UnlockButton fires for one memory, once more - an
-          // affirmation on the unlock that already happened, not a new mechanic.
+          // This was the last not-yet-earned stop of a started route.
           const finished =
             routeStarted &&
             nextRouteStop?.id === memory.id &&
             routeShown.every((stop) => stop.id === memory.id || earned.has(stop.id));
-          if (finished) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-            setReward(null);
-            setWalkDone(true);
-          }
-          // What a finished walk earned, and the streak the walk's card
-          // shows, counting today.
-          const before = profile;
-          deviceId()
-            .then(fetchProfile)
-            .then((who) => {
-              if (!mounted.current) return;
-              setProfile(who);
-              if (finished && before && who.xp > before.xp) {
-                setReward({
-                  xp: who.xp - before.xp,
-                  level: who.level > before.level ? who.level : null,
-                });
-              }
-            })
-            .catch(() => {});
+          refreshProfile(finished);
           setUnlocked(await rememberUnlocked(unlocked, opened));
           return true;
         } else {
@@ -1097,8 +1107,22 @@ export default function App() {
       }
       return false;
     },
-    [unlocked, routeStarted, nextRouteStop, routeShown, earned, profile],
+    [unlocked, routeStarted, nextRouteStop, routeShown, earned, refreshProfile],
   );
+
+  /** Drop the next stop and walk on to the one after. Dropping the last one
+   *  owed finishes the walk, as earning it would. */
+  const skipNext = useCallback(async () => {
+    if (!device || !nextRouteStop) return;
+    try {
+      const walk = await skipStop(device, nextRouteStop.id);
+      if (!mounted.current) return;
+      takeRoute(walk, routeHome, routeEnd);
+      refreshProfile(walk.memories.every((stop) => earned.has(stop.id)));
+    } catch {
+      if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
+    }
+  }, [device, nextRouteStop, takeRoute, routeHome, routeEnd, earned, refreshProfile]);
 
   // Count what was walked, from where the last count stopped.
   const countSteps = useCallback(() => {
@@ -1703,6 +1727,21 @@ export default function App() {
                         {routeProgress}
                       </Text>
                     </View>
+                    {/* Past a stop that is shut, or not worth it, without ending the walk. */}
+                    {!routeDone && routeShown.length > 1 && (
+                      <Pressable
+                        style={styles.skip}
+                        hitSlop={7}
+                        accessibilityRole="button"
+                        accessibilityLabel="Skip this stop"
+                        onPress={() => {
+                          Haptics.selectionAsync().catch(() => {});
+                          skipNext();
+                        }}
+                      >
+                        <Glyph name="forward.end" size={13} weight="semibold" color={color.inkSoft} />
+                      </Pressable>
+                    )}
                     {/* Nothing left to reach, nothing to lose, so no are-you-sure. */}
                     <CloseButton
                       label="End walk"
@@ -1898,4 +1937,12 @@ const styles = StyleSheet.create({
   walkText: { flex: 1, gap: 2 },
   walkNext: { ...label, fontSize: 15, color: color.ink },
   walkLeft: { ...label, fontSize: 13 },
+  skip: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.rule,
+  },
 });

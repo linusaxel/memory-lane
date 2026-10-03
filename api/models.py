@@ -430,6 +430,11 @@ class DeviceRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
 
 
+class SkipRequest(BaseModel):
+    device: str = Field(pattern=DEVICE_PATTERN)
+    memory_id: int
+
+
 class SignInRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
     # The provider's ID token. Not an access token: the app does the

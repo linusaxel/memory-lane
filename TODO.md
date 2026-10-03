@@ -548,23 +548,6 @@ with free choice. (checked 2026-10-03)
       - The goal gradient: people speed up near the reward (Kivetz et al.
         2006, https://business.columbia.edu/sites/default/files-efs/pubfiles/1200/goalgradient.pdf).
       - Strong in the lab, untested in walking apps.
-- [ ] **W3 Loose walks: the user shapes the path.** (checked 2026-10-02)
-      - In Smith et al. 2019, every participant changed the prescribed route:
-        reordered stops, skipped some, took the tram.
-      - Free roaming split people too. Some loved it; others hated "the
-        uncertainty" and wanted visited spots marked.
-      - So a walk is finished when its stops are opened, in any order, and a
-        stop can be dropped without ending the walk. Check
-        `ROUTE_COMPLETED_QUERY`.
-      - The founder (2026-10-02): keep the user's control of the walk. Keep
-        what F1 has: the length, **Loop** or **One way**, and **Next walk**.
-        Add reorder and skip on top of it. The one thing the user doesn't
-        choose on a free walk is *which* stops it contains: picking a stop
-        is **Walk here**, which uses the day's one walk. **Next walk** can
-        be used to fish for nearby pins. That's acceptable because the walk
-        is once a day, but cap rerolls if it becomes how people play.
-      - Keep stories short. People found more than 5 minutes too long but
-        still wanted more coverage.
 - [ ] **W5 A broken streak can be repaired.** (checked 2026-10-03)
       - A broken streak hurts, more so when people blame themselves, and less
         when it can be repaired (Silverman & Barasch, JCR 2023, 7 studies,

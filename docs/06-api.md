@@ -42,6 +42,10 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   in `walked`; one that opened nothing is deleted. Its unearned stops lock
   again, and another can be accepted if it opened nothing or the
   account is subscribed
+- `POST /v1/routes/today/skip` `{device, memory_id}` - drop a stop from today's
+  walk without ending it, and get the walk back without it. 404 with no walk
+  or `{reason: "not_on_walk"}`; 409 `{reason: "already_opened"}` or
+  `{reason: "last_stop"}`. Dropping the last stop owed finishes the walk
 - `GET /v1/routes/today?device=UUID` - today's walk in progress, or 404. Only reads
 - `GET /v1/routes/walked?device=UUID` - every walk the account took that
   opened something, newest first: earned stops open, `earned` of `size`, `completed_at`
