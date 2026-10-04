@@ -146,7 +146,9 @@ Journal (src/Memories.tsx in src/Drawer.tsx)  a panel from the left over the mou
 │                              opened something, date and length; a row opens in place to its
 │                              earned stops, numbered on an ember rail. Cached for the train
 ├─ Unlocked Memories           what you opened; "♡ Hearted" at the right of its count shows only
-│                              what you hearted
+│                              what you hearted. One opened since the last look scales in
+│                              once, 0.8 → 1.08 → 1 with a selection haptic, the first time
+│                              it is drawn (seen.ts). First look and Reduce Motion: no pulse
 └─ My Memories                 what you added; a row opens Submit as the editor. "3 hearts ·
                                1 note · last heart yesterday", never who
 

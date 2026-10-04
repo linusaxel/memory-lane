@@ -36,8 +36,9 @@ KINDS = ("amenity", "tourism", "shop", "leisure", "office", "craft", "building",
 # ponytail: a flat score from a name match. A cinema renamed ("Palads Teatret",
 # now "Palads Biograferne") reads as changed; compare kinds if that misleads.
 STILL, CHANGED = 0.2, 0.9
-# ponytail: areas only. A bar is usually an OSM point, which needs an `around`
-# query the public server times out on; a self-hosted Overpass can ask it.
+# ponytail: a point within 25 m confirms only by name. A different name there
+# may be the bar next door, so a changed bar stays blank; a seating permit at
+# the address could tell (TODO, "Now on a spot").
 
 
 class LookupFailed(Exception):
@@ -82,20 +83,32 @@ def since(qid: str | None) -> int | None:
     return min(years, default=None)
 
 
+def _ask(query: str) -> list[dict]:
+    """The tags of what Overpass names, keeping only what says what it is."""
+    found = geocode._get_json(f"{OVERPASS_URL}?{urllib.parse.urlencode({'data': query})}")
+    if found is None:
+        raise LookupFailed(query)
+    return [e["tags"] for e in found.get("elements", []) if any(k in e["tags"] for k in KINDS)]
+
+
+def _same(tags: dict, lat: float, lng: float, venue: str | None) -> bool:
+    hits = (geocode.Hit(lat, lng, n, None, None, "poi", "osm") for n in _names(tags))
+    return any(geocode._same_venue(venue, h) for h in hits)
+
+
 def now_at(lat: float, lng: float, venue: str | None) -> dict:
     """{"name", "kind", "same"} for what the pin stands inside, or {} when OSM
     names nothing there. A different name counts only with a kind: a bare
-    "building=yes" around a hot-dog stand is not what stands there now."""
-    query = (
+    "building=yes" around a hot-dog stand is not what stands there now. A bar
+    is usually a point, not an area, so the points within 25 m are asked too."""
+    areas = _ask(
         f"[out:json][timeout:10];is_in({lat},{lng})->.a;area.a[name][!boundary][!place];out tags;"
     )
-    found = geocode._get_json(f"{OVERPASS_URL}?{urllib.parse.urlencode({'data': query})}")
-    if found is None:
-        raise LookupFailed((lat, lng))
-    areas = [e["tags"] for e in found.get("elements", []) if any(k in e["tags"] for k in KINDS)]
     for tags in areas:
-        hits = (geocode.Hit(lat, lng, n, None, None, "poi", "osm") for n in _names(tags))
-        if any(geocode._same_venue(venue, h) for h in hits):
+        if _same(tags, lat, lng, venue):
+            return _found(tags, True)
+    for tags in _ask(f"[out:json][timeout:10];nw(around:25,{lat},{lng})[name];out tags;"):
+        if _same(tags, lat, lng, venue):
             return _found(tags, True)
     for tags in areas:
         if _kind(tags):
@@ -116,25 +129,30 @@ def clause(now: dict) -> str:
 
 
 def look_up(
-    session, place_id: int | None = None, content_id: int | None = None, again: bool = False
+    session,
+    place_id: int | None = None,
+    content_id: int | None = None,
+    again: bool = False,
+    blank: bool = False,
 ) -> dict:
     """Store what OSM says on each building-level place not yet looked at, then
     write the clause onto the extracted memories there. {place_id: now}.
     content_id keeps it to that content's places: the backlog is `main`'s job.
-    again looks at the confirmed places once more."""
+    again looks at the confirmed places once more, blank the ones OSM named
+    nothing at."""
     rows = session.execute(
         text("""
             SELECT id, venue, name,
                    ST_Y(coordinates::geometry) AS lat, ST_X(coordinates::geometry) AS lng
             FROM places
-            WHERE (now IS NULL OR (:again AND now->>'name' IS NOT NULL)) AND coordinates IS NOT NULL AND precision_meters <= 50
+            WHERE (now IS NULL OR (:again AND now->>'name' IS NOT NULL) OR (:blank AND now = '{}'::jsonb)) AND coordinates IS NOT NULL AND precision_meters <= 50
               AND geocode_status IN ('dawa', 'photon', 'wikidata', 'chosen')
               AND (CAST(:place_id AS INTEGER) IS NULL OR id = :place_id)
               AND (CAST(:content_id AS INTEGER) IS NULL
                    OR id IN (SELECT place_id FROM memories WHERE content_id = :content_id))
             ORDER BY id
         """),
-        {"place_id": place_id, "content_id": content_id, "again": again},
+        {"place_id": place_id, "content_id": content_id, "again": again, "blank": blank},
     ).fetchall()
     done = {}
     for n, r in enumerate(rows):
@@ -173,9 +191,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--place", type=int, help="one place, by id")
     parser.add_argument("--again", action="store_true", help="the confirmed places too")
+    parser.add_argument("--blank", action="store_true", help="the places OSM named nothing at")
     args = parser.parse_args()
     with get_session() as session:
-        done = look_up(session, place_id=args.place, again=args.again)
+        done = look_up(session, place_id=args.place, again=args.again, blank=args.blank)
     for place_id, now in done.items():
         print(f"{place_id}\t{clause(now) if now else '-'}")
     print(f"{len(done)} looked at, {sum(1 for now in done.values() if now)} confirmed")

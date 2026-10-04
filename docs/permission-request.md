@@ -10,9 +10,10 @@ What we promise in it has to be true before we send it:
 
 - **The proxy is gone.** Drop `WEBSHARE_PROXY_*` for permitted channels; a
   permitted channel can be drip-fetched without it.
-- **A transcript is deleted once it is extracted.** Not built yet: `transcripts`
-  keeps `segments` for ever. Build the delete (after aggregation, keep only the
-  timestamps a memory links to) before the first channel says yes.
+- **A transcript is deleted once it is extracted.** Built 2026-10-04: aggregation
+  forgets a video's captions (docs/10, *A video's transcript is deleted once it
+  is extracted*). Run `python -m pipeline.transcripts --forget-extracted` once
+  for the backlog before sending.
 
 ---
 

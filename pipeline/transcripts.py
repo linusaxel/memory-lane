@@ -162,9 +162,37 @@ def fetch_pending_transcripts(content_ids: list[int] | None = None, limit: int |
     return {"fetched": fetched, "failed": failed}
 
 
+def forget(session, content_id: int | None = None) -> int:
+    """Delete an extracted video's captions and the classifier's verbatim copy
+    of its chunks, as the permission email promises (docs/10, "A video's
+    transcript is deleted once it is extracted"). Books and other text keep
+    theirs. None forgets every extracted video. How many transcripts went."""
+    videos = """
+        SELECT id FROM content WHERE source_type = 'video' AND memories_extracted
+          AND (CAST(:id AS INTEGER) IS NULL OR id = :id)
+    """
+    session.execute(
+        text(f"UPDATE classifier_verdicts SET chunk_text = '' WHERE content_id IN ({videos})"),
+        {"id": content_id},
+    )
+    return session.execute(
+        text(f"DELETE FROM transcripts WHERE content_id IN ({videos})"), {"id": content_id}
+    ).rowcount
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description="Fetch pending YouTube transcripts")
     # The drip: a few an hour from cron stays under YouTube's block. docs/01-setup.md
     parser.add_argument("--limit", type=int, help="Fetch at most this many")
-    fetch_pending_transcripts(limit=parser.parse_args().limit)
+    parser.add_argument(
+        "--forget-extracted",
+        action="store_true",
+        help="Delete every extracted video's transcript instead (irreversible)",
+    )
+    args = parser.parse_args()
+    if args.forget_extracted:
+        with get_session() as session:
+            logger.info(f"Forgot {forget(session)} transcripts")
+    else:
+        fetch_pending_transcripts(limit=args.limit)

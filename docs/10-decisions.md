@@ -2842,6 +2842,28 @@ how the text is fetched and how long it is kept. The paywall doesn't change
 whether something infringes, but it breaks YouTube's "personal,
 non-commercial" clause and raises the damages.
 
+### A video's transcript is deleted once it is extracted
+
+Status: Accepted 2026-10-04
+
+The permission email (`docs/permission-request.md`) tells a channel we read
+its captions once and delete them, and §11b(3) allows text mining only "så
+længe det er nødvendigt". So aggregation ends with `transcripts.forget`: a
+video's `transcripts` row goes, and `classifier_verdicts.chunk_text` is
+emptied. The brief leaves Redis, and a failed chunk job's args expire after a
+week (RQ keeps them a year by default). It runs for every video, not only once a channel
+says yes: a promise that depends on remembering to run something isn't kept.
+`python -m pipeline.transcripts --forget-extracted` does the backlog.
+
+Kept: `memories.quote`, one line checked against the chunk, and
+`extraction_chunks.response`, the model's own JSON. Neither is the caption
+track. Books, newspapers and archive stories keep their text: they're public
+domain or licensed, and a book is re-extracted when the prompt improves.
+
+The cost: `quality --compare`/`--whole` and `classifier_audit` can't read an
+extracted video any more. Measure a video prompt change on videos not yet
+extracted, or on books.
+
 ### Copenhagen first, and the podcast is test data
 
 Status: Accepted 2026-09-20

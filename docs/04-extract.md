@@ -108,6 +108,10 @@ python -m pipeline.quality --compare candidate.txt   # same 10 chunks, both prom
 python -m pipeline.quality --labels                  # the judge against the corpus read's verdicts
 ```
 
+An extracted video has no transcript left (docs/10, *A video's transcript is
+deleted once it is extracted*), so `--compare` on video samples only videos
+not yet extracted; books keep their text.
+
 Baseline on the 224-memory corpus, all four found by reading it rather than
 guessing, and all four now addressed in `SYSTEM_PROMPT`:
 
@@ -572,7 +576,11 @@ One session's changes to the dev corpus, about $3 of credits in all.
   Andersen on the ramparts) and Maurice Baring, *The Puppet Show of Memory*
   (15 windows, none kept: legation society, not scenes). Nexø's memoirs are
   public domain since 2025 but have no free digital text; Andersen's *Mit
-  Livs Eventyr* would mostly retell source 202.
+  Livs Eventyr* would mostly retell source 202. On 2026-10-04 `now.py` also asks for points
+within 25 m (a bar is a node, not an area), confirming by name only.
+`--blank` over the 29 blank places confirmed 3 (Café Ægir, Ålholm Borgerkro,
+Copenhagen Hotdog); the public server refused the other 26, which stay blank
+for the next `--blank`.
 
 The visible corpus went from 188 to 192 memories.
 

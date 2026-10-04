@@ -19,7 +19,7 @@ from pipeline.config import (
 from pipeline.db import get_session
 from pipeline.tags import TAGS
 from pipeline.tags import clean as clean_tags
-from pipeline.transcripts import LONG_ENOUGH
+from pipeline.transcripts import LONG_ENOUGH, forget
 
 logger = logging.getLogger(__name__)
 
@@ -1572,6 +1572,7 @@ def extract_all_pending():
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),
                     {"id": content_id},
                 )
+                forget(session, content_id)
                 # Per video, not per run: a crash on video 50 must not roll back
                 # the 49 already paid for.
                 session.commit()

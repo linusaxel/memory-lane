@@ -23,6 +23,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **e2e demands a native rebuild for a dev-only change.** 2026-10-04:
+  `e2e/run.sh` hashes all of `mobile/package.json` into the prebuild stamp, so
+  cd065f6 (Prettier, a devDependency and two scripts) left the next session's
+  e2e at INFRA, wanting `prebuild --clean` + `pod install`, and G6 went
+  unchecked in the app. Fix: hash only `dependencies` and `app.json`.
 - **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
   permission classifier refused a hand triage (merge two places, hide four
   memories) and its undo, each a round-trip through the founder. The free
@@ -81,10 +86,11 @@ public launch that the rest of this file doesn't track. Blockers first.
 - [ ] **The corpus has no legal footing for a paid app.** (checked 2026-09-29)
       Researched source by source in docs/10, *The sources' legal footing*;
       a Danish lawyer still reads it before launch. The blockers:
-      - YouTube: written permission per channel, drop the Webshare proxy,
-        delete a transcript once it is extracted. Or drop the channels. The
-        email is drafted (`docs/permission-request.md`); build the transcript
-        delete before the first channel says yes, since the email promises it.
+      - YouTube: written permission per channel, drop the Webshare proxy. Or
+        drop the channels. The email is drafted (`docs/permission-request.md`).
+        The transcript delete is built (2026-10-04); run `python -m
+        pipeline.transcripts --forget-extracted` once for the backlog before
+        the first email goes out.
       - Historisk Atlas: ingest only CC BY, BY-SA and PD stories.
       - Suppress health, crime and WWII politics about private people, and
         place private people at the street, not the door.
@@ -118,10 +124,6 @@ back. Adapted to the rules here. 1 and 7 come first; the rest wait on
       (`STORE_ACCOUNT`). Serve it from the API beside `/privacy`
       (`api/privacy.py`), not Framer. Opt-in emails get their own table and
       are never matched to `identities`. Needs `DEPLOY`.
-- [ ] **3. A feedback row in Settings.** (checked 2026-10-03) Not on the map:
-      core actions stay one tap. A mailto `CONTACT_EMAIL` first; a vote board
-      (UserJot, Canny, both paid) once mail outruns reading it. The talk's
-      point: what gets the votes is what you would never have guessed.
 - [ ] **4. Lifecycle nudges, after launch, probably push.** (checked
       2026-10-03) The talk drips email through Loops. Sign-in emails are often
       Apple relays with no marketing consent, so the local version is a push
@@ -187,11 +189,11 @@ is to `pipeline/extract.py` unless named.
       work. Most of these are misheard names, which the next item targets.
       Separately, and unmeasured: have the extraction prompt spell known
       people as they are in print.
-- [ ] **Then-vs-now: the points.** (checked 2026-10-03) The backfill is
-      done: `pipeline.now` looked at 31 places with no refusal and confirmed 17
-      (docs/04, *Corpus work*). Left: the ~20 bars that OSM stores as points
-      need an `around` query, which the public server times out on. Then check
-      that the ranking reads better.
+- [ ] **Then-vs-now: the points.** (checked 2026-10-04) `now.py` asks for
+      points within 25 m now; `--blank` confirmed 3 of 29 before the public
+      Overpass refused the rest (docs/04, *Corpus work*). Left: rerun
+      `python -m pipeline.now --blank` off-peak, or against a mirror
+      (`OVERPASS_URL`), then check that the ranking reads better.
 
 From the research (docs/04, *Research, 2026-10-02*), in order:
 
@@ -705,9 +707,6 @@ shape, is the collection (e3aa671).
       walker is listening to. A rest day, so a missed day does not
       punish, is undecided (Duolingo's guilt design gets mixed reviews; the
       founder turned down a streak shield as a reward).
-- [ ] **G6 A ceremony for something new.** An unseen unlock pulses. The first
-      time it scrolls into view it scales 0.8 → 1.08 → 1 with a shimmer and a
-      soft chime, then the flag clears.
 - [ ] **G7 Today card.** First in Walks, like Pikmin Bloom's Lifelog: today's
       trace on a mini map, steps, and a week strip with a dot for each day you
       walked, above the walk cards. Maybe later, fog as a record: brighten

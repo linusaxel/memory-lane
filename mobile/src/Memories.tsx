@@ -52,12 +52,15 @@ import {
   attention,
   loadCounted,
   loadSeen,
+  loadUnlocksShown,
   saveCounted,
   saveSeen,
+  saveUnlocksShown,
   type Counted,
   type Seen,
 } from './seen.ts';
 import { color, dim, figure, font, label } from './theme.ts';
+import { useReduceMotion } from './useBreath.ts';
 
 type Props = {
   device: string | null;
@@ -126,6 +129,10 @@ export default function Memories({
   // the whole look; the look itself is what moves the baseline on.
   const [seen, setSeen] = useState<Seen | null>(null);
   const [looked, setLooked] = useState(false);
+  // The same for what you unlocked: undefined while it loads, null before the
+  // first look. A row pulses once a look, the first time it is drawn.
+  const [unlocksShown, setUnlocksShown] = useState<Set<number> | null>();
+  const pulsed = useRef(new Set<number>());
   // Header, sections, list: each slides in a beat after the one above it as
   // the drawer opens, so it arrives rather than appears.
   const enter = useRef([0, 1, 2].map(() => new Animated.Value(1))).current;
@@ -138,6 +145,9 @@ export default function Memories({
     if (!focused) return;
     setLooked(false);
     loadSeen().then(setSeen);
+    setUnlocksShown(undefined);
+    pulsed.current.clear();
+    loadUnlocksShown().then(setUnlocksShown);
     const now = counted.current;
     const timers: ReturnType<typeof setTimeout>[] = [];
     let closed = false;
@@ -203,7 +213,17 @@ export default function Memories({
     setLooked(true);
   }, [seen, section, mineStatus, mine]);
 
+  useEffect(() => {
+    if (unlocksShown === undefined || section !== 'unlocked') return;
+    saveUnlocksShown(unlocked.map((m) => m.id));
+  }, [unlocksShown, section, unlocked]);
+
   const isNew = (m: LocatedMemory) => !!seen && attention(m) > (seen[m.id] ?? 0);
+  const fresh = (m: LocatedMemory) => {
+    if (!unlocksShown || unlocksShown.has(m.id) || pulsed.current.has(m.id)) return false;
+    pulsed.current.add(m.id);
+    return true;
+  };
   const anyNew = !looked && mine.some(isNew);
 
   useEffect(() => {
@@ -403,6 +423,7 @@ export default function Memories({
                 place={item.memory.place.name}
                 summary={item.memory.summary}
                 distance={distanceTo(item.memory)}
+                fresh={item.kind === 'unlocked' && fresh(item.memory)}
                 onPress={() => onOpenStop(item.memory)}
               />
             ) : (
@@ -590,6 +611,7 @@ function Row({
   badge,
   stop,
   shape,
+  fresh,
   onPress,
 }: {
   place: string;
@@ -601,45 +623,60 @@ function Row({
   stop?: number;
   /** A walk: its shape, drawn small at the right. */
   shape?: Coordinates[];
+  /** Unlocked since the last look: it scales in once, 0.8 → 1.08 → 1. */
+  fresh?: boolean;
   onPress?: () => void;
 }) {
+  const reduceMotion = useReduceMotion();
+  const pop = useRef(new Animated.Value(fresh ? 0.8 : 1)).current;
+  // On mount only: the list draws a row the first time it scrolls into view.
+  useEffect(() => {
+    if (!fresh) return;
+    Haptics.selectionAsync().catch(() => {});
+    Animated.sequence([
+      Animated.spring(pop, { toValue: 1.08, tension: 120, friction: 6, useNativeDriver: true }),
+      Animated.spring(pop, { toValue: 1, tension: 80, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <Pressable
-      style={dim([styles.row, stop !== undefined && styles.stop, shape && styles.withShape])}
-      onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole="button"
-      accessibilityLabel={[stop && `Stop ${stop}`, place, distance, meta, badge]
-        .filter(Boolean)
-        .join(', ')}
-    >
-      {shape && (
-        <View style={styles.shape}>
-          <WalkShape path={shape} size={52} />
-        </View>
-      )}
-      {stop !== undefined && (
-        <>
-          <View style={styles.rail} />
-          <View style={styles.dot}>
-            <Text style={styles.dotText}>{stop}</Text>
+    <Animated.View style={{ transform: [{ scale: reduceMotion ? 1 : pop }] }}>
+      <Pressable
+        style={dim([styles.row, stop !== undefined && styles.stop, shape && styles.withShape])}
+        onPress={onPress}
+        disabled={!onPress}
+        accessibilityRole="button"
+        accessibilityLabel={[stop && `Stop ${stop}`, place, distance, meta, badge]
+          .filter(Boolean)
+          .join(', ')}
+      >
+        {shape && (
+          <View style={styles.shape}>
+            <WalkShape path={shape} size={52} />
           </View>
-        </>
-      )}
-      <Text style={styles.place} numberOfLines={1}>
-        {place}
-      </Text>
-      <Text style={styles.summary} numberOfLines={2}>
-        {summary}
-      </Text>
-      {(distance || meta) && (
-        <View style={styles.metaRow}>
-          {distance && <Text style={styles.when}>{distance}</Text>}
-          {meta && <Text style={styles.when}>{meta}</Text>}
-        </View>
-      )}
-      {badge && <Text style={styles.badge}>{badge}</Text>}
-    </Pressable>
+        )}
+        {stop !== undefined && (
+          <>
+            <View style={styles.rail} />
+            <View style={styles.dot}>
+              <Text style={styles.dotText}>{stop}</Text>
+            </View>
+          </>
+        )}
+        <Text style={styles.place} numberOfLines={1}>
+          {place}
+        </Text>
+        <Text style={styles.summary} numberOfLines={2}>
+          {summary}
+        </Text>
+        {(distance || meta) && (
+          <View style={styles.metaRow}>
+            {distance && <Text style={styles.when}>{distance}</Text>}
+            {meta && <Text style={styles.when}>{meta}</Text>}
+          </View>
+        )}
+        {badge && <Text style={styles.badge}>{badge}</Text>}
+      </Pressable>
+    </Animated.View>
   );
 }
 

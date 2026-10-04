@@ -44,6 +44,7 @@ from pipeline.queue import (
     get_queue,
     get_redis,
 )
+from pipeline.transcripts import forget
 from pipeline.walk_score import score_memories
 
 logger = logging.getLogger(__name__)
@@ -80,6 +81,9 @@ FAIL_OPEN = "fail-open: "
 # Same schedule as the extract retry. A throttled Haiku backs off on its own
 # queue instead of failing open and sending every chunk to Sonnet.
 RETRY = Retry(max=3, interval=[30, 120, 600])
+# A failed job keeps its chunk_text in Redis; RQ's default is a year, and the
+# caption text must not outlive the week anyone would read the failure in.
+CHUNK_FAILURE_TTL = 7 * 24 * 3600
 
 
 def _final(job):
@@ -264,6 +268,7 @@ def task_enqueue_chunks(content_id: int):
             total_chunks=total_chunks,
             chunk_text=chunk,
             job_timeout="5m",
+            failure_ttl=CHUNK_FAILURE_TTL,
             retry=RETRY,
         )
 
@@ -302,6 +307,7 @@ def task_classify_chunk(content_id: int, chunk_index: int, total_chunks: int, ch
             total_chunks=total_chunks,
             chunk_text=chunk_text,
             job_timeout="5m",
+            failure_ttl=CHUNK_FAILURE_TTL,
             # extract_memories_from_chunk raises TransientAPIError rather than
             # report an empty chunk; without a retry the video never aggregates.
             retry=RETRY,
@@ -439,11 +445,17 @@ def task_aggregate_memories(content_id: int):
                 logger.info(f"[content:{content_id}] Retellings hidden in the book: {hidden}")
     except Exception:
         logger.exception(f"[content:{content_id}] The book's retelling check failed")
+    try:
+        with get_session() as session:
+            forget(session, content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Forgetting the transcript failed")
 
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}
     )
 
+    redis.hdel(f"extraction:{content_id}", "brief")
     redis.delete(f"extraction:{content_id}:memories")
 
     logger.info(f"[content:{content_id}] Extraction complete: {len(filtered)} memories saved")

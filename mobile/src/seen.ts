@@ -57,3 +57,21 @@ export async function loadCounted(): Promise<Counted | null> {
 export function saveCounted(counted: Counted): void {
   AsyncStorage.setItem(COUNTED, JSON.stringify(counted)).catch(() => {});
 }
+
+const UNLOCKS = 'memorylane.unlocks.v1';
+
+/** The unlocked memories the journal has already shown, so one it hasn't
+ *  pulses once (UI.md). null before the first look: nothing pulses then, like
+ *  the count-up. Lost, it costs one look without the pulse. */
+export async function loadUnlocksShown(): Promise<Set<number> | null> {
+  try {
+    const raw = await AsyncStorage.getItem(UNLOCKS);
+    return raw ? new Set(JSON.parse(raw) as number[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveUnlocksShown(ids: number[]): void {
+  AsyncStorage.setItem(UNLOCKS, JSON.stringify(ids)).catch(() => {});
+}

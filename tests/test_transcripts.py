@@ -239,3 +239,56 @@ def test_a_person_s_captions_beat_the_machine_s_in_another_language(monkeypatch)
 
     monkeypatch.setattr(transcripts, "YouTubeTranscriptApi", lambda **_: _Api())
     assert transcripts.fetch_transcript("vvvvvvvvvvv")["language"] == "da"
+
+
+# -- an extracted video forgets its captions ----------------------------------
+
+
+@pytest.mark.db
+def test_an_extracted_video_forgets_its_captions_and_a_book_keeps_its_text(db_session):
+    """The permission email promises the captions are deleted once read."""
+    from sqlalchemy import text
+
+    ids = {}
+    for kind, extracted in (("video", True), ("book", True), ("video", False)):
+        cid = db_session.execute(
+            text("""
+                INSERT INTO content (url, platform, source_type, memories_extracted)
+                VALUES (:url, 'youtube', :kind, :extracted) RETURNING id
+            """),
+            {"url": f"https://example.com/{kind}{extracted}", "kind": kind, "extracted": extracted},
+        ).scalar()
+        db_session.execute(
+            text("INSERT INTO transcripts (content_id, segments) VALUES (:id, '[]')"), {"id": cid}
+        )
+        db_session.execute(
+            text("""
+                INSERT INTO classifier_verdicts (content_id, chunk_index, model, has_memories, chunk_text)
+                VALUES (:id, 0, 'haiku', TRUE, 'we went to Katz''s')
+            """),
+            {"id": cid},
+        )
+        ids[(kind, extracted)] = cid
+
+    assert transcripts.forget(db_session) == 1
+
+    left = dict(
+        db_session.execute(
+            text("""
+                SELECT c.id, v.chunk_text FROM content c
+                JOIN transcripts t ON t.content_id = c.id
+                JOIN classifier_verdicts v ON v.content_id = c.id
+            """)
+        ).fetchall()
+    )
+    assert left == {
+        ids[("book", True)]: "we went to Katz's",
+        ids[("video", False)]: "we went to Katz's",
+    }
+    gone = ids[("video", True)]
+    assert (
+        db_session.execute(
+            text("SELECT chunk_text FROM classifier_verdicts WHERE content_id = :id"), {"id": gone}
+        ).scalar()
+        == ""
+    )

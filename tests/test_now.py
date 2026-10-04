@@ -93,6 +93,40 @@ def test_a_bare_building_or_a_neighbourhood_says_nothing(monkeypatch):
     assert now.now_at(55.674, 12.565, "Copenhagen Hotdog") == {}
 
 
+def _areas_then_points(monkeypatch, areas, points):
+    """is_in answers with the areas, the `around` query with the points."""
+    monkeypatch.setattr(
+        geocode,
+        "_get_json",
+        lambda url: {"elements": [{"tags": t} for t in (points if "around" in url else areas)]},
+    )
+
+
+def test_a_bar_stored_as_a_point_is_still_there(monkeypatch):
+    """Café Lille Peter is an OSM node; the pin stands inside no named area."""
+    _areas_then_points(
+        monkeypatch,
+        [REGION],
+        [{"name": "Café Lille Peter", "amenity": "bar"}, {"name": "Stefansgade"}],
+    )
+    found = now.now_at(55.6958, 12.5439, "Café Lille Peter")
+    assert now.clause(found) == "Still Café Lille Peter, a bar."
+
+
+def test_another_bar_nearby_is_not_a_change(monkeypatch):
+    """25 m holds the bar next door too, so only a name match counts."""
+    _areas_then_points(monkeypatch, [REGION], [{"name": "Andre Wine Bar", "amenity": "bar"}])
+    assert now.now_at(55.6958, 12.5439, "Café Lille Peter") == {}
+
+
+def test_a_silent_point_query_is_not_stored_as_nothing_there(monkeypatch):
+    monkeypatch.setattr(
+        geocode, "_get_json", lambda url: None if "around" in url else {"elements": []}
+    )
+    with pytest.raises(now.LookupFailed):
+        now.now_at(55.6958, 12.5439, "Café Lille Peter")
+
+
 def test_a_silent_overpass_is_not_stored_as_nothing_there(monkeypatch):
     monkeypatch.setattr(geocode, "_get_json", lambda url: None)
     with pytest.raises(now.LookupFailed):
