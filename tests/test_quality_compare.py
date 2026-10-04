@@ -31,6 +31,11 @@ class _ByPrompt:
         return _Response(reply)
 
 
+def _extractions(client):
+    """The extractor's calls, not the check each kept memory gets (extract.checked)."""
+    return [c for c in client.calls if c["system"][0]["text"] in ("OLD", "NEW")]
+
+
 def _video_with_chunks(db_session, n):
     content_id = db_session.execute(
         text(
@@ -67,7 +72,8 @@ def test_the_comparison_scores_each_side_and_reruns_free(db_session):
     client = _ByPrompt()
 
     results = compare(db_session, client, {"baseline": "OLD", "candidate": "NEW"}, chunks)
-    assert len(client.calls) == 2 * len(chunks)
+    assert len(_extractions(client)) == 2 * len(chunks)
+    paid = len(client.calls)
 
     def flagged(name):
         summaries = [m["summary"] for runs in results[name] for m in runs[0]]
@@ -77,7 +83,7 @@ def test_the_comparison_scores_each_side_and_reruns_free(db_session):
     assert flagged("candidate")["anonymous subject"] == 0
 
     compare(db_session, client, {"baseline": "OLD", "candidate": "NEW"}, chunks)
-    assert len(client.calls) == 2 * len(chunks), "a rerun must read extraction_chunks back"
+    assert len(client.calls) == paid, "a rerun must read extraction_chunks back"
 
 
 @pytest.mark.db
@@ -87,11 +93,12 @@ def test_runs_are_fresh_draws_and_each_is_stored(db_session):
     client = _ByPrompt()
 
     results = compare(db_session, client, {"baseline": "OLD"}, chunks, runs=3)
-    assert len(client.calls) == 3 * len(chunks)
+    assert len(_extractions(client)) == 3 * len(chunks)
     assert all(len(runs) == 3 for runs in results["baseline"])
+    paid = len(client.calls)
 
     compare(db_session, client, {"baseline": "OLD"}, chunks, runs=3)
-    assert len(client.calls) == 3 * len(chunks)
+    assert len(client.calls) == paid
 
 
 @pytest.mark.db

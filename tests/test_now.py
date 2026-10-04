@@ -141,7 +141,7 @@ def test_the_clause_replaces_the_models_guess_on_a_building_pin_only(db_session,
             "VALUES ('https://example.invalid/n', 'text', 'n', 'archive') RETURNING id"
         )
     ).scalar()
-    guess = {"contrast_score": 0.7, "contrast_note": "current use unknown"}
+    guess = {"contrast_score": 0.7, "contrast_note": "a dance hall; a bank since 1994"}
     save_memories(
         db_session,
         content_id,
@@ -180,5 +180,5 @@ def test_the_clause_replaces_the_models_guess_on_a_building_pin_only(db_session,
     ).fetchall()
     assert [tuple(r) for r in rows] == [
         ("Frederikshospitalet", "Now Designmuseum Danmark, a museum.", pytest.approx(now.CHANGED)),
-        ("Somewhere Guessed", "current use unknown", pytest.approx(0.7)),
+        ("Somewhere Guessed", "a dance hall; a bank since 1994", pytest.approx(0.7)),
     ]

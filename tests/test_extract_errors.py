@@ -139,8 +139,10 @@ def _run(db_session, monkeypatch, client):
     monkeypatch.setattr(extract, "get_session", _session)
     monkeypatch.setattr(extract, "ANTHROPIC_API_KEY", "test")
     monkeypatch.setattr(extract.anthropic, "Anthropic", lambda **_: client)
-    # These count calls to the chunk extractor; the brief is tested on its own.
+    # These count calls to the chunk extractor; the brief and the check are
+    # tested on their own.
     monkeypatch.setattr(extract, "video_brief", lambda *a, **k: "")
+    monkeypatch.setattr(extract, "checked", lambda *a: a[-1])
     monkeypatch.setattr(extract, "worth_telling", lambda s, c, i, memories: memories)
     return extract.extract_all_pending()
 
@@ -185,7 +187,8 @@ def test_billing_still_raises_its_own_error():
 def test_unparseable_output_is_an_empty_chunk_not_a_crash():
     class _Messages:
         def create(self, **kwargs):
-            return type("R", (), {"content": [type("C", (), {"text": "not json at all"})()]})()
+            block = type("C", (), {"type": "text", "text": "not json at all"})()
+            return type("R", (), {"content": [block]})()
 
     class _Client:
         messages = _Messages()

@@ -165,6 +165,16 @@ worth the walk. Measure every change against the labels before and after
 (`python -m pipeline.quality --labels`). Every change is to
 `pipeline/extract.py` unless named.
 
+- [ ] **Video quotes after the longer card.** (2026-10-04) The 60-180 word
+      prompt kept video's keep rate but quotes fell 9 to 4 on 15 chunks
+      (docs/04, *A longer card*). Try "leave the quoted line out of the
+      summary: it is read right below" and measure with `quality --compare
+      --source-type video --score --runs 3`.
+- [ ] **Enrichment, first live run.** (2026-10-04) `pipeline/enrich.py` is
+      built and tested with fakes; the first live call hit an empty credit
+      balance. Run `python -m pipeline.enrich --memory <id>` on five strong
+      memories, read every item against its page, and record the cost per
+      memory in docs/04 before a new source's trial relies on it.
 - [ ] **The place test: a pass rule for the famous at a place's purpose.**
       (checked 2026-10-04) Applied: 52 of 70 visible book memories dropped, 34
       hidden after a read (docs/04, *The place test applied*). It would also

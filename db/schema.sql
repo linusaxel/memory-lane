@@ -249,6 +249,11 @@ CREATE TABLE memories (
     -- Null until pipeline/links.py has looked; [] when it found none.
     links JSONB,
 
+    -- What the story doesn't tell, each item checked against a fetched page:
+    -- {people, quotes, then_now, asides, pictures, at} (pipeline/enrich.py).
+    -- Null until looked at. Not served yet.
+    enrichment JSONB,
+
     -- The searchable text of this memory AND the name of the place it is
     -- filed at, stored rather than computed. An expression spanning two
     -- tables cannot be indexed, so search was a sequential scan over the

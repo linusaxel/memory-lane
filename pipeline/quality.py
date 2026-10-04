@@ -1,7 +1,7 @@
 """How good are the summaries, as a number.
 
     python -m pipeline.quality
-    python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10] [--runs 3]
+    python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10] [--runs 3] [--score]
     python -m pipeline.quality --labels [tests/fixtures/walk_labels.json] [--half tune|check]
     python -m pipeline.quality --whole [5] [--runs 2]
     python -m pipeline.quality --visible [--source-type book]
@@ -16,7 +16,10 @@ stable sample of transcript chunks, scores both, and prints them side by side
 for a person to pick. It bills the extractor per chunk per prompt (~$0.003),
 once: replies land in extraction_chunks, so a rerun, or a baseline the pipeline
 already ran, is free. A chunk varies more than a prompt, so --runs N draws each
-chunk N times per prompt and prints how often each keeps something.
+chunk N times per prompt and prints how often each keeps something. --score
+also scores every kept summary on the walk rubric and checks it against its
+chunk for anything the source does not say (two calls a memory, every run: a
+longer summary is where invention creeps in).
 
 --labels re-judges the stored memories the corpus read labelled walk, maybe or
 skip, through the pipeline's own judge, and prints what it keeps of each. The
@@ -63,6 +66,7 @@ from pipeline.extract import (
     place_of,
     prompt_for,
     source_context,
+    unsupported,
     video_brief,
     worth_telling,
 )
@@ -86,15 +90,47 @@ NOT_PAST = re.compile(
 # Nobody, when the video usually names the person, or at least their nickname.
 UNNAMED = re.compile(r"\bsomeone\b", re.I)
 
-WORD_LIMIT = 70
+WORD_LIMIT = 180
 
 CHECKS = (
     ("anonymous subject", ANONYMOUS.search, 'says "the speaker" instead of a name'),
     ("talks about talking", META.search, "reports the recording, not the event"),
     ("not past tense", NOT_PAST.search, "an announcement or a live narration"),
     ("unnamed someone", UNNAMED.search, "the transcript usually names them"),
-    ("over 70 words", lambda s: len(s.split()) > WORD_LIMIT, "summarises the conversation"),
+    ("over 180 words", lambda s: len(s.split()) > WORD_LIMIT, "summarises the conversation"),
 )
+
+
+def score_kept(session, client, results, chunks) -> dict[str, dict]:
+    """Per prompt: memories kept, mean words, mean walk score, how many add no
+    fact and no colour to their chunk, and what the others added."""
+    from pipeline.walk_score import walk_score
+
+    scores = {}
+    for name, per_chunk in results.items():
+        words, walks, faithful, plain, added = [], [], 0, 0, []
+        for (cid, i, chunk, context), runs in zip(chunks, per_chunk, strict=True):
+            for m in runs[0]:
+                summary = m.get("summary") or ""
+                words.append(len(summary.split()))
+                if (w := walk_score(client, f"{m.get('venue')}: {summary}")) is not None:
+                    walks.append(w)
+                extra = unsupported(session, client, cid, i, chunk, context, summary)
+                if extra is None:
+                    continue
+                faithful += not any(e["kind"] == "fact" for e in extra)
+                plain += not extra
+                added += [f"{e['kind']}, {m.get('venue')}: {e['claim']}" for e in extra]
+        n = len(words)
+        scores[name] = {
+            "kept": n,
+            "words": sum(words) / max(n, 1),
+            "walk": sum(walks) / max(len(walks), 1),
+            "faithful": faithful,
+            "plain": plain,
+            "added": added,
+        }
+    return scores
 
 
 def report(summaries: list[str]) -> list[tuple[str, int, str]]:
@@ -431,6 +467,9 @@ def main():
     parser.add_argument("--whole", nargs="?", type=int, const=5, metavar="VIDEOS")
     parser.add_argument("--runs", type=int, default=1, help="draws per chunk (--compare, --whole)")
     parser.add_argument("--places", metavar="PROMPT_FILE", help="a candidate placement prompt")
+    parser.add_argument(
+        "--score", action="store_true", help="--compare: walk rubric and faithfulness (bills)"
+    )
     args = parser.parse_args()
 
     if args.places:
@@ -498,7 +537,17 @@ def main():
             results = compare(
                 session, client, {"baseline": baseline, "candidate": candidate}, chunks, args.runs
             )
+            scores = score_kept(session, client, results, chunks) if args.score else {}
         _print_comparison(results, chunks)
+        if scores:
+            for name, s in scores.items():
+                print(
+                    f"\n== {name} scored: kept {s['kept']}, {s['words']:.0f} words, "
+                    f"walk {s['walk']:.1f}/12, no added fact {s['faithful']}/{s['kept']}, "
+                    f"nothing added {s['plain']}/{s['kept']}"
+                )
+                for a in s["added"]:
+                    print(f"  added: {a}")
         return
 
     with get_session() as session:

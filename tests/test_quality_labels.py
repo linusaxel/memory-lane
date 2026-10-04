@@ -5,6 +5,7 @@ import json
 import pytest
 from sqlalchemy import text
 
+from pipeline.extract import UNSUPPORTED_PROMPT, _sha256
 from pipeline.quality import read_whole, replay_labels, score_labels, score_whole, visible
 from tests.fakes import FakeAnthropic
 
@@ -142,8 +143,11 @@ def test_a_whole_video_is_one_stored_request_scored_against_the_labels(db_sessio
     kept = read_whole(db_session, fake, content)
     assert [m["venue"] for m in kept] == ["Ringkaféen"]
     stored = db_session.execute(
-        text("SELECT count(*) FROM extraction_chunks WHERE content_id = :c AND chunk_index = -5"),
-        {"c": content},
+        text(
+            "SELECT count(*) FROM extraction_chunks "
+            "WHERE content_id = :c AND chunk_index = -5 AND prompt_hash <> :check"
+        ),
+        {"c": content, "check": _sha256(UNSUPPORTED_PROMPT)},
     ).scalar()
     assert stored == 1, "an hour of video is one request"
     calls = len(fake.messages.calls)

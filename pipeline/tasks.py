@@ -15,6 +15,7 @@ from pipeline.config import (
 )
 from pipeline.db import get_session
 from pipeline.dedup import hide_repeats
+from pipeline.enrich import enrich_memories
 from pipeline.extract import (
     PENDING_EXTRACTION,
     BillingError,
@@ -434,6 +435,11 @@ def task_aggregate_memories(content_id: int):
             look_up(session, content_id=content_id)
     except Exception:
         logger.exception(f"[content:{content_id}] Looking up what is there now failed")
+    try:
+        with get_session() as session:
+            enrich_memories(session, client, content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Enrichment failed; memories are saved")
     try:
         with get_session() as session:
             book = session.execute(

@@ -27,6 +27,7 @@ from pipeline.extract import (
     layer_for,
     prompt_for,
     save_memories,
+    sure,
 )
 from tests.fakes import FakeAnthropic
 
@@ -188,3 +189,10 @@ def test_the_shared_context_is_its_own_cached_block_ahead_of_the_chunk():
     context, chunk = fake.messages.calls[0]["messages"][0]["content"]
     assert context == {"type": "text", "text": "the brief", "cache_control": {"type": "ephemeral"}}
     assert "some archive text" in chunk["text"] and "cache_control" not in chunk
+
+
+def test_a_guess_at_what_is_there_now_is_not_kept():
+    """A guess under "Then and now" reads as a fact."""
+    assert sure("a dance hall; a bank branch since May 1994") is not None
+    assert sure("a metalworking factory; current use unknown") is None
+    assert sure("a village pond, likely built over") is None

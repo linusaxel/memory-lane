@@ -2875,6 +2875,7 @@ Across every source:
   1.2, Google Play's UGC policy).
 
 **Consequences:** the summary itself was never the risk. Forty to seventy words
+(up to 180 since 2026-10-04, *A card runs as long as its source's details*)
 of our own, crediting the source and linking back to it, take facts rather
 than expression (Infopaq C-5/08 is the test, not the word count). The risk is
 how the text is fetched and how long it is kept. The paywall doesn't change
@@ -3340,13 +3341,71 @@ for every memory (rejected by the founder: each locket opens as itself).
 ### A card may run long when the story earns it
 
 Status: Accepted 2026-10-04 (the founder, recorded from TODO.md's open
-question).
+question). The cap clause is **Superseded 2026-10-04** by *A card runs as
+long as its source's details*: measured, and raised to 180.
 
 Short stays the default, and the extraction prompts keep their 40–70 words.
 The founder doesn't mind a longer card when the story carries it: the Weather
 Girls post (docs/04, *The north star*) runs ~400 words and earns them. Raising
 the extractor's cap is a prompt change, so it is measured first (docs/04,
 *Memory quality*); until then the cap stands.
+
+### A card runs as long as its source's details
+
+Status: Accepted 2026-10-04. Supersedes the cap clause of *A card may run long
+when the story earns it*.
+
+The founder wants more text and richer memories. Both extraction prompts now
+ask for 60-180 words: a lede that would stop someone walking, the scene in
+order with every concrete detail the source gives, then what came of it.
+Length comes from the source, never from the model: a Historisk Atlas entry
+of four lines stays about 45 words.
+
+- **Every kept memory is checked against its chunk** (`extract.checked`). A
+  thinking model lists what the summary says that the chunk doesn't, and
+  only those claims are cut. A prompt rule alone halved invention, and a
+  whole-summary rewrite cut the richness with it.
+- **Measured** (docs/04, *A longer card*): book cards went from 57 words to
+  121 and from 6.7 to 8.0 on the walk rubric, with the same memories kept;
+  video went from 45 to 84 words with the same keep rate, and lost quotes
+  (open).
+- `quality`'s length check moved from 70 to 180 words.
+
+**Options considered:** keeping 40–70 and putting the richness only beside
+the story (rejected: the summary is what is read standing there); a rewrite
+of the whole summary against the chunk (rejected, measured: it halved book
+summaries).
+
+### A memory is enriched when it is made
+
+Status: Accepted 2026-10-04. Data first: stored, not served yet.
+
+What a story doesn't tell is often the best of it: who the sculptor was, what
+the place is now, a line someone said. `pipeline/enrich.py` runs on each new
+content's memories after aggregation and writes `memories.enrichment`:
+people, quotes, then and now, asides, and pictures.
+
+- **The model researches, code decides.** One Sonnet call with web search and
+  fetch (`ENRICH_MAX_SEARCHES`) writes notes, a second puts them in fields.
+  Each item carries a passage copied from its page. We fetch the page
+  ourselves and keep the item only when the passage is there (a person also
+  needs their name on it, a quote its words), as `extract.grounded` keeps a
+  quote. The ungrounded "what to look at" trial invented about 14 of 40
+  (docs/04, *What to look at*); this is the ground it lacked.
+- **Public people only.** A private person gets nothing added (*The
+  sources' legal footing*, GDPR).
+- **Pictures from Wikimedia Commons, by code.** Geotagged within 60 m of the
+  pin, or named for the venue in its city, kept only under public domain,
+  CC0, CC BY or CC BY-SA, each with its author and licence for the credit.
+  The model only picks which show the place (oldest first, then now).
+  kbhbilleder's public-domain pictures join when access is granted.
+- **New memories only.** No backfill of the corpus: the founder's call.
+- **Not served.** The API doesn't select it, so nothing needs withholding
+  from a locked memory yet. When the sheet shows it, `api/gate.py` withholds
+  it as it withholds the summary.
+
+**Options considered:** Wikipedia and Wikidata only (cheaper, thinner: no
+anecdotes, few quotes); the model's own knowledge (rejected: no ground).
 
 ### Rejected approaches, do not retry
 

@@ -70,29 +70,45 @@ memory at all; answer them before you name a venue or write a word of summary.
   geocoder places the pin from this and the venue.
 - lat, lng: Decimal degrees; only the fallback if the geocoder misses.
 - timestamp_start: When the place is first mentioned, from the [timestamp] markers.
-- summary: 2-3 sentences, 40-70 words and never more, past tense, written for a stranger who
-  has never seen the video:
-  * Lead with the most interesting thing about this spot.
+- summary: past tense, written for a stranger who has never seen the video and
+  is standing on the spot. As long as the story earns: 60-180 words. Past about
+  90 words, split it into two paragraphs with a blank line. A small story stays
+  small; never pad: past 90 words, every sentence adds a
+  new detail of the same scene, not the years around it.
+  * Open with the most interesting thing about this spot, in one sentence that
+    would make someone stop walking.
+  * Then the scene, in order: who was there, when, what happened, and the turn
+    it took. Keep every concrete detail the transcript gives - names, numbers,
+    prices, objects, what someone said or did - because the details are what
+    make it worth reading on the spot.
+  * Then what came of it. If the transcript names something still visible
+    from the spot - the trees out front, the empty lot, the stream under the
+    street - end on it: it is what the reader looks up at.
   * Name people, with their nicknames where the transcript uses them ("Mark",
-    "Maleren, the painter"). With no name, give a role - "a ski guide", "one
-    regular". Every sentence has a subject.
+    "Maleren, the painter"), and say who they are in a few words the first
+    time. With no name, give a role - "a ski guide", "one regular". Every
+    sentence has a subject.
   * The first time an event or series appears, say what it is in a few words
     of your own, from the brief - never just "the pub crawl". A walker reads
     several of these in a row, so vary the wording.
   * THE VIBE: what made it worth telling - the funny turn, the mishap.
-  * If the transcript names something still visible from the spot - the trees
-    out front, the empty lot, the stream under the street - end on it: it is
-    what the reader looks up at.
   * Tell what happened, not what was said: the reader does not know there is a
-    recording, so no "he describes", "they mentioned", "the speaker", "the host".
-  * One idea. Past 70 words you are summarising the conversation; cut the setup
-    and keep what happened.
+    recording, so no "he describes", "notes that", "they mentioned",
+    "the speaker", "the host".
+  * Richness is the source's own details, never yours. Add no example, name,
+    image, adjective or superlative it does not give: if it says "a great
+    battle", do not name one; if it says "decorated", do not say "carved".
+  * Every detail comes from the transcript or the brief. Length comes from the
+    teller's details, never from general knowledge or atmosphere you add: if
+    the transcript gives three facts, write three facts.
+  * One story about one spot. A second story at the same spot is a second
+    memory.
 - quote: The best line about this moment, copied exactly as spoken, at most 25
-  words, in the language it was said in. It is shown in quotation marks under
-  the summary, so it is something someone said about what happened - a punch
-  line, a feeling, a detail - not the words that name the place. Null when no
-  line is worth reading on its own. Code checks it is in the transcript; a
-  paraphrase is dropped.
+  words, in the language it was said in. It is shown under the summary in the
+  teller's own voice, so it is something someone said about what happened - a
+  punch line, a feeling, a detail - not the words that name the place. Most
+  good stories have one: look for it. Null when no line is worth reading on its
+  own. Code checks it is in the transcript; a paraphrase is dropped.
 - quote_by: Who said it, by name, from the transcript or the brief. Null if
   you cannot tell.
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
@@ -226,23 +242,38 @@ memory at all; answer them before you name a venue or write a word of summary.
 - happened_at: ISO date of the EVENT - "1978-06-17", "1978-06", or "1978". Null if
   the text gives no date. This is when it happened, not when it was written about.
 - happened_precision: day | month | year | decade - how much of happened_at to trust
-- summary: 2-3 sentences, 40-70 words and never more, past tense, written for
-  a stranger who has never read the source:
-  * Lead with the most surprising thing that happened on this spot.
+- summary: past tense, written for a stranger who has never read the source
+  and is standing on the spot. As long as the story earns: 60-180 words. Past
+  about 90 words, split it into two paragraphs with a blank line. A small
+  story stays small; never pad: past 90 words, every sentence adds a
+  new detail of the same scene, not the years around it.
+  * Open with the most surprising thing that happened on this spot, in one
+    sentence that would make someone stop walking.
+  * Then the scene, in order: who was there, when, what happened, and the turn
+    it took. Keep every concrete detail the text gives - names, dates,
+    numbers, objects, what someone said or did - because the details are what
+    make it worth reading on the spot.
+  * Then what came of it. If the text names something still visible from the
+    spot - the avenue's trees, the stage, the stair - end on it: it is what
+    the reader looks up at.
   * Give every named person a role the first time ("Rahbek, the critic",
     "Oehlenschläger, the poet, then a boy"). With no name, give a role.
-  * If the text names something still visible from the spot - the avenue's
-    trees, the stage, the stair - end on it: it is what the reader looks up at.
   * Tell what happened, not what was written: no "the author describes", "he
     recalls", "the text says".
-  * One scene. Past 70 words you are summarising the page; cut the setup.
+  * Richness is the source's own details, never yours. Add no example, name,
+    image, adjective or superlative it does not give: if it says "a great
+    battle", do not name one; if it says "decorated", do not say "carved".
+  * Every detail comes from the text. Length comes from the source's details,
+    never from general knowledge or atmosphere you add: if the text gives
+    three facts, write three facts.
+  * One scene. A second scene at the same spot is a second memory.
 - quote: The best line about this moment, copied exactly from the text, old
-  spelling included, at most 25 words, in its own language. It is shown in
-  quotation marks under the summary, so it is somebody's voice - words a
-  person said or wrote, a memoirist's own line - not the words that name the
-  place. A register or report stating the facts has no voice: null. So is a
-  line that only says again what the summary says. Code checks it is in the
-  text; a paraphrase is dropped.
+  spelling included, at most 40 words, in its own language. It is shown under
+  the summary in its own voice, so it is somebody's voice - words a person
+  said or wrote, a memoirist's own line - not the words that name the place. A
+  register or report stating the facts has no voice: null. So is a line that
+  only says again what the summary says. Code checks it is in the text; a
+  paraphrase is dropped.
 - quote_by: Who wrote or said it, by name, if the text tells you. Null otherwise.
 - attribution: the source as it should be credited on a card, if the text names one
 - tags: 1-5 from: {TAG_LIST}. Anything else is dropped.
@@ -566,12 +597,14 @@ def _request(
     schema: dict = MEMORY_SCHEMA,
     context: str = "",
     max_tokens: int = 2000,
+    think: bool = False,
 ) -> str | None:
     """The model's raw reply, or None for an error no retry will fix.
 
     `context` is what every chunk of one video shares (source, brief). It goes
     ahead of `user` with a second breakpoint, so from chunk two it is read at
-    10% along with the system prompt.
+    10% along with the system prompt. `think` lets the model think first: for
+    a check where a miss costs more than the tokens.
     """
     content = (
         [
@@ -595,12 +628,12 @@ def _request(
             ],
             messages=[{"role": "user", "content": content}],
             # Sonnet 5 thinks by default: billed output, eats max_tokens, and
-            # puts a thinking block at content[0].
-            thinking={"type": "disabled"},
+            # puts a thinking block ahead of the text.
+            **({} if think else {"thinking": {"type": "disabled"}}),
             output_config={"format": {"type": "json_schema", "schema": schema}},
         )
         log_cache(response)
-        return response.content[0].text
+        return next(b.text for b in response.content if b.type == "text")
 
     except anthropic.BadRequestError as e:
         if is_billing_error(e):
@@ -655,7 +688,8 @@ def extract_chunk_stored(
     chunk: str,
     system_prompt: str = SYSTEM_PROMPT,
     context: str = "",
-    max_tokens: int = 2000,
+    # Several stories of up to 180 words each; a cut reply is no JSON at all.
+    max_tokens: int = 8000,
 ) -> list[dict]:
     """extract_memories_from_chunk, paid for once per exact request.
 
@@ -675,7 +709,108 @@ def extract_chunk_stored(
         context=context,
         max_tokens=max_tokens,
     )
-    return [] if raw is None else grounded(parse_memories(raw), chunk)
+    if raw is None:
+        return []
+    memories = grounded(parse_memories(raw), chunk)
+    return [checked(session, client, content_id, chunk_index, chunk, context, m) for m in memories]
+
+
+UNSUPPORTED_PROMPT = """The text is a source passage, with what is known about its
+source, then a story written from it for someone standing at the place. List
+every claim the story makes that the passage and the source do not support: a
+fact, name, role, number, date, event, object, image, adjective or superlative
+the story adds, or gives differently. Only additions and contradictions:
+leaving something out is fine, and so are translation, tense, wording, order
+and a plain inference (a bar is in the city the passage is about). Each is a
+`fact` (something a reader would repeat as true) or `colour` (an image or a
+flourish). An empty list means the story is faithful."""
+
+UNSUPPORTED_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "unsupported": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "claim": {"type": "string"},
+                    "kind": {"type": "string", "enum": ["fact", "colour"]},
+                },
+                "required": ["claim", "kind"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["unsupported"],
+    "additionalProperties": False,
+}
+
+TRIM_PROMPT = """The text is a story told at a place, then claims in it that its source
+does not support. Remove exactly those claims and nothing else: keep every
+other sentence and detail word for word, in its order and paragraphs. Cut the
+claim, not the sentence, where the sentence still stands without it. Return
+the story itself, never a description of it."""
+
+TRIM_SCHEMA = {
+    "type": "object",
+    "properties": {"summary": {"type": "string"}},
+    "required": ["summary"],
+    "additionalProperties": False,
+}
+
+
+def unsupported(session, client, content_id, chunk_index, chunk, context, summary):
+    """What the summary says that its chunk doesn't, as [{claim, kind}], or None
+    for no usable answer. It thinks first: a miss here is an invention on a pin."""
+    user = f"Passage:\n\n{chunk}\n\nStory:\n\n{summary}"
+    raw = _stored_request(
+        session,
+        client,
+        content_id,
+        chunk_index,
+        UNSUPPORTED_PROMPT,
+        user,
+        UNSUPPORTED_SCHEMA,
+        context,
+        max_tokens=16000,
+        think=True,
+    )
+    try:
+        return json.loads(raw)["unsupported"] if raw else None
+    except (
+        ValueError,
+        KeyError,
+    ):
+        return None
+
+
+def checked(session, client, content_id, chunk_index, chunk, context, memory: dict) -> dict:
+    """The memory with what its chunk doesn't say cut from the summary.
+
+    A longer summary is where invention creeps in, and a prompt rule against
+    it was not enough (docs/04, *A longer card*). Only a memory that passed
+    its spot test is checked, the rest are dropped anyway, and only what the
+    check names is cut: a rewrite of the whole summary cut its richness too.
+    Both calls are stored like a chunk, so a rerun is free.
+    """
+    if memory.get("spot_test") != "pass" or not memory.get("summary"):
+        return memory
+    claims = unsupported(
+        session, client, content_id, chunk_index, chunk, context, memory["summary"]
+    )
+    if not claims:
+        return memory
+    listed = "\n".join(f"- {c['claim']}" for c in claims)
+    user = f"Story:\n\n{memory['summary']}\n\nUnsupported:\n{listed}"
+    raw = _stored_request(session, client, content_id, chunk_index, TRIM_PROMPT, user, TRIM_SCHEMA)
+    try:
+        summary = json.loads(raw)["summary"].strip() if raw else ""
+    except (
+        ValueError,
+        KeyError,
+    ):
+        summary = ""
+    return {**memory, "summary": summary} if summary else memory
 
 
 def _stored_request(
@@ -688,6 +823,7 @@ def _stored_request(
     schema=MEMORY_SCHEMA,
     context="",
     max_tokens=2000,
+    think=False,
 ) -> str | None:
     key_schema = json.dumps(schema, sort_keys=True)
     # context + user is the message as it was before it was split in two, so
@@ -700,7 +836,7 @@ def _stored_request(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
     ).scalar()
     if raw is None:
-        raw = _request(client, system_prompt, user, schema, context, max_tokens)
+        raw = _request(client, system_prompt, user, schema, context, max_tokens, think)
         if raw is None:
             return None
         session.execute(
@@ -1464,6 +1600,18 @@ def _same_item(session, params: dict) -> int | None:
     ).scalar()
 
 
+# The prompt says null when it doesn't know what is there now, and it writes
+# "current use unknown" or "likely redeveloped" anyway (25 of 85 notes,
+# 2026-10-04). A guess under "Then and now" reads as a fact.
+HEDGE = re.compile(
+    r"\b(unknown|unclear|uncertain|likely|probably|perhaps|presumably|may have|might)\b", re.I
+)
+
+
+def sure(note: str | None) -> str | None:
+    return None if not note or HEDGE.search(note) else note
+
+
 def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str):
     session.execute(
         text("""
@@ -1498,7 +1646,7 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
             "attribution": mem.get("attribution"),
             "source_url": mem.get("source_url"),
             "contrast_score": _contrast_score(mem),
-            "contrast_note": mem.get("contrast_note"),
+            "contrast_note": sure(mem.get("contrast_note")),
             "quote": mem.get("quote"),
             "quote_by": mem.get("quote_by"),
         },

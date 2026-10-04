@@ -365,8 +365,8 @@ a historical memory should read like. Written as a card:
 On the research rubric it scores 10 of 12: site-lock 2, trace 2, incident 1,
 surprise 2, feeling 1, relates 2. It works because you look up and it is still
 there, it still moves, and the then against now is spelled out ("stood still
-for decades"). The post runs ~400 words; cards stay at 40–70, and whether a
-card may run longer is an open question in TODO.md.
+for decades"). The post runs ~400 words; cards ran 40–70 until 2026-10-04 and
+now run to 180 (*A longer card*, below).
 
 **Letting it pass** (2026-09-30, ~110 Sonnet calls). The archival prompt
 dropped the post: "a building existing is not something that happened" couldn't
@@ -669,6 +669,66 @@ is next (TODO, *The place test*).
   Runeberg's 1905 Danish spells it "Kjøbenhavn": "København" found 0 of 49.
 
 The visible corpus went from 192 to 162 memories.
+
+### A longer card, 2026-10-04
+
+The founder asked for more text and richer memories (docs/10, *A card runs
+as long as its source's details*). Both prompts' summary rule went from "2-3
+sentences, 40-70 words and never more" to 60-180 words, earned: a lede that
+would stop someone walking, the scene in order with every concrete detail the
+source gives, then what came of it, and two paragraphs past about 90 words.
+The archival quote may run to 40 words; the video one stays at 25, because a
+longer line rarely survives the verbatim check against auto-captions.
+
+`quality --compare --score` (new) also scores each kept summary on the walk
+rubric and asks a thinking model what it says that its chunk doesn't
+(`extract.unsupported`). 15 chunks a source type, one run unless noted:
+
+| Source | Draws keeping something (15 chunks × 3) | Words | Walk score | Quotes | No added fact |
+|---|---|---|---|---|---|
+| Book, old | 13 of 45 | 57 | 6.7 | 5 of 7 | 6 of 7 |
+| Book, new | 13 of 45 | 121 | 8.0 | 6 of 7 | 6 of 7 |
+| Video, old | 20 of 45 | 45 | 6.2 | 9 of 13 | 12 of 13 |
+| Video, new | 20 of 45 | 84 | 6.5 | 4 of 14 | 10 of 10 |
+| Historisk Atlas, old | 14 kept, one run | 37 | 6.3 | 2 | 14 of 14 |
+| Historisk Atlas, new | 14 kept, one run | 44 | 6.1 | 1 | 10 of 14 |
+
+- **Length invites invention, so every kept memory is now checked.** Before
+  the check, the longer summaries added things: "carved" for "decorated",
+  "the city's finest", and once a Battle of Bosworth the guide never named.
+  A prompt rule ("richness is the source's own details, never yours") halved
+  that, not more. `extract.checked` asks the detector, and when it names
+  claims, cuts exactly those and nothing else. Its first form rewrote the
+  whole summary against the chunk: book summaries fell from 125 words to 74
+  and one came back as "The story describes…". Both calls are stored, so a
+  rerun is free. The "no added fact" column is that same detector on the
+  final text, which makes it its own judge: read the summaries too.
+- **"A life history is not a story" cost the best book memory.** The first
+  candidate dropped Andersen jeered off the Royal Theatre's stage 0 of 3
+  draws, against 2 of 3: a memoir chunk read as a life. Reworded to "a new
+  detail of the same scene, not the years around it", it came back 2 of 3.
+- **Truncation.** Four memories of 180 words overran the extractor's 2000
+  tokens, and a cut reply is no JSON: Nygade Bio's four cinemas were lost.
+  `extract_chunk_stored` now allows 8000.
+- **Video quotes fell, 9 to 4.** Not yet understood (out of credit before a
+  fix could be measured); the guess is that the longer summary spends the
+  quotable line. Enrichment brings quotes of its own. TODO, *Video quotes
+  after the longer card*.
+- **The 107 video memories have no quote** because all of them were extracted
+  on 2026-09-27, before the field existed (2026-10-01), not because the
+  verbatim check fails.
+- Historisk Atlas entries are a few lines, so its summaries barely grew: a
+  small story stays small, as asked. Its "no added fact" fell on occupation
+  context ("during the German occupation") the detector counts as added.
+
+Read side by side, the new book cards are the change wanted: the Tuileries
+drumroll that "within months would announce something far larger", the
+Champs-Élysées carriages with their jockeys in green satin, the Kasino fire
+told through.
+
+A guessed `contrast_note` is no longer saved: 25 of 85 said "current use
+unknown", "likely redeveloped" or "uncertain to me", though the prompt asks
+for null. `extract.sure` drops a note that hedges.
 
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps

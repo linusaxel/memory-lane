@@ -23,6 +23,9 @@ ENABLE_EMBED = os.getenv("ENABLE_EMBED", "0" if PUBLIC_HOST else "1") != "0"
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-5")
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-4-5")
+# Web searches, and as many page reads, per new memory's enrichment
+# (pipeline/enrich.py). A search bills about a cent.
+ENRICH_MAX_SEARCHES = int(os.getenv("ENRICH_MAX_SEARCHES", "5"))
 CHUNK_MINUTES = int(os.getenv("CHUNK_MINUTES", "4"))
 CHUNK_OVERLAP_SECONDS = int(os.getenv("CHUNK_OVERLAP_SECONDS", "30"))
 # Shorter videos are never transcribed or extracted. On the channel this was

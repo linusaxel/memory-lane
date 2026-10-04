@@ -33,7 +33,7 @@ def test_the_good_shape_trips_nothing():
         "talks about talking": 0,
         "not past tense": 0,
         "unnamed someone": 0,
-        "over 70 words": 0,
+        "over 180 words": 0,
     }
 
 
@@ -58,10 +58,10 @@ def test_someone_is_caught():
 
 
 def test_length_is_counted_in_words_not_characters():
-    """A 71-word summary of a conversation, not a 400-character one - the limit
-    is about how much there is to read standing up, not about storage."""
-    assert counts(" ".join(["word"] * 71))["over 70 words"] == 1
-    assert counts(" ".join(["word"] * 70))["over 70 words"] == 0
+    """A 181-word summary of a conversation, not a 1000-character one - the
+    limit is about how much there is to read standing up, not about storage."""
+    assert counts(" ".join(["word"] * 181))["over 180 words"] == 1
+    assert counts(" ".join(["word"] * 180))["over 180 words"] == 0
 
 
 def test_a_clean_corpus_reports_all_zeroes():

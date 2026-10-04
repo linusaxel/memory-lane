@@ -28,8 +28,8 @@ om hvad der skete netop dér.
 Jeres videoer er fulde af den slags: [ét konkret eksempel fra kanalen, fx
 "historien om …" på …]. Jeg vil gerne spørge om lov til at bruge dem sådan:
 
-- **Vi skriver selv 40-70 ord** om én episode fra en video, med vores egne
-  ord, aldrig et klip eller en afskrift.
+- **Vi skriver selv en kort tekst** om én episode fra en video, med vores
+  egne ord, aldrig et klip eller en afskrift.
 - **I står som kilde** med kanalens navn øverst, og et link der åbner videoen
   på YouTube præcis hvor historien bliver fortalt. Seerne ender hos jer.
 - **Vi gemmer ikke jeres videoer.** Vi læser undertekstsporet én gang for at
