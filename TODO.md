@@ -660,12 +660,6 @@ They cost money, need an account, or need a person. Full detail in
   walks. A bar, which the research argues against; the founder's call.
 - **Does the podcast corpus eventually get pruned?** (checked 2026-09-20) It is
   US comedy anecdote in a product about Copenhagen history.
-- **Free walkers see the stops?** (checked 2026-10-04) *See the stops* is
-  paywalled, so a free walk is about 50 minutes committed blind, however good
-  the stories. What it would show (place, year, source) is already safe by
-  docs/10, *A locked memory says what it is*, and it is the hook. Proposal:
-  paywall the second walk, not the first one's preview. Amends *Subscribers
-  shape the walk* if taken; the founder's call.
 - **Sign in at the first unlock, not at launch?** (checked 2026-10-04) The
   wall comes before anything is shown, and "your collection follows you"
   holds only once there is one. App Review 5.1.1(v) allows sign-in where an

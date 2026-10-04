@@ -12,6 +12,12 @@ import {
   useColorScheme,
   useWindowDimensions,
 } from 'react-native';
+import Reanimated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
@@ -89,7 +95,8 @@ import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
-import { IrisGrow, type Iris } from './src/LocketUnlock.tsx';
+import { IrisGrow, type Iris, type LocketDrive } from './src/LocketUnlock.tsx';
+import SlideToUnlock from './src/SlideToUnlock.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { button, buttonText, color, dim, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
@@ -342,6 +349,9 @@ export default function App() {
   const mounted = useRef(true);
   // Read by callbacks that must not be rebuilt every time the person moves.
   const positionRef = useRef<Coordinates | null>(null);
+  // The locket and the slide that opens it share one hold (UnlockHere, SlideToUnlock).
+  const lockDrive = useRef<LocketDrive>(null);
+  const lockProgress = useSharedValue(0);
   const watcher = useRef<Location.LocationSubscription | null>(null);
 
   useEffect(() => {
@@ -1100,6 +1110,15 @@ export default function App() {
   // The locket being opened, kept on screen through its lid swing and dive.
   const [opening, setOpening] = useState<typeof ringFor>(null);
   const lockFor = opening ?? ringFor;
+  // The bottom row's middle while a memory is in reach: the slide that opens it.
+  const slide = lockFor && (
+    <SlideToUnlock
+      key={lockFor.group.memories[lockFor.index].id}
+      drive={lockDrive}
+      progress={lockProgress}
+      placeName={lockFor.group.memories[lockFor.index].place.name}
+    />
+  );
   const ringAt = Math.max(
     0,
     ringHere.findIndex(({ group, index }) => group.memories[index].id === ringMemory?.id),
@@ -1675,42 +1694,6 @@ export default function App() {
             )}
           </MapView>
 
-          {/* The lock, low where a thumb reaches, and which memory it opens. */}
-          {lockFor && (
-            <UnlockHere
-              memory={lockFor.group.memories[lockFor.index]}
-              index={ringAt}
-              count={ringHere.length}
-              onStep={(by) => {
-                Haptics.selectionAsync().catch(() => {});
-                const n = ringHere.length;
-                const next = ringHere[(ringAt + by + n) % n];
-                setPickedId(next.group.memories[next.index].id);
-                setUnlockError(null);
-              }}
-              error={unlockError}
-              requestUnlock={async () => {
-                if (walking) setRouteStarted(true);
-                // Held while the lid opens: once unlocked, the memory leaves
-                // the ring's list, and the locket would vanish mid-swing.
-                setOpening(lockFor);
-                const opened = await unlock(lockFor.group.memories[lockFor.index]);
-                if (!opened) setOpening(null);
-                return opened;
-              }}
-              onDiveStart={(from) => {
-                if (!opening) return;
-                setDiving({ from });
-                // Open now, hidden under the paper: up and drawn by the time it is grown.
-                setRevealId(opening.group.memories[opening.index].id);
-                setPickedId(null);
-                // Not openGroup: its tap would land on the hold's Success.
-                setOpenAt(opening.group.memories);
-                setOpenIndex(opening.index);
-              }}
-              onOpened={() => setOpening(null)}
-            />
-          )}
           {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
           {stage === 'preview' && !journalOpen && !pastWalk && (
             <Preview
@@ -1847,18 +1830,20 @@ export default function App() {
           {/* Home: the map, you on it, and one way into the planner. */}
           {stage === 'map' && !journalOpen && !pastWalk && (
             <View style={styles.bottom}>
-              <GlassButton
-                place={styles.grow}
-                style={styles.planWalk}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setStage('preview');
-                }}
-                accessibilityRole="button"
-              >
-                <Glyph name="figure.walk" size={20} weight="medium" color={color.gold} />
-                <Text style={styles.planWalkLabel}>Plan a walk</Text>
-              </GlassButton>
+              {!slide && (
+                <GlassButton
+                  place={styles.grow}
+                  style={styles.planWalk}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setStage('preview');
+                  }}
+                  accessibilityRole="button"
+                >
+                  <Glyph name="figure.walk" size={20} weight="medium" color={color.gold} />
+                  <Text style={styles.planWalkLabel}>Plan a walk</Text>
+                </GlassButton>
+              )}
             </View>
           )}
           <View style={styles.topRight}>
@@ -1912,10 +1897,12 @@ export default function App() {
                     <Text style={styles.planWalkText}>Turn on location</Text>
                   </Pressable>
                 )}
+                {/* Standing on a stop, the card gives its place to the slide
+                    that opens it; step away and the card, and its ✕, are back
+                    (docs/10, "Slide to unlock"). */}
                 {/* The walk's one card (F9): where next and how far, a tap to see
-                    it, and ✕ to end it. Standing on a stop it stays under the
-                    ring, so the walk can still end there. */}
-                {walking && onRoute && !!position && (
+                    it, and ✕ to end it. */}
+                {walking && onRoute && !!position && !lockFor && (
                   <GlassButton
                     place={styles.wide}
                     style={styles.walkCard}
@@ -2015,6 +2002,53 @@ export default function App() {
                   color={color.ink}
                 />
               </GlassButton>
+            </View>
+          )}
+          {/* While a memory is in reach the rest steps back: a paper wash over
+              the map and the chrome, which stay usable under it (it takes no
+              touches), and the locket and its slide over the wash. A wash and
+              not opacity: opacity on glass stops it rendering. */}
+          <Wash on={!!lockFor} />
+          {/* The lock, low where a thumb reaches, and which memory it opens. */}
+          {lockFor && (
+            <UnlockHere
+              memory={lockFor.group.memories[lockFor.index]}
+              count={ringHere.length}
+              onStep={(by) => {
+                Haptics.selectionAsync().catch(() => {});
+                const n = ringHere.length;
+                const next = ringHere[(ringAt + by + n) % n];
+                setPickedId(next.group.memories[next.index].id);
+                setUnlockError(null);
+              }}
+              error={unlockError}
+              requestUnlock={async () => {
+                if (walking) setRouteStarted(true);
+                // Held while the lid opens: once unlocked, the memory leaves
+                // the ring's list, and the locket would vanish mid-swing.
+                setOpening(lockFor);
+                const opened = await unlock(lockFor.group.memories[lockFor.index]);
+                if (!opened) setOpening(null);
+                return opened;
+              }}
+              onDiveStart={(from) => {
+                if (!opening) return;
+                setDiving({ from });
+                // Open now, hidden under the paper: up and drawn by the time it is grown.
+                setRevealId(opening.group.memories[opening.index].id);
+                setPickedId(null);
+                // Not openGroup: its tap would land on the hold's Success.
+                setOpenAt(opening.group.memories);
+                setOpenIndex(opening.index);
+              }}
+              onOpened={() => setOpening(null)}
+              drive={lockDrive}
+              progress={lockProgress}
+            />
+          )}
+          {slide && (
+            <View style={[styles.bottom, stage === 'walk' && styles.slideInset]}>
+              <View style={styles.grow}>{slide}</View>
             </View>
           )}
         </View>
@@ -2144,7 +2178,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  middle: { flex: 1, alignItems: 'center' },
+  // 56, the walk card's height, so the row keeps its line when the slide
+  // stands in for the card.
+  middle: { flex: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center' },
+  // The walk row's middle: between Add and Center on me (44 each, gap 12).
+  slideInset: { left: 18 + 44 + 12, right: 18 + 44 + 12 },
+  wash: { ...StyleSheet.absoluteFill, backgroundColor: color.paper },
   grow: { flex: 1 },
   planWalkText: { ...buttonText, color: color.paper },
   planWalk: { ...pill, minHeight: 56 },
@@ -2178,3 +2217,17 @@ const styles = StyleSheet.create({
   stamp: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.rule },
   stamped: { backgroundColor: color.gold },
 });
+
+/** The paper wash behind the lock: in over 600 ms, out the same, so walking
+ *  into reach is a scene change and not a cut. */
+function Wash({ on }: { on: boolean }) {
+  const shown = useSharedValue(0);
+  useEffect(() => {
+    shown.value = withTiming(on ? WASH : 0, { duration: 600, easing: Easing.inOut(Easing.cubic) });
+  }, [on, shown]);
+  const style = useAnimatedStyle(() => ({ opacity: shown.value }));
+  return <Reanimated.View style={[styles.wash, style]} pointerEvents="none" />;
+}
+
+// Strong enough to set the lock apart, thin enough that the street and your dot still read.
+const WASH = 0.5;

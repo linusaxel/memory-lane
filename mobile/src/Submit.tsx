@@ -986,7 +986,7 @@ export function Chip({
           style={[
             styles.chip,
             on && styles.chipOn,
-            pressed && sunk(styles.chip),
+            pressed && sunk,
             { transform: [{ scale: pop }] },
           ]}
         >
@@ -1104,21 +1104,14 @@ const styles = StyleSheet.create({
   action: { ...story.meta, color: color.inkSoft },
 
   chip: {
-    borderWidth: 1,
-    borderColor: color.rule,
     borderRadius: radius.pill,
     paddingHorizontal: 14,
     // 40 tall with the label's line box, and the row gap keeps neighbours
     // from stealing the edges of the target.
-    paddingTop: 11,
-    paddingBottom: 9,
-    borderBottomWidth: 3,
+    paddingVertical: 12,
+    backgroundColor: color.wash,
   },
-  chipOn: {
-    backgroundColor: color.gold,
-    borderColor: color.gold,
-    borderBottomColor: color.goldDeep,
-  },
+  chipOn: { backgroundColor: color.gold },
   chipText: { ...label, fontSize: 12, color: color.inkSoft },
   chipTextOn: { color: color.paper },
 

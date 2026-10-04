@@ -95,9 +95,8 @@ export default function Paywall({ visible, onClose, device, profile, onProfile }
           </Text>
         )}
         <Text style={styles.note}>
-          Another loop past memories you haven't heard yet, whenever the day leaves room. See the
-          stops before you go, and lean a walk towards the themes and years you like. Your first
-          walk each day stays free.
+          Another loop past memories you haven't heard yet, whenever the day leaves room, and walks
+          that lean towards the themes and years you like. Your first walk each day stays free.
         </Text>
 
         {offered === null ? null : offered.length === 0 ? (

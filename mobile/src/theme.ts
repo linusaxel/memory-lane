@@ -11,7 +11,6 @@
 import {
   DynamicColorIOS,
   Platform,
-  StyleSheet,
   type PressableStateCallbackType,
   type StyleProp,
   type ViewStyle,
@@ -42,12 +41,11 @@ export const color = {
    *  primary button, a link. Old gold, dark enough to be text on paper; the
    *  lockets carry the bright metal. docs/09-visual-design.md. */
   gold: dual('#86661A', '#D9B45E'),
-  /** The quiet button's fill: gold, barely. */
-  goldSoft: dual('#F1E4C2', '#352A14'),
-  /** The ledge under a gold button or chip: gold, a step down. */
-  goldDeep: dual('#5E470F', '#A8822E'),
-  /** The ledge under the quiet button. */
-  goldSoftDeep: dual('#DCC992', '#241C0C'),
+  /** The quiet button's fill: ink, washed thin, so it sits on glass or paper
+   *  alike (docs/09 part 13). */
+  wash: dual('rgba(28,25,23,0.07)', 'rgba(242,237,228,0.12)'),
+  /** A subscriber's thing, offered to a free walker: gold, washed thin. */
+  goldTint: dual('rgba(134,102,26,0.14)', 'rgba(217,180,94,0.18)'),
 
   /** Openable now, and nothing else: the in-reach halo, the reach circle, the
    *  unlock ring. Emerald, because gold beside gold is no signal. A fill: text
@@ -72,6 +70,9 @@ export const color = {
    *  alpha reads about the same over either. It lives here rather than inline
    *  so a palette change reaches it. */
   halo: 'rgba(63,165,126,0.35)',
+
+  /** The slide track's knob: white in both themes, as iOS draws it. */
+  knob: '#FFFFFF',
 
   /** `lift`'s shadow, and the scrim over an uploading photo. */
   shadow: '#000',
@@ -125,6 +126,9 @@ export const solid = (dark: boolean) => ({
   /** The glass over the map, warmed: paper in light, a dark gold in dark,
    *  thin enough that the map still shows through. A tint, so a real colour. */
   frost: dark ? 'rgba(53,42,20,0.35)' : 'rgba(241,228,194,0.45)',
+  /** The same warmth on a glass card, thicker: a card carries prose, which
+   *  must hold its contrast over a busy map. */
+  frostCard: dark ? 'rgba(32,29,25,0.72)' : 'rgba(255,253,249,0.72)',
 });
 
 /** One family, SF Pro Rounded: the system's own, so it sits with the map's
@@ -209,14 +213,13 @@ export const buttonText = {
 };
 export const buttonTextSmall = { ...font.uiBold, fontSize: 15 };
 
-/** The app's buttons: three capsules, two sizes. Spread one and add only where
+/** The app's buttons: three flat capsules, two sizes. Spread one and add only where
  *  it sits (margin, alignSelf); the text is `buttonText`. An action inside the
  *  page rather than ending it (Leave note, Edit this memory) spreads `small`
  *  after the capsule, with `buttonTextSmall` and `hitSlop={4}` to reach 44pt.
  *  A link to somewhere else (Terms, a credit) stays a link. */
 const buttonBox = {
   borderWidth: 1.5,
-  borderBottomWidth: 4,
   borderColor: 'transparent',
   borderRadius: radius.pill,
   minHeight: 52,
@@ -227,12 +230,12 @@ const buttonBox = {
 };
 export const button = {
   /** The one thing to do. Text in paper. */
-  solid: { ...buttonBox, backgroundColor: color.gold, borderBottomColor: color.goldDeep },
+  solid: { ...buttonBox, backgroundColor: color.gold },
   /** The way back, next to a solid one. Text in ink. */
-  quiet: { ...buttonBox, backgroundColor: color.goldSoft, borderBottomColor: color.goldSoftDeep },
+  quiet: { ...buttonBox, backgroundColor: color.wash },
   /** An action standing on its own. Text in ink. */
   outline: { ...buttonBox, borderColor: color.rule },
-  small: { minHeight: 36, borderBottomWidth: 3, paddingVertical: 6, paddingHorizontal: 16 },
+  small: { minHeight: 36, paddingVertical: 6, paddingHorizontal: 16 },
 };
 
 /** A text field. The display-name input renders twice - You and Submit - and
@@ -249,24 +252,9 @@ export const input = {
   backgroundColor: color.paperRaised,
 };
 
-/** How a pressed thing gives. A button or chip with a ledge (a bottom border
- *  over 2) sinks onto it: the border thins and the top margin takes up the
- *  difference, so the box keeps its size and nothing beside it moves. Anything
- *  else gives a little. Glass scales on its own (src/Glass.tsx). */
-export const sunk = (base?: StyleProp<ViewStyle>): ViewStyle => {
-  const f = StyleSheet.flatten(base) ?? {};
-  const lip = f.borderBottomWidth ?? 0;
-  if (lip <= 2) return { opacity: 0.85, transform: [{ scale: 0.97 }] };
-  const drop = lip - 1.5;
-  const top = f.marginTop ?? f.marginVertical ?? f.margin ?? 0;
-  // A minHeight or height would hold the box at size, so they shrink too.
-  return {
-    borderBottomWidth: 1.5,
-    marginTop: (typeof top === 'number' ? top : 0) + drop,
-    ...(typeof f.minHeight === 'number' && { minHeight: f.minHeight - drop }),
-    ...(typeof f.height === 'number' && { height: f.height - drop }),
-  };
-};
+/** How a pressed thing gives: a little smaller, a little fainter. Glass
+ *  scales on its own (src/Glass.tsx). */
+export const sunk: ViewStyle = { opacity: 0.85, transform: [{ scale: 0.97 }] };
 
 /** Every Pressable in the app gives a little while it is held.
  *
@@ -281,4 +269,4 @@ export const sunk = (base?: StyleProp<ViewStyle>): ViewStyle => {
  */
 export const dim =
   (base?: StyleProp<ViewStyle>) =>
-  ({ pressed }: PressableStateCallbackType): StyleProp<ViewStyle> => [base, pressed && sunk(base)];
+  ({ pressed }: PressableStateCallbackType): StyleProp<ViewStyle> => [base, pressed && sunk];

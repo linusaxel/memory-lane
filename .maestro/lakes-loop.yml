@@ -73,6 +73,7 @@ appId: ${APP_ID}
 - assertVisible: "Next walk"
 
 # Accepting is what registers the device, and with it the past walks.
+- tapOn: "Next"
 - tapOn: "Start this walk"
 - extendedWaitUntil:
     visible: "Next: .*\\. .* of 10.*"

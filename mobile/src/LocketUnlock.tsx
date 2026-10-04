@@ -13,11 +13,21 @@
  *    and never on an early release.
  *  - A plain accessibility activation (VoiceOver's double-tap) opens it without
  *    holding.
+ *  - The hold is one way to drive it; `ref` is the other: SlideToUnlock scrubs
+ *    the same progress with a thumb (docs/10, "Slide to unlock").
  *  - Reduce Motion: no tilt, sway, sparkles or zoom; it cross-fades instead.
  *
  * The parent must not clip this view: the dive scales it past its bounds.
  */
-import { memo, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -116,7 +126,23 @@ type Props = {
   /** Rendered size in points (the design is 300). */
   size?: number;
   style?: ViewStyle;
+  ref?: Ref<LocketDrive>;
+  /** The hold, when the parent shares it (SlideToUnlock's thumb rides it). */
+  progress?: SharedValue<number>;
 };
+
+/** The locket driven from outside, by SlideToUnlock. */
+export type LocketDrive = {
+  /** Puts the hold at `p`; reaching the end commits, as a full hold does. */
+  scrub: (p: number) => void;
+  /** Lets go: back to closed, unless it already committed. */
+  release: () => void;
+  /** Opens without a gesture: VoiceOver's double-tap. */
+  open: () => void;
+};
+
+// Past this the thumb is at the end of its track; a finger rarely lands on 1.
+const COMMIT = 0.98;
 
 type Motion = {
   oa: number;
@@ -163,6 +189,8 @@ export default function LocketUnlock({
   onOpened,
   size = BOX,
   style,
+  ref,
+  progress: shared,
 }: Props) {
   const reduce = useReducedMotion();
   const art = ART[locketOf(locket).id];
@@ -170,7 +198,8 @@ export default function LocketUnlock({
   const width = 2 * (C - hingeX);
   const root = useRef<View>(null);
 
-  const progress = useSharedValue(0); // the hold, 0 → 1 (springs below 0 on release)
+  const own = useSharedValue(0);
+  const progress = shared ?? own; // the hold, 0 → 1 (springs below 0 on release)
   const openP = useSharedValue(0); // the opening + dive, 0 → 1
   const phase = useSharedValue(IDLE);
   const pressed = useSharedValue(0);
@@ -285,6 +314,30 @@ export default function LocketUnlock({
     cancelAnimation(progress);
     springBack(); // no haptic: letting go is not a failure to reward
   }, [phase, progress, springBack]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrub: (p: number) => {
+        if (phase.value >= CHECKING) return;
+        if (phase.value !== HOLDING) {
+          phase.value = HOLDING;
+          frame.setActive(true);
+          haptic('light');
+          pressed.value = withTiming(1, { duration: 120 });
+        }
+        cancelAnimation(progress);
+        progress.value = clamp(p, 0, 1);
+        if (p >= COMMIT) {
+          progress.value = 1;
+          onHoldComplete();
+        }
+      },
+      release: end,
+      open: () => begin(300),
+    }),
+    [begin, end, frame, haptic, onHoldComplete, phase, pressed, progress],
+  );
 
   const onAccessibilityAction = useCallback(
     (e: AccessibilityActionEvent) => {

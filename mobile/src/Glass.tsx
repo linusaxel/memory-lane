@@ -1,8 +1,9 @@
-/** A control floating over the map: iOS 26's Liquid Glass, or raised paper
- *  with the one shadow where there is no glass (older iOS, Android).
+/** A control or a card floating over the map: iOS 26's Liquid Glass, or
+ *  raised paper with the one shadow where there is no glass (older iOS,
+ *  Android).
  *
- *  Only for the navigation layer over the map - never a sheet or a card, and
- *  never glass on glass (docs/09-visual-design.md part 8). `place` positions
+ *  Never a full sheet, and never glass on glass (docs/09-visual-design.md
+ *  parts 8 and 13). `place` positions
  *  it, `style` is its shape. The glass is warmed with `frost`, so it reads as
  *  paper and not as cold white. A press squishes it and springs it back with
  *  a little overshoot; it never dims: opacity on a glass view's parent stops
@@ -18,10 +19,11 @@ import {
   useColorScheme,
   type PressableProps,
   type StyleProp,
+  type ViewProps,
   type ViewStyle,
 } from 'react-native';
 
-import { color, lift, solid } from './theme';
+import { color, floating, lift, radius, solid } from './theme';
 
 const GLASS = isLiquidGlassAvailable();
 
@@ -59,5 +61,22 @@ export function GlassButton({ place, style, children, onPressIn, onPressOut, ...
         )}
       </Animated.View>
     </Pressable>
+  );
+}
+
+/** A card over the map: the planner's, the unlock card. Its tint is thicker
+ *  than a control's, since it carries prose. Never under an animated opacity:
+ *  that stops the glass rendering. */
+export function GlassCard({ style, ...props }: ViewProps) {
+  const frost = solid(useColorScheme() === 'dark').frostCard;
+  return GLASS ? (
+    <GlassView
+      {...props}
+      style={[style, { borderRadius: radius.card }]}
+      glassEffectStyle="regular"
+      tintColor={frost}
+    />
+  ) : (
+    <View {...props} style={[style, floating]} />
   );
 }

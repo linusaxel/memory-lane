@@ -845,3 +845,78 @@ Pins are images now (`mobile/assets/lockets/`, six lockets, keyhole and
 plain), and the unlock is the locket opening, on Reanimated
 (`src/LocketUnlock.tsx`).
 
+---
+
+# 13. Glass cards, flat buttons — **shipped 2026-10-04**
+
+The founder: the buttons' colours "aren't great", and every interface should
+be modern, glass and state of the art. This supersedes part 8's "glass never
+on a card" and the 4pt ledge under every button (part 8 and UI.md).
+
+- **Cards over the map are Liquid Glass.** `GlassCard` in `src/Glass.tsx`:
+  the planner's card in every step, End walk, the finish card, a past walk,
+  and the unlock card. Tinted by `solid().frostCard`, a 0.72 paper (a dark
+  paper in dark mode), which is thicker than a control's `frost` because a
+  card carries prose and part 2's finding still holds: text over glass needs
+  4.5:1. Where there is no glass it is `floating` paper, as before.
+- **Not the memory sheet's peek.** Its parent animates `opacity`, which stops
+  a glass view rendering, and it is a story, read at length. Full sheets
+  (the story, Journal, Settings, the paywall) stay paper.
+- **Buttons are flat capsules.** No ledge: `solid` is a flat gold fill,
+  `quiet` a thin ink wash (`color.wash`), the iOS 26 secondary button, which
+  sits on glass and paper alike without being glass on glass. Chips and the
+  two circles (the pager step, the play disc) lost their lips too. A press
+  is `sunk`: a little smaller and fainter. `goldSoft`, `goldDeep` and
+  `goldSoftDeep` are gone.
+- **A subscriber's thing reads as one.** A free walker's Themes and years is
+  a `goldTint` capsule with a lock glyph and a gold **PLUS** badge, so the
+  paywall is visible before the tap, not a 13pt locket.
+
+---
+
+# 14. Slide to unlock — **researched and shipped 2026-10-04**
+
+The founder: the card under the locket looked like a button and did nothing,
+and nothing said to hold the locket. Two passes, primary sources and app
+teardowns.
+
+## What the research said
+
+- **A hidden hold should not be the only way.** The HIG: gestures
+  "supplement standard gestures, not replace them", give people "more than
+  one way to interact"; touch-and-hold is for additional controls. NN/g:
+  long-press and swipe "are not discoverable", so offer a way that does not
+  rely on the gesture.
+- **The track is the signifier.** Apple's slide-to-unlock patent: an image
+  moved "along a predefined channel", with a visual cue to the direction.
+  Sliders survive where a deliberate act matters: Emergency SOS and power off
+  on the Watch, Uber's "swipe Start" so a trip cannot start from a stray tap.
+- **Scrub, do not play.** WWDC18 803: content that stops tracking the finger
+  1:1 is noticed at once; interactions should be interruptible and
+  reversible. The locket's motion already ran off one progress value, so the
+  thumb drives it directly (Tinder's card is the same idea: let go short and
+  it springs back).
+- **Accessibility.** WCAG 2.5.7 (AA): anything done by dragging must also be
+  doable with a single pointer without dragging; the hold on the locket is
+  that, and 2.5.1 accepts a long press. VoiceOver's activate opens it.
+- **Hold alone tires.** Snapchat dropped hold-to-view for tap in 2015.
+- **No coach marks.** NN/g: instructional overlays are usually unnecessary;
+  make the control say it.
+
+## What shipped
+
+`mobile/src/SlideToUnlock.tsx` in the bottom row's middle while a memory is in
+reach, drawn as iOS draws slide to power off (white knob, arrow, one
+shimmering line), with the rest under a thin paper wash; docs/10, "Slide to
+unlock"; mobile/UI.md, "The unlock control".
+
+## Sources
+
+- [HIG, Gestures](https://developer.apple.com/design/human-interface-guidelines/gestures)
+- [WWDC18 803, Designing Fluid Interfaces](https://developer.apple.com/videos/play/wwdc2018/803/)
+- [NN/g, contextual swipe](https://www.nngroup.com/articles/contextual-swipe/), [contextual menus](https://www.nngroup.com/articles/contextual-menus/), [instructional overlays](https://www.nngroup.com/articles/mobile-instructional-overlay/)
+- [WCAG 2.5.1](https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html), [WCAG 2.5.7](https://www.w3.org/WAI/WCAG22/Understanding/dragging.html)
+- [Slide to unlock patent](https://appleinsider.com/articles/11/10/26/apple_awarded_patent_for_touchscreen_slide_to_unlock_gesture)
+- [Uber, how to take trips](https://www.uber.com/sa/en/drive/basics/how-to-take-trips); [Apple Watch SOS](https://support.apple.com/108374)
+- [Snapchat, tap to view](https://9to5mac.com/2015/07/01/snapchat-tap-to-view/); [Tinder-style swipe](https://vp0.com/blogs/tinder-swipe-ui-kit-swiftui-code)
+

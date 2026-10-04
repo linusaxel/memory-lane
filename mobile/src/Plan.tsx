@@ -1,8 +1,7 @@
 /** The planner, which is the home screen: a walk drawn on the map, and a
  *  card in two steps - the length and the shape, then what its memories are
- *  of, paged between walks, and Start. The second step, and a third for
- *  themes and years, are a subscriber's: a free walker starts from the first
- *  (docs/10, "Subscribers shape the walk").
+ *  of, paged between walks, and Start. A third, for themes and years, is a
+ *  subscriber's (docs/10, "Subscribers shape the walk").
  *  Any change redraws the walk; ‹ › trade it for another. A one-way walk can
  *  end at a spot tapped on the map (EndPick), asked for per walk and stored
  *  nowhere. docs/10, "A walk planner, nothing else" and "Draw first, adjust
@@ -32,11 +31,12 @@ import {
 
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import CloseButton from './CloseButton.tsx';
+import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
 import { locketAt, locketOf } from './lockets.ts';
 import { Chip } from './Submit.tsx';
-import { button, buttonText, color, dim, floating, font, label } from './theme.ts';
+import { button, buttonText, color, dim, font, label, radius } from './theme.ts';
 import { WalkShape } from './WalkCard.tsx';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
@@ -111,7 +111,7 @@ function LengthSlider({ km, min, onKm }: LengthProps) {
 /** Over the map while it waits for the tap that says where the walk ends. */
 export function EndPick({ onCancel }: { onCancel: () => void }) {
   return (
-    <View style={styles.card} pointerEvents="box-none">
+    <GlassCard style={styles.card} pointerEvents="box-none">
       <Text style={styles.cardTitle}>Where does it end?</Text>
       <Text style={styles.cardBody}>Tap the map where you want to finish.</Text>
       <Pressable
@@ -122,7 +122,7 @@ export function EndPick({ onCancel }: { onCancel: () => void }) {
       >
         <Text style={styles.secondaryText}>Cancel</Text>
       </Pressable>
-    </View>
+    </GlassCard>
   );
 }
 
@@ -136,7 +136,7 @@ type PreviewProps = {
   onKm: (km: number) => void;
   ask: WalkAsk;
   onAsk: (ask: WalkAsk) => void;
-  /** Sees the stops before starting, and picks themes and years. */
+  /** Picks themes and years. */
   subscribed: boolean;
   /** The shortest walk that reaches the pin and the end; over WALK_KM.max, none does. */
   floorKm: number;
@@ -226,7 +226,7 @@ export function Preview({
   const close = <CloseButton label="Close the planner" onPress={onClose} place={styles.close} />;
   if (walkedOut) {
     return (
-      <View style={styles.card}>
+      <GlassCard style={styles.card}>
         <Text style={styles.cardTitle}>Today's walk is done</Text>
         <Text style={styles.cardBody}>
           There's another tomorrow. Or subscribe for as many as you like.
@@ -240,7 +240,7 @@ export function Preview({
           <Text style={styles.primaryText}>More walks</Text>
         </Pressable>
         {close}
-      </View>
+      </GlassCard>
     );
   }
   const count = stops?.length ?? null;
@@ -282,19 +282,19 @@ export function Preview({
   );
   if (step === 'stops' && found && stops) {
     return (
-      <View style={styles.card} onLayout={measure}>
+      <GlassCard style={styles.card} onLayout={measure}>
         {back}
         <Stops stops={stops} />
         {start}
         {error && <Text style={styles.error}>{error}</Text>}
         {close}
-      </View>
+      </GlassCard>
     );
   }
   if (step === 'choices') {
     const until = UNTIL_YEARS.filter((year) => year == null || ask.from == null || year > ask.from);
     return (
-      <View style={styles.card} onLayout={measure} testID="walk-choices">
+      <GlassCard style={styles.card} onLayout={measure} testID="walk-choices">
         {back}
         <Text style={styles.cardBody}>Lean the walk towards</Text>
         <View style={styles.chips}>
@@ -344,7 +344,7 @@ export function Preview({
           ))}
         </View>
         {close}
-      </View>
+      </GlassCard>
     );
   }
   const chosen = [
@@ -353,24 +353,8 @@ export function Preview({
   ]
     .filter(Boolean)
     .join(' ');
-  // A free walker sees what a subscription would add, padlocked; tapping it
-  // is the paywall.
-  const extra = (text: string, onPress: () => void) => (
-    <Pressable
-      style={dim([styles.secondary, styles.grow, styles.extra])}
-      onPress={subscribed ? onPress : onSubscribe}
-      disabled={busy}
-      accessibilityRole="button"
-      accessibilityHint={subscribed ? undefined : 'Part of a subscription'}
-    >
-      {!subscribed && <Image source={locketOf().locked} style={styles.locket} />}
-      <Text style={styles.secondaryText} numberOfLines={1}>
-        {text}
-      </Text>
-    </Pressable>
-  );
   return (
-    <View style={styles.card} onLayout={measure}>
+    <GlassCard style={styles.card} onLayout={measure}>
       <Text style={styles.cardTitle}>A walk from here</Text>
       {found ? (
         // Pages: the arrows flank what they change. A missing one keeps its
@@ -431,29 +415,53 @@ export function Preview({
           />
         )}
       </View>
+      <Pressable
+        style={dim(styles.primary)}
+        onPress={() => setStep('stops')}
+        disabled={busy || !found}
+        accessibilityRole="button"
+        accessibilityHint="Shows the stops on this walk"
+      >
+        {busy ? (
+          <ActivityIndicator color={color.paper} />
+        ) : (
+          <Text style={styles.primaryText}>Next</Text>
+        )}
+      </Pressable>
       {subscribed ? (
         <Pressable
-          style={dim(styles.primary)}
-          onPress={() => setStep('stops')}
-          disabled={busy || !found}
+          style={dim([styles.secondary, styles.extra])}
+          onPress={() => setStep('choices')}
+          disabled={busy}
           accessibilityRole="button"
         >
-          {busy ? (
-            <ActivityIndicator color={color.paper} />
-          ) : (
-            <Text style={styles.primaryText}>See the stops</Text>
-          )}
+          <Text style={styles.secondaryText} numberOfLines={1}>
+            {chosen || 'Themes and years'}
+          </Text>
         </Pressable>
       ) : (
-        start
+        // A subscriber's, offered: gold, padlocked and badged, so it reads as
+        // the paywall before it is tapped.
+        <Pressable
+          style={dim([styles.secondary, styles.extra, styles.plus])}
+          onPress={onSubscribe}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityHint="Part of PLUS"
+          testID="themes-plus"
+        >
+          <Glyph name="lock.fill" size={14} weight="semibold" color={color.gold} />
+          <Text style={styles.secondaryText} numberOfLines={1}>
+            Themes and years
+          </Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>PLUS</Text>
+          </View>
+        </Pressable>
       )}
-      <View style={styles.extras}>
-        {!subscribed && extra('See the stops', () => {})}
-        {extra(subscribed && chosen ? chosen : 'Themes and years', () => setStep('choices'))}
-      </View>
       {error && <Text style={styles.error}>{error}</Text>}
       {close}
-    </View>
+    </GlassCard>
   );
 }
 
@@ -540,7 +548,7 @@ type EndWalkProps = {
  *  not a system dialog: this app never raises one of its own. */
 export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
   return (
-    <View style={styles.card} accessibilityViewIsModal>
+    <GlassCard style={styles.card} accessibilityViewIsModal>
       <Text style={styles.cardTitle} accessibilityRole="header">
         End this walk?
       </Text>
@@ -574,7 +582,7 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
         <Text style={styles.secondaryText}>Keep walking</Text>
       </Pressable>
       {error && <Text style={styles.error}>{error}</Text>}
-    </View>
+    </GlassCard>
   );
 }
 
@@ -598,7 +606,7 @@ export function WalkDone({
         ? ` · ${minutes} min`
         : ` · ${Math.floor(minutes / 60)} h ${minutes % 60} min`;
   return (
-    <View
+    <GlassCard
       style={styles.card}
       accessibilityViewIsModal
       onLayout={(e) => onHeight(e.nativeEvent.layout.height)}
@@ -638,7 +646,7 @@ export function WalkDone({
           <Text style={styles.secondaryText}>Another walk today ›</Text>
         </Pressable>
       )}
-    </View>
+    </GlassCard>
   );
 }
 
@@ -694,7 +702,7 @@ export function PastWalk({
   onHeight: (height: number) => void;
 }) {
   return (
-    <View style={styles.card} onLayout={(e) => onHeight(e.nativeEvent.layout.height)}>
+    <GlassCard style={styles.card} onLayout={(e) => onHeight(e.nativeEvent.layout.height)}>
       <Text style={styles.cardTitle} accessibilityRole="header" testID="past-walk">
         {walkDate(walk.route_date)}
       </Text>
@@ -709,7 +717,7 @@ export function PastWalk({
       >
         <Text style={styles.primaryText}>Done</Text>
       </Pressable>
-    </View>
+    </GlassCard>
   );
 }
 
@@ -736,21 +744,27 @@ const styles = StyleSheet.create({
     bottom: 26,
     padding: 24,
     gap: 10,
-    ...floating,
   },
   close: { position: 'absolute', top: 16, right: 16 },
   cardTitle: { ...font.display, fontSize: 23, lineHeight: 30, color: color.ink },
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   from: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   grow: { flex: 1 },
-  extras: { flexDirection: 'row', gap: 8 },
   extra: {
     ...button.small,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
   },
+  plus: { backgroundColor: color.goldTint },
+  badge: {
+    backgroundColor: color.gold,
+    borderRadius: radius.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  badgeText: { ...font.uiBold, fontSize: 11, letterSpacing: 0.6, color: color.paper },
   // Four rows in view, the rest a scroll away: the map behind still shows the walk.
   stops: { maxHeight: 4 * 52, flexGrow: 0 },
   stop: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52 },

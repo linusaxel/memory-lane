@@ -37,16 +37,16 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Stop 4 of 4\\. .*"
     timeout: 5000
-# Step two, the stops, is a subscriber's: a free walker starts from step one,
-# and the padlocked See the stops is the paywall.
-- assertVisible: "Start this walk"
-- tapOn: "See the stops"
+# Themes and years are a subscriber's: for a free walker the PLUS tile is
+# the paywall.
+- tapOn:
+    id: "themes-plus"
 - extendedWaitUntil:
     visible: "More than one walk a day"
     timeout: 20000
 - tapOn: "Not now"
 - assertNotVisible:
-    id: "walk-stops"
+    id: "walk-choices"
 
 # F32: › is another walk as good, or one of a similar length, still a preview.
 - assertNotVisible: "Previous walk"
@@ -55,7 +55,7 @@ appId: ${APP_ID}
     visible: "Previous walk"
     timeout: 40000
 - assertVisible: "[0-9]+ memories · .* loop"
-- assertVisible: "See the stops"
+- assertVisible: "Next"
 # Pages: back to the first, which has no ‹.
 - tapOn: "Previous walk"
 - extendedWaitUntil:

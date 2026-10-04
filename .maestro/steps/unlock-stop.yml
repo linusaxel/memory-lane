@@ -1,5 +1,6 @@
 # Stand on stop N and open it: walk-and-unlock.yml runs this once per stop,
-# after that stop's leg. Env: N, STOP (its place name), WORDS (from its summary).
+# after that stop's leg. Env: N, STOP (its place name), WORDS (from its summary),
+# SLIDE ("1" opens it with the slide track, "0" with the hold).
 appId: ${APP_ID}
 ---
 # F7: the stop's pin turns in reach and the lock comes up alone on the map,
@@ -8,10 +9,26 @@ appId: ${APP_ID}
     visible: "Stop ${N} of 4. ${STOP}. Locked, within reach."
     timeout: 45000
 - assertVisible: "Unlock this memory"
-# The hold. longPressOn holds ~3s; the ring is HOLD_MS 900 and its
-# animation callback fires while the finger is still down, so the press
-# completes the unlock rather than cancelling it.
-- longPressOn: "Unlock this memory"
+# Two ways in (docs/10, "Slide to unlock"). SLIDE=1 drags the knob of the
+# slide in the bottom row's middle to its end: by screen point, since the track
+# is one accessibility element and its knob sits at its left (a 402pt-wide
+# iPhone; this is where it lands).
+- runFlow:
+    when:
+      true: ${SLIDE == '1'}
+    commands:
+      - swipe:
+          start: "25%,89%"
+          end: "96%,89%"
+          duration: 1500
+# Otherwise the hold. longPressOn holds ~3s; HOLD_MS is 900 and its animation
+# callback fires while the finger is still down, so the press completes the
+# unlock rather than cancelling it.
+- runFlow:
+    when:
+      true: ${SLIDE != '1'}
+    commands:
+      - longPressOn: "Unlock this memory"
 - extendedWaitUntil:
     visible: ".*${WORDS}.*"
     timeout: 30000

@@ -12,7 +12,10 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "4 memories · .* loop"
     timeout: 40000
-# A free walker starts from step one: the stops are a subscriber's.
+# Next is the stops, which everyone sees, then Start.
+- tapOn: "Next"
+- assertVisible:
+    id: "walk-stops"
 - tapOn: "Start this walk"
 - extendedWaitUntil:
     visible: "Next: .*\\. 1 of 4.*"

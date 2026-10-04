@@ -90,6 +90,7 @@ appId: ${APP_ID}
       N: "1"
       STOP: "${STOP1}"
       WORDS: "${WORDS1}"
+      SLIDE: "0"
 
 - runFlow: ../e2e/out/legs/2.yml
 - runFlow:
@@ -98,6 +99,7 @@ appId: ${APP_ID}
       N: "2"
       STOP: "${STOP2}"
       WORDS: "${WORDS2}"
+      SLIDE: "1"
 
 - runFlow: ../e2e/out/legs/3.yml
 - runFlow:
@@ -106,6 +108,7 @@ appId: ${APP_ID}
       N: "3"
       STOP: "${STOP3}"
       WORDS: "${WORDS3}"
+      SLIDE: "0"
 # Three earned, stop 4 still to reach: the card points on.
 - extendedWaitUntil:
     visible: "Next: ${STOP4}.*"
@@ -118,6 +121,7 @@ appId: ${APP_ID}
       N: "4"
       STOP: "${STOP4}"
       WORDS: "${WORDS4}"
+      SLIDE: "0"
 
 # F30: the finish shows the whole loop and what it came to, once.
 - extendedWaitUntil:

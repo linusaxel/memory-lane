@@ -34,7 +34,7 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
    ├─ "Planning from central Copenhagen." + Use my location   with no position; the location ask
    ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
    ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
-   ├─ See the stops             primary; step two, the map refits above the taller card
+   ├─ Next                      primary, every walker; step two, the map refits above the taller card
    │  ├─ ‹ Back                 to step one ("Back to the length")
    │  ├─ ‹ "4 memories · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left
    │  ├─ the list               a row per stop in walk order: gold number, place 16/700, "1978 · Vega
@@ -76,10 +76,10 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    walked: after "Nice walk." it ends itself and the map comes back. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
 │    walking. Never a plain tap. Standing at any stop, the lock (src/UnlockHere.tsx) comes
-│    up above it: the ring low above the bottom row, and under it a card with the place, year
-│    or source, and ‹ › with "2 of 3" when more than one is in reach. Only a stop of the
-│    walk in progress gets it. Tapping a pin in reach points it at that pin; the hold opens
-│    the sheet on the story
+│    up above it: the locket low above the bottom row, ‹ › either side when more than one
+│    is in reach, and the walk card gives its place to "slide to unlock" (src/SlideToUnlock.tsx)
+│    under a paper wash. Only a stop of the walk in progress gets it. Tapping a pin in reach
+│    points it at that pin; the slide, or the hold, opens the sheet on the story
 ├─ "Center on me"             the bottom row's right end, always there (F10). `location.fill`
 │                              while the map is on you, `location` when not: on a walk once a
 │                              one-finger drag lets go of you, before one once the map is off you
@@ -193,7 +193,8 @@ with no network is never stopped at the gate.
 | `src/lockets.ts` | the six lockets: their pin images and the level each opens at |
 | `src/LocketUnlock.tsx` | the hold: the key, the lid, the dive, the haptics; one lid per locket |
 | `src/lockMotion.ts` | the worklet curves and pivots LocketUnlock moves by |
-| `src/UnlockHere.tsx` | the locket over the map, with the place it opens |
+| `src/UnlockHere.tsx` | the locket over the map, ‹ › when more than one is in reach |
+| `src/SlideToUnlock.tsx` | slide to unlock, the bottom row's middle while a memory is in reach |
 | `src/LevelPill.tsx` | the top of the map: your level and an XP bar, the number rolling (`@expo/ui`) |
 | `src/WalkCard.tsx` | a past walk drawn as its shape: the cards in Your walks, the finish card's and journal rows' small shape |
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
@@ -265,9 +266,8 @@ in both themes, for the unlock's Svg only.
 | Token | Hex | Meaning |
 |---|---|---|
 | `gold` | `#86661A` / `#D9B45E` | **a memory, and the way to it.** The next stop's tag, the preview's line (washed out: `solid().line`), the walk's bar, the primary button, a link, errors |
-| `goldSoft` | `#F1E4C2` / `#352A14` | the quiet button's fill |
-| `goldDeep` | `#5E470F` / `#A8822E` | the ledge under a gold button or chip. A mark, never text |
-| `goldSoftDeep` | `#DCC992` / `#241C0C` | the ledge under the quiet button |
+| `wash` | ink at 7% / 12% | the quiet button's and an off chip's fill |
+| `goldTint` | gold at 14% / 18% | a subscriber's thing offered to a free walker (the PLUS tile) |
 | `seal` | `#1F6B4F` / `#3FA57E` | **openable.** Emerald: the in-reach halo and tag, the reach circle. A fill, never text |
 | `sealInk` | `#F7F4EE` / `#0B1F17` | anything drawn on seal: a lit pin's tag, the pill's words |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
@@ -278,15 +278,11 @@ Gold and seal differ in hue and lightness: gold beside gold is no signal, so
 openable is the one thing on the map that is not gold.
 
 **Buttons are `button.solid`, `button.quiet` or `button.outline`** from
-`theme.ts`, with `buttonText` inside: 52pt capsules, gold with paper text,
-soft gold with ink text, or a rule outline. Each sits on a 4pt ledge of its
-own colour (`goldDeep`, `goldSoftDeep`, `rule`; 3pt on `small` and on a
-chip), and pressed it sinks onto it: `sunk()` in `theme.ts` thins the bottom
-border and adds the difference to the top margin, so nothing beside it moves.
-`dim()` does this for any style with a ledge; a Pressable whose style is on a
-child (Submit's `Chip`) calls `sunk` itself. Two circles take a 3pt lip as well:
-a story's ‹ › pager step (rule) and a recording's play disc (gold on
-`goldDeep`). A screen adds only where one sits
+`theme.ts`, with `buttonText` inside: flat 52pt capsules, gold with paper
+text, a thin ink `wash` with ink text, or a rule outline. No ledge
+(docs/09 part 13). Pressed, `dim()` applies `sunk` from `theme.ts`: a little
+smaller and fainter. A Pressable whose style is on a child (Submit's `Chip`,
+the play disc) spreads `sunk` itself. A screen adds only where one sits
 (margin, alignSelf), never its own padding or border. Post is the
 same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
 `hitSlop={4}`. An action inside a page is not a button but `label` text with
@@ -333,13 +329,15 @@ nothing else: 28, 17 and 13.
 
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.
 
-**Glass over the map, flat inside sheets.** The controls floating over the map
+**Glass over the map, flat inside sheets.** The cards over the map (the
+planner in every step, End walk, the finish card, a past walk, the unlock
+card) are `GlassCard`, tinted by `solid().frostCard` so prose holds its
+contrast; not the memory sheet's peek, whose parent animates opacity
+(docs/09 part 13, superseding "never glass on a card"). The controls floating over the map
 (Journal, Add, the walk card, the keys pill, you,
 Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
-or raised paper with `lift` where glass is unavailable. Never glass on a sheet
-or a card, never glass on glass. The one gold thing in the bottom row, Plan a
-walk or Turn on location, is not glass but `button.solid` with its lip
-(2026-10-03): a ledge under glass reads as a shadow glued on. The walk card is
+or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. The one gold thing in the bottom row, Plan a
+walk or Turn on location, is not glass but `button.solid`. The walk card is
 untinted: the next stop's pin is the gold on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
@@ -930,18 +928,26 @@ moment the product is *about*, so it gets the animation budget. It is the
 memory's own locket opening (docs/10, "Lockets"). Spec, so it does not get
 re-invented per screen:
 
-- **Press and hold, not tap.** 900ms. A tap is a click; a hold is a key
-  turning. It also makes an accidental unlock almost impossible, which matters
-  because unlocking is irreversible.
+- **Slide or hold, not tap.** Two ways drive one progress (docs/10, "Slide
+  to unlock"). Standing on a stop, the bottom row's middle is
+  `src/SlideToUnlock.tsx`, as iOS draws slide to power off: a glass track, a
+  white knob (`color.knob`) with a gold arrow, one shimmering "slide to
+  unlock", and nothing else. The knob scrubs the hold 1:1 (`LocketUnlock`'s
+  `ref`: `scrub`, `release`, `open`, and a `progress` App shares between the
+  two), so the key turns under your thumb and rewinds as you slide back; the
+  end (0.98) commits. Or press and hold the locket, 900ms, and the knob rides
+  along. A tap is a click; both of these
+  are a key turning, and make an accidental unlock almost impossible, which
+  matters because unlocking is irreversible.
 - **The locket takes the key.** Over the hold a gold key slides into the
   keyhole, grinds to 25° and gives to 90°, the locket turning toward you to
   take it and back. The ornament (the compass rose, the guilloché) swings and
   settles; the bail presses home. One derived value (`motion`) turns the hold
   and the opening into every moving number, so nothing drifts out of sync.
-- **A ring fills around it, and the fill is linear.** It is a promise about
-  when you may let go, and an eased progress bar is a progress bar that lies.
-  Everything that builds is layered over it. Releasing early springs it back,
-  visibly, so the person understands they let go rather than that it failed.
+- **The thumb is the progress, and the hold's fill is linear.** An eased
+  progress bar is a progress bar that lies. Releasing early, either way,
+  springs it back, visibly, so the person understands they let go rather
+  than that it failed.
 - **Haptics carry the feel.** `Light` on press-in, `Rigid` as the key seats
   and as it gives, `Soft` and `Rigid` as the lid unlatches, `Medium` at the
   commit, and `notificationAsync(Success)` when the lid opens. `Success` is
@@ -983,15 +989,17 @@ re-invented per screen:
   (`collapsable={false}`) and they paint in written order. Reduce Motion
   drops the tilt, sway, sparkles, shine and zoom and cross-fades instead.
 - **It lives on the map, low, and says where.** `src/UnlockHere.tsx` puts a
-  180pt locket just above the bottom row, where a thumb reaches, and under it
-  the place and its year or source, so the hold says what it opens. More than
-  one in reach adds ‹ › and "2 of 3" beside the words, never beside the
-  locket, so a thumb aiming for an arrow cannot start the hold. Each memory
-  gets a fresh locket (`key`), so ‹ › never carries a half-turned key over. No
-  caption, cost or error: a stop of the walk costs nothing. It needs no ×
+  180pt locket just above the bottom row, where a thumb reaches; the slide is
+  the row itself, standing in for the walk card (and its ✕) until you step
+  off. More than one in reach adds ‹ › either side of the locket, 24pt clear,
+  so a finger aiming for an arrow cannot start the hold. Each memory gets a
+  fresh locket and slide (`key`), so ‹ › never carries a half-turned key over.
+  The rest steps back under a paper wash (`Wash` in App.tsx: 0.5, 600 ms,
+  no touches taken), and the locket and the slide sit over it.
+  No cost or error: a stop of the walk costs nothing. It needs no ×
   because walking away takes it away (rule 12). The parent must not clip it:
   the dive scales it past its bounds.
-- **A refusal springs back.** The key backs out, the ring empties, and
+- **A refusal springs back.** The key backs out, the thumb slides home, and
   `notificationAsync(Warning)` fires; a screen reader is told the reason,
   since nothing draws it.
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the

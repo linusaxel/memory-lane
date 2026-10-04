@@ -48,7 +48,7 @@ uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.
 | `APPLE_CLIENT_IDS` | For sign-in | Same, for Apple |
 | `CONTACT_EMAIL` | Before launch | The address the privacy policy's Contact section gives, and so the app's Contact row. Unset, it says one is coming |
 | `UNLIMITED_WALKS` | No | `1` lifts the one walk a day. Ignored on the public host. `docker-compose.yml` turns it on for the local API |
-| `DEV_SUBSCRIBED` | No | `1` makes every device a subscriber: See the stops, themes and years. Ignored on the public host. `docker-compose.yml` turns it on for the local API; `DEV_SUBSCRIBED=0 docker compose up -d api` shows the free planner |
+| `DEV_SUBSCRIBED` | No | `1` makes every device a subscriber: themes and years, more walks a day. Ignored on the public host. `docker-compose.yml` turns it on for the local API; `DEV_SUBSCRIBED=0 docker compose up -d api` shows the free planner |
 | `REVENUECAT_WEBHOOK_SECRET` | For subscriptions and keys | What RevenueCat's webhook sends as `Authorization: Bearer …`. Empty = `/v1/billing/revenuecat` answers 503 |
 | `REVENUECAT_API_KEY` | For subscriptions and keys | RevenueCat's secret server key (not the app's public one), to read a subscriber back. Empty = `/v1/billing/revenuecat` and `/v1/me/subscription` answer 503 |
 

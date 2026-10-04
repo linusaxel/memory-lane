@@ -40,7 +40,7 @@ appId: ${APP_ID}
     visible: "4 memories · .* loop"
     timeout: 40000
 # Paid: step two, the stops, opens.
-- tapOn: "See the stops"
+- tapOn: "Next"
 - assertVisible:
     id: "walk-stops"
 - assertVisible: "Stop 1, .*"

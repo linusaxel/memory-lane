@@ -122,6 +122,45 @@ opens one as a page sheet.
 **Options considered:** a short teaser card you tap to expand. That puts a
 step between the hold and the story, at the payoff.
 
+### Slide to unlock
+
+Status: Accepted 2026-10-04. Supersedes the words under the locket in *The
+lock says where*, and amends *The lock alone* (a caption is back, as the
+slide's label, and the map is dimmed after all).
+
+The founder: the place-and-year card under the locket looked like a button
+and did nothing, and nothing said the locket had to be held. So the card is
+gone, and standing on a stop the bottom row's middle, where the walk card
+was, is a slide to unlock (`mobile/src/SlideToUnlock.tsx`), drawn as iOS
+draws slide to power off: a white knob with an arrow, and one shimmering
+"slide to unlock". No locket on the knob and no place line (the founder:
+as native as it can be); the place is engraved in the locket and said to
+VoiceOver. The knob scrubs the locket's own hold, so the key turns and
+rewinds under it; the end commits, through the same checking beat. The hold
+on the locket stays, and moves the knob.
+
+The walk card, and its ✕, give way while you stand there and come back as
+you step off (the founder chose this over a ✕ beside the slide). ‹ › for
+more than one in reach flank the locket, 24pt clear of it.
+
+And the rest steps back: a paper wash (`Wash` in App.tsx, 0.5, 600 ms in and
+out) over the map and the chrome, the locket and the slide over it. It takes
+no touches, so nothing under it is a dead end, and it is a wash rather than
+opacity because opacity on glass stops it rendering. The founder asked for
+it; the old objection, that dimming hides where you stand, is answered by
+keeping it thin enough that the street and your dot read.
+
+Why, from the research (docs/09 part 14): a hidden press-and-hold should not
+be the only way in (HIG, NN/g); a visible track and thumb are what made
+slide-to-unlock self-evident (Apple's patent); a gesture that tracks the
+finger 1:1 and reverses feels direct (WWDC18 803); and WCAG 2.5.7 needs a
+way without dragging, which the hold and VoiceOver's activate are.
+
+**Options considered:** the hold made obvious, with a ring outline, "Hold to
+open" and an idle pulse (smallest change, but brings back the ring and
+caption the founder removed); dragging the locket's lid itself (most direct,
+hardest to signal, and it fights the map's pan).
+
 ### The lock says where
 
 Status: Accepted 2026-10-01. Supersedes *The lock alone* on its words and its
@@ -168,6 +207,7 @@ progress line is not shown while you stand on it.
 
 **Options considered:** three taps to crack it open (Clash Royale, Brawl Stars):
 easier to discover, but unlocking is irreversible and the hold stays. Dimming
+(superseded 2026-10-04 by a thin wash, *Slide to unlock*)
 the map behind it: more drama, but it hides where you are standing.
 
 ### Unlock on the map
@@ -315,6 +355,8 @@ One card held the stop list, the slider, the shape and Start, about 600pt,
 and the fit left it a fixed 300, so the walk it planned drew behind it. Now
 step one is the length and the shape with the walk drawn live above it, and
 **See the stops** is step two: ‹ › between walks, the list and Start walk.
+(2026-10-04: the button is **Next**, for every walker; *Subscribers shape the
+walk*.)
 (Amended 2026-10-03, the founder: ‹ › moved to step one, flanking the walk's
 line, so you page between walks while you can still see the whole walk.
 Step two is only the stops and Start walk.)
@@ -331,18 +373,22 @@ from, and the pins clustered).
 
 ### Subscribers shape the walk
 
-Status: Accepted 2026-10-03. Amends *A walk planner, nothing else* (a
-subscription buys more than walks), *The planner is two steps* (step two is
-a subscriber's) and supersedes the theme half of *Tags come from the text,
+Status: Accepted 2026-10-03; the stops half superseded 2026-10-04. Amends
+*A walk planner, nothing else* (a subscription buys more than walks), *The
+planner is two steps* (step two is a subscriber's, until 2026-10-04) and supersedes the theme half of *Tags come from the text,
 and a walk has no theme*.
 
 The founder: customising the walk planner is a subscriber feature. Three
 things, all of them on the planner card:
 
-- **See the stops.** Step two, the list of what each stop is of, is a
+- ~~**See the stops.** Step two, the list of what each stop is of, is a
   subscriber's. A free walker's step one has **Start walk**, and a padlocked
-  See the stops that opens the paywall. Only the app gates it: the same peek
-  shows on the walk, so there is nothing for the server to keep back.
+  See the stops that opens the paywall.~~ **Superseded 2026-10-04** (the
+  founder): everyone sees the stops. Step one's primary is **Next** for
+  every walker, and Start walk lives on step two. A free walk was about 50
+  minutes committed blind, and what the list shows is safe by *A locked
+  memory says what it is*. Themes and years stay a subscriber's, offered to
+  a free walker as a gold tile with a lock and a **PLUS** badge.
 - **Themes lean the walk.** Picked from the extractor's closed vocabulary
   (`pipeline/tags.py` `TAGS`, mirrored as `THEMES` in `mobile/src/Plan.tsx`),
   sent as `tags` on preview and accept. A memory carrying one is

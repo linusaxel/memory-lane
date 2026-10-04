@@ -190,7 +190,7 @@ the planner*).
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
    slider only on release. × closes it back to the map, from either step.
    Journal is top left and your level top centre. "4 memories · 3.8 km loop"
-   sits between ‹ › (another walk, F32). For a subscriber, **See the stops**
+   sits between ‹ › (another walk, F32). **Next**, for every walker,
    is step two: ‹ Back,
    then **the list**: each stop numbered in walk order, its place, and year · source ·
    two #tags, with a padlock; four rows in view, the rest a scroll away. All
@@ -294,12 +294,15 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    there — and nothing else.
 2. The unlock radius is drawn around you, so "how much closer" is a distance you
    can see rather than a number to interpret. Walking inside it turns that pin
-   into a seal-coloured ring, and a big lock comes up low on the map, above
-   the walk card and Add, with the place and its year or source under it. No
-   sheet opens first. With two in reach it is the route stop's first, and ‹ ›
-   beside the place (or tapping the other pin) points it at another.
-3. The unlock is a deliberate physical act, not a tap: press and hold ~900ms
-   while a ring fills, light haptic going in and a heavier one on completion.
+   into a seal-coloured ring, a big locket comes up low on the map, the walk
+   card gives its place to "slide to unlock", and the rest steps back under
+   a thin paper wash. No sheet opens first. With two in reach it is the
+   route stop's first, and ‹ › beside the locket (or tapping the other pin)
+   points it at another.
+3. The unlock is a deliberate physical act, not a tap: "slide to unlock" in
+   the bottom row, the key turning under your thumb as the knob moves, or
+   press and hold the locket ~900ms; light haptic going in and a heavier one
+   on completion.
    It should feel like a lock turning.
 4. The sheet opens on the memory, and it reveals: summary, source, the watch
    link — animated once, because that arrival is the only payoff the product
@@ -1116,7 +1119,7 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 ## F35 · Subscribe for more walks — **Implemented** (no store yet: TODO.md, *Set up the stores and RevenueCat*)
 
 **Who:** a free account. **Trigger:** **More walks** on the
-planner once today's walk is walked (F1), the padlocked **See the stops** or
+planner once today's walk is walked (F1), the PLUS-badged
 **Themes and years** on the planner (F1), **Another walk today ›** under
 **Done** on the finish card (signed in, not subscribed; never a pop-up), or
 **Subscribe** in Settings.

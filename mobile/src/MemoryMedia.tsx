@@ -44,7 +44,7 @@ function Recording({ item }: { item: MediaItem }) {
     >
       {({ pressed }) => (
         <>
-          <View style={[styles.glyph, pressed && sunk(styles.glyph)]}>
+          <View style={[styles.glyph, pressed && sunk]}>
             {status.playing ? (
               <View style={styles.pause}>
                 <View style={styles.bar} />
@@ -140,8 +140,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderBottomWidth: 3,
-    borderBottomColor: color.goldDeep,
     backgroundColor: color.gold,
     alignItems: 'center',
     justifyContent: 'center',
