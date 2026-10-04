@@ -1459,6 +1459,55 @@ export default function App() {
     </GlassButton>
   );
 
+  // What opens over the journal. iOS presents a modal over another only when
+  // it is rendered inside it, so these move into the journal while it is open.
+  const sheets = (
+    <>
+      <EditProfile
+        visible={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        device={device}
+        profile={profile}
+        onProfile={accountChanged}
+        displayName={displayName}
+        onDisplayName={rename}
+        nameError={nameError}
+      />
+      <MemorySheet
+        // Only your own, and only while it is open: the locked composition
+        // has nowhere to put this.
+        onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}
+        // Anything but your own; block only what a person filed.
+        onReport={!mine ? report : undefined}
+        reported={reported.has(openMemories[openIndex]?.id ?? -1)}
+        onBlock={openMemories[openIndex]?.author && !mine ? block : undefined}
+        memories={openMemories}
+        index={openIndex}
+        onIndex={setOpenIndex}
+        onClose={() => setOpenAt([])}
+        position={position}
+        revealId={revealId}
+        compact={!journalOpen}
+        onHeart={heart}
+        hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
+      />
+      <Submit
+        visible={submitOpen}
+        position={position}
+        device={device}
+        editing={editingMemory}
+        onClose={() => {
+          setSubmitOpen(false);
+          setEditingMemory(null);
+        }}
+        onPosted={posted}
+        onSaved={saved}
+        onDeleted={deleted}
+        author={{ name: displayName.trim() || 'Anonymous', avatar_url: profile?.avatar_url }}
+      />
+    </>
+  );
+
   return (
     <SafeAreaProvider>
       <View style={styles.container}>
@@ -1984,7 +2033,10 @@ export default function App() {
             onClose={() => setJournalOpen(false)}
             position={position}
           />
+          {journalOpen && sheets}
         </Modal>
+
+        {!journalOpen && sheets}
 
         <Board visible={boardOpen} onClose={() => setBoardOpen(false)} device={device} />
 
@@ -2011,36 +2063,6 @@ export default function App() {
           onNotifyNearby={handleNotifyNearby}
         />
 
-        <EditProfile
-          visible={profileOpen}
-          onClose={() => setProfileOpen(false)}
-          device={device}
-          profile={profile}
-          onProfile={accountChanged}
-          displayName={displayName}
-          onDisplayName={rename}
-          nameError={nameError}
-        />
-
-        <MemorySheet
-          // Only your own, and only while it is open: the locked composition
-          // has nowhere to put this.
-          onEdit={mine && openMemories[openIndex]?.locked === false ? openEditor : undefined}
-          // Anything but your own; block only what a person filed.
-          onReport={!mine ? report : undefined}
-          reported={reported.has(openMemories[openIndex]?.id ?? -1)}
-          onBlock={openMemories[openIndex]?.author && !mine ? block : undefined}
-          memories={openMemories}
-          index={openIndex}
-          onIndex={setOpenIndex}
-          onClose={() => setOpenAt([])}
-          position={position}
-          revealId={revealId}
-          compact={!journalOpen}
-          onHeart={heart}
-          hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
-        />
-
         <HowItWorks
           visible={howOpen}
           onClose={() => setHowOpen(false)}
@@ -2059,21 +2081,6 @@ export default function App() {
           device={device}
           profile={profile}
           onProfile={setProfile}
-        />
-
-        <Submit
-          visible={submitOpen}
-          position={position}
-          device={device}
-          editing={editingMemory}
-          onClose={() => {
-            setSubmitOpen(false);
-            setEditingMemory(null);
-          }}
-          onPosted={posted}
-          onSaved={saved}
-          onDeleted={deleted}
-          author={{ name: displayName.trim() || 'Anonymous', avatar_url: profile?.avatar_url }}
         />
       </View>
     </SafeAreaProvider>
