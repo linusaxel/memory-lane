@@ -23,7 +23,9 @@ uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.
 | `DATABASE_URL` | On Railway | PostgreSQL connection string (default: local Docker; on Railway there is none, and the API refuses to start) |
 | `REDIS_URL` | No | Queue backend (default: local Docker) |
 | `ANTHROPIC_API_KEY` | Yes | Claude API key |
-| `EXTRACTION_MODEL` | No | Claude model (default: claude-sonnet-5) |
+| `EXTRACTION_MODEL` | No | Claude model (default: claude-sonnet-5-5) |
+| `EXTRACTION_EFFORT` | No | Effort for Opus 5.5, which can't turn thinking off (default: low) |
+| `ANTHROPIC_ADMIN_KEY` | No | Admin key, read only by `python -m pipeline.cost` for the bill |
 | `CLASSIFIER_MODEL` | No | Haiku pre-filter (default: claude-haiku-4-5) |
 | `ENRICH_MAX_SEARCHES` | No | Web searches, and page reads, per new memory's enrichment (default: 5; about a cent a search) |
 | `CHUNK_MINUTES` | No | Transcript chunk size (default: 4) |

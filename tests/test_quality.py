@@ -158,19 +158,31 @@ def test_the_brief_reaches_every_chunk():
 
 def _verdict(**yes):
     base = dict.fromkeys(
-        ("only_here", "breach", "consequence", "visible_now", "so_what", "stands_alone"), False
+        (
+            "only_here",
+            "breach",
+            "consequence",
+            "visible_now",
+            "so_what",
+            "stands_alone",
+            "glad_to_know",
+        ),
+        False,
     )
     return {**base, **yes}
 
 
 def test_the_tellability_bar():
     """The model answers yes/no; code holds the bar. The place must be the point,
-    a stranger must follow it, and two of the other four must hold - an origin
-    story like Nørrebroparken has consequence and a point, but breaks no script."""
+    a stranger must follow it and be glad to know it, and two of the other four
+    must hold - an origin story like Nørrebroparken has consequence and a point,
+    but breaks no script."""
     from pipeline.extract import tellable
 
-    must = {"only_here": True, "stands_alone": True}
+    must = {"only_here": True, "stands_alone": True, "glad_to_know": True}
     assert tellable(_verdict(**must, consequence=True, so_what=True))
+    # 7220: true, on its spot, and a bare name and date nobody is glad to know.
+    assert not tellable(_verdict(only_here=True, stands_alone=True, breach=True, visible_now=True))
     assert not tellable(_verdict(**must, breach=True))
     assert not tellable(
         _verdict(stands_alone=True, breach=True, consequence=True, visible_now=True, so_what=True)

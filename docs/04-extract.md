@@ -79,8 +79,11 @@ Memories for the same place within 60 seconds are merged:
 
 ## What it costs
 
-Measured from the console balance, since the logs carry no output tokens
-(TODO.md, Friction). Sonnet 5 extracts; Haiku screening is cents.
+`python -m pipeline.cost --since <day>` divides Anthropic's bill for those
+days (Admin Cost Report API, needs `ANTHROPIC_ADMIN_KEY`) by the memories made
+in them. Web search, page reads and thinking are all included. The target is
+at most $0.50 a memory. The table below predates it: measured from the console
+balance, when Sonnet 5 extracted and nothing was fact-checked or enriched.
 
 | Run | Episodes | Video | Memories | Cost | $/memory | $/episode |
 |---|---|---|---|---|---|---|

@@ -24,12 +24,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **A cut reply is stored, and a rerun reads it back.** 2026-10-04: longer
-  summaries overran the extractor's `max_tokens`, the reply was no JSON, and
-  `_stored_request` cached it; the key leaves out `max_tokens`, so raising it
-  read the same cut reply back. It cost a comparison round to see Nygade
-  Bio's four cinemas were lost, not judged out. Fix: in `_request`, return
-  None (and log) when `stop_reason == "max_tokens"`, so nothing cut is stored.
+- **A model bake-off scores each model with itself.** 2026-10-04: `quality
+  --compare --score` under `EXTRACTION_MODEL=X` runs the walk rubric and the
+  unsupported-claim check on X too, so "no added fact 4/12" for Opus against
+  "22/33" for Sonnet compares two graders, not two writers. It nearly decided
+  the model. Fix: score with a fixed grader model, whatever extracts.
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"

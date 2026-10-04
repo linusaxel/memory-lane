@@ -24,6 +24,7 @@ class _Usage:
 
 class _Response:
     model = "fake"
+    stop_reason = "end_turn"
     usage = _Usage()
 
     def __init__(self, text):

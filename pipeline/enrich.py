@@ -54,6 +54,15 @@ exactly from that page (at most 30 words) that shows it:
 Only what the pages say. Leave out anything you can't copy a passage for; an
 empty section is fine. Don't retell the story."""
 
+SEED_PROMPT = """The text is a short record found at a place: a plaque's
+inscription, a line in an archive. Research the story behind it: what happened
+here, who the people were, why it mattered then, and the human detail or the
+surprise a stranger standing here would want to know. Search the web, read the
+pages you find, and report each finding with the page's URL and a passage
+copied exactly from that page (at most 80 words) that shows it. Only what the
+pages say; leave out anything you can't copy a passage for. If there is no
+story behind the record, say so."""
+
 STRUCTURE_PROMPT = """The text is research notes about a story told at a place. Put
 them in the fields, copying each URL and passage exactly as the notes give
 them. Leave out anything the notes give without a URL and a passage. Write
@@ -179,14 +188,17 @@ def verified(found: dict, fetch=page_text) -> dict:
     return kept
 
 
-def research(client, place: str, summary: str) -> str | None:
+def research(client, place: str, summary: str, prompt: str = RESEARCH_PROMPT) -> str | None:
     """The model's notes from the web, or None for no answer."""
     try:
         response = client.messages.create(
             model=EXTRACTION_MODEL,
             max_tokens=16000,
-            system=RESEARCH_PROMPT,
+            system=prompt,
             messages=[{"role": "user", "content": f"Place: {place}\n\nStory: {summary}"}],
+            # Searching and copying passages needs little thought, and thinking
+            # at the default effort was the bulk of this call's output.
+            output_config={"effort": "low"},
             tools=[
                 {
                     "type": "web_search_20260318",
@@ -325,6 +337,23 @@ def enrich(
         except Exception:
             logger.exception("Commons pictures failed for %s", place)
     return found | {"pictures": pictures, "at": datetime.now(UTC).isoformat(timespec="seconds")}
+
+
+def seed(client, place: str, record: str) -> str:
+    """What cited pages say about a thin record, one passage a line with its
+    URL, to extract from beside it; empty when nothing checks out
+    (docs/10, *A thin source is a lead*)."""
+    notes = research(client, place, record, SEED_PROMPT)
+    raw = notes and _request(client, STRUCTURE_PROMPT, notes, STRUCTURE_SCHEMA, max_tokens=8000)
+    try:
+        found = verified(json.loads(raw)) if raw else {}
+    except (
+        ValueError,
+        KeyError,
+    ):
+        found = {}
+    lines = (f'From {i["url"]}: "{i["passage"]}"' for items in found.values() for i in items)
+    return "\n".join(dict.fromkeys(lines))
 
 
 UNENRICHED = """

@@ -21,7 +21,12 @@ PUBLIC_HOST = bool(os.getenv("RAILWAY_ENVIRONMENT_NAME"))
 ENABLE_EMBED = os.getenv("ENABLE_EMBED", "0" if PUBLIC_HOST else "1") != "0"
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-5")
+# Reads the organisation's bill for pipeline/cost.py; nothing else uses it.
+ANTHROPIC_ADMIN_KEY = os.getenv("ANTHROPIC_ADMIN_KEY") or None
+EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-5-5")
+# Opus 5.5 cannot turn thinking off, only down: this is how far, on every call
+# that would otherwise run without it. Other models ignore it.
+EXTRACTION_EFFORT = os.getenv("EXTRACTION_EFFORT", "low")
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-4-5")
 # Web searches, and as many page reads, per new memory's enrichment
 # (pipeline/enrich.py). A search bills about a cent.

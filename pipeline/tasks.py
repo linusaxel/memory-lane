@@ -15,12 +15,13 @@ from pipeline.config import (
 )
 from pipeline.db import get_session
 from pipeline.dedup import hide_repeats
-from pipeline.enrich import enrich_memories
+from pipeline.enrich import enrich_memories, seed
 from pipeline.extract import (
     PENDING_EXTRACTION,
     BillingError,
     ModelUnusableError,
     TransientAPIError,
+    check_all,
     chunk_transcript,
     extract_chunk_stored,
     filter_low_confidence,
@@ -203,6 +204,15 @@ def _source_and_title(content_id: int) -> tuple[str | None, str | None]:
     return (row.source_name, row.title) if row else (None, None)
 
 
+# Under this, a record names a spot but rarely tells what happened there.
+THIN_CHARS = 600
+
+
+def _thin(source_type: str | None, segments: list) -> bool:
+    """A plaque, or a record too short to carry a story on its own."""
+    return source_type == "plaque" or sum(len(s.get("text", "")) for s in segments) < THIN_CHARS
+
+
 def task_enqueue_chunks(content_id: int):
     """
     Task: Fetch transcript and enqueue each chunk for classification.
@@ -233,9 +243,20 @@ def task_enqueue_chunks(content_id: int):
         segments = segments_json if isinstance(segments_json, list) else json.loads(segments_json)
         # Archival records are short and self-contained; a video needs its frame.
         brief = ""
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         if (source_type or "video") == "video":
-            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
             brief = video_brief(session, client, content_id, segments, source_name, title)
+        elif segments and _thin(source_type, segments):
+            found = seed(client, title, "\n".join(s.get("text", "") for s in segments))
+            if not found:
+                session.execute(
+                    text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),
+                    {"id": content_id},
+                )
+                session.commit()
+                logger.info(f"[content:{content_id}] A thin record with no story found behind it")
+                return {"skipped": "no_story"}
+            segments = [*segments, {"text": found, "start": segments[-1].get("start", 0)}]
 
     chunks = chunk_transcript(segments, CHUNK_MINUTES, CHUNK_OVERLAP_SECONDS)
     total_chunks = len(chunks)
@@ -410,6 +431,8 @@ def task_aggregate_memories(content_id: int):
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         filtered = worth_telling(session, client, content_id, candidates)
         filtered = one_name_per_venue(session, client, content_id, filtered)
+        context = source_context(*_source_and_title(content_id), _brief(redis, content_id))
+        filtered = check_all(session, client, content_id, context, filtered)
         logger.info(
             f"[content:{content_id}] After merge: {len(merged)}, after filter: "
             f"{len(candidates)}, worth telling: {len(filtered)}"

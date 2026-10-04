@@ -9,7 +9,15 @@ from pipeline.extract import UNSUPPORTED_PROMPT, _sha256
 from pipeline.quality import read_whole, replay_labels, score_labels, score_whole, visible
 from tests.fakes import FakeAnthropic
 
-QUESTIONS = ("only_here", "breach", "consequence", "visible_now", "so_what", "stands_alone")
+QUESTIONS = (
+    "only_here",
+    "breach",
+    "consequence",
+    "visible_now",
+    "so_what",
+    "stands_alone",
+    "glad_to_know",
+)
 
 
 def _memory(db_session, content_id, name, summary):

@@ -51,3 +51,25 @@ def test_an_empty_passage_or_a_non_web_url_proves_nothing():
         fetch=_fetch,
     )
     assert kept["then_now"] == []
+
+
+def test_a_thin_record_with_nothing_found_seeds_nothing(monkeypatch):
+    from pipeline import enrich
+
+    monkeypatch.setattr(enrich, "research", lambda *a, **k: None)
+    assert enrich.seed(None, "A plaque", "HER FALDT STYRMAND EJLER HAUBIRK") == ""
+
+
+def test_a_seed_is_the_passages_on_their_pages(monkeypatch):
+    import json
+
+    from pipeline import enrich
+
+    asides = [
+        {"text": "He decorated it.", "url": URL, "passage": "decorated the Alexandra"},
+        {"text": "He carved it.", "url": URL, "passage": "carved the Alexandra"},
+    ]
+    monkeypatch.setattr(enrich, "research", lambda *a, **k: "notes")
+    monkeypatch.setattr(enrich, "_request", lambda *a, **k: json.dumps(_found(asides=asides)))
+    monkeypatch.setattr(enrich, "verified", lambda found: verified(found, fetch=_fetch))
+    assert enrich.seed(None, "Alexandra", "a cinema") == f'From {URL}: "decorated the Alexandra"'

@@ -66,3 +66,17 @@ def test_a_failed_spot_test_is_not_paid_for():
     client = _Checker([])
     assert _check(None, client, {"spot_test": "fail", "summary": STORY})["summary"] == STORY
     assert client.calls == []
+
+
+def test_only_what_the_judge_kept_is_checked_and_the_chunk_is_let_go(monkeypatch):
+    from pipeline import extract
+
+    seen = []
+    monkeypatch.setattr(
+        extract, "checked", lambda s, c, cid, i, chunk, ctx, m: seen.append(chunk) or m
+    )
+    kept = extract.check_all(
+        None, None, 0, "", [{"summary": STORY, "chunk": "the chunk", "chunk_index": 3}]
+    )
+    assert seen == ["the chunk"]
+    assert kept == [{"summary": STORY, "chunk_index": 3}]

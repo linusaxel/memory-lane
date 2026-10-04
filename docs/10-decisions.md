@@ -2186,6 +2186,24 @@ keep or drop by hand.
 - Across three full runs, no labelled "drop" survived. Each run kept 4–5
   memories, down from 9–11.
 
+**Amended 2026-10-04: a seventh question, `glad_to_know`, and it is a gate.**
+Memory 7220 passed every question: "A mate named Ejler Haubirk fell on this
+spot on 20 October 1944." It is on its spot and it is true, but a stranger
+learns and feels nothing from it. Accuracy and place are the floor. The bar is
+whether someone standing there is glad they read it: a surprise, stakes, a
+human moment, something they can see. A bare record, scenery, a cheering crowd
+or a building existing is no. `tellable()` now requires `only_here`,
+`stands_alone` and `glad_to_know`, plus 2 of the other 4. Over the labelled
+corpus (`quality --labels`, Sonnet 5, both halves):
+
+| | walk kept | maybe kept | skip kept | precision | recall |
+|---|---|---|---|---|---|
+| before | 44 / 54 | 34 / 56 | 49 / 109 | 35% | 81% |
+| after | 39 / 54 | 25 / 56 | 30 / 109 | 41% | 72% |
+
+It costs 5 walks to drop 19 skips. 7220 is now an example in the prompt, so
+it is not added to the labels.
+
 ### One launch area
 
 Status: Accepted, 2026-09-30
@@ -3447,6 +3465,32 @@ people, quotes, then and now, asides, and pictures.
 
 **Options considered:** Wikipedia and Wikidata only (cheaper, thinner: no
 anecdotes, few quotes); the model's own knowledge (rejected: no ground).
+
+### A thin source is a lead
+
+Status: Accepted 2026-10-04
+
+A plaque names its spot and almost never says what happened there. Memory
+7220 was extracted from 154 characters: "HER FALDT UNDER DANMARKS FRIHEDSKAMP
+STYRMAND EJLER HAUBIRK 20•10•1944". The result was true, on its spot, and
+dull: "A mate named Ejler Haubirk fell on this spot on 20 October 1944."
+Nothing in the source could make it more.
+
+So a plaque, or any record under `THIN_CHARS` (600), is researched before
+it is extracted. `enrich.seed` runs the enrichment research with
+`SEED_PROMPT`: what happened, why it mattered, the human detail. Each
+passage it finds is kept only if it is on its page (`enrich.verified`). The
+kept passages are added to the record with their URLs. Extraction,
+`grounded()` and the fact-check then hold the story to the record plus the
+cited pages. If nothing checks out, the content is marked extracted with no
+memories. A lead with no story behind it is not a memory.
+
+- **Why not drop plaques.** About 100 leads in the launch area, each already
+  pinned. When the research finds the story, it is often the best kind:
+  someone died on this exact spot.
+- **Cost.** One research call per lead, with up to 5 searches at about a cent
+  each, plus the page reads. Leads that find nothing still count toward the
+  $0.50-a-memory budget (`python -m pipeline.cost`).
 
 ### Rejected approaches, do not retry
 

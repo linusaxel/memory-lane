@@ -258,3 +258,19 @@ def test_a_retried_video_only_pays_for_the_chunk_it_lost(db_session, monkeypatch
     assert "second" in rerun.messages.calls[0]["messages"][0]["content"]
     assert _states(db_session) == [(True, False)]
     assert db_session.execute(text("SELECT COUNT(*) FROM extraction_chunks")).scalar() == 2
+
+
+@pytest.mark.db
+def test_a_reply_cut_at_max_tokens_is_not_stored(db_session):
+    """Stored, it would be read back after max_tokens was raised, and the fix
+    would never take."""
+    client = FakeAnthropic([])
+
+    def create(**kwargs):
+        response = FakeAnthropic([]).messages.create(**kwargs)
+        response.stop_reason = "max_tokens"
+        return response
+
+    client.messages.create = create
+    assert extract._stored_request(db_session, client, 0, 0, "system", "user") is None
+    assert db_session.execute(text("SELECT count(*) FROM extraction_chunks")).scalar() == 0

@@ -83,3 +83,11 @@ def test_an_unusable_model_is_not_retried(monkeypatch):
     with pytest.raises(ModelUnusableError):
         tasks.task_classify_chunk(1, 0, 1, "a chunk")
     assert job.retries_left == 0
+
+
+def test_a_plaque_or_a_short_record_is_researched_first():
+    from pipeline.tasks import _thin
+
+    assert _thin("plaque", [{"text": "x" * 5000}])
+    assert _thin("archive", [{"text": "Her boede digteren."}])
+    assert not _thin("book", [{"text": "x" * 5000}])

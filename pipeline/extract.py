@@ -13,6 +13,7 @@ from pipeline.config import (
     ANTHROPIC_API_KEY,
     CHUNK_MINUTES,
     CHUNK_OVERLAP_SECONDS,
+    EXTRACTION_EFFORT,
     EXTRACTION_MODEL,
     LAUNCH_BBOX,
 )
@@ -590,6 +591,29 @@ def log_cache(response) -> None:
     )
 
 
+def _thinking(think: bool) -> dict:
+    """Thinking is billed output, eats max_tokens, and puts a block ahead of
+    the text, so a call runs without it unless it asks. Sonnet 5.5 turns it
+    off with between_tools, Sonnet 5 with disabled; Opus 5.5 can't, see _effort."""
+    if think or _lowered():
+        return {}
+    off = "disabled" if EXTRACTION_MODEL == "claude-sonnet-5" else "between_tools"
+    return {"thinking": {"type": off}}
+
+
+def _lowered() -> bool:
+    return EXTRACTION_MODEL.startswith("claude-opus-5-5")
+
+
+def _effort(think: bool) -> dict:
+    return {"effort": EXTRACTION_EFFORT} if _lowered() and not think else {}
+
+
+def _model_key() -> str:
+    """The model as a stored reply knows it: Opus at two efforts is two models."""
+    return f"{EXTRACTION_MODEL}@{EXTRACTION_EFFORT}" if _lowered() else EXTRACTION_MODEL
+
+
 def _request(
     client: anthropic.Anthropic,
     system_prompt: str,
@@ -627,12 +651,14 @@ def _request(
                 {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}
             ],
             messages=[{"role": "user", "content": content}],
-            # Sonnet 5 thinks by default: billed output, eats max_tokens, and
-            # puts a thinking block ahead of the text.
-            **({} if think else {"thinking": {"type": "disabled"}}),
-            output_config={"format": {"type": "json_schema", "schema": schema}},
+            **_thinking(think),
+            output_config={"format": {"type": "json_schema", "schema": schema}} | _effort(think),
         )
         log_cache(response)
+        if response.stop_reason == "max_tokens":
+            # A cut reply is no JSON, and stored it would be read back for ever.
+            logger.warning(f"Reply cut at max_tokens={max_tokens}; not used")
+            return None
         return next(b.text for b in response.content if b.type == "text")
 
     except anthropic.BadRequestError as e:
@@ -711,8 +737,11 @@ def extract_chunk_stored(
     )
     if raw is None:
         return []
-    memories = grounded(parse_memories(raw), chunk)
-    return [checked(session, client, content_id, chunk_index, chunk, context, m) for m in memories]
+    # The chunk rides along for check_all, which runs only on what the judge keeps.
+    return [
+        m | {"chunk": chunk, "chunk_index": chunk_index}
+        for m in grounded(parse_memories(raw), chunk)
+    ]
 
 
 UNSUPPORTED_PROMPT = """The text is a source passage, with what is known about its
@@ -723,7 +752,11 @@ the story adds, or gives differently. Only additions and contradictions:
 leaving something out is fine, and so are translation, tense, wording, order
 and a plain inference (a bar is in the city the passage is about). Each is a
 `fact` (something a reader would repeat as true) or `colour` (an image or a
-flourish). An empty list means the story is faithful."""
+flourish). Name each claim by the fewest words that carry it, never a span
+that also holds what the source does say: in "fell fighting for Denmark's
+freedom under the occupation", where the source has only the fight for
+freedom, the claim is "under the occupation". An empty list means the story
+is faithful."""
 
 UNSUPPORTED_SCHEMA = {
     "type": "object",
@@ -748,8 +781,9 @@ UNSUPPORTED_SCHEMA = {
 TRIM_PROMPT = """The text is a story told at a place, then claims in it that its source
 does not support. Remove exactly those claims and nothing else: keep every
 other sentence and detail word for word, in its order and paragraphs. Cut the
-claim, not the sentence, where the sentence still stands without it. Return
-the story itself, never a description of it."""
+claim, not the sentence, where the sentence still stands without it, and cut
+the fewest words that remove it. Return the story itself, never a description
+of it."""
 
 TRIM_SCHEMA = {
     "type": "object",
@@ -782,6 +816,18 @@ def unsupported(session, client, content_id, chunk_index, chunk, context, summar
         KeyError,
     ):
         return None
+
+
+def check_all(session, client, content_id, context, memories: list[dict]) -> list[dict]:
+    """Each kept memory checked against the chunk it came from, the chunk let go.
+    After the filters and the judge: a thinking call on a memory they drop is
+    money spent on nothing."""
+    kept = []
+    for m in memories:
+        if (chunk := m.pop("chunk", None)) is not None:
+            m = checked(session, client, content_id, m["chunk_index"], chunk, context, m)
+        kept.append(m)
+    return kept
 
 
 def checked(session, client, content_id, chunk_index, chunk, context, memory: dict) -> dict:
@@ -828,9 +874,7 @@ def _stored_request(
     key_schema = json.dumps(schema, sort_keys=True)
     # context + user is the message as it was before it was split in two, so
     # rows stored then still hit.
-    key = _sha256(
-        f"{content_id}\0{EXTRACTION_MODEL}\0{key_schema}\0{system_prompt}\0{context}{user}"
-    )
+    key = _sha256(f"{content_id}\0{_model_key()}\0{key_schema}\0{system_prompt}\0{context}{user}")
 
     raw = session.execute(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
@@ -851,7 +895,7 @@ def _stored_request(
                 "content_id": content_id,
                 "chunk_index": chunk_index,
                 "prompt_hash": _sha256(system_prompt),
-                "model": EXTRACTION_MODEL,
+                "model": _model_key(),
                 "response": raw,
             },
         )
@@ -928,6 +972,11 @@ For each candidate, write a one-line note first, then answer yes or no:
 - so_what: Can you say in one sentence why a stranger would care, without "it
   was fun", "it was wild" or "it's where they met"?
 - stands_alone: Would a stranger understand every name and event in it?
+- glad_to_know: Would a stranger standing here say "huh!" and want to tell
+  someone? That takes a surprise, stakes, a human moment, or something they
+  can see from here. A bare record - a name and a date, that someone died, was
+  born, lived or worked here - is no, however true; so is scenery, a crowd
+  cheering, or a building existing.
 
 <examples>
 <example>
@@ -936,21 +985,21 @@ ground when metro works broke through to the old Lygteå stream still running
 under the street. Cracks showed on its front until recently."
 note: a bar undermined by a buried stream - the street hides a river.
 only_here yes, breach yes, consequence yes, visible_now yes, so_what yes,
-stands_alone yes
+stands_alone yes, glad_to_know yes
 </example>
 <example>
 Under Hylden: "Under Hylden is named for the elder trees still in its front
 garden, and dates from when new buildings had to include a pub for locals."
 note: the name is on the trees you can see, and a forgotten law made the pub.
 only_here yes, breach yes, consequence yes, visible_now yes, so_what yes,
-stands_alone yes
+stands_alone yes, glad_to_know yes
 </example>
 <example>
 Maskot: "Maskot is where Trip Nørrebro always starts. A few drinks go down here
 before the group sets off."
 note: a routine starting point; any bar could be it.
 only_here no, breach no, consequence no, visible_now no, so_what no,
-stands_alone yes
+stands_alone yes, glad_to_know no
 </example>
 <example>
 Kongens Nytorv: "The king's statue in the middle of the square was cast in lead
@@ -958,28 +1007,36 @@ in 1688 for want of bronze. It sagged under its own weight, was propped up
 with iron for centuries, and was finally recast in bronze in 1946."
 note: the thing in front of you nearly collapsed - you look up at it.
 only_here yes, breach yes, consequence yes, visible_now yes, so_what yes,
-stands_alone yes
+stands_alone yes, glad_to_know yes
 </example>
 <example>
 Kastellet: "A captured officer was held in a cell here through one winter,
 given bread and water, and wrote letters to his wife that were never sent."
 note: a hard captivity, but any fortress's cell would tell it the same.
 only_here no, breach no, consequence no, visible_now no, so_what yes,
-stands_alone yes
+stands_alone yes, glad_to_know yes
 </example>
 <example>
 Saalbach: "Working as a ski guide, he met Maleren, who came for two weeks with
 friends. That led to an invitation to join Trip Nørrebro."
 note: backstory about how two people met; nothing happened at the place.
 only_here no, breach no, consequence no, visible_now no, so_what no,
-stands_alone yes
+stands_alone yes, glad_to_know no
 </example>
 <example>
 Mexibar: "One participant drank too much and was helped to throw up, then the
 group carried on drinking at Mexibar."
 note: a generic drunk mishap that could be any bar on any crawl.
 only_here no, breach no, consequence no, visible_now no, so_what no,
-stands_alone no
+stands_alone no, glad_to_know no
+</example>
+<example>
+Mindesmærke for Ejler Haubirk: "First mate Ejler Haubirk fell on this spot on
+20 October 1944, in Denmark's fight for freedom."
+note: a true death on this spot, but only a name and a date: nothing a
+stranger learns or feels.
+only_here yes, breach yes, consequence no, visible_now yes, so_what no,
+stands_alone yes, glad_to_know no
 </example>
 </examples>
 
@@ -1004,6 +1061,7 @@ JUDGE_SCHEMA = {
                             "visible_now",
                             "so_what",
                             "stands_alone",
+                            "glad_to_know",
                         )
                     },
                 },
@@ -1016,6 +1074,7 @@ JUDGE_SCHEMA = {
                     "visible_now",
                     "so_what",
                     "stands_alone",
+                    "glad_to_know",
                 ],
                 "additionalProperties": False,
             },
@@ -1033,7 +1092,8 @@ TELLABLE_MIN = 2
 def tellable(v: dict) -> bool:
     """The model answers the questions; the bar is here, in code."""
     rest = sum(bool(v.get(q)) for q in ("breach", "consequence", "visible_now", "so_what"))
-    return bool(v.get("only_here")) and bool(v.get("stands_alone")) and rest >= TELLABLE_MIN
+    gates = ("only_here", "stands_alone", "glad_to_know")
+    return all(v.get(q) for q in gates) and rest >= TELLABLE_MIN
 
 
 # The same story, judged twice, flipped: Under Hylden passed and then failed. A
@@ -1709,6 +1769,9 @@ def extract_all_pending():
 
                 merged = merge_nearby_memories(all_memories)
                 filtered = worth_telling(session, client, content_id, filter_low_confidence(merged))
+                filtered = check_all(
+                    session, client, content_id, source_context(source_name, title, brief), filtered
+                )
 
                 logger.info(
                     f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering"
