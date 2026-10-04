@@ -15,8 +15,6 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
     Wikipedia article (`pipeline/links.py`). Locked, `links` is empty
   - Open, it also carries `quote` and `quote_by` (a line copied from the source,
     or null), `happened_at` with `happened_precision`, and `contrast_note`
-  - `epic` is true on an open epic memory and always false locked, so a walk
-    can't tell which stop it is (docs/10, "Epic memories")
 - `POST /v1/memories/{id}/unlock` `{device, lat?, lng?}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
   Only a stop of the walk in progress opens, and only standing on it; away

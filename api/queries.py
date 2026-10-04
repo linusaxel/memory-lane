@@ -72,28 +72,6 @@ ANNIVERSARY = """(
             = to_char((now() AT TIME ZONE 'utc')::date, 'MM-DD')
     ) as anniversary"""
 
-# Epic: the rubric picks it, then hearts keep or drop it. Below
-# EPIC_MIN_OPENS opens only walk_score counts. From there, hearts per open
-# promote a memory the rubric missed and demote one it overrated
-# (docs/10-decisions.md#epic-memories-scored-by-rubric-kept-by-hearts-hidden-until-opened).
-# ponytail: the rates are guesses; tune them once real hearts-per-open exist.
-EPIC_SCORE = 11
-EPIC_MIN_OPENS = 20
-EPIC_PROMOTE = 0.3
-EPIC_DEMOTE = 0.1
-EPIC_EXPR = f"""(
-        WITH n AS (
-            SELECT (SELECT COUNT(*) FROM unlocks uo WHERE uo.memory_id = m.id) AS opens,
-                   (SELECT COUNT(*) FROM memory_hearts he WHERE he.memory_id = m.id) AS hearts
-        )
-        SELECT CASE
-            WHEN n.opens < {EPIC_MIN_OPENS} THEN COALESCE(m.walk_score >= {EPIC_SCORE}, FALSE)
-            ELSE n.hearts >= {EPIC_PROMOTE} * n.opens
-                OR (COALESCE(m.walk_score >= {EPIC_SCORE}, FALSE)
-                    AND n.hearts >= {EPIC_DEMOTE} * n.opens)
-        END FROM n
-    )"""
-
 # Every column a memory-shaped response needs. row_to_memory reads the row by
 # name, so a query is free to append distance, rank or unlocked_at.
 MEMORY_COLUMNS = f"""
@@ -133,8 +111,7 @@ MEMORY_COLUMNS = f"""
     {MEMORY_MEDIA},
     {MEMORY_HEART_COUNT},
     {MEMORY_NOTE_COUNT},
-    {COORDINATE_IS_UNIQUE},
-    {EPIC_EXPR} as epic"""
+    {COORDINATE_IS_UNIQUE}"""
 
 # Both LEFT: a submitted memory has no content, an extracted one has no author.
 # `au` and not `u` because DEVICE_UNLOCKS_QUERY owns `u` for the unlocks table.
@@ -575,7 +552,6 @@ SUBSCRIBED_QUERY = """
 #     route rather than re-discovering what its sibling already earned.
 #   - only walk-to-unlock memories - a centroid a route sent you to would open
 #     the moment you arrived, which is not a stop, it is scenery.
-#   - an epic one only once :epic_open (api.progression.EPIC_LEVEL).
 #   - a subscriber's year range, if any: no year is out of every range.
 # `preferred` is a subscriber's theme: it leans the walk, never filters it
 # (docs/10, "Subscribers shape the walk").
@@ -596,7 +572,6 @@ WHERE
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )
-    AND (:epic_open OR NOT {EPIC_EXPR})
     AND (CAST(:year_from AS integer) IS NULL OR EXTRACT(YEAR FROM m.happened_at) >= :year_from)
     AND (CAST(:year_to AS integer) IS NULL OR EXTRACT(YEAR FROM m.happened_at) <= :year_to)
 -- A stack's memories share one distance: the preferred, then the best scored

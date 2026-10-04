@@ -13,8 +13,7 @@ from itertools import pairwise
 import pytest
 from sqlalchemy import text
 
-from api import accounts, queries, read, route_solver, streets
-from api.accounts import touch_device
+from api import accounts, read, route_solver, streets
 from api.models import Coordinates
 
 pytestmark = pytest.mark.db
@@ -801,86 +800,6 @@ def test_a_walk_left_unfinished_earns_no_key(client, db_session):
     db_session.commit()
     _walk_one_stop(client)
     assert _xp(client) == 0
-
-
-def _level_four(db_session):
-    touch_device(db_session, DEVICE)
-    # Yesterday's walk of 41 stops and 4 km: 450 XP, level 4.
-    db_session.execute(
-        text(
-            "INSERT INTO daily_routes (device_id, route_date, memory_ids, completed_at) "
-            "VALUES (CAST(:d AS uuid), CURRENT_DATE - 1, CAST(:m AS integer[]), CURRENT_TIMESTAMP)"
-        ),
-        {"d": DEVICE, "m": list(range(1, 42))},
-    )
-    db_session.commit()
-
-
-def test_an_epic_memory_joins_a_walk_from_its_level(client, db_session):
-    """docs/10, "Epic memories: scored by rubric, kept by hearts, hidden until opened"."""
-    epic = _offset(db_session, 1)
-    _offset(db_session, 2)
-    db_session.execute(text("UPDATE memories SET walk_score = 12 WHERE id = :m"), {"m": epic})
-    db_session.commit()
-
-    def stops():
-        return [m["id"] for m in _preview(client).json()["memories"]]
-
-    assert epic not in stops()
-    _level_four(db_session)
-    assert client.get(f"/v1/me?device={DEVICE}").json()["level"] == 4
-    assert epic in stops()
-
-
-def test_an_epic_stop_says_so_only_once_open(client, db_session):
-    for n in (1, 2):
-        _offset(db_session, n)
-    db_session.commit()
-    epic = _route(client).json()["memories"][0]["id"]
-    db_session.execute(text("UPDATE memories SET walk_score = 12 WHERE id = :m"), {"m": epic})
-    db_session.commit()
-    stop = _route(client).json()["memories"][0]
-    assert stop["id"] == epic and stop["epic"] is False
-    opened = client.post(
-        f"/v1/memories/{epic}/unlock", json={"device": DEVICE, **stop["place"]["coordinates"]}
-    )
-    assert opened.json()["epic"] is True
-
-
-@pytest.mark.parametrize(
-    ("score", "opens", "hearts", "epic"),
-    [
-        (12, 0, 0, True),  # the rubric alone, before anyone has opened it
-        (9, 0, 0, False),
-        (None, 0, 0, False),
-        (9, 20, 6, True),  # hearts promote what the rubric missed
-        (12, 20, 1, False),  # and demote what it overrated
-        (12, 20, 2, True),
-    ],
-)
-def test_epic_is_the_rubric_then_hearts(db_session, score, opens, hearts, epic):
-    memory = _offset(db_session, 1)
-    db_session.execute(
-        text("UPDATE memories SET walk_score = :s WHERE id = :m"), {"s": score, "m": memory}
-    )
-    for n in range(opens):
-        device = f"00000000-0000-0000-0000-{n:012}"
-        touch_device(db_session, device)
-        db_session.execute(
-            text("INSERT INTO unlocks (device_id, memory_id) VALUES (CAST(:d AS uuid), :m)"),
-            {"d": device, "m": memory},
-        )
-        if n < hearts:
-            db_session.execute(
-                text(
-                    "INSERT INTO memory_hearts (device_id, memory_id) VALUES (CAST(:d AS uuid), :m)"
-                ),
-                {"d": device, "m": memory},
-            )
-    got = db_session.execute(
-        text(f"SELECT {queries.EPIC_EXPR} FROM memories m WHERE m.id = :m"), {"m": memory}
-    ).scalar()
-    assert got is epic
 
 
 def _shape(session, memory_id, tags, year):

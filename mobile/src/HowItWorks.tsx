@@ -86,8 +86,7 @@ export default function HowItWorks({
         </Section>
         <Section title="Finish it to level up">
           Reach every stop and the walk counts: ten XP a memory, ten a kilometre, one walk a day.
-          Every walk is kept above, drawn as its shape. From level 4, epic stories near you can join
-          your walks, and you only find out which when one opens.
+          Every walk is kept above, drawn as its shape.
         </Section>
         <Section title={profile?.subscribed ? 'Walk as much as you like' : 'One walk a day'}>
           {profile?.subscribed

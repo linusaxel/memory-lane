@@ -197,7 +197,6 @@ def main() -> None:
                 "limit": ROUTE_POOL,
                 "tag": None,
                 "include": None,
-                "epic_open": True,
                 "tags": ["history"],
                 "year_from": None,
                 "year_to": None,

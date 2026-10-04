@@ -837,7 +837,7 @@ made every memory a locket (docs/10, "Lockets"). The palette, in
   else. On a map of gold lockets, a gold "openable" would be no signal, so it
   is the one thing that is not gold. `sealInk` on it is paper.
 - **`purple`** (`#5B2A6E` / `#C59BD8`): what you earned. The level pill, the
-  streak's flame, an epic, your row on the board.
+  streak's flame, your row on the board.
 - Paper, ink and the type are unchanged. The app icon and splash still carry
   the ember tile (`solid().tile`); redrawing them is open.
 

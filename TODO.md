@@ -380,9 +380,7 @@ progress; refine what exists rather than add.
       that are gone. Next: only where OSM confirms the place still stands,
       given OSM and Wikidata's description of the building instead of the
       story. A new extracted field: measure before and after.
-- [ ] **A hidden stop.** (checked 2026-10-04) Epic memories hide only
-      *which* stop is rare (cf498be); see whether they carry the surprise
-      before building this. One stop shows as "?", is never drawn, and its
+- [ ] **A hidden stop.** (checked 2026-10-04) One stop shows as "?", is never drawn, and its
       place is withheld until you are within reach; it opens like any stop.
       `api/route_solver.py` picks it from memories not near any other stop.
       Evidence: Zygarde Cells on Pokémon GO's Routes, Adventure Lab's bonus

@@ -60,8 +60,7 @@ export const color = {
   /** Seal as text or a thin mark on paper. */
   sealDeep: dual('#16573F', '#7FD1AE'),
 
-  /** The rich purple detail: your level, your streak, an epic, your row on the
-   *  board. Things you earned, never a memory or an action. */
+  /** The rich purple detail: your level, your streak, your row on the board. Things you earned, never a memory or an action. */
   purple: dual('#5B2A6E', '#C59BD8'),
 
   /** Out of reach: a far thing, faded. Dark enough to hold against the

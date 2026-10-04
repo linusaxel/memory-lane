@@ -309,7 +309,7 @@ scores six criteria from 0 to 2 each:
 
 A total of 9 or more out of 12 is worth the walk, 7–8 is filler, and 6 or less is cut.
 `pipeline/walk_score.py` scores every extracted summary on it into
-`memories.walk_score`; 11 or 12 is epic (docs/10, "Epic memories").
+`memories.walk_score`, which picks a walk's stops (docs/10, "A walk picks its stops by the rubric").
 Whatever the total, site-lock must score at least 1, and trace and relates can't
 both be 0. Being on the spot adds imagery, not emotion or recall (Karapanos et al.,
 [IwC 2012](https://www.sciencedirect.com/science/article/abs/pii/S0953543812000367)),

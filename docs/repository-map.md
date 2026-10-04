@@ -55,7 +55,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/repin.py` | Places still on the model's guess (`llm`): the geocoder chain again, free; `--choose` lets the model pick one of the map's points, never a coordinate of its own |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Fixtures for an empty database**: e2e's, the tests', route_bench's. Refuses one holding real content |
-| `pipeline/walk_score.py` | Scores each extracted summary on the walk rubric (0-12) into `memories.walk_score`, which decides what is epic. Runs after aggregation; `--all` is the backfill. Bills a little |
+| `pipeline/walk_score.py` | Scores each extracted summary on the walk rubric (0-12) into `memories.walk_score`, which picks a walk's stops. Runs after aggregation; `--all` is the backfill. Bills a little |
 | `pipeline/links.py` | Links the names in a summary to Wikipedia via Wikidata, only on one exact match. Runs after aggregation; alone, it is the backfill. Bills a little |
 | `pipeline/now.py` | Asks OpenStreetMap what a building-level pin stands inside today, and writes the "now" side of its contrast from that. Runs after aggregation on that content's places; alone, it is the backfill. Free |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |

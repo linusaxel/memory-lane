@@ -219,8 +219,8 @@ CREATE TABLE memories (
     contrast_score REAL,
     contrast_note TEXT,
 
-    -- The walk rubric (docs/04-extract.md): six criteria, 0-2 each. 11 or 12
-    -- makes it epic until hearts say otherwise (api/progression.py).
+    -- The walk rubric (docs/04-extract.md): six criteria, 0-2 each. A walk's
+    -- stops are picked by it (api/route_solver.py, _prize).
     walk_score SMALLINT CHECK (walk_score BETWEEN 0 AND 12),
 
     -- The locket its pin and unlock are drawn as: chosen by its author, or
@@ -280,7 +280,7 @@ CREATE TABLE unlocks (
 );
 
 CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
--- Opens per memory, for the epic rule's hearts-per-open.
+-- Opens per memory, for the city board.
 CREATE INDEX idx_unlocks_memory ON unlocks(memory_id);
 
 -- Say this one mattered. Unlike an unlock, it can be taken back. A join table

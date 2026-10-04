@@ -130,8 +130,6 @@ class Memory(BaseModel):
     source_url: str | None = None
     contrast_score: float | None = None
     contrast_note: str | None = None
-    # False while locked, so a walk can't tell which stop is epic until it opens.
-    epic: bool = False
     # A line in the teller's own words. Null while locked, like the summary.
     quote: str | None = None
     quote_by: str | None = None

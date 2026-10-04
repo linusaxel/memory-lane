@@ -100,8 +100,7 @@ export default function Settings({
             </Text>
           </Row>
           <Text style={styles.note}>
-            A memory opens only on a walk, standing there. Finishing a walk earns XP, and from level
-            4 epic stories can join your walks. You find out which when it opens.
+            A memory opens only on a walk, standing there. Finishing a walk earns XP.
           </Text>
           <Text style={styles.note}>
             A few are only pinned to a city, not a spot. Those are open to everyone.

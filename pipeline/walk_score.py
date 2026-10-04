@@ -1,4 +1,4 @@
-"""Score a summary on the walk rubric, which decides what is epic.
+"""Score a summary on the walk rubric, which picks a walk's stops.
 
     python -m pipeline.walk_score               # how many are unscored, and nothing else
     python -m pipeline.walk_score --memory 42   # one, printed
@@ -110,7 +110,7 @@ def main():
         done = score_memories(session, client, memory_id=args.memory)
     for memory_id, score in done.items():
         print(f"{memory_id}\t{score}")
-    print(f"{len(done)} scored, {sum(s >= 11 for s in done.values())} epic by score")
+    print(f"{len(done)} scored")
 
 
 if __name__ == "__main__":

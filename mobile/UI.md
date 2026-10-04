@@ -270,7 +270,7 @@ in both themes, for the unlock's Svg only.
 | `sealInk` | `#F7F4EE` / `#0B1F17` | anything drawn on seal: a lit pin's tag, the pill's words |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
 | `sealDeep` | `#16573F` / `#7FD1AE` | seal as words or a thin mark on paper: "attachments waiting" |
-| `purple` | `#5B2A6E` / `#C59BD8` | **what you earned.** The level pill, the streak's flame, an epic's line, your row on the board |
+| `purple` | `#5B2A6E` / `#C59BD8` | **what you earned.** The level pill, the streak's flame, your row on the board |
 
 Gold and seal differ in hue and lightness: gold beside gold is no signal, so
 openable is the one thing on the map that is not gold.

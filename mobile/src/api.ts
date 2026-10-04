@@ -117,9 +117,6 @@ export type Memory = {
    *  while locked, like the summary. */
   quote?: string | null;
   quote_by?: string | null;
-  /** One of the best stories. False while locked, so a walk can't tell which
-   *  stop it is until it opens (docs/10, "Epic memories"). */
-  epic?: boolean;
   /** Set once enough people report it. Only ever true from /v1/me/memories -
    *  every other endpoint drops a hidden memory instead of flagging it. */
   hidden: boolean;

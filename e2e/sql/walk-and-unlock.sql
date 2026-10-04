@@ -21,13 +21,3 @@ CREATE FUNCTION yesterday() RETURNS trigger AS $$ BEGIN
   RETURN NEW;
 END $$ LANGUAGE plpgsql;
 CREATE TRIGGER yesterday AFTER INSERT ON devices FOR EACH ROW EXECUTE FUNCTION yesterday();
--- docs/10, "Epic memories": the first stop of today's walk turns epic once the
--- walk is stored, so the planner never chose it as one (that needs level 4),
--- and its sheet opens with the Epic line. The past walks above are not today's.
-CREATE FUNCTION epic_first() RETURNS trigger AS $$ BEGIN
-  IF NEW.route_date = (now() AT TIME ZONE 'utc')::date THEN
-    UPDATE memories SET walk_score = 12 WHERE id = NEW.memory_ids[1];
-  END IF;
-  RETURN NEW;
-END $$ LANGUAGE plpgsql;
-CREATE TRIGGER epic_first AFTER INSERT ON daily_routes FOR EACH ROW EXECUTE FUNCTION epic_first();

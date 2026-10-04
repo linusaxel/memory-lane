@@ -1,6 +1,6 @@
 """XP and level, counted from finished walks and never stored, like the
 streak. Nothing here is ever sold. docs/10, "Walks earn XP; rare memories wait
-for a level" and "Epic memories"."""
+for a level"."""
 
 from math import isqrt
 
@@ -13,9 +13,6 @@ XP_PER_STOP = 10
 METERS_PER_XP = 100
 # Level n+1 at 50·n² XP: a first walk is a level, then each takes longer.
 XP_STEP = 50
-# Epic stories (api.queries.EPIC_EXPR) join a walk only from this level. The
-# gate is unchanged; this only plans the walk.
-EPIC_LEVEL = 4
 # The lockets and their levels are the lockets table. docs/10, "Lockets".
 LOCKET_DEFAULT = "hunter-compass"
 

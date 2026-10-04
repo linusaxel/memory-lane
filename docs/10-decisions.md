@@ -390,7 +390,8 @@ earned by effort, "think of WoW, Naxx". Research notes and sources:
   never stored and location is foreground only (UI.md rule 2).
 - **The rare tier is earned, never bought.** **Superseded 2026-10-03** on its
   signal by *Epic memories: scored by rubric, kept by hearts, hidden until
-  opened*; the level gate stays. Memories with
+  opened*; the level gate stayed until that too was removed on 2026-10-04.
+  Memories with
   `contrast_score >= 0.9` (about a tenth) join a planned walk only from level
   4. Effort-gating like Naxx, but small: Blizzard's 40-man Naxx was seen by
   few and re-released for everyone, and a neighbourhood has few memories. The
@@ -408,8 +409,11 @@ preferred layer) wait for retention data.
 
 ### Epic memories: scored by rubric, kept by hearts, hidden until opened
 
-Status: Accepted 2026-10-03. Supersedes the rare tier's signal in *Walks earn
-XP; rare memories wait for a level*; its level-4 gate stays.
+Status: **Superseded 2026-10-04**: removed by the founder. No memory is epic,
+nothing waits for level 4, and the sheet has no Epic line. `walk_score`
+stays and still picks a walk's stops (*A walk picks its stops by the rubric*).
+Was: Accepted 2026-10-03. Superseded the rare tier's signal in *Walks earn
+XP; rare memories wait for a level*; its level-4 gate stayed.
 
 Variable reward magnitude: every memory is a reward, so some have to be
 bigger, and you can't know which until you are standing there. The rare

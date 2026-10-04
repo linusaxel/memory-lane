@@ -30,8 +30,6 @@ PARAMS = {
     "tag": None,
     # None means no "Walk here" pin.
     "query": "coffee",
-    # The route's epic tier, closed: its full predicate.
-    "epic_open": False,
     # A subscriber's year range, set: its full predicate.
     "year_from": 1900,
     "year_to": 1999,
