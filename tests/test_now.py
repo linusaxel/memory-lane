@@ -18,6 +18,44 @@ def _overpass(monkeypatch, *areas):
 REGION = {"name": "Region Hovedstaden", "admin_level": "4"}
 
 
+def _inception(*times):
+    """wbgetentities' shape for Børsen (Q1060870), one P571 claim per (time, precision)."""
+    claims = [{"mainsnak": {"datavalue": {"value": {"time": t, "precision": p}}}} for t, p in times]
+    return {"entities": {"Q1060870": {"claims": {"P571": claims}}}}
+
+
+BORSEN = {"name": "Børsen", "amenity": "stock_exchange", "wikidata": "Q1060870"}
+
+
+def _both(monkeypatch, area, wikidata):
+    overpass = {"elements": [{"tags": area}]}
+    monkeypatch.setattr(
+        geocode, "_get_json", lambda url: wikidata if "wikidata.org" in url else overpass
+    )
+
+
+def test_the_wikidata_tag_dates_what_stands_there(monkeypatch):
+    _both(
+        monkeypatch, BORSEN, _inception(("+1640-00-00T00:00:00Z", 9), ("+1619-00-00T00:00:00Z", 9))
+    )
+    found = now.now_at(55.6758, 12.5833, "Børsen")
+    assert found["since"] == 1619, "the earliest inception"
+    assert now.clause(found) == "Still Børsen, a stock exchange, since 1619."
+
+
+def test_a_century_is_no_year_and_no_tag_reads_as_before(monkeypatch):
+    _both(monkeypatch, BORSEN, _inception(("+1600-00-00T00:00:00Z", 7)))
+    assert now.clause(now.now_at(55.6758, 12.5833, "Børsen")) == "Still Børsen, a stock exchange."
+    _both(monkeypatch, {k: v for k, v in BORSEN.items() if k != "wikidata"}, None)
+    assert "since" not in now.now_at(55.6758, 12.5833, "Børsen")
+
+
+def test_a_silent_wikidata_is_retried_not_stored(monkeypatch):
+    _both(monkeypatch, BORSEN, None)
+    with pytest.raises(now.LookupFailed):
+        now.now_at(55.6758, 12.5833, "Børsen")
+
+
 def test_a_different_place_there_now_is_a_change(monkeypatch):
     """Frederikshospitalet's pin stands inside Designmuseum Danmark."""
     _overpass(monkeypatch, REGION, {"name": "Designmuseum Danmark", "tourism": "museum"})

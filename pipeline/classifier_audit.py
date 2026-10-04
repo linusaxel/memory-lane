@@ -2,11 +2,16 @@
 
     python -m pipeline.classifier_audit              # 20 rejected chunks
     python -m pipeline.classifier_audit --sample 50
+    python -m pipeline.classifier_audit --against old_prompt.txt
 
 Re-extracts a sample of the chunks the classifier rejected and counts the ones
 that still yield a memory the pipeline would keep. Bills the extractor once per
 sampled chunk (~$0.003 each): the sample is stable and every reply lands in
 extraction_chunks, so a rerun over the same sample is free.
+
+--against replays stored chunks, kept and rejected, through an old classifier
+prompt and the current one, and counts the flips per source. Nothing caches a
+classifier reply: every run bills two Haiku calls a chunk.
 """
 
 import argparse
@@ -18,6 +23,7 @@ from sqlalchemy import text
 from pipeline.config import ANTHROPIC_API_KEY
 from pipeline.db import get_session
 from pipeline.extract import extract_chunk_stored, filter_low_confidence, prompt_for, source_context
+from pipeline.tasks import FAIL_OPEN, classify_chunk
 
 
 def audit(session, client, sample: int) -> tuple[int, list]:
@@ -51,12 +57,47 @@ def audit(session, client, sample: int) -> tuple[int, list]:
     return len(rows), missed
 
 
+def flips(session, client, old_prompt: str, sample: int) -> dict[str, dict[str, int]]:
+    """{source: {"lost", "gained", "same"}}: lost is kept by the old prompt and
+    rejected by the current one. A fail-open answer on either side is no verdict,
+    so its chunk is left out. Stored verdicts are never rewritten."""
+    rows = session.execute(
+        text("""
+            SELECT v.chunk_text, COALESCE(c.source_name, '(no source)') AS source
+            FROM classifier_verdicts v
+            JOIN content c ON c.id = v.content_id
+            ORDER BY md5(v.content_id || '-' || v.chunk_index)
+            LIMIT :n
+        """),
+        {"n": sample},
+    ).fetchall()
+    counts = {}
+    for r in rows:
+        old, old_reason = classify_chunk(client, r.chunk_text, prompt=old_prompt)
+        new, new_reason = classify_chunk(client, r.chunk_text)
+        if old_reason.startswith(FAIL_OPEN) or new_reason.startswith(FAIL_OPEN):
+            continue
+        kind = "same" if old == new else "lost" if old else "gained"
+        counts.setdefault(r.source, {"lost": 0, "gained": 0, "same": 0})[kind] += 1
+    return counts
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", type=int, default=20)
+    parser.add_argument("--against", metavar="PROMPT_FILE", help="an old classifier prompt")
     args = parser.parse_args()
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    if args.against:
+        with get_session() as session:
+            counts = flips(session, client, open(args.against).read(), args.sample)
+        for source, c in sorted(counts.items()):
+            print(f"{source}: {c['lost']} lost, {c['gained']} gained, {c['same']} unchanged")
+        lost = sum(c["lost"] for c in counts.values())
+        gained = sum(c["gained"] for c in counts.values())
+        print(f"total: {lost} kept by the old prompt and rejected now, {gained} the other way")
+        return
     with get_session() as session:
         total, missed = audit(session, client, args.sample)
 

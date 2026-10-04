@@ -1253,6 +1253,20 @@ def _told_already(session, client, content_id: int, mem: dict, lat: float, lng: 
     return True
 
 
+def place_of(mem: dict) -> tuple[float, float, int, str] | None:
+    """What the geocoders make of a memory's place, or None: it stays the model's guess."""
+    lat, lng = mem.get("lat"), mem.get("lng")
+    happened = _happened_at(mem)
+    return geocode.place(
+        (mem.get("address") or "").strip() or None,
+        geocode.unbracket(mem.get("venue") or "") or None,
+        (mem.get("locality") or "").strip() or None,
+        (mem.get("country") or "").strip() or None,
+        (lat, lng) if lat is not None and lng is not None else None,
+        int(happened[:4]) if happened else None,
+    )
+
+
 def save_memories(
     session, content_id: int, memories: list[dict], layer: str = "historical", client=None
 ):
@@ -1274,15 +1288,7 @@ def save_memories(
 
         precision = precision_to_meters(mem.get("location_precision", "street"))
         status = "llm"
-        happened = _happened_at(mem)
-        hit = geocode.place(
-            (mem.get("address") or "").strip() or None,
-            venue,
-            locality,
-            (mem.get("country") or "").strip() or None,
-            (lat, lng) if has_coords else None,
-            int(happened[:4]) if happened else None,
-        )
+        hit = place_of(mem)
         if hit:
             lat, lng, precision, status = hit
             has_coords = True

@@ -38,3 +38,22 @@ export async function anyNew(memories: Memory[]): Promise<boolean> {
   const seen = await loadSeen();
   return memories.some((m) => attention(m) > (seen[m.id] ?? 0));
 }
+
+const COUNTED = 'memorylane.counted.v1';
+
+/** The journal header's numbers as last shown, so the next look rolls them up
+ *  from there (UI.md). Lost, it costs one look without the roll. */
+export type Counted = { memories: number; places: number; steps: number };
+
+export async function loadCounted(): Promise<Counted | null> {
+  try {
+    const raw = await AsyncStorage.getItem(COUNTED);
+    return raw ? (JSON.parse(raw) as Counted) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveCounted(counted: Counted): void {
+  AsyncStorage.setItem(COUNTED, JSON.stringify(counted)).catch(() => {});
+}

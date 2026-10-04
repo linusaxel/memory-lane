@@ -2,12 +2,15 @@
 
     python -m pipeline.now               # every building-level place not yet looked at
     python -m pipeline.now --place 42    # one, printed
+    python -m pipeline.now --again       # the confirmed ones too, for a new field
 
 A contrast the model writes is a guess about the present ("current use
 unknown"). This asks OSM which named building or amenity the pin stands
 inside, and only then writes the "now" side: "Still Rigshospitalet, a
 hospital." or "Now Designmuseum Danmark, a museum." The model's score gives
 way to the name match: the same place scores low, a different one high.
+When the OSM area carries a `wikidata` tag, the item's inception (P571) adds
+the year: "Still Børsen, a stock exchange, since 1619."
 
 Free, no key. Only pins a geocoder put on a building: a model's guess or a
 street's middle stands inside whatever happens to be there.
@@ -16,6 +19,7 @@ street's middle stands inside whatever happens to be there.
 import argparse
 import json
 import logging
+import re
 import time
 import urllib.parse
 
@@ -58,6 +62,26 @@ def _kind(tags: dict) -> str | None:
     return None
 
 
+def since(qid: str | None) -> int | None:
+    """The earliest year Wikidata says it began (P571), or None. A building's
+    year or an institution's founding: "since" is true of both. A date known
+    only to the decade or century is no year."""
+    if not qid or not re.fullmatch(r"Q\d+", qid):
+        return None
+    params = {"action": "wbgetentities", "ids": qid, "props": "claims", "format": "json"}
+    found = geocode._get_json(f"{geocode.Wikidata.API}?{urllib.parse.urlencode(params)}")
+    if found is None:
+        raise LookupFailed(qid)
+    claims = found.get("entities", {}).get(qid, {}).get("claims", {}).get("P571", [])
+    values = [c["mainsnak"].get("datavalue", {}).get("value", {}) for c in claims]
+    years = [
+        int(v["time"][1:].split("-")[0])
+        for v in values
+        if v.get("time", "").startswith("+") and v.get("precision", 0) >= 9
+    ]
+    return min(years, default=None)
+
+
 def now_at(lat: float, lng: float, venue: str | None) -> dict:
     """{"name", "kind", "same"} for what the pin stands inside, or {} when OSM
     names nothing there. A different name counts only with a kind: a bare
@@ -72,35 +96,45 @@ def now_at(lat: float, lng: float, venue: str | None) -> dict:
     for tags in areas:
         hits = (geocode.Hit(lat, lng, n, None, None, "poi", "osm") for n in _names(tags))
         if any(geocode._same_venue(venue, h) for h in hits):
-            return {"name": tags["name"], "kind": _kind(tags), "same": True}
+            return _found(tags, True)
     for tags in areas:
         if _kind(tags):
-            return {"name": tags["name"], "kind": _kind(tags), "same": False}
+            return _found(tags, False)
     return {}
+
+
+def _found(tags: dict, same: bool) -> dict:
+    found = {"name": tags["name"], "kind": _kind(tags), "same": same}
+    year = since(tags.get("wikidata"))
+    return found | {"since": year} if year else found
 
 
 def clause(now: dict) -> str:
     kind = f", {'an' if now['kind'][0] in 'aeiou' else 'a'} {now['kind']}" if now["kind"] else ""
-    return f"{'Still' if now['same'] else 'Now'} {now['name']}{kind}."
+    year = f", since {now['since']}" if now.get("since") else ""
+    return f"{'Still' if now['same'] else 'Now'} {now['name']}{kind}{year}."
 
 
-def look_up(session, place_id: int | None = None, content_id: int | None = None) -> dict:
+def look_up(
+    session, place_id: int | None = None, content_id: int | None = None, again: bool = False
+) -> dict:
     """Store what OSM says on each building-level place not yet looked at, then
     write the clause onto the extracted memories there. {place_id: now}.
-    content_id keeps it to that content's places: the backlog is `main`'s job."""
+    content_id keeps it to that content's places: the backlog is `main`'s job.
+    again looks at the confirmed places once more."""
     rows = session.execute(
         text("""
             SELECT id, venue, name,
                    ST_Y(coordinates::geometry) AS lat, ST_X(coordinates::geometry) AS lng
             FROM places
-            WHERE now IS NULL AND coordinates IS NOT NULL AND precision_meters <= 50
+            WHERE (now IS NULL OR (:again AND now->>'name' IS NOT NULL)) AND coordinates IS NOT NULL AND precision_meters <= 50
               AND geocode_status IN ('dawa', 'photon', 'wikidata', 'chosen')
               AND (CAST(:place_id AS INTEGER) IS NULL OR id = :place_id)
               AND (CAST(:content_id AS INTEGER) IS NULL
                    OR id IN (SELECT place_id FROM memories WHERE content_id = :content_id))
             ORDER BY id
         """),
-        {"place_id": place_id, "content_id": content_id},
+        {"place_id": place_id, "content_id": content_id, "again": again},
     ).fetchall()
     done = {}
     for n, r in enumerate(rows):
@@ -138,9 +172,10 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--place", type=int, help="one place, by id")
+    parser.add_argument("--again", action="store_true", help="the confirmed places too")
     args = parser.parse_args()
     with get_session() as session:
-        done = look_up(session, place_id=args.place)
+        done = look_up(session, place_id=args.place, again=args.again)
     for place_id, now in done.items():
         print(f"{place_id}\t{clause(now) if now else '-'}")
     print(f"{len(done)} looked at, {sum(1 for now in done.values() if now)} confirmed")

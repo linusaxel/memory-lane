@@ -151,7 +151,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/hearted.ts` | Which memories this device has hearted |
 | `mobile/src/link.ts` | `openLink`: every link opens in an in-app browser sheet |
-| `mobile/src/seen.ts` | The hearts and notes each of your memories had when you last looked |
+| `mobile/src/seen.ts` | The hearts and notes each of your memories had when you last looked, and the journal header's numbers as last shown |
 | `mobile/src/Flourish.tsx` | The ornamental divider between an open story's parts |
 | `mobile/src/Notes.tsx` | The notes under an open memory (F33) |
 | `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative. Also a subscriber's themes and years, kept on the phone |
@@ -166,6 +166,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen, and what the source button says |
+| `mobile/src/countUp.ts` | The values a journal number rolls through on its way up |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/story.ts` | A story's little markdown: blocks, marks, placed photos |
 | `mobile/src/StoryBody.tsx` | A story laid out as written, photos wrapped; the sheet and Preview |

@@ -90,7 +90,10 @@ def _final(job):
 
 
 def classify_chunk(
-    client: anthropic.Anthropic, chunk: str, last_attempt: bool = True
+    client: anthropic.Anthropic,
+    chunk: str,
+    last_attempt: bool = True,
+    prompt: str = CLASSIFIER_PROMPT,
 ) -> tuple[bool, str]:
     """Use Haiku to quickly determine if chunk likely contains memories.
 
@@ -104,7 +107,7 @@ def classify_chunk(
         response = client.messages.create(
             model=CLASSIFIER_MODEL,
             max_tokens=300,
-            messages=[{"role": "user", "content": f"{CLASSIFIER_PROMPT}\n\nTranscript:\n{chunk}"}],
+            messages=[{"role": "user", "content": f"{prompt}\n\nTranscript:\n{chunk}"}],
             output_config={"format": {"type": "json_schema", "schema": CLASSIFIER_SCHEMA}},
         )
         log_cache(response)

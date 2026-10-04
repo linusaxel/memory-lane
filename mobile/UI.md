@@ -137,7 +137,11 @@ Journal (src/Memories.tsx in src/Drawer.tsx)  a panel from the left over the mou
 │                              cascade. The journal is you as well
 ├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
 │                              it "12 memories · 4 places · 2 added · 5 hearts", zeros left out
-│                              but the first. Tapping it opens Edit profile. × top right
+│                              but the first. Tapping it opens Edit profile. × top right. A
+│                              number that grew since the last look rolls up from its old
+│                              value (countUp.ts, at most 8 ticks over ~600 ms, a selection
+│                              haptic each); one that fell just shows. First look and Reduce
+│                              Motion: no roll
 ├─ Walks                       the streak, large (F27; not at 0), then one row per walk that
 │                              opened something, date and length; a row opens in place to its
 │                              earned stops, numbered on an ember rail. Cached for the train

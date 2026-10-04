@@ -1994,6 +1994,12 @@ Rigshospitalet, a hospital." (0.2) or "Now Designmuseum Danmark, a museum."
   changed.
 - **A changed place needs a kind.** A bare `building=yes` or a `landuse` says
   nothing about what stands there.
+- **The year comes from the area's own `wikidata` tag** (added 2026-10-04):
+  its inception (P571), the earliest one known to the year, as ", since 1619".
+  "Since" is true of a building's year and an institution's founding alike.
+  No tag, no year; a decade or century is no year. The item is never searched
+  for by name: the tag is OSM's own link, on the same building-level pin.
+  Wikidata is CC0, so no credit is owed.
 
 Measured 2026-09-30 on the 42 building-level places behind visible memories:
 16 still the same, about 4 changed (Frederikshospitalet, Blegdamshospitalet,

@@ -5,6 +5,7 @@
     python -m pipeline.quality --labels [tests/fixtures/walk_labels.json] [--half tune|check]
     python -m pipeline.quality --whole [5] [--runs 2]
     python -m pipeline.quality --visible [--source-type book]
+    python -m pipeline.quality --places new_prompt.txt [--source-type book]
 
 Run it before and after any prompt change; extraction costs money and you get
 one shot. Baseline in docs/04-extract.md, reasoning in
@@ -33,6 +34,12 @@ same prompt, filter and judge, and prints what it keeps beside what the
 4-minute chunks kept: walks found again, failure checks, duplicates. It saves
 no memory. One extractor call per video per run plus the judge, stored at
 chunk_index -5, so a rerun is free; --runs draws again to show the noise.
+
+--places judges a placement change: over the chunks of content holding an
+`llm` place, the ones whose baseline keeps a memory the geocoders can't place,
+it counts what each prompt keeps and how much of it the geocoders place. The
+baseline is mostly read back free; the candidate bills once per chunk. The
+geocoders are free and slow, about a second a memory.
 """
 
 import argparse
@@ -53,6 +60,7 @@ from pipeline.extract import (
     extract_chunk_stored,
     filter_low_confidence,
     merge_nearby_memories,
+    place_of,
     prompt_for,
     source_context,
     video_brief,
@@ -94,7 +102,9 @@ def report(summaries: list[str]) -> list[tuple[str, int, str]]:
     return [(name, sum(1 for s in summaries if test(s)), why) for name, test, why in CHECKS]
 
 
-def sample_chunks(session, n: int, source_type: str = "video", client=None) -> list[tuple]:
+def sample_chunks(
+    session, n: int | None, source_type: str = "video", client=None, content_ids=None
+) -> list[tuple]:
     """(content_id, chunk_index, chunk, context), the same n every run.
 
     Rebuilt from transcripts rather than read from anywhere extraction wrote,
@@ -108,8 +118,9 @@ def sample_chunks(session, n: int, source_type: str = "video", client=None) -> l
             FROM content c
             JOIN transcripts t ON t.content_id = c.id
             WHERE COALESCE(c.source_type, 'video') = :source_type
+              AND (:every OR c.id = ANY(:ids))
         """),
-        {"source_type": source_type},
+        {"source_type": source_type, "every": content_ids is None, "ids": content_ids or []},
     ).fetchall()
     chunks = []
     for r in rows:
@@ -131,6 +142,32 @@ def sample_chunks(session, n: int, source_type: str = "video", client=None) -> l
         )
         for cid, i, c, segs, r in chunks[:n]
     ]
+
+
+LLM_CONTENT = """
+    SELECT DISTINCT m.content_id FROM memories m JOIN places p ON p.id = m.place_id
+    WHERE p.geocode_status = 'llm' AND NOT m.hidden ORDER BY m.content_id
+"""
+
+
+def places(
+    session, client, prompts: dict[str, str], source_type: str = "video"
+) -> tuple[int, dict[str, tuple[int, int]]]:
+    """(chunks, {prompt: (kept, placed)}) over the chunks whose first prompt
+    keeps a memory the geocoders leave unplaced: the ones that make `llm` places."""
+    ids = list(session.execute(text(LLM_CONTENT)).scalars())
+    chunks = sample_chunks(session, None, source_type, client, ids) if ids else []
+    results = compare(session, client, prompts, chunks)
+    hits = {
+        name: [[place_of(m) is not None for m in runs[0]] for runs in per_chunk]
+        for name, per_chunk in results.items()
+    }
+    first = next(iter(prompts))
+    keep = [i for i, placed in enumerate(hits[first]) if not all(placed)]
+    return len(keep), {
+        name: (sum(len(h[i]) for i in keep), sum(sum(h[i]) for i in keep))
+        for name, h in hits.items()
+    }
 
 
 def compare(
@@ -393,7 +430,20 @@ def main():
     )
     parser.add_argument("--whole", nargs="?", type=int, const=5, metavar="VIDEOS")
     parser.add_argument("--runs", type=int, default=1, help="draws per chunk (--compare, --whole)")
+    parser.add_argument("--places", metavar="PROMPT_FILE", help="a candidate placement prompt")
     args = parser.parse_args()
+
+    if args.places:
+        with open(args.places) as f:
+            candidate = f.read()
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        prompts = {"baseline": prompt_for(args.source_type), "candidate": candidate}
+        with get_session() as session:
+            n, counts = places(session, client, prompts, args.source_type)
+        print(f"{n} chunks that make an llm place")
+        for name, (kept, placed) in counts.items():
+            print(f"{name}: placed {placed} of {kept} kept")
+        return
 
     if args.whole:
         with open("tests/fixtures/walk_labels.json") as f:

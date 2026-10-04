@@ -5,7 +5,8 @@ import json
 import pytest
 from sqlalchemy import text
 
-from pipeline.quality import compare, report, sample_chunks
+from pipeline import quality
+from pipeline.quality import compare, places, report, sample_chunks
 from tests.fakes import FakeAnthropic, _Response
 
 BASE = FakeAnthropic().messages._payload[0]
@@ -118,3 +119,46 @@ def test_a_brief_ending_in_a_curly_quote_is_cut_there():
     assert (
         brief_from('{"brief":"Trip Nørrebro: a yearly crawl."}') == "Trip Nørrebro: a yearly crawl."
     )
+
+
+class _Venues:
+    """OLD names a venue no geocoder finds, NEW the one it does."""
+
+    def __init__(self):
+        self.messages = self
+        self.calls = []
+
+    def create(self, **kwargs):
+        self.calls.append(kwargs)
+        venue = "Nowhere Bar" if kwargs["system"][0]["text"] == "OLD" else "Katz's Delicatessen"
+        return _Response(json.dumps({"memories": [dict(BASE, venue=venue)]}))
+
+
+@pytest.mark.db
+def test_places_counts_what_each_prompt_gets_placed(db_session, monkeypatch):
+    content_id = _video_with_chunks(db_session, 2)
+    every_chunk = sample_chunks(db_session, None)
+    place_id = db_session.execute(
+        text(
+            "INSERT INTO places (name, place_query, geocode_status) VALUES ('n', 'n', 'llm') RETURNING id"
+        )
+    ).scalar()
+    db_session.execute(
+        text("INSERT INTO memories (place_id, content_id, summary) VALUES (:p, :c, 's')"),
+        {"p": place_id, "c": content_id},
+    )
+    db_session.commit()
+    monkeypatch.setattr(
+        quality,
+        "place_of",
+        lambda m: (40.7, -73.9, 30, "fake") if m["venue"] == "Katz's Delicatessen" else None,
+    )
+    client = _Venues()
+
+    n, counts = places(db_session, client, {"baseline": "OLD", "candidate": "NEW"})
+    assert n == len(every_chunk)
+    assert counts == {"baseline": (n, 0), "candidate": (n, n)}
+
+    billed = len(client.calls)
+    places(db_session, client, {"baseline": "OLD", "candidate": "NEW"})
+    assert len(client.calls) == billed, "a rerun reads extraction_chunks back"

@@ -28,17 +28,6 @@ delete an entry when its fix lands.
   memories) and its undo, each a round-trip through the founder. The free
   pipeline commands are allowed in `.claude/settings.json` since 2026-10-04;
   writes stay a prompt on purpose. Fix: a human runs them with `!`.
-- **Placement has no before/after tool.** 2026-09-28: `quality --compare`
-  samples chunks by hash and scores summaries only. A venue-line change is
-  judged on the chunks that produced `llm` places, by whether they geocode.
-  That took a throwaway script (baseline read free from `extraction_chunks`,
-  candidate billed, both run through `geocode.place`). Fix: a `--places` mode
-  on `pipeline.quality` doing just that.
-- **A classifier prompt change can't be measured without a throwaway script.**
-  2026-09-27: `classifier_audit` only re-extracts rejected chunks; comparing
-  the old and new prompt over `classifier_verdicts.chunk_text` took a 70-line
-  scratch replay. Fix: `classifier_audit --against <old prompt file>` that
-  replays stored chunks through both prompts and prints flips per source.
 
 ---
 
@@ -219,8 +208,6 @@ From the research (docs/04, *Research, 2026-10-02*), in order:
       `python -m pipeline.review --limit 40`: it now draws a stable spread
       across sources (14 Københavnerliv, 10 Glimt, 15 books), then
       `--accept` / `--reject` the ids. A reject hides the memory.
-- [ ] **Then against now from Wikidata.** Inception, demolition and
-      significant events for the linked place, as the contrast line.
 - [ ] **More public-domain memoirs.** (checked 2026-10-03) Riis added 2 and
       Baring none (docs/04, *Corpus work*). Nexø has no free digital text, and
       *Mit Livs Eventyr* retells source 202. Gutenberg's own search
@@ -711,9 +698,6 @@ nothing feels special. Checked 2026-10-03: the level pill and its sheet are
 the trainer card (d4f416a), and Your walks, one card per walk drawn as its
 shape, is the collection (e3aa671).
 
-- [ ] **G4 Counters that tick up.** After a walk, opening the drawer rolls
-      memories, places and steps up from their old values, with a haptic on
-      each tick, instead of showing them already counted.
 - [ ] **G5 Streak milestones: the sound and a rest day.** (checked
       2026-10-03) The 7/30/100 moment shipped with a flame and a haptic
       (`Milestone` in `src/Plan.tsx`), no sound. A chime needs a bundled

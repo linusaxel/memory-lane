@@ -47,7 +47,16 @@ import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
 import { WalkShape, walkPath } from './WalkCard.tsx';
-import { attention, loadSeen, saveSeen, type Seen } from './seen.ts';
+import { roll } from './countUp.ts';
+import {
+  attention,
+  loadCounted,
+  loadSeen,
+  saveCounted,
+  saveSeen,
+  type Counted,
+  type Seen,
+} from './seen.ts';
 import { color, dim, figure, font, label } from './theme.ts';
 
 type Props = {
@@ -120,11 +129,55 @@ export default function Memories({
   // Header, sections, list: each slides in a beat after the one above it as
   // the drawer opens, so it arrives rather than appears.
   const enter = useRef([0, 1, 2].map(() => new Animated.Value(1))).current;
+  // The header's numbers mid-roll; null shows the real ones.
+  const [rolling, setRolling] = useState<Counted | null>(null);
+  const counted = useRef<Counted>({ memories: 0, places: 0, steps: 0 });
+  counted.current = { memories: unlockedCount, places: placeCount, steps: profile?.steps ?? 0 };
 
   useEffect(() => {
     if (!focused) return;
     setLooked(false);
     loadSeen().then(setSeen);
+    const now = counted.current;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let closed = false;
+    Promise.all([loadCounted(), AccessibilityInfo.isReduceMotionEnabled()]).then(
+      ([before, still]) => {
+        saveCounted(now);
+        if (!before || still || closed) return;
+        const keys = ['memories', 'places', 'steps'] as const;
+        const tracks = keys.map((k) => roll(before[k], now[k]));
+        const ticks = Math.max(...tracks.map((t) => t.length));
+        if (!ticks) return;
+        const at = (t: number) =>
+          Object.fromEntries(
+            keys.map((k, i) => [k, t < 0 ? Math.min(before[k], now[k]) : (tracks[i][t] ?? now[k])]),
+          ) as Counted;
+        setRolling(at(-1));
+        // After the drawer lands and the header has arrived, ~600 ms of ticks.
+        for (let t = 0; t < ticks; t++) {
+          timers.push(
+            setTimeout(
+              () => {
+                setRolling(at(t));
+                Haptics.selectionAsync().catch(() => {});
+              },
+              350 + ((t + 1) * 600) / ticks,
+            ),
+          );
+        }
+        timers.push(setTimeout(() => setRolling(null), 350 + 650));
+      },
+    );
+    return () => {
+      closed = true;
+      timers.forEach(clearTimeout);
+      setRolling(null);
+    };
+  }, [focused]);
+
+  useEffect(() => {
+    if (!focused) return;
     AccessibilityInfo.isReduceMotionEnabled().then((still) => {
       if (still) return;
       enter.forEach((value) => value.setValue(0));
@@ -291,7 +344,9 @@ export default function Memories({
               {displayName.trim() || 'Journal'}
             </Text>
             <Text style={styles.stats} numberOfLines={1}>
-              {stats(unlockedCount, placeCount, profile)}
+              {rolling
+                ? stats(rolling.memories, rolling.places, profile, rolling.steps)
+                : stats(unlockedCount, placeCount, profile, profile?.steps ?? 0)}
             </Text>
           </View>
         </Pressable>
@@ -430,14 +485,13 @@ export default function Memories({
 
 /** What Settings' figures used to say, in one line under the name. A count
  *  that is still zero says nothing, bar the first. */
-function stats(unlocked: number, places: number, profile: Profile | null): string {
+function stats(unlocked: number, places: number, profile: Profile | null, steps: number): string {
   const parts = [`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'}`];
   if (places > 0) parts.push(`${places} ${places === 1 ? 'place' : 'places'}`);
   const added = profile?.submitted ?? 0;
   if (added > 0) parts.push(`${added} added`);
   const hearts = profile?.hearts_received ?? 0;
   if (hearts > 0) parts.push(`${hearts} ${hearts === 1 ? 'heart' : 'hearts'}`);
-  const steps = profile?.steps ?? 0;
   if (steps > 0) parts.push(`${steps.toLocaleString()} steps`);
   return parts.join(' · ');
 }
