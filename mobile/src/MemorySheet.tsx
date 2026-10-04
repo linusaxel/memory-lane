@@ -518,7 +518,7 @@ export default function MemorySheet({
                 {/* The lock is the ring you will hold, drawn as how far there is
                     still to go: a condition to meet, not a badge. */}
                 <View style={styles.approach}>
-                  <Approach meters={fromHere} radius={radius} />
+                  <Approach meters={fromHere} radius={radius} locket={memory.locket} />
                   <View style={styles.approachText}>
                     {fromHere != null && (
                       <Text style={styles.peekFigure}>{distance(fromHere)}</Text>
@@ -536,7 +536,7 @@ export default function MemorySheet({
             ) : locked ? (
               <View style={styles.gate}>
                 {/* In reach, the ring is on the map and this is not open. */}
-                <Approach meters={fromHere} radius={radius} />
+                <Approach meters={fromHere} radius={radius} locket={memory.locket} />
                 <Text style={styles.gateFigure}>
                   {position == null ? '—' : formatDistance(fromHere)?.replace(' away', '')}
                 </Text>

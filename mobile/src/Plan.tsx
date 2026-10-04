@@ -34,7 +34,7 @@ import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts'
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
-import { locketAt } from './lockets.ts';
+import { locketAt, locketOf } from './lockets.ts';
 import { Chip } from './Submit.tsx';
 import { button, buttonText, color, dim, floating, font, label } from './theme.ts';
 import { WalkShape } from './WalkCard.tsx';
@@ -363,7 +363,7 @@ export function Preview({
       accessibilityRole="button"
       accessibilityHint={subscribed ? undefined : 'Part of a subscription'}
     >
-      {!subscribed && <Glyph name="lock.fill" size={13} color={color.ink} />}
+      {!subscribed && <Image source={locketOf().locked} style={styles.locket} />}
       <Text style={styles.secondaryText} numberOfLines={1}>
         {text}
       </Text>
@@ -493,7 +493,7 @@ function Stops({ stops }: { stops: LocatedMemory[] }) {
                 </Text>
               )}
             </View>
-            <Glyph name="lock.fill" size={13} color={color.inkFaint} />
+            <Image source={locketOf(memory.locket).locked} style={styles.locket} />
           </View>
         );
       })}
@@ -714,6 +714,7 @@ export function PastWalk({
 }
 
 const styles = StyleSheet.create({
+  locket: { width: 13, height: 13 },
   earned: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   earnedLocket: { width: 40, height: 40 },
   doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

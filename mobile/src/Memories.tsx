@@ -21,6 +21,7 @@ import {
   ActivityIndicator,
   Animated,
   FlatList,
+  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -40,6 +41,7 @@ import {
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
+import { locketOf } from './lockets.ts';
 import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
@@ -665,7 +667,7 @@ function Row({
 function Empty({ text }: { text: string }) {
   return (
     <View style={styles.empty}>
-      <Glyph name="lock.fill" size={28} color={color.rule} />
+      <Image source={locketOf().locked} style={{ width: 28, height: 28 }} />
       <Text style={styles.emptyText}>{text}</Text>
     </View>
   );

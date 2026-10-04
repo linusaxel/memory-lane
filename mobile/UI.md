@@ -187,7 +187,7 @@ with no network is never stopped at the gate.
 
 | File | What it owns |
 |---|---|
-| `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. The pin is the one drawn mark |
+| `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always a locket's keyhole face |
 | `src/MemoryMarker.tsx` | one locket, keyhole and all until opened, lit when it can be opened from here |
 | `src/lockets.ts` | the six lockets: their pin images and the level each opens at |
 | `src/LocketUnlock.tsx` | the hold: the key, the ring, the lid, the dive, the haptics; one lid per locket |
@@ -918,8 +918,8 @@ this is not a polish pass:
 - Markers carry an `accessibilityLabel` with their state. The callout title says
   *where*; only the colour says whether you can read it, and colour is not
   available to everyone.
-- Every state that colour distinguishes is also written or drawn: the lock
-  (`lock.fill`, a shape, read out as "Locked"), "within reach", "Nearest locked memory".
+- Every state that colour distinguishes is also written or drawn: the locket's
+  keyhole face (a shape, read out as "Locked"), "within reach", "Nearest locked memory".
 
 ## The unlock control
 

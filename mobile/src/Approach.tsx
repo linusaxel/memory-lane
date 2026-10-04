@@ -2,9 +2,9 @@
  *  the same ring" under "The unlock control" in UI.md. */
 
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, Image, StyleSheet, View } from 'react-native';
 
-import Glyph from './Glyph.tsx';
+import { locketOf } from './lockets.ts';
 import { approachOf } from './reach.ts';
 import { color } from './theme.ts';
 
@@ -18,9 +18,11 @@ type Props = {
   /** In place of how close: how full, 0-1, as the steps towards an unlock. */
   progress?: number;
   size?: number;
+  /** The memory's locket, drawn locked in the centre. */
+  locket?: string | null;
 };
 
-export default function Approach({ meters, radius, progress, size = RING }: Props) {
+export default function Approach({ meters, radius, progress, size = RING, locket }: Props) {
   const filled = progress ?? approachOf(meters, radius);
   const fill = useRef(new Animated.Value(filled)).current;
 
@@ -48,7 +50,10 @@ export default function Approach({ meters, radius, progress, size = RING }: Prop
           { borderRadius: size / 2, transform: [{ scale: fill.interpolate(CLOSE) }] },
         ]}
       />
-      <Glyph name="lock.fill" size={Math.round((size * 2) / 7)} color={color.faded} />
+      <Image
+        source={locketOf(locket).locked}
+        style={{ width: Math.round((size * 2) / 7), height: Math.round((size * 2) / 7) }}
+      />
     </View>
   );
 }

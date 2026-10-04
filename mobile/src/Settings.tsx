@@ -6,14 +6,14 @@
  * the numbers) is the journal's header, not here.
  */
 
-import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { API_BASE, setOnBoard, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
 import { openLink } from './link.ts';
 import CloseButton from './CloseButton.tsx';
 import SignIn from './SignIn.tsx';
-import Glyph from './Glyph.tsx';
+import { locketOf } from './lockets.ts';
 import type { Permission } from './types.ts';
 import { button, buttonText, color, dim, font, label } from './theme.ts';
 
@@ -94,7 +94,7 @@ export default function Settings({
 
         <Section title="How unlocking works">
           <Row>
-            <Glyph name="lock.fill" size={15} color={color.faded} />
+            <Image source={locketOf().locked} style={{ width: 15, height: 15 }} />
             <Text style={styles.rowText}>
               Memories stay locked until you're within {Math.round(radiusMeters)} m of them.
             </Text>
