@@ -28,7 +28,11 @@ delete an entry when its fix lands.
   `e2e/run.sh` hashes all of `mobile/package.json` into the prebuild stamp, so
   cd065f6 (Prettier, a devDependency and two scripts) left the next session's
   e2e at INFRA, wanting `prebuild --clean` + `pod install`, and a change went
-  unchecked in the app. Fix: hash only `dependencies` and `app.json`.
+  unchecked in the app. Fix: hash only `dependencies`, the `reanimated` key
+  and `app.json`. The other half: `native.built` hashes `Podfile.lock` and
+  patches, but a `reanimated.staticFeatureFlags` change (2026-10-04) moves
+  neither, so e2e would run the stale binary unless you install by hand.
+  Fix: add the `reanimated` key to the native hash.
 - **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
   permission classifier refused a hand triage (merge two places, hide four
   memories) and its undo, each a round-trip through the founder. The free

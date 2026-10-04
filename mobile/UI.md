@@ -954,7 +954,8 @@ re-invented per screen:
   *checking* beat (the lid trembles on its latch, at least 420ms), and the lid
   opens only on a yes: a locket that swings open and then shuts on a refusal
   would be a lie. It replaced the burst played over the request (docs/10,
-  "Lockets"). On a yes the lid swings past 90° on its hinge, sparkles pop, the
+  "Lockets"). On a yes the lid swings past 90° on its hinge (the key fading
+  out before 90°, where it would point into the case), sparkles pop, the
   inside glows with the place engraved, and the camera dives in. The story
   rises into `MemorySheet` from the dive (`onDiveStart`, `revealId`): the
   lede, the rest, the quote, then "Then and now" and the credit, each rising
@@ -962,7 +963,12 @@ re-invented per screen:
   screen (`opening`) until the dive ends, because an opened memory leaves the
   ring's list.
 - **Transform and opacity only, on the UI thread.** Reanimated worklets; the
-  Svg art never re-renders, only the views holding it move. Reduce Motion
+  Svg art never re-renders, only the views holding it move. The
+  `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` flags in `package.json` keep those props
+  off the shadow tree, so a React commit (the map re-keying its pins as the
+  lid opens) cannot pause the frames. iOS depth-sorts 3D-transformed
+  siblings, so the coplanar lid layers carry an explicit `zIndex` (Fabric's
+  `zPosition`) rather than relying on draw order. Reduce Motion
   drops the tilt, sway, sparkles, shine and zoom and cross-fades instead.
 - **It lives on the map, low, and says where.** `src/UnlockHere.tsx` puts a
   180pt locket just above the bottom row, where a thumb reaches, and under it

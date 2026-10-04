@@ -52,5 +52,11 @@
     "format:check": "prettier --check App.tsx index.ts src",
     "postinstall": "patch-package"
   },
+  "reanimated": {
+    "staticFeatureFlags": {
+      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true,
+      "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true
+    }
+  },
   "private": true
 }

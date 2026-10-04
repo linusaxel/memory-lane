@@ -213,13 +213,18 @@ export default function LocketUnlock({
     onOpened?.();
   }, [frame, onOpened]);
 
+  const stopClock = useCallback(() => frame.setActive(false), [frame]);
+
   const springBack = useCallback(() => {
     phase.value = RELEASING;
     pressed.value = withTiming(0, { duration: 160 });
     progress.value = withSpring(0, { stiffness: 260, damping: 20, mass: 1 }, (fin) => {
-      if (fin && phase.value === RELEASING) phase.value = IDLE;
+      if (fin && phase.value === RELEASING) {
+        phase.value = IDLE;
+        runOnJS(stopClock)();
+      }
     });
-  }, [phase, pressed, progress]);
+  }, [phase, pressed, progress, stopClock]);
 
   const onHoldComplete = useCallback(async () => {
     phase.value = CHECKING;
@@ -304,7 +309,8 @@ export default function LocketUnlock({
     if (ph === HOLDING && pp > 0.32 && pp < 0.6) turn += Math.sin(t * 85) * 1.2;
     // the locket turns toward you to take the key, then faces you again
     const ka = open || reduce ? 0 : eio(seg(pp, 0, 0.22)) * (1 - eio(seg(pp, 0.82, 1)));
-    const keyOp = done ? 1 : seg(p, 0, 0.16);
+    // and leaves with the lid before it passes 90°: past that it would point into the case
+    const keyOp = done ? (open ? 1 - seg(oa, 0.05, 0.18) : 1) : seg(p, 0, 0.16);
 
     const zt = open && !reduce ? seg(o, 0.5, 0.9) : 0;
     return {
@@ -380,26 +386,18 @@ export default function LocketUnlock({
     return { opacity: 0.22 * m.keyOp * (1 - m.ins / 70) };
   });
 
-  // The key lives in a view whose left edge sits on the keyhole (x 150 → 300), so
-  // anything that slides past the keyhole is clipped away: it reads as going *in*.
-  const KX = 225; // centre of that view
-  const keyChain = (m: Motion): Tf => {
-    'worklet';
-    return [
-      P,
-      ...rigTf(m, KX, C),
-      ...lidTf(m, hingeX, KX, C),
-      ...about(C, keyY, KX, C, [{ rotateZ: `${m.turn}deg` }, { rotateY: '-90deg' }]),
-    ];
-  };
-  // Drawn twice: in front of the lid while it faces you, behind it once it swings past 90°.
-  const keyFrontStyle = useAnimatedStyle(() => {
+  // Centred on C like every other layer, so its perspective matches the lid's.
+  const keyStyle = useAnimatedStyle(() => {
     const m = motion.value;
-    return { opacity: m.ang <= 90 ? m.keyOp : 0, transform: keyChain(m) as never };
-  });
-  const keyBackStyle = useAnimatedStyle(() => {
-    const m = motion.value;
-    return { opacity: m.ang > 90 ? m.keyOp : 0, transform: keyChain(m) as never };
+    return {
+      opacity: m.keyOp,
+      transform: [
+        P,
+        ...rigTf(m, C, C),
+        ...lidTf(m, hingeX, C, C),
+        ...about(C, keyY, C, C, [{ rotateZ: `${m.turn}deg` }, { rotateY: '-90deg' }]),
+      ] as never,
+    };
   });
   const keySlideStyle = useAnimatedStyle(() => ({ transform: [{ translateX: motion.value.ins }] }));
 
@@ -412,11 +410,6 @@ export default function LocketUnlock({
   }));
 
   const scale = size / BOX;
-  const key = (
-    <Animated.View style={[styles.keySlide, keySlideStyle]}>
-      <KeyArt y={keyY} />
-    </Animated.View>
-  );
 
   return (
     <View style={[{ width: size, height: size }, style]}>
@@ -476,27 +469,33 @@ export default function LocketUnlock({
             <BailArt crown={art.crown} top={art.top} />
           </Animated.View>
 
-          <Animated.View style={[styles.keyView, keyBackStyle]}>{key}</Animated.View>
-
           {/* lid: inside face, outside face, ornament, then keyhole + shine on top */}
-          <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, lidBackStyle]}>
+          <Animated.View
+            style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 1 }, lidBackStyle]}
+          >
             <LidInsideArt shape={art.shape} />
           </Animated.View>
-          <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, lidFrontStyle]}>
+          <Animated.View
+            style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 2 }, lidFrontStyle]}
+          >
             <Svg width={BOX} height={BOX}>
               <GoldDefs />
               {art.lid(placeName)}
             </Svg>
           </Animated.View>
           {art.ornament && (
-            <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, roseStyle]}>
+            <Animated.View
+              style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 3 }, roseStyle]}
+            >
               <Svg width={BOX} height={BOX}>
                 <GoldDefs />
                 {art.ornament}
               </Svg>
             </Animated.View>
           )}
-          <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, lidFrontStyle]}>
+          <Animated.View
+            style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 4 }, lidFrontStyle]}
+          >
             <KeyholeArt y={keyY} />
             <Animated.View style={[StyleSheet.absoluteFill, keyShadowStyle]}>
               <Svg width={BOX} height={BOX}>
@@ -521,10 +520,16 @@ export default function LocketUnlock({
             </Svg>
           </Animated.View>
 
-          <Animated.View style={[styles.keyView, keyFrontStyle]}>{key}</Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, { zIndex: 5 }, keyStyle]}>
+            <View style={styles.keyClip}>
+              <Animated.View style={[styles.keySlide, keySlideStyle]}>
+                <KeyArt y={keyY} />
+              </Animated.View>
+            </View>
+          </Animated.View>
 
           {!reduce && (
-            <Animated.View style={[StyleSheet.absoluteFill, sparkleLayerStyle]}>
+            <Animated.View style={[StyleSheet.absoluteFill, { zIndex: 6 }, sparkleLayerStyle]}>
               {SPARKLES.map((s, i) => (
                 <Sparkle key={i} index={i} x={s[0]} y={s[1]} motion={motion} />
               ))}
@@ -1097,7 +1102,7 @@ const KeyArt = memo(function KeyArt({ y }: { y: number }) {
 const styles = StyleSheet.create({
   noBack: { backfaceVisibility: 'hidden' },
   // left edge on the keyhole; overflow hidden clips the blade as it goes in
-  keyView: {
+  keyClip: {
     position: 'absolute',
     left: C,
     top: 0,
