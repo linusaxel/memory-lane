@@ -2851,6 +2851,11 @@ until someone gives permission.
 | kbhbilleder | PD-marked only | Everything else needs the photographer or VISDA. A simple photo is protected 50 years from when it was taken (§70) | Filter on the Public Domain mark |
 | Stadsarkiv Erindringer | **No** | The writers keep copyright. The 1995 call allowed reading only with the author's permission for 25 years. The undocumented Solr endpoint is no authorisation, and the archive holds a §71 database right. The texts name private people | The archive's agreement and the authors' permission, first |
 | arkiv.dk | **No** | [Terms](https://arkiv.dk/rettigheder): "udelukkende til privat brug … må ikke … anvendes i kommercielle sammenhænge" | Exclude it, or license item by item from each local archive |
+| OpenStreetMap (plaques) | Yes | [ODbL](https://www.openstreetmap.org/copyright): use with credit, share-alike only for a derived database | Credit "© OpenStreetMap contributors"; the memories are our text, not a copy of the database |
+| Wikipedia | Yes | CC BY-SA: share-alike binds an adaptation of the text; facts retold in our own words are not one | Credit and link the article. Never paste a sentence |
+| Wikidata | Yes | CC0 | Nothing |
+| Wikimedia Commons pictures | Per file | Each file's own licence | Only public domain, CC0, CC BY, CC BY-SA, shown with author and licence (`pipeline/enrich.py`) |
+| Press and podcast feeds | Per feed, facts only | A feed is for reading, not a licence; a fact isn't protected, its wording is (Infopaq) | Check the outlet's ToS for a TDM reservation (§11b) first; keep the text only until extracted (`transcripts.forget`); credit and link the article or episode |
 | Nominatim | Low volume | "an absolute maximum of 1 request per second", no bulk geocoding, no resale | Self-host before a B2B corpus sale |
 
 Across every source:
@@ -3349,6 +3354,35 @@ The founder doesn't mind a longer card when the story carries it: the Weather
 Girls post (docs/04, *The north star*) runs ~400 words and earns them. Raising
 the extractor's cap is a prompt change, so it is measured first (docs/04,
 *Memory quality*); until then the cap stands.
+
+### Five more kinds of source, and a skill to find more
+
+Status: Accepted 2026-10-04.
+
+The founder asked for more sources, recent ones first, and a better way to
+find them. Four plug-ins, each one file in `crawler/` (*Sources are a Protocol
+and a registry*):
+
+- **`plaques`**: OSM plaques and inscribed memorials, 43 with
+  `memorial=plaque` in the launch area, nearly all with their inscription.
+  A plaque is a story that already names its spot.
+- **`filming`**: Wikidata's filming locations (P915) inside the box. Only 39
+  links, and a location with a population (a city, a district) is no spot,
+  which leaves 18: Olsen-banden at Langebro, Matador in Holmens Kirke.
+- **`wikipedia`**: articles geotagged near a point, without their reference
+  sections. Most of it is description the judge drops; the incidents are
+  what it keeps.
+- **`press`** and **`podcast`**: a feed's articles, or the episodes that link
+  a `<podcast:transcript>`. Nothing is transcribed from audio. Their text is
+  deleted once extracted, as a video's is.
+
+Not built: a Whisper path for podcasts without transcripts (a dependency and
+hours of compute a week), and a film prompt clause (the archival prompt reads
+"X was filmed here" as an event; measure before adding one).
+
+The funnel itself is `.claude/skills/find-sources/SKILL.md`: research on
+primary sources, the legal row before ingesting, a free sample, the Haiku
+screen, a one-item trial, then a decision written on the row.
 
 ### A card runs as long as its source's details
 

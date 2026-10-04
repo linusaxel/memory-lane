@@ -165,10 +165,12 @@ def fetch_pending_transcripts(content_ids: list[int] | None = None, limit: int |
 def forget(session, content_id: int | None = None) -> int:
     """Delete an extracted video's captions and the classifier's verbatim copy
     of its chunks, as the permission email promises (docs/10, "A video's
-    transcript is deleted once it is extracted"). Books and other text keep
-    theirs. None forgets every extracted video. How many transcripts went."""
+    transcript is deleted once it is extracted"). A press article and a podcast
+    transcript go the same way; books and other text keep theirs. None forgets
+    every one extracted. How many transcripts went."""
     videos = """
-        SELECT id FROM content WHERE source_type = 'video' AND memories_extracted
+        SELECT id FROM content WHERE source_type IN ('video', 'press', 'podcast')
+          AND memories_extracted
           AND (CAST(:id AS INTEGER) IS NULL OR id = :id)
     """
     session.execute(

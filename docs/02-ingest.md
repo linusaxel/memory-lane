@@ -22,6 +22,12 @@ python -m pipeline.ingest --video <url> --to <id>     # one trial episode
 python -m pipeline.sources set <id> active            # ingest now polls it
 ```
 
+Text sources (`crawler/sources.py`) take `--source <key> --query <q>`: books,
+old newspapers, Historisk Atlas, OSM plaques (`plaques`, a box), Wikipedia
+near a point (`wikipedia`), film locations (`filming`, a box), a press feed
+(`press`) and a podcast feed with transcripts (`podcast`). How to find and
+trial a new one is the `find-sources` skill (`.claude/skills/find-sources/`).
+
 Only `active` channels are polled, `poll_limit` newest videos each (NULL is the
 whole channel). A `candidate`'s or `rejected` source's items are ingested only
 to be screened, and bulk extraction (`enqueue --all`) skips them. Re-running

@@ -27,11 +27,26 @@ class Source(Protocol):
     def fetch(self, query: str, limit: int) -> Iterable[Record]: ...
 
 
-from crawler.gutenberg import Gutenberg  # noqa: E402  (they need Record defined first)
+from crawler.filming import Filming  # noqa: E402  (they need Record defined first)
+from crawler.gutenberg import Gutenberg  # noqa: E402
 from crawler.historisk_atlas import HistoriskAtlas  # noqa: E402
 from crawler.kb_aviser import KbAviser  # noqa: E402
+from crawler.plaques import Plaques  # noqa: E402
+from crawler.rss import Podcast, Press  # noqa: E402
 from crawler.runeberg import Runeberg  # noqa: E402
+from crawler.wikipedia import Wikipedia  # noqa: E402
 
 SOURCES: dict[str, Source] = {
-    s.name: s for s in (KbAviser(), HistoriskAtlas(), Gutenberg(), Runeberg())
+    s.name: s
+    for s in (
+        KbAviser(),
+        HistoriskAtlas(),
+        Gutenberg(),
+        Runeberg(),
+        Plaques(),
+        Wikipedia(),
+        Filming(),
+        Press(),
+        Podcast(),
+    )
 }
