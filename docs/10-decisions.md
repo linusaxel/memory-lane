@@ -1388,6 +1388,10 @@ Record); bottom left is Apple's logo and Legal, which the HIG asks not to
 cover all the time. Plan a walk keeps its label: it has no standard symbol
 (NN/g, icon usability). Settings costs a tap more, inside the menu.
 
+Amended 2026-10-04: Plan a walk is glass, like every other control over the
+map, with an ember walking figure beside its label; the flat ember capsule
+read as plain. The figure moved there from the level pill.
+
 ### Two equal actions at the bottom
 
 Status: **Superseded 2026-10-01** by *One ember button that changes*.

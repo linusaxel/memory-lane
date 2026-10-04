@@ -22,7 +22,6 @@ import {
 
 import type { Profile } from './api.ts';
 import { GlassButton } from './Glass.tsx';
-import Glyph from './Glyph.tsx';
 import { color, label, pill, solid } from './theme.ts';
 
 type Props = {
@@ -45,7 +44,6 @@ export default function LevelPill({ level, into, place, onPress }: Props) {
       accessibilityHint="Your level and every walk"
       onPress={onPress}
     >
-      <Glyph name="figure.walk" size={15} color={real.purple} />
       <View style={styles.lines}>
         {Platform.OS === 'ios' ? (
           <Host matchContents>

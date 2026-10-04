@@ -1836,16 +1836,18 @@ export default function App() {
           {/* Home: the map, you on it, and one way into the planner. */}
           {stage === 'map' && !journalOpen && !pastWalk && (
             <View style={styles.bottom}>
-              <Pressable
-                style={dim([button.solid, styles.grow])}
+              <GlassButton
+                place={styles.grow}
+                style={styles.planWalk}
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
                   setStage('preview');
                 }}
                 accessibilityRole="button"
               >
-                <Text style={styles.planWalkText}>Plan a walk</Text>
-              </Pressable>
+                <Glyph name="figure.walk" size={20} weight="medium" color={color.gold} />
+                <Text style={styles.planWalkLabel}>Plan a walk</Text>
+              </GlassButton>
             </View>
           )}
           <View style={styles.topRight}>
@@ -2138,6 +2140,8 @@ const styles = StyleSheet.create({
   middle: { flex: 1, alignItems: 'center' },
   grow: { flex: 1 },
   planWalkText: { ...buttonText, color: color.paper },
+  planWalk: { ...pill, minHeight: 56 },
+  planWalkLabel: { ...buttonText, color: color.ink },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
   circle: {

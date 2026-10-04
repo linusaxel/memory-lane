@@ -400,7 +400,7 @@ you.
 
 | Token | Hex light / dark | Means |
 |---|---|---|
-| `ember` (new) | `#B83A12` / `#F2703F` | **a memory, and the way to it.** Every pin at rest, the solid primary button ("Plan a walk"), the route line ahead of you, the next stop (bigger, hops), a later stop's number tag. 5.2:1 on paper, 4.8:1 on the dark map |
+| `ember` (new) | `#B83A12` / `#F2703F` | **a memory, and the way to it.** Every pin at rest, the walking figure on "Plan a walk", the route line ahead of you, the next stop (bigger, hops), a later stop's number tag. 5.2:1 on paper, 4.8:1 on the dark map |
 | `seal` | unchanged | **open it now.** The pin in reach, as today |
 | `faded` | unchanged | **behind you.** A stop already opened, the legs already walked |
 | `ink` | unchanged | text, quiet and outline buttons |
