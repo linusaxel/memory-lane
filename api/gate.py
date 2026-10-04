@@ -25,6 +25,7 @@ from api.models import (
     Place,
     Source,
 )
+from api.progression import LOCKET_DEFAULT
 
 # How close you have to stand to read a memory: on the spot, not down the
 # street. See docs/10-decisions.md#20-m.
@@ -223,6 +224,7 @@ def locked_memory(row, coords: Coordinates | None, distance_meters: float | None
         year=happened.year if happened else None,
         confidence=row.extraction_confidence or "medium",
         layer=getattr(row, "layer", None) or "historical",
+        locket=getattr(row, "locket", None) or LOCKET_DEFAULT,
         author=row_author(row),
         media_count=len(getattr(row, "media", None) or []),
         heart_count=getattr(row, "heart_count", 0),
@@ -284,6 +286,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         unlock_radius_meters=UNLOCK_RADIUS_METERS,
         confidence=row.extraction_confidence or "medium",
         layer=getattr(row, "layer", None) or "historical",
+        locket=getattr(row, "locket", None) or LOCKET_DEFAULT,
         happened_at=getattr(row, "happened_at", None),
         happened_precision=getattr(row, "happened_precision", None),
         attribution=getattr(row, "attribution", None),

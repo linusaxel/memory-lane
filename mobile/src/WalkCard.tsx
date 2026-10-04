@@ -42,7 +42,7 @@ export function WalkShape({ path, size }: { path: Coordinates[]; size: number })
       <Polyline
         points={points.map((p) => `${p.x},${p.y}`).join(' ')}
         fill="none"
-        stroke={real.ember}
+        stroke={real.gold}
         strokeWidth={Math.max(2, size / 40)}
         strokeLinecap="round"
         strokeLinejoin="round"

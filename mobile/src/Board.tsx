@@ -72,5 +72,5 @@ const styles = StyleSheet.create({
   rank: { ...label, minWidth: 28, fontVariant: ['tabular-nums'] },
   name: { flex: 1, ...font.uiMedium, fontSize: 17, color: color.ink },
   opens: { ...font.uiBold, fontSize: 17, color: color.ink, fontVariant: ['tabular-nums'] },
-  mine: { color: color.ember },
+  mine: { color: color.purple },
 });

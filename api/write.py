@@ -37,6 +37,7 @@ from api.models import (
     UnlockRequest,
 )
 from api.moderation import screen
+from api.progression import LOCKETS, level, xp_of
 from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
     EARNED_QUERY,
@@ -256,6 +257,17 @@ async def upload_media(
     )
 
 
+def check_locket(session, device: str, locket: str | None) -> None:
+    """A locket the author's level has not reached is refused, like an
+    unknown one. docs/10-decisions.md#lockets-one-per-memory-chosen-by-its-author-earned-by-level."""
+    if locket is None:
+        return
+    if locket not in LOCKETS:
+        raise HTTPException(status_code=422, detail="Unknown locket")
+    if level(xp_of(session, device)) < LOCKETS[locket]:
+        raise HTTPException(status_code=422, detail=f"That locket opens at level {LOCKETS[locket]}")
+
+
 @router.post("/v1/memories", response_model=Memory, status_code=201)
 def submit_memory(body: SubmissionRequest):
     """File a memory of where you are standing.
@@ -275,6 +287,7 @@ def submit_memory(body: SubmissionRequest):
     # lock. user_for_device is idempotent, so claiming the user here costs the
     # block below nothing.
     with get_session() as session:
+        check_locket(session, body.device, body.locket)
         user_id = user_for_device(session, body.device)
         filed = session.execute(text(FILED_TODAY), {"user_id": user_id}).scalar()
     refuse_over_quota(filed, DAILY_MEMORIES, "submission")
@@ -307,6 +320,7 @@ def submit_memory(body: SubmissionRequest):
                 "happened_at": body.happened_at,
                 "happened_precision": precision,
                 "user_id": user_id,
+                "locket": body.locket,
             },
         ).scalar()
 
@@ -559,6 +573,7 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
         ).fetchone()
         if not owned:
             raise HTTPException(status_code=404, detail="Memory not found")
+        check_locket(session, body.device, body.locket)
 
         session.execute(
             text("UPDATE places SET name = :name WHERE id = :place_id"),
@@ -570,11 +585,13 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
                     summary = :summary,
                     tags = CAST(:tags AS varchar[]),
                     happened_at = :happened_at,
-                    happened_precision = :happened_precision
+                    happened_precision = :happened_precision,
+                    locket = COALESCE(:locket, locket)
                 WHERE id = :id
             """),
             {
                 "id": memory_id,
+                "locket": body.locket,
                 "summary": body.summary.strip(),
                 "tags": tags,
                 "happened_at": body.happened_at,

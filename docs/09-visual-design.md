@@ -435,7 +435,7 @@ colours and a grey, not four colours.
 
 ---
 
-# 8. Friendly, not sharp — **shipped 2026-09-27**
+# 8. Friendly, not sharp — **shipped 2026-09-27; its colours superseded by part 12**
 
 The founder: not fun, not friendly, colours that do not match, buttons too
 sharp. A screenshot agreed: 4px black rectangles with spaced uppercase mono,
@@ -503,7 +503,7 @@ instantiateVariableFont(TTFont(src), dict(wght=700, opsz=36, SOFT=100, WONK=1)) 
 
 ## Not done, and when
 
-- Static-image markers: when the pin count makes the map stutter.
+- Static-image markers: **shipped 2026-10-04** with the lockets (part 12).
 - A signature object (Airbnb's 3D icons, Duolingo's lip): **the lip shipped
   2026-10-03** on buttons and chips, a 4pt ledge in a deeper step of the fill
   that the press sinks onto (the founder: the app felt sterile). Cards and the
@@ -823,3 +823,25 @@ A subscriber gets "Anything you stand on opens" in place of the middle two.
 Headings are 19 semibold ink, the lines 16/25 inkSoft. Same rules as UI.md
 *Copy*: no "we", no em dashes, no exclamation marks, *memory* for what is
 pinned.
+
+# 12. Gold lockets — **shipped 2026-10-04**
+
+The founder moved the look to gold with emerald and rich purple details, and
+made every memory a locket (docs/10, "Lockets"). The palette, in
+`mobile/src/theme.ts` and measured in `tests/test_palette.py`:
+
+- **`gold`** (`#86661A` / `#D9B45E`), was `ember`: a memory and the way to
+  it, the primary button, a link. Old gold, darkened to clear AA as text on
+  paper (4.9:1); the bright metal is the lockets' own (`metal`).
+- **`seal`, now emerald** (`#1F6B4F` / `#3FA57E`): openable, and nothing
+  else. On a map of gold lockets, a gold "openable" would be no signal, so it
+  is the one thing that is not gold. `sealInk` on it is paper.
+- **`purple`** (`#5B2A6E` / `#C59BD8`): what you earned. The level pill, the
+  streak's flame, an epic, your row on the board.
+- Paper, ink and the type are unchanged. The app icon and splash still carry
+  the ember tile (`solid().tile`); redrawing them is open.
+
+Pins are images now (`mobile/assets/lockets/`, six lockets, keyhole and
+plain), and the unlock is the locket opening, on Reanimated
+(`src/LocketUnlock.tsx`).
+

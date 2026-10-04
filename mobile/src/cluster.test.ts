@@ -22,6 +22,7 @@ function memory(id: number, name: string, lat: number, lng: number): LocatedMemo
     tags: [],
     confidence: 'high',
     layer: 'historical',
+    locket: 'hunter-compass',
     locked: false,
     unlock_radius_meters: null,
     author: null,

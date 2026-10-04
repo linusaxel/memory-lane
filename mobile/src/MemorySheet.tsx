@@ -568,7 +568,7 @@ export default function MemorySheet({
                       <Glyph
                         name="sparkles"
                         size={18}
-                        color={color.ember}
+                        color={color.gold}
                         bounce={memory.id === revealId}
                       />
                       <Text style={styles.epicText}>Epic</Text>
@@ -602,7 +602,7 @@ export default function MemorySheet({
                         onPress={() => open(memory.content!.url, "Couldn't open that link.")}
                       >
                         <View style={styles.calloutTitle}>
-                          <Glyph name="quote.opening" size={13} color={color.ember} />
+                          <Glyph name="quote.opening" size={13} color={color.gold} />
                           <Text style={styles.meta}>{quoteBy || 'In their words'}</Text>
                         </View>
                         <Text style={styles.summary}>{memory.quote}</Text>
@@ -610,7 +610,7 @@ export default function MemorySheet({
                     </Animated.View>
                   )}
                   <Animated.View style={[rise(3), styles.after]}>
-                    {/* The same callout, in grey: ember is the source's own voice. */}
+                    {/* The same callout, in grey: gold is the source's own voice. */}
                     {memory.contrast_note && (
                       <View style={[styles.callout, styles.calloutQuiet]}>
                         <View style={styles.calloutTitle}>
@@ -730,11 +730,11 @@ const styles = StyleSheet.create({
   peekNote: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   summary: story.body,
   epic: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
-  epicText: { ...label, color: color.ember },
+  epicText: { ...label, color: color.purple },
   // One rhythm: 8 inside a part, 24 between parts, and no rules between them.
   after: { marginTop: 24, gap: 24 },
-  // Ember, not a new colour: it is the memory's own voice (UI.md, "One accent").
-  callout: { paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.ember, gap: 8 },
+  // Gold, not a new colour: it is the memory's own voice (UI.md, "One accent").
+  callout: { paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.gold, gap: 8 },
   calloutQuiet: { borderLeftColor: color.rule },
   calloutTitle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   quote: { marginTop: 24 },
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
   bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bylineText: { ...story.meta, flexShrink: 1 },
   bylineName: { color: color.ink },
-  out: { color: color.ember },
+  out: { color: color.gold },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   heartText: { ...label, color: color.inkSoft, fontVariant: ['tabular-nums'] },
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
   askTitle: { ...font.displaySemi, fontSize: 16, color: color.ink, marginBottom: 4 },
   askChoice: { paddingVertical: 10 },
   askText: { ...font.prose, fontSize: 16, color: color.ink },
-  askDestructive: { color: color.ember },
+  askDestructive: { color: color.gold },
   askCancel: { ...font.prose, fontSize: 16, color: color.inkSoft },
   close: { position: 'absolute', top: 20, right: 20, zIndex: 1 },
   // One along from the ×.

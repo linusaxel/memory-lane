@@ -1,6 +1,8 @@
 /** Memory Lane API client. One fetch, no wrapper library. */
 import { File } from 'expo-file-system';
 
+import type { LocketId } from './lockets.ts';
+
 export const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8080';
 const BASE = API_BASE;
 /** Recording and playback of a memory's voice. Off unless `EXPO_PUBLIC_AUDIO=1`. */
@@ -75,6 +77,9 @@ export type Memory = {
    *  is everything the pipeline extracted, `stranger` everything filed from a
    *  phone. `friend` has no writer yet. See F4 in docs/08-ux-flows.md. */
   layer: Layer;
+  /** The locket its pin and unlock are drawn as, chosen by its author. Set on
+   *  a locked memory too (lockets.ts). */
+  locket: LocketId;
   /**
    * The server decided this, not the app. Hiding a summary the API already
    * sent would be theatre - see F7 in docs/08-ux-flows.md.
@@ -590,6 +595,8 @@ export type Draft = {
   happened_at: string | null;
   happened_precision: 'day' | 'year' | null;
   media_ids: number[];
+  /** Which locket its pin is drawn as (lockets.ts). */
+  locket: LocketId;
 };
 
 export async function fetchProfile(device: string, signal?: AbortSignal): Promise<Profile> {

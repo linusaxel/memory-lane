@@ -390,6 +390,6 @@ const styles = StyleSheet.create({
   apple: { height: 52, alignSelf: 'stretch' },
   action: { ...button.outline, alignSelf: 'flex-start' },
   actionText: { ...buttonText, color: color.ink },
-  deleteText: { ...buttonText, color: color.ember },
-  error: { ...font.ui, fontSize: 13, color: color.ember, textAlign: 'center' },
+  deleteText: { ...buttonText, color: color.gold },
+  error: { ...font.ui, fontSize: 13, color: color.gold, textAlign: 'center' },
 });

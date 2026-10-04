@@ -371,6 +371,7 @@ def filed_by_a_person(session) -> tuple[int, list[str]]:
             "happened_at": None,
             "happened_precision": None,
             "user_id": SEED_USER,
+            "locket": None,
         },
     ).scalar()
 
@@ -441,6 +442,7 @@ def a_second_submission(session) -> int:
             "happened_at": None,
             "happened_precision": None,
             "user_id": SEED_USER,
+            "locket": None,
         },
     ).scalar()
 
@@ -562,6 +564,7 @@ def plant(session, content_id, rng, label, i, lat, lng, stranger=None, memories=
                     "happened_at": None,
                     "happened_precision": None,
                     "user_id": SEED_USER,
+                    "locket": None,
                 },
             )
     else:

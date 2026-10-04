@@ -1,11 +1,13 @@
-/** What a coordinate looks like on the map: a padlock, lit when it can be
- *  opened from here and open once opened - see "One pin" in mobile/UI.md. */
+/** What a coordinate looks like on the map: its locket, keyhole and all until
+ *  it is opened, lit when it can be opened from here - see "One pin" in
+ *  mobile/UI.md. */
 
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import { Callout, Marker } from 'react-native-maps';
 
 import type { MemoryGroup } from './cluster.ts';
 import { groupLabel } from './cluster.ts';
+import { locketOf } from './lockets.ts';
 import { color, font } from './theme.ts';
 import type { Reach } from './reach.ts';
 import { useHop } from './useBreath.ts';
@@ -49,6 +51,8 @@ export default function MemoryMarker({
   opacity = 1,
 }: Props) {
   const count = group.memories.length;
+  // A spot with several draws the first one's.
+  const locket = group.memories[0]?.locket;
 
   return (
     <Marker
@@ -56,7 +60,7 @@ export default function MemoryMarker({
       // tracksViewChanges is off for the frame cost, so the marker only
       // repaints when React gives it a new identity - which is exactly when
       // its state changed.
-      key={`${group.key}:${reach}:${lit}:${next}:${opacity}:${routePosition ?? ''}`}
+      key={`${group.key}:${reach}:${lit}:${next}:${opacity}:${routePosition ?? ''}:${locket}`}
       coordinate={{ latitude: group.lat, longitude: group.lng }}
       // Put the middle of the pin on the point it names. iOS centres a custom
       // view already; Android defaults to bottom-centre whatever you draw, so
@@ -80,6 +84,7 @@ export default function MemoryMarker({
       onPress={onPress}
     >
       <Pin
+        locket={locket}
         lit={lit}
         next={next && !lit}
         open={reach === 'plain' || reach === 'stamped'}
@@ -102,6 +107,7 @@ export default function MemoryMarker({
 }
 
 type PinProps = {
+  locket?: string;
   lit: boolean;
   next: boolean;
   open: boolean;
@@ -109,21 +115,19 @@ type PinProps = {
   badge: number | null;
 };
 
-/** Every memory is a small padlock. It lights up gold only when it can be
- *  opened from where you stand, and once opened it swings its shackle up and
- *  turns paper, quiet beside the ones still waiting. Every other state lives in
- *  the title and the sheet. */
-function Pin({ lit, next, open, opacity, badge }: PinProps) {
+/** Every memory is its locket: with its keyhole while locked, without once
+ *  opened. It grows and glows when it can be opened from where you stand.
+ *  Every other state lives in the title and the sheet. */
+function Pin({ locket, lit, next, open, opacity, badge }: PinProps) {
   const hop = useHop(next);
+  const art = locketOf(locket);
   return (
     <Animated.View style={[styles.wrap, lit && styles.halo, { opacity }, hop]}>
-      <View style={[styles.lock, (lit || next) && styles.lockBig]}>
-        <View style={[styles.shackle, lit && styles.shackleLit, open && styles.shackleOpen]} />
-        {open && <View style={styles.leg} />}
-        <View style={[styles.body, lit && styles.bodyLit, open && styles.bodyOpen]}>
-          <View style={[styles.keyhole, lit && styles.onSeal, open && styles.keyholeOpen]} />
-        </View>
-      </View>
+      <Image
+        source={open ? art.opened : art.locked}
+        // An explicit size: the art's @2x and @3x are not 2 and 3 times @1x.
+        style={[styles.locket, (lit || next) && styles.locketBig]}
+      />
       {badge !== null && (
         <View style={[styles.tag, lit ? styles.tagLit : null]}>
           <Text
@@ -154,49 +158,9 @@ const styles = StyleSheet.create({
   // A soft glow so the lit pin is findable before you can read it.
   halo: { borderRadius: 23, backgroundColor: color.halo },
 
-  onSeal: { backgroundColor: color.sealInk },
-
-  // The padlock: a shackle over a body, drawn rather than a glyph, because a
-  // marker snapshots its view once (tracksViewChanges is off).
-  lock: { alignItems: 'center' },
-  // The next stop and a lock you can open read bigger, not just brighter.
-  lockBig: { transform: [{ scale: 1.35 }] },
-  shackle: {
-    width: 10,
-    height: 8,
-    borderWidth: 2.5,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    borderColor: color.ember,
-  },
-  shackleLit: { borderColor: color.sealInk },
-  // Lifted clear of the body; `leg` keeps the left one in it, as a real open
-  // padlock's is.
-  shackleOpen: { marginBottom: 3 },
-  leg: {
-    position: 'absolute',
-    left: 3,
-    top: 7,
-    width: 2.5,
-    height: 5,
-    backgroundColor: color.ember,
-  },
-  // Gold is too light for a paper edge, so a lit lock draws in sealInk.
-  body: {
-    width: 16,
-    height: 13,
-    borderRadius: 3,
-    borderWidth: 1.5,
-    borderColor: color.paper,
-    backgroundColor: color.ember,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bodyLit: { backgroundColor: color.seal, borderColor: color.sealInk },
-  bodyOpen: { backgroundColor: color.paper, borderColor: color.ember },
-  keyhole: { width: 3, height: 5, borderRadius: 1.5, backgroundColor: color.paper },
-  keyholeOpen: { backgroundColor: color.ember },
+  locket: { width: 32, height: 32 },
+  // The next stop and a locket you can open read bigger, not just brighter.
+  locketBig: { transform: [{ scale: 1.35 }] },
 
   tag: {
     position: 'absolute',
@@ -208,7 +172,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: color.paper,
-    backgroundColor: color.ember,
+    backgroundColor: color.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },

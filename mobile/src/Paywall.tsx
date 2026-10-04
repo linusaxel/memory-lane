@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   outlineText: { ...buttonText, color: color.ink },
   quiet: { ...button.quiet, marginTop: 6 },
   fine: { ...label, fontSize: 12, color: color.inkFaint },
-  error: { ...font.ui, fontSize: 13, lineHeight: 20, color: color.ember },
+  error: { ...font.ui, fontSize: 13, lineHeight: 20, color: color.gold },
   links: { flexDirection: 'row', gap: 24, marginTop: 12 },
   link: { alignSelf: 'flex-start' },
   linkText: {

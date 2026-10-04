@@ -7,7 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 export function openLink(url: string): Promise<unknown> {
   return WebBrowser.openBrowserAsync(url, {
     presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-    // controlsColor takes a plain string, so pick ember's half by hand.
+    // controlsColor takes a plain string, so pick gold's half by hand.
     controlsColor: Appearance.getColorScheme() === 'dark' ? '#F2703F' : '#A8350F',
     dismissButtonStyle: 'close',
   });

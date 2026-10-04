@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
   sectionTitle: { ...label },
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   input: { ...input },
-  // Ember, as Settings' and Submit's error lines.
-  saveFailed: { ...font.ui, fontSize: 13, lineHeight: 20, color: color.ember, textAlign: 'center' },
+  // Gold, as Settings' and Submit's error lines.
+  saveFailed: { ...font.ui, fontSize: 13, lineHeight: 20, color: color.gold, textAlign: 'center' },
   link: { alignSelf: 'center' },
   linkText: { ...font.uiMedium, fontSize: 13, color: color.ink, textDecorationLine: 'underline' },
 });

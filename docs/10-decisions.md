@@ -427,7 +427,8 @@ nothing.
   real ones exist.
 - **Hidden until it opens.** `epic` is false on a locked memory, so a
   planned walk can't tell which stop it is. It opens with its own haptic and
-  an "Epic" line on the sheet. No epic pin: pins are one kind.
+  an "Epic" line on the sheet. No epic pin: a pin is its author's locket
+  (*Lockets*; "pins are one kind" **Superseded 2026-10-04**).
 - **Still earned, never bought.** Epics join a walk only from level 4, as the
   rare tier did, and nothing about them is sold or random-for-money.
 
@@ -2021,8 +2022,8 @@ the past tense, and about a business, a public body or a production. Examples:
 theatre", or "The flood channel opened in May 2026". It stays true in 2030, so it
 ages into history and never needs re-checking. Anything that is only true now
 ("until Sunday", "opens 2029") is a second card type that expires. That type
-is designed but not built (TODO.md, *Now on a spot*). Pins stay one kind either
-way.
+is designed but not built (TODO.md, *Now on a spot*). ~~Pins stay one kind either
+way.~~ **Superseded 2026-10-04** by *Lockets*.
 
 - **Never:** opening hours, prices or offers (promotion), private people,
   police or crime items, and push about nearby things. Citizen and Nextdoor
@@ -2944,7 +2945,8 @@ Fraunces and Figtree. Supersedes the type bullet of "Friendly, not sharp".
 
 ### Friendly, not sharp
 
-Status: Accepted 2026-09-27
+Status: Accepted 2026-09-27. Its colours **Superseded 2026-10-04** by *Lockets*:
+ember is gold, seal is emerald.
 
 The founder: the app was not fun or friendly, the colours clashed and the
 buttons were too sharp. Paper and a serif stay; everything else that read as
@@ -3278,6 +3280,44 @@ still in the menu under your photo and on the finish card.
 **Consequences:** the journal unmounts when it closes, so it comes back on
 *Walks* each time, reading walks from the cache first (F16) and then asking
 again. The map no longer loses pans at its left edge.
+
+### Lockets: one per memory, chosen by its author, earned by level
+
+Status: Accepted 2026-10-04. Supersedes "pins are one kind" (in *Epic
+memories* and *The recent past is a memory*) and UI.md's "the burst plays
+over the request". Supersedes *Friendly, not sharp* on its colours only.
+
+The founder moved the look to gold with emerald and rich purple details, and
+made the memory a locket: on the map, in the hold that opens it, and as
+something a walker earns.
+
+- **Six lockets, two faces each.** Hunter compass, guilloché oval, deco
+  sunburst, monogram cushion, gold line (night) and Victorian garnet. Each has
+  a pin with a keyhole (locked) and one without (opened), in
+  `mobile/assets/lockets/`. The registry is `mobile/src/lockets.ts`, mirrored
+  by `LOCKETS` in `api/progression.py`.
+- **The author picks; everyone sees it.** `memories.locket` (migration 040)
+  is set on submit or edit and travels on a locked memory too, as `layer`
+  does: the pin is drawn as it before it opens, and it says nothing of the
+  story. NULL, which is every extracted memory, is `hunter-compass`.
+- **Earned, never sold.** Levels 1, 3, 5, 7, 9 and 11 each add one, in that
+  order. The server refuses a locket above the author's level with 422, as it
+  refuses an unknown one. The finish card shows the locket a level-up brings.
+- **The hold is the locket opening** (`mobile/src/LocketUnlock.tsx`, from the
+  founder's motion script, on Reanimated). A key turns, the lid waits in a
+  *checking* beat until the server answers, then swings open and the camera
+  dives in, and the sheet rises from the dive. It replaces the burst over the
+  request: the lid must not open on a refusal, so it waits for the answer.
+  Every locket shares the motion; each draws its own lid.
+- **Gold, emerald, purple.** `ember` is renamed `gold` (old gold, still AA on
+  paper). `seal` keeps its meaning, openable now, and turns emerald, because
+  gold beside gold is no signal. `purple` is for what you earned: level,
+  streak, an epic, your row on the board. `tests/test_palette.py` holds every
+  pair to AA.
+
+**Options considered:** a locket per layer or era, picked by the pipeline
+(rejected: it brings back the encoding *One pin* removed); the compass unlock
+for every memory (rejected by the founder: each locket opens as itself).
 
 ### Rejected approaches, do not retry
 

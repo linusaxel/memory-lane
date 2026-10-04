@@ -112,6 +112,7 @@ MEMORY_COLUMNS = f"""
     m.quote,
     m.quote_by,
     m.links,
+    m.locket,
     {ANNIVERSARY},
     p.id as place_id,
     p.name as place_name,
@@ -758,12 +759,12 @@ RETURNING id
 SUBMISSION_INSERT = """
 INSERT INTO memories (
     place_id, content_id, timestamp_start, summary, tags,
-    extraction_confidence, layer, happened_at, happened_precision, user_id
+    extraction_confidence, layer, happened_at, happened_precision, user_id, locket
 )
 VALUES (
     :place_id, NULL, NULL, :summary, CAST(:tags AS varchar[]),
     'high', 'stranger', :happened_at, :happened_precision,
-    CAST(:user_id AS uuid)
+    CAST(:user_id AS uuid), :locket
 )
 RETURNING id
 """

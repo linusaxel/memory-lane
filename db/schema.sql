@@ -205,6 +205,10 @@ CREATE TABLE memories (
     -- makes it epic until hearts say otherwise (api/progression.py).
     walk_score SMALLINT CHECK (walk_score BETWEEN 0 AND 12),
 
+    -- The locket its pin and unlock are drawn as, chosen by its author. NULL
+    -- is the default (api/progression.py, LOCKET_DEFAULT).
+    locket TEXT,
+
     -- One line in the teller's own words, checked against the source.
     quote TEXT,
     quote_by TEXT,

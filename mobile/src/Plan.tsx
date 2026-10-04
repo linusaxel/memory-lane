@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
+  Image,
   Animated,
   type LayoutChangeEvent,
   Pressable,
@@ -33,6 +34,7 @@ import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts'
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
+import { locketAt } from './lockets.ts';
 import { Chip } from './Submit.tsx';
 import { button, buttonText, color, dim, floating, font, label } from './theme.ts';
 import { WalkShape } from './WalkCard.tsx';
@@ -94,7 +96,7 @@ function LengthSlider({ km, min, onKm }: LengthProps) {
         tapToSeek
         // The native component takes any ColorValue (RNCSliderNativeComponent.ts);
         // only the published typings say string.
-        minimumTrackTintColor={color.ember as string}
+        minimumTrackTintColor={color.gold as string}
         maximumTrackTintColor={color.rule as string}
         accessibilityLabel="Walk length"
       />
@@ -612,6 +614,7 @@ export function WalkDone({
       </Text>
       {reward && <Text style={label}>{`+${reward.xp} XP`}</Text>}
       {reward?.level && <Text style={label}>{`Level ${reward.level}`}</Text>}
+      {reward?.level && <Earned level={reward.level} />}
       {MILESTONES.includes(streak) ? (
         <Milestone streak={streak} />
       ) : (
@@ -644,6 +647,18 @@ const MILESTONES = [7, 30, 100];
 
 /** A streak milestone's own moment on the finish card: it springs in with a
  *  flame and a second success haptic. Still, under Reduce Motion. */
+/** A level that brings a locket shows it: the reward is the thing itself. */
+function Earned({ level }: { level: number }) {
+  const locket = locketAt(level);
+  if (!locket) return null;
+  return (
+    <View style={styles.earned}>
+      <Image source={locket.opened} style={styles.earnedLocket} />
+      <Text style={label}>{`New locket: ${locket.name}`}</Text>
+    </View>
+  );
+}
+
 function Milestone({ streak }: { streak: number }) {
   const scale = useRef(new Animated.Value(0.8)).current;
   useEffect(() => {
@@ -661,7 +676,7 @@ function Milestone({ streak }: { streak: number }) {
   }, [scale]);
   return (
     <Animated.View style={[styles.milestone, { transform: [{ scale }] }]} testID="streak-milestone">
-      <Glyph name="flame.fill" size={22} color={color.ember} bounce={streak} />
+      <Glyph name="flame.fill" size={22} color={color.purple} bounce={streak} />
       <Text style={styles.milestoneText}>{`${streak} days in a row`}</Text>
     </Animated.View>
   );
@@ -699,6 +714,8 @@ export function PastWalk({
 }
 
 const styles = StyleSheet.create({
+  earned: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  earnedLocket: { width: 40, height: 40 },
   doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   milestone: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
   milestoneText: { ...font.uiBold, fontSize: 18, color: color.ink },
@@ -740,7 +757,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: color.ember,
+    backgroundColor: color.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },

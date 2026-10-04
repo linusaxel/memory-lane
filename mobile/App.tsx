@@ -270,7 +270,6 @@ export default function App() {
   // server's memory_hearts row is the durable fact; /v1/unlocks refills this.
   const [hearted, setHearted] = useState<Set<number>>(new Set());
   const [nameError, setNameError] = useState<string | null>(null);
-  const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [revealId, setRevealId] = useState<number | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
@@ -1086,6 +1085,9 @@ export default function App() {
     return [...ringHere].sort((a, b) => a.away - b.away)[0] ?? null;
   }, [ringHere, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
+  // The locket being opened, kept on screen through its lid swing and dive.
+  const [opening, setOpening] = useState<typeof ringFor>(null);
+  const lockFor = opening ?? ringFor;
   const ringAt = Math.max(
     0,
     ringHere.findIndex(({ group, index }) => group.memories[index].id === ringMemory?.id),
@@ -1152,7 +1154,7 @@ export default function App() {
   };
 
   /** The profile again, after a stop. `finished`: that was the walk's last
-   *  stop, so the same Success haptic UnlockButton fires for one memory, once
+   *  stop, so the same Success haptic LocketUnlock fires for one memory, once
    *  more, and the finish card shows what the walk earned and the streak,
    *  counting today. */
   const refreshProfile = useCallback(
@@ -1184,7 +1186,6 @@ export default function App() {
     async (memory: LocatedMemory): Promise<boolean> => {
       const at = positionRef.current;
 
-      setUnlocking(true);
       setUnlockError(null);
       try {
         const opened = await unlockMemory(memory.id, at, await deviceId());
@@ -1206,8 +1207,6 @@ export default function App() {
       } catch (e) {
         if (!mounted.current) return false;
         setUnlockError("Can't reach Memory Lane right now.");
-      } finally {
-        if (mounted.current) setUnlocking(false);
       }
       return false;
     },
@@ -1457,7 +1456,7 @@ export default function App() {
         setSubmitOpen(true);
       }}
     >
-      <Glyph name="plus" size={22} weight="semibold" color={color.ember} />
+      <Glyph name="plus" size={22} weight="semibold" color={color.gold} />
     </GlassButton>
   );
 
@@ -1506,6 +1505,7 @@ export default function App() {
         onSaved={saved}
         onDeleted={deleted}
         author={{ name: displayName.trim() || 'Anonymous', avatar_url: profile?.avatar_url }}
+        level={profile?.level ?? 1}
       />
     </>
   );
@@ -1667,9 +1667,9 @@ export default function App() {
           </MapView>
 
           {/* The lock, low where a thumb reaches, and which memory it opens. */}
-          {ringFor && ringMemory && (
+          {lockFor && (
             <UnlockHere
-              memory={ringMemory}
+              memory={lockFor.group.memories[lockFor.index]}
               index={ringAt}
               count={ringHere.length}
               onStep={(by) => {
@@ -1679,18 +1679,25 @@ export default function App() {
                 setPickedId(next.group.memories[next.index].id);
                 setUnlockError(null);
               }}
-              busy={unlocking}
               error={unlockError}
-              onUnlock={async () => {
+              requestUnlock={async () => {
                 if (walking) setRouteStarted(true);
-                const opened = await unlock(ringMemory);
-                if (!opened) return;
-                setRevealId(ringMemory.id);
+                // Held while the lid opens: once unlocked, the memory leaves
+                // the ring's list, and the locket would vanish mid-swing.
+                setOpening(lockFor);
+                const opened = await unlock(lockFor.group.memories[lockFor.index]);
+                if (!opened) setOpening(null);
+                return opened;
+              }}
+              onDiveStart={() => {
+                if (!opening) return;
+                setRevealId(opening.group.memories[opening.index].id);
                 setPickedId(null);
                 // Not openGroup: its tap would land on the hold's Success.
-                setOpenAt(ringFor.group.memories);
-                setOpenIndex(ringFor.index);
+                setOpenAt(opening.group.memories);
+                setOpenIndex(opening.index);
               }}
+              onOpened={() => setOpening(null)}
             />
           )}
           {/* Not under the journal: iOS 26 draws the slider's glass over covers. */}
@@ -1857,7 +1864,7 @@ export default function App() {
             />
           </View>
           {/* On a walk: Add, the walk card, Center on me (docs/10, "One
-              ember button that changes"). Not over a card with its own
+              gold button that changes"). Not over a card with its own
               buttons at the bottom. */}
           {pastWalk && (
             <PastWalk
@@ -2098,7 +2105,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 3,
     borderColor: color.paperRaised,
-    backgroundColor: color.ember,
+    backgroundColor: color.gold,
   },
   // What the map sits behind while the app finds out whether today's walk is
   // already accepted - a flash of the plan page would be a lie.
@@ -2117,7 +2124,7 @@ const styles = StyleSheet.create({
   topLeft: { position: 'absolute', top: 64, left: 18 },
   topLeftSecond: { position: 'absolute', top: 64, left: 74 },
   topRight: { position: 'absolute', top: 64, right: 18 },
-  // Edge to edge, a circle each end and the ember thing between. At 70, 12pt
+  // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
   // over Apple's logo and Legal link (HIG Maps asks 10).
   bottom: {
     position: 'absolute',
@@ -2149,7 +2156,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1.5,
     borderColor: color.paper,
-    backgroundColor: color.ember,
+    backgroundColor: color.gold,
   },
   walkCard: { ...pill, minHeight: 56, paddingLeft: 20, paddingRight: 12, gap: 12 },
   walkText: { flex: 1, gap: 2 },
@@ -2158,5 +2165,5 @@ const styles = StyleSheet.create({
   walkRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   walkCount: { flexShrink: 1, marginLeft: 4 },
   stamp: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.rule },
-  stamped: { backgroundColor: color.ember },
+  stamped: { backgroundColor: color.gold },
 });

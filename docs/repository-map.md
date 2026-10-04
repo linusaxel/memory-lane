@@ -121,10 +121,13 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, the pill recentres |
 | `mobile/src/Plan.tsx` | **The planner, home.** The walk card: length, shape and Start walk; for a subscriber, its list of memories and themes and years |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
-| `mobile/src/UnlockButton.tsx` | Hold-to-unlock: the ring, the haptics |
-| `mobile/src/UnlockHere.tsx` | The unlock ring over the map, for the memory you stand on |
+| `mobile/src/LocketUnlock.tsx` | Hold-to-unlock as the memory's locket: the key, the ring, the lid, the dive, the haptics |
+| `mobile/src/lockMotion.ts` | The worklet curves and pivots LocketUnlock moves by |
+| `mobile/src/lockets.ts` | The six lockets: pin images, names, the level each opens at |
+| `mobile/assets/lockets/` | The locket pins, keyhole (locked) and plain (opened), @1x-@3x |
+| `mobile/src/UnlockHere.tsx` | The locket over the map, for the memory you stand on |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
-| `mobile/src/MemoryMarker.tsx` | One pin, lit when it can be opened from here, inside out once opened |
+| `mobile/src/MemoryMarker.tsx` | One pin: its locket, keyhole and all until opened, lit when it can be opened from here |
 | `mobile/src/AccountMenu.tsx` | You, top right: your photo, and a menu of your numbers, Edit profile and Settings |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |

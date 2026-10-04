@@ -45,7 +45,7 @@ export default function LevelPill({ level, into, place, onPress }: Props) {
       accessibilityHint="Your level and every walk"
       onPress={onPress}
     >
-      <Glyph name="figure.walk" size={15} color={real.ember} />
+      <Glyph name="figure.walk" size={15} color={real.purple} />
       <View style={styles.lines}>
         {Platform.OS === 'ios' ? (
           <Host matchContents>
@@ -64,7 +64,7 @@ export default function LevelPill({ level, into, place, onPress }: Props) {
           <Text style={styles.figure}>{line}</Text>
         )}
         <View style={[styles.track, { backgroundColor: real.rule }]}>
-          <View style={[styles.fill, { width: `${into * 100}%`, backgroundColor: real.ember }]} />
+          <View style={[styles.fill, { width: `${into * 100}%`, backgroundColor: real.purple }]} />
         </View>
       </View>
     </GlassButton>

@@ -66,8 +66,9 @@ def test_the_regex_still_finds_the_whole_palette():
         "sealDeep",
         "faded",
         "sealInk",
-        "ember",
-        "emberSoft",
+        "gold",
+        "goldSoft",
+        "purple",
     }
 
 
@@ -82,9 +83,11 @@ TEXT_ON_GROUND = [
     ("faded", "paper"),
     ("sealInk", "seal"),
     ("paper", "faded"),
-    ("paper", "ember"),
-    ("ember", "paper"),
-    ("ink", "emberSoft"),
+    ("paper", "gold"),
+    ("gold", "paper"),
+    ("gold", "paperRaised"),
+    ("ink", "goldSoft"),
+    ("purple", "paper"),
     ("sealDeep", "paper"),
     ("sealDeep", "paperRaised"),
     ("sealDeep", "sealSoft"),
@@ -107,7 +110,7 @@ CARD_VARIABLES = {
     "fg": "ink",
     "muted": "faded",
     "rule": "rule",
-    "accent": "ember",
+    "accent": "gold",
 }
 
 

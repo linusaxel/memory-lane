@@ -47,6 +47,7 @@ import CloseButton from './CloseButton.tsx';
 import Flourish from './Flourish.tsx';
 import { duration, happened } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
+import { LOCKET_DEFAULT, LOCKETS, locketOf, type LocketId } from './lockets.ts';
 import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
 import StoryBody from './StoryBody.tsx';
 import { button, buttonTextSmall, color, dim, font, label, radius, story, sunk } from './theme.ts';
@@ -71,6 +72,8 @@ type Props = {
   onDeleted?: (id: number) => void;
   /** Who it will be signed by, shown where the open sheet shows it. */
   author: { name: string; avatar_url?: string | null };
+  /** The author's level: which lockets they can pick. */
+  level: number;
 };
 
 /** An attachment on its way up, or up. `id` arrives when the server has it. */
@@ -117,10 +120,12 @@ export default function Submit({
   onSaved,
   onDeleted,
   author,
+  level,
 }: Props) {
   const isEditing = !!editing;
   // The title is the place row's name - docs/10, "The title is the place name".
   const [placeName, setPlaceName] = useState('');
+  const [locket, setLocket] = useState<LocketId>(LOCKET_DEFAULT);
   const [items, setItems] = useState<Item[]>(() => [empty()]);
   // The block the toolbar acts on: the text being typed in, or a tapped photo.
   const [current, setCurrent] = useState<string | null>(null);
@@ -167,6 +172,7 @@ export default function Submit({
   useEffect(() => {
     if (visible) return;
     setPlaceName('');
+    setLocket(LOCKET_DEFAULT);
     setItems([empty()]);
     setCurrent(null);
     setPreviewing(false);
@@ -182,6 +188,7 @@ export default function Submit({
   useEffect(() => {
     if (!visible || !editing) return;
     setPlaceName(editing.place.name);
+    setLocket(locketOf(editing.locket).id);
     setDay(editing.happened_at ? localDay(editing.happened_at) : new Date());
     const filed = editing.media.map((item) => ({
       uri: mediaUrl(item),
@@ -516,6 +523,7 @@ export default function Submit({
       happened_at: isoDay(day),
       happened_precision: 'day',
       media_ids: attachments.flatMap((a) => (a.item ? [a.item.id] : [])),
+      locket,
     };
 
     try {
@@ -659,6 +667,36 @@ export default function Submit({
               }}
             />
           )}
+
+          {/* The locket its pin is drawn as. One not yet earned says the
+              level it opens at (docs/10, "Lockets"). */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.lockets}
+          >
+            {LOCKETS.map((l) => {
+              const earned = l.level <= level;
+              return (
+                <Pressable
+                  key={l.id}
+                  onPress={() => setLocket(l.id)}
+                  disabled={!earned}
+                  accessibilityRole="radio"
+                  accessibilityLabel={earned ? l.name : `${l.name}, level ${l.level}`}
+                  accessibilityState={{ selected: locket === l.id, disabled: !earned }}
+                  testID={`locket-${l.id}`}
+                  style={[styles.locket, locket === l.id && styles.locketOn]}
+                >
+                  <Image
+                    source={l.opened}
+                    style={[styles.locketImage, !earned && styles.disabled]}
+                  />
+                  {!earned && <Text style={styles.locketLevel}>Level {l.level}</Text>}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
 
           {/* The story, a block at a time: what is typed here is what
               StoryBody sets on the open sheet, and Preview shows it so. */}
@@ -1032,7 +1070,7 @@ const styles = StyleSheet.create({
   left: { alignSelf: 'flex-start' },
   center: { alignSelf: 'center' },
   right: { alignSelf: 'flex-end' },
-  photoOn: { borderWidth: 2, borderColor: color.ember },
+  photoOn: { borderWidth: 2, borderColor: color.gold },
   toolbar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1045,6 +1083,20 @@ const styles = StyleSheet.create({
     backgroundColor: color.paper,
   },
   byline: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  lockets: { gap: 8, paddingVertical: 12 },
+  // A circle, the selection a ring in gold: the pin is what is being chosen.
+  locket: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locketOn: { borderColor: color.gold },
+  locketImage: { width: 48, height: 48 },
+  locketLevel: { ...label, fontSize: 10, position: 'absolute', bottom: 0 },
   meta: { ...story.meta, flexShrink: 1 },
   metaInk: { color: color.ink },
   part: { gap: 8, marginTop: 24 },
@@ -1063,9 +1115,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
   },
   chipOn: {
-    backgroundColor: color.ember,
-    borderColor: color.ember,
-    borderBottomColor: color.emberDeep,
+    backgroundColor: color.gold,
+    borderColor: color.gold,
+    borderBottomColor: color.goldDeep,
   },
   chipText: { ...label, fontSize: 12, color: color.inkSoft },
   chipTextOn: { color: color.paper },
@@ -1090,7 +1142,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.field,
   },
 
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.ember },
-  error: { ...story.meta, color: color.ember },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.gold },
+  error: { ...story.meta, color: color.gold },
   delete: { marginTop: 40, alignSelf: 'flex-start' },
 });

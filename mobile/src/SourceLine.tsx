@@ -41,7 +41,7 @@ export default function SourceLine({ source, url = source.url ?? undefined, spok
       )}
       <Text style={styles.from} numberOfLines={2}>
         Retold by AI from <Text style={styles.name}>{source.name}</Text>
-        {/* Ember, as every link here is, and pointing out: it leaves the app.
+        {/* Gold, as every link here is, and pointing out: it leaves the app.
             Inside the text, so it follows the last word when the name wraps. */}
         {url && <Text style={styles.out}> ↗</Text>}
       </Text>
@@ -70,5 +70,5 @@ const styles = StyleSheet.create({
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
   from: { ...story.meta, flex: 1 },
   name: { color: color.ink },
-  out: { color: color.ember },
+  out: { color: color.gold },
 });

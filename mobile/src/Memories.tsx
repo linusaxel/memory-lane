@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     paddingHorizontal: 4,
-    backgroundColor: color.ember,
+    backgroundColor: color.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },

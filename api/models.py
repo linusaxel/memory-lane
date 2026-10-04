@@ -120,6 +120,9 @@ class Memory(BaseModel):
     locked: bool = False
     unlock_radius_meters: int | None = None
     layer: str = "historical"
+    # Set on a locked memory too: the pin is drawn as it before it opens, and
+    # it says nothing of the story.
+    locket: str = "hunter-compass"
     happened_at: date | None = None
     # day | month | year | decade: how much of happened_at to print.
     happened_precision: str | None = None
@@ -412,6 +415,8 @@ class SubmissionRequest(BaseModel):
     happened_at: date | None = None
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
     media_ids: list[int] = Field(default_factory=list, max_length=6)
+    # None is the default locket. One above the author's level is refused.
+    locket: str | None = None
 
 
 class MemoryEditRequest(BaseModel):
@@ -427,6 +432,8 @@ class MemoryEditRequest(BaseModel):
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
     # The final desired set, like SubmissionRequest.media_ids - not a diff.
     media_ids: list[int] = Field(default_factory=list, max_length=6)
+    # None keeps the one it has: what builds before lockets send.
+    locket: str | None = None
 
 
 class ReportRequest(BaseModel):

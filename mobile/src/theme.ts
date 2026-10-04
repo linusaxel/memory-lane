@@ -38,42 +38,67 @@ export const color = {
   /** Hairlines and dividers. Editorial layouts rule; they do not shadow. */
   rule: dual('#E0D9CC', '#332E27'),
 
-  /** A memory, and the way to it: every pin, the next stop, the preview's
-   *  line, the one primary button. The warm red no base map uses, so it never
-   *  reads as water or park. docs/09-visual-design.md part 8. */
-  ember: dual('#A8350F', '#F2703F'),
-  /** The quiet button's fill: ember, barely. */
-  emberSoft: dual('#F6E2D8', '#3A2219'),
-  /** The ledge under an ember button or chip: ember, a step down. */
-  emberDeep: dual('#7A260A', '#B5502A'),
+  /** A memory, and the way to it: the walk's line, the next stop, the one
+   *  primary button, a link. Old gold, dark enough to be text on paper; the
+   *  lockets carry the bright metal. docs/09-visual-design.md. */
+  gold: dual('#86661A', '#D9B45E'),
+  /** The quiet button's fill: gold, barely. */
+  goldSoft: dual('#F1E4C2', '#352A14'),
+  /** The ledge under a gold button or chip: gold, a step down. */
+  goldDeep: dual('#5E470F', '#A8822E'),
   /** The ledge under the quiet button. */
-  emberSoftDeep: dual('#E8C9B9', '#2A1810'),
+  goldSoftDeep: dual('#DCC992', '#241C0C'),
 
-  /** Openable now, and nothing else: the in-reach pin, the reach circle, the
-   *  unlock ring. Bright gold, because ember beside the old ochre was one
-   *  colour to a protanope. It is a fill, never text: text and marks on it are
-   *  sealInk, and gold text on paper is sealDeep. */
-  seal: dual('#F2B53A', '#F5C542'),
-  /** Anything drawn on seal: a pin's edge and eye, the pill's words. */
-  sealInk: dual('#2B1D05', '#1F1605'),
+  /** Openable now, and nothing else: the in-reach halo, the reach circle, the
+   *  unlock ring. Emerald, because gold beside gold is no signal. A fill: text
+   *  and marks on it are sealInk, and emerald text on paper is sealDeep. */
+  seal: dual('#1F6B4F', '#3FA57E'),
+  /** Anything drawn on seal: a lit pin's tag, the pill's words. */
+  sealInk: dual('#F7F4EE', '#0B1F17'),
   /** The ring filling during a hold. */
-  sealSoft: dual('#FCEBC2', '#3E3112'),
-  /** Seal as text or a thin mark on paper, and the padlock inside the ring. */
-  sealDeep: dual('#7A4F00', '#F7D074'),
+  sealSoft: dual('#D5EBDF', '#173528'),
+  /** Seal as text or a thin mark on paper. */
+  sealDeep: dual('#16573F', '#7FD1AE'),
 
-  /** Out of reach: the same padlock, faded. Dark enough to hold against the
-   *  parchment map, and lighter in the dark where a dark pin vanishes. */
+  /** The rich purple detail: your level, your streak, an epic, your row on the
+   *  board. Things you earned, never a memory or an action. */
+  purple: dual('#5B2A6E', '#C59BD8'),
+
+  /** Out of reach: a far thing, faded. Dark enough to hold against the
+   *  parchment map, and lighter in the dark where a dark mark vanishes. */
   faded: dual('#776E64', '#9A9086'),
 
   /** The wash behind a reachable pin, so it is findable before its shape is.
-   *  Deliberately not a pair: it is a translucent seal over a map, and the
-   *  seal's dark value is lighter, so one alpha reads about the same over
-   *  either. It lives here rather than inline so a palette change reaches it. */
-  halo: 'rgba(242,181,58,0.3)',
+   *  Deliberately not a pair: it is a translucent seal over a map, and one
+   *  alpha reads about the same over either. It lives here rather than inline
+   *  so a palette change reaches it. */
+  halo: 'rgba(63,165,126,0.35)',
 
   /** `lift`'s shadow, and the scrim over an uploading photo. */
   shadow: '#000',
   scrim: 'rgba(0,0,0,0.35)',
+};
+
+/** The lockets' metal, for the unlock's Svg (LocketUnlock.tsx). One set in
+ *  both themes: it is gold, not a surface. */
+export const metal = {
+  hi: '#FFF1C1',
+  light: '#F2D58A',
+  mid: '#D4AF5A',
+  deep: '#A8822E',
+  dark: '#6E5216',
+  engrave: '#8A6A22',
+  well: '#3B2C0C',
+  inner: '#E8C77A',
+  rim: '#C9A24A',
+  /** The night locket's enamel. */
+  night: '#211D18',
+  garnet: '#8F1D1D',
+  garnetHi: '#D9524A',
+  /** The inside of an open locket, and the glow it gives off. */
+  glow: '#FFFDF9',
+  /** The compass's N. */
+  north: '#8F2F1B',
 };
 
 /** Real colours, for the few props that cannot take a DynamicColorIOS value:
@@ -83,22 +108,24 @@ export const solid = (dark: boolean) => ({
   paper: dark ? '#161412' : '#F7F4EE',
   ink: dark ? '#F2EDE4' : '#1C1917',
   rule: dark ? '#332E27' : '#E0D9CC',
-  ember: dark ? '#F2703F' : '#A8350F',
+  gold: dark ? '#D9B45E' : '#86661A',
+  purple: dark ? '#C59BD8' : '#5B2A6E',
+  seal: dark ? '#3FA57E' : '#1F6B4F',
   /** The darker edge Apple Maps draws round a route. */
-  emberCasing: dark ? '#8A2E0C' : '#6E2208',
-  /** The preview's line: ember washed out, so the ember pins on it pop. */
-  line: dark ? '#8C4128' : '#EDA38A',
-  lineCasing: dark ? '#5E2A18' : '#D98266',
+  goldCasing: dark ? '#6E5216' : '#5E470F',
+  /** The preview's line: gold washed out, so the lockets on it pop. */
+  line: dark ? '#8A7238' : '#E3CF98',
+  lineCasing: dark ? '#5E4C22' : '#C9AE68',
   /** The reach circle: the seal, washed over the map. */
-  reachStroke: dark ? 'rgba(245,197,66,0.75)' : 'rgba(176,120,10,0.7)',
-  reachFill: dark ? 'rgba(245,197,66,0.12)' : 'rgba(242,181,58,0.14)',
+  reachStroke: dark ? 'rgba(63,165,126,0.75)' : 'rgba(31,107,79,0.7)',
+  reachFill: dark ? 'rgba(63,165,126,0.12)' : 'rgba(31,107,79,0.12)',
   /** mobile/assets/icon.svg and icon-dark.svg. */
   tile: dark ? '#5e2a18' : '#a8350f',
   road: dark ? '#f2ede4' : '#f7f4ee',
   sun: dark ? '#f5c542' : '#f2b53a',
-  /** The glass over the map, warmed: paper in light, a dark ember in dark,
+  /** The glass over the map, warmed: paper in light, a dark gold in dark,
    *  thin enough that the map still shows through. A tint, so a real colour. */
-  frost: dark ? 'rgba(58,34,25,0.35)' : 'rgba(246,226,206,0.45)',
+  frost: dark ? 'rgba(53,42,20,0.35)' : 'rgba(241,228,194,0.45)',
 });
 
 /** One family, SF Pro Rounded: the system's own, so it sits with the map's
@@ -175,7 +202,7 @@ export const story = {
   meta: label,
 };
 
-/** The text inside a button. Pair with `color.paper` on ember, `color.ink`
+/** The text inside a button. Pair with `color.paper` on gold, `color.ink`
  *  on the quiet and outlined ones. */
 export const buttonText = {
   ...font.uiBold,
@@ -201,9 +228,9 @@ const buttonBox = {
 };
 export const button = {
   /** The one thing to do. Text in paper. */
-  solid: { ...buttonBox, backgroundColor: color.ember, borderBottomColor: color.emberDeep },
+  solid: { ...buttonBox, backgroundColor: color.gold, borderBottomColor: color.goldDeep },
   /** The way back, next to a solid one. Text in ink. */
-  quiet: { ...buttonBox, backgroundColor: color.emberSoft, borderBottomColor: color.emberSoftDeep },
+  quiet: { ...buttonBox, backgroundColor: color.goldSoft, borderBottomColor: color.goldSoftDeep },
   /** An action standing on its own. Text in ink. */
   outline: { ...buttonBox, borderColor: color.rule },
   small: { minHeight: 36, borderBottomWidth: 3, paddingVertical: 6, paddingHorizontal: 16 },

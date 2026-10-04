@@ -185,8 +185,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   grow: { ...label, flex: 1 },
   action: { ...label, color: color.inkSoft },
-  // The same text action as Rewrite, in ember: the one thing to do here.
-  sendText: { ...label, color: color.ember },
+  // The same text action as Rewrite, in gold: the one thing to do here.
+  sendText: { ...label, color: color.gold },
   off: { opacity: 0.35 },
   input: { ...input, ...story.body },
 });

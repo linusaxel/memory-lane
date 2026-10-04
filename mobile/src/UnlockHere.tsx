@@ -2,12 +2,13 @@
  *  standing on, and under it which one: its place, its year or source, and ‹ ›
  *  when more than one is in reach (docs/10, "The lock says where"). */
 
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { LocatedMemory } from './api.ts';
 import Glyph from './Glyph.tsx';
+import LocketUnlock from './LocketUnlock.tsx';
 import { color, dim, floating, font, label } from './theme.ts';
-import UnlockButton from './UnlockButton.tsx';
 
 type Props = {
   memory: LocatedMemory;
@@ -15,17 +16,45 @@ type Props = {
   index: number;
   count: number;
   onStep: (by: 1 | -1) => void;
-  onUnlock: () => void;
-  busy: boolean;
+  /** Asks the server. True opens the locket, false springs it back. */
+  requestUnlock: () => Promise<boolean>;
+  /** The locket is diving in: bring the memory up. */
+  onDiveStart: () => void;
+  onOpened: () => void;
   error: string | null;
 };
 
-export default function UnlockHere({ memory, index, count, onStep, onUnlock, busy, error }: Props) {
+export default function UnlockHere({
+  memory,
+  index,
+  count,
+  onStep,
+  requestUnlock,
+  onDiveStart,
+  onOpened,
+  error,
+}: Props) {
   const from = [memory.year, memory.source_name].filter(Boolean).join(' · ');
   const many = count > 1;
+  const { lat, lng } = memory.place.coordinates;
+
+  useEffect(() => {
+    if (error) AccessibilityInfo.announceForAccessibility(error);
+  }, [error]);
+
   return (
     <View style={styles.stack} pointerEvents="box-none">
-      <UnlockButton onUnlock={onUnlock} busy={busy} error={error} />
+      <LocketUnlock
+        // A fresh locket per memory: ‹ › must not carry a half-turned key over.
+        key={memory.id}
+        locket={memory.locket}
+        placeName={memory.place.name}
+        coordinates={`${Math.abs(lat).toFixed(2)} ${lat < 0 ? 'S' : 'N'} · ${Math.abs(lng).toFixed(2)} ${lng < 0 ? 'W' : 'E'}`}
+        requestUnlock={requestUnlock}
+        onDiveStart={onDiveStart}
+        onOpened={onOpened}
+        size={LOCKET}
+      />
       <View style={styles.card}>
         {many && (
           <Arrow glyph="chevron.left" name="Previous memory here" onPress={() => onStep(-1)} />
@@ -60,6 +89,8 @@ function Arrow({ glyph, name, onPress }: ArrowProps) {
     </Pressable>
   );
 }
+
+const LOCKET = 180;
 
 const styles = StyleSheet.create({
   // Above Plan a walk / Add (App's `bottom`, at 70), which stay one tap away.

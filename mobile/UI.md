@@ -26,7 +26,7 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
 │                              the measured card. Draw first, adjust after. Journal and Add top left, level top
 │                              centre, you top right; no bottom row
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
-├─ the loop, drawn             RouteLine from the start and back, washed-out ember under labels so the pins pop
+├─ the loop, drawn             RouteLine from the start and back, washed-out gold under labels so the pins pop
 └─ card (Preview)              two steps; every change on it redraws the walk
    ├─ "A walk from here"        23/700; nothing to close back to
    ├─ "4 memories · 3.8 km loop"   "Finding a walk…" first; "No walk within 10 km from here."
@@ -37,7 +37,7 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
    ├─ See the stops             primary; step two, the map refits above the taller card
    │  ├─ ‹ Back                 to step one ("Back to the length")
    │  ├─ ‹ "4 memories · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left
-   │  ├─ the list               a row per stop in walk order: ember number, place 16/700, "1978 · Vega
+   │  ├─ the list               a row per stop in walk order: gold number, place 16/700, "1978 · Vega
    │  │                         Archive · #music #nightlife", a padlock. Four rows, then it scrolls
    │  └─ Start walk
    └─ walked out (one a day, F35), the card is "Today's walk is done" + More walks
@@ -46,7 +46,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ the level pill             top centre, every stage (src/LevelPill.tsx): "Level 3", an ember
+├─ the level pill             top centre, every stage (src/LevelPill.tsx): "Level 3", a purple
 │                              walker before it, a thin XP bar under it, rolling when it changes.
 │                              A tap recounts steps and opens Your walks (src/HowItWorks.tsx):
 │                              level and XP, every walk as a card drawn as its shape (src/WalkCard.tsx; a tap
@@ -58,18 +58,18 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              "Signed in with Apple" or "Not signed in", Edit profile, then
 │                              Settings (`gearshape`)
 ├─ Journal                    top left, a 44pt glass circle, the planner and the walk, never over a
-│                              card with its own buttons. `book.closed`, a 10pt ember dot: a heart
+│                              card with its own buttons. `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
 │                              journal sheet
 ├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), on the walk only,
 │                              never over a card with its own buttons (Preview, EndWalk,
-│                              WalkDone). Add, a 44pt glass circle with an ember `plus`, files a
+│                              WalkDone). Add, a 44pt glass circle with an gold `plus`, files a
 │                              memory, no walk needed (see "Writing"). Center on me the same circle
 │                              at the other end. Between them the one thing to do, which changes:
-│                              Turn on location (ember) with no position, else the walk card.
+│                              Turn on location (gold) with no position, else the walk card.
 │                              While a hold would open the ring the walk card stays under it
 ├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
-│    ●●○○○ "4.1 km left" (an ember stamp per stop opened, filled from the left, never a ring,
+│    ●●○○○ "4.1 km left" (an gold stamp per stop opened, filled from the left, never a ring,
 │    which is the hold's; VoiceOver hears "2 of 5", stops opened plus one), "Every stop unlocked"
 │    when done. A tap zooms out around you and the next stop; ⏭ ("Skip this stop") drops
 │    the next stop without ending the walk; the ✕ ("End walk") ends it,
@@ -88,7 +88,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
                                loop · 52 min", the streak, Done. At 7, 30 and 100 days the streak
-                               springs in with an ember flame and a second success haptic; any
+                               springs in with a purple flame and a second success haptic; any
                                other day it is one quiet line. A relaunch does not show it again
 
 MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a pageSheet from the journal) - two compositions, not one with holes in it
@@ -100,7 +100,7 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
   │                                 ├─ ❦ the one flourish: byline above, story below
   │                                 ├─ the lede  17/26: the first sentence, the peak, own paragraph
   │                                 ├─ the rest  17/26, #tags semibold
-  │                                 ├─ "their words"  callout: ember bar, ❝ "Mads, at 12:04" label, 17/26
+  │                                 ├─ "their words"  callout: gold bar, ❝ "Mads, at 12:04" label, 17/26
   │                                 ├─ then and now  callout: rule bar, clock icon, "Then and now" label, 17/26
   ├─ distance         52/700        ├─ photo / recording   if it has any
   ├─ "Get within 20 m"              └─ ❦ then the notes: "♡ 1  2 notes" header (F11, glyph first),
@@ -140,7 +140,7 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              haptic each); one that fell just shows. First look and Reduce
 │                              Motion: no roll
 ├─ Walks                       one row per walk that opened something, date and length; a row
-│                              opens in place to its earned stops, numbered on an ember rail.
+│                              opens in place to its earned stops, numbered on an gold rail.
 │                              Cached for the train
 ├─ Unlocked Memories           what you opened; "♡ Hearted" at the right of its count shows only
 │                              what you hearted. One opened since the last look scales in
@@ -170,7 +170,7 @@ offers, and a walk draws only itself. Only a stop of the walk in progress opens,
 On a walk the bottom is where you act, one tap each: Add, the walk card and Center on me;
 in the planner the card's own buttons are. The top is where you read:
 your level, with Journal top left and you top right (docs/10,
-"One ember button that changes").
+"One gold button that changes").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -188,9 +188,11 @@ with no network is never stopped at the gate.
 | File | What it owns |
 |---|---|
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. The pin is the one drawn mark |
-| `src/MemoryMarker.tsx` | one padlock, lit when it can be opened from here, open once opened |
-| `src/UnlockButton.tsx` | the hold, the ring, the haptics |
-| `src/UnlockHere.tsx` | the ring over the map, with the place it opens |
+| `src/MemoryMarker.tsx` | one locket, keyhole and all until opened, lit when it can be opened from here |
+| `src/lockets.ts` | the six lockets: their pin images and the level each opens at |
+| `src/LocketUnlock.tsx` | the hold: the key, the ring, the lid, the dive, the haptics; one lid per locket |
+| `src/lockMotion.ts` | the worklet curves and pivots LocketUnlock moves by |
+| `src/UnlockHere.tsx` | the locket over the map, with the place it opens |
 | `src/LevelPill.tsx` | the top of the map: your level and an XP bar, the number rolling (`@expo/ui`) |
 | `src/WalkCard.tsx` | a past walk drawn as its shape: the cards in Your walks, the finish card's and journal rows' small shape |
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
@@ -237,12 +239,13 @@ Two traps, both hit:
   how an app gets black glyphs on a black background.
 
 **Dark is not the light palette inverted.** Paper becomes a warm near-black
-rather than a grey, ember *lightens* so it holds on a dark map, and `faded`
+rather than a grey, gold *lightens* so it holds on a dark map, and `faded`
 lightens too — a locked pin has to survive a dark map, where the light-mode
 value disappeared entirely.
 
 **Warm and rounded** since 2026-09-27 (`docs/09-visual-design.md` part 8):
-paper and one rounded face, one warm accent, capsules, and glass only over the map.
+paper and one rounded face, capsules, and glass only over the map. **Gold,
+emerald and purple** since 2026-10-04 (docs/10, "Lockets").
 
 | Token | Hex | Used for |
 |---|---|---|
@@ -254,37 +257,39 @@ paper and one rounded face, one warm accent, capsules, and glass only over the m
 | `rule` | `#E0D9CC` / `#332E27` | hairlines. Rules do the work shadows used to |
 | `faded` | `#776E64` / `#9A9086` | a locked pin out of reach. Dark enough for parchment, light enough for a dark map |
 
-**Two warm colours, and each means one thing.** Blue is left to the map and
-to your location dot.
+**Three colours, and each means one thing.** Blue is left to the map and
+to your location dot. The lockets' own metal is `metal` in `theme.ts`, one set
+in both themes, for the unlock's Svg only.
 
 | Token | Hex | Meaning |
 |---|---|---|
-| `ember` | `#A8350F` / `#F2703F` | **a memory, and the way to it.** Every pin, the next stop (bigger, hops), the preview's line (washed out: `solid().line`), the walk's bar, the primary button, errors |
-| `emberSoft` | `#F6E2D8` / `#3A2219` | the quiet button's fill |
-| `emberDeep` | `#7A260A` / `#B5502A` | the ledge under an ember button or chip. A mark, never text |
-| `emberSoftDeep` | `#E8C9B9` / `#2A1810` | the ledge under the quiet button |
-| `seal` | `#F2B53A` / `#F5C542` | **openable.** The in-reach pin, the reach circle. A fill, never text |
-| `sealInk` | `#2B1D05` / `#1F1605` | anything drawn on seal: a lit pin's edge and eye, the pill's words |
-| `sealSoft` | `#FCEBC2` / `#3E3112` | the ring filling during a hold |
-| `sealDeep` | `#7A4F00` / `#F7D074` | seal as words or a thin mark on paper: the unlock ring, its lock, "attachments waiting" |
+| `gold` | `#86661A` / `#D9B45E` | **a memory, and the way to it.** The next stop's tag, the preview's line (washed out: `solid().line`), the walk's bar, the primary button, a link, errors |
+| `goldSoft` | `#F1E4C2` / `#352A14` | the quiet button's fill |
+| `goldDeep` | `#5E470F` / `#A8822E` | the ledge under a gold button or chip. A mark, never text |
+| `goldSoftDeep` | `#DCC992` / `#241C0C` | the ledge under the quiet button |
+| `seal` | `#1F6B4F` / `#3FA57E` | **openable.** Emerald: the in-reach halo and tag, the reach circle, the hold's ring. A fill, never text |
+| `sealInk` | `#F7F4EE` / `#0B1F17` | anything drawn on seal: a lit pin's tag, the pill's words |
+| `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
+| `sealDeep` | `#16573F` / `#7FD1AE` | seal as words or a thin mark on paper: "attachments waiting" |
+| `purple` | `#5B2A6E` / `#C59BD8` | **what you earned.** The level pill, the streak's flame, an epic's line, your row on the board |
 
-Ember and seal differ in lightness on purpose: the earlier ochre `seal` and
-ember were one colour under protanopia (docs/09 part 8).
+Gold and seal differ in hue and lightness: gold beside gold is no signal, so
+openable is the one thing on the map that is not gold.
 
 **Buttons are `button.solid`, `button.quiet` or `button.outline`** from
-`theme.ts`, with `buttonText` inside: 52pt capsules, ember with paper text,
-soft ember with ink text, or a rule outline. Each sits on a 4pt ledge of its
-own colour (`emberDeep`, `emberSoftDeep`, `rule`; 3pt on `small` and on a
+`theme.ts`, with `buttonText` inside: 52pt capsules, gold with paper text,
+soft gold with ink text, or a rule outline. Each sits on a 4pt ledge of its
+own colour (`goldDeep`, `goldSoftDeep`, `rule`; 3pt on `small` and on a
 chip), and pressed it sinks onto it: `sunk()` in `theme.ts` thins the bottom
 border and adds the difference to the top margin, so nothing beside it moves.
 `dim()` does this for any style with a ledge; a Pressable whose style is on a
 child (Submit's `Chip`) calls `sunk` itself. Two circles take a 3pt lip as well:
-a story's ‹ › pager step (rule) and a recording's play disc (ember on
-`emberDeep`). A screen adds only where one sits
+a story's ‹ › pager step (rule) and a recording's play disc (gold on
+`goldDeep`). A screen adds only where one sits
 (margin, alignSelf), never its own padding or border. Post is the
 same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
 `hitSlop={4}`. An action inside a page is not a button but `label` text with
-`hitSlop={12}`: inkSoft for Rewrite, Remove and the photo actions, ember for
+`hitSlop={12}`: inkSoft for Rewrite, Remove and the photo actions, gold for
 Leave note and Delete. Edit this memory is in ⋯ (docs/10, "Reading and writing
 are one page").
 
@@ -313,7 +318,7 @@ token is how it stops being one: the old mono voice was hand-retyped across most
 of the app and its tracking had drifted three ways before anybody noticed.
 
 **`buttonText`** is 600 at 17, the HIG's Headline size; pair it with
-`color.paper` on ember and `color.ink` on the quiet and outlined buttons.
+`color.paper` on gold and `color.ink` on the quiet and outlined buttons.
 **`input`** is the whole text-field block, which renders in both Edit profile
 and Submit and must not drift between them.
 
@@ -331,14 +336,14 @@ nothing else: 28, 17 and 13.
 (Journal, Add, the walk card, the keys pill, you,
 Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
 or raised paper with `lift` where glass is unavailable. Never glass on a sheet
-or a card, never glass on glass. The one ember thing in the bottom row, Plan a
+or a card, never glass on glass. The one gold thing in the bottom row, Plan a
 walk or Turn on location, is not glass but `button.solid` with its lip
 (2026-10-03): a ledge under glass reads as a shadow glued on. The walk card is
-untinted: the next stop's pin is the ember on the map. No `GlassContainer`: two circles merging read as
+untinted: the next stop's pin is the gold on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
 and that is the material, not a bug. Every glass control is warmed by
-`solid().frost`, a thin paper tint (a dark ember one in dark mode), so it
+`solid().frost`, a thin paper tint (a dark gold one in dark mode), so it
 reads as frosted paper and not as cold white (2026-10-03). A glass
 control squishes to 0.92 and springs back with a little overshoot rather than
 dimming: opacity on a glass view's parent stops the effect rendering. Inside sheets, hierarchy is still hairlines and
@@ -418,12 +423,15 @@ quietly go stale.
 | `inkFaint` on `paper` | 4.6:1 | 5.3:1 |
 | `inkFaint` on `paperRaised` | 5.0:1 | 4.8:1 |
 | `faded` on `paper` | 4.6:1 | 5.9:1 |
-| `sealInk` on `seal` | 8.9:1 | 11.0:1 |
+| `sealInk` on `seal` | 5.8:1 | 5.6:1 |
 | `paper` on `faded` | 4.6:1 | 5.9:1 |
-| `paper` on `ember` | 6.0:1 | 6.3:1 |
-| `ink` on `emberSoft` | 14.0:1 | 12.7:1 |
-| `sealDeep` on `paper` | 6.5:1 | 12.5:1 |
-| `sealDeep` on `sealSoft` | 6.0:1 | 8.6:1 |
+| `paper` on `gold` | 4.9:1 | 9.3:1 |
+| `gold` on `paper` | 4.9:1 | 9.3:1 |
+| `gold` on `paperRaised` | 5.3:1 | 8.5:1 |
+| `ink` on `goldSoft` | 13.8:1 | 12.1:1 |
+| `purple` on `paper` | 9.6:1 | 7.9:1 |
+| `sealDeep` on `paper` | 7.7:1 | 10.2:1 |
+| `sealDeep` on `sealSoft` | 6.8:1 | 7.4:1 |
 
 **`inkFaint` moved in both themes to get here**, and the way it failed is worth
 keeping. The light value was `#8A837A` — 3.4:1, well under AA, on the colour
@@ -598,7 +606,7 @@ page"):
   every composer. Post is held until the title and the story are there.
 - **Every other action is text** in the label voice: the toolbar's B, I,
   Heading, Quote, Divider, Photo, Camera, ↑ ↓ and Preview, a photo's S M L
-  and Left Center Right, Remove photo, Delete this memory (ember, two taps).
+  and Left Center Right, Remove photo, Delete this memory (gold, two taps).
 - **The story is blocks** (docs/10, "A story has a little markdown"): a
   paragraph, a heading, a quote, a divider, a photo. Markdown typed works as
   well as the toolbar: a blank line starts a block, `## ` and `> ` turn it,
@@ -788,37 +796,39 @@ paging through venues miles apart is not "1 of 23 here", it is a lie.
 
 ### One pin
 
-A locked memory draws a small padlock: an `ember` shackle over a 16×13
-`ember` body with a `paper` edge and keyhole (2026-10-02, the founder: "a mini
-lock instead of pins"). It changes for one reason only — **it can be opened
-from where you stand**, and on a route day only if it is one of the route's
-stops (F25) — and then it scales 1.35 in gold `seal` with `sealInk`, over a
-`halo` wash. Opened, the same lock opens: its shackle lifts 3px with the left
-leg still in the body, and the body turns `paper` with an `ember` edge and
-keyhole, quiet beside the ones still waiting. That is the whole visual
-language. Simplified 2026-09-23
-from five ink states, a round-or-folded-card shape per layer and a ranked
-corner slot of padlock and tag glyph: it was a legend nobody should need.
-The resting disc went from `ink` to teal on 2026-09-26 (black read as grim),
-and to `ember` on 2026-09-27: teal read as water and park.
+A memory draws as its locket (docs/10, "Lockets"): the one its author chose,
+or the Hunter compass for everything extracted. Locked, it shows its keyhole;
+opened, the same locket without one, from `mobile/assets/lockets/` through
+`src/lockets.ts`. A spot with several draws the first one's. It changes for
+one reason only — **it can be opened from where you stand**, and on a route
+day only if it is one of the route's stops (F25) — and then it scales 1.35
+over an emerald `halo` wash. That is the whole visual language. The padlock
+it replaces (2026-10-02, "a mini lock instead of pins") was drawn in Views;
+before that, five ink states and a shape per layer, which was a legend nobody
+should need.
 
 | When | Geometry | Tokens |
 |---|---|---|
-| locked | shackle 10×8, stroke 2.5; body 16×13, radius 3, border 1.5; keyhole 3×5 | shackle + body `ember`, edge + keyhole `paper` |
-| unlocked (`plain`, `stamped`): every memory in it opened | the lock, shackle lifted 3, left leg joined | shackle `ember`; body `paper`, edge + keyhole `ember` |
-| `unlockable`: inside the radius **and openable by walking** | the lock, scale 1.35; wash 46 | body `seal`, shackle + edge + keyhole `sealInk`, wash `halo` |
-| the next stop on today's walk, not yet in reach | the lock, scale 1.35; hops (`useHop`), still under Reduce Motion | as locked. Size and the hop tell it apart |
-| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `ember`, count `paper` (`seal` with `sealInk` on a lit pin) |
+| locked | the locket's keyhole image, 32×32 | the art's own gold |
+| unlocked (`plain`, `stamped`): every memory in it opened | the locket without its keyhole, 32×32 | the art's own gold |
+| `unlockable`: inside the radius **and openable by walking** | the locked image, scale 1.35; wash 46 | wash `halo` |
+| the next stop on today's walk, not yet in reach | the locked image, scale 1.35; hops (`useHop`), still under Reduce Motion | as locked. Size and the hop tell it apart |
+| a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `gold`, count `paper` (`seal` with `sealInk` on a lit pin) |
 | locked, off a walk (`opacityOf`) | same pin, fading with distance | opacity 1 to 500 m, down to 0.3 at 3 km, in tenths |
 | locked, on the home map (`FADED_PIN`) | same pin, never lit, a tap does nothing | opacity 0.4 |
+
+**Every image gets an explicit size.** The art's @2x and @3x are not two and
+three times its @1x (48, 192, 432 px), so an image left to its intrinsic size
+draws at a different size on every density.
 
 **The badge sits in the corner** so the blue location dot is never under it.
 
 **`seal` means openable now, and nothing else.** A seal-coloured pin you
 cannot open is an invitation that refuses you (F11). Only a walk's stops are
 ever drawn at full strength, and the home map's faded pins never light, so
-every lit pin can be opened. Locked near and locked
-far draw the same ember lock, bar a fade with distance (2026-10-02:
+every lit pin can be opened. Emerald is never in the locket art, so only the
+halo and the tag say it. Locked near and locked
+far draw the same locket, bar a fade with distance (2026-10-02:
 full detail near you, a glow further out, so the map reads as where to go
 next rather than a checklist), and earned and never gated the same open one
 (2026-10-01, docs/10 "A map of what is locked"); the rest is in the
@@ -849,7 +859,7 @@ the same object.
 
 **Nothing on a marker animates.** Animating a custom marker's children is a
 known flicker source in react-native-maps. Markers set `tracksViewChanges={false}`
-for the frame cost and are keyed `` `${group.key}:${reach}` ``, so they repaint
+for the frame cost and are keyed on the group, its reach and its locket, so they repaint
 exactly when their state changes and never otherwise.
 
 **A new walk draws itself, like a loading bar filling.** Once the camera's
@@ -913,68 +923,59 @@ this is not a polish pass:
 
 ## The unlock control
 
-`src/UnlockButton.tsx`. The one place in this app allowed to be playful. Everything else is a quiet
-map; this is the moment the product is *about*, so it gets the animation
-budget. Spec, so it does not get re-invented per screen:
+`src/LocketUnlock.tsx`, with its curves in `src/lockMotion.ts`. The one place
+in this app allowed to be playful. Everything else is a quiet map; this is the
+moment the product is *about*, so it gets the animation budget. It is the
+memory's own locket opening (docs/10, "Lockets"). Spec, so it does not get
+re-invented per screen:
 
-- **Alive at rest, quiet under the thumb.** Borrowed from Shazam: before
-  it is touched, the ring breathes (1 to 1.03) and two seal ripples leave it
-  half a breath apart (`IDLE_MS`, 2.4s), over a static seal glow. It asks
-  to be pressed. On press-in the ripples fade and the ring squishes to 0.94,
-  so the press is answered in the same frame. The squish reacts to the press
-  and the fill is the progress; one never stands in for the other. Letting go
-  pops it back with a little overshoot. It never loops while `busy` or with
-  Reduce Motion on.
-- **Press and hold, not tap.** ~900ms. A tap is a click; a hold is a lock
+- **Press and hold, not tap.** 900ms. A tap is a click; a hold is a key
   turning. It also makes an accidental unlock almost impossible, which matters
   because unlocking is irreversible.
-- **A ring fills around the button** over the hold, driven by
-  `Animated.timing` with `useNativeDriver`. Releasing early springs it back —
+- **The locket takes the key.** Over the hold a gold key slides into the
+  keyhole, grinds to 25° and gives to 90°, the locket turning toward you to
+  take it and back. The ornament (the compass rose, the guilloché) swings and
+  settles; the bail presses home. One derived value (`motion`) turns the hold
+  and the opening into every moving number, so nothing drifts out of sync.
+- **A ring fills around it, and the fill is linear.** It is a promise about
+  when you may let go, and an eased progress bar is a progress bar that lies.
+  Everything that builds is layered over it. Releasing early springs it back,
   visibly, so the person understands they let go rather than that it failed.
-- **The fill is linear, and stays linear.** It is a promise about when you may
-  let go, and an eased progress bar is a progress bar that lies. Everything
-  that builds is layered over it rather than baked into it, which is the only
-  way to have both suspense and an honest instrument.
-- **Haptics carry the feel, and they accelerate.** `Light` on press-in, then
-  `Soft` at 340ms, `Light` at 590ms and `Rigid` at 780ms — gaps closing, taps
-  sharpening — and `notificationAsync(Success)` at the end. 900ms of silence
-  is a long time to wonder whether a control is working, and the closing
-  tempo is where the anticipation comes from while the ring stays truthful.
-  `Success` is reserved: it is the one pattern in the app that means a thing
-  was earned. Never on release-cancel, which would read as a reward for
-  failing. One more `Light` fires in `App.tsx` the moment the reachable set
-  goes empty to non-empty — walking into range is the moment the app is for,
-  and it used to happen in silence. The transition, not the state:
-  `withinReach` gets a new array identity every 5 m, so the effect keys on a
-  boolean and a ref, not on the array or its length.
-- **The last quarter strains.** An inner ring fades up and closes in from 78%,
-  arriving with the third tick, and the lock swells as it is worked. Both
-  are interpolations of the same value the fill uses, so they cost one
-  animation and cannot drift out of sync with it. On the Success the lock
-  becomes `lock.open.fill`, with the symbol's own bounce.
-- **The burst plays over the request, not after it.** A completed hold fires
-  the unlock and the flare in the same frame, so the round trip happens behind
-  something worth watching. The payoff proper is not here — it is the story
-  rising into `MemorySheet` as it opens (`revealId`), and this hands off to
-  it: the lede, the rest, the quote, then "Then and now" and the
-  credit, each rising 12 px over 360 ms, 90 ms after the last (630 ms in
-  all, one native-driver value). Reduce Motion keeps the fades and drops the
-  rise. No haptic of its own: the Success has already fired on the hold.
-- **Transform and opacity only.** Those are what `useNativeDriver` can carry;
-  an animated colour puts the whole control back on the JS thread for the
-  900ms it most needs to be smooth.
+- **Haptics carry the feel.** `Light` on press-in, `Rigid` as the key seats
+  and as it gives, `Soft` and `Rigid` as the lid unlatches, `Medium` at the
+  commit, and `notificationAsync(Success)` when the lid opens. `Success` is
+  reserved: it is the one pattern in the app that means a thing was earned.
+  Never on release-cancel, which would read as a reward for failing. One more
+  `Light` fires in `App.tsx` the moment the reachable set goes empty to
+  non-empty — walking into range is the moment the app is for. The
+  transition, not the state: `withinReach` gets a new array identity every
+  5 m, so the effect keys on a boolean and a ref.
+- **It waits for the server, then opens.** A completed hold ends in a
+  *checking* beat (the lid trembles on its latch, at least 420ms), and the lid
+  opens only on a yes: a locket that swings open and then shuts on a refusal
+  would be a lie. It replaced the burst played over the request (docs/10,
+  "Lockets"). On a yes the lid swings past 90° on its hinge, sparkles pop, the
+  inside glows with the place engraved, and the camera dives in. The story
+  rises into `MemorySheet` from the dive (`onDiveStart`, `revealId`): the
+  lede, the rest, the quote, then "Then and now" and the credit, each rising
+  12 px over 360 ms, 90 ms after the last. App holds the opening locket on
+  screen (`opening`) until the dive ends, because an opened memory leaves the
+  ring's list.
+- **Transform and opacity only, on the UI thread.** Reanimated worklets; the
+  Svg art never re-renders, only the views holding it move. Reduce Motion
+  drops the tilt, sway, sparkles, shine and zoom and cross-fades instead.
 - **It lives on the map, low, and says where.** `src/UnlockHere.tsx` puts a
-  136px ring just above the bottom row, where a thumb reaches, and under it the
-  place and its year or source, so the hold says what it opens. More than one
-  in reach adds ‹ › and "2 of 3" beside the words, never beside the ring, so a
-  thumb aiming for an arrow cannot start the hold. No caption, cost or error:
-  a stop of the walk costs nothing. It needs no × because walking away takes it
-  away (rule 12). docs/10, "The lock says where".
-- **A refusal resets the ring and shakes its head.** Success unmounts the
-  control (the memory is no longer locked, and the sheet opens on it), so
-  `busy` falling back to false is always a no. The ring springs empty, shakes
-  side to side and fires `notificationAsync(Warning)`, and a screen reader is
-  told the reason, since nothing draws it.
+  180pt locket just above the bottom row, where a thumb reaches, and under it
+  the place and its year or source, so the hold says what it opens. More than
+  one in reach adds ‹ › and "2 of 3" beside the words, never beside the
+  locket, so a thumb aiming for an arrow cannot start the hold. Each memory
+  gets a fresh locket (`key`), so ‹ › never carries a half-turned key over. No
+  caption, cost or error: a stop of the walk costs nothing. It needs no ×
+  because walking away takes it away (rule 12). The parent must not clip it:
+  the dive scales it past its bounds.
+- **A refusal springs back.** The key backs out, the ring empties, and
+  `notificationAsync(Warning)` fires; a screen reader is told the reason,
+  since nothing draws it.
 - **The walk in is the same ring.** Out of reach, `src/Approach.tsx` draws the
   same 84px circle with a rim that thickens inward as you close — empty at
   three radii (`WARM_MULTIPLIER`, so the sheet and the pin agree about
@@ -994,14 +995,14 @@ Accessibility is not optional here, and a hold gesture is the easy thing to get
 wrong: the control needs `accessibilityRole="button"`, a label that states the
 gesture, and it must remain operable by a plain activation for anyone who cannot
 hold. A gate nobody with a motor impairment can open is a gate on the wrong
-people. As built, `onPress` unlocks directly when a screen reader is on, which
-covers VoiceOver and not every motor impairment — the `ponytail:` marker in the
-file names the gap.
+people. As built, the `activate` accessibility action runs the hold in 300ms,
+which covers VoiceOver and not every motor impairment. A "tap to unlock"
+setting is the next rung if asked for.
 
 **The button never decides anything.** It asks
 `POST /v1/memories/{id}/unlock` and the server re-measures, so a
-completed hold can still come back refused when GPS has drifted. The head
-shake says so, and VoiceOver hears "Not quite there. Take a few more steps."
+completed hold can still come back refused when GPS has drifted. The spring
+back says so, and VoiceOver hears "Not quite there. Take a few more steps."
 rather than meeting a control that looks broken.
 
 ## Flows

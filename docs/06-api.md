@@ -62,13 +62,17 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   carry a little markdown, photos placed as `![caption](photo:<media id> s|m|l left|center|right)`
   (`mobile/src/story.ts`; docs/10, *A story has a little markdown*). One coordinate: it is both where you are and where
   the memory goes. Lands in the `stranger` layer, gated like everything else,
-  and records the unlock for the person who filed it
+  and records the unlock for the person who filed it. Optional `locket`: the
+  locket its pin is drawn as, one the author's level has reached
+  (`LOCKETS` in `api/progression.py`), else 422. Every memory, locked or not,
+  carries `locket`; unset is `hunter-compass`
 - `POST /v1/media` (multipart: `device`, `file`, optional `duration_seconds`) -
   a photo or a recording, held until a submission claims it. `api/media.py`
   decides what a file may be; see [Uploads](architecture.md#uploads)
 - `PUT /v1/memories/{id}` / `DELETE /v1/memories/{id}` `{device, ...}` - change
   or take down something you filed. Ownership is the only check; the delete is
-  real, not the report path's hidden flag
+  real, not the report path's hidden flag. A `locket` on the PUT is checked
+  as on the POST; leaving it out keeps the one it has
 - `GET /v1/me/memories?device=UUID` - everything this account filed, newest
   first, hidden ones included. `last_hearted_at` is when its newest heart came;
   who gave it is never sent
