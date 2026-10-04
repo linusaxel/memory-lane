@@ -967,8 +967,9 @@ re-invented per screen:
   `*_SYNCHRONOUSLY_UPDATE_UI_PROPS` flags in `package.json` keep those props
   off the shadow tree, so a React commit (the map re-keying its pins as the
   lid opens) cannot pause the frames. iOS depth-sorts 3D-transformed
-  siblings, so the coplanar lid layers carry an explicit `zIndex` (Fabric's
-  `zPosition`) rather than relying on draw order. Reduce Motion
+  siblings and sorted the coplanar lid behind the case (half of it vanished
+  as the locket turned), so each moving layer sits in its own flat `Plane`
+  (`collapsable={false}`) and they paint in written order. Reduce Motion
   drops the tilt, sway, sparkles, shine and zoom and cross-fades instead.
 - **It lives on the map, low, and says where.** `src/UnlockHere.tsx` puts a
   180pt locket just above the bottom row, where a thumb reaches, and under it

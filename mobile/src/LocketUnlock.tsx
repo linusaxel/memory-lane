@@ -451,92 +451,112 @@ export default function LocketUnlock({
           </Svg>
 
           {/* case: chain stub, bail, the inside with the place */}
-          <Animated.View style={[StyleSheet.absoluteFill, caseStyle]}>
-            <CaseArt shape={art.shape} placeName={placeName} coordinates={coordinates} />
-            <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
-              <Svg width={BOX} height={BOX}>
-                <Defs>
-                  <RadialGradient id="glow">
-                    <Stop offset="0" stopColor={metal.glow} stopOpacity={1} />
-                    <Stop offset="1" stopColor={metal.glow} stopOpacity={0} />
-                  </RadialGradient>
-                </Defs>
-                <Circle cx={C} cy={CY} r={80} fill="url(#glow)" />
-              </Svg>
+          <Plane>
+            <Animated.View style={[StyleSheet.absoluteFill, caseStyle]}>
+              <CaseArt shape={art.shape} placeName={placeName} coordinates={coordinates} />
+              <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
+                <Svg width={BOX} height={BOX}>
+                  <Defs>
+                    <RadialGradient id="glow">
+                      <Stop offset="0" stopColor={metal.glow} stopOpacity={1} />
+                      <Stop offset="1" stopColor={metal.glow} stopOpacity={0} />
+                    </RadialGradient>
+                  </Defs>
+                  <Circle cx={C} cy={CY} r={80} fill="url(#glow)" />
+                </Svg>
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
-          <Animated.View style={[StyleSheet.absoluteFill, crownStyle]}>
-            <BailArt crown={art.crown} top={art.top} />
-          </Animated.View>
+          </Plane>
+          <Plane>
+            <Animated.View style={[StyleSheet.absoluteFill, crownStyle]}>
+              <BailArt crown={art.crown} top={art.top} />
+            </Animated.View>
+          </Plane>
 
           {/* lid: inside face, outside face, ornament, then keyhole + shine on top */}
-          <Animated.View
-            style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 1 }, lidBackStyle]}
-          >
-            <LidInsideArt shape={art.shape} />
-          </Animated.View>
-          <Animated.View
-            style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 2 }, lidFrontStyle]}
-          >
-            <Svg width={BOX} height={BOX}>
-              <GoldDefs />
-              {art.lid(placeName)}
-            </Svg>
-          </Animated.View>
-          {art.ornament && (
-            <Animated.View
-              style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 3 }, roseStyle]}
-            >
+          <Plane>
+            <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, lidBackStyle]}>
+              <LidInsideArt shape={art.shape} />
+            </Animated.View>
+          </Plane>
+          <Plane>
+            <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, lidFrontStyle]}>
               <Svg width={BOX} height={BOX}>
                 <GoldDefs />
-                {art.ornament}
+                {art.lid(placeName)}
               </Svg>
             </Animated.View>
-          )}
-          <Animated.View
-            style={[StyleSheet.absoluteFill, styles.noBack, { zIndex: 4 }, lidFrontStyle]}
-          >
-            <KeyholeArt y={keyY} />
-            <Animated.View style={[StyleSheet.absoluteFill, keyShadowStyle]}>
-              <Svg width={BOX} height={BOX}>
-                <Ellipse
-                  cx={C + 16}
-                  cy={keyY + 16}
-                  rx={18}
-                  ry={4.5}
-                  fill={metal.well}
-                  transform={`rotate(35 ${C + 16} ${keyY + 16})`}
-                />
-              </Svg>
-            </Animated.View>
-            {!reduce && (
-              <View style={[styles.shineClip, art.clip]}>
-                <Animated.View style={[styles.shine, shineStyle]} />
-              </View>
-            )}
-            <Svg width={BOX} height={BOX} style={StyleSheet.absoluteFill}>
-              <Rect x={hingeX - 4} y={150} width={8} height={12} rx={2} fill={metal.deep} />
-              <Rect x={hingeX - 4} y={178} width={8} height={12} rx={2} fill={metal.deep} />
-            </Svg>
-          </Animated.View>
-
-          <Animated.View style={[StyleSheet.absoluteFill, { zIndex: 5 }, keyStyle]}>
-            <View style={styles.keyClip}>
-              <Animated.View style={[styles.keySlide, keySlideStyle]}>
-                <KeyArt y={keyY} />
+          </Plane>
+          {art.ornament && (
+            <Plane>
+              <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, roseStyle]}>
+                <Svg width={BOX} height={BOX}>
+                  <GoldDefs />
+                  {art.ornament}
+                </Svg>
               </Animated.View>
-            </View>
-          </Animated.View>
+            </Plane>
+          )}
+          <Plane>
+            <Animated.View style={[StyleSheet.absoluteFill, styles.noBack, lidFrontStyle]}>
+              <KeyholeArt y={keyY} />
+              <Animated.View style={[StyleSheet.absoluteFill, keyShadowStyle]}>
+                <Svg width={BOX} height={BOX}>
+                  <Ellipse
+                    cx={C + 16}
+                    cy={keyY + 16}
+                    rx={18}
+                    ry={4.5}
+                    fill={metal.well}
+                    transform={`rotate(35 ${C + 16} ${keyY + 16})`}
+                  />
+                </Svg>
+              </Animated.View>
+              {!reduce && (
+                <View style={[styles.shineClip, art.clip]}>
+                  <Animated.View style={[styles.shine, shineStyle]} />
+                </View>
+              )}
+              <Svg width={BOX} height={BOX} style={StyleSheet.absoluteFill}>
+                <Rect x={hingeX - 4} y={150} width={8} height={12} rx={2} fill={metal.deep} />
+                <Rect x={hingeX - 4} y={178} width={8} height={12} rx={2} fill={metal.deep} />
+              </Svg>
+            </Animated.View>
+          </Plane>
+
+          <Plane>
+            <Animated.View style={[StyleSheet.absoluteFill, keyStyle]}>
+              <View style={styles.keyClip}>
+                <Animated.View style={[styles.keySlide, keySlideStyle]}>
+                  <KeyArt y={keyY} />
+                </Animated.View>
+              </View>
+            </Animated.View>
+          </Plane>
 
           {!reduce && (
-            <Animated.View style={[StyleSheet.absoluteFill, { zIndex: 6 }, sparkleLayerStyle]}>
-              {SPARKLES.map((s, i) => (
-                <Sparkle key={i} index={i} x={s[0]} y={s[1]} motion={motion} />
-              ))}
-            </Animated.View>
+            <Plane>
+              <Animated.View style={[StyleSheet.absoluteFill, sparkleLayerStyle]}>
+                {SPARKLES.map((s, i) => (
+                  <Sparkle key={i} index={i} x={s[0]} y={s[1]} motion={motion} />
+                ))}
+              </Animated.View>
+            </Plane>
           )}
         </Animated.View>
       </Pressable>
+    </View>
+  );
+}
+
+// iOS depth-sorts 3D-transformed siblings, and with each layer carrying its own
+// perspective it sorts the coplanar lid behind the case: half the lid vanished as
+// the locket turned. A plain parent flattens its child, so each moving layer gets
+// one and the layers paint in the order they are written.
+function Plane({ children }: { children: ReactNode }) {
+  return (
+    <View style={StyleSheet.absoluteFill} collapsable={false} pointerEvents="none">
+      {children}
     </View>
   );
 }
