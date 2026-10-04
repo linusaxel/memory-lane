@@ -17,12 +17,13 @@
  *
  * The parent must not clip this view: the dive scales it past its bounds.
  */
-import { memo, useCallback, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
   View,
   useColorScheme,
+  useWindowDimensions,
   type AccessibilityActionEvent,
   type ViewStyle,
 } from 'react-native';
@@ -68,7 +69,7 @@ import {
   type Tf,
 } from './lockMotion.ts';
 import { locketOf, type LocketId } from './lockets.ts';
-import { font, metal, solid } from './theme.ts';
+import { color, font, lift, metal, radius, solid } from './theme.ts';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -81,6 +82,7 @@ const RING_LEN = 879.6; // 2π × 140
 const HOLD_MS = 900;
 const CHECK_MIN_MS = 420;
 const OPEN_MS = 2300;
+const GROW_MS = 700;
 
 // phases as numbers so worklets can read them cheaply
 const IDLE = 0;
@@ -99,6 +101,10 @@ const TICKS: Array<[number, HapticKind]> = [
   [0.92, 'rigid'],
 ];
 
+/** Where the inside of the locket is on screen as the dive starts: its centre
+ *  and half its width, in window points. The memory grows out of it. */
+export type Iris = { x: number; y: number; r: number };
+
 type Props = {
   locket: LocketId;
   /** Engraved inside the case. */
@@ -107,7 +113,7 @@ type Props = {
   /** The server re-measures. Resolve true to open, false to refuse. */
   requestUnlock: () => Promise<boolean>;
   /** Fired as the camera starts diving in: bring the memory up from here. */
-  onDiveStart?: () => void;
+  onDiveStart?: (from: Iris) => void;
   /** Fired when the dive has finished. */
   onOpened?: () => void;
   /** Rendered size in points (the design is 300). */
@@ -167,6 +173,7 @@ export default function LocketUnlock({
   const art = ART[locketOf(locket).id];
   const { hingeX, keyY, swing } = art;
   const width = 2 * (C - hingeX);
+  const root = useRef<View>(null);
 
   const progress = useSharedValue(0); // the hold, 0 → 1 (springs below 0 on release)
   const openP = useSharedValue(0); // the opening + dive, 0 → 1
@@ -199,13 +206,24 @@ export default function LocketUnlock({
     },
   );
 
+  const diveStart = useCallback(() => {
+    const k = size / BOX;
+    root.current?.measureInWindow((x, y) =>
+      onDiveStart?.({
+        x: x + size / 2,
+        y: y + size / 2 + (CY - C) * k,
+        r: 0.9 * (C - hingeX) * k,
+      }),
+    );
+  }, [hingeX, onDiveStart, size]);
+
   // Start the dive callback once, as the zoom begins.
   useAnimatedReaction(
     () => openP.value >= 0.5,
     (now, before) => {
-      if (now && !before && phase.value === OPEN && onDiveStart) runOnJS(onDiveStart)();
+      if (now && before === false && phase.value === OPEN) runOnJS(diveStart)();
     },
-    [onDiveStart],
+    [diveStart],
   );
 
   const finishOpen = useCallback(() => {
@@ -412,7 +430,7 @@ export default function LocketUnlock({
   const scale = size / BOX;
 
   return (
-    <View style={[{ width: size, height: size }, style]}>
+    <View ref={root} collapsable={false} style={[{ width: size, height: size }, style]}>
       <Pressable
         onPressIn={() => begin()}
         onPressOut={end}
@@ -547,6 +565,60 @@ export default function LocketUnlock({
       </Pressable>
     </View>
   );
+}
+
+type IrisProps = {
+  from: Iris;
+  /** The open memory's card it lands on: full width, on the bottom edge. */
+  height: number;
+  /** Covered: open the card now, under it. */
+  onGrown: () => void;
+};
+
+/** The dive, continued over the map: paper grows out of the locket's inside to
+ *  the card's frame, so the memory opens in place instead of sliding up. A
+ *  circle until it is as wide as the card, then it stretches; width and
+ *  height, not scale, so it stays round. The parent removes it once the card
+ *  is up. With Reduce Motion it draws nothing and hands over at once. */
+export function IrisGrow({ from, height, onGrown }: IrisProps) {
+  const reduce = useReducedMotion();
+  const { width, height: screen } = useWindowDimensions();
+  const grow = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduce) {
+      onGrown();
+      return;
+    }
+    grow.value = withTiming(1, { duration: GROW_MS, easing: Easing.inOut(Easing.cubic) }, (fin) => {
+      if (fin) runOnJS(onGrown)();
+    });
+    // Once, as it mounts: the callback is new every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const style = useAnimatedStyle(() => {
+    const a = Math.min(grow.value / 0.55, 1);
+    const b = Math.max((grow.value - 0.55) / 0.45, 0);
+    const w = from.r * 2 + (width - from.r * 2) * a;
+    const h = a < 1 ? w : width + (height - width) * b;
+    const cy = from.y + (screen - height / 2 - from.y) * a;
+    const top = w / 2 + (radius.card - w / 2) * b;
+    const bottom = (w / 2) * (1 - b);
+    return {
+      left: from.x + (width / 2 - from.x) * a - w / 2,
+      top: cy - h / 2,
+      width: w,
+      height: h,
+      borderTopLeftRadius: top,
+      borderTopRightRadius: top,
+      borderBottomLeftRadius: bottom,
+      borderBottomRightRadius: bottom,
+    };
+  });
+
+  if (reduce) return null;
+  return <Animated.View pointerEvents="none" style={[styles.iris, style]} />;
 }
 
 // iOS depth-sorts 3D-transformed siblings, and with each layer carrying its own
@@ -1120,6 +1192,7 @@ const KeyArt = memo(function KeyArt({ y }: { y: number }) {
 });
 
 const styles = StyleSheet.create({
+  iris: { position: 'absolute', backgroundColor: color.paper, ...lift },
   noBack: { backfaceVisibility: 'hidden' },
   // left edge on the keyhole; overflow hidden clips the blade as it goes in
   keyClip: {

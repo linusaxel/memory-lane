@@ -58,6 +58,8 @@ type Props = {
   position: Coordinates | null;
   /** The memory a hold on the map just opened: its story arrives animated. */
   revealId?: number | null;
+  /** The sheet is up: a hold's dive hands over to it here. */
+  onShow?: () => void;
   /** Present only for a memory this account filed. */
   onEdit?: (memory: LocatedMemory) => void;
   /** Say this one mattered. Absent while locked - there is nothing to react
@@ -132,6 +134,9 @@ function formatDistance(meters: number | null): string | null {
   return meters == null ? null : distance(meters, { suffix: 'away' });
 }
 
+/** An open memory's card, as a share of the screen's height. */
+export const TALL = 0.92;
+
 const RISE_MS = 360;
 const BEAT_MS = 90;
 const REVEAL_MS = RISE_MS + 3 * BEAT_MS;
@@ -147,6 +152,7 @@ export default function MemorySheet({
   onClose,
   position,
   revealId,
+  onShow,
   onHeart,
   hearted,
   onEdit,
@@ -275,6 +281,10 @@ export default function MemorySheet({
 
   // Once per hold: paging away and back is rereading, not arriving.
   const arrived = useRef<number | null>(null);
+  // The hold's dive has already grown paper to this card's frame (IrisGrow),
+  // so it appears in place instead of sliding up.
+  const arriving =
+    !!memory && !memory.locked && memory.id === revealId && arrived.current !== revealId;
 
   useEffect(() => {
     if (!memory || memory.locked || memory.id !== revealId || arrived.current === revealId) return;
@@ -344,7 +354,8 @@ export default function MemorySheet({
   return (
     <Modal
       visible={!!memory}
-      animationType="slide"
+      animationType={arriving ? (still ? 'fade' : 'none') : 'slide'}
+      onShow={onShow}
       presentationStyle={compact ? 'overFullScreen' : 'pageSheet'}
       transparent={compact}
       // Required, or the Android back button does nothing.
@@ -378,7 +389,7 @@ export default function MemorySheet({
                       styles.floating,
                       { maxHeight: screenHeight * 0.6, marginBottom: 16 + insets.bottom },
                     ]
-                  : [styles.card, styles.tall, { height: screenHeight * 0.92 }]),
+                  : [styles.card, styles.tall, { height: screenHeight * TALL }]),
             ]}
           >
             <View style={styles.grabberRow}>

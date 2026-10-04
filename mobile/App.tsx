@@ -10,6 +10,7 @@ import {
   Text,
   View,
   useColorScheme,
+  useWindowDimensions,
 } from 'react-native';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import * as Haptics from 'expo-haptics';
@@ -88,13 +89,14 @@ import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
+import { IrisGrow, type Iris } from './src/LocketUnlock.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { button, buttonText, color, dim, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import AccountMenu from './src/AccountMenu.tsx';
 import MemoryMarker from './src/MemoryMarker.tsx';
-import MemorySheet from './src/MemorySheet.tsx';
+import MemorySheet, { TALL } from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
 import { identify } from './src/purchases.ts';
 import RouteLine from './src/RouteLine.tsx';
@@ -271,6 +273,13 @@ export default function App() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [revealId, setRevealId] = useState<number | null>(null);
+  const { height: windowHeight } = useWindowDimensions();
+  // The dive, growing over the map into the card it opens.
+  const [diving, setDiving] = useState<{
+    from: Iris;
+    memories: LocatedMemory[];
+    index: number;
+  } | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
   // a sparse area); it is not `route.length`, because a stop the local cache
   // lost or the server pruned still counted toward "today" when it was made.
@@ -1458,6 +1467,19 @@ export default function App() {
         onDisplayName={rename}
         nameError={nameError}
       />
+      {diving && (
+        <IrisGrow
+          from={diving.from}
+          height={windowHeight * TALL}
+          onGrown={() => {
+            setRevealId(diving.memories[diving.index].id);
+            setPickedId(null);
+            // Not openGroup: its tap would land on the hold's Success.
+            setOpenAt(diving.memories);
+            setOpenIndex(diving.index);
+          }}
+        />
+      )}
       <MemorySheet
         // Only your own, and only while it is open: the locked composition
         // has nowhere to put this.
@@ -1472,6 +1494,7 @@ export default function App() {
         onClose={() => setOpenAt([])}
         position={position}
         revealId={revealId}
+        onShow={() => setDiving(null)}
         compact={!journalOpen}
         onHeart={heart}
         hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
@@ -1673,13 +1696,9 @@ export default function App() {
                 if (!opened) setOpening(null);
                 return opened;
               }}
-              onDiveStart={() => {
-                if (!opening) return;
-                setRevealId(opening.group.memories[opening.index].id);
-                setPickedId(null);
-                // Not openGroup: its tap would land on the hold's Success.
-                setOpenAt(opening.group.memories);
-                setOpenIndex(opening.index);
+              onDiveStart={(from) => {
+                if (opening)
+                  setDiving({ from, memories: opening.group.memories, index: opening.index });
               }}
               onOpened={() => setOpening(null)}
             />

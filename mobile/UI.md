@@ -955,10 +955,17 @@ re-invented per screen:
   would be a lie. It replaced the burst played over the request (docs/10,
   "Lockets"). On a yes the lid swings past 90° on its hinge (the key fading
   out before 90°, where it would point into the case), sparkles pop, the
-  inside glows with the place engraved, and the camera dives in. The story
-  rises into `MemorySheet` from the dive (`onDiveStart`, `revealId`): the
-  lede, the rest, the quote, then "Then and now" and the credit, each rising
-  12 px over 360 ms, 90 ms after the last. App holds the opening locket on
+  inside glows with the place engraved, and the camera dives in. The card
+  grows out of the dive: `onDiveStart` hands over where the locket's inside
+  is on screen, and App draws `IrisGrow` over the map, paper growing from
+  that circle to the open card's frame (700 ms; round until it is as wide as
+  the card, then it stretches). Only then does `MemorySheet` open, in place
+  with no slide, and its `onShow` takes the paper away. It is drawn over the
+  map, not in the sheet, because a modal takes a few frames to come up and a
+  grow inside it showed late and off the locket. The story rises from there
+  (`revealId`): the lede, the rest, the quote, then "Then and now" and the
+  credit, each rising 12 px over 360 ms, 90 ms after the last. A tapped pin
+  still slides up; with Reduce Motion the card fades in. App holds the opening locket on
   screen (`opening`) until the dive ends, because an opened memory leaves the
   ring's list.
 - **Transform and opacity only, on the UI thread.** Reanimated worklets; the

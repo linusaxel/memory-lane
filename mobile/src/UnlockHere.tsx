@@ -7,7 +7,7 @@ import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import type { LocatedMemory } from './api.ts';
 import Glyph from './Glyph.tsx';
-import LocketUnlock from './LocketUnlock.tsx';
+import LocketUnlock, { type Iris } from './LocketUnlock.tsx';
 import { color, dim, floating, font, label } from './theme.ts';
 
 type Props = {
@@ -19,7 +19,7 @@ type Props = {
   /** Asks the server. True opens the locket, false springs it back. */
   requestUnlock: () => Promise<boolean>;
   /** The locket is diving in: bring the memory up. */
-  onDiveStart: () => void;
+  onDiveStart: (from: Iris) => void;
   onOpened: () => void;
   error: string | null;
 };
