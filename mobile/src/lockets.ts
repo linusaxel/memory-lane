@@ -1,5 +1,5 @@
 /** The lockets a memory can be drawn as, on its pin and in its unlock, and the
- *  level that lets an author pick each. Mirrors LOCKETS in api/progression.py.
+ *  level that lets an author pick each. Mirrors the lockets table (db/schema.sql).
  *  docs/10-decisions.md, "Lockets". */
 
 import type { ImageSourcePropType } from 'react-native';

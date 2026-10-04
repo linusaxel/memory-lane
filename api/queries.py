@@ -764,7 +764,7 @@ INSERT INTO memories (
 VALUES (
     :place_id, NULL, NULL, :summary, CAST(:tags AS varchar[]),
     'high', 'stranger', :happened_at, :happened_precision,
-    CAST(:user_id AS uuid), :locket
+    CAST(:user_id AS uuid), COALESCE(:locket, random_locket())
 )
 RETURNING id
 """

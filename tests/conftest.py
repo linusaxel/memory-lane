@@ -156,7 +156,8 @@ def db_session(db_engine):
         # file. A list that has to be maintained is one somebody will not.
         #
         # spatial_ref_sys belongs to PostGIS and lives in public; emptying it
-        # takes the coordinate systems with it.
+        # takes the coordinate systems with it. lockets is reference data too:
+        # empty, a new memory's random_locket() default is NULL.
         #
         # DELETE rather than TRUNCATE: TRUNCATE rewrites every table's files,
         # ~23 ms a test against ~3. The replica role skips the
@@ -168,7 +169,7 @@ def db_session(db_engine):
                 BEGIN
                     SET LOCAL session_replication_role = replica;
                     FOR r IN SELECT tablename FROM pg_tables
-                             WHERE schemaname = 'public' AND tablename <> 'spatial_ref_sys' LOOP
+                             WHERE schemaname = 'public' AND tablename NOT IN ('spatial_ref_sys', 'lockets') LOOP
                         EXECUTE format('DELETE FROM %I', r.tablename);
                     END LOOP;
                     FOR r IN SELECT sequencename FROM pg_sequences WHERE schemaname = 'public' LOOP

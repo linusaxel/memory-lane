@@ -64,8 +64,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   the memory goes. Lands in the `stranger` layer, gated like everything else,
   and records the unlock for the person who filed it. Optional `locket`: the
   locket its pin is drawn as, one the author's level has reached
-  (`LOCKETS` in `api/progression.py`), else 422. Every memory, locked or not,
-  carries `locket`; unset is `hunter-compass`
+  (the `lockets` table), else 422. Every memory, locked or not,
+  carries `locket`; one filed without a choice draws one at random
 - `POST /v1/media` (multipart: `device`, `file`, optional `duration_seconds`) -
   a photo or a recording, held until a submission claims it. `api/media.py`
   decides what a file may be; see [Uploads](architecture.md#uploads)

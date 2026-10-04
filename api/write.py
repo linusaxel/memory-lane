@@ -37,7 +37,7 @@ from api.models import (
     UnlockRequest,
 )
 from api.moderation import screen
-from api.progression import LOCKETS, level, xp_of
+from api.progression import level, xp_of
 from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
     EARNED_QUERY,
@@ -262,10 +262,13 @@ def check_locket(session, device: str, locket: str | None) -> None:
     unknown one. docs/10-decisions.md#lockets-one-per-memory-chosen-by-its-author-earned-by-level."""
     if locket is None:
         return
-    if locket not in LOCKETS:
+    needs = session.execute(
+        text("SELECT level FROM lockets WHERE id = :id"), {"id": locket}
+    ).scalar()
+    if needs is None:
         raise HTTPException(status_code=422, detail="Unknown locket")
-    if level(xp_of(session, device)) < LOCKETS[locket]:
-        raise HTTPException(status_code=422, detail=f"That locket opens at level {LOCKETS[locket]}")
+    if level(xp_of(session, device)) < needs:
+        raise HTTPException(status_code=422, detail=f"That locket opens at level {needs}")
 
 
 @router.post("/v1/memories", response_model=Memory, status_code=201)

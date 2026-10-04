@@ -8,12 +8,20 @@ from tests.test_api_submit import device, submission, submit
 pytestmark = pytest.mark.db
 
 
-def test_a_memory_with_no_choice_is_the_default_locket_even_locked(api_client):
+def test_a_memory_with_no_choice_draws_one_and_keeps_it_even_locked(api_client):
     memory = submit(api_client)
 
     locked = api_client.get(f"/v1/memories/{memory['id']}").json()
     assert locked["locked"] is True
-    assert locked["locket"] == "hunter-compass"
+    assert locked["locket"] == memory["locket"]
+    assert locked["locket"] in {
+        "hunter-compass",
+        "guilloche-oval",
+        "deco-sunburst",
+        "monogram-cushion",
+        "gold-line-night",
+        "victorian-garnet",
+    }
 
 
 def test_a_level_one_author_cannot_pick_a_later_locket(api_client):

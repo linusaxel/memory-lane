@@ -3295,12 +3295,17 @@ something a walker earns.
 - **Six lockets, two faces each.** Hunter compass, guilloché oval, deco
   sunburst, monogram cushion, gold line (night) and Victorian garnet. Each has
   a pin with a keyhole (locked) and one without (opened), in
-  `mobile/assets/lockets/`. The registry is `mobile/src/lockets.ts`, mirrored
-  by `LOCKETS` in `api/progression.py`.
+  `mobile/assets/lockets/`. The `lockets` table (migration 041) holds each
+  one's id, name and level, and `memories.locket` is a foreign key to it.
+  The art stays in the app, `mobile/src/lockets.ts`, because the bundler
+  needs a static `require` per image and each lid is drawn in code; a table
+  of asset URLs would buy lockets without a release at the cost of remote
+  images in the hold.
 - **The author picks; everyone sees it.** `memories.locket` (migration 040)
   is set on submit or edit and travels on a locked memory too, as `layer`
   does: the pin is drawn as it before it opens, and it says nothing of the
-  story. NULL, which is every extracted memory, is `hunter-compass`.
+  story. One filed without a choice, which is every extracted memory, draws
+  one at random (`random_locket()`, migration 041) and keeps it.
 - **Earned, never sold.** Levels 1, 3, 5, 7, 9 and 11 each add one, in that
   order. The server refuses a locket above the author's level with 422, as it
   refuses an unknown one. The finish card shows the locket a level-up brings.

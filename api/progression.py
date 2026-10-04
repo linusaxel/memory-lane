@@ -16,16 +16,7 @@ XP_STEP = 50
 # Epic stories (api.queries.EPIC_EXPR) join a walk only from this level. The
 # gate is unchanged; this only plans the walk.
 EPIC_LEVEL = 4
-# The locket a memory is drawn as, and the level that lets an author pick it.
-# Mirrored in mobile/src/lockets.ts. docs/10, "Lockets".
-LOCKETS = {
-    "hunter-compass": 1,
-    "guilloche-oval": 3,
-    "deco-sunburst": 5,
-    "monogram-cushion": 7,
-    "gold-line-night": 9,
-    "victorian-garnet": 11,
-}
+# The lockets and their levels are the lockets table. docs/10, "Lockets".
 LOCKET_DEFAULT = "hunter-compass"
 
 

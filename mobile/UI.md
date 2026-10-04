@@ -797,7 +797,7 @@ paging through venues miles apart is not "1 of 23 here", it is a lie.
 ### One pin
 
 A memory draws as its locket (docs/10, "Lockets"): the one its author chose,
-or the Hunter compass for everything extracted. Locked, it shows its keyhole;
+or one drawn at random for an extracted memory. Locked, it shows its keyhole;
 opened, the same locket without one, from `mobile/assets/lockets/` through
 `src/lockets.ts`. A spot with several draws the first one's. It changes for
 one reason only — **it can be opened from where you stand**, and on a route

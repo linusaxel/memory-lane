@@ -160,6 +160,24 @@ CREATE TABLE identities (
 
 CREATE INDEX idx_identities_user ON identities(user_id);
 
+-- What a memory's pin and unlock are drawn as, and the level that lets an
+-- author pick each. The art ships in the app: mobile/src/lockets.ts.
+CREATE TABLE lockets (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    level SMALLINT NOT NULL
+);
+INSERT INTO lockets (id, name, level) VALUES
+    ('hunter-compass', 'Hunter compass', 1),
+    ('guilloche-oval', 'Guilloché oval', 3),
+    ('deco-sunburst', 'Deco sunburst', 5),
+    ('monogram-cushion', 'Monogram cushion', 7),
+    ('gold-line-night', 'Gold line, night', 9),
+    ('victorian-garnet', 'Victorian garnet', 11);
+
+CREATE OR REPLACE FUNCTION random_locket() RETURNS TEXT LANGUAGE sql VOLATILE AS
+$$ SELECT id FROM lockets ORDER BY random() LIMIT 1 $$;
+
 CREATE TABLE memories (
     id SERIAL PRIMARY KEY,
     place_id INTEGER NOT NULL REFERENCES places(id) ON DELETE CASCADE,
@@ -205,9 +223,9 @@ CREATE TABLE memories (
     -- makes it epic until hearts say otherwise (api/progression.py).
     walk_score SMALLINT CHECK (walk_score BETWEEN 0 AND 12),
 
-    -- The locket its pin and unlock are drawn as, chosen by its author. NULL
-    -- is the default (api/progression.py, LOCKET_DEFAULT).
-    locket TEXT,
+    -- The locket its pin and unlock are drawn as: chosen by its author, or
+    -- drawn at random for one the pipeline files.
+    locket TEXT NOT NULL DEFAULT random_locket() REFERENCES lockets(id),
 
     -- One line in the teller's own words, checked against the source.
     quote TEXT,
