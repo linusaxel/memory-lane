@@ -586,7 +586,7 @@ The visible corpus went from 188 to 192 memories.
 
 ### What to look at, 2026-10-03
 
-TODO V3 wants a line telling a walker where to look. It was tried on 40
+TODO.md's *What to look at* wants a line telling a walker where to look. It was tried on 40
 visible memories (a stable sample, `md5(id || 'look')`): one Sonnet call
 each, given the place name and the summary, asked for at most 12 words
 pointing at something visible now, with no people, events or dates.

@@ -665,7 +665,7 @@ CPC network's 2025 principles on in-game currencies).
 at 0 keys, which costs nothing before launch. Someone who walks daily gets
 about four stories and a key a day free. If that is too generous, tune stops
 per walk, then keys per finish, then pack prices, never a price on walk stops.
-Nothing can be bought until the stores exist (TODO.md S6), and the paywall says
+Nothing can be bought until the stores exist (TODO.md, *Set up the stores and RevenueCat*), and the paywall says
 so.
 
 ### Steps open a memory

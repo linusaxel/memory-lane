@@ -27,7 +27,7 @@ delete an entry when its fix lands.
 - **e2e demands a native rebuild for a dev-only change.** 2026-10-04:
   `e2e/run.sh` hashes all of `mobile/package.json` into the prebuild stamp, so
   cd065f6 (Prettier, a devDependency and two scripts) left the next session's
-  e2e at INFRA, wanting `prebuild --clean` + `pod install`, and G6 went
+  e2e at INFRA, wanting `prebuild --clean` + `pod install`, and a change went
   unchecked in the app. Fix: hash only `dependencies` and `app.json`.
 - **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
   permission classifier refused a hand triage (merge two places, hide four
@@ -58,7 +58,7 @@ Retention is measured already: `python -m api.metrics`.
       from `Crashed.componentDidCatch` and the API.
 - [ ] **The corpus has no legal footing for a paid app.** (checked 2026-10-04)
       Researched source by source in docs/10, *The sources' legal footing*; a
-      Danish lawyer still reads it before launch, together with E1 below.
+      Danish lawyer still reads it before launch, together with *Licensing before money* below.
       - YouTube: written permission per channel, or drop the channels. The
         email is drafted (`docs/permission-request.md`). Run `python -m
         pipeline.transcripts --forget-extracted` once for the backlog before
@@ -72,7 +72,7 @@ Retention is measured already: `python -m api.metrics`.
         place private people at the street, not the door.
       - A written legitimate-interest assessment and a DPIA (location, and the
         step count).
-- [ ] **Rename the entitlement before S6.** (checked 2026-10-04)
+- [ ] **Rename the entitlement before the stores are set up.** (checked 2026-10-04)
       `ENTITLEMENT = "map"` (`api/billing.py`) names what was sold before the
       walk planner. Renaming it is free now and a migration of live
       subscribers later. Optional.
@@ -97,10 +97,10 @@ Retention is measured already: `python -m api.metrics`.
       `DELETE /v1/me` and the journal's two-press delete are built, but a Sign
       in with Apple account must also have its tokens revoked through Apple's
       REST API, which needs the `.p8` key (`STORE_ACCOUNT`).
-- [ ] **S6 The stores and RevenueCat.** (checked 2026-10-04) Waits on
+- [ ] **Set up the stores and RevenueCat.** (checked 2026-10-04) Waits on
       `STORE_ACCOUNT` and `DEPLOY` (the webhook needs a public URL). Built
       2026-09-27: the gate, the webhook and read-back (`api/billing.py`), the
-      paywall (F35) and `subscribe-when-walked-out.yml`. No code left:
+      paywall and `subscribe-when-walked-out.yml`. No code left:
       - App Store Connect: the Paid Apps agreement, banking and tax (without
         them no product loads); one subscription group, monthly and yearly,
         auto-renewing, no introductory offer; an In-App Purchase key for
@@ -118,9 +118,9 @@ Retention is measured already: `python -m api.metrics`.
       - Then on a real device: buy monthly, see the row, plan a second walk
         the same day, cancel in the sandbox, see it lapse. Nothing has ever
         called RevenueCat for real: the tests patch `billing.fetch_subscriber`.
-- [ ] **After S6: the paywall's follow-ups.** (checked 2026-10-04) From a
+- [ ] **Once the stores exist: the paywall's follow-ups.** (checked 2026-10-04) From a
       Mobbin talk on ~3,000 paywalls; trials, exit-intent offers, fake urgency
-      and pop-ups are ruled out (docs/08 F35).
+      and pop-ups are ruled out (docs/08, *Subscribe for more walks*).
       - A "save X%" badge on yearly, computed from the two store products'
         `price`, shown only when it rounds to 10% or more.
       - Experiments through RevenueCat's offerings A/B before anything of our
@@ -177,7 +177,7 @@ worth the walk. Measure every change against the labels before and after
       should a 1000 m `llm` pin be planned on a walk at all (25 places, among
       them 5615, Andersen on "the ramparts"), and should `is_gated`
       (`api/gate.py`) gate on `precision_meters` instead of
-      `coordinate_is_unique` (F7 option 1; docs/10, "The coordinates are
+      `coordinate_is_unique` (docs/10, "The coordinates are
       mostly guesses")? The position is self-reported either way: it stops
       `curl`, not a spoofer.
 - [ ] **40 labels by a person.** (checked 2026-10-04) The judge and
@@ -237,11 +237,11 @@ newspapers and Historisk Atlas, inside `LAUNCH_BBOX` (docs/10, *One launch
 area*). Candidates, rejects and why: `python -m pipeline.sources list`. In
 priority order.
 
-- [ ] **Check the historical layer, then write F3.** (checked 2026-10-04)
+- [ ] **Check the historical layer, then specify its flow.** (checked 2026-10-04)
       Standing anywhere in the launch area should return at least one
       historical card, the top one the highest-contrast rather than the
-      nearest, and worth screenshotting. Never run. F3 in docs/08 is still
-      Proposed, waiting on a source that has since been chosen: specify it
+      nearest, and worth screenshotting. Never run. The flow for it in docs/08,
+      *Arrive somewhere and find its history*, is still only proposed, waiting on a source that has since been chosen: specify it
       from the product, not from whatever ingestion produced.
 - [ ] **Three streets, counted by hand.** (checked 2026-10-04) In the launch
       area, count the *interesting* cards each source yields per street: would
@@ -255,7 +255,7 @@ priority order.
 - [ ] **Email kbhbilleder@kff.kk.dk.** (checked 2026-10-04) 41,779 historical
       photos, maps and drawings, ~5,000 out of copyright and commercially
       usable, many geotagged. Bot-protected: ask, never scrape. Open source
-      with a public APACS API (github.com/CopenhagenCityArchives). Unblocks C4.
+      with a public APACS API (github.com/CopenhagenCityArchives). Unblocks *Then and now, lined up*.
 - [ ] **More public-domain memoirs.** (checked 2026-10-04) Brandes' *Levned*
       I added 4 (source 231); volumes 2 and 3 are `runeberg:gblevned/2` and
       `/3`, queried as `Kjøbenhavn`. Heiberg's *Et Liv gjenoplevet* is only on
@@ -334,7 +334,7 @@ progress; refine what exists rather than add.
       stop drawn as done, here, next or later in `MemoryMarker.tsx` (needs
       each stop's opened state), and `RouteLine` split walked/ahead. Then
       UI.md.
-- [ ] **M3 A direction arrow on the user dot.** (checked 2026-10-04)
+- [ ] **A direction arrow on the user dot.** (checked 2026-10-04)
       react-native-maps 1.29.8 has `followsUserLocation` but no heading prop.
       Look on a real phone whether MapKit's dot draws the heading beam with
       `showsUserLocation` (`mobile/App.tsx`). Only if not:
@@ -361,7 +361,7 @@ progress; refine what exists rather than add.
 
 ### A reason to finish the walk
 
-- [ ] **V3 "What to look at when you're there" on a stop.** (checked
+- [ ] **"What to look at when you're there" on a stop.** (checked
       2026-10-04) A pointer to the spot ("the corner doorway, the green
       tiles"), never a line of the story; it also helps when GPS wobbles near
       20 m (Smith et al. 2019; Riot! 1831). Tried from the summary alone
@@ -369,7 +369,7 @@ progress; refine what exists rather than add.
       that are gone. Next: only where OSM confirms the place still stands,
       given OSM and Wikidata's description of the building instead of the
       story. A new extracted field: measure before and after.
-- [ ] **W1 A hidden stop.** (checked 2026-10-04) Epic memories hide only
+- [ ] **A hidden stop.** (checked 2026-10-04) Epic memories hide only
       *which* stop is rare (cf498be); see whether they carry the surprise
       before building this. One stop shows as "?", is never drawn, and its
       place is withheld until you are within reach; it opens like any stop.
@@ -385,30 +385,30 @@ progress; refine what exists rather than add.
       can be repaired, Silverman & Barasch 2023; Duolingo's second freeze
       lifted DAU 0.38%). The founder turned down a streak shield as a reward,
       so ask first. Watch for streak anxiety.
-- [ ] **G7 Today card.** (checked 2026-10-04) First in Walks, like Pikmin
+- [ ] **A today card in the journal.** (checked 2026-10-04) First in Walks, like Pikmin
       Bloom's Lifelog: today's trace on a mini map, steps, and a week strip
       with a dot for each day walked. Maybe later: brighten the streets you
       have walked (Fog of World, Wandrer), never hiding content.
-- [ ] **G8 Journal sections that follow a swipe.** (checked 2026-10-04) Walks,
+- [ ] **Journal sections that follow a swipe.** (checked 2026-10-04) Walks,
       Unlocked and Mine are a tap `Switcher` (`Memories.tsx`); a pager with
       the underline tracking it.
-- [ ] **F8 Lock Screen widget** (`expo-widgets`). (checked 2026-10-04)
+- [ ] **A Lock Screen widget** (`expo-widgets`). (checked 2026-10-04)
       Today's walk or the nearest stop, and the streak. After launch; skip
       Live Activities.
 
 ### Craft
 
-- [ ] **C3 An inline camera in Add.** (deferred 2026-10-03 until C4 has
-      archival photos to ghost) An `expo-camera` `CameraView` in the sheet in
+- [ ] **A camera inside Add.** (deferred 2026-10-03 until there are
+      archival photos to line up, below) An `expo-camera` `CameraView` in the sheet in
       place of `launchCameraAsync`, the shot shrinking into the attachment
       chip. Needs a native rebuild; keep the picker for the library. As
       written it breaks docs/10 "Reading and writing are one page"; keep both
       if it comes back.
-- [ ] **C4 Then and now, lined up.** (blocked 2026-10-03: no memory has an
-      image; needs kbhbilleder access) The C3 camera ghosts an archival photo
+- [ ] **Then and now, lined up.** (blocked 2026-10-03: no memory has an
+      image; needs kbhbilleder access) The camera inside Add ghosts an archival photo
       over the viewfinder at ~40% so the walker can match it. Open: where the
       "now" photo goes. Founder's call.
-- [ ] **C5 Illustrations, hand-drawn.** (checked 2026-10-03) The app has
+- [ ] **Hand-drawn illustrations.** (checked 2026-10-03) The app has
       none. Places that want one: the empty walk list, sign-in, the paywall,
       the finish card. Commission one base style (`ILLUSTRATOR`), derive the
       rest. Bar: nobody asks which prompt made it.
@@ -417,14 +417,14 @@ progress; refine what exists rather than add.
 
 - [ ] **Things only a device can check.** (checked 2026-10-04) The simulator
       has no compass, pedometer or real GPS:
-      - M3: does MapKit's dot draw the heading beam?
-      - F28 with the phone locked and the app killed (`notify-nearby.yml`
+      - The direction arrow: does MapKit's dot draw the heading beam?
+      - The nearby-memory notification with the phone locked and the app killed (`notify-nearby.yml`
         covers only the background).
       - Steps: grant Motion & Fitness, walk, reopen, see the journal's count
         rise once; deny it and walks still plan and open. Nothing has ever
         counted a real step. Unverified: whether Core Motion misses steps only
         a Watch counted.
-      - C2's route drawing and the locket unlock: frames were measured in the
+      - The route drawing itself and the locket unlock: frames were measured in the
         simulator only.
 
 ---
@@ -440,7 +440,7 @@ earns stays unsold (Apple 3.1.1, the loot-box rulings). The founder turned
 down: keeping a previewed memory for the next walk, a surprise open of an
 off-route memory, a streak shield, and an extra walk as a reward.
 
-- [ ] **E1 D: Licensing before money.** (checked 2026-10-03) Blocks any paid
+- [ ] **Licensing before money (your decision).** (checked 2026-10-03) Blocks any paid
       open of a DR-derived story. DR sells archive clips at about 80 DKK a
       second (Folketing KUU bilag 39 and spm 91, unverified: both 403'd); the
       free DR archive at KB is private streaming only and excludes AI use.
@@ -448,25 +448,25 @@ off-route memory, a streak shield, and an extra walk as a reward.
       Safe default: charge for the walk and curation, never a DR clip; if it
       stays open, paid walks plan only sources clearly ours (Gutenberg, user
       posts, licensed). Add to the lawyer's read.
-- [ ] **E5 The price.** (checked 2026-10-03) 49 DKK a month or 349 DKK a
+- [ ] **The price.** (checked 2026-10-03) 49 DKK a month or 349 DKK a
       year. Western Europe medians: $8.99 a month, $39.44 a year (RevenueCat
       report). Push annual: 44.1% retained after a year against 17.0% monthly.
       Plan for the subscription to carry ~80% of revenue.
-- [ ] **E6 Pitch commissioned walks to the city.** (checked 2026-10-02)
+- [ ] **Pitch commissioned walks to the city.** (checked 2026-10-02)
       Probably year one's biggest line, guessed 50–300K DKK. Budget 2024 set
       aside 2.1M DKK for "The Copenhagen App"; the city leads a 35M DKK EU
       tourism project with Wonderful Copenhagen, Nationalmuseet, Københavns
       Museum and StoryHunt, the incumbent (8 free walks, 11 at 99 DKK). The
       city pays for free walks that spread tourists out. A sales
       conversation, not code.
-- [ ] **E7 Premium walks on GetYourGuide / TripAdvisor.** (checked
+- [ ] **Premium walks on GetYourGuide / TripAdvisor.** (checked
       2026-10-02) Questo's model, revenue share (agencies 20–25%, stores 15%).
-      Only on public-domain or licensed sources (E1). Guessed 20–150K DKK.
-- [ ] **E8 Later: sponsored stops.** (checked 2026-10-02) Works only at
+      Only on public-domain or licensed sources (see licensing above). Guessed 20–150K DKK.
+- [ ] **Later: sponsored stops.** (checked 2026-10-02) Works only at
       McDonald's-scale footfall; small cafés churn. Revisit after real
       traffic, and label it if built. Not doing: walk-to-earn with a brand
       marketplace (near nothing below ~1M users).
-- [ ] **E9 Benchmarks for the business case.** (checked 2026-10-02) Download
+- [ ] **Benchmarks for the business case.** (checked 2026-10-02) Download
       to paid: 2.0% median (freemium 2.1%). Revenue per install at D60:
       Health & Fitness $0.66. Ceiling: Pikmin Bloom, $100M lifetime from
       passes and events, never access.
@@ -481,12 +481,12 @@ off-route memory, a streak shield, and an extra walk as a reward.
 
 ## Embed
 
-- [ ] **2.0 Tiles, before the embed is public.** (checked 2026-10-04)
+- [ ] **Map tiles of our own, before the embed is public.** (checked 2026-10-04)
       `TILE_URL` in `api/embed.py` is OSM's public tiles, which OSMF policy
       forbids for this. Stadia Maps (one URL + a key) or Protomaps/PMTiles
       (~$3/mo on R2), per `docs/09-visual-design.md`. **Blocks deploying the
       embed anywhere public.**
-- [ ] **2.3 Per-customer `CORS_ORIGINS` and a per-embed key.** (checked
+- [ ] **Per-customer `CORS_ORIGINS` and a per-embed key.** (checked
       2026-09-20) Blocked on `DEPLOY`. The first thing with a customer
       attached, so the first that needs a usage bound.
 
@@ -563,10 +563,10 @@ They cost money, need an account, or need a person. Full detail in
 - [ ] **`STORE_ACCOUNT`** (checked 2026-09-20) Apple $99/yr, Play $25. A
       personal Play account gates production behind **closed testing with 12
       testers for 14 continuous days**: start it the day EAS produces an
-      `.aab`. F28's background location needs the privacy disclosures
+      `.aab`. The nearby-memory notification's background location needs the privacy disclosures
       updated and a real device confirming delivery.
-- [ ] **`ILLUSTRATOR`** (checked 2026-10-03) An artist for C5's base style, a
-      few hundred. And decide C4: where a "now" photo goes.
+- [ ] **`ILLUSTRATOR`** (checked 2026-10-03) An artist for the illustrations'
+      base style, a few hundred. And decide where a "now" photo goes.
 
 ---
 

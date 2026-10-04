@@ -572,7 +572,7 @@ an audit of our own screens against `mobile/UI.md`.
 | `GlassContainer` in the installed `expo-glass-effect` | **Dropped** 2026-10-01: adopted in F2 round You and Add, and the founder disliked the merged shape. It also swallows taps in its gaps. Spacing 40 merged an 8pt gap; 12 did nothing visible |
 | RN 0.86 `boxShadow`, `backgroundImage` gradients | Use where an SVG or image is only a shadow or gradient |
 | Reanimated 4 | **Skipped.** Two native deps and a second animation model for what core `Animated` plus one SwiftUI `Text` already do |
-| Live Activities | **Skipped.** A balance is not a bounded, time-limited event. A Lock Screen widget (`expo-widgets`) is sensible after launch (F8) |
+| Live Activities | **Skipped.** A balance is not a bounded, time-limited event. A Lock Screen widget (`expo-widgets`) is sensible after launch (TODO.md) |
 
 ## What shipped first: the wallet
 
@@ -596,7 +596,7 @@ an audit of our own screens against `mobile/UI.md`.
 
 TODO.md § Facelift, in order: glass by the HIG (F2), SF Symbols (F3), one of
 each pill, card and figure (F4), paying along the hold (F5), the free open as
-an earn (F6), the words in You (F7), a Lock Screen widget (F8).
+an earn (F6), the words in You (F7), a Lock Screen widget (in TODO.md).
 
 ## Sources
 

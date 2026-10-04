@@ -1116,7 +1116,7 @@ note fails to send: "That didn't send. Try again.", the draft kept.
 replaces the first, the author can remove it, and a device that never unlocked
 it gets 403 from both routes. `tests/test_api_notes.py`.
 
-## F35 · Subscribe for more walks — **Implemented** (no store yet: TODO.md S6)
+## F35 · Subscribe for more walks — **Implemented** (no store yet: TODO.md, *Set up the stores and RevenueCat*)
 
 **Who:** a free account. **Trigger:** **More walks** on the
 planner once today's walk is walked (F1), the padlocked **See the stops** or
