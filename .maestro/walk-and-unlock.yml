@@ -229,8 +229,24 @@ appId: ${APP_ID}
 - assertVisible:
     id: "more-walks"
 
-# The walk is kept: its card in Your walks shows it on the map again.
+# The walk is kept: every memory it opened is a locket in Your walks, and a
+# tap opens it over the sheet (docs/10, "No keys; your memories are your
+# lockets"); its card shows the walk on the map again.
 - tapOn: "Level.*"
+- scrollUntilVisible:
+    element:
+      id: "opened-locket"
+    direction: DOWN
+- takeScreenshot: lockets
+- tapOn:
+    id: "opened-locket"
+    index: 0
+- assertVisible: "Heart"
+- tapOn: "Close"
+- scrollUntilVisible:
+    element:
+      id: "walk-card"
+    direction: UP
 - tapOn:
     id: "walk-card"
     index: 0

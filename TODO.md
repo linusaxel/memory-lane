@@ -177,6 +177,15 @@ worth the walk. Measure every change against the labels before and after
 (`python -m pipeline.quality --labels`). Every change is to
 `pipeline/extract.py` unless named.
 
+- [ ] **Memories written by tour guides.** (2026-10-04, the founder's idea)
+      A licensed guide files the stories they already tell at a place: quality
+      from the author, where `walk_score` is too weak a signal (r = 0.45). An
+      ordinary public memory through the gate, a higher prize in `_prize`
+      (`api/route_solver.py`), never held for subscribers; a byline, maybe a
+      link to book their tour. Ties to *Pitch commissioned walks to the city*
+      and *Premium walks on GetYourGuide*. Open: how a guide is marked (by
+      hand, never on email), whether their memory says so before it opens,
+      paid or credited.
 - [ ] **Measure $/memory from the bill.** (2026-10-04) `python -m
       pipeline.cost --since 2026-10-04` answers it, but the key in `.env` is a
       personal `sk-ant-usr-` key and the Cost Report API refuses it

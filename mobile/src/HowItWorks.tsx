@@ -1,14 +1,26 @@
-/** What the level pill opens: your level and every walk on top, then how the
- *  app works, in the order you meet it (docs/10, "A walk planner, nothing
- *  else" and "Walks earn XP; rare memories wait for a level"). */
+/** What the level pill opens: your level, every walk and every memory you
+ *  opened, drawn as its locket, on top; then how the app works, in the order
+ *  you meet it (docs/10, "Walks earn XP; rare memories wait for a level" and
+ *  "No keys; your memories are your lockets"). */
 
 import { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
 import { fetchWalked, type Profile, type WalkedRoute } from './api.ts';
 import CloseButton from './CloseButton.tsx';
+import { LOCKETS, locketOf } from './lockets.ts';
 import { loadWalked } from './route.ts';
 import { color, figure, font, label } from './theme.ts';
+import type { UnlockedMemory } from './unlocked.ts';
 import WalkCard from './WalkCard.tsx';
 
 type Props = {
@@ -18,7 +30,12 @@ type Props = {
   device: string | null;
   /** A card tapped: show that walk on the map. */
   onOpenWalk: (walk: WalkedRoute) => void;
+  /** Every memory opened, newest first: the journal's Unlocked list. */
+  opened: UnlockedMemory[];
+  onOpenMemory: (memory: UnlockedMemory) => void;
   radiusMeters: number;
+  /** The memory sheet, so it opens over this one (as the journal does). */
+  children?: React.ReactNode;
 };
 
 export default function HowItWorks({
@@ -28,6 +45,9 @@ export default function HowItWorks({
   device,
   radiusMeters,
   onOpenWalk,
+  opened,
+  onOpenMemory,
+  children,
 }: Props) {
   // The journal's cache first, so it reads offline, then the server's.
   const [walks, setWalks] = useState<WalkedRoute[]>([]);
@@ -39,7 +59,8 @@ export default function HowItWorks({
         .then(setWalks)
         .catch(() => {});
   }, [visible, device]);
-  // Two to a row, between the sheet's 24pt margins and one 12pt gap.
+  // Two to a row, between the sheet's 24pt margins and one 12pt gap; a
+  // memory's locket takes half of that, four to a row.
   const card = (useWindowDimensions().width - 48 - 12) / 2;
   return (
     <Modal
@@ -72,6 +93,43 @@ export default function HowItWorks({
           ))}
         </View>
 
+        {/* Every memory opened, as its locket. Extracted memories draw theirs
+            at random, so the count of each kind is a detail, not a set to
+            finish. */}
+        <Text style={styles.shelfTitle}>
+          {opened.length
+            ? `${opened.length} ${opened.length === 1 ? 'memory' : 'memories'}`
+            : 'Your first memory goes here'}
+        </Text>
+        <View style={styles.kinds}>
+          {LOCKETS.map((locket) => {
+            const count = opened.filter((m) => locketOf(m.locket).id === locket.id).length;
+            return (
+              <View key={locket.id} style={[styles.kind, !count && styles.none]}>
+                <Image source={count ? locket.opened : locket.locked} style={styles.kindImage} />
+                <Text style={styles.unit}>{count}</Text>
+              </View>
+            );
+          })}
+        </View>
+        <View style={styles.shelf}>
+          {opened.map((memory) => (
+            <Pressable
+              key={memory.id}
+              style={[styles.locket, { width: (card - 12) / 2 }]}
+              onPress={() => onOpenMemory(memory)}
+              testID="opened-locket"
+              accessibilityRole="button"
+              accessibilityLabel={memory.place.name}
+            >
+              <Image source={locketOf(memory.locket).opened} style={styles.locketImage} />
+              <Text style={styles.unit} numberOfLines={1}>
+                {memory.place.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
         {/* Each heading is the rule on its own, the line under it a picture
             or a reason; one number each, said as something you can feel.
             docs/09 part 11 has the research. */}
@@ -86,7 +144,7 @@ export default function HowItWorks({
         </Section>
         <Section title="Finish it to level up">
           Reach every stop and the walk counts: ten XP a memory, ten a kilometre, one walk a day.
-          Every walk is kept above, drawn as its shape.
+          Every walk is kept above, drawn as its shape, and every memory as its locket.
         </Section>
         <Section title={profile?.subscribed ? 'Walk as much as you like' : 'One walk a day'}>
           {profile?.subscribed
@@ -94,6 +152,7 @@ export default function HowItWorks({
             : 'Your first walk each day is free. Subscribe for as many as you like.'}
         </Section>
       </ScrollView>
+      {children}
     </Modal>
   );
 }
@@ -118,6 +177,12 @@ const styles = StyleSheet.create({
   unit: { ...label, fontSize: 12 },
   shelfTitle: { ...label, fontSize: 12, marginTop: 24 },
   shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10 },
+  kinds: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  kind: { alignItems: 'center', gap: 2 },
+  none: { opacity: 0.35 },
+  kindImage: { width: 28, height: 28, resizeMode: 'contain' },
+  locket: { alignItems: 'center', gap: 4 },
+  locketImage: { width: 56, height: 56, resizeMode: 'contain' },
   section: { marginTop: 30, gap: 8, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
   // The heading is the rule, so it reads first; the line under it is the why.
   sectionTitle: { ...font.displaySemi, fontSize: 19, lineHeight: 25, color: color.ink },

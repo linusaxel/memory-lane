@@ -264,7 +264,8 @@ whole app; without one there is nothing to do.
   (`_refuse_second_walk`). Walked out, the planner offers it. (Amended
   2026-10-03 by *Subscribers shape the walk*: it also buys seeing the stops
   before you go, and themes and years.)
-- **Keys are earned, never sold** (amended 2026-10-03 by *Walks earn XP;
+- **Keys are earned, never sold** (**Superseded 2026-10-04** by *No keys;
+  your memories are your lockets*; amended 2026-10-03 by *Walks earn XP;
   rare memories wait for a level*: keys are gone): one per finished walk, once a day
   (`CREDIT_WALK_KEY`). What a key does is not decided yet (TODO.md). The rule
   it must keep: it never yields a summary off the spot. Not selling keys keeps
@@ -3362,6 +3363,31 @@ something a walker earns.
 **Options considered:** a locket per layer or era, picked by the pipeline
 (rejected: it brings back the encoding *One pin* removed); the compass unlock
 for every memory (rejected by the founder: each locket opens as itself).
+
+### No keys; your memories are your lockets
+
+Status: Accepted 2026-10-04. Supersedes the Keys bullet of *A walk planner,
+nothing else*: what a key does is decided, and it is nothing.
+
+The founder: "too much gamification already". A walk's reward is its
+memories, XP and its card; the key that turns in the hold
+(`LocketUnlock.tsx`) is only motion.
+
+- **What you collect is what you opened.** Your walks (`src/HowItWorks.tsx`)
+  shows every memory you opened, newest first, as its opened locket, four to
+  a row; a tap opens its card over the sheet. It is the journal's Unlocked
+  list (`unlockedByOthers` in `App.tsx`), so nothing new is fetched.
+- **The count of each kind is a detail.** A strip of the six lockets with a
+  count each, a kind not yet met faded. An extracted memory draws its locket
+  at random (`random_locket()`), so the six fill within a few walks: it is
+  not a set to finish.
+
+**Options considered:** a key that opens a memory off the walk (rejected: it
+brings back *Keys open a lock*); a key that keeps a missed stop open, or that
+holds a faded lock for a later walk, or that gifts a walk (rejected: each a
+new game layer); keys that bring a rare or epic stop (rejected with the
+epics, and `walk_score` is too weak to mark rare, r = 0.45); "all six kinds
+collected" as a goal (rejected: random lockets fill it by chance).
 
 ### A card may run long when the story earns it
 

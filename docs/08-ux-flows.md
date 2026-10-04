@@ -312,9 +312,11 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 **Only on a walk:** only a stop of the walk in progress opens, and only
 standing on it; nothing else is drawn, so nothing else can be stood on. The
 top of the map says your level, "Level 3" over a thin XP bar, and a tap
-opens Your walks (level, XP, every walk drawn as a card, how it works; a
-card tapped shows that walk on the map, its date and Done) and counts steps again
-(docs/10, "Walks earn XP; rare memories wait for a level").
+opens Your walks (level, XP, every walk drawn as a card, every memory opened
+drawn as its locket with a count of each kind, how it works; a card tapped
+shows that walk on the map, its date and Done; a locket tapped opens its memory) and counts steps again
+(docs/10, "Walks earn XP; rare memories wait for a level" and "No keys; your
+memories are your lockets").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than

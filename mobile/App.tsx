@@ -2047,7 +2047,7 @@ export default function App() {
           {journalOpen && sheets}
         </Modal>
 
-        {!journalOpen && sheets}
+        {!journalOpen && !howOpen && sheets}
 
         <Board visible={boardOpen} onClose={() => setBoardOpen(false)} device={device} />
 
@@ -2084,7 +2084,14 @@ export default function App() {
             setHowOpen(false);
             setPastWalk(walk);
           }}
-        />
+          opened={unlockedByOthers}
+          onOpenMemory={(memory) => {
+            setOpenAt([memory]);
+            setOpenIndex(0);
+          }}
+        >
+          {howOpen && sheets}
+        </HowItWorks>
 
         <Paywall
           visible={paywallOpen}
