@@ -97,6 +97,7 @@ uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.
 python -m pipeline.sources list                               # where memories come from, ranked
 python -m pipeline.ingest && python -m pipeline.transcripts   # free: polls the active sources
 python -m pipeline.enqueue --video <content_id>               # extract one video (bills cents)
+python -m pipeline.batch --source "<name>" --run              # extract a source at half price
 python -m pipeline.worker --burst                             # run the queues, exit when empty
 
 # The dev database is real data only. seed_dev refuses it and seeds empty

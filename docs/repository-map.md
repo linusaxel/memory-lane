@@ -61,6 +61,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |
 | `pipeline/seed_dev.py` | **Fixtures for an empty database**: e2e's, the tests', route_bench's. Refuses one holding real content |
 | `pipeline/walk_score.py` | Scores each extracted summary on the walk rubric (0-12) into `memories.walk_score`, which picks a walk's stops. Runs after aggregation; `--all` is the backfill. Bills a little |
+| `pipeline/batch.py` | Extracts chosen contents (`--content`, `--source`) at half price through the Message Batches API, one stage a pass; `--run` bills |
 | `pipeline/cost.py` | Dollars per memory over a date range: the Admin Cost Report API's spend over the memories made. Needs `ANTHROPIC_ADMIN_KEY`; free |
 | `pipeline/enrich.py` | Researches each new memory on the web (people, quotes, then and now, asides) and keeps only what a page fetched to check it says; adds freely licensed Commons pictures of the place. Into `memories.enrichment`, not served yet. Runs after aggregation. Also `seed`: researches a thin record (a plaque) before it is extracted. Bills |
 | `pipeline/links.py` | Links the names in a summary to Wikipedia via Wikidata, only on one exact match. Runs after aggregation; alone, it is the backfill. Bills a little |
@@ -82,6 +83,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/walk_labels.json` | Walk/maybe/skip for all 209 memories as of 2026-09-29 (docs/04, *Corpus read*): what a judge change is measured against |
 | `tests/test_quality_labels.py` | `quality --labels` scores the judge against the labels and reruns free |
+| `tests/test_batch.py` | A batch pass collects one stage and saves nothing; replies land where the next pass reads them |
 | `tests/test_cost.py` | `pipeline.cost` sums the bill over every page |
 | `tests/fixtures/hashtags.json` | Hashtag cases both parsers are held to (`test_hashtags.py`, `hashtags.test.ts`) |
 | `tests/fixtures/story.json` | Story markdown cases both parsers are held to (`test_story.py`, `story.test.ts`) |

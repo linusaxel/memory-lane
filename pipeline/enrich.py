@@ -199,6 +199,9 @@ def research(client, place: str, summary: str, prompt: str = RESEARCH_PROMPT) ->
             # Searching and copying passages needs little thought, and thinking
             # at the default effort was the bulk of this call's output.
             output_config={"effort": "low"},
+            # Each search or page read is another turn over everything before
+            # it; with caching on, those turns read the earlier ones at 10%.
+            cache_control={"type": "ephemeral"},
             tools=[
                 {
                     "type": "web_search_20260318",

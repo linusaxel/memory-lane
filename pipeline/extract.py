@@ -588,6 +588,11 @@ def log_cache(response) -> None:
         f"{response.model}: cache read {u.cache_read_input_tokens}, "
         f"write {u.cache_creation_input_tokens}, uncached {u.input_tokens}, "
         f"output {u.output_tokens}"
+        + (
+            f", searches {n}"
+            if (n := getattr(getattr(u, "server_tool_use", None), "web_search_requests", 0))
+            else ""
+        )
     )
 
 
@@ -614,16 +619,10 @@ def _model_key() -> str:
     return f"{EXTRACTION_MODEL}@{EXTRACTION_EFFORT}" if _lowered() else EXTRACTION_MODEL
 
 
-def _request(
-    client: anthropic.Anthropic,
-    system_prompt: str,
-    user: str,
-    schema: dict = MEMORY_SCHEMA,
-    context: str = "",
-    max_tokens: int = 2000,
-    think: bool = False,
-) -> str | None:
-    """The model's raw reply, or None for an error no retry will fix.
+def _params(
+    system_prompt: str, user: str, schema: dict, context: str, max_tokens: int, think: bool
+) -> dict:
+    """One request's body, as _request sends it and pipeline/batch.py batches it.
 
     `context` is what every chunk of one video shares (source, brief). It goes
     ahead of `user` with a second breakpoint, so from chunk two it is read at
@@ -638,28 +637,46 @@ def _request(
         if context
         else user
     )
+    return dict(
+        model=EXTRACTION_MODEL,
+        max_tokens=max_tokens,
+        # The system prompt is ~1.2k tokens and is resent for every chunk -
+        # 22 chunks a video, 55 videos. Cached reads cost 10% of input and a
+        # write costs 1.25x, so this pays for itself on the second chunk.
+        # The chunk is last, after this and the context, which is the
+        # order caching requires.
+        system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
+        messages=[{"role": "user", "content": content}],
+        **_thinking(think),
+        output_config={"format": {"type": "json_schema", "schema": schema}} | _effort(think),
+    )
+
+
+def reply_text(response) -> str | None:
+    """The reply's text, or None for one cut at max_tokens: a cut reply is no
+    JSON, and stored it would be read back for ever."""
+    if response.stop_reason == "max_tokens":
+        logger.warning(f"Reply cut at max_tokens={response.usage.output_tokens}; not used")
+        return None
+    return next(b.text for b in response.content if b.type == "text")
+
+
+def _request(
+    client: anthropic.Anthropic,
+    system_prompt: str,
+    user: str,
+    schema: dict = MEMORY_SCHEMA,
+    context: str = "",
+    max_tokens: int = 2000,
+    think: bool = False,
+) -> str | None:
+    """The model's raw reply, or None for an error no retry will fix."""
     try:
         response = client.messages.create(
-            model=EXTRACTION_MODEL,
-            max_tokens=max_tokens,
-            # The system prompt is ~1.2k tokens and is resent for every chunk -
-            # 22 chunks a video, 55 videos. Cached reads cost 10% of input and a
-            # write costs 1.25x, so this pays for itself on the second chunk.
-            # The chunk is last, after this and the context, which is the
-            # order caching requires.
-            system=[
-                {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}
-            ],
-            messages=[{"role": "user", "content": content}],
-            **_thinking(think),
-            output_config={"format": {"type": "json_schema", "schema": schema}} | _effort(think),
+            **_params(system_prompt, user, schema, context, max_tokens, think)
         )
         log_cache(response)
-        if response.stop_reason == "max_tokens":
-            # A cut reply is no JSON, and stored it would be read back for ever.
-            logger.warning(f"Reply cut at max_tokens={max_tokens}; not used")
-            return None
-        return next(b.text for b in response.content if b.type == "text")
+        return reply_text(response)
 
     except anthropic.BadRequestError as e:
         if is_billing_error(e):
@@ -859,6 +876,41 @@ def checked(session, client, content_id, chunk_index, chunk, context, memory: di
     return {**memory, "summary": summary} if summary else memory
 
 
+class Collect:
+    """A batch pass: model calls with no stored reply, held back instead of
+    sent (pipeline/batch.py). Only a content's first stage to miss is
+    collected, so a stage is never paid for on what an earlier one, still
+    unanswered, would have dropped."""
+
+    def __init__(self):
+        self.requests: dict[str, dict] = {}  # request_hash: {params, content_id, ...}
+        self.stage: dict[int, str] = {}  # content_id: the system prompt it waits on
+
+
+#: Set by pipeline/batch.py for one pass; None sends every call as it comes.
+COLLECT: Collect | None = None
+
+
+def store(session, key, content_id, chunk_index, system_prompt_hash, raw) -> None:
+    session.execute(
+        text("""
+            INSERT INTO extraction_chunks
+                (request_hash, content_id, chunk_index, prompt_hash, model, response)
+            VALUES (:k, :content_id, :chunk_index, :prompt_hash, :model, :response)
+            ON CONFLICT (request_hash) DO NOTHING
+        """),
+        {
+            "k": key,
+            "content_id": content_id,
+            "chunk_index": chunk_index,
+            "prompt_hash": system_prompt_hash,
+            "model": _model_key(),
+            "response": raw,
+        },
+    )
+    session.commit()
+
+
 def _stored_request(
     session,
     client,
@@ -879,27 +931,20 @@ def _stored_request(
     raw = session.execute(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
     ).scalar()
-    if raw is None:
-        raw = _request(client, system_prompt, user, schema, context, max_tokens, think)
-        if raw is None:
-            return None
-        session.execute(
-            text("""
-                INSERT INTO extraction_chunks
-                    (request_hash, content_id, chunk_index, prompt_hash, model, response)
-                VALUES (:k, :content_id, :chunk_index, :prompt_hash, :model, :response)
-                ON CONFLICT (request_hash) DO NOTHING
-            """),
-            {
-                "k": key,
+    if raw is not None:
+        return raw
+    if COLLECT is not None:
+        if COLLECT.stage.setdefault(content_id, system_prompt) == system_prompt:
+            COLLECT.requests[key] = {
+                "params": _params(system_prompt, user, schema, context, max_tokens, think),
                 "content_id": content_id,
                 "chunk_index": chunk_index,
                 "prompt_hash": _sha256(system_prompt),
-                "model": _model_key(),
-                "response": raw,
-            },
-        )
-        session.commit()
+            }
+        return None
+    raw = _request(client, system_prompt, user, schema, context, max_tokens, think)
+    if raw is not None:
+        store(session, key, content_id, chunk_index, _sha256(system_prompt), raw)
     return raw
 
 
@@ -1713,7 +1758,8 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
     )
 
 
-def extract_all_pending():
+def extract_all_pending(content_ids: list[int] | None = None):
+    """Every pending content, or only `content_ids` of them, one after another."""
     if not ANTHROPIC_API_KEY:
         logger.error("ANTHROPIC_API_KEY not set")
         return {"extracted": 0, "failed": 0}
@@ -1726,8 +1772,9 @@ def extract_all_pending():
         pending = session.execute(
             text(
                 "SELECT c.id, c.title, t.segments, c.source_type, c.source_name "
-                f"{PENDING_EXTRACTION}"
-            )
+                f"{PENDING_EXTRACTION} AND (CAST(:ids AS int[]) IS NULL OR c.id = ANY(:ids))"
+            ),
+            {"ids": content_ids},
         ).fetchall()
 
         logger.info(f"Found {len(pending)} videos pending extraction")
@@ -1769,6 +1816,7 @@ def extract_all_pending():
 
                 merged = merge_nearby_memories(all_memories)
                 filtered = worth_telling(session, client, content_id, filter_low_confidence(merged))
+                filtered = one_name_per_venue(session, client, content_id, filtered)
                 filtered = check_all(
                     session, client, content_id, source_context(source_name, title, brief), filtered
                 )
@@ -1778,6 +1826,10 @@ def extract_all_pending():
                 )
 
                 save_memories(session, content_id, filtered, layer_for(source_type), client)
+                if COLLECT is not None and content_id in COLLECT.stage:
+                    # A stage waits on the batch: nothing kept, the next pass gets further.
+                    session.rollback()
+                    continue
 
                 session.execute(
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),

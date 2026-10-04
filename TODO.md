@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The worker's forked job segfaults on a page fetch.** 2026-10-04: plaque
+  1036's thin-source research died with signal 11 in the RQ work-horse
+  (macOS fork plus urllib, the crash `worker.py` already guards its own check
+  against), and the job just failed. 1 of 7 plaques; enrichment's page reads
+  run in the same horse. Fix: set `no_proxy=*` (or
+  `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`) in `pipeline/worker.py` before forking,
+  or extract with `pipeline.batch`, which does not fork.
 - **A model bake-off scores each model with itself.** 2026-10-04: `quality
   --compare --score` under `EXTRACTION_MODEL=X` runs the walk rubric and the
   unsupported-claim check on X too, so "no added fact 4/12" for Opus against

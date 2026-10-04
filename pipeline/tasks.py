@@ -213,6 +213,29 @@ def _thin(source_type: str | None, segments: list) -> bool:
     return source_type == "plaque" or sum(len(s.get("text", "")) for s in segments) < THIN_CHARS
 
 
+def seeded(session, client, content_id: int, title, segments: list) -> list | None:
+    """A thin record with the passages research found behind it, saved with
+    its transcript so the research is paid for once. None when nothing checks
+    out, and the content is marked extracted: a lead with no story is no memory."""
+    if any(s.get("seed") for s in segments):
+        return segments
+    found = seed(client, title, "\n".join(s.get("text", "") for s in segments))
+    if not found:
+        session.execute(
+            text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": content_id}
+        )
+        session.commit()
+        logger.info(f"[content:{content_id}] A thin record with no story found behind it")
+        return None
+    segments = [*segments, {"text": found, "start": segments[-1].get("start", 0), "seed": True}]
+    session.execute(
+        text("UPDATE transcripts SET segments = CAST(:s AS JSONB) WHERE content_id = :id"),
+        {"s": json.dumps(segments), "id": content_id},
+    )
+    session.commit()
+    return segments
+
+
 def task_enqueue_chunks(content_id: int):
     """
     Task: Fetch transcript and enqueue each chunk for classification.
@@ -247,16 +270,9 @@ def task_enqueue_chunks(content_id: int):
         if (source_type or "video") == "video":
             brief = video_brief(session, client, content_id, segments, source_name, title)
         elif segments and _thin(source_type, segments):
-            found = seed(client, title, "\n".join(s.get("text", "") for s in segments))
-            if not found:
-                session.execute(
-                    text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"),
-                    {"id": content_id},
-                )
-                session.commit()
-                logger.info(f"[content:{content_id}] A thin record with no story found behind it")
+            segments = seeded(session, client, content_id, title, segments)
+            if segments is None:
                 return {"skipped": "no_story"}
-            segments = [*segments, {"text": found, "start": segments[-1].get("start", 0)}]
 
     chunks = chunk_transcript(segments, CHUNK_MINUTES, CHUNK_OVERLAP_SECONDS)
     total_chunks = len(chunks)
@@ -393,6 +409,50 @@ def _check_extraction_complete(content_id: int, total_chunks: int):
         aggregate_queue.enqueue(task_aggregate_memories, content_id=content_id, job_timeout="5m")
 
 
+def after_save(client, content_id: int) -> None:
+    """What runs on a content's memories once they are committed: links, the
+    walk score, what is there now, enrichment, a book's retellings, and the
+    transcript forgotten. Each in its own session, so one failing keeps the rest."""
+    # Its own session, after the memories are committed: a failed lookup must
+    # not roll them back. What it misses, `python -m pipeline.links` picks up.
+    try:
+        with get_session() as session:
+            link_memories(session, client, content_id=content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Linking names failed; memories are saved")
+    try:
+        with get_session() as session:
+            score_memories(session, client, content_id=content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Walk scoring failed; memories are saved")
+    try:
+        with get_session() as session:
+            look_up(session, content_id=content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Looking up what is there now failed")
+    try:
+        with get_session() as session:
+            enrich_memories(session, client, content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Enrichment failed; memories are saved")
+    try:
+        with get_session() as session:
+            book = session.execute(
+                text("SELECT source_id FROM content WHERE id = :id AND source_type = 'book'"),
+                {"id": content_id},
+            ).scalar()
+            if book:
+                hidden = hide_repeats(session, client, book)
+                logger.info(f"[content:{content_id}] Retellings hidden in the book: {hidden}")
+    except Exception:
+        logger.exception(f"[content:{content_id}] The book's retelling check failed")
+    try:
+        with get_session() as session:
+            forget(session, content_id)
+    except Exception:
+        logger.exception(f"[content:{content_id}] Forgetting the transcript failed")
+
+
 def task_aggregate_memories(content_id: int):
     """
     Task: Collect all extracted memories, merge, filter, and save to DB.
@@ -441,44 +501,7 @@ def task_aggregate_memories(content_id: int):
             session, content_id, filtered, layer_for(_source_type(redis, content_id)), client
         )
 
-    # Its own session, after the memories are committed: a failed lookup must
-    # not roll them back. What it misses, `python -m pipeline.links` picks up.
-    try:
-        with get_session() as session:
-            link_memories(session, client, content_id=content_id)
-    except Exception:
-        logger.exception(f"[content:{content_id}] Linking names failed; memories are saved")
-    try:
-        with get_session() as session:
-            score_memories(session, client, content_id=content_id)
-    except Exception:
-        logger.exception(f"[content:{content_id}] Walk scoring failed; memories are saved")
-    try:
-        with get_session() as session:
-            look_up(session, content_id=content_id)
-    except Exception:
-        logger.exception(f"[content:{content_id}] Looking up what is there now failed")
-    try:
-        with get_session() as session:
-            enrich_memories(session, client, content_id)
-    except Exception:
-        logger.exception(f"[content:{content_id}] Enrichment failed; memories are saved")
-    try:
-        with get_session() as session:
-            book = session.execute(
-                text("SELECT source_id FROM content WHERE id = :id AND source_type = 'book'"),
-                {"id": content_id},
-            ).scalar()
-            if book:
-                hidden = hide_repeats(session, client, book)
-                logger.info(f"[content:{content_id}] Retellings hidden in the book: {hidden}")
-    except Exception:
-        logger.exception(f"[content:{content_id}] The book's retelling check failed")
-    try:
-        with get_session() as session:
-            forget(session, content_id)
-    except Exception:
-        logger.exception(f"[content:{content_id}] Forgetting the transcript failed")
+    after_save(client, content_id)
 
     redis.hset(
         f"extraction:{content_id}", mapping={"status": "completed", "total_memories": len(filtered)}

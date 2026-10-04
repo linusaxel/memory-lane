@@ -3492,6 +3492,37 @@ memories. A lead with no story behind it is not a memory.
   each, plus the page reads. Leads that find nothing still count toward the
   $0.50-a-memory budget (`python -m pipeline.cost`).
 
+### Extraction is batched
+
+Status: Accepted 2026-10-04
+
+Nothing in extraction waits on an answer, and the Message Batches API is half
+price on every token, stacking with caching. `pipeline/batch.py` drives the
+sequential path (`extract_all_pending`) over chosen contents, pass after pass.
+In a pass, a call with no stored reply is collected instead of sent, and its
+content stops there with nothing saved. The batch's replies land in
+`extraction_chunks` under the keys `_stored_request` looks up, so the next
+pass reads them back and gets one stage further.
+
+- **One stage per content per pass.** Only the first system prompt to miss is
+  collected. Without that rule, a judge still waiting on its chunks would be
+  paid for on what they drop.
+- **No new orchestration.** The stages, the store and the rollback are the
+  ones the pipeline already had. A pass is a dry run that stops at the first
+  unanswered stage.
+- **Never everything pending.** It takes `--content` or `--source`, like
+  `enqueue --video`, and only bills with `--run`.
+- **No Haiku pre-filter.** Every chunk goes to the extractor at half price,
+  instead of a screen first.
+- **What follows a save is not batched.** Links, walk score, enrichment and
+  the thin-source research are not stored replies, so they are sent as they
+  come (`tasks.after_save`, `tasks.seeded`). Batching them means storing
+  their replies too.
+
+**Options considered:** a batch per call (half price, but a run of hundreds
+of calls waits minutes each); rewriting the RQ tasks around batches (a second
+orchestration to keep in step with the first).
+
 ### Rejected approaches, do not retry
 
 Status: Rejected
