@@ -476,7 +476,11 @@ opens rise while hearts per open fall, count walks or cap a day's opens.
 
 ### A stop can be dropped
 
-Status: Accepted 2026-10-03.
+Status: Superseded 2026-10-04, the founder: the button and
+`POST /v1/routes/today/skip` are gone. On the walk card ⏭ read as a "next" that
+did nothing: no feedback, and it came and went with the stops left. Stops open
+in any order and End walk (F34) is there, so it earned too little for a third
+control on the card.
 
 In Smith et al. 2019 every participant changed the prescribed route:
 reordered stops, skipped some, took the tram. Stops already open in any

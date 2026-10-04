@@ -796,13 +796,7 @@ anyone else's collection or the local unlock cache.
    said plainly as a distance, never as minutes. Tapping the card zooms out
    around you until the next stop is on screen (it flies to the stop with no
    position, and frames the whole route once it is walked). Its ✕ ends the
-   walk (F34). Beside it, **Skip this stop** drops the next stop from the
-   walk without ending it: shut, out of the way, or not worth it. The walk
-   goes on to the one after, and is finished without it (and earns as a walk
-   of one stop fewer). An opened stop, or the walk's only one, can't be
-   dropped. Dropping the last stop owed finishes the walk, as earning it
-   would (F30). `POST /v1/routes/today/skip`; docs/10, "A stop can be
-   dropped".
+   walk (F34).
    **The camera follows you** while there is a position, and a pinch zooms
    without moving the centre. A one-finger drag lets go so you can look
    around, and **Center on me** (bottom right, beside the card) goes hollow

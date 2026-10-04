@@ -1,6 +1,6 @@
 /** The one way a layer closes: an × in a quiet circle, top trailing
  *  (UI.md, rule 12). 30pt drawn, 44pt to the finger. The same circle with
- *  another `icon` is the walk card's skip and a story's ⋯. */
+ *  another `icon` is a story's ⋯. */
 
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';

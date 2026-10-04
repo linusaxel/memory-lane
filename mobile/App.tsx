@@ -23,7 +23,6 @@ import {
   acceptRoute,
   blockUser,
   endRoute,
-  skipStop,
   fetchMine,
   fetchProfile,
   fetchTodaysRoute,
@@ -1213,21 +1212,6 @@ export default function App() {
     [unlocked, routeStarted, nextRouteStop, routeShown, earned, refreshProfile],
   );
 
-  /** Drop the next stop and walk on to the one after. Dropping the last one
-   *  owed finishes the walk, as earning it would. */
-  const skipNext = useCallback(async () => {
-    if (!device || !nextRouteStop) return;
-    setPlanError(null);
-    try {
-      const walk = await skipStop(device, nextRouteStop.id);
-      if (!mounted.current) return;
-      takeRoute(walk, routeHome, routeEnd);
-      refreshProfile(walk.memories.every((stop) => earned.has(stop.id)));
-    } catch {
-      if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
-    }
-  }, [device, nextRouteStop, takeRoute, routeHome, routeEnd, earned, refreshProfile]);
-
   // Count what was walked, from where the last count stopped.
   const countSteps = useCallback(() => {
     deviceId()
@@ -1967,22 +1951,11 @@ export default function App() {
                           />
                         ))}
                         <Text style={[styles.walkLeft, styles.walkCount]} numberOfLines={1}>
-                          {/* A skip or an end that failed says so here, not on a card that is gone. */}
+                          {/* An end that failed says so here, not on a card that is gone. */}
                           {planError ?? routeLeftText}
                         </Text>
                       </View>
                     </View>
-                    {/* Past a stop that is shut, or not worth it, without ending the walk. */}
-                    {!routeDone && routeShown.length > 1 && (
-                      <CloseButton
-                        icon="forward.end"
-                        label="Skip this stop"
-                        onPress={() => {
-                          Haptics.selectionAsync().catch(() => {});
-                          skipNext();
-                        }}
-                      />
-                    )}
                     {/* Nothing left to reach, nothing to lose, so no are-you-sure. */}
                     <CloseButton
                       label="End walk"

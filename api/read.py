@@ -4,9 +4,8 @@ The list endpoints never pass a position to `row_to_memory`: walking into range
 must *offer* the unlock, not perform it, or there is no moment to press.
 
 The exceptions to "nothing here writes": POST /v1/routes/today stores the walk
-a device accepts, next to the preview (both call api/route_solver.py),
-POST /v1/routes/today/skip drops a stop from it, and POST /v1/routes/today/end
-ends it. None records an unlock - that stays write.py's alone.
+a device accepts, next to the preview (both call api/route_solver.py), and
+POST /v1/routes/today/end ends it. None records an unlock - that stays write.py's alone.
 """
 
 import json
@@ -49,7 +48,6 @@ from api.models import (
     RouteResponse,
     SearchMeta,
     SearchResponse,
-    SkipRequest,
     Stats,
     Theme,
     UnlocksResponse,
@@ -63,7 +61,6 @@ from api.queries import (
     COUNT_QUERY,
     COUNT_WITH_TAGS_QUERY,
     DEVICE_UNLOCKS_QUERY,
-    EARNED_QUERY,
     HOTSPOTS_QUERY,
     MEMORY_NOTES_QUERY,
     MY_MEMORIES_COUNT_QUERY,
@@ -73,7 +70,6 @@ from api.queries import (
     NEARBY_PLACES_QUERY,
     NOTE_ALLOWED_QUERY,
     PLACES_COUNT_QUERY,
-    ROUTE_COMPLETED_QUERY,
     ROUTE_PRUNE,
     ROUTE_QUERY,
     SEARCH_COUNT_QUERY,
@@ -373,14 +369,6 @@ ROUTE_END = """
 """
 
 
-ROUTE_SKIP_LOOKUP = ROUTE_LOOKUP.rstrip() + " FOR UPDATE"
-
-ROUTE_SKIP = """
-    UPDATE daily_routes SET memory_ids = CAST(:ids AS integer[]), legs = CAST(:legs AS jsonb)
-    WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date AND ended_at IS NULL
-"""
-
-
 def _route_response(
     route_date, rows, memory_ids, budget_meters, legs, loop, ends=None, earned=frozenset()
 ) -> RouteResponse:
@@ -534,54 +522,6 @@ def end_route(body: DeviceRequest):
     with get_session() as session:
         session.execute(text(ROUTE_END), {"device": body.device, "route_date": route_date})
         session.execute(text(ROUTE_PRUNE), {"device_id": body.device, "route_date": route_date})
-
-
-def _legs_without(legs, i: int):
-    """legs[k] runs stop k to stop k+1. Dropping stop i joins the two legs
-    through it, so the walk still follows streets, past the dropped spot."""
-    if not legs:
-        return legs
-    if i == 0:
-        return legs[1:]
-    if i == len(legs):
-        return legs[:-1]
-    return legs[: i - 1] + [legs[i - 1] + legs[i][1:]] + legs[i + 1 :]
-
-
-@router.post("/v1/routes/today/skip", response_model=RouteResponse)
-def skip_stop(body: SkipRequest):
-    """Drop a stop from today's walk without ending it (docs/10, "A stop can be
-    dropped"). It leaves memory_ids, so the walk is finished without it and
-    earns as a walk of one stop fewer. An opened stop, or the walk's only one,
-    stays."""
-    route_date = gate.today()
-    binds = {"device": body.device, "route_date": route_date}
-    with get_session() as session:
-        row = session.execute(text(ROUTE_SKIP_LOOKUP), binds).fetchone()
-        if row is None:
-            raise HTTPException(status_code=404, detail="No walk accepted today")
-        ids = list(row.memory_ids)
-        if body.memory_id not in ids:
-            raise HTTPException(status_code=404, detail={"reason": "not_on_walk"})
-        earned = {"memory_id": body.memory_id, "device_id": body.device}
-        if session.execute(text(EARNED_QUERY), earned).scalar():
-            raise HTTPException(status_code=409, detail={"reason": "already_opened"})
-        if len(ids) == 1:
-            raise HTTPException(status_code=409, detail={"reason": "last_stop"})
-        i = ids.index(body.memory_id)
-        ids.pop(i)
-        legs = _legs_without(row.legs, i)
-        session.execute(
-            text(ROUTE_SKIP),
-            {**binds, "ids": ids, "legs": json.dumps(legs) if legs else None},
-        )
-        # The dropped stop may have been the last one owed.
-        session.execute(
-            text(ROUTE_COMPLETED_QUERY),
-            {"device_id": body.device, "memory_id": ids[0], "today": route_date},
-        )
-        row = session.execute(text(ROUTE_LOOKUP), binds).fetchone()
-        return _stored_route(session, route_date, row)
 
 
 @router.get("/v1/routes/today", response_model=RouteResponse)
