@@ -77,7 +77,7 @@ import {
   type Tf,
 } from './lockMotion.ts';
 import { locketOf, type LocketId } from './lockets.ts';
-import { color, font, lift, metal, radius } from './theme.ts';
+import { color, font, metal, radius } from './theme.ts';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const BOX = 300; // design box; everything below is in these units
@@ -87,7 +87,7 @@ const CY = 170; // centre of the locket
 const HOLD_MS = 900;
 const CHECK_MIN_MS = 420;
 const OPEN_MS = 2300;
-// The zoom runs over o 0.5 → 0.9 of the open (zt below); the paper rides it.
+// The zoom runs over o 0.5 → 0.9 of the open (zt below); IrisGrow waits it out.
 const DIVE_MS = 0.4 * OPEN_MS;
 const SETTLE_MS = 380;
 
@@ -108,10 +108,6 @@ const TICKS: Array<[number, HapticKind]> = [
   [0.92, 'rigid'],
 ];
 
-/** Where the inside of the locket is on screen as the dive starts: its centre
- *  and half its width, in window points. The memory grows out of it. */
-export type Iris = { x: number; y: number; r: number };
-
 type Props = {
   locket: LocketId;
   /** Engraved inside the case. */
@@ -119,8 +115,8 @@ type Props = {
   coordinates?: string;
   /** The server re-measures. Resolve true to open, false to refuse. */
   requestUnlock: () => Promise<boolean>;
-  /** Fired as the camera starts diving in: bring the memory up from here. */
-  onDiveStart?: (from: Iris) => void;
+  /** Fired as the camera starts diving in: bring the memory up. */
+  onDiveStart?: () => void;
   /** Fired when the dive has finished. */
   onOpened?: () => void;
   /** Rendered size in points (the design is 300). */
@@ -147,6 +143,7 @@ const COMMIT = 0.98;
 type Motion = {
   oa: number;
   rose: number;
+  engrave: number;
   crown: number;
   tilt: number;
   sway: number;
@@ -194,7 +191,7 @@ export default function LocketUnlock({
 }: Props) {
   const reduce = useReducedMotion();
   const art = ART[locketOf(locket).id];
-  const { hingeX, keyY, swing } = art;
+  const { hingeX, keyY, swing, top } = art;
   const width = 2 * (C - hingeX);
   const root = useRef<View>(null);
 
@@ -204,6 +201,8 @@ export default function LocketUnlock({
   const phase = useSharedValue(IDLE);
   const pressed = useSharedValue(0);
   const clock = useSharedValue(0); // seconds, only ticks while something is moving
+  const zoomMax = useSharedValue(14);
+  const window = useWindowDimensions();
 
   const frame = useFrameCallback((info) => {
     clock.value = info.timeSinceFirstFrame / 1000;
@@ -230,16 +229,21 @@ export default function LocketUnlock({
     },
   );
 
-  const diveStart = useCallback(() => {
+  const diveStart = useCallback(() => onDiveStart?.(), [onDiveStart]);
+
+  // The dive ends with the inside covering the whole screen, whatever the
+  // locket's shape: its inscribed circle reaches the farthest corner. IrisGrow
+  // takes over from there (docs/10, "One handover for every locket").
+  const measureZoom = useCallback(() => {
     const k = size / BOX;
-    root.current?.measureInWindow((x, y) =>
-      onDiveStart?.({
-        x: x + size / 2,
-        y: y + size / 2 + (CY - C) * k,
-        r: 0.9 * (C - hingeX) * k,
-      }),
-    );
-  }, [hingeX, onDiveStart, size]);
+    root.current?.measureInWindow((x, y) => {
+      const cx = x + size / 2;
+      const cy = y + size / 2 + (CY - C) * k;
+      const far = Math.hypot(Math.max(cx, window.width - cx), Math.max(cy, window.height - cy));
+      const inside = 0.9 * Math.min(C - hingeX, CY - top) * k;
+      zoomMax.value = Math.max(14, (1.1 * far) / inside);
+    });
+  }, [hingeX, size, top, window, zoomMax]);
 
   // Start the dive callback once, as the zoom begins.
   useAnimatedReaction(
@@ -271,6 +275,7 @@ export default function LocketUnlock({
   const onHoldComplete = useCallback(async () => {
     phase.value = CHECKING;
     haptic('medium');
+    measureZoom();
     const [ok] = await Promise.all([
       requestUnlock().catch(() => false),
       new Promise((r) => setTimeout(r, CHECK_MIN_MS)),
@@ -287,7 +292,7 @@ export default function LocketUnlock({
     openP.value = withTiming(1, { duration: OPEN_MS, easing: Easing.linear }, (fin) => {
       if (fin) runOnJS(finishOpen)();
     });
-  }, [finishOpen, haptic, openP, phase, pressed, requestUnlock, springBack]);
+  }, [finishOpen, haptic, measureZoom, openP, phase, pressed, requestUnlock, springBack]);
 
   const begin = useCallback(
     (durationMs?: number) => {
@@ -382,6 +387,7 @@ export default function LocketUnlock({
     return {
       oa,
       rose,
+      engrave: 1 - seg(zt, 0, 0.3),
       crown,
       tilt,
       sway,
@@ -392,8 +398,9 @@ export default function LocketUnlock({
       turn,
       ka,
       keyOp,
-      zoom: 1 + 13 * eic(zt),
-      lockOp: reduce ? (open ? 1 - seg(o, 0.5, 0.85) : 1) : 1 - seg(zt, 0.55, 0.95),
+      zoom: 1 + (zoomMax.value - 1) * eic(zt),
+      // No fade: it covers the screen until IrisGrow, over it, takes over.
+      lockOp: reduce ? (open ? 1 - seg(o, 0.5, 0.85) : 1) : 1,
       glow: open ? eoc(seg(oa, 0.15, 0.7)) : 0,
       o: open ? o : 0,
     };
@@ -416,6 +423,7 @@ export default function LocketUnlock({
     transform: [P, ...rigTf(motion.value, C, C), { translateY: motion.value.crown }] as never,
   }));
   const glowStyle = useAnimatedStyle(() => ({ opacity: motion.value.glow }));
+  const engraveStyle = useAnimatedStyle(() => ({ opacity: motion.value.engrave }));
   const lidBackStyle = useAnimatedStyle(() => {
     const m = motion.value;
     return {
@@ -497,7 +505,11 @@ export default function LocketUnlock({
           {/* case: chain stub, bail, the inside with the place */}
           <Plane>
             <Animated.View style={[StyleSheet.absoluteFill, caseStyle]}>
-              <CaseArt shape={art.shape} placeName={placeName} coordinates={coordinates} />
+              <CaseArt shape={art.shape} />
+              {/* Leaves as the dive starts, or the name sweeps the screen huge. */}
+              <Animated.View style={[StyleSheet.absoluteFill, engraveStyle]}>
+                <EngraveArt shape={art.shape} placeName={placeName} coordinates={coordinates} />
+              </Animated.View>
               <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
                 <Svg width={BOX} height={BOX}>
                   <Defs>
@@ -594,27 +606,23 @@ export default function LocketUnlock({
 }
 
 type IrisProps = {
-  from: Iris;
   /** The open memory's card it lands on: full width, on the bottom edge. */
   height: number;
-  /** Grown to the card's frame: the card can show. */
+  /** Settled on the card's frame: the card can show. */
   onGrown: () => void;
 };
 
-/** The dive, continued over the map: paper grows out of the locket's inside to
- *  the card's frame, so the memory opens in place instead of sliding up. A
- *  circle riding the locket's zoom until it is as wide as the card, then it
- *  stretches into the frame; width and
- *  height, not scale, so it stays round. The parent removes it once the card
- *  is up. With Reduce Motion it draws nothing and hands over at once. */
-export function IrisGrow({ from, height, onGrown }: IrisProps) {
+/** The dive, handed over: the locket's zoom ends with its inside covering the
+ *  screen, and from then this full-screen paper, over it, settles down into
+ *  the card's frame. It matches no locket's shape, so every locket blends the
+ *  same. The glow fades to paper as it settles, so dark mode does not cut.
+ *  The parent removes it once the card is up. With Reduce Motion it draws
+ *  nothing and hands over at once. */
+export function IrisGrow({ height, onGrown }: IrisProps) {
   const reduce = useReducedMotion();
-  const { width, height: screen } = useWindowDimensions();
+  const { height: screen } = useWindowDimensions();
   const ms = useSharedValue(0);
-  // When the zoom has made the locket's inside as wide as the card: cbrt
-  // undoes the zoom's easeInCubic.
-  const wide = DIVE_MS * Math.min(Math.cbrt(Math.max(width / (2 * from.r) - 1, 0) / 13), 1);
-  const total = wide + SETTLE_MS;
+  const total = DIVE_MS + SETTLE_MS;
 
   useEffect(() => {
     if (reduce) {
@@ -628,31 +636,28 @@ export function IrisGrow({ from, height, onGrown }: IrisProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const style = useAnimatedStyle(() => {
-    // Glued to the locket's inside while it zooms (the zoom is about its
-    // centre), then it stretches and settles into the card's frame.
-    const z = 1 + 13 * eic(Math.min(ms.value / DIVE_MS, 1));
-    const w = Math.min(from.r * 2 * z, width);
-    const b = eio(Math.max((ms.value - wide) / SETTLE_MS, 0));
-    const h = w + (height - w) * b;
-    const cx = from.x + (width / 2 - from.x) * b;
-    const cy = from.y + (screen - height / 2 - from.y) * b;
-    const top = w / 2 + (radius.card - w / 2) * b;
-    const bottom = (w / 2) * (1 - b);
+  const settle = useDerivedValue(() => eio(Math.max((ms.value - DIVE_MS) / SETTLE_MS, 0)));
+  const frame = useAnimatedStyle(() => {
+    const b = settle.value;
     return {
-      left: cx - w / 2,
-      top: cy - h / 2,
-      width: w,
-      height: h,
-      borderTopLeftRadius: top,
-      borderTopRightRadius: top,
-      borderBottomLeftRadius: bottom,
-      borderBottomRightRadius: bottom,
+      opacity: ms.value >= DIVE_MS ? 1 : 0,
+      top: (screen - height) * b,
+      borderTopLeftRadius: radius.card * b,
+      borderTopRightRadius: radius.card * b,
     };
   });
+  const glow = useAnimatedStyle(() => ({
+    opacity: 1 - settle.value,
+    borderTopLeftRadius: radius.card * settle.value,
+    borderTopRightRadius: radius.card * settle.value,
+  }));
 
   if (reduce) return null;
-  return <Animated.View pointerEvents="none" style={[styles.iris, style]} />;
+  return (
+    <Animated.View pointerEvents="none" style={[styles.iris, frame]}>
+      <Animated.View style={[styles.irisGlow, glow]} />
+    </Animated.View>
+  );
 }
 
 // iOS depth-sorts 3D-transformed siblings, and with each layer carrying its own
@@ -1051,17 +1056,7 @@ function GoldDefs() {
   );
 }
 
-const CaseArt = memo(function CaseArt({
-  shape,
-  placeName,
-  coordinates,
-}: {
-  shape: string;
-  placeName: string;
-  coordinates?: string;
-}) {
-  // A long name engraves smaller rather than running off the dial.
-  const nameSize = Math.min(20, 240 / Math.max(placeName.length, 1));
+const CaseArt = memo(function CaseArt({ shape }: { shape: string }) {
   return (
     <Svg width={BOX} height={BOX}>
       <GoldDefs />
@@ -1078,6 +1073,24 @@ const CaseArt = memo(function CaseArt({
         strokeWidth={1.5}
         transform={inset(0.9)}
       />
+    </Svg>
+  );
+});
+
+/** What is engraved inside the case: the place, where it is, north. */
+const EngraveArt = memo(function EngraveArt({
+  shape,
+  placeName,
+  coordinates,
+}: {
+  shape: string;
+  placeName: string;
+  coordinates?: string;
+}) {
+  // A long name engraves smaller rather than running off the dial.
+  const nameSize = Math.min(20, 240 / Math.max(placeName.length, 1));
+  return (
+    <Svg width={BOX} height={BOX}>
       <Path d={shape} fill="none" stroke={metal.inner} strokeWidth={1} transform={inset(0.7)} />
       <SvgText
         x={C}
@@ -1226,7 +1239,8 @@ const KeyArt = memo(function KeyArt({ y }: { y: number }) {
 });
 
 const styles = StyleSheet.create({
-  iris: { position: 'absolute', backgroundColor: color.paper, ...lift },
+  iris: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: color.paper },
+  irisGlow: { ...StyleSheet.absoluteFill, backgroundColor: metal.glow },
   noBack: { backfaceVisibility: 'hidden' },
   // left edge on the keyhole; overflow hidden clips the blade as it goes in
   keyClip: {

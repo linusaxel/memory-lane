@@ -161,6 +161,31 @@ open" and an idle pulse (smallest change, but brings back the ring and
 caption the founder removed); dragging the locket's lid itself (most direct,
 hardest to signal, and it fights the map's pan).
 
+**Amended 2026-10-04:** the slide left the bottom row for a row of its own
+just over it, near edge to edge (24pt in, 64pt tall, a 54pt knob), and the
+locket grew from 180 to 230pt above it. Squeezed between Add and Center on
+me it was 245pt, too short to scrub a key with; iOS's slide to power off runs
+nearly edge to edge, and the first slide to unlock was about 86% of the
+screen. The walk card still steps aside while you stand there.
+
+### One handover for every locket
+
+Status: Accepted 2026-10-04.
+
+The dive into a memory blended only for the hunter compass. The paper that
+grows into the card started as a circle glued to the locket's inside, and
+only the compass's inside is round: the ovals, the octagon and the cushion
+showed their rim and a huge engraved name around it. Now the zoom ends with
+the inside covering the whole screen (zoomed until its inscribed circle
+reaches the farthest corner), the engraving fades out early, and only then
+does full-screen paper (`IrisGrow`) settle down into the card's frame. It
+matches no shape, so any locket, and any dive a locket gets later, blends
+the same way as long as it ends with its inside filling the screen.
+
+**Options considered:** an iris per shape (an oval, an octagon...), which
+every new locket would have to redraw and a View cannot round into an
+ellipse anyway.
+
 ### The lock says where
 
 Status: Accepted 2026-10-01. Supersedes *The lock alone* on its words and its

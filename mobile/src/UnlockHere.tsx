@@ -1,6 +1,6 @@
 /** The lock, low on the map where a thumb reaches, for the memory you are
  *  standing on, with ‹ › beside it when more than one is in reach. The slide
- *  that opens it is the bottom row's middle, in App, sharing `drive` and
+ *  that opens it is its own row under it, in App, sharing `drive` and
  *  `progress` (docs/10, "Slide to unlock"). */
 
 import { useEffect, type RefObject } from 'react';
@@ -9,7 +9,7 @@ import type { SharedValue } from 'react-native-reanimated';
 
 import type { LocatedMemory } from './api.ts';
 import Glyph from './Glyph.tsx';
-import LocketUnlock, { type Iris, type LocketDrive } from './LocketUnlock.tsx';
+import LocketUnlock, { type LocketDrive } from './LocketUnlock.tsx';
 import { color, dim } from './theme.ts';
 
 type Props = {
@@ -20,7 +20,7 @@ type Props = {
   /** Asks the server. True opens the locket, false springs it back. */
   requestUnlock: () => Promise<boolean>;
   /** The locket is diving in: bring the memory up. */
-  onDiveStart: (from: Iris) => void;
+  onDiveStart: () => void;
   onOpened: () => void;
   error: string | null;
   /** The slide's handle on the locket, and the hold they share. */
@@ -88,17 +88,17 @@ function Arrow({ glyph, name, onPress }: ArrowProps) {
   );
 }
 
-const LOCKET = 180;
+const LOCKET = 230;
 
 const styles = StyleSheet.create({
-  // Above the bottom row (App's `bottom`, at 70), whose middle is the slide.
+  // Above the slide (App's `slideRow`, at 142, 64 tall), with 24 between.
   // ‹ › flank the locket with room between, so aiming for one cannot start
   // the hold.
   stack: {
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 134,
+    bottom: 142 + 64 + 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

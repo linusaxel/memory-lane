@@ -10,7 +10,7 @@ appId: ${APP_ID}
     timeout: 45000
 - assertVisible: "Unlock this memory"
 # Two ways in (docs/10, "Slide to unlock"). SLIDE=1 drags the knob of the
-# slide in the bottom row's middle to its end: by screen point, since the track
+# slide, in its own row over the bottom row, to its end: by screen point, since the track
 # is one accessibility element and its knob sits at its left (a 402pt-wide
 # iPhone; this is where it lands).
 - runFlow:
@@ -18,8 +18,8 @@ appId: ${APP_ID}
       true: ${SLIDE == '1'}
     commands:
       - swipe:
-          start: "25%,89%"
-          end: "96%,89%"
+          start: "14%,80%"
+          end: "96%,80%"
           duration: 1500
 # Otherwise the hold. longPressOn holds ~3s; HOLD_MS is 900 and its animation
 # callback fires while the finger is still down, so the press completes the

@@ -136,7 +136,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/lockets.ts` | The six lockets: pin images, names, the level each opens at |
 | `mobile/assets/lockets/` | The locket pins, keyhole (locked) and plain (opened), @1x-@3x |
 | `mobile/src/UnlockHere.tsx` | The locket over the map, for the memory you stand on |
-| `mobile/src/SlideToUnlock.tsx` | Slide to unlock: the bottom row's middle while a memory is in reach, scrubbing the locket's hold |
+| `mobile/src/SlideToUnlock.tsx` | Slide to unlock: its own row over the bottom row while a memory is in reach, scrubbing the locket's hold |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
 | `mobile/src/MemoryMarker.tsx` | One pin: its locket, keyhole and all until opened, lit when it can be opened from here |
 | `mobile/src/AccountMenu.tsx` | You, top right: your photo, and a menu of your numbers, Edit profile and Settings |

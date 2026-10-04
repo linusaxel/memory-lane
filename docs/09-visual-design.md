@@ -905,7 +905,7 @@ teardowns.
 
 ## What shipped
 
-`mobile/src/SlideToUnlock.tsx` in the bottom row's middle while a memory is in
+`mobile/src/SlideToUnlock.tsx` in its own row over the bottom row while a memory is in
 reach, drawn as iOS draws slide to power off (white knob, arrow, one
 shimmering line), with the rest under a thin paper wash; docs/10, "Slide to
 unlock"; mobile/UI.md, "The unlock control".

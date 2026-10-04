@@ -95,7 +95,7 @@ import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
-import { IrisGrow, type Iris, type LocketDrive } from './src/LocketUnlock.tsx';
+import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { button, buttonText, color, dim, font, label, pill, solid } from './src/theme.ts';
@@ -282,7 +282,7 @@ export default function App() {
   const [revealId, setRevealId] = useState<number | null>(null);
   const { height: windowHeight } = useWindowDimensions();
   // The dive, growing over the map into the card it opens.
-  const [diving, setDiving] = useState<{ from: Iris; grown?: boolean } | null>(null);
+  const [diving, setDiving] = useState<{ grown?: boolean } | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
   // a sparse area); it is not `route.length`, because a stop the local cache
   // lost or the server pruned still counted toward "today" when it was made.
@@ -1492,7 +1492,6 @@ export default function App() {
       />
       {diving && (
         <IrisGrow
-          from={diving.from}
           height={windowHeight * TALL}
           onGrown={() => setDiving((d) => d && { ...d, grown: true })}
         />
@@ -1897,8 +1896,8 @@ export default function App() {
                     <Text style={styles.planWalkText}>Turn on location</Text>
                   </Pressable>
                 )}
-                {/* Standing on a stop, the card gives its place to the slide
-                    that opens it; step away and the card, and its ✕, are back
+                {/* Standing on a stop, the card steps aside for the slide
+                    over it; step away and the card, and its ✕, are back
                     (docs/10, "Slide to unlock"). */}
                 {/* The walk's one card (F9): where next and how far, a tap to see
                     it, and ✕ to end it. */}
@@ -2031,9 +2030,9 @@ export default function App() {
                 if (!opened) setOpening(null);
                 return opened;
               }}
-              onDiveStart={(from) => {
+              onDiveStart={() => {
                 if (!opening) return;
-                setDiving({ from });
+                setDiving({});
                 // Open now, hidden under the paper: up and drawn by the time it is grown.
                 setRevealId(opening.group.memories[opening.index].id);
                 setPickedId(null);
@@ -2046,11 +2045,7 @@ export default function App() {
               progress={lockProgress}
             />
           )}
-          {slide && (
-            <View style={[styles.bottom, stage === 'walk' && styles.slideInset]}>
-              <View style={styles.grow}>{slide}</View>
-            </View>
-          )}
+          {slide && <View style={styles.slideRow}>{slide}</View>}
         </View>
 
         <Modal
@@ -2178,11 +2173,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  // 56, the walk card's height, so the row keeps its line when the slide
-  // stands in for the card.
+  // 56, the walk card's height, so the row keeps its line without it.
   middle: { flex: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center' },
-  // The walk row's middle: between Add and Center on me (44 each, gap 12).
-  slideInset: { left: 18 + 44 + 12, right: 18 + 44 + 12 },
+  // The slide's own row, centred over the bottom row (56 tall, at 70) with
+  // 16 between: near edge to edge, as slide to power off is.
+  slideRow: { position: 'absolute', left: 24, right: 24, bottom: 70 + 56 + 16 },
   wash: { ...StyleSheet.absoluteFill, backgroundColor: color.paper },
   grow: { flex: 1 },
   planWalkText: { ...buttonText, color: color.paper },

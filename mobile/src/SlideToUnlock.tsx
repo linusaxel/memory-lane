@@ -1,6 +1,6 @@
 /** The track under the locket, as iOS draws slide to power off: a white knob
- *  with an arrow and one shimmering line, in the bottom row's middle while a
- *  memory is in reach. Slide the knob to unlock. It
+ *  with an arrow and one shimmering line, in its own row over the bottom row
+ *  while a memory is in reach. Slide the knob to unlock. It
  *  scrubs the locket's own hold (LocketUnlock's `scrub`), so the key turns
  *  under your thumb and rewinds as you slide back; letting go short springs
  *  it shut, and the end commits. Holding the locket moves the thumb too: one
@@ -80,18 +80,17 @@ export default function SlideToUnlock({ drive, progress, placeName }: Props) {
       </Animated.View>
       <Animated.View style={[styles.thumb, thumbStyle]} {...pan.panHandlers}>
         <View pointerEvents="none">
-          <Glyph name="arrow.right" size={22} weight="semibold" color={color.gold} />
+          <Glyph name="arrow.right" size={26} weight="semibold" color={color.gold} />
         </View>
       </Animated.View>
     </GlassCard>
   );
 }
 
-const THUMB = 46;
+const THUMB = 54;
 const PAD = 5;
 
 const styles = StyleSheet.create({
-  // As tall as the walk card it stands in for.
   track: { alignSelf: 'stretch', height: THUMB + 2 * PAD, justifyContent: 'center' },
   words: {
     ...StyleSheet.absoluteFill,
@@ -100,7 +99,7 @@ const styles = StyleSheet.create({
     paddingLeft: THUMB + 2 * PAD,
     paddingRight: 16,
   },
-  slide: { ...font.ui, fontSize: 20, color: color.ink },
+  slide: { ...font.ui, fontSize: 22, color: color.ink },
   thumb: {
     position: 'absolute',
     left: PAD,

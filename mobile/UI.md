@@ -76,9 +76,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    walked: after "Nice walk." it ends itself and the map comes back. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
 │    walking. Never a plain tap. Standing at any stop, the lock (src/UnlockHere.tsx) comes
-│    up above it: the locket low above the bottom row, ‹ › either side when more than one
-│    is in reach, and the walk card gives its place to "slide to unlock" (src/SlideToUnlock.tsx)
-│    under a paper wash. Only a stop of the walk in progress gets it. Tapping a pin in reach
+│    up above it: "slide to unlock" (src/SlideToUnlock.tsx) in its own row over the bottom
+│    row, the locket above that, ‹ › either side when more than one is in reach, and the
+│    walk card steps aside, all under a paper wash. Only a stop of the walk in progress gets it. Tapping a pin in reach
 │    points it at that pin; the slide, or the hold, opens the sheet on the story
 ├─ "Center on me"             the bottom row's right end, always there (F10). `location.fill`
 │                              while the map is on you, `location` when not: on a walk once a
@@ -194,7 +194,7 @@ with no network is never stopped at the gate.
 | `src/LocketUnlock.tsx` | the hold: the key, the lid, the dive, the haptics; one lid per locket |
 | `src/lockMotion.ts` | the worklet curves and pivots LocketUnlock moves by |
 | `src/UnlockHere.tsx` | the locket over the map, ‹ › when more than one is in reach |
-| `src/SlideToUnlock.tsx` | slide to unlock, the bottom row's middle while a memory is in reach |
+| `src/SlideToUnlock.tsx` | slide to unlock, its own row over the bottom row while a memory is in reach |
 | `src/LevelPill.tsx` | the top of the map: your level and an XP bar, the number rolling (`@expo/ui`) |
 | `src/WalkCard.tsx` | a past walk drawn as its shape: the cards in Your walks, the finish card's and journal rows' small shape |
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
@@ -929,8 +929,9 @@ memory's own locket opening (docs/10, "Lockets"). Spec, so it does not get
 re-invented per screen:
 
 - **Slide or hold, not tap.** Two ways drive one progress (docs/10, "Slide
-  to unlock"). Standing on a stop, the bottom row's middle is
-  `src/SlideToUnlock.tsx`, as iOS draws slide to power off: a glass track, a
+  to unlock"). Standing on a stop, a row of its own over the bottom row is
+  `src/SlideToUnlock.tsx`, as iOS draws slide to power off: near edge to edge
+  (24pt in), 64pt tall with a 54pt knob, a glass track, a
   white knob (`color.knob`) with a gold arrow, one shimmering "slide to
   unlock", and nothing else. The knob scrubs the hold 1:1 (`LocketUnlock`'s
   `ref`: `scrub`, `release`, `open`, and a `progress` App shares between the
@@ -963,11 +964,14 @@ re-invented per screen:
   would be a lie. It replaced the burst played over the request (docs/10,
   "Lockets"). On a yes the lid swings past 90° on its hinge (the key fading
   out before 90°, where it would point into the case), sparkles pop, the
-  inside glows with the place engraved, and the camera dives in. The card
-  grows out of the dive: `onDiveStart` hands over where the locket's inside
-  is on screen, and App draws `IrisGrow` over the map: paper glued to that
-  circle on the locket's own zoom curve until it is as wide as the card; then it stretches into the
-  card's frame (380 ms). One motion, not a zoom and then a grow. `MemorySheet`
+  inside glows with the place engraved, and the camera dives in. One handover
+  for every locket, whatever its shape: the zoom ends with the inside
+  covering the whole screen (zoomed until its inscribed circle reaches the
+  farthest corner, measured at the commit), the engraving fading out early so
+  it does not sweep past huge. Then `IrisGrow`, full-screen paper drawn over
+  it by App, settles down into the card's frame (380 ms), the inside's glow
+  fading to paper as it goes. It matches no shape, so a new locket, or a new
+  dive, blends as long as it ends with its inside filling the screen. `MemorySheet`
   opens as the dive starts, in place with no slide, its card `hidden` over
   the paper; once the paper is grown the card fades in on it (180 ms) and
   `onShown` takes the paper away. Opened only then, the modal took a beat to
@@ -989,9 +993,8 @@ re-invented per screen:
   (`collapsable={false}`) and they paint in written order. Reduce Motion
   drops the tilt, sway, sparkles, shine and zoom and cross-fades instead.
 - **It lives on the map, low, and says where.** `src/UnlockHere.tsx` puts a
-  180pt locket just above the bottom row, where a thumb reaches; the slide is
-  the row itself, standing in for the walk card (and its ✕) until you step
-  off. More than one in reach adds ‹ › either side of the locket, 24pt clear,
+  230pt locket just above the slide, which has its own row over the bottom
+  row; the walk card (and its ✕) steps aside until you step off. More than one in reach adds ‹ › either side of the locket, 24pt clear,
   so a finger aiming for an arrow cannot start the hold. Each memory gets a
   fresh locket and slide (`key`), so ‹ › never carries a half-turned key over.
   The rest steps back under a paper wash (`Wash` in App.tsx: 0.5, 600 ms,
