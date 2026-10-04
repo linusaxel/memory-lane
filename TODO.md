@@ -177,6 +177,27 @@ worth the walk. Measure every change against the labels before and after
 (`python -m pipeline.quality --labels`). Every change is to
 `pipeline/extract.py` unless named.
 
+- [ ] **Measure $/memory from the bill.** (2026-10-04) `python -m
+      pipeline.cost --since 2026-10-04` answers it, but the key in `.env` is a
+      personal `sk-ant-usr-` key and the Cost Report API refuses it
+      (`permission_error`). Needs an Admin key (`sk-ant-admin01-`, Console,
+      Settings, Admin keys). Then record the figure in docs/04 *What it
+      costs*; the estimate is ~$0.25 a memory with seeding and enrichment.
+- [ ] **Pick the extraction model, measured.** (2026-10-04) Sonnet 5.5 is the
+      default by assumption. Opus 5.5 at low effort kept 12 memories where
+      Sonnet kept 33 from the same 50 chunks, but each scored itself (Friction).
+      Next: fix `extract._thinking` for Fable 5.1 (no `thinking` field at
+      all), then run Sonnet 5.5, Opus 5.5 low and medium and Fable 5.1 over
+      `quality --labels` for the judge, and `quality --compare` for the
+      writer, read blind by a person. Pick per step; cost breaks a tie.
+- [ ] **The rest of the plaques.** (2026-10-04) 18 of 105 are done: research
+      first (docs/10 *A thin source is a lead*), then extraction. Run
+      `python -m pipeline.batch --source "OpenStreetMap plaques" --run`
+      (~$10-20), and read the memories it makes before the next source.
+- [ ] **Review what the new judge would drop.** (2026-10-04) `glad_to_know`
+      only filters new extractions. `python -m pipeline.quality --visible`
+      lists the visible memories it now drops; read the list, then
+      `pipeline.review --reject` what should go.
 - [ ] **Video quotes after the longer card.** (2026-10-04) The 60-180 word
       prompt kept video's keep rate but quotes fell 9 to 4 on 15 chunks
       (docs/04, *A longer card*). Try "leave the quoted line out of the
@@ -256,16 +277,15 @@ worth the walk. Measure every change against the labels before and after
       kept a third fewer memories and lost a walk on both runs. Before trying
       again, draw today's chunked prompt twice on the same five videos, and
       try 15-minute chunks as the middle course.
-- [ ] **The Batch API, before any whole-channel run.** (checked 2026-10-04)
-      Half price, and nothing in the pipeline waits on an answer. Not worth it
-      for one video. No code yet.
-- [ ] **Prompt caching: the brief and the classifier are uncached.** (checked
-      2026-10-04) Chunk 1 writes ~4.3k and later chunks read it; the judge's
-      ~1.4k is read on passes two and three. The brief (~14k, once a video)
-      and the Haiku classifier (~0.2k, under Haiku's 4,096 minimum) are never
-      cached. With several workers, a video's first wave of chunks may all
-      write: check the `cache read` log lines the first time more than one
-      worker runs.
+- [ ] **Batch the web research too.** (2026-10-04) Extraction is batched
+      (`pipeline/batch.py`, docs/10 *Extraction is batched*); the research is
+      not, and it is now most of the bill: one search per plaque before
+      extraction (`tasks.seeded`) and one per memory after (`enrich`). Store
+      `enrich.research`'s reply like `_stored_request` does, so a pass
+      collects it, then batch `structure` and `pick` the same way.
+      Prompt caching is otherwise done: checked 2026-10-04, the shared
+      prefixes are read ~10 times for each write, the rest is chunk text that
+      can't repeat.
 - [ ] **`published_at` is NULL for flat-crawled videos.** (checked
       2026-10-04) `api/gate.py` serves it as the source's year and newspapers
       fill it; yt-dlp flat extraction returns no timestamp. A real date needs
