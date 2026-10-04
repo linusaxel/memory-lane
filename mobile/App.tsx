@@ -852,6 +852,8 @@ export default function App() {
       setOpenAt(group.memories.filter((memory) => earned.has(memory.id)));
       setOpenIndex(0);
     };
+    // The home map's pins are what is locked nearby, not stops: no numbers.
+    if (stage === 'map' && !pastWalk) return map;
     pins.forEach((memory, i) => {
       if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
     });
