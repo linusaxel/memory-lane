@@ -8,8 +8,10 @@ How a walk is ranked, in two stages, the second only with streets:
    (`_bunched`), then the most prize, then the shortest walk. Every walk tied with the best one on count and mix (and, to an end, bunched no more) makes a
    shortlist of up to ROUTE_SHORTLIST. Without streets, the best one is the walk.
 2. From the streets (`_plan_route`, its `judge`): each shortlisted walk is
-   routed and scored on metres off the slider plus metres retraced plus
-   CROSSING_METERS a place it crosses itself, in steps of SPUR_STEP_METERS,
+   routed, each leg that walks back down walked street taking OSRM's way
+   round if there is a short one (`fewer_retraced`), and scored on metres off
+   the slider plus RETRACE_WEIGHT a metre retraced plus CROSSING_METERS a
+   place it crosses itself, in steps of SPUR_STEP_METERS,
    then on retraced metres alone. Every walk within ROUTE_VARIETY of the
    slider of the best one, retracing and crossing no more, is as good;
    the day plus `again` picks among them. Then up to ROUTE_CLEANUPS rounds drop
@@ -29,7 +31,7 @@ from api.gate import UNLOCK_RADIUS_METERS, meters_between
 from api.models import Coordinates
 from api.progression import EPIC_LEVEL, level, xp_of
 from api.queries import ROUTE_CANDIDATES_QUERY
-from api.streets import crossings, retraced_meters, street_legs, street_table
+from api.streets import crossings, fewer_retraced, retraced_meters, street_legs, street_table
 
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
 
@@ -434,6 +436,9 @@ SPUR_STEP_METERS = 25
 # What a walk crossing its own path costs in the judge, as if it were this
 # many metres retraced: a figure of eight reads as lost on the map.
 CROSSING_METERS = 300
+# What a metre of street walked twice costs in the judge, in metres short of
+# the slider: walking back the way you came is allowed, just not preferred.
+RETRACE_WEIGHT = 3
 # A walk judged within this share of the slider of the best one, retracing no
 # more, is as good a walk. Day and `again` take turns through them.
 ROUTE_VARIETY = 0.1
@@ -538,14 +543,16 @@ def _plan_route(
     def streets(order: list[int]):
         stops = [Coordinates(lat=candidates[i - 1].lat, lng=candidates[i - 1].lng) for i in order]
         if end:
-            return street_legs([at, *stops, end])
-        if not loop:
-            return street_legs([at, *stops])
-        # Once more past home to the first stop, and that leg is the way out:
-        # with the start a waypoint mid-route, out and home cannot share the
-        # stretch to its corner. An end of a route may turn round; a middle not.
-        legs = street_legs([at, *stops, at, stops[0]])
-        return legs and [legs[-1], *legs[1:-1]]
+            legs = street_legs([at, *stops, end])
+        elif not loop:
+            legs = street_legs([at, *stops])
+        else:
+            # Once more past home to the first stop, and that leg is the way out:
+            # with the start a waypoint mid-route, out and home cannot share the
+            # stretch to its corner. An end of a route may turn round; a middle not.
+            legs = street_legs([at, *stops, at, stops[0]])
+            legs = legs and [legs[-1], *legs[1:-1]]
+        return legs and fewer_retraced(legs, [at, *stops])
 
     shortlist = walks(set())
     order = shortlist[0]
@@ -576,7 +583,7 @@ def _plan_route(
         off = max(0.0, short, routed_meters(legs) - budget_meters)
         retraced = spur(order, legs)
         tangled = CROSSING_METERS * crossed(order, legs)
-        return (off + retraced + tangled) // SPUR_STEP_METERS, retraced
+        return (off + RETRACE_WEIGHT * retraced + tangled) // SPUR_STEP_METERS, retraced
 
     routed = [(order, legs)] + [(o, streets(o)) for o in shortlist[1:]]
     # Round the block is longer than `d` says. When that takes the walk over

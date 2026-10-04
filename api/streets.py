@@ -63,7 +63,11 @@ def retraced_meters(path: list[Coordinates], stops: list[Coordinates] = ()) -> f
 
     Not inside the gate of a stop: the line runs to the pin, but a person
     unlocks from UNLOCK_RADIUS_METERS out and never walks the stub between."""
-    seen: set = set()
+    return _retraced(path, stops, set())
+
+
+def _retraced(path: list[Coordinates], stops: list[Coordinates], seen: set) -> float:
+    """retraced_meters, counting `seen` as walked already, and adding to it."""
     total = 0.0
     for a, b in pairwise(path):
         ka, kb = (round(a.lat, 5), round(a.lng, 5)), (round(b.lat, 5), round(b.lng, 5))
@@ -103,6 +107,48 @@ def crossings(path: list[Coordinates], stops: list[Coordinates] = ()) -> int:
         seen.add(a)
         edges.add(frozenset((a, b)))
     return count
+
+
+# A leg's way round walked street may be this much longer than the leg.
+LEG_STRETCH = 1.25
+
+
+def _shape_meters(shape: list[Coordinates]) -> float:
+    return sum(meters_between(a, b) for a, b in pairwise(shape))
+
+
+def fewer_retraced(
+    legs: list[list[Coordinates]], stops: list[Coordinates] = ()
+) -> list[list[Coordinates]]:
+    """`legs` in walking order, each one that walks back down street already
+    walked swapped for OSRM's alternative that retraces least, if it is at
+    most LEG_STRETCH longer. The shortest path between two stops does not know
+    what came before it."""
+    if not ROUTING_URL:
+        return legs
+    out: list[list[Coordinates]] = []
+    seen: set = set()
+    for leg in legs:
+
+        def added(shape):
+            return _retraced(shape, stops, set(seen))
+
+        if added(leg) >= 1 and len(leg) > 1:
+            try:
+                body = _osrm(
+                    "route", [leg[0], leg[-1]], "alternatives=3&overview=full&geometries=geojson"
+                )
+                ways = [
+                    [Coordinates(lat=lat, lng=lng) for lng, lat in r["geometry"]["coordinates"]]
+                    for r in body["routes"]
+                ]
+                cap = LEG_STRETCH * _shape_meters(leg)
+                leg = min([leg, *(w for w in ways if _shape_meters(w) <= cap)], key=added)
+            except Exception:
+                pass
+        out.append(leg)
+        _retraced(leg, stops, seen)
+    return out
 
 
 def street_legs(stops: list[Coordinates]) -> list[list[Coordinates]] | None:

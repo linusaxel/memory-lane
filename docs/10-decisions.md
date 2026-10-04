@@ -2680,6 +2680,31 @@ the DB's seed map at 2-4 km 31-75% → 0%; walk ÷ budget, spurs and time within
 noise. At 6-10 km on that map it did not move: `fresh` is 0%, there is one
 walk to pick, and its way home already retraces the way out.
 
+### Retracing costs three times, and a leg goes round it
+
+Status: Accepted
+
+Walks still went back down streets already walked. Two reasons. The judge
+counted a metre retraced the same as a metre short of the slider, so a full
+walk with an out-and-back beat a clean one a little short. And the judge could
+only swap stops: OSRM routes each leg on its shortest path, which does not
+know what the walk already covered, so two legs between good stops still
+shared a street.
+
+- **`RETRACE_WEIGHT` (3)** multiplies retraced metres in the judge. Retracing
+  is allowed, just dearer than the slider.
+- **`fewer_retraced`** (`api/streets.py`) walks the routed legs in order, and
+  for a leg that adds retracing asks OSRM for up to three alternatives
+  between its two ends. It keeps whichever retraces least, if it is at most
+  `LEG_STRETCH` (1.25) times the leg. Every routed walk is judged on these
+  legs, so a longer way round that goes over the slider is still caught.
+
+`route_bench`, before and after: default map (100 runs) >50m 21% → 13%,
+retraced p95 217 → 116 m, spur 37% → 31%; walk ÷ budget 0.86 → 0.85.
+Scenarios (40 runs each), retraced p95: sparse 129 → 35 m, one-layer 213 → 58,
+lakes 291 → 111; dense, bimodal, linear and stack-heavy within noise. Time
+p50/p95 200/1103 → 228/1293 ms: about one alternatives call per walk routed.
+
 ### Loop or one-way, and a theme, per walk
 
 Status: Accepted; the theme **Superseded 2026-09-26** by *Tags come from the

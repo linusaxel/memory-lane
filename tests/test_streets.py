@@ -110,3 +110,32 @@ def test_a_clean_loop_and_a_spur_cross_nothing():
 def test_a_corner_inside_a_stops_gate_is_where_legs_meet():
     figure_eight = grid((0, 1), (1, 1), (2, 1), (2, 2), (1, 2), (1, 1), (1, 0), (0, 0), (0, 1))
     assert streets.crossings(figure_eight, grid((1, 1))) == 0
+
+
+def routes(*paths):
+    return {
+        "code": "Ok",
+        "routes": [{"geometry": {"coordinates": [[p.lng, p.lat] for p in path]}} for path in paths],
+    }
+
+
+OUT = grid((0, 0), (1, 0), (2, 0))
+BACK = grid((2, 0), (1, 0), (0, 0), (0, 1))
+
+
+def test_a_leg_back_down_a_walked_street_takes_another_way(osrm):
+    round_the_block = grid((2, 0), (2, 1), (1, 1), (0, 1))
+    osrm[0][0] = routes(BACK, round_the_block)
+    assert streets.fewer_retraced([OUT, BACK]) == [OUT, round_the_block]
+    assert "alternatives=3" in osrm[1][0]
+
+
+def test_a_way_round_much_longer_than_the_leg_is_not_taken(osrm):
+    the_long_way = grid((2, 0), (2, 1), (2, 2), (1, 2), (0, 2), (0, 1))
+    osrm[0][0] = routes(BACK, the_long_way)
+    assert streets.fewer_retraced([OUT, BACK]) == [OUT, BACK]
+
+
+def test_a_leg_that_retraces_nothing_asks_nothing(osrm):
+    assert streets.fewer_retraced([OUT, grid((2, 0), (2, 1))]) == [OUT, grid((2, 0), (2, 1))]
+    assert osrm[1] == []
