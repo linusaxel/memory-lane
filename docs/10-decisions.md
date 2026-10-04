@@ -994,7 +994,8 @@ block being written.
 
 ### Tags come from the text, and a walk has no theme
 
-Status: Accepted 2026-09-26. Supersedes the submission half of *One tag
+Status: Accepted 2026-09-26; the theme half superseded 2026-10-03 by
+*Subscribers shape the walk*. Supersedes the submission half of *One tag
 vocabulary, not two* and the theme in *Loop or one-way, and a theme, per walk*.
 
 The founder: tags the way X does them. A person writes `#food` in the
@@ -3318,6 +3319,17 @@ something a walker earns.
 **Options considered:** a locket per layer or era, picked by the pipeline
 (rejected: it brings back the encoding *One pin* removed); the compass unlock
 for every memory (rejected by the founder: each locket opens as itself).
+
+### A card may run long when the story earns it
+
+Status: Accepted 2026-10-04 (the founder, recorded from TODO.md's open
+question).
+
+Short stays the default, and the extraction prompts keep their 40–70 words.
+The founder doesn't mind a longer card when the story carries it: the Weather
+Girls post (docs/04, *The north star*) runs ~400 words and earns them. Raising
+the extractor's cap is a prompt change, so it is measured first (docs/04,
+*Memory quality*); until then the cap stands.
 
 ### Rejected approaches, do not retry
 
