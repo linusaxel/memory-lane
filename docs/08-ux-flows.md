@@ -539,12 +539,11 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, the book top left of the map, or a swipe in from the
-   left edge, slides the journal in over the map. It is you as well: your
-   photo, name and numbers on top (a tap is Edit profile, F21), then *Walks*,
-   *Unlocked Memories* and *My Memories* (F24). Settings is not in it: that is
-   under your photo top right (F17). *Walks* has the streak on top, large
-   (F27).
+1. **Journal**, the book top left of the map, opens the journal as a sheet
+   over the map. It is you as well: your photo, name and numbers on top (a
+   tap is Edit profile, F21), then *Walks*, *Unlocked Memories* and *My
+   Memories* (F24). Settings is not in it: that is under your photo top right
+   (F17).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
    says so.

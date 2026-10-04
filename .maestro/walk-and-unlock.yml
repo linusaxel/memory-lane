@@ -142,7 +142,6 @@ appId: ${APP_ID}
 # stops, and an earned one opens the same sheet. (F16, the same journal with
 # no network, is not scripted; e2e/README.md has the by-hand recipe.)
 - tapOn: "Journal"
-- assertVisible: "7 day streak"
 - extendedWaitUntil:
     visible: ".*, 3 memories · .*"
     timeout: 30000

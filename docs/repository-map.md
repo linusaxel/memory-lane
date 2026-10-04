@@ -131,7 +131,6 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/Settings.tsx` | Settings: its own sheet, from the cog on the map |
 | `mobile/src/Board.tsx` | The city board: this month's top openers, a sheet from the account menu |
-| `mobile/src/Drawer.tsx` | The journal's panel from the left: edge swipe, spring, scrim |
 | `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
 | `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |
 | `mobile/src/Paywall.tsx` | The subscription: more walks a day (F35). Prices from the store; "not available" without a RevenueCat key |

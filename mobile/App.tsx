@@ -3,6 +3,7 @@ import {
   AppState,
   Dimensions,
   Linking,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -79,7 +80,6 @@ import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
 import Board from './src/Board.tsx';
 import EditProfile from './src/EditProfile.tsx';
-import Drawer from './src/Drawer.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import HowItWorks from './src/HowItWorks.tsx';
@@ -1959,10 +1959,11 @@ export default function App() {
           )}
         </View>
 
-        <Drawer
-          open={journalOpen}
-          onOpen={() => setJournalOpen(true)}
-          onClose={() => setJournalOpen(false)}
+        <Modal
+          visible={journalOpen}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setJournalOpen(false)}
         >
           <Memories
             device={device}
@@ -1971,7 +1972,6 @@ export default function App() {
             unlockedCount={collected.length}
             placeCount={placesUnlocked}
             onEditProfile={() => setProfileOpen(true)}
-            streak={profile?.streak ?? 0}
             focused={journalOpen}
             refreshKey={mineVersion}
             unlocked={unlockedByOthers}
@@ -1984,7 +1984,7 @@ export default function App() {
             onClose={() => setJournalOpen(false)}
             position={position}
           />
-        </Drawer>
+        </Modal>
 
         <Board visible={boardOpen} onClose={() => setBoardOpen(false)} device={device} />
 

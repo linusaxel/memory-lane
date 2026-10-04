@@ -60,7 +60,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ Journal                    top left, a 44pt glass circle, the planner and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt ember dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
-│                              drawer, as does a swipe in from the left edge (src/Drawer.tsx)
+│                              journal sheet
 ├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), on the walk only,
 │                              never over a card with its own buttons (Preview, EndWalk,
 │                              WalkDone). Add, a 44pt glass circle with an ember `plus`, files a
@@ -129,12 +129,9 @@ MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a
 
 Submit (pageSheet modal, from Add) - see Writing
 
-Journal (src/Memories.tsx in src/Drawer.tsx)  a panel from the left over the mounted map,
-│                              screen width less 44 (at most 380), the map dimmed by `scrim` at
-│                              its right. Springs in with a little overshoot and a light haptic on
-│                              landing; header, sections and list arrive a beat apart. Swipe it
-│                              left, tap the map or × to close. Reduce Motion: no spring, no
-│                              cascade. The journal is you as well
+Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted map;
+│                              header, sections and list arrive a beat apart. Drag it down or
+│                              × to close. Reduce Motion: no cascade. The journal is you as well
 ├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
 │                              it "12 memories · 4 places · 2 added · 5 hearts", zeros left out
 │                              but the first. Tapping it opens Edit profile. × top right. A
@@ -142,9 +139,9 @@ Journal (src/Memories.tsx in src/Drawer.tsx)  a panel from the left over the mou
 │                              value (countUp.ts, at most 8 ticks over ~600 ms, a selection
 │                              haptic each); one that fell just shows. First look and Reduce
 │                              Motion: no roll
-├─ Walks                       the streak, large (F27; not at 0), then one row per walk that
-│                              opened something, date and length; a row opens in place to its
-│                              earned stops, numbered on an ember rail. Cached for the train
+├─ Walks                       one row per walk that opened something, date and length; a row
+│                              opens in place to its earned stops, numbered on an ember rail.
+│                              Cached for the train
 ├─ Unlocked Memories           what you opened; "♡ Hearted" at the right of its count shows only
 │                              what you hearted. One opened since the last look scales in
 │                              once, 0.8 → 1.08 → 1 with a selection haptic, the first time
@@ -153,8 +150,7 @@ Journal (src/Memories.tsx in src/Drawer.tsx)  a panel from the left over the mou
                                1 note · last heart yesterday", never who
 
 Settings and Edit profile are sections of nothing: a section is what you did,
-and the account is not (docs/10, "The journal is a drawer; settings are the
-map's"). They open as pageSheet modals, Settings from the map and Edit profile
+and the account is not (docs/10, "The journal is a sheet"). They open as pageSheet modals, Settings from the map and Edit profile
 over the journal, which stays mounted under it.
 
 Settings (src/Settings.tsx, pageSheet, from the menu under your photo) - "Settings" 34/700, × top right
@@ -201,7 +197,6 @@ with no network is never stopped at the gate.
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
 | `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
-| `src/Drawer.tsx` | the journal's panel from the left: the edge swipe, the spring, the scrim |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
 | `src/Flourish.tsx` | the leaf-and-curls divider, twice on an open story: under the byline, before the notes |
@@ -534,8 +529,8 @@ Each of these exists because something broke or would have been rejected.
    rule; nothing floats in that corner now.
 8. **`onRequestClose` is required on every Modal**, or the Android back button
    does nothing.
-9. **The map never unmounts.** The journal is hidden with `display: 'none'`,
-   not a conditional render, and the map sits under it. Unmounting the map
+9. **The map never unmounts.** The journal is a modal over it, not a screen
+   in its place, and the map sits under it. Unmounting the map
    means losing the viewport and re-animating to GPS every time somebody
    glances at their journal. The map is the exception: anything else under a
    cover that holds a native control (Slider, Switch) unmounts, since iOS 26

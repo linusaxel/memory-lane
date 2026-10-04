@@ -1,13 +1,11 @@
-/** The journal: a drawer over the map (src/Drawer.tsx), opened from its
- *  corner or the left edge. It is you as well: your photo, name and numbers on
- *  top (tap them for Edit profile), then three sections of what you did behind
- *  a segmented control. Settings are not a fourth, and not here: they are the
- *  map's cog (docs/10-decisions.md, "The journal is a drawer; settings are the
- *  map's").
+/** The journal: a pageSheet from the map's Journal button. It is you as
+ *  well: your photo, name and numbers on top (tap them for Edit profile), then
+ *  three sections of what you did behind a segmented control. Settings are not
+ *  a fourth, and not here: they are under your photo on the map
+ *  (docs/10-decisions.md, "The journal is a sheet").
  *
- * **Walks** - the streak, once there is one, then every walk this account
- * took that opened something, newest first (a walk that opened nothing is
- * deleted, docs/10). A row opens in
+ * **Walks** - every walk this account took that opened something, newest
+ * first (a walk that opened nothing is deleted, docs/10). A row opens in
  * place to the memories it earned, strung on a rail in walking order. Cached
  * (route.ts `loadWalked`), so it reads on a train (F16).
  * **Unlocked Memories** - everything earned, newest first, from App.tsx's
@@ -30,7 +28,6 @@ import {
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   fetchMine,
@@ -59,7 +56,7 @@ import {
   type Counted,
   type Seen,
 } from './seen.ts';
-import { color, dim, figure, font, label } from './theme.ts';
+import { color, dim, font, label } from './theme.ts';
 import { useReduceMotion } from './useBreath.ts';
 
 type Props = {
@@ -71,7 +68,6 @@ type Props = {
   unlockedCount: number;
   placeCount: number;
   onEditProfile: () => void;
-  streak: number;
   /** Refetches each time this turns true: the journal stays mounted. */
   focused: boolean;
   /** Bumped by App.tsx after a save or a delete, which happen without
@@ -104,7 +100,6 @@ export default function Memories({
   unlockedCount,
   placeCount,
   onEditProfile,
-  streak,
   focused,
   refreshKey,
   unlocked,
@@ -114,7 +109,6 @@ export default function Memories({
   onClose,
   position,
 }: Props) {
-  const insets = useSafeAreaInsets();
   const [section, setSection] = useState<Section>('walks');
   const [mine, setMine] = useState<LocatedMemory[]>([]);
   const [mineTotal, setMineTotal] = useState(0);
@@ -134,7 +128,7 @@ export default function Memories({
   const [unlocksShown, setUnlocksShown] = useState<Set<number> | null>();
   const pulsed = useRef(new Set<number>());
   // Header, sections, list: each slides in a beat after the one above it as
-  // the drawer opens, so it arrives rather than appears.
+  // the sheet opens, so it arrives rather than appears.
   const enter = useRef([0, 1, 2].map(() => new Animated.Value(1))).current;
   // The header's numbers mid-roll; null shows the real ones.
   const [rolling, setRolling] = useState<Counted | null>(null);
@@ -164,7 +158,7 @@ export default function Memories({
             keys.map((k, i) => [k, t < 0 ? Math.min(before[k], now[k]) : (tracks[i][t] ?? now[k])]),
           ) as Counted;
         setRolling(at(-1));
-        // After the drawer lands and the header has arrived, ~600 ms of ticks.
+        // After the sheet lands and the header has arrived, ~600 ms of ticks.
         for (let t = 0; t < ticks; t++) {
           timers.push(
             setTimeout(
@@ -350,7 +344,7 @@ export default function Memories({
       : undefined;
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + 14 }]}>
+    <View style={styles.screen}>
       <Animated.View style={[styles.top, arrive(0)]}>
         <Pressable
           style={dim(styles.who)}
@@ -381,18 +375,6 @@ export default function Memories({
           }}
           filedNew={anyNew}
         />
-        {/* The only number in the app that goes up because you went outside.
-            Under Walks only: it counts days you walked, and means nothing beside
-            the other two. Nothing at zero: a 0 is not a thing to show off, and
-            the empty walk list already says how to start. */}
-        {section === 'walks' && streak > 0 && (
-          <View style={styles.streak} accessible accessibilityLabel={`${streak} day streak`}>
-            <Text style={styles.streakValue}>{streak}</Text>
-            <Text style={styles.streakLabel}>
-              {streak === 1 ? 'day in a row' : 'days in a row'}
-            </Text>
-          </View>
-        )}
       </Animated.View>
 
       <Animated.View style={[styles.list, arrive(2)]}>
@@ -690,7 +672,7 @@ function Empty({ text }: { text: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: color.paper },
+  screen: { flex: 1, paddingTop: 28, backgroundColor: color.paper },
   list: { flex: 1 },
   body: { paddingBottom: 72 },
   top: {
@@ -704,15 +686,6 @@ const styles = StyleSheet.create({
   whoText: { flex: 1 },
   title: { ...font.display, fontSize: 28, color: color.ink },
   stats: { ...label, fontSize: 12, marginTop: 2 },
-  streak: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 10,
-    marginTop: 18,
-    paddingHorizontal: 24,
-  },
-  streakValue: figure,
-  streakLabel: { ...label, fontSize: 12 },
   switcher: { flexDirection: 'row', marginTop: 22, paddingHorizontal: 24, gap: 24 },
   switcherItem: { gap: 8 },
   switcherLabel: { ...label, color: color.inkFaint },

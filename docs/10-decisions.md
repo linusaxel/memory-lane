@@ -1456,10 +1456,10 @@ walk is planned today, if Plan a walk use drops.
 
 ### The journal is a drawer; settings are the map's
 
-Status: Accepted, 2026-10-01. Where it put the controls (the Journal pill
-top left, Settings as a cog) was superseded by *One button, like a Poké
-Ball*, itself superseded by *Act at the bottom, read at the top*; the drawer
-stands.
+Status: Superseded, 2026-10-04, by *The journal is a sheet*. Where it put
+the controls (the Journal pill top left, Settings as a cog) was superseded
+earlier by *One button, like a Poké Ball*, itself superseded by *Act at the
+bottom, read at the top*.
 
 The founder wanted the app to feel like a game, and a menu that slides over
 the world is how map games keep you on the map. So the journal is a panel
@@ -3237,6 +3237,22 @@ whether it belongs with the notes, the founder chose the notes.
 - **Each note is who and when, then what they wrote**: "Anna · 2 days ago"
   in `label`, Rewrite and Remove at the far end of that line, then the note
   in 17/26, as reviews and replies set it. Space between notes, no rules.
+
+### The journal is a sheet
+
+Status: Accepted, 2026-10-04. Supersedes *The journal is a drawer; settings
+are the map's*.
+
+The founder went off the drawer: it narrowed the journal by the strip of map
+it left showing, and bought only the feel of a side panel. The journal is now
+a pageSheet modal from the Journal button, like Settings and Your walks, so
+it gets the whole width and closes with a drag down or its ×. `Drawer.tsx`
+and the left-edge swipe are gone. The streak left the top of *Walks*: it is
+still in the menu under your photo and on the finish card.
+
+**Consequences:** the journal unmounts when it closes, so it comes back on
+*Walks* each time, reading walks from the cache first (F16) and then asking
+again. The map no longer loses pans at its left edge.
 
 ### Rejected approaches, do not retry
 
