@@ -164,6 +164,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/unlocked.ts` | What this device has earned. Cached locally, authoritative on the server |
 | `mobile/src/hearted.ts` | Which memories this device has hearted |
 | `mobile/src/link.ts` | `openLink`: every link opens in an in-app browser sheet |
+| `mobile/src/WikiPreview.tsx` | A linked Wikipedia name, summarised inside the card |
 | `mobile/src/seen.ts` | The hearts and notes each of your memories had when you last looked, and the journal header's numbers as last shown |
 | `mobile/src/Flourish.tsx` | The ornamental divider between an open story's parts |
 | `mobile/src/Notes.tsx` | The notes under an open memory (F33) |

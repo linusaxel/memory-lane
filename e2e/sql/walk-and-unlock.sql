@@ -21,3 +21,11 @@ CREATE FUNCTION yesterday() RETURNS trigger AS $$ BEGIN
   RETURN NEW;
 END $$ LANGUAGE plpgsql;
 CREATE TRIGGER yesterday AFTER INSERT ON devices FOR EACH ROW EXECUTE FUNCTION yesterday();
+-- F15's reread taps a linked name and gets its Wikipedia preview in the card.
+-- Each seed stop's WORDS (e2e/travel.py) is the link, so stop 1 has one.
+UPDATE memories m
+  SET links = jsonb_build_array(jsonb_build_object(
+    'text', w, 'url', 'https://en.wikipedia.org/wiki/Copenhagen'))
+  FROM (VALUES ('filed this one myself'), ('Lygteå'), ('swam to the other side'),
+               ('jukebox on shuffle'), ('mortared it in')) v(w)
+  WHERE m.summary LIKE '%' || w || '%';

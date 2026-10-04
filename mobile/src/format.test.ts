@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { count, distance, duration, happened, sourceAction, walkDate, when } from './format.ts';
+import {
+  count,
+  distance,
+  duration,
+  happened,
+  sourceAction,
+  walkDate,
+  when,
+  wikiSummaryUrl,
+} from './format.ts';
 
 test('metres below a kilometre, kilometres above', () => {
   assert.equal(distance(420), '420 m');
@@ -102,4 +111,17 @@ test('the source button says where it goes', () => {
     'Read it at Historisk Atlas',
   );
   assert.equal(sourceAction({ ...page, kind: null }).text, 'Read the original');
+});
+
+test('a Wikipedia link previews from its summary, in its own language', () => {
+  assert.equal(
+    wikiSummaryUrl('https://en.wikipedia.org/wiki/Leonora_Christina_Ulfeldt'),
+    'https://en.wikipedia.org/api/rest_v1/page/summary/Leonora_Christina_Ulfeldt',
+  );
+  assert.equal(
+    wikiSummaryUrl('https://da.m.wikipedia.org/wiki/K%C3%B8benhavn#Historie'),
+    'https://da.wikipedia.org/api/rest_v1/page/summary/K%C3%B8benhavn',
+  );
+  assert.equal(wikiSummaryUrl('https://www.youtube.com/watch?v=abc'), null);
+  assert.equal(wikiSummaryUrl('https://www.gutenberg.org/ebooks/1'), null);
 });

@@ -162,6 +162,22 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible: ".*${WORDS1}.*"
+# A linked name previews in the card, not a browser (docs/10, "Wikipedia
+# previews inline"). e2e/sql makes WORDS1 the link.
+- tapOn: "${WORDS1}"
+- extendedWaitUntil:
+    visible:
+      id: "wiki-preview"
+    timeout: 15000
+- assertVisible: "Read on Wikipedia.*"
+# Centred, as the note below is: low down, the pinned heart covers it.
+- scrollUntilVisible:
+    element: "Close preview"
+    direction: UP
+    centerElement: true
+- tapOn: "Close preview"
+- assertNotVisible:
+    id: "wiki-preview"
 # F26: the heart fills and the count goes up, and both outlive the sheet.
 - tapOn: "Heart"
 - extendedWaitUntil:

@@ -27,9 +27,10 @@ import Avatar from './Avatar.tsx';
 import Flourish from './Flourish.tsx';
 import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
-import { distance, duration, happened, sourceAction } from './format.ts';
+import { distance, duration, happened, sourceAction, wikiSummaryUrl } from './format.ts';
 import { photoIds } from './story.ts';
 import StoryBody from './StoryBody.tsx';
+import WikiPreview from './WikiPreview.tsx';
 import { useReduceMotion } from './useBreath.ts';
 import { metersBetween } from './region.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -175,6 +176,9 @@ export default function MemorySheet({
   // Report or block, asked in the sheet. Another memory asks afresh.
   const [asking, setAsking] = useState<'report' | 'block' | null>(null);
   useEffect(() => setAsking(null), [memory?.id]);
+  // A linked Wikipedia name previews in the card; tapped again, it closes.
+  const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => setPreview(null), [memory?.id]);
 
   const open = (url: string, whenNothingOpens: string) => {
     setLinkFailed(null);
@@ -599,13 +603,29 @@ export default function MemorySheet({
                     summary={memory.summary}
                     media={memory.media}
                     links={memory.links}
-                    onLink={(url) => open(url, "Couldn't open that link.")}
+                    onLink={(url) =>
+                      wikiSummaryUrl(url)
+                        ? setPreview((now) => (now === url ? null : url))
+                        : open(url, "Couldn't open that link.")
+                    }
                     part={(i, node) => (
                       <Animated.View key={i} style={rise(Math.min(i, 1))}>
                         {node}
                       </Animated.View>
                     )}
                   />
+                  {preview && (
+                    <View style={styles.quote}>
+                      <WikiPreview
+                        url={preview}
+                        onClose={() => setPreview(null)}
+                        onFail={() => {
+                          setPreview(null);
+                          open(preview, "Couldn't open that link.");
+                        }}
+                      />
+                    </View>
+                  )}
                   {memory.quote && (
                     <Animated.View style={rise(2)}>
                       {/* Copied from the source and checked against it

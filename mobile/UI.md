@@ -902,7 +902,9 @@ foreground only). Walking into range has to change the map by itself.
 
 Every link goes through `openLink` (`src/link.ts`): an in-app Safari sheet
 with Close, so a source credit or the privacy page never throws a walker out
-of the app mid-walk. It rejects when nothing can show the link — a managed
+of the app mid-walk. A linked Wikipedia name in a story does
+not even go that far: `WikiPreview` shows its summary in the card, and if
+that fails it falls back to the sheet. It rejects when nothing can show the link — a managed
 device. The watch link catches that in `MemorySheet` and says so. A control
 that silently does nothing is the failure people blame on themselves.
 

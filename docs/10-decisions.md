@@ -3620,6 +3620,22 @@ pass reads them back and gets one stage further.
 of calls waits minutes each); rewriting the RQ tasks around batches (a second
 orchestration to keep in step with the first).
 
+### Wikipedia previews inline
+
+Status: Accepted 2026-10-04
+
+A linked name in a summary (every one is Wikipedia, `pipeline/links.py`) opens
+`WikiPreview` in the card: the title, photo and extract from Wikipedia's free
+REST summary, in the article's own language. A walker standing on the spot
+learns who that was without switching context. "Read on Wikipedia" still
+opens the whole page in the Safari sheet (`openLink`). If the preview can't be
+fetched, the tap falls back to that sheet, so the tap is never a dead end.
+
+**Options considered:** YouTube played in the card (it needs
+`react-native-webview`, a native rebuild, and some videos refuse embedding);
+the book passage in the card (the pipeline would have to store it). Both
+credits keep the sheet.
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

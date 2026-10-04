@@ -117,3 +117,10 @@ export function sourceAction(content: ContentRef): { text: string; spoken: strin
             : 'Read the original';
   return { text, spoken: at != null && content.kind === 'video' ? `${text} into the video` : text };
 }
+
+/** The free REST summary behind a Wikipedia article link, any language, or
+ *  null when the link is not one. WikiPreview shows it in the card. */
+export function wikiSummaryUrl(url: string): string | null {
+  const m = url.match(/^https?:\/\/([a-z-]+)(?:\.m)?\.wikipedia\.org\/wiki\/([^#?]+)/);
+  return m ? `https://${m[1]}.wikipedia.org/api/rest_v1/page/summary/${m[2]}` : null;
+}
