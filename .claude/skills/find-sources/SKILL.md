@@ -23,8 +23,8 @@ locators and evidence.
 | Plaques, memorials | `plaques` | `plaques:<s,w,n,e>` | Already names its spot; exact pin |
 | Film and TV shot here | `filming` | `filming:<s,w,n,e>` | Wikidata P915 to a spot, not a city |
 | Wikipedia places | `wikipedia` | `wikipedia:<lang> <lat>,<lng> <metres>` | History sections with incidents |
-| Press feed | `press` | `press:<feed url>` | Local, recent, full text in the feed or on the page |
-| Podcast feed | `podcast` | `podcast:<feed url>` | Items carry `<podcast:transcript>`; no audio is transcribed |
+| Press feed | `press` | `press:<feed url>` | Only with the outlet's agreement: every Copenhagen outlet reserves TDM (§11b) |
+| Podcast feed | `podcast` | `podcast:<feed url>` | Items carry `<podcast:transcript>` (no Copenhagen show did, 2026-10-04); no audio is transcribed |
 | Public-domain book | `gutenberg`, `runeberg` | `gutenberg:<id> <word>`, `runeberg:<key> <word>` | Memoir of a city life, author dead 70+ years |
 | Old newspapers | `kb-aviser` | `kb-aviser:<query>` | Over 140 years old |
 | Historisk Atlas | `historisk-atlas` | `historisk-atlas:<title word>` | CC or PD licence only |

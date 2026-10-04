@@ -176,6 +176,17 @@ worth the walk. Measure every change against the labels before and after
       (docs/04, *A longer card*). Try "leave the quoted line out of the
       summary: it is read right below" and measure with `quality --compare
       --source-type video --score --runs 3`.
+- [ ] **Screen and trial the new sources.** (2026-10-04, blocked on credits)
+      Ingested, all `candidate`: plaques 232 (105), filming 233 (39),
+      Wikipedia 234 (15 windows), memoirs 235–243 (256 windows; Carl Møller's
+      *Paa Farten* first). Follow `.claude/skills/find-sources`: `screen`,
+      then a one-item trial each.
+- [ ] **Ask Københavns Museum for its podcasts.** (2026-10-04) Four
+      place-bound shows on Podbean, no transcripts, ©. Ask for permission
+      and transcripts, as `docs/permission-request.md` asks a channel.
+- [ ] **An ADL plug-in for Heiberg.** (2026-10-04) *Et Liv gjenoplevet i
+      Erindringen*, FRI volumes `heibfr05val`–`07val` only, full text at
+      `https://tekster.kb.dk/text/<id>`. One file in `crawler/`.
 - [ ] **Enrichment, first live run.** (2026-10-04) `pipeline/enrich.py` is
       built and tested with fakes; the first live call hit an empty credit
       balance. Run `python -m pipeline.enrich --memory <id>` on five strong

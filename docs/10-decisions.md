@@ -2855,7 +2855,9 @@ until someone gives permission.
 | Wikipedia | Yes | CC BY-SA: share-alike binds an adaptation of the text; facts retold in our own words are not one | Credit and link the article. Never paste a sentence |
 | Wikidata | Yes | CC0 | Nothing |
 | Wikimedia Commons pictures | Per file | Each file's own licence | Only public domain, CC0, CC BY, CC BY-SA, shown with author and licence (`pipeline/enrich.py`) |
-| Press and podcast feeds | Per feed, facts only | A feed is for reading, not a licence; a fact isn't protected, its wording is (Infopaq) | Check the outlet's ToS for a TDM reservation (§11b) first; keep the text only until extracted (`transcripts.forget`); credit and link the article or episode |
+| Copenhagen press | **No** (checked 2026-10-04) | Every outlet checked reserves TDM under §11b: københavnLIV's [ai.txt](https://kobenhavnliv.dk/ai.txt) ("access to AI utilization of our content can only be done by an agreement"), TV 2 Kosmopol's footer, Politiken, Berlingske and Altinget's ai.txt; DR, Kristeligt Dagblad and the Copenhagen Post block AI crawlers | An agreement with the outlet. The `press` plug-in waits for one |
+| Copenhagen podcasts | **No transcripts** (checked 2026-10-04) | None of 27 feeds carries `<podcast:transcript>`; all are © | The publisher's permission and a transcript. Københavns Museum's four shows first |
+| ADL (Arkiv for Dansk Litteratur) | FRI volumes only | The search API labels everything CC BY-NC-SA (KB's markup); the [copyright list](https://tekster.kb.dk/pages/adl-overview-copyright) marks old editions FRI and modern ones "Udgiver har den fulde ophavsret" | Heiberg's `heibfr05val`–`07val` (1944 edition) only, never `heibfr01`–`04` (1973) |
 | Nominatim | Low volume | "an absolute maximum of 1 request per second", no bulk geocoding, no resale | Self-host before a B2B corpus sale |
 
 Across every source:
@@ -3374,7 +3376,12 @@ and a registry*):
   what it keeps.
 - **`press`** and **`podcast`**: a feed's articles, or the episodes that link
   a `<podcast:transcript>`. Nothing is transcribed from audio. Their text is
-  deleted once extracted, as a video's is.
+  deleted once extracted, as a video's is. Built, and waiting: every
+  Copenhagen outlet reserves text and data mining, and no Copenhagen podcast
+  publishes transcripts (legal table). They are for a feed whose owner says yes.
+- **Nine more public-domain memoirs** on Runeberg, no code: Carl Møller's
+  *Paa Farten* (150 named places), Etlar, Fibiger, Høffding, Goldschmidt,
+  Bøgh, Thiele's Thorvaldsen, Brandes II and III (sources 235–243).
 
 Not built: a Whisper path for podcasts without transcripts (a dependency and
 hours of compute a week), and a film prompt clause (the archival prompt reads
