@@ -136,11 +136,13 @@ appId: ${APP_ID}
 # F35: signed in, not subscribed: a quiet way to the paywall, never a pop-up.
 - assertVisible:
     id: "walk-done-more"
+# A walked walk ends itself: Done is the map again, no walk card.
 - tapOn: "Done"
 
 - extendedWaitUntil:
-    visible: "Every stop unlocked\\. 4 of 4\\."
+    visible: "Plan a walk"
     timeout: 30000
+- assertNotVisible: "End walk"
 
 # F15 + F31: the journal keeps the walk. Its row opens in place to its
 # stops, and an earned one opens the same sheet. (F16, the same journal with
@@ -193,13 +195,11 @@ appId: ${APP_ID}
 - tapOn: "Close"
 
 # Still there after the process dies. No clearState this time - that is the
-# whole assertion. And the walk stands until it is ended: the relaunch lands
-# on the walked route, not on a planned one.
+# whole assertion. The walk is ended, so the relaunch lands on the map.
 - launchApp
 - extendedWaitUntil:
-    visible: "Every stop unlocked\\. 4 of 4\\."
+    visible: "Plan a walk"
     timeout: 30000
-- assertNotVisible: "A walk from here"
 - assertNotVisible:
     id: "walk-done"
 - tapOn: "Journal"
@@ -218,16 +218,9 @@ appId: ${APP_ID}
     direction: DOWN
 - tapOn: "Close"
 - tapOn: "Close journal"
-- assertVisible: "Every stop unlocked\\. 4 of 4\\."
 
-# Ending a walked walk loses nothing, so it does not ask. The map comes back,
-# and its planner is walked out: a second walk the same day is a subscriber's
+# The planner is walked out: a second walk the same day is a subscriber's
 # (docs/10, "A walk planner, nothing else").
-- tapOn: "End walk"
-- assertNotVisible: "End this walk\\?"
-- extendedWaitUntil:
-    visible: "Plan a walk"
-    timeout: 30000
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "Today's walk is done"

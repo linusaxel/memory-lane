@@ -69,9 +69,9 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              Turn on location (gold) with no position, else the walk card.
 │                              While a hold would open the ring the walk card stays under it
 ├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
-│    ●●○○○ "4.1 km left" (an gold stamp per stop opened, filled from the left, never a ring,
-│    which is the hold's; VoiceOver hears "2 of 5", stops opened plus one), "Every stop unlocked"
-│    when done. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
+│    ●●○○○ "4.1 km left" (an gold stamp per stop opened, filled from the left, never a ring;
+│    VoiceOver hears "2 of 5", stops opened plus one). Gone once the walk is
+│    walked: after "Nice walk." it ends itself and the map comes back. A tap zooms out around you and the next stop; the ✕ ("End walk") ends it,
 │    and with stops left asks first in a card (EndWalk): "End this walk?", End walk / Keep
 │    walking. Never a plain tap. Standing at any stop, the lock (src/UnlockHere.tsx) comes
 │    up above it: the ring low above the bottom row, and under it a card with the place, year
@@ -189,7 +189,7 @@ with no network is never stopped at the gate.
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always a locket's keyhole face |
 | `src/MemoryMarker.tsx` | one locket, keyhole and all until opened, lit when it can be opened from here |
 | `src/lockets.ts` | the six lockets: their pin images and the level each opens at |
-| `src/LocketUnlock.tsx` | the hold: the key, the ring, the lid, the dive, the haptics; one lid per locket |
+| `src/LocketUnlock.tsx` | the hold: the key, the lid, the dive, the haptics; one lid per locket |
 | `src/lockMotion.ts` | the worklet curves and pivots LocketUnlock moves by |
 | `src/UnlockHere.tsx` | the locket over the map, with the place it opens |
 | `src/LevelPill.tsx` | the top of the map: your level and an XP bar, the number rolling (`@expo/ui`) |
@@ -266,7 +266,7 @@ in both themes, for the unlock's Svg only.
 | `goldSoft` | `#F1E4C2` / `#352A14` | the quiet button's fill |
 | `goldDeep` | `#5E470F` / `#A8822E` | the ledge under a gold button or chip. A mark, never text |
 | `goldSoftDeep` | `#DCC992` / `#241C0C` | the ledge under the quiet button |
-| `seal` | `#1F6B4F` / `#3FA57E` | **openable.** Emerald: the in-reach halo and tag, the reach circle, the hold's ring. A fill, never text |
+| `seal` | `#1F6B4F` / `#3FA57E` | **openable.** Emerald: the in-reach halo and tag, the reach circle. A fill, never text |
 | `sealInk` | `#F7F4EE` / `#0B1F17` | anything drawn on seal: a lit pin's tag, the pill's words |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
 | `sealDeep` | `#16573F` / `#7FD1AE` | seal as words or a thin mark on paper: "attachments waiting" |
@@ -957,12 +957,15 @@ re-invented per screen:
   out before 90°, where it would point into the case), sparkles pop, the
   inside glows with the place engraved, and the camera dives in. The card
   grows out of the dive: `onDiveStart` hands over where the locket's inside
-  is on screen, and App draws `IrisGrow` over the map, paper growing from
-  that circle to the open card's frame (700 ms; round until it is as wide as
-  the card, then it stretches). Only then does `MemorySheet` open, in place
-  with no slide, and its `onShow` takes the paper away. It is drawn over the
-  map, not in the sheet, because a modal takes a few frames to come up and a
-  grow inside it showed late and off the locket. The story rises from there
+  is on screen, and App draws `IrisGrow` over the map: paper glued to that
+  circle on the locket's own zoom curve until it is as wide as the card; then it stretches into the
+  card's frame (380 ms). One motion, not a zoom and then a grow. `MemorySheet`
+  opens as the dive starts, in place with no slide, its card `hidden` over
+  the paper; once the paper is grown the card fades in on it (180 ms) and
+  `onShown` takes the paper away. Opened only then, the modal took a beat to
+  come up and the grown paper sat blank. The
+  paper is drawn over the map, not in the sheet, because a modal takes a few
+  frames to come up and a grow inside it showed late and off the locket. The story rises from there
   (`revealId`): the lede, the rest, the quote, then "Then and now" and the
   credit, each rising 12 px over 360 ms, 90 ms after the last. A tapped pin
   still slides up; with Reduce Motion the card fades in. App holds the opening locket on

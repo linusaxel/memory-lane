@@ -22,7 +22,6 @@ import {
   Pressable,
   StyleSheet,
   View,
-  useColorScheme,
   useWindowDimensions,
   type AccessibilityActionEvent,
   type ViewStyle,
@@ -31,7 +30,6 @@ import Animated, {
   cancelAnimation,
   Easing,
   runOnJS,
-  useAnimatedProps,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -69,20 +67,19 @@ import {
   type Tf,
 } from './lockMotion.ts';
 import { locketOf, type LocketId } from './lockets.ts';
-import { color, font, lift, metal, radius, solid } from './theme.ts';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+import { color, font, lift, metal, radius } from './theme.ts';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const BOX = 300; // design box; everything below is in these units
 const C = 150; // centre of the box
 const CY = 170; // centre of the locket
-const RING_LEN = 879.6; // 2π × 140
 
 const HOLD_MS = 900;
 const CHECK_MIN_MS = 420;
 const OPEN_MS = 2300;
-const GROW_MS = 700;
+// The zoom runs over o 0.5 → 0.9 of the open (zt below); the paper rides it.
+const DIVE_MS = 0.4 * OPEN_MS;
+const SETTLE_MS = 380;
 
 // phases as numbers so worklets can read them cheaply
 const IDLE = 0;
@@ -122,7 +119,6 @@ type Props = {
 };
 
 type Motion = {
-  pp: number;
   oa: number;
   rose: number;
   crown: number;
@@ -169,7 +165,6 @@ export default function LocketUnlock({
   style,
 }: Props) {
   const reduce = useReducedMotion();
-  const ring = solid(useColorScheme() === 'dark');
   const art = ART[locketOf(locket).id];
   const { hingeX, keyY, swing } = art;
   const width = 2 * (C - hingeX);
@@ -332,7 +327,6 @@ export default function LocketUnlock({
 
     const zt = open && !reduce ? seg(o, 0.5, 0.9) : 0;
     return {
-      pp,
       oa,
       rose,
       crown,
@@ -423,10 +417,6 @@ export default function LocketUnlock({
     transform: [P, ...rigTf(motion.value, C, C)] as never,
   }));
 
-  const ringProps = useAnimatedProps(() => ({
-    strokeDashoffset: RING_LEN * (1 - motion.value.pp),
-  }));
-
   const scale = size / BOX;
 
   return (
@@ -451,23 +441,6 @@ export default function LocketUnlock({
         }}
       >
         <Animated.View style={[StyleSheet.absoluteFill, diveStyle]} pointerEvents="none">
-          {/* progress ring: stays flat while the locket moves inside it */}
-          <Svg width={BOX} height={BOX} style={StyleSheet.absoluteFill}>
-            <Circle cx={C} cy={CY} r={140} stroke={ring.rule} strokeWidth={1.5} fill="none" />
-            <AnimatedCircle
-              cx={C}
-              cy={CY}
-              r={140}
-              stroke={ring.seal}
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              fill="none"
-              strokeDasharray={`${RING_LEN}`}
-              animatedProps={ringProps}
-              transform={`rotate(-90 ${C} ${CY})`}
-            />
-          </Svg>
-
           {/* case: chain stub, bail, the inside with the place */}
           <Plane>
             <Animated.View style={[StyleSheet.absoluteFill, caseStyle]}>
@@ -571,26 +544,31 @@ type IrisProps = {
   from: Iris;
   /** The open memory's card it lands on: full width, on the bottom edge. */
   height: number;
-  /** Covered: open the card now, under it. */
+  /** Grown to the card's frame: the card can show. */
   onGrown: () => void;
 };
 
 /** The dive, continued over the map: paper grows out of the locket's inside to
  *  the card's frame, so the memory opens in place instead of sliding up. A
- *  circle until it is as wide as the card, then it stretches; width and
+ *  circle riding the locket's zoom until it is as wide as the card, then it
+ *  stretches into the frame; width and
  *  height, not scale, so it stays round. The parent removes it once the card
  *  is up. With Reduce Motion it draws nothing and hands over at once. */
 export function IrisGrow({ from, height, onGrown }: IrisProps) {
   const reduce = useReducedMotion();
   const { width, height: screen } = useWindowDimensions();
-  const grow = useSharedValue(0);
+  const ms = useSharedValue(0);
+  // When the zoom has made the locket's inside as wide as the card: cbrt
+  // undoes the zoom's easeInCubic.
+  const wide = DIVE_MS * Math.min(Math.cbrt(Math.max(width / (2 * from.r) - 1, 0) / 13), 1);
+  const total = wide + SETTLE_MS;
 
   useEffect(() => {
     if (reduce) {
       onGrown();
       return;
     }
-    grow.value = withTiming(1, { duration: GROW_MS, easing: Easing.inOut(Easing.cubic) }, (fin) => {
+    ms.value = withTiming(total, { duration: total, easing: Easing.linear }, (fin) => {
       if (fin) runOnJS(onGrown)();
     });
     // Once, as it mounts: the callback is new every render.
@@ -598,15 +576,18 @@ export function IrisGrow({ from, height, onGrown }: IrisProps) {
   }, []);
 
   const style = useAnimatedStyle(() => {
-    const a = Math.min(grow.value / 0.55, 1);
-    const b = Math.max((grow.value - 0.55) / 0.45, 0);
-    const w = from.r * 2 + (width - from.r * 2) * a;
-    const h = a < 1 ? w : width + (height - width) * b;
-    const cy = from.y + (screen - height / 2 - from.y) * a;
+    // Glued to the locket's inside while it zooms (the zoom is about its
+    // centre), then it stretches and settles into the card's frame.
+    const z = 1 + 13 * eic(Math.min(ms.value / DIVE_MS, 1));
+    const w = Math.min(from.r * 2 * z, width);
+    const b = eio(Math.max((ms.value - wide) / SETTLE_MS, 0));
+    const h = w + (height - w) * b;
+    const cx = from.x + (width / 2 - from.x) * b;
+    const cy = from.y + (screen - height / 2 - from.y) * b;
     const top = w / 2 + (radius.card - w / 2) * b;
     const bottom = (w / 2) * (1 - b);
     return {
-      left: from.x + (width / 2 - from.x) * a - w / 2,
+      left: cx - w / 2,
       top: cy - h / 2,
       width: w,
       height: h,

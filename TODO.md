@@ -406,6 +406,13 @@ progress; refine what exists rather than add.
 - [ ] **A Lock Screen widget** (`expo-widgets`). (checked 2026-10-04)
       Today's walk or the nearest stop, and the streak. After launch; skip
       Live Activities.
+- [ ] **Hear the story at its spot.** (checked 2026-10-04) A paragraph read
+      on a street corner is the wrong format for somebody walking, and the
+      sources are already recordings with an offset (docs/10, *An offset
+      only exists when the source is a recording*). At the unlock, offer the
+      clip from that second, for earbuds, beside the text. DR clips wait on
+      *Licensing before money*; start with sources clearly ours or
+      linkable. Prototype one stop before building it.
 
 ### Craft
 
@@ -463,6 +470,10 @@ off-route memory, a streak shield, and an extra walk as a reward.
       year. Western Europe medians: $8.99 a month, $39.44 a year (RevenueCat
       report). Push annual: 44.1% retained after a year against 17.0% monthly.
       Plan for the subscription to carry ~80% of revenue.
+- [ ] **A pass for visitors.** (checked 2026-10-04) A visitor fits "a walk
+      a day" exactly and rarely subscribes for a three-day trip. A 1- or
+      3-day pass, non-renewing, through RevenueCat beside the subscription.
+      Price it against the entry above and StoryHunt (11 walks at 99 DKK).
 - [ ] **Pitch commissioned walks to the city.** (checked 2026-10-02)
       Probably year one's biggest line, guessed 50–300K DKK. Budget 2024 set
       aside 2.1M DKK for "The Copenhagen App"; the city leads a 35M DKK EU
@@ -589,3 +600,14 @@ They cost money, need an account, or need a person. Full detail in
   walks. A bar, which the research argues against; the founder's call.
 - **Does the podcast corpus eventually get pruned?** (checked 2026-09-20) It is
   US comedy anecdote in a product about Copenhagen history.
+- **Free walkers see the stops?** (checked 2026-10-04) *See the stops* is
+  paywalled, so a free walk is about 50 minutes committed blind, however good
+  the stories. What it would show (place, year, source) is already safe by
+  docs/10, *A locked memory says what it is*, and it is the hook. Proposal:
+  paywall the second walk, not the first one's preview. Amends *Subscribers
+  shape the walk* if taken; the founder's call.
+- **Sign in at the first unlock, not at launch?** (checked 2026-10-04) The
+  wall comes before anything is shown, and "your collection follows you"
+  holds only once there is one. App Review 5.1.1(v) allows sign-in where an
+  account feature needs it. Supersedes *Sign-in comes first, and it is the
+  whole onboarding* if taken; the founder's call.

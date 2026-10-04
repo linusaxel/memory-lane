@@ -275,11 +275,7 @@ export default function App() {
   const [revealId, setRevealId] = useState<number | null>(null);
   const { height: windowHeight } = useWindowDimensions();
   // The dive, growing over the map into the card it opens.
-  const [diving, setDiving] = useState<{
-    from: Iris;
-    memories: LocatedMemory[];
-    index: number;
-  } | null>(null);
+  const [diving, setDiving] = useState<{ from: Iris; grown?: boolean } | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
   // a sparse area); it is not `route.length`, because a stop the local cache
   // lost or the server pruned still counted toward "today" when it was made.
@@ -938,6 +934,14 @@ export default function App() {
   );
   // After the last stop's sheet is closed, not over it: that memory is read first.
   const showDone = walkDone && openAt.length === 0;
+  // A walked walk has nothing left to lose, so it ends itself: after the
+  // finish card's Done, or at once on a relaunch. Locally even offline; the
+  // next launch ends it on the server again.
+  useEffect(() => {
+    if (stage !== 'walk' || !routeDone || walkDone || pastWalk || !device) return;
+    endRoute(device).catch(() => {});
+    dropRoute();
+  }, [stage, routeDone, walkDone, pastWalk, device, dropRoute]);
   // The whole walk, from the start and home on a loop; stop to stop one-way.
   const donePath = useMemo(
     () =>
@@ -1471,13 +1475,7 @@ export default function App() {
         <IrisGrow
           from={diving.from}
           height={windowHeight * TALL}
-          onGrown={() => {
-            setRevealId(diving.memories[diving.index].id);
-            setPickedId(null);
-            // Not openGroup: its tap would land on the hold's Success.
-            setOpenAt(diving.memories);
-            setOpenIndex(diving.index);
-          }}
+          onGrown={() => setDiving((d) => d && { ...d, grown: true })}
         />
       )}
       <MemorySheet
@@ -1491,10 +1489,14 @@ export default function App() {
         memories={openMemories}
         index={openIndex}
         onIndex={setOpenIndex}
-        onClose={() => setOpenAt([])}
+        onClose={() => {
+          setOpenAt([]);
+          setDiving(null);
+        }}
         position={position}
         revealId={revealId}
-        onShow={() => setDiving(null)}
+        hidden={!!diving && !diving.grown}
+        onShown={() => setDiving(null)}
         compact={!journalOpen}
         onHeart={heart}
         hearted={!!openMemories[openIndex] && hearted.has(openMemories[openIndex].id)}
@@ -1697,8 +1699,14 @@ export default function App() {
                 return opened;
               }}
               onDiveStart={(from) => {
-                if (opening)
-                  setDiving({ from, memories: opening.group.memories, index: opening.index });
+                if (!opening) return;
+                setDiving({ from });
+                // Open now, hidden under the paper: up and drawn by the time it is grown.
+                setRevealId(opening.group.memories[opening.index].id);
+                setPickedId(null);
+                // Not openGroup: its tap would land on the hold's Success.
+                setOpenAt(opening.group.memories);
+                setOpenIndex(opening.index);
               }}
               onOpened={() => setOpening(null)}
             />

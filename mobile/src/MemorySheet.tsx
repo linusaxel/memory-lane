@@ -58,8 +58,10 @@ type Props = {
   position: Coordinates | null;
   /** The memory a hold on the map just opened: its story arrives animated. */
   revealId?: number | null;
-  /** The sheet is up: a hold's dive hands over to it here. */
-  onShow?: () => void;
+  /** A hold's dive is still growing over it: drawn, not yet seen. */
+  hidden?: boolean;
+  /** Faded in over the dive's paper: it can go. */
+  onShown?: () => void;
   /** Present only for a memory this account filed. */
   onEdit?: (memory: LocatedMemory) => void;
   /** Say this one mattered. Absent while locked - there is nothing to react
@@ -140,6 +142,7 @@ export const TALL = 0.92;
 const RISE_MS = 360;
 const BEAT_MS = 90;
 const REVEAL_MS = RISE_MS + 3 * BEAT_MS;
+const SHOW_MS = 180;
 
 function formatTimestamp(seconds: number): string {
   return duration(seconds, { hours: true });
@@ -152,7 +155,8 @@ export default function MemorySheet({
   onClose,
   position,
   revealId,
-  onShow,
+  hidden,
+  onShown,
   onHeart,
   hearted,
   onEdit,
@@ -286,8 +290,29 @@ export default function MemorySheet({
   const arriving =
     !!memory && !memory.locked && memory.id === revealId && arrived.current !== revealId;
 
+  // Over the dive's paper, on the same frame: fading in hands over without a cut.
+  const shown = useRef(new Animated.Value(hidden ? 0 : 1)).current;
+  const wasHidden = useRef(hidden);
   useEffect(() => {
-    if (!memory || memory.locked || memory.id !== revealId || arrived.current === revealId) return;
+    if (hidden) shown.setValue(0);
+    else if (wasHidden.current)
+      Animated.timing(shown, { toValue: 1, duration: SHOW_MS, useNativeDriver: true }).start(() =>
+        onShown?.(),
+      );
+    wasHidden.current = hidden;
+    // On the edge only: onShown is new every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hidden, shown]);
+
+  useEffect(() => {
+    if (
+      hidden ||
+      !memory ||
+      memory.locked ||
+      memory.id !== revealId ||
+      arrived.current === revealId
+    )
+      return;
     arrived.current = revealId;
     // Quiet by default, loud only here: an epic one arrives with its own haptic.
     if (memory.epic)
@@ -300,7 +325,7 @@ export default function MemorySheet({
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [memory, revealId, reveal]);
+  }, [hidden, memory, revealId, reveal]);
 
   /** Knowing a photograph or a note is waiting is the pull. Handing it over is the
    *  leak, so only the count travels. */
@@ -355,7 +380,6 @@ export default function MemorySheet({
     <Modal
       visible={!!memory}
       animationType={arriving ? (still ? 'fade' : 'none') : 'slide'}
-      onShow={onShow}
       presentationStyle={compact ? 'overFullScreen' : 'pageSheet'}
       transparent={compact}
       // Required, or the Android back button does nothing.
@@ -379,9 +403,10 @@ export default function MemorySheet({
             // twice to VoiceOver and sends a flow's tap to the status bar.
             <Pressable style={styles.fill} accessibilityLabel="Dismiss" onPress={onClose} />
           )}
-          <View
+          <Animated.View
             style={[
               styles.sheet,
+              { opacity: shown },
               compact &&
                 (peeking
                   ? [
@@ -689,7 +714,7 @@ export default function MemorySheet({
                 )}
               </View>
             )}
-          </View>
+          </Animated.View>
         </ScrollView>
       )}
     </Modal>

@@ -813,8 +813,8 @@ anyone else's collection or the local unlock cache.
    costs nothing.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the card moves on to the next.
-6. The last stop earned, the card reads "Every stop unlocked" over five full stamps,
-   and a tap fits the map to the whole walk. No confetti — the success haptic on that final
+6. The last stop earned, the closing card follows (F30), and after it the walk
+   ends itself: there is nothing left to lose. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
 **One walk a day, one at a time.** `POST /v1/routes/today` stores the first accept with
@@ -996,8 +996,9 @@ The last stop unlocks and the day should feel finished.
    another day), then "+60 XP" when finishing earned it (once a day) and "Level 3" when it
    reached one, then
    the streak once it is more than one day (F27).
-4. Done goes back to the map, following you again, with the walk card at
-   "Every stop unlocked".
+4. Done ends the walk and goes back to the map, following you again. A walked
+   walk ends itself, so there is no "every stop unlocked" limbo, and a relaunch
+   on a walked day lands on the map too.
 
 It shows once per walk, and nothing stores that it did: it follows the unlock
 that finished the walk in this session, so a relaunch on a walked day lands on
