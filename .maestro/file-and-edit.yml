@@ -189,6 +189,31 @@ appId: ${APP_ID}
     id: "photo"
 - tapOn:
     id: "photo-size-l"
+# The camera is a viewfinder in the story, under the tapped photo; the shot
+# takes its place. The simulator has no camera: expo-camera hands back a
+# generated picture, which uploads like any other.
+- tapOn:
+    id: "toolbar-camera"
+# iOS 26 asks for the camera too, simctl grant or not.
+- tapOn:
+    text: "Allow"
+    optional: true
+- scrollUntilVisible:
+    element:
+      id: "camera-take"
+    direction: DOWN
+- tapOn:
+    id: "camera-take"
+- extendedWaitUntil:
+    notVisible:
+      id: "photo-uploading"
+    timeout: 30000
+- assertNotVisible:
+    id: "camera-take"
+- scrollUntilVisible:
+    element:
+      id: "title"
+    direction: UP
 - tapOn:
     id: "title"
 - eraseText: 60

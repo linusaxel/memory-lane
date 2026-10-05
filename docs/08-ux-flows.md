@@ -629,7 +629,8 @@ one (not over the preview's card). Filing needs no walk.
    width, left, centre or right, captioned; a small photo to one side has
    the next paragraph wrap round it. ↑ ↓ move a block, and Preview shows it
    as it will read (docs/10, *A story has a little markdown*).
-7. **Photos** from the camera or the library, up to four, and one **recording**
+7. **Photos** from the library, or from a viewfinder that opens in the story
+   where the photo will go and becomes it on Take, up to four, and one **recording**
    up to three minutes. Each one uploads the moment it is taken, so the wait is
    spent composing rather than watching a spinner after Post — and a failed
    upload costs the text nothing.

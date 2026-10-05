@@ -83,6 +83,12 @@
           "cameraPermission": "Memory Lane uses the camera for photos you attach to a memory you file here."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Memory Lane uses the camera for photos you attach to a memory you file here."
+        }
+      ],
       "expo-web-browser",
       "expo-apple-authentication",
       "expo-notifications",

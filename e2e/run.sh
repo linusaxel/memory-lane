@@ -372,7 +372,7 @@ for flow in "${SELECTED[@]}"; do
 
   # Granted up front, because a system prompt left unanswered outlives the app
   # and sits over every later flow's launch, which then fails on "Memory Lane"
-  # with no hint why. iOS 26 still asks for full photo access; file-and-edit
+  # with no hint why. iOS 26 still asks for full photo access and the camera; file-and-edit
   # answers it. Location is launch.yml's, per flow.
   for service in photos camera microphone; do
     xcrun simctl privacy "$DEVICE" grant "$service" "$APP_ID" >/dev/null 2>&1

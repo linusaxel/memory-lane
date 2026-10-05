@@ -613,6 +613,9 @@ page"):
   block takes it away. ↑ ↓ move the block being written, or a tapped photo.
   The toolbar sits under the bar, never over the keyboard. Preview is
   `StoryBody`, the open sheet's own layout, wrap and all.
+- **Camera is a viewfinder in the story** (docs/10, "The camera is a block"):
+  full width where the photo will go, Take and Cancel under it. Take turns it
+  into that photo; Post waits while it is open.
 
 A submission comes back already unlocked and its sheet opens over the map. The
 modal closing is not a confirmation, and it is also the first sight of what a

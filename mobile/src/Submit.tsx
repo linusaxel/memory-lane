@@ -21,6 +21,7 @@ import {
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
@@ -92,6 +93,8 @@ type Item = { key: string } & (
   | { kind: 'p' | 'h' | 'quote'; text: string }
   | { kind: 'divider' }
   | { kind: 'photo'; uri: string; size: Size; place: Place; caption: string }
+  // The viewfinder, where its photo will go (docs/10, "The camera is a block").
+  | { kind: 'camera' }
 );
 type TextItem = Extract<Item, { kind: 'p' | 'h' | 'quote' }>;
 
@@ -149,6 +152,8 @@ export default function Submit({
   const [deleting, setDeleting] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const camera = useRef<CameraView>(null);
+  const [, requestCamera] = useCameraPermissions();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recording = useAudioRecorderState(recorder);
   const mounted = useRef(true);
@@ -224,8 +229,10 @@ export default function Submit({
   const photos = attachments.filter((a) => a.kind === 'photo');
   const sound = attachments.find((a) => a.kind === 'audio');
   const uploading = attachments.some((a) => !a.item && !a.failed);
+  const framing = items.some((i) => i.kind === 'camera');
   const summary = serialize(
     items.flatMap((i): Block[] => {
+      if (i.kind === 'camera') return [];
       if (i.kind !== 'photo') return [i];
       const id = attachments.find((a) => a.uri === i.uri)?.item?.id;
       return id ? [{ kind: 'photo', id, size: i.size, place: i.place, caption: i.caption }] : [];
@@ -240,6 +247,7 @@ export default function Submit({
     told &&
     summary.length <= MAX_SUMMARY &&
     !uploading &&
+    !framing &&
     !posting;
   const when = happened(isoDay(day), 'day');
   const pickDay = () =>
@@ -281,17 +289,11 @@ export default function Submit({
     }
   };
 
-  const addPhoto = async (fromCamera: boolean) => {
+  const addPhoto = async () => {
     setError(null);
-    const permission = fromCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError(
-        fromCamera
-          ? 'Allow camera access in Settings to take a photo.'
-          : 'Allow photo access in Settings to add one.',
-      );
+      setError('Allow photo access in Settings to add one.');
       return;
     }
 
@@ -306,9 +308,7 @@ export default function Submit({
       preferredAssetRepresentationMode:
         ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
     };
-    const result = fromCamera
-      ? await ImagePicker.launchCameraAsync(options)
-      : await ImagePicker.launchImageLibraryAsync(options);
+    const result = await ImagePicker.launchImageLibraryAsync(options);
     const picked = result.canceled ? null : result.assets[0];
     if (!picked) return;
 
@@ -316,6 +316,32 @@ export default function Submit({
     insert({ key: key(), kind: 'photo', uri: picked.uri, size: 'l', place: 'center', caption: '' });
     // The picker keeps a PNG a PNG, so the type is what it says it wrote.
     await attach({ uri: picked.uri, kind: 'photo' }, picked.mimeType ?? 'image/jpeg');
+  };
+
+  const openCamera = async () => {
+    setError(null);
+    const permission = await requestCamera();
+    if (!permission.granted) {
+      setError('Allow camera access in Settings to take a photo.');
+      return;
+    }
+    insert({ key: key(), kind: 'camera' });
+  };
+
+  /** The viewfinder becomes its photo, in the same place under the same key. */
+  const takePhoto = async (k: string) => {
+    // Re-encoded for the same reason as the library's: a thumbnail, not a print.
+    const shot = await camera.current?.takePictureAsync({ quality: 0.7 }).catch(() => null);
+    if (!shot) return setError("That didn't take. Try again.");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setItems((list) =>
+      list.map((i): Item =>
+        i.key === k
+          ? { key: k, kind: 'photo', uri: shot.uri, size: 'l', place: 'center', caption: '' }
+          : i,
+      ),
+    );
+    await attach({ uri: shot.uri, kind: 'photo' }, 'image/jpeg');
   };
 
   const startRecording = async () => {
@@ -494,10 +520,15 @@ export default function Submit({
           <Action label="Heading" testID="toolbar-heading" onPress={() => turn('h')} />
           <Action label="Quote" testID="toolbar-quote" onPress={() => turn('quote')} />
           <Action label="Divider" testID="toolbar-divider" onPress={divider} />
-          {photos.length < MAX_PHOTOS && (
+          {photos.length < MAX_PHOTOS && !framing && (
             <>
-              <Action label="Photo" spoken="Choose photo" onPress={() => addPhoto(false)} />
-              <Action label="Camera" spoken="Take photo" onPress={() => addPhoto(true)} />
+              <Action label="Photo" spoken="Choose photo" onPress={addPhoto} />
+              <Action
+                label="Camera"
+                spoken="Take photo"
+                testID="toolbar-camera"
+                onPress={openCamera}
+              />
             </>
           )}
           <Action label="↑" spoken="Move up" testID="block-up" onPress={() => move(-1)} />
@@ -725,6 +756,33 @@ export default function Submit({
                           <Action label="Remove divider" onPress={() => remove(item)} />
                         </View>
                       )}
+                    </View>
+                  );
+                }
+                if (item.kind === 'camera') {
+                  return (
+                    <View key={item.key} style={styles.part}>
+                      <CameraView
+                        ref={camera}
+                        style={styles.photo}
+                        onMountError={() => {
+                          remove(item);
+                          setError('No camera on this phone.');
+                        }}
+                      />
+                      <View style={styles.row}>
+                        <Action
+                          label="Take"
+                          spoken="Take photo"
+                          testID="camera-take"
+                          onPress={() => takePhoto(item.key)}
+                        />
+                        <Action
+                          label="Cancel"
+                          spoken="Put the camera away"
+                          onPress={() => remove(item)}
+                        />
+                      </View>
                     </View>
                   );
                 }

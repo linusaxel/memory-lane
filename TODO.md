@@ -454,15 +454,9 @@ progress; refine what exists rather than add.
 
 ### Craft
 
-- [ ] **A camera inside Add.** (deferred 2026-10-03 until there are
-      archival photos to line up, below) An `expo-camera` `CameraView` in the sheet in
-      place of `launchCameraAsync`, the shot shrinking into the attachment
-      chip. Needs a native rebuild; keep the picker for the library. As
-      written it breaks docs/10 "Reading and writing are one page"; keep both
-      if it comes back.
 - [ ] **Then and now, lined up.** (blocked 2026-10-03: no memory has an
-      image; needs kbhbilleder access) The camera inside Add ghosts an archival photo
-      over the viewfinder at ~40% so the walker can match it. Open: where the
+      image; needs kbhbilleder access) The viewfinder in Add (docs/10, *The camera is a
+      block*) ghosts an archival photo over itself at ~40% so the walker can match it. Open: where the
       "now" photo goes. Founder's call.
 - [ ] **Hand-drawn illustrations.** (checked 2026-10-03) The app has
       none. Places that want one: the empty walk list, sign-in, the paywall,
@@ -480,6 +474,8 @@ progress; refine what exists rather than add.
         rise once; deny it and walks still plan and open. Nothing has ever
         counted a real step. Unverified: whether Core Motion misses steps only
         a Watch counted.
+      - The camera in Add: a real viewfinder, Take, the upload. The
+        simulator's shot is a generated picture.
       - The route drawing itself and the locket unlock: frames were measured in the
         simulator only.
 

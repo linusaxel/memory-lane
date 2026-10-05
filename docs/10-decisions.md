@@ -3636,6 +3636,26 @@ fetched, the tap falls back to that sheet, so the tap is never a dead end.
 the book passage in the card (the pipeline would have to store it). Both
 credits keep the sheet.
 
+### The camera is a block
+
+Status: Accepted 2026-10-05
+
+Camera in Add's toolbar no longer leaves the page for the system camera
+(`launchCameraAsync`). It puts a live viewfinder (`expo-camera`'s
+`CameraView`) into the story where the photo will go, at the size a photo
+lands at (full width, 4:3), with Take and Cancel under it in the label voice.
+Take freezes it into that photo block, in place, and the upload starts as
+before. Post waits while a viewfinder is open. Photo keeps the library picker;
+the avatar in Settings keeps the picker's camera.
+
+Why: *Reading and writing are one page*. The TODO's first version shrank the
+shot into an attachment chip, but there are no chips: a photo is a block at
+the size it is read at, so the viewfinder is that block. It is also where
+*Then and now, lined up* will ghost an archival photo.
+
+**Options considered:** the system camera (leaves the page); a full-screen
+`CameraView` with the shot flying into place (chrome for one tap).
+
 ### Rejected approaches, do not retry
 
 Status: Rejected
