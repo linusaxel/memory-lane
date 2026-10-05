@@ -747,3 +747,5 @@ adds a line here. Started 2026-10-05 at 74 good out of 169 visible.
 
 | Date | Source | Items | Memories | Good | Mean score | $ |
 |---|---|---|---|---|---|---|
+| 2026-10-05 | Historisk Atlas (10), ids 176-217 | 40 | 10 | 0 | 4.2 | ~5.60 |
+| 2026-10-05 | Wikipedia, modern Copenhagen (245), trial | 5 | 7 | 0 (old scale) | 4.3 | ~1.70 |
