@@ -750,3 +750,4 @@ adds a line here. Started 2026-10-05 at 74 good out of 169 visible.
 | 2026-10-05 | Historisk Atlas (10), ids 176-217 | 40 | 10 | 0 | 4.2 | ~5.60 |
 | 2026-10-05 | Wikipedia, modern Copenhagen (245), trial | 5 | 7 | 0 (old scale) | 4.3 | ~1.70 |
 | 2026-10-05 | Wikipedia, modern Copenhagen (245), rest; new scorer | 67 | 54 | 4 | 4.3 | ~9 (13.50 at full price) |
+| 2026-10-05 | Trials: Stolpersteine (246), Bryggebladet (247), Nørrebro Lokalhistoriske Forening (248), Christianshavneren (250) | 20 (5 each) | 12 (2/3/4/3) | 3 (1/0/2/0) | 5.3 | ~3-5, est. |
