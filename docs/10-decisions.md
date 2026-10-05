@@ -527,6 +527,40 @@ story was. `walk_score` existed for epics but was never backfilled.
   after stop count, layer mix and shape. `route_bench`: spur 44% → 43%, p95
   1112 → 1110 ms, unchanged.
 
+### The walk score asks one question
+
+Status: Accepted 2026-10-05. Changes how `walk_score` is computed in *A walk
+picks its stops by the rubric*; the prize formula and its other parts stand.
+
+The six-criteria sum separated the labelled walks from the skips at AUC 0.71
+(0.74 on the skips a summary can show), and at 7 or more only 33 of the 93 it
+kept were walks. Each criterion on its own was near chance (0.54 to 0.65), so
+their sum was mostly noise. One question, "would a curious walker standing here
+be glad they stopped to hear it?", with the rubric as what raises and sinks a
+story and four anchored bands, scored 0.87 to 0.89 on the judgeable skips over
+two runs, and 14 of the 20 it scored 7 or more were walks.
+
+- **New memories only.** Scores already stored stay. Rescoring the 186 in the
+  launch box would have taken the good count from 74 to 28, and the founder
+  chose not to move it. So the stored scores are a mix of two scales until
+  someone decides otherwise.
+- **It is stricter.** Expect fewer 7s per source than the old rubric gave.
+  A source's "good per item" from before 2026-10-05 overstates what it will
+  yield now.
+- **`--labels` measures a prompt** against `tests/fixtures/walk_labels.json`
+  without writing. Run it before and after any change to `PROMPT`.
+
+**Consequences:** the labels were scored by agents on an older five-criteria
+rubric, so they lean towards literary historical scenes. The holistic prompt
+demoted most Københavnerliv pub stories, rightly for most, not for all
+(Edderkoppen at Under Uret scored 3). A person's labels (`review --person`)
+are the better yardstick when there are some.
+
+**Options considered:** the six criteria with sharper definitions (0.75 on
+judgeable skips); adding a "glad" criterion to them (0.77 to 0.84); a
+"worst flaw" that capped the score, which the model found in almost every
+story (0.60 overall).
+
 ### A city board, by opens
 
 Status: Accepted 2026-10-03. Reverses "stat screens" in *Walks earn XP; rare

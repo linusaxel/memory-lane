@@ -24,6 +24,19 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A batch on a `candidate` source runs nothing and exits 0.** 2026-10-05:
+  `sources add` defaults to `candidate`, `PENDING_EXTRACTION` skips candidates,
+  and `batch --run --content <ids>` printed "0 pending" and exited green, so an
+  approved trial looked started and cost a round trip to the founder. Fix:
+  `batch --run` exits non-zero when chosen ids were dropped, naming their
+  source's status.
+
+- **A source's `expected` is its past, not its next items.** 2026-10-05:
+  Historisk Atlas showed 90 expected from its first 18 items; the next 40 were
+  thin records and the WWII sabotage set, 19 empty and 10 memories at mean 4.2,
+  0 good. Fix: make-memories step 2 trials the next 5 pending ids of any
+  source before a bigger batch, not only sources under 5 items done.
+
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"

@@ -8,6 +8,8 @@ description: Resume making Memory Lane memories toward the goal of 1,000 good on
 **Goal: 1,000 good memories in Copenhagen.** Good means visible, not a user's,
 inside the launch bbox, and `walk_score >= 7`. The database is the state: every
 pass starts by counting, so there is nothing to resume by hand.
+Scores from 2026-10-05 on are stricter (docs/10, *The walk score asks one
+question*), so a source's old good-per-item overstates its yield now.
 
 One pass, one source. Every step is free except the one marked **bills**, and
 that one waits for a yes.

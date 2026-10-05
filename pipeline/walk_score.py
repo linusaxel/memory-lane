@@ -3,11 +3,15 @@
     python -m pipeline.walk_score               # how many are unscored, and nothing else
     python -m pipeline.walk_score --memory 42   # one, printed
     python -m pipeline.walk_score --all         # every unscored extracted memory (bills)
+    python -m pipeline.walk_score --labels      # the prompt against the labels; writes nothing
 
-The rubric is docs/04-extract.md's research rubric: six criteria, 0-2 each.
-It scores the finished summary, which is what a walker reads, so the
-extraction prompt and its summaries stay untouched. The Weather Girls are not
-in the prompt: they are the held-out test.
+One holistic question, 0-12: would a curious walker standing here be glad
+they stopped to hear it? The six-criteria rubric it replaced (docs/04-extract.md)
+is now the list of what raises and sinks a story; summed, its parts were
+noise (docs/10, *The walk score asks one question*). It scores the finished
+summary, which is what a walker reads, so the extraction prompt and its
+summaries stay untouched. The Weather Girls are not in the prompt: they are
+the held-out test.
 
 Bills a little (one short model call per memory). Aggregation runs it on each
 new video's memories; --all is the backfill.
@@ -24,24 +28,27 @@ from pipeline.extract import _request
 
 logger = logging.getLogger(__name__)
 
-CRITERIA = ("site_lock", "visible_trace", "incident", "surprise", "feeling", "relates")
+PROMPT = """The text is a place, then a short story told to someone standing there.
+Score it 0 to 12: would a curious walker, standing on this spot, be glad they
+stopped to hear it?
 
-PROMPT = """The text is a place, then a short story told to someone standing there. Score it
-on six criteria, each 0, 1 or 2:
+What raises it: it happened right here, at this building or square; the walker
+can see the spot or what is left of it; a scene with people and stakes; a
+"wait, here?" surprise; awe, danger, anger, tenderness or absurdity; it changes
+how the spot looks now.
+What sinks it: it sells a business; a private person's death, illness or crime;
+a name it never introduces; any place of its kind would tell it the same;
+nothing happens, only names, dates or a description.
 
-- site_lock: 2 if it happened at this doorway, 0 if only "in the city".
-- visible_trace: 2 if it points at something still there to look at.
-- incident: 2 for a scene with people and stakes, 0 for names and dates.
-- surprise: 2 for a "wait, here?", a small gap the reader wants closed.
-- feeling: 2 for awe, danger, anger or absurdity.
-- relates: 2 if then is set against now, tied to the person standing there.
-
-Be strict: a 2 is rare. Most stories total 5 to 8."""
+- 10 to 12: a story they will retell for years.
+- 7 to 9: worth stopping for; they are glad they heard it here.
+- 4 to 6: true and placed, but they forget it by the next corner.
+- 0 to 3: nothing to stand here for."""
 
 SCHEMA = {
     "type": "object",
-    "properties": {c: {"type": "integer", "enum": [0, 1, 2]} for c in CRITERIA},
-    "required": list(CRITERIA),
+    "properties": {"score": {"type": "integer", "enum": list(range(13))}},
+    "required": ["score"],
     "additionalProperties": False,
 }
 
@@ -52,8 +59,7 @@ def walk_score(client, summary: str) -> int | None:
     if raw is None:
         return None
     try:
-        scores = json.loads(raw)
-        return sum(min(2, max(0, int(scores[c]))) for c in CRITERIA)
+        return min(12, max(0, int(json.loads(raw)["score"])))
     except (
         ValueError,
         KeyError,
@@ -92,6 +98,47 @@ def score_memories(session, client, content_id: int | None = None, memory_id: in
     return done
 
 
+def auc(pos: list[int], neg: list[int]) -> float:
+    """The chance a walk outscores a skip; ties count half."""
+    return sum((p > n) + 0.5 * (p == n) for p in pos for n in neg) / (len(pos) * len(neg))
+
+
+# Skips for reasons the summary can't show (outside the box, a bad pin, a
+# duplicate, a wrong fact); other stages catch those.
+UNSEEN = {"out", "pin", "p1000", "dup", "wrong", "hall"}
+
+
+def check_labels(session, client, path: str = "tests/fixtures/walk_labels.json") -> dict:
+    """Score the labelled memories afresh, writing nothing, and say how well the
+    prompt puts walks above skips: on every label, and on the ones it can judge."""
+    labels = {m["id"]: m for m in json.load(open(path))["memories"]}
+    rows = session.execute(
+        text(
+            "SELECT m.id, p.name, m.summary FROM memories m JOIN places p ON p.id = m.place_id"
+            " WHERE m.id = ANY(:ids)"
+        ),
+        {"ids": list(labels)},
+    ).fetchall()
+    scored = {r.id: walk_score(client, f"{r.name}: {r.summary}") for r in rows}
+    scored = {i: s for i, s in scored.items() if s is not None}
+
+    def split(ids):
+        return (
+            [scored[i] for i in ids if labels[i]["verdict"] == "walk"],
+            [scored[i] for i in ids if labels[i]["verdict"] == "skip"],
+        )
+
+    seen = [i for i in scored if not set(labels[i]["flags"]) & UNSEEN]
+    good = [i for i in scored if scored[i] >= 7]
+    return {
+        "scored": len(scored),
+        "auc": round(auc(*split(scored)), 3),
+        "auc_judgeable": round(auc(*split(seen)), 3),
+        "good": len(good),
+        "good_walks": sum(labels[i]["verdict"] == "walk" for i in good),
+    }
+
+
 def main():
     import anthropic
 
@@ -101,8 +148,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--memory", type=int, help="one memory, by id")
     parser.add_argument("--all", action="store_true", help="every unscored one; bills")
+    parser.add_argument("--labels", action="store_true", help="measure the prompt; bills")
     args = parser.parse_args()
     with get_session() as session:
+        if args.labels:
+            print(check_labels(session, anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)))
+            return
         if not (args.memory or args.all):
             n = len(session.execute(text(UNSCORED), {"content_id": None, "memory_id": None}).all())
             print(f"{n} unscored. --all scores them, one short model call each.")

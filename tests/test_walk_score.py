@@ -1,4 +1,4 @@
-"""The walk rubric's sum is stored once per extracted memory, never on what a
+"""The walk score is stored once per extracted memory, never on what a
 person filed. FakeAnthropic answers; nothing bills."""
 
 import pytest
@@ -7,22 +7,22 @@ from sqlalchemy import text
 from pipeline import walk_score
 from tests.fakes import FakeAnthropic
 
-SCORES = {
-    "site_lock": 2,
-    "visible_trace": 2,
-    "incident": 1,
-    "surprise": 2,
-    "feeling": 1,
-    "relates": 2,
-}
+SCORES = {"score": 10}
 
 
-def test_the_score_is_the_sum():
+def test_the_score_is_the_answer_kept_in_range():
     assert walk_score.walk_score(FakeAnthropic(SCORES), "a story") == 10
+    assert walk_score.walk_score(FakeAnthropic({"score": 40}), "a story") == 12
 
 
 def test_an_unusable_answer_is_no_score():
     assert walk_score.walk_score(FakeAnthropic({"site_lock": 2}), "a story") is None
+
+
+def test_auc_is_the_chance_a_walk_beats_a_skip():
+    assert walk_score.auc([9, 8], [3, 4]) == 1.0
+    assert walk_score.auc([5], [5]) == 0.5
+    assert walk_score.auc([2], [7, 1]) == 0.5
 
 
 @pytest.mark.db
