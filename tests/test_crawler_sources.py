@@ -1,6 +1,6 @@
-"""The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds."""
+"""The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds, stones."""
 
-from crawler import archive, filming, plaques, rss, wikipedia
+from crawler import archive, filming, plaques, rss, stolpersteine, wikipedia
 
 
 def test_a_plaque_becomes_its_inscription_its_subject_and_its_point():
@@ -114,3 +114,20 @@ def test_categories_merge_once_longest_first_and_skip_the_ungeotagged(monkeypatc
     found = wikipedia.categories("en", "Crime| Riots")
     assert [f["title"] for f in found] == ["Ungdomshuset", "Shooting", "Stub"]
     assert (found[0]["lat"], found[0]["lon"]) == (55.68, 12.58)
+
+
+def test_stones_at_one_door_are_one_story_in_plain_text():
+    row = (
+        "\n|-\n| [[Datei:Stein.jpg|120px]]\n"
+        '|style="text-align:center;"| <small>HIER WOHNTE</small><br />{name}\n'
+        "| Nansensgade 19{district}<!--{{{{Coordinate|NS=}}}}-->\n"
+        "| {{{{PersonZelle|{name}|Levy|fett=1}}}} floh nach [[Schweden|Südschweden]].<ref>x</ref>"
+    )
+    wikitext = "{|\n! Stein" + row.format(name="ABEL", district="<br><small>Kopenhagen</small>")
+    wikitext += row.format(name="RUTH", district="") + "\n|}"
+    assert stolpersteine.stones(wikitext) == {
+        "Nansensgade 19 Kopenhagen": [
+            ("HIER WOHNTE\nABEL", "ABEL Levy floh nach Südschweden."),
+            ("HIER WOHNTE\nRUTH", "RUTH Levy floh nach Südschweden."),
+        ]
+    }

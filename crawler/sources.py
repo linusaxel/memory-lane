@@ -35,6 +35,7 @@ from crawler.kb_aviser import KbAviser  # noqa: E402
 from crawler.plaques import Plaques  # noqa: E402
 from crawler.rss import Podcast, Press  # noqa: E402
 from crawler.runeberg import Runeberg  # noqa: E402
+from crawler.stolpersteine import Stolpersteine  # noqa: E402
 from crawler.wikipedia import Wikipedia  # noqa: E402
 
 SOURCES: dict[str, Source] = {
@@ -47,6 +48,7 @@ SOURCES: dict[str, Source] = {
         Archive(),
         Plaques(),
         Wikipedia(),
+        Stolpersteine(),
         Filming(),
         Press(),
         Podcast(),
