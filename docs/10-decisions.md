@@ -1505,6 +1505,11 @@ Amended 2026-10-04: Plan a walk is glass, like every other control over the
 map, with an ember walking figure beside its label; the flat ember capsule
 read as plain. The figure moved there from the level pill.
 
+Amended 2026-10-05: on the home map Add leaves the top corner for the bottom
+row's right end, a 56pt glass circle beside the Plan a walk pill, as a tab
+bar sits beside its floating + button. The planner, whose card holds the
+bottom, keeps Add top left beside Journal.
+
 ### Two equal actions at the bottom
 
 Status: **Superseded 2026-10-01** by *One ember button that changes*.

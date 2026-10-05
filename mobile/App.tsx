@@ -1458,9 +1458,9 @@ export default function App() {
 
   // Add, one tap from the planner and the walk alike: filing is standing
   // somewhere, not unlocking.
-  const addButton = (
+  const addButton = (shape: typeof styles.circle = styles.circle) => (
     <GlassButton
-      style={styles.circle}
+      style={shape}
       hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel="Add a memory here"
@@ -1472,7 +1472,12 @@ export default function App() {
         setSubmitOpen(true);
       }}
     >
-      <Glyph name="plus" size={22} weight="semibold" color={color.gold} />
+      <Glyph
+        name="plus"
+        size={shape === styles.circle ? 22 : 26}
+        weight="semibold"
+        color={color.gold}
+      />
     </GlassButton>
   );
 
@@ -1823,10 +1828,10 @@ export default function App() {
             )}
           {/* The planner has no bottom row (its card is there), so Add sits
               beside Journal. */}
-          {(stage === 'map' || stage === 'preview') && !journalOpen && (
-            <View style={styles.topLeftSecond}>{addButton}</View>
+          {stage === 'preview' && !journalOpen && (
+            <View style={styles.topLeftSecond}>{addButton()}</View>
           )}
-          {/* Home: the map, you on it, and one way into the planner. */}
+          {/* Home: the map, you on it, the way into the planner and Add. */}
           {stage === 'map' && !journalOpen && !pastWalk && (
             <View style={styles.bottom}>
               {!slide && (
@@ -1843,6 +1848,7 @@ export default function App() {
                   <Text style={styles.planWalkLabel}>Plan a walk</Text>
                 </GlassButton>
               )}
+              {addButton(styles.bigCircle)}
             </View>
           )}
           <View style={styles.topRight}>
@@ -1875,7 +1881,7 @@ export default function App() {
           )}
           {stage === 'walk' && !confirmEnd && !showDone && !pastWalk && (
             <View style={styles.bottom}>
-              {addButton}
+              {addButton()}
               <View style={styles.middle}>
                 {walking && !position && (
                   <Pressable
@@ -2185,6 +2191,14 @@ const styles = StyleSheet.create({
   planWalkLabel: { ...buttonText, color: color.ink },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
+  // Add on the home row, as tall as Plan a walk.
+  bigCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   circle: {
     width: 44,
     height: 44,

@@ -784,8 +784,9 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. Journal and Add sit in the top corners at every
-   stage; there are no tabs. There is no
+   no hotspots card. Journal sits top left at every stage; Add sits
+   bottom right on the home map, beside Journal in the planner, and at the
+   bottom row's left on a walk. There are no tabs. There is no
    "Near me": Center on me recentres, and "Turn on location" shows only while
    there is no position.
 3. **One walk card at the bottom centre** says this is a walk and not the
