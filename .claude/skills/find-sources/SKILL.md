@@ -12,6 +12,47 @@ the funnel, in order. Each step is cheap until the one marked **bills**.
 Read first: `docs/10-decisions.md` → *The sources' legal footing* (the table),
 *Sources are a Protocol and a registry*, *Sources are rows with a status*.
 
+## 0. Already searched (read before researching)
+
+Re-check only what is marked open. Dated, so a stale entry can be re-tried.
+
+**By era (2026-10-05).** The free sources stop at about 1945. Living memory,
+and above all the 2010s to now, comes only from permission or from people in
+the app. Don't search the open web for free recent stories again.
+
+| Era | Where it is | State |
+|---|---|---|
+| 2010s-now | Wikidata events in the bbox with P585 ≥ 2010: about 10 (Hotel Jørgensen 2010, the 2015 shootings, Field's 2022, Børsen 2024). Mostly grim, so they fail "glad to know" | Not worth a source |
+| 2010s-now | YouTube channels with permission (Københavnerliv covers this era and is exhausted; Københavnerglimt has nothing new) | Researching permission targets |
+| 1950-2000 | Local-history society yearbooks: Nørrebro (24 PDFs 2000-23, about 80-100 good), Sydhavnen (26 articles), SLAK for the other 8 | Email drafted in `docs/permission-request.md`, not sent |
+| 1940-45 | Stolpersteine, `stolpersteine:Liste der Stolpersteine im Großraum Kopenhagen` (source 246, 46 addresses) | Ingested, not screened |
+| 1860-1919 | Public-domain memoirs: Gottschalksen `archive:engladmusikantsd00gott` (densest), Bang `runeberg:bang/6 København`, Grandjean `archive:spredtemindergen00gran`, Egan `gutenberg:36412 Copenhagen` | Not registered |
+
+**Dead ends.** Don't retry these without new evidence.
+- **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
+  clubs) gave 4 good from 67 items (source 245). Danish Wikipedia's 2,783
+  geotagged articles read the same, with a rare gem such as Elmegade 23 or
+  Cafe Intime.
+- **Historisk Atlas** gives title and intro only, with no licence in the
+  public JSON. The sabotage set scored 0 good.
+- **Records that are labels, not stories:** Europeana's listed buildings (CC0,
+  boilerplate), the Kommune's open data (`monumenter` has no text), Wikinews,
+  Wikivoyage, OpenHistoricalMap, and one-line Wikidata descriptions.
+- **No usable text:** Nationalmuseet, modstand.natmus.dk, Arbejdermuseet and
+  the Folklore Archives (no open licence or only on site); Københavns Museum
+  podcasts (no transcripts).
+- **No Copenhagen memoir as free text:** Nexø's *Erindringer*, Pontoppidan,
+  Michaëlis, J.V. Jensen, Wied, Drachmann and Aakjær. Thit Jensen and
+  Johannes Jørgensen are still in copyright.
+- **Local-history websites with no stories to read:** chrarkiv.dk (photos),
+  Islands Brygge (books for sale), Kend Din By (film), erindringer.dk (dead).
+
+**Lessons.**
+- A source's last items can be off-topic: Københavnerliv's backlog ended in
+  film chats and festivals. Read the pending titles before trusting `expected`.
+- Ingest everything when a source is small, and trial the richest items, not
+  the first five.
+
 ## 1. Research candidates (free)
 
 Fan out parallel agents, one per kind, on primary sources only: the feed
