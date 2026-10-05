@@ -336,14 +336,15 @@ contrast; not the memory sheet's peek, whose parent animates opacity
 (docs/09 part 13, superseding "never glass on a card"). The controls floating over the map
 (Journal, Add, the walk card, the keys pill, you,
 Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
-or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. The one gold thing in the bottom row, Plan a
-walk or Turn on location, is not glass but `button.solid`. The walk card is
+or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. Plan a walk is the one
+tinted control, `prominent`: gold stained glass (`solid().goldGlass`) with a
+paper label; Turn on location is `button.solid`. The walk card is
 untinted: the next stop's pin is the gold on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,
-and that is the material, not a bug. Every glass control is warmed by
-`solid().frost`, a thin paper tint (a dark gold one in dark mode), so it
-reads as frosted paper and not as cold white (2026-10-03). A glass
+and that is the material, not a bug. The rest are untinted, with
+`glassEdge` (an ink hairline) and `glassLift` (a soft shadow): the paper
+tint they had measured 1.01:1 on the cream map (docs/09 part 15). A glass
 control squishes to 0.92 and springs back with a little overshoot rather than
 dimming: opacity on a glass view's parent stops the effect rendering. Inside sheets, hierarchy is still hairlines and
 weight.

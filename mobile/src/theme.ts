@@ -74,6 +74,9 @@ export const color = {
   /** The slide track's knob: white in both themes, as iOS draws it. */
   knob: '#FFFFFF',
 
+  /** The hairline round a glass control, so it holds an edge on the map. */
+  edge: dual('rgba(28,25,23,0.25)', 'rgba(242,237,228,0.25)'),
+
   /** `lift`'s shadow, and the scrim over an uploading photo. */
   shadow: '#000',
   scrim: 'rgba(0,0,0,0.35)',
@@ -123,9 +126,10 @@ export const solid = (dark: boolean) => ({
   tile: dark ? '#5e2a18' : '#a8350f',
   road: dark ? '#f2ede4' : '#f7f4ee',
   sun: dark ? '#f5c542' : '#f2b53a',
-  /** The glass over the map, warmed: paper in light, a dark gold in dark,
-   *  thin enough that the map still shows through. A tint, so a real colour. */
-  frost: dark ? 'rgba(53,42,20,0.35)' : 'rgba(241,228,194,0.45)',
+  /** The one tinted control over the map, Plan a walk: gold stained glass,
+   *  dense, because a light tint on the cream map measured 1.01:1
+   *  (docs/09 part 15). A tint, so a real colour. */
+  goldGlass: dark ? 'rgba(217,180,94,0.85)' : 'rgba(118,90,22,0.92)',
   /** The same warmth on a glass card, thicker: a card carries prose, which
    *  must hold its contrast over a busy map. */
   frostCard: dark ? 'rgba(32,29,25,0.72)' : 'rgba(255,253,249,0.72)',
@@ -156,6 +160,16 @@ export const lift = {
   shadowRadius: 16,
   shadowOpacity: 0.12,
   elevation: 4,
+};
+
+/** A glass control's edge and shadow: the HIG Maps "thin stroke or light drop
+ *  shadow", since glass drops its own shadow over a light map. */
+export const glassEdge = { borderWidth: 1, borderColor: color.edge };
+export const glassLift = {
+  shadowColor: color.shadow,
+  shadowOffset: { width: 0, height: 3 },
+  shadowRadius: 10,
+  shadowOpacity: 0.18,
 };
 
 /** A card over the map: the unlock card, Plan's, the peek. Where it sits and

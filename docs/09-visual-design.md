@@ -920,3 +920,54 @@ unlock"; mobile/UI.md, "The unlock control".
 - [Uber, how to take trips](https://www.uber.com/sa/en/drive/basics/how-to-take-trips); [Apple Watch SOS](https://support.apple.com/108374)
 - [Snapchat, tap to view](https://9to5mac.com/2015/07/01/snapchat-tap-to-view/); [Tinder-style swipe](https://vp0.com/blogs/tinder-swipe-ui-kit-swiftui-code)
 
+
+---
+
+# 15. Glass that stands out from the map — **researched and shipped 2026-10-05**
+
+The founder: the buttons and the app are "quite similar in colour". Measured,
+they were the same: the paper frost (rgba(241,228,194,0.45)) composites to
+about **1.01:1** on the cream mutedStandard map. Three passes: Apple's primary
+sources, map-app teardowns, perception research.
+
+## What the research said
+
+- **Luminance makes the edge, not hue.** Figure-ground and edge detection run
+  on the colour-blind luminance channel (Livingstone, *Vision and Art*; Ware,
+  *Information Visualization* ch. 4, about 3:1 for small items). Another light
+  tint at the map's lightness would blend just the same.
+- **Apple says so for maps.** HIG Maps: "Make sure there's enough contrast
+  between custom controls and the map… Consider using a thin stroke or light
+  drop shadow." HIG Color: avoid "similar colors in the content layer and
+  controls".
+- **Tint one thing.** WWDC25 219: tint "only… primary elements and actions.
+  When every element is tinted, nothing stands out." The tint goes on the
+  background (the stained glass of `glassProminent`). Glass also "lowers the
+  opacity of its shadow when it is over a solid light background", which
+  is this map, so its own separation is weakest here.
+- **The field agrees.** Citymapper's GO, Komoot's Get Directions, Uber's
+  Confirm, Google's Directions and Airbnb's Map pill each fill one primary
+  action densely, darker or more saturated than a muted map. Their secondary
+  controls are neutral circles with a real shadow.
+- **WCAG 1.4.11.** A labelled button needs no 3:1 boundary; its label needs
+  4.5:1 and an icon 3:1. A shadow counts as the colour nearest it, so it
+  helps findability without passing on its own.
+
+## What shipped
+
+- Plan a walk is `prominent`: `solid().goldGlass`, a deep gold at 0.92 in
+  light (0.85 of the dark gold in dark), with a paper label and figure.
+  Measured off the simulator: pill to map 4.7:1 and label to pill 5.0:1
+  in light; 5.5:1 and 7.2:1 in dark. 0.85 of `gold` was tried first. Glass
+  lightens what it tints, so the label came out at 3.7:1.
+- Every other glass control (Journal, Add, the level pill, you, the walk
+  card) is untinted regular glass with `glassEdge`, an ink hairline at 25%,
+  and `glassLift`, a soft shadow. `frost` is gone.
+
+## Sources
+
+- [HIG, Maps](https://developer.apple.com/design/human-interface-guidelines/maps); [Color](https://developer.apple.com/design/human-interface-guidelines/color#Liquid-Glass-color); [Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons); [Materials](https://developer.apple.com/design/human-interface-guidelines/materials)
+- [WWDC25 219, Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/); [323](https://developer.apple.com/videos/play/wwdc2025/323/); [glassProminent](https://developer.apple.com/documentation/swiftui/primitivebuttonstyle/glassprominent)
+- [WCAG 1.4.11, Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)
+- [NN/g, Liquid Glass](https://www.nngroup.com/articles/liquid-glass/); [Glassmorphism](https://www.nngroup.com/articles/glassmorphism/)
+- [Komoot redesign](https://newsroom.komoot.com/254263-komoot-unveils-modern-design-as-part-of-ambitious-product-roadmap/); [Google Maps colours](https://9to5google.com/2023/08/31/google-maps-new-colors/); App Store screenshots of Citymapper, Uber, Google Maps

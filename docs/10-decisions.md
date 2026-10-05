@@ -1510,6 +1510,11 @@ row's right end, a 56pt glass circle beside the Plan a walk pill, as a tab
 bar sits beside its floating + button. The planner, whose card holds the
 bottom, keeps Add top left beside Journal.
 
+Amended 2026-10-05, later: Plan a walk is gold stained glass, the one tinted
+control over the map; the rest are untinted glass with an ink hairline and a
+soft shadow. The paper frost they shared measured 1.01:1 on the cream map
+(docs/09 part 15).
+
 ### Two equal actions at the bottom
 
 Status: **Superseded 2026-10-01** by *One ember button that changes*.

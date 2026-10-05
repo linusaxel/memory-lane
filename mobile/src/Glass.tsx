@@ -4,8 +4,9 @@
  *
  *  Never a full sheet, and never glass on glass (docs/09-visual-design.md
  *  parts 8 and 13). `place` positions
- *  it, `style` is its shape. The glass is warmed with `frost`, so it reads as
- *  paper and not as cold white. A press squishes it and springs it back with
+ *  it, `style` is its shape. Untinted, with a hairline and a shadow so it
+ *  holds an edge on the cream map; `prominent`, the one primary, is gold
+ *  stained glass (docs/09 part 15). A press squishes it and springs it back with
  *  a little overshoot; it never dims: opacity on a glass view's parent stops
  *  the effect rendering.
  */
@@ -23,18 +24,28 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { color, floating, lift, radius, solid } from './theme';
+import { color, floating, glassEdge, glassLift, lift, radius, solid } from './theme';
 
 const GLASS = isLiquidGlassAvailable();
 
 type Props = Omit<PressableProps, 'style' | 'children'> & {
   place?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
+  /** The one primary action over the map: gold glass, so its label is paper. */
+  prominent?: boolean;
   children: ReactNode;
 };
 
-export function GlassButton({ place, style, children, onPressIn, onPressOut, ...press }: Props) {
-  const frost = solid(useColorScheme() === 'dark').frost;
+export function GlassButton({
+  place,
+  style,
+  prominent,
+  children,
+  onPressIn,
+  onPressOut,
+  ...press
+}: Props) {
+  const gold = solid(useColorScheme() === 'dark').goldGlass;
   const scale = useRef(new Animated.Value(1)).current;
   const to = (toValue: number, bounciness: number) =>
     Animated.spring(scale, { toValue, speed: 40, bounciness, useNativeDriver: true }).start();
@@ -51,13 +62,27 @@ export function GlassButton({ place, style, children, onPressIn, onPressOut, ...
         onPressOut?.(e);
       }}
     >
-      <Animated.View style={{ transform: [{ scale }] }}>
+      <Animated.View style={[glassLift, { transform: [{ scale }] }]}>
         {GLASS ? (
-          <GlassView style={style} glassEffectStyle="regular" tintColor={frost} isInteractive>
+          <GlassView
+            style={[style, glassEdge]}
+            glassEffectStyle="regular"
+            tintColor={prominent ? gold : undefined}
+            isInteractive
+          >
             {children}
           </GlassView>
         ) : (
-          <View style={[style, lift, { backgroundColor: color.paperRaised }]}>{children}</View>
+          <View
+            style={[
+              style,
+              glassEdge,
+              lift,
+              { backgroundColor: prominent ? color.gold : color.paperRaised },
+            ]}
+          >
+            {children}
+          </View>
         )}
       </Animated.View>
     </Pressable>

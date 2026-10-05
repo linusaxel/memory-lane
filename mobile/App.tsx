@@ -1838,13 +1838,14 @@ export default function App() {
                 <GlassButton
                   place={styles.grow}
                   style={styles.planWalk}
+                  prominent
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
                     setStage('preview');
                   }}
                   accessibilityRole="button"
                 >
-                  <Glyph name="figure.walk" size={20} weight="medium" color={color.gold} />
+                  <Glyph name="figure.walk" size={20} weight="medium" color={color.paper} />
                   <Text style={styles.planWalkLabel}>Plan a walk</Text>
                 </GlassButton>
               )}
@@ -2188,7 +2189,7 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   planWalkText: { ...buttonText, color: color.paper },
   planWalk: { ...pill, minHeight: 56 },
-  planWalkLabel: { ...buttonText, color: color.ink },
+  planWalkLabel: { ...buttonText, color: color.paper },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
   // Add on the home row, as tall as Plan a walk.
