@@ -92,3 +92,25 @@ def test_an_ocr_text_mends_its_line_break_hyphens():
         archive.mend(raw)
         == "mistænkte  ham  for  at  være  et  af  Struensees  Kreaturer, og  Gammeltorv\nLand-\n\nsknægte"
     )
+
+
+def test_categories_merge_once_longest_first_and_skip_the_ungeotagged(monkeypatch):
+    def page(title, length, geo=True):
+        return {"title": title, "length": length} | (
+            {"coordinates": [{"lat": 55.68, "lon": 12.58}]} if geo else {}
+        )
+
+    replies = {
+        "Category:Crime": [page("Shooting", 9000), page("Stub", 100)],
+        "Category:Riots": [
+            page("Ungdomshuset", 30000),
+            page("Shooting", 9000),
+            page("Nowhere", 50000, geo=False),
+        ],
+    }
+    monkeypatch.setattr(
+        wikipedia, "_api", lambda lang, p: {"query": {"pages": replies[p["gcmtitle"]]}}
+    )
+    found = wikipedia.categories("en", "Crime| Riots")
+    assert [f["title"] for f in found] == ["Ungdomshuset", "Shooting", "Stub"]
+    assert (found[0]["lat"], found[0]["lon"]) == (55.68, 12.58)

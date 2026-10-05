@@ -43,7 +43,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/runeberg.py` | Nordic public-domain books from Projekt Runeberg, same query shape: `<work key> <word>` |
 | `crawler/archive.py` | Public-domain books from the Internet Archive's OCR text, same query shape: `<item id> <word>` |
 | `crawler/plaques.py` | OSM plaques and inscribed memorials in a box, with the Wikipedia intro of their subject |
-| `crawler/wikipedia.py` | Wikipedia articles geotagged near a point (`<lang> <lat>,<lng> <metres>`), reference sections dropped; `article_text` for the others |
+| `crawler/wikipedia.py` | Wikipedia articles geotagged near a point (`<lang> <lat>,<lng> <metres>`) or in categories (`<lang> category:<A>|<B>`, longest first), reference sections dropped; `article_text` for the others |
 | `crawler/filming.py` | Films shot at a spot (Wikidata P915, cities left out), with the shoot paragraphs of the film's article |
 | `crawler/rss.py` | `press`: a feed's articles; `podcast`: episodes' `<podcast:transcript>`. Both forgotten once extracted |
 | `.claude/skills/find-sources/SKILL.md` | **How to find a source:** research, legal check, sample, screen, trial, decide |
