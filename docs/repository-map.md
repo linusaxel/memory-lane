@@ -143,7 +143,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/SlideToUnlock.tsx` | Slide to unlock: its own row over the bottom row while a memory is in reach, scrubbing the locket's hold |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
 | `mobile/src/MemoryMarker.tsx` | One pin: its locket, keyhole and all until opened, lit when it can be opened from here |
-| `mobile/src/AccountMenu.tsx` | You, top right: your photo, and a menu of your numbers, Edit profile and Settings |
+| `mobile/src/AccountMenu.tsx` | You, top right: your photo, and a menu of your numbers, Edit profile, Settings and Appearance |
+| `mobile/src/appearance.ts` | System, Light or Dark from the account menu, kept on the phone |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
@@ -182,6 +183,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification: the native wrapper, the pure region maths, the opt-in flag |
 | `mobile/src/theme.ts` | Every colour and typeface. Never a hex or font name anywhere else |
 | `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
+| `mobile/src/PlanWalkButton.tsx` | Plan a walk on home: the gold glass pill whose figure walks through its label before the planner opens |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen, and what the source button says |
 | `mobile/src/countUp.ts` | The values a journal number rolls through on its way up |

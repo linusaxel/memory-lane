@@ -24,7 +24,8 @@ python -m pipeline.sources set <id> active            # ingest now polls it
 
 Text sources (`crawler/sources.py`) take `--source <key> --query <q>`: books,
 old newspapers, Historisk Atlas, OSM plaques (`plaques`, a box), Wikipedia
-near a point or in a category (`wikipedia`), film locations (`filming`, a box), a press feed
+near a point or in a category (`wikipedia`), film locations (`filming`, a box), Stolpersteine (`stolpersteine`, a de.wikipedia
+list title), a page of back-issue PDFs (`pdfs`), a press feed
 (`press`) and a podcast feed with transcripts (`podcast`). How to find and
 trial a new one is the `find-sources` skill (`.claude/skills/find-sources/`).
 

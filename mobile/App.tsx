@@ -95,6 +95,7 @@ import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
+import { PlanWalkButton } from './src/PlanWalkButton.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
@@ -102,6 +103,7 @@ import { button, buttonText, color, dim, font, label, pill, solid } from './src/
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import AccountMenu from './src/AccountMenu.tsx';
+import { loadLook } from './src/appearance.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet, { TALL } from './src/MemorySheet.tsx';
 import Paywall from './src/Paywall.tsx';
@@ -221,6 +223,7 @@ export default function App() {
     until: null,
   });
   useEffect(() => {
+    loadLook();
     loadChoices().then((kept) => kept && setWalkAsk((ask) => ({ ...ask, ...kept })));
   }, []);
   const askWalk = useCallback((ask: WalkAsk) => {
@@ -1835,19 +1838,12 @@ export default function App() {
           {stage === 'map' && !journalOpen && !pastWalk && (
             <View style={styles.bottom}>
               {!slide && (
-                <GlassButton
+                <PlanWalkButton
                   place={styles.grow}
                   style={styles.planWalk}
-                  prominent
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setStage('preview');
-                  }}
-                  accessibilityRole="button"
-                >
-                  <Glyph name="figure.walk" size={20} weight="medium" color={color.paper} />
-                  <Text style={styles.planWalkLabel}>Plan a walk</Text>
-                </GlassButton>
+                  onPress={() => Haptics.selectionAsync().catch(() => {})}
+                  onWalkEnd={() => setStage('preview')}
+                />
               )}
               {addButton(styles.bigCircle)}
             </View>
@@ -2189,7 +2185,6 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   planWalkText: { ...buttonText, color: color.paper },
   planWalk: { ...pill, minHeight: 56 },
-  planWalkLabel: { ...buttonText, color: color.paper },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
   // Add on the home row, as tall as Plan a walk.

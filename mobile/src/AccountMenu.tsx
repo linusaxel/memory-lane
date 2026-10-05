@@ -1,13 +1,15 @@
 /** You, top right: your photo or initial in a glass circle, and under it a
  *  native menu. Your name, your numbers and Edit profile, then the board and
- *  Settings. */
+ *  Settings and Appearance. */
 
-import { Button, Host, Menu, RNHostView, Section } from '@expo/ui/swift-ui';
-import { accessibilityLabel, disabled } from '@expo/ui/swift-ui/modifiers';
+import { Button, Host, Menu, Picker, RNHostView, Section, Text } from '@expo/ui/swift-ui';
+import { accessibilityLabel, disabled, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { Profile } from './api.ts';
+import { type Look, look, setLook } from './appearance.ts';
 import Avatar from './Avatar.tsx';
 import { color, glassEdge, glassLift, lift } from './theme';
 
@@ -24,6 +26,7 @@ type Props = {
 };
 
 export default function AccountMenu({ profile, name, onEditProfile, onSettings, onBoard }: Props) {
+  const [chosen, choose] = useState<Look>(look);
   const numbers = [
     profile?.streak ? `${profile.streak}-day streak` : null,
     `${profile?.unlocked ?? 0} opened`,
@@ -53,6 +56,20 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings, 
         </Section>
         <Button label="Board" systemImage="list.number" onPress={onBoard} />
         <Button label="Settings" systemImage="gearshape" onPress={onSettings} />
+        <Picker
+          modifiers={[pickerStyle('menu')]}
+          label="Appearance"
+          systemImage="circle.lefthalf.filled"
+          selection={chosen}
+          onSelectionChange={(next: Look) => {
+            choose(next);
+            setLook(next);
+          }}
+        >
+          <Text modifiers={[tag('unspecified')]}>System</Text>
+          <Text modifiers={[tag('light')]}>Light</Text>
+          <Text modifiers={[tag('dark')]}>Dark</Text>
+        </Picker>
       </Menu>
     </Host>
   );

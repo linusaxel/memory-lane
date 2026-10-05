@@ -58,7 +58,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              glass circle, and under it a native menu (src/AccountMenu.tsx):
 │                              your name as its title, "3-day streak · 27 opened · 2 filed",
 │                              "Signed in with Apple" or "Not signed in", Edit profile, then
-│                              Settings (`gearshape`)
+│                              Settings (`gearshape`), Appearance (System, Light, Dark;
+│                              src/appearance.ts, kept on the phone)
 ├─ Journal                    top left, a 44pt glass circle, the planner and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
@@ -207,6 +208,7 @@ with no network is never stopped at the gate.
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12); with another `icon`, the walk card's skip and a story's ⋯ |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
+| `src/PlanWalkButton.tsx` | Plan a walk: the figure walks through its label, then the planner opens (0.9 s) |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
@@ -228,6 +230,9 @@ scope keeps working and no component needs a hook or a context. It is iOS-only �
 **Android takes the light value** until somebody does the theme-context
 refactor. That is a real gap, not a shrug; it is just not worth eleven files
 while the app is iOS-first.
+
+The menu's Appearance (src/appearance.ts) overrides the system with
+`Appearance.setColorScheme`, which every `dual()` and `useColorScheme()` follows.
 
 Two traps, both hit:
 
@@ -338,7 +343,9 @@ contrast; not the memory sheet's peek, whose parent animates opacity
 Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
 or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. Plan a walk is the one
 tinted control, `prominent`: gold stained glass (`solid().goldGlass`) with a
-paper label; Turn on location is `button.solid`. The walk card is
+paper label. A tap walks its figure through the label, the letters
+parting, and the planner opens as he arrives, 0.9 s
+(`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. Turn on location is `button.solid`. The walk card is
 untinted: the next stop's pin is the gold on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,

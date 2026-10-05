@@ -78,6 +78,8 @@ locators and evidence.
 | Plaques, memorials | `plaques` | `plaques:<s,w,n,e>` | Already names its spot; exact pin |
 | Film and TV shot here | `filming` | `filming:<s,w,n,e>` | Wikidata P915 to a spot, not a city |
 | Wikipedia places | `wikipedia` | `wikipedia:<lang> <lat>,<lng> <metres>` or `wikipedia:<lang> category:<A>|<B>` | History sections with incidents; categories beat a radius, which drags in stubs and the citywide article |
+| Stolpersteine | `stolpersteine` | `stolpersteine:<de.wikipedia list title>` | One record per door; the geocoder places the address |
+| Back issues as PDFs | `pdfs` | `pdfs:<index page url> [<from year>]` | A paper or society that links its issues; read for stories, not ads and listings |
 | Press feed | `press` | `press:<feed url>` | Only with the outlet's agreement: every Copenhagen outlet reserves TDM (§11b) |
 | Podcast feed | `podcast` | `podcast:<feed url>` | Items carry `<podcast:transcript>` (no Copenhagen show did, 2026-10-04); no audio is transcribed |
 | Public-domain book | `gutenberg`, `runeberg` | `gutenberg:<id> <word>`, `runeberg:<key> <word>` | Memoir of a city life, author dead 70+ years |
