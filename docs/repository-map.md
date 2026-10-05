@@ -46,6 +46,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/filming.py` | Films shot at a spot (Wikidata P915, cities left out), with the shoot paragraphs of the film's article |
 | `crawler/rss.py` | `press`: a feed's articles; `podcast`: episodes' `<podcast:transcript>`. Both forgotten once extracted |
 | `.claude/skills/find-sources/SKILL.md` | **How to find a source:** research, legal check, sample, screen, trial, decide |
+| `.claude/skills/make-memories/SKILL.md` | **How to resume making memories:** progress to 1,000, pick a source, ask, batch, check, log |
 | `pipeline/ingest.py` | Polls the `active` channels in `sources` into `content`; `--video <url> --to <id>` adds one; `--source <name> --query <q>` runs a text source |
 | `pipeline/sources.py` | **The source funnel:** `list` (yield per source), `discover` (YouTube search over Copenhagen), `screen` (Haiku only), `set`, `add` |
 | `pipeline/geocode.py` | **Places what the model names:** Photon, Wikidata behind one guard, `place()` |

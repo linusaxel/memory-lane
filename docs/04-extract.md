@@ -736,3 +736,12 @@ for null. `extract.sure` drops a note that hedges.
 - WHO: Use names ("Mark and Joe" not "the hosts")
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps
 - THE VIBE: Emotions, humor, what made it memorable
+
+### Road to 1,000 (Copenhagen)
+
+The goal is 1,000 good memories in the launch bbox. Good means visible and
+`walk_score >= 7`. `.claude/skills/make-memories` runs one source per pass and
+adds a line here. Started 2026-10-05 at 74 good out of 169 visible.
+
+| Date | Source | Items | Memories | Good | Mean score | $ |
+|---|---|---|---|---|---|---|
