@@ -23,7 +23,8 @@ the app. Don't search the open web for free recent stories again.
 | Era | Where it is | State |
 |---|---|---|
 | 2010s-now | Wikidata events in the bbox with P585 ≥ 2010: about 10 (Hotel Jørgensen 2010, the 2015 shootings, Field's 2022, Børsen 2024). Mostly grim, so they fail "glad to know" | Not worth a source |
-| 2010s-now | YouTube channels with permission (Københavnerliv covers this era and is exhausted; Københavnerglimt has nothing new) | Researching permission targets |
+| 2010s-now | Nonprofit local papers as PDFs, with no TDM reservation: Bryggebladet (redaktion@bryggebladet.dk, about 21 issues a year 2003-26), Christianshavneren (christianshavneren@beboerhus.dk, 2011-17 plus web), Havnefronten (red@havne-fronten.dk, since 2020, mostly openings) | Best 2010s bet: text, and a likely yes. Ask first |
+| 2010s-now | Bar stories: VLTV's *De Brune Værtshuse* on YouTube (vltv@hotmail.com, auto-captions); the podcasts *Sidste Omgang* (86 episodes, one bar each, Instagram @sidste.omgang) and *Barvox* (info@barvox.com); the book *Stamsteder* (220 pubs, 2021, print only) | Permission needed. The podcasts have no transcripts and we transcribe no audio, so VLTV is the only one usable as built |
 | 1950-2000 | Local-history society yearbooks: Nørrebro (24 PDFs 2000-23, about 80-100 good), Sydhavnen (26 articles), SLAK for the other 8 | Email drafted in `docs/permission-request.md`, not sent |
 | 1940-45 | Stolpersteine, `stolpersteine:Liste der Stolpersteine im Großraum Kopenhagen` (source 246, 46 addresses) | Ingested, not screened |
 | 1860-1919 | Public-domain memoirs: Gottschalksen `archive:engladmusikantsd00gott` (densest), Bang `runeberg:bang/6 København`, Grandjean `archive:spredtemindergen00gran`, Egan `gutenberg:36412 Copenhagen` | Not registered |
@@ -44,6 +45,16 @@ the app. Don't search the open web for free recent stories again.
 - **No Copenhagen memoir as free text:** Nexø's *Erindringer*, Pontoppidan,
   Michaëlis, J.V. Jensen, Wied, Drachmann and Aakjær. Thit Jensen and
   Johannes Jørgensen are still in copyright.
+- **District weeklies** (Vesterbro Bladet, Østerbro Avis, Valby Bladet,
+  Amager Bladet/amagerliv, City Avisen) are Jysk Fynske Medier.
+  lokalavisen.dk redirects to dinavis.dk, which reserves TDM and blocks
+  anthropic-ai. They're closed, as the press row says.
+- **Collections that turned out to be pre-2010 or not stories:** Københavns
+  Museum's and Københavns Biblioteker's podcasts (older history), *Gang i
+  gaden* (centuries ago, retold), the corona collections (objects, or for
+  researchers only), and Kanal København (shut 2009).
+- **Unchecked:** Copenhagen history accounts on Instagram, which search
+  doesn't index. Look by hand.
 - **Local-history websites with no stories to read:** chrarkiv.dk (photos),
   Islands Brygge (books for sale), Kend Din By (film), erindringer.dk (dead).
 
