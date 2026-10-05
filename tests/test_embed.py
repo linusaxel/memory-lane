@@ -80,9 +80,9 @@ def test_an_out_of_range_parameter_is_refused(query):
 
 
 def test_config_reaches_the_page_as_json_not_as_string_interpolation():
-    body = client.get("/embed?lat=55.6&lng=12.5&layer=friend").text
+    body = client.get("/embed?lat=55.6&lng=12.5&layer=stranger").text
     cfg = json.loads(body.split("var CFG = ")[1].split(";\n")[0])
-    assert cfg["layer"] == "friend"
+    assert cfg["layer"] == "stranger"
     assert cfg["lat"] == 55.6
 
 

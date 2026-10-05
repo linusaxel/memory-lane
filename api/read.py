@@ -31,7 +31,6 @@ from api.models import (
     ROUTE_BUDGET_MIN_METERS,
     YEAR_MAX,
     YEAR_MIN,
-    AuthoredRouteResponse,
     Coordinates,
     DeviceRequest,
     Hotspot,
@@ -56,8 +55,6 @@ from api.models import (
     WalkedRoute,
 )
 from api.queries import (
-    AUTHORED_ROUTE_QUERY,
-    AUTHORED_ROUTE_STOPS_QUERY,
     COUNT_QUERY,
     COUNT_WITH_TAGS_QUERY,
     DEVICE_UNLOCKS_QUERY,
@@ -99,7 +96,7 @@ def get_nearby_memories(
     tags: str | None = Query(None, description="Comma-separated tags to filter"),
     layer: str | None = Query(
         None,
-        pattern="^(historical|friend|stranger)$",
+        pattern="^(historical|stranger)$",
         description="Restrict to one content layer. Omit for all.",
     ),
     min_confidence: str = Query(
@@ -581,23 +578,6 @@ def get_walked_routes(
         )
 
     return WalkedResponse(walks=[walked(w) for w in walks])
-
-
-# After /today, /preview and /walked, which would otherwise read as an id.
-@router.get("/v1/routes/{route_id}", response_model=AuthoredRouteResponse)
-def get_authored_route(route_id: int):
-    """An authored walk, or 404 while it is a draft."""
-    with get_session() as session:
-        route = session.execute(text(AUTHORED_ROUTE_QUERY), {"route_id": route_id}).fetchone()
-        if route is None:
-            raise HTTPException(status_code=404, detail="No such route")
-        rows = session.execute(text(AUTHORED_ROUTE_STOPS_QUERY), {"route_id": route_id}).fetchall()
-    return AuthoredRouteResponse(
-        id=route.id,
-        title=route.title,
-        loop=route.is_loop,
-        memories=[row_to_memory(r) for r in rows],
-    )
 
 
 @router.get("/v1/me/memories", response_model=MyMemoriesResponse)

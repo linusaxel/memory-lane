@@ -1,6 +1,6 @@
-"""The three content layers, event dates, attribution and contrast scores.
+"""The content layers, event dates, attribution and contrast scores.
 
-The product is historical / friend / stranger content ranked by contrast rather
+The product is historical / stranger content ranked by contrast rather
 than distance. None of that had anywhere to live: memories could say where a
 story sits in a video but not when the thing happened, carried no attribution of
 its own, and had no score to order by.
@@ -70,12 +70,12 @@ def test_a_memory_defaults_to_the_historical_layer(db_session):
     assert layer == "historical"
 
 
-@pytest.mark.parametrize("layer", ["historical", "friend", "stranger"])
-def test_the_three_layers_are_accepted(db_session, layer):
+@pytest.mark.parametrize("layer", ["historical", "stranger"])
+def test_the_layers_are_accepted(db_session, layer):
     assert _insert_memory(db_session, layer=layer)
 
 
-def test_a_layer_outside_the_three_is_rejected(db_session):
+def test_a_layer_outside_the_set_is_rejected(db_session):
     """Not merely unused - an unknown layer would escape the rendering rules."""
     with pytest.raises(Exception, match="memories_layer_check"):
         _insert_memory(db_session, layer="public")

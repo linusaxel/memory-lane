@@ -302,14 +302,6 @@ class WalkedResponse(BaseModel):
     walks: list[WalkedRoute]
 
 
-class AuthoredRouteResponse(BaseModel):
-    id: int
-    title: str
-    loop: bool
-    # In walking order, locked like today's stops: nobody is standing anywhere.
-    memories: list[Memory]
-
-
 class MyMemoriesMeta(BaseModel):
     total: int
     limit: int

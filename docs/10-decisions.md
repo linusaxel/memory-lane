@@ -297,10 +297,9 @@ route and geofence exclusions, the sealed card, and the 423 on edit are all
 gone. The founder chose to ship it this way for now. The proximity gate
 stands, and it is the only lock.
 
-`memories.opens_at` stays in the schema with nothing reading or writing it.
-Dropping it would mean rewriting migration 009, which the migration-replay test
-replays on its own. A memory sealed before the removal now reads like any
-other.
+A memory sealed before the removal now reads like any other. `memories.opens_at`
+stayed in the schema with nothing reading it until 044 dropped it
+(**Superseded 2026-10-05** by *The schema keeps only what is read*).
 
 **Options considered:** Hiding the "Who can read it" field and keeping the
 server half. That leaves a gate branch nothing can reach and a feature the docs
@@ -806,9 +805,9 @@ run is one choice: three locked memories near you, and the one you pick opens
 from wherever you are. Every one after it opens where it happened.
 
 - **One, once, from anywhere.** `WELCOME_UNLOCKS` (`api/models.py`), counted
-  on `users.free_used` for the life of the account. `free_day` is no longer
-  read; it stays in the schema because migrations replay on top of it. The
-  unlock takes no position for it.
+  on `users.free_used` for the life of the account (both columns dropped in
+  044, **Superseded 2026-10-05** by *The schema keeps only what is read*).
+  The unlock takes no position for it.
 - **Standing there, steps first.** A subscriber pays nothing; anyone else
   spends 1,000 steps, then the welcome one (a new account standing on a pin
   has no steps yet), then 403 `no_steps`. The old order spent the free one
@@ -2913,8 +2912,10 @@ Status: Accepted
   Rank by the gap between the memory and what is there now, not by fame.
 - **Screenshot-native cards** are the only distribution channel geo-gated
   content has. Place name and attribution visible, readable at thumbnail size.
-- **Layer separation.** Friend content is intimate and ephemeral, historical is
-  public and permanent. Never equal weight in one feed; friend comes first.
+- **Layer separation.** A person's memory (`stranger`) and the archive
+  (`historical`) are never at equal weight in one feed; the person's comes
+  first. The `friend` layer was dropped in 044 with no writer (**Superseded
+  2026-10-05** by *The schema keeps only what is read*).
 - **Density over coverage.** One neighborhood before a second.
 - **Never re-extract.** Extraction is a one-time, cached cost per place, with a
   hard cap on user-submitted ingestion.
@@ -3655,6 +3656,28 @@ the size it is read at, so the viewfinder is that block. It is also where
 
 **Options considered:** the system camera (leaves the page); a full-screen
 `CameraView` with the shot flying into place (chrome for one tap).
+
+### The schema keeps only what is read
+
+Status: Accepted (2026-10-05)
+
+A column, table or enum value that nothing reads goes, in a migration that
+drops it (044). The migration that added it loses its ADD and keeps a line
+saying which migration drops it, as 037 did for `users.keys`. Without that,
+the replay test re-runs the old ADD on top of `schema.sql` and puts the
+column back. Gone in 044: `users.free_day` and `free_used` (the welcome
+unlock), `memories.opens_at` (the time capsule), `routes` and `route_stops`
+with `GET /v1/routes/{id}` (authored walks that nothing wrote and the app
+never called), and the `friend` layer, which had no writer. Authored walks
+come back as a migration when something writes one.
+
+`key_purchases` stays until production is checked: it is billing history, and
+the dev database cannot say whether the live one has rows.
+
+**Options considered:** keeping them "for later" (the schema then describes a
+product that does not exist, and every reader has to learn that it does not);
+dropping a column but leaving its ADD in the old migration (the replay test
+fails, correctly).
 
 ### Rejected approaches, do not retry
 

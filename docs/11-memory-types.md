@@ -39,13 +39,12 @@ it belongs to.
 
 ## Layer: what kind of memory this is
 
-`memories.layer` is a `VARCHAR(20)` closed by a `CHECK` constraint to three
-values (`db/schema.sql:96-102`):
+`memories.layer` is a `VARCHAR(20)` closed by a `CHECK` constraint to two
+values (`db/schema.sql`, `memories.layer`):
 
-> *"Which of the three content layers this belongs to. The layers render
-> differently and must never appear at equal weight in one feed: friend
-> memories are intimate and ephemeral, historical cards public and
-> permanent."*
+> *"Which content layer this belongs to: historical is what the pipeline
+> extracted, stranger what a person filed. They render differently and
+> must never appear at equal weight in one feed."*
 
 - **`historical`** — everything the pipeline extracted from a video or
   archival transcript. `pipeline/extract.py`'s `layer_for()` (lines 401–404)
@@ -58,11 +57,8 @@ values (`db/schema.sql:96-102`):
   there is no code path that lets a client choose a different layer for its
   own submission. Always has an author, never a `content_id`, and is always
   gated (see below) because it was filed by someone standing exactly there.
-- **`friend`** — reserved in the schema and nowhere else. No pipeline path
-  writes it, no submission path writes it, and no migration has ever
-  inserted a row with it. It exists as a designed-but-unbuilt third tier —
-  "intimate and ephemeral" content from people you actually know, as opposed
-  to a stranger's public post.
+- **`friend`** was a reserved third value with no writer. Migration 044
+  dropped it (docs/10, *The schema keeps only what is read*).
 
 Layer is not chosen by a filter or a segmented control. F4
 (`docs/08-ux-flows.md`) explains why: every layer is drawn at once, as the

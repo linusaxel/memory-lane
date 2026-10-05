@@ -15,4 +15,4 @@
 --   docker compose exec -T db psql -U memorylane -d memorylane -v ON_ERROR_STOP=1 \
 --     < db/migrations/009_time_locked.sql
 
-ALTER TABLE memories ADD COLUMN IF NOT EXISTS opens_at DATE;
+-- memories.opens_at was added here; 044_schema_cleanup.sql drops it again.

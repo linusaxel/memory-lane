@@ -53,7 +53,7 @@ export type MediaItem = {
 };
 
 /** Fixed by a CHECK constraint in db/migrations/002_layers.sql. */
-export type Layer = 'historical' | 'friend' | 'stranger';
+export type Layer = 'historical' | 'stranger';
 
 export type SummaryLink = { text: string; url: string };
 
@@ -75,7 +75,7 @@ export type Memory = {
   confidence: string;
   /** What kind of memory this is, and so what shape its pin takes. `historical`
    *  is everything the pipeline extracted, `stranger` everything filed from a
-   *  phone. `friend` has no writer yet. See F4 in docs/08-ux-flows.md. */
+   *  phone. See F4 in docs/08-ux-flows.md. */
   layer: Layer;
   /** The locket its pin and unlock are drawn as, chosen by its author. Set on
    *  a locked memory too (lockets.ts). */

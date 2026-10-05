@@ -734,9 +734,8 @@ theirs to change.
 Removed 2026-09-26: every memory is public. Anyone standing at a memory can
 read it, and no memory can be held back until a date, not even by its author.
 The "Who can read it" field is gone from the submit sheet, and the API no
-longer accepts or returns `opens_at`. The `memories.opens_at` column is still
-there, but nothing reads or writes it, so a memory sealed before the removal
-is now ordinary. For the reasoning, see docs/10, *Every memory is public*.
+longer accepts or returns `opens_at`. Migration 044 dropped the column, so a
+memory sealed before the removal is now ordinary. For the reasoning, see docs/10, *Every memory is public*.
 
 ---
 
@@ -1166,7 +1165,7 @@ The core of the product brief: stand in a Copenhagen street, learn what
 happened there. Blocked on choosing the historical source, and on deciding
 whether it is a separate map layer, a filter, or a second pin style.
 
-### F4 · Switch between historical, friend and stranger layers — **Answered: all at once, told apart in the sheet**
+### F4 · Switch between historical and stranger layers — **Answered: all at once, told apart in the sheet**
 
 Not a segmented control and not a filter sheet. Layers are drawn at once, as
 the same pin, and the sheet says which kind a memory is — a source to watch, or
@@ -1187,7 +1186,7 @@ made sense, and a mixed stack could not honestly wear either shape anyway.
 the feed underneath was still flat: `/v1/memories/nearby` ordered by contrast
 alone, so a well-scored podcast anecdote sorted ahead of a note somebody left
 standing at the same point. `LAYER_ORDER` in `api/queries.py` now leads the
-ORDER BY — friend, then stranger, then historical — ahead of contrast, and the
+ORDER BY — stranger, then historical — ahead of contrast, and the
 sheet pager inherits it because the pager is the API's order.
 
 Ahead of contrast rather than beside it, because *never at equal weight* is a

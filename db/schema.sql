@@ -130,11 +130,8 @@ CREATE TABLE users (
     -- Shown on the city board by display name. Off leaves the board.
     on_board BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- free_day and free_used are unread, from the welcome unlock. XP is
-    -- counted from walks, not stored (api/progression.py). Steps are a lifetime total and a watermark, never a day's count, and buy
-    -- nothing. free_day is unread since the free ones stopped being a day's.
-    free_day DATE,
-    free_used INTEGER NOT NULL DEFAULT 0,
+    -- XP is counted from walks, not stored (api/progression.py). Steps are a
+    -- lifetime total and a watermark, never a day's count, and buy nothing.
     steps INTEGER NOT NULL DEFAULT 0,
     steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -192,13 +189,13 @@ CREATE TABLE memories (
     extraction_confidence VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    -- Which of the three content layers this belongs to. The layers render
-    -- differently and must never appear at equal weight in one feed: friend
-    -- memories are intimate and ephemeral, historical cards public and
-    -- permanent. CHECKed because the set is closed and the product rules
-    -- depend on it; a typo here silently hides content.
+    -- Which content layer this belongs to: historical is what the pipeline
+    -- extracted, stranger what a person filed. They render differently and
+    -- must never appear at equal weight in one feed. CHECKed because the set
+    -- is closed and the product rules depend on it; a typo here silently
+    -- hides content.
     layer VARCHAR(20) NOT NULL DEFAULT 'historical'
-        CHECK (layer IN ('historical', 'friend', 'stranger')),
+        CHECK (layer IN ('historical', 'stranger')),
 
     -- WHEN it happened, as opposed to timestamp_start, which is where it sits
     -- in a video. A 1978 gig needs somewhere to record 1978. Null when the
@@ -230,11 +227,6 @@ CREATE TABLE memories (
     -- One line in the teller's own words, checked against the source.
     quote TEXT,
     quote_by TEXT,
-
-    -- Unused since 2026-09-26: the time capsule was removed and every memory
-    -- is public (docs/10, "Every memory is public"). Kept so migration 009
-    -- still replays against this schema.
-    opens_at DATE,
 
     -- Who filed it, when a person did. Null for everything extracted.
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -345,6 +337,8 @@ CREATE TABLE daily_routes (
 );
 CREATE UNIQUE INDEX daily_routes_in_progress
     ON daily_routes (device_id, route_date) WHERE ended_at IS NULL;
+-- The partial index above serves no ended walk; this serves the rest. See 044.
+CREATE INDEX idx_daily_routes_device ON daily_routes (device_id, route_date);
 
 -- Who has paid, and until when: on the account, so every device of it is
 -- covered. See db/migrations/028_subscriptions.sql.
@@ -360,25 +354,6 @@ CREATE TABLE key_purchases (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     keys INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- An authored walk, served by GET /v1/routes/{id} once published. A join
--- table here, unlike daily_routes: it is long-lived, ordered and edited. See
--- db/migrations/023_authored_routes.sql.
-CREATE TABLE routes (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    status VARCHAR(10) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
-    is_loop BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE route_stops (
-    route_id INTEGER NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
-    position INTEGER NOT NULL,
-    memory_id INTEGER NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
-    PRIMARY KEY (route_id, position),
-    UNIQUE (route_id, memory_id)
 );
 
 -- A photo or a recording attached to a submitted memory. A memory of a place is
@@ -455,6 +430,7 @@ CREATE UNIQUE INDEX idx_places_venue_locality
     WHERE venue IS NOT NULL AND locality IS NOT NULL;
 CREATE INDEX idx_places_geocode_status ON places(geocode_status);
 CREATE INDEX idx_content_platform ON content(platform);
+CREATE INDEX idx_content_platform_id ON content(platform_id);
 CREATE INDEX idx_content_pending_transcript ON content(transcript_fetched) WHERE transcript_fetched = FALSE AND transcript_failed = FALSE;
 CREATE INDEX idx_content_pending_extraction ON content(memories_extracted) WHERE memories_extracted = FALSE AND extraction_failed = FALSE AND transcript_fetched = TRUE;
 

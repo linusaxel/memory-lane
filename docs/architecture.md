@@ -102,7 +102,6 @@ One database, two writers. Nothing else writes to it.
 |--------|--------|
 | Pipeline | `sources`, `content`, `transcripts`, `extraction_chunks`, `classifier_verdicts`, `places`, `memories` (extracted), `memory_reviews` |
 | API | `devices`, `users`, `identities`, `unlocks`, `memory_hearts`, `daily_routes`, `places` + `memories` (submitted), `media`, `reports` |
-| Only SQL, for now | `routes`, `route_stops` (authored walks) |
 
 `pipeline/seed_dev.py` and `pipeline/sweep.py` also write the API's tables. They
 are dev and maintenance tools, not a third writer. What each table holds is in

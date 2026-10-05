@@ -155,7 +155,7 @@ def embed_page(
     lng: float = Query(12.5655, ge=-180, le=180),
     radius_km: float = Query(2, ge=0.1, le=100),
     zoom: int = Query(14, ge=1, le=20),
-    layer: str | None = Query(None, pattern="^(historical|friend|stranger)$"),
+    layer: str | None = Query(None, pattern="^(historical|stranger)$"),
 ):
     """The iframe body. Defaults to Copenhagen, which is the launch city.
 

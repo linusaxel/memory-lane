@@ -118,18 +118,16 @@ def test_unscored_memories_sort_below_scored_ones(client, db_session):
 
 
 def test_a_person_who_was_here_outranks_the_archive(client, db_session):
-    """The core rule: friend, then stranger, then historical, and layer wins
-    over contrast. One point holding a note somebody left and a well-scored
+    """The core rule: stranger, then historical, and layer wins over contrast. One point holding a note somebody left and a well-scored
     podcast anecdote is one feed, and the note must not be page three of it."""
     place = _place(db_session, "Vega", LAT, LNG)
     content = _content(db_session, "https://example.invalid/eeeeeeeeeee")
     _memory(db_session, place, content, "a jazz club, now a bank", contrast_score=0.95)
     _memory(db_session, place, content, "we queued here in the rain", layer="stranger")
-    _memory(db_session, place, content, "her flat was upstairs", layer="friend")
     db_session.commit()
 
     body = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()
-    assert [mem["layer"] for mem in body["memories"]] == ["friend", "stranger", "historical"]
+    assert [mem["layer"] for mem in body["memories"]] == ["stranger", "historical"]
 
 
 def test_within_a_layer_contrast_still_decides(client, db_session):
@@ -157,11 +155,11 @@ def test_a_layer_filter_returns_only_that_layer(client, db_session):
     place = _place(db_session, "Vega", LAT, LNG)
     content = _content(db_session, "https://example.invalid/ddddddddddd")
     _memory(db_session, place, content, "public and permanent", layer="historical")
-    _memory(db_session, place, content, "intimate and ephemeral", layer="friend")
+    _memory(db_session, place, content, "somebody stood here", layer="stranger")
     db_session.commit()
 
-    only = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&layer=friend").json()
-    assert [mem["summary"] for mem in only["memories"]] == ["intimate and ephemeral"]
+    only = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&layer=stranger").json()
+    assert [mem["summary"] for mem in only["memories"]] == ["somebody stood here"]
     assert only["meta"]["total"] == 1, "total must respect the layer filter too"
 
     everything = client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}").json()
@@ -231,7 +229,7 @@ def test_a_year_only_date_is_not_an_anniversary(client, db_session):
 
 
 def test_an_unknown_layer_is_rejected_not_silently_ignored(client):
-    """A typo must not quietly return friend memories to everyone."""
+    """A typo must not quietly return every layer to everyone."""
     assert client.get(f"/v1/memories/nearby?lat={LAT}&lng={LNG}&layer=public").status_code == 422
 
 

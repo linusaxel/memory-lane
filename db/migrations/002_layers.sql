@@ -33,7 +33,7 @@ ALTER TABLE memories
 -- the set open. Dropping first makes the whole file re-runnable.
 ALTER TABLE memories DROP CONSTRAINT IF EXISTS memories_layer_check;
 ALTER TABLE memories ADD CONSTRAINT memories_layer_check
-    CHECK (layer IN ('historical', 'friend', 'stranger'));
+    CHECK (layer IN ('historical', 'stranger'));
 
 ALTER TABLE memories DROP CONSTRAINT IF EXISTS memories_happened_precision_check;
 ALTER TABLE memories ADD CONSTRAINT memories_happened_precision_check

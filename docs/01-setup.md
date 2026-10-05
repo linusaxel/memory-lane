@@ -96,8 +96,6 @@ Who writes which is in [architecture.md](architecture.md#data-ownership).
 | `unlocks` | `(device, memory)` — who has earned what |
 | `memory_hearts` | `(device, memory)` — one heart each, never taken back |
 | `daily_routes` | Today's accepted walk per device, stops as an array |
-| `routes` | An authored walk: title, draft\|published, loop |
-| `route_stops` | `(route, position, memory)`. `daily_routes` keeps its array |
 | `media` | Photos and recordings attached to a submitted memory |
 | `reports` | `(memory, device)` — what makes public submissions defensible |
 

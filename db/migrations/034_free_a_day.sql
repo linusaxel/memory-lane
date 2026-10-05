@@ -6,5 +6,5 @@
 --     < db/migrations/034_free_a_day.sql
 
 ALTER TABLE users DROP COLUMN IF EXISTS free_unlocks;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS free_day DATE;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS free_used INTEGER NOT NULL DEFAULT 0;
+-- users.free_day and free_used were added here; 044_schema_cleanup.sql drops
+-- them again.

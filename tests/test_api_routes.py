@@ -391,40 +391,6 @@ def test_a_long_ask_is_not_traded_for_a_short_walk_that_retraces_less(
     assert walked >= route_solver.ROUTE_FILL * 10000, f"a 10km ask walked {walked:.0f}m"
 
 
-def _authored(session, memory_ids, status="published"):
-    route_id = session.execute(
-        text("INSERT INTO routes (title, status) VALUES ('A walk', :s) RETURNING id"),
-        {"s": status},
-    ).scalar()
-    for position, memory_id in enumerate(memory_ids):
-        session.execute(
-            text("INSERT INTO route_stops (route_id, position, memory_id) VALUES (:r, :p, :m)"),
-            {"r": route_id, "p": position, "m": memory_id},
-        )
-    return route_id
-
-
-def test_an_authored_route_serves_its_stops_in_order_locked_and_without_hidden_ones(
-    client, db_session
-):
-    first, hidden, last = _offset(db_session, 3), _offset(db_session, 2), _offset(db_session, 1)
-    db_session.execute(text("UPDATE memories SET hidden = TRUE WHERE id = :m"), {"m": hidden})
-    route_id = _authored(db_session, [first, hidden, last])
-    db_session.commit()
-
-    route = client.get(f"/v1/routes/{route_id}").json()
-    assert [m["id"] for m in route["memories"]] == [first, last]
-    assert all(m["locked"] and m["summary"] == "" for m in route["memories"])
-
-
-def test_a_draft_route_is_not_served(client, db_session):
-    route_id = _authored(db_session, [_offset(db_session, 1)], status="draft")
-    db_session.commit()
-
-    assert client.get(f"/v1/routes/{route_id}").status_code == 404
-    assert client.get(f"/v1/routes/{route_id + 1}").status_code == 404
-
-
 def test_a_stop_hidden_after_the_accept_drops_out_of_todays_walk(client, db_session):
     _offset(db_session, 1)
     _offset(db_session, 2)

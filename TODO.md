@@ -398,15 +398,11 @@ progress; refine what exists rather than add.
       spur cleanup re-solving once per stop; retracing fell 21% → 13% with
       0e136e2. Speed bought with spurs is a founder's call: measure with
       `route_bench`.
-- [ ] **Authored walks: the rest of `routes` + `route_stops`.** (checked
-      2026-10-04) Migration 023 and `GET /v1/routes/{id}` exist, published
-      only, kept to `title, status, is_loop`. No author, theme, source, budget
-      or geometry until something writes a route (the job below, or an
-      editor). `daily_routes.route_id` waits for the app to walk one.
 - [ ] **Generated themed routes, reviewed before publishing.** (checked
       2026-10-04) An offline job: for each hotspot cluster × each tag, solve
       from the centroid, write `status='draft'`, accept or reject in the style
-      of `pipeline/review.py`. Waits on one area with ≥3 tags of ≥5 walkable
+      of `pipeline/review.py`. `routes` went in 044 for want of a writer, so
+      this brings the table back with its first draft. Waits on one area with ≥3 tags of ≥5 walkable
       stops: `python -m pipeline.themed_routes` says which. None yet outside
       the dev seed.
 
