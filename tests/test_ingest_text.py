@@ -98,3 +98,12 @@ def test_the_synthetic_fixture_loads_and_is_labelled(ingest_into, db_session):
         data["records"], source_name=data["source_name"], source_type=data["source_type"]
     )
     assert result["inserted"] == 3
+
+
+def test_a_story_across_a_chunk_boundary_is_whole_in_one_chunk():
+    """The overlap is repeated text: a line in the 30 s before a boundary
+    opens the next chunk as well as closing this one."""
+    segments = [{"start": t, "text": f"line {t}"} for t in range(0, 600, 10)]
+    first, second, *_ = chunk_transcript(segments, chunk_minutes=4, overlap_seconds=30)
+    assert "[230.0] line 230" in first and "[230.0] line 230" in second
+    assert "[200.0] line 200" not in second

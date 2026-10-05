@@ -21,6 +21,7 @@ from pipeline.extract import (
     BillingError,
     ModelUnusableError,
     TransientAPIError,
+    _thinking,
     check_all,
     chunk_transcript,
     extract_chunk_stored,
@@ -114,6 +115,8 @@ def classify_chunk(
             model=CLASSIFIER_MODEL,
             max_tokens=300,
             messages=[{"role": "user", "content": f"{prompt}\n\nTranscript:\n{chunk}"}],
+            # Sonnet thinks by default, and 300 tokens of thinking is a cut reply.
+            **_thinking(False, CLASSIFIER_MODEL),
             output_config={"format": {"type": "json_schema", "schema": CLASSIFIER_SCHEMA}},
         )
         log_cache(response)

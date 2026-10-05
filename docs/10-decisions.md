@@ -3656,6 +3656,24 @@ pass reads them back and gets one stage further.
 of calls waits minutes each); rewriting the RQ tasks around batches (a second
 orchestration to keep in step with the first).
 
+### Chunks overlap, and the cache lasts an hour
+
+Status: Accepted 2026-10-05
+
+- **The overlap is repeated text.** `chunk_transcript` moved the next window's
+  start back 30 s but never carried those lines over, so no text was ever in
+  two chunks, and a story told across a boundary was cut in half. The last
+  30 s of a chunk now opens the next one too. A story told whole in both is
+  folded by `merge_nearby_memories`.
+- **Both cache breakpoints use the 1-hour TTL.** A batch can take longer than
+  the default five minutes, and several workers start a video's chunks
+  together. An hour's write costs 2x input instead of 1.25x, which comes to
+  well under a cent a video. It pays for itself from the third read.
+- **The classifier can run on Sonnet.** Haiku 4.5 retires "not sooner than
+  2026-10-15". `classify_chunk` now goes through `_thinking`, so
+  `CLASSIFIER_MODEL=claude-sonnet-5-5` sends no thinking ahead of its
+  300-token verdict.
+
 ### Wikipedia previews inline
 
 Status: Accepted 2026-10-04

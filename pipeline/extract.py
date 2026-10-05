@@ -492,7 +492,7 @@ def chunk_transcript(
 
     chunk_seconds = chunk_minutes * 60
     chunks = []
-    current_chunk_lines = []
+    current = []  # (start, line)
     chunk_start_time = 0
 
     for seg in segments:
@@ -502,15 +502,17 @@ def chunk_transcript(
             continue
 
         if start >= chunk_start_time + chunk_seconds:
-            if current_chunk_lines:
-                chunks.append("\n".join(current_chunk_lines))
+            if current:
+                chunks.append("\n".join(line for _, line in current))
             chunk_start_time = start - overlap_seconds
-            current_chunk_lines = []
+            # The overlap is repeated text, so a story told across a boundary
+            # is whole in one chunk; merge_nearby_memories folds the retelling.
+            current = [(s, line) for s, line in current if s >= chunk_start_time]
 
-        current_chunk_lines.append(f"[{start:.1f}] {text}")
+        current.append((start, f"[{start:.1f}] {text}"))
 
-    if current_chunk_lines:
-        chunks.append("\n".join(current_chunk_lines))
+    if current:
+        chunks.append("\n".join(line for _, line in current))
 
     return chunks
 
@@ -599,9 +601,9 @@ def log_cache(response) -> None:
 def _thinking(think: bool, model: str = EXTRACTION_MODEL) -> dict:
     """Thinking is billed output, eats max_tokens, and puts a block ahead of
     the text, so a call runs without it unless it asks. Sonnet 5.5 turns it
-    off with between_tools, Sonnet 5 with disabled; Opus 5.5 and Fable can't,
-    see _effort."""
-    if think or _lowered(model):
+    off with between_tools, Sonnet 5 with disabled; Haiku 4.5 is off unless
+    asked; Opus 5.5 and Fable can't, see _effort."""
+    if think or _lowered(model) or model.startswith("claude-haiku"):
         return {}
     off = "disabled" if model == "claude-sonnet-5" else "between_tools"
     return {"thinking": {"type": off}}
@@ -618,6 +620,9 @@ def _effort(think: bool, model: str = EXTRACTION_MODEL) -> dict:
 def _model_key(model: str = EXTRACTION_MODEL) -> str:
     """The model as a stored reply knows it: Opus at two efforts is two models."""
     return f"{model}@{EXTRACTION_EFFORT}" if _lowered(model) else model
+
+
+CACHE = {"type": "ephemeral", "ttl": "1h"}
 
 
 def _params(
@@ -638,7 +643,7 @@ def _params(
     """
     content = (
         [
-            {"type": "text", "text": context, "cache_control": {"type": "ephemeral"}},
+            {"type": "text", "text": context, "cache_control": CACHE},
             {"type": "text", "text": user},
         ]
         if context
@@ -647,12 +652,13 @@ def _params(
     return dict(
         model=model,
         max_tokens=max_tokens,
-        # The system prompt is ~1.2k tokens and is resent for every chunk -
-        # 22 chunks a video, 55 videos. Cached reads cost 10% of input and a
-        # write costs 1.25x, so this pays for itself on the second chunk.
+        # The system prompt is ~3.8k tokens with its schema and is resent for
+        # every chunk. A read costs 10% of input; an hour's write costs 2x, so
+        # it pays for itself on the third chunk, and outlives a batch, which
+        # can take longer than the default five minutes.
         # The chunk is last, after this and the context, which is the
         # order caching requires.
-        system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
+        system=[{"type": "text", "text": system_prompt, "cache_control": CACHE}],
         messages=[{"role": "user", "content": content}],
         **_thinking(think, model),
         output_config={"format": {"type": "json_schema", "schema": schema}} | _effort(think, model),

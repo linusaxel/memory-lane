@@ -184,6 +184,20 @@ worth the walk. Measure every change against the labels before and after
       (`permission_error`). Needs an Admin key (`sk-ant-admin01-`, Console,
       Settings, Admin keys). Then record the figure in docs/04 *What it
       costs*; the estimate is ~$0.25 a memory with seeding and enrichment.
+- [ ] **Human labels, then let them decide.** (2026-10-05) Every judge and
+      prompt number so far is against `walk_labels.json`, which an agent
+      made, and the judge, fact-check and trim run on the extractor's own
+      model. The founder labels ~100 memories (walk / maybe / skip) in
+      `review.py`. Then, in order:
+      1. Add Cohen's κ (judge against human) to `quality --labels`.
+      2. Pit the 3-pass judge against a walk-score threshold. The judge is
+         at 31-41% precision; walk score is at AUC 0.87.
+      3. Route the judge and `unsupported()` through `GRADER_MODEL`.
+      4. Sweep `unsupported()` effort: low, medium, default.
+      5. A/B the full transcript as cached context with "extract from this
+         window only" against the brief alone. That costs ~$0.002 a chunk;
+         the whole-video single call already lost.
+      GEPA (DSPy) on the extraction prompt only after those settle.
 - [ ] **Pick the extraction model, measured.** (2026-10-04) Sonnet 5.5 is the
       default by assumption. Opus 5.5 at low effort kept 12 memories where
       Sonnet kept 33 from the same 50 chunks, but each scored itself; since

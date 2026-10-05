@@ -100,7 +100,7 @@ def _system_text(fake):
     """
     system = fake.messages.calls[0]["system"]
     assert isinstance(system, list) and len(system) == 1, "one cached block"
-    assert system[0]["cache_control"] == {"type": "ephemeral"}, "still cached"
+    assert system[0]["cache_control"] == {"type": "ephemeral", "ttl": "1h"}, "still cached"
     return system[0]["text"]
 
 
@@ -187,7 +187,11 @@ def test_the_shared_context_is_its_own_cached_block_ahead_of_the_chunk():
     fake = FakeAnthropic([ARCHIVE_MEMORY])
     extract_memories_from_chunk(fake, "some archive text", HISTORICAL_SYSTEM_PROMPT, "the brief")
     context, chunk = fake.messages.calls[0]["messages"][0]["content"]
-    assert context == {"type": "text", "text": "the brief", "cache_control": {"type": "ephemeral"}}
+    assert context == {
+        "type": "text",
+        "text": "the brief",
+        "cache_control": {"type": "ephemeral", "ttl": "1h"},
+    }
     assert "some archive text" in chunk["text"] and "cache_control" not in chunk
 
 
