@@ -24,6 +24,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`sources add --licence` over 40 characters dies with a bare SQLAlchemy
+  line.** 2026-10-05: `sources.licence` is varchar(40), and `tail -1` showed
+  only "Background on this error at: sqlalche.me", so a source silently didn't
+  register and a retry made a duplicate-ish row to clean up. Fix: argparse
+  rejects a licence over 40 characters, naming the limit.
 - **A batch on a `candidate` source runs nothing and exits 0.** 2026-10-05:
   `sources add` defaults to `candidate`, `PENDING_EXTRACTION` skips candidates,
   and `batch --run --content <ids>` printed "0 pending" and exited green, so an

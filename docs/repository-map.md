@@ -42,6 +42,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/gutenberg.py` | Public-domain books: `<ebook id> <word>` keeps the windows naming the place |
 | `crawler/runeberg.py` | Nordic public-domain books from Projekt Runeberg, same query shape: `<work key> <word>` |
 | `crawler/archive.py` | Public-domain books from the Internet Archive's OCR text, same query shape: `<item id> <word>` |
+| `crawler/pdfs.py` | Back issues from a page that links their PDFs (`<index url> [<from year>]`), newest first, via `pdftotext`; typed press, so forgotten once extracted |
 | `crawler/plaques.py` | OSM plaques and inscribed memorials in a box, with the Wikipedia intro of their subject |
 | `crawler/stolpersteine.py` | Stolpersteine from a German Wikipedia city list (the list's title), one record per address, inscription and life; no coordinates, the geocoder places the address |
 | `crawler/wikipedia.py` | Wikipedia articles geotagged near a point (`<lang> <lat>,<lng> <metres>`) or in categories (`<lang> category:<A>|<B>`, longest first), reference sections dropped; `article_text` for the others |

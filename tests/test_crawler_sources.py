@@ -1,6 +1,6 @@
-"""The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds, stones."""
+"""The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds, stones, PDFs."""
 
-from crawler import archive, filming, plaques, rss, stolpersteine, wikipedia
+from crawler import archive, filming, pdfs, plaques, rss, stolpersteine, wikipedia
 
 
 def test_a_plaque_becomes_its_inscription_its_subject_and_its_point():
@@ -131,3 +131,17 @@ def test_stones_at_one_door_are_one_story_in_plain_text():
             ("HIER WOHNTE\nRUTH", "RUTH Levy floh nach Südschweden."),
         ]
     }
+
+
+def test_pdf_links_are_absolute_once_newest_first_and_from_a_year():
+    page = (
+        '<a href="/pdf/2019/01-2019.pdf">a</a><a href="/pdf/2023/02-2023.PDF">b</a>'
+        '<a href="https://x.dk/pdf/2019/01-2019.pdf">dup</a><a href="/om/">c</a>'
+    )
+    assert pdfs.pdf_links(page, "https://x.dk/arkiv/") == [
+        "https://x.dk/pdf/2023/02-2023.PDF",
+        "https://x.dk/pdf/2019/01-2019.pdf",
+    ]
+    assert pdfs.pdf_links(page, "https://x.dk/arkiv/", since=2020) == [
+        "https://x.dk/pdf/2023/02-2023.PDF"
+    ]

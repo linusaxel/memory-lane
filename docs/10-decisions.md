@@ -2969,7 +2969,8 @@ Status: Accepted
 
 ### The sources' legal footing
 
-Status: Accepted 2026-09-29. Research from primary sources, not a lawyer's
+Status: Accepted 2026-09-29, partly superseded 2026-10-05 by *Recent sources
+without permission*. Research from primary sources, not a lawyer's
 opinion. A Danish IP and data lawyer still reads it before launch.
 
 The archival books and the old newspapers are fine. The YouTube corpus, fetched
@@ -3741,6 +3742,36 @@ come back as a migration when something writes one.
 product that does not exist, and every reader has to learn that it does not);
 dropping a column but leaving its ADD in the old migration (the replay test
 fails, correctly).
+
+### Recent sources without permission
+
+Status: Accepted 2026-10-05. Supersedes "Written permission per channel" and
+"An agreement with the outlet" in *The sources' legal footing*, for the sources
+named here.
+
+Stories from 2010 to now exist only in copyrighted sources (find-sources skill,
+*Already searched*), and asking first stalls the road to 1,000. So the founder
+chose to use some without asking: VLTV Vesterbro Lokal TV's bar episodes,
+Bryggebladet, Christianshavneren and the Nørrebro yearbooks (sources 247, 248,
+250, 251; licence "© without permission").
+
+What still holds, because it is what keeps this defensible:
+
+- **Our own words, a credit and a link** on every memory. Never a quote longer than a line.
+- **The text is forgotten once extracted**: the PDFs are typed press, a video
+  is a video (`pipeline.transcripts.forget`).
+- **A takedown is honoured within a day**, for one story or a whole source.
+- **No circumvention**: no proxy past a block, no login, no paywall. A source
+  that opts out (ai.txt, a TDM reservation, robots.txt) stays out, so the
+  district weeklies and dinavis.dk are still closed.
+- The permission emails in `docs/permission-request.md` stay worth sending:
+  a yes turns a risk into a credit.
+
+**Consequences:** the lawyer's pre-launch read now covers these sources too,
+and a takedown is a real event, not a theoretical one.
+
+**Options considered:** asking first (slow, and the 2010s stay empty);
+the proxy for YouTube (§75c, the line this does not cross).
 
 ### Rejected approaches, do not retry
 

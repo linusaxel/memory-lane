@@ -32,6 +32,7 @@ from crawler.filming import Filming  # noqa: E402
 from crawler.gutenberg import Gutenberg  # noqa: E402
 from crawler.historisk_atlas import HistoriskAtlas  # noqa: E402
 from crawler.kb_aviser import KbAviser  # noqa: E402
+from crawler.pdfs import Pdfs  # noqa: E402
 from crawler.plaques import Plaques  # noqa: E402
 from crawler.rss import Podcast, Press  # noqa: E402
 from crawler.runeberg import Runeberg  # noqa: E402
@@ -49,6 +50,7 @@ SOURCES: dict[str, Source] = {
         Plaques(),
         Wikipedia(),
         Stolpersteine(),
+        Pdfs(),
         Filming(),
         Press(),
         Podcast(),
