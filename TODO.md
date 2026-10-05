@@ -205,6 +205,24 @@ worth the walk. Measure every change against the labels before and after
       called. Next: run Sonnet 5.5, Opus 5.5 low and medium and Fable 5.1 over
       `quality --labels` for the judge, and `quality --compare` for the
       writer, read blind by a person. Pick per step; cost breaks a tie.
+      Grade against the founder's labels (above), not the agent's. Prices
+      2026-10-05, per 1M tokens in/out, batch half: Sonnet 5.5 $2/$10, Opus
+      5.5 $4/$20, Fable 5.1 $10/$50. Leaderboards don't settle it: Vectara
+      has no 5.x rows and measures summaries, not this task.
+- [ ] **Move the classifier off Haiku 4.5.** (2026-10-05) Anthropic retires
+      it "not sooner than 2026-10-15", with 60 days' notice. When the notice
+      lands, set `CLASSIFIER_MODEL=claude-sonnet-5-5` in `.env` and Railway.
+      `classify_chunk` already sends no thinking. Then run
+      `classifier_audit.py` once to confirm the pass rate holds.
+- [ ] **See the 1-hour cache hold in a real run.** (2026-10-05) Shipped
+      with only the gate as proof. Run the next paid `enqueue --video`, or
+      a batch, and check its `log_cache` lines: cache reads should be ≥10×
+      writes. If they aren't, the TTL isn't taking.
+- [ ] **Drop the redundant JSON lines from the prompts.** (2026-10-05)
+      "Return JSON: {...}" (`SYSTEM_PROMPT`, `HISTORICAL_SYSTEM_PROMPT`) and
+      "Return only valid JSON" (`USER_PROMPT_TEMPLATE`) repeat what the
+      enforced schema already does. Fold the change into the next measured
+      prompt change rather than paying for a measurement of its own.
 - [ ] **The rest of the plaques.** (2026-10-04) 18 of 105 are done: research
       first (docs/10 *A thin source is a lead*), then extraction. Run
       `python -m pipeline.batch --source "OpenStreetMap plaques" --run`
