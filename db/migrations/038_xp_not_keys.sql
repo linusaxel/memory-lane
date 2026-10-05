@@ -1,5 +1,5 @@
 -- Walks earn XP, counted from daily_routes and never stored; the key balance
--- goes. key_purchases stays as history
+-- goes. key_purchases stayed as history until 045
 -- (docs/10-decisions.md#walks-earn-xp-rare-memories-wait-for-a-level).
 --
 --   docker compose exec -T db psql -U memorylane -d memorylane -v ON_ERROR_STOP=1 \

@@ -1,6 +1,5 @@
 """Who has paid. RevenueCat sells the subscription; this writes
-`subscriptions`, which the walk limit reads. `key_purchases` is history from
-when keys were sold.
+`subscriptions`, which the walk limit reads.
 
 Every event is treated as "something changed for this user": the subscriber is
 read back from RevenueCat and the row made to match. Duplicate, late or

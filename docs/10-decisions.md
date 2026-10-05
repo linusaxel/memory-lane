@@ -334,8 +334,8 @@ whole app; without one there is nothing to do.
   (`CREDIT_WALK_KEY`). What a key does is not decided yet (TODO.md). The rule
   it must keep: it never yields a summary off the spot. Not selling keys keeps
   any random reward out of loot-box rules (Apple 3.1.1, Belgium/Netherlands).
-  The key packs are gone from the app and the webhook; `key_purchases` stays
-  as history.
+  The key packs are gone from the app and the webhook; `key_purchases`
+  stayed as history until 045 dropped it, empty.
 
 `GET /v1/memories/nearby` stays: the embed (`api/embed.py`) reads it, and it
 never served a summary. `POST /v1/dev/keys` stays off the public host.
@@ -3671,8 +3671,7 @@ with `GET /v1/routes/{id}` (authored walks that nothing wrote and the app
 never called), and the `friend` layer, which had no writer. Authored walks
 come back as a migration when something writes one.
 
-`key_purchases` stays until production is checked: it is billing history, and
-the dev database cannot say whether the live one has rows.
+`key_purchases` went in 045, once production was found to have no rows.
 
 **Options considered:** keeping them "for later" (the schema then describes a
 product that does not exist, and every reader has to learn that it does not);

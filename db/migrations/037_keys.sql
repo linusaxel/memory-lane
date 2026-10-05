@@ -7,9 +7,4 @@
 
 -- users.keys was added here; 038_xp_not_keys.sql drops it again.
 
-CREATE TABLE IF NOT EXISTS key_purchases (
-    transaction_id TEXT PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    keys INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- key_purchases was created here; 045_drop_key_purchases.sql drops it again.

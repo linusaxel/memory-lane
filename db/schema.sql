@@ -347,15 +347,6 @@ CREATE TABLE subscriptions (
     expires_at TIMESTAMP NOT NULL
 );
 
--- Every key pack the store sold, by its transaction id, so a webhook retry or
--- a second read-back credits it once. See db/migrations/037_keys.sql.
-CREATE TABLE key_purchases (
-    transaction_id TEXT PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    keys INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- A photo or a recording attached to a submitted memory. A memory of a place is
 -- a thin thing in text alone.
 CREATE TABLE media (

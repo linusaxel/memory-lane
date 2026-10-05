@@ -348,13 +348,6 @@ def absorb(session, old_user: str, new_user: str) -> None:
         """),
         {"new": new_user, "old": old_user},
     )
-    # The key packs once bought, kept as history, or the cascade drops them.
-    session.execute(
-        text(
-            "UPDATE key_purchases SET user_id = CAST(:new AS uuid) WHERE user_id = CAST(:old AS uuid)"
-        ),
-        {"new": new_user, "old": old_user},
-    )
     session.execute(text("DELETE FROM users WHERE id = CAST(:id AS uuid)"), {"id": old_user})
 
 
