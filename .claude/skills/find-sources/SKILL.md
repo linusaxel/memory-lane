@@ -26,6 +26,7 @@ locators and evidence.
 | Press feed | `press` | `press:<feed url>` | Only with the outlet's agreement: every Copenhagen outlet reserves TDM (§11b) |
 | Podcast feed | `podcast` | `podcast:<feed url>` | Items carry `<podcast:transcript>` (no Copenhagen show did, 2026-10-04); no audio is transcribed |
 | Public-domain book | `gutenberg`, `runeberg` | `gutenberg:<id> <word>`, `runeberg:<key> <word>` | Memoir of a city life, author dead 70+ years |
+| Internet Archive book | `archive` | `archive:<item id> <word>` | A walk book by street or house, author dead 70+ years; roman type, not Fraktur |
 | Old newspapers | `kb-aviser` | `kb-aviser:<query>` | Over 140 years old |
 | Historisk Atlas | `historisk-atlas` | `historisk-atlas:<title word>` | CC or PD licence only |
 | YouTube channel | `pipeline.sources discover` | channel URL | Only with written permission (`docs/permission-request.md`) |

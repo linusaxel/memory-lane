@@ -1,6 +1,6 @@
 """The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds."""
 
-from crawler import filming, plaques, rss, wikipedia
+from crawler import archive, filming, plaques, rss, wikipedia
 
 
 def test_a_plaque_becomes_its_inscription_its_subject_and_its_point():
@@ -84,3 +84,11 @@ def test_a_transcript_loses_its_cues_and_timings():
     vtt = "WEBVTT\n\n1\n00:00:01.000 --> 00:00:04.000\n<v Anna>Det var her\n\n2\n00:00:04 --> 00:00:06\nbaren lå."
     assert rss.transcript_text(vtt, "text/vtt") == "Det var her baren lå."
     assert rss.transcript_text('{"segments": [{"body": "Hej"}]}', "application/json") == "Hej"
+
+
+def test_an_ocr_text_mends_its_line_break_hyphens():
+    raw = "mistænkte  ham  for  at  være  et  af  Struensees  Kre-\naturer, og  Gammel-  \ntorv\nLand-\n\nsknægte"
+    assert (
+        archive.mend(raw)
+        == "mistænkte  ham  for  at  være  et  af  Struensees  Kreaturer, og  Gammeltorv\nLand-\n\nsknægte"
+    )
