@@ -531,7 +531,8 @@ CREATE TABLE memory_reviews (
     before TEXT NOT NULL,
     after TEXT,
     extracted_at TIMESTAMP,
-    reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewer VARCHAR(10) NOT NULL DEFAULT 'agent' CHECK (reviewer IN ('person', 'agent'))
 );
 
 -- The promote-or-reject number. `screened` is the Haiku pass rate, which is

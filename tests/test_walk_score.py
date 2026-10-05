@@ -45,3 +45,10 @@ def test_scored_once_and_only_extracted(db_session):
     assert walk_score.score_memories(db_session, fake) == {extracted: 10}
     assert walk_score.score_memories(db_session, fake) == {}
     assert len(fake.messages.calls) == 1
+
+
+def test_graded_by_the_grader_whatever_extracts():
+    """2026-10-04: a bake-off under EXTRACTION_MODEL=Opus scored Opus with Opus."""
+    fake = FakeAnthropic(SCORES)
+    walk_score.walk_score(fake, "a story")
+    assert fake.messages.calls[0]["model"] == walk_score.GRADER_MODEL

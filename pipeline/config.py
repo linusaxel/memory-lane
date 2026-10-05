@@ -24,9 +24,12 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 # Reads the organisation's bill for pipeline/cost.py; nothing else uses it.
 ANTHROPIC_ADMIN_KEY = os.getenv("ANTHROPIC_ADMIN_KEY") or None
 EXTRACTION_MODEL = os.getenv("EXTRACTION_MODEL", "claude-sonnet-5-5")
-# Opus 5.5 cannot turn thinking off, only down: this is how far, on every call
+# Opus 5.5 and Fable cannot turn thinking off, only down: this is how far, on every call
 # that would otherwise run without it. Other models ignore it.
 EXTRACTION_EFFORT = os.getenv("EXTRACTION_EFFORT", "low")
+# Scores the walk rubric, whatever extracts, and grades a bake-off's
+# unsupported claims: a model scoring itself is two graders, not two writers.
+GRADER_MODEL = os.getenv("GRADER_MODEL", "claude-sonnet-5-5")
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "claude-haiku-4-5")
 # Web searches, and as many page reads, per new memory's enrichment
 # (pipeline/enrich.py). A search bills about a cent.

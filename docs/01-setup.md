@@ -24,7 +24,8 @@ uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.
 | `REDIS_URL` | No | Queue backend (default: local Docker) |
 | `ANTHROPIC_API_KEY` | Yes | Claude API key |
 | `EXTRACTION_MODEL` | No | Claude model (default: claude-sonnet-5-5) |
-| `EXTRACTION_EFFORT` | No | Effort for Opus 5.5, which can't turn thinking off (default: low) |
+| `EXTRACTION_EFFORT` | No | Effort for Opus 5.5 and Fable, which can't turn thinking off (default: low) |
+| `GRADER_MODEL` | No | Scores the walk rubric and a bake-off's added claims, whatever extracts (default: claude-sonnet-5-5) |
 | `ANTHROPIC_ADMIN_KEY` | No | Admin key, read only by `python -m pipeline.cost` for the bill |
 | `CLASSIFIER_MODEL` | No | Haiku pre-filter (default: claude-haiku-4-5) |
 | `ENRICH_MAX_SEARCHES` | No | Web searches, and page reads, per new memory's enrichment (default: 5; about a cent a search) |
@@ -86,7 +87,7 @@ Who writes which is in [architecture.md](architecture.md#data-ownership).
 | `transcripts` | JSONB segments with timestamps |
 | `extraction_chunks` | Each chunk's raw model reply, keyed on the exact request |
 | `classifier_verdicts` | What the Haiku pre-filter decided per chunk, and why |
-| `memory_reviews` | A person's accept / edit / reject on an extracted memory. Outlives it |
+| `memory_reviews` | An accept / edit / reject on an extracted memory, by a person or an agent (`reviewer`). Outlives it |
 | `places` | Locations with PostGIS coordinates |
 | `memories` | Experiences pinned to places. `content_id` **or** `user_id`, never both |
 | `devices` | An installation's self-issued UUID. Not a person |

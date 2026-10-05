@@ -74,3 +74,14 @@ def test_reviews_outlive_a_reprocessed_video(db_session):
 def test_only_extracted_memories_can_be_reviewed(db_session):
     with pytest.raises(SystemExit):
         review(db_session, 999, "accept")
+
+
+@pytest.mark.db
+def test_a_persons_verdict_is_told_from_an_agents(db_session):
+    """The judge is tuned on agent labels; a person's are the check on it."""
+    ok, bad, _ = _three_memories(db_session)
+    review(db_session, ok, "accept", reviewer="person")
+    review(db_session, bad, "reject")
+
+    rows = stats(db_session)
+    assert sorted((r.reviewer, r.reviewed) for r in rows) == [("agent", 1), ("person", 1)]

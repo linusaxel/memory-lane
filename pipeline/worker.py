@@ -9,6 +9,8 @@ import sys
 
 if sys.platform == "darwin" and os.environ.get("OBJC_DISABLE_INITIALIZE_FORK_SAFETY") != "YES":
     os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
+    # urllib's macOS proxy lookup still segfaults in a forked horse; skip it.
+    os.environ.setdefault("no_proxy", "*")
     # -m, not sys.argv[0]: running the file directly puts pipeline/ on sys.path
     # instead of the repo root, and every `from pipeline...` import then fails.
     os.execvp(sys.executable, [sys.executable, "-m", "pipeline.worker", *sys.argv[1:]])

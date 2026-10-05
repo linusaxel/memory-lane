@@ -54,7 +54,7 @@ import sys
 import anthropic
 from sqlalchemy import text
 
-from pipeline.config import ANTHROPIC_API_KEY
+from pipeline.config import ANTHROPIC_API_KEY, GRADER_MODEL
 from pipeline.db import get_session
 from pipeline.extract import (
     _judge,
@@ -115,7 +115,7 @@ def score_kept(session, client, results, chunks) -> dict[str, dict]:
                 words.append(len(summary.split()))
                 if (w := walk_score(client, f"{m.get('venue')}: {summary}")) is not None:
                     walks.append(w)
-                extra = unsupported(session, client, cid, i, chunk, context, summary)
+                extra = unsupported(session, client, cid, i, chunk, context, summary, GRADER_MODEL)
                 if extra is None:
                     continue
                 faithful += not any(e["kind"] == "fact" for e in extra)

@@ -9,6 +9,7 @@ from pipeline.extract import (
     HISTORICAL_SYSTEM_PROMPT,
     MEMORY_SCHEMA,
     SYSTEM_PROMPT,
+    _params,
     extract_memories_from_chunk,
 )
 from pipeline.tags import TAGS
@@ -53,3 +54,10 @@ def test_the_decision_is_made_before_the_venue():
     """Claude fills fields in schema order. With venue first it commits to a place
     and then justifies it; the quote and the spot test have to come first."""
     assert list(ITEM["properties"])[:4] == ["place_words", "happened_there", "spot_test", "venue"]
+
+
+def test_fable_sends_no_thinking_field_and_an_effort():
+    """Fable 5.1 rejects any thinking setting but adaptive; effort is the dial."""
+    p = _params("s", "u", MEMORY_SCHEMA, "", 100, False, "claude-fable-5-1")
+    assert "thinking" not in p
+    assert "effort" in p["output_config"]

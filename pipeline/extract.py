@@ -596,31 +596,38 @@ def log_cache(response) -> None:
     )
 
 
-def _thinking(think: bool) -> dict:
+def _thinking(think: bool, model: str = EXTRACTION_MODEL) -> dict:
     """Thinking is billed output, eats max_tokens, and puts a block ahead of
     the text, so a call runs without it unless it asks. Sonnet 5.5 turns it
-    off with between_tools, Sonnet 5 with disabled; Opus 5.5 can't, see _effort."""
-    if think or _lowered():
+    off with between_tools, Sonnet 5 with disabled; Opus 5.5 and Fable can't,
+    see _effort."""
+    if think or _lowered(model):
         return {}
-    off = "disabled" if EXTRACTION_MODEL == "claude-sonnet-5" else "between_tools"
+    off = "disabled" if model == "claude-sonnet-5" else "between_tools"
     return {"thinking": {"type": off}}
 
 
-def _lowered() -> bool:
-    return EXTRACTION_MODEL.startswith("claude-opus-5-5")
+def _lowered(model: str = EXTRACTION_MODEL) -> bool:
+    return model.startswith(("claude-opus-5-5", "claude-fable-"))
 
 
-def _effort(think: bool) -> dict:
-    return {"effort": EXTRACTION_EFFORT} if _lowered() and not think else {}
+def _effort(think: bool, model: str = EXTRACTION_MODEL) -> dict:
+    return {"effort": EXTRACTION_EFFORT} if _lowered(model) and not think else {}
 
 
-def _model_key() -> str:
+def _model_key(model: str = EXTRACTION_MODEL) -> str:
     """The model as a stored reply knows it: Opus at two efforts is two models."""
-    return f"{EXTRACTION_MODEL}@{EXTRACTION_EFFORT}" if _lowered() else EXTRACTION_MODEL
+    return f"{model}@{EXTRACTION_EFFORT}" if _lowered(model) else model
 
 
 def _params(
-    system_prompt: str, user: str, schema: dict, context: str, max_tokens: int, think: bool
+    system_prompt: str,
+    user: str,
+    schema: dict,
+    context: str,
+    max_tokens: int,
+    think: bool,
+    model: str = EXTRACTION_MODEL,
 ) -> dict:
     """One request's body, as _request sends it and pipeline/batch.py batches it.
 
@@ -638,7 +645,7 @@ def _params(
         else user
     )
     return dict(
-        model=EXTRACTION_MODEL,
+        model=model,
         max_tokens=max_tokens,
         # The system prompt is ~1.2k tokens and is resent for every chunk -
         # 22 chunks a video, 55 videos. Cached reads cost 10% of input and a
@@ -647,8 +654,8 @@ def _params(
         # order caching requires.
         system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
         messages=[{"role": "user", "content": content}],
-        **_thinking(think),
-        output_config={"format": {"type": "json_schema", "schema": schema}} | _effort(think),
+        **_thinking(think, model),
+        output_config={"format": {"type": "json_schema", "schema": schema}} | _effort(think, model),
     )
 
 
@@ -669,11 +676,12 @@ def _request(
     context: str = "",
     max_tokens: int = 2000,
     think: bool = False,
+    model: str = EXTRACTION_MODEL,
 ) -> str | None:
     """The model's raw reply, or None for an error no retry will fix."""
     try:
         response = client.messages.create(
-            **_params(system_prompt, user, schema, context, max_tokens, think)
+            **_params(system_prompt, user, schema, context, max_tokens, think, model)
         )
         log_cache(response)
         return reply_text(response)
@@ -685,13 +693,13 @@ def _request(
             ) from e
         # A rejected schema or parameter is rejected for every chunk, so it
         # stops the run rather than emptying the backlog one [] at a time.
-        raise ModelUnusableError(f"EXTRACTION_MODEL={EXTRACTION_MODEL!r} rejected: {e}") from e
+        raise ModelUnusableError(f"EXTRACTION_MODEL={model!r} rejected: {e}") from e
     except (
         anthropic.NotFoundError,
         anthropic.AuthenticationError,
         anthropic.PermissionDeniedError,
     ) as e:
-        raise ModelUnusableError(f"EXTRACTION_MODEL={EXTRACTION_MODEL!r} is not usable: {e}") from e
+        raise ModelUnusableError(f"EXTRACTION_MODEL={model!r} is not usable: {e}") from e
     except Exception as e:
         if is_transient(e):
             raise TransientAPIError(str(e)) from e
@@ -810,7 +818,9 @@ TRIM_SCHEMA = {
 }
 
 
-def unsupported(session, client, content_id, chunk_index, chunk, context, summary):
+def unsupported(
+    session, client, content_id, chunk_index, chunk, context, summary, model=EXTRACTION_MODEL
+):
     """What the summary says that its chunk doesn't, as [{claim, kind}], or None
     for no usable answer. It thinks first: a miss here is an invention on a pin."""
     user = f"Passage:\n\n{chunk}\n\nStory:\n\n{summary}"
@@ -825,6 +835,7 @@ def unsupported(session, client, content_id, chunk_index, chunk, context, summar
         context,
         max_tokens=16000,
         think=True,
+        model=model,
     )
     try:
         return json.loads(raw)["unsupported"] if raw else None
@@ -891,7 +902,9 @@ class Collect:
 COLLECT: Collect | None = None
 
 
-def store(session, key, content_id, chunk_index, system_prompt_hash, raw) -> None:
+def store(
+    session, key, content_id, chunk_index, system_prompt_hash, raw, model=EXTRACTION_MODEL
+) -> None:
     session.execute(
         text("""
             INSERT INTO extraction_chunks
@@ -904,7 +917,7 @@ def store(session, key, content_id, chunk_index, system_prompt_hash, raw) -> Non
             "content_id": content_id,
             "chunk_index": chunk_index,
             "prompt_hash": system_prompt_hash,
-            "model": _model_key(),
+            "model": _model_key(model),
             "response": raw,
         },
     )
@@ -922,11 +935,14 @@ def _stored_request(
     context="",
     max_tokens=2000,
     think=False,
+    model=EXTRACTION_MODEL,
 ) -> str | None:
     key_schema = json.dumps(schema, sort_keys=True)
     # context + user is the message as it was before it was split in two, so
     # rows stored then still hit.
-    key = _sha256(f"{content_id}\0{_model_key()}\0{key_schema}\0{system_prompt}\0{context}{user}")
+    key = _sha256(
+        f"{content_id}\0{_model_key(model)}\0{key_schema}\0{system_prompt}\0{context}{user}"
+    )
 
     raw = session.execute(
         text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
@@ -936,15 +952,15 @@ def _stored_request(
     if COLLECT is not None:
         if COLLECT.stage.setdefault(content_id, system_prompt) == system_prompt:
             COLLECT.requests[key] = {
-                "params": _params(system_prompt, user, schema, context, max_tokens, think),
+                "params": _params(system_prompt, user, schema, context, max_tokens, think, model),
                 "content_id": content_id,
                 "chunk_index": chunk_index,
                 "prompt_hash": _sha256(system_prompt),
             }
         return None
-    raw = _request(client, system_prompt, user, schema, context, max_tokens, think)
+    raw = _request(client, system_prompt, user, schema, context, max_tokens, think, model)
     if raw is not None:
-        store(session, key, content_id, chunk_index, _sha256(system_prompt), raw)
+        store(session, key, content_id, chunk_index, _sha256(system_prompt), raw, model)
     return raw
 
 

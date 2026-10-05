@@ -264,19 +264,22 @@ say "3/5  app"
 # A new native module (a pod) is invisible to Metro: the installed binary runs
 # the new JS and dies on the missing module. So a Podfile.lock that differs
 # from the one last built is a rebuild. So is a native patch-package edit
-# (mobile/patches), which changes compiled code without touching the lock.
+# (mobile/patches), which changes compiled code without touching the lock, and
+# reanimated's static feature flags, compiled in from package.json.
 BUILT_STAMP=mobile/ios/build/native.built
-NATIVE=$(cat mobile/ios/Podfile.lock mobile/patches/* 2>/dev/null | shasum)
+REANIMATED=$(node -p 'JSON.stringify(require("./mobile/package.json").reanimated)')
+NATIVE=$( (cat mobile/ios/Podfile.lock mobile/patches/* 2>/dev/null; echo "$REANIMATED") | shasum)
 [ "$NATIVE" = "$(cat "$BUILT_STAMP" 2>/dev/null)" ] || BUILD=1
 # A damaged Pods tree or a stale prebuild fails minutes into xcodebuild as a
 # link or copy error. Say which, up front.
 [ -f mobile/ios/Pods/React-Core-prebuilt/React.xcframework/ios-arm64_x86_64-simulator/React.framework/React ] \
   || infra "React binary missing: rm -rf mobile/ios/Pods/React-Core-prebuilt && (cd mobile/ios && pod install)"
 PREBUILD_STAMP=mobile/ios/build/prebuild.stamp
-PREBUILD=$(cat mobile/app.json mobile/package.json | shasum)
+# Only what prebuild reads: a devDependency or a script is not a native change.
+PREBUILD=$( (cat mobile/app.json; node -p 'const p = require("./mobile/package.json"); JSON.stringify([p.dependencies, p.reanimated])') | shasum)
 [ -f "$PREBUILD_STAMP" ] || echo "$PREBUILD" > "$PREBUILD_STAMP"
 [ "$PREBUILD" = "$(cat "$PREBUILD_STAMP")" ] \
-  || infra "app.json or package.json changed since prebuild: (cd mobile && npx expo prebuild --platform ios --clean) && (cd mobile/ios && pod install), then rm $PREBUILD_STAMP"
+  || infra "app.json or package.json's dependencies changed since prebuild: (cd mobile && npx expo prebuild --platform ios --clean) && (cd mobile/ios && pod install), then rm $PREBUILD_STAMP"
 if [ "$BUILD" = 1 ] || ! xcrun simctl get_app_container "$DEVICE" "$APP_ID" >/dev/null 2>&1; then
   echo "     building $APP_ID (several minutes)"
   (cd mobile/ios && xcodebuild \

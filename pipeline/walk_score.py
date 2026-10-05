@@ -19,6 +19,7 @@ import logging
 
 from sqlalchemy import text
 
+from pipeline.config import GRADER_MODEL
 from pipeline.extract import _request
 
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ SCHEMA = {
 
 def walk_score(client, summary: str) -> int | None:
     """0-12, or None when the model did not answer usably."""
-    raw = _request(client, PROMPT, summary, SCHEMA, max_tokens=200)
+    raw = _request(client, PROMPT, summary, SCHEMA, max_tokens=200, model=GRADER_MODEL)
     if raw is None:
         return None
     try:

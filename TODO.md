@@ -24,18 +24,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **The worker's forked job segfaults on a page fetch.** 2026-10-04: plaque
-  1036's thin-source research died with signal 11 in the RQ work-horse
-  (macOS fork plus urllib, the crash `worker.py` already guards its own check
-  against), and the job just failed. 1 of 7 plaques; enrichment's page reads
-  run in the same horse. Fix: set `no_proxy=*` (or
-  `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`) in `pipeline/worker.py` before forking,
-  or extract with `pipeline.batch`, which does not fork.
-- **A model bake-off scores each model with itself.** 2026-10-04: `quality
-  --compare --score` under `EXTRACTION_MODEL=X` runs the walk rubric and the
-  unsupported-claim check on X too, so "no added fact 4/12" for Opus against
-  "22/33" for Sonnet compares two graders, not two writers. It nearly decided
-  the model. Fix: score with a fixed grader model, whatever extracts.
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"
@@ -43,15 +31,6 @@ delete an entry when its fix lands.
   hand-built AVFoundation script. Fix: `e2e/run.sh --frames <flow> <from>-<to>`
   that starts recording after launch and writes a contact sheet.
 
-- **e2e demands a native rebuild for a dev-only change.** 2026-10-04:
-  `e2e/run.sh` hashes all of `mobile/package.json` into the prebuild stamp, so
-  cd065f6 (Prettier, a devDependency and two scripts) left the next session's
-  e2e at INFRA, wanting `prebuild --clean` + `pod install`, and a change went
-  unchecked in the app. Fix: hash only `dependencies`, the `reanimated` key
-  and `app.json`. The other half: `native.built` hashes `Podfile.lock` and
-  patches, but a `reanimated.staticFeatureFlags` change (2026-10-04) moves
-  neither, so e2e would run the stale binary unless you install by hand.
-  Fix: add the `reanimated` key to the native hash.
 - **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
   permission classifier refused a hand triage (merge two places, hide four
   memories) and its undo, each a round-trip through the founder. The free
@@ -194,9 +173,9 @@ worth the walk. Measure every change against the labels before and after
       costs*; the estimate is ~$0.25 a memory with seeding and enrichment.
 - [ ] **Pick the extraction model, measured.** (2026-10-04) Sonnet 5.5 is the
       default by assumption. Opus 5.5 at low effort kept 12 memories where
-      Sonnet kept 33 from the same 50 chunks, but each scored itself (Friction).
-      Next: fix `extract._thinking` for Fable 5.1 (no `thinking` field at
-      all), then run Sonnet 5.5, Opus 5.5 low and medium and Fable 5.1 over
+      Sonnet kept 33 from the same 50 chunks, but each scored itself; since
+      2026-10-05 `GRADER_MODEL` scores every bake-off, and Fable 5.1 can be
+      called. Next: run Sonnet 5.5, Opus 5.5 low and medium and Fable 5.1 over
       `quality --labels` for the judge, and `quality --compare` for the
       writer, read blind by a person. Pick per step; cost breaks a tie.
 - [ ] **The rest of the plaques.** (2026-10-04) 18 of 105 are done: research
@@ -254,12 +233,11 @@ worth the walk. Measure every change against the labels before and after
       `coordinate_is_unique` (docs/10, "The coordinates are
       mostly guesses")? The position is self-reported either way: it stops
       `curl`, not a spoofer.
-- [ ] **40 labels by a person.** (checked 2026-10-04) The judge and
-      `walk_score` are tuned on agent labels. `memory_reviews` holds the place
-      test's rejects, made by an agent, and `pipeline/review.py` has no
-      reviewer column to tell them apart. Add one, then run `python -m
-      pipeline.review --limit 40` (a stable spread across sources) and
-      `--accept` / `--reject` the ids. Unblocks the few-shot item in Parked.
+- [ ] **40 labels by a person.** (checked 2026-10-05) The judge and
+      `walk_score` are tuned on agent labels; `memory_reviews.reviewer` now
+      tells them apart. Run `python -m pipeline.review --limit 40`, then
+      `--accept` / `--reject` the ids with `--person` (without it a verdict is
+      an agent's). Unblocks the few-shot item in Parked.
 - [ ] **Then-vs-now: the points.** (checked 2026-10-04) `now.py` asks for
       named points within 25 m when no area matches; `--blank` confirmed 3 of
       29 before the public Overpass refused the rest (docs/04, *Corpus work*).
