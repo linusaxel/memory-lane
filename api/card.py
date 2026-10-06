@@ -135,9 +135,9 @@ FONT_HREF = (
 # values and no build step between TypeScript and Python. tests/test_palette.py
 # fails if the two drift. Why these colours at all: docs/09-visual-design.md.
 CARD_CSS = """
-:root{--bg:#f7f4ee;--fg:#1c1917;--muted:#776e64;--rule:#e0d9cc;--accent:#86661a}
+:root{--bg:#f6f1e7;--fg:#1e1626;--muted:#6b6172;--rule:#e2d8ca;--accent:#7e5e14}
 @media (prefers-color-scheme:dark){
-  :root{--bg:#161412;--fg:#f2ede4;--muted:#9a9086;--rule:#332e27;--accent:#d9b45e}
+  :root{--bg:#14101a;--fg:#f3ece0;--muted:#9b90a3;--rule:#362c3f;--accent:#e3be6b}
 }
 *{box-sizing:border-box}
 /* Soft Fraunces and Figtree, with stacks that hold on their own: a link

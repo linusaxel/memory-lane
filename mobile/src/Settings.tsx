@@ -15,7 +15,8 @@ import CloseButton from './CloseButton.tsx';
 import SignIn from './SignIn.tsx';
 import { locketOf } from './lockets.ts';
 import type { Permission } from './types.ts';
-import { button, buttonText, color, dim, font, label } from './theme.ts';
+import Button from './Button.tsx';
+import { button, buttonText, color, dim, font, label, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -81,13 +82,7 @@ export default function Settings({
             </>
           ) : (
             profile?.user_id && (
-              <Pressable
-                style={dim(styles.action)}
-                onPress={onSubscribe}
-                accessibilityRole="button"
-              >
-                <Text style={styles.actionText}>Subscribe</Text>
-              </Pressable>
+              <Button kind="foil" label="Subscribe" onPress={onSubscribe} place={styles.action} />
             )
           )}
         </Section>
@@ -207,7 +202,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
   // The journal's title bar, so the two sheets read as one app.
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { ...font.display, fontSize: 34, color: color.ink },
+  title: screenTitle,
   section: {
     marginTop: 38,
     gap: 12,
@@ -219,7 +214,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   rowText: { flex: 1, ...font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
-  action: { ...button.outline, alignSelf: 'flex-start', marginTop: 6 },
+  action: { ...button.quiet, alignSelf: 'flex-start', marginTop: 6 },
   actionText: { ...buttonText, color: color.ink },
   link: { alignSelf: 'flex-start' },
   linkText: {

@@ -47,6 +47,7 @@ import {
   type MediaItem,
 } from './api.ts';
 import Avatar from './Avatar.tsx';
+import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import Flourish from './Flourish.tsx';
 import Glyph from './Glyph.tsx';
@@ -54,19 +55,7 @@ import { duration, happened } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { LOCKET_DEFAULT, LOCKETS, locketOf, type LocketId } from './lockets.ts';
 import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
-import {
-  button,
-  buttonText,
-  buttonTextSmall,
-  color,
-  dim,
-  font,
-  label,
-  lift,
-  radius,
-  story,
-  sunk,
-} from './theme.ts';
+import { color, dim, font, label, lift, radius, story, sunk } from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
@@ -734,19 +723,17 @@ export default function Submit({
           ) : (
             <CloseButton onPress={close} label="Cancel" />
           )}
-          <Pressable
-            style={dim([styles.post, !ready && styles.disabled])}
+          <Button
+            kind="go"
+            label={isEditing ? 'Save' : 'Post'}
+            place={[styles.post, !ready && styles.disabled]}
             onPress={() => {
               Keyboard.dismiss();
               setSealing(true);
             }}
             disabled={!ready}
             hitSlop={4}
-            accessibilityRole="button"
-            accessibilityLabel={isEditing ? 'Save' : 'Post'}
-          >
-            <Text style={styles.postText}>{isEditing ? 'Save' : 'Post'}</Text>
-          </Pressable>
+          />
         </View>
 
         <Animated.ScrollView
@@ -1095,23 +1082,22 @@ export default function Submit({
               </View>
               <Text style={styles.meta}>{locketOf(locket).name}</Text>
               {error && <Text style={styles.error}>{error}</Text>}
-              <Pressable
-                style={dim([styles.seal, posting && styles.disabled])}
-                onPress={post}
-                disabled={posting}
-                accessibilityRole="button"
-                testID="seal"
-              >
-                <Text style={styles.sealText}>
-                  {posting
+              <Button
+                kind="foil"
+                label={
+                  posting
                     ? isEditing
                       ? 'Saving…'
                       : 'Sealing…'
                     : isEditing
                       ? 'Save'
-                      : 'Seal it here'}
-                </Text>
-              </Pressable>
+                      : 'Seal it here'
+                }
+                place={[styles.seal, posting && styles.disabled]}
+                onPress={post}
+                disabled={posting}
+                testID="seal"
+              />
             </Animated.View>
           </View>
         )}
@@ -1266,8 +1252,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 8,
   },
-  post: { ...button.solid, ...button.small },
-  postText: { ...buttonTextSmall, color: color.paper },
+  post: { minHeight: 40, paddingHorizontal: 18 },
   disabled: { opacity: 0.35 },
 
   // MemorySheet's reading column: 24 in, 8 inside a part, 24 between parts.
@@ -1278,13 +1263,13 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   blocks: { gap: 16, marginTop: 24 },
   p: story.body,
-  h: { ...story.body, ...font.display },
+  h: { ...story.body, ...font.storyBold },
   quote: { ...story.body, paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.rule },
   alone: { minHeight: 130 },
   mark: { color: color.inkFaint },
-  bold: { ...font.display },
+  bold: font.storyBold,
   italic: { fontStyle: 'italic' },
-  hashtag: { ...font.displaySemi },
+  hashtag: font.storyBold,
   divider: { paddingVertical: 4, borderRadius: radius.field },
   dividerOn: { backgroundColor: color.rule },
   caption: { ...story.meta, color: color.inkSoft, marginTop: 6 },
@@ -1320,8 +1305,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.paper,
   },
   trayLabel: label,
-  seal: { ...button.solid, alignSelf: 'stretch', marginTop: 8 },
-  sealText: { ...buttonText, color: color.paper },
+  seal: { alignSelf: 'stretch', marginTop: 8 },
   byline: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
   lockets: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   // A circle, the selection a ring in gold: the pin is what is being chosen.
@@ -1349,7 +1333,7 @@ const styles = StyleSheet.create({
     // 40 tall with the label's line box, and the row gap keeps neighbours
     // from stealing the edges of the target.
     paddingVertical: 12,
-    backgroundColor: color.wash,
+    backgroundColor: color.quiet,
   },
   chipOn: { backgroundColor: color.gold },
   chipText: { ...label, fontSize: 12, color: color.inkSoft },

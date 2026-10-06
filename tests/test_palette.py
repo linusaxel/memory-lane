@@ -61,13 +61,17 @@ def test_the_regex_still_finds_the_whole_palette():
         "inkSoft",
         "inkFaint",
         "rule",
+        "quiet",
         "seal",
         "sealSoft",
-        "sealDeep",
         "faded",
         "sealInk",
         "gold",
-        "purple",
+        "goBg",
+        "onGo",
+        "plum",
+        "danger",
+        "heart",
     }
 
 
@@ -85,10 +89,17 @@ TEXT_ON_GROUND = [
     ("paper", "gold"),
     ("gold", "paper"),
     ("gold", "paperRaised"),
-    ("purple", "paper"),
-    ("sealDeep", "paper"),
-    ("sealDeep", "paperRaised"),
-    ("sealDeep", "sealSoft"),
+    ("gold", "quiet"),
+    ("ink", "quiet"),
+    ("plum", "paper"),
+    ("plum", "paperRaised"),
+    ("seal", "paper"),
+    ("seal", "paperRaised"),
+    ("seal", "sealSoft"),
+    ("onGo", "goBg"),
+    ("danger", "paper"),
+    ("danger", "paperRaised"),
+    ("heart", "paper"),
 ]
 
 

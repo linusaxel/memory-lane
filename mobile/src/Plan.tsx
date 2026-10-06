@@ -18,7 +18,6 @@ import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  ActivityIndicator,
   Image,
   Animated,
   type LayoutChangeEvent,
@@ -30,13 +29,14 @@ import {
 } from 'react-native';
 
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
+import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
 import { locketAt, locketOf } from './lockets.ts';
 import { Chip } from './Submit.tsx';
-import { button, buttonText, color, dim, font, label, radius } from './theme.ts';
+import { button, buttonText, color, dim, font, label, radius, screenTitle } from './theme.ts';
 import { WalkShape } from './WalkCard.tsx';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
@@ -114,14 +114,7 @@ export function EndPick({ onCancel }: { onCancel: () => void }) {
     <GlassCard style={styles.card} pointerEvents="box-none">
       <Text style={styles.cardTitle}>Where does it end?</Text>
       <Text style={styles.cardBody}>Tap the map where you want to finish.</Text>
-      <Pressable
-        style={dim(styles.secondary)}
-        onPress={onCancel}
-        accessibilityRole="button"
-        accessibilityLabel="Cancel"
-      >
-        <Text style={styles.secondaryText}>Cancel</Text>
-      </Pressable>
+      <Button kind="quiet" label="Cancel" onPress={onCancel} />
     </GlassCard>
   );
 }
@@ -231,14 +224,13 @@ export function Preview({
         <Text style={styles.cardBody}>
           There's another tomorrow. Or subscribe for as many as you like.
         </Text>
-        <Pressable
-          style={dim(styles.primary)}
+        <Button
+          kind="go"
+          label="More walks"
           onPress={onSubscribe}
-          accessibilityRole="button"
           testID="more-walks"
-        >
-          <Text style={styles.primaryText}>More walks</Text>
-        </Pressable>
+          place={styles.primary}
+        />
         {close}
       </GlassCard>
     );
@@ -265,20 +257,16 @@ export function Preview({
     </Pressable>
   );
   const start = (
-    <Pressable
-      style={dim(styles.primary)}
+    <Button
+      kind="go"
+      label="Start walk"
       onPress={onAccept}
       disabled={busy || !found}
-      accessibilityRole="button"
+      busy={busy}
       accessibilityLabel="Start this walk"
       accessibilityHint="You can end it any time."
-    >
-      {busy ? (
-        <ActivityIndicator color={color.paper} />
-      ) : (
-        <Text style={styles.primaryText}>Start walk</Text>
-      )}
-    </Pressable>
+      place={styles.primary}
+    />
   );
   if (step === 'stops' && found && stops) {
     return (
@@ -415,19 +403,15 @@ export function Preview({
           />
         )}
       </View>
-      <Pressable
-        style={dim(styles.primary)}
+      <Button
+        kind="go"
+        label="Next"
         onPress={() => setStep('stops')}
         disabled={busy || !found}
-        accessibilityRole="button"
+        busy={busy}
         accessibilityHint="Shows the stops on this walk"
-      >
-        {busy ? (
-          <ActivityIndicator color={color.paper} />
-        ) : (
-          <Text style={styles.primaryText}>Next</Text>
-        )}
-      </Pressable>
+        place={styles.primary}
+      />
       {subscribed ? (
         <Pressable
           style={dim([styles.secondary, styles.extra])}
@@ -559,28 +543,24 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
             : `The ${left} stops you haven't reached will lock again.`
         } Anything you've unlocked stays unlocked.`}
       </Text>
-      <Pressable
-        style={dim(styles.primary)}
-        onPress={onEnd}
-        disabled={busy}
-        accessibilityRole="button"
-        accessibilityLabel="End walk"
-      >
-        {busy ? (
-          <ActivityIndicator color={color.paper} />
-        ) : (
-          <Text style={styles.primaryText}>End walk</Text>
-        )}
-      </Pressable>
-      <Pressable
-        style={dim(styles.secondary)}
-        onPress={onKeep}
-        disabled={busy}
-        accessibilityRole="button"
-        accessibilityLabel="Keep walking"
-      >
-        <Text style={styles.secondaryText}>Keep walking</Text>
-      </Pressable>
+      {/* Ending is never the loud one: quiet, beside a green way on. */}
+      <View style={styles.pair}>
+        <Button
+          kind="quiet"
+          label="End walk"
+          onPress={onEnd}
+          disabled={busy}
+          busy={busy}
+          place={styles.grow}
+        />
+        <Button
+          kind="go"
+          label="Keep walking"
+          onPress={onKeep}
+          disabled={busy}
+          place={styles.grow}
+        />
+      </View>
       {error && <Text style={styles.error}>{error}</Text>}
     </GlassCard>
   );
@@ -628,23 +608,9 @@ export function WalkDone({
       ) : (
         streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>
       )}
-      <Pressable
-        style={dim(styles.primary)}
-        onPress={onDone}
-        accessibilityRole="button"
-        accessibilityLabel="Done"
-      >
-        <Text style={styles.primaryText}>Done</Text>
-      </Pressable>
+      <Button kind="foil" label="Done" onPress={onDone} place={styles.primary} />
       {onMore && (
-        <Pressable
-          style={dim(styles.secondary)}
-          onPress={onMore}
-          accessibilityRole="button"
-          testID="walk-done-more"
-        >
-          <Text style={styles.secondaryText}>Another walk today ›</Text>
-        </Pressable>
+        <Button kind="text" label="Another walk today ›" onPress={onMore} testID="walk-done-more" />
       )}
     </GlassCard>
   );
@@ -684,7 +650,7 @@ function Milestone({ streak }: { streak: number }) {
   }, [scale]);
   return (
     <Animated.View style={[styles.milestone, { transform: [{ scale }] }]} testID="streak-milestone">
-      <Glyph name="flame.fill" size={22} color={color.purple} bounce={streak} />
+      <Glyph name="flame.fill" size={22} color={color.plum} bounce={streak} />
       <Text style={styles.milestoneText}>{`${streak} days in a row`}</Text>
     </Animated.View>
   );
@@ -709,14 +675,7 @@ export function PastWalk({
       <Text style={styles.cardBody}>
         {`${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'} · ${distance(walk.budget_meters)}`}
       </Text>
-      <Pressable
-        style={dim(styles.primary)}
-        onPress={onDone}
-        accessibilityRole="button"
-        accessibilityLabel="Done"
-      >
-        <Text style={styles.primaryText}>Done</Text>
-      </Pressable>
+      <Button kind="quiet" label="Done" onPress={onDone} place={styles.primary} />
     </GlassCard>
   );
 }
@@ -732,8 +691,8 @@ const styles = StyleSheet.create({
   slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  primary: { ...button.solid, marginTop: 14 },
-  primaryText: { ...buttonText, color: color.paper },
+  primary: { marginTop: 14 },
+  pair: { flexDirection: 'row', gap: 12, marginTop: 14 },
   secondary: button.quiet,
   secondaryText: { ...buttonText, color: color.ink },
   error: { ...font.prose, fontSize: 14, color: color.inkSoft, textAlign: 'center' },
@@ -746,7 +705,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   close: { position: 'absolute', top: 16, right: 16 },
-  cardTitle: { ...font.display, fontSize: 23, lineHeight: 30, color: color.ink },
+  cardTitle: { ...screenTitle, fontSize: 28, lineHeight: 32 },
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   from: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   grow: { flex: 1 },
@@ -791,5 +750,5 @@ const styles = StyleSheet.create({
   paged: { flex: 1, textAlign: 'center' },
   // 44pt, Apple's smallest hit target.
   arrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  doneTitle: { ...font.display, fontSize: 34, lineHeight: 40, color: color.ink },
+  doneTitle: screenTitle,
 });

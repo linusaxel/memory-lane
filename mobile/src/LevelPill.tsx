@@ -62,7 +62,7 @@ export default function LevelPill({ level, into, place, onPress }: Props) {
           <Text style={styles.figure}>{line}</Text>
         )}
         <View style={[styles.track, { backgroundColor: real.rule }]}>
-          <View style={[styles.fill, { width: `${into * 100}%`, backgroundColor: real.purple }]} />
+          <View style={[styles.fill, { width: `${into * 100}%`, backgroundColor: real.plum }]} />
         </View>
       </View>
     </GlassButton>

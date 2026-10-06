@@ -19,7 +19,7 @@ import { fetchWalked, type Profile, type WalkedRoute } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import { LOCKETS, locketOf } from './lockets.ts';
 import { loadWalked } from './route.ts';
-import { color, figure, font, label } from './theme.ts';
+import { color, figure, font, label, screenTitle } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
 import WalkCard from './WalkCard.tsx';
 
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { ...font.display, fontSize: 34, color: color.ink },
+  title: screenTitle,
   now: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 12 },
   figure,
   unit: { ...label, fontSize: 12 },
@@ -185,6 +185,6 @@ const styles = StyleSheet.create({
   locketImage: { width: 56, height: 56, resizeMode: 'contain' },
   section: { marginTop: 30, gap: 8, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
   // The heading is the rule, so it reads first; the line under it is the why.
-  sectionTitle: { ...font.displaySemi, fontSize: 19, lineHeight: 25, color: color.ink },
+  sectionTitle: { ...font.title, fontSize: 20, lineHeight: 26, color: color.ink },
   text: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
 });

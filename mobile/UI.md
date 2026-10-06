@@ -245,68 +245,75 @@ Two traps, both hit:
   `userInterfaceStyle` and the `StatusBar`, which is `"auto"` — hardcoding it is
   how an app gets black glyphs on a black background.
 
-**Dark is not the light palette inverted.** Paper becomes a warm near-black
-rather than a grey, gold *lightens* so it holds on a dark map, and `faded`
-lightens too — a locked pin has to survive a dark map, where the light-mode
-value disappeared entirely.
+**Dark is not the light palette inverted.** Paper becomes plum-black rather
+than a grey, gold *lightens* so it holds on a dark map, and `faded` lightens
+too: a locked pin has to survive a dark map.
 
-**Warm and rounded** since 2026-09-27 (`docs/09-visual-design.md` part 8):
-paper and one rounded face, capsules, and glass only over the map. **Gold,
-emerald and purple** since 2026-10-04 (docs/10, "Lockets").
+**Jewel Box** since 2026-10-06 (docs/10, "Jewel Box"): cream and plum-black
+paper, one meaning per colour, Gloock and Newsreader beside SF Pro Rounded.
 
 | Token | Hex | Used for |
 |---|---|---|
-| `paper` | `#F7F4EE` / `#161412` | every surface. Not white, and close to the muted map underneath |
-| `paperRaised` | `#FFFDF9` / `#201D19` | the rare surface that must lift off the paper |
-| `ink` | `#1C1917` / `#F2EDE4` | primary text, solid buttons |
-| `inkSoft` | `#4A443D` / `#BDB5A8` | secondary prose |
-| `inkFaint` | `#746D65` / `#908979` | labels, captions |
-| `rule` | `#E0D9CC` / `#332E27` | hairlines. Rules do the work shadows used to |
-| `faded` | `#776E64` / `#9A9086` | a locked pin out of reach. Dark enough for parchment, light enough for a dark map |
+| `paper` | `#F6F1E7` / `#14101A` | every surface |
+| `paperRaised` | `#FFFCF6` / `#211A29` | a surface that lifts off the paper: cards, fields |
+| `ink` | `#1E1626` / `#F3ECE0` | primary text |
+| `inkSoft` | `#4A3F52` / `#C5BAC9` | secondary prose |
+| `inkFaint` | `#6B6172` / `#9B90A3` | labels, captions |
+| `rule` | `#E2D8CA` / `#362C3F` | hairlines |
+| `quiet` | `#ECE4D7` / `#2A2233` | the quiet button's fill, a close button's, an off chip's |
+| `faded` | `#6B6172` / `#9B90A3` | a locked pin out of reach |
 
-**Three colours, and each means one thing.** Blue is left to the map and
-to your location dot. The lockets' own metal is `metal` in `theme.ts`, one set
-in both themes, for the unlock's Svg only.
+**Each colour means one thing.** Blue is left to the map and to your location
+dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 
 | Token | Hex | Meaning |
 |---|---|---|
-| `gold` | `#86661A` / `#D9B45E` | **a memory, and the way to it.** The next stop's tag, the preview's line (washed out: `solid().line`), the walk's bar, the primary button, a link, errors |
-| `wash` | ink at 7% / 12% | the quiet button's and an off chip's fill |
-| `goldTint` | gold at 14% / 18% | a subscriber's thing offered to a free walker (the PLUS tile) |
-| `seal` | `#1F6B4F` / `#3FA57E` | **openable.** Emerald: the in-reach halo and tag, the reach circle. A fill, never text |
-| `sealInk` | `#F7F4EE` / `#0B1F17` | anything drawn on seal: a lit pin's tag, the pill's words |
+| `gold` | `#7E5E14` / `#E3BE6B` | **a memory, and the way to it.** The route, the next stop, a link, a text button |
+| `goldLine` | gold at 55% / 60% | a gold hairline: glass edges, quiet buttons in the dark |
+| `goldTint` | gold at 14% / 18% | a subscriber's thing offered to a free walker (the Plus tile) |
+| `goBg`, `goRim`, `onGo` | `#24694E` / `#256349` | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
+| `foil` | `#F6DE9A → #D9B45E → #B88E36` | **keep something.** Seal it here, Subscribe, Done. One set in both themes |
+| `seal` | `#1C6A4D` / `#4CC196` | **openable.** Emerald: a lit pin, the reach circle, the diamond in the rule. Fill or text |
+| `sealInk` | `#F6F1E7` / `#0B1F17` | anything drawn on seal |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
-| `sealDeep` | `#16573F` / `#7FD1AE` | seal as words or a thin mark on paper: "attachments waiting" |
-| `purple` | `#5B2A6E` / `#C59BD8` | **what you earned.** The level pill, the streak's flame, your row on the board |
+| `glow` | emerald at 55% | the radial glow behind an in-reach locket. Never a ring |
+| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Level, streak, XP, your row on the board |
+| `track` | `#E9DFEE` / `#362C3F` | the empty part of the level bar |
+| `danger` | `#9B2C2C` / `#F09A9A` | Delete account. Nothing destructive is gold |
+| `heart` | `#A3294E` / `#F29BB4` | a filled heart |
 
 Gold and seal differ in hue and lightness: gold beside gold is no signal, so
 openable is the one thing on the map that is not gold.
 
-**Buttons are `button.solid`, `button.quiet` or `button.outline`** from
-`theme.ts`, with `buttonText` inside: flat 52pt capsules, gold with paper
-text, a thin ink `wash` with ink text, or a rule outline. No ledge
-(docs/09 part 13). Pressed, `dim()` applies `sunk` from `theme.ts`: a little
-smaller and fainter. A Pressable whose style is on a child (Submit's `Chip`,
-the play disc) spreads `sunk` itself. A screen adds only where one sits
-(margin, alignSelf), never its own padding or border. Post is the
-same capsule at 36pt: spread `button.small` after it, `buttonTextSmall` inside,
-`hitSlop={4}`. An action inside a page is not a button but `label` text with
-`hitSlop={12}`: inkSoft for Rewrite, Remove and the photo actions, gold for
-Leave note and Delete. Edit this memory is in ⋯ (docs/10, "Reading and writing
-are one page").
+**Buttons are `Button` (`src/Button.tsx`), one meaning each.** `go` is green
+enamel with a gold bezel: anything that starts or moves on (Plan a walk,
+Next, Start walk, Keep walking, Turn on location). `foil` is a gold gradient:
+keeping something (Seal it here, Subscribe, Done on the finish card). `quiet`
+is the way back or aside (End walk, Cancel, a past walk's Done), with a gold
+hairline in the dark. `text` is a gold word (Another walk today ›, Not now).
+56pt capsules that squish to 0.94 when pressed. Destructive is never gold:
+Delete account is `danger` text. An in-page action whose Pressable lays out
+its own children spreads `button.quiet` from `theme.ts`, and `button.small`
+for the 36pt size with `buttonTextSmall` and `hitSlop={4}`. An action inside
+a page that is only words is `label` text with `hitSlop={12}`.
 
 ## Type
 
-One family: **SF Pro Rounded** (`fontFamily: 'ui-rounded'`), the system's own.
-It sits with Apple Maps' labels, which are SF Pro, and its round terminals keep
-the app friendly. Nothing to bundle or load. Android has no rounded cut and
-gets Roboto, which is Google Maps' label face there.
+Three families (docs/10, "Jewel Box"). **Gloock** for titles, place names and
+big figures; **Newsreader** for a story's body and its quotes; **SF Pro
+Rounded** (`'ui-rounded'`) for everything you press or read as UI, the face of
+Apple Maps' labels. Gloock and Newsreader are bundled and loaded behind the
+splash; each has one weight loaded, so their tokens set no `fontWeight` (a
+weight iOS cannot find falls back to the system face). Android gets Roboto
+for the UI.
 
-| Token | Weight | Used for |
-|---|---|---|
-| `font.display` / `displaySemi` | 700 / 600 | titles, place names, the big figures |
-| `font.prose` | 400 | the stories and every sentence |
-| `font.ui` / `uiMedium` / `uiBold` | 400 / 500 / 600 | buttons, labels, distances, counts. Sentence case |
+| Token | Used for |
+|---|---|
+| `font.title` | Gloock: `screenTitle`, `story.title`, `figure`, place names |
+| `font.story` / `storyItalic` / `storyBold` | Newsreader: the story, its quotes, its #words and bold |
+| `font.display` / `displaySemi` | rounded 700 / 600: UI emphasis |
+| `font.prose` | rounded 400: every sentence that is not a story |
+| `font.ui` / `uiMedium` / `uiBold` | rounded 400 / 500 / 600: buttons, labels, distances, counts. Sentence case |
 
 Each `font` token is a style to spread, `{ ...font.display, fontSize: 34 }`,
 so trying another family or weight is an edit to `theme.ts` alone.
@@ -324,12 +331,11 @@ of the app and its tracking had drifted three ways before anybody noticed.
 **`input`** is the whole text-field block, which renders in both Edit profile
 and Submit and must not drift between them.
 
-**Scale**: 34 display (screen titles) · 28/34 (place name) · 52 `figure` (the
-gate's distance, the streak, the stats) · 36 `figureSmall` (the peek's
-distance, under its place) · 17/26 prose (the story, then-and-now, notes)
-· 16/25 prose (body elsewhere) · 13 `label` (everything labelled) · 17
-buttons. A memory, open or being written, is `story` in `theme.ts` and
-nothing else: 28, 17 and 13.
+**Scale**: 34 `screenTitle` · 34/38 `story.title` (the place name) · 52
+`figure` (the gate's distance, the streak, the stats) · 36 `figureSmall` (the
+peek's distance) · 20/31 `story.body` (the story, then-and-now, notes) · 16/25
+prose (body elsewhere) · 13 `label` · 17 buttons. A memory, open or being
+written, is `story` in `theme.ts` and nothing else: 34, 20 and 13.
 
 
 **Corners are soft**: `radius` in `theme.ts` — capsules for anything you press.

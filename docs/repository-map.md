@@ -157,6 +157,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/steps.ts` | Steps walked, from Core Motion, counted on the account for the journal. Buys nothing. iOS only |
 | `mobile/src/LevelPill.tsx` | Your level and an XP bar, top of the map; the number rolls natively (`@expo/ui`) |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: the plans and the key packs, no-ops without a key. Never decides who has paid |
+| `mobile/src/Button.tsx` | The four buttons: go (green), foil (gold), quiet, text |
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |

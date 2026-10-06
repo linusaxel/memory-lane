@@ -7,7 +7,7 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { fetchBoard, type BoardRow } from './api.ts';
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
-import { color, font, label } from './theme.ts';
+import { color, font, label, screenTitle } from './theme.ts';
 
 type Props = { visible: boolean; onClose: () => void; device: string | null };
 
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
   // Settings' title bar, so the sheets read as one app.
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { ...font.display, fontSize: 34, color: color.ink },
+  title: screenTitle,
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint, marginBottom: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
   // Your own row, when it is below the top: a break says the ranks skip.
@@ -72,5 +72,5 @@ const styles = StyleSheet.create({
   rank: { ...label, minWidth: 28, fontVariant: ['tabular-nums'] },
   name: { flex: 1, ...font.uiMedium, fontSize: 17, color: color.ink },
   opens: { ...font.uiBold, fontSize: 17, color: color.ink, fontVariant: ['tabular-nums'] },
-  mine: { color: color.purple },
+  mine: { color: color.plum },
 });

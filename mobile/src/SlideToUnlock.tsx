@@ -21,7 +21,7 @@ import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
 import type { LocketDrive } from './LocketUnlock.tsx';
 import { clamp } from './lockMotion.ts';
-import { color, font, lift } from './theme.ts';
+import { color, foil, font, lift } from './theme.ts';
 
 type Props = {
   drive: RefObject<LocketDrive | null>;
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     width: THUMB,
     height: THUMB,
     borderRadius: THUMB / 2,
-    backgroundColor: color.knob,
+    backgroundColor: foil.colors[1],
     alignItems: 'center',
     justifyContent: 'center',
     ...lift,

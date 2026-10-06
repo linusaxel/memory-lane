@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { removeAvatar, uploadAvatar, type Profile } from './api.ts';
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
-import { button, buttonText, color, dim, font, input, label } from './theme.ts';
+import { button, buttonText, color, dim, font, input, label, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -168,10 +168,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { ...font.display, fontSize: 34, color: color.ink },
+  title: screenTitle,
   photo: { alignItems: 'center', gap: 14, marginTop: 28 },
   actions: { flexDirection: 'row', gap: 10 },
-  action: { ...button.outline },
+  action: { ...button.quiet },
   actionText: { ...buttonText, color: color.ink },
   section: {
     marginTop: 38,

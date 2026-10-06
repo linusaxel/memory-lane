@@ -21,65 +21,74 @@ const dual = (light: string, dark: string) =>
   Platform.OS === 'ios' ? DynamicColorIOS({ light, dark }) : light;
 
 export const color = {
-  /** Warm paper. Not #fff, and not a zinc - it sits close to the muted Apple
-   *  map underneath so the sheets feel cut from the same stock. */
-  paper: dual('#F7F4EE', '#161412'),
+  /** Warm cream, and plum-black in the dark: the Jewel Box's two papers
+   *  (docs/10-decisions.md, "Jewel Box"). */
+  paper: dual('#F6F1E7', '#14101A'),
   /** One step up for surfaces that need to lift off the paper. */
-  paperRaised: dual('#FFFDF9', '#201D19'),
-  ink: dual('#1C1917', '#F2EDE4'),
-  inkSoft: dual('#4A443D', '#BDB5A8'),
-  /** Labels and captions, and so the colour the 9-11px label voice is set in.
-   *  Both values moved for contrast: #8A837A was 3.4:1 on paper, and #8A8276
-   *  was 4.8:1 on paper but only 4.4:1 on paperRaised, which is where inputs
-   *  and the audio row put it. 4.7:1 and 4.8:1 now, on both grounds.
-   *  tests/test_palette.py holds every pair to 4.5:1 in both themes. */
-  inkFaint: dual('#746D65', '#908979'),
+  paperRaised: dual('#FFFCF6', '#211A29'),
+  ink: dual('#1E1626', '#F3ECE0'),
+  inkSoft: dual('#4A3F52', '#C5BAC9'),
+  /** Labels and captions. tests/test_palette.py holds every pair to 4.5:1
+   *  in both themes, on paper and on paperRaised. */
+  inkFaint: dual('#6B6172', '#9B90A3'),
   /** Hairlines and dividers. Editorial layouts rule; they do not shadow. */
-  rule: dual('#E0D9CC', '#332E27'),
+  rule: dual('#E2D8CA', '#362C3F'),
+  /** The quiet button's fill, and a close button's. */
+  quiet: dual('#ECE4D7', '#2A2233'),
+  /** A quiet button's edge: none on cream, a gold hairline on plum. */
+  quietEdge: dual('rgba(0,0,0,0)', 'rgba(227,190,107,0.45)'),
 
-  /** A memory, and the way to it: the walk's line, the next stop, the one
-   *  primary button, a link. Old gold, dark enough to be text on paper; the
-   *  lockets carry the bright metal. docs/09-visual-design.md. */
-  gold: dual('#86661A', '#D9B45E'),
-  /** The quiet button's fill: ink, washed thin, so it sits on glass or paper
-   *  alike (docs/09 part 13). */
-  wash: dual('rgba(28,25,23,0.07)', 'rgba(242,237,228,0.12)'),
+  /** A memory, and the way to it: links, text buttons, the walk's line. */
+  gold: dual('#7E5E14', '#E3BE6B'),
+  /** A gold hairline: glass over the map, quiet buttons in the dark. */
+  goldLine: dual('rgba(184,142,54,0.55)', 'rgba(227,190,107,0.6)'),
   /** A subscriber's thing, offered to a free walker: gold, washed thin. */
-  goldTint: dual('rgba(134,102,26,0.14)', 'rgba(217,180,94,0.18)'),
+  goldTint: dual('rgba(126,94,20,0.14)', 'rgba(227,190,107,0.18)'),
 
-  /** Openable now, and nothing else: the in-reach halo, the reach circle, the
-   *  unlock ring. Emerald, because gold beside gold is no signal. A fill: text
-   *  and marks on it are sealInk, and emerald text on paper is sealDeep. */
-  seal: dual('#1F6B4F', '#3FA57E'),
-  /** Anything drawn on seal: a lit pin's tag, the pill's words. */
-  sealInk: dual('#F7F4EE', '#0B1F17'),
-  /** The ring filling during a hold. */
+  /** Go: Plan a walk, Start walk, Next, the slide track. Text on it is onGo. */
+  goBg: dual('#24694E', '#256349'),
+  goRim: dual('rgba(233,201,120,0.55)', 'rgba(227,190,107,0.55)'),
+  onGo: dual('#FFFCF6', '#F3ECE0'),
+
+  /** Openable now, and nothing else: a lit pin, the diamond in the rule. A
+   *  fill and a text colour both; marks drawn on it are sealInk. */
+  seal: dual('#1C6A4D', '#4CC196'),
+  sealInk: dual('#F6F1E7', '#0B1F17'),
   sealSoft: dual('#D5EBDF', '#173528'),
-  /** Seal as text or a thin mark on paper. */
-  sealDeep: dual('#16573F', '#7FD1AE'),
+  /** The glow behind an in-reach locket. Never a ring. */
+  glow: dual('rgba(28,140,98,0.55)', 'rgba(76,193,150,0.55)'),
 
-  /** The rich purple detail: your level, your streak, your row on the board. Things you earned, never a memory or an action. */
-  purple: dual('#5B2A6E', '#C59BD8'),
+  /** What you earned: your level, your streak, XP, your row on the board.
+   *  Never a memory or an action. */
+  plum: dual('#5D2A71', '#CFA4E2'),
+  /** The empty part of the level bar. */
+  track: dual('#E9DFEE', '#362C3F'),
 
-  /** Out of reach: a far thing, faded. Dark enough to hold against the
-   *  parchment map, and lighter in the dark where a dark mark vanishes. */
-  faded: dual('#776E64', '#9A9086'),
+  /** Delete account, and nothing else gold-free and final. */
+  danger: dual('#9B2C2C', '#F09A9A'),
+  heart: dual('#A3294E', '#F29BB4'),
+
+  /** Out of reach: a far thing, faded. */
+  faded: dual('#6B6172', '#9B90A3'),
 
   /** The wash behind a reachable pin, so it is findable before its shape is.
-   *  Deliberately not a pair: it is a translucent seal over a map, and one
-   *  alpha reads about the same over either. It lives here rather than inline
-   *  so a palette change reaches it. */
-  halo: 'rgba(63,165,126,0.35)',
-
-  /** The slide track's knob: white in both themes, as iOS draws it. */
-  knob: '#FFFFFF',
+   *  One alpha reads about the same over either map. */
+  halo: 'rgba(76,193,150,0.35)',
 
   /** The hairline round a glass control, so it holds an edge on the map. */
-  edge: dual('rgba(28,25,23,0.25)', 'rgba(242,237,228,0.25)'),
+  edge: dual('rgba(184,142,54,0.45)', 'rgba(227,190,107,0.45)'),
 
   /** `lift`'s shadow, and the scrim over an uploading photo. */
   shadow: '#000',
   scrim: 'rgba(0,0,0,0.35)',
+};
+
+/** Gold foil: Seal it here, Subscribe, Done. One set in both themes. */
+export const foil = {
+  colors: ['#F6DE9A', '#D9B45E', '#B88E36'] as const,
+  highlight: 'rgba(255,246,214,0.9)',
+  ring: 'rgba(110,82,22,0.4)',
+  text: '#1E1626',
 };
 
 /** The lockets' metal, for the unlock's Svg (LocketUnlock.tsx). One set in
@@ -104,24 +113,28 @@ export const metal = {
   north: '#8F2F1B',
 };
 
+/** The paywall's plum velvet, one set in both themes: it is cloth. */
+export const velvet = { hi: '#7A3E92', mid: '#4E1F63', deep: '#36144A' };
+
 /** Real colours, for the few props that cannot take a DynamicColorIOS value:
  *  map overlays, Svg fills, the splash. Pick with `useColorScheme()`. Where a
  *  name is also in `color`, the values are the same pair. */
 export const solid = (dark: boolean) => ({
-  paper: dark ? '#161412' : '#F7F4EE',
-  ink: dark ? '#F2EDE4' : '#1C1917',
-  rule: dark ? '#332E27' : '#E0D9CC',
-  gold: dark ? '#D9B45E' : '#86661A',
-  purple: dark ? '#C59BD8' : '#5B2A6E',
-  seal: dark ? '#3FA57E' : '#1F6B4F',
+  paper: dark ? '#14101A' : '#F6F1E7',
+  ink: dark ? '#F3ECE0' : '#1E1626',
+  rule: dark ? '#362C3F' : '#E2D8CA',
+  gold: dark ? '#E3BE6B' : '#7E5E14',
+  plum: dark ? '#CFA4E2' : '#5D2A71',
+  track: dark ? '#362C3F' : '#E9DFEE',
+  seal: dark ? '#4CC196' : '#1C6A4D',
   /** The darker edge Apple Maps draws round a route. */
   goldCasing: dark ? '#6E5216' : '#5E470F',
   /** The preview's line: gold washed out, so the lockets on it pop. */
   line: dark ? '#8A7238' : '#E3CF98',
   lineCasing: dark ? '#5E4C22' : '#C9AE68',
   /** The reach circle: the seal, washed over the map. */
-  reachStroke: dark ? 'rgba(63,165,126,0.75)' : 'rgba(31,107,79,0.7)',
-  reachFill: dark ? 'rgba(63,165,126,0.12)' : 'rgba(31,107,79,0.12)',
+  reachStroke: dark ? 'rgba(76,193,150,0.75)' : 'rgba(28,106,77,0.7)',
+  reachFill: dark ? 'rgba(76,193,150,0.12)' : 'rgba(28,106,77,0.12)',
   /** mobile/assets/icon.svg and icon-dark.svg. */
   tile: dark ? '#5e2a18' : '#a8350f',
   road: dark ? '#f2ede4' : '#f7f4ee',
@@ -132,14 +145,20 @@ export const solid = (dark: boolean) => ({
   goldGlass: dark ? 'rgba(217,180,94,0.85)' : 'rgba(118,90,22,0.92)',
   /** The same warmth on a glass card, thicker: a card carries prose, which
    *  must hold its contrast over a busy map. */
-  frostCard: dark ? 'rgba(32,29,25,0.72)' : 'rgba(255,253,249,0.72)',
+  frostCard: dark ? 'rgba(33,26,41,0.86)' : 'rgba(255,252,246,0.86)',
 });
 
-/** One family, SF Pro Rounded: the system's own, so it sits with the map's
- *  labels, and rounded, so it is friendly. Android has no rounded cut and
- *  falls back to Roboto, which is the map's there. Each token is a style you
- *  spread (`...font.display`), so a family or weight changes here alone. */
+/** Three families. Gloock for titles, place names and big figures; Newsreader
+ *  for a story's body and quotes; SF Pro Rounded for everything you press or
+ *  read as UI (Roboto on Android). The two bundled faces have one weight
+ *  each, so their tokens set none: a weight iOS cannot find falls back to the
+ *  system face. App.tsx loads them before the splash goes. Each token is a
+ *  style you spread (`...font.display`), so a family changes here alone. */
 export const font = {
+  title: { fontFamily: 'Gloock_400Regular' },
+  story: { fontFamily: 'Newsreader_400Regular' },
+  storyItalic: { fontFamily: 'Newsreader_400Regular_Italic' },
+  storyBold: { fontFamily: 'Newsreader_600SemiBold' },
   display: { fontFamily: 'ui-rounded', fontWeight: '700' },
   displaySemi: { fontFamily: 'ui-rounded', fontWeight: '600' },
   prose: { fontFamily: 'ui-rounded', fontWeight: '400' },
@@ -150,7 +169,10 @@ export const font = {
 
 /** The only corners: a field, a card over the map, and a capsule for anything
  *  you press. Circles are half their side and need no token. */
-export const radius = { field: 14, card: 28, pill: 999 };
+export const radius = { field: 14, card: 24, pill: 999 };
+
+/** A screen's or sheet's own title: Journal, Settings, Your walks. */
+export const screenTitle = { ...font.title, fontSize: 34, lineHeight: 40, color: color.ink };
 
 /** The shadow for paper that floats over the map. The hold ring's seal glow
  *  is the only other (UI.md, "Spacing, radii and the two shadows"). */
@@ -193,14 +215,8 @@ export const pill = {
 
 /** The number a screen is about: the distance to a pin, a streak, a stat. The
  *  peek's distance is the small one, under the place it belongs to. */
-export const figure = { ...font.display, fontSize: 52, color: color.ink, letterSpacing: -1 };
-export const figureSmall = {
-  ...font.display,
-  fontSize: 36,
-  lineHeight: 42,
-  color: color.ink,
-  letterSpacing: -0.5,
-};
+export const figure = { ...font.title, fontSize: 52, lineHeight: 56, color: color.ink };
+export const figureSmall = { ...font.title, fontSize: 36, lineHeight: 42, color: color.ink };
 
 /** The app's label voice, wherever a screen names a thing rather than says
  *  something. */
@@ -214,8 +230,8 @@ export const label = {
  *  open sheet's text with nothing in it yet, so the two cannot drift. Three
  *  sizes and nothing else (docs/10, "Reading and writing are one page"). */
 export const story = {
-  title: { ...font.display, fontSize: 28, lineHeight: 34, color: color.ink },
-  body: { ...font.prose, fontSize: 17, lineHeight: 26, color: color.ink },
+  title: { ...font.title, fontSize: 34, lineHeight: 38, color: color.ink },
+  body: { ...font.story, fontSize: 20, lineHeight: 31, color: color.ink },
   meta: label,
 };
 
@@ -227,28 +243,23 @@ export const buttonText = {
 };
 export const buttonTextSmall = { ...font.uiBold, fontSize: 15 };
 
-/** The app's buttons: three flat capsules, two sizes. Spread one and add only where
- *  it sits (margin, alignSelf); the text is `buttonText`. An action inside the
- *  page rather than ending it (Leave note, Edit this memory) spreads `small`
- *  after the capsule, with `buttonTextSmall` and `hitSlop={4}` to reach 44pt.
- *  A link to somewhere else (Terms, a credit) stays a link. */
-const buttonBox = {
-  borderWidth: 1.5,
-  borderColor: 'transparent',
-  borderRadius: radius.pill,
-  minHeight: 52,
-  paddingVertical: 12,
-  paddingHorizontal: 24,
-  alignItems: 'center' as const,
-  justifyContent: 'center' as const,
-};
+/** A capsule for an action inside a page (Sign out, Choose photo): the quiet
+ *  button's look, for a Pressable that lays out its own children. Anything
+ *  that starts, keeps or ends something is `Button` (src/Button.tsx). An
+ *  in-page action spreads `small` after it, with `buttonTextSmall` and
+ *  `hitSlop={4}` to reach 44pt. A link to somewhere else stays a link. */
 export const button = {
-  /** The one thing to do. Text in paper. */
-  solid: { ...buttonBox, backgroundColor: color.gold },
-  /** The way back, next to a solid one. Text in ink. */
-  quiet: { ...buttonBox, backgroundColor: color.wash },
-  /** An action standing on its own. Text in ink. */
-  outline: { ...buttonBox, borderColor: color.rule },
+  quiet: {
+    borderWidth: 1,
+    borderColor: color.quietEdge,
+    borderRadius: radius.pill,
+    minHeight: 52,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: color.quiet,
+  },
   small: { minHeight: 36, paddingVertical: 6, paddingHorizontal: 16 },
 };
 

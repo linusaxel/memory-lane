@@ -5,7 +5,6 @@ import {
   Linking,
   Modal,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -100,7 +99,7 @@ import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
-import { button, buttonText, color, dim, font, label, pill, solid } from './src/theme.ts';
+import { color, font, label, pill, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import AccountMenu from './src/AccountMenu.tsx';
@@ -111,6 +110,14 @@ import Paywall from './src/Paywall.tsx';
 import { identify } from './src/purchases.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
+import Button from './src/Button.tsx';
+import { useFonts } from 'expo-font';
+import { Gloock_400Regular } from '@expo-google-fonts/gloock';
+import {
+  Newsreader_400Regular,
+  Newsreader_400Regular_Italic,
+  Newsreader_600SemiBold,
+} from '@expo-google-fonts/newsreader';
 
 // Held until StartupLogo has painted its first frame, which is the splash
 // image exactly, so the native splash and the JS animation hand off with no
@@ -211,6 +218,14 @@ function filedBy(memory: LocatedMemory, me: string | null | undefined): boolean 
 
 export default function App() {
   const [logoDone, setLogoDone] = useState(false);
+  // The splash holds until these are in, so no title ever paints in the
+  // system face first. A font that fails to load falls back; it never blocks.
+  const [fontsLoaded, fontError] = useFonts({
+    Gloock_400Regular,
+    Newsreader_400Regular,
+    Newsreader_400Regular_Italic,
+    Newsreader_600SemiBold,
+  });
 
   // Only for grouping pins at the zoom they are seen at.
   const [region, setRegion] = useState<Region>(FALLBACK_REGION);
@@ -1447,6 +1462,8 @@ export default function App() {
     setOpenIndex(0);
   };
 
+  if (!fontsLoaded && !fontError) return null;
+
   if (!logoDone) {
     return <StartupLogo onDone={() => setLogoDone(true)} />;
   }
@@ -1891,11 +1908,14 @@ export default function App() {
               {addButton()}
               <View style={styles.middle}>
                 {walking && !position && (
-                  <Pressable
-                    style={dim([button.solid, styles.locate])}
-                    accessibilityRole="button"
-                    accessibilityLabel="Turn on location"
+                  // Without location nothing can ever unlock, so the button says so
+                  // rather than leaving a walk whose stops never open.
+                  <Button
+                    kind="go"
+                    label="Turn on location"
+                    glyph="location"
                     accessibilityHint="Asks for permission to use your location"
+                    place={styles.locate}
                     onPress={() => {
                       if (permission === 'blocked') {
                         Linking.openSettings();
@@ -1903,11 +1923,7 @@ export default function App() {
                       }
                       goToMyLocation().catch(() => false);
                     }}
-                  >
-                    {/* Without location nothing can ever unlock, so the button says so
-                        rather than leaving a walk whose stops never open. */}
-                    <Text style={styles.planWalkText}>Turn on location</Text>
-                  </Pressable>
+                  />
                 )}
                 {/* Standing on a stop, the card steps aside for the slide
                     over it; step away and the card, and its ✕, are back
@@ -2206,7 +2222,6 @@ const styles = StyleSheet.create({
   slideRow: { position: 'absolute', left: 24, right: 24, bottom: 70 + 56 + 16 },
   wash: { ...StyleSheet.absoluteFill, backgroundColor: color.paper },
   grow: { flex: 1 },
-  planWalkText: { ...buttonText, color: color.paper },
   planWalk: { ...pill, minHeight: 56 },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },

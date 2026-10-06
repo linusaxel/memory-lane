@@ -38,7 +38,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { deleteAccount, fetchProfile, signIn, signOut, type Profile } from './api.ts';
 import { LogoTile } from './StartupLogo.tsx';
-import { button, buttonText, color, dim, font, label } from './theme.ts';
+import { button, buttonText, color, dim, font, label, screenTitle } from './theme.ts';
 
 // Closes the browser tab the moment the redirect comes back. Without it the
 // person is left staring at a finished Google page wondering what to tap.
@@ -356,7 +356,12 @@ export default function SignIn({ device, profile, onProfile }: Props) {
           cancelled in the App Store or Google Play, not here.
         </Text>
       )}
-      <Pressable style={dim(styles.action)} onPress={remove} accessibilityRole="button">
+      <Pressable
+        style={dim(styles.delete)}
+        onPress={remove}
+        hitSlop={12}
+        accessibilityRole="button"
+      >
         <Text style={styles.deleteText}>
           {confirmingDelete ? 'Delete for good' : 'Delete account'}
         </Text>
@@ -370,7 +375,7 @@ export default function SignIn({ device, profile, onProfile }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper, paddingHorizontal: 32 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 },
-  title: { ...font.display, fontSize: 34, color: color.ink, marginTop: 8 },
+  title: { ...screenTitle, marginTop: 8 },
   tagline: {
     ...font.prose,
     fontSize: 17,
@@ -380,7 +385,7 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   actions: { gap: 12, alignItems: 'stretch' },
-  google: { ...button.outline, height: 52, paddingVertical: 0 },
+  google: { ...button.quiet, height: 52, paddingVertical: 0 },
   googleText: { ...buttonText, color: color.ink },
   skip: { alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 16 },
   skipText: { ...label },
@@ -388,8 +393,9 @@ const styles = StyleSheet.create({
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   // Apple's button draws itself; it only takes a frame.
   apple: { height: 52, alignSelf: 'stretch' },
-  action: { ...button.outline, alignSelf: 'flex-start' },
+  action: { ...button.quiet, alignSelf: 'flex-start' },
   actionText: { ...buttonText, color: color.ink },
-  deleteText: { ...buttonText, color: color.gold },
+  delete: { alignSelf: 'flex-start', paddingVertical: 4 },
+  deleteText: { ...buttonText, color: color.danger },
   error: { ...font.ui, fontSize: 13, color: color.gold, textAlign: 'center' },
 });

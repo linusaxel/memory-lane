@@ -58,7 +58,7 @@ import {
   type Counted,
   type Seen,
 } from './seen.ts';
-import { color, dim, font, label } from './theme.ts';
+import { color, dim, font, label, screenTitle } from './theme.ts';
 import { useReduceMotion } from './useBreath.ts';
 
 type Props = {
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
   },
   who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   whoText: { flex: 1 },
-  title: { ...font.display, fontSize: 28, color: color.ink },
+  title: { ...screenTitle, fontSize: 28, lineHeight: 34 },
   stats: { ...label, fontSize: 12, marginTop: 2 },
   switcher: { flexDirection: 'row', marginTop: 22, paddingHorizontal: 24, gap: 24 },
   switcherItem: { gap: 8 },
@@ -743,11 +743,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dotText: { color: color.paper, ...font.uiBold, fontSize: 12 },
-  place: { ...font.displaySemi, fontSize: 19, lineHeight: 26, color: color.ink },
+  place: { ...font.title, fontSize: 20, lineHeight: 26, color: color.ink },
   summary: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   metaRow: { flexDirection: 'row', gap: 10 },
   when: { ...label, fontSize: 12, marginTop: 2 },
-  badge: { ...label, fontSize: 12, color: color.sealDeep, marginTop: 2 },
+  badge: { ...label, fontSize: 12, color: color.seal, marginTop: 2 },
   spinner: { marginTop: 12 },
   empty: { alignItems: 'flex-start', paddingHorizontal: 24, paddingVertical: 12, gap: 14 },
   emptyText: {

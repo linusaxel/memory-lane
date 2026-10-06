@@ -8,7 +8,7 @@ export function openLink(url: string): Promise<unknown> {
   return WebBrowser.openBrowserAsync(url, {
     presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
     // controlsColor takes a plain string, so pick gold's half by hand.
-    controlsColor: Appearance.getColorScheme() === 'dark' ? '#F2703F' : '#A8350F',
+    controlsColor: Appearance.getColorScheme() === 'dark' ? '#E3BE6B' : '#7E5E14',
     dismissButtonStyle: 'close',
   });
 }

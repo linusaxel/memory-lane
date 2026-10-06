@@ -1,5 +1,5 @@
 /** The one way a layer closes: an × in a quiet circle, top trailing
- *  (UI.md, rule 12). 30pt drawn, 44pt to the finger. The same circle with
+ *  (UI.md, rule 12). 40pt drawn, 44pt to the finger. The same circle with
  *  another `icon` is a story's ⋯. */
 
 import type { ComponentProps } from 'react';
@@ -28,22 +28,24 @@ export default function CloseButton({
       style={dim([styles.circle, place])}
       onPress={onPress}
       disabled={disabled}
-      hitSlop={7}
+      hitSlop={2}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Glyph name={icon} size={13} weight="semibold" color={color.inkSoft} />
+      <Glyph name={icon} size={15} weight="semibold" color={color.ink} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   circle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: color.rule,
+    backgroundColor: color.quiet,
+    borderWidth: 1,
+    borderColor: color.quietEdge,
   },
 });

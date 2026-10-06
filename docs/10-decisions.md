@@ -3092,7 +3092,8 @@ the shape and type were the bigger half of why.
 
 ### One font, the map's
 
-Status: Accepted 2026-09-27
+Status: Accepted 2026-09-27. **Superseded 2026-10-06** by *Jewel Box*: Gloock
+and Newsreader join SF Pro Rounded, which stays for all UI.
 
 The founder saw three faces on one screen: Fraunces on the walk card, Figtree
 on its buttons and SF Pro in the map's street names, which `react-native-maps`
@@ -3484,6 +3485,26 @@ something a walker earns.
 **Options considered:** a locket per layer or era, picked by the pipeline
 (rejected: it brings back the encoding *One pin* removed); the compass unlock
 for every memory (rejected by the founder: each locket opens as itself).
+
+### Jewel Box
+
+Status: Accepted 2026-10-06. Supersedes *One font, the map's*, and the colour
+values of *Lockets* (the roles stay). The founder's round-2 redesign, direction
+B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
+
+- **One meaning per colour.** Gold is a memory and the way to it (links, the
+  route, pins). Green enamel (`goBg`) is go: every start or next action. Gold
+  foil (`foil`) is keeping something: Seal it here, Subscribe, Done. Emerald
+  (`seal`, `glow`) is openable now. Plum (`plum`) is what you earned: level,
+  streak, XP, your board row. Blue stays the map's and your dot's. Destructive
+  actions are never gold: Delete account is `danger`, End walk is quiet.
+- **Papers.** Warm cream in light; plum-black `#14101A` in dark, replacing the
+  brown. Every text pair still holds 4.5:1 in both (`tests/test_palette.py`).
+- **Three faces.** Gloock for titles, place names and big figures; Newsreader
+  for the story's body and quotes; SF Pro Rounded, the map's, for everything
+  else. The two new faces are bundled (`@expo-google-fonts/*`) and loaded
+  behind the splash in `App.tsx`, so a title never paints in the system face
+  first; a failed load falls back rather than blocking.
 
 ### No keys; your memories are your lockets
 
