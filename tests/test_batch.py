@@ -102,3 +102,34 @@ def test_a_network_blip_while_polling_does_not_drop_the_batch(db_session, collec
     batches = _Blip([('{"memories": []}', "end_turn")])
     assert send(NS(messages=NS(batches=batches)), requests, db_session) == 1
     assert batches.polls == 2
+
+
+@pytest.mark.db
+def test_a_run_that_stops_early_still_scores_what_it_saved(db_session, monkeypatch):
+    from contextlib import contextmanager
+
+    from pipeline import batch, tasks
+
+    @contextmanager
+    def _session():
+        yield db_session
+
+    monkeypatch.setattr(batch, "get_session", _session)
+    saved = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id, memories_extracted) "
+            "VALUES ('https://www.youtube.com/watch?v=ddddddddddd', 'youtube', 'ddddddddddd', true) "
+            "RETURNING id"
+        )
+    ).scalar()
+
+    def _one_call_left(ids):
+        extract.COLLECT.requests["k"] = {}
+
+    monkeypatch.setattr(extract, "extract_all_pending", _one_call_left)
+    monkeypatch.setattr(batch, "send", lambda client, requests, session: 0)
+    scored = []
+    monkeypatch.setattr(tasks, "after_save", lambda client, cid: scored.append(cid))
+    with pytest.raises(SystemExit):
+        batch.run(None, [saved])
+    assert scored == [saved]

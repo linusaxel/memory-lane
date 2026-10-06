@@ -94,6 +94,7 @@ def run(client, content_ids: list[int]) -> None:
             if row.segments and _thin(row.source_type, row.segments):
                 seeded(session, client, row.id, row.title, row.segments)
 
+    stopped = None
     for n in range(1, MAX_PASSES + 1):
         extract.COLLECT = Collect()
         try:
@@ -106,9 +107,10 @@ def run(client, content_ids: list[int]) -> None:
         logger.info(f"Pass {n}: {len(pending)} calls wait on a batch")
         with get_session() as session:
             if not send(client, pending, session):
-                raise SystemExit("A batch stored no reply; stopping rather than resending it")
+                stopped = "A batch stored no reply; stopping rather than resending it"
+                break
     else:
-        raise SystemExit(f"Still waiting after {MAX_PASSES} passes")
+        stopped = f"Still waiting after {MAX_PASSES} passes"
 
     with get_session() as session:
         done = list(
@@ -120,6 +122,9 @@ def run(client, content_ids: list[int]) -> None:
     for content_id in done:
         after_save(client, content_id)
     logger.info(f"{len(done)} of {len(content_ids)} extracted")
+    # Stopping early still scores what was saved: a rerun never picks it up again.
+    if stopped:
+        raise SystemExit(stopped)
 
 
 def main():

@@ -24,6 +24,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A reply cut at `max_tokens=2000` is paid for and thrown away.**
+  2026-10-07: the Københavnerglimt batch logged it on several calls, then a
+  last pass of three cut calls stored nothing and stopped the run, leaving
+  content 633 pending forever (every rerun pays for the same cut replies).
+  Fix: log the stage with the warning, and raise that stage's cap in
+  `pipeline/extract.py` (`_stored_request` defaults to 2000).
 - **Maestro taps what the screen shows, not what the scroll view shows.**
   2026-10-06: Add's bar floats over the page's edge and its header covers
   the top, but `scrollUntilVisible` and `tapOn` call a field half under
