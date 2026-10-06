@@ -60,6 +60,7 @@ See [docs/repository-map.md](docs/repository-map.md). Run the tests with `./loop
 | [08-ux-flows.md](docs/08-ux-flows.md) | What a person actually does, start to finish |
 | [09-visual-design.md](docs/09-visual-design.md) | Why the app looks the way it does, and what was rejected |
 | [10-decisions.md](docs/10-decisions.md) | The calls where the obvious alternative is wrong |
+| [design-brief/](docs/design-brief/README.md) | Every view as a screenshot, the founder's taste in their words, and the constraints: hand it to a designer |
 | [11-memory-types.md](docs/11-memory-types.md) | What a memory is and isn't: layer vs. tag vs. confidence |
 | [research-progression.md](docs/research-progression.md) | XP, loot and money in walking games: what lasted, with sources |
 | [permission-request.md](docs/permission-request.md) | The email asking a YouTube channel for written permission, and what must be true first |
