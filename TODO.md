@@ -510,6 +510,22 @@ progress; refine what exists rather than add.
       image; needs kbhbilleder access) The viewfinder in Add (docs/10, *The camera is a
       block*) ghosts an archival photo over itself at ~40% so the walker can match it. Open: where the
       "now" photo goes. Founder's call.
+- [ ] **A swipe down throws Add's draft away.** (checked 2026-10-06) ×
+      asks "Tap again to discard", but React Native's page sheet cannot
+      refuse a swipe (`Modal` has no `isModalInPresentation`), so a slip
+      loses the story. Options: a small patch setting it while `dirty`, or
+      keep the draft in memory until the next open at the same spot. HIG
+      Sheets asks for a confirm. `mobile/src/Submit.tsx`.
+- [ ] **Heading in Add's bar reads as a plain "A".** (checked 2026-10-06)
+      `textformat.size.larger` next to B and I is ambiguous. Try
+      `textformat.size` or an "H"-style symbol, and look at it beside the
+      others. `Tool` in `mobile/src/Submit.tsx`.
+- [ ] **Watch the seal land.** (checked 2026-10-06) `LocketSeal` (the lid
+      run backwards, the drop onto the pin, the first-memory line) passes
+      `file-and-edit` but nobody has looked at it frame by frame: the key
+      showing as the lid shuts, the drop point when the map is not following
+      the user, and the first-memory line over a busy map. Screenshot it in
+      the simulator, then on a phone.
 - [ ] **Hand-drawn illustrations.** (checked 2026-10-03) The app has
       none. Places that want one: the empty walk list, sign-in, the paywall,
       the finish card. Commission one base style (`ILLUSTRATOR`), derive the
