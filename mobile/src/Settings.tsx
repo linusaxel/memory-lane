@@ -89,7 +89,7 @@ export default function Settings({
 
         <Section title="How unlocking works">
           <Row>
-            <Image source={locketOf().locked} style={{ width: 15, height: 15 }} />
+            <Image source={locketOf().locked} style={{ width: 32, height: 32 }} />
             <Text style={styles.rowText}>
               Memories stay locked until you're within {Math.round(radiusMeters)} m of them.
             </Text>
@@ -108,15 +108,13 @@ export default function Settings({
               ? "On. Used to tell when you're close to a memory, and never stored."
               : "Off. You'll need it to unlock anything."}
           </Text>
-          <Pressable
-            style={dim(styles.action)}
+          <Button
+            kind="text"
+            label={granted ? 'Manage in Settings' : 'Turn on location'}
+            trailing={granted ? 'arrow.up.right' : undefined}
             onPress={onRequestLocation}
-            accessibilityRole="button"
-          >
-            <Text style={styles.actionText}>
-              {granted ? 'Manage in Settings' : 'Turn on location'}
-            </Text>
-          </Pressable>
+            place={styles.textAction}
+          />
         </Section>
 
         <Section title="Notifications">
@@ -188,6 +186,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionRule} />
       {children}
     </View>
   );
@@ -203,18 +202,15 @@ const styles = StyleSheet.create({
   // The journal's title bar, so the two sheets read as one app.
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: screenTitle,
-  section: {
-    marginTop: 38,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: color.rule,
-    paddingTop: 18,
-  },
+  // A sentence-case label over its own rule, then the section.
+  section: { marginTop: 32, gap: 12 },
   sectionTitle: { ...label },
+  sectionRule: { height: StyleSheet.hairlineWidth, backgroundColor: color.rule, marginTop: -4 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   rowText: { flex: 1, ...font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   action: { ...button.quiet, alignSelf: 'flex-start', marginTop: 6 },
+  textAction: { alignSelf: 'flex-start' },
   actionText: { ...buttonText, color: color.ink },
   link: { alignSelf: 'flex-start' },
   linkText: {

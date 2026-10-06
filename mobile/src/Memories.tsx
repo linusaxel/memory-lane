@@ -8,9 +8,9 @@
  * first (a walk that opened nothing is deleted, docs/10). A row opens in
  * place to the memories it earned, strung on a rail in walking order. Cached
  * (route.ts `loadWalked`), so it reads on a train (F16).
- * **Unlocked Memories** - everything earned, newest first, from App.tsx's
+ * **Unlocked** - everything earned, newest first, from App.tsx's
  * local copy (unlocked.ts), so it too reads on a train. Your own are left out.
- * **My Memories** - what you filed. Always the server's, because it has to
+ * **Mine** - what you filed. Always the server's, because it has to
  * show a thing no local cache was told about: one enough people reported.
  * Pages at `MINE_PAGE_SIZE`.
  */
@@ -21,7 +21,6 @@ import {
   ActivityIndicator,
   Animated,
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -40,8 +39,8 @@ import {
 } from './api.ts';
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
+import DiamondRule from './DiamondRule.tsx';
 import Glyph from './Glyph.tsx';
-import { locketOf } from './lockets.ts';
 import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
@@ -58,7 +57,7 @@ import {
   type Counted,
   type Seen,
 } from './seen.ts';
-import { color, dim, font, label, screenTitle } from './theme.ts';
+import { color, dim, font, label, lift, screenTitle } from './theme.ts';
 import { useReduceMotion } from './useBreath.ts';
 
 type Props = {
@@ -77,7 +76,7 @@ type Props = {
   refreshKey: number;
   /** Everything this device has earned, newest first, minus what you filed. */
   unlocked: LocatedMemory[];
-  /** What this device hearted: Unlocked Memories can show only those. */
+  /** What this device hearted: Unlocked can show only those. */
   hearted: Set<number>;
   onOpenMine: (memory: LocatedMemory) => void;
   /** An earned stop of a past walk. */
@@ -515,12 +514,12 @@ function Switcher({
     <View style={styles.switcher}>
       <SwitcherItem label="Walks" active={section === 'walks'} onPress={() => onSelect('walks')} />
       <SwitcherItem
-        label="Unlocked Memories"
+        label="Unlocked"
         active={section === 'unlocked'}
         onPress={() => onSelect('unlocked')}
       />
       <SwitcherItem
-        label={filedNew ? 'My Memories ·' : 'My Memories'}
+        label={filedNew ? 'Mine ·' : 'Mine'}
         active={section === 'mine'}
         onPress={() => onSelect('mine')}
       />
@@ -539,13 +538,12 @@ function SwitcherItem({
 }) {
   return (
     <Pressable
-      style={dim(styles.switcherItem)}
+      style={dim([styles.switcherItem, active && styles.switcherItemActive])}
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
     >
       <Text style={[styles.switcherLabel, active && styles.switcherLabelActive]}>{label}</Text>
-      <View style={[styles.switcherRule, active && styles.switcherRuleActive]} />
     </Pressable>
   );
 }
@@ -642,11 +640,12 @@ function Row({
           <>
             <View style={styles.rail} />
             <View style={styles.dot}>
-              <Text style={styles.dotText}>{stop}</Text>
+              <Glyph name="checkmark" size={11} weight="bold" color={color.paper} />
             </View>
           </>
         )}
         <Text style={styles.place} numberOfLines={1}>
+          {stop !== undefined && <Text style={styles.stopNumber}>{stop} </Text>}
           {place}
         </Text>
         <Text style={styles.summary} numberOfLines={2}>
@@ -667,7 +666,7 @@ function Row({
 function Empty({ text }: { text: string }) {
   return (
     <View style={styles.empty}>
-      <Image source={locketOf().locked} style={{ width: 28, height: 28 }} />
+      <DiamondRule />
       <Text style={styles.emptyText}>{text}</Text>
     </View>
   );
@@ -688,12 +687,33 @@ const styles = StyleSheet.create({
   whoText: { flex: 1 },
   title: { ...screenTitle, fontSize: 28, lineHeight: 34 },
   stats: { ...label, fontSize: 12, marginTop: 2 },
-  switcher: { flexDirection: 'row', marginTop: 22, paddingHorizontal: 24, gap: 24 },
-  switcherItem: { gap: 8 },
-  switcherLabel: { ...label, color: color.inkFaint },
-  switcherLabelActive: { color: color.ink },
-  switcherRule: { height: 2, backgroundColor: 'transparent' },
-  switcherRuleActive: { backgroundColor: color.ink },
+  // A capsule with the open tab raised in it, like the planner's Mode row.
+  switcher: {
+    flexDirection: 'row',
+    marginTop: 22,
+    marginHorizontal: 24,
+    padding: 4,
+    borderRadius: 999,
+    backgroundColor: color.quiet,
+    borderWidth: 1,
+    borderColor: color.quietEdge,
+  },
+  switcherItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  switcherItemActive: {
+    backgroundColor: color.paperRaised,
+    borderColor: color.goldLine,
+    ...lift,
+    shadowOpacity: 0.08,
+  },
+  switcherLabel: { ...label, color: color.inkSoft },
+  switcherLabelActive: { ...font.uiBold, color: color.ink },
   // Space, not a rule, sets the list off from the switcher: a rule here and
   // another between rows read as a double line.
   header: {
@@ -728,32 +748,33 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 1,
-    backgroundColor: color.rule,
+    backgroundColor: color.goldLine,
   },
+  // Every stop here was opened: the walk card's done circle.
   dot: {
     position: 'absolute',
-    left: 24,
-    top: 20,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    paddingHorizontal: 4,
+    left: 23,
+    top: 19,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: color.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dotText: { color: color.paper, ...font.uiBold, fontSize: 12 },
+  stopNumber: { color: color.gold },
   place: { ...font.title, fontSize: 20, lineHeight: 26, color: color.ink },
   summary: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   metaRow: { flexDirection: 'row', gap: 10 },
   when: { ...label, fontSize: 12, marginTop: 2 },
   badge: { ...label, fontSize: 12, color: color.seal, marginTop: 2 },
   spinner: { marginTop: 12 },
-  empty: { alignItems: 'flex-start', paddingHorizontal: 24, paddingVertical: 12, gap: 14 },
+  empty: { paddingHorizontal: 24, paddingVertical: 12, gap: 16 },
   emptyText: {
-    ...font.prose,
-    fontSize: 16,
+    ...font.storyItalic,
+    fontSize: 18,
     lineHeight: 26,
-    color: color.inkFaint,
+    color: color.inkSoft,
+    textAlign: 'center',
   },
 });

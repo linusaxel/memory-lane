@@ -78,7 +78,13 @@ export default function WalkCard({ walk, size, onPress }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 14, borderWidth: 1, borderColor: color.rule, overflow: 'hidden' },
+  card: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: color.goldLine,
+    backgroundColor: color.paperRaised,
+    overflow: 'hidden',
+  },
   under: { paddingHorizontal: 10, paddingBottom: 10, gap: 2 },
   day: { ...font.displaySemi, fontSize: 14, color: color.ink },
   meta: { ...label, fontSize: 11 },

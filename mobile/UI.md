@@ -141,14 +141,17 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              value (countUp.ts, at most 8 ticks over ~600 ms, a selection
 │                              haptic each); one that fell just shows. First look and Reduce
 │                              Motion: no roll
+├─ tabs                        a quiet capsule, the open tab raised in paperRaised with a gold
+│                              hairline: Walks · Unlocked · Mine ("Mine ·" when something
+│                              came back)
 ├─ Walks                       one row per walk that opened something, date and length; a row
-│                              opens in place to its earned stops, numbered on an gold rail.
+│                              opens in place to its earned stops: a gold check circle each, on a gold rail.
 │                              Cached for the train
-├─ Unlocked Memories           what you opened; "♡ Hearted" at the right of its count shows only
+├─ Unlocked                    what you opened; "♡ Hearted" at the right of its count shows only
 │                              what you hearted. One opened since the last look scales in
 │                              once, 0.8 → 1.08 → 1 with a selection haptic, the first time
 │                              it is drawn (seen.ts). First look and Reduce Motion: no pulse
-└─ My Memories                 what you added; a row opens Submit as the editor. "3 hearts ·
+└─ Mine                        what you added; a row opens Submit as the editor. "3 hearts ·
                                1 note · last heart yesterday", never who
 
 Settings and Edit profile are sections of nothing: a section is what you did,

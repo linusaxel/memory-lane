@@ -3517,6 +3517,12 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
   gone), over the place name. The slide is green enamel with a foil key,
   "slide to open", and takes the bottom row's place. In dark the dive into the
   story fades through plum-black, never white.
+- **The sheets.** Tabs are a capsule with the open one raised; the journal's
+  read Walks, Unlocked, Mine (shorter than *Unlocked Memories* and *My
+  Memories*, which wrapped in the capsule). A walk's stops are gold check
+  circles on a gold rail: every stop listed was opened. Section labels are
+  sentence case over their own rule. Your board row is plum, and the top three
+  wear gold, silver and bronze.
 
 ### No keys; your memories are your lockets
 

@@ -546,8 +546,8 @@ product is about.
 
 1. **Journal**, the book top left of the map, opens the journal as a sheet
    over the map. It is you as well: your photo, name and numbers on top (a
-   tap is Edit profile, F21), then *Walks*, *Unlocked Memories* and *My
-   Memories* (F24). Settings is not in it: that is under your photo top right
+   tap is Edit profile, F21), then *Walks*, *Unlocked* and
+   *Mine* (F24). Settings is not in it: that is under your photo top right
    (F17).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
@@ -555,9 +555,9 @@ product is about.
 3. There is no **Show on map**: the map draws only today's walk, so a memory
    from another day has no pin to fly to.
 
-*Unlocked Memories* is every unlock in one flat list, newest first, from the
+*Unlocked* is every unlock in one flat list, newest first, from the
 device's copy (F16), each opening its sheet. What you filed yourself stays in
-*My Memories*, not here.
+*Mine*, not here.
 
 ## F16 · Read on the train home — **Implemented**
 
@@ -743,7 +743,7 @@ memory sealed before the removal is now ordinary. For the reasoning, see docs/10
 ## F24 · Manage what you filed — **Implemented**
 
 **Who:** somebody who has filed at least one memory.
-**Trigger:** the journal (F15) → *My Memories*. Empty until something is filed, and
+**Trigger:** the journal (F15) → *Mine*. Empty until something is filed, and
 it says so rather than hiding.
 
 1. A list, newest first: place name and summary. A row reported by others carries a **Reported** badge instead of vanishing,
@@ -887,14 +887,14 @@ simply does not fill and nothing is lost by tapping it again later.
 immediately, the state survives closing and reopening the sheet and
 relaunching the app, and a locked memory shows no heart control at all.
 
-**The author hears back.** Every row under Journal → My Memories says "3 hearts · 1
+**The author hears back.** Every row under Journal → Mine says "3 hearts · 1
 note · last heart yesterday", never who, and a row whose count went up since
-the last look wears "New" (the tab reads "My Memories ·" until you open it).
+the last look wears "New" (the tab reads "Mine ·" until you open it).
 The Journal button on the map wears an ember dot until then. The baseline is on
 the phone (`mobile/src/seen.ts`): no push, and no notifications tab.
 The journal's header counts every heart they ever got (`hearts_received` on `/v1/me`).
 
-**A heart keeps it for you.** Unlocked Memories has a "Hearted" filter that
+**A heart keeps it for you.** Unlocked has a "Hearted" filter that
 shows only what you hearted. `/v1/unlocks` says which, so it survives a
 reinstall and covers every phone on the account.
 

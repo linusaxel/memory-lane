@@ -8,8 +8,10 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { removeAvatar, uploadAvatar, type Profile } from './api.ts';
 import Avatar from './Avatar.tsx';
+import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
-import { button, buttonText, color, dim, font, input, label, screenTitle } from './theme.ts';
+import DiamondRule from './DiamondRule.tsx';
+import { color, dim, font, input, label, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -109,24 +111,24 @@ export default function EditProfile({
         </View>
 
         <View style={styles.photo}>
-          <Avatar url={profile?.avatar_url} name={displayName} size={112} />
+          <View style={styles.ring}>
+            <Avatar url={profile?.avatar_url} name={displayName} size={112} />
+          </View>
           <View style={styles.actions}>
-            <Pressable
-              style={dim(styles.action)}
+            <Button
+              kind="quiet"
+              label="Choose photo"
+              glyph="photo"
               onPress={() => choose(false)}
               disabled={busy}
-              accessibilityRole="button"
-            >
-              <Text style={styles.actionText}>Choose photo</Text>
-            </Pressable>
-            <Pressable
-              style={dim(styles.action)}
+            />
+            <Button
+              kind="quiet"
+              label="Take photo"
+              glyph="camera"
               onPress={() => choose(true)}
               disabled={busy}
-              accessibilityRole="button"
-            >
-              <Text style={styles.actionText}>Take photo</Text>
-            </Pressable>
+            />
           </View>
           {profile?.avatar_url && (
             <Pressable
@@ -141,6 +143,7 @@ export default function EditProfile({
           {photoError && <Text style={styles.saveFailed}>{photoError}</Text>}
         </View>
 
+        <DiamondRule place={styles.rule} />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your name</Text>
           <Text style={styles.note}>
@@ -170,19 +173,14 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: screenTitle,
   photo: { alignItems: 'center', gap: 14, marginTop: 28 },
+  // Gold-rimmed, like a portrait in a locket.
+  ring: { padding: 4, borderRadius: 999, borderWidth: 2, borderColor: color.gold },
   actions: { flexDirection: 'row', gap: 10 },
-  action: { ...button.quiet },
-  actionText: { ...buttonText, color: color.ink },
-  section: {
-    marginTop: 38,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: color.rule,
-    paddingTop: 18,
-  },
+  rule: { marginTop: 32 },
+  section: { marginTop: 24, gap: 12 },
   sectionTitle: { ...label },
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
-  input: { ...input },
+  input: { ...input, ...font.title, fontSize: 24 },
   // Gold, as Settings' and Submit's error lines.
   saveFailed: { ...font.ui, fontSize: 13, lineHeight: 20, color: color.gold, textAlign: 'center' },
   link: { alignSelf: 'center' },

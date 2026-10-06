@@ -170,9 +170,9 @@ appId: ${APP_ID}
 # The tab says something came back before it is opened, and the row says what.
 - tapOn: "Journal"
 - extendedWaitUntil:
-    visible: "My Memories ·"
+    visible: "Mine ·"
     timeout: 40000
-- tapOn: "My Memories ·"
+- tapOn: "Mine ·"
 
 # A server fetch: wait for its own note rather than the place name.
 - extendedWaitUntil:
@@ -180,7 +180,7 @@ appId: ${APP_ID}
     timeout: 40000
 - assertVisible: "The step by the ferry landing, .*1 note, New"
 # Opening the tab was the look: the dot goes with it.
-- assertVisible: "My Memories"
+- assertVisible: "Mine"
 
 # The Filed row opens the same sheet as editing: fields come back exactly as
 # filed. Rows carry a live distance alongside the place name in their
@@ -267,4 +267,4 @@ appId: ${APP_ID}
     element: "Delete this memory"
     direction: DOWN
 - tapOn: "Cancel"
-- assertVisible: "My Memories"
+- assertVisible: "Mine"

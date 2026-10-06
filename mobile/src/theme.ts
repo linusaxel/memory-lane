@@ -109,6 +109,9 @@ export const metal = {
   glow: '#FFFDF9',
   /** The compass's N. */
   north: '#8F2F1B',
+  /** The board's second and third places, beside `mid` for the first. */
+  silver: '#C7CAD3',
+  bronze: '#C68B5B',
 };
 
 /** The paywall's plum velvet, one set in both themes: it is cloth. */

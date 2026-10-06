@@ -17,9 +17,10 @@ import {
 
 import { fetchWalked, type Profile, type WalkedRoute } from './api.ts';
 import CloseButton from './CloseButton.tsx';
+import DiamondRule from './DiamondRule.tsx';
 import { LOCKETS, locketOf } from './lockets.ts';
 import { loadWalked } from './route.ts';
-import { color, figure, font, label, screenTitle } from './theme.ts';
+import { color, font, label, radius, screenTitle } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
 import WalkCard from './WalkCard.tsx';
 
@@ -62,6 +63,9 @@ export default function HowItWorks({
   // Two to a row, between the sheet's 24pt margins and one 12pt gap; a
   // memory's locket takes half of that, four to a row.
   const card = (useWindowDimensions().width - 48 - 12) / 2;
+  const level = profile?.level ?? 1;
+  const xp = profile?.xp ?? 0;
+  const next = profile?.xp_next ?? 50;
   return (
     <Modal
       visible={visible}
@@ -71,15 +75,21 @@ export default function HowItWorks({
     >
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
-          <Text style={styles.title}>Your walks</Text>
+          <Text style={styles.title} accessibilityRole="header">{`Level ${level}`}</Text>
           <CloseButton onPress={onClose} />
         </View>
-        <View style={styles.now}>
-          <Text style={styles.figure}>{`Level ${profile?.level ?? 1}`}</Text>
-          <Text style={styles.unit}>
-            {`${(profile?.xp ?? 0).toLocaleString()} / ${(profile?.xp_next ?? 50).toLocaleString()} XP`}
-          </Text>
+        <View style={styles.xpRow}>
+          <Text style={styles.xp}>{`${xp.toLocaleString()} / ${next.toLocaleString()} XP`}</Text>
+          {next > xp && (
+            <Text
+              style={styles.unit}
+            >{`${(next - xp).toLocaleString()} XP to Level ${level + 1}`}</Text>
+          )}
         </View>
+        <View style={styles.bar}>
+          <View style={[styles.fill, { width: `${Math.min(100, (xp / next) * 100)}%` }]} />
+        </View>
+        <DiamondRule place={styles.rule} />
 
         {/* Every walk you took, newest first, each drawn as its shape. */}
         <Text style={styles.shelfTitle}>
@@ -101,7 +111,7 @@ export default function HowItWorks({
             ? `${opened.length} ${opened.length === 1 ? 'memory' : 'memories'}`
             : 'Your first memory goes here'}
         </Text>
-        <View style={styles.kinds}>
+        <View style={[styles.kinds, styles.case]}>
           {LOCKETS.map((locket) => {
             const count = opened.filter((m) => locketOf(m.locket).id === locket.id).length;
             return (
@@ -130,6 +140,7 @@ export default function HowItWorks({
           ))}
         </View>
 
+        <Text style={styles.shelfTitle}>How it works</Text>
         {/* Each heading is the rule on its own, the line under it a picture
             or a reason; one number each, said as something you can feel.
             docs/09 part 11 has the research. */}
@@ -160,8 +171,11 @@ export default function HowItWorks({
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.text}>{children}</Text>
+      <View style={styles.bullet} />
+      <View style={styles.sectionText}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.text}>{children}</Text>
+      </View>
     </View>
   );
 }
@@ -171,20 +185,46 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: screenTitle,
-  now: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 12 },
-  figure,
+  title: { ...screenTitle, fontSize: 44, lineHeight: 52 },
+  xpRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginTop: 8,
+  },
+  xp: { ...font.uiBold, fontSize: 17, color: color.plum },
+  bar: { height: 10, borderRadius: 5, backgroundColor: color.track, marginTop: 10 },
+  fill: { height: 10, borderRadius: 5, backgroundColor: color.plum },
+  rule: { marginTop: 24 },
   unit: { ...label, fontSize: 12 },
-  shelfTitle: { ...label, fontSize: 12, marginTop: 24 },
+  shelfTitle: { ...label, fontSize: 15, color: color.inkSoft, marginTop: 24 },
   shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10 },
   kinds: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  // The lockets in their case: plum, edged in gold.
+  case: {
+    padding: 16,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: color.goldLine,
+    backgroundColor: color.track,
+  },
   kind: { alignItems: 'center', gap: 2 },
   none: { opacity: 0.35 },
-  kindImage: { width: 28, height: 28, resizeMode: 'contain' },
+  kindImage: { width: 40, height: 40, resizeMode: 'contain' },
   locket: { alignItems: 'center', gap: 4 },
   locketImage: { width: 56, height: 56, resizeMode: 'contain' },
-  section: { marginTop: 30, gap: 8, borderTopWidth: 1, borderTopColor: color.rule, paddingTop: 18 },
+  section: { flexDirection: 'row', gap: 14, marginTop: 16 },
+  bullet: {
+    width: 10,
+    height: 10,
+    marginTop: 7,
+    transform: [{ rotate: '45deg' }],
+    backgroundColor: color.seal,
+    borderWidth: 1,
+    borderColor: color.goldLine,
+  },
+  sectionText: { flex: 1, gap: 4 },
   // The heading is the rule, so it reads first; the line under it is the why.
-  sectionTitle: { ...font.title, fontSize: 20, lineHeight: 26, color: color.ink },
+  sectionTitle: { ...font.uiBold, fontSize: 18, lineHeight: 24, color: color.ink },
   text: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
 });
