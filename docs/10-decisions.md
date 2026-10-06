@@ -1360,7 +1360,9 @@ and why an unconfigured server answers 503 rather than verifying against nothing
 
 ### Sign-in comes first, and it is the whole onboarding
 
-Status: Accepted 2026-09-26, built the same day (F22). Supersedes "Sign-in is
+Status: Accepted 2026-09-26, built the same day (F22). **Superseded
+2026-10-07** in part by *Four pages, then the map*: sign-in still comes first,
+but it is no longer the whole onboarding. Supersedes "Sign-in is
 never a gate" (`mobile/UI.md`, `docs/08-ux-flows.md`) and the onboarding
 non-goal below.
 
@@ -3523,6 +3525,29 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
   circles on a gold rail: every stop listed was opened. Section labels are
   sentence case over their own rule. Your board row is plum, and the top three
   wear gold, silver and bronze.
+
+### Four pages, then the map
+
+Status: Accepted 2026-10-07 (the Jewel Box handoff, B-03 to B-07). Supersedes
+the "no carousel" half of *Sign-in comes first, and it is the whole onboarding*.
+
+Sign-in is still the first screen. Right after a real sign-in, four pages say
+what the app is (stories in your city; they open only on the spot; one walk a
+day, free; walks earn lockets), with Skip and dots, then the location primer:
+"Turn on location", a press with a reason, or "Not now". Someone who already
+granted location skips the primer. `Onboarding.tsx`, over the map so the
+primer's fix flies the map there.
+
+- **Once, by the event, not a flag.** It shows when the sign-in screen hands
+  over an account, so people already signed in before this shipped never see
+  it, and no stored flag can go stale. Signing out and in again shows it again;
+  that is rare enough to accept.
+- **The dev skip goes straight to the map**, so `./e2e/run.sh` is unchanged.
+  `EXPO_PUBLIC_DEV_OPEN_SCREEN=onboarding` opens it to look at.
+- **The pictures are the handoff's own**, rasterised from its HTML by headless
+  Chrome at 3x into `mobile/assets/onboarding/` (light and dark, ~50 KB each),
+  not redrawn: they mix gradients, glows and locket art that an SVG port would
+  only approximate. Their small text (20 m, 3.4 km, Level 3) is illustration.
 
 ### No keys; your memories are your lockets
 

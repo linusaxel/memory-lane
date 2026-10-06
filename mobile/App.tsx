@@ -98,6 +98,7 @@ import { PlanWalkButton } from './src/PlanWalkButton.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
+import Onboarding from './src/Onboarding.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
@@ -335,6 +336,8 @@ export default function App() {
   // The gate (docs/10, *Sign-in comes first*). Null until the stored answer is
   // read, so a signed-in launch never flashes the sign-in screen.
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  // The four pages and the location primer, once, right after a sign-in.
+  const [intro, setIntro] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
@@ -1033,6 +1036,7 @@ export default function App() {
     if (!screen) return;
     setJournalOpen(screen === 'journal');
     setSubmitOpen(screen === 'submit');
+    setIntro(screen === 'onboarding');
   }, []);
 
   // EXPO_PUBLIC_DEV_OPEN_MEMORY, under __DEV__ only. See src/devOpen.ts: there
@@ -1487,7 +1491,11 @@ export default function App() {
         <StatusBar style="auto" />
         <SignInScreen
           device={device}
-          onProfile={accountChanged}
+          onProfile={(who) => {
+            accountChanged(who);
+            if (who.providers.length > 0) setIntro(true);
+          }}
+          // The dev skip goes straight to the map: e2e drives it.
           onSkip={() => {
             setSignedIn(true);
             saveSignedIn(true);
@@ -2208,6 +2216,15 @@ export default function App() {
           profile={profile}
           onProfile={setProfile}
         />
+
+        {intro && (
+          <Onboarding
+            radiusMeters={radiusMeters}
+            permission={permission}
+            onLocation={goToMyLocation}
+            onDone={() => setIntro(false)}
+          />
+        )}
       </View>
     </SafeAreaProvider>
   );

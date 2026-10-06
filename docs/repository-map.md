@@ -140,6 +140,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/lockMotion.ts` | The worklet curves and pivots LocketUnlock moves by |
 | `mobile/src/lockets.ts` | The six lockets: pin images, names, the level each opens at |
 | `mobile/assets/lockets/` | The locket pins, keyhole (locked) and plain (opened), @1x-@3x |
+| `mobile/assets/onboarding/` | The first-run pages' pictures, light and dark, rasterised from the Jewel Box handoff |
 | `mobile/src/UnlockHere.tsx` | The locket over the map, for the memory you stand on |
 | `mobile/src/SlideToUnlock.tsx` | Slide to unlock: its own row over the bottom row while a memory is in reach, scrubbing the locket's hold |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
@@ -160,6 +161,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/AddIcon.tsx` | Add a memory's icon: a locket with a plus |
 | `mobile/src/Button.tsx` | The four buttons: go (green), foil (gold), quiet, text |
 | `mobile/src/CloseButton.tsx` | The × every card, sheet and page closes with |
+| `mobile/src/Onboarding.tsx` | The four first-run pages and the location primer, once after sign-in |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/HowItWorks.tsx` | What the level pill opens: level, XP, every walk as a card, then how walks work |

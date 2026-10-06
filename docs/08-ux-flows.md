@@ -110,6 +110,8 @@ because nothing is reachable before it (docs/10, *Sign-in comes first*).
    ("A walk planner with memories along the way. One walk a day, free."), Apple's
    own control and Continue with Google. Nothing else — no carousel, no email
    field, no password, no magic link.
+   Once signed in, four pages and the location primer follow, once (docs/10,
+   *Four pages, then the map*).
 2. The provider's sheet, then back. The app sends the ID token it was given and
    is told who that makes it.
 3. The planner (F1), which draws a walk at once and is where location is

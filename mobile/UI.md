@@ -190,6 +190,11 @@ comes first*). Because nothing can be tried before it, that one screen has to
 earn the tap on its own. The last answer is kept locally, so a signed-in person
 with no network is never stopped at the gate.
 
+**Then four pages, once.** Right after a real sign-in: four illustrated pages
+(Gloock title, centred line, gold dots, Go Next/Start, gold Skip) and the
+location primer (Go "Turn on location", text "Not now"), drawn over the map
+(`Onboarding.tsx`; docs/10, *Four pages, then the map*).
+
 | File | What it owns |
 |---|---|
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always a locket's keyhole face |

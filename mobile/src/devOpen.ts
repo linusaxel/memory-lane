@@ -14,9 +14,9 @@
  *     xcrun simctl io booted screenshot /tmp/sheet.png
  */
 
-/** Every screen a launch can land on: the map, the journal over it, or the
- *  submit modal over that. */
-const SCREENS = ['walk', 'journal', 'submit'] as const;
+/** Every screen a launch can land on: the map, the journal over it, the
+ *  submit modal over that, or the first-run pages. */
+const SCREENS = ['walk', 'journal', 'submit', 'onboarding'] as const;
 
 export type DevScreen = (typeof SCREENS)[number];
 
