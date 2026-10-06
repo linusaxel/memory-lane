@@ -24,6 +24,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Maestro taps what the screen shows, not what the scroll view shows.**
+  2026-10-06: Add's bar floats over the page's edge and its header covers
+  the top, but `scrollUntilVisible` and `tapOn` call a field half under
+  either "visible" and tap its middle, so file-and-edit hit the bar's Quote
+  and Photo, typed nowhere, and six runs went on reading screenshots. Fix: a
+  `tapOn` helper flow that scrolls an id clear of `bar`/header before tapping.
 - **`sources add --licence` over 40 characters dies with a bare SQLAlchemy
   line.** 2026-10-05: `sources.licence` is varchar(40), and `tail -1` showed
   only "Background on this error at: sqlalche.me", so a source silently didn't

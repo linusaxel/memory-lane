@@ -135,7 +135,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, the pill recentres |
 | `mobile/src/Plan.tsx` | **The planner, home.** The walk card: length, shape and Start walk; for a subscriber, its list of memories and themes and years |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
-| `mobile/src/LocketUnlock.tsx` | The unlock as the memory's locket: the key, the lid, the dive, the haptics; held, or driven by SlideToUnlock |
+| `mobile/src/LocketUnlock.tsx` | The unlock as the memory's locket: the key, the lid, the dive, the haptics; held, or driven by SlideToUnlock; or run backwards to seal |
+| `mobile/src/LocketSeal.tsx` | A memory just filed: its locket shuts over the map and drops onto the pin |
 | `mobile/src/lockMotion.ts` | The worklet curves and pivots LocketUnlock moves by |
 | `mobile/src/lockets.ts` | The six lockets: pin images, names, the level each opens at |
 | `mobile/assets/lockets/` | The locket pins, keyhole (locked) and plain (opened), @1x-@3x |

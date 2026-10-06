@@ -623,20 +623,21 @@ one (not over the preview's card). Filing needs no walk.
 4. **When**: a date, today unless changed, from the platform's own picker.
 5. **Tags** are the #words written in the description, as on X (`#food`):
    there is no picker, and the server reads them from the text.
-6. **Layout**: the description is blocks, laid out from a toolbar under
-   Cancel and Post or typed as markdown: **bold**, *italic*, a heading, a
-   quote, a divider, and each photo where it goes, a third, a half or full
-   width, left, centre or right, captioned; a small photo to one side has
-   the next paragraph wrap round it. ↑ ↓ move a block, and Preview shows it
-   as it will read (docs/10, *A story has a little markdown*).
+6. **Layout**: the description is blocks, laid out from the bar over the
+   keyboard (Aa: bold, italic, heading, quote, divider) or typed as markdown,
+   and each photo where it goes, a third, a half or full width, left, centre
+   or right, captioned; a small photo to one side has the next paragraph
+   wrap round it. ↑ ↓ move a tapped photo or divider (docs/10, *Writing is a
+   calm page*).
 7. **Photos** from the library, or from a viewfinder that opens in the story
    where the photo will go and becomes it on Take, up to four, and one **recording**
    up to three minutes. Each one uploads the moment it is taken, so the wait is
    spent composing rather than watching a spinner after Post — and a failed
    upload costs the text nothing.
-8. Post. The memory comes back already unlocked and its sheet opens on top of
-   the map: the modal closing is not a confirmation, and this is also the first
-   sight of what anybody else will find here.
+8. Post opens the seal: pick the locket its pin is drawn as, then **Seal it
+   here**. Its locket shuts over the map and drops onto the spot, and the
+   memory, already unlocked, opens on top of the map: the first sight of what
+   anybody else will find here. The first memory ever holds a beat and says so.
 
 ### It files where you are, and nowhere else
 
@@ -749,7 +750,7 @@ it says so rather than hiding.
    because this is the one screen an author cannot have something disappear
    from without a reason.
 2. Tapping a row opens the submit sheet in editor mode: every field prefilled
-   from the memory, **Post** relabelled **Save**, and no map or coordinate
+   from the memory, **Post** relabelled **Save** (it opens the same seal, its button Save), and no map or coordinate
    field — the pin does not move.
 3. **Save** changes place name, summary (and so its #tags), when, and photos/recording in
    place. **Delete** takes a second, differently-worded press before it

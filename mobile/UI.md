@@ -599,7 +599,8 @@ are not preferences:
   same words in `font.displaySemi`, not a colour, since every colour here
   already means something. `mobile/src/hashtags.ts` must match the server;
   `tests/fixtures/hashtags.json` is read by both tests. Not tappable. The
-  placeholder ends in `#nightlife` so the form explains it.
+  placeholder asks a question and ends "Add a #tag if you like." so the
+  form explains it.
 
 The shape of it is the open sheet's (docs/10, "Reading and writing are one
 page"):
@@ -609,21 +610,30 @@ page"):
   `story.body`, photos at the size they are read at. No boxes and no field
   labels: the placeholder and the cursor say what is editable. Nothing asks
   for a name: the account signs it (Settings), and a blank one is Anonymous.
-- **Cancel and Post are the only chrome**, the × left and Post right, as in
-  every composer. Post is held until the title and the story are there.
-- **Every other action is text** in the label voice: the toolbar's B, I,
-  Heading, Quote, Divider, Photo, Camera, ↑ ↓ and Preview, a photo's S M L
-  and Left Center Right, Remove photo, Delete this memory (gold, two taps).
+- **Cancel and Post are the only chrome above**, the × left and Post right,
+  as in every composer. Post is held until the title and the story are there,
+  and opens the seal. × with words in it asks again: "Tap again to discard".
+- **One bar of glyphs below** (docs/10, "Writing is a calm page"): Aa, Photo,
+  Camera and Hide keyboard, on paper raised, riding the keyboard's top edge or
+  docked at the foot. Aa swaps in B, I, Heading, Quote, Divider and ×. The
+  page ends above it, so nothing is typed under it.
+- **Every other action is text** in the label voice: a photo's S M L, Left
+  Center Right, ↑ ↓ and Remove photo, a divider's ↑ ↓, Delete this memory
+  (gold, two taps).
 - **The story is blocks** (docs/10, "A story has a little markdown"): a
   paragraph, a heading, a quote, a divider, a photo. Markdown typed works as
   well as the toolbar: a blank line starts a block, `## ` and `> ` turn it,
   `---` is a divider, and the marks stay in, faint. Backspace in an empty
-  block takes it away. ↑ ↓ move the block being written, or a tapped photo.
-  The toolbar sits under the bar, never over the keyboard. Preview is
-  `StoryBody`, the open sheet's own layout, wrap and all.
+  block takes it away. ↑ ↓ move a tapped photo or divider; text moves by cut
+  and paste. There is no Preview: the page is already `StoryBody`'s layout.
 - **Camera is a viewfinder in the story** (docs/10, "The camera is a block"):
   full width where the photo will go, Take and Cancel under it. Take turns it
   into that photo; Post waits while it is open.
+
+- **The seal** is a tray from the foot: the lockets earned, the next locked
+  one alone with its level, the chosen one's name, and "Seal it here" (Save
+  when editing). Then its locket shuts over the map and drops onto the pin
+  (`LocketSeal.tsx`).
 
 A submission comes back already unlocked and its sheet opens over the map. The
 modal closing is not a confirmation, and it is also the first sight of what a

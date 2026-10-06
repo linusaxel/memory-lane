@@ -2,12 +2,14 @@
  *  "Writing", UI.md. Doubles as the editor for a memory you already filed:
  *  `editing` prefills every field from it and Post becomes Save. */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Animated,
+  Dimensions,
+  Easing,
   Image,
-  KeyboardAvoidingView,
+  Keyboard,
   Modal,
   Platform,
   Pressable,
@@ -21,6 +23,7 @@ import {
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import {
   RecordingPresets,
@@ -46,17 +49,33 @@ import {
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
 import Flourish from './Flourish.tsx';
+import Glyph from './Glyph.tsx';
 import { duration, happened } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { LOCKET_DEFAULT, LOCKETS, locketOf, type LocketId } from './lockets.ts';
 import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
-import StoryBody from './StoryBody.tsx';
-import { button, buttonTextSmall, color, dim, font, label, radius, story, sunk } from './theme.ts';
+import {
+  button,
+  buttonText,
+  buttonTextSmall,
+  color,
+  dim,
+  font,
+  label,
+  lift,
+  radius,
+  story,
+  sunk,
+} from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
 /** Long enough for a story, short enough that nobody uploads a podcast. */
 const MAX_RECORDING_SECONDS = 180;
+/** Where the bar sits with the keyboard down, over the home indicator. */
+const DOCK = 34;
+/** The bar's height and a little air: the page ends above it. */
+const BAR = 52;
 
 type Props = {
   visible: boolean;
@@ -130,12 +149,18 @@ export default function Submit({
   const [placeName, setPlaceName] = useState('');
   const [locket, setLocket] = useState<LocketId>(LOCKET_DEFAULT);
   const [items, setItems] = useState<Item[]>(() => [empty()]);
-  // The block the toolbar acts on: the text being typed in, or a tapped photo.
+  // The block the bar acts on: the text being typed in, or a tapped photo.
   const [current, setCurrent] = useState<string | null>(null);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   // Set for one render after B or I, to put the caret between the marks.
   const [caret, setCaret] = useState<{ key: string; at: number } | null>(null);
-  const [previewing, setPreviewing] = useState(false);
+  // Aa: the bar shows the marks instead of Photo and Camera.
+  const [styling, setStyling] = useState(false);
+  // Post opens the seal: the locket is chosen once the story is written.
+  const [sealing, setSealing] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
+  // The street it is filed on, for the byline; "here" until it is known.
+  const [here, setHere] = useState<string | null>(null);
   const inputs = useRef(new Map<string, TextInput>());
   const scroll = useRef<ScrollView>(null);
   // A block added at the end is scrolled to once it has a height.
@@ -171,6 +196,42 @@ export default function Submit({
     };
   }, []);
 
+  // The bar rides the keyboard. A page sheet ends at the screen's foot, so
+  // what the keyboard covers is the screen below its top edge; the sheet's own
+  // frame reads as starting at 0 (why KeyboardAvoidingView missed).
+  const lifted = useRef(new Animated.Value(DOCK)).current;
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    const to = (bottom: number, ms: number) =>
+      Animated.timing(lifted, {
+        toValue: bottom,
+        duration: ms,
+        easing: Easing.bezier(0.2, 0.8, 0.2, 1),
+        useNativeDriver: false,
+      }).start();
+    const show = Keyboard.addListener('keyboardWillChangeFrame', (e) => {
+      const over = Dimensions.get('window').height - e.endCoordinates.screenY;
+      setTyping(over > 0);
+      to(over > 0 ? over + 8 : DOCK, e.duration);
+    });
+    const hide = Keyboard.addListener('keyboardWillHide', (e) => {
+      setTyping(false);
+      to(DOCK, e.duration);
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [lifted]);
+
+  // The seal rises from the foot.
+  const rise = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!sealing) return;
+    rise.setValue(0);
+    Animated.spring(rise, { toValue: 1, speed: 14, bounciness: 4, useNativeDriver: true }).start();
+  }, [sealing, rise]);
+
   // Everything resets on close. A half-written memory kept across openings
   // would eventually be posted somewhere it did not happen, because the
   // coordinate is taken fresh and the words would not be.
@@ -180,7 +241,10 @@ export default function Submit({
     setLocket(LOCKET_DEFAULT);
     setItems([empty()]);
     setCurrent(null);
-    setPreviewing(false);
+    setStyling(false);
+    setSealing(false);
+    setDiscarding(false);
+    setHere(null);
     setDay(new Date());
     setPickingDay(false);
     setAttachments([]);
@@ -226,6 +290,16 @@ export default function Submit({
     // on every render, and re-running on that would fight anything typed.
   }, [visible, editing?.id]);
 
+  // Display only: Apple's geocoder, on the phone. The title is still theirs.
+  const lat = position?.lat;
+  const lng = position?.lng;
+  useEffect(() => {
+    if (!visible || isEditing || lat == null || lng == null) return;
+    Location.reverseGeocodeAsync({ latitude: lat, longitude: lng })
+      .then(([found]) => mounted.current && setHere(found?.street ?? found?.name ?? null))
+      .catch(() => {});
+  }, [visible, isEditing, lat, lng]);
+
   const photos = attachments.filter((a) => a.kind === 'photo');
   const sound = attachments.find((a) => a.kind === 'audio');
   const uploading = attachments.some((a) => !a.item && !a.failed);
@@ -250,6 +324,8 @@ export default function Submit({
     !framing &&
     !posting;
   const when = happened(isoDay(day), 'day');
+  const today = isoDay(day) === isoDay(new Date());
+  const dirty = !isEditing && (named || told || attachments.length > 0);
   const pickDay = () =>
     Platform.OS === 'ios'
       ? setPickingDay((open) => !open)
@@ -497,51 +573,78 @@ export default function Submit({
     setCurrent(null);
   };
 
-  // The marks, the blocks, and a look at how it will read.
-  // Text, like every action on this screen.
-  const tools = (
-    <View style={styles.toolbar}>
-      {!previewing && (
+  // One bar for every field, over the keyboard (docs/10, "Writing is a calm
+  // page"): Aa for the marks, Photo, Camera. Docked at the foot while the
+  // keyboard is down.
+  const tools = () => (
+    <View style={styles.capsule}>
+      {styling ? (
         <>
-          <Action
-            label="B"
-            spoken="Bold"
-            testID="toolbar-bold"
-            style={styles.bold}
-            onPress={() => mark('**')}
+          <Tool icon="bold" spoken="Bold" testID="toolbar-bold" onPress={() => mark('**')} />
+          <Tool icon="italic" spoken="Italic" testID="toolbar-italic" onPress={() => mark('*')} />
+          <Tool
+            icon="textformat.size.larger"
+            spoken="Heading"
+            testID="toolbar-heading"
+            onPress={() => turn('h')}
           />
-          <Action
-            label="I"
-            spoken="Italic"
-            testID="toolbar-italic"
-            style={styles.italic}
-            onPress={() => mark('*')}
+          <Tool
+            icon="text.quote"
+            spoken="Quote"
+            testID="toolbar-quote"
+            onPress={() => turn('quote')}
           />
-          <Action label="Heading" testID="toolbar-heading" onPress={() => turn('h')} />
-          <Action label="Quote" testID="toolbar-quote" onPress={() => turn('quote')} />
-          <Action label="Divider" testID="toolbar-divider" onPress={divider} />
+          <Tool icon="minus" spoken="Divider" testID="toolbar-divider" onPress={divider} />
+          <Tool icon="xmark" spoken="Done styling" onPress={() => setStyling(false)} />
+        </>
+      ) : (
+        <>
+          <Tool
+            icon="textformat"
+            spoken="Style"
+            testID="toolbar-style"
+            onPress={() => setStyling(true)}
+          />
           {photos.length < MAX_PHOTOS && !framing && (
             <>
-              <Action label="Photo" spoken="Choose photo" onPress={addPhoto} />
-              <Action
-                label="Camera"
+              <Tool icon="photo" spoken="Choose photo" testID="toolbar-photo" onPress={addPhoto} />
+              <Tool
+                icon="camera"
                 spoken="Take photo"
                 testID="toolbar-camera"
                 onPress={openCamera}
               />
             </>
           )}
-          <Action label="↑" spoken="Move up" testID="block-up" onPress={() => move(-1)} />
-          <Action label="↓" spoken="Move down" testID="block-down" onPress={() => move(1)} />
+          {typing && (
+            <Tool
+              icon="keyboard.chevron.compact.down"
+              spoken="Hide keyboard"
+              onPress={Keyboard.dismiss}
+            />
+          )}
         </>
       )}
-      <Action
-        label={previewing ? 'Back to writing' : 'Preview'}
-        testID="preview"
-        onPress={() => setPreviewing((p) => !p)}
-      />
     </View>
   );
+
+  /** ↑ and ↓ for a tapped photo or divider: text moves by cut and paste. */
+  const moves = (
+    <>
+      <Action label="↑" spoken="Move up" testID="block-up" onPress={() => move(-1)} />
+      <Action label="↓" spoken="Move down" testID="block-down" onPress={() => move(1)} />
+    </>
+  );
+
+  const close = () => {
+    if (!dirty || discarding) return onClose();
+    setDiscarding(true);
+    confirmTimer.current = setTimeout(() => setDiscarding(false), 3000);
+  };
+
+  // The lockets they have earned, and the next one as something to walk for.
+  const next = LOCKETS.find((l) => l.level > level);
+  const offered = LOCKETS.filter((l) => l.level <= level || l === next);
 
   const post = async () => {
     if (!device || (!isEditing && !position)) return;
@@ -618,36 +721,37 @@ export default function Submit({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        style={styles.sheet}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={styles.sheet}>
         {/* The open sheet with nothing in it yet: the same title, byline and
             story type, in the same places, so what you write is what people
             standing here will read (docs/10, "Reading and writing are one
             page"). Cancel and Post are the only chrome. */}
         <View style={styles.bar}>
-          <CloseButton onPress={onClose} label="Cancel" />
+          {discarding ? (
+            <Pressable onPress={close} hitSlop={12} accessibilityRole="button">
+              <Text style={styles.error}>Tap again to discard</Text>
+            </Pressable>
+          ) : (
+            <CloseButton onPress={close} label="Cancel" />
+          )}
           <Pressable
             style={dim([styles.post, !ready && styles.disabled])}
-            onPress={post}
+            onPress={() => {
+              Keyboard.dismiss();
+              setSealing(true);
+            }}
             disabled={!ready}
             hitSlop={4}
             accessibilityRole="button"
             accessibilityLabel={isEditing ? 'Save' : 'Post'}
           >
-            <Text style={styles.postText}>
-              {posting ? (isEditing ? 'Saving…' : 'Posting…') : isEditing ? 'Save' : 'Post'}
-            </Text>
+            <Text style={styles.postText}>{isEditing ? 'Save' : 'Post'}</Text>
           </Pressable>
         </View>
-        {/* Under the bar, not over the keyboard: up here nothing covers it,
-            a software keyboard or a hardware one's suggestion strip. */}
-        {tools}
 
-        <ScrollView
+        <Animated.ScrollView
           ref={scroll}
-          style={styles.scroll}
+          style={[styles.scroll, { marginBottom: Animated.add(lifted, BAR) }]}
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => {
@@ -660,7 +764,7 @@ export default function Submit({
             style={[styles.slot, styles.title]}
             value={placeName}
             onChangeText={setPlaceName}
-            placeholder="The night the ferry horn went off"
+            placeholder="Give it a name"
             placeholderTextColor={color.inkFaint}
             accessibilityLabel="Title"
             testID="title"
@@ -681,9 +785,9 @@ export default function Submit({
                 accessibilityLabel={`When, ${when?.within} ${when?.year}`}
                 onPress={pickDay}
               >
-                {when?.within} {when?.year} ▾
+                {today ? 'Today' : `${when?.within} ${when?.year}`} ▾
               </Text>
-              {!isEditing && ' · here'}
+              {!isEditing && ` · ${here ?? 'here'}`}
             </Text>
           </View>
           {pickingDay && (
@@ -699,232 +803,194 @@ export default function Submit({
             />
           )}
 
-          {/* The locket its pin is drawn as. One not yet earned says the
-              level it opens at (docs/10, "Lockets"). */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.lockets}
-          >
-            {LOCKETS.map((l) => {
-              const earned = l.level <= level;
-              return (
-                <Pressable
-                  key={l.id}
-                  onPress={() => setLocket(l.id)}
-                  disabled={!earned}
-                  accessibilityRole="radio"
-                  accessibilityLabel={earned ? l.name : `${l.name}, level ${l.level}`}
-                  accessibilityState={{ selected: locket === l.id, disabled: !earned }}
-                  testID={`locket-${l.id}`}
-                  style={[styles.locket, locket === l.id && styles.locketOn]}
-                >
-                  <Image
-                    source={l.opened}
-                    style={[styles.locketImage, !earned && styles.disabled]}
-                  />
-                  {!earned && <Text style={styles.locketLevel}>Level {l.level}</Text>}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
           {/* The story, a block at a time: what is typed here is what
-              StoryBody sets on the open sheet, and Preview shows it so. */}
+              StoryBody sets on the open sheet. */}
           <View style={styles.blocks}>
-            {previewing ? (
-              <StoryBody
-                summary={summary}
-                media={attachments.flatMap((a) => (a.item ? [a.item] : []))}
-              />
-            ) : (
-              items.map((item, n) => {
-                const on = item.key === current;
-                if (item.kind === 'divider') {
-                  return (
-                    <View key={item.key}>
+            {items.map((item, n) => {
+              const on = item.key === current;
+              if (item.kind === 'divider') {
+                return (
+                  <View key={item.key}>
+                    <Pressable
+                      onPress={() => setCurrent(item.key)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Divider"
+                      testID="divider"
+                      style={[styles.divider, on && styles.dividerOn]}
+                    >
+                      <Flourish />
+                    </Pressable>
+                    {on && (
+                      <View style={styles.row}>
+                        {moves}
+                        <Action label="Remove divider" onPress={() => remove(item)} />
+                      </View>
+                    )}
+                  </View>
+                );
+              }
+              if (item.kind === 'camera') {
+                return (
+                  <View key={item.key} style={styles.part}>
+                    <CameraView
+                      ref={camera}
+                      style={styles.photo}
+                      onMountError={() => {
+                        remove(item);
+                        setError('No camera on this phone.');
+                      }}
+                    />
+                    <View style={styles.row}>
+                      <Action
+                        label="Take"
+                        spoken="Take photo"
+                        testID="camera-take"
+                        onPress={() => takePhoto(item.key)}
+                      />
+                      <Action
+                        label="Cancel"
+                        spoken="Put the camera away"
+                        onPress={() => remove(item)}
+                      />
+                    </View>
+                  </View>
+                );
+              }
+              if (item.kind === 'photo') {
+                const upload = attachments.find((a) => a.uri === item.uri);
+                return (
+                  <View key={item.key} style={styles.part}>
+                    <View style={[styles[item.place], { width: WIDTH[item.size] }]}>
                       <Pressable
                         onPress={() => setCurrent(item.key)}
                         accessibilityRole="button"
-                        accessibilityLabel="Divider"
-                        style={[styles.divider, on && styles.dividerOn]}
+                        accessibilityLabel="Photo"
+                        testID={upload?.item ? 'photo' : 'photo-uploading'}
                       >
-                        <Flourish />
+                        <Image
+                          source={{ uri: upload?.item ? mediaUrl(upload.item) : item.uri }}
+                          style={[
+                            styles.photo,
+                            upload?.failed && styles.photoFailed,
+                            on && styles.photoOn,
+                          ]}
+                        />
+                        {!upload?.item && !upload?.failed && (
+                          <View style={styles.photoBusy}>
+                            <ActivityIndicator size="small" color={color.paper} />
+                          </View>
+                        )}
                       </Pressable>
-                      {on && (
-                        <View style={styles.row}>
-                          <Action label="Remove divider" onPress={() => remove(item)} />
-                        </View>
-                      )}
-                    </View>
-                  );
-                }
-                if (item.kind === 'camera') {
-                  return (
-                    <View key={item.key} style={styles.part}>
-                      <CameraView
-                        ref={camera}
-                        style={styles.photo}
-                        onMountError={() => {
-                          remove(item);
-                          setError('No camera on this phone.');
-                        }}
+                      <TextInput
+                        style={[styles.slot, styles.caption]}
+                        value={item.caption}
+                        onChangeText={(caption) =>
+                          patch(item.key, { caption: caption.replace(/\n/g, ' ') })
+                        }
+                        onFocus={() => setCurrent(item.key)}
+                        placeholder="Caption"
+                        placeholderTextColor={color.inkFaint}
+                        accessibilityLabel="Caption"
+                        testID="caption"
+                        maxLength={140}
                       />
+                    </View>
+                    {upload?.failed && <Text style={styles.error}>Upload failed</Text>}
+                    {on && (
                       <View style={styles.row}>
-                        <Action
-                          label="Take"
-                          spoken="Take photo"
-                          testID="camera-take"
-                          onPress={() => takePhoto(item.key)}
-                        />
-                        <Action
-                          label="Cancel"
-                          spoken="Put the camera away"
-                          onPress={() => remove(item)}
-                        />
-                      </View>
-                    </View>
-                  );
-                }
-                if (item.kind === 'photo') {
-                  const upload = attachments.find((a) => a.uri === item.uri);
-                  return (
-                    <View key={item.key} style={styles.part}>
-                      <View style={[styles[item.place], { width: WIDTH[item.size] }]}>
-                        <Pressable
-                          onPress={() => setCurrent(item.key)}
-                          accessibilityRole="button"
-                          accessibilityLabel="Photo"
-                          testID={upload?.item ? 'photo' : 'photo-uploading'}
-                        >
-                          <Image
-                            source={{ uri: upload?.item ? mediaUrl(upload.item) : item.uri }}
-                            style={[
-                              styles.photo,
-                              upload?.failed && styles.photoFailed,
-                              on && styles.photoOn,
-                            ]}
+                        {(['s', 'm', 'l'] as const).map((size) => (
+                          <Chip
+                            key={size}
+                            label={size.toUpperCase()}
+                            on={item.size === size}
+                            testID={`photo-size-${size}`}
+                            onPress={() => patch(item.key, { size })}
                           />
-                          {!upload?.item && !upload?.failed && (
-                            <View style={styles.photoBusy}>
-                              <ActivityIndicator size="small" color={color.paper} />
-                            </View>
-                          )}
-                        </Pressable>
-                        <TextInput
-                          style={[styles.slot, styles.caption]}
-                          value={item.caption}
-                          onChangeText={(caption) =>
-                            patch(item.key, { caption: caption.replace(/\n/g, ' ') })
-                          }
-                          onFocus={() => setCurrent(item.key)}
-                          placeholder="Caption"
-                          placeholderTextColor={color.inkFaint}
-                          accessibilityLabel="Caption"
-                          testID="caption"
-                          maxLength={140}
-                        />
+                        ))}
+                        {(['left', 'center', 'right'] as const).map((place) => (
+                          <Chip
+                            key={place}
+                            label={place[0].toUpperCase() + place.slice(1)}
+                            on={item.place === place}
+                            testID={`photo-${place}`}
+                            onPress={() => patch(item.key, { place })}
+                          />
+                        ))}
+                        {moves}
+                        <Action label="Remove photo" onPress={() => remove(item)} />
                       </View>
-                      {upload?.failed && <Text style={styles.error}>Upload failed</Text>}
-                      {on && (
-                        <View style={styles.row}>
-                          {(['s', 'm', 'l'] as const).map((size) => (
-                            <Chip
-                              key={size}
-                              label={size.toUpperCase()}
-                              on={item.size === size}
-                              testID={`photo-size-${size}`}
-                              onPress={() => patch(item.key, { size })}
-                            />
-                          ))}
-                          {(['left', 'center', 'right'] as const).map((place) => (
-                            <Chip
-                              key={place}
-                              label={place[0].toUpperCase() + place.slice(1)}
-                              on={item.place === place}
-                              testID={`photo-${place}`}
-                              onPress={() => patch(item.key, { place })}
-                            />
-                          ))}
-                          <Action label="Remove photo" onPress={() => remove(item)} />
-                        </View>
-                      )}
-                    </View>
-                  );
-                }
-                const first = items.findIndex(isText) === n;
-                return (
-                  <TextInput
-                    key={item.key}
-                    ref={(input) => {
-                      if (input) inputs.current.set(item.key, input);
-                      else inputs.current.delete(item.key);
-                    }}
-                    style={[
-                      styles.slot,
-                      styles[item.kind],
-                      first && items.length === 1 && styles.alone,
-                    ]}
-                    onChangeText={(text) => write(item, text)}
-                    onKeyPress={(e) => e.nativeEvent.key === 'Backspace' && back(item)}
-                    onFocus={() => setCurrent(item.key)}
-                    onSelectionChange={(e) => {
-                      setSelection(e.nativeEvent.selection);
-                      if (caret) setCaret(null);
-                    }}
-                    selection={
-                      caret?.key === item.key ? { start: caret.at, end: caret.at } : undefined
-                    }
-                    placeholder={
-                      first
-                        ? 'We sat here until it got light and nobody wanted to say so. #nightlife'
-                        : item.kind === 'h'
-                          ? 'Heading'
-                          : item.kind === 'quote'
-                            ? 'What somebody said'
-                            : undefined
-                    }
-                    placeholderTextColor={color.inkFaint}
-                    accessibilityLabel={
-                      item.kind === 'h'
+                    )}
+                  </View>
+                );
+              }
+              const first = items.findIndex(isText) === n;
+              return (
+                <TextInput
+                  key={item.key}
+                  ref={(input) => {
+                    if (input) inputs.current.set(item.key, input);
+                    else inputs.current.delete(item.key);
+                  }}
+                  style={[
+                    styles.slot,
+                    styles[item.kind],
+                    first && items.length === 1 && styles.alone,
+                  ]}
+                  onChangeText={(text) => write(item, text)}
+                  onKeyPress={(e) => e.nativeEvent.key === 'Backspace' && back(item)}
+                  onFocus={() => setCurrent(item.key)}
+                  onSelectionChange={(e) => {
+                    setSelection(e.nativeEvent.selection);
+                    if (caret) setCaret(null);
+                  }}
+                  selection={
+                    caret?.key === item.key ? { start: caret.at, end: caret.at } : undefined
+                  }
+                  placeholder={
+                    first
+                      ? 'What happened here? Add a #tag if you like.'
+                      : item.kind === 'h'
                         ? 'Heading'
                         : item.kind === 'quote'
-                          ? 'Quote'
-                          : 'Description'
-                    }
-                    testID={first ? 'story' : `block-${item.kind}`}
-                    multiline
-                    scrollEnabled={false}
-                    textAlignVertical="top"
-                  >
-                    {/* The marks stay where they were typed, faint, and what
+                          ? 'What somebody said'
+                          : undefined
+                  }
+                  placeholderTextColor={color.inkFaint}
+                  accessibilityLabel={
+                    item.kind === 'h' ? 'Heading' : item.kind === 'quote' ? 'Quote' : 'Description'
+                  }
+                  testID={first ? 'story' : `block-${item.kind}`}
+                  multiline
+                  scrollEnabled={false}
+                  textAlignVertical="top"
+                >
+                  {/* The marks stay where they were typed, faint, and what
                         they mark is set as it will read. */}
-                    {inline(item.text, true).map((run, i) => (
-                      <Text
-                        key={i}
-                        style={[
-                          run.mark && styles.mark,
-                          run.bold && styles.bold,
-                          run.italic && styles.italic,
-                        ]}
-                      >
-                        {run.mark
-                          ? run.text
-                          : hashtagParts(run.text).map((part, j) =>
-                              part.tag ? (
-                                <Text key={j} style={styles.hashtag}>
-                                  {part.text}
-                                </Text>
-                              ) : (
-                                part.text
-                              ),
-                            )}
-                      </Text>
-                    ))}
-                  </TextInput>
-                );
-              })
-            )}
+                  {inline(item.text, true).map((run, i) => (
+                    <Text
+                      key={i}
+                      style={[
+                        run.mark && styles.mark,
+                        run.bold && styles.bold,
+                        run.italic && styles.italic,
+                      ]}
+                    >
+                      {run.mark
+                        ? run.text
+                        : hashtagParts(run.text).map((part, j) =>
+                            part.tag ? (
+                              <Text key={j} style={styles.hashtag}>
+                                {part.text}
+                              </Text>
+                            ) : (
+                              part.text
+                            ),
+                          )}
+                    </Text>
+                  ))}
+                </TextInput>
+              );
+            })}
           </View>
           {/* Only near the limit: a count from the first letter reads as a nag. */}
           {summary.length > MAX_SUMMARY - 200 && (
@@ -978,8 +1044,78 @@ export default function Submit({
               </Text>
             </Pressable>
           )}
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </Animated.ScrollView>
+        <Animated.View style={[styles.dock, { bottom: lifted }]}>{tools()}</Animated.View>
+
+        {/* The seal: the locket its pin is drawn as, chosen once the story is
+            there (docs/10, "Writing is a calm page"). */}
+        {sealing && (
+          <View style={StyleSheet.absoluteFill}>
+            <Pressable
+              style={styles.scrim}
+              onPress={() => !posting && setSealing(false)}
+              accessibilityLabel="Back to writing"
+            />
+            <Animated.View
+              style={[
+                styles.tray,
+                {
+                  transform: [
+                    { translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [360, 0] }) },
+                  ],
+                },
+              ]}
+            >
+              <Text style={styles.trayLabel}>Seal it with</Text>
+              <View style={styles.lockets}>
+                {offered.map((l) => {
+                  const earned = l.level <= level;
+                  return (
+                    <Pressable
+                      key={l.id}
+                      onPress={() => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setLocket(l.id);
+                      }}
+                      disabled={!earned}
+                      accessibilityRole="radio"
+                      accessibilityLabel={earned ? l.name : `${l.name}, level ${l.level}`}
+                      accessibilityState={{ selected: locket === l.id, disabled: !earned }}
+                      testID={`locket-${l.id}`}
+                      style={[styles.locket, locket === l.id && styles.locketOn]}
+                    >
+                      <Image
+                        source={l.opened}
+                        style={[styles.locketImage, !earned && styles.disabled]}
+                      />
+                      {!earned && <Text style={styles.locketLevel}>Level {l.level}</Text>}
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Text style={styles.meta}>{locketOf(locket).name}</Text>
+              {error && <Text style={styles.error}>{error}</Text>}
+              <Pressable
+                style={dim([styles.seal, posting && styles.disabled])}
+                onPress={post}
+                disabled={posting}
+                accessibilityRole="button"
+                testID="seal"
+              >
+                <Text style={styles.sealText}>
+                  {posting
+                    ? isEditing
+                      ? 'Saving…'
+                      : 'Sealing…'
+                    : isEditing
+                      ? 'Save'
+                      : 'Seal it here'}
+                </Text>
+              </Pressable>
+            </Animated.View>
+          </View>
+        )}
+      </View>
     </Modal>
   );
 }
@@ -1086,6 +1222,34 @@ function Action({
   );
 }
 
+/** A glyph in the bar over the keyboard, 44pt to the finger. */
+function Tool({
+  icon,
+  spoken,
+  testID,
+  onPress,
+}: {
+  icon: ComponentProps<typeof Glyph>['name'];
+  spoken: string;
+  testID?: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={() => {
+        Haptics.selectionAsync().catch(() => {});
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={spoken}
+      testID={testID}
+      style={dim(styles.tool)}
+    >
+      <Glyph name={icon} size={19} weight="medium" color={color.inkSoft} />
+    </Pressable>
+  );
+}
+
 function isText(item: Item | undefined): item is TextItem {
   return item?.kind === 'p' || item?.kind === 'h' || item?.kind === 'quote';
 }
@@ -1107,11 +1271,10 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.35 },
 
   // MemorySheet's reading column: 24 in, 8 inside a part, 24 between parts.
-  body: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 56 },
+  body: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 },
   // A field with no box: the cursor and the placeholder say it is editable.
   slot: { padding: 0, margin: 0 },
   title: story.title,
-  // Ends at the toolbar, so nothing scrolls in under it.
   scroll: { flex: 1 },
   blocks: { gap: 16, marginTop: 24 },
   p: story.body,
@@ -1129,19 +1292,38 @@ const styles = StyleSheet.create({
   center: { alignSelf: 'center' },
   right: { alignSelf: 'flex-end' },
   photoOn: { borderWidth: 2, borderColor: color.gold },
-  toolbar: {
+  // The bar: one quiet capsule, over the keyboard or at the foot.
+  capsule: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 18,
+    alignSelf: 'center',
+    paddingHorizontal: 6,
+    borderRadius: radius.pill,
+    backgroundColor: color.paperRaised,
+    ...lift,
+  },
+  tool: { width: 48, height: 44, alignItems: 'center', justifyContent: 'center' },
+  dock: { position: 'absolute', alignSelf: 'center' },
+  scrim: { ...StyleSheet.absoluteFill, backgroundColor: color.scrim },
+  tray: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    gap: 12,
     paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: color.rule,
+    paddingTop: 24,
+    paddingBottom: 44,
+    borderTopLeftRadius: radius.card,
+    borderTopRightRadius: radius.card,
     backgroundColor: color.paper,
   },
+  trayLabel: label,
+  seal: { ...button.solid, alignSelf: 'stretch', marginTop: 8 },
+  sealText: { ...buttonText, color: color.paper },
   byline: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  lockets: { gap: 8, paddingVertical: 12 },
+  lockets: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
   // A circle, the selection a ring in gold: the pin is what is being chosen.
   locket: {
     width: 64,

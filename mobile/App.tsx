@@ -97,6 +97,7 @@ import { distance } from './src/format.ts';
 import { GlassButton } from './src/Glass.tsx';
 import { PlanWalkButton } from './src/PlanWalkButton.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
+import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { button, buttonText, color, dim, font, label, pill, solid } from './src/theme.ts';
@@ -286,6 +287,12 @@ export default function App() {
   const { height: windowHeight } = useWindowDimensions();
   // The dive, growing over the map into the card it opens.
   const [diving, setDiving] = useState<{ grown?: boolean } | null>(null);
+  // A memory just filed, its locket shutting over the map (LocketSeal).
+  const [sealing, setSealing] = useState<{
+    memory: LocatedMemory;
+    at: { x: number; y: number } | null;
+    first: boolean;
+  } | null>(null);
   // Today's accepted walk. routeSize is the route's true size (can be short in
   // a sparse area); it is not `route.length`, because a stop the local cache
   // lost or the server pruned still counted toward "today" when it was made.
@@ -1349,12 +1356,15 @@ export default function App() {
           : who,
       );
       setMineVersion((v) => v + 1);
-      // Show them what they filed. The modal closing is not a confirmation,
-      // and this is also the first sight of what anybody else will find here.
-      setOpenAt([memory]);
-      setOpenIndex(0);
+      // Its locket shuts and lands on the spot, then the sheet opens on what
+      // they filed: the first sight of what anybody else will find here.
+      const { lat: latitude, lng: longitude } = memory.place.coordinates;
+      const at = await mapRef.current
+        ?.pointForCoordinate({ latitude, longitude })
+        .catch(() => null);
+      setSealing({ memory, at: at ?? null, first: (profile?.submitted ?? 0) === 0 });
     },
-    [unlocked],
+    [unlocked, profile?.submitted, mapRef],
   );
 
   /** Opens Submit as an editor rather than a blank form - the journal and the
@@ -2049,6 +2059,19 @@ export default function App() {
             />
           )}
           {slide && <View style={styles.slideRow}>{slide}</View>}
+          {sealing && (
+            <LocketSeal
+              locket={sealing.memory.locket}
+              placeName={sealing.memory.place.name}
+              at={sealing.at}
+              first={sealing.first}
+              onLanded={() => {
+                setOpenAt([sealing.memory]);
+                setOpenIndex(0);
+                setSealing(null);
+              }}
+            />
+          )}
         </View>
 
         <Modal

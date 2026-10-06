@@ -1093,7 +1093,8 @@ dropped, so nothing needs validating server-side. Media the text does not
 place still renders after it.
 
 The editor is native blocks, one borderless field each, with the marks left
-in faint as they are typed (iA Writer, Bear). The toolbar sits under Cancel
+in faint as they are typed (iA Writer, Bear). *The toolbar's place, ↑ ↓ and
+Preview are superseded 2026-10-06 by "Writing is a calm page".* The toolbar sits under Cancel
 and Post, not over the keyboard: a KeyboardAvoidingView in a page sheet
 measures from the sheet and left a bottom bar under the keyboard, and over
 the keyboard a hardware keyboard's suggestion strip still covers it.
@@ -3326,7 +3327,8 @@ noisy, and adding a memory looked nothing like reading one.
   cursor (NN/g: users must know what is editable, which a layout change does
   not help).
 - **Actions inside a page are text**: Rewrite, Remove, Leave note (ember),
-  Take photo, Choose photo, Delete this memory.
+  Take photo, Choose photo, Delete this memory. *Superseded 2026-10-06 for
+  the composer's bar, which is glyphs: "Writing is a calm page".*
 
 ### The open story is one voice
 
@@ -3721,6 +3723,68 @@ the size it is read at, so the viewfinder is that block. It is also where
 
 **Options considered:** the system camera (leaves the page); a full-screen
 `CameraView` with the shot flying into place (chrome for one tap).
+
+### Writing is a calm page; the locket is chosen at the seal
+
+Status: Accepted 2026-10-06. Supersedes the toolbar under the bar, ↑ ↓ for
+any block, and Preview in *A story has a little markdown*; "Actions inside a
+page are text" in *Reading and writing are one page*, for the bar only; and
+the locket row on the page in *Lockets*.
+
+The founder called Add a memory ugly and unintuitive: two rows of words under
+the header (B I Heading Quote Divider Photo Camera / ↑ ↓ Preview), five
+lockets mid-page with four greyed "Level N", and an example placeholder. It
+was rebuilt on a teardown of Apple Journal, Journey, Day One, Bear, iA Writer,
+Substack, Swarm, BeReal, Polarsteps, Geocaching, Notes, Notion and Slowly,
+and on HIG, NN/g and the papers below.
+
+- **One bar of glyphs over the keyboard; × and Post are the only chrome
+  above.** Every app looked at has one row over the keyboard, none has two
+  rows of words (HIG Toolbars: "Prefer simple, recognizable symbols…";
+  Virtual keyboards: controls above the keyboard). The bar is Aa, Photo,
+  Camera and Hide keyboard; Aa swaps in B, I, Heading, Quote, Divider, as
+  Journal, Day One and Notes put formatting behind one Aa. With the keyboard
+  down it docks at the foot, and the page ends above it.
+- **It follows `keyboardWillChangeFrame`, not `InputAccessoryView`.** Under
+  the new architecture an accessory view binds to the first input with its
+  id, once; one per field made UIKit throw in Auto Layout as it hosted it
+  (iOS 26). The offset is the window's height less the keyboard's top: a page
+  sheet ends at the screen's foot, and its own frame reads as starting at 0,
+  which is what KeyboardAvoidingView got wrong.
+- **No Preview, and ↑ ↓ only for a tapped photo or divider.** No app checked
+  has a Preview: the editor is the page. Text moves by cut and paste.
+- **The placeholder asks**: "What happened here? Add a #tag if you like.", and
+  the title "Give it a name". A question beats an example to copy (Day One
+  prompts, Apple Journal suggestions, StoryCorps; Beenen et al., CSCW 2004),
+  and NN/g warns a placeholder can be taken for content.
+- **"Here" is the street**, from expo-location's reverse geocode on the phone
+  (Apple's, free), and "Today" when it is. Display only.
+- **Post opens the seal.** The lockets earned, the current one chosen, and
+  only the next locked one with its level, then "Seal it here". Slowly picks
+  its stamps at send; the IKEA effect holds "only when labor results in
+  successful completion" (Norton, Mochon & Ariely 2012); one locked locket
+  reads as the next goal (goal-gradient, Kivetz et al. 2006), four as a gate.
+- **The locket shuts and lands.** `LocketUnlock`'s opening runs backwards
+  over the map (`onSealed`), the key home, then `LocketSeal` drops it onto the
+  pin's point with Success, and the sheet opens as before. The first memory
+  holds a beat with one line. Reduce Motion goes straight to the sheet (HIG
+  Feedback; NN/g Microinteractions).
+- **× with words in it asks twice**, "Tap again to discard", the app's
+  two-tap in place of an alert. A swipe down still dismisses: React Native's
+  page sheet cannot refuse it.
+
+**Options considered:** words over the keyboard ("Style · Photo · Camera"),
+kept the text rule, rejected by the founder for glyphs; the locket as a chip
+in the byline (easy to miss); drag to reorder (needs gesture-handler);
+`react-native-keyboard-controller` (a native dependency for what one listener
+does).
+
+Sources: developer.apple.com/design/human-interface-guidelines (toolbars,
+virtual-keyboards, sheets, feedback, maps); nngroup.com/articles
+(progressive-disclosure, form-design-placeholders, microinteractions,
+participation-inequality); dayoneapp.com/blog/introducing-prompt-packs;
+support.apple.com/guide/iphone/iph492ee70a8; presnick.people.si.umich.edu/papers/cscw04;
+dash.harvard.edu/handle/1/12136084.
 
 ### The schema keeps only what is read
 

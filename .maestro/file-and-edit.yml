@@ -37,9 +37,12 @@ appId: ${APP_ID}
 - inputText: "A ferry horn woke the whole dock. It was **loud** and *long*, and nobody could stop laughing about it after. #food"
 
 # The story is blocks (docs/10, "A story has a little markdown"). A blank
-# line starts the next; Heading turns it into one.
+# line starts the next; Heading, under Aa in the bar over the keyboard, turns
+# it into one.
 - pressKey: Enter
 - pressKey: Enter
+- tapOn:
+    id: "toolbar-style"
 - tapOn:
     id: "toolbar-heading"
 - inputText: "The horn"
@@ -50,9 +53,18 @@ appId: ${APP_ID}
 - tapOn:
     id: "toolbar-quote"
 - inputText: "Somebody do it again"
-# Reordered: ↑ moves the block being written, the quote up past the divider.
+# Reordered: a tapped divider shows ↑ ↓; it moves up past the heading.
+- tapOn:
+    id: "divider"
 - tapOn:
     id: "block-up"
+# Back in the quote, so the photo goes in under it. The keyboard goes down
+# first: the quote now sits at the page's edge, half under the bar, and a
+# tap there lands on the bar's own Quote.
+- tapOn: "Done styling"
+- tapOn: "Hide keyboard"
+- tapOn:
+    id: "block-quote"
 
 # A photo, which no other flow attaches: SDK 57's expo/fetch once refused the
 # { uri } FormData part and every upload failed without reaching the API.
@@ -77,6 +89,11 @@ appId: ${APP_ID}
     timeout: 30000
 
 # A third of the column, on the left: the paragraph after it wraps it.
+# Scrolled to first: under the page's edge is the bar, and its Photo.
+- scrollUntilVisible:
+    element:
+      id: "block-p"
+    direction: DOWN
 - tapOn:
     id: "photo-size-s"
 - tapOn:
@@ -86,23 +103,20 @@ appId: ${APP_ID}
 - inputText: "We stayed on the step until the first ferry came in, and the man who blew the horn waved at us from the bridge as if we had been waiting for him all along, which by then we had. "
 # B with nothing selected leaves a pair to type into.
 - tapOn:
+    id: "toolbar-style"
+- tapOn:
     id: "toolbar-bold"
 - inputText: "proud"
 - tapOn:
     id: "caption"
 - inputText: "The dock at dawn"
 
-# Preview is the open sheet's own layout: the marks are gone, the words stay.
-- tapOn:
-    id: "preview"
-- assertVisible: "The horn"
-- assertVisible: ".*It was loud and long.*"
-- assertNotVisible: ".*\\*\\*.*"
-- assertVisible: "The dock at dawn"
-- assertVisible: ".*proud.*"
-- tapOn:
-    id: "preview"
+# Post opens the seal: the locket is chosen once the story is written.
 - tapOn: "Post"
+- assertVisible:
+    id: "locket-hunter-compass"
+- tapOn:
+    id: "seal"
 
 # One sentence and its #words are one paragraph (hashtags.ts, lede).
 - extendedWaitUntil:
@@ -110,7 +124,7 @@ appId: ${APP_ID}
     timeout: 40000
 - assertVisible: ".*after. #food"
 - assertVisible: "The step by the ferry landing"
-# Every block the editor made, set as it read in Preview.
+# Every block the editor made, set as the sheet reads it: the marks gone.
 - assertVisible: "The horn"
 - assertVisible: "Somebody do it again"
 - assertNotVisible: ".*\\*\\*.*"
@@ -214,6 +228,11 @@ appId: ${APP_ID}
     element:
       id: "title"
     direction: UP
+# And a little further: Maestro calls the title visible while the header
+# still covers its middle. Short, so at the top it cannot dismiss the sheet.
+- swipe:
+    start: "50%, 40%"
+    end: "50%, 52%"
 - tapOn:
     id: "title"
 - eraseText: 60
@@ -224,6 +243,8 @@ appId: ${APP_ID}
 - eraseText: 60
 - inputText: "The jetty by the ferry landing"
 - tapOn: "Save"
+- tapOn:
+    id: "seal"
 
 # Back on the journal - onSaved closes the editor the same way onPosted does,
 # and App.tsx's mineVersion bump means Filed has already refetched without the

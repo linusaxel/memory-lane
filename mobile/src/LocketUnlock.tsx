@@ -125,6 +125,10 @@ type Props = {
   ref?: Ref<LocketDrive>;
   /** The hold, when the parent shares it (SlideToUnlock's thumb rides it). */
   progress?: SharedValue<number>;
+  /** Plays the opening backwards instead of waiting for a hold: the lid shuts
+   *  on a memory just filed (docs/10, "Writing is a calm page"). Called once
+   *  it is shut. */
+  onSealed?: () => void;
 };
 
 /** The locket driven from outside, by SlideToUnlock. */
@@ -188,6 +192,7 @@ export default function LocketUnlock({
   style,
   ref,
   progress: shared,
+  onSealed,
 }: Props) {
   const reduce = useReducedMotion();
   const art = ART[locketOf(locket).id];
@@ -293,6 +298,25 @@ export default function LocketUnlock({
       if (fin) runOnJS(finishOpen)();
     });
   }, [finishOpen, haptic, measureZoom, openP, phase, pressed, requestUnlock, springBack]);
+
+  const sealed = useCallback(() => {
+    frame.setActive(false);
+    haptic('rigid');
+    onSealed?.();
+  }, [frame, haptic, onSealed]);
+
+  // From open, short of the dive (it starts at 0.5), back to shut.
+  useEffect(() => {
+    if (!onSealed) return;
+    phase.value = OPEN;
+    openP.value = 0.45;
+    frame.setActive(true);
+    openP.value = withTiming(0, { duration: 1100, easing: Easing.inOut(Easing.cubic) }, (fin) => {
+      if (fin) runOnJS(sealed)();
+    });
+    // Once, as it mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const begin = useCallback(
     (durationMs?: number) => {
@@ -483,6 +507,7 @@ export default function LocketUnlock({
   return (
     <View ref={root} collapsable={false} style={[{ width: size, height: size }, style]}>
       <Pressable
+        disabled={!!onSealed}
         onPressIn={() => begin()}
         onPressOut={end}
         accessible
