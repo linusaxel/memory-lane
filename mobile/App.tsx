@@ -2313,8 +2313,8 @@ const styles = StyleSheet.create({
   walkText: { flex: 1, gap: 4 },
   walkNext: { ...font.title, fontSize: 22, lineHeight: 26, color: color.ink },
   walkLeft: { ...label, fontSize: 14 },
-  walkRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  walkCount: { flexShrink: 1, marginLeft: 4, color: color.ink },
+  walkRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  walkCount: { flexShrink: 0, marginLeft: 4, color: color.ink },
   stamp: {
     width: 16,
     height: 16,

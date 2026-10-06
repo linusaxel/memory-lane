@@ -77,6 +77,21 @@ export function inline(text: string, marks = false): Run[] {
   return runs;
 }
 
+/** Runs cut at a character offset, styles kept on both sides: the drop cap
+ *  sets the lines beside it apart from the rest of its paragraph. */
+export function splitRuns(runs: Run[], at: number): [Run[], Run[]] {
+  const head: Run[] = [];
+  const tail: Run[] = [];
+  let seen = 0;
+  for (const run of runs) {
+    const cut = Math.max(0, Math.min(run.text.length, at - seen));
+    if (cut > 0) head.push({ ...run, text: run.text.slice(0, cut) });
+    if (cut < run.text.length) tail.push({ ...run, text: run.text.slice(cut) });
+    seen += run.text.length;
+  }
+  return [head, tail];
+}
+
 /** The words alone: no marks, no dividers, no photos. */
 export function plain(md: string): string {
   return blocks(md)

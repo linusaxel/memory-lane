@@ -8,10 +8,9 @@ import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import CloseButton from './CloseButton.tsx';
-import Glyph from './Glyph.tsx';
 import { wikiSummaryUrl } from './format.ts';
 import { openLink } from './link.ts';
-import { color, dim, story } from './theme.ts';
+import { color, dim, font, radius } from './theme.ts';
 
 type Props = { url: string; onClose: () => void; onFail: () => void };
 type Summary = { title: string; extract: string; thumbnail?: { source: string } };
@@ -38,14 +37,7 @@ export default function WikiPreview({ url, onClose, onFail }: Props) {
   if (!page) return null;
 
   return (
-    <View style={styles.callout} testID="wiki-preview">
-      <View style={styles.titleRow}>
-        <Glyph name="book.closed" size={13} color={color.gold} />
-        <Text style={styles.title} numberOfLines={2}>
-          {page.title}
-        </Text>
-        <CloseButton onPress={onClose} label="Close preview" />
-      </View>
+    <View style={styles.card} testID="wiki-preview">
       {page.thumbnail && !imageFailed && (
         <Image
           source={{ uri: page.thumbnail.source }}
@@ -53,25 +45,44 @@ export default function WikiPreview({ url, onClose, onFail }: Props) {
           onError={() => setImageFailed(true)}
         />
       )}
-      <Text style={styles.extract}>{page.extract}</Text>
-      <Pressable
-        style={dim()}
-        onPress={() => openLink(url).catch(() => {})}
-        accessibilityRole="link"
-        hitSlop={8}
-      >
-        <Text style={styles.more}>Read on Wikipedia ↗</Text>
-      </Pressable>
+      <View style={styles.text}>
+        <Text style={styles.title} numberOfLines={2}>
+          {page.title}
+        </Text>
+        <Text style={styles.extract} numberOfLines={4}>
+          {page.extract}
+        </Text>
+        <Pressable
+          style={dim()}
+          onPress={() => openLink(url).catch(() => {})}
+          accessibilityRole="link"
+          hitSlop={8}
+        >
+          <Text style={styles.more}>Read on Wikipedia ↗</Text>
+        </Pressable>
+      </View>
+      <CloseButton onPress={onClose} label="Close preview" place={styles.close} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // MemorySheet's quote callout: the gold bar, a title row, the text.
-  callout: { paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.gold, gap: 8 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  title: { ...story.meta, color: color.ink, flex: 1 },
-  thumb: { width: 72, height: 72, borderRadius: 8, backgroundColor: color.rule },
-  extract: story.body,
-  more: { ...story.meta, color: color.gold },
+  // A card under the paragraph the name is in: what the link would open, in
+  // brief. The story's own type stays the story's.
+  card: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 14,
+    paddingRight: 48,
+    borderRadius: radius.card - 4,
+    borderWidth: 1,
+    borderColor: color.goldLine,
+    backgroundColor: color.paperRaised,
+  },
+  close: { position: 'absolute', top: 8, right: 8 },
+  text: { flex: 1, gap: 4 },
+  title: { ...font.title, fontSize: 20, lineHeight: 25, color: color.ink },
+  thumb: { width: 64, height: 64, borderRadius: 14, backgroundColor: color.rule },
+  extract: { ...font.prose, fontSize: 15, lineHeight: 21, color: color.inkSoft },
+  more: { ...font.uiBold, fontSize: 15, color: color.gold, marginTop: 4 },
 });

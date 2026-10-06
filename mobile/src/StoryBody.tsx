@@ -6,9 +6,10 @@ import { useState, type ReactNode } from 'react';
 import { Image, Text, View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { mediaUrl, type MediaItem } from './api.ts';
-import Flourish from './Flourish.tsx';
+import DiamondRule from './DiamondRule.tsx';
+import PullQuote from './PullQuote.tsx';
 import { lede, summaryParts } from './hashtags.ts';
-import { blocks, inline, type Block, type Run } from './story.ts';
+import { blocks, inline, splitRuns, type Block, type Run } from './story.ts';
 import { color, font, label, radius, story } from './theme.ts';
 
 type Link = { text: string; url: string };
@@ -78,25 +79,20 @@ export default function StoryBody({ summary, media, links, onLink, part = (_, n)
       }
       continue;
     }
-    if (b.kind === 'divider') nodes.push(<Flourish key={i} />);
+    if (b.kind === 'divider') nodes.push(<DiamondRule key={i} />);
     else if (b.kind === 'h')
       nodes.push(
         <Text key={i} style={styles.heading} accessibilityRole="header">
           {words(inline(b.text))}
         </Text>,
       );
-    else if (b.kind === 'quote')
-      nodes.push(
-        <View key={i} style={styles.quote}>
-          <Text style={styles.body}>{words(inline(b.text))}</Text>
-        </View>,
-      );
+    else if (b.kind === 'quote') nodes.push(<PullQuote key={i}>{words(inline(b.text))}</PullQuote>);
     else if (i === 0) {
       // The lede is the first paragraph's first sentence, set apart as before.
       const [first, rest] = lede(b.text);
       nodes.push(
         <View key={i} style={styles.lede}>
-          <Text style={styles.body}>{words(inline(first))}</Text>
+          <DropCap key={width} runs={inline(first)} width={width} words={words} />
           {rest !== '' && <Text style={styles.body}>{words(inline(rest))}</Text>}
         </View>,
       );
@@ -114,6 +110,64 @@ export default function StoryBody({ summary, media, links, onLink, part = (_, n)
     </View>
   );
 }
+
+/** The story's first letter, in gold Gloock two lines deep, the lines beside
+ *  it set narrower. React Native cannot float text round a box, so the
+ *  paragraph is laid out once, hidden, at the narrow width, and the first two
+ *  lines it makes go beside the letter; the rest runs the full width. Until
+ *  that measure is in, the paragraph reads plain. */
+function DropCap({
+  runs,
+  width,
+  words,
+}: {
+  runs: Run[];
+  width: number;
+  words: (runs: Run[]) => ReactNode;
+}) {
+  const [capWidth, setCapWidth] = useState<number | null>(null);
+  const [beside, setBeside] = useState<number | null>(null);
+  const cap = runs[0]?.text.charAt(0) ?? '';
+  if (!/\p{L}/u.test(cap) || width === 0) return <Text style={styles.body}>{words(runs)}</Text>;
+  const [, after] = splitRuns(runs, 1);
+  if (capWidth === null || beside === null) {
+    return (
+      <View>
+        <Text style={styles.body}>{words(runs)}</Text>
+        <View style={styles.capMeasure} pointerEvents="none">
+          <Text style={styles.cap} onLayout={(e) => setCapWidth(e.nativeEvent.layout.width)}>
+            {cap}
+          </Text>
+          {capWidth !== null && (
+            <Text
+              style={[styles.body, { width: width - capWidth - CAP_GAP }]}
+              onTextLayout={(e) =>
+                setBeside(
+                  e.nativeEvent.lines.slice(0, 2).reduce((n, line) => n + line.text.length, 0),
+                )
+              }
+            >
+              {words(after)}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+  const [head, tail] = splitRuns(after, beside);
+  return (
+    // Not one accessible element: its links must stay reachable on their own.
+    <View>
+      <View style={styles.capRow}>
+        <Text style={styles.cap}>{cap}</Text>
+        <Text style={[styles.body, styles.grow]}>{words(head)}</Text>
+      </View>
+      {tail.length > 0 && <Text style={styles.body}>{words(tail)}</Text>}
+    </View>
+  );
+}
+
+const CAP_GAP = 8;
 
 type PhotoBlock = Extract<Block, { kind: 'photo' }>;
 
@@ -231,10 +285,15 @@ const styles = StyleSheet.create({
   body: story.body,
   heading: { ...story.body, ...font.storyBold },
   bold: font.storyBold,
-  italic: { fontStyle: 'italic' },
+  // The bundled face has its own italic; iOS will not slant a custom one.
+  italic: font.storyItalic,
   hashtag: font.storyBold,
-  link: { textDecorationLine: 'underline' },
-  quote: { paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.rule },
+  link: { textDecorationLine: 'underline', textDecorationColor: color.gold },
+  grow: { flex: 1 },
+  capRow: { flexDirection: 'row', gap: CAP_GAP },
+  // Two lines of the body deep: 2 × 31.
+  cap: { ...font.title, fontSize: 64, lineHeight: 62, height: 62, color: color.gold, marginTop: 2 },
+  capMeasure: { position: 'absolute', opacity: 0, flexDirection: 'row', gap: CAP_GAP },
   figure: { gap: 6 },
   left: { alignSelf: 'flex-start' },
   center: { alignSelf: 'center' },

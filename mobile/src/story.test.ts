@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { blocks, inline, plain, serialize } from './story.ts';
+import { blocks, inline, plain, serialize, splitRuns } from './story.ts';
 
 // The server's cases (tests/test_story.py): one list, two parsers.
 const cases: [string, string][] = JSON.parse(
@@ -48,4 +48,18 @@ test('marks stay in for the editor, out for the reader', () => {
       .join(''),
     'a **b**',
   );
+});
+
+test('runs split at an offset keep their styles on both sides', () => {
+  const runs = inline('ab **cd** e');
+  assert.deepEqual(splitRuns(runs, 3), [
+    [{ text: 'ab ' }],
+    [{ text: 'cd', bold: true }, { text: ' e' }],
+  ]);
+  assert.deepEqual(splitRuns(runs, 4), [
+    [{ text: 'ab ' }, { text: 'c', bold: true }],
+    [{ text: 'd', bold: true }, { text: ' e' }],
+  ]);
+  assert.deepEqual(splitRuns(runs, 0), [[], runs]);
+  assert.deepEqual(splitRuns(runs, 99), [runs, []]);
 });

@@ -442,6 +442,13 @@ progress; refine what exists rather than add.
 
 ### The walk on the map
 
+- [ ] **The heart does not press after a dark-mode unlock** (2026-10-07).
+      `./e2e/run.sh walk` fails at F26 with the simulator in dark: a tap on
+      Heart reaches nothing, and the hierarchy shows an empty full-sheet layer
+      at the card's frame over it. Suspect `IrisGrow`'s dark path
+      (LocketUnlock.tsx, Jewel Box). A tap after relaunch works. Light mode
+      untested since the change.
+
 - [ ] **A walk's stops told apart.** (checked 2026-10-04) The accent question
       is settled (gold, emerald `seal`, `faded`; docs/10, *Lockets*). Left: a
       stop drawn as done, here, next or later in `MemoryMarker.tsx` (needs

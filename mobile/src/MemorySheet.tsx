@@ -24,7 +24,8 @@ import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
 import { openLink } from './link.ts';
 import Avatar from './Avatar.tsx';
-import Flourish from './Flourish.tsx';
+import DiamondRule from './DiamondRule.tsx';
+import PullQuote from './PullQuote.tsx';
 import Glyph from './Glyph.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration, happened, sourceAction, wikiSummaryUrl } from './format.ts';
@@ -456,7 +457,7 @@ export default function MemorySheet({
               {!locked &&
                 (memory.author ? (
                   <View style={[styles.byline, styles.bylineRow]}>
-                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={20} />
+                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={26} />
                     <Text style={styles.bylineText} numberOfLines={2}>
                       Left by <Text style={styles.bylineName}>{memory.author.name}</Text>
                     </Text>
@@ -483,11 +484,7 @@ export default function MemorySheet({
                   </Pressable>
                 ) : null)}
               {linkFailed && <Text style={[styles.meta, styles.byline]}>{linkFailed}</Text>}
-              {!locked && (
-                <View style={styles.flourish}>
-                  <Flourish />
-                </View>
-              )}
+              {!locked && <DiamondRule place={styles.flourish} />}
               {/* What it is about, as the #words the open story sets them in
                   (UI.md, "Tags are the #words"): under the name they belong
                   to, not in the apparatus line. Not tappable. */}
@@ -631,27 +628,21 @@ export default function MemorySheet({
                       {/* Copied from the source and checked against it
                           (pipeline/extract.py, grounded), never written. A tap
                           goes to where it was said, like the watch button. */}
-                      {/* A callout, as GitHub's > [!NOTE] is: the bar, then a
-                          title row that says what the box is. No quote marks
-                          in a block quote (Butterick). */}
                       <Pressable
-                        style={dim([styles.callout, styles.quote])}
+                        style={dim(styles.quote)}
                         disabled={!memory.content}
                         accessibilityRole={memory.content ? 'link' : 'text'}
                         onPress={() => open(memory.content!.url, "Couldn't open that link.")}
                       >
-                        <View style={styles.calloutTitle}>
-                          <Glyph name="quote.opening" size={13} color={color.gold} />
-                          <Text style={styles.meta}>{quoteBy || 'In their words'}</Text>
-                        </View>
-                        <Text style={styles.summary}>{memory.quote}</Text>
+                        <PullQuote caption={quoteBy || 'In their words'}>{memory.quote}</PullQuote>
                       </Pressable>
                     </Animated.View>
                   )}
                   <Animated.View style={[rise(3), styles.after]}>
-                    {/* The same callout, in grey: gold is the source's own voice. */}
+                    {/* What stands here now, under its own label: gold is the
+                        source's own voice, so this one is plain. */}
                     {memory.contrast_note && (
-                      <View style={[styles.callout, styles.calloutQuiet]}>
+                      <View style={styles.callout}>
                         <View style={styles.calloutTitle}>
                           <Glyph name="clock.arrow.circlepath" size={13} color={color.inkFaint} />
                           <Text style={styles.meta}>Then and now</Text>
@@ -662,7 +653,7 @@ export default function MemorySheet({
 
                     <MemoryMedia media={memory.media.filter((m) => !placed.includes(m.id))} />
 
-                    <Flourish />
+                    <DiamondRule />
                     <Notes memoryId={memory.id} isAuthor={!!onEdit} heart={heart} />
                   </Animated.View>
                 </ScrollView>
@@ -748,12 +739,12 @@ const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
   tag: {
     borderWidth: 1,
-    borderColor: color.rule,
+    borderColor: color.goldLine,
     borderRadius: corner.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  tagText: { ...font.displaySemi, fontSize: 13, color: color.inkSoft },
+  tagText: { ...font.uiBold, fontSize: 15, color: color.ink },
   approach: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   approachText: { flex: 1, gap: 2 },
   peekFigure: figureSmall,
@@ -770,9 +761,7 @@ const styles = StyleSheet.create({
   summary: story.body,
   // One rhythm: 8 inside a part, 24 between parts, and no rules between them.
   after: { marginTop: 24, gap: 24 },
-  // Gold, not a new colour: it is the memory's own voice (UI.md, "One accent").
-  callout: { paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.gold, gap: 8 },
-  calloutQuiet: { borderLeftColor: color.rule },
+  callout: { gap: 8 },
   calloutTitle: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   quote: { marginTop: 24 },
   waiting: { ...label, color: color.seal },
@@ -780,8 +769,8 @@ const styles = StyleSheet.create({
   byline: { marginTop: 8 },
   flourish: { marginTop: 20 },
   bylineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bylineText: { ...story.meta, flexShrink: 1 },
-  bylineName: { color: color.ink },
+  bylineText: { ...font.ui, fontSize: 16, lineHeight: 22, color: color.inkSoft, flexShrink: 1 },
+  bylineName: { ...font.uiBold, color: color.ink },
   out: { color: color.gold },
   actions: { padding: 20, gap: 12, borderTopWidth: 1, borderTopColor: color.rule },
   heart: { flexDirection: 'row', alignItems: 'center', gap: 6 },

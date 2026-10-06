@@ -32,6 +32,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  useColorScheme,
   useWindowDimensions,
   type AccessibilityActionEvent,
   type ViewStyle,
@@ -640,12 +641,15 @@ type IrisProps = {
 /** The dive, handed over: the locket's zoom ends with its inside covering the
  *  screen, and from then this full-screen paper, over it, settles down into
  *  the card's frame. It matches no locket's shape, so every locket blends the
- *  same. The glow fades to paper as it settles, so dark mode does not cut.
+ *  same. In light the inside's glow fades to paper as it settles; in dark,
+ *  where a cream screen would flash, the paper fades in over the dive itself,
+ *  so the locket dives into plum-black and nothing is ever white.
  *  The parent removes it once the card is up. With Reduce Motion it draws
  *  nothing and hands over at once. */
 export function IrisGrow({ height, onGrown }: IrisProps) {
   const reduce = useReducedMotion();
   const { height: screen } = useWindowDimensions();
+  const dark = useColorScheme() === 'dark';
   const ms = useSharedValue(0);
   const total = DIVE_MS + SETTLE_MS;
 
@@ -665,7 +669,7 @@ export function IrisGrow({ height, onGrown }: IrisProps) {
   const frame = useAnimatedStyle(() => {
     const b = settle.value;
     return {
-      opacity: ms.value >= DIVE_MS ? 1 : 0,
+      opacity: dark ? Math.min(ms.value / DIVE_MS, 1) : ms.value >= DIVE_MS ? 1 : 0,
       top: (screen - height) * b,
       borderTopLeftRadius: radius.card * b,
       borderTopRightRadius: radius.card * b,
@@ -680,7 +684,7 @@ export function IrisGrow({ height, onGrown }: IrisProps) {
   if (reduce) return null;
   return (
     <Animated.View pointerEvents="none" style={[styles.iris, frame]}>
-      <Animated.View style={[styles.irisGlow, glow]} />
+      {!dark && <Animated.View style={[styles.irisGlow, glow]} />}
     </Animated.View>
   );
 }
@@ -957,10 +961,8 @@ const ART: Record<LocketId, Art> = {
           x={C}
           y={172}
           textAnchor="middle"
-          fontFamily={font.display.fontFamily}
-          fontStyle="italic"
+          fontFamily={font.title.fontFamily}
           fontSize={34}
-          fontWeight="700"
           fill={metal.engrave}
         >
           {placeName.trim().charAt(0).toUpperCase()}
@@ -1121,8 +1123,7 @@ const EngraveArt = memo(function EngraveArt({
         x={C}
         y={166}
         textAnchor="middle"
-        fontFamily={font.display.fontFamily}
-        fontWeight="700"
+        fontFamily={font.title.fontFamily}
         fontSize={nameSize}
         fill={metal.dark}
       >

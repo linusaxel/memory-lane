@@ -49,7 +49,7 @@ import {
 import Avatar from './Avatar.tsx';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
-import Flourish from './Flourish.tsx';
+import DiamondRule from './DiamondRule.tsx';
 import Glyph from './Glyph.tsx';
 import { duration, happened } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
@@ -805,7 +805,7 @@ export default function Submit({
                       testID="divider"
                       style={[styles.divider, on && styles.dividerOn]}
                     >
-                      <Flourish />
+                      <DiamondRule />
                     </Pressable>
                     {on && (
                       <View style={styles.row}>
@@ -1268,7 +1268,7 @@ const styles = StyleSheet.create({
   alone: { minHeight: 130 },
   mark: { color: color.inkFaint },
   bold: font.storyBold,
-  italic: { fontStyle: 'italic' },
+  italic: font.storyItalic,
   hashtag: font.storyBold,
   divider: { paddingVertical: 4, borderRadius: radius.field },
   dividerOn: { backgroundColor: color.rule },

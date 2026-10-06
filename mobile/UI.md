@@ -204,7 +204,8 @@ with no network is never stopped at the gate.
 | `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
-| `src/Flourish.tsx` | the leaf-and-curls divider, twice on an open story: under the byline, before the notes |
+| `src/DiamondRule.tsx` | the one ornament, twice on an open story: under the byline, before the notes |
+| `src/PullQuote.tsx` | a quote set apart: gold mark, Newsreader italic, a caption |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12); with another `icon`, the walk card's skip and a story's ⋯ |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |

@@ -67,8 +67,8 @@ const CLOSE = { inputRange: [0, 1], outputRange: [0.985, 0.72] };
 const styles = StyleSheet.create({
   ring: {
     borderWidth: 3,
-    borderColor: color.rule,
-    backgroundColor: color.paper,
+    borderColor: color.track,
+    backgroundColor: color.paperRaised,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: color.faded,
+    backgroundColor: color.gold,
   },
   cover: {
     position: 'absolute',
@@ -87,6 +87,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: color.paper,
+    backgroundColor: color.paperRaised,
   },
 });

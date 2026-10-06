@@ -14,7 +14,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Source } from './api.ts';
 import { openLink } from './link.ts';
-import { color, dim, story } from './theme.ts';
+import { color, dim, font } from './theme.ts';
 
 type Props = {
   source: Source;
@@ -62,13 +62,13 @@ export default function SourceLine({ source, url = source.url ?? undefined, spok
   );
 }
 
-const AVATAR = 20;
+const AVATAR = 26;
 
 const styles = StyleSheet.create({
   // MemorySheet's byline, under the place name.
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatar: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2, backgroundColor: color.rule },
-  from: { ...story.meta, flex: 1 },
-  name: { color: color.ink },
+  from: { ...font.ui, fontSize: 16, lineHeight: 22, color: color.inkSoft, flex: 1 },
+  name: { ...font.uiBold, color: color.gold },
   out: { color: color.gold },
 });

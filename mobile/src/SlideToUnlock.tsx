@@ -1,13 +1,13 @@
-/** The track under the locket, as iOS draws slide to power off: a white knob
- *  with an arrow and one shimmering line, in its own row over the bottom row
- *  while a memory is in reach. Slide the knob to unlock. It
+/** The track under the locket, as iOS draws slide to power off: a foil knob
+ *  with a key on green enamel and one shimmering line, in place of the bottom
+ *  row while a memory is in reach. Slide the knob to open it. It
  *  scrubs the locket's own hold (LocketUnlock's `scrub`), so the key turns
  *  under your thumb and rewinds as you slide back; letting go short springs
  *  it shut, and the end commits. Holding the locket moves the thumb too: one
  *  progress, two ways to drive it (docs/10, "Slide to unlock"). */
 
 import { useEffect, useRef, type RefObject } from 'react';
-import { PanResponder, StyleSheet, View } from 'react-native';
+import { PanResponder, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   type SharedValue,
   useAnimatedStyle,
@@ -17,11 +17,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { GlassCard } from './Glass.tsx';
+import { LinearGradient } from 'expo-linear-gradient';
 import Glyph from './Glyph.tsx';
 import type { LocketDrive } from './LocketUnlock.tsx';
 import { clamp } from './lockMotion.ts';
-import { color, foil, font, lift } from './theme.ts';
+import { color, foil, font, lift, radius } from './theme.ts';
 
 type Props = {
   drive: RefObject<LocketDrive | null>;
@@ -64,7 +64,7 @@ export default function SlideToUnlock({ drive, progress, placeName }: Props) {
   const shimmerStyle = useAnimatedStyle(() => ({ opacity: shimmer.value }));
 
   return (
-    <GlassCard
+    <View
       style={styles.track}
       onLayout={(e) => (range.value = e.nativeEvent.layout.width - 2 * PAD - THUMB)}
       accessible
@@ -75,15 +75,25 @@ export default function SlideToUnlock({ drive, progress, placeName }: Props) {
       onAccessibilityAction={() => drive.current?.open()}
       testID="slide-to-unlock"
     >
+      <View style={styles.rim} pointerEvents="none" />
       <Animated.View style={[styles.words, wordsStyle]} pointerEvents="none">
-        <Animated.Text style={[styles.slide, shimmerStyle]}>slide to unlock</Animated.Text>
+        <Animated.View style={[styles.say, shimmerStyle]}>
+          <Text style={styles.slide}>slide to open</Text>
+          <Glyph name="chevron.right.2" size={18} weight="semibold" color={color.onGo} />
+        </Animated.View>
       </Animated.View>
       <Animated.View style={[styles.thumb, thumbStyle]} {...pan.panHandlers}>
+        <LinearGradient
+          colors={foil.colors}
+          locations={[0, 0.5, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         <View pointerEvents="none">
-          <Glyph name="arrow.right" size={26} weight="semibold" color={color.gold} />
+          <Glyph name="key.horizontal.fill" size={22} weight="semibold" color={foil.text} />
         </View>
       </Animated.View>
-    </GlassCard>
+    </View>
   );
 }
 
@@ -91,7 +101,23 @@ const THUMB = 54;
 const PAD = 5;
 
 const styles = StyleSheet.create({
-  track: { alignSelf: 'stretch', height: THUMB + 2 * PAD, justifyContent: 'center' },
+  // Green enamel, as every go is, with a foil knob carrying the key.
+  track: {
+    alignSelf: 'stretch',
+    height: THUMB + 2 * PAD,
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    backgroundColor: color.goBg,
+    ...lift,
+  },
+  rim: {
+    ...StyleSheet.absoluteFill,
+    margin: 4,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.goRim,
+  },
+  say: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   words: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
@@ -99,16 +125,15 @@ const styles = StyleSheet.create({
     paddingLeft: THUMB + 2 * PAD,
     paddingRight: 16,
   },
-  slide: { ...font.ui, fontSize: 22, color: color.ink },
+  slide: { ...font.uiBold, fontSize: 21, color: color.onGo },
   thumb: {
     position: 'absolute',
     left: PAD,
     width: THUMB,
     height: THUMB,
     borderRadius: THUMB / 2,
-    backgroundColor: foil.colors[1],
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    ...lift,
   },
 });

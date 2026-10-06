@@ -174,7 +174,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/link.ts` | `openLink`: every link opens in an in-app browser sheet |
 | `mobile/src/WikiPreview.tsx` | A linked Wikipedia name, summarised inside the card |
 | `mobile/src/seen.ts` | The hearts and notes each of your memories had when you last looked, and the journal header's numbers as last shown |
-| `mobile/src/Flourish.tsx` | The ornamental divider between an open story's parts |
+| `mobile/src/DiamondRule.tsx` | The one ornament: gold hairline, emerald diamond, gold hairline |
+| `mobile/src/PullQuote.tsx` | A quote set apart: a gold Gloock mark over Newsreader italic |
 | `mobile/src/Notes.tsx` | The notes under an open memory (F33) |
 | `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative. Also a subscriber's themes and years, kept on the phone |
 | `mobile/src/reach.ts` | Which locked pins can be opened from where you stand (unit tested) |

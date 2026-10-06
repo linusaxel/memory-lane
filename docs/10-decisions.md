@@ -3354,7 +3354,8 @@ semibold quote, a semibold link, and a "280 left" from the first keystroke.
 
 ### One source, one flourish
 
-Status: Accepted 2026-10-03. Supersedes the flourish placement in *The open
+Status: Accepted 2026-10-03. Its ornament **Superseded 2026-10-06** by
+*Jewel Box*: the diamond rule, in the same places. Supersedes the flourish placement in *The open
 story is one voice*, and the source link closing the story in *Reading and
 writing are one page* and *The credit is a byline*.
 
@@ -3505,6 +3506,17 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
   else. The two new faces are bundled (`@expo-google-fonts/*`) and loaded
   behind the splash in `App.tsx`, so a title never paints in the system face
   first; a failed load falls back rather than blocking.
+- **One ornament, the diamond rule** (`DiamondRule.tsx`): gold hairline,
+  emerald diamond, gold hairline, where the flourish was. **Quotes are pull
+  quotes** (`PullQuote.tsx`), centred in Newsreader italic under a gold
+  Gloock mark; the gold left bar is gone. The story opens on a gold Gloock
+  **drop cap**, two lines deep (`StoryBody.tsx`, measured once since React
+  Native cannot float text).
+- **In reach, the locket hangs and glows.** On its chain from the top of the
+  screen, with a soft emerald glow and no ring (the founder asked for the ring
+  gone), over the place name. The slide is green enamel with a foil key,
+  "slide to open", and takes the bottom row's place. In dark the dive into the
+  story fades through plum-black, never white.
 
 ### No keys; your memories are your lockets
 
