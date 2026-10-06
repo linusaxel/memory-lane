@@ -395,7 +395,7 @@ export function PlanWalkButton({
           style={[{ marginRight: FIGURE_GAP }, walker]}
           onLayout={(e) => setFig({ x: e.nativeEvent.layout.x, w: e.nativeEvent.layout.width })}
         >
-          <Figure t={t} active={active} ink={color.paper} halo={color.gold} />
+          <Figure t={t} active={active} ink={color.onGo} halo={color.goBg} />
         </Animated.View>
       </View>
     </GlassButton>
@@ -406,5 +406,5 @@ const styles = StyleSheet.create({
   clip: { overflow: 'hidden' },
   row: { flexDirection: 'row-reverse', alignItems: 'center' },
   label: { flexDirection: 'row', alignItems: 'center' },
-  letter: { ...buttonText, color: color.paper },
+  letter: { ...buttonText, color: color.onGo },
 });

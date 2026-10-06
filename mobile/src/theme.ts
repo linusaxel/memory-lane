@@ -42,8 +42,6 @@ export const color = {
   gold: dual('#7E5E14', '#E3BE6B'),
   /** A gold hairline: glass over the map, quiet buttons in the dark. */
   goldLine: dual('rgba(184,142,54,0.55)', 'rgba(227,190,107,0.6)'),
-  /** A subscriber's thing, offered to a free walker: gold, washed thin. */
-  goldTint: dual('rgba(126,94,20,0.14)', 'rgba(227,190,107,0.18)'),
 
   /** Go: Plan a walk, Start walk, Next, the slide track. Text on it is onGo. */
   goBg: dual('#24694E', '#256349'),
@@ -139,10 +137,10 @@ export const solid = (dark: boolean) => ({
   tile: dark ? '#5e2a18' : '#a8350f',
   road: dark ? '#f2ede4' : '#f7f4ee',
   sun: dark ? '#f5c542' : '#f2b53a',
-  /** The one tinted control over the map, Plan a walk: gold stained glass,
+  /** The one tinted control over the map, Plan a walk: green enamel glass,
    *  dense, because a light tint on the cream map measured 1.01:1
    *  (docs/09 part 15). A tint, so a real colour. */
-  goldGlass: dark ? 'rgba(217,180,94,0.85)' : 'rgba(118,90,22,0.92)',
+  goGlass: dark ? 'rgba(37,99,73,0.94)' : 'rgba(36,105,78,0.94)',
   /** The same warmth on a glass card, thicker: a card carries prose, which
    *  must hold its contrast over a busy map. */
   frostCard: dark ? 'rgba(33,26,41,0.86)' : 'rgba(255,252,246,0.86)',

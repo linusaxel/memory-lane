@@ -270,7 +270,6 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 |---|---|---|
 | `gold` | `#7E5E14` / `#E3BE6B` | **a memory, and the way to it.** The route, the next stop, a link, a text button |
 | `goldLine` | gold at 55% / 60% | a gold hairline: glass edges, quiet buttons in the dark |
-| `goldTint` | gold at 14% / 18% | a subscriber's thing offered to a free walker (the Plus tile) |
 | `goBg`, `goRim`, `onGo` | `#24694E` / `#256349` | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
 | `foil` | `#F6DE9A → #D9B45E → #B88E36` | **keep something.** Seal it here, Subscribe, Done. One set in both themes |
 | `seal` | `#1C6A4D` / `#4CC196` | **openable.** Emerald: a lit pin, the reach circle, the diamond in the rule. Fill or text |
@@ -348,10 +347,17 @@ contrast; not the memory sheet's peek, whose parent animates opacity
 (Journal, Add, the walk card, the keys pill, you,
 Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
 or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. Plan a walk is the one
-tinted control, `prominent`: gold stained glass (`solid().goldGlass`) with a
-paper label. A tap walks its figure through the label, the letters
+tinted control, `prominent`: green enamel glass (`solid().goGlass`) in a gold
+bezel, its label in `onGo`. A tap walks its figure through the label, the letters
 parting, and the planner opens as he arrives, 0.9 s
-(`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. Turn on location is `button.solid`. The walk card is
+(`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. Turn on location is a go `Button`. **Every map state shares one bottom
+row** (docs/10, "Jewel Box"): Add a memory bottom left and Center on me bottom
+right, 60pt glass circles, with the state's main thing between them (Plan a
+walk at home, the walk card on a walk). In reach, the slide replaces the whole
+row. The walk card says "Next · 280 m", the place in Gloock, and a checklist of
+16pt circles: done gold with a check, next a gold ring, later a rule ring. When
+the home map's fetch fails, a glass banner says "Can't reach Memory Lane right
+now." with Try again. The walk card is
 untinted: the next stop's pin is the gold on the map. No `GlassContainer`: two circles merging read as
 one odd shape (the founder, 2026-10-01), and the container swallows taps in
 its gaps. Glass takes colour from what is under it: Journal reads cyan over a lake,

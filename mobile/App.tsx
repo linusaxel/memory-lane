@@ -93,13 +93,13 @@ import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
-import { GlassButton } from './src/Glass.tsx';
+import { GlassButton, GlassCard } from './src/Glass.tsx';
 import { PlanWalkButton } from './src/PlanWalkButton.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
-import { color, font, label, pill, solid } from './src/theme.ts';
+import { color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import AccountMenu from './src/AccountMenu.tsx';
@@ -111,6 +111,7 @@ import { identify } from './src/purchases.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 import Button from './src/Button.tsx';
+import AddIcon from './src/AddIcon.tsx';
 import { useFonts } from 'expo-font';
 import { Gloock_400Regular } from '@expo-google-fonts/gloock';
 import {
@@ -786,6 +787,10 @@ export default function App() {
   // On the home map, and again when a position first arrives: by where you
   // are, never by viewport, so panning fetches nothing (UI.md rule 3).
   const located = !!position;
+  // The home map's one fetch failing is the app being offline, as far as a
+  // walker can tell: a banner with Try again, gone on the next success.
+  const [offline, setOffline] = useState(false);
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     if (stage !== 'map') return;
     const controller = new AbortController();
@@ -794,10 +799,16 @@ export default function App() {
       lng: FALLBACK_REGION.longitude,
     };
     fetchNearby(at, MAP_RADIUS_KM, device, controller.signal)
-      .then((found) => mounted.current && setNearby(found))
-      .catch(() => {});
+      .then((found) => {
+        if (!mounted.current) return;
+        setNearby(found);
+        setOffline(false);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted && mounted.current) setOffline(true);
+      });
     return () => controller.abort();
-  }, [stage, located, me, device]);
+  }, [stage, located, me, device, retry]);
 
   const stopsShown = revealed.walk === preview ? revealed.count : 0;
 
@@ -1486,6 +1497,31 @@ export default function App() {
     );
   }
 
+  // Bottom right on every map state: back to you, filled while the map
+  // follows you, as Apple Maps does.
+  const centerButton = (
+    <GlassButton
+      style={styles.bigCircle}
+      hitSlop={4}
+      accessibilityRole="button"
+      accessibilityLabel="Center on me"
+      onPress={() => {
+        Haptics.selectionAsync().catch(() => {});
+        const you = positionRef.current;
+        if (!you) goToMyLocation().catch(() => false);
+        else setFollowing(true);
+      }}
+    >
+      {/* Filled while the map is on you, as Apple Maps does. */}
+      <Glyph
+        name={offYou ? 'location' : 'location.fill'}
+        size={22}
+        weight="medium"
+        color={color.ink}
+      />
+    </GlassButton>
+  );
+
   // Add, one tap from the planner and the walk alike: filing is standing
   // somewhere, not unlocking.
   const addButton = (shape: typeof styles.circle = styles.circle) => (
@@ -1502,12 +1538,7 @@ export default function App() {
         setSubmitOpen(true);
       }}
     >
-      <Glyph
-        name="plus"
-        size={shape === styles.circle ? 22 : 26}
-        weight="semibold"
-        color={color.gold}
-      />
+      <AddIcon size={shape === styles.circle ? 24 : 30} color={color.gold} />
     </GlassButton>
   );
 
@@ -1611,7 +1642,7 @@ export default function App() {
               if (stage !== 'end') return;
               const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
               Haptics.selectionAsync().catch(() => {});
-              setWalkAsk((ask) => ({ ...ask, end: { lat, lng } }));
+              setWalkAsk((ask) => ({ ...ask, loop: false, end: { lat, lng } }));
               setStage('preview');
             }}
             // Teleport, under __DEV__ only: the pinned position ignores the
@@ -1802,6 +1833,8 @@ export default function App() {
               loop={!!routeHome}
               minutes={doneMinutes}
               streak={profile?.streak ?? 0}
+              level={profile?.level ?? 1}
+              into={profile ? levelInto(profile) : 0}
               reward={reward}
               path={donePath}
               onDone={() => setWalkDone(false)}
@@ -1861,18 +1894,26 @@ export default function App() {
           {stage === 'preview' && !journalOpen && (
             <View style={styles.topLeftSecond}>{addButton()}</View>
           )}
+          {stage === 'map' && offline && !journalOpen && (
+            <GlassCard style={styles.offline} accessibilityLiveRegion="polite">
+              <Glyph name="icloud.slash" size={20} weight="medium" color={color.inkSoft} />
+              <Text style={styles.offlineText}>Can't reach Memory Lane right now.</Text>
+              <Button kind="text" label="Try again" onPress={() => setRetry((n) => n + 1)} />
+            </GlassCard>
+          )}
           {/* Home: the map, you on it, the way into the planner and Add. */}
-          {stage === 'map' && !journalOpen && !pastWalk && (
+          {stage === 'map' && !journalOpen && !pastWalk && !slide && (
             <View style={styles.bottom}>
-              {!slide && (
+              {addButton(styles.bigCircle)}
+              <View style={styles.middle}>
                 <PlanWalkButton
-                  place={styles.grow}
+                  place={styles.wide}
                   style={styles.planWalk}
                   onPress={() => Haptics.selectionAsync().catch(() => {})}
                   onWalkEnd={() => setStage('preview')}
                 />
-              )}
-              {addButton(styles.bigCircle)}
+              </View>
+              {centerButton}
             </View>
           )}
           <View style={styles.topRight}>
@@ -1903,9 +1944,9 @@ export default function App() {
               }}
             />
           )}
-          {stage === 'walk' && !confirmEnd && !showDone && !pastWalk && (
+          {stage === 'walk' && !confirmEnd && !showDone && !pastWalk && !slide && (
             <View style={styles.bottom}>
-              {addButton()}
+              {addButton(styles.bigCircle)}
               <View style={styles.middle}>
                 {walking && !position && (
                   // Without location nothing can ever unlock, so the button says so
@@ -1980,17 +2021,32 @@ export default function App() {
                         routeDone ? 'Shows the whole walk' : 'Shows you and the next stop'
                       }
                     >
-                      <Text style={styles.walkNext} numberOfLines={1}>
-                        {routeLabel}
+                      <Text style={styles.walkLeft} numberOfLines={1}>
+                        {nextRouteStop
+                          ? `Next${toNextStop === null ? '' : ` · ${distance(toNextStop)}`}`
+                          : 'Every stop unlocked'}
                       </Text>
+                      {nextRouteStop && (
+                        <Text style={styles.walkNext} numberOfLines={1}>
+                          {nextRouteStop.place.name}
+                        </Text>
+                      )}
                       <View style={styles.walkRow}>
-                        {/* A stamp card, filled as stops open. Not a ring:
-                            the ring is the hold's (UI.md). */}
-                        {routeShown.map((memory, i) => (
+                        {/* Done, next and later: a checklist, filled as stops
+                            open. Not a ring: the ring is the hold's (UI.md). */}
+                        {routeShown.map((memory) => (
                           <View
                             key={memory.id}
-                            style={[styles.stamp, i < routeUnlockedCount && styles.stamped]}
-                          />
+                            style={[
+                              styles.stamp,
+                              memory === nextRouteStop && styles.stampNext,
+                              earned.has(memory.id) && styles.stamped,
+                            ]}
+                          >
+                            {earned.has(memory.id) && (
+                              <Glyph name="checkmark" size={9} weight="bold" color={color.paper} />
+                            )}
+                          </View>
                         ))}
                         <Text style={[styles.walkLeft, styles.walkCount]} numberOfLines={1}>
                           {/* An end that failed says so here, not on a card that is gone. */}
@@ -2010,26 +2066,7 @@ export default function App() {
                   </GlassButton>
                 )}
               </View>
-              <GlassButton
-                style={styles.circle}
-                hitSlop={4}
-                accessibilityRole="button"
-                accessibilityLabel="Center on me"
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  const you = positionRef.current;
-                  if (!you) goToMyLocation().catch(() => false);
-                  else setFollowing(true);
-                }}
-              >
-                {/* Filled while the map is on you, as Apple Maps does. */}
-                <Glyph
-                  name={offYou ? 'location' : 'location.fill'}
-                  size={18}
-                  weight="medium"
-                  color={color.ink}
-                />
-              </GlassButton>
+              {centerButton}
             </View>
           )}
           {/* While a memory is in reach the rest steps back: a paper wash over
@@ -2202,7 +2239,7 @@ const styles = StyleSheet.create({
   corner: { position: 'absolute', top: 64 },
   steps: { alignSelf: 'center' },
   topLeft: { position: 'absolute', top: 64, left: 18 },
-  topLeftSecond: { position: 'absolute', top: 64, left: 74 },
+  topLeftSecond: { position: 'absolute', top: 64, left: 76 },
   topRight: { position: 'absolute', top: 64, right: 18 },
   // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
   // over Apple's logo and Legal link (HIG Maps asks 10).
@@ -2215,31 +2252,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  // 56, the walk card's height, so the row keeps its line without it.
-  middle: { flex: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center' },
+  // 60, the circles' height, so the row keeps its line without the card.
+  middle: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center' },
   // The slide's own row, centred over the bottom row (56 tall, at 70) with
   // 16 between: near edge to edge, as slide to power off is.
-  slideRow: { position: 'absolute', left: 24, right: 24, bottom: 70 + 56 + 16 },
+  slideRow: { position: 'absolute', left: 18, right: 18, bottom: 70 },
   wash: { ...StyleSheet.absoluteFill, backgroundColor: color.paper },
   grow: { flex: 1 },
-  planWalk: { ...pill, minHeight: 56 },
+  planWalk: { ...pill, minHeight: 60 },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
-  // Add on the home row, as tall as Plan a walk.
+  // Add and Center on me, each end of the bottom row.
   bigCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
   circle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  offline: {
+    position: 'absolute',
+    top: 124,
+    left: 18,
+    right: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingLeft: 18,
+    paddingRight: 8,
+    paddingVertical: 8,
+  },
+  offlineText: { ...font.uiMedium, flex: 1, fontSize: 16, lineHeight: 21, color: color.ink },
   newDot: {
     position: 'absolute',
     top: 4,
@@ -2251,14 +2301,31 @@ const styles = StyleSheet.create({
     borderColor: color.paper,
     backgroundColor: color.gold,
   },
-  walkCard: { ...pill, minHeight: 56, paddingLeft: 20, paddingRight: 12, gap: 12 },
-  walkText: { flex: 1, gap: 2 },
-  walkNext: { ...label, fontSize: 15, color: color.ink },
-  walkLeft: { ...label, fontSize: 13 },
-  walkRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  walkCount: { flexShrink: 1, marginLeft: 4 },
-  stamp: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: color.rule },
-  stamped: { backgroundColor: color.gold },
+  walkCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: radius.card,
+    paddingVertical: 14,
+    paddingLeft: 18,
+    paddingRight: 12,
+    gap: 8,
+  },
+  walkText: { flex: 1, gap: 4 },
+  walkNext: { ...font.title, fontSize: 22, lineHeight: 26, color: color.ink },
+  walkLeft: { ...label, fontSize: 14 },
+  walkRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  walkCount: { flexShrink: 1, marginLeft: 4, color: color.ink },
+  stamp: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: color.rule,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stampNext: { borderColor: color.gold },
+  stamped: { backgroundColor: color.gold, borderColor: color.gold },
 });
 
 /** The paper wash behind the lock: in over 600 ms, out the same, so walking

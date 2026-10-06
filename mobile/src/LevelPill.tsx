@@ -61,7 +61,7 @@ export default function LevelPill({ level, into, place, onPress }: Props) {
         ) : (
           <Text style={styles.figure}>{line}</Text>
         )}
-        <View style={[styles.track, { backgroundColor: real.rule }]}>
+        <View style={[styles.track, { backgroundColor: real.track }]}>
           <View style={[styles.fill, { width: `${into * 100}%`, backgroundColor: real.plum }]} />
         </View>
       </View>
@@ -75,9 +75,9 @@ export function levelInto({ xp, xp_level, xp_next }: Profile): number {
 }
 
 const styles = StyleSheet.create({
-  pill,
-  lines: { alignItems: 'center', gap: 3 },
+  pill: { ...pill, minHeight: 48, paddingHorizontal: 20 },
+  lines: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   figure: { ...label, fontSize: 15, color: color.ink },
-  track: { width: 56, height: 3, borderRadius: 2, overflow: 'hidden' },
-  fill: { height: 3 },
+  track: { width: 48, height: 6, borderRadius: 3, overflow: 'hidden' },
+  fill: { height: 6, borderRadius: 3 },
 });

@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
   circle: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: color.rule,
+    backgroundColor: color.track,
     overflow: 'hidden',
   },
-  initial: { ...font.uiBold, color: color.inkSoft },
+  initial: { ...font.title, color: color.ink },
 });

@@ -44,7 +44,7 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings, 
         label={
           <RNHostView matchContents>
             <View style={styles.face}>
-              <Avatar url={profile?.avatar_url} name={name} size={38} />
+              <Avatar url={profile?.avatar_url} name={name} size={46} />
             </View>
           </RNHostView>
         }
@@ -88,12 +88,12 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings, 
 
 const styles = StyleSheet.create({
   circle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  face: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  face: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
 });

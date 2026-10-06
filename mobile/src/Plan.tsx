@@ -34,9 +34,21 @@ import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
-import { locketAt, locketOf } from './lockets.ts';
+import { LOCKETS, locketAt, locketOf } from './lockets.ts';
 import { Chip } from './Submit.tsx';
-import { button, buttonText, color, dim, font, label, radius, screenTitle } from './theme.ts';
+import {
+  button,
+  buttonText,
+  color,
+  dim,
+  foil,
+  font,
+  label,
+  lift,
+  metal,
+  radius,
+  screenTitle,
+} from './theme.ts';
 import { WalkShape } from './WalkCard.tsx';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
@@ -82,7 +94,10 @@ function LengthSlider({ km, min, onKm }: LengthProps) {
   const round = (v: number) => Math.round(v / WALK_KM.step) * WALK_KM.step;
   return (
     <>
-      <Text style={styles.value} accessibilityLiveRegion="polite">{`${shown} km`}</Text>
+      <View style={styles.lengthRow}>
+        <Text style={label}>Length</Text>
+        <Text style={styles.value} accessibilityLiveRegion="polite">{`${shown} km`}</Text>
+      </View>
       <Slider
         style={styles.slider}
         minimumValue={min}
@@ -97,6 +112,7 @@ function LengthSlider({ km, min, onKm }: LengthProps) {
         // The native component takes any ColorValue (RNCSliderNativeComponent.ts);
         // only the published typings say string.
         minimumTrackTintColor={color.gold as string}
+        thumbTintColor={metal.light}
         maximumTrackTintColor={color.rule as string}
         accessibilityLabel="Walk length"
       />
@@ -169,16 +185,37 @@ type ArrowProps = {
 };
 
 function Arrow({ glyph, name, onPress, busy }: ArrowProps) {
-  if (!onPress) return <View style={styles.arrow} />;
+  if (!onPress) return <View style={styles.arrowSpace} />;
   return (
     <Pressable
       style={dim(styles.arrow)}
+      hitSlop={2}
       onPress={onPress}
       disabled={busy}
       accessibilityRole="button"
       accessibilityLabel={name}
     >
-      <Glyph name={glyph} size={24} weight="semibold" color={color.ink} />
+      <Glyph name={glyph} size={17} weight="semibold" color={color.ink} />
+    </Pressable>
+  );
+}
+
+/** One of the planner's three shapes: a segment of one capsule, the chosen
+ *  one raised. */
+function Mode({ label: text, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      style={[styles.mode, on && styles.modeOn]}
+      onPress={() => {
+        Haptics.selectionAsync().catch(() => {});
+        onPress();
+      }}
+      accessibilityRole="button"
+      accessibilityState={{ selected: on }}
+    >
+      <Text style={[styles.modeText, on && styles.modeTextOn]} numberOfLines={1}>
+        {text}
+      </Text>
     </Pressable>
   );
 }
@@ -343,22 +380,29 @@ export function Preview({
     .join(' ');
   return (
     <GlassCard style={styles.card} onLayout={measure}>
-      <Text style={styles.cardTitle}>A walk from here</Text>
-      {found ? (
-        // Pages: the arrows flank what they change. A missing one keeps its
-        // space, so the line never shifts between walks.
-        <View style={styles.pages}>
-          <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />
-          <Text
-            style={[styles.cardBody, styles.paged]}
-          >{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
-          <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />
+      {/* The arrows page through walks. A missing one keeps its space, so
+          the title never shifts between walks. */}
+      <View style={styles.pages}>
+        <View style={styles.grow}>
+          <Text style={styles.cardTitle}>A walk from here</Text>
+          {found ? (
+            <Text
+              style={styles.cardBody}
+            >{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
+          ) : (
+            <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
+              {count == null ? 'Finding a walk…' : `No walk within ${WALK_KM.max} km from here.`}
+            </Text>
+          )}
         </View>
-      ) : (
-        <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
-          {count == null ? 'Finding a walk…' : `No walk within ${WALK_KM.max} km from here.`}
-        </Text>
-      )}
+        {found && (
+          <>
+            <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />
+            <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />
+          </>
+        )}
+        <CloseButton label="Close the planner" onPress={onClose} />
+      </View>
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
       )}
@@ -391,18 +435,41 @@ export function Preview({
         // since only a release changes km.
         <LengthSlider key={`${min}:${km}`} km={Math.max(km, min)} min={min} onKm={onKm} />
       )}
-      <View style={styles.chips}>
-        <Chip label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true, end: null })} />
-        <Chip label="One way" on={!ask.loop} onPress={() => onAsk({ ...ask, loop: false })} />
+      <View style={styles.modes}>
+        <Mode label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true, end: null })} />
+        <Mode
+          label="One way"
+          on={!ask.loop && !ask.end}
+          onPress={() => onAsk({ ...ask, loop: false, end: null })}
+        />
         {/* A second tap lets the end go. */}
-        {!ask.loop && (
-          <Chip
-            label={ask.end ? 'Ends where you tapped' : 'Pick where it ends'}
-            on={!!ask.end}
-            onPress={() => (ask.end ? onAsk({ ...ask, end: null }) : onPickEnd())}
-          />
-        )}
+        <Mode
+          label={ask.end ? 'Ends where you tapped' : 'Pick where it ends'}
+          on={!!ask.end}
+          onPress={() => (ask.end ? onAsk({ ...ask, end: null }) : onPickEnd())}
+        />
       </View>
+      {/* A subscriber's, offered to a free walker: badged Plus, so it reads
+          as the paywall before it is tapped. */}
+      <Pressable
+        style={dim(styles.themes)}
+        onPress={subscribed ? () => setStep('choices') : onSubscribe}
+        disabled={busy}
+        accessibilityRole="button"
+        accessibilityHint={subscribed ? undefined : 'Part of Plus'}
+        testID={subscribed ? undefined : 'themes-plus'}
+      >
+        <Glyph name="slider.horizontal.3" size={18} weight="semibold" color={color.gold} />
+        <Text style={styles.themesText} numberOfLines={1}>
+          {(subscribed && chosen) || 'Themes and years'}
+        </Text>
+        {!subscribed && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>Plus</Text>
+          </View>
+        )}
+        <Glyph name="chevron.right" size={14} weight="semibold" color={color.inkFaint} />
+      </Pressable>
       <Button
         kind="go"
         label="Next"
@@ -412,39 +479,7 @@ export function Preview({
         accessibilityHint="Shows the stops on this walk"
         place={styles.primary}
       />
-      {subscribed ? (
-        <Pressable
-          style={dim([styles.secondary, styles.extra])}
-          onPress={() => setStep('choices')}
-          disabled={busy}
-          accessibilityRole="button"
-        >
-          <Text style={styles.secondaryText} numberOfLines={1}>
-            {chosen || 'Themes and years'}
-          </Text>
-        </Pressable>
-      ) : (
-        // A subscriber's, offered: gold, padlocked and badged, so it reads as
-        // the paywall before it is tapped.
-        <Pressable
-          style={dim([styles.secondary, styles.extra, styles.plus])}
-          onPress={onSubscribe}
-          disabled={busy}
-          accessibilityRole="button"
-          accessibilityHint="Part of PLUS"
-          testID="themes-plus"
-        >
-          <Glyph name="lock.fill" size={14} weight="semibold" color={color.gold} />
-          <Text style={styles.secondaryText} numberOfLines={1}>
-            Themes and years
-          </Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>PLUS</Text>
-          </View>
-        </Pressable>
-      )}
       {error && <Text style={styles.error}>{error}</Text>}
-      {close}
     </GlassCard>
   );
 }
@@ -500,6 +535,9 @@ type WalkDoneProps = {
   /** First unlock to last, or null when they were not all earned today. */
   minutes: number | null;
   streak: number;
+  /** Where you stand now, for the level column. */
+  level: number;
+  into: number;
   /** What finishing earned, once the profile is back; null for a
    *  subscriber's second walk of the day, which earns nothing. */
   reward: Reward | null;
@@ -573,12 +611,15 @@ export function WalkDone({
   loop,
   minutes,
   streak,
+  level,
+  into,
   reward,
   path,
   onDone,
   onHeight,
   onMore,
 }: WalkDoneProps) {
+  const next = LOCKETS.find((l) => l.level > level);
   const took =
     minutes === null
       ? ''
@@ -600,13 +641,37 @@ export function WalkDone({
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
-      {reward && <Text style={label}>{`+${reward.xp} XP`}</Text>}
-      {reward?.level && <Text style={label}>{`Level ${reward.level}`}</Text>}
+      {/* What you earned, in plum: this walk, where it leaves you, the streak. */}
+      <View style={styles.stats}>
+        {reward && (
+          <View style={styles.stat}>
+            <Text style={styles.statFigure}>{`+${reward.xp} XP`}</Text>
+            <Text style={label}>This walk</Text>
+          </View>
+        )}
+        <View style={[styles.stat, styles.statRuled]}>
+          <Text style={[styles.statFigure, styles.statInk]}>{`Level ${level}`}</Text>
+          <View style={styles.bar}>
+            <View style={[styles.barFill, { width: `${into * 100}%` }]} />
+          </View>
+        </View>
+        {streak > 0 && (
+          <View style={[styles.stat, styles.statRuled]}>
+            <Text style={styles.statFigure}>{`${streak} ${streak === 1 ? 'day' : 'days'}`}</Text>
+            <Text style={label}>Streak</Text>
+          </View>
+        )}
+      </View>
       {reward?.level && <Earned level={reward.level} />}
-      {MILESTONES.includes(streak) ? (
-        <Milestone streak={streak} />
-      ) : (
-        streak > 1 && <Text style={label}>{`${streak} days in a row`}</Text>
+      {MILESTONES.includes(streak) && <Milestone streak={streak} />}
+      {!reward?.level && next && (
+        <View style={styles.earned}>
+          <Image source={next.opened} style={[styles.earnedLocket, styles.unearned]} />
+          <View style={styles.grow}>
+            <Text style={styles.nextName}>{`Next locket: ${next.name}`}</Text>
+            <Text style={label}>{`Unlocks at level ${next.level}`}</Text>
+          </View>
+        </View>
       )}
       <Button kind="foil" label="Done" onPress={onDone} place={styles.primary} />
       {onMore && (
@@ -669,12 +734,20 @@ export function PastWalk({
 }) {
   return (
     <GlassCard style={styles.card} onLayout={(e) => onHeight(e.nativeEvent.layout.height)}>
-      <Text style={styles.cardTitle} accessibilityRole="header" testID="past-walk">
+      <Text style={label}>A walk you took</Text>
+      <Text style={styles.doneTitle} accessibilityRole="header" testID="past-walk">
         {walkDate(walk.route_date)}
       </Text>
-      <Text style={styles.cardBody}>
-        {`${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'} · ${distance(walk.budget_meters)}`}
-      </Text>
+      <View style={styles.checks}>
+        {Array.from({ length: Math.min(walk.earned, 10) }, (_, i) => (
+          <View key={i} style={styles.check}>
+            <Glyph name="checkmark" size={10} weight="bold" color={color.paper} />
+          </View>
+        ))}
+        <Text style={styles.cardBody}>
+          {`${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'} · ${distance(walk.budget_meters)}`}
+        </Text>
+      </View>
       <Button kind="quiet" label="Done" onPress={onDone} place={styles.primary} />
     </GlassCard>
   );
@@ -684,10 +757,70 @@ const styles = StyleSheet.create({
   locket: { width: 13, height: 13 },
   earned: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   earnedLocket: { width: 40, height: 40 },
+  unearned: { opacity: 0.35 },
+  checks: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  check: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: color.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nextName: { ...font.uiBold, fontSize: 16, color: color.ink },
+  stats: {
+    flexDirection: 'row',
+    paddingVertical: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: color.rule,
+  },
+  stat: { flex: 1, gap: 4, paddingHorizontal: 10 },
+  statRuled: { borderLeftWidth: StyleSheet.hairlineWidth, borderColor: color.rule },
+  statFigure: { ...font.title, fontSize: 24, lineHeight: 30, color: color.plum },
+  statInk: { color: color.ink },
+  bar: { height: 6, borderRadius: 3, backgroundColor: color.track, overflow: 'hidden' },
+  barFill: { height: 6, borderRadius: 3, backgroundColor: color.plum },
   doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   milestone: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
   milestoneText: { ...font.uiBold, fontSize: 18, color: color.ink },
-  value: { ...font.uiBold, fontSize: 22, color: color.ink, marginTop: 4 },
+  value: { ...font.title, fontSize: 30, lineHeight: 34, color: color.ink },
+  lengthRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginTop: 6,
+  },
+  modes: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: radius.pill,
+    backgroundColor: color.quiet,
+    borderWidth: 1,
+    borderColor: color.quietEdge,
+  },
+  mode: {
+    flexGrow: 1,
+    minHeight: 40,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeOn: { backgroundColor: color.paperRaised, ...lift, shadowOpacity: 0.08 },
+  modeText: { ...font.uiMedium, fontSize: 15, color: color.inkSoft },
+  modeTextOn: { ...font.uiBold, color: color.ink },
+  themes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 52,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: color.rule,
+    marginTop: 6,
+  },
+  themesText: { ...font.uiMedium, flex: 1, fontSize: 17, color: color.ink },
   slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
@@ -709,21 +842,13 @@ const styles = StyleSheet.create({
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   from: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   grow: { flex: 1 },
-  extra: {
-    ...button.small,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  plus: { backgroundColor: color.goldTint },
   badge: {
-    backgroundColor: color.gold,
+    backgroundColor: metal.light,
     borderRadius: radius.pill,
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
-  badgeText: { ...font.uiBold, fontSize: 11, letterSpacing: 0.6, color: color.paper },
+  badgeText: { ...font.uiBold, fontSize: 13, color: foil.text },
   // Four rows in view, the rest a scroll away: the map behind still shows the walk.
   stops: { maxHeight: 4 * 52, flexGrow: 0 },
   stop: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52 },
@@ -746,9 +871,18 @@ const styles = StyleSheet.create({
     minHeight: 44,
     marginTop: -10,
   },
-  pages: { flexDirection: 'row', alignItems: 'center' },
-  paged: { flex: 1, textAlign: 'center' },
-  // 44pt, Apple's smallest hit target.
-  arrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  pages: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingRight: 0 },
+  // 40pt drawn; hitSlop takes it to Apple's 44.
+  arrowSpace: { width: 40 },
+  arrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: color.quiet,
+    borderWidth: 1,
+    borderColor: color.quietEdge,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   doneTitle: screenTitle,
 });

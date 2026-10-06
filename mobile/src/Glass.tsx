@@ -5,8 +5,8 @@
  *  Never a full sheet, and never glass on glass (docs/09-visual-design.md
  *  parts 8 and 13). `place` positions
  *  it, `style` is its shape. Untinted, with a hairline and a shadow so it
- *  holds an edge on the cream map; `prominent`, the one primary, is gold
- *  stained glass (docs/09 part 15). A press squishes it and springs it back with
+ *  holds an edge on the cream map; `prominent`, the one primary, is green
+ *  enamel glass in a gold bezel (docs/10, "Jewel Box"). A press squishes it and springs it back with
  *  a little overshoot; it never dims: opacity on a glass view's parent stops
  *  the effect rendering.
  */
@@ -31,7 +31,7 @@ const GLASS = isLiquidGlassAvailable();
 type Props = Omit<PressableProps, 'style' | 'children'> & {
   place?: StyleProp<ViewStyle>;
   style?: StyleProp<ViewStyle>;
-  /** The one primary action over the map: gold glass, so its label is paper. */
+  /** The one primary action over the map: green glass, its label in onGo. */
   prominent?: boolean;
   children: ReactNode;
 };
@@ -45,7 +45,7 @@ export function GlassButton({
   onPressOut,
   ...press
 }: Props) {
-  const gold = solid(useColorScheme() === 'dark').goldGlass;
+  const go = solid(useColorScheme() === 'dark').goGlass;
   const scale = useRef(new Animated.Value(1)).current;
   const to = (toValue: number, bounciness: number) =>
     Animated.spring(scale, { toValue, speed: 40, bounciness, useNativeDriver: true }).start();
@@ -67,10 +67,11 @@ export function GlassButton({
           <GlassView
             style={[style, glassEdge]}
             glassEffectStyle="regular"
-            tintColor={prominent ? gold : undefined}
+            tintColor={prominent ? go : undefined}
             isInteractive
           >
             {children}
+            {prominent && <View style={bezel} />}
           </GlassView>
         ) : (
           <View
@@ -78,16 +79,29 @@ export function GlassButton({
               style,
               glassEdge,
               lift,
-              { backgroundColor: prominent ? color.gold : color.paperRaised },
+              { backgroundColor: prominent ? color.goBg : color.paperRaised },
             ]}
           >
             {children}
+            {prominent && <View style={bezel} />}
           </View>
         )}
       </Animated.View>
     </Pressable>
   );
 }
+
+// The prominent one's gold bezel, 4pt in, as Button's go.
+const bezel = {
+  position: 'absolute' as const,
+  top: 4,
+  left: 4,
+  right: 4,
+  bottom: 4,
+  borderRadius: radius.pill,
+  borderWidth: 1,
+  borderColor: color.goRim,
+};
 
 /** A card over the map: the planner's, the unlock card. Its tint is thicker
  *  than a control's, since it carries prose. Never under an animated opacity:
