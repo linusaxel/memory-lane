@@ -21,6 +21,7 @@ import argparse
 import logging
 import time
 
+import anthropic
 from sqlalchemy import text
 
 from pipeline import extract
@@ -57,7 +58,12 @@ def send(client, requests: dict[str, dict], session) -> int:
     logger.info(f"Batch {batch.id}: {len(requests)} calls")
     while batch.processing_status != "ended":
         time.sleep(POLL_SECONDS)
-        batch = client.messages.batches.retrieve(batch.id)
+        try:
+            batch = client.messages.batches.retrieve(batch.id)
+        except anthropic.APIConnectionError as e:
+            # A network blip must not drop a batch that is already paid for.
+            logger.warning(f"Batch {batch.id}: {e}; polling again")
+            continue
         logger.info(f"Batch {batch.id}: {batch.request_counts}")
     stored = 0
     for result in client.messages.batches.results(batch.id):
@@ -117,8 +123,6 @@ def run(client, content_ids: list[int]) -> None:
 
 
 def main():
-    import anthropic
-
     from pipeline.config import ANTHROPIC_API_KEY
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])

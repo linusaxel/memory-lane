@@ -3,6 +3,7 @@ replies are stored where the next pass reads them (pipeline/batch.py)."""
 
 from types import SimpleNamespace as NS
 
+import anthropic
 import pytest
 from sqlalchemy import text
 
@@ -69,3 +70,35 @@ def test_a_batch_reply_is_stored_where_the_next_pass_reads_it(db_session, collec
     assert send(client, requests, db_session) == 1
     assert _stored_request(db_session, None, cid, 0, "extract", "chunk 0") == '{"memories": []}'
     assert _rows(db_session) == 1
+
+
+class _Blip(_Batches):
+    """A batch still running, whose first poll hits a network blip."""
+
+    def create(self, requests):
+        super().create(requests)
+        self.polls = 0
+        return NS(id="b1", processing_status="in_progress")
+
+    def retrieve(self, batch_id):
+        self.polls += 1
+        if self.polls == 1:
+            raise anthropic.APIConnectionError(request=None)
+        return NS(id=batch_id, processing_status="ended", request_counts=None)
+
+
+@pytest.mark.db
+def test_a_network_blip_while_polling_does_not_drop_the_batch(db_session, collecting, monkeypatch):
+    monkeypatch.setattr("pipeline.batch.time.sleep", lambda s: None)
+    cid = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id) "
+            "VALUES ('https://www.youtube.com/watch?v=ccccccccccc', 'youtube', 'ccccccccccc') "
+            "RETURNING id"
+        )
+    ).scalar()
+    _stored_request(db_session, None, cid, 0, "extract", "chunk 0")
+    requests, extract.COLLECT = collecting.requests, None
+    batches = _Blip([('{"memories": []}', "end_turn")])
+    assert send(NS(messages=NS(batches=batches)), requests, db_session) == 1
+    assert batches.polls == 2
