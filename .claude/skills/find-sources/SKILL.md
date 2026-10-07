@@ -26,7 +26,10 @@ the app. Don't search the open web for free recent stories again.
 | Era | Where it is | State |
 |---|---|---|
 | 2010s-now | Wikidata events in the bbox with P585 ≥ 2010: about 10 (Hotel Jørgensen 2010, the 2015 shootings, Field's 2022, Børsen 2024). Mostly grim, so they fail "glad to know" | Not worth a source |
-| 2010s-now | Nonprofit local papers as PDFs, with no TDM reservation: Bryggebladet (redaktion@bryggebladet.dk, about 21 issues a year 2003-26), Christianshavneren (christianshavneren@beboerhus.dk, 2011-17 plus web), Havnefronten (red@havne-fronten.dk, since 2020, mostly openings) | Registered (`pdfs:` index pages): Bryggebladet 247 from 2019 (the archive page lists only 2019 onwards; news plus ad pages), Christianshavneren 250 (homepage PDFs, mostly event listings), Nørrebro yearbooks 248 from 2010 (recent issues write about older history). Havnefronten 249 was rejected: its feed is council news through a tracker. Untrialled |
+| 2010s-now | Nonprofit local papers as PDFs, with no TDM reservation: Bryggebladet (redaktion@bryggebladet.dk, about 21 issues a year 2003-26), Christianshavneren (christianshavneren@beboerhus.dk, 2011-17 plus web), Havnefronten (red@havne-fronten.dk, since 2020, mostly openings) | Registered (`pdfs:` index pages): Bryggebladet 247 from 2019 (the archive page lists only 2019 onwards; news plus ad pages), Christianshavneren 250 (homepage PDFs, mostly event listings), Nørrebro yearbooks 248 from 2010 (recent issues write about older history). Havnefronten 249 was rejected: its feed is council news through a tracker. Trialled 5 items each (2026-10-07): 247 mean 4.5 and 250 mean 4.3 (civic news), 248 mean 6.3 but every memory is pre-1900. All under the bar |
+| 2000-now | Small papers with no opt-out (2026-10-07): NABO, Humleby's residents' paper (humleby.dk/nabo, 153 issues 2008-26, one hop post→PDF, HTML behind a browser check, PDFs open); fsb beboeren (fsb.dk/om-fsb/udgivelser/fsb-beboeren, about 22 issues 2010-20, one hop); Kilden, Strandvejskvarteret (one 352 MB PDF 1981-2021); Magasinet KBH (magasinetkbh.dk/arkiv, 43 PDFs 2005-09, a company, "må ikke eftertrykkes", mostly architecture); Valby Lokalhistoriske's newsletter (valbylokalhistorie.dk/aarsskrifter, 11 PDFs 1985-2003, mostly pre-1960, one gem: the 1991 village pond dig) | Not registered. Small; a dozen or two memories each at best |
+| 2000-now | First-party dated posts: noma.dk blog (dozens of fun, spot-tied posts; 403 to plain bots, so only if our crawler gets through as is), Tivoli's history timeline (about 10 since 2000, one spot), cphdistortion.dk/history (about 6; robots.txt has Cloudflare's preamble without a Content-Signal line, re-check before every run) | Not registered. Would want a `sitemap:` plug-in for Noma |
+| 2000-now | 1001 fortællinger om Danmark: 305 places in the bbox, about 10-15 really post-2000. The KML dump survives at web.archive.org (`kulturarv.dk/1001fortaellinger/gps/1001.kml`); text rights sit with Slots- og Kulturstyrelsen, which may license partners | Needs permission from SLKS |
 | 2010s-now | Bar stories: VLTV's *De Brune Værtshuse* on YouTube (vltv@hotmail.com, auto-captions); the podcasts *Sidste Omgang* (86 episodes, one bar each, Instagram @sidste.omgang) and *Barvox* (info@barvox.com); the book *Stamsteder* (220 pubs, 2021, print only) | VLTV is registered as source 251: 10 bar videos ingested (two others are gone), with captions waiting on YouTube's IP block. The podcasts have no transcripts, and we don't transcribe audio |
 | 1950-2000 | Local-history society yearbooks: Nørrebro (24 PDFs 2000-23, about 80-100 good), Sydhavnen (26 articles), SLAK for the other 8 | Email drafted in `docs/permission-request.md`, not sent |
 | 1940-45 | Stolpersteine, `stolpersteine:Liste der Stolpersteine im Großraum Kopenhagen` (source 246, 46 addresses) | Ingested, not screened |
@@ -58,6 +61,20 @@ the app. Don't search the open web for free recent stories again.
   researchers only), and Kanal København (shut 2009).
 - **Unchecked:** Copenhagen history accounts on Instagram, which search
   doesn't index. Look by hand.
+- **Venue "about" pages (2026-10-07)** give 0-2 dated anecdotes each, mostly
+  openings and closures: Vega, Mojo, Pumpehuset, Empire, Grand, Bakken,
+  Loppen, Stengade, Mikkeller. Ungdomshuset is grim, Pride's site is hacked,
+  christiania.org is event notices, Atlas Obscura blocks us (403).
+- **Blocked or closed (2026-10-07):** parish papers (Holmens Kirke's
+  *Ankerkæden* and the shared parish platform block ClaudeBot), Vanløse's
+  *Historisk Set* (needs prior agreement), Nordhavn/Ørestad Avis (paywall),
+  Reddit (no AI or commercial use), Netarkivet (researchers only), arkiv.dk
+  (private use only, labels), Kunstindeks Danmark (catalogue notes), and
+  Ugespejlet (no online archive). Østerbro, Vesterbro, Sundby lokalhistorie
+  sell their magazines.
+- **Open data with modern text is thin:** the Kommune's WFS (CC BY, about
+  230 dry route and renewal texts), iNaturalist CC0/BY (maybe 50-100 nature
+  anecdotes), Commons and OSM descriptions (captions).
 - **Local-history websites with no stories to read:** chrarkiv.dk (photos),
   Islands Brygge (books for sale), Kend Din By (film), erindringer.dk (dead).
 
