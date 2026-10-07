@@ -15,7 +15,10 @@ import api.media
 from api.auth import apple_identity, either_identity, google_identity
 from api.models import (
     DEVICE_PATTERN,
+    Coordinates,
     DeviceRequest,
+    Neighbourhood,
+    NeighbourhoodsResponse,
     Profile,
     ProfileRequest,
     SignInRequest,
@@ -26,6 +29,7 @@ from api.progression import XP_STEP, level, xp_of
 from api.queries import (
     CREDIT_STEPS,
     DELETE_ORPHAN_SUBMITTED_PLACE,
+    NEIGHBOURHOODS_QUERY,
     STREAK_DAYS_QUERY,
     UNLOCK_COUNT_QUERY,
 )
@@ -185,6 +189,27 @@ def set_profile(body: ProfileRequest):
         user_id = user_for_device(session, body.device)
         set_display_name(session, user_id, name)
         return profile_of(session, body.device)
+
+
+@router.get("/v1/me/neighbourhoods", response_model=NeighbourhoodsResponse)
+def get_neighbourhoods(
+    device: str = Query(..., pattern=DEVICE_PATTERN),
+    lat: float | None = Query(None, ge=-90, le=90),
+    lng: float | None = Query(None, ge=-180, le=180),
+):
+    """Where stories still wait: each neighbourhood, opened out of total."""
+    with get_session() as session:
+        rows = session.execute(
+            text(NEIGHBOURHOODS_QUERY), {"device_id": device, "lat": lat, "lng": lng}
+        ).fetchall()
+    return NeighbourhoodsResponse(
+        neighbourhoods=[
+            Neighbourhood(
+                name=r.name, opened=r.opened, total=r.total, end=Coordinates(lat=r.lat, lng=r.lng)
+            )
+            for r in rows
+        ]
+    )
 
 
 # The old path, read under the row lock, so two racing uploads each take the

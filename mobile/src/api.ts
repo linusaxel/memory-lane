@@ -570,6 +570,34 @@ export type Profile = {
   steps_counted_until: string | null;
 };
 
+export type Neighbourhood = {
+  name: string;
+  opened: number;
+  total: number;
+  /** Where a walk to it ends: a point inside it. */
+  end: Coordinates;
+};
+
+/** Each neighbourhood, opened out of total, nearest first (docs/10, "Where
+ *  stories wait"). Counts only, never which. */
+export async function fetchNeighbourhoods(
+  device: string,
+  at: Coordinates | null,
+  signal?: AbortSignal,
+): Promise<Neighbourhood[]> {
+  const params = new URLSearchParams({ device });
+  if (at) {
+    params.set('lat', String(at.lat));
+    params.set('lng', String(at.lng));
+  }
+  const body = await get<{ neighbourhoods?: Neighbourhood[] }>(
+    '/v1/me/neighbourhoods',
+    params,
+    signal,
+  );
+  return body.neighbourhoods ?? [];
+}
+
 export type Draft = {
   place_name: string;
   /** Its #words are the tags (hashtags.ts); there is no separate field. */

@@ -1,6 +1,6 @@
 /** You, top right: your photo or initial in a glass circle, and under it a
  *  native menu. Your name, your numbers and Edit profile, then Your walks,
- *  Settings and Appearance. */
+ *  Where stories wait, Settings and Appearance. */
 
 import { Button, Host, Menu, Picker, RNHostView, Section, Text } from '@expo/ui/swift-ui';
 import { accessibilityLabel, disabled, pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
@@ -23,9 +23,17 @@ type Props = {
   onEditProfile: () => void;
   onSettings: () => void;
   onWalks: () => void;
+  onWaiting: () => void;
 };
 
-export default function AccountMenu({ profile, name, onEditProfile, onSettings, onWalks }: Props) {
+export default function AccountMenu({
+  profile,
+  name,
+  onEditProfile,
+  onSettings,
+  onWalks,
+  onWaiting,
+}: Props) {
   const [chosen, choose] = useState<Look>(look);
   const numbers = [
     profile?.streak ? `${profile.streak}-day streak` : null,
@@ -55,6 +63,7 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings, 
           <Button label="Edit profile" systemImage="person.crop.circle" onPress={onEditProfile} />
         </Section>
         <Button label="Your walks" systemImage="figure.walk" onPress={onWalks} />
+        <Button label="Where stories wait" systemImage="map" onPress={onWaiting} />
         <Button label="Settings" systemImage="gearshape" onPress={onSettings} />
         <Picker
           modifiers={[pickerStyle('menu')]}

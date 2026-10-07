@@ -53,6 +53,13 @@ Retention is measured already: `python -m api.metrics`.
 
 ### Unblocked now
 
+- [ ] **Load the neighbourhoods.** (2026-10-07) "Where stories wait" is empty
+      until `python -m pipeline.neighbourhoods` runs (docs/01-setup.md, *Load a
+      city's neighbourhoods*); Overpass answered 504 to everything the day it
+      shipped. Check that Copenhagen's bydele are `admin_level` 10 and that
+      Frederiksberg at 7 returns itself, and that `geocode._get_json`'s 10 s
+      timeout is long enough for `out geom`.
+
 - [ ] **The privacy policy is thin.** (checked 2026-10-04) `api/privacy.py`
       has no controller, legal basis, retention, RevenueCat or geocoders.
       Photos are re-encoded without EXIF (`api/media.py`). Contact reads

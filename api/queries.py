@@ -806,3 +806,30 @@ WHERE id = :place_id
 """
 
 # Closed list: free text would be a tag soup of one-offs within a week.
+
+# "Where stories wait": per neighbourhood, the memories a walk could open there
+# and how many this account has opened. Counts only, never which, so the gate
+# has nothing to guard (docs/10-decisions.md#where-stories-wait). Nearest
+# first when the phone says where it is.
+NEIGHBOURHOODS_QUERY = f"""
+SELECT n.name,
+    COUNT(*) AS total,
+    COUNT(*) FILTER (
+        WHERE EXISTS (
+            SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
+        )
+    ) AS opened,
+    ST_Y(ST_PointOnSurface(n.outline::geometry)) AS lat,
+    ST_X(ST_PointOnSurface(n.outline::geometry)) AS lng
+FROM neighbourhoods n
+JOIN places p ON ST_Covers(n.outline, p.coordinates)
+JOIN memories m ON m.place_id = p.id
+WHERE {VISIBLE}
+  AND {NOT_BLOCKED}
+  AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
+GROUP BY n.id
+ORDER BY ST_Distance(
+    n.outline,
+    ST_MakePoint(CAST(:lng AS float8), CAST(:lat AS float8))::geography
+) NULLS LAST, n.name
+"""

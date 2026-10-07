@@ -4065,8 +4065,33 @@ hollow.
   and in Your walks.
 - **The count strip is gone.** Random lockets filled it by luck.
 
-**Next:** "Where stories wait", opened out of total per neighbourhood, is the
-collection that never resets and points a walker outward.
+**Next:** *Where stories wait*.
+
+### Where stories wait
+
+Status: Accepted 2026-10-07. Takes the city board's place in the account menu.
+
+The collections that keep location players are the ones that never reset and
+take effort (Ingress's Visited map, Wandrer's completionists). Turned around
+for Memory Lane, that is where stories still wait: one row per neighbourhood,
+opened out of total, so a walker whose streets are read has somewhere to go.
+
+- **Counts only.** No pins and no content, so it stays within *A locked memory
+  says what it is*, and needs no gate.
+- **A row is a walk.** It plans a one-way walk ending at a point inside the
+  neighbourhood, the path *A one-way walk can end where you tap* already has.
+- **OSM's outlines, any city.** `pipeline/neighbourhoods.py` asks Overpass for
+  the administrative boundaries at one level inside an area and polygonizes
+  their outer ways. Copenhagen's bydele should be level 10, and Frederiksberg,
+  which has none, is loaded as itself (level 7); unchecked, Overpass was down
+  the day this shipped (TODO.md, *Load the neighbourhoods*).
+- **No competition.** The board is gone; a relative ±2 board by days walked
+  was considered and not taken.
+
+**Measure:** the share of walks after day 30 with most stops outside the
+walker's most-walked area, and D60 of walkers whose streets are read, before
+and after. Watch that hearts per open don't fall, which would mean people
+chase the count.
 
 ### Rejected approaches, do not retry
 

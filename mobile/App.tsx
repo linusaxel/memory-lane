@@ -89,6 +89,7 @@ import EditProfile from './src/EditProfile.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import HowItWorks from './src/HowItWorks.tsx';
+import Neighbourhoods from './src/Neighbourhoods.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
@@ -345,6 +346,7 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
+  const [waitingOpen, setWaitingOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
   // server knows (src/purchases.ts).
   useEffect(() => {
@@ -1114,6 +1116,7 @@ export default function App() {
     setProfileOpen(false);
     setPaywallOpen(false);
     setHowOpen(false);
+    setWaitingOpen(false);
   }, [notification, openMemory]);
 
   // On a walk only its stops are drawn, so only they are in reach; off one,
@@ -1974,6 +1977,10 @@ export default function App() {
                 countSteps();
                 setHowOpen(true);
               }}
+              onWaiting={() => {
+                Haptics.selectionAsync().catch(() => {});
+                setWaitingOpen(true);
+              }}
             />
           </View>
           {/* On a walk: Add, the walk card, Center on me (docs/10, "One
@@ -2225,6 +2232,21 @@ export default function App() {
           onNotifyNearby={handleNotifyNearby}
         />
 
+        <Neighbourhoods
+          visible={waitingOpen}
+          onClose={() => setWaitingOpen(false)}
+          device={device}
+          at={positionRef.current}
+          onPick={
+            stage === 'map' || stage === 'preview'
+              ? (end) => {
+                  setWaitingOpen(false);
+                  setWalkAsk((ask) => ({ ...ask, loop: false, end }));
+                  setStage('preview');
+                }
+              : undefined
+          }
+        />
         <HowItWorks
           visible={howOpen}
           onClose={() => setHowOpen(false)}

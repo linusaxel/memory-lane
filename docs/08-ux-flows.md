@@ -61,6 +61,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F34 | End a walk | Implemented |
 | F35 | Subscribe for more walks | Implemented (no store yet) |
 | F36 | Choose your first memory | Removed from the app |
+| F37 | See where stories wait | Implemented |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
 screen, no map to browse — no carousel, no settings anybody
@@ -1172,6 +1173,25 @@ this account yet."
 
 **Done when:** the finish-card and paywall checks in `.maestro/walk-and-unlock.yml` pass, and
 `tests/test_api_billing.py` and `tests/test_api_routes.py`.
+
+## F37 · See where stories wait — **Implemented**
+
+**Who:** a walker whose own streets are read.
+**Trigger:** Where stories wait, in the account menu.
+
+1. A sheet lists each neighbourhood, nearest first, as "Valby · 12 of 40":
+   memories opened there out of what a walk could open
+   (`GET /v1/me/neighbourhoods`). Counts only: no pins, no stories (docs/10,
+   *A locked memory says what it is*).
+2. Off a walk, a row plans a one-way walk that ends inside it: the planner
+   opens as after *Pick where it ends* (F1), the length lifted to reach it.
+   On a walk the rows only read.
+3. It never resets and has no luck in it: a count only walking moves.
+
+The outlines are OpenStreetMap's (`python -m pipeline.neighbourhoods`), so
+any city works. Why, in docs/10, *Where stories wait*.
+
+**Done when:** `tests/test_neighbourhoods.py`.
 
 ## F36 · Choose your first memory — **Removed from the app**
 

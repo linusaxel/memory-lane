@@ -108,6 +108,11 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   where the next count starts. `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.
   The GET creates nothing
+- `GET /v1/me/neighbourhoods?device=UUID&lat=X&lng=Y` - where stories wait:
+  `{neighbourhoods: [{name, opened, total, end}]}`, nearest first when `lat`
+  and `lng` are sent. `total` is what a walk could open inside the outline,
+  `opened` how many of them this account has; `end` is a point inside it, for
+  a walk that ends there. Counts only (docs/10, "Where stories wait")
 - `POST /v1/me/avatar` (multipart: `device`, `file`) - set the profile photo,
   deleting the one it replaces; `DELETE /v1/me/avatar?device=UUID` clears it.
   Both return the `Profile`. Photos only, through `/v1/media`'s checks and

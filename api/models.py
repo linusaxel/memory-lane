@@ -383,6 +383,20 @@ class StepsRequest(BaseModel):
     steps: int = Field(ge=0, le=1_000_000)
 
 
+class Neighbourhood(BaseModel):
+    """docs/10, "Where stories wait"."""
+
+    name: str
+    opened: int
+    total: int
+    # Where a walk to it ends: a point inside its outline.
+    end: Coordinates
+
+
+class NeighbourhoodsResponse(BaseModel):
+    neighbourhoods: list[Neighbourhood]
+
+
 class ProfileRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
     # Blank clears it back to Anonymous, which has to be possible: a name is the

@@ -356,6 +356,16 @@ CREATE TABLE surprises (
 );
 CREATE INDEX idx_surprises_user ON surprises (user_id, granted_at DESC);
 
+-- A neighbourhood's outline from OpenStreetMap, for "Where stories wait".
+-- pipeline/neighbourhoods.py fills it; id is the OSM relation id.
+-- See db/migrations/048_neighbourhoods.sql.
+CREATE TABLE neighbourhoods (
+    id BIGINT PRIMARY KEY,
+    name TEXT NOT NULL,
+    outline GEOGRAPHY(MULTIPOLYGON, 4326) NOT NULL
+);
+CREATE INDEX idx_neighbourhoods_outline ON neighbourhoods USING GIST (outline);
+
 -- A photo or a recording attached to a submitted memory. A memory of a place is
 -- a thin thing in text alone.
 CREATE TABLE media (
