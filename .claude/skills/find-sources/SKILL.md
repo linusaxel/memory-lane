@@ -36,6 +36,8 @@ festivals', venues' and institutions' own history pages and news archives.
 | 2010s-now | Bar stories: VLTV's *De Brune Værtshuse* on YouTube (vltv@hotmail.com, auto-captions); the podcasts *Sidste Omgang* (86 episodes, one bar each, Instagram @sidste.omgang) and *Barvox* (info@barvox.com); the book *Stamsteder* (220 pubs, 2021, print only) | VLTV is registered as source 251: 10 bar videos ingested (two others are gone), with captions waiting on YouTube's IP block. The podcasts have no transcripts, and we don't transcribe audio |
 | 1950-2000 | Local-history society yearbooks: Nørrebro (24 PDFs 2000-23, about 80-100 good), Sydhavnen (26 articles), SLAK for the other 8 | Email drafted in `docs/permission-request.md`, not sent |
 | 2000-now | Events at their spots: festivals' own history pages, Wikidata P276+P585 events in the bbox (see step 1) | Open: not searched. Distortion (258) and Tivoli (257) are the first two |
+| Trials of the screened text, 2026-10-07 | 2-3 richest items each | Rundetårn 269 active (8 and 6). Københavns Biblioteker 271 stays trial (4 memories, mean 5.5). Rejected: Valby 255 (4.75, all occupation bombings), Kilden 253 (0), Københavns Museum 260 (4, 3), LGBT+ 264 (5), Zoo 270 (0) |
+| 1960-now | YouTube sweep, 2026-10-07 (2 agents). Registered as candidates, with 2-4 story videos each ingested and waiting on captions (IP block): Københavns Museum's Nørrebro oral-history films 273, Bøllemis' Olsen-banden locations 274, TV 2 Kosmopol's *Historien om* 275 (a broadcaster: check its TDM opt-out before a trial; drop crime), Gotha & Petersen walks 192, Paul-Erik Lind's Sydhavnen 277, *Ungeren indefra* 278. Registered, nothing ingested: Rundetaarn 279, Den Kongelige Samling 280. Not registered: Ditlev Tamm's legal history (playlist `PL1alpxNggDi6Erk5DneRYCpVjuVooKUb_`), P3 Essensen's TV-Avisen clips (news), Jewish Copenhagen and Københavnerture (promos), Frederiksberg-erindringer (trailers; the full films are at stadsarkivet.frederiksberg.dk/video, an open lead). No channel found for the Amager, Sundby, Vanløse, Brønshøj, Østerbro or Nordvest societies | Run `pipeline.transcripts` when the block lifts, then screen |
 | 1940-45 | Stolpersteine, `stolpersteine:Liste der Stolpersteine im Großraum Kopenhagen` (source 246, 46 addresses) | Ingested, not screened |
 | 1860-1919 | Public-domain memoirs: Gottschalksen `archive:engladmusikantsd00gott` (densest), Bang `runeberg:bang/6 København`, Grandjean `archive:spredtemindergen00gran`, Egan `gutenberg:36412 Copenhagen` | Not registered |
 
@@ -131,6 +133,11 @@ locators and evidence.
 Kinds worth a fan-out beyond the table's archives, because a walker is glad to
 know *this is where it happens*:
 
+- **YouTube, every time.** The two best sources are channels (Københavnerglimt,
+  Københavnerliv). Always fan out one agent on channels: local TV, local-history
+  societies, storytellers, music and nightlife series. Skip ones already in
+  `pipeline.sources list`; captions come from `pipeline.transcripts`, never
+  through a proxy.
 - **Recurring events at a fixed spot.** Festivals and their grounds:
   Copenhell (Refshaleøen), Distortion, Copenhagen Jazz Festival, CPH:PIX,
   CPH:DOX, Kulturnatten, Copenhagen Pride, Vinterjazz, Strøm, Copenhagen Light
