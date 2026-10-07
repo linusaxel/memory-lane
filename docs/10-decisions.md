@@ -3914,6 +3914,8 @@ Bryggebladet, Christianshavneren and the Nørrebro yearbooks (sources 247, 248,
 250, 251; licence "© without permission"). On 2026-10-07 the founder added,
 on the same terms: NABO (Humleby), Kilden (Strandvejskvarteret), Magasinet
 KBH, Valby Lokalhistoriske Selskab, Noma, Tivoli and Distortion (252-258).
+The same day, find-sources registered 259-272 as candidates on these terms
+(venues', festivals' and institutions' own history pages, none opting out).
 
 What still holds, because it is what keeps this defensible:
 

@@ -31,7 +31,8 @@ festivals', venues' and institutions' own history pages and news archives.
 | 2010s-now | Nonprofit local papers as PDFs, with no TDM reservation: Bryggebladet (redaktion@bryggebladet.dk, about 21 issues a year 2003-26), Christianshavneren (christianshavneren@beboerhus.dk, 2011-17 plus web), Havnefronten (red@havne-fronten.dk, since 2020, mostly openings) | Registered (`pdfs:` index pages): Bryggebladet 247 from 2019 (the archive page lists only 2019 onwards; news plus ad pages), Christianshavneren 250 (homepage PDFs, mostly event listings), Nørrebro yearbooks 248 from 2010 (recent issues write about older history). Havnefronten 249 was rejected: its feed is council news through a tracker. Trialled 5 items each (2026-10-07): 247 mean 4.5 and 250 mean 4.3 (civic news), 248 mean 6.3 but every memory is pre-1900. All under the bar |
 | 2000-now | Small papers with no opt-out (2026-10-07): NABO, Humleby's residents' paper (humleby.dk/nabo, 153 issues 2008-26, one hop post→PDF, HTML behind a browser check, PDFs open); fsb beboeren (fsb.dk/om-fsb/udgivelser/fsb-beboeren, about 22 issues 2010-20, one hop); Kilden, Strandvejskvarteret (one 352 MB PDF 1981-2021); Magasinet KBH (magasinetkbh.dk/arkiv, 43 PDFs 2005-09, a company, "må ikke eftertrykkes", mostly architecture); Valby Lokalhistoriske's newsletter (valbylokalhistorie.dk/aarsskrifter, 11 PDFs 1985-2003, mostly pre-1960, one gem: the 1991 village pond dig) | Registered 2026-10-07 as 252 NABO, 253 Kilden, 254 Magasinet KBH, 255 Valby (5 items each, screen 1.00/0.40/0.60/1.00). fsb's issue pages didn't render for us: not registered. Trialled 2026-10-07 on the 5 most story-like chunks each: KBH 8 memories, mean 3.9, all old history retold; NABO 1 memory, score 4. Both under the bar. Kilden and Valby untrialled |
 | 2000-now | First-party dated posts: noma.dk blog (dozens of fun, spot-tied posts; 403 to plain bots, so only if our crawler gets through as is), Tivoli's history timeline (about 10 since 2000, one spot), cphdistortion.dk/history (about 6; robots.txt has Cloudflare's preamble without a Content-Signal line, re-check before every run) | Registered 2026-10-07 via `webpages:` as 256 Noma (83 items, sitemap), 257 Tivoli, 258 Distortion. Untrialled |
-| 2000-now | 1001 fortællinger om Danmark: 305 places in the bbox, about 10-15 really post-2000. The KML dump survives at web.archive.org (`kulturarv.dk/1001fortaellinger/gps/1001.kml`); text rights sit with Slots- og Kulturstyrelsen, which may license partners | Read 2026-10-07: encyclopedic short entries (architecture, founding dates), like Wikipedia. Skip even with permission |
+| 2000-now | 1960-now | Exhaustive sweep, 2026-10-07 (8 agents: festivals, one-off events, food, institutions, music/film, blogs, community, open data). First-party history pages, each one spot: K.B. Hallen 261, Copenhagen Pride 263, Kjeld Frandsen's jazz-festival history 265, Jazzhus Montmartre 266, Parken 267, Fiskebaren 268, Eurovision 2001 272. Archives: Københavns Museum's digs and building stories 260, LGBT+ Danmark 264, Rundetårn 269, Zoo 270, Københavns Biblioteker's 281 history articles 271 (mostly pre-1960) | Screened: 1.00 for 261, 263, 265-268, 271; 0.67 for 260, 264, 269, 270; 0 for 272. Rejected: By & Havn 259 (0/6, notices), Olsen-banden Drehorte 262 (text in tables). Untrialled. Not yet registered, one page each: Sticks'n'Sushi /dk/en/about/, groed.com/om-grod, Torvehallerne /om-os/arkitekten-bag, fantask.dk/history.asp, ab-b.dk/om-amagerbio-2/, cirkusbygningen.dk/historie/, folketshus.dk/da/historie2/, copenhagenmarathon.dk/om-os/, kbhallen.dk/om/byggeriet/, eurovision.com copenhagen-1964 and -2014. Larger, low hit rate: indenforvoldene.dk (wp-sitemap.xml, one page per address, venue lines in architecture text; source 18's "all rights reserved" predates the without-permission rule), VisitCopenhagen POIs (sitemap.xml `gdk\d+$`, 1,826 pages, 3-5% with an anecdote), Reffen, Culture Box, Kongehuset's begivenheder |
+| 1001 fortællinger om Danmark: 305 places in the bbox, about 10-15 really post-2000. The KML dump survives at web.archive.org (`kulturarv.dk/1001fortaellinger/gps/1001.kml`); text rights sit with Slots- og Kulturstyrelsen, which may license partners | Read 2026-10-07: encyclopedic short entries (architecture, founding dates), like Wikipedia. Skip even with permission |
 | 2010s-now | Bar stories: VLTV's *De Brune Værtshuse* on YouTube (vltv@hotmail.com, auto-captions); the podcasts *Sidste Omgang* (86 episodes, one bar each, Instagram @sidste.omgang) and *Barvox* (info@barvox.com); the book *Stamsteder* (220 pubs, 2021, print only) | VLTV is registered as source 251: 10 bar videos ingested (two others are gone), with captions waiting on YouTube's IP block. The podcasts have no transcripts, and we don't transcribe audio |
 | 1950-2000 | Local-history society yearbooks: Nørrebro (24 PDFs 2000-23, about 80-100 good), Sydhavnen (26 articles), SLAK for the other 8 | Email drafted in `docs/permission-request.md`, not sent |
 | 2000-now | Events at their spots: festivals' own history pages, Wikidata P276+P585 events in the bbox (see step 1) | Open: not searched. Distortion (258) and Tivoli (257) are the first two |
@@ -80,8 +81,37 @@ festivals', venues' and institutions' own history pages and news archives.
   anecdotes), Commons and OSM descriptions (captions).
 - **Local-history websites with no stories to read:** chrarkiv.dk (photos),
   Islands Brygge (books for sale), Kend Din By (film), erindringer.dk (dead).
+- **Opt out for us (2026-10-07, robots/ai.txt as our UA):** lex.dk and
+  danmarkshistorien.dk, DFI and Danmark på film, Copenhagenize, Historypin,
+  Bremen Teater, DRS, Culture Trip, Fandom wikis, Resident Advisor, Ved
+  Stranden 10, Den Vandrette, Hviids Vinstue, CPH Open, MIX Copenhagen,
+  Kulturstationen Vanløse. 403 or a challenge: ft.dk, cph.dk, Visit Carlsberg,
+  Atelier September, Amass, Copenhagen Cycle Chic, Spotted by Locals,
+  kbhbilleder/kbharkiv (202 empty).
+- **Brochures, no story archive (2026-10-07):** almost every restaurant, bar
+  and bakery (Geranium, Alchemist, Barr, WarPigs, Mikkeller news, Hart, Lille,
+  La Glace, Manfreds, Lagkagehuset...), most festivals (Copenhell, CPH:DOX,
+  Opera festival, Strøm, Light Festival, Photo Festival, Fashion Week, Royal
+  Run, Kulturnatten: one fact), SMK, Designmuseum, Charlottenborg, Det Kgl.
+  Teater, Royal Arena, Bella Center, CopenHill, Cisternerne, kk.dk/nyheder
+  (policy), lokaludvalg sites, tour companies' blogs, Rockmuseet, artist sites.
+  FCK (match reports) and kongehuset.dk (programmes) are big but dry.
+  Personal Copenhagen blogs barely exist; frostfestival.dk, kulturhavn.dk and
+  refshaleoen.dk are SEO spam now.
+- **Open data, modern (2026-10-07):** nothing. Vores Kunst is JS-only, KØS's
+  database is offline, FBB is architecture, OpenAlex has no spot papers,
+  Internet Archive CC texts are pre-1940, tidsskrift.dk is academic ©.
+  Wikidata: 927 events since 1960 in the bbox, about 15 fun with a real
+  article, none geotagged, so `wikipedia:` misses them (a `titles:` mode
+  pinned at the P276 venue would catch them).
+- **Restricted:** Street Art Cities (address metadata needs written
+  permission), StoryHunt (stories in its paid app), Sydhavnens Historie
+  ("reproduction only by prior agreement", 1940s-60s, about 25 good).
 
 **Lessons.**
+- jazz.dk's sitemap URLs loop 301/302 forever; only the
+  `/copenhagen-jazz-festival-<year>/nyheder/<slug>/` form answers, and the
+  year changes.
 - A source's last items can be off-topic: Københavnerliv's backlog ended in
   film chats and festivals. Read the pending titles before trusting `expected`.
 - One event page often yields several memories at one spot; prefer festivals

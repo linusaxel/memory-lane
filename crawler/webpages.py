@@ -52,7 +52,8 @@ class Webpages:
         rules = robots(url)
         pause = rules.crawl_delay(USER_AGENT) or PAUSE_S
         get = lambda u: download(u, USER_AGENT).decode("utf-8", "replace")  # noqa: E731
-        pages = sitemap_urls(get(url), pattern or None) if url.endswith(".xml") else [url]
+        xml = urllib.parse.urlparse(url).path.endswith(".xml")
+        pages = sitemap_urls(get(url), pattern or None) if xml else [url]
         for page in pages:
             if not rules.can_fetch(USER_AGENT, page):
                 continue
