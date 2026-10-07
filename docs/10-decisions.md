@@ -3525,6 +3525,13 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
   circles on a gold rail: every stop listed was opened. Section labels are
   sentence case over their own rule. Your board row is plum, and the top three
   wear gold, silver and bronze.
+  In Settings, Sign out (quiet) and Subscribe (foil) share a row, or Manage
+  once subscribed. Shared cards and the embed set Gloock and Newsreader too.
+- **Sign-in and the crash screen.** Sign-in is the tile with a soft shadow,
+  the name in Gloock at the splash's size, and the line in Newsreader italic.
+  A render error shows a locket sprung open in line, the diamond rule and Try
+  again, and hides the splash itself, since a crash before `StartupLogo`
+  mounts would otherwise leave it up.
 - **Writing.** The byline is three chips (who, When ▾, the street in gold)
   over the diamond rule, and a `>` block is set as the sheet's pull quote, so
   the page still reads as what it files. Post becomes **Next**, a Go capsule

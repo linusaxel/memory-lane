@@ -259,7 +259,9 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
       {/* Where StartupLogo left it, so the logo lands and the page grows
           around it rather than cutting to something new. */}
       <View style={styles.hero}>
-        <LogoTile size={120} />
+        <View style={styles.tile}>
+          <LogoTile size={120} />
+        </View>
         <Text style={styles.title}>Memory Lane</Text>
         <Text style={styles.tagline}>
           A walk planner with memories along the way. One walk a day, free.
@@ -379,11 +381,19 @@ export default function SignIn({ device, profile, onProfile, beside }: Props) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper, paddingHorizontal: 32 },
   hero: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 },
-  title: { ...screenTitle, marginTop: 8 },
+  // B-02: the tile floats a little; the splash before it has no shadow.
+  tile: {
+    shadowColor: color.shadow,
+    shadowOffset: { width: 0, height: 18 },
+    shadowRadius: 20,
+    shadowOpacity: 0.28,
+  },
+  // StartupLogo's size, so the name does not jump when the splash hands over.
+  title: { ...screenTitle, fontSize: 44, lineHeight: 50, marginTop: 8 },
   tagline: {
-    ...font.prose,
-    fontSize: 17,
-    lineHeight: 26,
+    ...font.storyItalic,
+    fontSize: 19,
+    lineHeight: 27,
     color: color.inkSoft,
     textAlign: 'center',
     maxWidth: 280,

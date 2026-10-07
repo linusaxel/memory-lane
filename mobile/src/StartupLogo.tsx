@@ -35,7 +35,7 @@ export default function StartupLogo({ onDone }: { onDone: () => void }) {
     <View style={styles.container}>
       <LogoTile size={SIZE} />
       <Animated.View style={[styles.name, { opacity: name }]}>
-        <Text style={screenTitle}>Memory Lane</Text>
+        <Text style={styles.title}>Memory Lane</Text>
       </Animated.View>
     </View>
   );
@@ -56,4 +56,6 @@ const styles = StyleSheet.create({
   },
   // Under the tile without moving it off the splash's centre.
   name: { position: 'absolute', top: '50%', marginTop: SIZE / 2 + 28 },
+  // SignIn's title, so the name stays put when it takes over.
+  title: { ...screenTitle, fontSize: 44, lineHeight: 50 },
 });
