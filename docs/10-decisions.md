@@ -3528,8 +3528,8 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
 - **Writing.** The byline is three chips (who, When ▾, the street in gold)
   over the diamond rule, and a `>` block is set as the sheet's pull quote, so
   the page still reads as what it files. Post becomes **Next**, a Go capsule
-  at the foot beside the glyph bar (the bar alone when Aa is open: six marks
-  need the width). Next opens **the seal as a page**, not a tray: "Seal it
+  at the foot beside the glyph bar (its chevron alone when Aa is open: six
+  marks need the width). Next opens **the seal as a page**, not a tray: "Seal it
   with", the chosen locket large in a gold glow, the title and "street · left
   by name", the lockets as tiles (the next locked one dashed, with its level:
   still only one, as *Writing is a calm page* argued), the radius line, then

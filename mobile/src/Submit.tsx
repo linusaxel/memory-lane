@@ -1069,20 +1069,19 @@ export default function Submit({
         </Animated.ScrollView>
         <Animated.View style={[styles.dock, { bottom: lifted }]}>
           {tools()}
-          {/* Styling needs the whole width for its six marks. */}
-          {!styling && (
-            <Button
-              kind="go"
-              label={isEditing ? 'Save' : 'Next'}
-              trailing="chevron.right"
-              place={[styles.next, !ready && styles.disabled]}
-              onPress={() => {
-                Keyboard.dismiss();
-                setSealing(true);
-              }}
-              disabled={!ready}
-            />
-          )}
+          {/* With Aa open, Next is the chevron alone: six marks need the room. */}
+          <Button
+            kind="go"
+            label={styling ? '' : isEditing ? 'Save' : 'Next'}
+            accessibilityLabel={isEditing ? 'Save' : 'Next'}
+            trailing="chevron.right"
+            place={[styles.next, styling && styles.nextSmall, !ready && styles.disabled]}
+            onPress={() => {
+              Keyboard.dismiss();
+              setSealing(true);
+            }}
+            disabled={!ready}
+          />
         </Animated.View>
 
         {/* The seal: the locket its pin is drawn as, chosen once the story is
@@ -1363,6 +1362,7 @@ const styles = StyleSheet.create({
   step: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.rule },
   stepOn: { width: 20, backgroundColor: color.gold },
   next: { paddingHorizontal: 28 },
+  nextSmall: { width: 60, paddingHorizontal: 0 },
   disabled: { opacity: 0.35 },
 
   // MemorySheet's reading column: 24 in, 8 inside a part, 24 between parts.

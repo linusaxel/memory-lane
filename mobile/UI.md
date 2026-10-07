@@ -639,7 +639,7 @@ page"):
 - **One bar of glyphs below** (docs/10, "Writing is a calm page"): Aa, Photo,
   Camera and Hide keyboard, a paper-raised capsule with a gold hairline beside
   Next, riding the keyboard's top edge or docked at the foot. Aa swaps in B, I,
-  Heading, Quote, Divider and ×, and takes the whole row. The page ends above
+  Heading, Quote, Divider and ×, and Next shrinks to its chevron to make room. The page ends above
   it, so nothing is typed under it.
 - **A quote is the pull quote**: the gold “ over centred italic, as the sheet
   sets it.

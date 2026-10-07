@@ -70,9 +70,11 @@ export default function Button({
       ) : (
         <>
           {glyph && <Glyph name={glyph} size={17} weight="semibold" color={tint} />}
-          <Text style={[styles.label, { color: tint }]} numberOfLines={1}>
-            {label}
-          </Text>
+          {label !== '' && (
+            <Text style={[styles.label, { color: tint }]} numberOfLines={1}>
+              {label}
+            </Text>
+          )}
           {children}
           {trailing && <Glyph name={trailing} size={15} weight="bold" color={tint} />}
         </>
