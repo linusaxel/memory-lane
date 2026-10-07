@@ -15,6 +15,10 @@ PROMO_REAL = (
     "about Marilyn Monroe."
 )
 META_REAL = "He describes it as basically a fake town created just to house a casino."
+SOURCE_REAL = (
+    "The manuscript 'Dengang jeg var pige', published in 2022, gives a rare glimpse of the "
+    "queer-erotic room for manoeuvre open to the working class."
+)
 
 # What the prompt now asks for: named, past tense, about the event.
 GOOD = (
@@ -33,8 +37,13 @@ def test_the_good_shape_trips_nothing():
         "talks about talking": 0,
         "not past tense": 0,
         "unnamed someone": 0,
+        "talks about the source": 0,
         "over 180 words": 0,
     }
+
+
+def test_the_archives_voice_is_caught():
+    assert counts(SOURCE_REAL)["talks about the source"] == 1
 
 
 def test_the_label_instead_of_a_name_is_caught():

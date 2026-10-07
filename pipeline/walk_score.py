@@ -130,7 +130,7 @@ def check_labels(session, client, path: str = "tests/fixtures/walk_labels.json")
         )
 
     seen = [i for i in scored if not set(labels[i]["flags"]) & UNSEEN]
-    good = [i for i in scored if scored[i] >= 7]
+    good = [i for i in scored if scored[i] >= 6]
     return {
         "scored": len(scored),
         "auc": round(auc(*split(scored)), 3),

@@ -90,6 +90,14 @@ NOT_PAST = re.compile(
 # Nobody, when the video usually names the person, or at least their nickname.
 UNNAMED = re.compile(r"\bsomeone\b", re.I)
 
+# The archive's voice instead of the event: the scholar ("the manuscript gives a
+# rare glimpse", "later tellings") or the planner ("the museum recommends").
+SOURCE_TALK = re.compile(
+    r"\b(the (manuscript|article|archive|museum|book)\b|sources?\b"
+    r"|later tellings|recommend(s|ed)?\b|rare glimpse)",
+    re.I,
+)
+
 WORD_LIMIT = 180
 
 CHECKS = (
@@ -97,6 +105,7 @@ CHECKS = (
     ("talks about talking", META.search, "reports the recording, not the event"),
     ("not past tense", NOT_PAST.search, "an announcement or a live narration"),
     ("unnamed someone", UNNAMED.search, "the transcript usually names them"),
+    ("talks about the source", SOURCE_TALK.search, "the archive's voice, not the event"),
     ("over 180 words", lambda s: len(s.split()) > WORD_LIMIT, "summarises the conversation"),
 )
 

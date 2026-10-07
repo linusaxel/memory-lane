@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`quality --compare` can't be aimed at a source.** 2026-10-07: a summary
+  flaw lived in three web sources (260, 264, 269), but `--compare` samples
+  chunks of a whole `--source-type` at random. Twenty press chunks held none
+  of the flaw, so the measurement said nothing, and the prompt fix couldn't be
+  judged. Fix: a `--content <ids>` or `--source <id>` flag that feeds
+  `sample_chunks`' existing `content_ids`.
+
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"

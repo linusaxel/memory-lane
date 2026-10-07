@@ -69,6 +69,13 @@ ORDER BY expected DESC, pending DESC;
   run `batch --content <5 ids>` with those five ids. `expected` is the
   source's past, not its next items: Historisk Atlas showed 90 expected, and
   its next 40 were thin records with no good memory.
+- With no track record, genre is the prior (find-sources step 1): memoirs and
+  people telling their own places first, an institution about itself last.
+- Between near-equals, take the one that fills the empty map: count the 1 km
+  cells (`ST_SnapToGrid(ST_Transform(p.coordinates::geometry, 25832), 1000)`)
+  holding no good memory that its places would land in. A walk wants one a
+  kilometre, so a 6 in an empty cell beats the tenth in Indre By. A one-venue
+  source gives a walk at most one stop there, whatever it yields.
 - If a source's done items average under 7, suggest
   `! venv/bin/python -m pipeline.sources set <id> paused --note "<why>"` to the user and skip it.
 

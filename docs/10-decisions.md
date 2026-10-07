@@ -518,7 +518,8 @@ nothing.
 ### A walk picks its stops by the rubric
 
 Status: Accepted 2026-10-03. Amended 2026-10-07 by *New since your last walk*:
-a new memory adds to the prize.
+a new memory adds to the prize, and by *A dull story is no stop*: the floor
+not taken here is taken now.
 
 A stop's prize in the solver was `1 + contrast_score`, and contrast is
 mostly a default, so a walk picked stops with no regard to how good the
@@ -4125,6 +4126,28 @@ opened out of total, so a walker whose streets are read has somewhere to go.
 walker's most-walked area, and D60 of walkers whose streets are read, before
 and after. Watch that hearts per open don't fall, which would mean people
 chase the count.
+
+### A dull story is no stop
+
+Status: Accepted 2026-10-07. Amends *A walk picks its stops by the rubric*,
+which ranked by `walk_score` and set no floor.
+
+A walk with nothing better nearby made a 2 a stop, and the gate then opened
+it for someone who had walked there: a Noma wine-bar announcement scored 1,
+and K.B. Hallen and Wikipedia gave a run of 3s. The rubric is now one
+question (*The walk score asks one question*, AUC 0.87-0.89), so a low score
+means what it says.
+
+- **Under 4 is no stop.** `WALKABLE` in `api/queries.py` has
+  `walk_score >= WALK_FLOOR`. Unscored memories, a walker's own posts, still
+  qualify. Nothing is hidden and the count of good memories doesn't move: the
+  memory stays, the walk just never sends anyone to it.
+- **What it costs.** 60 visible memories leave walks, and 4 of 54 occupied 1 km
+  cells have none left. On the labels it drops 22 skips, 6 maybes and 2
+  walks, and one of those walks was already hidden.
+- **Why now, when 10-03 said no.** That floor was judged on the six-criteria
+  sum, which barely told walks from skips. A thin cell gets more memories;
+  it shouldn't get a dull one.
 
 ### Rejected approaches, do not retry
 

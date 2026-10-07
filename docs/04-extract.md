@@ -755,6 +755,42 @@ for null. `extract.sure` drops a note that hedges.
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps
 - THE VIBE: Emotions, humor, what made it memorable
 
+### Yield by genre, 2026-10-07
+
+The 412 visible memories, grouped by source. A source's genre predicts its
+good (6+) share better than the prompt does:
+
+| Genre | Sources | Good |
+|---|---|---|
+| First-person memoir | Andersen, Leonora Christina, Carl Møller, Brandes, Oehlenschläger | ~80% |
+| People telling their own places | Københavnerliv 68%, Københavnerglimt 54% | ~58% |
+| Plaques, researched | OSM plaques (5) | 5 of 5 |
+| Local-history society | Nørrebro 75%, Valby 25% | mixed |
+| An institution about itself | Tivoli 0, Parken 0, Magasinet KBH 0, K.B. Hallen 20, Noma 25 | ~10% |
+| Encyclopedic | Wikipedia, modern Copenhagen (57) | 14% |
+
+- Tags agree. *personal* (6.8), *comedy* (6.9), *family* (6.5) and *strange*
+  (6.4) score high; *music* (4.2), *work* (4.8) and *sport* (5.0), the venue
+  sites' themes, score low.
+- Undated memories average 6.0 and year-dated ones 4.5: stories carry no
+  date, encyclopedias always do.
+- The day's institutional trials spent about $10 for 3 good memories.
+  Københavnerglimt made 27 for about $27.
+- The 200 good are on two scales. Before 2026-10-05, 111 of 169 (66%) were
+  good; since then, 89 of 245 (36%). Plan by the new rate.
+- An archival source can leak its own voice into the summary: "the manuscript
+  gives a rare glimpse", "later tellings added", "the museum recommends". It
+  is rare: 4 of the 412 visible, all from Københavns Museum (260), LGBT+
+  Danmark (264) and Rundetårn (269). A prompt rule against it was measured
+  with `quality --compare` on 20 press chunks: 0 hits before, 1 after, so it
+  didn't ship. `quality` counts it as *talks about the source*, and the fix
+  is the source: pick its story pages, not its reports.
+- 60 visible memories score under 4. A walk no longer stops at them (docs/10,
+  *A dull story is no stop*).
+- The map is thin. 54 occupied 1 km cells, the densest with 94 memories, the
+  median with 3. The skills now weigh empty cells and genre when choosing a
+  source.
+
 ### Road to 1,000 (Copenhagen)
 
 The goal is 1,000 good memories in the launch bbox. Good means visible and

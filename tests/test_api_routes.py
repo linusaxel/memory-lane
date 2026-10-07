@@ -180,6 +180,21 @@ def test_a_route_excludes_already_unlocked_memories(client, db_session):
     assert keep in ids
 
 
+def test_a_dull_story_is_never_a_stop_but_an_unscored_one_is(client, db_session):
+    dull, fine, unscored = (_offset(db_session, n) for n in (1, 2, 3))
+    db_session.execute(
+        text("UPDATE memories SET walk_score = :s WHERE id = :m"), {"s": 3, "m": dull}
+    )
+    db_session.execute(
+        text("UPDATE memories SET walk_score = :s WHERE id = :m"), {"s": 4, "m": fine}
+    )
+    db_session.commit()
+
+    ids = [m["id"] for m in _route(client).json()["memories"]]
+    assert dull not in ids, "a 3 is no stop, even with nothing better nearby"
+    assert fine in ids and unscored in ids
+
+
 def test_a_route_mixes_layers_when_both_are_available(client, db_session):
     for n in range(1, 4):
         _offset(db_session, n, layer="historical")

@@ -573,12 +573,15 @@ SUBSCRIBED_QUERY = """
 """
 
 # Today's route candidates: nearby, not already earned, and actually worth the
-# walk. Four predicates that exist nowhere else in this file:
+# walk. Five predicates that exist nowhere else in this file:
 #   - not already unlocked - the inverse of DEVICE_UNLOCKS_QUERY's `earned` CTE,
 #     over the same MY_DEVICES so a second phone on one account sees the same
 #     route rather than re-discovering what its sibling already earned.
 #   - only walk-to-unlock memories - a centroid a route sent you to would open
 #     the moment you arrived, which is not a stop, it is scenery.
+#   - not dull - a story the walk rubric scored under WALK_FLOOR is no stop,
+#     even with nothing better nearby (docs/10, "A dull story is no stop").
+#     Unscored ones, a walker's own posts, stay.
 # `preferred` counts how many of a subscriber's choices a memory meets, its theme
 # and its era (an undated memory meets no era): they lean the walk, never
 # filter it (docs/10, "Subscribers shape the walk").
@@ -587,12 +590,14 @@ SUBSCRIBED_QUERY = """
 # since your last walk"). No walk yet, nothing is new.
 # Ordered by distance and not CONTRAST_ORDER on purpose: a route is where to
 # walk next, not a feed to rank.
+WALK_FLOOR = 4
 WALKABLE = f"""
     p.coordinates IS NOT NULL
     AND {VISIBLE}
     AND {NOT_BLOCKED}
     AND {WITHIN}
     AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
+    AND (m.walk_score IS NULL OR m.walk_score >= {WALK_FLOOR})
     AND NOT EXISTS (
         SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
     )"""

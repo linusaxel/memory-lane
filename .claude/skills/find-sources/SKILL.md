@@ -130,6 +130,19 @@ Fan out parallel agents, one per kind, on primary sources only: the feed
 itself, the catalogue page, the ToS page. Not listicles. Ask each for exact
 locators and evidence.
 
+**Genre predicts yield better than anything else** (docs/04, *Yield by genre*).
+Hunt in this order, and register an institution's history of itself or an
+encyclopedia only when the page shows a named person's anecdote on its spot:
+
+| Genre | Good (6+) per memory, 2026-10-07 |
+|---|---|
+| First-person memoir of a city life | ~80% |
+| People telling their own places (channels) | ~58% |
+| Plaques, researched | high, few |
+| Local-history society, story pages | 25-75% |
+| An institution about itself (venue, festival, restaurant) | ~10% |
+| Encyclopedic (Wikipedia) | 14% |
+
 Kinds worth a fan-out beyond the table's archives, because a walker is glad to
 know *this is where it happens*:
 
