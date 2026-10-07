@@ -71,7 +71,7 @@ memory at all; answer them before you name a venue or write a word of summary.
   geocoder places the pin from this and the venue.
 - lat, lng: Decimal degrees; only the fallback if the geocoder misses.
 - timestamp_start: When the place is first mentioned, from the [timestamp] markers.
-- summary: past tense, written for a stranger who has never seen the video and
+- summary: in English whatever the source's language, past tense, written for a stranger who has never seen the video and
   is standing on the spot. As long as the story earns: 60-180 words. Past about
   90 words, split it into two paragraphs with a blank line. A small story stays
   small; never pad: past 90 words, every sentence adds a
@@ -243,7 +243,7 @@ memory at all; answer them before you name a venue or write a word of summary.
 - happened_at: ISO date of the EVENT - "1978-06-17", "1978-06", or "1978". Null if
   the text gives no date. This is when it happened, not when it was written about.
 - happened_precision: day | month | year | decade - how much of happened_at to trust
-- summary: past tense, written for a stranger who has never read the source
+- summary: in English whatever the source's language, past tense, written for a stranger who has never read the source
   and is standing on the spot. As long as the story earns: 60-180 words. Past
   about 90 words, split it into two paragraphs with a blank line. A small
   story stays small; never pad: past 90 words, every sentence adds a
