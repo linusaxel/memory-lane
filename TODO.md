@@ -24,18 +24,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **An e2e run swallows the app's `console.log`.** 2026-10-07: chasing a
-  dead unlock, logs reached neither `e2e/out/logs/metro.log` nor `simctl
-  spawn booted log stream`; three runs went by before pinging the API
-  (`fetch('http://localhost:8090/?dbg=...')`, read in `api.log`) showed no
-  handler ran. Fix: have run.sh capture JS logs (Metro's `--dev-client`
-  output, or the device log's ReactNativeJS lines) into `e2e/out/logs/`.
-- **Maestro taps what the screen shows, not what the scroll view shows.**
-  2026-10-06: Add's bar floats over the page's edge and its header covers
-  the top, but `scrollUntilVisible` and `tapOn` call a field half under
-  either "visible" and tap its middle, so file-and-edit hit the bar's Quote
-  and Photo, typed nowhere, and six runs went on reading screenshots. Fix: a
-  `tapOn` helper flow that scrolls an id clear of `bar`/header before tapping.
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"
@@ -495,16 +483,6 @@ progress; refine what exists rather than add.
       image; needs kbhbilleder access) The viewfinder in Add (docs/10, *The camera is a
       block*) ghosts an archival photo over itself at ~40% so the walker can match it. Open: where the
       "now" photo goes. Founder's call.
-- [ ] **A swipe down throws Add's draft away.** (checked 2026-10-06) ×
-      asks "Tap again to discard", but React Native's page sheet cannot
-      refuse a swipe (`Modal` has no `isModalInPresentation`), so a slip
-      loses the story. Options: a small patch setting it while `dirty`, or
-      keep the draft in memory until the next open at the same spot. HIG
-      Sheets asks for a confirm. `mobile/src/Submit.tsx`.
-- [ ] **Heading in Add's bar reads as a plain "A".** (checked 2026-10-06)
-      `textformat.size.larger` next to B and I is ambiguous. Try
-      `textformat.size` or an "H"-style symbol, and look at it beside the
-      others. `Tool` in `mobile/src/Submit.tsx`.
 - [ ] **Watch the seal land.** (checked 2026-10-06) `LocketSeal` (the lid
       run backwards, the drop onto the pin, the first-memory line) passes
       `file-and-edit` but nobody has looked at it frame by frame: the key

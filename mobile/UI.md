@@ -642,7 +642,8 @@ page"):
 - **The × above, Next below.** The × left, "Leave a memory here" centred,
   two step dots right. Next (Save when editing) is a Go capsule at the foot,
   held until the title and the story are there, and opens the seal. × with
-  words in it asks again: "Tap again to discard".
+  words in it asks again: "Tap again to discard". A swipe down keeps the
+  draft for the next open at the same spot.
 - **One bar of glyphs below** (docs/10, "Writing is a calm page"): Aa, Photo,
   Camera and Hide keyboard, a paper-raised capsule with a gold hairline beside
   Next, riding the keyboard's top edge or docked at the foot. Aa swaps in B, I,

@@ -3864,8 +3864,11 @@ and on HIG, NN/g and the papers below.
   holds a beat with one line. Reduce Motion goes straight to the sheet (HIG
   Feedback; NN/g Microinteractions).
 - **× with words in it asks twice**, "Tap again to discard", the app's
-  two-tap in place of an alert. A swipe down still dismisses: React Native's
-  page sheet cannot refuse it.
+  two-tap in place of an alert. A swipe down still dismisses (React Native's
+  page sheet cannot refuse it), so the draft is kept in memory and comes back
+  on the next open within reach of where it was written; anywhere else it is
+  dropped, because the pin is taken fresh and the words would not be
+  (2026-10-07).
 
 **Options considered:** words over the keyboard ("Style · Photo · Camera"),
 kept the text rule, rejected by the founder for glyphs; the locket as a chip

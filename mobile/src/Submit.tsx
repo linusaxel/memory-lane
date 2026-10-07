@@ -54,6 +54,7 @@ import Glyph from './Glyph.tsx';
 import { duration, happened } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { LOCKET_DEFAULT, LOCKETS, locketOf, type LocketId } from './lockets.ts';
+import { metersBetween } from './region.ts';
 import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { color, dim, font, label, lift, metal, radius, screenTitle, story, sunk } from './theme.ts';
@@ -117,6 +118,19 @@ const key = () => String(++keys);
 const empty = (): Item => ({ key: key(), kind: 'p', text: '' });
 
 /** The written blocks as items, a photo's id swapped for its attachment uri. */
+/** A draft swiped away, for the next open at the same spot. A page sheet
+ *  cannot refuse a swipe (RN's Modal has no isModalInPresentation), so this
+ *  keeps the words instead of asking. Only while the app lives. */
+type Kept = {
+  at: Coordinates;
+  placeName: string;
+  locket: LocketId;
+  items: Item[];
+  day: Date;
+  attachments: Attachment[];
+};
+let kept: Kept | null = null;
+
 function toItems(story: Block[], uriOf: (id: number) => string | undefined): Item[] {
   return story.flatMap((b): Item[] => {
     if (b.kind !== 'photo') return [{ key: key(), ...b }];
@@ -172,6 +186,8 @@ export default function Submit({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set by a discard or a post: the close that follows keeps nothing.
+  const done = useRef(false);
 
   const camera = useRef<CameraView>(null);
   const [, requestCamera] = useCameraPermissions();
@@ -233,11 +249,40 @@ export default function Submit({
     }).start();
   }, [sealing, rise]);
 
-  // Everything resets on close. A half-written memory kept across openings
-  // would eventually be posted somewhere it did not happen, because the
-  // coordinate is taken fresh and the words would not be.
+  // Everything resets on close. A draft swiped away is kept, but it comes back
+  // only at the spot it was written: kept further, it would eventually be
+  // posted somewhere it did not happen, because the coordinate is taken fresh
+  // and the words would not be. A photo still uploading is not kept.
   useEffect(() => {
-    if (visible) return;
+    if (visible) {
+      done.current = false;
+      if (isEditing || !kept || !position) return;
+      const there =
+        metersBetween(kept.at.lat, kept.at.lng, position.lat, position.lng) <= radiusMeters;
+      if (there) {
+        setPlaceName(kept.placeName);
+        setLocket(kept.locket);
+        setItems(kept.items);
+        setDay(kept.day);
+        setAttachments(kept.attachments);
+      }
+      kept = null;
+      return;
+    }
+    if (dirty && !done.current && position) {
+      const up = attachments.filter((a) => a.item);
+      const left = items.filter(
+        (i) => i.kind !== 'camera' && (i.kind !== 'photo' || up.some((a) => a.uri === i.uri)),
+      );
+      kept = {
+        at: position,
+        placeName,
+        locket,
+        items: left.length ? left : [empty()],
+        day,
+        attachments: up,
+      };
+    }
     setPlaceName('');
     setLocket(LOCKET_DEFAULT);
     setItems([empty()]);
@@ -584,7 +629,7 @@ export default function Submit({
           <Tool icon="bold" spoken="Bold" testID="toolbar-bold" onPress={() => mark('**')} />
           <Tool icon="italic" spoken="Italic" testID="toolbar-italic" onPress={() => mark('*')} />
           <Tool
-            icon="textformat.size.larger"
+            icon="h.square"
             spoken="Heading"
             testID="toolbar-heading"
             onPress={() => turn('h')}
@@ -638,6 +683,7 @@ export default function Submit({
   );
 
   const close = () => {
+    if (discarding) done.current = true;
     if (!dirty || discarding) return onClose();
     setDiscarding(true);
     confirmTimer.current = setTimeout(() => setDiscarding(false), 3000);
@@ -693,6 +739,7 @@ export default function Submit({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         onPosted(memory);
       }
+      done.current = true;
       onClose();
     } catch (e) {
       if (!mounted.current) return;
