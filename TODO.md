@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A batch log's funnel counts repeat every pass.** 2026-10-08: summing
+  "Found N raw ... M after filtering" over a `pipeline.batch` log gave 283 raw
+  for 46 windows that stored 7, because each pass replays every content. It
+  took a half-hour detour to see the loss was out-of-bbox travel chapters, not
+  a bug. Fix: `batch` prints one funnel per content at the end (raw, spot
+  test, outside bbox, judge, saved).
+
 - **Parallel sessions share one git index.** 2026-10-07: a `git rm` staged in
   one session went out in another session's unrelated commit (fa94bb0, a
   memoir trial carrying the account menu's deletions). Fix: AGENTS.md's commit

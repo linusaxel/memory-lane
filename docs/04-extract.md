@@ -815,3 +815,4 @@ line here. Started 2026-10-05 at 74 good out of 169 visible. On 2026-10-07,
 | 2026-10-07 | Trials, most story-like chunks: Magasinet KBH (254), NABO Humleby (252) | 10 (5 each) | 9 (8/1) | 0 | 3.8 | ~2-4, est. |
 | 2026-10-07 | Trials, first window each: K.B. Hallen (261), Copenhagen Pride (263), Jazz Festival history (265), Jazzhus Montmartre (266), Parken (267), Fiskebaren (268) | 6 | 10 (5/1/0/1/2/1) | 0 | 4.3 (best: Lars Ulrich at Deep Purple, Montmartre, 6) | ~3, est. |
 | 2026-10-07 | Trials, public-domain memoirs, first 5 windows each: Gottschalksen (281), Bang vol. 6 (282), Grandjean (283), Egan (284) | 20 | 6 (1/0/4/1) | 5 | 6.8 (new scale; Battle of Fælleden 1872 and a bear cub on Nyhavn, 8) | ~5-7, est. |
+| 2026-10-08 | Grandjean (283) and Gottschalksen (281), the rest of both books | 46 | 7 (5/1 kept, 1 hidden as a retelling) | 5 | 7.3 (Moltke ends Balduin Dahl at Tivoli, 9) | ~5-8, est. |
