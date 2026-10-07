@@ -102,6 +102,8 @@ export type Memory = {
   hearted?: boolean;
   /** Only from fetchMine: when the newest heart came, never from whom. */
   last_hearted_at?: string | null;
+  /** Only from fetchMine: how many people opened it standing there. */
+  opened_by?: number;
   /** Something happened here on today's date. Set on locked memories too — it
    *  is a reason to walk over and gives away nothing the pin did not. The
    *  server sorts these to the top, which is the whole of "resurfacing" - the

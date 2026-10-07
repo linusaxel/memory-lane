@@ -115,6 +115,8 @@ class Memory(BaseModel):
     hearted: bool = False
     # Only on /v1/me/memories: when the newest heart came, never from whom.
     last_hearted_at: datetime | None = None
+    # Only on /v1/me/memories: how many people opened it standing there.
+    opened_by: int = 0
     tags: list[str]
     confidence: str
     locked: bool = False

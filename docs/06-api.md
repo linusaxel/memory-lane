@@ -69,7 +69,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   as on the POST; leaving it out keeps the one it has
 - `GET /v1/me/memories?device=UUID` - everything this account filed, newest
   first, hidden ones included. `last_hearted_at` is when its newest heart came;
-  who gave it is never sent
+  who gave it is never sent. `opened_by` is how many people opened it (on the
+  spot, so every one walked there), the author never among them
 - `POST /v1/memories/{id}/heart` `{device}` - one heart per device. No position
   check. Your own memory is a 403. `DELETE /v1/memories/{id}/heart?device=UUID`
   takes back every heart the account gave it. Both return `heart_count`

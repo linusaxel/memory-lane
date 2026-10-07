@@ -3934,6 +3934,25 @@ and a takedown is a real event, not a theoretical one.
 **Options considered:** asking first (slow, and the 2010s stay empty);
 the proxy for YouTube (§75c, the line this does not cross).
 
+### Authors hear they were read
+
+Status: Accepted 2026-10-07.
+
+People write for an audience (Beenen et al., CSCW 2004), and an author only
+heard about hearts and notes. A memory opens only standing on it, so an open
+is someone who walked there and read it: the plainest proof of an audience
+the app has. Mine says "Read on the spot by 14 walkers" first, and a new
+reader lights "Mine ·" and the row's New, as a heart does. `opened_by` on
+`/v1/me/memories` only, counted from `unlocks`, distinct people, never the
+author (filing opens it for them), never who.
+
+**Options considered:** keys earned on a walk and spent to post (the
+founder's idea, dropped in discussion): it rations writing before there is
+much of it, a held key gets hoarded, and it counts posts rather than making
+them good; `DAILY_MEMORIES` is the spam knob. "On N walks this week" beside
+it: a second number, add it if opens alone don't move posting. The count on a
+reader's card: rejected with "you're the 3rd to stand here" (*A city board*).
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

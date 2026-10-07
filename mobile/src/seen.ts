@@ -1,4 +1,4 @@
-/** How many hearts and notes each memory you filed had the last time you
+/** How many opens, hearts and notes each memory you filed had the last time you
  *  looked, so the Filed list can say which ones got more since. No server
  *  state and no push: a baseline on this phone, like hearted.ts, and losing
  *  it costs nothing but one "new" too many. */
@@ -11,7 +11,7 @@ const KEY = 'memorylane.seen.v1';
 
 export type Seen = Record<number, number>;
 
-export const attention = (m: Memory) => m.heart_count + m.note_count;
+export const attention = (m: Memory) => (m.opened_by ?? 0) + m.heart_count + m.note_count;
 
 export async function loadSeen(): Promise<Seen> {
   try {
@@ -32,7 +32,7 @@ export async function saveSeen(current: Seen, memories: Memory[]): Promise<void>
   }
 }
 
-/** Did anything you filed get a heart or a note since you last looked? The
+/** Did anything you filed get read, a heart or a note since you last looked? The
  *  map's Journal button says so. */
 export async function anyNew(memories: Memory[]): Promise<boolean> {
   const seen = await loadSeen();

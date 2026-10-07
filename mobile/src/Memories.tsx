@@ -507,7 +507,7 @@ function Switcher({
 }: {
   section: Section;
   onSelect: (section: Section) => void;
-  /** Someone hearted or left a note on something you filed since you last looked. */
+  /** Someone read, hearted or left a note on something you filed since you last looked. */
   filedNew: boolean;
 }) {
   return (
@@ -548,11 +548,13 @@ function SwitcherItem({
   );
 }
 
-/** "3 hearts · 1 note · last heart yesterday": what came back for something
- *  you filed. Never who: a heart is anonymous. */
+/** "Read on the spot by 14 walkers · 3 hearts · 1 note · last heart yesterday": what
+ *  came back for something you filed. Never who: a heart is anonymous. */
 function reach(m: LocatedMemory): string | undefined {
   const last = m.last_hearted_at ? when(Date.parse(m.last_hearted_at)) : null;
+  const readers = m.opened_by ?? 0;
   const parts = [
+    readers > 0 && `Read on the spot by ${readers} ${readers === 1 ? 'walker' : 'walkers'}`,
     m.heart_count > 0 && (m.heart_count === 1 ? '1 heart' : `${m.heart_count} hearts`),
     m.note_count > 0 && (m.note_count === 1 ? '1 note' : `${m.note_count} notes`),
     last && `last heart ${last}`,

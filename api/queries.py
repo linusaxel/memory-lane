@@ -288,7 +288,13 @@ SELECT {MEMORY_COLUMNS},
     (
         SELECT MAX(hearted_at) AT TIME ZONE 'UTC' FROM memory_hearts mh
         WHERE mh.memory_id = m.id
-    ) AS last_hearted_at
+    ) AS last_hearted_at,
+    -- People, not phones, and never the author: filing opens it for them.
+    (
+        SELECT COUNT(DISTINCT COALESCE(d.user_id, d.id)) FROM unlocks un
+        JOIN devices d ON d.id = un.device_id
+        WHERE un.memory_id = m.id AND d.user_id IS DISTINCT FROM m.user_id
+    ) AS opened_by
 {MEMORY_JOIN}
 WHERE m.user_id = (SELECT user_id FROM devices WHERE id = CAST(:device AS uuid))
 ORDER BY m.created_at DESC

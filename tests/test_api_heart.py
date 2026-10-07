@@ -160,6 +160,44 @@ def test_the_author_sees_when_the_last_heart_came_never_from_whom(client, memory
     assert OTHER_DEVICE not in _mine(client).text
 
 
+def test_the_author_sees_how_many_people_read_it_never_counting_themselves(
+    client, memory_id, db_session
+):
+    author, reader = (
+        db_session.execute(
+            text("INSERT INTO users (id) VALUES (gen_random_uuid()) RETURNING id")
+        ).scalar()
+        for _ in range(2)
+    )
+    phones = {
+        DEVICE: author,
+        OTHER_DEVICE: reader,
+        "99999999-8888-7777-6666-444444444444": reader,
+    }
+    for device, user in phones.items():
+        db_session.execute(
+            text("INSERT INTO devices (id, user_id) VALUES (CAST(:d AS uuid), :u)"),
+            {"d": device, "u": user},
+        )
+    db_session.execute(
+        text("UPDATE memories SET user_id = :u WHERE id = :m"), {"u": author, "m": memory_id}
+    )
+    db_session.commit()
+
+    def opened(device):
+        db_session.execute(
+            text("INSERT INTO unlocks (device_id, memory_id) VALUES (CAST(:d AS uuid), :m)"),
+            {"d": device, "m": memory_id},
+        )
+        db_session.commit()
+        return _mine(client).json()["memories"][0]["opened_by"]
+
+    assert opened(DEVICE) == 0
+    assert opened(OTHER_DEVICE) == 1
+    # The reader's second phone is still one person.
+    assert opened("99999999-8888-7777-6666-444444444444") == 1
+
+
 def _unheart(client, memory_id, device=DEVICE):
     return client.delete(f"/v1/memories/{memory_id}/heart?device={device}")
 

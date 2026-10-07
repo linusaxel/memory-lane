@@ -279,6 +279,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         note_count=getattr(row, "note_count", 0),
         hearted=bool(getattr(row, "hearted", False)),
         last_hearted_at=getattr(row, "last_hearted_at", None),
+        opened_by=getattr(row, "opened_by", 0),
         tags=row.tags or [],
         # Set on open memories too, not just locked ones: the app needs the
         # radius to draw the reach circle, and a viewport with nothing locked in
