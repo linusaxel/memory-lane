@@ -49,8 +49,8 @@ ROUTE_LOOP = os.getenv("ROUTE_LOOP", "1") != "0"
 
 # A memory nobody scored (a walker's own post) counts as the corpus's middle.
 UNSCORED_WALK = 6
-# A subscriber's theme, worth half the walk rubric's range: it leans the walk
-# without emptying it where the theme is rare.
+# Each of a subscriber's choices a memory meets (its theme, its era) is worth
+# half the walk rubric's range: they lean the walk without emptying it.
 PREFERRED_PRIZE = 1
 
 
@@ -60,7 +60,7 @@ def _prize(c) -> float:
     #a-walk-picks-its-stops-by-the-rubric."""
     walk = getattr(c, "walk_score", None)
     contrast = getattr(c, "contrast_score", None) or 0
-    preferred = PREFERRED_PRIZE if getattr(c, "preferred", False) else 0
+    preferred = PREFERRED_PRIZE * (getattr(c, "preferred", 0) or 0)
     return 1 + (UNSCORED_WALK if walk is None else walk) / 6 + contrast / 10 + preferred
 
 

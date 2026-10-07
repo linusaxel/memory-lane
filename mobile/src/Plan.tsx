@@ -1,7 +1,8 @@
 /** The planner, which is the home screen: a walk drawn on the map, and a
  *  card in two steps - the length and the shape, then what its memories are
- *  of, paged between walks, and Start. A third, for themes and years, is a
- *  subscriber's (docs/10, "Subscribers shape the walk").
+ *  of, paged between walks, and Start. A third, Customize (themes and an era
+ *  the walk leans towards), is a subscriber's (docs/10, "Subscribers shape
+ *  the walk").
  *  Any change redraws the walk; ‹ › trade it for another. A one-way walk can
  *  end at a spot tapped on the map (EndPick), asked for per walk and stored
  *  nowhere. docs/10, "A walk planner, nothing else" and "Draw first, adjust
@@ -35,6 +36,7 @@ import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
 import { LOCKETS, locketAt, locketOf } from './lockets.ts';
+import { ERAS } from './route.ts';
 import { Chip } from './Submit.tsx';
 import {
   button,
@@ -54,31 +56,29 @@ import { WalkShape } from './WalkCard.tsx';
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 
 /** pipeline/tags.py TAGS, the vocabulary a walk can lean on; a test holds the
- *  two to the same list. */
+ *  two to the same list. Richest first (the corpus, 2026-10-07). */
 export const THEMES = [
-  'personal',
-  'travel',
-  'business',
-  'nightlife',
+  'history',
   'culture',
-  'adventure',
+  'strange',
+  'personal',
+  'drink',
+  'art',
+  'work',
   'comedy',
   'food',
-  'drink',
-  'nature',
-  'music',
-  'art',
-  'history',
-  'sport',
-  'romance',
+  'business',
   'family',
-  'work',
-  'strange',
+  'music',
+  'travel',
+  'adventure',
+  'nightlife',
+  'sport',
+  'nature',
+  'romance',
 ];
 
-/** Where a range of years can start and end; null is either way open. */
-const FROM_YEARS = [null, 1600, 1700, 1800, 1900, 1950, 2000];
-const UNTIL_YEARS = [1700, 1800, 1900, 1950, 2000, null];
+const themeName = (theme: string) => theme[0].toUpperCase() + theme.slice(1);
 
 /** api/route_solver.py ROUTE_FILL: under this share of the ask, the map ran out. */
 const ROUTE_FILL = 0.8;
@@ -145,7 +145,7 @@ type PreviewProps = {
   onKm: (km: number) => void;
   ask: WalkAsk;
   onAsk: (ask: WalkAsk) => void;
-  /** Picks themes and years. */
+  /** Customizes the walk; a free walker is offered Plus instead. */
   subscribed: boolean;
   /** The shortest walk that reaches the pin and the end; over WALK_KM.max, none does. */
   floorKm: number;
@@ -316,19 +316,38 @@ export function Preview({
       </GlassCard>
     );
   }
+  const era = ERAS.find((e) => e.from === ask.from && e.until === ask.until) ?? ERAS[0];
+  const customized = ask.themes.length > 0 || era !== ERAS[0];
   if (step === 'choices') {
-    const until = UNTIL_YEARS.filter((year) => year == null || ask.from == null || year > ask.from);
     return (
       <GlassCard style={styles.card} onLayout={measure} testID="walk-choices">
         {back}
-        <Text style={styles.cardBody}>Lean the walk towards</Text>
+        <View style={styles.from}>
+          <Text style={[styles.cardTitle, styles.grow]} accessibilityRole="header">
+            Customize
+          </Text>
+          {customized && (
+            <Pressable
+              style={dim([styles.secondary, button.small])}
+              onPress={() => onAsk({ ...ask, themes: [], from: null, until: null })}
+              accessibilityRole="button"
+              accessibilityHint="Clears the themes and the era"
+            >
+              <Text style={styles.secondaryText}>Clear</Text>
+            </Pressable>
+          )}
+        </View>
+        <Text style={styles.cardBody}>
+          The walk leans towards these, and still fills up with the best nearby.
+        </Text>
+        <Text style={styles.section}>Themes</Text>
         <View style={styles.chips}>
           {THEMES.map((theme) => {
             const on = ask.themes.includes(theme);
             return (
               <Chip
                 key={theme}
-                label={`#${theme}`}
+                label={themeName(theme)}
                 on={on}
                 onPress={() =>
                   onAsk({
@@ -340,44 +359,31 @@ export function Preview({
             );
           })}
         </View>
-        <Text style={styles.cardBody}>Memories from</Text>
+        <Text style={styles.section}>Era</Text>
         <View style={styles.chips}>
-          {FROM_YEARS.map((year) => (
+          {ERAS.map((e) => (
             <Chip
-              key={`from-${year}`}
-              label={year == null ? 'Any year' : String(year)}
-              on={ask.from === year}
-              onPress={() =>
-                onAsk({
-                  ...ask,
-                  from: year,
-                  until: year != null && ask.until != null && ask.until <= year ? null : ask.until,
-                })
-              }
+              key={e.label}
+              label={e.label}
+              on={e === era}
+              onPress={() => onAsk({ ...ask, from: e.from, until: e.until })}
             />
           ))}
         </View>
-        <Text style={styles.cardBody}>Until</Text>
-        <View style={styles.chips}>
-          {until.map((year) => (
-            <Chip
-              key={`until-${year}`}
-              label={year == null ? 'Now' : String(year)}
-              on={ask.until === year}
-              onPress={() => onAsk({ ...ask, until: year })}
-            />
-          ))}
-        </View>
+        <Button
+          kind="go"
+          label={found ? `Done · ${count} ${count === 1 ? 'stop' : 'stops'}` : 'Done'}
+          onPress={() => setStep(null)}
+          busy={busy}
+          place={styles.primary}
+        />
         {close}
       </GlassCard>
     );
   }
-  const chosen = [
-    ...ask.themes.map((t) => `#${t}`),
-    ask.from != null || ask.until != null ? `${ask.from ?? '…'}–${ask.until ?? 'now'}` : '',
-  ]
+  const chosen = [ask.themes.map(themeName).join(', '), era === ERAS[0] ? '' : era.label]
     .filter(Boolean)
-    .join(' ');
+    .join(' · ');
   return (
     <GlassCard style={styles.card} onLayout={measure}>
       {/* The arrows page through walks. A missing one keeps its space, so
@@ -461,7 +467,7 @@ export function Preview({
       >
         <Glyph name="slider.horizontal.3" size={18} weight="semibold" color={color.gold} />
         <Text style={styles.themesText} numberOfLines={1}>
-          {(subscribed && chosen) || 'Themes and years'}
+          {(subscribed && chosen) || 'Customize'}
         </Text>
         {!subscribed && (
           <View style={styles.badge}>
@@ -821,6 +827,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   themesText: { ...font.uiMedium, flex: 1, fontSize: 17, color: color.ink },
+  section: { ...font.uiBold, fontSize: 13, color: color.inkSoft, marginTop: 6 },
   slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },

@@ -391,7 +391,7 @@ def _route_response(
 
 
 def _shaped(session, device: str, tags, years):
-    """A subscriber's themes and years, or none for anyone else: shaping the
+    """A subscriber's Customize, themes and an era, or none for anyone else: shaping the
     walk is what a subscription buys (docs/10, "Subscribers shape the walk")."""
     if DEV_SUBSCRIBED or session.execute(text(SUBSCRIBED_QUERY), {"device_id": device}).scalar():
         return {"tags": tags, "years": years}

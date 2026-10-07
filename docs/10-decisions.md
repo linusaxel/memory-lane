@@ -327,7 +327,7 @@ whole app; without one there is nothing to do.
 - **One walk a day free; a subscription buys more walks** and nothing else
   (`_refuse_second_walk`). Walked out, the planner offers it. (Amended
   2026-10-03 by *Subscribers shape the walk*: it also buys seeing the stops
-  before you go, and themes and years.)
+  before you go, and Customize: themes and an era.)
 - **Keys are earned, never sold** (**Superseded 2026-10-04** by *No keys;
   your memories are your lockets*; amended 2026-10-03 by *Walks earn XP;
   rare memories wait for a level*: keys are gone): one per finished walk, once a day
@@ -412,7 +412,8 @@ things, all of them on the planner card:
   every walker, and Start walk lives on step two. A free walk was about 50
   minutes committed blind, and what the list shows is safe by *A locked
   memory says what it is*. Themes and years stay a subscriber's, offered to
-  a free walker as a gold tile with a lock and a **PLUS** badge.
+  a free walker as a gold tile with a lock and a **PLUS** badge. (Renamed
+  **Customize** 2026-10-07, a row with a Plus badge.)
 - **Themes lean the walk.** Picked from the extractor's closed vocabulary
   (`pipeline/tags.py` `TAGS`, mirrored as `THEMES` in `mobile/src/Plan.tsx`),
   sent as `tags` on preview and accept. A memory carrying one is
@@ -420,10 +421,16 @@ things, all of them on the planner card:
   the solver. Lean, not filter, so a rare theme still gives a full walk.
   A submission's open hashtags never match, which is fine: it leans, and they
   are still on the walk.
-- **Years filter the walk.** `year_from`/`year_to` (inclusive) leave out every
+- ~~**Years filter the walk.** `year_from`/`year_to` (inclusive) leave out every
   memory outside the range, and every memory with no `happened_at`. On
   2026-10-03 33 of 162 memories had a year, so a range often gives a short walk
-  or the nearest length that has one.
+  or the nearest length that has one.~~ **Superseded 2026-10-07** (the
+  founder): **an era leans the walk, as a theme does.** 288 of 498 memories had
+  no year, so a range threw out 58% of the map. `preferred` now counts the
+  choices a memory meets (theme, era; an undated one meets no era), each worth
+  `PREFERRED_PRIZE`. The app offers four eras, not free years: Any time,
+  Before 1800, 1800–1945, Since 1945 (`ERAS`, `mobile/src/route.ts`), split
+  where the dated memories fall about evenly.
 
 The server heeds `tags` and the years only when `SUBSCRIBED_QUERY` is true
 (`api/read.py` `_shaped`), and drops them silently otherwise. The app keeps the

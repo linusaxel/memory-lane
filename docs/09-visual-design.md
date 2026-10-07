@@ -869,9 +869,9 @@ on a card" and the 4pt ledge under every button (part 8 and UI.md).
   two circles (the pager step, the play disc) lost their lips too. A press
   is `sunk`: a little smaller and fainter. `goldSoft`, `goldDeep` and
   `goldSoftDeep` are gone.
-- **A subscriber's thing reads as one.** A free walker's Themes and years is
-  a `goldTint` capsule with a lock glyph and a gold **PLUS** badge, so the
-  paywall is visible before the tap, not a 13pt locket.
+- **A subscriber's thing reads as one.** A free walker's Customize row
+  carries a `metal.light` **Plus** badge, so the paywall is visible before
+  the tap, not a 13pt locket.
 
 ---
 

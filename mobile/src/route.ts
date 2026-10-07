@@ -81,14 +81,28 @@ export async function saveWalked(walks: WalkedRoute[]): Promise<void> {
 
 const CHOICES_KEY = 'memorylane.walk-choices.v1';
 
-/** A subscriber's themes and years: kept on this phone, and sent with every
- *  plan. Not the loop or the end, which are asked for per walk. */
+/** A subscriber's Customize, themes and an era: kept on this phone, and sent
+ *  with every plan. Not the loop or the end, which are asked for per walk. */
 export type WalkChoices = Pick<WalkAsk, 'themes' | 'from' | 'until'>;
+
+/** The eras a walk can lean towards, split where the dated memories fall
+ *  about evenly; `until` is exclusive. */
+export const ERAS: { label: string; from: number | null; until: number | null }[] = [
+  { label: 'Any time', from: null, until: null },
+  { label: 'Before 1800', from: null, until: 1800 },
+  { label: '1800–1945', from: 1800, until: 1945 },
+  { label: 'Since 1945', from: 1945, until: null },
+];
 
 export async function loadChoices(): Promise<WalkChoices | null> {
   try {
     const raw = await AsyncStorage.getItem(CHOICES_KEY);
-    return raw ? (JSON.parse(raw) as WalkChoices) : null;
+    if (!raw) return null;
+    const kept = JSON.parse(raw) as WalkChoices;
+    // A range kept from before the eras, which no chip shows, is let go.
+    return ERAS.some((e) => e.from === kept.from && e.until === kept.until)
+      ? kept
+      : { ...kept, from: null, until: null };
   } catch {
     return null;
   }

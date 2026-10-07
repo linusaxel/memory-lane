@@ -805,19 +805,31 @@ def _themed_pair(session):
     return south, north
 
 
-def test_a_subscribers_theme_and_years_shape_the_walk(client, db_session):
+def test_a_subscribers_theme_and_era_lean_the_walk(client, db_session):
     south, north = _themed_pair(db_session)
     _subscribe(db_session)
     assert _shaped_ids(client, "&tags=history", tags=["history"]) == [north]
     _end(client)
     assert _shaped_ids(client, "&tags=music", tags=["music"]) == [south]
     _end(client)
+    assert _shaped_ids(client, "&year_from=1920&year_to=1940", year_from=1920, year_to=1940) == [
+        south
+    ]
+    _end(client)
+    era = "&year_from=1980&year_to=1999"
+    assert _shaped_ids(client, era, year_from=1980, year_to=1999) == [north]
+    _end(client)
+    # Both stops carry a theme; only south also meets the era.
+    both = "&tags=music&tags=history&year_from=1920&year_to=1940"
+    assert _shaped_ids(client, both, tags=["music", "history"], year_from=1920, year_to=1940) == [
+        south
+    ], "a theme and an era outweigh a theme alone"
+    _end(client)
 
     undated = _offset(db_session, 2)
     db_session.commit()
-    walk = _shaped_ids(client, "&year_from=1980&year_to=1999", year_from=1980, year_to=1999)
-    assert walk == [north], "out of range and undated are left out"
-    assert undated not in walk
+    walk = _shaped_ids(client, era, year_from=1980, year_to=1999)
+    assert undated in walk, "an era leans, it never leaves the undated out"
 
 
 def test_a_non_subscribers_theme_and_years_change_nothing(client, db_session):

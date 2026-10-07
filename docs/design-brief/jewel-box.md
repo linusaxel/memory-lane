@@ -89,7 +89,7 @@ Every map state uses one skeleton at the bottom:
 | 07 | **New** location primer before the OS prompt | new, inside onboarding |
 | 08 | Home map | map stage in `App.tsx` |
 | 09–10 | Planner steps 1 and 2 | `Plan.tsx` |
-| 11 | Themes and years | `Plan.tsx` (subscriber sheet) |
+| 11 | Customize | `Plan.tsx` (subscriber step) |
 | 12 | Pick where it ends | `Plan.tsx` |
 | 13 | Walked out | planner |
 | 14 | Walking | walk stage |

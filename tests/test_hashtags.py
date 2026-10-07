@@ -22,4 +22,4 @@ def test_the_planners_themes_are_the_extractors_tags():
     API refuses anything outside pipeline/tags.py TAGS."""
     plan = (pathlib.Path(__file__).parents[1] / "mobile/src/Plan.tsx").read_text()
     block = plan.split("export const THEMES = [", 1)[1].split("];", 1)[0]
-    assert tuple(re.findall(r"'(\w+)'", block)) == TAGS
+    assert sorted(re.findall(r"'(\w+)'", block)) == sorted(TAGS), "in any order"

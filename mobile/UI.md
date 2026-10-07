@@ -34,6 +34,11 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
    ├─ "Planning from central Copenhagen." + Use my location   with no position; the location ask
    ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
    ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
+   ├─ Customize ›               a ruled row; what is chosen once set ("History · 1800–1945"); Plus badge free
+   │  ├─ ‹ Back, "Customize" + Clear   Clear only once something is chosen
+   │  ├─ Themes                 18 Chips, richest first, many at once; they lean, never filter
+   │  ├─ Era                    Any time · Before 1800 · 1800–1945 · Since 1945, one at a time
+   │  └─ Done · N stops         primary, back to step one
    ├─ Next                      primary, every walker; step two, the map refits above the taller card
    │  ├─ ‹ Back                 to step one ("Back to the length")
    │  ├─ ‹ "4 memories · 3.8 km loop" ›   pages, 44pt each: no ‹ on the first, no › once none is left

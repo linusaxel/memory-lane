@@ -134,7 +134,7 @@ The endpoint list is [06-api.md](06-api.md).
 | File | Purpose |
 |------|---------|
 | `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, the pill recentres |
-| `mobile/src/Plan.tsx` | **The planner, home.** The walk card: length, shape and Start walk; for a subscriber, its list of memories and themes and years |
+| `mobile/src/Plan.tsx` | **The planner, home.** The walk card: length, shape and Start walk; its list of memories; for a subscriber, Customize (themes and an era) |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
 | `mobile/src/LocketUnlock.tsx` | The unlock as the memory's locket: the key, the lid, the dive, the haptics; held, or driven by SlideToUnlock; or run backwards to seal |
 | `mobile/src/LocketSeal.tsx` | A memory just filed: its locket shuts over the map and drops onto the pin |
@@ -180,7 +180,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/DiamondRule.tsx` | The one ornament: gold hairline, emerald diamond, gold hairline |
 | `mobile/src/PullQuote.tsx` | A quote set apart: a gold Gloock mark over Newsreader italic |
 | `mobile/src/Notes.tsx` | The notes under an open memory (F33) |
-| `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative. Also a subscriber's themes and years, kept on the phone |
+| `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative. Also a subscriber's Customize (themes, era, `ERAS`), kept on the phone |
 | `mobile/src/reach.ts` | Which locked pins can be opened from where you stand (unit tested) |
 | `mobile/src/cluster.ts` | Group memories that share a map point (unit tested) |
 | `mobile/src/region.ts` | Metres, paths and framing a walk (unit tested) |

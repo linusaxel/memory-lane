@@ -118,7 +118,7 @@ export default function Paywall({ visible, onClose, device, profile, onProfile }
         )}
         <View style={styles.perks}>
           <Perk glyph="infinity" text="As many walks a day as you like" />
-          <Perk glyph="number" text="Walks that lean towards your themes and years" />
+          <Perk glyph="number" text="Customize your walk: themes and eras it leans towards" />
           <Perk glyph="gift" text="Your first walk each day stays free" />
         </View>
 

@@ -37,7 +37,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "Stop 4 of 4\\. .*"
     timeout: 5000
-# Themes and years are a subscriber's: for a free walker the PLUS tile is
+# Customize is a subscriber's: for a free walker the Plus row is
 # the paywall.
 - tapOn:
     id: "themes-plus"

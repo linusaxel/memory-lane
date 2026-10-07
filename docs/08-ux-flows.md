@@ -197,13 +197,15 @@ the planner*).
    then **the list**: each stop numbered in walk order, its place, and year · source ·
    two #tags, with a padlock; four rows in view, the rest a scroll away. All
    of it is what a locked memory already says (docs/10, *A locked memory says
-   what it is*). Beside it, **Themes and years** (or what is chosen, "#history
-   1900–now") opens a third step: chips for the 18 themes, which lean the walk,
-   and a From and an Until for its years, kept on the phone (docs/10,
-   *Subscribers shape the walk*). A free walker's step one has **Start walk**
-   instead, and both of those padlocked: either opens the paywall (F35).
+   what it is*). On step one, under Loop · One way, **Customize** (or what is
+   chosen, "History, Music · 1800–1945") opens a third step: a title and
+   Clear, chips for the 18 themes, richest first, one era (Any time, Before
+   1800, 1800–1945, Since 1945), and **Done · N stops**. Themes and the era both
+   lean the walk, never filter it, and are kept on the phone (docs/10,
+   *Subscribers shape the walk*). A free walker's Customize carries a Plus
+   badge and opens the paywall (F35).
 3. **Start walk**, on step two (step one, free), is `POST /v1/routes/today` with the same
-   position, length, loop, themes and years, and lands on the walk (F25).
+   position, length, loop, themes and era, and lands on the walk (F25).
 
 **Accepting starts the walk.** It stands until it is ended (F34). One a day:
 another the same day needs a subscription, unless the first opened nothing.
@@ -1123,13 +1125,13 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 ## F35 · Subscribe for more walks — **Implemented** (no store yet: TODO.md, *Set up the stores and RevenueCat*)
 
 **Who:** a free account. **Trigger:** **More walks** on the
-planner once today's walk is walked (F1), the PLUS-badged
-**Themes and years** on the planner (F1), **Another walk today ›** under
+planner once today's walk is walked (F1), the Plus-badged
+**Customize** on the planner (F1), **Another walk today ›** under
 **Done** on the finish card (signed in, not subscribed; never a pop-up), or
 **Subscribe** in Settings.
 
 1. The paywall (`src/Paywall.tsx`): "More than one walk a day" and what it
-   buys (more walks, the stops before you go, themes and years), yearly first (solid, with the store's price a month) then monthly,
+   buys (more walks, Customize), yearly first (solid, with the store's price a month) then monthly,
    "No commitment … cancel anytime", **Restore purchases**, Terms and
    Privacy, and **Not now**. No trial, no exit-intent offer, no countdown:
    the free walk each day is the trial.
