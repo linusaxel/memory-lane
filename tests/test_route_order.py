@@ -264,3 +264,11 @@ def test_a_walk_to_an_end_spreads_its_stops_along_the_way():
         for walk in _choose_walks(picks, 4, d, seed, 4000, True, ANCHOR, end):
             legs = [d[a][b] for a, b in itertools.pairwise([0, *walk, 0])]
             assert max(legs) < 2 * sum(legs) / len(legs), (seed, walk)
+
+
+def test_standing_on_the_only_stop_plans_rather_than_crashing():
+    """A paid second walk planned from the last stop of the first: the only
+    candidate is where the walker stands, every distance 0 (a ZeroDivisionError
+    once, found by e2e walk-and-unlock)."""
+    picks = [stop("here", 0)]
+    assert _choose_walks(picks, 1, crow(picks), "a", 4000, True, ANCHOR)

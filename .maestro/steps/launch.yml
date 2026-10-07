@@ -1,5 +1,5 @@
 # Stand at LAT,LNG, open a cleared install with LOCATION permission, sign in,
-# and open the planner. notify-nearby.yml launches by hand: it needs notifications.
+# and open the planner. Notifications are allowed for walk-and-unlock's F28.
 appId: ${APP_ID}
 ---
 - setLocation:
@@ -9,6 +9,7 @@ appId: ${APP_ID}
     clearState: true
     permissions:
       location: ${LOCATION}
+      notifications: allow
 - runFlow: sign-in.yml
 # The map is home; Plan a walk opens the planner, walked out or not.
 - extendedWaitUntil:

@@ -549,7 +549,7 @@ Each of these exists because something broke or would have been rejected.
    CoreLocation, but expo-location's `startGeofencingAsync` refuses to start
    without the mode (`LocationModule.swift`, `hasBackgroundModeEnabled`), and
    App.tsx swallowed the error, so for three days the toggle showed on and
-   nothing was watched. `.maestro/notify-nearby.yml` is what caught it. The
+   nothing was watched. The F28 step of `.maestro/walk-and-unlock.yml` is what caught it. The
    mode is declared for the geofence only; nothing calls
    `startLocationUpdatesAsync`.
 3. **Nothing fetches by viewport.** The map before a walk fetches by position

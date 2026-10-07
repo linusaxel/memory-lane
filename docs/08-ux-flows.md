@@ -1152,7 +1152,7 @@ out of the store's sheet: nothing is said. Anything else: "That didn't go
 through. Try again." A purchase the server cannot find: "Nothing bought on
 this account yet."
 
-**Done when:** `.maestro/subscribe-when-walked-out.yml` and the finish-card check in `.maestro/walk-and-unlock.yml` pass, and
+**Done when:** the finish-card and paywall checks in `.maestro/walk-and-unlock.yml` pass, and
 `tests/test_api_billing.py` and `tests/test_api_routes.py`.
 
 ## F36 · Choose your first memory — **Removed from the app**

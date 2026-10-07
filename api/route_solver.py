@@ -294,7 +294,8 @@ def _choose_walks(
     # How much longer a walk is than the straight line, from this very matrix:
     # 1.3 without streets, whatever the streets say with them.
     crow = [meters_between(at, Coordinates(lat=c.lat, lng=c.lng)) for c in candidates]
-    d_per_crow = sum(d[0][i] for i in nodes) / max(sum(crow), 1) if size else 1
+    # Never under 1: standing on the only candidate, both sums are 0.
+    d_per_crow = max(1, sum(d[0][i] for i in nodes) / max(sum(crow), 1)) if size else 1
     offset = rng.uniform(0, 2 * math.pi)
     # Nearest-neighbour as a start too: prize per metre can spend the budget on
     # a few far stops where the plain nearest ones would have fit more.

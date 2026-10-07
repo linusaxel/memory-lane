@@ -1,6 +1,7 @@
 # F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
 # loop 1 -> 4 -> F30 finish it (F27 streak) -> F15/F31 reread it in the
-# journal (F26 heart it, F33 leave a note).
+# journal (F26 heart it, F33 leave a note), with F28 the nearby notification on
+# leg 1 and F35 the paywall once walked out.
 # docs/08-ux-flows.md
 #
 # This is the product. Everything else exists to get somebody here.
@@ -24,15 +25,14 @@
 
 appId: ${APP_ID}
 ---
-# iOS takes always/inuse/never/unset here, not allow. `inuse` because
-# background location is only asked for by the opt-in nearby toggle
-# (mobile/src/geofence.ts), which this flow never turns on.
+# iOS takes always/inuse/never/unset here, not allow. `always` because F28's
+# nearby toggle (mobile/src/geofence.ts) watches the walk in the background.
 - runFlow:
     file: steps/launch.yml
     env:
       LAT: ${START_LAT}
       LNG: ${START_LNG}
-      LOCATION: inuse
+      LOCATION: always
 
 # A name mints the account, so the finish card offers F35's paywall below.
 - runFlow:
@@ -71,6 +71,40 @@ appId: ${APP_ID}
 - assertNotVisible: "Heart"
 - tapOn: "Close"
 
+# F28 Notify me when a memory is nearby: with the app in the background,
+# walking onto a stop of today's walk posts "A memory is nearby". The home
+# screen, not a locked phone: neither Maestro nor simctl can lock the
+# simulator (TODO.md, M3). Only the walk on screen is watched (App.tsx,
+# startWatching(routeShown)). The regions are registered from ~2 km away, so
+# walking leg 1 in crosses one and fires Enter; registered from inside, iOS
+# would never say so.
+- setLocation:
+    latitude: ${Number(START_LAT) + 0.02}
+    longitude: ${START_LNG}
+- tapOn: "You"
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element: "Notify me when a memory is nearby"
+    direction: DOWN
+- tapOn: "Notify me when a memory is nearby"
+# Another app in front, not `pressKey: home`: home left this app on screen,
+# and the toggle's own label then passed for the banner.
+- launchApp: com.apple.Preferences
+# Stand still outside every fence until locationd has checked them. It adds
+# them a second or two after the toggle and first checks on the next fix; if
+# that fix is already on stop 1 the fence starts Inside and never fires Enter.
+# A person walks slower than Maestro. `optional` makes the wait a pause.
+- extendedWaitUntil:
+    visible: "never shown, a pause"
+    timeout: 5000
+    optional: true
+- setLocation:
+    latitude: ${Number(START_LAT) + 0.0201}
+    longitude: ${START_LNG}
+- extendedWaitUntil:
+    visible: "never shown, a pause"
+    timeout: 3000
+    optional: true
 # F25 + F13 + F7, four times: walk today's route in order, 1 -> 4, whichever
 # four of the seed's five stops the route picks (never the stack first).
 # Each leg is two fixes, halfway along its street shape from OSRM and where the
@@ -78,6 +112,26 @@ appId: ${APP_ID}
 # 20m gate. Only the stop being stood on is ever in reach. Nothing is tapped
 # while walking - the pin turns and the ring comes up on its own.
 - runFlow: ../e2e/out/legs/1.yml
+# The banner is SpringBoard's, and Maestro reads no text in it. So tap where it
+# sits: with a banner that brings this app back, without one the tap lands on
+# the Settings title and nothing opens.
+- extendedWaitUntil:
+    visible: "never shown, a pause"
+    timeout: 3000
+    optional: true
+- takeScreenshot: notify-nearby-banner
+- tapOn:
+    point: 50%, 10%
+# The tap opens the memory it named (whichever fence leg 1 crossed first,
+# not always stop 1), and closes the settings sheet left open:
+# iOS shows one sheet at a time, and once a sheet it never showed left the
+# map deaf to the hold.
+- extendedWaitUntil:
+    visible: "(You're right here|Get within).*"
+    timeout: 20000
+- assertNotVisible:
+    id: "notify-nearby"
+- tapOn: "Close"
 - extendedWaitUntil:
     visible: "Unlock this memory"
     timeout: 45000
@@ -90,7 +144,7 @@ appId: ${APP_ID}
       N: "1"
       STOP: "${STOP1}"
       WORDS: "${WORDS1}"
-      SLIDE: "0"
+      SLIDE: "1"
 
 - runFlow: ../e2e/out/legs/2.yml
 - runFlow:
@@ -99,7 +153,7 @@ appId: ${APP_ID}
       N: "2"
       STOP: "${STOP2}"
       WORDS: "${WORDS2}"
-      SLIDE: "1"
+      SLIDE: "0"
 
 - runFlow: ../e2e/out/legs/3.yml
 - runFlow:
@@ -273,5 +327,26 @@ appId: ${APP_ID}
 - assertVisible:
     id: "past-walk"
 - tapOn: "Done"
-- assertVisible:
+
+# F35: the paywall has nothing to sell on a simulator (no RevenueCat key) and
+# says so, with a way out. Renamed Paid, e2e/sql's `subscriber` pays, and the
+# planner plans again.
+- tapOn:
     id: "more-walks"
+- extendedWaitUntil:
+    visible: "More than one walk a day"
+    timeout: 20000
+- assertVisible:
+    id: "subscriptions-unavailable"
+- tapOn: "Not now"
+- runFlow:
+    file: steps/rename.yml
+    env:
+      NAME: "Paid"
+- extendedWaitUntil:
+    visible: "[0-9]+ memor(y|ies) · .*"
+    timeout: 40000
+- assertNotVisible: "Today's walk is done"
+- tapOn: "Next"
+- assertVisible:
+    id: "walk-stops"

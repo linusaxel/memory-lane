@@ -1076,8 +1076,15 @@ export default function App() {
     if (typeof id !== 'number' || handledNotification.current === request!.identifier) return;
     if (!openMemory(id)) return;
     handledNotification.current = request!.identifier;
+    // Every other sheet: iOS will not present one over another, and a sheet
+    // React thinks is up but iOS never showed leaves the map deaf to touch.
     setJournalOpen(false);
     setSubmitOpen(false);
+    setSettingsOpen(false);
+    setBoardOpen(false);
+    setProfileOpen(false);
+    setPaywallOpen(false);
+    setHowOpen(false);
   }, [notification, openMemory]);
 
   // Only on a walk, and only its stops are drawn, so only they are in reach.

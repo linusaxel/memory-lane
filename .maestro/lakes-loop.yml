@@ -1,5 +1,10 @@
-# F1 plan a walk -> F32 Next walk, round the Copenhagen lakes -> F31
-# look back at the walks already walked there. docs/08-ux-flows.md
+# The planner, round the Copenhagen lakes: F8 be asked for location (and
+# refused), F1 the planner and its list (loop, one way, nothing walkable),
+# F32 another walk, then the whole slider and F31 past walks.
+# docs/08-ux-flows.md
+#
+# No walk is accepted until the end, so the first launches share one database
+# and the past walks (e2e/sql/lakes-loop.sql) land only on Accept.
 #
 # e2e/run.sh plants `seed_dev --routes lakes` for this flow instead of the
 # random-start cluster: stops every ~400 m round the three lakes, each named
@@ -15,6 +20,109 @@
 
 appId: ${APP_ID}
 ---
+# ---- F8 + F1
+#
+# The first screen is ours, not a system dialog: the map, and from its Plan a
+# walk the planner, drawing a walk from central Copenhagen, and its Use my location is the ask, a press with a
+# reason (F8).
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: 55.7007
+      LNG: 12.5759
+      LOCATION: unset
+- extendedWaitUntil:
+    visible:
+      id: "planning-from-centre"
+    timeout: 40000
+- tapOn: "Use my location"
+- tapOn:
+    text: "Allow While Using App"
+    optional: true
+
+# F1: drawn again from here. The whole loop on the map, then its list, and a decision.
+- extendedWaitUntil:
+    visible: "[0-9]+ memor(y|ies) · .* loop"
+    timeout: 40000
+- assertNotVisible:
+    id: "planning-from-centre"
+# The stops land as the line draws through them.
+- extendedWaitUntil:
+    visible: "Stop [0-9]+ of [0-9]+\\. .*"
+    timeout: 5000
+# Customize is a subscriber's: for a free walker the Plus row is
+# the paywall.
+- tapOn:
+    id: "themes-plus"
+- extendedWaitUntil:
+    visible: "More than one walk a day"
+    timeout: 20000
+- tapOn: "Not now"
+- assertNotVisible:
+    id: "walk-choices"
+
+# F32: › is another walk as good, or one of a similar length, still a preview.
+- assertNotVisible: "Previous walk"
+- tapOn: "Next walk"
+- extendedWaitUntil:
+    visible: "Previous walk"
+    timeout: 40000
+- assertVisible: "[0-9]+ memories · .* loop"
+- assertVisible: "Next"
+# Pages: back to the first, which has no ‹.
+- tapOn: "Previous walk"
+- extendedWaitUntil:
+    notVisible: "Previous walk"
+    timeout: 5000
+- assertVisible: "[0-9]+ memor(y|ies) · .* loop"
+
+# One way redraws in place: the same stops' worth, ending somewhere new.
+- tapOn: "One way"
+- extendedWaitUntil:
+    visible: "[0-9]+ memories · [0-9.]+ k?m"
+    timeout: 40000
+- assertNotVisible: "[0-9]+ memories · .* loop"
+- tapOn: "Loop"
+# × goes back to the map from any step, and Plan a walk plans again.
+- tapOn: "Close the planner"
+- assertNotVisible: "A walk from here"
+- tapOn: "Plan a walk"
+- extendedWaitUntil:
+    visible: "[0-9]+ memor(y|ies) · .* loop"
+    timeout: 40000
+
+# ---- F8, refused
+#
+# A reviewer who taps Deny still gets a walk, planned from central Copenhagen and saying so.
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: 55.7007
+      LNG: 12.5759
+      LOCATION: never
+- extendedWaitUntil:
+    visible:
+      id: "planning-from-centre"
+    timeout: 40000
+
+# ---- F1, nothing walkable
+#
+# From Malmö there is nothing within any length of walk. The planner says so
+# and offers the slider back, rather than accepting an empty day. Not
+# Copenhagen: `seed_dev --routes lakes` plants the lakes there.
+- runFlow:
+    file: steps/launch.yml
+    env:
+      LAT: 55.605
+      LNG: 13.0038
+      LOCATION: inuse
+- extendedWaitUntil:
+    visible:
+      id: "no-walk"
+    timeout: 40000
+- assertVisible: "Walk length"
+
+# ---- F1 the whole slider, F32 until the far lake, F31 past walks
 - runFlow:
     file: steps/launch.yml
     env:

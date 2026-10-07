@@ -28,7 +28,7 @@ The database is rebuilt **before every flow**. `clearState: true` keeps the
 keychain, so the device id survives (correctly, see `docs/architecture.md`), and
 only a fresh database makes each flow a stranger. A flow needing more than the
 seed has `e2e/sql/<flow>.sql`, applied after the reset: six days of walks for
-the streak, past walks for the lakes, a walked-out-then-paid account. Each is a
+the streak, past walks for the lakes, a paid account once renamed Paid. Each is a
 trigger on the device or user the app has not minted yet. Signing in and
 planning mint neither (reads create nothing), so a flow whose trigger must fire
 before the first walk mints one with `steps/rename.yml` first. A flow named
@@ -48,19 +48,16 @@ id joins the journey it belongs to; a step two flows share goes in
 
 | File | Flow |
 |---|---|
-| `first-run.yml` | F1 the planner is home and its list (and nothing walkable, and refused location), F8 be asked for location, F32 show me another |
-| `walk-and-unlock.yml` | F13 walk into range, F7 unlock, F25 today's route, F30 finish, F27 the streak, F15 reread (a linked name previews from Wikipedia), F26 heart, F33 a note rewritten, F31 the walk in the journal |
-| `lakes-loop.yml` | F1 the whole slider round the lakes, the longest walk, F32 until the far lake, F31 past walks |
+| `walk-and-unlock.yml` | F13 walk into range, F28 the nearby notification with the app in the background, F7 unlock, F25 today's route, F30 finish, F27 the streak, F15 reread (a linked name previews from Wikipedia), F26 heart, F33 a note rewritten, F31 the walk in the journal, F35 the paywall once walked out, then a walk once paid |
+| `lakes-loop.yml` | F8 be asked for location (and refused), F1 the planner and its list (one way, nothing walkable, the whole slider, the longest walk), F32 another walk until the far lake, F31 past walks |
 | `file-and-edit.yml` | F5 file your own: the story's markdown, every toolbar block, a placed and wrapped photo, the in-story camera, ↑ reorder, Preview; F21 be somebody, F24 manage what you filed, the author hearing back |
-| `notify-nearby.yml` | F28 the nearby notification with the app in the background |
-| `subscribe-when-walked-out.yml` | F35 the paywall once today's walk is walked, then a walk once paid |
 
 | Step | Used by |
 |---|---|
-| `launch.yml` | every flow but notify-nearby: stand at LAT,LNG, cold start, sign in |
-| `start-walk.yml` | walk-and-unlock, notify-nearby: plan and accept the 4-stop loop |
+| `launch.yml` | every flow: stand at LAT,LNG, cold start, sign in |
+| `start-walk.yml` | walk-and-unlock: plan and accept the 4-stop loop |
 | `unlock-stop.yml` | walk-and-unlock, once per stop |
-| `rename.yml` | subscribe-when-walked-out, to pay |
+| `rename.yml` | walk-and-unlock, to mint the account and to pay |
 
 ## Writing a flow
 

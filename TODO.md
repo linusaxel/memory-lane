@@ -24,6 +24,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **An e2e run swallows the app's `console.log`.** 2026-10-07: chasing a
+  dead unlock, logs reached neither `e2e/out/logs/metro.log` nor `simctl
+  spawn booted log stream`; three runs went by before pinging the API
+  (`fetch('http://localhost:8090/?dbg=...')`, read in `api.log`) showed no
+  handler ran. Fix: have run.sh capture JS logs (Metro's `--dev-client`
+  output, or the device log's ReactNativeJS lines) into `e2e/out/logs/`.
 - **A reply cut at `max_tokens=2000` is paid for and thrown away.**
   2026-10-07: the Københavnerglimt batch logged it on several calls, then a
   last pass of three cut calls stored nothing and stopped the run, leaving
@@ -132,7 +138,7 @@ Retention is measured already: `python -m api.metrics`.
 - [ ] **Set up the stores and RevenueCat.** (checked 2026-10-04) Waits on
       `STORE_ACCOUNT` and `DEPLOY` (the webhook needs a public URL). Built
       2026-09-27: the gate, the webhook and read-back (`api/billing.py`), the
-      paywall and `subscribe-when-walked-out.yml`. No code left:
+      paywall and its F35 check in `walk-and-unlock.yml`. No code left:
       - App Store Connect: the Paid Apps agreement, banking and tax (without
         them no product loads); one subscription group, monthly and yearly,
         auto-renewing, no introductory offer; an In-App Purchase key for
@@ -542,7 +548,7 @@ progress; refine what exists rather than add.
 - [ ] **Things only a device can check.** (checked 2026-10-04) The simulator
       has no compass, pedometer or real GPS:
       - The direction arrow: does MapKit's dot draw the heading beam?
-      - The nearby-memory notification with the phone locked and the app killed (`notify-nearby.yml`
+      - The nearby-memory notification with the phone locked and the app killed (`walk-and-unlock.yml`'s F28
         covers only the background).
       - Steps: grant Motion & Fitness, walk, reopen, see the journal's count
         rise once; deny it and walks still plan and open. Nothing has ever

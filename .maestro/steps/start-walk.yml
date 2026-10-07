@@ -1,14 +1,7 @@
 # F25: the planner draws today's walk from where you stand; accept it. The
-# default length is a 4-stop loop; walk-and-unlock.yml and notify-nearby.yml
-# both start here.
+# default length is a 4-stop loop; walk-and-unlock.yml starts here.
 appId: ${APP_ID}
 ---
-# notify-nearby.yml launches by hand, so it arrives on the map.
-- runFlow:
-    when:
-      visible: "Plan a walk"
-    commands:
-      - tapOn: "Plan a walk"
 - extendedWaitUntil:
     visible: "4 memories · .* loop"
     timeout: 40000
