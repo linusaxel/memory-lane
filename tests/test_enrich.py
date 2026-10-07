@@ -1,6 +1,6 @@
 """Enrichment keeps only what a page we fetched says (pipeline/enrich.py)."""
 
-from pipeline.enrich import verified
+from pipeline.enrich import source_pictures, verified
 
 PAGE = "Olaf Sæther-Nielsen (1891-1967) decorated the Alexandra cinema in 1942."
 URL = "https://example.org/alexandra"
@@ -73,3 +73,18 @@ def test_a_seed_is_the_passages_on_their_pages(monkeypatch):
     monkeypatch.setattr(enrich, "_request", lambda *a, **k: json.dumps(_found(asides=asides)))
     monkeypatch.setattr(enrich, "verified", lambda found: verified(found, fetch=_fetch))
     assert enrich.seed(None, "Alexandra", "a cinema") == f'From {URL}: "decorated the Alexandra"'
+
+
+def test_a_source_page_gives_its_photos_not_its_logos():
+    page = """<img src="/img/logo.svg" alt="Logo"><img src="/flags/da.png">
+    <img src="data:image/gif;base64,R0l"><img src="/tiny.jpg" width="40">
+    <figure><img src="/ph.gif" data-flickity-lazyload="/files/beatles.jpg" alt="">
+    <figcaption>The Beatles, 4 June 1964</figcaption></figure>
+    <img src="/files/08briannielsen.jpg">"""
+    found = source_pictures("https://kbhallen.dk/history/#0", "K.B. Hallen", fetch=lambda u: page)
+    assert [(p["url"], p["caption"]) for p in found] == [
+        ("https://kbhallen.dk/files/beatles.jpg", "The Beatles, 4 June 1964"),
+        ("https://kbhallen.dk/files/08briannielsen.jpg", "08briannielsen"),
+    ]
+    assert found[0]["license"] == "© K.B. Hallen" and found[0]["source"]
+    assert source_pictures("https://youtube.com/watch?v=x", "Y", fetch=lambda u: page) == []

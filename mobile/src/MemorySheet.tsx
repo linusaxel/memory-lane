@@ -18,7 +18,7 @@ import {
 
 import CloseButton from './CloseButton.tsx';
 import type { Coordinates, LocatedMemory, ReportReason } from './api.ts';
-import MemoryMedia from './MemoryMedia.tsx';
+import MemoryMedia, { Pictures } from './MemoryMedia.tsx';
 import Approach from './Approach.tsx';
 import Notes from './Notes.tsx';
 import SourceLine from './SourceLine.tsx';
@@ -651,6 +651,7 @@ export default function MemorySheet({
                       </View>
                     )}
 
+                    <Pictures pictures={memory.pictures ?? []} />
                     <MemoryMedia media={memory.media.filter((m) => !placed.includes(m.id))} />
 
                     <DiamondRule />

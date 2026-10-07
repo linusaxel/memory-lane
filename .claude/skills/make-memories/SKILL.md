@@ -6,7 +6,7 @@ description: Resume making Memory Lane memories toward the goal of 1,000 good on
 # Make memories
 
 **Goal: 1,000 good memories in Copenhagen.** Good means visible, not a user's,
-inside the launch bbox, and `walk_score >= 7`. The database is the state: every
+inside the launch bbox, and `walk_score >= 6`. The database is the state: every
 pass starts by counting, so there is nothing to resume by hand.
 Scores from 2026-10-05 on are stricter (docs/10, *The walk score asks one
 question*), so a source's old good-per-item overstates its yield now.
@@ -20,9 +20,9 @@ All SQL runs as `docker exec memory-lane-db-1 psql -U memorylane -d memorylane -
 
 ```sql
 SELECT count(*) FILTER (WHERE NOT m.hidden) visible,
-       count(*) FILTER (WHERE NOT m.hidden AND m.walk_score >= 7) good,
+       count(*) FILTER (WHERE NOT m.hidden AND m.walk_score >= 6) good,
        count(*) FILTER (WHERE NOT m.hidden AND m.walk_score IS NULL) unscored,
-       1000 - count(*) FILTER (WHERE NOT m.hidden AND m.walk_score >= 7) to_go
+       1000 - count(*) FILTER (WHERE NOT m.hidden AND m.walk_score >= 6) to_go
 FROM memories m JOIN places p ON p.id = m.place_id
 WHERE m.user_id IS NULL
   AND ST_Y(p.coordinates::geometry) BETWEEN 55.60 AND 55.74
@@ -49,7 +49,7 @@ Expected haul is good memories per extracted item × items pending:
 ```sql
 WITH done AS (
   SELECT c.source_id, count(DISTINCT c.id) items,
-         count(m.id) FILTER (WHERE NOT m.hidden AND m.walk_score >= 7) good
+         count(m.id) FILTER (WHERE NOT m.hidden AND m.walk_score >= 6) good
   FROM content c LEFT JOIN memories m ON m.content_id = c.id AND m.user_id IS NULL
   WHERE c.memories_extracted GROUP BY 1),
 pending AS (

@@ -183,6 +183,10 @@ QUALIFIES:
 - Events: "Bowie played this room in 1978, 400 capacity"
 - Things that stood here: "The bakery was on that corner until '78"
 - Documented incidents: "The tram derailed outside the pharmacy in March 1931"
+- Someone famous at this exact spot: "Michael Jackson drank at this bar after
+  the 1992 Parken show". A public figure a stranger would know, at a spot a
+  walker can stand at (this bar, this hotel, this stage door, this shop), when
+  the text says they were there. The spot is the point: they were HERE.
 - A thing still there with a life of its own: an odd, working or strange
   feature a stranger can look up and see, whose story has dated turns - made,
   stopped, restored, moved. "Gilded figures on this tower have told the weather
@@ -196,8 +200,8 @@ Does NOT qualify - reject these as firmly as you would reject a hypothetical:
   with a life of its own; a build date and a style are not turns in a story.
 - Architectural or stylistic commentary: "a fine example of the national romantic style"
 - Encyclopaedia facts: "Copenhagen is the capital of Denmark"
-- A visit: "X visited the cathedral", "X dined at the palace". Someone famous
-  passing through is not an event at the place unless something happened there.
+- Passing through a town or region: "X travelled through Roskilde". A town is
+  no spot. And a private person's visit is no story.
 - Anything you are inferring rather than reading. If the text does not say it
   happened, it did not happen. Do not fill gaps with plausible history.
 
@@ -212,9 +216,10 @@ memory at all; answer them before you name a venue or write a word of summary.
   old spelling included. Code checks they are in the text; a paraphrase is dropped.
 - happened_there: One line - what happened at that place, and nowhere else.
 - spot_test: "pass" if the place is the point, "fail" if the story would be the
-  same pinned anywhere, the text only mentions the place in passing, or it is a
-  visit. Moved to another place of the same kind, would it tell the same? A
-  story the place only holds - how a prisoner was treated in a cell, a dinner
+  same pinned anywhere, the text only mentions the place in passing, or it is
+  a town passed through. Moved to another place of the same kind, would it
+  tell the same? Someone famous at this exact spot passes: they were here, not
+  at the bar next door. Otherwise a story the place only holds - how a prisoner was treated in a cell, a dinner
   in a hall - fails however true; one this place's own feature, purpose or
   history is part of passes. Only "pass" is kept, so a "fail" costs nothing.
 - venue: The proper name of the specific place - the business, building, park,
@@ -313,15 +318,17 @@ Real cases, shown with the deciding fields and the summary (the rest omitted).
 {"place_words": "In =Halberstadt= sah ich zum ersten Mal in meinem Leben ein katholisches Kloster",
  "happened_there": "Oehlenschläger toured a monastery and nearly missed his coach.",
  "spot_test": "fail", "venue": "Halberstadt", "summary": "..."}
-Fail: a visit on a journey. Nothing happened to the place; the story would be
-the same at any monastery on the road.
+Fail: a town passed through on a journey, not a spot a walker can stand at, and
+the story would be the same at any monastery on the road.
 </example>
 
 <example>
 {"place_words": "Bei dem prächtigen Krönungsfeste war ich auf dem Schlosse Zuschauer",
  "happened_there": "Oehlenschläger watched the king and queen anointed.",
  "spot_test": "fail", "venue": "Frederiksborg Slot", "summary": "..."}
-Fail: a spectator at a famous event. And "the castle in a lake" is
+Fail: he only watched, and nothing of his own happened there. A watcher passes
+when the watching changed them on that spot, as a boy's first concert can. And
+"the castle in a lake" is
 Frederiksborg in Hillerød, not Frederiksberg: never move a place to the
 nearest similar name.
 </example>
@@ -1041,7 +1048,8 @@ For each candidate, write a one-line note first, then answer yes or no:
   empty, the willow on this avenue, the plaque on this wall. No when the place
   only holds the people - how a prisoner was treated in a cell, a dinner in a
   hall, a talk in a room - however true. Where someone lives or grew up is
-  about them, not the place: no.
+  about them, not the place: no. But someone famous at this exact spot is
+  yes: the bar Michael Jackson drank in is this bar and no other.
 - breach: Does it depart from what normally happens at this kind of place or
   event? A crawl starting, a round bought, a drunk mishap is what normally
   happens: no.

@@ -3009,6 +3009,7 @@ until someone gives permission.
 | Copenhagen press | **No** (checked 2026-10-04) | Every outlet checked reserves TDM under §11b: københavnLIV's [ai.txt](https://kobenhavnliv.dk/ai.txt) ("access to AI utilization of our content can only be done by an agreement"), TV 2 Kosmopol's footer, Politiken, Berlingske and Altinget's ai.txt; DR, Kristeligt Dagblad and the Copenhagen Post block AI crawlers | An agreement with the outlet. The `press` plug-in waits for one |
 | Copenhagen podcasts | **No transcripts** (checked 2026-10-04) | None of 27 feeds carries `<podcast:transcript>`; all are © | The publisher's permission and a transcript. Københavns Museum's four shows first |
 | ADL (Arkiv for Dansk Litteratur) | FRI volumes only | The search API labels everything CC BY-NC-SA (KB's markup); the [copyright list](https://tekster.kb.dk/pages/adl-overview-copyright) marks old editions FRI and modern ones "Udgiver har den fulde ophavsret" | Heiberg's `heibfr05val`–`07val` (1944 edition) only, never `heibfr01`–`04` (1973). The text pages' own footer says "Udgiver har den fulde ophavsret" even on these (checked 2026-10-07): the lawyer reads that against the list. `crawler/adl.py` refuses every other id |
+| Source pages' own pictures | Hotlinked, never copied (2026-10-07) | A venue's photo of the night is ©, and a photo can't be retold in our words. Linking to or framing a work freely available on its own site is no communication to a new public (CJEU Svensson C-466/12, BestWater C-348/13); not so where the site blocks framing (VG Bild-Kunst C-392/19). Nothing is downloaded: the app loads the picture from the source's server | Credit and link each picture to its page, never store a copy, honour a takedown within a day, and leave out pictures of private people. The lawyer reads it before launch |
 | Nominatim | Low volume | "an absolute maximum of 1 request per second", no bulk geocoding, no resale | Self-host before a B2B corpus sale |
 
 Across every source:
@@ -3699,15 +3700,18 @@ people, quotes, then and now, asides, and pictures.
   (docs/04, *What to look at*); this is the ground it lacked.
 - **Public people only.** A private person gets nothing added (*The
   sources' legal footing*, GDPR).
-- **Pictures from Wikimedia Commons, by code.** Geotagged within 60 m of the
+- **Pictures by code.** From Wikimedia Commons: geotagged within 60 m of the
   pin, or named for the venue in its city, kept only under public domain,
   CC0, CC BY or CC BY-SA, each with its author and licence for the credit.
-  The model only picks which show the place (oldest first, then now).
+  From the source page (since 2026-10-07): its own photos, hotlinked, credited
+  "Photo: <source>" (*The sources' legal footing*). The model only picks: the
+  moment first (the people in it, there), then the place as it was, then now.
   kbhbilleder's public-domain pictures join when access is granted.
 - **New memories only.** No backfill of the corpus: the founder's call.
-- **Not served.** The API doesn't select it, so nothing needs withholding
-  from a locked memory yet. When the sheet shows it, `api/gate.py` withholds
-  it as it withholds the summary.
+- **Pictures are served, the rest is not yet.** `Memory.pictures` comes with
+  the summary and is empty while locked (`api/gate.py`); the sheet shows them
+  under the story, each with its credit. People, quotes, then-and-now and
+  asides are still only stored.
 
 **Options considered:** Wikipedia and Wikidata only (cheaper, thinner: no
 anecdotes, few quotes); the model's own knowledge (rejected: no ground).
@@ -3984,6 +3988,35 @@ background location task re-registers the 20 nearest every ~500 m moved
 the week a kilometre past), and the first finish card offers the opt-in
 once, since nobody finds it in Settings. Position is self-reported (*The position is
 self-reported*), so a spoofer gets one memory a week.
+
+### Famous people at a spot, and good is 6
+
+Status: Accepted 2026-10-07. Supersedes "a visit is not an event" in the
+archival prompt and the judge (docs/04, *The place test*), and "good is 7 or
+more" in docs/04, *Road to 1,000*.
+
+The six venue pages trialled on 2026-10-07 (K.B. Hallen, Parken, Montmartre)
+averaged 4.3: "Michael Jackson was in this pub" was a story the founder wanted
+and the prompt refused ("someone famous passing through is not an event").
+So:
+
+- **A famous person at an exact spot passes.** A public figure a stranger
+  would know, at a spot a walker can stand at (this bar, this hotel, this
+  stage door), when the text says they were there. A town passed through
+  still fails, and so does a private person's visit. `spot_test`, the
+  judge's `only_here` and `walk_score`'s raises all say it.
+- **Good is 6 or more.** It was only ever the goal's number: walks rank by the
+  score and never cut on it (*A walk picks its stops by the rubric*).
+  `check_labels` keeps 7, so its numbers compare with past runs.
+- **Pictures prove it.** The source page's own photo of the night is picked
+  first (*A memory is enriched when it is made*).
+
+**Consequences:** more memories per venue page, scored on the same scale.
+Stored scores stay as they are. Measured before and after in docs/04.
+
+**Options considered:** only lowering the bar (the visits would still never
+be extracted); a `celebrity` tag (the model emitted it off-menu once; a tag
+changes nothing about what passes).
 
 ### Authors hear they were read
 

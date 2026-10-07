@@ -90,6 +90,7 @@ MEMORY_COLUMNS = f"""
     m.quote,
     m.quote_by,
     m.links,
+    m.enrichment->'pictures' as pictures,
     m.locket,
     {ANNIVERSARY},
     p.id as place_id,

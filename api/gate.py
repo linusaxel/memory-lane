@@ -303,6 +303,7 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         quote=getattr(row, "quote", None),
         quote_by=getattr(row, "quote_by", None),
         links=getattr(row, "links", None) or [],
+        pictures=[p for p in getattr(row, "pictures", None) or [] if p.get("url")],
         anniversary=bool(getattr(row, "anniversary", False)),
         hidden=bool(getattr(row, "hidden", False)),
     )

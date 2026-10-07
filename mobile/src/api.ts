@@ -57,6 +57,20 @@ export type Layer = 'historical' | 'stranger';
 
 export type SummaryLink = { text: string; url: string };
 
+/** A picture of the place or the moment, never copied: `url` is where it
+ *  lives, `page` where it is credited. `source` is the source page's own
+ *  picture, hotlinked. */
+export type Picture = {
+  url: string;
+  thumb?: string | null;
+  page?: string | null;
+  caption: string;
+  year?: string | null;
+  author: string;
+  license: string;
+  source: boolean;
+};
+
 export type Memory = {
   id: number;
   /** Empty string while locked. The server never sends it until you are there. */
@@ -125,6 +139,8 @@ export type Memory = {
   /** Names in the summary, exactly as written, and their Wikipedia article.
    *  Empty while locked: the names are part of what it says. */
   links?: SummaryLink[];
+  /** Empty while locked, like media. */
+  pictures?: Picture[];
   /** Only on a locked memory: what it is, never what it says. */
   source_name?: string | null;
   year?: number | null;

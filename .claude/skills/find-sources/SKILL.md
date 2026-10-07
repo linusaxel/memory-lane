@@ -217,7 +217,7 @@ summary query, then read every new memory and its `enrichment`.
 ## 6. Decide and record
 
 - Yield: memories per item, mean `walk_score`, how many survived the check.
-  Keep a source whose memories average 7 or more and that names spots.
+  Keep a source whose memories average 6 or more and that names spots.
 - `set <id> active` or `rejected`, with `--note` saying why.
 - Log the numbers in `docs/04-extract.md` or `docs/02-ingest.md`, and the
   legal row in `docs/10-decisions.md`.

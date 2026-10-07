@@ -94,6 +94,21 @@ class Link(BaseModel):
     url: str
 
 
+class Picture(BaseModel):
+    """A picture of the place or the moment, from Commons or the source's own
+    page. Never copied: `url` is where it lives, `page` where it is credited."""
+
+    url: str
+    thumb: str | None = None
+    page: str | None = None
+    caption: str = ""
+    year: str | None = None
+    author: str = ""
+    license: str = ""
+    # The source page's own picture, hotlinked: docs/10, *The sources' legal footing*.
+    source: bool = False
+
+
 class Memory(BaseModel):
     id: int
     summary: str
@@ -137,6 +152,8 @@ class Memory(BaseModel):
     quote_by: str | None = None
     # Empty while locked, like media: the names are part of what it says.
     links: list[Link] = []
+    # Empty while locked, like media.
+    pictures: list[Picture] = []
     # Something happened here on today's date. Travels on a locked memory too,
     # like media_count: it is a reason to walk over, and it gives away nothing
     # the pin did not already.

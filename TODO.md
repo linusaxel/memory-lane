@@ -249,13 +249,6 @@ worth the walk. Measure every change against the labels before and after
       balance. Run `python -m pipeline.enrich --memory <id>` on five strong
       memories, read every item against its page, and record the cost per
       memory in docs/04 before a new source's trial relies on it.
-- [ ] **The place test: a pass rule for the famous at a place's purpose.**
-      (checked 2026-10-04) Applied: 52 of 70 visible book memories dropped, 34
-      hidden after a read (docs/04, *The place test applied*). It would also
-      have dropped 8 labelled walks (the king guiding Riis at Charlottenborg,
-      the king at Kasino's door, Bakkehus's roses), kept by hand. Decide
-      whether "a famous person meets the place's own purpose" earns another
-      ~150 judge calls; measure with `quality --labels`.
 - [ ] **Re-extract the paused books with the archival prompt.** (checked
       2026-10-04) Carl Møller, Oehlenschläger vol. I, Andersen and Leonora
       Christina are done (docs/04). Left: Oehlenschläger 206-208 and

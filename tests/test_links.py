@@ -158,3 +158,10 @@ def test_links_stay_behind_the_gate():
 def test_links_come_with_the_summary():
     opened = row_to_memory(_row(), at=Coordinates(lat=55.676, lng=12.568))
     assert json.loads(opened.model_dump_json())["links"][0]["url"] == STAUNING_URL
+
+
+def test_pictures_come_only_with_the_summary():
+    pictures = [{"url": "https://kbhallen.dk/a.jpg", "author": "K.B. Hallen", "source": True}]
+    assert row_to_memory(_row(pictures=pictures), at=None).pictures == []
+    opened = row_to_memory(_row(pictures=pictures), at=Coordinates(lat=55.676, lng=12.568))
+    assert [p.url for p in opened.pictures] == ["https://kbhallen.dk/a.jpg"]

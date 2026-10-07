@@ -14,7 +14,8 @@ import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 
-import { AUDIO, mediaUrl, type MediaItem } from './api.ts';
+import { AUDIO, mediaUrl, type MediaItem, type Picture } from './api.ts';
+import { openLink } from './link.ts';
 import { duration } from './format.ts';
 import { color, label, radius, sunk } from './theme.ts';
 
@@ -116,7 +117,44 @@ export default function MemoryMedia({ media }: { media: MediaItem[] }) {
   );
 }
 
+/** Pictures found for an extracted memory, each with the credit its licence
+ *  or its source asks for. Tapping one opens where it is credited. */
+export function Pictures({ pictures }: { pictures: Picture[] }) {
+  // Above the early return, for the reason MemoryMedia's is.
+  const [failed, setFailed] = useState<string[]>([]);
+  const shown = pictures.filter((p) => !failed.includes(p.url));
+  if (shown.length === 0) return null;
+
+  return (
+    <View style={styles.wrap}>
+      {shown.map((picture) => (
+        <Pressable
+          key={picture.url}
+          accessibilityRole="link"
+          accessibilityLabel={picture.caption || 'Picture'}
+          disabled={!picture.page}
+          onPress={() => picture.page && openLink(picture.page).catch(() => {})}
+        >
+          <Image
+            testID="picture"
+            source={{ uri: picture.thumb || picture.url }}
+            style={styles.photo}
+            // A dead hotlink drops out rather than leaving a grey block.
+            onError={() => setFailed((current) => [...current, picture.url])}
+          />
+          <Text style={styles.credit} numberOfLines={2}>
+            {picture.source
+              ? `Photo: ${picture.author}`
+              : [picture.author, picture.license].filter(Boolean).join(' · ')}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  credit: { ...label, marginTop: 4 },
   wrap: { gap: 8 },
   photo: {
     width: '100%',

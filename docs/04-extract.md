@@ -645,6 +645,22 @@ Charlottenborg, Andersen at Bakkehus). One run each: the judge flips between
 runs. The `spot_test` change is unmeasured: `quality --compare` on book chunks
 is next (TODO, *The place test*).
 
+**Amended 2026-10-07.** Someone famous at this exact spot now passes
+`spot_test` and `only_here` (docs/10, *Famous people at a spot, and good is 6*).
+The king guiding Riis at Charlottenborg is the kind this lets back in.
+
+| Measured on the labels | Before | After |
+|---|---|---|
+| `walk_score --labels` AUC (judgeable) | 0.711 (0.847) | 0.680 (0.849) |
+| `walk_score --labels` 7+ (of them walks) | 15 (13) | 14 (12) |
+| `quality --labels` precision / recall | 41% / 52% | 42% / 52% |
+
+One run each. The labels hold few famous visits, so these mostly say nothing
+broke; the overall AUC dipped 0.03, inside the run-to-run spread. Re-extracting
+K.B. Hallen (3692) moved no score: "X played this hall" is the hall doing its
+job, not a famous person turning up somewhere. The rule is for a bar, a hotel,
+a shop.
+
 ### The place test applied, 2026-10-03
 
 - **`spot_test` measured.** `quality --compare --source-type book --sample 20`,
@@ -742,8 +758,11 @@ for null. `extract.sure` drops a note that hedges.
 ### Road to 1,000 (Copenhagen)
 
 The goal is 1,000 good memories in the launch bbox. Good means visible and
-`walk_score >= 7`. `.claude/skills/make-memories` runs one source per pass and
-adds a line here. Started 2026-10-05 at 74 good out of 169 visible.
+`walk_score >= 6` (7 until 2026-10-07: docs/10, *Famous people at a spot, and
+good is 6*). `.claude/skills/make-memories` runs one source per pass and adds a
+line here. Started 2026-10-05 at 74 good out of 169 visible. On 2026-10-07,
+403 visible: 116 at 7 or more, 197 at 6 or more. Rows above that date count
+"Good" at 7.
 
 | Date | Source | Items | Memories | Good | Mean score | $ |
 |---|---|---|---|---|---|---|

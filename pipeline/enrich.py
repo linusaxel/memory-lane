@@ -8,8 +8,9 @@ Aggregation runs it on each new content's memories; there is no backfill
 web search and fetch, and code keeps only what a page we fetched ourselves
 says: every item carries a passage copied from its page, and an item whose
 passage isn't on that page is dropped, as `extract.grounded` drops a quote.
-Pictures come from Wikimedia Commons by code, never from the model, and only
-under a licence that lets us show them with a credit.
+Pictures come by code, never from the model: Wikimedia Commons under a
+licence that lets us show them with a credit, and the source page's own,
+hotlinked and never copied (docs/10, *The sources' legal footing*).
 
 Bills: one research call (web search at ENRICH_MAX_SEARCHES, about $0.01 a
 search, plus the pages read) and two short calls a memory.
@@ -107,12 +108,16 @@ STRUCTURE_SCHEMA = {
     "additionalProperties": False,
 }
 
-PICK_PROMPT = """The text is a place, the story told there, then numbered pictures
-from Wikimedia Commons taken near it, each with its title, description and
-date. Pick up to four that show this place itself, best first: the oldest one
-that shows it as it was, then it as it is. Leave out pictures of other
-buildings, of people, of maps, and anything you can't tell is this place. An
-empty list is a fine answer."""
+PICK_PROMPT = """The text is a place, the story told there, then numbered pictures,
+each with its caption and date: first the story's own source page's, marked
+[source], then Wikimedia Commons pictures taken near it. Pick up to four, best
+first: a picture of the moment itself (the people in the story, there, then)
+comes first; then this place as it was; then it as it is.
+Before you keep a picture whose caption names a person or a band, find that
+name in the story. Not there means it is another night: leave it out, however
+famous (a story of Deep Purple gets no Led Zeppelin photo). Leave out pictures of other buildings, of
+maps, of people who are not public figures, logos, adverts, and anything you
+can't tell is this place or this story. An empty list is a fine answer."""
 
 PICK_SCHEMA = {
     "type": "object",
@@ -126,6 +131,10 @@ COMMONS = "https://commons.wikimedia.org/w/api.php"
 # fair use) is not ours to show in a paid app.
 FREE = ("public domain", "pd", "cc0", "cc by", "cc-by")
 PICTURE_METERS = 60
+SOURCE_PICTURES = 30
+# A logo, icon or tracking pixel is no picture of the story.
+NOT_A_PICTURE = re.compile(r"logo|icon|sprite|avatar|pixel|badge|spinner|flags?/|\.svg(\?|$)", re.I)
+PHOTO = re.compile(r"\.(jpe?g|png|webp)(\?|$)", re.I)
 YEAR = re.compile(r"\b(1[6-9]\d\d|20\d\d)\b")
 PAGE_BYTES = 3_000_000
 
@@ -146,23 +155,107 @@ class _Text(HTMLParser):
             self.parts.append(data)
 
 
-def page_text(url: str) -> str | None:
-    """The page's words, squashed as extract._squash squashes a chunk, or None
-    when it doesn't answer. A PDF or an image is no page for this."""
+def page_html(url: str) -> str | None:
+    """The page as fetched by us, or None when it doesn't answer. A PDF or an
+    image is no page for this."""
     request = urllib.request.Request(url, headers={"User-Agent": geocode.USER_AGENT})
     try:
         with urllib.request.urlopen(request, timeout=20) as r:
             if "html" not in r.headers.get("Content-Type", "html"):
                 return None
-            raw = r.read(PAGE_BYTES).decode(r.headers.get_content_charset() or "utf-8", "replace")
+            return r.read(PAGE_BYTES).decode(r.headers.get_content_charset() or "utf-8", "replace")
     except (
         OSError,
         ValueError,
     ):
         return None
+
+
+def page_text(url: str) -> str | None:
+    """The page's words, squashed as extract._squash squashes a chunk."""
+    raw = page_html(url)
+    if raw is None:
+        return None
     parser = _Text()
     parser.feed(raw)
     return _squash(" ".join(parser.parts))
+
+
+class _Images(HTMLParser):
+    """Each <img> with its alt text, and the <figcaption> of the figure it sits in."""
+
+    def __init__(self):
+        super().__init__()
+        self.found, self._figure, self._caption = [], None, None
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "figure":
+            self._figure = []
+        elif tag == "figcaption" and self._figure is not None:
+            self._caption = []
+        elif tag == "img":
+            srcset = a.get("srcset") or a.get("data-srcset") or ""
+            srcset = [s.split()[0] for s in srcset.split(",") if s.strip()]
+            # A lazy-loading page puts the real picture in a data- attribute
+            # (data-src, data-flickity-lazyload) and a placeholder in src.
+            lazy = [v for k, v in attrs if k.startswith("data-") and v and PHOTO.search(v)]
+            width = a.get("width") or ""
+            item = {
+                "src": srcset[-1] if srcset else (lazy or [a.get("src") or ""])[0],
+                "alt": a.get("alt") or "",
+                "small": not srcset and width.isdigit() and int(width) < 300,
+            }
+            self.found.append(item)
+            if self._figure is not None:
+                self._figure.append(item)
+
+    def handle_data(self, data):
+        if self._caption is not None:
+            self._caption.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "figcaption" and self._caption is not None:
+            for item in self._figure or []:
+                item["caption"] = " ".join("".join(self._caption).split())
+            self._caption = None
+        elif tag == "figure":
+            self._figure = None
+
+
+def name(src: str) -> str:
+    return urllib.parse.unquote(src.rsplit("/", 1)[-1].split("?")[0].split(".")[0])
+
+
+def source_pictures(url: str | None, credit: str, fetch=page_html) -> list[dict]:
+    """The source page's own pictures, as Commons ones are listed. Only the URL
+    is kept: the app loads it from the source, credited and linked."""
+    if not url or not url.startswith("http") or "youtu" in url or url.lower().endswith(".pdf"):
+        return []
+    raw = fetch(url.split("#")[0])
+    if not raw:
+        return []
+    parser = _Images()
+    parser.feed(raw)
+    pictures = []
+    for img in parser.found:
+        src = urllib.parse.urljoin(url, img["src"])
+        if not src.startswith("http") or img["small"] or NOT_A_PICTURE.search(src):
+            continue
+        pictures.append(
+            {
+                "url": src,
+                "thumb": src,
+                "page": url,
+                # A file name ("08briannielsen") is caption enough to pick by.
+                "caption": (img.get("caption") or img["alt"] or name(src))[:300],
+                "year": None,
+                "author": credit,
+                "license": f"© {credit}",
+                "source": True,
+            }
+        )
+    return list({p["url"]: p for p in pictures}.values())[:SOURCE_PICTURES]
 
 
 def verified(found: dict, fetch=page_text) -> dict:
@@ -299,7 +392,8 @@ def pick(client, place: str, summary: str, pictures: list[dict]) -> list[dict]:
     if not pictures:
         return []
     listed = "\n".join(
-        f"{i}. {p['caption']} ({p['year'] or 'undated'})" for i, p in enumerate(pictures)
+        f"{i}. {'[source] ' if p.get('source') else ''}{p['caption']} ({p['year'] or 'undated'})"
+        for i, p in enumerate(pictures)
     )
     raw = _request(
         client, PICK_PROMPT, f"Place: {place}\n\nStory: {summary}\n\n{listed}", PICK_SCHEMA
@@ -315,7 +409,15 @@ def pick(client, place: str, summary: str, pictures: list[dict]) -> list[dict]:
 
 
 def enrich(
-    client, place: str, summary: str, lat, lng, venue: str | None, locality: str | None
+    client,
+    place: str,
+    summary: str,
+    lat,
+    lng,
+    venue: str | None,
+    locality: str | None,
+    source_url: str | None = None,
+    credit: str | None = None,
 ) -> dict | None:
     """The memory's enrichment, or None when research got no answer: it is
     looked at again next run rather than stored empty."""
@@ -333,12 +435,13 @@ def enrich(
     if found is None:
         return None
     pictures = []
-    if lat is not None:
-        try:
-            near = pictures_near(lat, lng, venue or place, locality)
-            pictures = pick(client, place, summary, near)
-        except Exception:
-            logger.exception("Commons pictures failed for %s", place)
+    try:
+        found_pictures = source_pictures(source_url, credit or "the source")
+        if lat is not None:
+            found_pictures += pictures_near(lat, lng, venue or place, locality)
+        pictures = pick(client, place, summary, found_pictures)
+    except Exception:
+        logger.exception("Pictures failed for %s", place)
     return found | {"pictures": pictures, "at": datetime.now(UTC).isoformat(timespec="seconds")}
 
 
@@ -361,8 +464,11 @@ def seed(client, place: str, record: str) -> str:
 
 UNENRICHED = """
     SELECT m.id, p.name, p.venue, p.locality, m.summary,
+           COALESCE(m.source_url, c.url) AS source_url,
+           COALESCE(c.source_name, m.attribution) AS credit,
            ST_Y(p.coordinates::geometry) AS lat, ST_X(p.coordinates::geometry) AS lng
     FROM memories m JOIN places p ON p.id = m.place_id
+    LEFT JOIN content c ON c.id = m.content_id
     WHERE m.enrichment IS NULL AND m.user_id IS NULL AND NOT m.hidden
       AND m.content_id = :content_id
     ORDER BY m.id
@@ -373,7 +479,9 @@ def enrich_memories(session, client, content_id: int) -> dict:
     """Enrich one content's new memories; return {memory_id: enrichment}."""
     done = {}
     for r in session.execute(text(UNENRICHED), {"content_id": content_id}).fetchall():
-        found = enrich(client, r.name, r.summary, r.lat, r.lng, r.venue, r.locality)
+        found = enrich(
+            client, r.name, r.summary, r.lat, r.lng, r.venue, r.locality, r.source_url, r.credit
+        )
         if found is None:
             continue
         session.execute(
@@ -407,7 +515,9 @@ def main():
         ).one()
     print(
         json.dumps(
-            enrich(client, r.name, r.summary, r.lat, r.lng, r.venue, r.locality),
+            enrich(
+                client, r.name, r.summary, r.lat, r.lng, r.venue, r.locality, r.source_url, r.credit
+            ),
             indent=2,
             ensure_ascii=False,
         )
