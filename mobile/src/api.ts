@@ -233,6 +233,21 @@ export async function unlockMemory(
   return !memory.locked && hasCoordinates(memory) ? memory : null;
 }
 
+/** Ask for this week's surprise at a memory the background geofence fired on.
+ *  null is the server saying not now, for any reason (docs/10, "A surprise,
+ *  once a week"). */
+export async function grantSurprise(
+  memoryId: number,
+  at: Coordinates,
+  device: string,
+): Promise<{ memory_id: number; place: string; expires_at: string } | null> {
+  try {
+    return await post(`/v1/surprise`, { device, memory_id: memoryId, lat: at.lat, lng: at.lng });
+  } catch {
+    return null;
+  }
+}
+
 /** Say this one mattered. Hearting twice from the same device is a harmless
  *  no-op that leaves the count unchanged. No position - unlike unlock,
  *  hearting isn't gated by proximity. */

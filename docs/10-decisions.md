@@ -3934,6 +3934,39 @@ and a takedown is a real event, not a theoretical one.
 **Options considered:** asking first (slow, and the 2010s stay empty);
 the proxy for YouTube (§75c, the line this does not cross).
 
+### A surprise, once a week
+
+Status: Accepted 2026-10-07. Amends *A walk planner, nothing else* (only a
+stop of the walk in progress opens) with one exception, and F28's watch.
+
+The founder: a random nudge, when you are not using the app, to a memory
+100-200 m away, as an event. The moment the product is about, served by
+chance instead of by plan. Every location app that lasted lets the world
+reach you (*Why every pin shows*: Pokémon GO lost its users when it stopped).
+
+- **Off a walk, the opt-in watch is the locked memories around you**
+  (F28's toggle, still off by default). Crossing into one on a day the app
+  was not opened asks `POST /v1/surprise`.
+- **The server decides.** A gated, unopened memory within `SURPRISE_RADIUS_M`
+  (200) of the phone, at most one per `SURPRISE_EVERY_DAYS` (7) per account,
+  under the user's row lock. A grant (`surprises`) opens that memory standing
+  on it for `SURPRISE_MINUTES` (30): `pay_for_unlock` accepts it beside
+  today's walk. Any refusal is the same 409, and the phone stays silent.
+- **The notification names the place, never the story.** Opening is
+  unchanged: standing on it, the locket, the slide. It counts toward the
+  streak and the board like any open; it earns no XP, which is a finished
+  walk's.
+- **Rare by rule, no key.** Scarcity is what makes it an event, so nothing
+  is earned, held or spent (*No keys; your memories are your lockets*
+  stands). A key that bought one was considered and dropped: a currency to
+  hoard for what a timer does.
+
+**Consequences:** regions are registered where the app was last open, so a
+surprise finds you near home and your usual streets, not across town. A
+significant-location-change task would re-register them; add it if
+surprises turn out rare. Position is self-reported (*The position is
+self-reported*), so a spoofer gets one memory a week.
+
 ### Authors hear they were read
 
 Status: Accepted 2026-10-07.

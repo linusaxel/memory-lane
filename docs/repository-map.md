@@ -188,7 +188,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/scripts/fresh-splash.sh` | Dev: clear the simulator's saved launch screen, so a new native splash shows |
 | `mobile/scripts/reset-unlocks.sh` | Dev: lock everything again for the simulator's user, in the dev DB and on the device |
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
-| `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification: the native wrapper, the pure region maths, the opt-in flag |
+| `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification and the weekly surprise: the native wrapper, the pure region maths, the opt-in flag |
 | `mobile/src/theme.ts` | Every colour and typeface. Never a hex or font name anywhere else |
 | `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
 | `mobile/src/PlanWalkButton.tsx` | Plan a walk on home: the gold glass pill whose figure walks through its label before the planner opens |

@@ -963,6 +963,13 @@ the app is not open.
 5. Tapping it opens that memory's sheet, the same as tapping its pin. The
    memory id rides in the notification's `data`; `App.tsx` reads it with
    `useLastNotificationResponse`, which also covers a tap that launched the app.
+6. **Off a walk, the surprise** (docs/10, "A surprise, once a week"). The watch
+   is the locked memories around you instead. On a day the app was not
+   opened, crossing into one asks `POST /v1/surprise` from the background
+   task; only a grant notifies ("A story is open nearby", the place, half an
+   hour). That pin then draws lit on the home map, and standing on it brings
+   up the locket and the slide as a walk stop does. Once a week at most, by
+   the server.
 
 **Opt-in on purpose.** This is the one feature in the app that asks for
 location while the app is not open, and the only place `mobile/UI.md`'s "location

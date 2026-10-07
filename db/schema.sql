@@ -347,6 +347,17 @@ CREATE TABLE subscriptions (
     expires_at TIMESTAMP NOT NULL
 );
 
+-- A surprise: one memory opened off a walk, for half an hour, once a week.
+-- See db/migrations/046_surprises.sql.
+CREATE TABLE surprises (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    memory_id INTEGER NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    granted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL
+);
+CREATE INDEX idx_surprises_user ON surprises (user_id, granted_at DESC);
+
 -- A photo or a recording attached to a submitted memory. A memory of a place is
 -- a thin thing in text alone.
 CREATE TABLE media (

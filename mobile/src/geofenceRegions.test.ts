@@ -2,7 +2,13 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import type { LocatedMemory } from './api.ts';
-import { mayNotify, memoriesToWatch, regionsFor } from './geofenceRegions.ts';
+import {
+  liveSurprise,
+  mayNotify,
+  maySurprise,
+  memoriesToWatch,
+  regionsFor,
+} from './geofenceRegions.ts';
 
 let nextId = 1;
 
@@ -82,4 +88,16 @@ test('dithering on one boundary notifies once a day', () => {
 test('a day-old alert is forgotten, so the record stays small', () => {
   const sent = mayNotify('1', 10 * HOUR, NOTHING)!;
   assert.deepEqual(Object.keys(mayNotify('2', 40 * HOUR, sent)!.byId), ['2']);
+});
+
+test('a surprise waits for a day the app was not opened', () => {
+  assert.equal(maySurprise('2026-10-07', '2026-10-07'), false);
+  assert.equal(maySurprise('2026-10-06', '2026-10-07'), true);
+  assert.equal(maySurprise(null, '2026-10-07'), true);
+});
+
+test('a surprise is gone once it expires', () => {
+  const surprise = { memoryId: 1, place: 'Vega', expiresAt: '2026-10-07T12:30:00Z' };
+  assert.equal(liveSurprise(surprise, Date.parse('2026-10-07T12:29:00Z')), surprise);
+  assert.equal(liveSurprise(surprise, Date.parse('2026-10-07T12:31:00Z')), null);
 });

@@ -22,13 +22,46 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 
-import type { LocatedMemory } from './api.ts';
-import { mayNotify, memoriesToWatch, regionsFor, type Sent } from './geofenceRegions.ts';
+import { grantSurprise, type LocatedMemory } from './api.ts';
+import { deviceId } from './device.ts';
+import {
+  liveSurprise,
+  mayNotify,
+  maySurprise,
+  memoriesToWatch,
+  regionsFor,
+  type Sent,
+  type Surprise,
+} from './geofenceRegions.ts';
 
 export const GEOFENCE_TASK = 'memory-lane-proximity';
 
 const NAMES_KEY = 'memorylane.geofenceNames.v1';
 const SENT_KEY = 'memorylane.geofenceSent.v1';
+const MODE_KEY = 'memorylane.geofenceMode.v1';
+const OPENED_KEY = 'memorylane.lastOpened.v1';
+const SURPRISE_KEY = 'memorylane.surprise.v1';
+
+/** On a walk the watch is its stops; off one, the locked memories around you,
+ *  any of which may be this week's surprise (docs/10, "A surprise, once a
+ *  week"). Stored, because the task can run with the app killed. */
+export type WatchMode = 'walk' | 'surprise';
+
+const localDay = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+
+/** The app was opened today, so no surprise today. */
+export function noteOpened(): void {
+  AsyncStorage.setItem(OPENED_KEY, localDay()).catch(() => {});
+}
+
+export async function loadSurprise(): Promise<Surprise | null> {
+  try {
+    const raw = await AsyncStorage.getItem(SURPRISE_KEY);
+    return liveSurprise(raw ? (JSON.parse(raw) as Surprise) : null, Date.now());
+  } catch {
+    return null;
+  }
+}
 
 type GeofenceTaskData = {
   eventType: Location.GeofencingEventType;
@@ -47,6 +80,8 @@ TaskManager.defineTask<GeofenceTaskData>(GEOFENCE_TASK, ({ data, error }) => {
 });
 
 async function onEnter(id: string) {
+  const mode = await AsyncStorage.getItem(MODE_KEY).catch(() => null);
+  if (mode === 'surprise') return onSurprise(id);
   let sent: Sent = { last: 0, byId: {} };
   try {
     const raw = await AsyncStorage.getItem(SENT_KEY);
@@ -77,12 +112,41 @@ async function onEnter(id: string) {
   });
 }
 
+/** Off a walk: ask the server for this week's surprise, and say so only if it
+ *  grants one. Silent otherwise, which is most of the time. */
+async function onSurprise(id: string) {
+  const lastOpened = await AsyncStorage.getItem(OPENED_KEY).catch(() => null);
+  if (!maySurprise(lastOpened, localDay()) || (await loadSurprise())) return;
+  const fix = await Location.getLastKnownPositionAsync().catch(() => null);
+  if (!fix) return;
+  const at = { lat: fix.coords.latitude, lng: fix.coords.longitude };
+  const granted = await grantSurprise(Number(id), at, await deviceId());
+  if (!granted) return;
+  const surprise: Surprise = {
+    memoryId: granted.memory_id,
+    place: granted.place,
+    expiresAt: granted.expires_at,
+  };
+  await AsyncStorage.setItem(SURPRISE_KEY, JSON.stringify(surprise)).catch(() => {});
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'A story is open nearby',
+      body: `Something happened at ${granted.place}. It's yours to read there for the next half hour.`,
+      data: { memoryId: granted.memory_id },
+    },
+    trigger: null,
+  });
+}
+
 /** Starts (or restarts, replacing the region list) watching the given
  *  memories. Requests background location and notification permission if
  *  they are not already granted; returns false without asking for anything
  *  if there is nothing to watch or foreground permission was never granted -
  *  background permission means nothing without it. */
-export async function startWatching(memories: LocatedMemory[]): Promise<boolean> {
+export async function startWatching(
+  memories: LocatedMemory[],
+  mode: WatchMode = 'walk',
+): Promise<boolean> {
   const watched = memoriesToWatch(memories);
   if (watched.length === 0) {
     await stopWatching();
@@ -106,6 +170,7 @@ export async function startWatching(memories: LocatedMemory[]): Promise<boolean>
     // The geofence still fires; the notification just falls back to "a place".
   }
 
+  await AsyncStorage.setItem(MODE_KEY, mode).catch(() => {});
   await Location.startGeofencingAsync(GEOFENCE_TASK, regionsFor(memories));
   return true;
 }

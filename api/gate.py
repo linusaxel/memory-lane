@@ -31,6 +31,12 @@ from api.progression import LOCKET_DEFAULT
 # street. See docs/10-decisions.md#20-m.
 UNLOCK_RADIUS_METERS = int(os.getenv("UNLOCK_RADIUS_METERS", "20"))
 
+# A surprise: how near it has to find you, how long it stays open, and how
+# often one comes. See docs/10-decisions.md#a-surprise-once-a-week.
+SURPRISE_RADIUS_M = int(os.getenv("SURPRISE_RADIUS_M", "200"))
+SURPRISE_MINUTES = int(os.getenv("SURPRISE_MINUTES", "30"))
+SURPRISE_EVERY_DAYS = int(os.getenv("SURPRISE_EVERY_DAYS", "7"))
+
 
 def row_source(row) -> Source | None:
     """None for every submission - they have no content row - and for the four

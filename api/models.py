@@ -229,6 +229,24 @@ class UnlockRequest(BaseModel):
     lng: float | None = Field(None, ge=-180, le=180)
 
 
+class SurpriseRequest(BaseModel):
+    """The memory a background geofence fired on, and where the phone was."""
+
+    device: str = Field(pattern=DEVICE_PATTERN)
+    memory_id: int
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+
+
+class SurpriseResponse(BaseModel):
+    """A place name and a deadline: never the story, which still waits for
+    standing there."""
+
+    memory_id: int
+    place: str
+    expires_at: datetime
+
+
 class UnlocksResponse(BaseModel):
     memories: list[Memory]
 

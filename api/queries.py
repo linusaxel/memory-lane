@@ -504,6 +504,26 @@ ON_TODAYS_ROUTE_QUERY = f"""
     )
 """
 
+# An unexpired surprise for this memory, on this account
+# (docs/10-decisions.md#a-surprise-once-a-week): the one other thing that opens.
+SURPRISE_OPEN_QUERY = """
+    SELECT EXISTS (
+        SELECT 1 FROM surprises
+        WHERE memory_id = :memory_id
+          AND expires_at > LOCALTIMESTAMP
+          AND user_id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid))
+    )
+"""
+
+# Has this account had a surprise in the last :days days?
+SURPRISED_LATELY_QUERY = """
+    SELECT EXISTS (
+        SELECT 1 FROM surprises
+        WHERE user_id = :user_id
+          AND granted_at > LOCALTIMESTAMP - make_interval(days => :days)
+    )
+"""
+
 # Has this account already had today's walk? Any walk today on any of its
 # devices, bar this device's own in progress. An ended walk that opened nothing
 # was deleted by ROUTE_PRUNE, so it never counts: a bad plan or rain before the

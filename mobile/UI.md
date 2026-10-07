@@ -519,7 +519,9 @@ Each of these exists because something broke or would have been rejected.
    string. Both exist for exactly one feature — the proximity notification
    (`geofence.ts`, Settings.tsx's "Notify me when a memory is nearby" toggle,
    off unless the person turns it on) — and nothing else in the app asks for
-   position while it is not open. The other two keys expo-location can inject —
+   position while it is not open. The weekly surprise (`docs/10-decisions.md`,
+   "A surprise, once a week") is that same feature off a walk: it sends the
+   position once, to ask, and the server keeps only which memory. The other two keys expo-location can inject —
    `NSLocationAlwaysUsageDescription` (the pre-iOS11 fallback, not needed for an
    app that only supports iOS 13+) and `NSMotionUsageDescription` (no motion
    feature) — stay `false` in the plugin's options, which deletes them from the

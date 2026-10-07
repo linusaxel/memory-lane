@@ -53,7 +53,8 @@ import {
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
 import { devOpenMemory, devOpenScreen } from './src/devOpen.ts';
-import { startWatching, stopWatching } from './src/geofence.ts';
+import { loadSurprise, noteOpened, startWatching, stopWatching } from './src/geofence.ts';
+import type { Surprise } from './src/geofenceRegions.ts';
 import { forgetHearted, loadHearted, rememberHearted } from './src/hearted.ts';
 import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { anyNew } from './src/seen.ts';
@@ -878,15 +879,41 @@ export default function App() {
               : [],
     [pastWalk, stage, preview, routeShown, nearby, earned],
   );
-  // The background watch tracks today's route, not the map's panned viewport -
-  // bounded (ROUTE_SIZE, well under the OS's ~20-region cap), already "nearby
-  // things to walk to", and it does not change every time somebody pans the
-  // map. Re-registers whenever a stop is earned, so an already-unlocked stop
-  // drops out of the watch the next time this runs rather than lingering.
+  // The background watch tracks today's route on a walk, and off one the
+  // locked memories around you, any of which may be this week's surprise
+  // (docs/10, "A surprise, once a week"). Never the map's panned viewport, so
+  // it does not change every time somebody pans. Re-registers whenever a stop
+  // is earned, so an already-unlocked one drops out rather than lingering.
   useEffect(() => {
     if (!notifyNearby) return;
-    startWatching(routeShown).catch((e) => console.warn('Nearby notifications did not start:', e));
-  }, [notifyNearby, routeShown]);
+    const onWalk = stage === 'walk';
+    const watch = onWalk
+      ? routeShown
+      : nearby.filter((memory) => memory.locked && !earned.has(memory.id));
+    startWatching(watch, onWalk ? 'walk' : 'surprise').catch((e) =>
+      console.warn('Nearby notifications did not start:', e),
+    );
+  }, [notifyNearby, stage, routeShown, nearby, earned]);
+
+  // This week's surprise, if the background watch was granted one: that one
+  // memory opens off a walk, standing on it, until it expires. Opening the app
+  // also says "not today" to the next one.
+  const [surprise, setSurprise] = useState<Surprise | null>(null);
+  useEffect(() => {
+    const look = () => {
+      noteOpened();
+      loadSurprise().then(setSurprise);
+    };
+    look();
+    const sub = AppState.addEventListener('change', (state) => state === 'active' && look());
+    return () => sub.remove();
+  }, []);
+  useEffect(() => {
+    if (!surprise) return;
+    const timer = setTimeout(() => setSurprise(null), Date.parse(surprise.expiresAt) - Date.now());
+    return () => clearTimeout(timer);
+  }, [surprise]);
+  const surpriseId = surprise && !earned.has(surprise.memoryId) ? surprise.memoryId : null;
 
   const handleNotifyNearby = useCallback((next: boolean) => {
     setNotifyNearbyState(next);
@@ -1087,13 +1114,20 @@ export default function App() {
     setHowOpen(false);
   }, [notification, openMemory]);
 
-  // Only on a walk, and only its stops are drawn, so only they are in reach.
+  // On a walk only its stops are drawn, so only they are in reach; off one,
+  // only the surprise.
   const withinReach = useMemo(
     () =>
       stage === 'walk' && !pastWalk
         ? groups.filter((group) => reachOf(group, position, earned) === 'unlockable')
-        : [],
-    [stage, pastWalk, groups, position, earned],
+        : stage === 'map' && !pastWalk && surpriseId != null
+          ? groups.filter(
+              (group) =>
+                group.memories.some((memory) => memory.id === surpriseId) &&
+                reachOf(group, position, earned) === 'unlockable',
+            )
+          : [],
+    [stage, pastWalk, groups, position, earned, surpriseId],
   );
   const collected = useMemo(() => inUnlockOrder(unlocked), [unlocked]);
   // Filing unlocks what you filed; the journal keeps that under My Memories.
@@ -1130,7 +1164,7 @@ export default function App() {
         const away = metersBetween(position.lat, position.lng, lat, lng);
         if (
           memory.locked &&
-          onTodaysWalk(memory.id) &&
+          (onTodaysWalk(memory.id) || memory.id === surpriseId) &&
           away <= (memory.unlock_radius_meters ?? FALLBACK_RADIUS_M)
         ) {
           here.push({ group, index, away });
@@ -1142,7 +1176,7 @@ export default function App() {
       const [x, y] = [a.group.memories[a.index].id, b.group.memories[b.index].id];
       return stop(x) - stop(y) || x - y;
     });
-  }, [withinReach, position, routePositionById, onTodaysWalk]);
+  }, [withinReach, position, routePositionById, onTodaysWalk, surpriseId]);
   // The memory the ring on the map opens: the one picked, else the route stop
   // you are at, else the nearest. docs/10, "The lock says where".
   const [pickedId, setPickedId] = useState<number | null>(null);
@@ -1731,15 +1765,16 @@ export default function App() {
               if (stage === 'preview' && !pastWalk && (routePosition ?? 0) > stopsShown)
                 return null;
               const reach = reachOf(group, position, earned);
+              const surprising = group.memories.some((memory) => memory.id === surpriseId);
               return (
                 <MemoryMarker
                   key={group.key}
                   group={group}
                   reach={reach}
-                  lit={walking && reach === 'unlockable'}
+                  lit={(walking || surprising) && reach === 'unlockable'}
                   next={walking && group.memories.some((memory) => memory.id === nextRouteStop?.id)}
                   opacity={
-                    stage === 'map' && !pastWalk
+                    stage === 'map' && !pastWalk && !surprising
                       ? FADED_PIN
                       : walking || routePosition != null
                         ? 1

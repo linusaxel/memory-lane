@@ -42,6 +42,9 @@ uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.
 | `ROUTING_URL` | No | An OSRM `foot` server. Empty or down means crow-flies × 1.3 and straight lines. Local: `./osrm/build.sh` once, then `docker compose --profile routing up -d osrm` and `ROUTING_URL=http://localhost:5001` |
 | `CORS_ORIGINS` | No | Comma-separated origins (default: `*`). The only lockdown knob |
 | `UNLOCK_RADIUS_METERS` | No | How close you must stand to read a memory (default: 20) |
+| `SURPRISE_RADIUS_M` | No | How near a surprise must find you (default: 200) |
+| `SURPRISE_MINUTES` | No | How long a surprise stays open (default: 30) |
+| `SURPRISE_EVERY_DAYS` | No | At most one surprise per account in this many days (default: 7) |
 | `MEDIA_DIR` | No | Where uploads are written (default: `media`; a volume in Docker) |
 | `REPORT_THRESHOLD` | No | Distinct devices needed to hide a submission (default: 3) |
 | `ENABLE_EMBED` | No | `/embed` and `/embed.js`. Default on locally, off on Railway; `1` turns it on there |

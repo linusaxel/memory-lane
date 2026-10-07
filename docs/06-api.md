@@ -15,9 +15,15 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
     Wikipedia article (`pipeline/links.py`). Locked, `links` is empty
   - Open, it also carries `quote` and `quote_by` (a line copied from the source,
     or null), `happened_at` with `happened_precision`, and `contrast_note`
+- `POST /v1/surprise` `{device, memory_id, lat, lng}` - asked by the phone's
+  background geofence off a walk. Grants one locked memory within
+  `SURPRISE_RADIUS_M` an unlock window of `SURPRISE_MINUTES`, at most once per
+  `SURPRISE_EVERY_DAYS` per account; returns `{memory_id, place, expires_at}`,
+  never the story. Any refusal is 409 `{reason: "not_now"}` (docs/10, "A
+  surprise, once a week")
 - `POST /v1/memories/{id}/unlock` `{device, lat?, lng?}` - **the unlock.** Same gate,
   and the only route that records one. POST because it creates something.
-  Only a stop of the walk in progress opens, and only standing on it; away
+  Only a stop of the walk in progress, or this week's surprise, opens, and only standing on it; away
   from it, it answers the locked memory and its distance. Opening one this
   account already has always works. 403 `{reason: "not_on_walk"}` standing on
   anything else, subscriber or not. Finishing today's walk with it sets

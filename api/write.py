@@ -13,6 +13,9 @@ from sqlalchemy import text
 import api.media
 from api.accounts import touch_device, user_for_device
 from api.gate import (
+    SURPRISE_EVERY_DAYS,
+    SURPRISE_MINUTES,
+    SURPRISE_RADIUS_M,
     is_gated,
     meters_between,
     notes_response,
@@ -34,6 +37,8 @@ from api.models import (
     ReportRequest,
     ReportResponse,
     SubmissionRequest,
+    SurpriseRequest,
+    SurpriseResponse,
     UnlockRequest,
 )
 from api.moderation import screen
@@ -53,6 +58,8 @@ from api.queries import (
     ROUTE_COMPLETED_QUERY,
     SINGLE_MEMORY_QUERY,
     SUBMISSION_INSERT,
+    SURPRISE_OPEN_QUERY,
+    SURPRISED_LATELY_QUERY,
 )
 from pipeline.db import get_session
 from pipeline.tags import from_text as hashtags
@@ -122,8 +129,9 @@ def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
     """Whether this account may open this memory.
 
     Already opened, it is theirs. Otherwise only a stop of today's walk in
-    progress opens, and only standing on it; anything else is refused 403
-    `not_on_walk` (docs/10, "A walk planner, nothing else").
+    progress opens, or an unexpired surprise, and only standing on it; anything
+    else is refused 403 `not_on_walk` (docs/10, "A walk planner, nothing else",
+    "A surprise, once a week").
 
     Under the user's row lock, so two presses on one memory record one unlock.
     """
@@ -135,6 +143,8 @@ def pay_for_unlock(session, device: str, memory_id: int, here: bool) -> bool:
     if not here:
         return False
     if session.execute(text(ON_TODAYS_ROUTE_QUERY), {**binds, "today": today()}).scalar():
+        return True
+    if session.execute(text(SURPRISE_OPEN_QUERY), binds).scalar():
         return True
     raise HTTPException(status_code=403, detail={"reason": "not_on_walk"})
 
@@ -189,6 +199,48 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
         )
 
     return memory
+
+
+@router.post("/v1/surprise", response_model=SurpriseResponse, status_code=201)
+def grant_surprise(body: SurpriseRequest):
+    """Open one locked memory off a walk, for half an hour, once a week.
+
+    Asked by the phone's background geofence when it passes near one. The
+    phone only says where it was; the server decides, so a loop of these
+    cannot open the map. Any refusal is the same 409 `not_now`, and the phone
+    then stays quiet. docs/10-decisions.md#a-surprise-once-a-week.
+    """
+    refused = HTTPException(status_code=409, detail={"reason": "not_now"})
+    with get_session() as session:
+        row = session.execute(
+            text(SINGLE_MEMORY_QUERY), {"memory_id": body.memory_id, "device_id": body.device}
+        ).fetchone()
+        if not row or not is_gated(row):
+            raise refused
+        coords = row_coordinates(row)
+        at = Coordinates(lat=body.lat, lng=body.lng)
+        if coords is None or meters_between(at, coords) > SURPRISE_RADIUS_M:
+            raise refused
+
+        user_id = user_for_device(session, body.device)
+        session.execute(text(LOCK_USER), {"user_id": user_id})
+        binds = {"device_id": body.device, "memory_id": body.memory_id}
+        if session.execute(text(EARNED_QUERY), binds).scalar():
+            raise refused
+        lately = {"user_id": user_id, "days": SURPRISE_EVERY_DAYS}
+        if session.execute(text(SURPRISED_LATELY_QUERY), lately).scalar():
+            raise refused
+
+        expires_at = session.execute(
+            text("""
+                INSERT INTO surprises (user_id, memory_id, expires_at)
+                VALUES (:user_id, :memory_id, LOCALTIMESTAMP + make_interval(mins => :minutes))
+                RETURNING expires_at AT TIME ZONE 'UTC'
+            """),
+            {"user_id": user_id, "memory_id": body.memory_id, "minutes": SURPRISE_MINUTES},
+        ).scalar()
+
+    return SurpriseResponse(memory_id=body.memory_id, place=row.place_name, expires_at=expires_at)
 
 
 @router.post("/v1/media", response_model=MediaItem, status_code=201)

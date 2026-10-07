@@ -41,6 +41,8 @@ PARAMS = {
     # Any valid UUID: EXPLAIN only needs the cast to parse.
     "device_id": "00000000-0000-0000-0000-000000000000",
     "device": "00000000-0000-0000-0000-000000000000",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "days": 7,
     "ids": [1],
     "today": "2026-09-22",
     "city_lat": 55.6761,

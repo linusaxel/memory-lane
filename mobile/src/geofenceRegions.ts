@@ -58,3 +58,14 @@ export function mayNotify(id: string, now: number, sent: Sent): Sent | null {
   );
   return { last: now, byId: { ...byId, [id]: now } };
 }
+
+/** An unexpired grant from POST /v1/surprise: one memory open off a walk
+ *  (docs/10-decisions.md#a-surprise-once-a-week). */
+export type Surprise = { memoryId: number; place: string; expiresAt: string };
+
+/** Only on a day the app was not opened: a surprise is for when you are not
+ *  looking. The once-a-week rule is the server's. */
+export const maySurprise = (lastOpened: string | null, today: string) => lastOpened !== today;
+
+export const liveSurprise = (surprise: Surprise | null, now: number): Surprise | null =>
+  surprise && Date.parse(surprise.expiresAt) > now ? surprise : null;
