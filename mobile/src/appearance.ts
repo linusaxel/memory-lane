@@ -1,4 +1,4 @@
-/** System, Light or Dark, chosen in the account menu and kept on this phone.
+/** System, Light or Dark, chosen in Settings and kept on this phone.
  *  `Appearance.setColorScheme` overrides the window, so `DynamicColorIOS`,
  *  `useColorScheme()`, the map and the native menus all follow it. */
 

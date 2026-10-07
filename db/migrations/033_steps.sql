@@ -6,6 +6,6 @@
 --   docker compose exec -T db psql -U memorylane -d memorylane -v ON_ERROR_STOP=1 \
 --     < db/migrations/033_steps.sql
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS steps INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS steps_counted_until TIMESTAMP NOT NULL
-    DEFAULT CURRENT_TIMESTAMP;
+-- users.steps and users.steps_counted_until were added here;
+-- 049_drop_steps_and_neighbourhoods.sql drops them again.
+SELECT 1;

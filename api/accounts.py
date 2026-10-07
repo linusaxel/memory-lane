@@ -15,21 +15,15 @@ import api.media
 from api.auth import apple_identity, either_identity, google_identity
 from api.models import (
     DEVICE_PATTERN,
-    Coordinates,
     DeviceRequest,
-    Neighbourhood,
-    NeighbourhoodsResponse,
     Profile,
     ProfileRequest,
     SignInRequest,
-    StepsRequest,
 )
 from api.moderation import screen
 from api.progression import XP_STEP, level, xp_of
 from api.queries import (
-    CREDIT_STEPS,
     DELETE_ORPHAN_SUBMITTED_PLACE,
-    NEIGHBOURHOODS_QUERY,
     STREAK_DAYS_QUERY,
     UNLOCK_COUNT_QUERY,
 )
@@ -130,8 +124,7 @@ def profile_of(session, device: str) -> Profile:
                     ARRAY[]::varchar[]
                 ) AS providers,
                 s.expires_at AS subscribed_until,
-                COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed,
-                u.steps, u.steps_counted_until
+                COALESCE(s.expires_at > CURRENT_TIMESTAMP, false) AS subscribed
             FROM devices d JOIN users u ON d.user_id = u.id
             LEFT JOIN subscriptions s ON s.user_id = u.id
             WHERE d.id = CAST(:device_id AS uuid)
@@ -164,8 +157,6 @@ def profile_of(session, device: str) -> Profile:
         providers=list(row.providers),
         subscribed=DEV_SUBSCRIBED or row.subscribed,
         subscribed_until=row.subscribed_until,
-        steps=row.steps,
-        steps_counted_until=row.steps_counted_until,
         **earned,
     )
 
@@ -189,27 +180,6 @@ def set_profile(body: ProfileRequest):
         user_id = user_for_device(session, body.device)
         set_display_name(session, user_id, name)
         return profile_of(session, body.device)
-
-
-@router.get("/v1/me/neighbourhoods", response_model=NeighbourhoodsResponse)
-def get_neighbourhoods(
-    device: str = Query(..., pattern=DEVICE_PATTERN),
-    lat: float | None = Query(None, ge=-90, le=90),
-    lng: float | None = Query(None, ge=-180, le=180),
-):
-    """Where stories still wait: each neighbourhood, opened out of total."""
-    with get_session() as session:
-        rows = session.execute(
-            text(NEIGHBOURHOODS_QUERY), {"device_id": device, "lat": lat, "lng": lng}
-        ).fetchall()
-    return NeighbourhoodsResponse(
-        neighbourhoods=[
-            Neighbourhood(
-                name=r.name, opened=r.opened, total=r.total, end=Coordinates(lat=r.lat, lng=r.lng)
-            )
-            for r in rows
-        ]
-    )
 
 
 # The old path, read under the row lock, so two racing uploads each take the
@@ -254,32 +224,6 @@ async def set_avatar(file: UploadFile, device: str = Form(..., pattern=DEVICE_PA
 @router.delete("/v1/me/avatar", response_model=Profile)
 def remove_avatar(device: str = Query(..., pattern=DEVICE_PATTERN)):
     return swap_avatar(device, None)
-
-
-# Faster than anyone walks, sustained: a count over it is shaken or made up.
-MAX_STEPS_PER_SECOND = 3
-
-
-@router.post("/v1/me/steps", response_model=Profile)
-def credit_steps(body: StepsRequest):
-    """Add the steps the phone counted since the watermark, and move it to now.
-
-    A `since` that is no longer the watermark credits nothing and answers the
-    profile as it is, whose watermark the next sync starts from: a retry or a
-    second phone racing this one is counted once.
-    """
-    with get_session() as session:
-        user_id = user_for_device(session, body.device)
-        session.execute(
-            text(CREDIT_STEPS),
-            {
-                "user_id": user_id,
-                "since": body.since.replace(tzinfo=None),
-                "steps": body.steps,
-                "max_rate": MAX_STEPS_PER_SECOND,
-            },
-        )
-        return profile_of(session, body.device)
 
 
 # Signing in binds devices.user_id and issues no token. api/auth.py verifies the

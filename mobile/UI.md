@@ -51,17 +51,6 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ you ("You")                top right, your photo or initial (src/Avatar.tsx, 38pt) in a 44pt
-│                              glass circle, and under it a native menu (src/AccountMenu.tsx):
-│                              your name as its title, "3-day streak · 27 opened · 2 filed",
-│                              "Signed in with Apple" or "Not signed in", Edit profile, then
-│                              Your walks (`figure.walk`; it recounts steps and opens
-│                              src/HowItWorks.tsx: level and XP, every walk as a card drawn as its
-│                              shape (src/WalkCard.tsx; a tap shows it on the map under the
-│                              PastWalk card), every memory opened as its locket, four to a row (a
-│                              tap opens it over the sheet), then planning, standing there,
-│                              finishing to level up, one walk a day), Settings (`gearshape`),
-│                              Appearance (System, Light, Dark; src/appearance.ts, kept on the phone)
 ├─ Journal                    top left, a 44pt glass circle, the planner and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
@@ -137,8 +126,9 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              header, sections and list arrive a beat apart. Drag it down or
 │                              × to close. Reduce Motion: no cascade. The journal is you as well
 ├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
-│                              it "12 memories · 4 places · 2 added · 5 hearts", zeros left out
-│                              but the first. Tapping it opens Edit profile. × top right. A
+│                              it "3-day streak · 12 memories · 4 places · 2 added · 5 hearts",
+│                              zeros left out but the first, then "Level 3" and a thin plum XP
+│                              bar. Tapping it opens Edit profile. A gear, then × top right. A
 │                              number that grew since the last look rolls up from its old
 │                              value (countUp.ts, at most 8 ticks over ~600 ms, a selection
 │                              haptic each); one that fell just shows. First look and Reduce
@@ -148,7 +138,9 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              came back)
 ├─ Walks                       one row per walk that opened something, date and length; a row
 │                              opens in place to its earned stops: a gold check circle each, on a gold rail.
-│                              Cached for the train
+│                              "Cards" at the right of its count shows them two to a row, each
+│                              drawn as its shape (src/WalkCard.tsx; a tap closes the journal and
+│                              shows it on the map under the PastWalk card). Cached for the train
 ├─ Unlocked                    what you opened; "♡ Hearted" at the right of its count shows only
 │                              what you hearted. One opened since the last look scales in
 │                              once, 0.8 → 1.08 → 1 with a selection haptic, the first time
@@ -157,15 +149,17 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
                                1 note · last heart yesterday", never who
 
 Settings and Edit profile are sections of nothing: a section is what you did,
-and the account is not (docs/10, "The journal is a sheet"). They open as pageSheet modals, Settings from the map and Edit profile
-over the journal, which stays mounted under it.
+and the account is not (docs/10, "The journal is you"). They open as pageSheet modals over the journal, which
+stays mounted under it: Settings from its gear, Edit profile from its header.
 
-Settings (src/Settings.tsx, pageSheet, from the menu under your photo) - "Settings" 34/700, × top right
+Settings (src/Settings.tsx, pageSheet, from the journal's gear) - "Settings" 34/700, × top right.
+Grouped rows: a small label, a paperRaised card with a gold hairline, an optional line under it
 ├─ Account                     which sign-ins, add the other, sign out (back to the gate),
 │                              delete; the subscription
-├─ How unlocking works         the one place that answers "why can't I read this"
-├─ Location, Notifications     state + action; the Switch is why this is not inside the cover (rule 9)
-└─ About                       privacy policy, contact, OpenStreetMap
+├─ Appearance                  System · Light · Dark (src/appearance.ts, kept on the phone)
+├─ Location, Notifications     one row each: "Location  On ›", "A memory is nearby" + Switch
+├─ How it works                the one place that answers "why can't I read this", two lines
+└─ About                       privacy policy, contact, OpenStreetMap, each ↗
 
 Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/700, × top right
 ├─ the photo, 112pt            Choose photo / Take photo, square crop; Remove photo. Public,
@@ -176,8 +170,7 @@ There are no tabs on the map, and no map of what is locked: the planner draws th
 offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
 On a walk the bottom is where you act, one tap each: Add, the walk card and Center on me;
 in the planner the card's own buttons are. The top is where you read:
-your level, with Journal top left and you top right (docs/10,
-"One gold button that changes").
+Journal top left, nothing top right (docs/10, "The journal is you").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -206,7 +199,7 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/lockMotion.ts` | the worklet curves and pivots LocketUnlock moves by |
 | `src/UnlockHere.tsx` | the locket over the map, ‹ › when more than one is in reach |
 | `src/SlideToUnlock.tsx` | slide to unlock, its own row over the bottom row while a memory is in reach |
-| `src/WalkCard.tsx` | a past walk drawn as its shape: the cards in Your walks, the finish card's and journal rows' small shape |
+| `src/WalkCard.tsx` | a past walk drawn as its shape: the journal's walk cards, the finish card's and journal rows' small shape |
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |

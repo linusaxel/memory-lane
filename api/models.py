@@ -384,34 +384,6 @@ class Profile(BaseModel):
     level: int = 1
     xp_level: int = 0
     xp_next: int = 50
-    # Steps are a lifetime total for the journal and buy nothing, counted from
-    # steps_counted_until (naive UTC), null until there is a user row.
-    steps: int = 0
-    steps_counted_until: datetime | None = None
-
-
-class StepsRequest(BaseModel):
-    """The steps the phone counted from `since`, which must be the watermark
-    the profile last gave it. Seven days of Core Motion is at most a few
-    hundred thousand; the bound is only against garbage."""
-
-    device: str = Field(pattern=DEVICE_PATTERN)
-    since: datetime
-    steps: int = Field(ge=0, le=1_000_000)
-
-
-class Neighbourhood(BaseModel):
-    """docs/10, "Where stories wait"."""
-
-    name: str
-    opened: int
-    total: int
-    # Where a walk to it ends: a point inside its outline.
-    end: Coordinates
-
-
-class NeighbourhoodsResponse(BaseModel):
-    neighbourhoods: list[Neighbourhood]
 
 
 class ProfileRequest(BaseModel):

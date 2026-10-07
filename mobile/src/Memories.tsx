@@ -1,12 +1,14 @@
 /** The journal: a pageSheet from the map's Journal button. It is you as
- *  well: your photo, name and numbers on top (tap them for Edit profile), then
- *  three sections of what you did behind a segmented control. Settings are not
- *  a fourth, and not here: they are under your photo on the map
- *  (docs/10-decisions.md, "The journal is a sheet").
+ *  well: your photo, name, numbers and level on top (tap them for Edit
+ *  profile), the cog for Settings beside ×, then three sections of what you
+ *  did behind a segmented control (docs/10-decisions.md, "The journal is
+ *  you").
  *
  * **Walks** - every walk this account took that opened something, newest
- * first (a walk that opened nothing is deleted, docs/10). A row opens in
- * place to the memories it earned, strung on a rail in walking order. Cached
+ * first (a walk that opened nothing is deleted, docs/10). As a list, a row
+ * opens in place to the memories it earned, strung on a rail in walking
+ * order; as cards, each walk is drawn as its shape and a tap shows it on the
+ * map. Cached
  * (route.ts `loadWalked`), so it reads on a train (F16).
  * **Unlocked** - everything earned, newest first, from App.tsx's
  * local copy (unlocked.ts), so it too reads on a train. Your own are left out.
@@ -26,6 +28,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
@@ -44,7 +47,7 @@ import Glyph from './Glyph.tsx';
 import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
-import { WalkShape, walkPath } from './WalkCard.tsx';
+import WalkCard, { WalkShape, walkPath } from './WalkCard.tsx';
 import { roll } from './countUp.ts';
 import {
   attention,
@@ -69,6 +72,9 @@ type Props = {
   unlockedCount: number;
   placeCount: number;
   onEditProfile: () => void;
+  onSettings: () => void;
+  /** A walk card tapped: show that walk on the map. */
+  onOpenWalk: (walk: WalkedRoute) => void;
   /** Refetches each time this turns true: the journal stays mounted. */
   focused: boolean;
   /** Bumped by App.tsx after a save or a delete, which happen without
@@ -90,6 +96,7 @@ type Status = 'loading' | 'ready' | 'failed';
 type Section = 'walks' | 'unlocked' | 'mine';
 type Item =
   | { kind: 'walk'; walk: WalkedRoute; index: number }
+  | { kind: 'cards' }
   | { kind: 'stop'; memory: LocatedMemory; walk: number; stop: number }
   | { kind: 'unlocked'; memory: LocatedMemory }
   | { kind: 'mine'; memory: LocatedMemory };
@@ -101,6 +108,8 @@ export default function Memories({
   unlockedCount,
   placeCount,
   onEditProfile,
+  onSettings,
+  onOpenWalk,
   focused,
   refreshKey,
   unlocked,
@@ -120,6 +129,9 @@ export default function Memories({
   const [walksStatus, setWalksStatus] = useState<Status>('loading');
   const [openWalk, setOpenWalk] = useState<number | null>(null);
   const [heartedOnly, setHeartedOnly] = useState(false);
+  const [walkCards, setWalkCards] = useState(false);
+  // Two to a row, between the sheet's 24pt margins and one 12pt gap.
+  const card = (useWindowDimensions().width - 48 - 12) / 2;
   // The baseline as it was when the journal opened, so a row stays "new" for
   // the whole look; the look itself is what moves the baseline on.
   const [seen, setSeen] = useState<Seen | null>(null);
@@ -133,8 +145,8 @@ export default function Memories({
   const enter = useRef([0, 1, 2].map(() => new Animated.Value(1))).current;
   // The header's numbers mid-roll; null shows the real ones.
   const [rolling, setRolling] = useState<Counted | null>(null);
-  const counted = useRef<Counted>({ memories: 0, places: 0, steps: 0 });
-  counted.current = { memories: unlockedCount, places: placeCount, steps: profile?.steps ?? 0 };
+  const counted = useRef<Counted>({ memories: 0, places: 0 });
+  counted.current = { memories: unlockedCount, places: placeCount };
 
   useEffect(() => {
     if (!focused) return;
@@ -150,7 +162,7 @@ export default function Memories({
       ([before, still]) => {
         saveCounted(now);
         if (!before || still || closed) return;
-        const keys = ['memories', 'places', 'steps'] as const;
+        const keys = ['memories', 'places'] as const;
         const tracks = keys.map((k) => roll(before[k], now[k]));
         const ticks = Math.max(...tracks.map((t) => t.length));
         if (!ticks) return;
@@ -322,14 +334,23 @@ export default function Memories({
       ? mine.map((memory) => ({ kind: 'mine', memory }))
       : section === 'unlocked'
         ? shown.map((memory) => ({ kind: 'unlocked', memory }))
-        : walks.flatMap((walk, index): Item[] => [
-            { kind: 'walk', walk, index },
-            ...(openWalk === index
-              ? walk.memories
-                  .map((memory, at): Item => ({ kind: 'stop', memory, walk: index, stop: at + 1 }))
-                  .filter((item) => item.kind === 'stop' && !item.memory.locked)
-              : []),
-          ]);
+        : walkCards
+          ? walks.length
+            ? [{ kind: 'cards' }]
+            : []
+          : walks.flatMap((walk, index): Item[] => [
+              { kind: 'walk', walk, index },
+              ...(openWalk === index
+                ? walk.memories
+                    .map((memory, at): Item => ({
+                      kind: 'stop',
+                      memory,
+                      walk: index,
+                      stop: at + 1,
+                    }))
+                    .filter((item) => item.kind === 'stop' && !item.memory.locked)
+                : []),
+            ]);
 
   // Live, not stored: neither list carries a meaningful distance_meters.
   const distanceTo = (item: LocatedMemory) =>
@@ -360,10 +381,20 @@ export default function Memories({
             </Text>
             <Text style={styles.stats} numberOfLines={1}>
               {rolling
-                ? stats(rolling.memories, rolling.places, profile, rolling.steps)
-                : stats(unlockedCount, placeCount, profile, profile?.steps ?? 0)}
+                ? stats(rolling.memories, rolling.places, profile)
+                : stats(unlockedCount, placeCount, profile)}
             </Text>
+            <Level profile={profile} />
           </View>
+        </Pressable>
+        <Pressable
+          style={dim(styles.cog)}
+          hitSlop={8}
+          onPress={onSettings}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+        >
+          <Glyph name="gearshape" size={20} color={color.inkSoft} />
         </Pressable>
         <CloseButton onPress={onClose} label="Close journal" />
       </Animated.View>
@@ -384,14 +415,22 @@ export default function Memories({
           data={data}
           // Two walks can share a date: one per device, and an account has several.
           keyExtractor={(item) =>
-            item.kind === 'walk'
-              ? `walk-${item.index}`
-              : item.kind === 'stop'
-                ? `walk-${item.walk}-${item.memory.id}`
-                : String(item.memory.id)
+            item.kind === 'cards'
+              ? 'cards'
+              : item.kind === 'walk'
+                ? `walk-${item.index}`
+                : item.kind === 'stop'
+                  ? `walk-${item.walk}-${item.memory.id}`
+                  : String(item.memory.id)
           }
           renderItem={({ item }) =>
-            item.kind === 'walk' ? (
+            item.kind === 'cards' ? (
+              <View style={styles.shelf}>
+                {walks.map((walk, i) => (
+                  <WalkCard key={i} walk={walk} size={card} onPress={() => onOpenWalk(walk)} />
+                ))}
+              </View>
+            ) : item.kind === 'walk' ? (
               <Row
                 place={walkDate(item.walk.route_date)}
                 summary={item.walk.memories.map((memory) => memory.place.name).join(' · ')}
@@ -434,6 +473,11 @@ export default function Memories({
               filter={
                 section === 'unlocked' && unlocked.length > 0
                   ? { on: heartedOnly, toggle: () => setHeartedOnly((on) => !on) }
+                  : undefined
+              }
+              cards={
+                section === 'walks' && walks.length > 0
+                  ? { on: walkCards, toggle: () => setWalkCards((on) => !on) }
                   : undefined
               }
             />
@@ -487,17 +531,37 @@ export default function Memories({
   );
 }
 
-/** What Settings' figures used to say, in one line under the name. A count
- *  that is still zero says nothing, bar the first. */
-function stats(unlocked: number, places: number, profile: Profile | null, steps: number): string {
+/** Your numbers in one line under the name. A count that is still zero says
+ *  nothing, bar the first. */
+function stats(unlocked: number, places: number, profile: Profile | null): string {
   const parts = [`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'}`];
+  const streak = profile?.streak ?? 0;
+  if (streak > 0) parts.unshift(`${streak}-day streak`);
   if (places > 0) parts.push(`${places} ${places === 1 ? 'place' : 'places'}`);
   const added = profile?.submitted ?? 0;
   if (added > 0) parts.push(`${added} added`);
   const hearts = profile?.hearts_received ?? 0;
   if (hearts > 0) parts.push(`${hearts} ${hearts === 1 ? 'heart' : 'hearts'}`);
-  if (steps > 0) parts.push(`${steps.toLocaleString()} steps`);
   return parts.join(' · ');
+}
+
+/** Your level and how far into it, as a thin bar: finished walks fill it. */
+function Level({ profile }: { profile: Profile | null }) {
+  const level = profile?.level ?? 1;
+  const into = (profile?.xp ?? 0) - (profile?.xp_level ?? 0);
+  const span = (profile?.xp_next ?? 50) - (profile?.xp_level ?? 0);
+  return (
+    <View
+      style={styles.level}
+      accessible
+      accessibilityLabel={`Level ${level}, ${Math.max(0, span - into)} XP to the next`}
+    >
+      <Text style={styles.levelText}>{`Level ${level}`}</Text>
+      <View style={styles.bar}>
+        <View style={[styles.fill, { width: `${Math.min(100, (into / span) * 100)}%` }]} />
+      </View>
+    </View>
+  );
 }
 
 function Switcher({
@@ -562,10 +626,29 @@ function reach(m: LocatedMemory): string | undefined {
   return parts.length ? parts.join(' · ') : undefined;
 }
 
-function Header({ note, filter }: { note: string; filter?: { on: boolean; toggle: () => void } }) {
+type Toggle = { on: boolean; toggle: () => void };
+
+function Header({ note, filter, cards }: { note: string; filter?: Toggle; cards?: Toggle }) {
   return (
     <View style={styles.header}>
-      {!!note && <Text style={styles.sectionNote}>{note}</Text>}
+      <Text style={styles.sectionNote}>{note}</Text>
+      {cards && (
+        <Pressable
+          style={dim(styles.filter)}
+          hitSlop={8}
+          onPress={cards.toggle}
+          accessibilityRole="button"
+          accessibilityLabel={cards.on ? 'Show as a list' : 'Show as cards'}
+          testID="walks-view"
+        >
+          <Glyph
+            name={cards.on ? 'list.bullet' : 'square.grid.2x2'}
+            size={15}
+            color={color.inkSoft}
+          />
+          <Text style={styles.filterText}>{cards.on ? 'List' : 'Cards'}</Text>
+        </Pressable>
+      )}
       {filter && (
         <Pressable
           style={dim(styles.filter)}
@@ -689,6 +772,12 @@ const styles = StyleSheet.create({
   whoText: { flex: 1 },
   title: { ...screenTitle, fontSize: 28, lineHeight: 34 },
   stats: { ...label, fontSize: 12, marginTop: 2 },
+  level: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  levelText: { ...font.uiBold, fontSize: 12, color: color.plum },
+  bar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: color.track },
+  fill: { height: 4, borderRadius: 2, backgroundColor: color.plum },
+  cog: { padding: 6 },
+  shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 24, paddingTop: 16 },
   // A capsule with the open tab raised in it, like the planner's Mode row.
   switcher: {
     flexDirection: 'row',

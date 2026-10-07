@@ -71,7 +71,6 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/cost.py` | Dollars per memory over a date range: the Admin Cost Report API's spend over the memories made. Needs `ANTHROPIC_ADMIN_KEY`; free |
 | `pipeline/enrich.py` | Researches each new memory on the web (people, quotes, then and now, asides) and keeps only what a page fetched to check it says; adds freely licensed Commons pictures of the place. Into `memories.enrichment`, not served yet. Runs after aggregation. Also `seed`: researches a thin record (a plaque) before it is extracted. Bills |
 | `pipeline/links.py` | Links the names in a summary to Wikipedia via Wikidata, only on one exact match. Runs after aggregation; alone, it is the backfill. Bills a little |
-| `pipeline/neighbourhoods.py` | Neighbourhood outlines from one Overpass query, for "Where stories wait". Free, upserts |
 | `pipeline/now.py` | Asks OpenStreetMap what a building-level pin stands inside today, and writes the "now" side of its contrast from that. Runs after aggregation on that content's places; alone, it is the backfill. Free |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset. `--memories` finds retold memories within 150 m, and `--apply` hides the weaker telling |
@@ -148,16 +147,14 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/SlideToUnlock.tsx` | Slide to unlock: its own row over the bottom row while a memory is in reach, scrubbing the locket's hold |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
 | `mobile/src/MemoryMarker.tsx` | One pin: its locket, keyhole and all until opened, lit when it can be opened from here |
-| `mobile/src/AccountMenu.tsx` | You, top right: your photo, and a menu of your numbers, Edit profile, Settings and Appearance |
-| `mobile/src/appearance.ts` | System, Light or Dark from the account menu, kept on the phone |
+| `mobile/src/appearance.ts` | System, Light or Dark from Settings, kept on the phone |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
-| `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |
+| `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name, numbers and level, a gear for Settings, then past walks (list or cards), unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
-| `mobile/src/Settings.tsx` | Settings: its own sheet, from the cog on the map |
+| `mobile/src/Settings.tsx` | Settings: grouped rows in its own sheet, from the gear in the journal |
 | `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
 | `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |
 | `mobile/src/Paywall.tsx` | The subscription: more walks a day (F35). Prices from the store; "not available" without a RevenueCat key |
-| `mobile/src/steps.ts` | Steps walked, from Core Motion, counted on the account for the journal. Buys nothing. iOS only |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: the plans and the key packs, no-ops without a key. Never decides who has paid |
 | `mobile/src/AddIcon.tsx` | Add a memory's icon: a locket with a plus |
 | `mobile/src/Button.tsx` | The four buttons: go (green), foil (gold), quiet, text |
@@ -165,8 +162,6 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Onboarding.tsx` | The four first-run pages and the location primer, once after sign-in |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
-| `mobile/src/Neighbourhoods.tsx` | Where stories wait, from the account menu: each neighbourhood, opened out of total; a row plans a walk ending there |
-| `mobile/src/HowItWorks.tsx` | Your walks, from the account menu: level, XP, every walk as a card, then how walks work |
 | `mobile/src/WalkCard.tsx` | A past walk as a card, drawn as its shape (`react-native-svg`); `WalkShape` for the finish card and journal rows |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
 | `mobile/src/Glyph.tsx` | Every icon, as an SF Symbol (`@expo/ui`) |

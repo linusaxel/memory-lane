@@ -87,9 +87,6 @@ import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
 import EditProfile from './src/EditProfile.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
-import { syncSteps } from './src/steps.ts';
-import HowItWorks from './src/HowItWorks.tsx';
-import Neighbourhoods from './src/Neighbourhoods.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
@@ -104,7 +101,6 @@ import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
-import AccountMenu from './src/AccountMenu.tsx';
 import { loadLook } from './src/appearance.ts';
 import MemoryMarker from './src/MemoryMarker.tsx';
 import MemorySheet, { TALL } from './src/MemorySheet.tsx';
@@ -345,8 +341,6 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
-  const [howOpen, setHowOpen] = useState(false);
-  const [waitingOpen, setWaitingOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
   // server knows (src/purchases.ts).
   useEffect(() => {
@@ -354,7 +348,7 @@ export default function App() {
   }, [profile?.user_id]);
   // What finishing today's walk earned: the closing card says so.
   const [reward, setReward] = useState<Reward | null>(null);
-  // A past walk tapped in Your walks, drawn on the map in place of today's
+  // A past walk tapped in the journal, drawn on the map in place of today's
   // pins until Done. A look: nothing on it opens that was not earned.
   const [pastWalk, setPastWalk] = useState<WalkedRoute | null>(null);
   // Set to open Submit as an editor for this memory instead of a blank form.
@@ -516,9 +510,7 @@ export default function App() {
               setSignedIn(true);
               saveSignedIn(true);
             }
-            return syncSteps(id, who);
           })
-          .then((after) => after && mounted.current && setProfile(after))
           .catch(() => {});
         const earned = await fetchUnlocked(id);
         if (!mounted.current || earned.length === 0) return;
@@ -1115,8 +1107,6 @@ export default function App() {
     setSettingsOpen(false);
     setProfileOpen(false);
     setPaywallOpen(false);
-    setHowOpen(false);
-    setWaitingOpen(false);
   }, [notification, openMemory]);
 
   // On a walk only its stops are drawn, so only they are in reach; off one,
@@ -1327,21 +1317,6 @@ export default function App() {
     [unlocked, routeStarted, nextRouteStop, routeShown, earned, refreshProfile],
   );
 
-  // Count what was walked, from where the last count stopped.
-  const countSteps = useCallback(() => {
-    deviceId()
-      .then(async (id) => {
-        const who = await fetchProfile(id);
-        const after = (await syncSteps(id, who)) ?? who;
-        if (!mounted.current) return;
-        // A walk's worth landing is felt; a stroll to the fridge is not.
-        if (after.steps - who.steps >= 100) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-        }
-        setProfile(after);
-      })
-      .catch(() => {});
-  }, []);
   const checkJournal = useCallback(() => {
     deviceId()
       .then((id) => fetchMine(id))
@@ -1354,15 +1329,13 @@ export default function App() {
   useEffect(() => {
     if (!journalOpen) checkJournal();
   }, [journalOpen, checkJournal]);
-  // Back in the app, count what was walked while it was away.
+  // Back in the app, see what came back on your memories while it was away.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state !== 'active') return;
-      countSteps();
-      checkJournal();
+      if (state === 'active') checkJournal();
     });
     return () => sub.remove();
-  }, [countSteps, checkJournal]);
+  }, [checkJournal]);
 
   const heart = useCallback(
     async (memory: LocatedMemory) => {
@@ -1573,11 +1546,11 @@ export default function App() {
     </GlassButton>
   );
 
-  // Add, one tap from the planner and the walk alike: filing is standing
-  // somewhere, not unlocking.
-  const addButton = (shape: typeof styles.circle = styles.circle) => (
+  // Add, one tap from the map and the walk alike: filing is standing
+  // somewhere, not unlocking. The planner has none: its card fills the bottom.
+  const addButton = (
     <GlassButton
-      style={shape}
+      style={styles.bigCircle}
       hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel="Add a memory here"
@@ -1589,7 +1562,7 @@ export default function App() {
         setSubmitOpen(true);
       }}
     >
-      <AddIcon size={shape === styles.circle ? 24 : 30} color={color.gold} />
+      <AddIcon size={30} color={color.gold} />
     </GlassButton>
   );
 
@@ -1597,6 +1570,36 @@ export default function App() {
   // it is rendered inside it, so these move into the journal while it is open.
   const sheets = (
     <>
+      <Settings
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onSubscribe={() => {
+          setSettingsOpen(false);
+          setPaywallOpen(true);
+        }}
+        device={device}
+        profile={profile}
+        onProfile={accountChanged}
+        radiusMeters={radiusMeters}
+        permission={permission}
+        onRequestLocation={() => {
+          if (permission === 'granted' || permission === 'blocked') {
+            Linking.openSettings();
+            return;
+          }
+          goToMyLocation().catch(() => false);
+        }}
+        notifyNearby={notifyNearby}
+        onNotifyNearby={handleNotifyNearby}
+      />
+
+      <Paywall
+        visible={paywallOpen}
+        onClose={() => setPaywallOpen(false)}
+        device={device}
+        profile={profile}
+        onProfile={setProfile}
+      />
       <EditProfile
         visible={profileOpen}
         onClose={() => setProfileOpen(false)}
@@ -1936,11 +1939,6 @@ export default function App() {
                 {journalNew && <View style={styles.newDot} />}
               </GlassButton>
             )}
-          {/* The planner has no bottom row (its card is there), so Add sits
-              beside Journal. */}
-          {stage === 'preview' && !journalOpen && (
-            <View style={styles.topLeftSecond}>{addButton()}</View>
-          )}
           {stage === 'map' && offline && !journalOpen && (
             <GlassCard style={styles.offline} accessibilityLiveRegion="polite">
               <Glyph name="icloud.slash" size={20} weight="medium" color={color.inkSoft} />
@@ -1951,7 +1949,7 @@ export default function App() {
           {/* Home: the map, you on it, the way into the planner and Add. */}
           {stage === 'map' && !journalOpen && !pastWalk && !slide && (
             <View style={styles.bottom}>
-              {addButton(styles.bigCircle)}
+              {addButton}
               <View style={styles.middle}>
                 <PlanWalkButton
                   place={styles.wide}
@@ -1963,26 +1961,6 @@ export default function App() {
               {centerButton}
             </View>
           )}
-          <View style={styles.topRight}>
-            <AccountMenu
-              profile={profile}
-              name={displayName}
-              onEditProfile={() => setProfileOpen(true)}
-              onSettings={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setSettingsOpen(true);
-              }}
-              onWalks={() => {
-                Haptics.selectionAsync().catch(() => {});
-                countSteps();
-                setHowOpen(true);
-              }}
-              onWaiting={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setWaitingOpen(true);
-              }}
-            />
-          </View>
           {/* On a walk: Add, the walk card, Center on me (docs/10, "One
               gold button that changes"). Not over a card with its own
               buttons at the bottom. */}
@@ -1998,7 +1976,7 @@ export default function App() {
           )}
           {stage === 'walk' && !confirmEnd && !showDone && !pastWalk && !slide && (
             <View style={styles.bottom}>
-              {addButton(styles.bigCircle)}
+              {addButton}
               <View style={styles.middle}>
                 {walking && !position && (
                   // Without location nothing can ever unlock, so the button says so
@@ -2192,6 +2170,14 @@ export default function App() {
             unlockedCount={collected.length}
             placeCount={placesUnlocked}
             onEditProfile={() => setProfileOpen(true)}
+            onSettings={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setSettingsOpen(true);
+            }}
+            onOpenWalk={(walk) => {
+              setJournalOpen(false);
+              setPastWalk(walk);
+            }}
             focused={journalOpen}
             refreshKey={mineVersion}
             unlocked={unlockedByOthers}
@@ -2207,72 +2193,7 @@ export default function App() {
           {journalOpen && sheets}
         </Modal>
 
-        {!journalOpen && !howOpen && sheets}
-
-        <Settings
-          visible={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-          onSubscribe={() => {
-            setSettingsOpen(false);
-            setPaywallOpen(true);
-          }}
-          device={device}
-          profile={profile}
-          onProfile={accountChanged}
-          radiusMeters={radiusMeters}
-          permission={permission}
-          onRequestLocation={() => {
-            if (permission === 'granted' || permission === 'blocked') {
-              Linking.openSettings();
-              return;
-            }
-            goToMyLocation().catch(() => false);
-          }}
-          notifyNearby={notifyNearby}
-          onNotifyNearby={handleNotifyNearby}
-        />
-
-        <Neighbourhoods
-          visible={waitingOpen}
-          onClose={() => setWaitingOpen(false)}
-          device={device}
-          at={positionRef.current}
-          onPick={
-            stage === 'map' || stage === 'preview'
-              ? (end) => {
-                  setWaitingOpen(false);
-                  setWalkAsk((ask) => ({ ...ask, loop: false, end }));
-                  setStage('preview');
-                }
-              : undefined
-          }
-        />
-        <HowItWorks
-          visible={howOpen}
-          onClose={() => setHowOpen(false)}
-          profile={profile}
-          device={device}
-          radiusMeters={radiusMeters}
-          onOpenWalk={(walk) => {
-            setHowOpen(false);
-            setPastWalk(walk);
-          }}
-          opened={unlockedByOthers}
-          onOpenMemory={(memory) => {
-            setOpenAt([memory]);
-            setOpenIndex(0);
-          }}
-        >
-          {howOpen && sheets}
-        </HowItWorks>
-
-        <Paywall
-          visible={paywallOpen}
-          onClose={() => setPaywallOpen(false)}
-          device={device}
-          profile={profile}
-          onProfile={setProfile}
-        />
+        {!journalOpen && sheets}
 
         {intro && (
           <Onboarding
@@ -2311,8 +2232,6 @@ const styles = StyleSheet.create({
   // Glass over the map (src/Glass.tsx). `topLeft` and friends place a
   // control; `pill` and `circle` are its shape.
   topLeft: { position: 'absolute', top: 64, left: 18 },
-  topLeftSecond: { position: 'absolute', top: 64, left: 76 },
-  topRight: { position: 'absolute', top: 64, right: 18 },
   // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
   // over Apple's logo and Legal link (HIG Maps asks 10).
   bottom: {

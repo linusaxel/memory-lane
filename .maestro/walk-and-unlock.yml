@@ -81,12 +81,15 @@ appId: ${APP_ID}
 - setLocation:
     latitude: ${Number(START_LAT) + 0.02}
     longitude: ${START_LNG}
-- tapOn: "You"
+- tapOn: "Journal"
 - tapOn: "Settings"
 - scrollUntilVisible:
     element: "Notify me when a memory is nearby"
     direction: DOWN
 - tapOn: "Notify me when a memory is nearby"
+# Settings opens over the journal, and the map's walk waits under both.
+- tapOn: "Close settings"
+- tapOn: "Close journal"
 # Another app in front, not `pressKey: home`: home left this app on screen,
 # and the toggle's own label then passed for the banner.
 - launchApp: com.apple.Preferences
@@ -303,25 +306,12 @@ appId: ${APP_ID}
 - assertVisible:
     id: "more-walks"
 
-# The walk is kept: every memory it opened is a locket in Your walks, and a
-# tap opens it over the sheet (docs/10, "No keys; your memories are your
-# lockets"); its card shows the walk on the map again.
-- tapOn: "You"
-- tapOn: "Your walks"
-- scrollUntilVisible:
-    element:
-      id: "opened-locket"
-    direction: DOWN
-- takeScreenshot: lockets
+# The walk is kept: the journal's Walks tab, as cards, draws it as its shape,
+# and a card shows the walk on the map again.
+- tapOn: "Journal"
 - tapOn:
-    id: "opened-locket"
-    index: 0
-- assertVisible: "Heart"
-- tapOn: "Close"
-- scrollUntilVisible:
-    element:
-      id: "walk-card"
-    direction: UP
+    id: "walks-view"
+- takeScreenshot: walk-cards
 - tapOn:
     id: "walk-card"
     index: 0

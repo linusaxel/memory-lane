@@ -43,7 +43,7 @@ const COUNTED = 'memorylane.counted.v1';
 
 /** The journal header's numbers as last shown, so the next look rolls them up
  *  from there (UI.md). Lost, it costs one look without the roll. */
-export type Counted = { memories: number; places: number; steps: number };
+export type Counted = { memories: number; places: number };
 
 export async function loadCounted(): Promise<Counted | null> {
   try {

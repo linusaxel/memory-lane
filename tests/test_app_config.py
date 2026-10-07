@@ -62,11 +62,10 @@ def test_ios_declares_always_location_only_for_the_proximity_notification(expo):
     "Allow MemoryLane to access your location". `false` deletes a key outright;
     see applyPermissions in @expo/config-plugins.
 
-    Now two of those three are real, specific purpose strings, and the
-    pre-iOS11 NSLocationAlwaysUsageDescription key stays false: it is not
-    needed for an app that only supports iOS 13+. Motion is the step count
-    (docs/10-decisions.md#steps-open-a-memory), and expo-location's plugin
-    writes the key after expo-sensors', so the two must say the same. A
+    Now the always string is real and specific, and the pre-iOS11
+    NSLocationAlwaysUsageDescription key stays false: it is not needed for an
+    app that only supports iOS 13+. Motion is false again: nothing reads it
+    since the step count went (docs/10-decisions.md#the-journal-is-you). A
     declared purpose string is what App Store review reads
     as intent, so this pair - the deprecated key staying false, and the real
     one being specific - is what keeps this honest, same as
@@ -85,13 +84,7 @@ def test_ios_declares_always_location_only_for_the_proximity_notification(expo):
     assert always is not False
     assert len(always) > 40, "too vague for review"
     assert options["locationAlwaysPermission"] is False
-    sensors = next(
-        entry[1]
-        for entry in expo["plugins"]
-        if isinstance(entry, list) and entry[0] == "expo-sensors"
-    )
-    assert options["motionUsagePermission"] == sensors["motionPermission"]
-    assert "steps" in sensors["motionPermission"]
+    assert options["motionUsagePermission"] is False, "nothing reads motion since steps went"
     assert options["locationWhenInUsePermission"].startswith("Memory Lane")
     assert options["isAndroidBackgroundLocationEnabled"] is True
     # expo-location's startGeofencingAsync throws without UIBackgroundModes

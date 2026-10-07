@@ -167,7 +167,7 @@ export const font = {
  *  you press. Circles are half their side and need no token. */
 export const radius = { field: 14, card: 24, pill: 999 };
 
-/** A screen's or sheet's own title: Journal, Settings, Your walks. */
+/** A screen's or sheet's own title: Journal, Settings. */
 export const screenTitle = { ...font.title, fontSize: 34, lineHeight: 40, color: color.ink };
 
 /** The shadow for paper that floats over the map. The hold ring's seal glow
@@ -198,7 +198,7 @@ export const floating = {
   ...lift,
 };
 
-/** A glass control over the map: Journal, the steps pill, the walk bar. */
+/** A glass control over the map: Journal, the walk bar. */
 export const pill = {
   minHeight: 44,
   paddingHorizontal: 16,

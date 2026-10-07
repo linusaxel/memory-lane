@@ -127,11 +127,8 @@ CREATE TABLE users (
     -- A photo under MEDIA_DIR, public like the name. Not a media row: those
     -- with no memory are what pipeline/sweep.py reaps.
     avatar_path TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    -- XP is counted from walks, not stored (api/progression.py). Steps are a
-    -- lifetime total and a watermark, never a day's count, and buy nothing.
-    steps INTEGER NOT NULL DEFAULT 0,
-    steps_counted_until TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    -- XP is counted from walks, not stored (api/progression.py).
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- How a person proves they are the same person on a new phone. Google and
@@ -355,16 +352,6 @@ CREATE TABLE surprises (
     expires_at TIMESTAMP NOT NULL
 );
 CREATE INDEX idx_surprises_user ON surprises (user_id, granted_at DESC);
-
--- A neighbourhood's outline from OpenStreetMap, for "Where stories wait".
--- pipeline/neighbourhoods.py fills it; id is the OSM relation id.
--- See db/migrations/048_neighbourhoods.sql.
-CREATE TABLE neighbourhoods (
-    id BIGINT PRIMARY KEY,
-    name TEXT NOT NULL,
-    outline GEOGRAPHY(MULTIPOLYGON, 4326) NOT NULL
-);
-CREATE INDEX idx_neighbourhoods_outline ON neighbourhoods USING GIST (outline);
 
 -- A photo or a recording attached to a submitted memory. A memory of a place is
 -- a thin thing in text alone.

@@ -99,7 +99,6 @@ Who writes which is in [architecture.md](architecture.md#data-ownership).
 | `unlocks` | `(device, memory)` — who has earned what |
 | `memory_hearts` | `(device, memory)` — one heart each, never taken back |
 | `daily_routes` | Today's accepted walk per device, stops as an array |
-| `neighbourhoods` | OSM outlines for "Where stories wait", by relation id (`pipeline/neighbourhoods.py`) |
 | `media` | Photos and recordings attached to a submitted memory |
 | `reports` | `(memory, device)` — what makes public submissions defensible |
 
@@ -202,13 +201,6 @@ uvicorn api.main:app --reload --port 8000
 2. Run `python -m pipeline.ingest`
 3. Run `python -m pipeline.transcripts`
 4. Run `python -m pipeline.extract`
-
-### Load a city's neighbourhoods
-Free, one Overpass query each, safe to rerun (it upserts):
-```bash
-python -m pipeline.neighbourhoods --area "Københavns Kommune" --level 10
-python -m pipeline.neighbourhoods --area "Frederiksberg Kommune" --level 7
-```
 
 ### Reset and reprocess a video
 ```sql

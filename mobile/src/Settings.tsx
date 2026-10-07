@@ -1,14 +1,18 @@
-/** Settings: a sheet of its own, opened from the cog on the map.
+/** Settings: a sheet of its own, opened from the cog in the journal's header.
  *
- * The account, and the answer to "why can I not read this". Every app with a
+ * Grouped one-line rows, like iOS's own: the account, how it looks, location,
+ * notifications, and the answer to "why can I not read this". Every app with a
  * proximity gate needs somewhere to answer that, and a sheet you only see once
  * you are already frustrated is too late. Who you are (the photo, the name,
  * the numbers) is the journal's header, not here.
  */
 
+import { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { API_BASE, type Profile } from './api.ts';
+import { type Look, look, setLook } from './appearance.ts';
+import Glyph from './Glyph.tsx';
 import { manage } from './purchases.ts';
 import { openLink } from './link.ts';
 import CloseButton from './CloseButton.tsx';
@@ -16,7 +20,7 @@ import SignIn from './SignIn.tsx';
 import { locketOf } from './lockets.ts';
 import type { Permission } from './types.ts';
 import Button from './Button.tsx';
-import { color, dim, font, label, screenTitle } from './theme.ts';
+import { color, dim, font, label, lift, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -49,6 +53,7 @@ export default function Settings({
   onSubscribe,
 }: Props) {
   const granted = permission === 'granted';
+  const [chosen, choose] = useState<Look>(look);
 
   return (
     <Modal
@@ -62,70 +67,92 @@ export default function Settings({
           <Text style={styles.title}>Settings</Text>
           <CloseButton onPress={onClose} label="Close settings" />
         </View>
-        <Section title="Account">
-          {profile?.subscribed && (
-            <Text style={styles.note}>
-              {profile.subscribed_until
-                ? `Subscribed until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
-                : 'Subscribed.'}{' '}
-              Plan as many walks a day as you like.
-            </Text>
-          )}
-          <SignIn
-            device={device}
-            profile={profile}
-            onProfile={onProfile}
-            beside={
-              profile?.subscribed ? (
-                <Button
-                  kind="quiet"
-                  label="Manage"
-                  accessibilityLabel="Manage subscription"
-                  onPress={() => manage().catch(() => {})}
-                  place={styles.half}
-                />
-              ) : (
-                profile?.user_id && (
-                  <Button kind="foil" label="Subscribe" onPress={onSubscribe} place={styles.half} />
+
+        <Group title="Account">
+          <View style={styles.padded}>
+            {profile?.subscribed && (
+              <Text style={styles.note}>
+                {profile.subscribed_until
+                  ? `Subscribed until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
+                  : 'Subscribed.'}
+              </Text>
+            )}
+            <SignIn
+              device={device}
+              profile={profile}
+              onProfile={onProfile}
+              beside={
+                profile?.subscribed ? (
+                  <Button
+                    kind="quiet"
+                    label="Manage"
+                    accessibilityLabel="Manage subscription"
+                    onPress={() => manage().catch(() => {})}
+                    place={styles.half}
+                  />
+                ) : (
+                  profile?.user_id && (
+                    <Button
+                      kind="foil"
+                      label="Subscribe"
+                      onPress={onSubscribe}
+                      place={styles.half}
+                    />
+                  )
                 )
-              )
-            }
-          />
-        </Section>
+              }
+            />
+          </View>
+        </Group>
 
-        <Section title="How unlocking works">
-          <Row>
-            <Image source={locketOf().locked} style={{ width: 32, height: 32 }} />
-            <Text style={styles.rowText}>
-              Memories stay locked until you're within {Math.round(radiusMeters)} m of them.
-            </Text>
-          </Row>
-          <Text style={styles.note}>
-            A memory opens only on a walk, standing there. Finishing a walk earns XP.
-          </Text>
-          <Text style={styles.note}>
-            A few are only pinned to a city, not a spot. Those are open to everyone.
-          </Text>
-        </Section>
+        <Group title="Appearance">
+          <View style={styles.segments}>
+            {(
+              [
+                ['unspecified', 'System'],
+                ['light', 'Light'],
+                ['dark', 'Dark'],
+              ] as const
+            ).map(([value, name]) => (
+              <Pressable
+                key={value}
+                style={dim([styles.segment, chosen === value && styles.segmentOn])}
+                onPress={() => {
+                  choose(value);
+                  setLook(value);
+                }}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: chosen === value }}
+              >
+                <Text style={[styles.segmentText, chosen === value && styles.segmentTextOn]}>
+                  {name}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </Group>
 
-        <Section title="Location">
-          <Text style={styles.rowText}>
-            {granted
-              ? "On. Used to tell when you're close to a memory, and never stored."
-              : "Off. You'll need it to unlock anything."}
-          </Text>
-          <Button
-            kind="text"
-            label={granted ? 'Manage in Settings' : 'Turn on location'}
-            trailing={granted ? 'arrow.up.right' : undefined}
+        <Group
+          title="Location"
+          footer={
+            granted
+              ? "Used to tell when you're close to a memory, and never stored."
+              : "You'll need it to unlock anything."
+          }
+        >
+          <Row
+            label="Location"
+            value={granted ? 'On' : 'Off'}
             onPress={onRequestLocation}
-            place={styles.textAction}
+            accessibilityLabel={granted ? 'Manage in Settings' : 'Turn on location'}
           />
-        </Section>
+        </Group>
 
-        <Section title="Notifications">
-          <Row>
-            <Text style={styles.rowText}>Tell me when a memory I haven't unlocked is nearby.</Text>
+        <Group
+          title="Notifications"
+          footer="Needs location in the background, only to check whether you're near a memory. Your position is never stored."
+        >
+          <Row label="A memory is nearby">
             <Switch
               testID="notify-nearby"
               value={notifyNearby}
@@ -133,74 +160,153 @@ export default function Settings({
               accessibilityLabel="Notify me when a memory is nearby"
             />
           </Row>
-          <Text style={styles.note}>
-            This needs location in the background, only to check whether you're near a memory you
-            haven't unlocked. Your position is never stored.
-          </Text>
-        </Section>
+        </Group>
 
-        <Section title="About">
-          <Pressable
-            style={dim(styles.link)}
-            accessibilityRole="link"
-            onPress={() => openLink(`${API_BASE}/privacy`).catch(() => {})}
-          >
-            <Text style={styles.linkText}>Privacy policy</Text>
-          </Pressable>
-          <Pressable
-            style={dim(styles.link)}
-            accessibilityRole="link"
-            onPress={() => openLink(`${API_BASE}/privacy#contact`).catch(() => {})}
-          >
-            <Text style={styles.linkText}>Contact us</Text>
-          </Pressable>
-          <Pressable
-            style={dim(styles.link)}
-            accessibilityRole="link"
-            onPress={() => openLink('https://www.openstreetmap.org/copyright').catch(() => {})}
-          >
-            <Text style={styles.linkText}>Places © OpenStreetMap contributors</Text>
-          </Pressable>
-        </Section>
+        <Group title="How it works">
+          <View style={[styles.padded, styles.how]}>
+            <Image source={locketOf().locked} style={styles.locket} />
+            <Text style={styles.howText}>
+              A memory opens only on a walk, within {Math.round(radiusMeters)} m of it. Finish the
+              walk to earn XP.
+            </Text>
+          </View>
+        </Group>
+
+        <Group title="About">
+          <Row label="Privacy policy" link onPress={() => openLink(`${API_BASE}/privacy`)} />
+          <Row label="Contact us" link onPress={() => openLink(`${API_BASE}/privacy#contact`)} />
+          <Row
+            label="Places © OpenStreetMap"
+            link
+            onPress={() => openLink('https://www.openstreetmap.org/copyright')}
+          />
+        </Group>
       </ScrollView>
     </Modal>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+/** A small label, a paper card of rows, and an optional line under it. */
+function Group({
+  title,
+  footer,
+  children,
+}: {
+  title: string;
+  footer?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.sectionRule} />
-      {children}
+    <View style={styles.group}>
+      <Text style={styles.groupTitle}>{title}</Text>
+      <View style={styles.card}>{children}</View>
+      {footer && <Text style={styles.footer}>{footer}</Text>}
     </View>
   );
 }
 
-function Row({ children }: { children: React.ReactNode }) {
-  return <View style={styles.row}>{children}</View>;
+/** One line: a label, then a value and a chevron, an arrow out, or a control. */
+function Row({
+  label: text,
+  value,
+  link,
+  onPress,
+  accessibilityLabel,
+  children,
+}: {
+  label: string;
+  value?: string;
+  link?: boolean;
+  onPress?: () => unknown;
+  accessibilityLabel?: string;
+  children?: React.ReactNode;
+}) {
+  // A control row stays a View: a Pressable around it would hide the
+  // control's own label from VoiceOver.
+  if (!onPress)
+    return (
+      <View style={styles.row}>
+        <Text style={styles.rowText}>{text}</Text>
+        {children}
+      </View>
+    );
+  return (
+    <Pressable
+      style={dim(styles.row)}
+      onPress={() => Promise.resolve(onPress()).catch(() => {})}
+      accessibilityRole={link ? 'link' : 'button'}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <Text style={styles.rowText}>{text}</Text>
+      {value && <Text style={styles.value}>{value}</Text>}
+      <Glyph
+        name={link ? 'arrow.up.right' : 'chevron.right'}
+        size={13}
+        weight="semibold"
+        color={color.inkFaint}
+      />
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
-  body: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 72, gap: 6 },
+  body: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 72 },
   // The journal's title bar, so the two sheets read as one app.
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: screenTitle,
-  // A sentence-case label over its own rule, then the section.
-  section: { marginTop: 32, gap: 12 },
-  sectionTitle: { ...label },
-  sectionRule: { height: StyleSheet.hairlineWidth, backgroundColor: color.rule, marginTop: -4 },
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  rowText: { flex: 1, ...font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
-  note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
-  half: { flex: 1 },
-  textAction: { alignSelf: 'flex-start' },
-  link: { alignSelf: 'flex-start' },
-  linkText: {
-    ...font.uiMedium,
-    fontSize: 13,
-    color: color.ink,
-    textDecorationLine: 'underline',
+  top: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 4,
   },
+  title: screenTitle,
+  group: { marginTop: 28, gap: 8 },
+  groupTitle: { ...label, fontSize: 12, color: color.inkFaint, marginLeft: 16 },
+  // A raised paper card, like the journal's switcher tab.
+  card: {
+    backgroundColor: color.paperRaised,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: color.goldLine,
+    overflow: 'hidden',
+    ...lift,
+    shadowOpacity: 0.06,
+  },
+  footer: {
+    ...font.prose,
+    fontSize: 13,
+    lineHeight: 19,
+    color: color.inkFaint,
+    marginHorizontal: 16,
+  },
+  padded: { padding: 16, gap: 10 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 50,
+    paddingHorizontal: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: color.rule,
+    marginTop: -StyleSheet.hairlineWidth,
+  },
+  rowText: { flex: 1, ...font.uiMedium, fontSize: 16, color: color.ink },
+  value: { ...font.ui, fontSize: 16, color: color.inkSoft },
+  note: { ...font.prose, fontSize: 15, lineHeight: 22, color: color.inkSoft },
+  half: { flex: 1 },
+  segments: { flexDirection: 'row', padding: 4, gap: 4 },
+  segment: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  segmentOn: { backgroundColor: color.quiet, borderColor: color.goldLine },
+  segmentText: { ...label, color: color.inkSoft },
+  segmentTextOn: { ...font.uiBold, color: color.ink },
+  how: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  locket: { width: 32, height: 32 },
+  howText: { flex: 1, ...font.prose, fontSize: 15, lineHeight: 22, color: color.inkSoft },
 });

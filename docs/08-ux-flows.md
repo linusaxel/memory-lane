@@ -61,7 +61,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F34 | End a walk | Implemented |
 | F35 | Subscribe for more walks | Implemented (no store yet) |
 | F36 | Choose your first memory | Removed from the app |
-| F37 | See where stories wait | Implemented |
+| F37 | See where stories wait | Removed from the app |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
 screen, no map to browse — no carousel, no settings anybody
@@ -95,7 +95,7 @@ make it worth having got here.
 **Session three — coming back.** The collection has things in it (F15), it works
 on the train home with no signal (F16), the streak says how many days in a row
 (F27), and tomorrow there is another walk. The map shows what is locked around
-you, never what it says: standing there is the only way in. Settings, under your photo top right, is where
+you, never what it says: standing there is the only way in. Settings, behind the journal's gear, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -320,12 +320,9 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 
 **Only on a walk:** only a stop of the walk in progress opens, and only
 standing on it; nothing else is drawn, so nothing else can be stood on. Your
-walks, in the account menu, counts steps again and opens (level, XP, every
-walk drawn as a card, every memory opened drawn as its locket, how it works;
-a card tapped shows that walk on the map, its date and Done; a locket tapped
-opens its memory)
-(docs/10, "Walks earn XP; rare memories wait for a level" and "No keys; your
-memories are your lockets").
+walks are the journal's *Walks* tab, as rows or as cards drawn as their
+shape; a card tapped shows that walk on the map, its date and Done (docs/10,
+"The journal is you").
 
 **Failure:** location permission denied. Nothing can unlock, so the app says so
 — a bottom button reads "Turn on location", shown only then — rather than
@@ -551,13 +548,12 @@ product is about.
 ## F15 · Reread what you unlocked — **Implemented**
 
 1. **Journal**, the book top left of the map, opens the journal as a sheet
-   over the map. It is you as well: your photo, name and numbers on top (a
-   tap is Edit profile, F21), then *Walks*, *Unlocked* and
-   *Mine* (F24). Settings is not in it: that is under your photo top right
-   (F17).
+   over the map. It is you as well: your photo, name, numbers and level on
+   top (a tap is Edit profile, F21), a gear for Settings (F17), then *Walks*,
+   *Unlocked* and *Mine* (F24).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
-   says so.
+   says so. *Cards* shows the walks two to a row, each drawn as its shape.
 3. There is no **Show on map**: the map draws only today's walk, so a memory
    from another day has no pin to fly to.
 
@@ -584,7 +580,7 @@ kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
-**Settings** (the cog on the map) exists because every proximity-gated app needs somewhere to
+**Settings** (the gear in the journal's header) exists because every proximity-gated app needs somewhere to
 answer that, and answering it only inside the sheet that provoked the question
 is too late.
 
@@ -1020,7 +1016,7 @@ The last stop unlocks and the day should feel finished.
    and the map fits the whole walk, drawn from the start and back home on a
    loop.
 3. The card reads "Nice walk." beside the walk's shape, the card it becomes in
-   Your walks, then "5 memories · 4.1 km loop · 52 min" (the
+   the journal, then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
    another day), then "+60 XP" when finishing earned it (once a day) and "Level 3" when it
    reached one, then
@@ -1174,24 +1170,10 @@ this account yet."
 **Done when:** the finish-card and paywall checks in `.maestro/walk-and-unlock.yml` pass, and
 `tests/test_api_billing.py` and `tests/test_api_routes.py`.
 
-## F37 · See where stories wait — **Implemented**
+## F37 · See where stories wait — **Removed from the app**
 
-**Who:** a walker whose own streets are read.
-**Trigger:** Where stories wait, in the account menu.
-
-1. A sheet lists each neighbourhood, nearest first, as "Valby · 12 of 40":
-   memories opened there out of what a walk could open
-   (`GET /v1/me/neighbourhoods`). Counts only: no pins, no stories (docs/10,
-   *A locked memory says what it is*).
-2. Off a walk, a row plans a one-way walk that ends inside it: the planner
-   opens as after *Pick where it ends* (F1), the length lifted to reach it.
-   On a walk the rows only read.
-3. It never resets and has no luck in it: a count only walking moves.
-
-The outlines are OpenStreetMap's (`python -m pipeline.neighbourhoods`), so
-any city works. Why, in docs/10, *Where stories wait*.
-
-**Done when:** `tests/test_neighbourhoods.py`.
+Removed 2026-10-07 with the account menu: the planner already picks the walk.
+docs/10, "The journal is you".
 
 ## F36 · Choose your first memory — **Removed from the app**
 

@@ -205,47 +205,6 @@ def test_opening_an_earned_memory_again_costs_nothing(client, memory_id):
     assert _unlock(client, memory_id, lat=FAR_LAT)["locked"] is False
 
 
-def test_steps_are_counted_once_from_the_watermark_and_buy_nothing(client, db_session):
-    give_user(db_session, DEVICE)
-    db_session.execute(
-        text(
-            "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '1 hour' "
-            "WHERE id = (SELECT user_id FROM devices WHERE id = CAST(:d AS uuid))"
-        ),
-        {"d": DEVICE},
-    )
-    db_session.commit()
-    since = client.get(f"/v1/me?device={DEVICE}").json()["steps_counted_until"]
-
-    def credit(steps):
-        return client.post(
-            "/v1/me/steps", json={"device": DEVICE, "since": since, "steps": steps}
-        ).json()
-
-    after = credit(2400)
-    assert after["steps"] == 2400
-    assert after["xp"] == 0
-    assert after["steps_counted_until"] > since
-    assert credit(2400)["steps"] == 2400, "a retry from the old watermark counts nothing"
-
-
-def test_steps_faster_than_anyone_walks_are_capped(client, db_session):
-    give_user(db_session, DEVICE)
-    db_session.execute(
-        text(
-            "UPDATE users SET steps_counted_until = CURRENT_TIMESTAMP - INTERVAL '10 seconds' "
-            "WHERE id = (SELECT user_id FROM devices WHERE id = CAST(:d AS uuid))"
-        ),
-        {"d": DEVICE},
-    )
-    db_session.commit()
-    since = client.get(f"/v1/me?device={DEVICE}").json()["steps_counted_until"]
-    after = client.post(
-        "/v1/me/steps", json={"device": DEVICE, "since": since, "steps": 100_000}
-    ).json()
-    assert 30 <= after["steps"] < 40
-
-
 def test_a_device_id_that_is_not_a_uuid_is_rejected(client, memory_id):
     """It is a cast to uuid downstream; reject at the edge rather than 500."""
     assert (

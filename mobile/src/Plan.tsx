@@ -556,7 +556,7 @@ type WalkDoneProps = {
   /** What finishing earned, once the profile is back; null for a
    *  subscriber's second walk of the day, which earns nothing. */
   reward: Reward | null;
-  /** The walk drawn whole, for the card it becomes in Your walks. */
+  /** The walk drawn whole, for the card it becomes in the journal. */
   path: Coordinates[];
   onDone: () => void;
   /** The card as measured, so the map's fit clears it. */
@@ -736,7 +736,7 @@ function Milestone({ streak }: { streak: number }) {
 }
 
 /** A past walk, drawn on the map behind it: when, and what it came to.
- *  Opened from its card in Your walks. */
+ *  Opened from its card in the journal. */
 export function PastWalk({
   walk,
   onDone,

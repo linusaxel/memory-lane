@@ -580,39 +580,7 @@ export type Profile = {
   level: number;
   xp_level: number;
   xp_next: number;
-  /** Every step counted, for the journal. Buys nothing. */
-  steps: number;
-  /** Steps count from here, UTC without a zone; null until there is an account. */
-  steps_counted_until: string | null;
 };
-
-export type Neighbourhood = {
-  name: string;
-  opened: number;
-  total: number;
-  /** Where a walk to it ends: a point inside it. */
-  end: Coordinates;
-};
-
-/** Each neighbourhood, opened out of total, nearest first (docs/10, "Where
- *  stories wait"). Counts only, never which. */
-export async function fetchNeighbourhoods(
-  device: string,
-  at: Coordinates | null,
-  signal?: AbortSignal,
-): Promise<Neighbourhood[]> {
-  const params = new URLSearchParams({ device });
-  if (at) {
-    params.set('lat', String(at.lat));
-    params.set('lng', String(at.lng));
-  }
-  const body = await get<{ neighbourhoods?: Neighbourhood[] }>(
-    '/v1/me/neighbourhoods',
-    params,
-    signal,
-  );
-  return body.neighbourhoods ?? [];
-}
 
 export type Draft = {
   place_name: string;
@@ -635,12 +603,6 @@ export async function fetchProfile(device: string, signal?: AbortSignal): Promis
  *  webhook. */
 export async function refreshSubscription(device: string): Promise<Profile> {
   return post<Profile>('/v1/me/subscription', { device });
-}
-
-/** Count the steps walked since `since`, the profile's watermark. A stale
- *  `since` credits nothing, and the profile that comes back has the new one. */
-export async function creditSteps(device: string, since: string, steps: number): Promise<Profile> {
-  return post<Profile>('/v1/me/steps', { device, since, steps });
 }
 
 /** A walk refused because today's is already walked (one a day, bar a

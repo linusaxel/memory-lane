@@ -38,14 +38,6 @@ only affects that check: your coordinates are still not stored or linked to you,
 notification is generated on your device, and nothing is sent anywhere beyond the same
 nearby-memories check the map already makes. Turning it off stops the check immediately.</p>
 
-<h2>Steps</h2>
-<p>On an iPhone, if you grant Motion &amp; Fitness permission, the app reads the step
-count your phone already keeps and sends us one number: the steps since it last counted.
-We store only your running total and when it was last counted, never a day-by-day
-history, never alongside your location, and never share it with anyone. It is shown in
-your journal and pays for nothing. Without the permission the app works the same.
-Deleting your account deletes the total.</p>
-
 <h2>Walks and levels</h2>
 <p>A memory opens only as a stop of a walk the app planned, standing there. Finished
 walks earn experience, worked out from the walks we already keep and never stored on

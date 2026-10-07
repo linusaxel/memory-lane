@@ -24,6 +24,18 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Parallel sessions share one git index.** 2026-10-07: a `git rm` staged in
+  one session went out in another session's unrelated commit (fa94bb0, a
+  memoir trial carrying the account menu's deletions). Fix: AGENTS.md's commit
+  checklist says commit with explicit paths (`git commit <paths>`), and delete
+  files with plain `rm` until commit time.
+
+- **Dropping a column breaks the migration that added it.** 2026-10-07:
+  `test_schema_layers` replays every migration on a schema.sql database, so a
+  drop also means rewriting the old `ADD COLUMN` as a pointer (039 did it for
+  047). Cost a red gate. Fix: say so beside "must replay as a no-op" in
+  docs/01-setup.md.
+
 - **`quality --compare` can't be aimed at a source.** 2026-10-07: a summary
   flaw lived in three web sources (260, 264, 269), but `--compare` samples
   chunks of a whole `--source-type` at random. Twenty press chunks held none
@@ -53,14 +65,6 @@ waits on `DEPLOY`, `EAS_BUILD` or `STORE_ACCOUNT` (see *Blocked on you*).
 Retention is measured already: `python -m api.metrics`.
 
 ### Unblocked now
-
-- [ ] **Load the neighbourhoods.** (2026-10-07) "Where stories wait" is empty
-      until `python -m pipeline.neighbourhoods` runs (docs/01-setup.md, *Load a
-      city's neighbourhoods*); Overpass answered 504 to everything the day it
-      shipped. Check that Copenhagen's bydele are `admin_level` 10 and that
-      Frederiksberg at 7 returns itself, and that `geocode._get_json`'s 10 s
-      timeout is long enough for `out geom`. Still down on 2026-10-07 evening:
-      overpass-api.de 504 ("too busy"), private.coffee 500, maps.mail.ru 504.
 
 - [ ] **The privacy policy is thin.** (checked 2026-10-04) `api/privacy.py`
       has no controller, legal basis, retention, RevenueCat or geocoders.

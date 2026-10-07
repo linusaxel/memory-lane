@@ -767,7 +767,8 @@ walk is the wait.
   pack is not taken back yet (a `ponytail:` note in `credit_keys`).
 - **Steps buy nothing.** `/v1/me/steps` keeps its watermark and cap, and
   `users.steps` becomes a lifetime total, shown in the journal. Subscribers
-  count steps too now.
+  count steps too now. **Superseded 2026-10-07** by *The journal is you*:
+  steps are gone, endpoint, columns and the motion prompt with them.
 - **The app** (`src/wallet.ts`, `src/KeysPill.tsx`, `src/UnlockHere.tsx`): the
   pill reads "1 to start", then "3 keys", and out of keys "No keys · Free on
   today's walk". Out of keys off the walk, the lock is faded and offers **Open
@@ -3445,7 +3446,8 @@ whether it belongs with the notes, the founder chose the notes.
 ### The journal is a sheet
 
 Status: Accepted, 2026-10-04. Supersedes *The journal is a drawer; settings
-are the map's*.
+are the map's*. The menu under your photo and Your walks are gone since *The
+journal is you* (2026-10-07).
 
 The founder went off the drawer: it narrowed the journal by the strip of map
 it left showing, and bought only the feel of a side panel. The journal is now
@@ -4103,7 +4105,10 @@ hollow.
 
 ### Where stories wait
 
-Status: Accepted 2026-10-07. Takes the city board's place in the account menu.
+Status: **Superseded 2026-10-07** by *The journal is you*: the founder did not
+know what it was, and the planner already picks the walk. The route, the
+table (migration 049) and `pipeline/neighbourhoods.py` are gone. Accepted
+2026-10-07. Takes the city board's place in the account menu.
 
 The collections that keep location players are the ones that never reset and
 take effort (Ingress's Visited map, Wandrer's completionists). Turned around
@@ -4148,6 +4153,36 @@ means what it says.
 - **Why now, when 10-03 said no.** That floor was judged on the six-criteria
   sum, which barely told walks from skips. A thin cell gets more memories;
   it shouldn't get a dull one.
+
+### The journal is you
+
+Status: Accepted 2026-10-07. Supersedes *Where stories wait*, the **Steps buy
+nothing** bullet of *Keys open a lock*, and where *The journal is a sheet* and
+*Fewer games* put the account menu and Your walks.
+
+The founder found the native menu under your photo out of place beside the
+paper and gold, Your walks a second journal, and steps a number nothing used.
+So there is one "you" place again, as *The journal is you; settings behind a
+gear* had it:
+
+- **No account menu.** The map's top right is empty. The journal's header has
+  your photo, name, streak and numbers, and a thin level bar under them; a
+  tap is Edit profile, and a gear beside × opens Settings over the journal.
+- **Your walks is the Walks tab.** A List / Cards toggle draws the same walks
+  as expanding rows or as the shape cards Your walks had; a card shows that
+  walk on the map. The opened lockets are the Unlocked tab already.
+- **Settings is grouped rows**, iOS-style paper cards: Account, Appearance
+  (System, Light, Dark, which the menu had), Location, Notifications, How it
+  works in two lines, About.
+- **Steps are gone.** `steps.ts`, `expo-sensors`, `POST /v1/me/steps`,
+  `users.steps` and `steps_counted_until` (migration 049). Motion is no longer
+  asked for, so `motionUsagePermission` is `false` again.
+- **Add is on the map and on a walk, not in the planner,** where it had
+  jumped to the top left beside Journal.
+
+**Consequences:** Settings and the paywall are among the sheets that move
+into the journal while it is open, so Subscribe in Settings can present the
+paywall over it. A native rebuild drops the Core Motion module.
 
 ### Rejected approaches, do not retry
 

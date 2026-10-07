@@ -272,8 +272,6 @@ def test_reading_a_profile_creates_nobody(client, db_session):
         "level": 1,
         "xp_level": 0,
         "xp_next": 50,
-        "steps": 0,
-        "steps_counted_until": None,
     }
     assert db_session.execute(text("SELECT COUNT(*) FROM users")).scalar() == 0
 

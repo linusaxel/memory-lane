@@ -104,24 +104,14 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   submission is signed with, which sign-ins are attached, `subscribed` /
   `subscribed_until`, and `xp` / `level` / `xp_level` / `xp_next` / `items` /
   `items_total`, counted from finished walks on every read (`api/progression.py`).
-  `steps` is every step counted, for the journal, and `steps_counted_until`
-  where the next count starts. `hearts_received` counts every heart on what the account filed.
+  `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.
   The GET creates nothing
-- `GET /v1/me/neighbourhoods?device=UUID&lat=X&lng=Y` - where stories wait:
-  `{neighbourhoods: [{name, opened, total, end}]}`, nearest first when `lat`
-  and `lng` are sent. `total` is what a walk could open inside the outline,
-  `opened` how many of them this account has; `end` is a point inside it, for
-  a walk that ends there. Counts only (docs/10, "Where stories wait")
 - `POST /v1/me/avatar` (multipart: `device`, `file`) - set the profile photo,
   deleting the one it replaces; `DELETE /v1/me/avatar?device=UUID` clears it.
   Both return the `Profile`. Photos only, through `/v1/media`'s checks and
   EXIF strip; anything else is 415. A memory's `author` carries the same
   `avatar_url`
-- `POST /v1/me/steps` `{device, since, steps}` - add the steps the phone
-  counted from `since`, which must be `steps_counted_until`, and move it to
-  now. A stale `since` credits nothing; either way it returns the `Profile`.
-  At most three steps a second over the window. They buy nothing
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
   display_name?, link_token?}` - verify a provider ID token and bind this device
   to that account. `display_name` is for Apple, which gives the name to the
