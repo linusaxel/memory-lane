@@ -598,7 +598,7 @@ Each of these exists because something broke or would have been rejected.
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
     preview, Journal, Settings, Edit profile, a memory's sheet, Add a memory.
     Always trailing, never leading: a sheet's own action is not a corner
-    word but the solid button at the end of the page (Post, Save). A text
+    word but the solid button at the end of the page (Next, Save). A text
     button stays only where it says more than close: Not now on the paywall.
 
 ## Writing
@@ -610,9 +610,9 @@ are not preferences:
   both "where I am" and "where this goes". There is no map picker and there is
   not going to be one - a memory you can pin from your sofa is a pin, and the
   whole product is the difference. Without a fix, declined or still coming,
-  Post stays held: `ready` requires a position, so no path can file from a sofa.
-- **Attachments upload while you type**, not on Post. A phone photo is 4 MB and
-  the wait belongs in the part where somebody is composing. Post stays disabled
+  Next stays held: `ready` requires a position, so no path can file from a sofa.
+- **Attachments upload while you type**, not on Next. A phone photo is 4 MB and
+  the wait belongs in the part where somebody is composing. Next stays disabled
   while an upload is in flight, and a failed one shows as failed rather than
   disappearing.
 - **Tags are the #words in the description**, as on X: there is no picker. The
@@ -627,17 +627,22 @@ The shape of it is the open sheet's (docs/10, "Reading and writing are one
 page"):
 
 - **The same page with empty slots.** The title in `story.title`, the byline
-  ("Anna · 1 October 2026 ▾ · here", the date tappable), the story in
+  as three chips (avatar and name, "When ▾" or the date, the street in gold)
+  over the diamond rule, the story in
   `story.body`, photos at the size they are read at. No boxes and no field
   labels: the placeholder and the cursor say what is editable. Nothing asks
   for a name: the account signs it (Settings), and a blank one is Anonymous.
-- **Cancel and Post are the only chrome above**, the × left and Post right,
-  as in every composer. Post is held until the title and the story are there,
-  and opens the seal. × with words in it asks again: "Tap again to discard".
+- **The × above, Next below.** The × left, "Leave a memory here" centred,
+  two step dots right. Next (Save when editing) is a Go capsule at the foot,
+  held until the title and the story are there, and opens the seal. × with
+  words in it asks again: "Tap again to discard".
 - **One bar of glyphs below** (docs/10, "Writing is a calm page"): Aa, Photo,
-  Camera and Hide keyboard, on paper raised, riding the keyboard's top edge or
-  docked at the foot. Aa swaps in B, I, Heading, Quote, Divider and ×. The
-  page ends above it, so nothing is typed under it.
+  Camera and Hide keyboard, a paper-raised capsule with a gold hairline beside
+  Next, riding the keyboard's top edge or docked at the foot. Aa swaps in B, I,
+  Heading, Quote, Divider and ×, and takes the whole row. The page ends above
+  it, so nothing is typed under it.
+- **A quote is the pull quote**: the gold “ over centred italic, as the sheet
+  sets it.
 - **Every other action is text** in the label voice: a photo's S M L, Left
   Center Right, ↑ ↓ and Remove photo, a divider's ↑ ↓, Delete this memory
   (gold, two taps).
@@ -649,11 +654,13 @@ page"):
   and paste. There is no Preview: the page is already `StoryBody`'s layout.
 - **Camera is a viewfinder in the story** (docs/10, "The camera is a block"):
   full width where the photo will go, Take and Cancel under it. Take turns it
-  into that photo; Post waits while it is open.
+  into that photo; Next waits while it is open.
 
-- **The seal** is a tray from the foot: the lockets earned, the next locked
-  one alone with its level, the chosen one's name, and "Seal it here" (Save
-  when editing). Then its locket shuts over the map and drops onto the pin
+- **The seal** is a page over the story (B-35): "Seal it with", the chosen
+  locket large in a gold glow with four sparkles, the title and "street · left
+  by name", the lockets earned as tiles and the next locked one dashed with its
+  level, "It opens for anyone who walks within 20 m of this spot.", then
+  ‹ Back and a foil "Seal it here" (Save when editing). Then its locket shuts over the map and drops onto the pin
   (`LocketSeal.tsx`).
 
 A submission comes back already unlocked and its sheet opens over the map. The

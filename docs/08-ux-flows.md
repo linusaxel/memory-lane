@@ -618,7 +618,7 @@ one (not over the preview's card). Filing needs no walk.
 2. A full-height sheet opens. The first thing on it is not a field: it is the
    coordinate, and the sentence "other people will have to come here to read
    it".
-3. **Title**, then **Description**. Post stays dim until both have text; no
+3. **Title**, then **Description**. Next stays dim until both have text; no
    minimum length and no countdown, and the API asks for the same. The title
    is the place row's name (docs/10, *The title is the place name*), so it is
    the card's heading, locked or not; the description is what the gate keeps.
@@ -634,9 +634,9 @@ one (not over the preview's card). Filing needs no walk.
 7. **Photos** from the library, or from a viewfinder that opens in the story
    where the photo will go and becomes it on Take, up to four, and one **recording**
    up to three minutes. Each one uploads the moment it is taken, so the wait is
-   spent composing rather than watching a spinner after Post — and a failed
+   spent composing rather than watching a spinner after sealing — and a failed
    upload costs the text nothing.
-8. Post opens the seal: pick the locket its pin is drawn as, then **Seal it
+8. Next opens the seal, a page of its own: pick the locket its pin is drawn as, then **Seal it
    here**. Its locket shuts over the map and drops onto the spot, and the
    memory, already unlocked, opens on top of the map: the first sight of what
    anybody else will find here. The first memory ever holds a beat and says so.
@@ -665,7 +665,7 @@ a memory outside Katz's would unlock Katz's for everybody — a gate anybody cou
 open by posting next to it. `tests/test_api_submit.py` holds it to that.
 
 **What can go wrong:** no location (the form will not open); an upload fails
-(the attachment shows as failed and Post waits rather than dropping it); the
+(the attachment shows as failed and Next waits rather than dropping it); the
 post fails (the text stays on screen, nothing is lost).
 
 **Done when:** somebody can stand somewhere, say what happened, and find it
@@ -752,7 +752,7 @@ it says so rather than hiding.
    because this is the one screen an author cannot have something disappear
    from without a reason.
 2. Tapping a row opens the submit sheet in editor mode: every field prefilled
-   from the memory, **Post** relabelled **Save** (it opens the same seal, its button Save), and no map or coordinate
+   from the memory, **Next** relabelled **Save** (it opens the same seal, its button Save), and no map or coordinate
    field — the pin does not move.
 3. **Save** changes place name, summary (and so its #tags), when, and photos/recording in
    place. **Delete** takes a second, differently-worded press before it

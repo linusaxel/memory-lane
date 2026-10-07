@@ -23,7 +23,7 @@ appId: ${APP_ID}
 # One coordinate, taken from where the phone is. No field asks for it. The
 # text is something this flow can look for again once it sits in a list.
 - tapOn: "Add a memory here"
-- assertVisible: "Post"
+- assertVisible: "Next"
 
 # The fields have no box and no label on screen, so the flow finds them by id.
 - tapOn:
@@ -82,7 +82,7 @@ appId: ${APP_ID}
 # The first stock photo, top left of the grid.
 - tapOn:
     point: "17%,30%"
-# Post stays disabled until the upload is back; the id only says photo then.
+# Next stays disabled until the upload is back; the id only says photo then.
 - extendedWaitUntil:
     visible:
       id: "photo"
@@ -111,8 +111,8 @@ appId: ${APP_ID}
     id: "caption"
 - inputText: "The dock at dawn"
 
-# Post opens the seal: the locket is chosen once the story is written.
-- tapOn: "Post"
+# Next opens the seal: the locket is chosen once the story is written.
+- tapOn: "Next"
 - assertVisible:
     id: "locket-hunter-compass"
 - tapOn:
@@ -191,7 +191,7 @@ appId: ${APP_ID}
 - assertVisible: ".*The step by the ferry landing"
 - assertVisible: ".*ferry horn.*"
 
-# Change the place name and save. Post becomes Save while editing - same
+# Change the place name and save. Next becomes Save while editing - same
 # button, relabelled. Both fields asserted above sit above the fold, so
 # nothing here has scrolled yet.
 #

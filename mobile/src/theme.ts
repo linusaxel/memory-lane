@@ -128,6 +128,8 @@ export const solid = (dark: boolean) => ({
   plum: dark ? '#CFA4E2' : '#5D2A71',
   track: dark ? '#362C3F' : '#E9DFEE',
   seal: dark ? '#4CC196' : '#1C6A4D',
+  /** color.glow, for Svg, which cannot take a dynamic colour. */
+  glow: dark ? 'rgba(76,193,150,0.55)' : 'rgba(28,140,98,0.55)',
   /** The darker edge Apple Maps draws round a route. */
   goldCasing: dark ? '#6E5216' : '#5E470F',
   /** The preview's line: gold washed out, so the lockets on it pop. */

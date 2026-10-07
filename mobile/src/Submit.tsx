@@ -1,6 +1,6 @@
 /** The only screen in the app that writes, or edits, or deletes - spec in
  *  "Writing", UI.md. Doubles as the editor for a memory you already filed:
- *  `editing` prefills every field from it and Post becomes Save. */
+ *  `editing` prefills every field from it and Next becomes Save. */
 
 import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import {
@@ -55,7 +55,8 @@ import { duration, happened } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { LOCKET_DEFAULT, LOCKETS, locketOf, type LocketId } from './lockets.ts';
 import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
-import { color, dim, font, label, lift, radius, story, sunk } from './theme.ts';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import { color, dim, font, label, lift, metal, radius, screenTitle, story, sunk } from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
@@ -64,7 +65,10 @@ const MAX_RECORDING_SECONDS = 180;
 /** Where the bar sits with the keyboard down, over the home indicator. */
 const DOCK = 34;
 /** The bar's height and a little air: the page ends above it. */
-const BAR = 52;
+const BAR = 72;
+/** The chosen locket on the seal, and the glow it sits in. */
+const SEAL = 168;
+const SEAL_GLOW = 300;
 
 type Props = {
   visible: boolean;
@@ -83,6 +87,8 @@ type Props = {
   author: { name: string; avatar_url?: string | null };
   /** The author's level: which lockets they can pick. */
   level: number;
+  /** How near a reader has to stand, for the seal's last line. */
+  radiusMeters: number;
 };
 
 /** An attachment on its way up, or up. `id` arrives when the server has it. */
@@ -96,7 +102,7 @@ type Attachment = {
 };
 
 /** One block of the story being written (story.ts). A photo is known by its
- *  attachment's uri until Post, because the id arrives with the upload. */
+ *  attachment's uri until the seal, because the id arrives with the upload. */
 type Item = { key: string } & (
   | { kind: 'p' | 'h' | 'quote'; text: string }
   | { kind: 'divider' }
@@ -132,6 +138,7 @@ export default function Submit({
   onDeleted,
   author,
   level,
+  radiusMeters,
 }: Props) {
   const isEditing = !!editing;
   // The title is the place row's name - docs/10, "The title is the place name".
@@ -145,7 +152,7 @@ export default function Submit({
   const [caret, setCaret] = useState<{ key: string; at: number } | null>(null);
   // Aa: the bar shows the marks instead of Photo and Camera.
   const [styling, setStyling] = useState(false);
-  // Post opens the seal: the locket is chosen once the story is written.
+  // Next opens the seal: the locket is chosen once the story is written.
   const [sealing, setSealing] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   // The street it is filed on, for the byline; "here" until it is known.
@@ -213,12 +220,17 @@ export default function Submit({
     };
   }, [lifted]);
 
-  // The seal rises from the foot.
+  // The seal comes up over the page.
   const rise = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!sealing) return;
     rise.setValue(0);
-    Animated.spring(rise, { toValue: 1, speed: 14, bounciness: 4, useNativeDriver: true }).start();
+    Animated.timing(rise, {
+      toValue: 1,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
   }, [sealing, rise]);
 
   // Everything resets on close. A half-written memory kept across openings
@@ -634,6 +646,28 @@ export default function Submit({
   // The lockets they have earned, and the next one as something to walk for.
   const next = LOCKETS.find((l) => l.level > level);
   const offered = LOCKETS.filter((l) => l.level <= level || l === next);
+  const step = (n: 0 | 1) => (
+    <View style={styles.steps} accessible accessibilityLabel={`Step ${n + 1} of 2`}>
+      {[0, 1].map((i) => (
+        <View key={i} style={[styles.step, i === n && styles.stepOn]} />
+      ))}
+    </View>
+  );
+  const top = (n: 0 | 1) => (
+    <View style={styles.bar}>
+      {discarding ? (
+        <Pressable onPress={close} hitSlop={12} accessibilityRole="button">
+          <Text style={styles.error}>Tap again to discard</Text>
+        </Pressable>
+      ) : (
+        <CloseButton onPress={close} label="Cancel" />
+      )}
+      <Text style={styles.barTitle} accessibilityRole="header">
+        {isEditing ? 'Edit your memory' : 'Leave a memory here'}
+      </Text>
+      {step(n)}
+    </View>
+  );
 
   const post = async () => {
     if (!device || (!isEditing && !position)) return;
@@ -714,27 +748,8 @@ export default function Submit({
         {/* The open sheet with nothing in it yet: the same title, byline and
             story type, in the same places, so what you write is what people
             standing here will read (docs/10, "Reading and writing are one
-            page"). Cancel and Post are the only chrome. */}
-        <View style={styles.bar}>
-          {discarding ? (
-            <Pressable onPress={close} hitSlop={12} accessibilityRole="button">
-              <Text style={styles.error}>Tap again to discard</Text>
-            </Pressable>
-          ) : (
-            <CloseButton onPress={close} label="Cancel" />
-          )}
-          <Button
-            kind="go"
-            label={isEditing ? 'Save' : 'Post'}
-            place={[styles.post, !ready && styles.disabled]}
-            onPress={() => {
-              Keyboard.dismiss();
-              setSealing(true);
-            }}
-            disabled={!ready}
-            hitSlop={4}
-          />
-        </View>
+            page"). Cancel above and Next below are the only chrome. */}
+        {top(0)}
 
         <Animated.ScrollView
           ref={scroll}
@@ -762,20 +777,27 @@ export default function Submit({
           />
 
           <View style={styles.byline}>
-            <Avatar url={author.avatar_url ?? null} name={author.name} size={20} />
-            <Text style={styles.meta}>
-              <Text style={styles.metaInk}>{author.name}</Text>
-              {' · '}
-              <Text
-                style={styles.metaInk}
-                accessibilityRole="button"
-                accessibilityLabel={`When, ${when?.within} ${when?.year}`}
-                onPress={pickDay}
-              >
-                {today ? 'Today' : `${when?.within} ${when?.year}`} ▾
-              </Text>
-              {!isEditing && ` · ${here ?? 'here'}`}
-            </Text>
+            <View style={[styles.tag, styles.tagAuthor]}>
+              <Avatar url={author.avatar_url ?? null} name={author.name} size={28} />
+              <Text style={styles.tagText}>{author.name}</Text>
+            </View>
+            <Pressable
+              style={dim(styles.tag)}
+              onPress={pickDay}
+              accessibilityRole="button"
+              accessibilityLabel={`When, ${today ? 'today' : `${when?.within} ${when?.year}`}`}
+            >
+              <Text style={styles.tagText}>{today ? 'When' : `${when?.within} ${when?.year}`}</Text>
+              <Glyph name="chevron.down" size={12} weight="semibold" color={color.ink} />
+            </Pressable>
+            {!isEditing && (
+              <View style={styles.tag}>
+                <Glyph name="mappin" size={14} weight="medium" color={color.gold} />
+                <Text style={[styles.tagText, styles.tagPlace]} numberOfLines={1}>
+                  {here ?? 'Here'}
+                </Text>
+              </View>
+            )}
           </View>
           {pickingDay && (
             <DateTimePicker
@@ -789,6 +811,8 @@ export default function Submit({
               }}
             />
           )}
+
+          <DiamondRule place={styles.rule} />
 
           {/* The story, a block at a time: what is typed here is what
               StoryBody sets on the open sheet. */}
@@ -911,9 +935,8 @@ export default function Submit({
                 );
               }
               const first = items.findIndex(isText) === n;
-              return (
+              const field = (
                 <TextInput
-                  key={item.key}
                   ref={(input) => {
                     if (input) inputs.current.set(item.key, input);
                     else inputs.current.delete(item.key);
@@ -977,6 +1000,18 @@ export default function Submit({
                   ))}
                 </TextInput>
               );
+              // A `>` block reads as PullQuote sets it on the open sheet. One
+              // wrapper for every kind, so turning a block keeps its focus.
+              return (
+                <View key={item.key} style={item.kind === 'quote' && styles.quoteBox}>
+                  {item.kind === 'quote' && (
+                    <Text style={styles.quoteMark} accessibilityElementsHidden>
+                      “
+                    </Text>
+                  )}
+                  {field}
+                </View>
+              );
             })}
           </View>
           {/* Only near the limit: a count from the first letter reads as a nag. */}
@@ -1032,31 +1067,78 @@ export default function Submit({
             </Pressable>
           )}
         </Animated.ScrollView>
-        <Animated.View style={[styles.dock, { bottom: lifted }]}>{tools()}</Animated.View>
+        <Animated.View style={[styles.dock, { bottom: lifted }]}>
+          {tools()}
+          {/* Styling needs the whole width for its six marks. */}
+          {!styling && (
+            <Button
+              kind="go"
+              label={isEditing ? 'Save' : 'Next'}
+              trailing="chevron.right"
+              place={[styles.next, !ready && styles.disabled]}
+              onPress={() => {
+                Keyboard.dismiss();
+                setSealing(true);
+              }}
+              disabled={!ready}
+            />
+          )}
+        </Animated.View>
 
         {/* The seal: the locket its pin is drawn as, chosen once the story is
             there (docs/10, "Writing is a calm page"). */}
         {sealing && (
-          <View style={StyleSheet.absoluteFill}>
-            <Pressable
-              style={styles.scrim}
-              onPress={() => !posting && setSealing(false)}
-              accessibilityLabel="Back to writing"
-            />
-            <Animated.View
-              style={[
-                styles.tray,
-                {
-                  transform: [
-                    { translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [360, 0] }) },
-                  ],
-                },
-              ]}
-            >
-              <Text style={styles.trayLabel}>Seal it with</Text>
+          <Animated.View
+            style={[
+              styles.seal,
+              {
+                opacity: rise,
+                transform: [
+                  { translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) },
+                ],
+              },
+            ]}
+          >
+            {top(1)}
+            <ScrollView contentContainerStyle={styles.sealBody}>
+              <Text style={styles.sealTitle} accessibilityRole="header">
+                Seal it with
+              </Text>
+              <View style={styles.chosen}>
+                <Svg width={SEAL_GLOW} height={SEAL_GLOW} style={styles.sealGlow}>
+                  <Defs>
+                    <RadialGradient id="seal">
+                      <Stop offset="0" stopColor={metal.mid} stopOpacity={0.35} />
+                      <Stop offset="1" stopColor={metal.mid} stopOpacity={0} />
+                    </RadialGradient>
+                  </Defs>
+                  <Circle
+                    cx={SEAL_GLOW / 2}
+                    cy={SEAL_GLOW / 2}
+                    r={SEAL_GLOW / 2}
+                    fill="url(#seal)"
+                  />
+                </Svg>
+                {SPARKLES.map((at, i) => (
+                  <View key={i} style={[styles.sparkle, at]}>
+                    <Glyph name="sparkle" size={at.size} color={color.gold} />
+                  </View>
+                ))}
+                <Image source={locketOf(locket).opened} style={styles.chosenImage} />
+              </View>
+              <Text style={styles.sealName} numberOfLines={2}>
+                {placeName.trim()}
+              </Text>
+              <Text style={styles.sealMeta}>
+                {isEditing
+                  ? `left by ${author.name}`
+                  : `${here ?? 'Here'} · left by ${author.name}`}
+              </Text>
+              <Text style={styles.sealLabel}>Your lockets</Text>
               <View style={styles.lockets}>
                 {offered.map((l) => {
                   const earned = l.level <= level;
+                  const on = locket === l.id;
                   return (
                     <Pressable
                       key={l.id}
@@ -1067,21 +1149,36 @@ export default function Submit({
                       disabled={!earned}
                       accessibilityRole="radio"
                       accessibilityLabel={earned ? l.name : `${l.name}, level ${l.level}`}
-                      accessibilityState={{ selected: locket === l.id, disabled: !earned }}
+                      accessibilityState={{ selected: on, disabled: !earned }}
                       testID={`locket-${l.id}`}
-                      style={[styles.locket, locket === l.id && styles.locketOn]}
+                      style={[styles.locket, !earned && styles.locketLater, on && styles.locketOn]}
                     >
                       <Image
                         source={l.opened}
                         style={[styles.locketImage, !earned && styles.disabled]}
                       />
-                      {!earned && <Text style={styles.locketLevel}>Level {l.level}</Text>}
+                      {earned ? (
+                        <View style={[styles.locketDot, on && styles.locketDotOn]} />
+                      ) : (
+                        <Text style={styles.locketLevel}>Level {l.level}</Text>
+                      )}
                     </Pressable>
                   );
                 })}
               </View>
-              <Text style={styles.meta}>{locketOf(locket).name}</Text>
+              <Text style={styles.sealNote}>
+                {`It opens for anyone who walks within ${Math.round(radiusMeters)} m of this spot.`}
+              </Text>
               {error && <Text style={styles.error}>{error}</Text>}
+            </ScrollView>
+            <View style={styles.sealFoot}>
+              <Button
+                kind="text"
+                label="Back"
+                glyph="chevron.left"
+                onPress={() => setSealing(false)}
+                disabled={posting}
+              />
               <Button
                 kind="foil"
                 label={
@@ -1093,13 +1190,13 @@ export default function Submit({
                       ? 'Save'
                       : 'Seal it here'
                 }
-                place={[styles.seal, posting && styles.disabled]}
+                place={[styles.sealButton, posting && styles.disabled]}
                 onPress={post}
                 disabled={posting}
                 testID="seal"
               />
-            </Animated.View>
-          </View>
+            </View>
+          </Animated.View>
         )}
       </View>
     </Modal>
@@ -1242,17 +1339,30 @@ function isText(item: Item | undefined): item is TextItem {
 
 const WIDTH = { s: '33.3%', m: '50%', l: '100%' } as const;
 
+/** Where the seal's four sparkles sit round the chosen locket. */
+const SPARKLES = [
+  { top: 40, left: 46, size: 20 },
+  { top: 24, right: 60, size: 14 },
+  { bottom: 30, left: 60, size: 12 },
+  { bottom: 30, right: 54, size: 18 },
+];
+
 const styles = StyleSheet.create({
   sheet: { flex: 1, backgroundColor: color.paper },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 8,
   },
-  post: { minHeight: 40, paddingHorizontal: 18 },
+  barTitle: { ...font.uiBold, fontSize: 17, color: color.ink, flexShrink: 1 },
+  steps: { flexDirection: 'row', gap: 6, width: 40, justifyContent: 'flex-end' },
+  step: { width: 6, height: 6, borderRadius: 3, backgroundColor: color.rule },
+  stepOn: { width: 20, backgroundColor: color.gold },
+  next: { paddingHorizontal: 28 },
   disabled: { opacity: 0.35 },
 
   // MemorySheet's reading column: 24 in, 8 inside a part, 24 between parts.
@@ -1264,7 +1374,17 @@ const styles = StyleSheet.create({
   blocks: { gap: 16, marginTop: 24 },
   p: story.body,
   h: { ...story.body, ...font.storyBold },
-  quote: { ...story.body, paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: color.rule },
+  quoteBox: { alignItems: 'center', gap: 8, paddingHorizontal: 8, marginVertical: 8 },
+  quoteMark: { ...font.title, fontSize: 64, lineHeight: 64, height: 44, color: color.gold },
+  quote: {
+    ...font.storyItalic,
+    fontSize: 21,
+    lineHeight: 30,
+    color: color.ink,
+    textAlign: 'center',
+    alignSelf: 'stretch',
+  },
+  rule: { marginTop: 24 },
   alone: { minHeight: 130 },
   mark: { color: color.inkFaint },
   bold: font.storyBold,
@@ -1277,52 +1397,91 @@ const styles = StyleSheet.create({
   center: { alignSelf: 'center' },
   right: { alignSelf: 'flex-end' },
   photoOn: { borderWidth: 2, borderColor: color.gold },
-  // The bar: one quiet capsule, over the keyboard or at the foot.
+  // The bar: one quiet capsule beside Next, over the keyboard or at the foot.
   capsule: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'center',
+    height: 60,
     paddingHorizontal: 6,
     borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.goldLine,
     backgroundColor: color.paperRaised,
     ...lift,
   },
-  tool: { width: 48, height: 44, alignItems: 'center', justifyContent: 'center' },
-  dock: { position: 'absolute', alignSelf: 'center' },
-  scrim: { ...StyleSheet.absoluteFill, backgroundColor: color.scrim },
-  tray: {
+  tool: { flex: 1, height: 52, alignItems: 'center', justifyContent: 'center' },
+  dock: { position: 'absolute', left: 16, right: 16, flexDirection: 'row', gap: 12 },
+  byline: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16 },
+  // The byline as chips: who, when, where.
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 44,
+    paddingHorizontal: 14,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: color.goldLine,
+    backgroundColor: color.paperRaised,
+    maxWidth: '100%',
+  },
+  tagAuthor: { paddingLeft: 7 },
+  tagText: { ...font.uiBold, fontSize: 15, color: color.ink, flexShrink: 1 },
+  tagPlace: { color: color.gold },
+
+  // The seal: a page of its own over the story (docs/10, "Jewel Box").
+  seal: {
     position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 44,
-    borderTopLeftRadius: radius.card,
-    borderTopRightRadius: radius.card,
     backgroundColor: color.paper,
   },
-  trayLabel: label,
-  seal: { alignSelf: 'stretch', marginTop: 8 },
-  byline: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  lockets: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
-  // A circle, the selection a ring in gold: the pin is what is being chosen.
-  locket: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: 'transparent',
+  sealBody: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 },
+  sealTitle: { ...screenTitle, textAlign: 'center' },
+  chosen: {
+    width: SEAL_GLOW,
+    height: SEAL_GLOW - 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  locketOn: { borderColor: color.gold },
-  locketImage: { width: 48, height: 48 },
-  locketLevel: { ...label, fontSize: 10, position: 'absolute', bottom: 0 },
+  sealGlow: { position: 'absolute', top: -30 },
+  chosenImage: { width: SEAL, height: SEAL, resizeMode: 'contain' },
+  sparkle: { position: 'absolute' },
+  sealName: { ...font.title, fontSize: 30, lineHeight: 36, color: color.ink, textAlign: 'center' },
+  sealMeta: { ...font.ui, fontSize: 15, color: color.inkSoft, marginTop: 4, textAlign: 'center' },
+  sealLabel: { ...label, alignSelf: 'flex-start', marginTop: 32, marginBottom: 12 },
+  lockets: { flexDirection: 'row', flexWrap: 'wrap', alignSelf: 'stretch', gap: 6 },
+  // A tile each; the ones still to walk for are a dashed outline with their level.
+  locket: {
+    width: 54,
+    height: 80,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: color.goldLine,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  locketLater: { borderStyle: 'dashed', borderColor: color.rule },
+  locketOn: { borderWidth: 1.5, borderColor: color.gold, backgroundColor: color.quiet },
+  locketImage: { width: 40, height: 40, resizeMode: 'contain' },
+  locketDot: { width: 6, height: 6, borderRadius: 3 },
+  locketDotOn: { backgroundColor: color.gold },
+  locketLevel: { ...label, fontSize: 11, color: color.inkSoft },
+  sealNote: { ...font.ui, fontSize: 15, lineHeight: 21, color: color.inkSoft, marginTop: 16 },
+  sealFoot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: DOCK,
+  },
+  sealButton: { flex: 1 },
   meta: { ...story.meta, flexShrink: 1 },
-  metaInk: { color: color.ink },
   part: { gap: 8, marginTop: 24 },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16, marginTop: 24 },
   action: { ...story.meta, color: color.inkSoft },

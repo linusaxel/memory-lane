@@ -4,7 +4,7 @@
  *  `progress` (docs/10, "Slide to unlock"). */
 
 import { useEffect, type RefObject } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Line, RadialGradient, Stop } from 'react-native-svg';
 
@@ -12,7 +12,7 @@ import type { LocatedMemory } from './api.ts';
 import Glyph from './Glyph.tsx';
 import LocketUnlock, { type LocketDrive } from './LocketUnlock.tsx';
 import DiamondRule from './DiamondRule.tsx';
-import { color, dim, font, metal, story } from './theme.ts';
+import { color, dim, font, metal, solid, story } from './theme.ts';
 
 type Props = {
   memory: LocatedMemory;
@@ -42,6 +42,7 @@ export default function UnlockHere({
   progress,
 }: Props) {
   const many = count > 1;
+  const glow = solid(useColorScheme() === 'dark').glow;
   const { lat, lng } = memory.place.coordinates;
   // ‹ › brings a fresh locket, so the thumb starts over with it.
   useEffect(() => {
@@ -75,9 +76,9 @@ export default function UnlockHere({
           <Svg width={GLOW} height={GLOW} style={styles.glow} pointerEvents="none">
             <Defs>
               <RadialGradient id="reach">
-                <Stop offset="0" stopColor={color.glow as string} stopOpacity={1} />
-                <Stop offset="0.45" stopColor={color.glow as string} stopOpacity={0.6} />
-                <Stop offset="1" stopColor={color.glow as string} stopOpacity={0} />
+                <Stop offset="0" stopColor={glow} stopOpacity={1} />
+                <Stop offset="0.45" stopColor={glow} stopOpacity={0.6} />
+                <Stop offset="1" stopColor={glow} stopOpacity={0} />
               </RadialGradient>
             </Defs>
             <Circle cx={GLOW / 2} cy={GLOW / 2} r={GLOW / 2} fill="url(#reach)" />

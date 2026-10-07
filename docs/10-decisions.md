@@ -3525,6 +3525,15 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
   circles on a gold rail: every stop listed was opened. Section labels are
   sentence case over their own rule. Your board row is plum, and the top three
   wear gold, silver and bronze.
+- **Writing.** The byline is three chips (who, When ▾, the street in gold)
+  over the diamond rule, and a `>` block is set as the sheet's pull quote, so
+  the page still reads as what it files. Post becomes **Next**, a Go capsule
+  at the foot beside the glyph bar (the bar alone when Aa is open: six marks
+  need the width). Next opens **the seal as a page**, not a tray: "Seal it
+  with", the chosen locket large in a gold glow, the title and "street · left
+  by name", the lockets as tiles (the next locked one dashed, with its level:
+  still only one, as *Writing is a calm page* argued), the radius line, then
+  ‹ Back and a foil "Seal it here".
 
 ### Four pages, then the map
 
@@ -3803,7 +3812,8 @@ Substack, Swarm, BeReal, Polarsteps, Geocaching, Notes, Notion and Slowly,
 and on HIG, NN/g and the papers below.
 
 - **One bar of glyphs over the keyboard; × and Post are the only chrome
-  above.** Every app looked at has one row over the keyboard, none has two
+  above.** *(Superseded in part 2026-10-07: Post is Next, at the foot beside
+  the bar. See Jewel Box, "Writing".)* Every app looked at has one row over the keyboard, none has two
   rows of words (HIG Toolbars: "Prefer simple, recognizable symbols…";
   Virtual keyboards: controls above the keyboard). The bar is Aa, Photo,
   Camera and Hide keyboard; Aa swaps in B, I, Heading, Quote, Divider, as
@@ -3823,7 +3833,8 @@ and on HIG, NN/g and the papers below.
   and NN/g warns a placeholder can be taken for content.
 - **"Here" is the street**, from expo-location's reverse geocode on the phone
   (Apple's, free), and "Today" when it is. Display only.
-- **Post opens the seal.** The lockets earned, the current one chosen, and
+- **Post opens the seal.** *(Superseded in part 2026-10-07: Next opens it,
+  and it is a page, not a tray. See Jewel Box, "Writing".)* The lockets earned, the current one chosen, and
   only the next locked one with its level, then "Seal it here". Slowly picks
   its stamps at send; the IKEA effect holds "only when labor results in
   successful completion" (Norton, Mochon & Ariely 2012); one locked locket

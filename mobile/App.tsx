@@ -1607,6 +1607,7 @@ export default function App() {
         onDeleted={deleted}
         author={{ name: displayName.trim() || 'Anonymous', avatar_url: profile?.avatar_url }}
         level={profile?.level ?? 1}
+        radiusMeters={radiusMeters}
       />
     </>
   );
