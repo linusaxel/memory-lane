@@ -754,3 +754,4 @@ adds a line here. Started 2026-10-05 at 74 good out of 169 visible.
 | 2026-10-06 | Københavnerglimt (3), trial, ids 617-621 | 5 | 28 | 7 | 5.5 | ~8, est. |
 | 2026-10-07 | Københavnerglimt (3), rest, ids 622-640 (633, Bakken, stuck on cut replies) | 16 | 101 | 27 | 5.6 | ~27, est. |
 | 2026-10-07 | Noma (256, 22 Copenhagen posts), Tivoli (257), Distortion (258); no trial | 25 | 14 | 2 | 4.6 | ~5, est. |
+| 2026-10-07 | Trials, most story-like chunks: Magasinet KBH (254), NABO Humleby (252) | 10 (5 each) | 9 (8/1) | 0 | 3.8 | ~2-4, est. |
