@@ -127,8 +127,7 @@ def source_href(row) -> str | None:
 # WebView and a link preview with no asset pipeline behind it.
 FONT_HREF = (
     "https://fonts.googleapis.com/css2?"
-    "family=Figtree:wght@400;500;600"
-    "&family=Fraunces:opsz,wght,SOFT,WONK@9..144,400,100,0;9..144,700,100,1&display=swap"
+    "family=Gloock&family=Newsreader:opsz,wght@6..72,400&display=swap"
 )
 
 # The palette is mobile/src/theme.ts, copied by hand because there are eleven
@@ -140,12 +139,14 @@ CARD_CSS = """
   :root{--bg:#14101a;--fg:#f3ece0;--muted:#9b90a3;--rule:#362c3f;--accent:#e3be6b}
 }
 *{box-sizing:border-box}
-/* Soft Fraunces and Figtree, with stacks that hold on their own: a link
+/* The app's type (docs/10, "Jewel Box"): Gloock for the title, Newsreader
+   for the story, the system's rounded face for the small print. Stacks that
+   hold on their own: a link
    preview bot fetches no fonts, and a card that collapses to Times is worse
    than one that was never restyled. `muted` is `faded`, not `inkFaint` - this
    sets 12px in it and inkFaint is 3.4:1 on paper. */
 body{margin:0;background:var(--bg);color:var(--fg);
-  font:400 16px/1.5 Fraunces,Georgia,"Times New Roman",serif;
+  font:400 16px/1.5 Newsreader,Georgia,"Times New Roman",serif;
   -webkit-font-smoothing:antialiased}
 /* The card hugs its content and never stretches: this same markup is an iframe
    in the embed widget, where a card stretched to 100vh is a credit stranded at
@@ -161,8 +162,9 @@ body{min-height:100svh;display:flex;flex-direction:column;
 .card{max-width:34rem;width:100%;margin-inline:auto;padding:28px 24px;display:flex;
   flex-direction:column;gap:14px}
 /* clamp() so the place name survives being scaled down to a thumbnail */
-.place{font-size:clamp(22px,5.5vw,30px);font-weight:700;line-height:1.2;margin:0}
-.when{font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+.place{font-family:Gloock,Georgia,"Times New Roman",serif;
+  font-size:clamp(22px,5.5vw,30px);font-weight:400;line-height:1.2;margin:0}
+.when{font-family:ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:12px;color:var(--muted);margin:0}
 /* 19/31, the same size the app's sheet gives it, because it is the same
    sentence and it is the reason anybody opened this. */
@@ -174,7 +176,7 @@ body{min-height:100svh;display:flex;flex-direction:column;
 /* Under the place name, as a byline: the first thing seen with the story,
    which is where the AI Act wants the label (docs/09 part 10). */
 .credit{margin:0;
-  font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-family:ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:12px;line-height:19px;color:var(--muted);display:flex;
   flex-wrap:wrap;gap:6px}
 .credit a{color:var(--accent)}
@@ -182,7 +184,7 @@ body{min-height:100svh;display:flex;flex-direction:column;
    fixed height so a portrait phone shot is not cropped to a letterbox. */
 .photo{width:100%;border-radius:14px;display:block;max-height:60vh;object-fit:cover}
 .layer{display:inline-block;
-  font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-family:ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:13px;font-weight:600;color:var(--muted)}
 @media (max-width:360px){.card{padding:18px 16px}.summary{font-size:17px;line-height:28px}}
 """

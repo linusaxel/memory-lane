@@ -16,6 +16,12 @@ const TILE_RX = 34;
 const noBackground = (svg) => svg.replace(/<rect[^>]*\/>/, '');
 const tileOnly = (svg) => svg.replace(/(<rect[^>]*\/>)[\s\S]*(<\/svg>)/, '$1$2');
 const rounded = (svg) => svg.replace('<rect ', `<rect rx="${TILE_RX}" `);
+// Android crops an adaptive icon to its middle 66%: the art shrinks into it,
+// without the tile's hairline edge, which the circle would cut into lines.
+const safe = (svg) =>
+  noBackground(noBackground(svg))
+    .replace('</defs>', '</defs><g transform="translate(20.4 20.4) scale(0.66)">')
+    .replace('</svg>', '</g></svg>');
 const white = (svg) => svg.replace(/fill="#[0-9a-f]+"/gi, 'fill="#ffffff"');
 
 // An opaque icon must carry no alpha channel at all (iOS App Store rejects
@@ -36,9 +42,9 @@ async function main() {
   await write(rounded(dark), 1024, 'splash-icon-dark.png');
 
   // Android adaptive icon: the art over the tile layer.
-  await write(noBackground(light), 512, 'android-icon-foreground.png');
+  await write(safe(light), 512, 'android-icon-foreground.png');
   await write(tileOnly(light), 512, 'android-icon-background.png', { opaque: true });
-  await write(white(noBackground(light)), 432, 'android-icon-monochrome.png');
+  await write(white(safe(light)), 432, 'android-icon-monochrome.png');
 
   await write(light, 48, 'favicon.png', { opaque: true });
 }

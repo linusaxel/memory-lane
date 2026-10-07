@@ -16,7 +16,7 @@ import SignIn from './SignIn.tsx';
 import { locketOf } from './lockets.ts';
 import type { Permission } from './types.ts';
 import Button from './Button.tsx';
-import { button, buttonText, color, dim, font, label, screenTitle } from './theme.ts';
+import { color, dim, font, label, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -63,28 +63,34 @@ export default function Settings({
           <CloseButton onPress={onClose} label="Close settings" />
         </View>
         <Section title="Account">
-          <SignIn device={device} profile={profile} onProfile={onProfile} />
-          {profile?.subscribed ? (
-            <>
-              <Text style={styles.note}>
-                {profile.subscribed_until
-                  ? `Subscribed until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
-                  : 'Subscribed.'}{' '}
-                Plan as many walks a day as you like.
-              </Text>
-              <Pressable
-                style={dim(styles.action)}
-                onPress={() => manage().catch(() => {})}
-                accessibilityRole="button"
-              >
-                <Text style={styles.actionText}>Manage subscription</Text>
-              </Pressable>
-            </>
-          ) : (
-            profile?.user_id && (
-              <Button kind="foil" label="Subscribe" onPress={onSubscribe} place={styles.action} />
-            )
+          {profile?.subscribed && (
+            <Text style={styles.note}>
+              {profile.subscribed_until
+                ? `Subscribed until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
+                : 'Subscribed.'}{' '}
+              Plan as many walks a day as you like.
+            </Text>
           )}
+          <SignIn
+            device={device}
+            profile={profile}
+            onProfile={onProfile}
+            beside={
+              profile?.subscribed ? (
+                <Button
+                  kind="quiet"
+                  label="Manage"
+                  accessibilityLabel="Manage subscription"
+                  onPress={() => manage().catch(() => {})}
+                  place={styles.half}
+                />
+              ) : (
+                profile?.user_id && (
+                  <Button kind="foil" label="Subscribe" onPress={onSubscribe} place={styles.half} />
+                )
+              )
+            }
+          />
         </Section>
 
         <Section title="How unlocking works">
@@ -209,9 +215,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   rowText: { flex: 1, ...font.prose, fontSize: 17, lineHeight: 27, color: color.ink },
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
-  action: { ...button.quiet, alignSelf: 'flex-start', marginTop: 6 },
+  half: { flex: 1 },
   textAction: { alignSelf: 'flex-start' },
-  actionText: { ...buttonText, color: color.ink },
   link: { alignSelf: 'flex-start' },
   linkText: {
     ...font.uiMedium,

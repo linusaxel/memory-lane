@@ -768,6 +768,10 @@ physical-device branch anyway. `./e2e/run.sh` builds with `xcodebuild` for that
 reason (its step 3/5, which also rebuilds whenever `Podfile.lock` changed), and
 running it is the shortest way to a fresh simulator build.
 
+**A new native splash still opens on the old one** until
+`mobile/scripts/fresh-splash.sh` deletes the launch-screen snapshot iOS keeps
+in the app's container; a rebuild, a reinstall and a reboot all leave it.
+
 It bakes the LAN IP into the launch URL and exits with Metro, so start Metro
 yourself afterwards with `REACT_NATIVE_PACKAGER_HOSTNAME=localhost` and
 `xcrun simctl launch` — the dev client remembers the last URL it loaded, if

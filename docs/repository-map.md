@@ -184,6 +184,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/cluster.ts` | Group memories that share a map point (unit tested) |
 | `mobile/src/region.ts` | Metres, paths and framing a walk (unit tested) |
 | `mobile/src/useMapCamera.ts` | Owns the map ref and every camera move |
+| `mobile/scripts/fresh-splash.sh` | Dev: clear the simulator's saved launch screen, so a new native splash shows |
 | `mobile/scripts/reset-unlocks.sh` | Dev: lock everything again for the simulator's user, in the dev DB and on the device |
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification: the native wrapper, the pure region maths, the opt-in flag |

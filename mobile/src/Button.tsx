@@ -69,7 +69,7 @@ export default function Button({
         <ActivityIndicator color={tint} />
       ) : (
         <>
-          {glyph && <Glyph name={glyph} size={17} weight="semibold" color={tint} />}
+          {glyph && <Glyph name={glyph} size={15} weight="bold" color={tint} />}
           {label !== '' && (
             <Text style={[styles.label, { color: tint }]} numberOfLines={1}>
               {label}

@@ -19,7 +19,7 @@
  * that a release build cannot take: see `Skip` below.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -37,6 +37,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { deleteAccount, fetchProfile, signIn, signOut, type Profile } from './api.ts';
+import Button from './Button.tsx';
 import { LogoTile } from './StartupLogo.tsx';
 import { button, buttonText, color, dim, font, label, screenTitle } from './theme.ts';
 
@@ -290,12 +291,14 @@ type Props = {
   device: string | null;
   profile: Profile | null;
   onProfile: (next: Profile) => void;
+  /** Shares Sign out's row: Settings puts Subscribe there. */
+  beside?: ReactNode;
 };
 
 /** The journal's Account section. Only ever seen signed in (or skipped past in
  *  a dev build): which sign-ins are attached, the other one, and sign out -
  *  which lands back on SignInScreen. */
-export default function SignIn({ device, profile, onProfile }: Props) {
+export default function SignIn({ device, profile, onProfile, beside }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const appleAvailable = useAppleAvailable();
@@ -347,9 +350,10 @@ export default function SignIn({ device, profile, onProfile }: Props) {
         !providers.includes('apple') && (
           <LinkApple device={device} onProfile={onProfile} onError={setError} onBusy={setBusy} />
         )}
-      <Pressable style={dim(styles.action)} onPress={leave} accessibilityRole="button">
-        <Text style={styles.actionText}>Sign out</Text>
-      </Pressable>
+      <View style={styles.row}>
+        <Button kind="quiet" label="Sign out" onPress={leave} place={styles.half} />
+        {beside}
+      </View>
       {confirmingDelete && (
         <Text style={styles.note}>
           Your memories, photos, notes and sign-ins are deleted for good. A subscription is
@@ -385,6 +389,8 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   actions: { gap: 12, alignItems: 'stretch' },
+  row: { flexDirection: 'row', gap: 12 },
+  half: { flex: 1 },
   google: { ...button.quiet, height: 52, paddingVertical: 0 },
   googleText: { ...buttonText, color: color.ink },
   skip: { alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 16 },
@@ -393,8 +399,6 @@ const styles = StyleSheet.create({
   note: { ...font.prose, fontSize: 15, lineHeight: 24, color: color.inkFaint },
   // Apple's button draws itself; it only takes a frame.
   apple: { height: 52, alignSelf: 'stretch' },
-  action: { ...button.quiet, alignSelf: 'flex-start' },
-  actionText: { ...buttonText, color: color.ink },
   delete: { alignSelf: 'flex-start', paddingVertical: 4 },
   deleteText: { ...buttonText, color: color.danger },
   error: { ...font.ui, fontSize: 13, color: color.gold, textAlign: 'center' },
