@@ -91,12 +91,18 @@ Each of these cost an afternoon.
 9. **A geofence registered from inside never fires.** Stand still outside
    every fence for a few seconds first (`extendedWaitUntil` with
    `optional: true` is the pause).
-10. **A bottom tap that does nothing: look for `WARN` in
-    `e2e/out/logs/metro.log`.** A `console.warn` raises the dev toast over the
+10. **A bottom tap that does nothing: look for warnings in
+    `e2e/out/logs/<flow>.js.log`.** It holds the app's console, which
+    `metro.log` no longer gets. A `console.warn` raises the dev toast over the
     bottom of the screen. Fix the warning.
 11. **The first-pick card covers the lower map** until the welcome unlock is
     spent. Tap a pin above it, or pick first.
-12. **The keyboard covers the bottom of a sheet.** A `KeyboardAvoidingView` in
+12. **A field half under Add's bar or header still counts as visible**, and
+    the tap lands on the bar. Tap it with `steps/tap-clear.yml` (`ID`), which
+    scrolls down until it is centred. Down only: Maestro reads `direction`
+    before any variable. Not the title or the last block: neither can
+    centre, and at the top the swipe reads as the sheet's pull-to-dismiss.
+13. **The keyboard covers the bottom of a sheet.** A `KeyboardAvoidingView` in
     a page sheet does not lift it, and the suggestion strip takes taps meant
     for what is under it. Put controls a flow taps while typing at the top of
     the sheet.

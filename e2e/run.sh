@@ -112,6 +112,7 @@ rm -f "$OUT"/*.sb-* 2>/dev/null
 
 API_PID=""
 REC_PID=""
+JS_PID=""
 
 kill_port() {
   local pids
@@ -126,6 +127,7 @@ psql_on() {
 
 cleanup() {
   [ -n "$REC_PID" ] && kill -INT "$REC_PID" 2>/dev/null && wait "$REC_PID" 2>/dev/null
+  [ -n "$JS_PID" ] && kill "$JS_PID" 2>/dev/null
   if [ "$KEEP" = 1 ]; then
     say "--keep: API on :$API_PORT, Metro on :$METRO_PORT and $DB are still up"
     return
@@ -378,6 +380,12 @@ for flow in "${SELECTED[@]}"; do
     xcrun simctl privacy "$DEVICE" grant "$service" "$APP_ID" >/dev/null 2>&1
   done
 
+  # The app's console.log, which reaches neither Metro's terminal nor
+  # metro.log since React Native 0.77 sent it to DevTools.
+  xcrun simctl spawn "$DEVICE" log stream --level debug --style compact \
+    --predicate 'subsystem == "com.facebook.react.log"' > "$LOGS/$name.js.log" 2>&1 &
+  JS_PID=$!
+
   if [ "$RECORD" = 1 ]; then
     rm -f "$OUT/$name.mp4"
     xcrun simctl io "$DEVICE" recordVideo --codec h264 -f "$OUT/$name.mp4" \
@@ -415,6 +423,8 @@ for flow in "${SELECTED[@]}"; do
   wait "$maestro_pid" 2>/dev/null || FAIL=1
   printf '\033[2m     %ss\033[0m\n' "$(( $(date +%s) - flow_started ))"
   LAST=$(date +%s)
+
+  kill "$JS_PID" 2>/dev/null
 
   if [ -n "$REC_PID" ]; then
     kill -INT "$REC_PID" 2>/dev/null

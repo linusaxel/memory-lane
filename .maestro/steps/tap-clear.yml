@@ -1,0 +1,14 @@
+# Taps a field below by id once it is clear of Add's floating bar and its header.
+# Maestro calls a field "visible" half under either and taps its middle, which
+# lands on the bar's Quote or Photo. Centred, it is clear of both.
+# Not for the title or the last block: neither can centre, and at the top the
+# swipe that tries reads as the page sheet's pull-to-dismiss.
+appId: ${APP_ID}
+---
+- scrollUntilVisible:
+    element:
+      id: ${ID}
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: ${ID}

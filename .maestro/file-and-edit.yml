@@ -59,12 +59,13 @@ appId: ${APP_ID}
 - tapOn:
     id: "block-up"
 # Back in the quote, so the photo goes in under it. The keyboard goes down
-# first: the quote now sits at the page's edge, half under the bar, and a
-# tap there lands on the bar's own Quote.
+# first; the quote now sits at the page's edge, half under the bar.
 - tapOn: "Done styling"
 - tapOn: "Hide keyboard"
-- tapOn:
-    id: "block-quote"
+- runFlow:
+    file: steps/tap-clear.yml
+    env:
+      ID: block-quote
 
 # A photo, which no other flow attaches: SDK 57's expo/fetch once refused the
 # { uri } FormData part and every upload failed without reaching the API.
