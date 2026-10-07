@@ -138,10 +138,6 @@ export const solid = (dark: boolean) => ({
   /** The reach circle: the seal, washed over the map. */
   reachStroke: dark ? 'rgba(76,193,150,0.75)' : 'rgba(28,106,77,0.7)',
   reachFill: dark ? 'rgba(76,193,150,0.12)' : 'rgba(28,106,77,0.12)',
-  /** mobile/assets/icon.svg and icon-dark.svg. */
-  tile: dark ? '#5e2a18' : '#a8350f',
-  road: dark ? '#f2ede4' : '#f7f4ee',
-  sun: dark ? '#f5c542' : '#f2b53a',
   /** The one tinted control over the map, Plan a walk: green enamel glass,
    *  dense, because a light tint on the cream map measured 1.01:1
    *  (docs/09 part 15). A tint, so a real colour. */

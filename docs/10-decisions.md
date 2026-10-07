@@ -3534,6 +3534,11 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
   by name", the lockets as tiles (the next locked one dashed, with its level:
   still only one, as *Writing is a calm page* argued), the radius line, then
   ‹ Back and a foil "Seal it here".
+- **The icon is the locket on its lane.** A gold locket with an emerald
+  stone, its chain winding down a plum enamel tile (`mobile/assets/icon.svg`,
+  the handoff's B-01, one tile for light and dark). The splash is that tile
+  on paper; the lane-and-sun drawing is gone, and the name fades in under the
+  tile in Gloock, where the sign-in screen has it.
 
 ### Four pages, then the map
 

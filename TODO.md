@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A new native splash shows the old one until its snapshot is deleted.**
+  2026-10-07: after the Jewel Box icon, prebuild and xcodebuild put the new
+  splash in the bundle, but the simulator kept launching on the ember tile
+  through a reinstall and a reboot; it took an `assetutil` check of the bundle
+  to find the cache. Also `npx expo run:ios` dies on signing with a paired
+  iPhone, as `e2e/run.sh` notes. Fix: a `mobile/scripts/fresh-splash.sh` that
+  deletes the app container's `Library/SplashBoard` (in `UI.md`'s recipe).
 - **A reply cut at `max_tokens=2000` is paid for and thrown away.**
   2026-10-07: the Københavnerglimt batch logged it on several calls, then a
   last pass of three cut calls stored nothing and stopped the run, leaving

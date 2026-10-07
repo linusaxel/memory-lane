@@ -839,7 +839,8 @@ made every memory a locket (docs/10, "Lockets"). The palette, in
 - **`purple`** (`#5B2A6E` / `#C59BD8`): what you earned. The level pill, the
   streak's flame, your row on the board.
 - Paper, ink and the type are unchanged. The app icon and splash still carry
-  the ember tile (`solid().tile`); redrawing them is open.
+  the ember tile (`solid().tile`); redrawing them is open. *(Redrawn
+  2026-10-07: the Jewel Box tile, docs/10 "Jewel Box".)*
 
 Pins are images now (`mobile/assets/lockets/`, six lockets, keyhole and
 plain), and the unlock is the locket opening, on Reanimated
