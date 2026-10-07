@@ -270,6 +270,9 @@ class RouteMeta(BaseModel):
     # (docs/10-decisions.md § Routes). The phone keeps them next to its own.
     out_leg: list[Coordinates] | None = None
     home_leg: list[Coordinates] | None = None
+    # Preview only: memories added within NEW_NEARBY_METERS of the start since
+    # this account's last walk, still unopened. 0 before a first walk.
+    new_nearby: int | None = None
 
 
 # 1km still separates five stops in a dense corpus; 10km is a long day's outing.
@@ -364,8 +367,6 @@ class Profile(BaseModel):
     level: int = 1
     xp_level: int = 0
     xp_next: int = 50
-    # On the city board by display name. Off leaves it.
-    on_board: bool = True
     # Steps are a lifetime total for the journal and buy nothing, counted from
     # steps_counted_until (naive UTC), null until there is a user row.
     steps: int = 0
@@ -380,27 +381,6 @@ class StepsRequest(BaseModel):
     device: str = Field(pattern=DEVICE_PATTERN)
     since: datetime
     steps: int = Field(ge=0, le=1_000_000)
-
-
-class BoardRow(BaseModel):
-    rank: int
-    # "Anonymous" when unnamed, like a byline.
-    display_name: str
-    avatar_url: str | None = None
-    opens: int
-    mine: bool = False
-
-
-class BoardResponse(BaseModel):
-    """docs/10, "A city board, by opens"."""
-
-    city: str
-    rows: list[BoardRow]
-
-
-class BoardRequest(BaseModel):
-    device: str = Field(pattern=DEVICE_PATTERN)
-    on_board: bool
 
 
 class ProfileRequest(BaseModel):

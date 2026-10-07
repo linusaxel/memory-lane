@@ -14,6 +14,15 @@ export async function loadNotifyNearby(): Promise<boolean> {
   }
 }
 
+/** Chosen either way, here or in Settings: the finish card asks only once. */
+export async function notifyNearbyChosen(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(KEY)) !== null;
+  } catch {
+    return true;
+  }
+}
+
 export async function saveNotifyNearby(on: boolean): Promise<void> {
   try {
     await AsyncStorage.setItem(KEY, on ? 'true' : 'false');

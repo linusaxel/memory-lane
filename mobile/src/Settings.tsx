@@ -8,7 +8,7 @@
 
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { API_BASE, setOnBoard, type Profile } from './api.ts';
+import { API_BASE, type Profile } from './api.ts';
 import { manage } from './purchases.ts';
 import { openLink } from './link.ts';
 import CloseButton from './CloseButton.tsx';
@@ -136,27 +136,6 @@ export default function Settings({
           <Text style={styles.note}>
             This needs location in the background, only to check whether you're near a memory you
             haven't unlocked. Your position is never stored.
-          </Text>
-        </Section>
-
-        <Section title="Board">
-          <Row>
-            <Text style={styles.rowText}>Show me on the city board.</Text>
-            <Switch
-              testID="on-board"
-              value={profile?.on_board ?? true}
-              disabled={!device || !profile?.user_id}
-              onValueChange={(next) => {
-                if (device)
-                  setOnBoard(device, next)
-                    .then(onProfile)
-                    .catch(() => {});
-              }}
-              accessibilityLabel="Show me on the city board"
-            />
-          </Row>
-          <Text style={styles.note}>
-            By your name and photo, with how many memories you opened this month.
           </Text>
         </Section>
 

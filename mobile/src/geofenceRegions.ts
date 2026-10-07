@@ -6,6 +6,7 @@
 
 import type { Coordinates, LocatedMemory } from './api.ts';
 import { FALLBACK_RADIUS_M } from './reach.ts';
+import { metersBetween } from './region.ts';
 
 /** iOS refuses to monitor more than 20 regions per app; there is no reason to
  *  ask Android for more than that either. */
@@ -25,13 +26,24 @@ export type Region = {
   notifyOnExit: false;
 };
 
-/** Locked: an open memory is nothing to walk to. */
-export function memoriesToWatch(memories: LocatedMemory[]): LocatedMemory[] {
-  return memories.filter((m) => m.locked).slice(0, MAX_REGIONS);
+const away = (m: LocatedMemory, from: Coordinates) => {
+  const at = m.place.coordinates as Coordinates;
+  return metersBetween(from.lat, from.lng, at.lat, at.lng);
+};
+
+/** Locked: an open memory is nothing to walk to. The nearest to `from` first,
+ *  when there is a `from`: the server lists nearby by story, not distance. */
+export function memoriesToWatch(
+  memories: LocatedMemory[],
+  from: Coordinates | null = null,
+): LocatedMemory[] {
+  const locked = memories.filter((m) => m.locked);
+  if (from) locked.sort((a, b) => away(a, from) - away(b, from));
+  return locked.slice(0, MAX_REGIONS);
 }
 
-export function regionsFor(memories: LocatedMemory[]): Region[] {
-  return memoriesToWatch(memories).map((m) => ({
+export function regionsFor(memories: LocatedMemory[], from: Coordinates | null = null): Region[] {
+  return memoriesToWatch(memories, from).map((m) => ({
     identifier: String(m.id),
     latitude: (m.place.coordinates as Coordinates).lat,
     longitude: (m.place.coordinates as Coordinates).lng,
@@ -66,6 +78,14 @@ export type Surprise = { memoryId: number; place: string; expiresAt: string };
 /** Only on a day the app was not opened: a surprise is for when you are not
  *  looking. The once-a-week rule is the server's. */
 export const maySurprise = (lastOpened: string | null, today: string) => lastOpened !== today;
+
+/** A surprise is for someone on foot: a bike is a kilometre past a 100 m
+ *  region before the notification lands, and it would spend the week. iOS
+ *  reports -1, and some fixes null, when the speed is unknown: let those by. */
+const SURPRISE_MAX_SPEED = 2.5; // m/s, a brisk walk
+
+export const walkingPace = (speed: number | null | undefined) =>
+  speed == null || speed < 0 || speed <= SURPRISE_MAX_SPEED;
 
 export const liveSurprise = (surprise: Surprise | null, now: number): Surprise | null =>
   surprise && Date.parse(surprise.expiresAt) > now ? surprise : null;

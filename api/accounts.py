@@ -15,9 +15,6 @@ import api.media
 from api.auth import apple_identity, either_identity, google_identity
 from api.models import (
     DEVICE_PATTERN,
-    BoardRequest,
-    BoardResponse,
-    BoardRow,
     DeviceRequest,
     Profile,
     ProfileRequest,
@@ -27,7 +24,6 @@ from api.models import (
 from api.moderation import screen
 from api.progression import XP_STEP, level, xp_of
 from api.queries import (
-    BOARD_QUERY,
     CREDIT_STEPS,
     DELETE_ORPHAN_SUBMITTED_PLACE,
     STREAK_DAYS_QUERY,
@@ -38,23 +34,27 @@ from pipeline.db import get_session
 
 router = APIRouter()
 
+REST_EVERY = timedelta(days=7)
+
 
 def current_streak(days: list[date], today: date) -> int:
-    """Consecutive calendar days, newest first, ending today or yesterday.
+    """Consecutive calendar days walked, ending today or yesterday.
 
-    A gap anywhere older breaks it; a day skipped entirely (nothing unlocked
-    yesterday or today) means the streak is over, not merely paused.
+    One missed day a week is a rest day and doesn't break it, nor count:
+    a miss is bridged when the day before it was walked and no other was
+    bridged in the six days after it. Nothing earns it or buys it.
     """
-    if not days or days[0] < today - timedelta(days=1):
-        return 0
-    count = 0
-    expected = days[0]
-    for d in days:
-        if d != expected:
-            break
-        count += 1
-        expected -= timedelta(days=1)
-    return count
+    walked = set(days)
+    day = today if today in walked else today - timedelta(days=1)
+    count, rested = 0, None
+    while True:
+        if day in walked:
+            count += 1
+        elif day - timedelta(days=1) in walked and (rested is None or rested - day >= REST_EVERY):
+            rested = day
+        else:
+            return count
+        day -= timedelta(days=1)
 
 
 def touch_device(session, device: str) -> None:
@@ -116,7 +116,7 @@ def profile_of(session, device: str) -> Profile:
     changed it. Creates nothing."""
     row = session.execute(
         text("""
-            SELECT u.id, u.display_name, u.avatar_path, u.on_board,
+            SELECT u.id, u.display_name, u.avatar_path,
                 (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id) AS submitted,
                 (SELECT COUNT(*) FROM memory_hearts mh JOIN memories m ON m.id = mh.memory_id
                  WHERE m.user_id = u.id) AS hearts_received,
@@ -162,7 +162,6 @@ def profile_of(session, device: str) -> Profile:
         subscribed_until=row.subscribed_until,
         steps=row.steps,
         steps_counted_until=row.steps_counted_until,
-        on_board=row.on_board,
         **earned,
     )
 
@@ -185,55 +184,6 @@ def set_profile(body: ProfileRequest):
     with get_session() as session:
         user_id = user_for_device(session, body.device)
         set_display_name(session, user_id, name)
-        return profile_of(session, body.device)
-
-
-# One city until there is a second. ponytail: a list of centres and the
-# nearest to the walker, when another city has memories.
-CITY = "Copenhagen"
-CITY_LAT, CITY_LNG = 55.6761, 12.5683
-CITY_RADIUS_METERS = 15_000
-BOARD_TOP = 20
-
-
-@router.get("/v1/board", response_model=BoardResponse)
-def get_board(device: str = Query(..., pattern=DEVICE_PATTERN)):
-    """The top of this month's city board, and your own row wherever it is.
-    Counts only, never what was opened, so the gate has nothing to guard."""
-    with get_session() as session:
-        rows = session.execute(
-            text(BOARD_QUERY),
-            {
-                "device_id": device,
-                "city_lat": CITY_LAT,
-                "city_lng": CITY_LNG,
-                "city_radius": CITY_RADIUS_METERS,
-                "top": BOARD_TOP,
-            },
-        ).fetchall()
-    return BoardResponse(
-        city=CITY,
-        rows=[
-            BoardRow(
-                rank=r.rank,
-                display_name=r.display_name or "Anonymous",
-                avatar_url=api.media.media_url(r.avatar_path) if r.avatar_path else None,
-                opens=r.opens,
-                mine=bool(r.mine),
-            )
-            for r in rows
-        ],
-    )
-
-
-@router.put("/v1/me/board", response_model=Profile)
-def set_on_board(body: BoardRequest):
-    with get_session() as session:
-        user_id = user_for_device(session, body.device)
-        session.execute(
-            text("UPDATE users SET on_board = :on WHERE id = CAST(:id AS uuid)"),
-            {"on": body.on_board, "id": user_id},
-        )
         return profile_of(session, body.device)
 
 

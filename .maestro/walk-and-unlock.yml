@@ -306,11 +306,14 @@ appId: ${APP_ID}
 # The walk is kept: every memory it opened is a locket in Your walks, and a
 # tap opens it over the sheet (docs/10, "No keys; your memories are your
 # lockets"); its card shows the walk on the map again.
-- tapOn: "Level.*"
+- tapOn: "You"
+- tapOn: "Your walks"
+# Centred: a dev warning toast sits over the sheet's foot.
 - scrollUntilVisible:
     element:
       id: "opened-locket"
     direction: DOWN
+    centerElement: true
 - takeScreenshot: lockets
 - tapOn:
     id: "opened-locket"

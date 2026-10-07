@@ -127,8 +127,6 @@ CREATE TABLE users (
     -- A photo under MEDIA_DIR, public like the name. Not a media row: those
     -- with no memory are what pipeline/sweep.py reaps.
     avatar_path TEXT,
-    -- Shown on the city board by display name. Off leaves the board.
-    on_board BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     -- XP is counted from walks, not stored (api/progression.py). Steps are a
     -- lifetime total and a watermark, never a day's count, and buy nothing.
@@ -277,7 +275,7 @@ CREATE TABLE unlocks (
 );
 
 CREATE INDEX idx_unlocks_device ON unlocks(device_id, unlocked_at DESC);
--- Opens per memory, for the city board.
+-- Opens per memory: "Read on the spot by N walkers".
 CREATE INDEX idx_unlocks_memory ON unlocks(memory_id);
 
 -- Say this one mattered. Unlike an unlock, it can be taken back. A join table

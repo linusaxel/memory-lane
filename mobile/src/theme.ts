@@ -56,7 +56,7 @@ export const color = {
   /** The glow behind an in-reach locket. Never a ring. */
   glow: dual('rgba(28,140,98,0.55)', 'rgba(76,193,150,0.55)'),
 
-  /** What you earned: your level, your streak, XP, your row on the board.
+  /** What you earned: your level, your streak, XP.
    *  Never a memory or an action. */
   plum: dual('#5D2A71', '#CFA4E2'),
   /** The empty part of the level bar. */
@@ -109,9 +109,6 @@ export const metal = {
   glow: '#FFFDF9',
   /** The compass's N. */
   north: '#8F2F1B',
-  /** The board's second and third places, beside `mid` for the first. */
-  silver: '#C7CAD3',
-  bronze: '#C68B5B',
 };
 
 /** The paywall's plum velvet, one set in both themes: it is cloth. */

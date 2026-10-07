@@ -65,6 +65,7 @@ from api.queries import (
     NEARBY_MEMORIES_QUERY,
     NEARBY_MEMORIES_WITH_TAGS_QUERY,
     NEARBY_PLACES_QUERY,
+    NEW_NEARBY_QUERY,
     NOTE_ALLOWED_QUERY,
     PLACES_COUNT_QUERY,
     ROUTE_PRUNE,
@@ -84,6 +85,10 @@ from pipeline.config import DEV_SUBSCRIBED, UNLIMITED_WALKS
 from pipeline.db import get_session
 
 router = APIRouter()
+
+# "4 new stories within 2 km since your last walk" (docs/10, "New since your
+# last walk").
+NEW_NEARBY_METERS = 2000
 
 
 @router.get("/v1/memories/nearby", response_model=NearbyResponse)
@@ -451,9 +456,15 @@ def preview_route(
             end,
             **_shaped(session, device, tags, (year_from, year_to)),
         )
-    return _route_response(
+        new_nearby = session.execute(
+            text(NEW_NEARBY_QUERY),
+            {"device_id": device, "lat": lat, "lng": lng, "radius_meters": NEW_NEARBY_METERS},
+        ).scalar()
+    response = _route_response(
         route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), loop, ends
     )
+    response.meta.new_nearby = new_nearby
+    return response
 
 
 @router.post("/v1/routes/today", response_model=RouteResponse)

@@ -8,6 +8,7 @@ import {
   maySurprise,
   memoriesToWatch,
   regionsFor,
+  walkingPace,
 } from './geofenceRegions.ts';
 
 let nextId = 1;
@@ -100,4 +101,17 @@ test('a surprise is gone once it expires', () => {
   const surprise = { memoryId: 1, place: 'Vega', expiresAt: '2026-10-07T12:30:00Z' };
   assert.equal(liveSurprise(surprise, Date.parse('2026-10-07T12:29:00Z')), surprise);
   assert.equal(liveSurprise(surprise, Date.parse('2026-10-07T12:31:00Z')), null);
+});
+
+test('the nearest are watched first, whatever order the server listed them in', () => {
+  const far = memory({ lat: 55.7 });
+  const near = memory({ lat: 55.676 });
+  assert.deepEqual(memoriesToWatch([far, near], { lat: 55.6759, lng: 12.5655 }), [near, far]);
+});
+
+test('a surprise asks only at walking pace, or when the speed is unknown', () => {
+  assert.equal(walkingPace(1.4), true);
+  assert.equal(walkingPace(5.5), false);
+  assert.equal(walkingPace(-1), true);
+  assert.equal(walkingPace(null), true);
 });

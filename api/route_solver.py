@@ -52,6 +52,9 @@ UNSCORED_WALK = 6
 # Each of a subscriber's choices a memory meets (its theme, its era) is worth
 # half the walk rubric's range: they lean the walk without emptying it.
 PREFERRED_PRIZE = 1
+# A memory added since the walker's last walk leans it the same way: the new
+# supply is what brings a walker back (docs/10, "New since your last walk").
+NEW_PRIZE = 1
 
 
 def _prize(c) -> float:
@@ -61,7 +64,8 @@ def _prize(c) -> float:
     walk = getattr(c, "walk_score", None)
     contrast = getattr(c, "contrast_score", None) or 0
     preferred = PREFERRED_PRIZE * (getattr(c, "preferred", 0) or 0)
-    return 1 + (UNSCORED_WALK if walk is None else walk) / 6 + contrast / 10 + preferred
+    new = NEW_PRIZE * (getattr(c, "is_new", 0) or 0)
+    return 1 + (UNSCORED_WALK if walk is None else walk) / 6 + contrast / 10 + preferred + new
 
 
 def _one_per_place(candidates: list) -> list:

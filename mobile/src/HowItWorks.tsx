@@ -18,9 +18,9 @@ import {
 import { fetchWalked, type Profile, type WalkedRoute } from './api.ts';
 import CloseButton from './CloseButton.tsx';
 import DiamondRule from './DiamondRule.tsx';
-import { LOCKETS, locketOf } from './lockets.ts';
+import { locketOf } from './lockets.ts';
 import { loadWalked } from './route.ts';
-import { color, font, label, radius, screenTitle } from './theme.ts';
+import { color, font, label, screenTitle } from './theme.ts';
 import type { UnlockedMemory } from './unlocked.ts';
 import WalkCard from './WalkCard.tsx';
 
@@ -103,25 +103,12 @@ export default function HowItWorks({
           ))}
         </View>
 
-        {/* Every memory opened, as its locket. Extracted memories draw theirs
-            at random, so the count of each kind is a detail, not a set to
-            finish. */}
+        {/* Every memory opened, as its locket. */}
         <Text style={styles.shelfTitle}>
           {opened.length
             ? `${opened.length} ${opened.length === 1 ? 'memory' : 'memories'}`
             : 'Your first memory goes here'}
         </Text>
-        <View style={[styles.kinds, styles.case]}>
-          {LOCKETS.map((locket) => {
-            const count = opened.filter((m) => locketOf(m.locket).id === locket.id).length;
-            return (
-              <View key={locket.id} style={[styles.kind, !count && styles.none]}>
-                <Image source={count ? locket.opened : locket.locked} style={styles.kindImage} />
-                <Text style={styles.unit}>{count}</Text>
-              </View>
-            );
-          })}
-        </View>
         <View style={styles.shelf}>
           {opened.map((memory) => (
             <Pressable
@@ -199,18 +186,6 @@ const styles = StyleSheet.create({
   unit: { ...label, fontSize: 12 },
   shelfTitle: { ...label, fontSize: 15, color: color.inkSoft, marginTop: 24 },
   shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10 },
-  kinds: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
-  // The lockets in their case: plum, edged in gold.
-  case: {
-    padding: 16,
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: color.goldLine,
-    backgroundColor: color.track,
-  },
-  kind: { alignItems: 'center', gap: 2 },
-  none: { opacity: 0.35 },
-  kindImage: { width: 40, height: 40, resizeMode: 'contain' },
   locket: { alignItems: 'center', gap: 4 },
   locketImage: { width: 56, height: 56, resizeMode: 'contain' },
   section: { flexDirection: 'row', gap: 14, marginTop: 16 },

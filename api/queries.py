@@ -581,8 +581,30 @@ SUBSCRIBED_QUERY = """
 # `preferred` counts how many of a subscriber's choices a memory meets, its theme
 # and its era (an undated memory meets no era): they lean the walk, never
 # filter it (docs/10, "Subscribers shape the walk").
+# `is_new` is a memory added since this account's last walk began: it leans
+# the walk like `preferred`, and NEW_NEARBY_QUERY counts them (docs/10, "New
+# since your last walk"). No walk yet, nothing is new.
 # Ordered by distance and not CONTRAST_ORDER on purpose: a route is where to
 # walk next, not a feed to rank.
+WALKABLE = f"""
+    p.coordinates IS NOT NULL
+    AND {VISIBLE}
+    AND {NOT_BLOCKED}
+    AND {WITHIN}
+    AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
+    AND NOT EXISTS (
+        SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
+    )"""
+# A walk that opened something: one that opened nothing is pruned on the next
+# accept (ROUTE_PRUNE), and a preview must agree with its accept.
+LAST_WALK = f"""(
+    SELECT MAX(r.created_at) FROM daily_routes r
+    WHERE r.device_id IN {MY_DEVICES}
+      AND EXISTS (
+          SELECT 1 FROM unlocks u
+          WHERE u.device_id IN {MY_DEVICES} AND u.memory_id = ANY(r.memory_ids)
+      )
+)"""
 ROUTE_CANDIDATES_QUERY = f"""
 SELECT {MEMORY_COLUMNS},
     m.walk_score,
@@ -594,22 +616,21 @@ SELECT {MEMORY_COLUMNS},
             AND COALESCE(CAST(:year_to AS integer), 9999),
         false
     )::int AS preferred,
+    COALESCE(m.created_at > {LAST_WALK}, false)::int AS is_new,
     {DISTANCE}
 {MEMORY_JOIN}
-WHERE
-    p.coordinates IS NOT NULL
-    AND {VISIBLE}
-    AND {NOT_BLOCKED}
-    AND {WITHIN}
-    AND (m.user_id IS NOT NULL OR {COORDINATE_IS_UNIQUE_EXPR})
-    AND NOT EXISTS (
-        SELECT 1 FROM unlocks u WHERE u.memory_id = m.id AND u.device_id IN {MY_DEVICES}
-    )
+WHERE {WALKABLE}
 -- A stack's memories share one distance: the preferred, then the best scored
 -- stands for the place, and the id makes that the same on every call, so a
 -- preview and its accept agree.
 ORDER BY distance_meters ASC, preferred DESC, m.walk_score DESC NULLS LAST, m.id ASC
 LIMIT :limit
+"""
+
+NEW_NEARBY_QUERY = f"""
+SELECT COUNT(*)
+{MEMORY_JOIN}
+WHERE {WALKABLE} AND m.created_at > {LAST_WALK}
 """
 
 # Today's route, rendered. No DISTANCE here - lat/lng are only ever supplied
@@ -785,30 +806,3 @@ WHERE id = :place_id
 """
 
 # Closed list: free text would be a tag soup of one-offs within a week.
-
-# The city board: distinct memories each account opened inside the city this
-# calendar month (UTC), ranked. Per account, not per device, so a second phone
-# adds nothing. Only accounts still on_board. A monthly reset keeps it winnable
-# (docs/10-decisions.md#a-city-board-by-opens).
-BOARD_QUERY = """
-WITH counts AS (
-    SELECT d.user_id, COUNT(DISTINCT un.memory_id) AS opens
-    FROM unlocks un
-    JOIN devices d ON d.id = un.device_id
-    JOIN users u ON u.id = d.user_id
-    JOIN memories m ON m.id = un.memory_id
-    JOIN places p ON p.id = m.place_id
-    WHERE u.on_board
-      AND un.unlocked_at >= date_trunc('month', now() AT TIME ZONE 'utc')
-      AND ST_DWithin(p.coordinates, ST_MakePoint(:city_lng, :city_lat)::geography, :city_radius)
-    GROUP BY d.user_id
-), ranked AS (
-    SELECT user_id, opens, RANK() OVER (ORDER BY opens DESC) AS rank FROM counts
-)
-SELECT r.rank, r.opens, u.display_name, u.avatar_path,
-    u.id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid)) AS mine
-FROM ranked r JOIN users u ON u.id = r.user_id
-WHERE r.rank <= :top
-   OR u.id = (SELECT user_id FROM devices WHERE id = CAST(:device_id AS uuid))
-ORDER BY r.rank, u.id
-"""

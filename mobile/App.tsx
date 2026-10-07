@@ -60,7 +60,7 @@ import { MUTED_ANDROID_STYLE } from './src/mapStyle.ts';
 import { anyNew } from './src/seen.ts';
 import { FALLBACK_RADIUS_M, opacityOf, reachOf } from './src/reach.ts';
 import { around, endFloorKm, metersBetween, pathMeters, type Region } from './src/region.ts';
-import { loadNotifyNearby, saveNotifyNearby } from './src/notifyNearby.ts';
+import { loadNotifyNearby, notifyNearbyChosen, saveNotifyNearby } from './src/notifyNearby.ts';
 import { clearRoute, loadChoices, loadRoute, saveChoices, saveRoute } from './src/route.ts';
 import {
   forgetUnlocked,
@@ -81,15 +81,14 @@ import {
   WALK_KM,
   WalkDone,
   type Reward,
+  levelInto,
 } from './src/Plan.tsx';
 import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
-import Board from './src/Board.tsx';
 import EditProfile from './src/EditProfile.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import { syncSteps } from './src/steps.ts';
 import HowItWorks from './src/HowItWorks.tsx';
-import LevelPill, { levelInto } from './src/LevelPill.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
@@ -295,6 +294,8 @@ export default function App() {
   // Off until chosen (notifyNearby.ts). Drives geofence.ts's background watch
   // of today's route, not the map's own viewport list - see the effect below.
   const [notifyNearby, setNotifyNearbyState] = useState(false);
+  // Until it is read, as if chosen: the finish card offers it once, never by mistake.
+  const [notifyChosen, setNotifyChosen] = useState(true);
   const [unlocked, setUnlocked] = useState<Unlocked>({});
   // The heart button's filled state and the journal's Hearted filter. The
   // server's memory_hearts row is the durable fact; /v1/unlocks refills this.
@@ -341,7 +342,6 @@ export default function App() {
   const [intro, setIntro] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [boardOpen, setBoardOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
@@ -531,6 +531,9 @@ export default function App() {
       .catch(() => {});
     loadNotifyNearby().then((on) => {
       if (mounted.current) setNotifyNearbyState(on);
+    });
+    notifyNearbyChosen().then((chosen) => {
+      if (mounted.current) setNotifyChosen(chosen);
     });
   }, []);
 
@@ -890,7 +893,7 @@ export default function App() {
     const watch = onWalk
       ? routeShown
       : nearby.filter((memory) => memory.locked && !earned.has(memory.id));
-    startWatching(watch, onWalk ? 'walk' : 'surprise').catch((e) =>
+    startWatching(watch, onWalk ? 'walk' : 'surprise', positionRef.current).catch((e) =>
       console.warn('Nearby notifications did not start:', e),
     );
   }, [notifyNearby, stage, routeShown, nearby, earned]);
@@ -1108,7 +1111,6 @@ export default function App() {
     setJournalOpen(false);
     setSubmitOpen(false);
     setSettingsOpen(false);
-    setBoardOpen(false);
     setProfileOpen(false);
     setPaywallOpen(false);
     setHowOpen(false);
@@ -1283,10 +1285,7 @@ export default function App() {
           if (!mounted.current) return;
           setProfile(who);
           if (finished && before && who.xp > before.xp) {
-            setReward({
-              xp: who.xp - before.xp,
-              level: who.level > before.level ? who.level : null,
-            });
+            setReward({ xp: who.xp - before.xp });
           }
         })
         .catch(() => {});
@@ -1647,7 +1646,6 @@ export default function App() {
         onSaved={saved}
         onDeleted={deleted}
         author={{ name: displayName.trim() || 'Anonymous', avatar_url: profile?.avatar_url }}
-        level={profile?.level ?? 1}
         radiusMeters={radiusMeters}
       />
     </>
@@ -1845,6 +1843,7 @@ export default function App() {
               onBack={shownAt > 0 ? () => showAt(shownAt - 1) : null}
               walkNumber={shownAt + 1}
               emptyAt={emptyAt}
+              newNearby={preview?.new_nearby ?? 0}
               walkedOut={walkedOut}
               onSubscribe={() => setPaywallOpen(true)}
               onHeight={setPreviewCardHeight}
@@ -1890,6 +1889,14 @@ export default function App() {
               path={donePath}
               onDone={() => setWalkDone(false)}
               onHeight={setDoneCardHeight}
+              onNotify={
+                notifyChosen
+                  ? undefined
+                  : (yes) => {
+                      setNotifyChosen(true);
+                      handleNotifyNearby(yes);
+                    }
+              }
               onMore={
                 profile?.user_id && !profile.subscribed
                   ? () => {
@@ -1904,20 +1911,6 @@ export default function App() {
           {stage === 'end' && <EndPick onCancel={() => setStage('preview')} />}
           {stage === 'loading' && <View style={styles.cover} />}
 
-          {/* Top centre: your level. A tap counts steps again. */}
-          {profile && (
-            <LevelPill
-              level={profile.level}
-              into={levelInto(profile)}
-              place={[styles.corner, styles.steps]}
-              // What it means, and a recount behind it.
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                countSteps();
-                setHowOpen(true);
-              }}
-            />
-          )}
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
               read at the top"). Journal top left, you top right. */}
@@ -1976,9 +1969,10 @@ export default function App() {
                 Haptics.selectionAsync().catch(() => {});
                 setSettingsOpen(true);
               }}
-              onBoard={() => {
+              onWalks={() => {
                 Haptics.selectionAsync().catch(() => {});
-                setBoardOpen(true);
+                countSteps();
+                setHowOpen(true);
               }}
             />
           </View>
@@ -2208,8 +2202,6 @@ export default function App() {
 
         {!journalOpen && !howOpen && sheets}
 
-        <Board visible={boardOpen} onClose={() => setBoardOpen(false)} device={device} />
-
         <Settings
           visible={settingsOpen}
           onClose={() => setSettingsOpen(false)}
@@ -2294,10 +2286,8 @@ const styles = StyleSheet.create({
     left: 0,
     backgroundColor: color.paper,
   },
-  // Glass over the map (src/Glass.tsx). `corner` and friends place a
+  // Glass over the map (src/Glass.tsx). `topLeft` and friends place a
   // control; `pill` and `circle` are its shape.
-  corner: { position: 'absolute', top: 64 },
-  steps: { alignSelf: 'center' },
   topLeft: { position: 'absolute', top: 64, left: 18 },
   topLeftSecond: { position: 'absolute', top: 64, left: 76 },
   topRight: { position: 'absolute', top: 64, right: 18 },

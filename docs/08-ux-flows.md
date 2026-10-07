@@ -184,14 +184,15 @@ the planner*).
    numbered and the loop drawn. Preview pins do not open: it is a look, not a
    walk. The card (`mobile/src/Plan.tsx`) is two steps (docs/10, *The planner
    is two steps*). Step one reads "A walk from here", then "4 memories ·
-   3.8 km loop", then the length:
+   3.8 km loop", then, when there are any, "3 new stories within 2 km since
+   your last walk" (docs/10, *New since your last walk*), then the length:
    one slider, 1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`), about one
    stop a km. Under it **Loop** or **One way**. One way adds **Pick where
    it ends**: the map, a card saying to tap it, and the tap is the end ("Ends
    where you tapped"; a second tap lets it go), with the slider at least the
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
    slider only on release. × closes it back to the map, from either step.
-   Journal is top left and your level top centre. "4 memories · 3.8 km loop"
+   Journal is top left. "4 memories · 3.8 km loop"
    sits between ‹ › (another walk, F32). **Next**, for every walker,
    is step two: ‹ Back,
    then **the list**: each stop numbered in walk order, its place, and year · source ·
@@ -317,11 +318,11 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    device stored, so a memory you walked to is readable on the train home.
 
 **Only on a walk:** only a stop of the walk in progress opens, and only
-standing on it; nothing else is drawn, so nothing else can be stood on. The
-top of the map says your level, "Level 3" over a thin XP bar, and a tap
-opens Your walks (level, XP, every walk drawn as a card, every memory opened
-drawn as its locket with a count of each kind, how it works; a card tapped
-shows that walk on the map, its date and Done; a locket tapped opens its memory) and counts steps again
+standing on it; nothing else is drawn, so nothing else can be stood on. Your
+walks, in the account menu, counts steps again and opens (level, XP, every
+walk drawn as a card, every memory opened drawn as its locket, how it works;
+a card tapped shows that walk on the map, its date and Done; a locket tapped
+opens its memory)
 (docs/10, "Walks earn XP; rare memories wait for a level" and "No keys; your
 memories are your lockets").
 
@@ -913,12 +914,16 @@ reinstall and covers every phone on the account.
    calendar days this account (this device, or every device on the same
    account) unlocked **a stop of that day's walk** (`STREAK_DAYS_QUERY`, unlocks
    joined to `daily_routes`), and counts back from today for as long as the
-   days are consecutive.
+   days are consecutive, bar a rest day (step 3).
 2. One stop is enough; the whole walk is not required. Filing does **not**
    count, though it records its own unlock (F5): otherwise a streak is kept by
    posting anything (decided 2026-09-24).
-3. No stop yesterday *and* none today breaks it back to zero; none yet
-   *today* does not, since the day is not over.
+3. **A rest day a week.** One missed day doesn't break it, nor count: a miss
+   is bridged when the day before it was walked and no other was bridged in
+   the six days after it. Two missed days in a row end it; none yet *today*
+   does not, since the day is not over. Nobody earns or buys the rest day
+   (docs/10, "A rest day in the streak"). A surprise open (F28) is off a walk,
+   so it keeps no streak.
 4. Shown large at the top of the journal (`Memories.tsx`), and on the closing
    card once it is more than one day (F30). At 7, 30 and 100 days that line
    is a moment of its own: it springs in with a flame and a second success
@@ -929,8 +934,8 @@ truer number the next time the app is opened, same as F25's route pill. This
 is the streak half of the founder-brainstorm's "streak + proximity
 notification, reopened" resolution - F28 is the other half.
 
-**Done when:** a walk stop on consecutive days increases the number, a skipped
-day resets it, a day with only a filing does not count, and it reads zero for
+**Done when:** a walk stop on consecutive days increases the number, one
+missed day a week is bridged, two in a row reset it, a day with only a filing does not count, and it reads zero for
 a device that has never walked. `tests/test_streak.py`.
 
 ---
@@ -969,7 +974,12 @@ the app is not open.
    task; only a grant notifies ("A story is open nearby", the place, half an
    hour). That pin then draws lit on the home map, and standing on it brings
    up the locket and the slide as a walk stop does. Once a week at most, by
-   the server.
+   the server. The regions follow you: every ~500 m moved re-registers the 20
+   nearest locked memories, and a crossing faster than 2.5 m/s (a bike) asks
+   nothing, so the week isn't spent on a ride past.
+7. **Offered once.** The first finish card (F30) asks "Let a story find you now
+   and then?"; Yes turns this on, and either answer, here or in Settings,
+   means it is never asked again.
 
 **Opt-in on purpose.** This is the one feature in the app that asks for
 location while the app is not open, and the only place `mobile/UI.md`'s "location
@@ -1013,7 +1023,8 @@ The last stop unlocks and the day should feel finished.
    time is first unlock to last, and is left off if a stop was earned on
    another day), then "+60 XP" when finishing earned it (once a day) and "Level 3" when it
    reached one, then
-   the streak once it is more than one day (F27).
+   the streak once it is more than one day (F27). Until the surprise was
+   chosen either way, it asks "Let a story find you now and then?" (F28).
 4. Done ends the walk and goes back to the map, following you again. A walked
    walk ends itself, so there is no "every stop unlocked" limbo, and a relaunch
    on a walked day lands on the map too.

@@ -355,6 +355,8 @@ export type TodaysRoute = {
    *  Preview only: the server stores no start, so the phone keeps these. */
   out_leg: Coordinates[] | null;
   home_leg: Coordinates[] | null;
+  /** Preview only: memories added within 2 km since your last walk. */
+  new_nearby: number;
 };
 
 type RouteBody = {
@@ -366,6 +368,7 @@ type RouteBody = {
     legs?: Coordinates[][] | null;
     out_leg?: Coordinates[] | null;
     home_leg?: Coordinates[] | null;
+    new_nearby?: number | null;
   };
 };
 
@@ -378,6 +381,7 @@ function toRoute(body: RouteBody): TodaysRoute {
     legs: body.meta?.legs ?? null,
     out_leg: body.meta?.out_leg ?? null,
     home_leg: body.meta?.home_leg ?? null,
+    new_nearby: body.meta?.new_nearby ?? 0,
   };
 }
 
@@ -564,36 +568,7 @@ export type Profile = {
   steps: number;
   /** Steps count from here, UTC without a zone; null until there is an account. */
   steps_counted_until: string | null;
-  /** On the city board by display name. */
-  on_board: boolean;
 };
-
-export type BoardRow = {
-  rank: number;
-  display_name: string;
-  avatar_url: string | null;
-  opens: number;
-  mine: boolean;
-};
-
-/** This month's city board: memories opened in the city (docs/10, "A city
- *  board, by opens"). */
-export async function fetchBoard(
-  device: string,
-  signal?: AbortSignal,
-): Promise<{ city: string; rows: BoardRow[] }> {
-  return get('/v1/board', new URLSearchParams({ device }), signal);
-}
-
-export async function setOnBoard(device: string, onBoard: boolean): Promise<Profile> {
-  const res = await fetch(`${BASE}/v1/me/board`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ device, on_board: onBoard }),
-  });
-  if (!res.ok) throw await refused(res);
-  return (await res.json()) as Profile;
-}
 
 export type Draft = {
   place_name: string;

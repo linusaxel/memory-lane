@@ -1,5 +1,5 @@
 /** You, top right: your photo or initial in a glass circle, and under it a
- *  native menu. Your name, your numbers and Edit profile, then the board and
+ *  native menu. Your name, your numbers and Edit profile, then Your walks,
  *  Settings and Appearance. */
 
 import { Button, Host, Menu, Picker, RNHostView, Section, Text } from '@expo/ui/swift-ui';
@@ -22,10 +22,10 @@ type Props = {
   name: string;
   onEditProfile: () => void;
   onSettings: () => void;
-  onBoard: () => void;
+  onWalks: () => void;
 };
 
-export default function AccountMenu({ profile, name, onEditProfile, onSettings, onBoard }: Props) {
+export default function AccountMenu({ profile, name, onEditProfile, onSettings, onWalks }: Props) {
   const [chosen, choose] = useState<Look>(look);
   const numbers = [
     profile?.streak ? `${profile.streak}-day streak` : null,
@@ -54,7 +54,7 @@ export default function AccountMenu({ profile, name, onEditProfile, onSettings, 
           <Button label={signedIn} systemImage="person.badge.key" modifiers={[disabled(true)]} />
           <Button label="Edit profile" systemImage="person.crop.circle" onPress={onEditProfile} />
         </Section>
-        <Button label="Board" systemImage="list.number" onPress={onBoard} />
+        <Button label="Your walks" systemImage="figure.walk" onPress={onWalks} />
         <Button label="Settings" systemImage="gearshape" onPress={onSettings} />
         <Picker
           modifiers={[pickerStyle('menu')]}

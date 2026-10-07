@@ -29,13 +29,13 @@ import {
   View,
 } from 'react-native';
 
-import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
+import type { Coordinates, LocatedMemory, Profile, WalkAsk, WalkedRoute } from './api.ts';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
 import { distance, walkDate } from './format.ts';
-import { LOCKETS, locketAt, locketOf } from './lockets.ts';
+import { locketOf } from './lockets.ts';
 import { ERAS } from './route.ts';
 import { Chip } from './Submit.tsx';
 import {
@@ -167,6 +167,9 @@ type PreviewProps = {
   walkNumber: number;
   /** The asked length, when it had no walk and the card moved to the nearest. */
   emptyAt: number | null;
+  /** Memories added within 2 km since your last walk (docs/10, "New since
+   *  your last walk"). */
+  newNearby: number;
   /** Today's free walk is walked: the card offers the subscription instead. */
   walkedOut: boolean;
   onSubscribe: () => void;
@@ -239,6 +242,7 @@ export function Preview({
   onBack,
   walkNumber,
   emptyAt,
+  newNearby,
   walkedOut,
   onSubscribe,
   onHeight,
@@ -409,6 +413,11 @@ export function Preview({
         )}
         <CloseButton label="Close the planner" onPress={onClose} />
       </View>
+      {found && newNearby > 0 && (
+        <Text style={styles.cardBody} testID="new-nearby">
+          {`${newNearby} new ${newNearby === 1 ? 'story' : 'stories'} within 2 km since your last walk`}
+        </Text>
+      )}
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
       )}
@@ -555,12 +564,14 @@ type WalkDoneProps = {
   /** The paywall, for a signed-in account without a subscription; unset
    *  hides the link. Never a pop-up: Done stays the one tap. */
   onMore?: () => void;
+  /** Set until the surprise was chosen either way: asked here once, after a
+   *  first walk, since nobody finds it in Settings (docs/10, "A surprise,
+   *  once a week"). */
+  onNotify?: (yes: boolean) => void;
 };
 
 export type Reward = {
   xp: number;
-  /** The level reached, when this walk reached one. */
-  level: number | null;
 };
 
 type EndWalkProps = {
@@ -610,6 +621,11 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
   );
 }
 
+/** How far from this level's start to the next, 0 to 1. */
+export function levelInto({ xp, xp_level, xp_next }: Profile): number {
+  return Math.min(1, (xp - xp_level) / Math.max(1, xp_next - xp_level));
+}
+
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
 export function WalkDone({
   stops,
@@ -624,8 +640,8 @@ export function WalkDone({
   onDone,
   onHeight,
   onMore,
+  onNotify,
 }: WalkDoneProps) {
-  const next = LOCKETS.find((l) => l.level > level);
   const took =
     minutes === null
       ? ''
@@ -668,14 +684,18 @@ export function WalkDone({
           </View>
         )}
       </View>
-      {reward?.level && <Earned level={reward.level} />}
       {MILESTONES.includes(streak) && <Milestone streak={streak} />}
-      {!reward?.level && next && (
-        <View style={styles.earned}>
-          <Image source={next.opened} style={[styles.earnedLocket, styles.unearned]} />
-          <View style={styles.grow}>
-            <Text style={styles.nextName}>{`Next locket: ${next.name}`}</Text>
-            <Text style={label}>{`Unlocks at level ${next.level}`}</Text>
+      {onNotify && (
+        <View testID="surprise-ask">
+          <Text style={styles.cardBody}>Let a story find you now and then?</Text>
+          <View style={styles.pair}>
+            <Button
+              kind="quiet"
+              label="Not now"
+              onPress={() => onNotify(false)}
+              place={styles.grow}
+            />
+            <Button kind="go" label="Yes" onPress={() => onNotify(true)} place={styles.grow} />
           </View>
         </View>
       )}
@@ -692,18 +712,6 @@ const MILESTONES = [7, 30, 100];
 
 /** A streak milestone's own moment on the finish card: it springs in with a
  *  flame and a second success haptic. Still, under Reduce Motion. */
-/** A level that brings a locket shows it: the reward is the thing itself. */
-function Earned({ level }: { level: number }) {
-  const locket = locketAt(level);
-  if (!locket) return null;
-  return (
-    <View style={styles.earned}>
-      <Image source={locket.opened} style={styles.earnedLocket} />
-      <Text style={label}>{`New locket: ${locket.name}`}</Text>
-    </View>
-  );
-}
-
 function Milestone({ streak }: { streak: number }) {
   const scale = useRef(new Animated.Value(0.8)).current;
   useEffect(() => {
@@ -761,9 +769,6 @@ export function PastWalk({
 
 const styles = StyleSheet.create({
   locket: { width: 13, height: 13 },
-  earned: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  earnedLocket: { width: 40, height: 40 },
-  unearned: { opacity: 0.35 },
   checks: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   check: {
     width: 20,
@@ -773,7 +778,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nextName: { ...font.uiBold, fontSize: 16, color: color.ink },
   stats: {
     flexDirection: 'row',
     paddingVertical: 14,

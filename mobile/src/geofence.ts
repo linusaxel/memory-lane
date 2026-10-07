@@ -21,8 +21,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
+import { AppState } from 'react-native';
 
-import { grantSurprise, type LocatedMemory } from './api.ts';
+import { fetchNearby, grantSurprise, type Coordinates, type LocatedMemory } from './api.ts';
 import { deviceId } from './device.ts';
 import {
   liveSurprise,
@@ -32,9 +33,17 @@ import {
   regionsFor,
   type Sent,
   type Surprise,
+  walkingPace,
 } from './geofenceRegions.ts';
+import { loadUnlocked } from './unlocked.ts';
 
 export const GEOFENCE_TASK = 'memory-lane-proximity';
+/** Off a walk, the regions follow you: every ~500 m moved re-registers the
+ *  locked memories nearest where you are now, so a surprise can find someone
+ *  whose own streets are read, not only where the app was last open. */
+const MOVED_TASK = 'memory-lane-moved';
+const MOVED_METERS = 500;
+const AROUND_KM = 2;
 
 const NAMES_KEY = 'memorylane.geofenceNames.v1';
 const SENT_KEY = 'memorylane.geofenceSent.v1';
@@ -79,6 +88,29 @@ TaskManager.defineTask<GeofenceTaskData>(GEOFENCE_TASK, ({ data, error }) => {
   return queue;
 });
 
+TaskManager.defineTask<{ locations: Location.LocationObject[] }>(MOVED_TASK, ({ data, error }) => {
+  const fix = data?.locations?.at(-1);
+  if (error || !fix) return Promise.resolve();
+  queue = queue.then(() => onMoved(fix)).catch(() => {});
+  return queue;
+});
+
+async function onMoved(fix: Location.LocationObject) {
+  // Open, the app's own watch already follows `nearby`.
+  if (AppState.currentState === 'active') return;
+  if ((await AsyncStorage.getItem(MODE_KEY).catch(() => null)) !== 'surprise') return;
+  const at = { lat: fix.coords.latitude, lng: fix.coords.longitude };
+  const [around, opened] = await Promise.all([
+    fetchNearby(at, AROUND_KM, await deviceId()),
+    loadUnlocked(),
+  ]);
+  await startWatching(
+    around.filter((m) => !(m.id in opened)),
+    'surprise',
+    at,
+  );
+}
+
 async function onEnter(id: string) {
   const mode = await AsyncStorage.getItem(MODE_KEY).catch(() => null);
   if (mode === 'surprise') return onSurprise(id);
@@ -118,7 +150,7 @@ async function onSurprise(id: string) {
   const lastOpened = await AsyncStorage.getItem(OPENED_KEY).catch(() => null);
   if (!maySurprise(lastOpened, localDay()) || (await loadSurprise())) return;
   const fix = await Location.getLastKnownPositionAsync().catch(() => null);
-  if (!fix) return;
+  if (!fix || !walkingPace(fix.coords.speed)) return;
   const at = { lat: fix.coords.latitude, lng: fix.coords.longitude };
   const granted = await grantSurprise(Number(id), at, await deviceId());
   if (!granted) return;
@@ -146,8 +178,9 @@ async function onSurprise(id: string) {
 export async function startWatching(
   memories: LocatedMemory[],
   mode: WatchMode = 'walk',
+  from: Coordinates | null = null,
 ): Promise<boolean> {
-  const watched = memoriesToWatch(memories);
+  const watched = memoriesToWatch(memories, from);
   if (watched.length === 0) {
     await stopWatching();
     return false;
@@ -171,11 +204,32 @@ export async function startWatching(
   }
 
   await AsyncStorage.setItem(MODE_KEY, mode).catch(() => {});
-  await Location.startGeofencingAsync(GEOFENCE_TASK, regionsFor(memories));
+  await Location.startGeofencingAsync(GEOFENCE_TASK, regionsFor(memories, from));
+  if (mode === 'surprise') await followMoves();
+  else await stopFollowing();
   return true;
+}
+
+// ponytail: coarse background updates stand in for iOS's significant-change
+// service, which expo-location does not expose; swap it in if battery shows.
+async function followMoves() {
+  if (await Location.hasStartedLocationUpdatesAsync(MOVED_TASK).catch(() => false)) return;
+  await Location.startLocationUpdatesAsync(MOVED_TASK, {
+    accuracy: Location.Accuracy.Low,
+    distanceInterval: MOVED_METERS,
+    deferredUpdatesDistance: MOVED_METERS,
+    pausesUpdatesAutomatically: true,
+    showsBackgroundLocationIndicator: false,
+  });
+}
+
+async function stopFollowing() {
+  if (await Location.hasStartedLocationUpdatesAsync(MOVED_TASK).catch(() => false))
+    await Location.stopLocationUpdatesAsync(MOVED_TASK);
 }
 
 export async function stopWatching(): Promise<void> {
   const started = await Location.hasStartedGeofencingAsync(GEOFENCE_TASK).catch(() => false);
   if (started) await Location.stopGeofencingAsync(GEOFENCE_TASK);
+  await stopFollowing();
 }

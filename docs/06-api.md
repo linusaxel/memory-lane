@@ -41,7 +41,10 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   the account already walked today and is not subscribed. A subscriber's
   `tags` (repeated, from `pipeline/tags.py` `TAGS`, else 422) lean the walk
   towards memories carrying one, and `year_from`/`year_to` (inclusive) leave
-  out memories outside them or with no year; anyone else's are ignored
+  out memories outside them or with no year; anyone else's are ignored.
+  `meta.new_nearby` counts the unopened memories within 2 km added since the
+  account's last walk that opened something (docs/10, "New since your last
+  walk"); such a memory also leans the walk
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, end?, tags?, year_from?, year_to?}` - accept it. The
   same solve, stored; one a day per account (403 `walked_today`, bar a
   subscriber), one in progress per device, and a second accept gets that walk
@@ -63,8 +66,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   (`mobile/src/story.ts`; docs/10, *A story has a little markdown*). One coordinate: it is both where you are and where
   the memory goes. Lands in the `stranger` layer, gated like everything else,
   and records the unlock for the person who filed it. Optional `locket`: the
-  locket its pin is drawn as, one the author's level has reached
-  (the `lockets` table), else 422. Every memory, locked or not,
+  locket its pin is drawn as, any of them (the `lockets` table), else 422. Every memory, locked or not,
   carries `locket`; one filed without a choice draws one at random
 - `POST /v1/media` (multipart: `device`, `file`, optional `duration_seconds`) -
   a photo or a recording, held until a submission claims it. `api/media.py`
@@ -104,14 +106,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   `items_total`, counted from finished walks on every read (`api/progression.py`).
   `steps` is every step counted, for the journal, and `steps_counted_until`
   where the next count starts. `hearts_received` counts every heart on what the account filed.
-  `avatar_url` is the profile photo, server-relative, or null. `on_board` says
-  whether the account shows on the city board.
+  `avatar_url` is the profile photo, server-relative, or null.
   The GET creates nothing
-- `GET /v1/board?device=UUID` - this month's city board: `{city, rows}`, each
-  row `{rank, display_name, avatar_url, opens, mine}`. The top 20 plus your own
-  row, counting distinct memories an account opened in the city (docs/10, "A
-  city board, by opens"). `PUT /v1/me/board` `{device, on_board}` leaves or
-  rejoins it and returns the `Profile`
 - `POST /v1/me/avatar` (multipart: `device`, `file`) - set the profile photo,
   deleting the one it replaces; `DELETE /v1/me/avatar?device=UUID` clears it.
   Both return the `Profile`. Photos only, through `/v1/media`'s checks and

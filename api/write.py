@@ -42,7 +42,6 @@ from api.models import (
     UnlockRequest,
 )
 from api.moderation import screen
-from api.progression import level, xp_of
 from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
     EARNED_QUERY,
@@ -309,18 +308,13 @@ async def upload_media(
     )
 
 
-def check_locket(session, device: str, locket: str | None) -> None:
-    """A locket the author's level has not reached is refused, like an
-    unknown one. docs/10-decisions.md#lockets-one-per-memory-chosen-by-its-author-earned-by-level."""
+def check_locket(session, locket: str | None) -> None:
+    """Any author picks any locket; an unknown one is refused.
+    docs/10-decisions.md#lockets-one-per-memory-chosen-by-its-author-earned-by-level."""
     if locket is None:
         return
-    needs = session.execute(
-        text("SELECT level FROM lockets WHERE id = :id"), {"id": locket}
-    ).scalar()
-    if needs is None:
+    if not session.execute(text("SELECT 1 FROM lockets WHERE id = :id"), {"id": locket}).scalar():
         raise HTTPException(status_code=422, detail="Unknown locket")
-    if level(xp_of(session, device)) < needs:
-        raise HTTPException(status_code=422, detail=f"That locket opens at level {needs}")
 
 
 @router.post("/v1/memories", response_model=Memory, status_code=201)
@@ -342,7 +336,7 @@ def submit_memory(body: SubmissionRequest):
     # lock. user_for_device is idempotent, so claiming the user here costs the
     # block below nothing.
     with get_session() as session:
-        check_locket(session, body.device, body.locket)
+        check_locket(session, body.locket)
         user_id = user_for_device(session, body.device)
         filed = session.execute(text(FILED_TODAY), {"user_id": user_id}).scalar()
     refuse_over_quota(filed, DAILY_MEMORIES, "submission")
@@ -628,7 +622,7 @@ def edit_memory(memory_id: int, body: MemoryEditRequest):
         ).fetchone()
         if not owned:
             raise HTTPException(status_code=404, detail="Memory not found")
-        check_locket(session, body.device, body.locket)
+        check_locket(session, body.locket)
 
         session.execute(
             text("UPDATE places SET name = :name WHERE id = :place_id"),

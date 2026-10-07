@@ -859,3 +859,60 @@ def test_the_local_api_can_make_every_device_a_subscriber(client, db_session, mo
     db_session.commit()
     assert client.get(f"/v1/me?device={DEVICE}").json()["subscribed"]
     assert _shaped_ids(client, "&tags=history", tags=["history"]) == [north]
+
+
+def _last_walk(session, days_ago=1):
+    """A past walk that opened its one stop, far out of today's way."""
+    walked = _offset(session, 40)
+    session.execute(
+        text("INSERT INTO devices (id) VALUES (CAST(:d AS uuid)) ON CONFLICT DO NOTHING"),
+        {"d": DEVICE},
+    )
+    session.execute(
+        text("INSERT INTO unlocks (device_id, memory_id) VALUES (CAST(:d AS uuid), :m)"),
+        {"d": DEVICE, "m": walked},
+    )
+    session.execute(
+        text(
+            "INSERT INTO daily_routes (device_id, route_date, memory_ids, created_at) VALUES "
+            "(CAST(:d AS uuid), CURRENT_DATE - :n, ARRAY[:m], "
+            "CURRENT_TIMESTAMP - :n * INTERVAL '1 day')"
+        ),
+        {"d": DEVICE, "n": days_ago, "m": walked},
+    )
+
+
+def _added(session, memory_id, days_ago):
+    session.execute(
+        text(
+            "UPDATE memories SET created_at = CURRENT_TIMESTAMP - :n * INTERVAL '1 day' WHERE id = :id"
+        ),
+        {"n": days_ago, "id": memory_id},
+    )
+
+
+def test_new_nearby_counts_what_arrived_within_2km_since_the_last_walk(client, db_session):
+    old, new, far = _offset(db_session, 1), _offset(db_session, 2), _offset(db_session, 30)
+    assert _preview(client).json()["meta"]["new_nearby"] == 0, "no walk yet, nothing is new"
+
+    _added(db_session, old, 5)
+    _last_walk(db_session, 2)
+    _added(db_session, new, 1)
+    _added(db_session, far, 1)
+    db_session.commit()
+    assert _preview(client).json()["meta"]["new_nearby"] == 1
+
+
+def test_a_memory_new_since_the_last_walk_leans_the_walk(client, db_session):
+    south, north = _themed_pair(db_session)
+    _last_walk(db_session, 2)
+    _added(db_session, south, 5)
+    _added(db_session, north, 1)
+    db_session.commit()
+    assert _shaped_ids(client) == [north]
+    _end(client)
+
+    _added(db_session, south, 0)
+    _added(db_session, north, 5)
+    db_session.commit()
+    assert _shaped_ids(client) == [south]

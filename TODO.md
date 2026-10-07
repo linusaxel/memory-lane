@@ -24,6 +24,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **walk-and-unlock is red on main.** 2026-10-07: on unchanged HEAD it fails
+  at `walk-stops` after `steps/rename.yml`, and twice in five runs the journal's
+  Heart tap didn't register; telling a regression from that took a stash and
+  a baseline run (5 min each). Fix: make the rename-then-plan step wait for the
+  planner card, and retry the Heart tap until `selected`.
+
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"
@@ -520,8 +526,10 @@ One walk a day is free; Memory Lane+ buys more walks a day and Customize
 from a neighbouring kind of app; tune on real data. The sources behind each
 line are in this file at `9421fb0`, *Map, walk and money*. Anything a walk
 earns stays unsold (Apple 3.1.1, the loot-box rulings). The founder turned
-down: keeping a previewed memory for the next walk, a surprise open of an
-off-route memory, a streak shield, and an extra walk as a reward.
+down, as rewards: keeping a previewed memory for the next walk, a streak
+shield, and an extra walk. A surprise open off a walk is now free, once a
+week, by timer (docs/10, *A surprise, once a week*), and the streak's rest
+day is a rule, not a shield (*A rest day in the streak*).
 
 - [ ] **Licensing before money (your decision).** (checked 2026-10-03) Blocks any paid
       open of a DR-derived story. DR sells archive clips at about 80 DKK a

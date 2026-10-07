@@ -7,5 +7,5 @@
 
 ALTER TABLE memories ADD COLUMN IF NOT EXISTS walk_score SMALLINT
     CHECK (walk_score BETWEEN 0 AND 12);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS on_board BOOLEAN NOT NULL DEFAULT TRUE;
+-- users.on_board was added here; 047_drop_on_board.sql drops it again.
 CREATE INDEX IF NOT EXISTS idx_unlocks_memory ON unlocks(memory_id);

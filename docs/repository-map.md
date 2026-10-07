@@ -112,7 +112,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/read.py` | The read endpoints |
 | `api/route_solver.py` | **Today's walk.** Which stops, what order; its docstring is how a walk is ranked |
 | `api/write.py` | Unlock, media, submissions, reports |
-| `api/accounts.py` | `/v1/me`, `/v1/auth/*` and the city board (`/v1/board`) |
+| `api/accounts.py` | `/v1/me` and `/v1/auth/*` |
 | `api/my_data.py` | A copy of one person's data, for a GDPR request. A CLI, not a route |
 | `api/metrics.py` | D1/D7 return, walks, opens per walk and stories left, from the tables. A CLI, not a route |
 | `api/card.py` | The server-rendered card. Gates itself |
@@ -140,7 +140,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/LocketUnlock.tsx` | The unlock as the memory's locket: the key, the lid, the dive, the haptics; held, or driven by SlideToUnlock; or run backwards to seal |
 | `mobile/src/LocketSeal.tsx` | A memory just filed: its locket shuts over the map and drops onto the pin |
 | `mobile/src/lockMotion.ts` | The worklet curves and pivots LocketUnlock moves by |
-| `mobile/src/lockets.ts` | The six lockets: pin images, names, the level each opens at |
+| `mobile/src/lockets.ts` | The six lockets: pin images and names |
 | `mobile/assets/lockets/` | The locket pins, keyhole (locked) and plain (opened), @1x-@3x |
 | `mobile/assets/onboarding/` | The first-run pages' pictures, light and dark, rasterised from the Jewel Box handoff |
 | `mobile/src/UnlockHere.tsx` | The locket over the map, for the memory you stand on |
@@ -153,12 +153,10 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name and numbers, then past walks, unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/Settings.tsx` | Settings: its own sheet, from the cog on the map |
-| `mobile/src/Board.tsx` | The city board: this month's top openers, a sheet from the account menu |
 | `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
 | `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |
 | `mobile/src/Paywall.tsx` | The subscription: more walks a day (F35). Prices from the store; "not available" without a RevenueCat key |
 | `mobile/src/steps.ts` | Steps walked, from Core Motion, counted on the account for the journal. Buys nothing. iOS only |
-| `mobile/src/LevelPill.tsx` | Your level and an XP bar, top of the map; the number rolls natively (`@expo/ui`) |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: the plans and the key packs, no-ops without a key. Never decides who has paid |
 | `mobile/src/AddIcon.tsx` | Add a memory's icon: a locket with a plus |
 | `mobile/src/Button.tsx` | The four buttons: go (green), foil (gold), quiet, text |
@@ -166,7 +164,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Onboarding.tsx` | The four first-run pages and the location primer, once after sign-in |
 | `mobile/src/SignIn.tsx` | The sign-in screen the app sits behind (F22), and the Account card. Neither button works in Expo Go |
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
-| `mobile/src/HowItWorks.tsx` | What the level pill opens: level, XP, every walk as a card, then how walks work |
+| `mobile/src/HowItWorks.tsx` | Your walks, from the account menu: level, XP, every walk as a card, then how walks work |
 | `mobile/src/WalkCard.tsx` | A past walk as a card, drawn as its shape (`react-native-svg`); `WalkShape` for the finish card and journal rows |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
 | `mobile/src/Glyph.tsx` | Every icon, as an SF Symbol (`@expo/ui`) |

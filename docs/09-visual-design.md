@@ -836,8 +836,8 @@ made every memory a locket (docs/10, "Lockets"). The palette, in
 - **`seal`, now emerald** (`#1F6B4F` / `#3FA57E`): openable, and nothing
   else. On a map of gold lockets, a gold "openable" would be no signal, so it
   is the one thing that is not gold. `sealInk` on it is paper.
-- **`purple`** (`#5B2A6E` / `#C59BD8`): what you earned. The level pill, the
-  streak's flame, your row on the board.
+- **`purple`** (`#5B2A6E` / `#C59BD8`): what you earned. Your level, the
+  streak's flame.
 - Paper, ink and the type are unchanged. The app icon and splash still carry
   the ember tile (`solid().tile`); redrawing them is open. *(Redrawn
   2026-10-07: the Jewel Box tile, docs/10 "Jewel Box".)*
@@ -961,7 +961,7 @@ sources, map-app teardowns, perception research.
   Measured off the simulator: pill to map 4.7:1 and label to pill 5.0:1
   in light; 5.5:1 and 7.2:1 in dark. 0.85 of `gold` was tried first. Glass
   lightens what it tints, so the label came out at 3.7:1.
-- Every other glass control (Journal, Add, the level pill, you, the walk
+- Every other glass control (Journal, Add, you, the walk
   card) is untinted regular glass with `glassEdge`, an ink hairline at 25%,
   and `glassLift`, a soft shadow. `frost` is gone.
 

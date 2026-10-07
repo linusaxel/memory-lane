@@ -86,8 +86,6 @@ type Props = {
   onDeleted?: (id: number) => void;
   /** Who it will be signed by, shown where the open sheet shows it. */
   author: { name: string; avatar_url?: string | null };
-  /** The author's level: which lockets they can pick. */
-  level: number;
   /** How near a reader has to stand, for the seal's last line. */
   radiusMeters: number;
 };
@@ -151,7 +149,6 @@ export default function Submit({
   onSaved,
   onDeleted,
   author,
-  level,
   radiusMeters,
 }: Props) {
   const isEditing = !!editing;
@@ -689,9 +686,6 @@ export default function Submit({
     confirmTimer.current = setTimeout(() => setDiscarding(false), 3000);
   };
 
-  // The lockets they have earned, and the next one as something to walk for.
-  const next = LOCKETS.find((l) => l.level > level);
-  const offered = LOCKETS.filter((l) => l.level <= level || l === next);
   const step = (n: 0 | 1) => (
     <View style={styles.steps} accessible accessibilityLabel={`Step ${n + 1} of 2`}>
       {[0, 1].map((i) => (
@@ -1182,8 +1176,7 @@ export default function Submit({
               </Text>
               <Text style={styles.sealLabel}>Your lockets</Text>
               <View style={styles.lockets}>
-                {offered.map((l) => {
-                  const earned = l.level <= level;
+                {LOCKETS.map((l) => {
                   const on = locket === l.id;
                   return (
                     <Pressable
@@ -1192,22 +1185,14 @@ export default function Submit({
                         Haptics.selectionAsync().catch(() => {});
                         setLocket(l.id);
                       }}
-                      disabled={!earned}
                       accessibilityRole="radio"
-                      accessibilityLabel={earned ? l.name : `${l.name}, level ${l.level}`}
-                      accessibilityState={{ selected: on, disabled: !earned }}
+                      accessibilityLabel={l.name}
+                      accessibilityState={{ selected: on }}
                       testID={`locket-${l.id}`}
-                      style={[styles.locket, !earned && styles.locketLater, on && styles.locketOn]}
+                      style={[styles.locket, on && styles.locketOn]}
                     >
-                      <Image
-                        source={l.opened}
-                        style={[styles.locketImage, !earned && styles.disabled]}
-                      />
-                      {earned ? (
-                        <View style={[styles.locketDot, on && styles.locketDotOn]} />
-                      ) : (
-                        <Text style={styles.locketLevel}>Level {l.level}</Text>
-                      )}
+                      <Image source={l.opened} style={styles.locketImage} />
+                      <View style={[styles.locketDot, on && styles.locketDotOn]} />
                     </Pressable>
                   );
                 })}
@@ -1501,7 +1486,7 @@ const styles = StyleSheet.create({
   sealMeta: { ...font.ui, fontSize: 15, color: color.inkSoft, marginTop: 4, textAlign: 'center' },
   sealLabel: { ...label, alignSelf: 'flex-start', marginTop: 32, marginBottom: 12 },
   lockets: { flexDirection: 'row', flexWrap: 'wrap', alignSelf: 'stretch', gap: 6 },
-  // A tile each; the ones still to walk for are a dashed outline with their level.
+  // A tile each.
   locket: {
     width: 54,
     height: 80,
@@ -1512,12 +1497,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
   },
-  locketLater: { borderStyle: 'dashed', borderColor: color.rule },
   locketOn: { borderWidth: 1.5, borderColor: color.gold, backgroundColor: color.quiet },
   locketImage: { width: 40, height: 40, resizeMode: 'contain' },
   locketDot: { width: 6, height: 6, borderRadius: 3 },
   locketDotOn: { backgroundColor: color.gold },
-  locketLevel: { ...label, fontSize: 11, color: color.inkSoft },
   sealNote: { ...font.ui, fontSize: 15, lineHeight: 21, color: color.inkSoft, marginTop: 16 },
   sealFoot: {
     flexDirection: 'row',

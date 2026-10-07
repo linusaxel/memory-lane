@@ -51,20 +51,17 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ the level pill             top centre, every stage (src/LevelPill.tsx): "Level 3", a purple
-│                              walker before it, a thin XP bar under it, rolling when it changes.
-│                              A tap recounts steps and opens Your walks (src/HowItWorks.tsx):
-│                              level and XP, every walk as a card drawn as its shape (src/WalkCard.tsx; a tap
-│                              shows it on the map under the PastWalk card), every memory opened
-│                              as its locket, four to a row, under a count of each kind (a tap
-│                              opens it over the sheet), then
-│                              planning, standing there, finishing to level up, one walk a day
 ├─ you ("You")                top right, your photo or initial (src/Avatar.tsx, 38pt) in a 44pt
 │                              glass circle, and under it a native menu (src/AccountMenu.tsx):
 │                              your name as its title, "3-day streak · 27 opened · 2 filed",
 │                              "Signed in with Apple" or "Not signed in", Edit profile, then
-│                              Settings (`gearshape`), Appearance (System, Light, Dark;
-│                              src/appearance.ts, kept on the phone)
+│                              Your walks (`figure.walk`; it recounts steps and opens
+│                              src/HowItWorks.tsx: level and XP, every walk as a card drawn as its
+│                              shape (src/WalkCard.tsx; a tap shows it on the map under the
+│                              PastWalk card), every memory opened as its locket, four to a row (a
+│                              tap opens it over the sheet), then planning, standing there,
+│                              finishing to level up, one walk a day), Settings (`gearshape`),
+│                              Appearance (System, Light, Dark; src/appearance.ts, kept on the phone)
 ├─ Journal                    top left, a 44pt glass circle, the planner and the walk, never over a
 │                              card with its own buttons. `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
@@ -204,12 +201,11 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 |---|---|
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always a locket's keyhole face |
 | `src/MemoryMarker.tsx` | one locket, keyhole and all until opened, lit when it can be opened from here |
-| `src/lockets.ts` | the six lockets: their pin images and the level each opens at |
+| `src/lockets.ts` | the six lockets: their pin images and names, any of them an author's |
 | `src/LocketUnlock.tsx` | the hold: the key, the lid, the dive, the haptics; one lid per locket |
 | `src/lockMotion.ts` | the worklet curves and pivots LocketUnlock moves by |
 | `src/UnlockHere.tsx` | the locket over the map, ‹ › when more than one is in reach |
 | `src/SlideToUnlock.tsx` | slide to unlock, its own row over the bottom row while a memory is in reach |
-| `src/LevelPill.tsx` | the top of the map: your level and an XP bar, the number rolling (`@expo/ui`) |
 | `src/WalkCard.tsx` | a past walk drawn as its shape: the cards in Your walks, the finish card's and journal rows' small shape |
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
@@ -290,7 +286,7 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 | `sealInk` | `#F6F1E7` / `#0B1F17` | anything drawn on seal |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
 | `glow` | emerald at 55% | the radial glow behind an in-reach locket. Never a ring |
-| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Level, streak, XP, your row on the board |
+| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Level, streak, XP |
 | `track` | `#E9DFEE` / `#362C3F` | the empty part of the level bar |
 | `danger` | `#9B2C2C` / `#F09A9A` | Delete account. Nothing destructive is gold |
 | `heart` | `#A3294E` / `#F29BB4` | a filled heart |

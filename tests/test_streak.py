@@ -38,14 +38,31 @@ def test_yesterday_with_nothing_today_still_counts_so_far():
     assert current_streak(days, TODAY) == 2
 
 
-def test_a_day_skipped_two_days_ago_breaks_the_streak():
-    days = [TODAY - timedelta(days=2), TODAY - timedelta(days=3)]
+def test_two_missed_days_in_a_row_end_the_streak():
+    days = [TODAY - timedelta(days=3), TODAY - timedelta(days=4)]
     assert current_streak(days, TODAY) == 0
 
 
-def test_a_gap_in_the_middle_stops_counting_there():
+def test_one_missed_day_is_a_rest_day_and_does_not_count():
     days = [TODAY, TODAY - timedelta(days=1), TODAY - timedelta(days=3)]
+    assert current_streak(days, TODAY) == 3
+
+
+def test_missing_yesterday_is_a_rest_day_not_the_end():
+    days = [TODAY - timedelta(days=2), TODAY - timedelta(days=3)]
     assert current_streak(days, TODAY) == 2
+
+
+def test_a_second_rest_day_in_a_week_breaks_it():
+    walked = [0, 2, 3, 5, 6]
+    days = [TODAY - timedelta(days=d) for d in walked]
+    assert current_streak(days, TODAY) == 3
+
+
+def test_a_rest_day_comes_back_after_a_week():
+    walked = [0, 2, 3, 4, 5, 6, 7, 8, 10]
+    days = [TODAY - timedelta(days=d) for d in walked]
+    assert current_streak(days, TODAY) == 9
 
 
 @pytest.fixture

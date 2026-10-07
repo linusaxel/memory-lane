@@ -446,7 +446,8 @@ second phone can pick again in a tap).
 
 ### Walks earn XP; rare memories wait for a level
 
-Status: Accepted 2026-10-03. Amends the Keys bullet of *A walk planner,
+Status: Accepted 2026-10-03. Amended 2026-10-07 by *Fewer games: no board, no
+level gate, no count strip*: a level gates no locket and is off the map. Amends the Keys bullet of *A walk planner,
 nothing else*: there are no keys.
 
 The founder: give loot and XP after walks, RPG-style, with "certain access"
@@ -516,7 +517,8 @@ nothing.
 
 ### A walk picks its stops by the rubric
 
-Status: Accepted 2026-10-03.
+Status: Accepted 2026-10-03. Amended 2026-10-07 by *New since your last walk*:
+a new memory adds to the prize.
 
 A stop's prize in the solver was `1 + contrast_score`, and contrast is
 mostly a default, so a walk picked stops with no regard to how good the
@@ -570,7 +572,8 @@ story (0.60 overall).
 
 ### A city board, by opens
 
-Status: Accepted 2026-10-03. Reverses "stat screens" in *Walks earn XP; rare
+Status: Superseded 2026-10-07 by *Fewer games: no board, no level gate, no
+count strip*. Was: Accepted 2026-10-03. Reverses "stat screens" in *Walks earn XP; rare
 memories wait for a level*, and puts names where *Hearts come back in the
 app, anonymous* had none.
 
@@ -3198,7 +3201,7 @@ Not done, and each is the founder's call:
 
 ### A streak and a proximity notification, after all
 
-Status: Accepted 2026-09-22
+Status: Accepted 2026-09-22. Amended 2026-10-07 by *A rest day in the streak*.
 
 Decided 2026-09-22, against the earlier "no notifications, no streaks" rule
 (`docs/11-memory-types.md`) and foreground-only location (`mobile/UI.md` rule
@@ -3455,7 +3458,9 @@ again. The map no longer loses pans at its left edge.
 
 ### Lockets: one per memory, chosen by its author, earned by level
 
-Status: Accepted 2026-10-04. Supersedes "pins are one kind" (in *Epic
+Status: Accepted 2026-10-04. The **Earned, never sold** bullet is
+**Superseded 2026-10-07** by *Fewer games: no board, no level gate, no count
+strip*: any author picks any locket. Supersedes "pins are one kind" (in *Epic
 memories* and *The recent past is a memory*) and UI.md's "the burst plays
 over the request". Supersedes *Friendly, not sharp* on its colours only.
 
@@ -3579,7 +3584,9 @@ primer's fix flies the map there.
 
 ### No keys; your memories are your lockets
 
-Status: Accepted 2026-10-04. Supersedes the Keys bullet of *A walk planner,
+Status: Accepted 2026-10-04. The **count of each kind** bullet is
+**Superseded 2026-10-07** by *Fewer games: no board, no level gate, no count
+strip*. Supersedes the Keys bullet of *A walk planner,
 nothing else*: what a key does is decided, and it is nothing.
 
 The founder: "too much gamification already". A walk's reward is its
@@ -3960,16 +3967,22 @@ reach you (*Why every pin shows*: Pokémon GO lost its users when it stopped).
 - **The notification names the place, never the story.** Opening is
   unchanged: standing on it, the locket, the slide. It counts toward the
   streak and the board like any open; it earns no XP, which is a finished
-  walk's.
+  walk's. *Corrected 2026-10-07:* it counts toward no streak. The streak
+  counts a walk's stops only (F27), and with *A rest day in the streak* it
+  needs no quiet saver; the board is gone.
 - **Rare by rule, no key.** Scarcity is what makes it an event, so nothing
   is earned, held or spent (*No keys; your memories are your lockets*
   stands). A key that bought one was considered and dropped: a currency to
   hoard for what a timer does.
 
-**Consequences:** regions are registered where the app was last open, so a
-surprise finds you near home and your usual streets, not across town. A
-significant-location-change task would re-register them; add it if
-surprises turn out rare. Position is self-reported (*The position is
+**Consequences:** the phone's regions are 100 m (the iOS floor); the
+server's 200 m is slack for a fix taken late. *Amended 2026-10-07:* regions
+followed where the app was last open, which missed exactly the walker whose
+own streets are read and the one who stopped opening the app. Now a coarse
+background location task re-registers the 20 nearest every ~500 m moved
+(`geofence.ts`), a crossing above 2.5 m/s asks nothing (a bike would spend
+the week a kilometre past), and the first finish card offers the opt-in
+once, since nobody finds it in Settings. Position is self-reported (*The position is
 self-reported*), so a spoofer gets one memory a week.
 
 ### Authors hear they were read
@@ -3990,6 +4003,70 @@ much of it, a held key gets hoarded, and it counts posts rather than making
 them good; `DAILY_MEMORIES` is the spam knob. "On N walks this week" beside
 it: a second number, add it if opens alone don't move posting. The count on a
 reader's card: rejected with "you're the 3rd to stand here" (*A city board*).
+
+### New since your last walk
+
+Status: Accepted 2026-10-07. Amends *A walk picks its stops by the rubric*.
+
+Walks never revisit, so the stories around a walker's home run out: in
+weeks in Valby, in about two months in Vesterbro. New memories arrive every
+week (179, 91 and 237 in the last three) and a walker never learned of them.
+Zombies, Run!'s weekly mission is the one content lever in this space with a
+record.
+
+- **The planner says so.** `meta.new_nearby` on a preview counts the
+  unopened memories within 2 km added since the account's last walk, and
+  step one reads "3 new stories within 2 km since your last walk". A line,
+  not a notification: that channel stays the surprise's.
+- **The last walk is one that opened something.** One that opened nothing is
+  pruned on the next accept, and a preview must agree with its accept.
+- **A new memory leans the walk.** `NEW_PRIZE` (1) in `_prize`, as
+  `preferred` does: it ranks, never filters.
+
+**Measure:** walkers who get a batch of new memories within 2 km against those
+who don't, returning within 7 days (batches land unevenly, a natural
+experiment); D30 and D60 of walkers who have opened 80% of what is within
+3 km.
+
+### A rest day in the streak
+
+Status: Accepted 2026-10-07. Amends *A streak and a proximity notification,
+after all* (F27 step 3).
+
+A missed day lost everything. Duolingo measured +0.38% DAU from a second
+streak freeze and +4% return a week later from the Weekend Amulet. One missed
+day a week is now a rest day: it doesn't break the streak, nor count. It is a
+rule in `current_streak`, nothing earned, held or bought, so not the "streak
+shield as a reward" turned down before.
+
+**Measure:** the share of 7+ streaks that end each week, return within 3 days
+after a break, and D30.
+
+### Fewer games: no board, no level gate, no count strip
+
+Status: Accepted 2026-10-07. Supersedes *A city board, by opens*, the
+**Earned, never sold** bullet of *Lockets*, and the count-of-each-kind bullet
+of *No keys*; amends *Walks earn XP*.
+
+A critique of what keeps a walker past month two (points and levels raise
+output, not intrinsic motivation, Mekler 2017) kept the locket opening, the
+daily walk, walk cards, hearts and "Read by N walkers", and cut what was
+hollow.
+
+- **The city board is gone.** A full ranked board motivates the top and
+  pressures the rest, it counted quantity, a subscriber bought rank, and the
+  top had nowhere to go once the 15 km was read. `/v1/board`,
+  `/v1/me/board`, `users.on_board` (migration 047) and `Board.tsx` went with it.
+- **Any author picks any locket.** The gate put its cost on the people most
+  wanted: a first-time writer at level 1 had one locket, so no choice. The
+  `lockets.level` column stays, unread.
+- **The level is off the map.** The pill was the only way into Your walks,
+  which moved to the account menu. XP and the level stay on the finish card
+  and in Your walks.
+- **The count strip is gone.** Random lockets filled it by luck.
+
+**Next:** "Where stories wait", opened out of total per neighbourhood, is the
+collection that never resets and points a walker outward.
 
 ### Rejected approaches, do not retry
 
