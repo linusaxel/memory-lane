@@ -308,12 +308,10 @@ appId: ${APP_ID}
 # lockets"); its card shows the walk on the map again.
 - tapOn: "You"
 - tapOn: "Your walks"
-# Centred: a dev warning toast sits over the sheet's foot.
 - scrollUntilVisible:
     element:
       id: "opened-locket"
     direction: DOWN
-    centerElement: true
 - takeScreenshot: lockets
 - tapOn:
     id: "opened-locket"

@@ -24,12 +24,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **walk-and-unlock is red on main.** 2026-10-07: on unchanged HEAD it fails
-  at `walk-stops` after `steps/rename.yml`, and twice in five runs the journal's
-  Heart tap didn't register; telling a regression from that took a stash and
-  a baseline run (5 min each). Fix: make the rename-then-plan step wait for the
-  planner card, and retry the Heart tap until `selected`.
-
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"
@@ -58,7 +52,8 @@ Retention is measured already: `python -m api.metrics`.
       city's neighbourhoods*); Overpass answered 504 to everything the day it
       shipped. Check that Copenhagen's bydele are `admin_level` 10 and that
       Frederiksberg at 7 returns itself, and that `geocode._get_json`'s 10 s
-      timeout is long enough for `out geom`.
+      timeout is long enough for `out geom`. Still down on 2026-10-07 evening:
+      overpass-api.de 504 ("too busy"), private.coffee 500, maps.mail.ru 504.
 
 - [ ] **The privacy policy is thin.** (checked 2026-10-04) `api/privacy.py`
       has no controller, legal basis, retention, RevenueCat or geocoders.
@@ -591,6 +586,32 @@ day is a rule, not a shield (*A rest day in the streak*).
 
 Each waits on something named; none is worth building before it.
 
+- [ ] **The first four cities.** (checked 2026-10-07) Waits on Copenhagen
+      at ~1,000 good memories and two measured numbers: the city's share
+      using the app each month and the share of those who pay. Target ~10k €
+      net a month ≈ 18k € pre-tax ≈ 19.5k € a month paid out by the stores
+      (prices include VAT; then the stores keep 15%). That is ~4,400 payers
+      at 49 DKK a month, ~7,400 on the year. At a guessed 1% of a city using it monthly and 3% of those
+      paying, ~300 payers per million people: ~18 Copenhagens. Pick by
+      walk-testable from Copenhagen, a language we can judge, free sources,
+      tourists.
+      1. **Copenhagen.** Finish and measure; nothing else ships first. Watch
+         whether visitors or locals pay (*A pass for visitors*): visitors
+         paying moves London up.
+      2. **Stockholm.** A cheap replication: can we make a good city without
+         living in it? One trip to walk-test. Ask what the next city costs in
+         days, not credits.
+      3. **London, one district** (the City or Southwark), not all of it. The
+         first city that could pay: the largest English source pool, tourists,
+         a short flight.
+      4. **Edinburgh.** Compact, walkable old town, heavy tourism, and it
+         reuses London's English-language source work. Amsterdam if London
+         showed English sources were not what carried it.
+      Copenhagen-only today: `LAUNCH_BBOX` (`pipeline/config.py`), the Danish
+      phrases and neighbourhoods in `pipeline/sources.py`, `--area` in
+      `pipeline/neighbourhoods.py`, and the extraction prompt's examples.
+      Make each one a per-city setting when city 2 starts, not before.
+
 - [ ] **Retrieve few-shot examples instead of hard-coding three.** (checked
       2026-10-04) Waits on ~50 person-reviewed rows (*40 labels by a person*).
 - [ ] **Revealed-preference report.** (checked 2026-09-23) A `quality.py
@@ -655,6 +676,21 @@ They cost money, need an account, or need a person. Full detail in
       replace first; the bundle id is irreversible once submitted. Sign-in
       needs this too: neither button works in Expo Go, and
       `GOOGLE_CLIENT_IDS` / `APPLE_CLIENT_IDS` need real client ids.
+- [ ] **`COMPANY`** (checked 2026-10-07) Swedish, since you live there
+      and run it from there: a company is taxed where it is managed, so a
+      Danish ApS run from Sweden risks both countries. Enskild firma now
+      (periodiseringsfond, expansionsfond at 20.6%), or an AB (25k SEK) for
+      limited liability from day one; a holding AB on top once profit
+      outgrows spending (dividends and a sale tax-free inside it). 3:12 after
+      the 2026 reform: ~320k SEK a year of dividends at ~20%, more taxed as
+      salary. Before registering: an hour with an accountant who knows
+      Øresund commuting, and Monta's contract for side-business and IP
+      clauses; don't make Monta's office the place the app is run from.
+      Before `STORE_ACCOUNT`: an organisation developer account needs the
+      legal entity and a D-U-N-S number, or the store shows your own name
+      as the seller. Cyprus (15% corporate, 0% dividends as non-dom) only
+      if you really move, once profit passes ~29k € a year and the app no
+      longer needs you in Copenhagen. Figures from memory, verify them.
 - [ ] **`STORE_ACCOUNT`** (checked 2026-09-20) Apple $99/yr, Play $25. A
       personal Play account gates production behind **closed testing with 12
       testers for 14 continuous days**: start it the day EAS produces an

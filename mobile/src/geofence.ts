@@ -170,19 +170,40 @@ async function onSurprise(id: string) {
   });
 }
 
+/** One change to the watch at a time: App's effect calls again before the
+ *  last call is done, and two stops of one task race to "Task … not found". */
+let watching: Promise<unknown> = Promise.resolve();
+function inTurn<T>(run: () => Promise<T>): Promise<T> {
+  const next = watching.then(run);
+  watching = next.catch(() => {});
+  return next;
+}
+
 /** Starts (or restarts, replacing the region list) watching the given
  *  memories. Requests background location and notification permission if
  *  they are not already granted; returns false without asking for anything
  *  if there is nothing to watch or foreground permission was never granted -
  *  background permission means nothing without it. */
-export async function startWatching(
+export function startWatching(
   memories: LocatedMemory[],
   mode: WatchMode = 'walk',
   from: Coordinates | null = null,
 ): Promise<boolean> {
+  return inTurn(() => watch(memories, mode, from));
+}
+
+export function stopWatching(): Promise<void> {
+  return inTurn(unwatch);
+}
+
+async function watch(
+  memories: LocatedMemory[],
+  mode: WatchMode,
+  from: Coordinates | null,
+): Promise<boolean> {
   const watched = memoriesToWatch(memories, from);
   if (watched.length === 0) {
-    await stopWatching();
+    await unwatch();
     return false;
   }
 
@@ -228,7 +249,7 @@ async function stopFollowing() {
     await Location.stopLocationUpdatesAsync(MOVED_TASK);
 }
 
-export async function stopWatching(): Promise<void> {
+async function unwatch(): Promise<void> {
   const started = await Location.hasStartedGeofencingAsync(GEOFENCE_TASK).catch(() => false);
   if (started) await Location.stopGeofencingAsync(GEOFENCE_TASK);
   await stopFollowing();
