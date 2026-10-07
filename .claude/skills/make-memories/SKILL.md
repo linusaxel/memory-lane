@@ -65,9 +65,10 @@ ORDER BY expected DESC, pending DESC;
 
 - Take the top row, unless it is out of the launch area: Tuesdays with Stories
   is US comedy, and the bbox drops every memory it yields.
-- **A source with fewer than 5 items done gets a trial first**: run
-  `batch --content <5 ids>` with those five ids. Its `expected` is a guess
-  until then.
+- **Trial the next 5 pending ids before any bigger batch**, of any source:
+  run `batch --content <5 ids>` with those five ids. `expected` is the
+  source's past, not its next items: Historisk Atlas showed 90 expected, and
+  its next 40 were thin records with no good memory.
 - If a source's done items average under 7, suggest
   `! venv/bin/python -m pipeline.sources set <id> paused --note "<why>"` to the user and skip it.
 

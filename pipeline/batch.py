@@ -50,6 +50,37 @@ def chosen(session, content_ids: list[int] | None, source: str | None) -> list[i
     )
 
 
+def dropped(session, content_ids: list[int], ids: list[int]) -> list[str]:
+    """Why each asked-for id is not pending, so a batch never runs nothing quietly."""
+    missing = sorted(set(content_ids) - set(ids))
+    rows = {
+        r.id: r
+        for r in session.execute(
+            text(
+                "SELECT c.id, s.status, c.memories_extracted, c.extraction_failed,"
+                " c.transcript_fetched FROM content c LEFT JOIN sources s ON s.id = c.source_id"
+                " WHERE c.id = ANY(:ids)"
+            ),
+            {"ids": missing},
+        )
+    }
+
+    def why(r) -> str:
+        if r is None:
+            return "no such content"
+        if r.status in ("candidate", "rejected"):
+            return f"its source is {r.status}"
+        if r.memories_extracted:
+            return "already extracted"
+        if r.extraction_failed:
+            return "extraction failed"
+        if not r.transcript_fetched:
+            return "no transcript"
+        return "too short"
+
+    return [f"{i}: {why(rows.get(i))}" for i in missing]
+
+
 def send(client, requests: dict[str, dict], session) -> int:
     """One batch of `requests`, waited on; how many replies were stored."""
     batch = client.messages.batches.create(
@@ -72,11 +103,11 @@ def send(client, requests: dict[str, dict], session) -> int:
             logger.warning(f"[content:{r['content_id']}] {result.result.type}: {result.result}")
             continue
         log_cache(result.result.message)
-        if (raw := reply_text(result.result.message)) is not None:
-            store(
-                session, result.custom_id, r["content_id"], r["chunk_index"], r["prompt_hash"], raw
-            )
-            stored += 1
+        if (raw := reply_text(result.result.message)) is None:
+            logger.warning(f"[content:{r['content_id']}] {r['stage']} cut; raise its max_tokens")
+            continue
+        store(session, result.custom_id, r["content_id"], r["chunk_index"], r["prompt_hash"], raw)
+        stored += 1
     return stored
 
 
@@ -139,6 +170,11 @@ def main():
         parser.error("choose --content or --source: a batch never takes everything pending")
     with get_session() as session:
         ids = chosen(session, args.content, args.source)
+        skipped = dropped(session, args.content or [], ids)
+    for line in skipped:
+        print(f"not pending: {line}")
+    if args.run and skipped:
+        raise SystemExit("Some chosen contents are not pending; drop them or fix them first")
     print(f"{len(ids)} pending: {ids[:20]}{' ...' if len(ids) > 20 else ''}")
     if args.run and ids:
         run(anthropic.Anthropic(api_key=ANTHROPIC_API_KEY), ids)

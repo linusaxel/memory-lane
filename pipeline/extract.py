@@ -962,12 +962,25 @@ def _stored_request(
                 "content_id": content_id,
                 "chunk_index": chunk_index,
                 "prompt_hash": _sha256(system_prompt),
+                "stage": stage(system_prompt),
             }
         return None
     raw = _request(client, system_prompt, user, schema, context, max_tokens, think, model)
     if raw is not None:
         store(session, key, content_id, chunk_index, _sha256(system_prompt), raw, model)
     return raw
+
+
+def stage(system_prompt: str) -> str:
+    """The pipeline stage a system prompt belongs to, for log lines."""
+    return {
+        BRIEF_PROMPT: "brief",
+        UNSUPPORTED_PROMPT: "check",
+        TRIM_PROMPT: "trim",
+        JUDGE_PROMPT: "judge",
+        SAME_VENUE_PROMPT: "same venue",
+        SAME_EVENT_PROMPT: "same event",
+    }.get(system_prompt, "extract")
 
 
 def _squash(s: str) -> str:
@@ -1181,7 +1194,10 @@ def _judge(session, client, content_id: int, memories: list[dict], order) -> dic
         for i in order
     )
     try:
-        raw = _stored_request(session, client, content_id, -2, JUDGE_PROMPT, user, JUDGE_SCHEMA)
+        # One verdict per memory: a long video's judge outgrows 2000 tokens.
+        raw = _stored_request(
+            session, client, content_id, -2, JUDGE_PROMPT, user, JUDGE_SCHEMA, max_tokens=8000
+        )
         return {v["index"]: tellable(v) for v in json.loads(raw)["verdicts"]}
     except (TransientAPIError, TypeError, ValueError, KeyError):
         return None
@@ -1255,7 +1271,14 @@ def one_name_per_venue(session, client, content_id: int, memories: list[dict]) -
     )
     try:
         raw = _stored_request(
-            session, client, content_id, -3, SAME_VENUE_PROMPT, user, SAME_VENUE_SCHEMA
+            session,
+            client,
+            content_id,
+            -3,
+            SAME_VENUE_PROMPT,
+            user,
+            SAME_VENUE_SCHEMA,
+            max_tokens=8000,
         )
         pairs = json.loads(raw)["same"]
     except (TransientAPIError, TypeError, ValueError, KeyError):

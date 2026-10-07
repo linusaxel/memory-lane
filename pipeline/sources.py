@@ -201,6 +201,13 @@ def _list(session):
         )
 
 
+def licence(value: str) -> str:
+    # sources.licence is varchar(40); past it the INSERT dies on a bare SQLAlchemy line.
+    if len(value) > 40:
+        raise argparse.ArgumentTypeError("a licence is at most 40 characters")
+    return value
+
+
 def main():
     logging.basicConfig(force=True, level=logging.INFO, format="%(message)s")
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
@@ -224,7 +231,7 @@ def main():
     a.add_argument("name")
     a.add_argument("--language")
     a.add_argument("--status", default="candidate")
-    a.add_argument("--licence")
+    a.add_argument("--licence", type=licence)
     a.add_argument("--note")
     args = parser.parse_args()
 

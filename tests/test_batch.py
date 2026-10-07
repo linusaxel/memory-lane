@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy import text
 
 from pipeline import extract
-from pipeline.batch import send
+from pipeline.batch import dropped, send
 from pipeline.extract import Collect, _stored_request
 from tests.fakes import _Response
 
@@ -54,7 +54,7 @@ class _Batches:
 
 
 @pytest.mark.db
-def test_a_batch_reply_is_stored_where_the_next_pass_reads_it(db_session, collecting):
+def test_a_batch_reply_is_stored_where_the_next_pass_reads_it(db_session, collecting, caplog):
     cid = db_session.execute(
         text(
             "INSERT INTO content (url, platform, platform_id) "
@@ -70,6 +70,7 @@ def test_a_batch_reply_is_stored_where_the_next_pass_reads_it(db_session, collec
     assert send(client, requests, db_session) == 1
     assert _stored_request(db_session, None, cid, 0, "extract", "chunk 0") == '{"memories": []}'
     assert _rows(db_session) == 1
+    assert f"[content:{cid}] extract cut" in caplog.text, "a cut reply names its stage"
 
 
 class _Blip(_Batches):
@@ -133,3 +134,24 @@ def test_a_run_that_stops_early_still_scores_what_it_saved(db_session, monkeypat
     with pytest.raises(SystemExit):
         batch.run(None, [saved])
     assert scored == [saved]
+
+
+@pytest.mark.db
+def test_a_chosen_id_that_is_not_pending_says_why(db_session):
+    source = db_session.execute(
+        text(
+            "INSERT INTO sources (kind, locator, name, status) "
+            "VALUES ('text', 'adl:x', 'S', 'candidate') RETURNING id"
+        )
+    ).scalar()
+    cid = db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id, source_id) "
+            "VALUES ('https://example.org/x', 'web', 'x', :s) RETURNING id"
+        ),
+        {"s": source},
+    ).scalar()
+    assert dropped(db_session, [cid, -1], []) == [
+        "-1: no such content",
+        f"{cid}: its source is candidate",
+    ]

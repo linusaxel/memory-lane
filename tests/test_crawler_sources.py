@@ -1,6 +1,10 @@
-"""The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds, stones, PDFs."""
+"""The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds, stones, PDFs, ADL."""
 
-from crawler import archive, filming, pdfs, plaques, rss, stolpersteine, webpages, wikipedia
+import argparse
+
+import pytest
+
+from crawler import adl, archive, filming, pdfs, plaques, rss, stolpersteine, webpages, wikipedia
 
 
 def test_a_plaque_becomes_its_inscription_its_subject_and_its_point():
@@ -158,3 +162,29 @@ def test_sitemap_urls_are_unescaped_once_and_filtered():
     xml = "<loc>https://x.dk/a?b=1&amp;c=2</loc><loc>https://x.dk/da/a</loc><loc>https://x.dk/a?b=1&amp;c=2</loc>"
     assert webpages.sitemap_urls(xml) == ["https://x.dk/a?b=1&c=2", "https://x.dk/da/a"]
     assert webpages.sitemap_urls(xml, r"x\.dk/(?!da/)") == ["https://x.dk/a?b=1&c=2"]
+
+
+def test_an_adl_page_reads_as_its_paragraphs_without_links_page_numbers_or_notes():
+    page = """<title>1. Del : 1812-42 - Det Kgl. Biblioteks tekstportal</title>
+    <h2 class="head-in-work">FORORD</h2>
+    <p class="paragraph"><span><a class="quote"><span class="symbol quote">✂ </span></a>
+    </span>Nielsen spillede <em>Correggio</em>.<a class="note">*</a><span class="note_content"
+    >* Denne Replik lyder anderledes.</span><span class="pageBreak"><a><small>24</small></a></span>
+    Han kyssede mig.<br/></p>
+    <p class="paragraph">Paa Kongens Nytorv.</p>"""
+    title, text = adl.book(page)
+    assert title == "1. Del : 1812-42"
+    assert text == "Nielsen spillede Correggio. Han kyssede mig.\n\nPaa Kongens Nytorv."
+
+
+def test_adl_refuses_a_volume_that_is_not_free():
+    with pytest.raises(ValueError):
+        next(adl.Adl().fetch("heibfr01val", 1))
+
+
+def test_a_licence_longer_than_its_column_is_refused():
+    from pipeline.sources import licence
+
+    assert licence("CC BY-SA 4.0") == "CC BY-SA 4.0"
+    with pytest.raises(argparse.ArgumentTypeError):
+        licence("x" * 41)

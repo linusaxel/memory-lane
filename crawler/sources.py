@@ -27,7 +27,8 @@ class Source(Protocol):
     def fetch(self, query: str, limit: int) -> Iterable[Record]: ...
 
 
-from crawler.archive import Archive  # noqa: E402  (they need Record defined first)
+from crawler.adl import Adl  # noqa: E402  (they need Record defined first)
+from crawler.archive import Archive  # noqa: E402
 from crawler.filming import Filming  # noqa: E402
 from crawler.gutenberg import Gutenberg  # noqa: E402
 from crawler.historisk_atlas import HistoriskAtlas  # noqa: E402
@@ -47,6 +48,7 @@ SOURCES: dict[str, Source] = {
         HistoriskAtlas(),
         Gutenberg(),
         Runeberg(),
+        Adl(),
         Archive(),
         Plaques(),
         Wikipedia(),

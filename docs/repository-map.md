@@ -41,6 +41,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/historisk_atlas.py` | Historisk Atlas stories matched by sitemap title (`Sabotage` for the WWII set) |
 | `crawler/gutenberg.py` | Public-domain books: `<ebook id> <word>` keeps the windows naming the place |
 | `crawler/runeberg.py` | Nordic public-domain books from Projekt Runeberg, same query shape: `<work key> <word>` |
+| `crawler/adl.py` | Johanne Luise Heiberg's memoirs from Arkiv for Dansk Litteratur, the three FRI volumes only: `<volume id> <word>` |
 | `crawler/archive.py` | Public-domain books from the Internet Archive's OCR text, same query shape: `<item id> <word>` |
 | `crawler/webpages.py` | A site's own pages: one page, or a sitemap's (`<url> [<url regex>]`); honours robots.txt fetched as us, and its Crawl-delay; typed press, so forgotten once extracted |
 | `crawler/pdfs.py` | Back issues from a page that links their PDFs (`<index url> [<from year>] [<via regex>]`; via: one page per issue, each linking its PDF), newest first, via `pdftotext`; typed press, so forgotten once extracted |

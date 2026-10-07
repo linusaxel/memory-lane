@@ -30,36 +30,12 @@ delete an entry when its fix lands.
   (`fetch('http://localhost:8090/?dbg=...')`, read in `api.log`) showed no
   handler ran. Fix: have run.sh capture JS logs (Metro's `--dev-client`
   output, or the device log's ReactNativeJS lines) into `e2e/out/logs/`.
-- **A reply cut at `max_tokens=2000` is paid for and thrown away.**
-  2026-10-07: the Københavnerglimt batch logged it on several calls, then a
-  last pass of three cut calls stored nothing and stopped the run, leaving
-  content 633 pending forever (every rerun pays for the same cut replies).
-  Fix: log the stage with the warning, and raise that stage's cap in
-  `pipeline/extract.py` (`_stored_request` defaults to 2000).
 - **Maestro taps what the screen shows, not what the scroll view shows.**
   2026-10-06: Add's bar floats over the page's edge and its header covers
   the top, but `scrollUntilVisible` and `tapOn` call a field half under
   either "visible" and tap its middle, so file-and-edit hit the bar's Quote
   and Photo, typed nowhere, and six runs went on reading screenshots. Fix: a
   `tapOn` helper flow that scrolls an id clear of `bar`/header before tapping.
-- **`sources add --licence` over 40 characters dies with a bare SQLAlchemy
-  line.** 2026-10-05: `sources.licence` is varchar(40), and `tail -1` showed
-  only "Background on this error at: sqlalche.me", so a source silently didn't
-  register and a retry made a duplicate-ish row to clean up. Fix: argparse
-  rejects a licence over 40 characters, naming the limit.
-- **A batch on a `candidate` source runs nothing and exits 0.** 2026-10-05:
-  `sources add` defaults to `candidate`, `PENDING_EXTRACTION` skips candidates,
-  and `batch --run --content <ids>` printed "0 pending" and exited green, so an
-  approved trial looked started and cost a round trip to the founder. Fix:
-  `batch --run` exits non-zero when chosen ids were dropped, naming their
-  source's status.
-
-- **A source's `expected` is its past, not its next items.** 2026-10-05:
-  Historisk Atlas showed 90 expected from its first 18 items; the next 40 were
-  thin records and the WWII sabotage set, 19 empty and 10 memories at mean 4.2,
-  0 good. Fix: make-memories step 2 trials the next 5 pending ids of any
-  source before a bigger batch, not only sources under 5 items done.
-
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"
@@ -267,9 +243,6 @@ worth the walk. Measure every change against the labels before and after
 - [ ] **Ask Københavns Museum for its podcasts.** (2026-10-04) Four
       place-bound shows on Podbean, no transcripts, ©. Ask for permission
       and transcripts, as `docs/permission-request.md` asks a channel.
-- [ ] **An ADL plug-in for Heiberg.** (2026-10-04) *Et Liv gjenoplevet i
-      Erindringen*, FRI volumes `heibfr05val`–`07val` only, full text at
-      `https://tekster.kb.dk/text/<id>`. One file in `crawler/`.
 - [ ] **Enrichment, first live run.** (2026-10-04) `pipeline/enrich.py` is
       built and tested with fakes; the first live call hit an empty credit
       balance. Run `python -m pipeline.enrich --memory <id>` on five strong
@@ -377,8 +350,8 @@ priority order.
       with a public APACS API (github.com/CopenhagenCityArchives). Unblocks *Then and now, lined up*.
 - [ ] **More public-domain memoirs.** (checked 2026-10-04) Brandes' *Levned*
       I added 4 (source 231); volumes 2 and 3 are `runeberg:gblevned/2` and
-      `/3`, queried as `Kjøbenhavn`. Heiberg's *Et Liv gjenoplevet* is only on
-      tekster.kb.dk (ADL), which needs its own fetch. Nexø has no free text;
+      `/3`, queried as `Kjøbenhavn`. Heiberg's *Et Liv gjenoplevet* is
+      `--source adl --query heibfr05val` (and `06val`, `07val`). Nexø has no free text;
       *Mit Livs Eventyr* retells source 202. Gutenberg's own search works when
       gutendex is down.
 - [ ] **Open sources with coordinates.** (checked 2026-10-04) Wikidata (CC0)
