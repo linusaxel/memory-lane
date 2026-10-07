@@ -21,7 +21,9 @@ out, as long as nothing circumvents a block: docs/10, *Recent sources without pe
 
 **By era (2026-10-05).** The free sources stop at about 1945. Living memory,
 and above all the 2010s to now, comes only from permission or from people in
-the app. Don't search the open web for free recent stories again.
+the app. Don't search the open web for *openly licensed* recent stories
+again. The modern seam is first-party pages under the without-permission rule:
+festivals', venues' and institutions' own history pages and news archives.
 
 | Era | Where it is | State |
 |---|---|---|
@@ -32,6 +34,7 @@ the app. Don't search the open web for free recent stories again.
 | 2000-now | 1001 fortællinger om Danmark: 305 places in the bbox, about 10-15 really post-2000. The KML dump survives at web.archive.org (`kulturarv.dk/1001fortaellinger/gps/1001.kml`); text rights sit with Slots- og Kulturstyrelsen, which may license partners | Read 2026-10-07: encyclopedic short entries (architecture, founding dates), like Wikipedia. Skip even with permission |
 | 2010s-now | Bar stories: VLTV's *De Brune Værtshuse* on YouTube (vltv@hotmail.com, auto-captions); the podcasts *Sidste Omgang* (86 episodes, one bar each, Instagram @sidste.omgang) and *Barvox* (info@barvox.com); the book *Stamsteder* (220 pubs, 2021, print only) | VLTV is registered as source 251: 10 bar videos ingested (two others are gone), with captions waiting on YouTube's IP block. The podcasts have no transcripts, and we don't transcribe audio |
 | 1950-2000 | Local-history society yearbooks: Nørrebro (24 PDFs 2000-23, about 80-100 good), Sydhavnen (26 articles), SLAK for the other 8 | Email drafted in `docs/permission-request.md`, not sent |
+| 2000-now | Events at their spots: festivals' own history pages, Wikidata P276+P585 events in the bbox (see step 1) | Open: not searched. Distortion (258) and Tivoli (257) are the first two |
 | 1940-45 | Stolpersteine, `stolpersteine:Liste der Stolpersteine im Großraum Kopenhagen` (source 246, 46 addresses) | Ingested, not screened |
 | 1860-1919 | Public-domain memoirs: Gottschalksen `archive:engladmusikantsd00gott` (densest), Bang `runeberg:bang/6 København`, Grandjean `archive:spredtemindergen00gran`, Egan `gutenberg:36412 Copenhagen` | Not registered |
 
@@ -81,6 +84,8 @@ the app. Don't search the open web for free recent stories again.
 **Lessons.**
 - A source's last items can be off-topic: Københavnerliv's backlog ended in
   film chats and festivals. Read the pending titles before trusting `expected`.
+- One event page often yields several memories at one spot; prefer festivals
+  that moved between venues, since each move is a new spot.
 - Ingest everything when a source is small, and trial the richest items, not
   the first five.
 
@@ -90,14 +95,32 @@ Fan out parallel agents, one per kind, on primary sources only: the feed
 itself, the catalogue page, the ToS page. Not listicles. Ask each for exact
 locators and evidence.
 
+Kinds worth a fan-out beyond the table's archives, because a walker is glad to
+know *this is where it happens*:
+
+- **Recurring events at a fixed spot.** Festivals and their grounds:
+  Copenhell (Refshaleøen), Distortion, Copenhagen Jazz Festival, CPH:PIX,
+  CPH:DOX, Kulturnatten, Copenhagen Pride, Vinterjazz, Strøm, Copenhagen Light
+  Festival, Copenhagen Cooking, the Marathon, Ironman, Royal Run, Tivoli's
+  seasons. Good when its own history page names years and spots.
+- **One-off events at a spot.** Eurovision 2014 (B&W Hallerne), the Tour de
+  France Grand Départ 2022, COP15 (Bella Center), concerts that made history,
+  royal events. Start from Wikidata events with P276 (location) and P585
+  (date) in the bbox, keep the fun ones (not crimes or disasters), then read
+  the event's own page for the story.
+- **Venues and institutions with dated posts.** Restaurants, clubs, theatres,
+  museums, harbour baths. "About" pages give 0-2 anecdotes; a blog or news
+  archive read through its sitemap gives dozens (Noma, 2026-10-07).
+
 | Kind | Plug-in (`crawler/`) | Locator (`<key>:<query>`) | What makes one good |
 |---|---|---|---|
 | Plaques, memorials | `plaques` | `plaques:<s,w,n,e>` | Already names its spot; exact pin |
 | Film and TV shot here | `filming` | `filming:<s,w,n,e>` | Wikidata P915 to a spot, not a city |
 | Wikipedia places | `wikipedia` | `wikipedia:<lang> <lat>,<lng> <metres>` or `wikipedia:<lang> category:<A>|<B>` | History sections with incidents; categories beat a radius, which drags in stubs and the citywide article |
 | Stolpersteine | `stolpersteine` | `stolpersteine:<de.wikipedia list title>` | One record per door; the geocoder places the address |
-| Back issues as PDFs | `pdfs` | `pdfs:<index page url> [<from year>] [<via regex>]` |
-| A site's own pages | `webpages` | `webpages:<page url>` or `webpages:<sitemap.xml> [<url regex>]` | First-party dated posts with spot-tied anecdotes | A paper or society that links its issues; read for stories, not ads and listings |
+| Back issues as PDFs | `pdfs` | `pdfs:<index page url> [<from year>] [<via regex>]` | A paper or society that links its issues; read for stories, not ads and listings |
+| A site's own pages | `webpages` | `webpages:<page url>` or `webpages:<sitemap.xml> [<url regex>]` | First-party dated posts with spot-tied anecdotes |
+| Events and festivals | `webpages` | `webpages:<history page>` or `webpages:<sitemap.xml> [<url regex>]` | Names its spot and years: firsts, moves, records, famous nights |
 | Press feed | `press` | `press:<feed url>` | Only with the outlet's agreement: every Copenhagen outlet reserves TDM (§11b) |
 | Podcast feed | `podcast` | `podcast:<feed url>` | Items carry `<podcast:transcript>` (no Copenhagen show did, 2026-10-04); no audio is transcribed |
 | Public-domain book | `gutenberg`, `runeberg` | `gutenberg:<id> <word>`, `runeberg:<key> <word>` | Memoir of a city life, author dead 70+ years |
@@ -121,6 +144,12 @@ private person's health, politics or crime (GDPR Art 9), and anything needing
 a login, a paywall bypass or a proxy. Press and podcast text is forgotten once
 extracted (`pipeline.transcripts.forget`); we keep facts in our own words and
 a link.
+
+A first-party page with no licence: fetch robots.txt *as us* (Python's
+RobotFileParser.read() fetches as Python-urllib, which some sites refuse;
+`crawler.webpages.robots` doesn't), ai.txt, `/.well-known/tdmrep.json`,
+Cloudflare's `Content-Signal:` line, and the ToS. A 403 or a JavaScript
+challenge to our user agent is a block: don't go around it.
 
 ## 3. Register and fetch a sample (free)
 

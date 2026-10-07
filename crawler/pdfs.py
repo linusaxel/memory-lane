@@ -32,8 +32,9 @@ def pdf_links(page: str, base: str, since: int | None = None, pattern=r"\.pdf$")
 
 
 def pdf_text(data: bytes) -> str:
+    """The PDF's text; "" for one pdftotext can't open, so one bad issue doesn't sink a run."""
     return subprocess.run(
-        ["pdftotext", "-q", "-", "-"], input=data, capture_output=True, check=True
+        ["pdftotext", "-q", "-", "-"], input=data, capture_output=True
     ).stdout.decode("utf-8", "replace")
 
 
