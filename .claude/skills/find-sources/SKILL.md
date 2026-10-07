@@ -134,6 +134,9 @@ locators and evidence.
 Hunt in this order, and register an institution's history of itself or an
 encyclopedia only when the page shows a named person's anecdote on its spot:
 
+Memoirs and channels were scored on the looser pre-10-05 scale, so trust the
+order, not the gap.
+
 | Genre | Good (6+) per memory, 2026-10-07 |
 |---|---|
 | First-person memoir of a city life | ~80% |

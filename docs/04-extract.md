@@ -758,7 +758,10 @@ for null. `extract.sure` drops a note that hedges.
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its
-good (6+) share better than the prompt does:
+good (6+) share better than the prompt does. Caveat: the memoirs, Københavnerliv
+and the plaques were all scored before 2026-10-05 (the old, looser scale) and
+the institutions all after, so the gap is overstated; the order is the claim,
+not the size. The next memoir trial checks it on the new scale:
 
 | Genre | Sources | Good |
 |---|---|---|
