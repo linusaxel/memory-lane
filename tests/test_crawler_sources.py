@@ -1,6 +1,6 @@
 """The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds, stones, PDFs."""
 
-from crawler import archive, filming, pdfs, plaques, rss, stolpersteine, wikipedia
+from crawler import archive, filming, pdfs, plaques, rss, stolpersteine, webpages, wikipedia
 
 
 def test_a_plaque_becomes_its_inscription_its_subject_and_its_point():
@@ -145,3 +145,16 @@ def test_pdf_links_are_absolute_once_newest_first_and_from_a_year():
     assert pdfs.pdf_links(page, "https://x.dk/arkiv/", since=2020) == [
         "https://x.dk/pdf/2023/02-2023.PDF"
     ]
+
+
+def test_pdf_links_can_pick_issue_pages_to_hop_through():
+    page = '<a href="/2019/02/nabo-2/">a</a><a href="/om/">b</a><a href="/2010/04/464/">c</a>'
+    assert pdfs.pdf_links(page, "https://x.dk/nabo/", since=2015, pattern=r"/20\d\d/\d\d/") == [
+        "https://x.dk/2019/02/nabo-2/"
+    ]
+
+
+def test_sitemap_urls_are_unescaped_once_and_filtered():
+    xml = "<loc>https://x.dk/a?b=1&amp;c=2</loc><loc>https://x.dk/da/a</loc><loc>https://x.dk/a?b=1&amp;c=2</loc>"
+    assert webpages.sitemap_urls(xml) == ["https://x.dk/a?b=1&c=2", "https://x.dk/da/a"]
+    assert webpages.sitemap_urls(xml, r"x\.dk/(?!da/)") == ["https://x.dk/a?b=1&c=2"]

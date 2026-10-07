@@ -3904,7 +3904,9 @@ Stories from 2010 to now exist only in copyrighted sources (find-sources skill,
 *Already searched*), and asking first stalls the road to 1,000. So the founder
 chose to use some without asking: VLTV Vesterbro Lokal TV's bar episodes,
 Bryggebladet, Christianshavneren and the Nørrebro yearbooks (sources 247, 248,
-250, 251; licence "© without permission").
+250, 251; licence "© without permission"). On 2026-10-07 the founder added,
+on the same terms: NABO (Humleby), Kilden (Strandvejskvarteret), Magasinet
+KBH, Valby Lokalhistoriske Selskab, Noma, Tivoli and Distortion (252-258).
 
 What still holds, because it is what keeps this defensible:
 
@@ -3912,7 +3914,8 @@ What still holds, because it is what keeps this defensible:
 - **The text is forgotten once extracted**: the PDFs are typed press, a video
   is a video (`pipeline.transcripts.forget`).
 - **A takedown is honoured within a day**, for one story or a whole source.
-- **No circumvention**: no proxy past a block, no login, no paywall. A source
+- **No circumvention**: no proxy past a block, no login, no paywall, and
+  robots.txt and its Crawl-delay are honoured as fetched by our own user agent. A source
   that opts out (ai.txt, a TDM reservation, robots.txt) stays out, so the
   district weeklies and dinavis.dk are still closed.
 - The permission emails in `docs/permission-request.md` stay worth sending:

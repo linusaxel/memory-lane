@@ -37,6 +37,7 @@ from crawler.plaques import Plaques  # noqa: E402
 from crawler.rss import Podcast, Press  # noqa: E402
 from crawler.runeberg import Runeberg  # noqa: E402
 from crawler.stolpersteine import Stolpersteine  # noqa: E402
+from crawler.webpages import Webpages  # noqa: E402
 from crawler.wikipedia import Wikipedia  # noqa: E402
 
 SOURCES: dict[str, Source] = {
@@ -52,6 +53,7 @@ SOURCES: dict[str, Source] = {
         Stolpersteine(),
         Pdfs(),
         Filming(),
+        Webpages(),
         Press(),
         Podcast(),
     )
