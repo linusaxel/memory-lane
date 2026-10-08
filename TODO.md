@@ -24,6 +24,15 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The 20-minute floor hides short videos from a trial.** 2026-10-08: five
+  channels "waiting on YouTube's block" held 14 videos, but 12 were under
+  `MIN_VIDEO_MINUTES` (oral-history clips of 1-12 min), so `transcripts` never
+  asked for them and `batch --content` would have reported them as "too short", block or no
+  block. Getting them took a `python -c` on `fetch_pending_transcripts` with
+  `MIN_VIDEO_MINUTES=0`, and the same env var on the batch. Fix: `LONG_ENOUGH` applies
+  to bulk polling only, and named ids (`transcripts --content`, `batch
+  --content`) skip it.
+
 - **A batch log's funnel counts repeat every pass.** 2026-10-08: summing
   "Found N raw ... M after filtering" over a `pipeline.batch` log gave 283 raw
   for 46 windows that stored 7, because each pass replays every content. It
