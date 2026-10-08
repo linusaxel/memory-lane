@@ -90,6 +90,16 @@ def test_a_transcript_loses_its_cues_and_timings():
     assert rss.transcript_text('{"segments": [{"body": "Hej"}]}', "application/json") == "Hej"
 
 
+def test_an_archive_item_reads_its_largest_ocr_file_whatever_its_name():
+    files = [
+        {"name": "x_djvu.txt", "size": "12"},
+        {"name": "Bergsøe - Drenge_djvu.txt", "size": "355359"},
+        {"name": "Bergsøe - Drenge.pdf", "size": "5263563"},
+    ]
+    assert archive.ocr_file("x", files) == "Bergsøe - Drenge_djvu.txt"
+    assert archive.ocr_file("x", []) == "x_djvu.txt"
+
+
 def test_an_ocr_text_mends_its_line_break_hyphens():
     raw = "mistænkte  ham  for  at  være  et  af  Struensees  Kre-\naturer, og  Gammel-  \ntorv\nLand-\n\nsknægte"
     assert (
