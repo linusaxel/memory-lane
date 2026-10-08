@@ -755,6 +755,38 @@ for null. `extract.sure` drops a note that hedges.
 - WHAT HAPPENED: Anecdotes, funny moments, mishaps
 - THE VIBE: Emotions, humor, what made it memorable
 
+### The check cut the lede, 2026-10-08
+
+Memoir memories read as inventories ("Sorte Hane, the old soap-boiling house…",
+a students' club room by room). The extractor was not the cause: its ledes were
+hooks ("A schoolmaster escaped four watchmen here by being hauled up a wall").
+`extract.unsupported` flagged the lede as added, because a lede compresses
+("escaped", "here"), and the trim cut it, leaving the background first or a
+fragment ("Saturday nights at the Students' Association rooms."). Measured on
+the 37 summaries of 16 memoir windows (Bergsøe, Schorn, Zinck), check and trim
+only:
+
+| | Lede kept | Changed by trim | Fact claims |
+|---|---|---|---|
+| Old check | 27 of 37 | 22 | 24 |
+| Check that lets a lede sum up the passage, and "here" | 29 of 37 | 17 | 19 |
+
+Shipped. Four hooks came back (the wall, the tightrope walker, Borgerdydskolen,
+Sorte Hane). One was lost: the elephant's "caused an uproar". The check is a
+thinking call, so some of the five fewer fact claims are draw-to-draw noise, and
+some may be real catches given up. Also tried, and none of the three shipped:
+
+- A trim rule to cut the whole sentence rather than leave it broken. It changed
+  nothing: the students' club stayed a fragment.
+- A summary prompt putting the event first and banning inventories. It was 10%
+  shorter (134 to 121 words) but its ledes went chronological ("In 1827 the rope
+  dancer Roat came to Copenhagen").
+- A walk-score sink for inventories. It moved memoir scores by about 1 point
+  either way, the judge's own noise, and lost on the 219 labels: AUC 0.717 to
+  0.687.
+
+Memories already stored keep their trimmed summaries.
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its

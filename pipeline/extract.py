@@ -788,7 +788,10 @@ every claim the story makes that the passage and the source do not support: a
 fact, name, role, number, date, event, object, image, adjective or superlative
 the story adds, or gives differently. Only additions and contradictions:
 leaving something out is fine, and so are translation, tense, wording, order
-and a plain inference (a bar is in the city the passage is about). Each is a
+and a plain inference (a bar is in the city the passage is about), and a lede that sums up in
+fewer words what the passage goes on to tell ("was carried off by the crowd" over a
+passage that tells the crowd carrying him, or "here" for the place the story is
+told at). Each is a
 `fact` (something a reader would repeat as true) or `colour` (an image or a
 flourish). Name each claim by the fewest words that carry it, never a span
 that also holds what the source does say: in "fell fighting for Denmark's

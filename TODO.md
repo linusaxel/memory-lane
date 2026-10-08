@@ -56,8 +56,10 @@ delete an entry when its fix lands.
   flaw lived in three web sources (260, 264, 269), but `--compare` samples
   chunks of a whole `--source-type` at random. Twenty press chunks held none
   of the flaw, so the measurement said nothing, and the prompt fix couldn't be
-  judged. Fix: a `--content <ids>` or `--source <id>` flag that feeds
-  `sample_chunks`' existing `content_ids`.
+  judged. Again 2026-10-08: measuring the memoir prompts and the check/trim
+  stage took two scratch scripts, since `--compare` stops at extraction. Fix: a
+  `--content <ids>` or `--source <id>` flag that feeds `sample_chunks`' existing
+  `content_ids`, and a `--check` that reruns `extract.checked` on the kept summaries.
 
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
