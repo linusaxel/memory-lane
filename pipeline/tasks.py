@@ -22,6 +22,7 @@ from pipeline.extract import (
     ModelUnusableError,
     TransientAPIError,
     _thinking,
+    book_brief,
     check_all,
     chunk_transcript,
     extract_chunk_stored,
@@ -272,6 +273,8 @@ def task_enqueue_chunks(content_id: int):
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         if (source_type or "video") == "video":
             brief = video_brief(session, client, content_id, segments, source_name, title)
+        elif source_type == "book":
+            brief = book_brief(session, client, content_id, source_name, title)
         elif segments and _thin(source_type, segments):
             segments = seeded(session, client, content_id, title, segments)
             if segments is None:
@@ -384,7 +387,9 @@ def task_extract_chunk(content_id: int, chunk_index: int, total_chunks: int, chu
                 chunk_index,
                 chunk_text,
                 prompt_for(source_type),
-                source_context(*_source_and_title(content_id), _brief(redis, content_id)),
+                source_context(
+                    *_source_and_title(content_id), _brief(redis, content_id), source_type
+                ),
             )
     except (ModelUnusableError, BillingError):
         _final(get_current_job())
@@ -494,7 +499,11 @@ def task_aggregate_memories(content_id: int):
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         filtered = worth_telling(session, client, content_id, candidates)
         filtered = one_name_per_venue(session, client, content_id, filtered)
-        context = source_context(*_source_and_title(content_id), _brief(redis, content_id))
+        context = source_context(
+            *_source_and_title(content_id),
+            _brief(redis, content_id),
+            _source_type(redis, content_id),
+        )
         filtered = check_all(session, client, content_id, context, filtered)
         logger.info(
             f"[content:{content_id}] After merge: {len(merged)}, after filter: "

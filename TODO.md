@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A long call fails before it is sent.** 2026-10-09: a whole-book index call
+  with `max_tokens=24000` got "Streaming is required for operations that may
+  take longer than 10 minutes" from the SDK. `_request` logged it as an error,
+  returned None, and the script crashed on it a step later. That cost a rerun.
+  Fix: `_request` streams when `max_tokens` is over ~21k (or raises
+  `ModelUnusableError` on it), rather than returning None.
+
 - **The 20-minute floor hides short videos from a trial.** 2026-10-08: five
   channels "waiting on YouTube's block" held 14 videos, but 12 were under
   `MIN_VIDEO_MINUTES` (oral-history clips of 1-12 min), so `transcripts` never
@@ -193,6 +200,18 @@ worth the walk. Measure every change against the labels before and after
 (`python -m pipeline.quality --labels`). Every change is to
 `pipeline/extract.py` unless named.
 
+- [ ] **Scene-first extraction.** (2026-10-09) An index of the whole source,
+      then a scene finder that writes no prose, then the spot resolved by the
+      geocoder, then a short writer with varied example cards. It won 10 of 24
+      memoir windows against 6 for the stored cards (docs/04, *About the
+      spot*).
+      Before it ships:
+      1. The founder labels the 82 blind cards.
+      2. Add one card per scene (two cards came out of one anecdote).
+      3. Add a check on the first three words of each card.
+      4. Find out why the theatre-debut and elephant windows came out empty.
+      Then wire it into the book path of `extract.py`/`tasks.py`/`batch.py`,
+      and the video path after measuring it.
 - [ ] **Memories written by tour guides.** (2026-10-04, the founder's idea)
       A licensed guide files the stories they already tell at a place: quality
       from the author, where `walk_score` is too weak a signal (r = 0.45). An

@@ -216,8 +216,10 @@ memory at all; answer them before you name a venue or write a word of summary.
   old spelling included. Code checks they are in the text; a paraphrase is dropped.
 - happened_there: One line - what happened at that place, and nowhere else.
 - spot_test: "pass" if the place is the point, "fail" if the story would be the
-  same pinned anywhere, the text only mentions the place in passing, or it is
-  a town passed through. Moved to another place of the same kind, would it
+  same pinned anywhere, the text only mentions the place in passing, it is
+  a town passed through, or neither the text nor the brief says where the place
+  was, so a walker could not find it ("the mill by the churchyard" with no
+  street, building or institution named). Moved to another place of the same kind, would it
   tell the same? Someone famous at this exact spot passes: they were here, not
   at the bar next door. Otherwise a story the place only holds - how a prisoner was treated in a cell, a dinner
   in a hall - fails however true; one this place's own feature, purpose or
@@ -249,21 +251,28 @@ memory at all; answer them before you name a venue or write a word of summary.
   the text gives no date. This is when it happened, not when it was written about.
 - happened_precision: day | month | year | decade - how much of happened_at to trust
 - summary: in English whatever the source's language, past tense, written for a stranger who has never read the source
-  and is standing on the spot. As long as the story earns: 60-180 words. Past
+  and is standing on the spot today. The spot is the subject; the story is
+  why it is worth stopping here. As long as the story earns: 60-180 words. Past
   about 90 words, split it into two paragraphs with a blank line. A small
   story stays small; never pad: past 90 words, every sentence adds a
   new detail of the same scene, not the years around it.
-  * Open with the most surprising thing that happened on this spot, in one
+  * Open on the spot: tell the reader where they are standing and what was
+    here, in today's terms, from the text or the brief ("This was the yard of
+    the royal porcelain factory"), and at once what happened here, in a
     sentence that would make someone stop walking.
-  * Then the scene, in order: who was there, when, what happened, and the turn
-    it took. Keep every concrete detail the text gives - names, dates,
-    numbers, objects, what someone said or did - because the details are what
-    make it worth reading on the spot.
-  * Then what came of it. If the text names something still visible from the
-    spot - the avenue's trees, the stage, the stair - end on it: it is what
-    the reader looks up at.
-  * Give every named person a role the first time ("Rahbek, the critic",
-    "Oehlenschläger, the poet, then a boy"). With no name, give a role.
+  * Then the one scene, in order: who was there, when, what happened, and the
+    turn it took, so the reader can picture it on this spot. Keep the details
+    that make the scene - dates, numbers, the object at the turn, what someone
+    said or did. Not the ones that do not: rooms, fittings, owners in turn.
+  * Plain words a stranger today knows. An old trade, tool, room or nickname
+    the reader would not know is explained in a few words or left out, never
+    translated word for word. Tell the twist plainly.
+  * Name a person only when the story needs the name; anyone else is their
+    role ("the coachman", "a maid"). Give every named person a role the first
+    time ("Rahbek, the critic", "Oehlenschläger, the poet, then a boy").
+  * Close on the spot: what of it the reader can still see - the avenue's
+    trees, the stage, the stair - or what the story changes about what they
+    are looking at. If the text or brief says it is gone, say so.
   * Tell what happened, not what was written: no "the author describes", "he
     recalls", "the text says".
   * Richness is the source's own details, never yours. Add no example, name,
@@ -441,7 +450,9 @@ label - never "the speaker", "the host" or "the narrator".
 """
 
 
-def source_context(source_name: str | None, title: str | None, brief: str = "") -> str:
+def source_context(
+    source_name: str | None, title: str | None, brief: str = "", source_type: str | None = None
+) -> str:
     """The lead-in for a chunk, or nothing when we know nothing about the source."""
     lead = (
         SOURCE_CONTEXT_TEMPLATE.format(
@@ -451,7 +462,8 @@ def source_context(source_name: str | None, title: str | None, brief: str = "") 
         if source_name
         else ""
     )
-    return lead + (BRIEF_TEMPLATE.format(brief=brief) if brief else "")
+    template = BOOK_BRIEF_TEMPLATE if source_type == "book" else BRIEF_TEMPLATE
+    return lead + (template.format(brief=brief) if brief else "")
 
 
 BRIEF_TEMPLATE = """<video_brief>
@@ -462,6 +474,29 @@ event is. It is context for writing, not a source of memories: every memory
 comes from the transcript chunk below.
 
 """
+
+BOOK_BRIEF_TEMPLATE = """<book_brief>
+{brief}
+</book_brief>
+The brief comes from the book's opening pages, so use it to say where a setting
+was and who a person is. It is context for writing, not a source of memories:
+every memory comes from the passage below.
+
+"""
+
+BOOK_BRIEF_PROMPT = """You write the brief that every later reader of one passage of
+this book gets, so that a story on page 200 can say where it happens, which was
+set up on page 3. About 120 words, in English, plain prose, facts only, from
+its opening pages:
+
+- What the book is: who wrote it, when, and whose life it tells.
+- The settings it keeps returning to, each with where it was as the text
+  places it: a home, a workplace, a school, a theatre ("the royal porcelain
+  factory on Købmagergade, where the author's father worked and the family
+  lived").
+- The people: names, and who they are to the author.
+
+Only what the text says. A setting the text does not place is left out."""
 
 BRIEF_PROMPT = """You write the brief that every later reader of one chunk of this
 video's transcript gets, so that a story from minute 33 can say what was set up
@@ -985,6 +1020,7 @@ def stage(system_prompt: str) -> str:
     """The pipeline stage a system prompt belongs to, for log lines."""
     return {
         BRIEF_PROMPT: "brief",
+        BOOK_BRIEF_PROMPT: "book brief",
         UNSUPPORTED_PROMPT: "check",
         TRIM_PROMPT: "trim",
         JUDGE_PROMPT: "judge",
@@ -1024,6 +1060,33 @@ def video_brief(session, client, content_id: int, segments: list, source: str, t
     transcript = " ".join((s.get("text") or "").strip() for s in segments)
     user = f"{source_context(source, title)}Transcript:\n\n{transcript}"
     raw = _stored_request(session, client, content_id, -1, BRIEF_PROMPT, user, BRIEF_SCHEMA)
+    return brief_from(raw) if raw else ""
+
+
+BOOK_OPENING = """
+    SELECT c.id, t.full_text FROM content c JOIN transcripts t ON t.content_id = c.id
+    WHERE c.source_id = (SELECT source_id FROM content WHERE id = :id)
+    ORDER BY c.id LIMIT 3
+"""
+
+
+def book_brief(session, client, content_id: int, source: str, title) -> str:
+    """Where the book's life takes place, for every window to write from.
+
+    A window is cut from the middle of a book: the porcelain factory is placed on
+    Købmagergade on page 3, and its quartz mill haunts page 40, so without this
+    the summary can't say where the reader is standing. Built from the book's
+    first three windows and stored under the first, so it is paid for once a book.
+    """
+    rows = session.execute(text(BOOK_OPENING), {"id": content_id}).fetchall()
+    if not rows:
+        return ""
+    opening = "\n\n".join(r.full_text for r in rows)
+    user = f"{source_context(source, title)}Opening pages:\n\n{opening}"
+    raw = _stored_request(session, client, rows[0].id, -1, BOOK_BRIEF_PROMPT, user, BRIEF_SCHEMA)
+    if raw is None and COLLECT is not None:
+        # The brief waits on the batch under the book's first window: hold this one too.
+        COLLECT.stage.setdefault(content_id, BOOK_BRIEF_PROMPT)
     return brief_from(raw) if raw else ""
 
 
@@ -1848,6 +1911,8 @@ def extract_all_pending(content_ids: list[int] | None = None):
                 brief = ""
                 if (source_type or "video") == "video":
                     brief = video_brief(session, client, content_id, segments, source_name, title)
+                elif source_type == "book":
+                    brief = book_brief(session, client, content_id, source_name, title)
 
                 all_memories = []
                 for i, chunk in enumerate(chunks):
@@ -1860,7 +1925,7 @@ def extract_all_pending(content_ids: list[int] | None = None):
                             i,
                             chunk,
                             prompt_for(source_type),
-                            source_context(source_name, title, brief),
+                            source_context(source_name, title, brief, source_type),
                         )
                         all_memories.extend(memories)
                     except BillingError as e:
@@ -1874,7 +1939,11 @@ def extract_all_pending(content_ids: list[int] | None = None):
                 filtered = worth_telling(session, client, content_id, filter_low_confidence(merged))
                 filtered = one_name_per_venue(session, client, content_id, filtered)
                 filtered = check_all(
-                    session, client, content_id, source_context(source_name, title, brief), filtered
+                    session,
+                    client,
+                    content_id,
+                    source_context(source_name, title, brief, source_type),
+                    filtered,
                 )
 
                 logger.info(

@@ -787,6 +787,109 @@ some may be real catches given up. Also tried, and none of the three shipped:
 
 Memories already stored keep their trimmed summaries.
 
+### About the spot, 2026-10-09
+
+A memoir card could still be told anywhere. Example: the quartz mill card was
+"mumbo jumbo" (the founder): it never said the mill was in the porcelain
+factory's yard on Købmagergade, nor what a quartz mill was. Its pin was a
+guess, on Nørrebro. Three causes:
+- the prompt treated the place as a setting;
+- a book window had no brief;
+- the model placed the pin.
+
+**Shipped as an interim fix** (`HISTORICAL_SYSTEM_PROMPT`, `book_brief`):
+- The spot is the subject. Open on where the reader stands and what was there,
+  close on what of it they can still see.
+- Keep the details that make the scene, not rooms, fittings or owners in turn.
+- Gloss old words. Name a person only when the story needs it.
+- `spot_test` fails a place neither the text nor the brief locates.
+- A book window gets a brief made from the book's first three windows,
+  `<book_brief>`, built like `video_brief`.
+
+Measured on the 16 memoir windows with extraction and check, no judge: 39
+memories against 18 stored, 132 words against 142. The extra memories are
+there because no judge ran. Results:
+- Ledes open on the spot (Kongens Nytorv, Store Larsbjørnstræde).
+- The tightrope walker moved from Amager Fælled to Rosenborg.
+- Rundetårn no longer puts Bergsøe there in 1807.
+- New problems:
+  - "This was…" opened most cards.
+  - Postgården and Sorte Hane stayed inventories.
+  - Bergsøe's brief is genealogy, because his first pages are.
+
+**Research** (three agents; this adds to *Research, 2026-10-02*):
+- **No product extracts place stories from books automatically.** VoiceMap,
+  Clio, Detour, Autio, Atlas Obscura and Hidden Copenhagen all have writers
+  and an editor.
+- **The nearest automated work hit our failures:**
+  - Edinburgh's Palimpsest/LitLong
+    ([Loxley et al. 2017](https://www.storre.stir.ac.uk/bitstream/1893/28517/1/DSH_article_finalrevisions.pdf)):
+    its worst false hits were family histories, registers and catalogues,
+    which are dense with place names. Ranking precision was MAP 0.13, then
+    0.17 after feedback, and scholars still curated.
+  - Stanford Lit Lab's London project
+    ([Pamphlet 13](https://litlab.stanford.edu/LiteraryLabPamphlet13.pdf)):
+    only about half of place mentions are the scene of the action.
+- **Interpretation craft.** Tilden, Ham's TORE, NPS, and Te Papa's
+  [label guide](https://www.tepapa.govt.nz/assets/76067/1687925811-28-writing-effective-interpretive-text.pdf):
+  - one theme per text, a sentence with a point;
+  - tie what can be seen to what happened there;
+  - "a chronology or a list of facts" is the named failure;
+  - gloss jargon.
+- **Audio tours.** VoiceMap's
+  [writing guide](https://docs.voicemap.me/tour-publishers/writing-scripts-that-make-listeners-feel-something/):
+  "tell the story of just one", at most two names.
+- **Pipelines:**
+  - Pick the story apart from writing it
+    ([StorySeeker](https://arxiv.org/abs/2311.09675)).
+  - Index the whole source first
+    ([contextual retrieval](https://www.anthropic.com/news/contextual-retrieval)).
+  - Resolve the place before writing.
+  - Teach style with varied examples rather than rules
+    ([multishot](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/multishot-prompting)):
+    a rule becomes a template, as "This was…" did.
+
+**A scene-first pipeline, trialled and not shipped** (about $10, nothing
+saved). It has four steps:
+1. **Index.** One call reads the whole book and writes people with their roles
+   and places with what they were and where.
+2. **Find scenes.** Per window, a scene finder writes no prose. It classifies
+   each candidate by place use (scene, mention, discourse), shape (scene,
+   list, lineage, chronicle, description), turn, and a theme of at most 15
+   words. Code keeps scene, scene, turn, theme. It names the spot as today's
+   map does.
+3. **Write.** The geocoder places the spot. A short writer prompt with four
+   varied example cards writes from the scene, the spot and the people.
+4. **Check.** Today's check and trim.
+
+The comparison was against the stored cards on 24 windows: the 16 above plus 8
+Grandjean and Gottschalksen windows that already had memories. The pairwise
+judge ran in both orders, and only verdicts that agree count. The first run
+lost 4 to 17, because the index's places were prose and covered only 15–32 per
+book, so 47 good scenes found no spot. With the finder naming the spot:
+
+| | Stored | Scene-first |
+|---|---|---|
+| Cards | 30 | 52 |
+| Mean words | 137 | 118 |
+| Windows won (both orders) | 6 | 10 (8 split) |
+| Candidates dropped as description, chronicle, lineage or no turn | - | 100 |
+
+- **The writing is better.** The quartz mill card now says the factory stood
+  there until 1885, with its yard against Trinitatis churchyard, and the ghost
+  turns out to be a drying sheet.
+- **It finds stories the stored cards missed:** the bear cub on the quay, the
+  cat through the plate glass, the Wildersgade mud town, Moltke at Tivoli.
+- **It loses on:**
+  - two cards for one anecdote, so it needs one card per scene;
+  - repeated openers ("The old Royal…" ×6), which a first-three-words check
+    would catch;
+  - two windows it left empty (Zinck's theatre debut, the elephant);
+  - a trim that left a card garbled.
+
+82 cards, shuffled and blind, wait for the founder's labels before
+it ships (TODO.md, *Scene-first extraction*).
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its

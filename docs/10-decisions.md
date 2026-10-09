@@ -3659,10 +3659,37 @@ The funnel itself is `.claude/skills/find-sources/SKILL.md`: research on
 primary sources, the legal row before ingesting, a free sample, the Haiku
 screen, a one-item trial, then a decision written on the row.
 
+### A card is about the spot it stands on
+
+Status: Accepted 2026-10-09. Supersedes the detail rule of *A card runs as long
+as its source's details*; its length and check stand.
+
+A walker reads the card standing on the spot, so the spot is the subject.
+The archival prompt opens on where the reader stands and what was there, in
+today's terms, and on what happened there. It closes on what can still be
+seen, or says the place is gone.
+- Only the details that make the scene, not every detail. Rooms, fittings and
+  owners in turn made memoir cards into inventories.
+- Old words are glossed or left out, never translated word for word.
+- A person is named only when the story needs the name.
+- A place neither the text nor the brief locates fails the spot test.
+- A book window gets a `<book_brief>` from the book's opening pages, as a video
+  chunk gets its brief.
+
+Measured in docs/04, *About the spot*. It is an interim step: a scene-first
+pipeline (find the scene, resolve the spot, then write) beat the stored
+cards on 24 memoir windows, and waits on human labels.
+
+**Options considered:** a summary prompt putting the event first (rejected,
+measured 2026-10-08: its ledes went chronological); more rules against
+inventories (rejected: the "This was…" opener shows a rule turning into a
+template).
+
 ### A card runs as long as its source's details
 
-Status: Accepted 2026-10-04. Supersedes the cap clause of *A card may run long
-when the story earns it*.
+Status: Superseded in part 2026-10-09 by *A card is about the spot it stands
+on* (the detail rule). Accepted 2026-10-04. Supersedes the cap clause of *A card
+may run long when the story earns it*.
 
 The founder wants more text and richer memories. Both extraction prompts now
 ask for 60-180 words: a lede that would stop someone walking, the scene in

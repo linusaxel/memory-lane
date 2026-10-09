@@ -163,6 +163,10 @@ def test_the_brief_reaches_every_chunk():
     assert "<video_brief>" in context and brief in context
     assert "not a source of memories" in context
     assert source_context("Københavnerliv", None) == source_context("Københavnerliv", None, "")
+    book = source_context(
+        "Internet Archive", None, "Bergsøe grew up at the porcelain factory.", "book"
+    )
+    assert "<book_brief>" in book and "<video_brief>" not in book
 
 
 def _verdict(**yes):
