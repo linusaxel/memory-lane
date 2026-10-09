@@ -922,6 +922,30 @@ def check_all(session, client, content_id, context, memories: list[dict]) -> lis
     return kept
 
 
+# A sentence the trim left broken: it starts mid-clause, or ends on a word the
+# summary as written never ended one on, cut from what followed it ("to raise
+# money for Roat's."). A prompt rule against it changed nothing (docs/04, *The
+# check cut the lede*). "walked in." is fine when the summary said it too.
+DANGLING = re.compile(
+    r"\S+['’]s[.!?]$|\b(?:a|an|the|of|for|to|in|on|at|by|with|from|into|and|but|or|that)[.!?]$"
+)
+
+
+def _sentences(text: str) -> list[str]:
+    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s]
+
+
+def broken(trimmed: str, summary: str) -> bool:
+    """A sentence of the trimmed summary, not in the summary as written, that
+    looks cut in half."""
+    written = set(_sentences(summary))
+    for s in _sentences(trimmed):
+        end = DANGLING.search(s.rstrip('"”’)'))
+        if s not in written and (s[0].islower() or (end and f" {end[0]}" not in f" {summary}")):
+            return True
+    return False
+
+
 def checked(session, client, content_id, chunk_index, chunk, context, memory: dict) -> dict:
     """The memory with what its chunk doesn't say cut from the summary.
 
@@ -948,6 +972,9 @@ def checked(session, client, content_id, chunk_index, chunk, context, memory: di
         KeyError,
     ):
         summary = ""
+    if summary and broken(summary, memory["summary"]):
+        logger.info("Trim broke a sentence, kept the summary as written: %r", summary)
+        return memory
     return {**memory, "summary": summary} if summary else memory
 
 

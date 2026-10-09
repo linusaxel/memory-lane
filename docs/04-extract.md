@@ -790,7 +790,10 @@ thinking call, so some of the five fewer fact claims are draw-to-draw noise, and
 some may be real catches given up. Also tried, and none of the three shipped:
 
 - A trim rule to cut the whole sentence rather than leave it broken. It changed
-  nothing: the students' club stayed a fragment.
+  nothing: the students' club stayed a fragment. Since 2026-10-09
+  `extract.broken` keeps the untrimmed summary when a trimmed sentence starts
+  mid-clause or newly ends on "for Roat's." or "the."; a verbless fragment
+  like the club's still passes.
 - A summary prompt putting the event first and banning inventories. It was 10%
   shorter (134 to 121 words) but its ledes went chronological ("In 1827 the rope
   dancer Roat came to Copenhagen").
@@ -942,9 +945,9 @@ for about $1.10 at Sonnet's list price, mostly the thinking check:
     to the window it ends in. 4001 now tells it whole, from the night walks
     round the Horse to the new cap on Østergade.
 
-Seen on the way, not fixed: the check's trim still breaks a sentence ("to
-raise money for Roat's."); the finder places Herlufsholm and Lolland scenes,
-outside Copenhagen. Book scans kept their running heads and page numbers;
+Seen on the way: the check's trim broke a sentence ("to raise money for
+Roat's."), now guarded in code (*The check cut the lede*); the finder places
+Herlufsholm and Lolland scenes, outside Copenhagen. Book scans kept their running heads and page numbers;
 since 2026-10-09 `crawler.gutenberg.unpaged` drops them at ingest, and
 `copied` keeps its slack for the windows ingested before.
 

@@ -5,7 +5,7 @@ import json
 import pytest
 from sqlalchemy import text
 
-from pipeline.extract import TRIM_PROMPT, UNSUPPORTED_PROMPT, checked
+from pipeline.extract import TRIM_PROMPT, UNSUPPORTED_PROMPT, broken, checked
 from tests.fakes import _Response
 
 STORY = "A Pegasus relief, carved in 1942, still hangs over Nørregade."
@@ -14,10 +14,11 @@ STORY = "A Pegasus relief, carved in 1942, still hangs over Nørregade."
 class _Checker:
     """The detector names `claims`; the trim answers with `trimmed`."""
 
-    def __init__(self, claims):
+    def __init__(self, claims, trimmed="A Pegasus relief from 1942 hangs here."):
         self.messages = self
         self.calls = []
         self.claims = claims
+        self.trimmed = trimmed
 
     def create(self, **kwargs):
         self.calls.append(kwargs)
@@ -25,7 +26,7 @@ class _Checker:
         if system == UNSUPPORTED_PROMPT:
             return _Response(json.dumps({"unsupported": self.claims}))
         assert system == TRIM_PROMPT
-        return _Response(json.dumps({"summary": "A Pegasus relief from 1942 hangs here."}))
+        return _Response(json.dumps({"summary": self.trimmed}))
 
 
 def _check(db_session, client, memory, content_id=0):
@@ -52,6 +53,27 @@ def test_only_what_the_check_names_is_trimmed_and_a_rerun_is_free(db_session):
     assert "- carved" in client.calls[1]["messages"][0]["content"]
     _check(db_session, client, memory, content)
     assert len(client.calls) == 2
+
+
+@pytest.mark.db
+@pytest.mark.parametrize(
+    "trimmed",
+    [
+        "A Pegasus relief hangs over Nørregade. It was put up to raise money for Roat's.",
+        "A Pegasus relief hangs over the.",
+        "A Pegasus relief. still hangs over Nørregade.",
+    ],
+)
+def test_a_trim_that_breaks_a_sentence_keeps_the_summary_as_written(db_session, trimmed):
+    client = _Checker([{"claim": "carved", "kind": "colour"}], trimmed)
+    memory = {"spot_test": "pass", "summary": STORY}
+    assert _check(db_session, client, memory, _content(db_session))["summary"] == STORY
+
+
+def test_a_sentence_may_end_on_a_word_the_summary_already_ended_one_on():
+    written = "At the Tivoli concert hall one evening in 1890, Moltke walked in."
+    assert not broken("At the Tivoli concert hall one evening, Moltke walked in.", written)
+    assert not broken("They raised money at Field's.", "They raised 400 kroner at Field's.")
 
 
 @pytest.mark.db
