@@ -184,10 +184,6 @@ worth the walk. Measure every change against the labels before and after
       4. Scenes outside Copenhagen (Herlufsholm, Lolland) are kept: intended?
       Then wire it into the book path of `extract.py`/`tasks.py`/`batch.py`,
       and the video path after measuring it.
-- [ ] **Strip running heads and page numbers from book scans at ingest.**
-      (2026-10-09) They split place words mid-phrase (the theatre fall in
-      window 3898); `scenes.copied` works round it with an 80-character gap.
-      Every prompt reads them.
 - [ ] **The fact-check's trim breaks sentences.** (2026-10-09) "to raise
       money for Roat's." Seen in the scene-first trial.
 - [ ] **Memories written by tour guides.** (2026-10-04, the founder's idea)

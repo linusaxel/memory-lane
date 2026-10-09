@@ -944,8 +944,9 @@ for about $1.10 at Sonnet's list price, mostly the thinking check:
 
 Seen on the way, not fixed: the check's trim still breaks a sentence ("to
 raise money for Roat's."); the finder places Herlufsholm and Lolland scenes,
-outside Copenhagen; book scans keep their running heads and page numbers,
-which a cleaner at ingest would remove for every prompt, not just this one.
+outside Copenhagen. Book scans kept their running heads and page numbers;
+since 2026-10-09 `crawler.gutenberg.unpaged` drops them at ingest, and
+`copied` keeps its slack for the windows ingested before.
 
 ### Yield by genre, 2026-10-07
 

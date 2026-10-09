@@ -10,11 +10,14 @@ import http.client
 import re
 import time
 import urllib.request
+from collections import Counter
 
 URL = "https://www.gutenberg.org/cache/epub/{id}/pg{id}.txt"
 # ponytail: a guess, about 2k tokens; one window is one extraction chunk.
 WINDOW_CHARS = 8000
 LANGUAGES = {"English": "en", "Danish": "da", "German": "de", "French": "fr"}
+# A page number, its 1s sometimes read as I, i or l: "34", "— i6 —", "^^8".
+PAGE_NUMBER = re.compile(r"\W*[\dIil]*\d[\dIil]*\W*")
 
 
 def download(url: str, user_agent: str | None = None, tries: int = 3) -> bytes:
@@ -38,6 +41,23 @@ def _header(raw: str, field: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
+def _letters(para: str) -> str:
+    return re.sub(r"[\W\d_]", "", para).lower()
+
+
+def unpaged(paras: list[str]) -> list[str]:
+    """The paragraphs without what a scan prints on every page: a bare page
+    number, and a short running head ("Otto Zinck: Erindringer 3") seen five
+    times or more. Both split a place name mid-phrase."""
+    seen = Counter(_letters(p) for p in paras if len(p) <= 60)
+    return [
+        p
+        for p in paras
+        if not PAGE_NUMBER.fullmatch(p)
+        and not (len(p) <= 60 and len(_letters(p)) >= 8 and seen[_letters(p)] >= 5)
+    ]
+
+
 def windows(raw: str, word: str | None = None) -> list[str]:
     """The book between Gutenberg's START and END lines, in paragraph-aligned
     windows; with `word`, only the windows that mention it."""
@@ -45,8 +65,7 @@ def windows(raw: str, word: str | None = None) -> list[str]:
     end = re.search(r"^\*\*\* ?END OF.*$", raw, re.MULTILINE)
     body = raw[start.end() if start else 0 : end.start() if end else len(raw)]
     out, current = [], ""
-    for para in re.split(r"\n\s*\n", body):
-        para = " ".join(para.split())
+    for para in unpaged([" ".join(p.split()) for p in re.split(r"\n\s*\n", body)]):
         if not para:
             continue
         if current and len(current) + len(para) > WINDOW_CHARS:

@@ -171,6 +171,21 @@ def test_a_book_is_cut_to_the_windows_that_name_the_place():
     assert "licence" not in "".join(windows(raw))
 
 
+def test_a_scan_loses_its_page_numbers_and_running_heads():
+    streets = ["Amagertorv", "Nyhavn", "Gothersgade", "Vimmelskaftet", "Østergade"]
+    pages = [
+        f"Jeg gik til {s}.\n\nOtto Zinck: Erindringer {n}\n\n— {n}4 —"
+        for n, s in enumerate(streets)
+    ]
+    raw = "\n\n".join(
+        [*pages, "det nye\n\nOtto Zinck : Erindringer\n\ni6\n\nkongelige Teater", "Adieu!"]
+    )
+    text = windows(raw)[0]
+    assert "Erindringer" not in text and "—" not in text and "i6" not in text
+    assert "det nye\n\nkongelige Teater" in text and "Jeg gik til Østergade." in text
+    assert "Adieu!" in text
+
+
 def test_a_runeberg_zip_reads_as_its_pages_in_order_without_page_numbers():
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as z:
