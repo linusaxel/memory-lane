@@ -24,6 +24,16 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A change to `mobile/app.json` leaves e2e on INFRA for the next
+  session.** 2026-10-09: the privacy commit touched it and the next
+  `./e2e/run.sh` stopped until a hand `expo prebuild --clean` and `pod
+  install`. Fix: run.sh prebuilds itself when its stamp is stale.
+
+- **Explicit-path commits still carry other sessions' hunks.** 2026-10-09:
+  a parallel session's `git commit docs/10-decisions.md` took another's
+  uncommitted entry with it. Fix: shared docs are committed by one session
+  at the end, or `git add -p` then `git commit` without paths.
+
 - **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
   permission classifier refused a hand triage (merge two places, hide four
   memories) and its undo, each a round-trip through the founder. The free
@@ -40,12 +50,27 @@ Retention is measured already: `python -m api.metrics`.
 
 ### Unblocked now
 
-- [ ] **The privacy policy is thin.** (checked 2026-10-04) `api/privacy.py`
-      has no controller, legal basis, retention, RevenueCat or geocoders.
-      Photos are re-encoded without EXIF (`api/media.py`). Contact reads
-      `CONTACT_EMAIL`, unset until you pick an address. The generated
-      `PrivacyInfo.xcprivacy` declares no collected data. The GDPR copy is
-      `python -m api.my_data`, answered by email.
+- [ ] **The privacy policy's placeholders and questions.** (checked
+      2026-10-09) `api/privacy.py`, `mobile/store/privacy.md` and the
+      DPIA/LIA in `docs/data-protection.md` are written against the code.
+      Placeholders: the controller (`COMPANY`), `CONTACT_EMAIL`, log and
+      backup retention days. The founder decides:
+      1. Keep positions and device ids out of logs: `--no-access-log` in the
+         Dockerfile, or lat/lng/device out of GET query strings. The device
+         id is the credential, so today the access log is a list of keys.
+      2. Railway's log and backup retention and region; sign the Railway and
+         RevenueCat DPAs.
+      3. Google's real name as the public display name by default, or a
+         chosen one?
+      4. Stop storing email, which nothing uses?
+      5. A retention for inactive accounts' walks, opens and surprises.
+      6. `pipeline.dedup`'s whole-corpus mode skips user posts, so Anthropic
+         leaves the user-data list?
+      7. A minimum age.
+      8. Swedish or Danish law (the lawyer's first question).
+      The policy had drifted far from the code, and `tests/test_store_copy.py`
+      checks keywords only: reread it on any change to `api/write.py`,
+      `api/accounts.py` or `geofence.ts`.
 - [ ] **Nobody hears about a crash.** (checked 2026-10-04) A render error
       shows `mobile/src/Crashed.tsx`, the API logs with timestamps, and `/`
       answers 503 without its database. Nothing leaves the phone or the
@@ -149,13 +174,22 @@ worth the walk. Measure every change against the labels before and after
       geocoder, then a short writer with varied example cards. It won 10 of 24
       memoir windows against 6 for the stored cards (docs/04, *About the
       spot*).
+      Now `pipeline/scenes.py` (docs/04, *Scene-first, before it ships*).
       Before it ships:
-      1. The founder labels the 82 blind cards.
-      2. Add one card per scene (two cards came out of one anecdote).
-      3. Add a check on the first three words of each card.
-      4. Find out why the theatre-debut and elephant windows came out empty.
+      1. The founder labels the 82 blind cards in
+         `docs/labels/scene-first-blind.md` (the key beside it, unopened).
+      2. The opening check misses near-repeats ("Classens Have is…", "…lies…")
+         and counts repeats per run; count per book when wired.
+      3. One story's payoff still leaks into a neighbouring card.
+      4. Scenes outside Copenhagen (Herlufsholm, Lolland) are kept: intended?
       Then wire it into the book path of `extract.py`/`tasks.py`/`batch.py`,
       and the video path after measuring it.
+- [ ] **Strip running heads and page numbers from book scans at ingest.**
+      (2026-10-09) They split place words mid-phrase (the theatre fall in
+      window 3898); `scenes.copied` works round it with an 80-character gap.
+      Every prompt reads them.
+- [ ] **The fact-check's trim breaks sentences.** (2026-10-09) "to raise
+      money for Roat's." Seen in the scene-first trial.
 - [ ] **Memories written by tour guides.** (2026-10-04, the founder's idea)
       A licensed guide files the stories they already tell at a place: quality
       from the author, where `walk_score` is too weak a signal (r = 0.45). An
@@ -286,15 +320,15 @@ worth the walk. Measure every change against the labels before and after
       kept a third fewer memories and lost a walk on both runs. Before trying
       again, draw today's chunked prompt twice on the same five videos, and
       try 15-minute chunks as the middle course.
-- [ ] **Batch the web research too.** (2026-10-04) Extraction is batched
-      (`pipeline/batch.py`, docs/10 *Extraction is batched*); the research is
-      not, and it is now most of the bill: one search per plaque before
-      extraction (`tasks.seeded`) and one per memory after (`enrich`). Store
-      `enrich.research`'s reply like `_stored_request` does, so a pass
-      collects it, then batch `structure` and `pick` the same way.
-      Prompt caching is otherwise done: checked 2026-10-04, the shared
-      prefixes are read ~10 times for each write, the rest is chunk text that
-      can't repeat.
+- [ ] **The batched web research, first live run.** (2026-10-09) Built with
+      fakes only (c7eff8d). On the next `batch --run`, check: the batch API
+      accepts the web search/fetch tools with `cache_control` and effort (a
+      rejected batch stops with "A batch stored no reply"); research replies
+      cut on `pause_turn`/`max_tokens` (now resent, not used); "Still waiting
+      after 12 passes" (a pick's picture list changing between passes);
+      `pipeline.cost` against an earlier run, since searches aren't
+      discounted. Links and the walk score in `after_save` still go at full
+      price.
 - [ ] **`published_at` is NULL for flat-crawled videos.** (checked
       2026-10-04) `api/gate.py` serves it as the source's year and newspapers
       fill it; yt-dlp flat extraction returns no timestamp. A real date needs
@@ -433,12 +467,6 @@ progress; refine what exists rather than add.
       that are gone. Next: only where OSM confirms the place still stands,
       given OSM and Wikidata's description of the building instead of the
       story. A new extracted field: measure before and after.
-- [ ] **A hidden stop.** (checked 2026-10-04) One stop shows as "?", is never drawn, and its
-      place is withheld until you are within reach; it opens like any stop.
-      `api/route_solver.py` picks it from memories not near any other stop.
-      Evidence: Zygarde Cells on Pokémon GO's Routes, Adventure Lab's bonus
-      cache; uncertain rewards motivate more (Shen, Fishbach & Hsee 2015). No
-      daily cap that turns it into a grind.
 - [ ] **The streak: a sound, and a rest day or a repair.** (checked
       2026-10-04) The 7/30/100 moment has a flame and a haptic (`Milestone` in
       `src/Plan.tsx`), no sound; a chime needs a bundled asset and an audio
@@ -468,12 +496,11 @@ progress; refine what exists rather than add.
       image; needs kbhbilleder access) The viewfinder in Add (docs/10, *The camera is a
       block*) ghosts an archival photo over itself at ~40% so the walker can match it. Open: where the
       "now" photo goes. Founder's call.
-- [ ] **Watch the seal land.** (checked 2026-10-06) `LocketSeal` (the lid
-      run backwards, the drop onto the pin, the first-memory line) passes
-      `file-and-edit` but nobody has looked at it frame by frame: the key
-      showing as the lid shuts, the drop point when the map is not following
-      the user, and the first-memory line over a busy map. Screenshot it in
-      the simulator, then on a phone.
+- [ ] **The seal starts with a cut.** (2026-10-09) The seal page cuts
+      straight to a full-size open locket over the map, its lid large and
+      partly off the left edge: the unlock played backwards, probably
+      intended, but no transition. Founder's eye. Nothing guards the drop if
+      the user's dot is off-screen.
 - [ ] **Hand-drawn illustrations.** (checked 2026-10-03) The app has
       none. Places that want one: the empty walk list, sign-in, the paywall,
       the finish card. Commission one base style (`ILLUSTRATOR`), derive the
@@ -494,6 +521,10 @@ progress; refine what exists rather than add.
         simulator's shot is a generated picture.
       - The route drawing itself and the locket unlock: frames were measured in the
         simulator only.
+      - The seal's first-memory line over a dense map (the simulator's was
+        sparse).
+      - A mystery stop (docs/10, *A mystery stop*) appearing as you near it;
+        e2e starts are random and the run so far had none.
 
 ---
 
