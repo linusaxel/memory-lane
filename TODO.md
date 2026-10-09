@@ -297,8 +297,11 @@ worth the walk. Measure every change against the labels before and after
 - [ ] **Then-vs-now: the points.** (checked 2026-10-04) `now.py` asks for
       named points within 25 m when no area matches; `--blank` confirmed 3 of
       29 before the public Overpass refused the rest (docs/04, *Corpus work*).
-      Rerun off-peak or against a mirror (`OVERPASS_URL`), then check that the
-      ranking reads better.
+      2026-10-09: the mirrors (kumi, private.coffee, mail.ru) were down too,
+      and a public rerun kept being refused. Fix that holds: a self-hosted
+      Overpass on the Denmark extract beside OSRM. Then check that the
+      ranking reads better. Also check `now.py`'s `[!boundary][!place]`
+      area filter: a hand query still returned boundaries.
 - [ ] **Summary against its chunk.** (checked 2026-10-04) ~20 factual or
       speech-recognition errors: Tom "Christensen", Vestergade for
       Vimmelskaftet, lupus called cancer. Automatic fixes damaged walks and
@@ -347,7 +350,13 @@ priority order.
 - [ ] **Check the historical layer, then specify its flow.** (checked 2026-10-04)
       Standing anywhere in the launch area should return at least one
       historical card, the top one the highest-contrast rather than the
-      nearest, and worth screenshotting. Never run. The flow for it in docs/08,
+      nearest, and worth screenshotting. Measured 2026-10-09 (250 m grid,
+      2,586 walkable cells): an archival memory within 1 km of 46%, within
+      500 m of 24%; 91% within 4 km of Rådhuspladsen at 1 km. Empty ring:
+      Avedøre, Kalvebod Fælled, Kastrup, Tårnby, Rødovre, Husum (95-100%),
+      Hellerup, Hvidovre, Sydhavn, Amager Øst, Nordhavn, Emdrup (50-87%).
+      ~300 covered cells' top card has no contrast score, so they fall back to
+      the nearest. Sources for the ring first, or shrink `LAUNCH_BBOX`. The flow for it in docs/08,
       *Arrive somewhere and find its history*, is still only proposed, waiting on a source that has since been chosen: specify it
       from the product, not from whatever ingestion produced.
 - [ ] **Three streets, counted by hand.** (checked 2026-10-04) In the launch
