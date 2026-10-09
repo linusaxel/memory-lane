@@ -95,7 +95,7 @@ festivals', venues' and institutions' own history pages and news archives.
   and bakery (Geranium, Alchemist, Barr, WarPigs, Mikkeller news, Hart, Lille,
   La Glace, Manfreds, Lagkagehuset...), most festivals (Copenhell, CPH:DOX,
   Opera festival, Strøm, Light Festival, Photo Festival, Fashion Week, Royal
-  Run, Kulturnatten: one fact), SMK, Designmuseum, Charlottenborg, Det Kgl.
+  Run, Kulturnatten: one fact, and its programme is one night's blurbs, 2026-10-09), SMK, Designmuseum, Charlottenborg, Det Kgl.
   Teater, Royal Arena, Bella Center, CopenHill, Cisternerne, kk.dk/nyheder
   (policy), lokaludvalg sites, tour companies' blogs, Rockmuseet, artist sites.
   FCK (match reports) and kongehuset.dk (programmes) are big but dry.
