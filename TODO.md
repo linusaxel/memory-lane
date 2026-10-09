@@ -298,7 +298,8 @@ worth the walk. Measure every change against the labels before and after
       named points within 25 m when no area matches; `--blank` confirmed 3 of
       29 before the public Overpass refused the rest (docs/04, *Corpus work*).
       2026-10-09: the mirrors (kumi, private.coffee, mail.ru) were down too,
-      and a public rerun kept being refused. Fix that holds: a self-hosted
+      and a public rerun looked at 20 of 97 and confirmed 13 (written to the
+      dev DB; some read oddly: "Still Field's, a parking"). Fix that holds: a self-hosted
       Overpass on the Denmark extract beside OSRM. Then check that the
       ranking reads better. Also check `now.py`'s `[!boundary][!place]`
       area filter: a hand query still returned boundaries.
