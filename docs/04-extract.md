@@ -893,6 +893,50 @@ book, so 47 good scenes found no spot. With the finder naming the spot:
 82 cards, shuffled and blind, wait for the founder's labels before
 it ships (TODO.md, *Scene-first extraction*).
 
+### Scene-first, before it ships, 2026-10-09
+
+The trial now lives in `pipeline/scenes.py` (`python -m pipeline.scenes <id>...`,
+bills only the windows named; not wired in). Three of the four items before it
+ships, rerun on the five windows they came from (3898, 3900, 3903, 4000, 4001)
+for about $1.10 at Sonnet's list price, mostly the thinking check:
+
+- **One card per scene.** The finder prompt now says one anecdote is one
+  candidate, from where it starts to its payoff. Zinck's fall on Kongens
+  Nytorv and his brother's engagement came back as one card that reaches the
+  debut; the rope-dancer and "peas and pork", two stories at one house, stayed
+  two. Not solved: a story's coda can still leak into a neighbour's card
+  (Herlufsholm's beech climb ends on the carving that has its own card).
+- **The first three words.** `opening_fault` rejects a stock opening ("This…",
+  "Here…", "The walker…", "Nothing is left…", a date first) and one that
+  already opens another card in the run; the writer gets one more draw told
+  why. 4 of 15 cards were redrawn, and each came back opening on the person or
+  the moment ("A rope-dancer named Roat came…", "Otto Zinck was a small boy,
+  crying at an open window…"). "The walker is on Østergade…" was added after it
+  passed. Not caught: near-repeats such as "Classens
+  Have is…" and "Classens Have lies…", five cards on one spot from one window.
+- **The two empty windows were the pipeline's fault, three times over:**
+  - *Theatre fall (3903) and the elephant's window (4000):* the finder's list
+    stopped after its first candidate, covering 7% and 3% of the passage
+    (every other window reached 53-99%). In 3903 the reply's last string
+    even held `}},{"`. A list that ends before half the passage is now asked
+    again for the rest. 4000 then gave six scenes, Kaspar the donkey torn in
+    two on stage among them.
+  - *The theatre fall:* its place words were "det nye kongelige Teater", and
+    the scan puts a running head and page number between "nye" and
+    "kongelige", so the exact-copy test dropped it. `copied` lets up to 80
+    characters stand between the words. The card is back: the fall through the
+    floor of the unfinished theatre, umbrella in hand.
+  - *The elephant:* its turn (it eats the boy's cap and bread) is on the next
+    window's first page; windows don't overlap. The finder now gets the last
+    1,500 characters of the window before as `<before>`, and a scene belongs
+    to the window it ends in. 4001 now tells it whole, from the night walks
+    round the Horse to the new cap on Østergade.
+
+Seen on the way, not fixed: the check's trim still breaks a sentence ("to
+raise money for Roat's."); the finder places Herlufsholm and Lolland scenes,
+outside Copenhagen; book scans keep their running heads and page numbers,
+which a cleaner at ingest would remove for every prompt, not just this one.
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its
