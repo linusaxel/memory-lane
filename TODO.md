@@ -176,10 +176,16 @@ worth the walk. Measure every change against the labels before and after
       spot*).
       Now `pipeline/scenes.py` (docs/04, *Scene-first, before it ships*).
       Before it ships:
-      1. The founder labels the 82 blind cards in
-         `docs/labels/scene-first-blind.md` (the key beside it, unopened).
-      2. The opening check misses near-repeats ("Classens Have is…", "…lies…")
-         and counts repeats per run; count per book when wired.
+      1. The founder labelled 20 of the 82 blind cards. They led to people
+         being introduced and to `setting` being dropped (docs/04). The rest
+         are optional.
+      2. The opening check misses near-repeats ("Classens Have is…", "…lies…",
+         "<Place> is where…") and counts repeats per run; count per book when
+         wired.
+      2b. The trim damages cards mid-sentence ("Retelling it later,",
+         "colleagues, Rosenkilde, put on"), which the end-of-sentence guard
+         can't see.
+      2c. One window can give five cards about one week (November 1863).
       3. One story's payoff still leaks into a neighbouring card.
       4. Scenes outside Copenhagen (Herlufsholm, Lolland) are kept: intended?
       Then wire it into the book path of `extract.py`/`tasks.py`/`batch.py`,

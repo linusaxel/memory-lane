@@ -951,6 +951,35 @@ Herlufsholm and Lolland scenes, outside Copenhagen. Book scans kept their runnin
 since 2026-10-09 `crawler.gutenberg.unpaged` drops them at ingest, and
 `copied` keeps its slack for the windows ingested before.
 
+**The founder's first labels** (20 of the 82 blind cards,
+`docs/labels/scene-first-blind.md`): stored 7 of 8 glad to know, scene-first 9
+of 12. Nearly every note was the same: *who is this?* The note was written for
+Grandjean, Zinck, Phister, Dahl, Thorvaldsen and the pastor, and for words
+("humbug", "quay"). Two *no* cards only happened to take place where they are
+pinned (a flat, a shop). So:
+- The writer introduces everyone named, the author included, from the index's
+  roles. It uses words a reader with school English knows.
+- The finder has a fourth `place_use`, `setting`: a home, shop or office where
+  the same moment could have happened in any other. Code drops it.
+
+Rerun on the 11 windows behind the labelled cards, about $2:
+- Every card now says who people are: "Phister, the leading comic actor",
+  "Axel Grandjean, the composer and conductor", "Pastor Visby, the chaplain of
+  the prison and workhouse", "Otto Zinck, three years old". "Humbug" became
+  "a farce".
+- `setting` dropped 18 candidates, among them both *no* cards (the imaginary
+  guests in a Nørregade flat, the Holberg portrait in a Nygade shop) and a
+  classroom.
+- **Still wrong:**
+  - The trim damages cards mid-sentence, where the end-of-sentence guard
+    can't see it: "Retelling it later," ends one card; "his father and two
+    Royal Theatre colleagues, Rosenkilde, put on…"; "played Peter the Great
+    himself, as Catharina".
+  - One window gives five cards about one week of November 1863, two of them
+    the same night in Amaliegade.
+  - A new stock opening has replaced "This was": "Kongens Nytorv is where…",
+    "Tivoli is where…", "Børsbroen was where…".
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its

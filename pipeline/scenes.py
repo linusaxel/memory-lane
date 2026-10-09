@@ -94,9 +94,13 @@ that fail, so each can be seen to fail:
   stood on. Null if neither the passage nor the index says where it was.
 - address: today's street and number, if known; else null.
 - what_happens: one line, who did what.
-- place_use: "scene" if it happens at the place; "mention" if the place is
-  only referred to (an event elsewhere, before or after, a home someone came
-  from); "discourse" if it is a figure of speech or a comparison.
+- place_use: "scene" if the place is part of what happens - its purpose, its
+  feature, the crowd it drew, what was seen from it; "setting" if it only
+  happened there, in a home, shop or office where the same moment could have
+  happened in any other ("a man entertained imaginary guests in his flat");
+  "mention" if the place is only referred to (an event elsewhere, before or
+  after, a home someone came from); "discourse" if it is a figure of speech or
+  a comparison.
 - shape: "scene" for one moment that unfolds; "list" for rooms, fittings,
   goods, owners; "lineage" for who begat whom, who married whom, who lived
   where; "chronicle" for years of a place's or a person's life told in turn;
@@ -123,7 +127,10 @@ FIND_SCHEMA = {
                     "venue": extract._NULLABLE_STRING,
                     "address": extract._NULLABLE_STRING,
                     "what_happens": {"type": "string"},
-                    "place_use": {"type": "string", "enum": ["scene", "mention", "discourse"]},
+                    "place_use": {
+                        "type": "string",
+                        "enum": ["scene", "setting", "mention", "discourse"],
+                    },
                     "shape": {
                         "type": "string",
                         "enum": ["scene", "list", "lineage", "chronicle", "description"],
@@ -163,8 +170,14 @@ and the passage with the scene marked.
   gone and what is there now.
 - Then the one scene, in order, with the details that make it: what was said
   or done, the object at the turn, the date. Not rooms, fittings or ancestors.
-- Plain words a stranger knows. An old trade or thing is said in a few words
-  of what it was. At most two people by name; anyone else by their role.
+- The reader knows none of these people, the author included. Everyone named
+  is introduced the first time, from the people given: who they were, and
+  their age if it matters ("Otto Zinck, three years old, later an actor";
+  "Thorvaldsen, the sculptor"). At most two people by name; anyone else by
+  their role ("the boy's father", "a priest from the prison").
+- Everyday words that a reader with school English knows: "harbour front",
+  not "quay"; "nonsense", not "humbug". An old trade or thing is said in a few
+  words of what it was.
 - 60 to 150 words, past tense, English. Two short paragraphs past 90 words.
 - Every fact comes from the passage or the spot and people given; add no
   name, date, image or adjective of your own.
