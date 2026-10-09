@@ -588,7 +588,13 @@ One session's changes to the dev corpus, about $3 of credits in all.
 within 25 m (a bar is a node, not an area), confirming by name only.
 `--blank` over the 29 blank places confirmed 3 (Café Ægir, Ålholm Borgerkro,
 Copenhagen Hotdog); the public server refused the other 26, which stay blank
-for the next `--blank`.
+for the next `--blank`. On 2026-10-09 the mirrors were no way round it:
+kumi.systems and private.coffee returned 500 and maps.mail.ru 504 on a
+one-point query. Against kumi, `--blank` (97 places: 32 blank, 65 never looked
+at) got one answer, Københavns Rådhus ("Still ... since 1905"). The public
+server answered a single query in 4 s, but refused again within the first 25
+places of a full rerun. Whether the ranking reads better is still unchecked;
+a self-hosted Overpass on the Denmark extract is the fix that would hold.
 
 The visible corpus went from 188 to 192 memories.
 
