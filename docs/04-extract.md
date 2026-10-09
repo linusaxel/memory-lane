@@ -980,6 +980,20 @@ Rerun on the 11 windows behind the labelled cards, about $2:
   - A new stock opening has replaced "This was": "Kongens Nytorv is where…",
     "Tivoli is where…", "Børsbroen was where…".
 
+**A flagged card is written again, not cut** (`scenes.faithful`). When the
+check names a claim, the writer draws the card again, told what the passage
+does not say. Only what the second draw still adds is trimmed. Same 11
+windows, about $1:
+- 25 cards, 14 flagged, all 14 rewritten. 12 rewrites still carried a claim
+  and were trimmed: the thinking check names something new on each draw.
+- Bournonville and Roat came back whole ("Telling the story later, he added:
+  'Yes, I was saddened!'"; "The actor Rosenkilde and Zinck's father then put
+  on a benefit performance").
+- Two cards are still damaged:
+  - "He played Peter the Great, both in crowns and ermine cloaks": the check
+    called "his wife" unsupported twice, and the trim cut it.
+  - "and 15 November 1863, a wild crowd gathered here".
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its

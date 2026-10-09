@@ -406,6 +406,7 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: set[str]) -> lis
         print(f"  keep  {tag} -> {entry['today']} ({hit[3] if hit else 'NO GEOCODE'})")
         w = write(session, client, cid, passage, ctx, sc, entry)
         fault = w and opening_fault(w["summary"], seen)
+        note = ""
         if fault:
             print(f"  reopen: {fault}")
             note = (
@@ -415,10 +416,30 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: set[str]) -> lis
         if not w:
             continue
         seen.add(" ".join(w["summary"].split()[:3]).lower())
-        memory = {"spot_test": "pass", "summary": w["summary"]}
-        m = extract.checked(session, client, cid, 0, passage, ctx + spot_card(entry), memory)
-        out.append({"place": entry["today"], "summary": m["summary"], "quote": w["quote"]})
+        summary = faithful(session, client, cid, passage, ctx, sc, entry, w["summary"], note)
+        out.append({"place": entry["today"], "summary": summary, "quote": w["quote"]})
     return out
+
+
+def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: str) -> str:
+    """The card with nothing the passage doesn't say. The writer writes it
+    again told what to leave out, rather than the trim cutting words from it:
+    the trim left fragments mid-sentence ("Retelling it later,"), which no
+    end-of-sentence guard sees (docs/04, *Scene-first, before it ships*). Only
+    what the second draw still adds is trimmed."""
+    context = ctx + spot_card(entry)
+    claims = extract.unsupported(session, client, cid, 0, passage, context, summary)
+    if not claims:
+        return summary
+    listed = "; ".join(c["claim"] for c in claims)
+    print(f"  rewrite, unsupported: {listed}")
+    leave_out = f"The passage does not say: {listed}. Leave these out; keep the rest."
+    again = write(session, client, cid, passage, ctx, sc, entry, f"{note}\n{leave_out}".strip())
+    memory = {"spot_test": "pass", "summary": again["summary"] if again else summary}
+    final = extract.checked(session, client, cid, 0, passage, context, memory)["summary"]
+    if final != memory["summary"]:
+        print("  trimmed after the rewrite")
+    return final
 
 
 def main():

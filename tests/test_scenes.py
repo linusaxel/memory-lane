@@ -26,3 +26,31 @@ def test_copied_across_a_page_break():
     assert copied("det nye kongelige Teater", passage)
     assert not copied("det gamle kongelige Teater", passage)
     assert not copied("det nye Teater", "det nye " + "x" * 200 + " Teater")
+
+
+def test_an_unsupported_claim_is_written_again_not_cut(monkeypatch):
+    from pipeline import scenes
+
+    entry = {
+        "today": "Kongens Nytorv",
+        "address": None,
+        "old_name": "",
+        "what": "",
+        "standing": "no",
+    }
+    notes = []
+
+    def claims(*a):
+        return [{"claim": "two colleagues", "kind": "fact"}] if a[-1] == "first" else []
+
+    def write(*a):
+        notes.append(a[-1])
+        return {"summary": "second", "quote": None}
+
+    monkeypatch.setattr(scenes.extract, "unsupported", claims)
+    monkeypatch.setattr(scenes.extract, "checked", lambda *a: a[-1])
+    monkeypatch.setattr(scenes, "write", write)
+    assert scenes.faithful(None, None, 1, "", "", {}, entry, "first", "") == "second"
+    assert "two colleagues" in notes[0]
+    assert scenes.faithful(None, None, 1, "", "", {}, entry, "clean", "") == "clean"
+    assert len(notes) == 1
