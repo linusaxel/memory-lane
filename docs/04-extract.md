@@ -592,9 +592,13 @@ for the next `--blank`. On 2026-10-09 the mirrors were no way round it:
 kumi.systems and private.coffee returned 500 and maps.mail.ru 504 on a
 one-point query. Against kumi, `--blank` (97 places: 32 blank, 65 never looked
 at) got one answer, Københavns Rådhus ("Still ... since 1905"). The public
-server answered a single query in 4 s, but refused again within the first 25
-places of a full rerun. Whether the ranking reads better is still unchecked;
-a self-hosted Overpass on the Denmark extract is the fix that would hold.
+server then answered 20 of the other 96 and confirmed 13, all "Still" (Café
+Lille Peter, Folketeatret, Vega, Magasin du Nord, Frederiksberg Rådhus since
+1953); it refused 76. Two read wrong: "Field's, a parking" and "Nyhavn, an
+attraction", where the point matched is not the building. A "Still" scores
+0.2, so these sink in the ranking rather than rise; the ranking reads better
+only where a "Now" lands, and this run found none. A self-hosted Overpass on
+the Denmark extract is the fix that would hold.
 
 The visible corpus went from 188 to 192 memories.
 
