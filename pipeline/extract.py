@@ -559,21 +559,28 @@ def chunk_transcript(
     return chunks
 
 
-# Here as well as before the transcript fetch: a clip's transcript may predate
-# the filter. A candidate's items are ingested only to be screened by Haiku; one
-# goes to Sonnet by `enqueue --video`, never in bulk.
-PENDING_EXTRACTION = f"""
+# A candidate's items are ingested only to be screened by Haiku; one goes to
+# Sonnet by `enqueue --video`, never in bulk. Content named by id skips the
+# length floor; the bulk query below adds it.
+PENDING_ANY_LENGTH = """
 FROM content c
 JOIN transcripts t ON c.id = t.content_id
 WHERE c.memories_extracted = FALSE
   AND c.extraction_failed = FALSE
   AND c.transcript_fetched = TRUE
-  AND {LONG_ENOUGH}
   AND NOT EXISTS (
       SELECT 1 FROM sources s
       WHERE s.id = c.source_id AND s.status IN ('candidate', 'rejected')
   )
 """
+# Here as well as before the transcript fetch: a clip's transcript may predate
+# the filter.
+PENDING_EXTRACTION = f"{PENDING_ANY_LENGTH}  AND {LONG_ENOUGH}\n"
+
+
+def pending_query(content_ids: list[int] | None) -> str:
+    """The pending query for these ids, or for everything long enough."""
+    return PENDING_ANY_LENGTH if content_ids else PENDING_EXTRACTION
 
 
 class BillingError(Exception):
@@ -665,6 +672,7 @@ def _model_key(model: str = EXTRACTION_MODEL) -> str:
 
 
 CACHE = {"type": "ephemeral", "ttl": "1h"}
+STREAM_ABOVE = 21_000
 
 
 def _params(
@@ -727,10 +735,15 @@ def _request(
     model: str = EXTRACTION_MODEL,
 ) -> str | None:
     """The model's raw reply, or None for an error no retry will fix."""
+    params = _params(system_prompt, user, schema, context, max_tokens, think, model)
     try:
-        response = client.messages.create(
-            **_params(system_prompt, user, schema, context, max_tokens, think, model)
-        )
+        # The SDK refuses a plain call it expects to run past ten minutes,
+        # which it reckons from max_tokens (~21k); a stream it lets through.
+        if max_tokens > STREAM_ABOVE:
+            with client.messages.stream(**params) as stream:
+                response = stream.get_final_message()
+        else:
+            response = client.messages.create(**params)
         log_cache(response)
         return reply_text(response)
 
@@ -947,6 +960,7 @@ class Collect:
     def __init__(self):
         self.requests: dict[str, dict] = {}  # request_hash: {params, content_id, ...}
         self.stage: dict[int, str] = {}  # content_id: the system prompt it waits on
+        self.funnel: dict[int, dict] = {}  # content_id: how many each step kept
 
 
 #: Set by pipeline/batch.py for one pass; None sends every call as it comes.
@@ -1891,7 +1905,7 @@ def extract_all_pending(content_ids: list[int] | None = None):
         pending = session.execute(
             text(
                 "SELECT c.id, c.title, t.segments, c.source_type, c.source_name "
-                f"{PENDING_EXTRACTION} AND (CAST(:ids AS int[]) IS NULL OR c.id = ANY(:ids))"
+                f"{pending_query(content_ids)} AND (CAST(:ids AS int[]) IS NULL OR c.id = ANY(:ids))"
             ),
             {"ids": content_ids},
         ).fetchall()
@@ -1936,7 +1950,9 @@ def extract_all_pending(content_ids: list[int] | None = None):
                         return {"extracted": extracted, "failed": failed, "error": "model"}
 
                 merged = merge_nearby_memories(all_memories)
-                filtered = worth_telling(session, client, content_id, filter_low_confidence(merged))
+                placeable = filter_low_confidence(merged)
+                filtered = worth_telling(session, client, content_id, placeable)
+                judged = len(filtered)
                 filtered = one_name_per_venue(session, client, content_id, filtered)
                 filtered = check_all(
                     session,
@@ -1949,6 +1965,14 @@ def extract_all_pending(content_ids: list[int] | None = None):
                 logger.info(
                     f"  Found {len(all_memories)} raw, {len(merged)} merged, {len(filtered)} after filtering"
                 )
+                if COLLECT is not None:
+                    COLLECT.funnel[content_id] = {
+                        "raw": len(all_memories),
+                        "merged": len(merged),
+                        "spot test": len(placeable),
+                        "judge": judged,
+                        "checked": len(filtered),
+                    }
 
                 save_memories(session, content_id, filtered, layer_for(source_type), client)
                 if COLLECT is not None and content_id in COLLECT.stage:

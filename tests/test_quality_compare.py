@@ -5,7 +5,7 @@ import json
 import pytest
 from sqlalchemy import text
 
-from pipeline import quality
+from pipeline import extract, quality
 from pipeline.quality import compare, places, report, sample_chunks
 from tests.fakes import FakeAnthropic, _Response
 
@@ -99,6 +99,28 @@ def test_runs_are_fresh_draws_and_each_is_stored(db_session):
 
     compare(db_session, client, {"baseline": "OLD"}, chunks, runs=3)
     assert len(client.calls) == paid
+
+
+class _Checking(_ByPrompt):
+    """The check names a claim, and the trim cuts it."""
+
+    def create(self, **kwargs):
+        system = kwargs["system"][0]["text"]
+        if system == extract.UNSUPPORTED_PROMPT:
+            return _Response(json.dumps({"unsupported": [{"claim": "pastrami", "kind": "fact"}]}))
+        if system == extract.TRIM_PROMPT:
+            return _Response(json.dumps({"summary": "Mark argued at Katz's."}))
+        return super().create(**kwargs)
+
+
+@pytest.mark.db
+def test_check_trims_the_kept_summaries_as_the_pipeline_does(db_session):
+    _video_with_chunks(db_session, 1)
+    chunks = sample_chunks(db_session, 10)
+    plain = compare(db_session, _Checking(), {"candidate": "NEW"}, chunks)
+    trimmed = compare(db_session, _Checking(), {"candidate": "NEW"}, chunks, check=True)
+    assert plain["candidate"][0][0][0]["summary"] == "Mark argued about pastrami at Katz's."
+    assert trimmed["candidate"][0][0][0]["summary"] == "Mark argued at Katz's."
 
 
 @pytest.mark.db

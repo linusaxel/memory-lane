@@ -92,7 +92,7 @@ def fetch_pending_transcripts(content_ids: list[int] | None = None, limit: int |
                 WHERE transcript_fetched = FALSE
                   AND transcript_failed = FALSE
                   AND platform = 'youtube'
-                  AND {LONG_ENOUGH}
+                  AND (CAST(:ids AS integer[]) IS NOT NULL OR {LONG_ENOUGH})
                   AND (CAST(:ids AS integer[]) IS NULL OR id = ANY(CAST(:ids AS integer[])))
                 ORDER BY id
                 LIMIT :limit

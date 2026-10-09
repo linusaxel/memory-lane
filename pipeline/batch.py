@@ -26,7 +26,7 @@ from sqlalchemy import text
 
 from pipeline import extract
 from pipeline.db import get_session
-from pipeline.extract import PENDING_EXTRACTION, Collect, log_cache, reply_text, store
+from pipeline.extract import Collect, log_cache, pending_query, reply_text, store
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def chosen(session, content_ids: list[int] | None, source: str | None) -> list[i
     return list(
         session.execute(
             text(
-                f"SELECT c.id {PENDING_EXTRACTION}"
+                f"SELECT c.id {pending_query(content_ids)}"
                 " AND (CAST(:ids AS int[]) IS NULL OR c.id = ANY(:ids))"
                 " AND (CAST(:source AS text) IS NULL OR c.source_name = :source)"
                 " ORDER BY c.id"
@@ -57,8 +57,8 @@ def dropped(session, content_ids: list[int], ids: list[int]) -> list[str]:
         r.id: r
         for r in session.execute(
             text(
-                "SELECT c.id, s.status, c.memories_extracted, c.extraction_failed,"
-                " c.transcript_fetched FROM content c LEFT JOIN sources s ON s.id = c.source_id"
+                "SELECT c.id, s.status, c.memories_extracted, c.extraction_failed"
+                " FROM content c LEFT JOIN sources s ON s.id = c.source_id"
                 " WHERE c.id = ANY(:ids)"
             ),
             {"ids": missing},
@@ -74,9 +74,7 @@ def dropped(session, content_ids: list[int], ids: list[int]) -> list[str]:
             return "already extracted"
         if r.extraction_failed:
             return "extraction failed"
-        if not r.transcript_fetched:
-            return "no transcript"
-        return "too short"
+        return "no transcript"
 
     return [f"{i}: {why(rows.get(i))}" for i in missing]
 
@@ -126,11 +124,14 @@ def run(client, content_ids: list[int]) -> None:
                 seeded(session, client, row.id, row.title, row.segments)
 
     stopped = None
+    funnel = {}
     for n in range(1, MAX_PASSES + 1):
         extract.COLLECT = Collect()
         try:
             extract.extract_all_pending(content_ids)
             pending = extract.COLLECT.requests
+            # Every pass replays every content; the last one it got through counts.
+            funnel |= extract.COLLECT.funnel
         finally:
             extract.COLLECT = None
         if not pending:
@@ -152,10 +153,29 @@ def run(client, content_ids: list[int]) -> None:
         )
     for content_id in done:
         after_save(client, content_id)
+    print_funnel(funnel)
     logger.info(f"{len(done)} of {len(content_ids)} extracted")
     # Stopping early still scores what was saved: a rerun never picks it up again.
     if stopped:
         raise SystemExit(stopped)
+
+
+def print_funnel(funnel: dict[int, dict]) -> None:
+    """One line per content: how many each step kept. Placing drops the rest
+    (the city as venue, outside the launch area, a retelling), each logged."""
+    with get_session() as session:
+        saved = dict(
+            session.execute(
+                text(
+                    "SELECT content_id, count(*) FROM memories"
+                    " WHERE content_id = ANY(:ids) GROUP BY content_id"
+                ),
+                {"ids": list(funnel)},
+            ).all()
+        )
+    for content_id, steps in sorted(funnel.items()):
+        counts = ", ".join(f"{n} {step}" for step, n in steps.items())
+        print(f"content {content_id}: {counts}, {saved.get(content_id, 0)} saved")
 
 
 def main():

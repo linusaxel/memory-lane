@@ -2,6 +2,7 @@
 
     python -m pipeline.quality
     python -m pipeline.quality --compare new_prompt.txt [--baseline old.txt] [--sample 10] [--runs 3] [--score]
+        [--content ID ... | --source ID] [--check]
     python -m pipeline.quality --labels [tests/fixtures/walk_labels.json] [--half tune|check]
     python -m pipeline.quality --whole [5] [--runs 2]
     python -m pipeline.quality --visible [--source-type book]
@@ -20,6 +21,9 @@ chunk N times per prompt and prints how often each keeps something. --score
 also scores every kept summary on the walk rubric and checks it against its
 chunk for anything the source does not say (two calls a memory, every run: a
 longer summary is where invention creeps in).
+--content or --source aims the sample at one source's chunks, and --check
+trims each kept summary as the pipeline's check stage does (two thinking calls
+a memory).
 
 --labels re-judges the stored memories the corpus read labelled walk, maybe or
 skip, through the pipeline's own judge, and prints what it keeps of each. The
@@ -59,6 +63,7 @@ from pipeline.db import get_session
 from pipeline.extract import (
     _judge,
     _same_story,
+    checked,
     chunk_transcript,
     extract_chunk_stored,
     filter_low_confidence,
@@ -216,25 +221,25 @@ def places(
 
 
 def compare(
-    session, client, prompts: dict[str, str], chunks, runs: int = 1
+    session, client, prompts: dict[str, str], chunks, runs: int = 1, check: bool = False
 ) -> dict[str, list[list[list[dict]]]]:
     """Each prompt's kept memories, per chunk in the order of `chunks`, per run.
     Run 0 is the plain request; a later run differs only by a line in the
-    context, as in read_whole, so it is a fresh draw that is also stored."""
+    context, as in read_whole, so it is a fresh draw that is also stored.
+    `check` trims each kept summary as the pipeline's check stage does."""
+
+    def kept(prompt, cid, i, chunk, context):
+        memories = filter_low_confidence(
+            extract_chunk_stored(session, client, cid, i, chunk, prompt, context)
+        )
+        if check:
+            memories = [checked(session, client, cid, i, chunk, context, m) for m in memories]
+        return memories
+
     return {
         name: [
             [
-                filter_low_confidence(
-                    extract_chunk_stored(
-                        session,
-                        client,
-                        cid,
-                        i,
-                        chunk,
-                        prompt,
-                        context + (f"\n(read {run})" if run else ""),
-                    )
-                )
+                kept(prompt, cid, i, chunk, context + (f"\n(read {run})" if run else ""))
                 for run in range(runs)
             ]
             for cid, i, chunk, context in chunks
@@ -464,6 +469,11 @@ def main():
     parser.add_argument("--baseline", metavar="PROMPT_FILE", help="default: the current prompt")
     parser.add_argument("--sample", type=int, default=10)
     parser.add_argument("--source-type", default="video")
+    parser.add_argument("--content", type=int, nargs="+", help="--compare: only these ids")
+    parser.add_argument("--source", type=int, help="--compare: only this source id's content")
+    parser.add_argument(
+        "--check", action="store_true", help="--compare: trim as the check stage does (bills)"
+    )
     parser.add_argument(
         "--labels", nargs="?", const="tests/fixtures/walk_labels.json", metavar="LABELS_FILE"
     )
@@ -542,9 +552,21 @@ def main():
             baseline = prompt_for(args.source_type)
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         with get_session() as session:
-            chunks = sample_chunks(session, args.sample, args.source_type, client)
+            ids = args.content
+            if args.source:
+                ids = list(
+                    session.execute(
+                        text("SELECT id FROM content WHERE source_id = :s"), {"s": args.source}
+                    ).scalars()
+                )
+            chunks = sample_chunks(session, args.sample, args.source_type, client, ids)
             results = compare(
-                session, client, {"baseline": baseline, "candidate": candidate}, chunks, args.runs
+                session,
+                client,
+                {"baseline": baseline, "candidate": candidate},
+                chunks,
+                args.runs,
+                args.check,
             )
             scores = score_kept(session, client, results, chunks) if args.score else {}
         _print_comparison(results, chunks)

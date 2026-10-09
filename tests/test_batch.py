@@ -155,3 +155,27 @@ def test_a_chosen_id_that_is_not_pending_says_why(db_session):
         "-1: no such content",
         f"{cid}: its source is candidate",
     ]
+
+
+@pytest.mark.db
+def test_a_run_prints_one_funnel_per_content_from_its_last_pass(db_session, monkeypatch, capsys):
+    from contextlib import contextmanager
+
+    from pipeline import batch, tasks
+
+    @contextmanager
+    def _session():
+        yield db_session
+
+    monkeypatch.setattr(batch, "get_session", _session)
+    passes = iter([(4, {"k": {}}), (6, {})])
+
+    def _pass(ids):
+        raw, extract.COLLECT.requests = next(passes)
+        extract.COLLECT.funnel[7] = {"raw": raw, "judge": 1}
+
+    monkeypatch.setattr(extract, "extract_all_pending", _pass)
+    monkeypatch.setattr(batch, "send", lambda client, requests, session: 1)
+    monkeypatch.setattr(tasks, "after_save", lambda client, cid: None)
+    batch.run(None, [7])
+    assert capsys.readouterr().out == "content 7: 6 raw, 1 judge, 0 saved\n"

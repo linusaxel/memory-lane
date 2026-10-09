@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy import text
 
 from pipeline import ingest
-from pipeline.extract import PENDING_EXTRACTION
+from pipeline.extract import PENDING_EXTRACTION, pending_query
 from pipeline.transcripts import LONG_ENOUGH
 
 pytestmark = pytest.mark.db
@@ -51,6 +51,12 @@ def test_a_clip_whose_transcript_predates_the_filter_is_not_extracted(db_session
     _video(db_session, "episode0000", 4452, transcript=True)
     got = _ids(db_session, f"SELECT c.platform_id {PENDING_EXTRACTION}")
     assert got == ["episode0000"]
+
+
+def test_a_clip_named_by_id_is_extracted_all_the_same(db_session):
+    _video(db_session, "clip0000000", 300, transcript=True)
+    assert _ids(db_session, f"SELECT c.platform_id {pending_query([1])}") == ["clip0000000"]
+    assert _ids(db_session, f"SELECT c.platform_id {pending_query(None)}") == []
 
 
 def test_refresh_backfills_duration_and_title_without_overwriting(db_session, monkeypatch):

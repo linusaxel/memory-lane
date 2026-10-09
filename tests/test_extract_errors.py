@@ -196,6 +196,15 @@ def test_unparseable_output_is_an_empty_chunk_not_a_crash():
     assert extract_memories_from_chunk(_Client(), "a chunk") == []
 
 
+def test_a_long_call_streams_rather_than_failing_before_it_is_sent():
+    fake = FakeAnthropic({"memories": []})
+    streamed = []
+    plain = fake.messages.stream
+    fake.messages.stream = lambda **kw: streamed.append(kw) or plain(**kw)
+    assert extract._request(fake, "system", "user", max_tokens=24000) == '{"memories": []}'
+    assert streamed
+
+
 # -- the classifier has the same three classes of failure ---------------------
 
 

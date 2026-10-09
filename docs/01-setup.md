@@ -78,7 +78,9 @@ container init; `db/migrations/` carries the same changes for databases that
 already exist. `python -m pipeline.migrate` applies whichever is missing and
 records each file in `schema_migrations`; the Dockerfile runs it before the API,
 so a deploy migrates itself. A new migration must replay as a no-op, and
-`tests/test_schema_layers.py` holds the two in agreement.
+`tests/test_schema_layers.py` holds the two in agreement. So dropping a column
+also means rewriting the old migration that added it as a pointer to the drop,
+as 039 does for 047.
 It also fails the gate when your dev database is missing a migration, and
 names the columns.
 Who writes which is in [architecture.md](architecture.md#data-ownership).

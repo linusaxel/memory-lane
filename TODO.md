@@ -24,49 +24,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **A long call fails before it is sent.** 2026-10-09: a whole-book index call
-  with `max_tokens=24000` got "Streaming is required for operations that may
-  take longer than 10 minutes" from the SDK. `_request` logged it as an error,
-  returned None, and the script crashed on it a step later. That cost a rerun.
-  Fix: `_request` streams when `max_tokens` is over ~21k (or raises
-  `ModelUnusableError` on it), rather than returning None.
-
-- **The 20-minute floor hides short videos from a trial.** 2026-10-08: five
-  channels "waiting on YouTube's block" held 14 videos, but 12 were under
-  `MIN_VIDEO_MINUTES` (oral-history clips of 1-12 min), so `transcripts` never
-  asked for them and `batch --content` would have reported them as "too short", block or no
-  block. Getting them took a `python -c` on `fetch_pending_transcripts` with
-  `MIN_VIDEO_MINUTES=0`, and the same env var on the batch. Fix: `LONG_ENOUGH` applies
-  to bulk polling only, and named ids (`transcripts --content`, `batch
-  --content`) skip it.
-
-- **A batch log's funnel counts repeat every pass.** 2026-10-08: summing
-  "Found N raw ... M after filtering" over a `pipeline.batch` log gave 283 raw
-  for 46 windows that stored 7, because each pass replays every content. It
-  took a half-hour detour to see the loss was out-of-bbox travel chapters, not
-  a bug. Fix: `batch` prints one funnel per content at the end (raw, spot
-  test, outside bbox, judge, saved).
-
-- **Parallel sessions share one git index.** 2026-10-07: a `git rm` staged in
-  one session went out in another session's unrelated commit (fa94bb0, a
-  memoir trial carrying the account menu's deletions). Fix: AGENTS.md's commit
-  checklist says commit with explicit paths (`git commit <paths>`), and delete
-  files with plain `rm` until commit time.
-
-- **Dropping a column breaks the migration that added it.** 2026-10-07:
-  `test_schema_layers` replays every migration on a schema.sql database, so a
-  drop also means rewriting the old `ADD COLUMN` as a pointer (039 did it for
-  047). Cost a red gate. Fix: say so beside "must replay as a no-op" in
-  docs/01-setup.md.
-
-- **`quality --compare` can't be aimed at a source.** 2026-10-07: a summary
-  flaw lived in three web sources (260, 264, 269), but `--compare` samples
-  chunks of a whole `--source-type` at random. Twenty press chunks held none
-  of the flaw, so the measurement said nothing, and the prompt fix couldn't be
-  judged. Again 2026-10-08: measuring the memoir prompts and the check/trim
-  stage took two scratch scripts, since `--compare` stops at extraction. Fix: a
-  `--content <ids>` or `--source <id>` flag that feeds `sample_chunks`' existing
-  `content_ids`, and a `--check` that reruns `extract.checked` on the kept summaries.
+- **`test_route_order` fails now and then.** 2026-10-09: the "short of five"
+  check failed once in a full gate (walk 3029 m, plus a 436 m leftover times
+  1.3, is still under 4000 m), then passed alone and on the rerun. A red gate
+  that isn't real costs a rerun and trust in the next red. Fix: find what
+  isn't seeded in `choose` (set or hash order?), or the order the tests run in.
 
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with

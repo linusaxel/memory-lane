@@ -40,6 +40,23 @@ class _Messages:
         self.calls.append(kwargs)
         return _Response(json.dumps(self._payload))
 
+    def stream(self, **kwargs):
+        return _Stream(self.create(**kwargs))
+
+
+class _Stream:
+    def __init__(self, response):
+        self._response = response
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def get_final_message(self):
+        return self._response
+
 
 class FakeAnthropic:
     """Drop-in for anthropic.Anthropic that never touches the network.
