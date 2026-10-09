@@ -220,10 +220,13 @@ def _thin(source_type: str | None, segments: list) -> bool:
 def seeded(session, client, content_id: int, title, segments: list) -> list | None:
     """A thin record with the passages research found behind it, saved with
     its transcript so the research is paid for once. None when nothing checks
-    out, and the content is marked extracted: a lead with no story is no memory."""
+    out, and the content is marked extracted: a lead with no story is no memory.
+    None too while a batch pass waits on the research (pipeline/batch.py)."""
     if any(s.get("seed") for s in segments):
         return segments
-    found = seed(client, title, "\n".join(s.get("text", "") for s in segments))
+    found = seed(session, client, content_id, title, "\n".join(s.get("text", "") for s in segments))
+    if found is None:
+        return None
     if not found:
         session.execute(
             text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": content_id}

@@ -1,7 +1,7 @@
 """What a new memory's story doesn't tell: who its people were, more of their
 words, then against now, a surprise or two, and pictures of the place.
 
-    python -m pipeline.enrich --memory 42   # one, printed, nothing written (bills)
+    python -m pipeline.enrich --memory 42   # one, printed, the memory untouched (bills)
 
 Aggregation runs it on each new content's memories; there is no backfill
 (docs/10, *A memory is enriched when it is made*). The model researches with
@@ -13,7 +13,8 @@ licence that lets us show them with a credit, and the source page's own,
 hotlinked and never copied (docs/10, *The sources' legal footing*).
 
 Bills: one research call (web search at ENRICH_MAX_SEARCHES, about $0.01 a
-search, plus the pages read) and two short calls a memory.
+search, plus the pages read) and two short calls a memory. Each reply is stored
+in extraction_chunks, so `python -m pipeline.batch` sends them at half price.
 """
 
 import argparse
@@ -28,9 +29,9 @@ from html.parser import HTMLParser
 
 from sqlalchemy import text
 
-from pipeline import geocode
+from pipeline import extract, geocode
 from pipeline.config import ENRICH_MAX_SEARCHES, EXTRACTION_MODEL
-from pipeline.extract import _request, _squash, log_cache
+from pipeline.extract import _sha256, _squash, _stored_request, log_cache, reply_text, store
 
 logger = logging.getLogger(__name__)
 
@@ -281,39 +282,79 @@ def verified(found: dict, fetch=page_text) -> dict:
     return kept
 
 
-def research(client, place: str, summary: str, prompt: str = RESEARCH_PROMPT) -> str | None:
-    """The model's notes from the web, or None for no answer."""
+# Research and what follows it are stored in extraction_chunks under this index.
+INDEX = -5
+
+
+def research(
+    session, client, content_id: int, place: str, summary: str, prompt: str = RESEARCH_PROMPT
+) -> str | None:
+    """The model's notes from the web, or None for no answer. Stored as
+    `extract._stored_request` stores a reply, so it is paid for once and a
+    batch pass collects it (pipeline/batch.py)."""
+    params = dict(
+        model=EXTRACTION_MODEL,
+        max_tokens=16000,
+        system=prompt,
+        messages=[{"role": "user", "content": f"Place: {place}\n\nStory: {summary}"}],
+        # Searching and copying passages needs little thought, and thinking
+        # at the default effort was the bulk of this call's output.
+        output_config={"effort": "low"},
+        # Each search or page read is another turn over everything before
+        # it; with caching on, those turns read the earlier ones at 10%.
+        cache_control={"type": "ephemeral"},
+        tools=[
+            {"type": "web_search_20260318", "name": "web_search", "max_uses": ENRICH_MAX_SEARCHES},
+            {"type": "web_fetch_20260318", "name": "web_fetch", "max_uses": ENRICH_MAX_SEARCHES},
+        ],
+    )
+    key = _sha256(f"{content_id}\0{json.dumps(params, sort_keys=True)}")
+    notes = session.execute(
+        text("SELECT response FROM extraction_chunks WHERE request_hash = :k"), {"k": key}
+    ).scalar()
+    if notes is not None:
+        return notes.strip() or None
+    if extract.COLLECT is not None:
+        if extract.COLLECT.stage.setdefault(content_id, prompt) == prompt:
+            extract.COLLECT.requests[key] = {
+                "params": params,
+                "content_id": content_id,
+                "chunk_index": INDEX,
+                "prompt_hash": _sha256(prompt),
+                "stage": "research",
+            }
+        return None
     try:
-        response = client.messages.create(
-            model=EXTRACTION_MODEL,
-            max_tokens=16000,
-            system=prompt,
-            messages=[{"role": "user", "content": f"Place: {place}\n\nStory: {summary}"}],
-            # Searching and copying passages needs little thought, and thinking
-            # at the default effort was the bulk of this call's output.
-            output_config={"effort": "low"},
-            # Each search or page read is another turn over everything before
-            # it; with caching on, those turns read the earlier ones at 10%.
-            cache_control={"type": "ephemeral"},
-            tools=[
-                {
-                    "type": "web_search_20260318",
-                    "name": "web_search",
-                    "max_uses": ENRICH_MAX_SEARCHES,
-                },
-                {
-                    "type": "web_fetch_20260318",
-                    "name": "web_fetch",
-                    "max_uses": ENRICH_MAX_SEARCHES,
-                },
-            ],
-        )
+        response = client.messages.create(**params)
     except Exception:
         logger.exception("Research failed for %s", place)
         return None
     log_cache(response)
-    notes = "\n".join(b.text for b in response.content if b.type == "text").strip()
-    return notes or None
+    notes = reply_text(response)
+    if notes is not None:
+        store(session, key, content_id, INDEX, _sha256(prompt), notes)
+    return (notes or "").strip() or None
+
+
+def structured(session, client, content_id: int, notes: str | None) -> dict | None:
+    """The notes in STRUCTURE_SCHEMA, only what their pages say; None for no answer."""
+    raw = notes and _stored_request(
+        session,
+        client,
+        content_id,
+        INDEX,
+        STRUCTURE_PROMPT,
+        notes,
+        STRUCTURE_SCHEMA,
+        max_tokens=8000,
+    )
+    try:
+        return verified(json.loads(raw)) if raw else None
+    except (
+        ValueError,
+        KeyError,
+    ):
+        return None
 
 
 def _commons(params: dict) -> dict:
@@ -388,16 +429,18 @@ def pictures_near(lat: float, lng: float, venue: str, locality: str | None) -> l
     return pictures
 
 
-def pick(client, place: str, summary: str, pictures: list[dict]) -> list[dict]:
+def pick(session, client, content_id: int, place: str, summary: str, pictures: list[dict]):
+    """Up to four of `pictures`, best first; None while a batch pass waits on it."""
     if not pictures:
         return []
     listed = "\n".join(
         f"{i}. {'[source] ' if p.get('source') else ''}{p['caption']} ({p['year'] or 'undated'})"
         for i, p in enumerate(pictures)
     )
-    raw = _request(
-        client, PICK_PROMPT, f"Place: {place}\n\nStory: {summary}\n\n{listed}", PICK_SCHEMA
-    )
+    user = f"Place: {place}\n\nStory: {summary}\n\n{listed}"
+    raw = _stored_request(session, client, content_id, INDEX, PICK_PROMPT, user, PICK_SCHEMA)
+    if raw is None and extract.COLLECT is not None:
+        return None
     try:
         chosen = json.loads(raw)["pick"] if raw else []
     except (
@@ -409,7 +452,9 @@ def pick(client, place: str, summary: str, pictures: list[dict]) -> list[dict]:
 
 
 def enrich(
+    session,
     client,
+    content_id: int,
     place: str,
     summary: str,
     lat,
@@ -420,18 +465,10 @@ def enrich(
     credit: str | None = None,
 ) -> dict | None:
     """The memory's enrichment, or None when research got no answer: it is
-    looked at again next run rather than stored empty."""
-    notes = research(client, place, summary)
-    if notes is None:
-        return None
-    raw = _request(client, STRUCTURE_PROMPT, notes, STRUCTURE_SCHEMA, max_tokens=8000)
-    try:
-        found = verified(json.loads(raw)) if raw else None
-    except (
-        ValueError,
-        KeyError,
-    ):
-        found = None
+    looked at again next run (or next batch pass) rather than stored empty."""
+    found = structured(
+        session, client, content_id, research(session, client, content_id, place, summary)
+    )
     if found is None:
         return None
     pictures = []
@@ -439,31 +476,28 @@ def enrich(
         found_pictures = source_pictures(source_url, credit or "the source")
         if lat is not None:
             found_pictures += pictures_near(lat, lng, venue or place, locality)
-        pictures = pick(client, place, summary, found_pictures)
+        pictures = pick(session, client, content_id, place, summary, found_pictures)
     except Exception:
         logger.exception("Pictures failed for %s", place)
+    if pictures is None:
+        return None
     return found | {"pictures": pictures, "at": datetime.now(UTC).isoformat(timespec="seconds")}
 
 
-def seed(client, place: str, record: str) -> str:
+def seed(session, client, content_id: int, place: str, record: str) -> str | None:
     """What cited pages say about a thin record, one passage a line with its
     URL, to extract from beside it; empty when nothing checks out
-    (docs/10, *A thin source is a lead*)."""
-    notes = research(client, place, record, SEED_PROMPT)
-    raw = notes and _request(client, STRUCTURE_PROMPT, notes, STRUCTURE_SCHEMA, max_tokens=8000)
-    try:
-        found = verified(json.loads(raw)) if raw else {}
-    except (
-        ValueError,
-        KeyError,
-    ):
-        found = {}
+    (docs/10, *A thin source is a lead*), None while a batch pass waits on it."""
+    notes = research(session, client, content_id, place, record, SEED_PROMPT)
+    found = structured(session, client, content_id, notes) or {}
+    if extract.COLLECT is not None and content_id in extract.COLLECT.stage:
+        return None
     lines = (f'From {i["url"]}: "{i["passage"]}"' for items in found.values() for i in items)
     return "\n".join(dict.fromkeys(lines))
 
 
 UNENRICHED = """
-    SELECT m.id, p.name, p.venue, p.locality, m.summary,
+    SELECT m.id, m.content_id, p.name, p.venue, p.locality, m.summary,
            COALESCE(m.source_url, c.url) AS source_url,
            COALESCE(c.source_name, m.attribution) AS credit,
            ST_Y(p.coordinates::geometry) AS lat, ST_X(p.coordinates::geometry) AS lng
@@ -475,13 +509,15 @@ UNENRICHED = """
 """
 
 
+def _args(r) -> tuple:
+    return r.name, r.summary, r.lat, r.lng, r.venue, r.locality, r.source_url, r.credit
+
+
 def enrich_memories(session, client, content_id: int) -> dict:
     """Enrich one content's new memories; return {memory_id: enrichment}."""
     done = {}
     for r in session.execute(text(UNENRICHED), {"content_id": content_id}).fetchall():
-        found = enrich(
-            client, r.name, r.summary, r.lat, r.lng, r.venue, r.locality, r.source_url, r.credit
-        )
+        found = enrich(session, client, content_id, *_args(r))
         if found is None:
             continue
         session.execute(
@@ -513,15 +549,8 @@ def main():
             ),
             {"id": args.memory},
         ).one()
-    print(
-        json.dumps(
-            enrich(
-                client, r.name, r.summary, r.lat, r.lng, r.venue, r.locality, r.source_url, r.credit
-            ),
-            indent=2,
-            ensure_ascii=False,
-        )
-    )
+        found = enrich(session, client, r.content_id, *_args(r))
+    print(json.dumps(found, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":

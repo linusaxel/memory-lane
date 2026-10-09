@@ -7,7 +7,7 @@ import anthropic
 import pytest
 from sqlalchemy import text
 
-from pipeline import extract
+from pipeline import enrich, extract
 from pipeline.batch import dropped, send
 from pipeline.extract import Collect, _stored_request
 from tests.fakes import _Response
@@ -179,3 +179,53 @@ def test_a_run_prints_one_funnel_per_content_from_its_last_pass(db_session, monk
     monkeypatch.setattr(tasks, "after_save", lambda client, cid: None)
     batch.run(None, [7])
     assert capsys.readouterr().out == "content 7: 6 raw, 1 judge, 0 saved\n"
+
+
+def _content(db_session, platform_id):
+    return db_session.execute(
+        text(
+            "INSERT INTO content (url, platform, platform_id) VALUES (:url, 'web', :p) RETURNING id"
+        ),
+        {"url": f"https://example.org/{platform_id}", "p": platform_id},
+    ).scalar()
+
+
+@pytest.mark.db
+def test_research_is_collected_and_read_back_after_its_batch(db_session, collecting):
+    cid = _content(db_session, "vega")
+    assert enrich.research(db_session, None, cid, "Vega", "the amp caught fire") is None
+    [request] = collecting.requests.values()
+    assert request["stage"] == "research" and request["params"]["tools"]
+    requests, extract.COLLECT = collecting.requests, None
+    batches = _Batches([("Notes from the web.", "end_turn")])
+    assert send(NS(messages=NS(batches=batches)), requests, db_session) == 1
+    assert enrich.research(db_session, None, cid, "Vega", "the amp caught fire") == (
+        "Notes from the web."
+    )
+
+
+@pytest.mark.db
+def test_a_thin_record_waiting_on_its_research_is_not_marked_done(db_session, collecting):
+    from pipeline.tasks import seeded
+
+    cid = _content(db_session, "plaque")
+    assert seeded(db_session, None, cid, "A plaque", [{"text": "HER FALDT EJLER"}]) is None
+    assert cid in collecting.stage
+    done = db_session.execute(
+        text("SELECT memories_extracted FROM content WHERE id = :id"), {"id": cid}
+    ).scalar()
+    assert not done
+
+
+@pytest.mark.db
+def test_an_enrichment_waiting_on_its_pictures_is_not_saved_without_them(
+    db_session, collecting, monkeypatch
+):
+    found = {"people": [], "quotes": [], "then_now": [], "asides": []}
+    monkeypatch.setattr(enrich, "research", lambda *a: "notes")
+    monkeypatch.setattr(enrich, "structured", lambda *a: found)
+    picture = {"caption": "Vega, 1996", "year": None, "source": True}
+    monkeypatch.setattr(enrich, "source_pictures", lambda *a: [picture])
+    args = ("Vega", "the amp caught fire", None, None, None, None, "https://example.org/v")
+    assert enrich.enrich(db_session, None, 7, *args) is None
+    assert len(collecting.requests) == 1

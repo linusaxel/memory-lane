@@ -3797,7 +3797,16 @@ pass reads them back and gets one stage further.
 - **What follows a save is not batched.** Links, walk score, enrichment and
   the thin-source research are not stored replies, so they are sent as they
   come (`tasks.after_save`, `tasks.seeded`). Batching them means storing
-  their replies too.
+  their replies too. *Superseded 2026-10-09 for the research, see the next
+  point; links and the walk score are still sent as they come.*
+- **The web research is batched too** (2026-10-09). It had become most of
+  the bill. `enrich.research` stores its reply in `extraction_chunks` the way
+  `_stored_request` does, and structure and pick go through
+  `_stored_request`, all under index -5. A thin record's research is a stage
+  of the extraction passes (`tasks.seeded`, and the record is not extracted
+  while it waits); the saved memories' enrichment runs the same passes after
+  them, before `after_save`, which then finds it done. Only tokens are half
+  price: a web search costs the same in a batch.
 
 **Options considered:** a batch per call (half price, but a run of hundreds
 of calls waits minutes each); rewriting the RQ tasks around batches (a second

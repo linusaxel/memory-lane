@@ -721,7 +721,7 @@ def reply_text(response) -> str | None:
     if response.stop_reason == "max_tokens":
         logger.warning(f"Reply cut at max_tokens={response.usage.output_tokens}; not used")
         return None
-    return next(b.text for b in response.content if b.type == "text")
+    return "\n".join(b.text for b in response.content if b.type == "text")
 
 
 def _request(

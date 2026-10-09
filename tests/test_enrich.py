@@ -57,7 +57,7 @@ def test_a_thin_record_with_nothing_found_seeds_nothing(monkeypatch):
     from pipeline import enrich
 
     monkeypatch.setattr(enrich, "research", lambda *a, **k: None)
-    assert enrich.seed(None, "A plaque", "HER FALDT STYRMAND EJLER HAUBIRK") == ""
+    assert enrich.seed(None, None, 1, "A plaque", "HER FALDT STYRMAND EJLER HAUBIRK") == ""
 
 
 def test_a_seed_is_the_passages_on_their_pages(monkeypatch):
@@ -70,9 +70,14 @@ def test_a_seed_is_the_passages_on_their_pages(monkeypatch):
         {"text": "He carved it.", "url": URL, "passage": "carved the Alexandra"},
     ]
     monkeypatch.setattr(enrich, "research", lambda *a, **k: "notes")
-    monkeypatch.setattr(enrich, "_request", lambda *a, **k: json.dumps(_found(asides=asides)))
+    monkeypatch.setattr(
+        enrich, "_stored_request", lambda *a, **k: json.dumps(_found(asides=asides))
+    )
     monkeypatch.setattr(enrich, "verified", lambda found: verified(found, fetch=_fetch))
-    assert enrich.seed(None, "Alexandra", "a cinema") == f'From {URL}: "decorated the Alexandra"'
+    assert (
+        enrich.seed(None, None, 1, "Alexandra", "a cinema")
+        == f'From {URL}: "decorated the Alexandra"'
+    )
 
 
 def test_a_source_page_gives_its_photos_not_its_logos():

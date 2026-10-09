@@ -8,8 +8,10 @@ pass, a call with no stored reply is not sent but collected
 (`extract.COLLECT`), and its content stops there, pending, with nothing saved.
 The calls go out as one batch; their replies are stored under the keys the
 pipeline looks them up by, so the next pass reads them back and gets one stage
-further: brief, chunks, judge, check, trim, retellings. When a pass collects
-nothing, everything chosen is saved, and each content then gets what
+further: a thin record's research, brief, chunks, judge, check, trim,
+retellings. When a pass collects nothing, everything chosen is saved. Then
+the same passes enrich the saved memories (`enrich.enrich_memories`:
+research, structure, pick), and each content gets the rest of what
 aggregation gives it (`tasks.after_save`, sent as it comes, at full price).
 
 A batch usually ends within the hour, at most 24, so a run is a handful of
@@ -109,40 +111,50 @@ def send(client, requests: dict[str, dict], session) -> int:
     return stored
 
 
-def run(client, content_ids: list[int]) -> None:
-    from pipeline.tasks import _thin, after_save, seeded
-
-    with get_session() as session:
-        for row in session.execute(
-            text(
-                "SELECT c.id, c.title, c.source_type, t.segments FROM content c"
-                " JOIN transcripts t ON t.content_id = c.id WHERE c.id = ANY(:ids)"
-            ),
-            {"ids": content_ids},
-        ):
-            if row.segments and _thin(row.source_type, row.segments):
-                seeded(session, client, row.id, row.title, row.segments)
-
-    stopped = None
-    funnel = {}
+def passes(client, step) -> str | None:
+    """Run `step` pass after pass, each one's collected calls sent as one batch,
+    until a pass collects nothing; why it stopped short, or None."""
     for n in range(1, MAX_PASSES + 1):
         extract.COLLECT = Collect()
         try:
-            extract.extract_all_pending(content_ids)
+            step(extract.COLLECT)
             pending = extract.COLLECT.requests
-            # Every pass replays every content; the last one it got through counts.
-            funnel |= extract.COLLECT.funnel
         finally:
             extract.COLLECT = None
         if not pending:
-            break
+            return None
         logger.info(f"Pass {n}: {len(pending)} calls wait on a batch")
         with get_session() as session:
             if not send(client, pending, session):
-                stopped = "A batch stored no reply; stopping rather than resending it"
-                break
-    else:
-        stopped = f"Still waiting after {MAX_PASSES} passes"
+                return "A batch stored no reply; stopping rather than resending it"
+    return f"Still waiting after {MAX_PASSES} passes"
+
+
+def run(client, content_ids: list[int]) -> None:
+    from pipeline.enrich import enrich_memories
+    from pipeline.tasks import _thin, after_save, seeded
+
+    funnel = {}
+
+    def extraction(collect: Collect) -> None:
+        with get_session() as session:
+            for row in session.execute(
+                text(
+                    "SELECT c.id, c.title, c.source_type, t.segments FROM content c"
+                    " JOIN transcripts t ON t.content_id = c.id WHERE c.id = ANY(:ids)"
+                    " AND NOT c.memories_extracted"
+                ),
+                {"ids": content_ids},
+            ):
+                if row.segments and _thin(row.source_type, row.segments):
+                    seeded(session, client, row.id, row.title, row.segments)
+        # A thin record still waiting on its research is not extracted without it.
+        if ready := [i for i in content_ids if i not in collect.stage]:
+            extract.extract_all_pending(ready)
+        # Every pass replays every content; the last one it got through counts.
+        funnel.update(collect.funnel)
+
+    stopped = passes(client, extraction)
 
     with get_session() as session:
         done = list(
@@ -151,6 +163,15 @@ def run(client, content_ids: list[int]) -> None:
                 {"ids": content_ids},
             ).scalars()
         )
+
+    def enrichment(collect: Collect) -> None:
+        with get_session() as session:
+            for content_id in done:
+                enrich_memories(session, client, content_id)
+
+    # What enrichment still misses, after_save sends at full price.
+    late = passes(client, enrichment)
+    stopped = stopped or late
     for content_id in done:
         after_save(client, content_id)
     print_funnel(funnel)

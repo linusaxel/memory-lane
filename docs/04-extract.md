@@ -457,6 +457,9 @@ That is measured below, *A video read whole*.
   checked in code (`grounded()`) remains the right tool.
 - Batches are half price and stack with caching
   ([batch processing](https://platform.claude.com/docs/en/build-with-claude/batch-processing)).
+  `pipeline.batch` sends the web research through them too: a plaque's before
+  extraction, each memory's enrichment after (docs/10, *Extraction is
+  batched*). The searches themselves are not discounted.
 
 **Sources.**
 - The craft rule from audio tours: tell them what they can't see, and people
