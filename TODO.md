@@ -24,13 +24,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **No way to check an animation frame by frame.** 2026-10-04: checking the
-  locket dive took four e2e runs. `simctl io recordVideo` started with
-  `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"
-  (twice), there is no ffmpeg to cut frames, and the frames had to come from a
-  hand-built AVFoundation script. Fix: `e2e/run.sh --frames <flow> <from>-<to>`
-  that starts recording after launch and writes a contact sheet.
-
 - **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
   permission classifier refused a hand triage (merge two places, hide four
   memories) and its undo, each a round-trip through the founder. The free
