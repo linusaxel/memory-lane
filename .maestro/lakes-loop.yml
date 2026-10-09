@@ -201,5 +201,20 @@ appId: ${APP_ID}
 - assertVisible: "Stop \\d+, Sortedams Sø 4, dev seed, .*"
 - assertNotVisible: "Stop \\d+, Sortedams Sø 3, dev seed, .*"
 - tapOn: ".*, 2 memories · 4\\.0 km"
+# The sections are pages: a swipe turns one, and the tab follows it.
+- swipe:
+    direction: LEFT
+- extendedWaitUntil:
+    visible:
+      text: "Unlocked"
+      selected: true
+    timeout: 10000
+- swipe:
+    direction: RIGHT
+- extendedWaitUntil:
+    visible:
+      text: "Walks"
+      selected: true
+    timeout: 10000
 - tapOn: "Close journal"
 - assertVisible: "Next: .*\\. .* of 10.*"

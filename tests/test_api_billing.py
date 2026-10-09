@@ -32,7 +32,7 @@ def revenuecat(monkeypatch):
     monkeypatch.setattr(config, "REVENUECAT_API_KEY", "sk_test")
 
     def fetch(user_id):
-        grants = {"map": {"expires_date": said[user_id]}} if user_id in said else {}
+        grants = {billing.ENTITLEMENT: {"expires_date": said[user_id]}} if user_id in said else {}
         return {
             "subscriber": {"entitlements": grants, "non_subscriptions": bought.get(user_id, {})}
         }

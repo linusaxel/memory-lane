@@ -123,6 +123,12 @@ def test_a_leftover_that_would_starve_a_layer_stays_out():
     within_budget_and_full(random.Random(3605168176 + 1))
 
 
+def test_a_leftover_that_fits_once_the_walk_is_reordered_gets_in():
+    # Seed 43, instance 0: four stops in the order they were added leave no
+    # room for a fifth; in their shortest order they do.
+    within_budget_and_full(random.Random(43 + 1))
+
+
 def within_budget_and_full(rng):
     for i in range(100):
         picks = [

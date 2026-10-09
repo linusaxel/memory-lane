@@ -24,12 +24,6 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **`test_route_order` fails now and then.** 2026-10-09: the "short of five"
-  check failed once in a full gate (walk 3029 m, plus a 436 m leftover times
-  1.3, is still under 4000 m), then passed alone and on the rerun. A red gate
-  that isn't real costs a rerun and trust in the next red. Fix: find what
-  isn't seeded in `choose` (set or hash order?), or the order the tests run in.
-
 - **No way to check an animation frame by frame.** 2026-10-04: checking the
   locket dive took four e2e runs. `simctl io recordVideo` started with
   `e2e/run.sh` slows the cold bundle until the flow misses "Skip (dev build)"
@@ -80,11 +74,6 @@ Retention is measured already: `python -m api.metrics`.
         place private people at the street, not the door.
       - A written legitimate-interest assessment and a DPIA (location, and the
         step count).
-- [ ] **Rename the entitlement before the stores are set up.** (checked 2026-10-04)
-      `ENTITLEMENT = "map"` (`api/billing.py`) names what was sold before the
-      walk planner. Renaming it is free now and a migration of live
-      subscribers later. Optional.
-
 ### Waits on an account
 
 - [ ] **A waitlist page.** (checked 2026-10-04) One screenshot and an email
@@ -116,7 +105,7 @@ Retention is measured already: `python -m api.metrics`.
         tester.
       - Play Console: the same two subscriptions; a service-account JSON for
         RevenueCat; real-time developer notifications (Pub/Sub) to RevenueCat.
-      - RevenueCat: the entitlement, offering `default` with the monthly and
+      - RevenueCat: the entitlement `plus`, offering `default` with the monthly and
         annual packages, the webhook at `https://<deploy>/v1/billing/revenuecat`
         with `Bearer <REVENUECAT_WEBHOOK_SECRET>` as its Authorization, the
         secret server key into `REVENUECAT_API_KEY`, the public SDK keys into
@@ -420,11 +409,6 @@ progress; refine what exists rather than add.
 
 ### The walk on the map
 
-- [ ] **A walk's stops told apart.** (checked 2026-10-04) The accent question
-      is settled (gold, emerald `seal`, `faded`; docs/10, *Lockets*). Left: a
-      stop drawn as done, here, next or later in `MemoryMarker.tsx` (needs
-      each stop's opened state), and `RouteLine` split walked/ahead. Then
-      UI.md.
 - [ ] **A direction arrow on the user dot.** (checked 2026-10-04)
       react-native-maps 1.29.8 has `followsUserLocation` but no heading prop.
       Look on a real phone whether MapKit's dot draws the heading beam with
@@ -474,9 +458,6 @@ progress; refine what exists rather than add.
       Bloom's Lifelog: today's trace on a mini map, steps, and a week strip
       with a dot for each day walked. Maybe later: brighten the streets you
       have walked (Fog of World, Wandrer), never hiding content.
-- [ ] **Journal sections that follow a swipe.** (checked 2026-10-04) Walks,
-      Unlocked and Mine are a tap `Switcher` (`Memories.tsx`); a pager with
-      the underline tracking it.
 - [ ] **A Lock Screen widget** (`expo-widgets`). (checked 2026-10-04)
       Today's walk or the nearest stop, and the streak. After launch; skip
       Live Activities.

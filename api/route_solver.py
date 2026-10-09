@@ -182,6 +182,12 @@ def _choose_walks(
             ]
             options = [o for o in options if o[0] <= room]
             if not options:
+                # Insertion order is not the shortest: walked in its best order,
+                # the walk may have room for one more after all.
+                ordered = _walking_order(walk, d, loop)
+                if _path_meters(ordered, d, loop) < budget_meters - room - 1e-6:
+                    walk = ordered
+                    continue
                 break
             # Whether a stop fits is its layer's, so ask once a layer.
             one_of = {stranger[o[1]]: o[1] for o in options}

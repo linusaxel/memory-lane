@@ -934,7 +934,7 @@ rules keep it honest (`api/billing.py`):
   (the dev-build Skip) is nobody to RevenueCat and cannot buy.
 - **The event body is a doorbell, not a fact.** Every event reads the
   subscriber back from RevenueCat's REST API and makes the row match: an
-  entitlement `map` with its `expires_date`, or no row. Duplicate, late and
+  entitlement `plus` with its `expires_date`, or no row. Duplicate, late and
   out-of-order events cannot leave a wrong row, and purchase, renewal, refund
   and expiry are one code path.
 - **The app is never believed.** A purchase in the app calls

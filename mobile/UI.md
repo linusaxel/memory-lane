@@ -135,7 +135,8 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              Motion: no roll
 ├─ tabs                        a quiet capsule, the open tab raised in paperRaised with a gold
 │                              hairline: Walks · Unlocked · Mine ("Mine ·" when something
-│                              came back)
+│                              came back). The sections are pages: swipe between them, and
+│                              the raised pill follows the finger. Reduce Motion: it jumps
 ├─ Walks                       one row per walk that opened something, date and length; a row
 │                              opens in place to its earned stops: a gold check circle each, on a gold rail.
 │                              "Cards" at the right of its count shows them two to a row, each

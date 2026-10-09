@@ -25,6 +25,7 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -94,6 +95,7 @@ type Props = {
 
 type Status = 'loading' | 'ready' | 'failed';
 type Section = 'walks' | 'unlocked' | 'mine';
+const SECTIONS: Section[] = ['walks', 'unlocked', 'mine'];
 type Item =
   | { kind: 'walk'; walk: WalkedRoute; index: number }
   | { kind: 'cards' }
@@ -130,8 +132,14 @@ export default function Memories({
   const [openWalk, setOpenWalk] = useState<number | null>(null);
   const [heartedOnly, setHeartedOnly] = useState(false);
   const [walkCards, setWalkCards] = useState(false);
+  const window = useWindowDimensions().width;
   // Two to a row, between the sheet's 24pt margins and one 12pt gap.
-  const card = (useWindowDimensions().width - 48 - 12) / 2;
+  const card = (window - 48 - 12) / 2;
+  // The sections side by side, a page each; the switcher's pill follows the swipe.
+  const pager = useRef<ScrollView>(null);
+  const [pageWidth, setPageWidth] = useState(window);
+  const swiped = useRef(new Animated.Value(0)).current;
+  const reduceMotion = useReduceMotion();
   // The baseline as it was when the journal opened, so a row stays "new" for
   // the whole look; the look itself is what moves the baseline on.
   const [seen, setSeen] = useState<Seen | null>(null);
@@ -227,7 +235,13 @@ export default function Memories({
 
   const isNew = (m: LocatedMemory) => !!seen && attention(m) > (seen[m.id] ?? 0);
   const fresh = (m: LocatedMemory) => {
-    if (!unlocksShown || unlocksShown.has(m.id) || pulsed.current.has(m.id)) return false;
+    if (
+      section !== 'unlocked' ||
+      !unlocksShown ||
+      unlocksShown.has(m.id) ||
+      pulsed.current.has(m.id)
+    )
+      return false;
     pulsed.current.add(m.id);
     return true;
   };
@@ -329,7 +343,7 @@ export default function Memories({
       ? `${shown.length} hearted`
       : `${unlocked.length} unlocked`;
 
-  const data: Item[] =
+  const dataFor = (section: Section): Item[] =>
     section === 'mine'
       ? mine.map((memory) => ({ kind: 'mine', memory }))
       : section === 'unlocked'
@@ -364,6 +378,133 @@ export default function Memories({
           ),
         )
       : undefined;
+
+  const select = (next: Section) => {
+    if (next === section) return;
+    Haptics.selectionAsync().catch(() => {});
+    setSection(next);
+  };
+
+  const open = section;
+  const page = (section: Section) => (
+    <FlatList<Item>
+      // Unlocked is drawn afresh each time it comes into view: its rows pulse on mount.
+      key={section === 'unlocked' ? `unlocked-${open === 'unlocked'}` : section}
+      style={{ width: pageWidth }}
+      contentContainerStyle={styles.body}
+      data={dataFor(section)}
+      // Two walks can share a date: one per device, and an account has several.
+      keyExtractor={(item) =>
+        item.kind === 'cards'
+          ? 'cards'
+          : item.kind === 'walk'
+            ? `walk-${item.index}`
+            : item.kind === 'stop'
+              ? `walk-${item.walk}-${item.memory.id}`
+              : String(item.memory.id)
+      }
+      renderItem={({ item }) =>
+        item.kind === 'cards' ? (
+          <View style={styles.shelf}>
+            {walks.map((walk, i) => (
+              <WalkCard key={i} walk={walk} size={card} onPress={() => onOpenWalk(walk)} />
+            ))}
+          </View>
+        ) : item.kind === 'walk' ? (
+          <Row
+            place={walkDate(item.walk.route_date)}
+            summary={item.walk.memories.map((memory) => memory.place.name).join(' · ')}
+            shape={walkPath(item.walk)}
+            // What it opened, never what it missed: every walk here opened something.
+            meta={`${item.walk.earned} ${item.walk.earned === 1 ? 'memory' : 'memories'} · ${distance(item.walk.budget_meters)}`}
+            onPress={() => setOpenWalk((open) => (open === item.index ? null : item.index))}
+          />
+        ) : item.kind === 'stop' || item.kind === 'unlocked' ? (
+          <Row
+            stop={item.kind === 'stop' ? item.stop : undefined}
+            place={item.memory.place.name}
+            summary={item.memory.summary}
+            distance={distanceTo(item.memory)}
+            fresh={item.kind === 'unlocked' && fresh(item.memory)}
+            onPress={() => onOpenStop(item.memory)}
+          />
+        ) : (
+          <Row
+            place={item.memory.place.name}
+            summary={item.memory.summary}
+            distance={distanceTo(item.memory)}
+            meta={reach(item.memory)}
+            badge={item.memory.hidden ? 'Reported' : isNew(item.memory) ? 'New' : undefined}
+            onPress={() => onOpenMine(item.memory)}
+          />
+        )
+      }
+      // Between rows only, never above the first. A stop's rail is its own
+      // delimiter, so nothing is drawn above one.
+      // FlatList can render one with no trailingItem at all.
+      ItemSeparatorComponent={({ trailingItem }: { trailingItem?: Item }) =>
+        trailingItem?.kind === 'stop' ? null : <View style={styles.separator} />
+      }
+      ListHeaderComponent={
+        <Header
+          note={section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote}
+          filter={
+            section === 'unlocked' && unlocked.length > 0
+              ? { on: heartedOnly, toggle: () => setHeartedOnly((on) => !on) }
+              : undefined
+          }
+          cards={
+            section === 'walks' && walks.length > 0
+              ? { on: walkCards, toggle: () => setWalkCards((on) => !on) }
+              : undefined
+          }
+        />
+      }
+      ListEmptyComponent={
+        section === 'unlocked' ? (
+          <Empty
+            text={
+              heartedOnly
+                ? 'Nothing hearted yet. Heart a memory and it waits here.'
+                : 'Nothing unlocked yet. Walk to a stop and it opens here.'
+            }
+          />
+        ) : section === 'walks' ? (
+          walksStatus === 'loading' ? (
+            <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+          ) : walksStatus === 'failed' ? (
+            <Empty text="Can't reach Memory Lane right now." />
+          ) : (
+            <Empty text="No walks yet. Unlock a stop and your walk lands here." />
+          )
+        ) : mineStatus === 'loading' ? (
+          <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+        ) : mineStatus === 'failed' ? (
+          <Empty text="Can't reach Memory Lane right now." />
+        ) : (
+          <Empty text="You haven't left a memory yet. Tap the pin up top to leave one right where you are." />
+        )
+      }
+      ListFooterComponent={
+        section === 'mine' && loadingMore ? (
+          <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
+        ) : null
+      }
+      onEndReached={section === 'mine' ? loadMore : undefined}
+      onEndReachedThreshold={0.5}
+      refreshControl={
+        section === 'mine' ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={color.inkFaint}
+            colors={[color.inkFaint]}
+            progressBackgroundColor={color.paper}
+          />
+        ) : undefined
+      }
+    />
+  );
 
   return (
     <View style={styles.screen}>
@@ -402,130 +543,36 @@ export default function Memories({
         <Switcher
           section={section}
           onSelect={(next) => {
-            if (next !== section) Haptics.selectionAsync().catch(() => {});
-            setSection(next);
+            select(next);
+            pager.current?.scrollTo({
+              x: SECTIONS.indexOf(next) * pageWidth,
+              animated: !reduceMotion,
+            });
           }}
           filedNew={anyNew}
+          swiped={swiped}
+          pageWidth={pageWidth}
+          reduceMotion={reduceMotion}
         />
       </Animated.View>
 
       <Animated.View style={[styles.list, arrive(2)]}>
-        <FlatList<Item>
-          contentContainerStyle={styles.body}
-          data={data}
-          // Two walks can share a date: one per device, and an account has several.
-          keyExtractor={(item) =>
-            item.kind === 'cards'
-              ? 'cards'
-              : item.kind === 'walk'
-                ? `walk-${item.index}`
-                : item.kind === 'stop'
-                  ? `walk-${item.walk}-${item.memory.id}`
-                  : String(item.memory.id)
+        <Animated.ScrollView
+          ref={pager}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onLayout={(e) => setPageWidth(e.nativeEvent.layout.width)}
+          scrollEventThrottle={16}
+          onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: swiped } } }], {
+            useNativeDriver: true,
+          })}
+          onMomentumScrollEnd={(e) =>
+            select(SECTIONS[Math.round(e.nativeEvent.contentOffset.x / pageWidth)] ?? section)
           }
-          renderItem={({ item }) =>
-            item.kind === 'cards' ? (
-              <View style={styles.shelf}>
-                {walks.map((walk, i) => (
-                  <WalkCard key={i} walk={walk} size={card} onPress={() => onOpenWalk(walk)} />
-                ))}
-              </View>
-            ) : item.kind === 'walk' ? (
-              <Row
-                place={walkDate(item.walk.route_date)}
-                summary={item.walk.memories.map((memory) => memory.place.name).join(' · ')}
-                shape={walkPath(item.walk)}
-                // What it opened, never what it missed: every walk here opened something.
-                meta={`${item.walk.earned} ${item.walk.earned === 1 ? 'memory' : 'memories'} · ${distance(item.walk.budget_meters)}`}
-                onPress={() => setOpenWalk((open) => (open === item.index ? null : item.index))}
-              />
-            ) : item.kind === 'stop' || item.kind === 'unlocked' ? (
-              <Row
-                stop={item.kind === 'stop' ? item.stop : undefined}
-                place={item.memory.place.name}
-                summary={item.memory.summary}
-                distance={distanceTo(item.memory)}
-                fresh={item.kind === 'unlocked' && fresh(item.memory)}
-                onPress={() => onOpenStop(item.memory)}
-              />
-            ) : (
-              <Row
-                place={item.memory.place.name}
-                summary={item.memory.summary}
-                distance={distanceTo(item.memory)}
-                meta={reach(item.memory)}
-                badge={item.memory.hidden ? 'Reported' : isNew(item.memory) ? 'New' : undefined}
-                onPress={() => onOpenMine(item.memory)}
-              />
-            )
-          }
-          // Between rows only, never above the first. A stop's rail is its own
-          // delimiter, so nothing is drawn above one.
-          // FlatList can render one with no trailingItem at all.
-          ItemSeparatorComponent={({ trailingItem }: { trailingItem?: Item }) =>
-            trailingItem?.kind === 'stop' ? null : <View style={styles.separator} />
-          }
-          ListHeaderComponent={
-            <Header
-              note={
-                section === 'mine' ? mineNote : section === 'unlocked' ? unlockedNote : walksNote
-              }
-              filter={
-                section === 'unlocked' && unlocked.length > 0
-                  ? { on: heartedOnly, toggle: () => setHeartedOnly((on) => !on) }
-                  : undefined
-              }
-              cards={
-                section === 'walks' && walks.length > 0
-                  ? { on: walkCards, toggle: () => setWalkCards((on) => !on) }
-                  : undefined
-              }
-            />
-          }
-          ListEmptyComponent={
-            section === 'unlocked' ? (
-              <Empty
-                text={
-                  heartedOnly
-                    ? 'Nothing hearted yet. Heart a memory and it waits here.'
-                    : 'Nothing unlocked yet. Walk to a stop and it opens here.'
-                }
-              />
-            ) : section === 'walks' ? (
-              walksStatus === 'loading' ? (
-                <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-              ) : walksStatus === 'failed' ? (
-                <Empty text="Can't reach Memory Lane right now." />
-              ) : (
-                <Empty text="No walks yet. Unlock a stop and your walk lands here." />
-              )
-            ) : mineStatus === 'loading' ? (
-              <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-            ) : mineStatus === 'failed' ? (
-              <Empty text="Can't reach Memory Lane right now." />
-            ) : (
-              <Empty text="You haven't left a memory yet. Tap the pin up top to leave one right where you are." />
-            )
-          }
-          ListFooterComponent={
-            section === 'mine' && loadingMore ? (
-              <ActivityIndicator style={styles.spinner} color={color.inkFaint} />
-            ) : null
-          }
-          onEndReached={section === 'mine' ? loadMore : undefined}
-          onEndReachedThreshold={0.5}
-          refreshControl={
-            section === 'mine' ? (
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={color.inkFaint}
-                colors={[color.inkFaint]}
-                progressBackgroundColor={color.paper}
-              />
-            ) : undefined
-          }
-        />
+        >
+          {SECTIONS.map(page)}
+        </Animated.ScrollView>
       </Animated.View>
     </View>
   );
@@ -568,14 +615,37 @@ function Switcher({
   section,
   onSelect,
   filedNew,
+  swiped,
+  pageWidth,
+  reduceMotion,
 }: {
   section: Section;
   onSelect: (section: Section) => void;
   /** Someone read, hearted or left a note on something you filed since you last looked. */
   filedNew: boolean;
+  /** How far the pages have scrolled: the raised pill follows it. */
+  swiped: Animated.Value;
+  pageWidth: number;
+  /** The pill jumps to the open section instead of following the swipe. */
+  reduceMotion: boolean;
 }) {
+  const [width, setWidth] = useState(0);
+  // Inside the capsule's 4pt padding and 1pt border.
+  const segment = Math.max(0, width - 10) / SECTIONS.length;
+  const x = reduceMotion
+    ? SECTIONS.indexOf(section) * segment
+    : swiped.interpolate({
+        inputRange: [0, pageWidth * (SECTIONS.length - 1)],
+        outputRange: [0, segment * (SECTIONS.length - 1)],
+        extrapolate: 'clamp',
+      });
   return (
-    <View style={styles.switcher}>
+    <View style={styles.switcher} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      {width > 0 && (
+        <Animated.View
+          style={[styles.switcherPill, { width: segment, transform: [{ translateX: x }] }]}
+        />
+      )}
       <SwitcherItem label="Walks" active={section === 'walks'} onPress={() => onSelect('walks')} />
       <SwitcherItem
         label="Unlocked"
@@ -602,7 +672,7 @@ function SwitcherItem({
 }) {
   return (
     <Pressable
-      style={dim([styles.switcherItem, active && styles.switcherItemActive])}
+      style={dim(styles.switcherItem)}
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: active }}
@@ -797,7 +867,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  switcherItemActive: {
+  // Drawn once under the three tabs, so it can slide between them.
+  switcherPill: {
+    position: 'absolute',
+    top: 4,
+    bottom: 4,
+    left: 4,
+    borderRadius: 999,
+    borderWidth: 1,
     backgroundColor: color.paperRaised,
     borderColor: color.goldLine,
     ...lift,

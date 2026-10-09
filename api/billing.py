@@ -27,7 +27,7 @@ from pipeline.db import get_session
 
 router = APIRouter()
 
-ENTITLEMENT = "map"
+ENTITLEMENT = "plus"
 REVENUECAT_URL = "https://api.revenuecat.com/v1/subscribers/"
 # A grant with no end (a promotional lifetime from the RevenueCat dashboard).
 FOREVER = datetime(9999, 1, 1)
