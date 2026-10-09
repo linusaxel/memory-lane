@@ -199,7 +199,8 @@ the planner*).
    then **the list**: each stop numbered in walk order, its place, and year · source ·
    two #tags, with a padlock; four rows in view, the rest a scroll away. All
    of it is what a locked memory already says (docs/10, *A locked memory says
-   what it is*). On step one, under Loop · One way, **Customize** (or what is
+   what it is*). A walk with a mystery stop ends the list with a "?" row,
+   "Somewhere on the way" (docs/10, *A mystery stop*). On step one, under Loop · One way, **Customize** (or what is
    chosen, "History, Music · 1800–1945") opens a third step: a title and
    Clear, chips for the 18 themes, richest first, one era (Any time, Before
    1800, 1800–1945, Since 1945), and **Done · N stops**. Themes and the era both
@@ -822,7 +823,11 @@ anyone else's collection or the local unlock cache.
    costs nothing.
    The badge and the hop drop away the moment it is earned, the
    numbers on the rest do not shift, and the card moves on to the next.
-6. The last stop earned, the closing card follows (F30), and after it the walk
+6. **A mystery stop**, when the walk has one, is a "?" stamp after the others
+   and nothing on the map. Walking within 100 m of it draws its pin, without a
+   number; it opens like any stop and its stamp fills. Finishing never waits
+   for it (docs/10, *A mystery stop*).
+7. The last stop earned, the closing card follows (F30), and after it the walk
    ends itself: there is nothing left to lose. No confetti — the success haptic on that final
    unlock is the whole celebration.
 

@@ -58,6 +58,7 @@ from api.queries import (
     COUNT_QUERY,
     COUNT_WITH_TAGS_QUERY,
     DEVICE_UNLOCKS_QUERY,
+    EARNED_QUERY,
     HOTSPOTS_QUERY,
     MEMORY_NOTES_QUERY,
     MY_MEMORIES_COUNT_QUERY,
@@ -352,15 +353,16 @@ def get_unlocks(
 
 
 ROUTE_LOOKUP = """
-    SELECT memory_ids, budget_meters, legs, loop FROM daily_routes
+    SELECT memory_ids, budget_meters, legs, loop, mystery_id FROM daily_routes
     WHERE device_id = CAST(:device AS uuid) AND route_date = :route_date AND ended_at IS NULL
 """
 
 ROUTE_INSERT = """
-    INSERT INTO daily_routes (device_id, route_date, memory_ids, budget_meters, legs, loop)
+    INSERT INTO daily_routes
+        (device_id, route_date, memory_ids, budget_meters, legs, loop, mystery_id)
     VALUES (
         CAST(:device AS uuid), :route_date, CAST(:ids AS integer[]), :budget_meters,
-        CAST(:legs AS jsonb), :loop
+        CAST(:legs AS jsonb), :loop, :mystery_id
     )
     ON CONFLICT (device_id, route_date) WHERE ended_at IS NULL DO NOTHING
 """
@@ -372,15 +374,28 @@ ROUTE_END = """
 
 
 def _route_response(
-    route_date, rows, memory_ids, budget_meters, legs, loop, ends=None, earned=frozenset()
+    route_date,
+    rows,
+    memory_ids,
+    budget_meters,
+    legs,
+    loop,
+    ends=None,
+    earned=frozenset(),
+    mystery_id=None,
+    at=None,
 ) -> RouteResponse:
     # No position: these are unwalked stops, and rendering them locked is the
     # point - the same rule every other list endpoint here follows. `earned`
-    # stops are forced open, the way get_unlocks does it.
+    # stops are forced open, the way get_unlocks does it. The mystery stop is
+    # the gate's to withhold until `at` finds it.
+    mystery = next((r for r in rows if r.id == mystery_id), None)
+    memory_ids = [i for i in memory_ids if i != mystery_id]
     by_id = {r.id: row_to_memory(r, row_coordinates(r) if r.id in earned else None) for r in rows}
     memories = [by_id[i] for i in memory_ids if i in by_id]
     return RouteResponse(
         memories=memories,
+        mystery=mystery and gate.mystery_memory(mystery, at, mystery.id in earned),
         meta=RouteMeta(
             route_date=route_date,
             size=len(memory_ids),
@@ -445,7 +460,7 @@ def preview_route(
     route_date = gate.today()
     with get_session() as session:
         _refuse_second_walk(session, device, route_date)
-        picked, legs, ends = _plan_route(
+        picked, legs, ends, mystery = _plan_route(
             session,
             device,
             Coordinates(lat=lat, lng=lng),
@@ -460,8 +475,16 @@ def preview_route(
             text(NEW_NEARBY_QUERY),
             {"device_id": device, "lat": lat, "lng": lng, "radius_meters": NEW_NEARBY_METERS},
         ).scalar()
+    rows = [*picked, *([mystery] if mystery else [])]
     response = _route_response(
-        route_date, picked, [r.id for r in picked], budget_meters, _legs_json(legs), loop, ends
+        route_date,
+        rows,
+        [r.id for r in rows],
+        budget_meters,
+        _legs_json(legs),
+        loop,
+        ends,
+        mystery_id=mystery and mystery.id,
     )
     response.meta.new_nearby = new_nearby
     return response
@@ -487,7 +510,7 @@ def accept_route(body: RouteRequest):
             _refuse_second_walk(session, body.device, route_date)
             loop = ROUTE_LOOP if body.loop is None else body.loop
             loop = loop and not body.end
-            picked, legs, _ = _plan_route(
+            picked, legs, _, mystery = _plan_route(
                 session,
                 body.device,
                 Coordinates(lat=body.lat, lng=body.lng),
@@ -506,10 +529,11 @@ def accept_route(body: RouteRequest):
                 {
                     "device": body.device,
                     "route_date": route_date,
-                    "ids": [r.id for r in picked],
+                    "ids": [r.id for r in picked] + ([mystery.id] if mystery else []),
                     "budget_meters": body.budget_meters,
                     "legs": json.dumps(_legs_json(legs)) if legs else None,
                     "loop": loop,
+                    "mystery_id": mystery and mystery.id,
                 },
             )
             # Somebody else's accept this second may have won the race - read
@@ -517,7 +541,7 @@ def accept_route(body: RouteRequest):
             row = session.execute(
                 text(ROUTE_LOOKUP), {"device": body.device, "route_date": route_date}
             ).fetchone()
-        return _stored_route(session, route_date, row)
+        return _stored_route(session, route_date, row, body.device)
 
 
 @router.post("/v1/routes/today/end", status_code=204)
@@ -533,8 +557,13 @@ def end_route(body: DeviceRequest):
 
 
 @router.get("/v1/routes/today", response_model=RouteResponse)
-def get_todays_route(device: str = Query(..., pattern=DEVICE_PATTERN)):
-    """Today's accepted walk, or 404 when this device has not accepted one."""
+def get_todays_route(
+    device: str = Query(..., pattern=DEVICE_PATTERN),
+    lat: float | None = Query(None, ge=-90, le=90),
+    lng: float | None = Query(None, ge=-180, le=180),
+):
+    """Today's accepted walk, or 404 when this device has not accepted one.
+    `lat`/`lng`, where the phone is, find the mystery stop once within reach."""
     route_date = gate.today()
     with get_session() as session:
         row = session.execute(
@@ -542,13 +571,29 @@ def get_todays_route(device: str = Query(..., pattern=DEVICE_PATTERN)):
         ).fetchone()
         if row is None:
             raise HTTPException(status_code=404, detail="No walk accepted today")
-        return _stored_route(session, route_date, row)
+        return _stored_route(session, route_date, row, device, gate.viewer_position(lat, lng))
 
 
-def _stored_route(session, route_date, row) -> RouteResponse:
+def _stored_route(session, route_date, row, device, at=None) -> RouteResponse:
     memory_ids = list(row.memory_ids)
     rows = session.execute(text(ROUTE_QUERY), {"ids": memory_ids}).fetchall()
-    return _route_response(route_date, rows, memory_ids, row.budget_meters, row.legs, row.loop)
+    earned = (
+        row.mystery_id
+        and session.execute(
+            text(EARNED_QUERY), {"memory_id": row.mystery_id, "device_id": device}
+        ).scalar()
+    )
+    return _route_response(
+        route_date,
+        rows,
+        memory_ids,
+        row.budget_meters,
+        row.legs,
+        row.loop,
+        earned={row.mystery_id} if earned else frozenset(),
+        mystery_id=row.mystery_id,
+        at=at,
+    )
 
 
 @router.get("/v1/routes/walked", response_model=WalkedResponse)
@@ -573,7 +618,7 @@ def get_walked_routes(
     earned = {i for i, r in stops.items() if r.earned}
 
     def walked(w) -> WalkedRoute:
-        ids = list(w.memory_ids)
+        ids = [i for i in w.memory_ids if i != w.mystery_id]
         rows = [stops[i] for i in ids if i in stops]
         route = _route_response(
             w.route_date, rows, ids, w.budget_meters, w.legs, w.loop, earned=earned

@@ -42,7 +42,7 @@ WORDS = {
 
 def main(start: Coordinates) -> None:
     with get_session() as session:
-        stops, legs, ends = _plan_route(
+        stops, legs, ends, mystery = _plan_route(
             session, str(uuid.uuid4()), start, BUDGET_METERS, datetime.date.today()
         )
     if legs is None:
@@ -67,7 +67,7 @@ def main(start: Coordinates) -> None:
         )
         env += [f"STOP{n}={name}", f"WORDS{n}={WORDS[name]}"]
     (OUT / "env").write_text("\n".join(env) + "\n")
-    print(" -> ".join(names))
+    print(" -> ".join(names) + (f" (mystery: {mystery.place_name})" if mystery else ""))
 
 
 if __name__ == "__main__":

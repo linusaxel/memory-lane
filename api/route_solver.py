@@ -27,7 +27,7 @@ import random
 from fastapi import HTTPException
 from sqlalchemy import text
 
-from api.gate import UNLOCK_RADIUS_METERS, meters_between
+from api.gate import MYSTERY_REACH_METERS, UNLOCK_RADIUS_METERS, meters_between
 from api.models import Coordinates
 from api.queries import ROUTE_CANDIDATES_QUERY
 from api.streets import crossings, fewer_retraced, retraced_meters, street_legs, street_table
@@ -467,7 +467,8 @@ def _plan_route(
     years: tuple[int | None, int | None] = (None, None),
 ):
     """The walk this device would get from `at` today: (stops in order,
-    stop-to-stop street legs, {out, home} street legs touching `at`). Seeded
+    stop-to-stop street legs, {out, home} street legs touching `at`, the
+    mystery stop or None). Seeded
     on device and day, so the preview and the accept that follows it pick the
     same stops without the client ever naming them.
 
@@ -563,11 +564,15 @@ def _plan_route(
             legs = legs and [legs[-1], *legs[1:-1]]
         return legs and fewer_retraced(legs, [at, *stops])
 
+    def stops_of(order):
+        return [candidates[i - 1] for i in order]
+
     shortlist = walks(set())
     order = shortlist[0]
     legs = streets(order) if order else None
     if legs is None:
-        return [candidates[i - 1] for i in order], None, None
+        line = [Coordinates(lat=c.lat, lng=c.lng) for c in stops_of(order)]
+        return stops_of(order), None, None, _mystery(candidates, order, line, [at, end])
 
     def routed_meters(legs):
         return sum(meters_between(a, b) for leg in legs for a, b in itertools.pairwise(leg))
@@ -642,4 +647,34 @@ def _plan_route(
     # into the stop-to-stop legs (stored) and the two that touch the start
     # (handed to the preview, which stores nothing).
     ends = {"out": legs[0], "home": legs[-1] if closed else None}
-    return [candidates[i - 1] for i in order], legs[1 : len(order)], ends
+    line = [p for leg in legs[1 : len(order)] for p in leg]
+    return stops_of(order), legs[1 : len(order)], ends, _mystery(candidates, order, line, [at, end])
+
+
+def _mystery(candidates: list, order: list[int], line: list[Coordinates], ends: list):
+    """The walk's mystery stop (docs/10-decisions.md#a-mystery-stop), or None:
+    the best prize of the candidates not on the walk that lie within half of
+    MYSTERY_REACH_METERS of the line between its first and last stop, so
+    walking it finds one, and twice that from every stop, the start and the
+    end, so it is found on the way and not at one of them."""
+    near = [*(candidates[i - 1] for i in order), *(e for e in ends if e)]
+    options = [
+        c
+        for n, c in enumerate(candidates, 1)
+        if n not in order
+        and _off_line(c, line) <= MYSTERY_REACH_METERS / 2
+        and all(meters_between(c, s) >= 2 * MYSTERY_REACH_METERS for s in near)
+    ]
+    return max(options, key=lambda c: (_prize(c), -c.id), default=None)
+
+
+def _off_line(p, line: list[Coordinates]) -> float:
+    """Metres from `p` to the nearest point of `line`, flat round `p`."""
+    k = 111_320 * math.cos(math.radians(p.lat))
+    xy = [((q.lng - p.lng) * k, (q.lat - p.lat) * 111_320) for q in line]
+    best = math.inf
+    for (ax, ay), (bx, by) in itertools.pairwise(xy):
+        dx, dy = bx - ax, by - ay
+        t = max(0.0, min(1.0, -(ax * dx + ay * dy) / (dx * dx + dy * dy or 1)))
+        best = min(best, math.hypot(ax + t * dx, ay + t * dy))
+    return best

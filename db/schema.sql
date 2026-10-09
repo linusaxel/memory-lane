@@ -318,6 +318,7 @@ CREATE INDEX idx_memory_notes_memory ON memory_notes(memory_id);
 -- completed_at is set once, by the unlock that earns the last stop - see 024.
 -- loop is whether the walk comes back to its start, chosen per walk - see 025.
 -- ended_at is set by "End walk"; one walk in progress per device per day - see 027.
+-- mystery_id is the walk's mystery stop, one of memory_ids, or null - see 050.
 CREATE TABLE daily_routes (
     id SERIAL PRIMARY KEY,
     device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
@@ -328,7 +329,8 @@ CREATE TABLE daily_routes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
     loop BOOLEAN NOT NULL DEFAULT TRUE,
-    ended_at TIMESTAMP
+    ended_at TIMESTAMP,
+    mystery_id INTEGER
 );
 CREATE UNIQUE INDEX daily_routes_in_progress
     ON daily_routes (device_id, route_date) WHERE ended_at IS NULL;

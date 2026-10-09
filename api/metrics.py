@@ -52,7 +52,8 @@ def metrics(session, today: date) -> dict:
                    count(DISTINCT device_id) AS walkers,
                    count(*) FILTER (WHERE completed_at IS NOT NULL) AS finished,
                    count(*) - count(DISTINCT (device_id, route_date)) AS second_walks,
-                   coalesce(avg(cardinality(memory_ids)), 0) AS stops_per_walk
+                   coalesce(avg(cardinality(memory_ids) - (mystery_id IS NOT NULL)::int), 0)
+                       AS stops_per_walk
             FROM daily_routes""")
         )
         .mappings()

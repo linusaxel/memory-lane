@@ -140,6 +140,9 @@ const planKey = (km: number, ask: WalkAsk) =>
 const MAP_RADIUS_KM = WALK_KM.max / 2;
 /** A pin on the home map: there, but not yours to open until a walk passes it. */
 const FADED_PIN = 0.4;
+/** How far you walk before the server is asked again whether you are near the
+ *  walk's mystery stop: well inside the 100 m it is found within. */
+const MYSTERY_ASK_M = 25;
 
 const FALLBACK_REGION: Region = {
   latitude: 55.67886,
@@ -326,6 +329,8 @@ export default function App() {
   const [routeEnd, setRouteEnd] = useState<Coordinates | null>(null);
   // Street shapes between consecutive stops; null draws them straight.
   const [routeLegs, setRouteLegs] = useState<Coordinates[][] | null>(null);
+  // The walk's mystery stop: true while withheld, the stop once found nearby.
+  const [mystery, setMystery] = useState<LocatedMemory | boolean>(false);
   // Resolved once at launch. Held in state rather than awaited at each call
   // site because the submit form needs it synchronously to decide whether it
   // can open at all.
@@ -561,6 +566,7 @@ export default function App() {
       setRoute(walk.memories);
       setRouteSize(walk.size);
       setRouteLegs(walk.legs);
+      setMystery(walk.mystery);
       setRouteHome(walk.loop ? start : null);
       setRouteEnd(walk.loop ? null : end);
       saveRoute({
@@ -580,6 +586,7 @@ export default function App() {
     setRoute([]);
     setRouteSize(null);
     setRouteLegs(null);
+    setMystery(false);
     setRouteHome(null);
     setRouteEnd(null);
     setRouteStarted(false);
@@ -859,6 +866,21 @@ export default function App() {
     () => route.map((memory) => unlocked[memory.id] ?? memory),
     [route, unlocked],
   );
+  const found = typeof mystery === 'object' ? (unlocked[mystery.id] ?? mystery) : null;
+  // Asked again every MYSTERY_ASK_M walked: only the server knows where it is.
+  const mysteryAskedAt = useRef<Coordinates | null>(null);
+  useEffect(() => {
+    if (stage !== 'walk' || mystery !== true || !position || !device) return;
+    const last = mysteryAskedAt.current;
+    if (last && metersBetween(last.lat, last.lng, position.lat, position.lng) < MYSTERY_ASK_M)
+      return;
+    mysteryAskedAt.current = position;
+    fetchTodaysRoute(device, undefined, position)
+      .then((walk) => {
+        if (mounted.current && walk && typeof walk.mystery === 'object') setMystery(walk.mystery);
+      })
+      .catch(() => {});
+  }, [stage, mystery, position, device]);
   // The only pins there are: what is locked around you on the home map,
   // faded; the walk being previewed; or the walk being walked. Nothing off the
   // route is drawn once a walk is planned (docs/10, "The map shows what is
@@ -870,11 +892,13 @@ export default function App() {
         : stage === 'preview' || stage === 'end'
           ? (preview?.memories ?? [])
           : stage === 'walk'
-            ? routeShown
+            ? found
+              ? [...routeShown, found]
+              : routeShown
             : stage === 'map'
               ? nearby.filter((memory) => memory.locked && !earned.has(memory.id))
               : [],
-    [pastWalk, stage, preview, routeShown, nearby, earned],
+    [pastWalk, stage, preview, routeShown, found, nearby, earned],
   );
   // The background watch tracks today's route on a walk, and off one the
   // locked memories around you, any of which may be this week's surprise
@@ -931,15 +955,16 @@ export default function App() {
     // The home map's pins are what is locked nearby, not stops: no numbers.
     if (stage === 'map' && !pastWalk) return map;
     pins.forEach((memory, i) => {
-      if (!walking || !earned.has(memory.id)) map.set(memory.id, i + 1);
+      if ((!walking || !earned.has(memory.id)) && memory !== found) map.set(memory.id, i + 1);
     });
     return map;
-  }, [pins, earned, stage, pastWalk]);
+  }, [pins, earned, stage, pastWalk, found]);
   // Only a stop of today's walk opens (docs/10, "A walk planner, nothing
   // else"); a preview's stops are not yet a walk.
   const onTodaysWalk = useCallback(
-    (id: number) => stage === 'walk' && !pastWalk && routePositionById.has(id),
-    [stage, pastWalk, routePositionById],
+    (id: number) =>
+      stage === 'walk' && !pastWalk && (routePositionById.has(id) || id === found?.id),
+    [stage, pastWalk, routePositionById, found],
   );
   const routeUnlockedCount = useMemo(
     () => routeShown.filter((memory) => earned.has(memory.id)).length,
@@ -1818,6 +1843,7 @@ export default function App() {
           {stage === 'preview' && !journalOpen && !pastWalk && (
             <Preview
               stops={preview ? preview.memories : null}
+              mystery={preview?.mystery === true}
               meters={pathMeters(previewPath)}
               km={planKm}
               onKm={setWalkKm}
@@ -2078,6 +2104,18 @@ export default function App() {
                             )}
                           </View>
                         ))}
+                        {mystery !== false && (
+                          <View
+                            style={[styles.stamp, found && earned.has(found.id) && styles.stamped]}
+                            testID="mystery-stamp"
+                          >
+                            {found && earned.has(found.id) ? (
+                              <Glyph name="checkmark" size={9} weight="bold" color={color.paper} />
+                            ) : (
+                              <Text style={styles.stampMark}>?</Text>
+                            )}
+                          </View>
+                        )}
                         <Text style={[styles.walkLeft, styles.walkCount]} numberOfLines={1}>
                           {/* An end that failed says so here, not on a card that is gone. */}
                           {planError ?? routeLeftText}
@@ -2317,6 +2355,7 @@ const styles = StyleSheet.create({
   },
   stampNext: { borderColor: color.gold },
   stamped: { backgroundColor: color.gold, borderColor: color.gold },
+  stampMark: { ...label, fontSize: 10, lineHeight: 12 },
 });
 
 /** The paper wash behind the lock: in over 600 ms, out the same, so walking

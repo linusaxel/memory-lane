@@ -37,6 +37,10 @@ SURPRISE_RADIUS_M = int(os.getenv("SURPRISE_RADIUS_M", "200"))
 SURPRISE_MINUTES = int(os.getenv("SURPRISE_MINUTES", "30"))
 SURPRISE_EVERY_DAYS = int(os.getenv("SURPRISE_EVERY_DAYS", "7"))
 
+# How near a walk's mystery stop has to find you before its place is sent.
+# See docs/10-decisions.md#a-mystery-stop.
+MYSTERY_REACH_METERS = 100
+
 
 def row_source(row) -> Source | None:
     """None for every submission - they have no content row - and for the four
@@ -306,4 +310,23 @@ def row_to_memory(row, at: Coordinates | None = None, include_distance: bool = T
         pictures=[p for p in getattr(row, "pictures", None) or [] if p.get("url")],
         anniversary=bool(getattr(row, "anniversary", False)),
         hidden=bool(getattr(row, "hidden", False)),
+    )
+
+
+def mystery_memory(row, at: Coordinates | None, earned: bool = False) -> Memory:
+    """A walk's mystery stop. Nothing of it, not even its id (which
+    /v1/memories/{id} would place), until `at` is within MYSTERY_REACH_METERS;
+    then it is a stop like any other. Once earned it stays found."""
+    coords = row_coordinates(row)
+    if earned:
+        return row_to_memory(row, coords, include_distance=False)
+    if at and coords and meters_between(at, coords) <= MYSTERY_REACH_METERS:
+        return row_to_memory(row, None, include_distance=False)
+    return Memory(
+        id=0,
+        summary="",
+        place=Place(id=0, name="", precision_meters=0),
+        tags=[],
+        confidence="medium",
+        locked=True,
     )

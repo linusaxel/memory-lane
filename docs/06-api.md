@@ -44,7 +44,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   out memories outside them or with no year; anyone else's are ignored.
   `meta.new_nearby` counts the unopened memories within 2 km added since the
   account's last walk that opened something (docs/10, "New since your last
-  walk"); such a memory also leans the walk
+  walk"); such a memory also leans the walk. `mystery`, beside `memories`, is
+  the walk's mystery stop or null: id 0 and no place while withheld (docs/10,
+  "A mystery stop")
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, end?, tags?, year_from?, year_to?}` - accept it. The
   same solve, stored; one a day per account (403 `walked_today`, bar a
   subscriber), one in progress per device, and a second accept gets that walk
@@ -54,7 +56,9 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   in `walked`; one that opened nothing is deleted. Its unearned stops lock
   again, and another can be accepted if it opened nothing or the
   account is subscribed
-- `GET /v1/routes/today?device=UUID` - today's walk in progress, or 404. Only reads
+- `GET /v1/routes/today?device=UUID&lat=X&lng=Y` - today's walk in progress, or 404. Only reads.
+  A position within 100 m of the mystery stop sends it as a locked stop; one
+  opened is always sent. It opens like any stop and is not owed to finish
 - `GET /v1/routes/walked?device=UUID` - every walk the account took that
   opened something, newest first: earned stops open, `earned` of `size`, `completed_at`
 - `GET /v1/routes/{id}` - an authored walk: its stops in order, locked like

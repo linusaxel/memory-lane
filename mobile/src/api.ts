@@ -373,10 +373,15 @@ export type TodaysRoute = {
   home_leg: Coordinates[] | null;
   /** Preview only: memories added within 2 km since your last walk. */
   new_nearby: number;
+  /** The walk's mystery stop: true while its place is withheld, the stop
+   *  once the server finds you near it, false with none (docs/10, "A
+   *  mystery stop"). Not one of `memories`, and not owed to finish. */
+  mystery: LocatedMemory | boolean;
 };
 
 type RouteBody = {
   memories?: Memory[];
+  mystery?: Memory | null;
   meta?: {
     route_date?: string;
     size?: number;
@@ -398,18 +403,24 @@ function toRoute(body: RouteBody): TodaysRoute {
     out_leg: body.meta?.out_leg ?? null,
     home_leg: body.meta?.home_leg ?? null,
     new_nearby: body.meta?.new_nearby ?? 0,
+    mystery: body.mystery ? (hasCoordinates(body.mystery) ? body.mystery : true) : false,
   };
 }
 
-/** The walk this device accepted today and has not ended, or null. */
+/** The walk this device accepted today and has not ended, or null. `at`,
+ *  where you are, finds its mystery stop once you are near it. */
 export async function fetchTodaysRoute(
   device: string,
   signal?: AbortSignal,
+  at?: Coordinates | null,
 ): Promise<TodaysRoute | null> {
+  const params = new URLSearchParams({ device });
+  if (at) {
+    params.set('lat', String(at.lat));
+    params.set('lng', String(at.lng));
+  }
   try {
-    return toRoute(
-      await get<RouteBody>('/v1/routes/today', new URLSearchParams({ device }), signal),
-    );
+    return toRoute(await get<RouteBody>('/v1/routes/today', params, signal));
   } catch (e) {
     if (e instanceof Error && e.message === 'API 404') return null;
     throw e;

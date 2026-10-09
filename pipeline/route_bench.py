@@ -88,9 +88,9 @@ def run(
         )
     today = datetime.date.today()
     began = time.perf_counter()
-    stops, legs, ends = _plan_route(session, device, start, budget, today, loop, again, end=end)
+    stops, legs, ends, _ = _plan_route(session, device, start, budget, today, loop, again, end=end)
     ms = (time.perf_counter() - began) * 1000
-    another, _, _ = _plan_route(session, device, start, budget, today, loop, again + 1, end=end)
+    another, *_ = _plan_route(session, device, start, budget, today, loop, again + 1, end=end)
     fresh = {r.id for r in another} != {r.id for r in stops}
     if legs is None:  # no stops at all, or the sidecar went away mid-run
         return {

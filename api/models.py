@@ -322,6 +322,9 @@ class RouteResponse(BaseModel):
     # Stop order is the list index - a route never has more than a handful of
     # entries, and nothing else in this API represents order any other way.
     memories: list[Memory]
+    # One more stop off the list, or null: id 0 and no place until the phone
+    # is within gate.MYSTERY_REACH_METERS of it (docs/10-decisions.md#a-mystery-stop).
+    mystery: Memory | None = None
     meta: RouteMeta
 
 

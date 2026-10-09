@@ -541,7 +541,8 @@ WALKED_TODAY_QUERY = f"""
 # Every finished walk this account took, oldest first, one a day: a
 # subscriber's second walk earns nothing more (api.progression).
 FINISHED_WALKS_QUERY = f"""
-    SELECT DISTINCT ON (route_date) id, cardinality(memory_ids) AS stops, budget_meters
+    SELECT DISTINCT ON (route_date) id,
+        cardinality(memory_ids) - (mystery_id IS NOT NULL)::int AS stops, budget_meters
     FROM daily_routes
     WHERE device_id IN {MY_DEVICES} AND completed_at IS NOT NULL
     ORDER BY route_date, completed_at
@@ -639,7 +640,8 @@ ORDER BY array_position(CAST(:ids AS integer[]), m.id)
 
 # Mark today's walk finished when this unlock earned its last visible stop.
 # Earned across MY_DEVICES, like the route's candidates; hidden stops are not
-# owed, because the walk drops them (ROUTE_QUERY). Set once, never moved.
+# owed, because the walk drops them (ROUTE_QUERY), nor is the mystery stop
+# (docs/10-decisions.md#a-mystery-stop). Set once, never moved.
 ROUTE_COMPLETED_QUERY = f"""
 UPDATE daily_routes r SET completed_at = CURRENT_TIMESTAMP
 WHERE r.device_id = CAST(:device_id AS uuid)
@@ -650,6 +652,7 @@ WHERE r.device_id = CAST(:device_id AS uuid)
   AND NOT EXISTS (
       SELECT 1 FROM memories m
       WHERE m.id = ANY(r.memory_ids) AND {VISIBLE}
+        AND m.id IS DISTINCT FROM r.mystery_id
         AND m.id NOT IN (SELECT memory_id FROM unlocks WHERE device_id IN {MY_DEVICES})
   )
 RETURNING r.id
@@ -661,7 +664,7 @@ RETURNING r.id
 # filter is here, not in Python, so LIMIT counts only walks that are listed;
 # it is what keeps today's walk out until its first unlock.
 WALKED_QUERY = f"""
-SELECT route_date, memory_ids, budget_meters, legs, loop, completed_at
+SELECT route_date, memory_ids, budget_meters, legs, loop, completed_at, mystery_id
 FROM daily_routes r
 WHERE device_id IN {MY_DEVICES}
   AND EXISTS (

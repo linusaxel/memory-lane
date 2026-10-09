@@ -139,6 +139,8 @@ type PreviewProps = {
   /** In walk order, locked: what each is of, never what it says. Null until
    *  the first walk comes back. */
   stops: LocatedMemory[] | null;
+  /** One more stop, withheld until the walk passes it. */
+  mystery: boolean;
   meters: number;
   /** What the slider asked for. */
   km: number;
@@ -225,6 +227,7 @@ function Mode({ label: text, on, onPress }: { label: string; on: boolean; onPres
 
 export function Preview({
   stops,
+  mystery,
   meters,
   km,
   onKm,
@@ -313,7 +316,7 @@ export function Preview({
     return (
       <GlassCard style={styles.card} onLayout={measure}>
         {back}
-        <Stops stops={stops} />
+        <Stops stops={stops} mystery={mystery} />
         {start}
         {error && <Text style={styles.error}>{error}</Text>}
         {close}
@@ -501,7 +504,7 @@ export function Preview({
 
 /** What the walk passes, in order: the place, when, whose story, a tag or
  *  two. All of it is on a locked memory already (api/gate.py locked_memory). */
-function Stops({ stops }: { stops: LocatedMemory[] }) {
+function Stops({ stops, mystery }: { stops: LocatedMemory[]; mystery: boolean }) {
   return (
     <ScrollView style={styles.stops} testID="walk-stops">
       {stops.map((memory, i) => {
@@ -539,6 +542,21 @@ function Stops({ stops }: { stops: LocatedMemory[] }) {
           </View>
         );
       })}
+      {mystery && (
+        <View style={styles.stop} accessible testID="mystery-stop">
+          <View style={styles.number}>
+            <Text style={styles.numberText}>?</Text>
+          </View>
+          <View style={styles.stopText}>
+            <Text style={styles.stopName} numberOfLines={1}>
+              Somewhere on the way
+            </Text>
+            <Text style={label} numberOfLines={1}>
+              One more stop. It shows when you're close.
+            </Text>
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }

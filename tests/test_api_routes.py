@@ -9,6 +9,7 @@ thing that matters is what a device actually receives.
 import datetime
 import math
 from itertools import pairwise
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import text
@@ -417,6 +418,79 @@ def test_a_stop_hidden_after_the_accept_drops_out_of_todays_walk(client, db_sess
 
     walk = client.get(f"/v1/routes/today?device={DEVICE}").json()
     assert [m["id"] for m in walk["memories"]] == stops[1:]
+
+
+def test_the_mystery_stop_is_off_every_stop_and_on_the_way():
+    def at(n, north, east=0.0):
+        return SimpleNamespace(
+            id=n, lat=LAT + north / 111_320, lng=LNG + east / 63_000, walk_score=6
+        )
+
+    first, last = at(1, 300), at(2, 900)
+    candidates = [
+        first,
+        last,
+        at(3, 600, 30),  # on the way, 300 m from both stops
+        at(4, 350, 10),  # on the way, but at a stop
+        at(5, 600, 200),  # between them, but off the way
+    ]
+    line = [Coordinates(lat=c.lat, lng=c.lng) for c in (first, last)]
+    start = Coordinates(lat=LAT, lng=LNG)
+
+    assert route_solver._mystery(candidates, [1, 2], line, [start, None]).id == 3
+    assert route_solver._mystery(candidates[:2] + candidates[3:], [1, 2], line, [start]) is None
+
+
+def _mystery_walk(db_session):
+    """Two stops north of LAT,LNG on a 2 km loop, and a third memory beside the
+    way between them that the walk passes and never stops at."""
+    _offset(db_session, 2.5)
+    _offset(db_session, 6.5)
+    place = _place(db_session, "Mystery", LAT + 0.0045, LNG + 0.0003)
+    mystery = _historical(db_session, place, "the mystery", "https://e.invalid/mystery0000")
+    db_session.commit()
+    return mystery
+
+
+def test_a_mystery_stop_is_withheld_until_the_phone_is_near_it(client, db_session):
+    mystery = _mystery_walk(db_session)
+
+    def withheld(walk):
+        return walk["mystery"]["id"] == 0 and walk["mystery"]["place"]["coordinates"] is None
+
+    preview = _preview(client, budget_meters=2000).json()
+    assert mystery not in [m["id"] for m in preview["memories"]]
+    assert withheld(preview)
+    accepted = _route(client, budget_meters=2000).json()
+    assert withheld(accepted) and accepted["meta"]["size"] == 2
+
+    today = f"/v1/routes/today?device={DEVICE}"
+    assert withheld(client.get(today).json())
+    assert withheld(client.get(f"{today}&lat={LAT}&lng={LNG}").json())
+    found = client.get(f"{today}&lat={LAT + 0.004}&lng={LNG}").json()["mystery"]
+    assert found["id"] == mystery and found["locked"] and found["summary"] == ""
+    assert found["place"]["coordinates"] is not None
+
+
+def test_a_mystery_stop_opens_like_a_stop_and_is_not_owed(client, db_session):
+    mystery = _mystery_walk(db_session)
+    stops = [
+        (m["id"], m["place"]["coordinates"])
+        for m in _route(client, budget_meters=2000).json()["memories"]
+    ]
+
+    def unlock(memory_id, lat, lng):
+        return client.post(
+            f"/v1/memories/{memory_id}/unlock", json={"device": DEVICE, "lat": lat, "lng": lng}
+        )
+
+    assert unlock(mystery, LAT + 0.0045, LNG + 0.0003).json()["locked"] is False
+    found = client.get(f"/v1/routes/today?device={DEVICE}").json()["mystery"]
+    assert found["id"] == mystery and not found["locked"], "found stays found"
+    for memory_id, at in stops:
+        unlock(memory_id, at["lat"], at["lng"])
+    finished = db_session.execute(text("SELECT completed_at FROM daily_routes")).scalar()
+    assert finished is not None
 
 
 def test_the_unlock_that_earns_the_last_stop_finishes_the_walk_once(client, db_session):
