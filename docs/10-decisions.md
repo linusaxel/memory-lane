@@ -2937,6 +2937,41 @@ release.
 The press that opens the card is now the location ask (F8), which keeps it a
 press with a reason.
 
+### A mystery stop
+
+Status: Accepted 2026-10-09. Amends *A walk planner, nothing else*: one stop
+of a walk is not on its list.
+
+A walk was a list you could read through before leaving, so nothing on it was
+a surprise until the story itself. Zygarde Cells on Pokémon GO's Routes and
+Adventure Lab's bonus cache keep a reward on the way unseen, and an uncertain
+reward motivates more than a known one (Shen, Fishbach & Hsee 2015).
+
+- **The solver picks it** (`_mystery` in `api/route_solver.py`): the best
+  prize of the candidates not on the walk that lie within 50 m of the way
+  between its first and last stop, and at least 200 m from every stop, the
+  start and the end. On the way so walking it finds one, before the last
+  stop so the walk does not end first, and found between stops rather than at
+  one. None qualifies, no mystery.
+- **The server withholds it** (`gate.mystery_memory`). It is in
+  `daily_routes.memory_ids`, so it opens like any stop, and in `mystery_id`.
+  Every route response sends it apart from `memories` as id 0 with no place,
+  because its id would place it through `/v1/memories/{id}`. `GET
+  /v1/routes/today` with a position within `MYSTERY_REACH_METERS` (100) sends
+  it as a locked stop; once opened it stays found.
+- **One more mark, not a new pin.** "?" in the stop list and on the walk card,
+  never on the map. Found, it is drawn as any pin, without a number.
+- **A bonus, not owed.** Finishing the walk, its XP and the stop count leave
+  it out, and the journal's past walks don't list it. No daily cap: every
+  walk may have one, and missing one costs nothing.
+
+**Consequences:** the phone asks again every 25 m walked while it is
+withheld. Position is self-reported (*The position is self-reported*), so a
+sweep of fake positions finds it; it hides a surprise, not a secret.
+
+**Measure:** walks finished, and stops opened per walk, with a mystery
+against without.
+
 ---
 
 ## Product
@@ -3023,6 +3058,8 @@ Across every source:
   assessment instead. A dead person is protected for 10 years after death (§2(5)). Health,
   politics (WWII resistance or collaboration) and crime about private people
   are Art 9 and §8 data: suppress them.
+  The assessment, and a DPIA of location, is
+  [data-protection.md](data-protection.md) (draft, 2026-10-09).
 - **An exact address next to a private person** is the risk of straffeloven
   §264d (private matters) and §267 (a hallucinated slur). Place them at the
   street, or drop the name.

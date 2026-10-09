@@ -16,8 +16,16 @@ from sqlalchemy import text
 from api.accounts import OWNED_DEVICES, OWNED_MEMORIES
 from pipeline.db import get_session
 
-BY_DEVICE = ("unlocks", "memory_hearts", "memory_notes", "reports", "daily_routes", "media")
-BY_USER = ("identities", "subscriptions")
+BY_DEVICE = (
+    "unlocks",
+    "memory_hearts",
+    "memory_notes",
+    "reports",
+    "blocks",
+    "daily_routes",
+    "media",
+)
+BY_USER = ("identities", "subscriptions", "surprises")
 
 
 def my_data(session, device: str) -> dict:

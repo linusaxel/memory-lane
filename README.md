@@ -64,6 +64,7 @@ See [docs/repository-map.md](docs/repository-map.md). Run the tests with `./loop
 | [11-memory-types.md](docs/11-memory-types.md) | What a memory is and isn't: layer vs. tag vs. confidence |
 | [research-progression.md](docs/research-progression.md) | XP, loot and money in walking games: what lasted, with sources |
 | [permission-request.md](docs/permission-request.md) | The email asking a YouTube channel for written permission, and what must be true first |
+| [data-protection.md](docs/data-protection.md) | The legitimate-interest assessment and DPIA: location, and sources that name private people |
 | [mobile/UI.md](mobile/UI.md) | Design tokens and app constraints |
 
 The API's endpoint list lives in [06-api.md](docs/06-api.md).

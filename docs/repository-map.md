@@ -18,6 +18,7 @@ Where things live. How they talk to each other is in [architecture.md](architect
 | `osrm/` | `build.sh` and the Copenhagen extract for a local walking router |
 | `media/` | Uploads land here in dev (`MEDIA_DIR`). A named volume under Docker |
 | `docs/` | Everything else. The index is in [README.md](../README.md#documentation) |
+| `docs/data-protection.md` | The legitimate-interest assessment and the DPIA (location; sources naming private people), for the lawyer |
 
 Root files: `Dockerfile`, `railway.json` and `start.sh` (deployment, see
 [architecture.md](architecture.md#deployment)), `docker-compose.yml`, `pyproject.toml`

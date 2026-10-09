@@ -81,33 +81,38 @@ real account features. Paste this into the review notes:
 
 ## Play Data safety answers
 
-Answer these against `store/privacy.md`, not from memory — the app collects more
-than it did before submissions and sign-in landed.
+Answer these against `store/privacy.md`, not from memory.
 
-- **Location** (approximate and precise): collected, **not** stored, **not**
-  linked to the user, App functionality. A coordinate you choose to attach to a
-  memory you post is a different thing — see User content below.
-- **Personal info → Name**: optional display name, collected and **stored**,
-  **linked** to the user, shown publicly under what they post. App functionality.
-- **Personal info → Email address**: collected only if you sign in with Google or
-  Apple and allow it, stored, linked to the user, Account management. Not shown
-  to anyone and never used to contact you.
-- **Photos and videos**: collected only when attached to a memory, stored,
-  linked to the user, **shown publicly**. App functionality.
+- **Location → Precise**: collected, linked to the user, App functionality.
+  The position is not stored in the database, but a walk's stops and street
+  shape, each opened story with its time, and the request logs are.
+- **Personal info → Name**: the display name (by default the name Google or
+  Apple hands over), stored, linked, shown publicly under what they post. App
+  functionality.
+- **Personal info → Email address**: only if the provider hands over a verified
+  one, stored, linked, Account management. Never shown, never used to contact.
+- **Personal info → User IDs**: the provider's account id and our own; the
+  self-generated installation identifier. Linked. App functionality, Account
+  management.
+- **Financial info → Purchase history**: whether a subscription is active and
+  until when, via RevenueCat. Linked. App functionality.
+- **Photos and videos**: attached to a memory or set as a profile photo,
+  stored, linked, **shown publicly**. App functionality.
 - **Audio → Voice or sound recordings**: same as photos.
 - **Messages / other user-generated content**: the memory text, its tags, the
-  place name and the coordinates it was filed at. Stored, linked to the user,
+  place name and the coordinates it was filed at, and notes. Stored, linked,
   shown publicly.
-- **App activity**: which memories an installation has unlocked, against a
-  self-generated identifier.
-- No advertising ID. Data is not shared with third parties and is not sold.
-- Users can request deletion — see the Contact line in the privacy policy.
+- **App activity → App interactions**: walks, opened stories, hearts, reports,
+  blocks. Linked. App functionality.
+- No advertising ID, no tracking. Shared with processors only (Railway,
+  RevenueCat, Anthropic), which Play does not count as sharing. Not sold.
+- Data is encrypted in transit. Users can delete their account in the app.
 
 ## App Store privacy nutrition label
 
-- **Data linked to you**: Name (display name), Email address (sign-in only),
-  Photos or Videos, Audio Data, User Content, Coordinates attached to a post.
-  Purpose: App Functionality.
-- **Data not linked to you**: Precise Location, used to find and unlock nearby
-  memories. App Functionality.
+- **Data linked to you**: Precise Location, Name, Email Address, User ID,
+  Purchase History, Photos or Videos, Audio Data, Other User Content, Product
+  Interaction. Purpose: App Functionality.
+- **Data not linked to you**: none.
 - Not used for tracking. No third-party advertising.
+- `ios.privacyManifests` in `mobile/app.json` declares the same list.
