@@ -8,7 +8,7 @@ Grandjean's mother's cousin once filed past the dead King Frederik VII's coffin 
 
 Grandjean, then a boy, had watched the royal barge bring the King's body home by torchlight, and he remembered this comic moment from that week.
 
-Verdict: 
+Verdict: n - who is Grandjean's mother's cousin? a reader wouldn't know
 
 ## 2. Prices Theater, Copenhagen
 
@@ -16,13 +16,13 @@ The little wooden hut on Vesterbro, the "Pricekomedie", was where Schorn had his
 
 If the show did not start punctually, the whole audience stamped in an agreed rhythm, sometimes under raised umbrellas, since rain often came through the roof. Every old Copenhagener of the time carried home some of his happiest memories from this little house.
 
-Verdict: 
+Verdict: y
 
 ## 3. Kongens Nytorv
 
 The old Royal Theatre is gone, but on the evening of 15 November 1863 it was the stage for the day's events. King Frederik VII lay dead at Glücksborg, though Copenhagen did not know for certain until half past seven. Half an hour earlier a party of Student Union members had gone to the theatre, taken tickets for the second-class pit, and read the bulletins on the King's illness aloud to the audience, asking people to leave. The actors agreed not to play, and Phister announced it from the stage.
 
-Verdict: 
+Verdict: n - who is Phister? nobody introduced
 
 ## 4. Eremitagesletten
 
@@ -30,7 +30,7 @@ This open ground, Eremitagesletten, was a racecourse, and in 1870 Axel Grandjean
 
 The friends went to Tivoli, and along the shore road strangers shouted the news to one another. From the carriages came the Marseillaise, now and then 'The Brave Soldier'. In Tivoli the concert hall played Danish and French anthems in turn and the whole audience sang.
 
-Verdict: 
+Verdict: y
 
 ## 5. Tivoli, Copenhagen
 
@@ -38,7 +38,7 @@ A single tune ended Balduin Dahl's career at Tivoli. Field Marshal Moltke, on a 
 
 Nobody objected that night, but the next day the press and the Tivoli public erupted. Dahl was whistled out by the book. Crowds of students lined up at the Tivoli entrance to escort him home with whistling, jeers and bodily threats. After several evenings of this, police were posted in force in the concert hall and arrests were made. A police ban on whistling during the orchestra's numbers was posted, yet after each piece an infernal whistling concert broke out. Tivoli finally hired a pianist, Leser, to start playing the moment each orchestral number ended. Every evening after the concert, Dahl had to be rowed across the Tivoli lake to the rampart by Filosofgangen, to avoid the mob at the gate onto Vesterbrogade. Tivoli then ruled that its conductors may not play foreign national anthems outside the evening programme without the management's permission. The rule still stands, and the affair was Dahl's undoing: he fell seriously ill some years later and died.
 
-Verdict: 
+Verdict: y - but who is Balduin Dahl
 
 ## 6. Nørreport
 
@@ -46,7 +46,7 @@ Nørreport was the north gate of the city's fortifications, with a moat and brid
 
 On the way he passed the sentries at Nørreport and at the outwork beyond it, and they gave him the salute due an officer. He remembered the drilling itself as pure humbug: the recruits got more practice at emptying the canteen-keeper's little glasses of schnapps than at handling a rifle.
 
-Verdict: 
+Verdict: y - but who is Zinck, and what is humbug
 
 ## 7. Børsbroen
 
@@ -54,7 +54,7 @@ Christiansborg Palace burned here on 3 October 1884, and this bridge by the Exch
 
 On the way to Philosophgangen they met carts loaded with paintings from the gallery, cut from their frames by passers-in. Students covered the roof of Thorvaldsens Museum with wet sailcloth to put out the sparks, and Russian officers and sailors from a ship in the roads ran up to help. Sparks fell like rain over the streets. Near midnight, just after they got home, a violent bang rattled their windows: the building joining the palace to the church had been blown up, and the church was saved.
 
-Verdict: 
+Verdict: y - but who are these people
 
 ## 8. Amalienborg
 
@@ -62,7 +62,7 @@ Near Amalienborg, the night the army gave up the Dannevirke line in February 186
 
 The riot came again the next evening, weaker than the first. Other mobs went across to Christianshavn and woke Minister Monrad, shouting "Landsforræder" (traitor to the country).
 
-Verdict: 
+Verdict: y
 
 ## 9. Kronprinsessegade 22
 
@@ -70,31 +70,31 @@ The windows of this house looked straight over the drill ground at Rosenborg Cas
 
 Three-year-old Otto Zinck watched it from these windows, and it stayed in his memory. Afterwards his father put on a performance at the Royal Theatre to raise money for Roat's family.
 
-Verdict: 
+Verdict: y - but who is Otto Zinck
 
 ## 10. Postgården, København
 
 The royal porcelain factory ended up as a kind of branch of the General Post Office, and its overseer lived in the post yard itself. Holm, head of the General Post Office, was given a free residence in the Postgård: 19 larger and smaller rooms, stabling for six horses, four coach houses, hay lofts and fodder rooms, all supposedly so he could keep a closer eye on the factory, which lay roughly across the street. The factory's grounds ran from Købmagergade to Springgade, and it was also assigned a yard for firewood in the General Post Office's courtyard on Købmagergade, today's Postgård. The factory was run by the postal chief, and in hard times it drew its subsidies from the post office.
 
-Verdict: 
+Verdict: n - how is this related to the location?
 
 ## 11. Thorvaldsens Museum, Copenhagen
 
 On the evening of the Thorvaldsen centenary, 19 November 1870, crowds were lined up in rows at Stormbroen, filed past the museum's main entrance and away over Høibro. The museum itself lay completely dark, but its great wing doors stood open, and a mass of gas jets hidden behind the pillars lit the vestibule with its large equestrian statues. Further back the grave was lit the same way, and behind it the Christ hall stood open and brightly lit, so that the figure of Christ seemed to stand with outstretched arms right behind the grave. All the houses along the quay were illuminated, and the large crowd was orderly. That morning the mayor had kept his hat on while tossing a wreath toward the grave, where King Christian bared his head and carefully straightened his own wreath.
 
-Verdict: 
+Verdict: y - but who is Thorvaldsen
 
 ## 12. Nyhavn, Copenhagen
 
 A bear cub once held off a pack of dogs on this quay. A sailor of Anholm, a schoolboy's father and a ship's captain, had brought the cub home from Norway. It was tame and wandered about the ship, and the boys played with it like a puppy. One day it went ashore and dogs gathered, barking at it. The cub sat down with its back against the quay wall, and each time a dog came near it cuffed the dog on the side of the head with its paw.
 
-Verdict: 
+Verdict: y - but what is a quay?
 
 ## 13. Vor Frue Kirke, Copenhagen
 
 On the evening of 2 September, a bomb tore the long hand of the tower clock off Vor Frue Kirke and flung it toward Dyrkøb. It lay on the ground, as long as a lance. Bergsøe's father had just crossed the square at risk of his life, after helping Bugge pack books and instruments from Nørregade. The next day a Congreve rocket set the church's spire on fire. When the family came back from the Round Tower, everything around the church lay in rubble and ruins.
 
-Verdict: 
+Verdict: y - but who is Bergsøe
 
 ## 14. Wildersgade
 
@@ -102,7 +102,7 @@ This street, now called Wildersgade, was Lille Kongensgade in 1846, and by Bergs
 
 One day Pastor Visby, chaplain at the house of correction, stopped by a group of them. Kindly, he told them they had built a whole town with houses, streets and squares, and a church too. Was it the Church of Our Saviour? It was. "But where is the pastor?" he asked coaxingly, for he could not find him. The children answered that the pastor was not there either. There was not dirt enough for him. Visby walked on.
 
-Verdict: 
+Verdict: y - who is this pastor, but why not
 
 ## 15. Nygade
 
@@ -110,25 +110,25 @@ Roslin's portrait of Holberg once stood in Ernst Bojesen's shop in Nygade, on lo
 
 Two days later, on 3 October, the palace caught fire and burned through the night, then smouldered for more than three weeks. The painting in Nygade was unharmed.
 
-Verdict: 
+Verdict: y - same, who is he; and is it tied to the location?
 
 ## 16. Kongens Nytorv
 
 The old Royal Theatre stood on this square, though it is gone now. When winter evenings had kept the family at home for weeks, their father would one day break the spell. The children sat down to dinner and felt something hard in their napkins: tickets for that night. The jubilation was double, since they had had no chance to enjoy the prospect beforehand. Then, in the hour before the curtain rose, the two brothers stared at the curtain with tense expectation, for behind it hid the whole wonderful world of the stage, waiting to step out to meet them.
 
-Verdict: 
+Verdict: y - but who are these kids
 
 ## 17. Rundetårn, Copenhagen
 
 In September, during the British bombardment, the Round Tower was packed with refugees. Bugge, the astronomer, had already stored the observatory's instruments and the rarest books of the University Library in its hollow core, and he thought the tower bombproof. People crowded in anyway, piling trunks, bundles, junk and valuables up the spiral ramp, until the entrance was blocked and Bugge's protests went unheard. The boy Bergsøe, his mother and his father spent the night on the top, and the boys were allowed to play on the platform. At seven, as the clock struck on Vor Frue Kirke, they saw the first bombs and fire rockets trace the sky. Two bombs fell on the platform without harm, but gave a hollow boom down the spiral ramp. Next day Bugge and the boy's father judged the tower unsafe, since a stray rocket through a slit could ignite all the furniture and bedding in the ramp.
 
-Verdict: 
+Verdict: y - really good
 
 ## 18. Kongens Nytorv, Copenhagen
 
 King Christian IX was once announced by a landlady as 'a gentleman who says he is the King'. H. C. Andersen, the poet, lodged here at the corner of Kongens Nytorv and Lille Kongensgade with a lady who ran a photographic studio. When Andersen had been ill for some time, Christian IX came up to see him. The lady did not know the king and answered evasively when he asked whether Andersen was at home. The king said: 'Just tell him it is the King!' She opened the door to Andersen's room and announced: 'Will the Councillor of State receive? There is a gentleman here who says he is the King!' Andersen nearly went into a fit of fright, but the king was let in. Some time later the king came again. This time she curtsied deeply as she opened the door, and the king smiled: 'Well! Today you know me, I suppose!' She answered with pathos: 'Should I not know my King?'
 
-Verdict: 
+Verdict: y
 
 ## 19. Kongens Nytorv
 
@@ -136,7 +136,7 @@ The old Royal Theatre that stood on Kongens Nytorv is gone, replaced by the pres
 
 The theatre was in trouble: a prompter who could sing the parts from sight was hard to find. On Ludvig's advice they asked his brother Georg, a medical student who sang tenor in a church on the side. At a rehearsal of Nonnerne, the theatre chief Holstein heard Georg fill in for a sick singer, and was so struck that right after the rehearsal he offered him a large engagement as royal opera singer. The theatre had badly missed a tenor since 1808.
 
-Verdict: 
+Verdict: y
 
 ## 20. Nørregade
 
@@ -144,7 +144,7 @@ Nørregade is where Justitsraad Lund once lived, a bank office chief whose wife 
 
 The author found this a little odd but stayed an hour. Lund was very kind and at times irresistibly funny.
 
-Verdict: 
+Verdict: n - how is this related to the location, and what is the story?
 
 ## 21. Nyhavn
 
