@@ -19,6 +19,7 @@ Where things live. How they talk to each other is in [architecture.md](architect
 | `media/` | Uploads land here in dev (`MEDIA_DIR`). A named volume under Docker |
 | `docs/` | Everything else. The index is in [README.md](../README.md#documentation) |
 | `docs/data-protection.md` | The legitimate-interest assessment and the DPIA (location; sources naming private people), for the lawyer |
+| `docs/labels/scene-first-blind.md` | The 82 blind cards (scene-first against stored) for the founder to mark y/n; `scene-first-key.json` says which is which. Don't open the key before labelling |
 
 Root files: `Dockerfile`, `railway.json` and `start.sh` (deployment, see
 [architecture.md](architecture.md#deployment)), `docker-compose.yml`, `pyproject.toml`
