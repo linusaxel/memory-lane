@@ -377,6 +377,7 @@ export default function LocketUnlock({
   );
 
   // ─── one place that turns state into every moving number ─────────────────
+  const sealing = !!onSealed;
   const motion = useDerivedValue<Motion>(() => {
     const p = progress.value;
     const o = openP.value;
@@ -406,7 +407,8 @@ export default function LocketUnlock({
     // the locket turns toward you to take the key, then faces you again
     const ka = open || reduce ? 0 : eio(seg(pp, 0, 0.22)) * (1 - eio(seg(pp, 0.82, 1)));
     // and leaves with the lid before it passes 90°: past that it would point into the case
-    const keyOp = done ? (open ? 1 - seg(oa, 0.05, 0.18) : 1) : seg(p, 0, 0.16);
+    // and never comes back as the lid shuts on a memory just filed
+    const keyOp = sealing ? 0 : done ? (open ? 1 - seg(oa, 0.05, 0.18) : 1) : seg(p, 0, 0.16);
 
     const zt = open && !reduce ? seg(o, 0.5, 0.9) : 0;
     return {
@@ -429,7 +431,7 @@ export default function LocketUnlock({
       glow: open ? eoc(seg(oa, 0.15, 0.7)) : 0,
       o: open ? o : 0,
     };
-  }, [reduce, swing]);
+  }, [reduce, swing, sealing]);
 
   // ─── styles for each layer ───────────────────────────────────────────────
   const P = { perspective: 900 };
