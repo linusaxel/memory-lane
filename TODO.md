@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`reopened` keeps most stock openers it was built to fix.** 2026-10-10:
+  6 of 15 cards saved after it landed still open "This is…". The rewrite
+  comes back opening on a date ("On 16 April 2024…"), which `STOCK_OPENING`
+  rejects too, or rewrites past the first sentence, so the card is kept as
+  written, silently. Fix: `REOPEN_PROMPT` says no date first and shows one
+  before/after, measured on these six (`extraction_chunks`, prompt 0b71bc44).
+
 - **Walk scores are never refreshed when the rubric changes.** 2026-10-10:
   re-scoring 68 memories, 10 scored on 09-27 fell from 6-8 to 3-5 and stayed
   there on two reruns; 81 of 261 good memories carry pre-October scores, so
