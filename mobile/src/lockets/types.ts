@@ -81,6 +81,9 @@ export type LocketDesign = {
   hingeX: number;
   /** y of the hinge axis origin if it differs from cy (Heart) */
   hingeY?: number;
+  /** radius of the widest circle around (cx, cy) inside the open case, if under
+   *  0.9·(cx − hingeX): the dive zooms until it covers the screen (Eye, Heart) */
+  inside?: number;
   /** case outline as an SVG path; used for edge thickness, the shine clip and the inner face */
   outline: string;
   /** where the 5 sparkles pop on open ([] for none) */

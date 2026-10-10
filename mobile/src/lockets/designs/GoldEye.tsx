@@ -326,6 +326,7 @@ export const GoldEye: LocketDesign = {
   cx: 150,
   cy: 170,
   hingeX: 46,
+  inside: 68,
   outline: ellipsePath(150, 170, 104, 78),
   sparkles: [
     [262, 120],

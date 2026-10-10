@@ -226,6 +226,8 @@ export const GoldHeart: LocketDesign = {
   cy: 172,
   hingeX: 64,
   hingeY: 150,
+  // the cleft at the top, inset 0.9
+  inside: 49,
   outline: HEART,
   sparkles: [
     [246, 96],

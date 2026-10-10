@@ -306,6 +306,8 @@ export default function App() {
   const { height: windowHeight } = useWindowDimensions();
   // The dive, growing over the map into the card it opens.
   const [diving, setDiving] = useState<{ grown?: boolean } | null>(null);
+  // The locket being opened, kept on screen through its lid swing and dive.
+  const [opening, setOpening] = useState<{ group: MemoryGroup; index: number } | null>(null);
   // A memory just filed, its locket shutting over the map (LocketSeal).
   const [sealing, setSealing] = useState<{
     memory: LocatedMemory;
@@ -1030,8 +1032,10 @@ export default function App() {
     () => openAt.map((memory) => unlocked[memory.id] ?? memory),
     [openAt, unlocked],
   );
-  // After the last stop's sheet is closed, not over it: that memory is read first.
-  const showDone = walkDone && openAt.length === 0;
+  // After the last stop's sheet is closed, not over it: that memory is read
+  // first. Nor while its locket opens: walkDone lands with the server's yes,
+  // before the dive fills openAt.
+  const showDone = walkDone && openAt.length === 0 && !opening;
   // A walked walk has nothing left to lose, so it ends itself: after the
   // finish card's Done, or at once on a relaunch. Locally even offline; the
   // next launch ends it on the server again.
@@ -1208,8 +1212,6 @@ export default function App() {
     return [...ringHere].sort((a, b) => a.away - b.away)[0] ?? null;
   }, [ringHere, position, pickedId, stopHere]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
-  // The locket being opened, kept on screen through its lid swing and dive.
-  const [opening, setOpening] = useState<typeof ringFor>(null);
   const lockFor = opening ?? ringFor;
   // The bottom row's middle while a memory is in reach: the slide that opens it.
   const slide = lockFor && (

@@ -133,17 +133,17 @@ export default function LocketUnlock({
   const zoomMax = useSharedValue(14);
 
   // The dive ends with the inside covering the whole screen, whatever the
-  // locket's shape: its half-width reaches the farthest corner. IrisGrow takes
+  // locket's shape: its inscribed circle reaches the farthest corner. IrisGrow takes
   // over from there (docs/10, "One handover for every locket").
   const measureZoom = useCallback(() => {
     root.current?.measureInWindow((x, y) => {
       const px = x + cx * k;
       const py = y + cy * k;
       const far = Math.hypot(Math.max(px, window.width - px), Math.max(py, window.height - py));
-      const inside = 0.9 * (cx - hingeX) * k;
+      const inside = (design.inside ?? 0.9 * (cx - hingeX)) * k;
       zoomMax.value = Math.max(14, (1.1 * far) / inside);
     });
-  }, [cx, cy, hingeX, k, window, zoomMax]);
+  }, [cx, cy, hingeX, design.inside, k, window, zoomMax]);
 
   const { m, d, pressIn, release, scrub, open } = useLockMotion(design, {
     requestUnlock,
@@ -330,9 +330,12 @@ type IrisProps = {
 /** The dive, handed over: the locket's zoom ends with its inside covering the
  *  screen, and from then this full-screen paper, over it, settles down into
  *  the card's frame. It matches no locket's shape, so every locket blends the
- *  same. In light the inside's glow fades to paper as it settles; in dark,
- *  where a cream screen would flash, the paper fades in over the dive itself,
- *  so the locket dives into plum-black and nothing is ever white.
+ *  same. In light it fades in over the dive's last stretch, cream onto the
+ *  cream inside, so a darker inside (Night) or a corner the dive leaves
+ *  uncovered blends instead of cutting, and the glow fades to paper as it
+ *  settles. In dark, where a cream screen would flash, the paper fades in over
+ *  the dive itself, so the locket dives into plum-black and nothing is ever
+ *  white.
  *  The parent removes it once the card is up. With Reduce Motion it draws
  *  nothing and hands over at once. */
 export function IrisGrow({ height, onGrown }: IrisProps) {
@@ -358,7 +361,7 @@ export function IrisGrow({ height, onGrown }: IrisProps) {
   const frame = useAnimatedStyle(() => {
     const b = settle.value;
     return {
-      opacity: dark ? Math.min(ms.value / DIVE_MS, 1) : ms.value >= DIVE_MS ? 1 : 0,
+      opacity: dark ? Math.min(ms.value / DIVE_MS, 1) : seg(ms.value, 0.7 * DIVE_MS, DIVE_MS),
       top: (screen - height) * b,
       borderTopLeftRadius: radius.card * b,
       borderTopRightRadius: radius.card * b,

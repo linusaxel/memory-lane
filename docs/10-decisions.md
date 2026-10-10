@@ -180,7 +180,10 @@ the inside covering the whole screen (zoomed until its inscribed circle
 reaches the farthest corner), the engraving fades out early, and only then
 does full-screen paper (`IrisGrow`) settle down into the card's frame. It
 matches no shape, so any locket, and any dive a locket gets later, blends
-the same way as long as it ends with its inside filling the screen.
+the same way as long as it ends with its inside filling the screen. A design
+whose inside is narrower than its half-width says so with `inside` (the eye,
+the heart's cleft), and in light the paper fades in over the dive's last
+stretch, so a darker inside (night) blends instead of cutting.
 
 **Options considered:** an iris per shape (an oval, an octagon...), which
 every new locket would have to redraw and a View cannot round into an
