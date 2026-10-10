@@ -36,7 +36,9 @@ What raises it: it happened right here, at this building or square; the walker
 can see the spot or what is left of it; a scene with people and stakes; a
 "wait, here?" surprise; awe, danger, anger, tenderness or absurdity; it changes
 how the spot looks now; someone famous, introduced, was right here: this bar,
-this stage, this doorway, more so on a night something happened.
+this stage, this doorway, more so on a night something happened; a famous
+work was written, painted or set right here, or a discovery made here: the
+walker stands where it began, or sees the view the painter saw.
 What sinks it: it sells a business; a private person's death, illness or crime;
 a name it never introduces; any place of its kind would tell it the same;
 nothing happens, only names, dates or a description.

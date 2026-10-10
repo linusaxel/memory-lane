@@ -155,6 +155,14 @@ festivals', venues' and institutions' own history pages and news archives.
   Wikidata: 927 events since 1960 in the bbox, about 15 fun with a real
   article, none geotagged, so `wikipedia:` misses them (a `titles:` mode
   pinned at the P276 venue would catch them).
+- **Made or found here, via Wikidata (2026-10-10, source 300 rejected):** in
+  the bbox P1071 (location of creation) has 2 items, P189 (location of
+  discovery) none. P840 (narrative location) has ~300, all novel and film
+  plots: fiction is not something that happened here (1 of 8 screened).
+  Paintings that depict a spot (P180) number 132, 14 with an article: a
+  picture lead, not text. For works and breakthroughs made at a spot, read
+  memoirs, letters and biographies (Ørsted, Andersen, Bohr), where the
+  writer says where it happened.
 - **Restricted:** Street Art Cities (address metadata needs written
   permission), StoryHunt (stories in its paid app), Sydhavnens Historie
   ("reproduction only by prior agreement", 1940s-60s, about 25 good).

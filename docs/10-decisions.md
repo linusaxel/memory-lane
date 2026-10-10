@@ -4422,6 +4422,37 @@ line.
 **Options considered:** drawing the four new lids in the old engine (rejected:
 it keeps the key and loses each locket's own motion).
 
+### Made or found here is a stop
+
+Status: Accepted 2026-10-10. The founder: "if a particular place inspired a
+work of art, or if a work of art was created in a particular place, or some
+kind of realization or even a scientific breakthrough happened somewhere -
+this is memory worthy".
+
+The judge already kept these stories: four held-out ones (Kierkegaard
+finishing Either/Or at Nytorv, Bohr and Heisenberg at Blegdamsvej, Købke on
+the Kastellet rampart, Andersen's first tales at Nyhavn 20) passed 3 of 3
+before any change. The walk score sank them to 4-6, since a work is "only a
+name and a date". `walk_score.PROMPT` now counts a famous work written,
+painted or set right here, or a discovery made here, as raising a story.
+
+| | before | after |
+|---|---|---|
+| held out, mean of 3, at 6 or more | 1 of 4 | 3 of 4 |
+| controls ("Krøyer lived here", a build date) | 2.0, 0.3 | 2.0, 0.7 |
+| `walk_score --labels` AUC (judgeable) | 0.688 (0.846) | 0.697 (0.855) |
+| good (of them walks) | 52 (26) | 56 (27) |
+
+"Lived or worked here" still sinks a story, both in the judge and in the walk
+score: the work or the discovery is the event.
+
+**Options considered:** a QUALIFIES bullet in `HISTORICAL_SYSTEM_PROMPT`
+(`quality --compare` on 8 memoir chunks kept 6 against 3, none of the extra
+about a work, so it loosened extraction without reaching these stories); a
+sentence in the judge's `only_here` (nothing to fix); a Wikidata
+made/set/discovered-here fetcher (the find-sources ledger: P840 is fiction,
+and P1071 and P189 are empty here).
+
 ### Rejected approaches, do not retry
 
 Status: Rejected
