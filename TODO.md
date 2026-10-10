@@ -24,6 +24,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **No e2e flow screenshots the locket.** 2026-10-10: porting the unlock
+  engine, walk-and-unlock passed green with nothing showing the lid had drawn
+  or swung. It took a hand loop of `simctl io screenshot` and contact sheets
+  to see it. Fix: `takeScreenshot` in `steps/unlock-stop.yml` mid-hold and
+  just after the commit.
+
 - **A change to `mobile/app.json` leaves e2e on INFRA for the next
   session.** 2026-10-09: the privacy commit touched it and the next
   `./e2e/run.sh` stopped until a hand `expo prebuild --clean` and `pod

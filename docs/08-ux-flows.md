@@ -307,7 +307,7 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
    route stop's first, and ‹ › beside the locket (or tapping the other pin)
    points it at another.
 3. The unlock is a deliberate physical act, not a tap: "slide to unlock" in
-   the bottom row, the key turning under your thumb as the knob moves, or
+   the bottom row, the locket's hold playing under your thumb as the knob moves, or
    press and hold the locket ~900ms; light haptic going in and a heavier one
    on completion.
    It should feel like a lock turning.

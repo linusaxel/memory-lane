@@ -20,7 +20,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import Glyph from './Glyph.tsx';
 import type { LocketDrive } from './LocketUnlock.tsx';
-import { clamp } from './lockMotion.ts';
+import { clamp } from './lockets/math.ts';
 import { color, foil, font, lift, radius } from './theme.ts';
 
 type Props = {

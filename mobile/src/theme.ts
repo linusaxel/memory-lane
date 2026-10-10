@@ -89,8 +89,8 @@ export const foil = {
   text: '#1E1626',
 };
 
-/** The lockets' metal, for the unlock's Svg (LocketUnlock.tsx). One set in
- *  both themes: it is gold, not a surface. */
+/** The lockets' metal, for the unlock's Svg (lockets/). One set in both
+ *  themes: it is gold, not a surface. */
 export const metal = {
   hi: '#FFF1C1',
   light: '#F2D58A',
@@ -109,6 +109,13 @@ export const metal = {
   glow: '#FFFDF9',
   /** The compass's N. */
   north: '#8F2F1B',
+  /** What is engraved inside, and the night locket's. */
+  ink: '#1C1917',
+  faded: '#776E64',
+  nightText: '#F2EDE4',
+  nightFaded: '#9A9086',
+  /** The compass's needle tip and the sweetheart's small heart. */
+  red: '#C0462B',
 };
 
 /** The paywall's plum velvet, one set in both themes: it is cloth. */

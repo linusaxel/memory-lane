@@ -3530,7 +3530,8 @@ something a walker earns.
   order. The server refuses a locket above the author's level with 422, as it
   refuses an unknown one. The finish card shows the locket a level-up brings.
 - **The hold is the locket opening** (`mobile/src/LocketUnlock.tsx`, from the
-  founder's motion script, on Reanimated). A key turns, the lid waits in a
+  founder's motion script, on Reanimated). *The key and the one shared motion
+  are **Superseded 2026-10-10** by "Each locket opens as itself".* A key turns, the lid waits in a
   *checking* beat until the server answers, then swings open and the camera
   dives in, and the sheet rises from the dive. It replaces the burst over the
   request: the lid must not open on a refusal, so it waits for the answer.
@@ -4391,6 +4392,33 @@ is judged by hand.
 **Options considered:** a cap in the route solver (a walk would still be one
 theme where the map is); hiding memories over the cap (moves the count by
 hand).
+
+### Each locket opens as itself
+
+Status: Accepted 2026-10-10. Supersedes the key and the one shared motion in
+*Lockets*; the checking beat, the dive and the seal stay.
+
+The founder's round-4 lockets (Gold I-X) drop the key. Each locket does its own
+thing over the hold: the compass rose hunts and settles, the deco rays light
+one by one, the garnet turns over, the night locket draws itself in one gold
+line.
+
+- **One engine, ten drawings.** `mobile/src/lockets/lockMotion.ts` is the state
+  machine (hold, spring back, checking, open, seal) and the shared
+  choreography. `lockets/designs/Gold*.tsx` each draw a case, a lid, its
+  inside and its own hold, on the hold's progress, all on the UI thread.
+  `LocketUnlock.tsx` keeps its props, so the slide, the seal and `IrisGrow`
+  did not change.
+- **Six now, ten once the pins are drawn.** The new four (celtic knot, moon
+  phase, lover's eye, sweetheart) join `lockets.ts`, the picker and
+  `random_locket()` together, only when each has both pin faces. A memory
+  must never get a locket the map can't draw.
+- **No progress ring and no status line.** The round-4 files had both. The app
+  keeps the slide and the emerald glow (*Jewel Box*: "never a ring").
+- **Sparkles, the light sweep and the tilt are off under Reduce Motion.**
+
+**Options considered:** drawing the four new lids in the old engine (rejected:
+it keeps the key and loses each locket's own motion).
 
 ### Rejected approaches, do not retry
 

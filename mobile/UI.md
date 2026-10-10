@@ -196,8 +196,8 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always a locket's keyhole face |
 | `src/MemoryMarker.tsx` | one locket, keyhole and all until opened, lit when it can be opened from here |
 | `src/lockets.ts` | the six lockets: their pin images and names, any of them an author's |
-| `src/LocketUnlock.tsx` | the hold: the key, the lid, the dive, the haptics; one lid per locket |
-| `src/lockMotion.ts` | the worklet curves and pivots LocketUnlock moves by |
+| `src/LocketUnlock.tsx` | the hold: the lid, the dive, the haptics, drawn as the memory's locket |
+| `src/lockets/` | the engine (`lockMotion.ts`) and one file per locket's drawing and hold (`designs/`) |
 | `src/UnlockHere.tsx` | the locket over the map, ‹ › when more than one is in reach |
 | `src/SlideToUnlock.tsx` | slide to unlock, its own row over the bottom row while a memory is in reach |
 | `src/WalkCard.tsx` | a past walk drawn as its shape: the journal's walk cards, the finish card's and journal rows' small shape |
@@ -975,7 +975,7 @@ this is not a polish pass:
 
 ## The unlock control
 
-`src/LocketUnlock.tsx`, with its curves in `src/lockMotion.ts`. The one place
+`src/LocketUnlock.tsx`, on the engine in `src/lockets/lockMotion.ts`. The one place
 in this app allowed to be playful. Everything else is a quiet map; this is the
 moment the product is *about*, so it gets the animation budget. It is the
 memory's own locket opening (docs/10, "Lockets"). Spec, so it does not get
@@ -988,22 +988,23 @@ re-invented per screen:
   white knob (`color.knob`) with a gold arrow, one shimmering "slide to
   unlock", and nothing else. The knob scrubs the hold 1:1 (`LocketUnlock`'s
   `ref`: `scrub`, `release`, `open`, and a `progress` App shares between the
-  two), so the key turns under your thumb and rewinds as you slide back; the
+  two), so the locket's hold plays under your thumb and rewinds as you slide back; the
   end (0.98) commits. Or press and hold the locket, 900ms, and the knob rides
   along. A tap is a click; both of these
   are a key turning, and make an accidental unlock almost impossible, which
   matters because unlocking is irreversible.
-- **The locket takes the key.** Over the hold a gold key slides into the
-  keyhole, grinds to 25° and gives to 90°, the locket turning toward you to
-  take it and back. The ornament (the compass rose, the guilloché) swings and
-  settles; the bail presses home. One derived value (`motion`) turns the hold
-  and the opening into every moving number, so nothing drifts out of sync.
+- **Each locket opens as itself** (docs/10, "Each locket opens as itself").
+  No key. Over the hold the compass rose hunts and settles, the deco rays light,
+  the garnet turns over, the night locket draws itself in. The tilt, the
+  light sweep, the clasp and the lid straining on its catch are shared. Every
+  moving number comes from the one hold progress, on the UI thread, so nothing
+  drifts out of sync.
 - **The thumb is the progress, and the hold's fill is linear.** An eased
   progress bar is a progress bar that lies. Releasing early, either way,
   springs it back, visibly, so the person understands they let go rather
   than that it failed.
-- **Haptics carry the feel.** `Light` on press-in, `Rigid` as the key seats
-  and as it gives, `Soft` and `Rigid` as the lid unlatches, `Medium` at the
+- **Haptics carry the feel.** `Light` on press-in, the locket's own detents
+  over the hold (each design's `holdHaptics`), `Medium` at the
   commit, and `notificationAsync(Success)` when the lid opens. `Success` is
   reserved: it is the one pattern in the app that means a thing was earned.
   Never on release-cancel, which would read as a reward for failing. One more
@@ -1015,11 +1016,11 @@ re-invented per screen:
   *checking* beat (the lid trembles on its latch, at least 420ms), and the lid
   opens only on a yes: a locket that swings open and then shuts on a refusal
   would be a lie. It replaced the burst played over the request (docs/10,
-  "Lockets"). On a yes the lid swings past 90° on its hinge (the key fading
-  out before 90°, where it would point into the case), sparkles pop, the
+  "Lockets"). On a yes the lid swings past 90° on its hinge (its inside face showing
+  past 90°), sparkles pop, the
   inside glows with the place engraved, and the camera dives in. One handover
   for every locket, whatever its shape: the zoom ends with the inside
-  covering the whole screen (zoomed until its inscribed circle reaches the
+  covering the whole screen (zoomed until its half-width reaches the
   farthest corner, measured at the commit), the engraving fading out early so
   it does not sweep past huge. Then `IrisGrow`, full-screen paper drawn over
   it by App, settles down into the card's frame (380 ms), the inside's glow

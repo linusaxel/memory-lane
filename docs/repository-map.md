@@ -142,9 +142,11 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/App.tsx` | Plan → preview → walk: one map, only today's stops on it, the pill recentres |
 | `mobile/src/Plan.tsx` | **The planner, home.** The walk card: length, shape and Start walk; its list of memories; for a subscriber, Customize (themes and an era) |
 | `mobile/src/MemorySheet.tsx` | The memory detail sheet — locked and open are two compositions |
-| `mobile/src/LocketUnlock.tsx` | The unlock as the memory's locket: the key, the lid, the dive, the haptics; held, or driven by SlideToUnlock; or run backwards to seal |
+| `mobile/src/LocketUnlock.tsx` | The unlock as the memory's locket: the lid, the dive, the haptics; held, or driven by SlideToUnlock; or run backwards to seal. Also `IrisGrow` |
 | `mobile/src/LocketSeal.tsx` | A memory just filed: its locket shuts over the map and drops onto the pin |
-| `mobile/src/lockMotion.ts` | The worklet curves and pivots LocketUnlock moves by |
+| `mobile/src/lockets/lockMotion.ts` | The unlock's state machine and shared choreography (hold, spring back, checking, open, seal, dive) |
+| `mobile/src/lockets/designs/Gold*.tsx` | One locket each: its case, lid, inside and its own hold animation |
+| `mobile/src/lockets/{parts.tsx,math.ts,haptics.ts,types.ts}` | What the designs share: gradients, chain, hinges, the engraved place; worklet easing and Svg matrices; haptics; the design type |
 | `mobile/src/lockets.ts` | The six lockets: pin images and names |
 | `mobile/assets/lockets/` | The locket pins, keyhole (locked) and plain (opened), @1x-@3x |
 | `mobile/assets/onboarding/` | The first-run pages' pictures, light and dark, rasterised from the Jewel Box handoff |
