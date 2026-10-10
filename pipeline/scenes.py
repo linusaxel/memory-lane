@@ -78,7 +78,10 @@ surprise, a fall, a joke, a fright, a loss, a win.
 
 One anecdote is one candidate. When one moment leads to the next - a fall in
 the street that puts a brother on the stage - list it once, from where it
-starts to its payoff, at the place where it starts.
+starts to its payoff, at the place where it starts. One event told across
+several places - a king's death heard at the theatre, argued over at the
+club, cheered on the square - is one candidate too, at the place of its
+sharpest moment; the other places are its mentions.
 
 The passage may open with <before>, the end of the passage before it. A scene
 that begins there and ends in the passage is yours. A scene that runs past the
@@ -218,10 +221,12 @@ WRITE_SCHEMA = {
 
 STOCK_OPENING = re.compile(
     r"(This\b|Here\b|On this spot|You are standing|The walker|Nothing (is )?(left|remains|of)"
-    r"|(In|On|By|During) (the )?\d)",
+    r"|(In|On|By|During) (the )?\d"
+    r"|[\w' .-]{1,40}? (is|was) (where|the place)\b)",
     re.I,
 )
 SLACK = 80
+REWRITES = 2
 BEFORE_CHARS = 1500
 
 PREVIOUS_WINDOW = """SELECT t.full_text FROM content c JOIN transcripts t ON t.content_id = c.id
@@ -417,29 +422,39 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: set[str]) -> lis
             continue
         seen.add(" ".join(w["summary"].split()[:3]).lower())
         summary = faithful(session, client, cid, passage, ctx, sc, entry, w["summary"], note)
+        if not summary:
+            continue
         out.append({"place": entry["today"], "summary": summary, "quote": w["quote"]})
     return out
 
 
-def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: str) -> str:
-    """The card with nothing the passage doesn't say. The writer writes it
-    again told what to leave out, rather than the trim cutting words from it:
-    the trim left fragments mid-sentence ("Retelling it later,"), which no
-    end-of-sentence guard sees (docs/04, *Scene-first, before it ships*). Only
-    what the second draw still adds is trimmed."""
+def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: str) -> str | None:
+    """The card with no fact the passage doesn't give, or None.
+
+    The writer writes it again, told everything the check has named so far,
+    up to REWRITES times; nothing is ever cut from it. The trim left fragments
+    mid-sentence ("Retelling it later,", "he added a line."), which no guard
+    sees, and one rewrite then a drop lost the theatre debut and the mother's
+    grave to "sixteen" and "crying in secret" (docs/04, *Scene-first, before
+    it ships*). A card with only colour left is kept as written.
+    """
     context = ctx + spot_card(entry)
-    claims = extract.unsupported(session, client, cid, 0, passage, context, summary)
-    if not claims:
-        return summary
-    listed = "; ".join(c["claim"] for c in claims)
-    print(f"  rewrite, unsupported: {listed}")
-    leave_out = f"The passage does not say: {listed}. Leave these out; keep the rest."
-    again = write(session, client, cid, passage, ctx, sc, entry, f"{note}\n{leave_out}".strip())
-    memory = {"spot_test": "pass", "summary": again["summary"] if again else summary}
-    final = extract.checked(session, client, cid, 0, passage, context, memory)["summary"]
-    if final != memory["summary"]:
-        print("  trimmed after the rewrite")
-    return final
+    named: list[str] = []
+    for draw in range(REWRITES + 1):
+        claims = extract.unsupported(session, client, cid, 0, passage, context, summary) or []
+        if not any(c["kind"] == "fact" for c in claims):
+            return summary
+        named += [c["claim"] for c in claims if c["claim"] not in named]
+        if draw == REWRITES:
+            break
+        print(f"  rewrite, unsupported: {'; '.join(c['claim'] for c in claims)}")
+        leave_out = f"The passage does not say: {'; '.join(named)}. Leave these out; keep the rest."
+        again = write(session, client, cid, passage, ctx, sc, entry, f"{note}\n{leave_out}".strip())
+        if not again:
+            return None
+        summary = again["summary"]
+    print(f"  dropped, still unsupported: {'; '.join(named)}")
+    return None
 
 
 def main():

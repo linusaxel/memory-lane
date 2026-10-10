@@ -994,6 +994,27 @@ windows, about $1:
     called "his wife" unsupported twice, and the trim cut it.
   - "and 15 November 1863, a wild crowd gathered here".
 
+**Round 3, about $3.** Three changes:
+- One event told at several places is one candidate.
+- "<Place> is/was where…" counts as a stock opening.
+- A second draw that still adds a fact is dropped.
+
+Result: 21 cards, from 25.
+- No card is cut mid-sentence. "Peter the Great… in a crown and ermine
+  robes" is whole.
+- The November 1863 week gives four distinct moments, not five with a repeat.
+- Seven cards were dropped, and several were among the best: the theatre
+  debut, the fire watched from the Børs, the mother's grave, the foyer the
+  night the king died. The claims they lost on were nitpicks: "sixteen",
+  "volunteer", "had been crying in secret". The thinking check names something
+  new on each draw, so one rewrite is not enough.
+- The colour trim still produced "Telling the story later, he added a line."
+
+So `faithful` now never cuts. The writer draws up to `REWRITES` (2) more
+times, told every claim named so far. A card is dropped only if a fact is
+still added after that. A card with only colour left is kept as written. Not
+yet measured.
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its
