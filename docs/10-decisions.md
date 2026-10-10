@@ -3512,7 +3512,7 @@ The founder moved the look to gold with emerald and rich purple details, and
 made the memory a locket: on the map, in the hold that opens it, and as
 something a walker earns.
 
-- **Six lockets, two faces each.** Hunter compass, guilloché oval, deco
+- **Six lockets, two faces each.** *(Two faces Superseded 2026-10-10 by "Each locket opens as itself": one pin, faded once opened.)* Hunter compass, guilloché oval, deco
   sunburst, monogram cushion, gold line (night) and Victorian garnet. Each has
   a pin with a keyhole (locked) and one without (opened), in
   `mobile/assets/lockets/`. The `lockets` table (migration 041) holds each
@@ -4411,8 +4411,10 @@ line.
   did not change.
 - **Ten, in rotation.** The new four (celtic knot, moon phase, lover's eye,
   sweetheart) are in `lockets.ts`, the picker and `random_locket()`
-  (migration 052). Their keyhole faces aren't drawn yet, so for now a locked
-  one shows its plain pin. The paywall strings only the first six.
+  (migration 052). The paywall strings only the first six.
+- **No keyholes, on the pin either.** Each locket has one pin image. Locked,
+  it is full gold; opened, it fades to half, so what is left to walk to stands
+  out. Supersedes *Lockets*' "two faces each".
 - **No progress ring and no status line.** The round-4 files had both. The app
   keeps the slide and the emerald glow (*Jewel Box*: "never a ring").
 - **Sparkles, the light sweep and the tilt are off under Reduce Motion.**

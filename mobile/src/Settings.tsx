@@ -164,7 +164,7 @@ export default function Settings({
 
         <Group title="How it works">
           <View style={[styles.padded, styles.how]}>
-            <Image source={locketOf().locked} style={styles.locket} />
+            <Image source={locketOf().pin} style={styles.locket} />
             <Text style={styles.howText}>
               A memory opens only on a walk, within {Math.round(radiusMeters)} m of it. Finish the
               walk to earn XP.

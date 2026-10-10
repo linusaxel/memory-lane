@@ -842,8 +842,8 @@ made every memory a locket (docs/10, "Lockets"). The palette, in
   the ember tile (`solid().tile`); redrawing them is open. *(Redrawn
   2026-10-07: the Jewel Box tile, docs/10 "Jewel Box".)*
 
-Pins are images now (`mobile/assets/lockets/`, six lockets, keyhole and
-plain), and the unlock is the locket opening, on Reanimated
+Pins are images now (`mobile/assets/lockets/`, one image per locket;
+an opened one fades), and the unlock is the locket opening, on Reanimated
 (`src/LocketUnlock.tsx`).
 
 ---

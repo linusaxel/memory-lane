@@ -1164,7 +1164,7 @@ export default function Submit({
                     <Glyph name="sparkle" size={at.size} color={color.gold} />
                   </View>
                 ))}
-                <Image source={locketOf(locket).opened} style={styles.chosenImage} />
+                <Image source={locketOf(locket).pin} style={styles.chosenImage} />
               </View>
               <Text style={styles.sealName} numberOfLines={2}>
                 {placeName.trim()}
@@ -1191,7 +1191,7 @@ export default function Submit({
                       testID={`locket-${l.id}`}
                       style={[styles.locket, on && styles.locketOn]}
                     >
-                      <Image source={l.opened} style={styles.locketImage} />
+                      <Image source={l.pin} style={styles.locketImage} />
                       <View style={[styles.locketDot, on && styles.locketDotOn]} />
                     </Pressable>
                   );

@@ -148,12 +148,12 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/lockets/designs/Gold*.tsx` | One locket each: its case, lid, inside and its own hold animation |
 | `mobile/src/lockets/{parts.tsx,math.ts,haptics.ts,types.ts}` | What the designs share: gradients, chain, hinges, the engraved place; worklet easing and Svg matrices; haptics; the design type |
 | `mobile/src/lockets.ts` | The six lockets: pin images and names |
-| `mobile/assets/lockets/` | The locket pins, keyhole (locked) and plain (opened), @1x-@3x |
+| `mobile/assets/lockets/` | The locket pins, one per locket, @1x-@3x |
 | `mobile/assets/onboarding/` | The first-run pages' pictures, light and dark, rasterised from the Jewel Box handoff |
 | `mobile/src/UnlockHere.tsx` | The locket over the map, for the memory you stand on |
 | `mobile/src/SlideToUnlock.tsx` | Slide to unlock: its own row over the bottom row while a memory is in reach, scrubbing the locket's hold |
 | `mobile/src/Approach.tsx` | How close you are, as the ring you are going to hold |
-| `mobile/src/MemoryMarker.tsx` | One pin: its locket, keyhole and all until opened, lit when it can be opened from here |
+| `mobile/src/MemoryMarker.tsx` | One pin: its locket, faded once opened, lit when it can be opened from here |
 | `mobile/src/appearance.ts` | System, Light or Dark from Settings, kept on the phone |
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name, numbers and level, a gear for Settings, then past walks (list or cards), unlocked, and what you filed |

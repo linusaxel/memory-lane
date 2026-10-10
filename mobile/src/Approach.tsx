@@ -51,7 +51,7 @@ export default function Approach({ meters, radius, progress, size = RING, locket
         ]}
       />
       <Image
-        source={locketOf(locket).locked}
+        source={locketOf(locket).pin}
         style={{ width: Math.round((size * 2) / 7), height: Math.round((size * 2) / 7) }}
       />
     </View>

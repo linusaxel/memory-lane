@@ -241,7 +241,7 @@ function Velvet() {
         return (
           <Image
             key={locket.id}
-            source={locket.opened}
+            source={locket.pin}
             style={{ position: 'absolute', left: x, top: y, width: size, height: size * 1.25 }}
             resizeMode="contain"
           />

@@ -538,7 +538,7 @@ function Stops({ stops, mystery }: { stops: LocatedMemory[]; mystery: boolean })
                 </Text>
               )}
             </View>
-            <Image source={locketOf(memory.locket).locked} style={styles.locket} />
+            <Image source={locketOf(memory.locket).pin} style={styles.locket} />
           </View>
         );
       })}

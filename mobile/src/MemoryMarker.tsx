@@ -115,8 +115,8 @@ type PinProps = {
   badge: number | null;
 };
 
-/** Every memory is its locket: with its keyhole while locked, without once
- *  opened. It grows and glows when it can be opened from where you stand.
+/** Every memory is its locket: full gold while locked, faded back once
+ *  opened, so what is left to walk to stands out. It grows and glows when it can be opened from where you stand.
  *  Every other state lives in the title and the sheet. */
 function Pin({ locket, lit, next, open, opacity, badge }: PinProps) {
   const hop = useHop(next);
@@ -124,9 +124,9 @@ function Pin({ locket, lit, next, open, opacity, badge }: PinProps) {
   return (
     <Animated.View style={[styles.wrap, lit && styles.halo, { opacity }, hop]}>
       <Image
-        source={open ? art.opened : art.locked}
+        source={art.pin}
         // An explicit size: the art's @2x and @3x are not 2 and 3 times @1x.
-        style={[styles.locket, (lit || next) && styles.locketBig]}
+        style={[styles.locket, (lit || next) && styles.locketBig, open && styles.opened]}
       />
       {badge !== null && (
         <View style={[styles.tag, lit ? styles.tagLit : null]}>
@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
   locket: { width: 32, height: 32 },
   // The next stop and a locket you can open read bigger, not just brighter.
   locketBig: { transform: [{ scale: 1.35 }] },
+  opened: { opacity: 0.5 },
 
   tag: {
     position: 'absolute',

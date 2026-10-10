@@ -193,8 +193,8 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 
 | File | What it owns |
 |---|---|
-| `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always a locket's keyhole face |
-| `src/MemoryMarker.tsx` | one locket, keyhole and all until opened, lit when it can be opened from here |
+| `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always the locket, full gold |
+| `src/MemoryMarker.tsx` | one locket, faded once opened, lit when it can be opened from here |
 | `src/lockets.ts` | the six lockets: their pin images and names, any of them an author's |
 | `src/LocketUnlock.tsx` | the hold: the lid, the dive, the haptics, drawn as the memory's locket |
 | `src/lockets/` | the engine (`lockMotion.ts`) and one file per locket's drawing and hold (`designs/`) |
@@ -847,9 +847,10 @@ paging through venues miles apart is not "1 of 23 here", it is a lie.
 ### One pin
 
 A memory draws as its locket (docs/10, "Lockets"): the one its author chose,
-or one drawn at random for an extracted memory. Locked, it shows its keyhole;
-opened, the same locket without one, from `mobile/assets/lockets/` through
-`src/lockets.ts`. A spot with several draws the first one's. It changes for
+or one drawn at random for an extracted memory. Locked, it is full gold;
+opened, the same locket faded back (opacity 0.5), so what is left to walk to
+stands out. One image each, `mobile/assets/lockets/` through `src/lockets.ts`
+(docs/10, "Each locket opens as itself": no keyholes). A spot with several draws the first one's. It changes for
 one reason only — **it can be opened from where you stand**, and on a route
 day only if it is one of the route's stops (F25) — and then it scales 1.35
 over an emerald `halo` wash. That is the whole visual language. The padlock
@@ -859,8 +860,8 @@ should need.
 
 | When | Geometry | Tokens |
 |---|---|---|
-| locked | the locket's keyhole image, 32×32 | the art's own gold |
-| unlocked (`plain`, `stamped`): every memory in it opened | the locket without its keyhole, 32×32 | the art's own gold |
+| locked | the locket, 32×32 | the art's own gold |
+| unlocked (`plain`, `stamped`): every memory in it opened | the locket at opacity 0.5, 32×32 | the art's own gold |
 | `unlockable`: inside the radius **and openable by walking** | the locked image, scale 1.35; wash 46 | wash `halo` |
 | the next stop on today's walk, not yet in reach | the locked image, scale 1.35; hops (`useHop`), still under Reduce Motion | as locked. Size and the hop tell it apart |
 | a stack, or one of today's stops | tag min-w 20, h 20, radius 10, border 2, top right | `gold`, count `paper` (`seal` with `sealInk` on a lit pin) |
@@ -970,8 +971,8 @@ this is not a polish pass:
 - Markers carry an `accessibilityLabel` with their state. The callout title says
   *where*; only the colour says whether you can read it, and colour is not
   available to everyone.
-- Every state that colour distinguishes is also written or drawn: the locket's
-  keyhole face (a shape, read out as "Locked"), "within reach", "Nearest locked memory".
+- Every state that colour distinguishes is also written or drawn: the locket
+  fading once opened (and its label, read out as "Locked"), "within reach", "Nearest locked memory".
 
 ## The unlock control
 
