@@ -29,7 +29,7 @@ SEEN = {
 def test_a_moment_keeps_commons_point_and_its_picture(monkeypatch):
     monkeypatch.setattr(pictures.commons, "files", lambda titles: [FILE])
     monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
-    mem, picture = pictures.card(None, None, 1, FILE["page"], "caption")
+    mem, picture = pictures.card(None, None, 1, FILE["page"], "caption", set())
     assert (mem["lat"], mem["lng"]) == (FILE["lat"], FILE["lng"])
     assert picture["url"] == FILE["url"] and picture["license"] == "CC BY-SA 2.0"
 
@@ -37,10 +37,10 @@ def test_a_moment_keeps_commons_point_and_its_picture(monkeypatch):
 def test_an_unfree_or_still_picture_is_dropped(monkeypatch):
     monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
     monkeypatch.setattr(pictures.commons, "files", lambda t: [FILE | {"license": "CC BY-NC 2.0"}])
-    assert pictures.card(None, None, 1, FILE["page"], "c") is None
+    assert pictures.card(None, None, 1, FILE["page"], "c", set()) is None
     monkeypatch.setattr(pictures.commons, "files", lambda t: [FILE])
     monkeypatch.setattr(pictures, "look", lambda *a: SEEN | {"moment": False})
-    assert pictures.card(None, None, 1, FILE["page"], "c") is None
+    assert pictures.card(None, None, 1, FILE["page"], "c", set()) is None
 
 
 def test_the_walk_score_sees_a_picture_memorys_picture(monkeypatch):
@@ -57,3 +57,16 @@ def test_the_walk_score_sees_a_picture_memorys_picture(monkeypatch):
     assert walk_score.walk_score(None, "Nyhavn: sailors danced.") == 7
     assert asked[0][0] == walk_score.PICTURE_PROMPT and asked[0][1][0]["url"] == "https://x/a.jpg"
     assert asked[1][0] == walk_score.PROMPT, "a story without a picture is scored as before"
+
+
+def test_a_series_is_looked_at_once(monkeypatch):
+    monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
+    monkeypatch.setattr(
+        pictures.commons, "files", lambda t: [FILE | {"caption": "Show at Vega 01"}]
+    )
+    looked = set()
+    assert pictures.card(None, None, 1, FILE["page"], "c", looked)
+    monkeypatch.setattr(
+        pictures.commons, "files", lambda t: [FILE | {"caption": "Show at Vega 02"}]
+    )
+    assert pictures.card(None, None, 2, FILE["page"], "c", looked) is None

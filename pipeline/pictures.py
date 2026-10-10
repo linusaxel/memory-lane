@@ -13,6 +13,7 @@ first picture, so enrichment leaves it be; `tasks.after_save` scores it.
 
 import argparse
 import json
+import re
 import urllib.parse
 
 import anthropic
@@ -114,13 +115,27 @@ def spot(seen: dict, f: dict) -> tuple[float, float] | None:
     return at
 
 
-def card(session, client, cid: int, page: str, caption: str) -> tuple[dict, dict] | None:
+def series(caption: str) -> str:
+    """A caption without its numbers: a photographer uploads one show as
+    "... 01", "... 02", and each was looked at and saved (13 of one Kings of
+    Convenience matinee at Vega). The retelling check misses them: each is
+    hidden under GOOD before the next is saved, and it only sees visible ones."""
+    return re.sub(r"[\W\d_]+", " ", caption.lower()).strip()[:120]
+
+
+def card(
+    session, client, cid: int, page: str, caption: str, looked: set
+) -> tuple[dict, dict] | None:
     name = urllib.parse.unquote(page.rsplit("File:", 1)[-1]).replace("_", " ")
     found = commons.files(["File:" + name])
     if not found or not enrich.free(found[0]["license"]):
         print(f"  drop, not free: {found and found[0]['license']}")
         return None
     f = found[0]
+    if series(f["caption"]) in looked:
+        print("  drop, one of a series already looked at")
+        return None
+    looked.add(series(f["caption"]))
     seen = look(session, client, cid, f, caption)
     if not seen or not (seen["moment"] and seen["occasion"]) or seen["striking"] < STRIKING:
         print(f"  drop, no moment: {seen and (seen['striking'], seen['summary'][:80])}")
@@ -178,9 +193,10 @@ def main():
     args = parser.parse_args()
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     with get_session() as s:
+        looked: set = set()
         for r in s.execute(text(PENDING), {"s": args.source}).fetchall():
             print(f"######## {r.id} {r.title}", flush=True)
-            made = card(s, client, r.id, r.url, r.full_text)
+            made = card(s, client, r.id, r.url, r.full_text, looked)
             if made:
                 print(f"--- {made[0]['venue']}\n{made[0]['summary']}\n{made[1]['url']}\n")
             if args.save:
