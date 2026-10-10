@@ -40,6 +40,7 @@ this stage, this doorway, more so on a night something happened; a famous
 work was written, painted or set right here, or a discovery made here: the
 walker stands where it began, or sees the view the painter saw.
 What sinks it: it sells a business; a private person's death, illness or crime;
+a shooting, a killing, gang or drug crime, an overdose: grim is not glad;
 a name it never introduces; any place of its kind would tell it the same;
 nothing happens, only names, dates or a description.
 

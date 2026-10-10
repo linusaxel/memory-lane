@@ -97,6 +97,9 @@ def categories(lang: str, names: str) -> list[dict]:
 
 
 COPENHAGEN = re.compile(r"Copenhagen|København|Kjøbenhavn", re.I)
+# A titled article is one event; a long one (Freetown Christiania) gave seven
+# cards of one theme (docs/10, *No teller or theme dominates*).
+TITLE_WINDOWS = 2
 
 
 def titles(names: str) -> list[dict]:
@@ -143,10 +146,13 @@ class Wikipedia:
                 page["title"].replace(" ", "_")
             )
             body = article_text(lang, page["title"])
-            pinned = page["lat"] is not None
+            pinned, taken = page["lat"] is not None, 0
             for i, window in enumerate(windows(body)):
                 if not pinned and not COPENHAGEN.search(window):
                     continue
+                if not pinned and taken >= TITLE_WINDOWS:
+                    break
+                taken += 1
                 if n >= limit:
                     return
                 n += 1

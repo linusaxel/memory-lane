@@ -1066,6 +1066,23 @@ about half of them.
 again from their sheets alone, and prints before and after. `--apply` stores
 them. Only the writer and the check bill.
 
+### Wikipedia moments, and three fixes, 2026-10-10
+
+Famous moments by title (`wikipedia:<lang> titles:`) gave 17 good of 29, the
+best recent yield yet. Three faults, each fixed where it starts:
+
+- **Grim scored.** A 2016 police shooting and a biker war scored 7. The walk
+  score now sinks "a shooting, a killing, gang or drug crime, an overdose".
+  Labels: AUC 0.684 (0.848 judgeable), against 0.680 (0.849) before.
+- **One article, one theme.** Freetown Christiania gave 7 cards. A titled
+  article now gives at most `TITLE_WINDOWS` (2) windows.
+- **The old path's habits.** It still opens "This is…" and "You are
+  standing…", and its trim cut two sentences to a head ("The three storks on
+  its pedestal."). `broken()` now catches a written sentence with its
+  predicate cut off, and `extract.reopened` writes a stock first sentence
+  again, every other sentence word for word, or keeps the card as it was.
+  `STOCK_OPENING` moved from scenes.py to extract.py, shared.
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its
@@ -1135,3 +1152,4 @@ line here. Started 2026-10-05 at 74 good out of 169 visible. On 2026-10-07,
 | 2026-10-10 | Picture-first trial 2: Commons "Events in Copenhagen" (295), bar striking 4 + occasion | 29 | 5 (3 of one Conchita rehearsal; dedup hides 2) | 0 | 3.8 (Conchita Wurst rehearsing at B&W Hallerne, 5; WorldPride on Østerbrogade, 3) | <1, est. |
 | 2026-10-10 | Picture trial 3, walk score sees the picture: Frihedsmuseet 1940-45 (296), Copenhagen in the 1960s (297), demonstrations (298) | 59 (20/20/19) | 29 (15/4/10) | 9 (8/0/1) | 6 good of 1940-45 (bombers over Vester Farimagsgade 9 April 1940, 7); 1960s trams and 2009-26 protests 3-5. 296 paused: WW2 at the theme cap | <2, est. |
 | 2026-10-10 | Picture trial 4: concerts in Copenhagen (299) | 40 | 21 | 0 | 2.7 ("X played Vega": 13 pictures of one Kings of Convenience show) | <1, est. |
+| 2026-10-10 | Wikipedia, famous moments by title (293, 23 en articles; 294, 2 da) | 34 | 29 | 17 (19, less a 2016 shooting and the biker war, hidden as grim) | 6.3 (Harrison starting "My Sweet Lord" at Falkoner, 9; the Little Mermaid's head, Strøget closed to cars, the 2024 abdication, 8). Christiania gave 7 cards from one article; old-path openers ("This is…") and two trims cut to a head | ~4, batch |

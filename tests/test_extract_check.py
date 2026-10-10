@@ -102,3 +102,28 @@ def test_only_what_the_judge_kept_is_checked_and_the_chunk_is_let_go(monkeypatch
     )
     assert seen == ["the chunk"]
     assert kept == [{"summary": STORY, "chunk_index": 3}]
+
+
+def test_a_sentence_cut_to_its_head_is_broken():
+    written = "The three storks on its pedestal were made by Edvard Petersen. Midwives dance here."
+    assert broken("The three storks on its pedestal. Midwives dance here.", written)
+    assert not broken("Midwives dance here.", written), "a whole sentence dropped is a clean cut"
+
+
+def test_a_stock_opening_is_written_again_and_nothing_else(monkeypatch):
+    from pipeline import extract
+
+    story = "This is the Round Tower. A car drove up it in 1902. Nobody had tried."
+    replies = iter(
+        [
+            '{"summary": "In 1902 a Beaufort car drove up the ramp. A car drove up it in 1902. Nobody had tried."}',
+            '{"summary": "A Beaufort car climbed the Round Tower. A car drove up it in 1902. Nobody had tried."}',
+            '{"summary": "A Beaufort car climbed the Round Tower. Nobody tried."}',
+        ]
+    )
+    monkeypatch.setattr(extract, "_stored_request", lambda *a, **k: next(replies))
+    memory = {"summary": story}
+    assert extract.reopened(None, None, 1, 0, memory) == memory, "a date first is stock too"
+    again = extract.reopened(None, None, 1, 0, memory)["summary"]
+    assert again.startswith("A Beaufort car") and again.endswith("Nobody had tried.")
+    assert extract.reopened(None, None, 1, 0, memory) == memory, "the rest must stay word for word"

@@ -883,6 +883,21 @@ claim, not the sentence, where the sentence still stands without it, and cut
 the fewest words that remove it. Return the story itself, never a description
 of it."""
 
+# A rule about the spot became a template ("This was…" opened most cards):
+# docs/04, *About the spot*. pipeline/scenes.py checks its own cards with it too.
+STOCK_OPENING = re.compile(
+    r"(This\b|Here\b|On this spot|You are standing|The walker|Nothing (is )?(left|remains|of)"
+    r"|(In|On|By|During) (the )?\d"
+    r"|[\w' .-]{1,40}? (is|was) (where|the place)\b)",
+    re.I,
+)
+
+REOPEN_PROMPT = """The text is a story told at a place. Its first sentence opens on a
+formula ("This is…", "You are standing…", "In 1962…"). Write that first
+sentence again so it opens on the person, the moment or a line said, with the
+same facts and nothing new. Return the whole story with only the first
+sentence changed, every other sentence word for word."""
+
 TRIM_SCHEMA = {
     "type": "object",
     "properties": {"summary": {"type": "string"}},
@@ -946,17 +961,49 @@ def _sentences(text: str) -> list[str]:
 
 def broken(trimmed: str, summary: str) -> bool:
     """A sentence of the trimmed summary, not in the summary as written, that
-    looks cut in half."""
-    written = set(_sentences(summary))
+    looks cut in half: it starts small, ends on a dangling word, or is the
+    head of a written sentence with its predicate cut off ("The three storks
+    on its pedestal." from "The three storks on its pedestal were made…")."""
+    written = _sentences(summary)
     for s in _sentences(trimmed):
+        if s in written:
+            continue
         end = DANGLING.search(s.rstrip('"”’)'))
-        if s not in written and (s[0].islower() or (end and f" {end[0]}" not in f" {summary}")):
+        head = s.rstrip('.!?"”’) ')
+        if (
+            s[0].islower()
+            or (end and f" {end[0]}" not in f" {summary}")
+            or any(w.startswith(head) and len(w) > len(head) + 2 for w in written)
+        ):
             return True
     return False
 
 
+def reopened(session, client, content_id, chunk_index, memory: dict) -> dict:
+    """The memory with a stock first sentence written again, every other
+    sentence as it was; as it was when the new one isn't that."""
+    summary = memory.get("summary") or ""
+    if not STOCK_OPENING.match(summary):
+        return memory
+    raw = _stored_request(
+        session, client, content_id, chunk_index, REOPEN_PROMPT, summary, TRIM_SCHEMA
+    )
+    try:
+        again = json.loads(raw)["summary"].strip() if raw else ""
+    except (
+        ValueError,
+        KeyError,
+    ):
+        again = ""
+    old, new = _sentences(summary), _sentences(again)
+    if not new or new[1:] != old[1:] or STOCK_OPENING.match(again):
+        return memory
+    return {**memory, "summary": again}
+
+
 def checked(session, client, content_id, chunk_index, chunk, context, memory: dict) -> dict:
-    """The memory with what its chunk doesn't say cut from the summary.
+    """The memory with what its chunk doesn't say cut from the summary, and a
+    stock opening written again (`reopened`).
 
     A longer summary is where invention creeps in, and a prompt rule against
     it was not enough (docs/04, *A longer card*). Only a memory that passed
@@ -966,6 +1013,11 @@ def checked(session, client, content_id, chunk_index, chunk, context, memory: di
     """
     if memory.get("spot_test") != "pass" or not memory.get("summary"):
         return memory
+    memory = _trimmed(session, client, content_id, chunk_index, chunk, context, memory)
+    return reopened(session, client, content_id, chunk_index, memory)
+
+
+def _trimmed(session, client, content_id, chunk_index, chunk, context, memory: dict) -> dict:
     claims = unsupported(
         session, client, content_id, chunk_index, chunk, context, memory["summary"]
     )
@@ -1073,6 +1125,7 @@ def stage(system_prompt: str) -> str:
         BOOK_BRIEF_PROMPT: "book brief",
         UNSUPPORTED_PROMPT: "check",
         TRIM_PROMPT: "trim",
+        REOPEN_PROMPT: "reopen",
         JUDGE_PROMPT: "judge",
         SAME_VENUE_PROMPT: "same venue",
         SAME_EVENT_PROMPT: "same event",

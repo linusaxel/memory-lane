@@ -51,6 +51,10 @@ def test_a_titled_article_keeps_only_its_copenhagen_windows(monkeypatch):
     got = list(wikipedia.Wikipedia().fetch("en titles:Led Zeppelin European Tour 1970", 10))
     assert [r["text"].count("Nobs") for r in got] == [1]
     assert "places this at" not in got[0]["text"]
+    body = "\n\n".join(f"Copenhagen, part {n}." for n in range(5))
+    monkeypatch.setattr(wikipedia, "article_text", lambda lang, title: body)
+    got = list(wikipedia.Wikipedia().fetch("en titles:Freetown Christiania", 10))
+    assert len(got) == wikipedia.TITLE_WINDOWS
 
 
 def test_the_wikipedia_query_is_language_point_and_radius_capped():

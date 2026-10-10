@@ -352,12 +352,7 @@ WRITE_SCHEMA = {
     "additionalProperties": False,
 }
 
-STOCK_OPENING = re.compile(
-    r"(This\b|Here\b|On this spot|You are standing|The walker|Nothing (is )?(left|remains|of)"
-    r"|(In|On|By|During) (the )?\d"
-    r"|[\w' .-]{1,40}? (is|was) (where|the place)\b)",
-    re.I,
-)
+STOCK_OPENING = extract.STOCK_OPENING
 SLACK = 80
 REWRITES = 2
 BEFORE_CHARS = 1500
