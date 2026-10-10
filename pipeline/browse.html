@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memory Lane Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap">
+<style>
+/* The app's palette: mobile/src/theme.ts. */
+:root {
+  --paper: #F6F1E7; --raised: #FFFCF6; --ink: #1E1626; --soft: #4A3F52; --faint: #6B6172;
+  --rule: #E2D8CA; --quiet: #ECE4D7; --gold: #7E5E14; --goldline: rgba(184,142,54,.55);
+  --seal: #1C6A4D; --sealsoft: #D5EBDF; --plum: #5D2A71; --heart: #A3294E; --danger: #9B2C2C;
+  --wash: rgba(246,241,231,.86);
+}
+@media (prefers-color-scheme: dark) { :root {
+  --paper: #14101A; --raised: #211A29; --ink: #F3ECE0; --soft: #C5BAC9; --faint: #9B90A3;
+  --rule: #362C3F; --quiet: #2A2233; --gold: #E3BE6B; --goldline: rgba(227,190,107,.6);
+  --seal: #4CC196; --sealsoft: #173528; --plum: #CFA4E2; --heart: #F29BB4; --danger: #F09A9A;
+  --wash: rgba(20,16,26,.86);
+} }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink);
+  font: 14px/1.4 ui-rounded, system-ui, -apple-system, sans-serif; }
+body { display: grid; grid-template-columns: 440px 1fr; }
+button, select, input { font: inherit; color: inherit; }
+a { color: var(--gold); }
+
+#side { display: flex; flex-direction: column; height: 100vh; border-right: 1px solid var(--rule); min-width: 0; }
+#map { height: 100vh; }
+
+header { padding: 16px 16px 0; border-bottom: 1px solid var(--rule); }
+.title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+h1 { font: 28px Gloock, serif; margin: 0; }
+#stats { color: var(--faint); font-size: 12px; text-align: right; }
+#q { width: 100%; margin-top: 10px; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--goldline);
+  background: var(--raised); outline: none; }
+#q:focus { box-shadow: 0 0 0 3px var(--goldline); }
+.bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+.pill { border: 1px solid transparent; background: var(--quiet); color: var(--soft); border-radius: 999px;
+  padding: 4px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+select.pill { appearance: none; padding-right: 22px; max-width: 170px; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right 11px top 50%, right 7px top 50%; background-size: 4px 4px; background-repeat: no-repeat; }
+select.pill.set { background-color: var(--ink); color: var(--paper); }
+
+/* Walk score, 0-12: a bar per score, click to filter. */
+#hist { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; align-items: end; height: 46px; margin: 10px 0 2px; }
+#hist button { border: 0; padding: 0; background: none; cursor: pointer; height: 100%; display: flex;
+  flex-direction: column; justify-content: flex-end; align-items: stretch; }
+#hist span { display: block; background: var(--goldline); border-radius: 3px 3px 0 0; min-height: 2px; }
+#hist button.on span { background: var(--gold); }
+#hist button:hover span { background: var(--gold); }
+#histaxis { display: grid; grid-template-columns: repeat(13, 1fr); gap: 3px; font-size: 10px; color: var(--faint);
+  text-align: center; padding-bottom: 8px; }
+#count { color: var(--faint); font-size: 12px; padding: 8px 0 10px; display: flex; justify-content: space-between; }
+#count button { border: 0; background: none; color: var(--gold); cursor: pointer; padding: 0; font-size: 12px; }
+
+#list, #detail { overflow: auto; flex: 1; }
+.row { padding: 11px 16px 12px; border-bottom: 1px solid var(--rule); cursor: pointer; border-left: 3px solid transparent; }
+.row:hover { background: var(--raised); }
+.row.active { background: var(--raised); border-left-color: var(--gold); }
+.row b { font: 17px Gloock, serif; font-weight: 400; }
+.row p { margin: 4px 0 0; color: var(--soft); font: 15px/1.35 Newsreader, serif;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.meta { color: var(--faint); font-size: 12px; }
+.score { color: var(--gold); font-weight: 700; }
+.faded { opacity: .5; }
+.badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  border-radius: 4px; padding: 1px 5px; vertical-align: 2px; margin-left: 4px; }
+.badge.hidden { background: var(--danger); color: var(--paper); }
+.badge.stranger { background: var(--plum); color: var(--paper); }
+.badge.reported { border: 1px solid var(--danger); color: var(--danger); }
+.empty { padding: 40px 16px; color: var(--faint); text-align: center; font: italic 17px Newsreader, serif; }
+
+#detail { display: none; }
+.nav { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between;
+  background: var(--paper); padding: 10px 16px; border-bottom: 1px solid var(--rule); }
+.nav button { border: 0; background: none; color: var(--gold); cursor: pointer; font-weight: 600; padding: 4px 2px; }
+.nav button:disabled { color: var(--faint); opacity: .4; cursor: default; }
+.nav .pos { color: var(--faint); font-size: 12px; margin: 0 6px; }
+.placehead { padding: 16px 16px 4px; }
+.placehead h2 { font: 30px/1.1 Gloock, serif; font-weight: 400; margin: 0 0 4px; }
+.mem { margin: 12px 16px; padding: 16px; background: var(--raised); border: 1px solid var(--rule); border-radius: 14px; }
+.mem.current { border-color: var(--goldline); box-shadow: 0 0 0 1px var(--goldline); }
+.mem .top { display: flex; justify-content: space-between; gap: 8px; }
+.story { font: 18px/1.55 Newsreader, serif; white-space: pre-wrap; margin: 12px 0; }
+.quote { border-left: 3px solid var(--gold); padding: 2px 0 2px 12px; margin: 14px 0; font: italic 18px/1.45 Newsreader, serif; }
+.quote small { display: block; font: 12px ui-rounded, system-ui; color: var(--faint); font-style: normal; margin-top: 4px; }
+.then { background: var(--sealsoft); border-radius: 10px; padding: 8px 12px; font-size: 13px; margin: 12px 0; }
+.chip { display: inline-block; padding: 2px 9px; margin: 2px 4px 2px 0; border-radius: 999px; background: var(--quiet);
+  font-size: 12px; color: var(--soft); border: 0; cursor: pointer; text-decoration: none; }
+.chip:hover { background: var(--goldline); }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12px; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid var(--rule); }
+.facts dt { color: var(--faint); } .facts dd { margin: 0; overflow-wrap: anywhere; }
+.engage { display: flex; gap: 14px; font-size: 12px; color: var(--soft); margin-top: 10px; }
+.engage .heart { color: var(--heart); } .engage .flag { color: var(--danger); }
+.notes { margin: 8px 0 0; padding: 0; list-style: none; }
+.notes li { font: italic 15px Newsreader, serif; padding: 4px 0; border-top: 1px dashed var(--rule); }
+.pics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.pics figure { margin: 0; } .pics figure:only-child { grid-column: span 2; }
+.pics img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; display: block; background: var(--quiet); }
+.pics figcaption { font-size: 11px; color: var(--faint); margin-top: 2px; }
+details { margin-top: 10px; } summary { cursor: pointer; color: var(--faint); font-size: 12px; }
+pre { background: var(--paper); border: 1px solid var(--rule); padding: 8px; overflow: auto; font-size: 11px;
+  border-radius: 8px; max-height: 320px; }
+.nearby { margin: 4px 16px 24px; }
+.nearby h3 { font: 13px ui-rounded, system-ui; font-weight: 700; color: var(--faint); text-transform: uppercase;
+  letter-spacing: .05em; margin: 18px 0 6px; }
+.nearby button { display: flex; justify-content: space-between; width: 100%; border: 0; background: none; cursor: pointer;
+  padding: 7px 0; border-bottom: 1px solid var(--rule); text-align: left; }
+.nearby button:hover b { color: var(--gold); }
+.nearby b { font: 15px Gloock, serif; font-weight: 400; }
+
+.leaflet-container { background: var(--paper); font: inherit; }
+.leaflet-tooltip { font: 14px Gloock, serif; background: var(--raised); color: var(--ink); border: 1px solid var(--goldline);
+  box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.leaflet-tooltip-top:before { border-top-color: var(--goldline); }
+.leaflet-bar a { background: var(--raised); color: var(--ink); border-color: var(--rule); }
+.leaflet-control-attribution { background: var(--wash) !important; color: var(--faint); }
+#keys { position: absolute; right: 12px; top: 12px; z-index: 500; background: var(--wash); backdrop-filter: blur(8px);
+  border: 1px solid var(--goldline); border-radius: 12px; padding: 8px 12px; font-size: 11px; color: var(--soft); line-height: 1.7; }
+kbd { font: 11px ui-monospace, monospace; background: var(--quiet); border-radius: 4px; padding: 0 5px; }
+
+@media (max-width: 860px) {
+  body { grid-template-columns: 1fr; grid-template-rows: 42vh 58vh; }
+  #map { height: 42vh; order: -1; } #side { height: 58vh; } #keys { display: none; }
+}
+</style>
+</head>
+<body>
+<div id="side">
+  <header>
+    <div class="title"><h1>Memory Lane</h1><div id="stats"></div></div>
+    <input id="q" placeholder="Search words, places, tags, sources…  ( / )" autocomplete="off" spellcheck="false">
+    <div class="bar">
+      <select id="sort" class="pill" title="Sort">
+        <option value="new">Newest</option><option value="score">Walk score</option>
+        <option value="old">Earliest happened</option><option value="recent">Latest happened</option>
+        <option value="place">Place A–Z</option><option value="opens">Most opened</option>
+      </select>
+      <select id="source" class="pill" title="Source"></select>
+      <select id="hidden" class="pill" title="Hidden">
+        <option value="all">Hidden too</option><option value="shown">Shown only</option><option value="hidden">Hidden only</option>
+      </select>
+      <button class="pill" id="stranger" aria-pressed="false" title="Memories filed by a person">Filed by people</button>
+      <button class="pill" id="inview" aria-pressed="false" title="Only what is on the map">In view</button>
+    </div>
+    <div id="hist"></div><div id="histaxis"></div>
+    <div id="count"></div>
+  </header>
+  <div id="list"></div>
+  <div id="detail"></div>
+</div>
+<div id="map">
+  <div id="keys"><kbd>/</kbd> search · <kbd>↑</kbd><kbd>↓</kbd> move · <kbd>↵</kbd> open · <kbd>←</kbd><kbd>→</kbd> prev/next · <kbd>esc</kbd> back</div>
+</div>
+<script>
+const MEMORIES = __DATA__;
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c]);
+const byId = new Map(MEMORIES.map(m => [m.id, m]));
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+
+// --- map -------------------------------------------------------------------
+const map = L.map('map', {preferCanvas: true, zoomControl: false}).setView([55.6761, 12.5683], 13);
+L.control.zoom({position: 'bottomright'}).addTo(map);
+L.tileLayer(`https://tiles.stadiamaps.com/tiles/${dark ? 'alidade_smooth_dark' : 'alidade_smooth'}/{z}/{x}/{y}{r}.png`, {
+  maxZoom: 20,
+  attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+}).addTo(map);
+
+const places = new Map();
+for (const m of MEMORIES) {
+  m.text = [m.place, m.summary, m.quote, m.quote_by, m.contrast_note, m.source_name, m.title, m.attribution,
+    (m.tags || []).map(t => '#' + t).join(' '), (m.links || []).map(l => l.text).join(' '), '#' + m.id].join(' ').toLowerCase();
+  m.year = m.happened_at ? +m.happened_at.slice(0, 4) : null;
+  if (m.lat == null) continue;
+  if (!places.has(m.place_id)) places.set(m.place_id, {id: m.place_id, name: m.place, lat: m.lat, lng: m.lng,
+    precision: m.precision_meters, status: m.geocode_status, mems: []});
+  places.get(m.place_id).mems.push(m);
+}
+for (const p of places.values()) {
+  p.marker = L.circleMarker([p.lat, p.lng], {weight: 1.5})
+    .bindTooltip(() => `${esc(p.name)}${p.mems.length > 1 ? ` <span class=meta>· ${p.mems.length}</span>` : ''}`,
+      {direction: 'top', offset: [0, -8]})
+    .on('click', () => openMemory(pick(p).id)).addTo(map);
+}
+let ring = null;  // the selected place's pin precision
+
+// --- state -----------------------------------------------------------------
+const state = {q: '', sort: 'new', source: '', hidden: 'all', stranger: false, inview: false, scores: new Set()};
+let shown = [];      // the filtered, sorted list
+let active = -1;     // keyboard cursor in the list
+let current = null;  // the memory open in the detail
+
+const sources = {};
+for (const m of MEMORIES) sources[m.source_name || '(none)'] = (sources[m.source_name || '(none)'] || 0) + 1;
+$('source').innerHTML = `<option value="">All sources</option>` + Object.entries(sources).sort((a, b) => b[1] - a[1])
+  .map(([s, n]) => `<option value="${esc(s)}">${esc(s)} · ${n}</option>`).join('');
+
+const hiddenCount = MEMORIES.filter(m => m.hidden).length;
+const scored = MEMORIES.filter(m => m.walk_score != null);
+$('stats').innerHTML = `${MEMORIES.length} memories · ${places.size} places<br>${hiddenCount} hidden · mean score ${
+  (scored.reduce((a, m) => a + m.walk_score, 0) / scored.length).toFixed(1)}`;
+$('histaxis').innerHTML = Array.from({length: 13}, (_, i) => `<span>${i}</span>`).join('');
+
+const SORTS = {
+  new: (a, b) => b.id - a.id,
+  score: (a, b) => (b.walk_score ?? -1) - (a.walk_score ?? -1) || b.id - a.id,
+  old: (a, b) => (a.happened_at ?? '9999').localeCompare(b.happened_at ?? '9999'),
+  recent: (a, b) => (b.happened_at ?? '0000').localeCompare(a.happened_at ?? '0000'),
+  place: (a, b) => a.place.localeCompare(b.place, 'da'),
+  opens: (a, b) => b.opens - a.opens || b.hearts - a.hearts || b.id - a.id,
+};
+
+function passes(m, ignoreScore) {
+  if (state.hidden === 'shown' && m.hidden) return false;
+  if (state.hidden === 'hidden' && !m.hidden) return false;
+  if (state.stranger && m.layer !== 'stranger') return false;
+  if (state.source && (m.source_name || '(none)') !== state.source) return false;
+  if (!ignoreScore && state.scores.size && !state.scores.has(m.walk_score)) return false;
+  if (state.inview && (m.lat == null || !map.getBounds().contains([m.lat, m.lng]))) return false;
+  return state.q.split(/\s+/).filter(Boolean).every(w => m.text.includes(w));
+}
+
+function filter() {
+  shown = MEMORIES.filter(m => passes(m)).sort(SORTS[state.sort]);
+  for (const m of MEMORIES) m.shown = false;
+  for (const m of shown) m.shown = true;
+  drawHist();
+  drawList();
+  places.forEach(stylePlace);
+}
+
+// The histogram counts everything else the filter keeps, so a bar says what clicking it would give.
+function drawHist() {
+  const n = Array(13).fill(0);
+  for (const m of MEMORIES) if (m.walk_score != null && passes(m, true)) n[m.walk_score]++;
+  const max = Math.max(1, ...n);
+  $('hist').innerHTML = n.map((c, i) => `<button class="${state.scores.has(i) ? 'on' : ''}" data-s="${i}" title="Score ${i}: ${c}">
+    <span style="height:${Math.max(4, 100 * c / max)}%"></span></button>`).join('');
+}
+
+function badges(m) {
+  return (m.hidden ? '<span class="badge hidden">hidden</span>' : '') +
+    (m.layer === 'stranger' ? '<span class="badge stranger">filed</span>' : '') +
+    (m.reports ? `<span class="badge reported">⚑ ${m.reports}</span>` : '');
+}
+
+function when(m) {
+  if (!m.happened_at) return '';
+  const p = m.happened_precision;
+  return p === 'decade' ? m.happened_at.slice(0, 3) + '0s' : p === 'year' ? m.happened_at.slice(0, 4)
+    : p === 'month' ? m.happened_at.slice(0, 7) : m.happened_at;
+}
+
+const metaLine = m => [m.walk_score != null ? `<span class=score>${m.walk_score}</span>/12` : '',
+  esc(when(m)), esc(m.source_name)].filter(Boolean).join(' · ');
+
+function drawList() {
+  const filtered = state.q || state.source || state.hidden !== 'all' || state.stranger || state.inview || state.scores.size;
+  $('count').innerHTML = `<span>${shown.length} of ${MEMORIES.length}</span>` + `<span>${filtered && shown.length ? `<button id=fit>Show on map</button> · ` : ''}${filtered ? `<button id=clear>Clear filters</button>` : ''}</span>`;
+  $('list').innerHTML = shown.length ? shown.map((m, i) =>
+    `<div class="row${m.hidden ? ' faded' : ''}${i === active ? ' active' : ''}" data-id="${m.id}">
+      <b>${esc(m.place)}</b>${badges(m)}
+      <div class=meta>${metaLine(m)}</div><p>${esc(m.summary)}</p></div>`).join('')
+    : `<div class=empty>Nothing matches.</div>`;
+}
+
+function stylePlace(p) {
+  const vis = p.mems.some(m => m.shown);
+  const allHidden = p.mems.every(m => m.hidden);
+  const on = current && current.place_id === p.id;
+  const z = map.getZoom();
+  const base = z >= 16 ? 6 : z >= 14 ? 4.5 : 3.5;
+  p.marker.setStyle({
+    radius: on ? base + 6 : base + Math.min(p.mems.filter(m => m.shown).length - 1, 5),
+    color: css('--paper'),
+    fillColor: on ? css('--seal') : allHidden ? css('--faint') : css('--gold'),
+    fillOpacity: vis ? (allHidden ? .55 : .95) : 0, opacity: vis ? 1 : 0, interactive: vis,
+  });
+  if (on) p.marker.bringToFront();
+}
+
+// --- detail ----------------------------------------------------------------
+// A place's memory that the filter keeps, preferring the one at the cursor.
+const pick = p => p.mems.find(m => m.shown) || p.mems[0];
+
+function dist(a, b) {
+  const r = Math.PI / 180, x = (b.lng - a.lng) * r * Math.cos((a.lat + b.lat) * r / 2), y = (b.lat - a.lat) * r;
+  return 6371000 * Math.hypot(x, y);
+}
+
+// Commons serves any width of a picture; the originals run to 5000 px.
+const thumb = url => url.split('?')[0].replace(/\/commons\/(\w\/\w\w)\/([^/]+)$/, (_, d, f) => `/commons/thumb/${d}/${f}/640px-${f}`);
+
+function card(m) {
+  const pics = (m.enrichment?.pictures || []).map(p => `<figure><a href="${esc(p.url)}" target=_blank><img src="${esc(thumb(p.url))}" data-full="${esc(p.url)}" onerror="this.onerror=null;this.src=this.dataset.full" loading=lazy alt=""></a>
+    <figcaption>${esc(p.caption)} · ${esc(p.author)} · ${esc(p.license)}</figcaption></figure>`).join('');
+  const links = (m.links || []).map(l => `<a class=chip href="${esc(l.url)}" target=_blank>${esc(l.text)} ↗</a>`).join('');
+  const tags = (m.tags || []).map(t => `<button class=chip data-q="#${esc(t)}">#${esc(t)}</button>`).join('');
+  const notes = (m.notes || []).map(n => `<li class="${n.hidden ? 'faded' : ''}">“${esc(n.body)}”</li>`).join('');
+  const facts = [
+    ['Id', `#${m.id}`], ['Layer', m.layer], ['Happened', when(m) || '—'],
+    ['Source', m.source_name ? `<button class=chip data-source="${esc(m.source_name)}">${esc(m.source_name)}</button>` : '—'],
+    ['Item', m.link ? `<a href="${esc(m.link)}" target=_blank>${esc(m.title || m.link)}</a>` : esc(m.title || '—')],
+    m.published_at && ['Published', esc(m.published_at.slice(0, 10))],
+    m.attribution && ['Credit', esc(m.attribution)],
+    ['Confidence', esc(m.extraction_confidence || '—')],
+    ['Locket', esc(m.locket)],
+    m.review && ['Review', esc(m.review)],
+    ['Created', esc(m.created_at.slice(0, 16).replace('T', ' '))],
+  ].filter(Boolean).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  return `<article class="mem${m === current ? ' current' : ''}${m.hidden ? ' faded' : ''}" data-id="${m.id}">
+    <div class=top><div class=meta>${metaLine(m)}</div><div>${badges(m)}</div></div>
+    <div class=story>${esc(m.summary)}</div>
+    ${m.quote ? `<div class=quote>${esc(m.quote)}<small>${esc(m.quote_by)}</small></div>` : ''}
+    ${m.contrast_note ? `<div class=then><b>Then and now.</b> ${esc(m.contrast_note)}</div>` : ''}
+    <div>${tags}${links}</div>
+    ${pics ? `<div class=pics>${pics}</div>` : ''}
+    <div class=engage><span>Opened ${m.opens}</span><span class=heart>♥ ${m.hearts}</span><span>${(m.notes || []).length} notes</span>
+      ${m.reports ? `<span class=flag>⚑ ${m.reports} reports</span>` : ''}</div>
+    ${notes ? `<ul class=notes>${notes}</ul>` : ''}
+    <dl class=facts>${facts}</dl>
+    ${m.sheet ? `<details><summary>Fact sheet</summary><pre>${esc(JSON.stringify(m.sheet, null, 2))}</pre></details>` : ''}
+    ${m.enrichment ? `<details><summary>Enrichment</summary><pre>${esc(JSON.stringify(m.enrichment, null, 2))}</pre></details>` : ''}
+  </article>`;
+}
+
+function openMemory(id, {fly = true, push = true} = {}) {
+  const m = byId.get(id);
+  if (!m) return closeDetail();
+  const prev = current;
+  current = m;
+  const p = places.get(m.place_id);
+  if (prev && places.get(prev.place_id)) stylePlace(places.get(prev.place_id));
+  if (p) stylePlace(p);
+
+  const i = shown.indexOf(m);
+  if (i >= 0) active = i;
+  const others = p ? p.mems.filter(o => o !== m) : [];
+  const near = p ? [...places.values()].filter(o => o !== p).map(o => [o, dist(p, o)])
+    .filter(([, d]) => d < 250).sort((a, b) => a[1] - b[1]).slice(0, 8) : [];
+
+  $('detail').innerHTML = `<div class=nav>
+      <button data-act=back>‹ All memories</button>
+      <span><button data-act=prev ${i <= 0 ? 'disabled' : ''}>‹</button><span class=pos>${i >= 0 ? `${i + 1} of ${shown.length}` : 'not in filter'}</span><button data-act=next ${i < 0 || i >= shown.length - 1 ? 'disabled' : ''}>›</button></span>
+    </div>
+    <div class=placehead><h2>${esc(m.place)}</h2>
+      <div class=meta>${p ? `<a href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=18/${p.lat}/${p.lng}" target=_blank>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</a> · pin ±${p.precision ?? '?'} m · ${esc(p.status)}` : 'No coordinates'}
+      ${others.length ? ` · ${others.length + 1} memories here` : ''}</div></div>
+    ${card(m)}${others.map(card).join('')}
+    ${near.length ? `<div class=nearby><h3>Within 250 m</h3>${near.map(([o, d]) =>
+      `<button data-id="${pick(o).id}"><b>${esc(o.name)}</b><span class=meta>${o.mems.length > 1 ? o.mems.length + ' · ' : ''}${Math.round(d)} m</span></button>`).join('')}</div>` : ''}`;
+  $('list').style.display = 'none';
+  $('detail').style.display = 'block';
+  $('detail').scrollTop = 0;
+
+  if (ring) ring.remove();
+  ring = null;
+  if (p) {
+    ring = L.circle([p.lat, p.lng], {radius: p.precision || 50, color: css('--seal'), weight: 1, dashArray: '4 4', fillOpacity: .04, interactive: false}).addTo(map);
+    if (fly) map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16), {duration: .5});
+    map.eachLayer(l => l.closeTooltip?.());
+    p.marker.openTooltip();
+  }
+  const hash = '#' + m.id;
+  if (location.hash !== hash) history[push ? 'pushState' : 'replaceState'](null, '', hash);
+}
+
+function closeDetail({push = true} = {}) {
+  const prev = current;
+  current = null;
+  if (prev && places.get(prev.place_id)) stylePlace(places.get(prev.place_id));
+  if (ring) { ring.remove(); ring = null; }
+  map.eachLayer(l => l.closeTooltip?.());
+  $('detail').style.display = 'none';
+  $('list').style.display = 'block';
+  drawList();
+  $('list').querySelector('.row.active')?.scrollIntoView({block: 'nearest'});
+  if (location.hash && push) history.pushState(null, '', location.pathname);
+}
+
+function step(d) {
+  if (!shown.length) return;
+  const i = current ? shown.indexOf(current) : active;
+  const j = Math.max(0, Math.min(shown.length - 1, (i < 0 ? -1 : i) + d));
+  if (current) return openMemory(shown[j].id, {push: false});
+  active = j;
+  $('list').querySelectorAll('.row').forEach((r, k) => r.classList.toggle('active', k === j));
+  const row = $('list').children[j];
+  row.scrollIntoView({block: 'nearest'});
+  const p = places.get(shown[j].place_id);
+  if (p) { p.marker.openTooltip(); if (!map.getBounds().contains(p.marker.getLatLng())) map.panTo(p.marker.getLatLng()); }
+}
+
+// --- wiring ----------------------------------------------------------------
+const set = (k, v) => { state[k] = v; active = -1; if (current) closeDetail(); filter(); $('list').scrollTop = 0; };
+$('q').oninput = e => set('q', e.target.value.toLowerCase().trim());
+$('sort').onchange = e => set('sort', e.target.value);
+$('source').onchange = e => { e.target.classList.toggle('set', !!e.target.value); set('source', e.target.value); };
+$('hidden').onchange = e => { e.target.classList.toggle('set', e.target.value !== 'all'); set('hidden', e.target.value); };
+for (const k of ['stranger', 'inview']) $(k).onclick = e => { e.target.setAttribute('aria-pressed', !state[k]); set(k, !state[k]); };
+$('hist').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const s = +b.dataset.s;
+  state.scores.has(s) ? state.scores.delete(s) : state.scores.add(s);
+  set('scores', state.scores);
+};
+$('count').onclick = e => {
+  if (e.target.id === 'fit') {
+    const pts = shown.filter(m => m.lat != null).map(m => [m.lat, m.lng]);
+    return pts.length && map.flyToBounds(pts, {padding: [40, 40], maxZoom: 16, duration: .6});
+  }
+  if (e.target.id !== 'clear') return;
+  Object.assign(state, {q: '', source: '', hidden: 'all', stranger: false, inview: false, scores: new Set()});
+  $('q').value = ''; $('source').value = ''; $('hidden').value = 'all';
+  for (const el of [$('source'), $('hidden')]) el.classList.remove('set');
+  for (const k of ['stranger', 'inview']) $(k).setAttribute('aria-pressed', false);
+  set('q', '');
+};
+$('list').onclick = e => { const r = e.target.closest('.row'); if (r) openMemory(+r.dataset.id); };
+$('list').onmouseover = e => {
+  const r = e.target.closest('.row'); if (!r) return;
+  places.get(byId.get(+r.dataset.id).place_id)?.marker.openTooltip();
+};
+$('detail').onclick = e => {
+  const t = e.target.closest('[data-act],[data-id],[data-q],[data-source]'); if (!t) return;
+  if (t.dataset.act === 'back') return closeDetail();
+  if (t.dataset.act === 'prev') return step(-1);
+  if (t.dataset.act === 'next') return step(1);
+  if (t.dataset.q) { $('q').value = t.dataset.q; return set('q', t.dataset.q); }
+  if (t.dataset.source) { $('source').value = t.dataset.source; return $('source').onchange({target: $('source')}); }
+  if (t.tagName === 'BUTTON' && t.dataset.id) openMemory(+t.dataset.id);
+};
+map.on('zoomend', () => places.forEach(stylePlace));
+map.on('moveend', () => { if (state.inview) { filter(); if (current) openMemory(current.id, {fly: false, push: false}); } });
+
+addEventListener('keydown', e => {
+  if (e.target === $('q')) {
+    if (e.key === 'Escape') { $('q').blur(); }
+    else if (e.key === 'ArrowDown' || e.key === 'Enter') { $('q').blur(); if (e.key === 'Enter' && shown.length) openMemory(shown[Math.max(active, 0)].id); else step(1); e.preventDefault(); }
+    return;
+  }
+  if (e.target.tagName === 'SELECT' || e.metaKey || e.ctrlKey) return;
+  const k = e.key;
+  if (k === '/') { e.preventDefault(); $('q').focus(); $('q').select(); }
+  else if (k === 'Escape' && current) closeDetail();
+  else if (k === 'ArrowDown' || k === 'j' || (current && (k === 'ArrowRight' || k === 'l'))) { e.preventDefault(); step(1); }
+  else if (k === 'ArrowUp' || k === 'k' || (current && (k === 'ArrowLeft' || k === 'h'))) { e.preventDefault(); step(-1); }
+  else if (k === 'Enter' && !current && active >= 0) openMemory(shown[active].id);
+});
+
+const route = () => {
+  const id = +location.hash.slice(1);
+  if (id) openMemory(id, {push: false}); else if (current) closeDetail({push: false});
+};
+addEventListener('popstate', route);
+filter();
+route();
+</script>
+</body>
+</html>
