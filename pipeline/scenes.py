@@ -372,7 +372,12 @@ def resolve(sc: dict, idx: dict):
         "what": then["what"] if then else "",
         "standing": then["standing"] if then else "unknown",
     }
-    return entry, geocode.place(sc["address"], sc["venue"], "Copenhagen", "DK", None, None)
+    # The finder adds asides ("Holms Plads, ved Langebro"); the map knows the bare name.
+    for venue in dict.fromkeys([sc["venue"], geocode.unbracket(sc["venue"]).split(",")[0]]):
+        hit = geocode.place(sc["address"], venue, "Copenhagen", "DK", None, None)
+        if hit:
+            return entry, hit
+    return entry, None
 
 
 def spot_card(entry: dict) -> str:
@@ -416,10 +421,13 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: dict) -> list[di
         if not entry:
             print(f"  drop  {tag}")
             continue
+        if not hit:
+            print(f"  drop, not on the map: {entry['today']}")
+            continue
         if hit and LAUNCH_BBOX and not extract._in_box(hit[0], hit[1], LAUNCH_BBOX):
             print(f"  drop, outside the launch area: {entry['today']}")
             continue
-        print(f"  keep  {tag} -> {entry['today']} ({hit[3] if hit else 'NO GEOCODE'})")
+        print(f"  keep  {tag} -> {entry['today']} ({hit[3]})")
         w = write(session, client, cid, passage, ctx, sc, entry)
         fault = w and opening_fault(w["summary"], seen)
         note = ""
@@ -445,10 +453,10 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: dict) -> list[di
                 "locality": "Copenhagen",
                 "region": "Capital Region of Denmark",
                 "country": "DK",
-                "lat": hit[0] if hit else None,
-                "lng": hit[1] if hit else None,
+                "lat": hit[0],
+                "lng": hit[1],
                 "location_precision": "street",
-                "confidence": "high" if hit else "medium",
+                "confidence": "high",
                 "spot_test": "pass",
             }
         )

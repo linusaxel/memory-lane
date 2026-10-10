@@ -1,3 +1,4 @@
+from pipeline import scenes
 from pipeline.scenes import copied, opening_fault, raw_at, reach
 
 
@@ -68,3 +69,22 @@ def test_an_unsupported_fact_is_written_again_never_cut(monkeypatch):
     draws[:] = ["This was second", "clean"]
     assert scenes.faithful(None, None, 1, "", "", {}, entry, "first", "") == "clean"
     assert "stock opening" in notes[-1] and "two colleagues" in notes[-1]
+
+
+def test_a_venue_with_an_aside_is_looked_up_bare(monkeypatch):
+    asked = []
+
+    def place(address, venue, *rest):
+        asked.append(venue)
+        return (55.67, 12.58, 50, "photon") if venue == "Charlottenborg" else None
+
+    monkeypatch.setattr(scenes.geocode, "place", place)
+    sc = {
+        "venue": "Charlottenborg, Kongens Nytorv",
+        "address": "",
+        "index_place": "",
+        "place_words": "x",
+    }
+    entry, hit = scenes.resolve(sc, {"places": []})
+    assert asked == ["Charlottenborg, Kongens Nytorv", "Charlottenborg"]
+    assert hit[3] == "photon"
