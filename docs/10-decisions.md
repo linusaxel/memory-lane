@@ -4352,8 +4352,13 @@ few lines beside it. `crawler/commons.py` fetches Commons files by a search
 - **Licences per file**, as *The sources' legal footing* says: public domain,
   CC0, CC BY, CC BY-SA, Attribution. `enrich.free` now refuses "CC BY-NC" and
   "CC BY-ND", which it had let through on their "cc by" prefix.
+- **The walk score sees the picture** (2026-10-10, the founder's choice over
+  picking by hand). A memory whose first picture is its source is scored
+  with the picture and `PICTURE_PROMPT`; every other memory keeps `PROMPT`
+  unchanged. A picture memory under 6 is hidden as it is saved: "amazing" is
+  the bar, and a walk should not stop for less.
 - Not batched, and no fact check: the check reads text and can't see the
-  picture. Measure the first trial against walk scores before more.
+  picture.
 
 **Options considered:** the caption through the text extractor (captions are
 one line; the judge drops them as thin); a picture column on `memories` (the

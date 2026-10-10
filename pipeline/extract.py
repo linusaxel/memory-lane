@@ -1,5 +1,6 @@
 """Extract location-based memories from transcripts using Claude."""
 
+import base64
 import hashlib
 import json
 import logging
@@ -673,6 +674,17 @@ def _model_key(model: str = EXTRACTION_MODEL) -> str:
 
 CACHE = {"type": "ephemeral", "ttl": "1h"}
 STREAM_ABOVE = 21_000
+
+
+def image_block(url: str) -> dict:
+    """A picture as a request's content block, sent as bytes: Wikimedia
+    refuses the API's own fetch of a URL."""
+    from crawler.commons import USER_AGENT, download
+
+    raw = download(url, USER_AGENT)
+    kind = "image/png" if raw.startswith(b"\x89PNG") else "image/jpeg"
+    data = base64.b64encode(raw).decode()
+    return {"type": "image", "source": {"type": "base64", "media_type": kind, "data": data}}
 
 
 def _params(

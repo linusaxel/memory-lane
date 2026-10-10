@@ -24,7 +24,7 @@ import logging
 from sqlalchemy import text
 
 from pipeline.config import GRADER_MODEL
-from pipeline.extract import _request
+from pipeline.extract import _request, image_block
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,17 @@ nothing happens, only names, dates or a description.
 - 4 to 6: true and placed, but they forget it by the next corner.
 - 0 to 3: nothing to stand here for."""
 
+# The walker sees the picture beside the words (docs/10, *A picture can be the
+# memory*), so its score sees it too. Text-only memories keep PROMPT as it is.
+PICTURE_PROMPT = (
+    PROMPT
+    + """
+
+The picture beside the text is what the walker sees with it, taken on this
+spot. Score the two together: an arresting picture of the moment raises it, a
+snapshot anyone could take there today sinks it."""
+)
+
 SCHEMA = {
     "type": "object",
     "properties": {"score": {"type": "integer", "enum": list(range(13))}},
@@ -54,9 +65,13 @@ SCHEMA = {
 }
 
 
-def walk_score(client, summary: str) -> int | None:
+def walk_score(client, summary: str, picture: str | None = None) -> int | None:
     """0-12, or None when the model did not answer usably."""
-    raw = _request(client, PROMPT, summary, SCHEMA, max_tokens=200, model=GRADER_MODEL)
+    if picture:
+        user = [image_block(picture), {"type": "text", "text": summary}]
+        raw = _request(client, PICTURE_PROMPT, user, SCHEMA, max_tokens=200, model=GRADER_MODEL)
+    else:
+        raw = _request(client, PROMPT, summary, SCHEMA, max_tokens=200, model=GRADER_MODEL)
     if raw is None:
         return None
     try:
@@ -73,7 +88,11 @@ def walk_score(client, summary: str) -> int | None:
 
 
 UNSCORED = """
-    SELECT m.id, p.name, m.summary FROM memories m JOIN places p ON p.id = m.place_id
+    SELECT m.id, p.name, m.summary,
+           CASE WHEN m.enrichment->'pictures'->0->>'page' = c.url
+                THEN m.enrichment->'pictures'->0->>'thumb' END AS picture
+    FROM memories m JOIN places p ON p.id = m.place_id
+    LEFT JOIN content c ON c.id = m.content_id
     WHERE m.walk_score IS NULL AND m.user_id IS NULL
       AND (CAST(:content_id AS INTEGER) IS NULL OR m.content_id = :content_id)
       AND (CAST(:memory_id AS INTEGER) IS NULL OR m.id = :memory_id)
@@ -89,7 +108,7 @@ def score_memories(session, client, content_id: int | None = None, memory_id: in
     ).fetchall()
     done = {}
     for r in rows:
-        score = walk_score(client, f"{r.name}: {r.summary}")
+        score = walk_score(client, f"{r.name}: {r.summary}", r.picture)
         if score is None:
             continue
         session.execute(

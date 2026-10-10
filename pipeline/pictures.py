@@ -12,7 +12,6 @@ first picture, so enrichment leaves it be; `tasks.after_save` scores it.
 """
 
 import argparse
-import base64
 import json
 import urllib.parse
 
@@ -47,8 +46,9 @@ on that spot will see the picture on their phone with a few lines beside it.
 - summary: 30 to 80 words, past tense, English, beside the picture. The
   walker can see it: do not describe it. Tell what was going on - the
   occasion, who, when, what came of it - from the caption, the date and the
-  categories, and anyone named, introduced. No name, cause or feeling of your
-  own. Never "this photo shows" or "in this picture".
+  categories, and anyone named, introduced. No name, fact, cause or feeling
+  of your own: what came of it only if the caption says. Never "this photo
+  shows" or "in this picture".
 - tags: 1 to 3 from the list."""
 
 LOOK_SCHEMA = {
@@ -84,6 +84,7 @@ LOOK_SCHEMA = {
 }
 
 STRIKING = 4
+GOOD = 6
 
 PENDING = """SELECT c.id, c.url, c.title, t.full_text FROM content c
 JOIN transcripts t ON t.content_id = c.id
@@ -91,12 +92,8 @@ WHERE c.source_id = :s AND NOT c.memories_extracted AND NOT c.extraction_failed 
 
 
 def look(session, client, cid: int, f: dict, caption: str) -> dict | None:
-    # Sent as bytes: Wikimedia refuses the API's own fetch of a URL.
-    raw = commons.download(f["thumb"], commons.USER_AGENT)
-    kind = "image/png" if raw.startswith(b"\x89PNG") else "image/jpeg"
-    data = base64.b64encode(raw).decode()
     user = [
-        {"type": "image", "source": {"type": "base64", "media_type": kind, "data": data}},
+        extract.image_block(f["thumb"]),
         {"type": "text", "text": caption},
     ]
     raw = extract._stored_request(session, client, cid, 0, LOOK_PROMPT, user, LOOK_SCHEMA)
@@ -196,6 +193,14 @@ def main():
                 s.commit()
                 if made:
                     tasks.after_save(client, r.id)
+                    # Scored with the picture in view (walk_score); below
+                    # GOOD it is not amazing, and a walk should not stop for it.
+                    s.execute(
+                        text("""UPDATE memories SET hidden = TRUE
+                                WHERE content_id = :c AND walk_score < :g"""),
+                        {"c": r.id, "g": GOOD},
+                    )
+                    s.commit()
 
 
 if __name__ == "__main__":
