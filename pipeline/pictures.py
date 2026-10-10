@@ -12,6 +12,7 @@ first picture, so enrichment leaves it be; `tasks.after_save` scores it.
 """
 
 import argparse
+import base64
 import json
 
 import anthropic
@@ -84,8 +85,12 @@ WHERE c.source_id = :s AND NOT c.memories_extracted AND NOT c.extraction_failed 
 
 
 def look(session, client, cid: int, f: dict, caption: str) -> dict | None:
+    # Sent as bytes: Wikimedia refuses the API's own fetch of a URL.
+    raw = commons.download(f["thumb"], commons.USER_AGENT)
+    kind = "image/png" if raw.startswith(b"\x89PNG") else "image/jpeg"
+    data = base64.b64encode(raw).decode()
     user = [
-        {"type": "image", "source": {"type": "url", "url": f["thumb"]}},
+        {"type": "image", "source": {"type": "base64", "media_type": kind, "data": data}},
         {"type": "text", "text": caption},
     ]
     raw = extract._stored_request(session, client, cid, 0, LOOK_PROMPT, user, LOOK_SCHEMA)
