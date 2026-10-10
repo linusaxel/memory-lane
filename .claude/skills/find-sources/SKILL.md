@@ -90,6 +90,28 @@ festivals', venues' and institutions' own history pages and news archives.
   famous name or a crowd at a spot is not a story. Recent pictures: dead end
   unless an iconic moment.
 
+**Sweep 2026-10-10 (evening): recent first-person, after Christiania1 gave
+6 of 6 (2 agents).**
+- **Christiania1 (7)** has more: 8 *christianiahistorie* films (Louise Gehl,
+  Peter Larsen, Henrik Gottlieb, Ole Sol, Mo Elisabeth Hansen, Sanne & Hanne,
+  Ida Klemann, Nadia Køvedal Reich), Solvognens aktionsteater 1:2/2:2, Ygge
+  *Opvokset i Benenden*, *Stormen på plankeværket*. Christiania is a theme
+  (20 good then, cap 30): 5 ingested (4321-4325), waiting on captions.
+- **Local TV, first-person but uncaptioned** (we don't transcribe audio):
+  Christianshavns Kvarter 155 (647 videos; Stig Weye has auto-captions),
+  Frederiksberg Lokal TV 159's *Fortælleklubben* (Diakonissestiftelsen
+  p83lsFRs79A captioned, ingested), Kgs. Enghave Lokalhistoriske Arkiv,
+  Korridoren's *Sådan var min barndom*. Bispebjerg Lokal-TV 146 is experts
+  guiding (Skrammellegepladsen nEmNfJ0lwtE ingested). Frederiksberg-erindringer
+  on YouTube is trailers; the films are on stadsarkivet.frederiksberg.dk/video.
+- **Text: no open recent first-person collection exists.** Stadsarkiv's ~3,000
+  memoirs (1969 and 1995 calls, mostly pre-1950) sit behind an AWS WAF
+  challenge on kbharkiv.dk; chrarkiv.dk's 99 *Erindringer* are third-person
+  stubs linking there. Blocked or restricted: lgbt.dk (455), Information.dk
+  and Jacket2 (ClaudeBot), Sundby and Vanløse archives, slaegtsbibliotek.dk.
+  Arbejdermuseet's 1968 activists are audio. Recent material is in print
+  (*Bunk, Monk & Funk*, *Stemmer fra 68*). Ask Stadsarkiv (thread already open).
+
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
   clubs) gave 4 good from 67 items (source 245). Danish Wikipedia's 2,783
