@@ -1012,8 +1012,20 @@ Result: 21 cards, from 25.
 
 So `faithful` now never cuts. The writer draws up to `REWRITES` (2) more
 times, told every claim named so far. A card is dropped only if a fact is
-still added after that. A card with only colour left is kept as written. Not
-yet measured.
+still added after that. A card with only colour left is kept as written.
+
+**Round 4, about $2:**
+- 24 cards, 23 rewrites, 4 dropped. No sentence is broken.
+- Back whole: the Toby debut (now with its payoff, the angry letter and the
+  release), the fire seen from Børsen, and the foyer the night the king died.
+- Still dropped: the mother's grave ("for the first time the boy understood
+  that she was dead", "eleven-year-old"), and two 1863 cards.
+- **Open:**
+  - A kept flourish can be a generalisation the source doesn't make
+    ("Authors rarely get a second chance").
+  - A rewrite's opening is not checked, so "This was…", "On the evening of…"
+    and "Børsen is where…" got back in: 5 of 24.
+  - The Nygade shop card, dropped as `setting` in round 2, came back.
 
 ### Yield by genre, 2026-10-07
 

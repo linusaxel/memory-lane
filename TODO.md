@@ -182,10 +182,10 @@ worth the walk. Measure every change against the labels before and after
       2. The opening check misses near-repeats ("Classens Have is…", "…lies…",
          "<Place> is where…") and counts repeats per run; count per book when
          wired.
-      2b. A flagged card is now written again before any trim, and the
-         mid-sentence damage fell from 3 cards in 25 to 2 (docs/04). What's
-         left is the trim after a second flag. Next: drop the card rather than
-         trim it, or check whether the check is wrong ("his wife").
+      2b. Cards are never cut now: up to two rewrites, then a drop (docs/04,
+         round 4). No broken sentences. Open: a rewrite's opening isn't
+         checked (5 of 24 stock openings); a kept "colour" flourish can be a
+         generalisation; the mother's grave is lost to the check's nitpicks.
       2c. One window can give five cards about one week (November 1863).
       3. One story's payoff still leaks into a neighbouring card.
       4. Scenes outside Copenhagen (Herlufsholm, Lolland) are kept: intended?
