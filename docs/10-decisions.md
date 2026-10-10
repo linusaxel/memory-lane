@@ -4364,6 +4364,33 @@ few lines beside it. `crawler/commons.py` fetches Commons files by a search
 one line; the judge drops them as thin); a picture column on `memories` (the
 served `pictures` field already carries one, with its credit).
 
+### No teller or theme dominates
+
+Status: Accepted 2026-10-10. The founder: "I don't want too much Vilhelm
+Bergsøe stuff", then "we have to be mindful not to overcrowd the memories
+with a single theme, e.g. WW2. I want more recent stuff."
+
+A walk of one kilometre a stop is a mix, not one man's diary or one war.
+What scores well is not enough on its own:
+
+- **At most 15 good memories per author**, across all their books, and a
+  teller a walker may have heard of beats an obscure one at the same yield.
+  Bergsøe reached 25; his third volume was not run.
+- **At most 30 good memories per theme or era** (WW2, the 1853 cholera, one
+  festival). WW2 reached 30 on 2026-10-10, when Frihedsmuseet's 1940-45
+  pictures scored best of every picture set (8 good of 20); that source is
+  paused.
+- **Recent first.** 1960-now had 13 good memories to WW2's 30. Old free text
+  and pictures are the fallback.
+
+Enforced where sources are picked: the make-memories and find-sources skills.
+Counting is by `happened_at` and the source's author; a theme without a date
+is judged by hand.
+
+**Options considered:** a cap in the route solver (a walk would still be one
+theme where the map is); hiding memories over the cap (moves the count by
+hand).
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

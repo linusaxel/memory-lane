@@ -180,7 +180,9 @@ encyclopedia only when the page shows a named person's anecdote on its spot:
 
 Memoirs and channels were scored on the looser pre-10-05 scale, so trust the
 order, not the gap. Within a genre, prefer a teller a walker may have heard of,
-and many tellers over one: make-memories caps an author at 15 good memories.
+and many tellers over one: make-memories caps an author at 15 good memories
+and a theme or era at 30 (WW2 is full), recent first (docs/10, *No teller or
+theme dominates*).
 
 | Genre | Good (6+) per memory, 2026-10-07 |
 |---|---|

@@ -81,6 +81,11 @@ ORDER BY expected DESC, pending DESC;
   every second stop Bergsøe is one man's diary, and a teller the walker may
   have heard of (Andersen, Oehlenschläger, Blixen) beats an obscure one at
   the same yield. Bergsøe reached 25 on 2026-10-10: no more of his books.
+- **One theme, a few stops.** At most 30 good memories per theme or era:
+  WW2 (1939-45) stood at 30 on 2026-10-10, so no more occupation sources,
+  however well they score (Frihedsmuseet's pictures did). Count with
+  `extract(year FROM happened_at)`. Recent (1960-now) comes first: it had 13 (docs/10, *No teller or theme
+  dominates*).
 - If a source's done items average under 7, suggest
   `! venv/bin/python -m pipeline.sources set <id> paused --note "<why>"` to the user and skip it.
 
