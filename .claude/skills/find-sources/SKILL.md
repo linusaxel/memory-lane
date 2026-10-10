@@ -84,6 +84,11 @@ festivals', venues' and institutions' own history pages and news archives.
   WAF challenge: ask Stadsarkiv for API access, don't spoof. Not usable: KB
   COP (storied photos "muligvis beskyttet"), Arbejdermuseet (InC), Flickr
   API (terms), Europeana (thin), Polfoto/Ritzau.
+  Trialled through `pipeline.pictures` (docs/04 *Road*): only 1940-45 moments
+  scored (8 good of 20, now capped as WW2) and Eurovision 2014 (Conchita, 6-7).
+  Recent concerts, protests, 1960s/70s street life and events score 2-5: a
+  famous name or a crowd at a spot is not a story. Recent pictures: dead end
+  unless an iconic moment.
 
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
