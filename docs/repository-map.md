@@ -79,7 +79,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/now.py` | Asks OpenStreetMap what a building-level pin stands inside today, and writes the "now" side of its contrast from that. Runs after aggregation on that content's places; alone, it is the backfill. Free |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset. `--memories` finds retold memories within 150 m, and `--apply` hides the weaker telling |
-| `pipeline/browse.py` | **Every memory, all its content, in a browser.** Local only (127.0.0.1), ungated, hidden ones shown; filter box, click to expand. Free |
+| `pipeline/browse.py` | **Every memory, all its content, on a map.** Local only (127.0.0.1), ungated, hidden ones faded; a filter narrows list and pins, a pin or row opens it in full. Free |
 | `pipeline/export.py` | Hand a customer the corpus as rows, without the transcripts |
 | `pipeline/perf.py` | **Time the read path on a corpus this size isn't.** Run before and after touching `api/queries.py` |
 | `pipeline/themed_routes.py` | **Which areas could carry themed walks.** Per hotspot, the tags with `ROUTE_SIZE` walkable stops; ready at three. The check before the generated-routes job, which will grow here |
