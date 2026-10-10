@@ -893,10 +893,16 @@ STOCK_OPENING = re.compile(
 )
 
 REOPEN_PROMPT = """The text is a story told at a place. Its first sentence opens on a
-formula ("This is…", "You are standing…", "In 1962…"). Write that first
-sentence again so it opens on the person, the moment or a line said, with the
-same facts and nothing new. Return the whole story with only the first
-sentence changed, every other sentence word for word."""
+formula: "This is…", "Here…", "You are standing…", or a date ("In 1962…",
+"On 16 April 2024…"). Write that first sentence again so it opens on the
+person, the crowd, the thing that happened or a line said. Never open on a
+date, "This", "Here" or the place's description; a date may come later in the
+sentence. Use the same facts and nothing new. Change only the first sentence:
+keep it one sentence, and return the whole story with every other sentence
+word for word, in its order and paragraphs.
+
+Before: "This is the bridge where a swan nested in 1971. Traffic stopped for a week."
+After: "A swan nested on the bridge in 1971. Traffic stopped for a week.\""""
 
 TRIM_SCHEMA = {
     "type": "object",

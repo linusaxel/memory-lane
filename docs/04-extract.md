@@ -1082,6 +1082,12 @@ best recent yield yet. Three faults, each fixed where it starts:
   predicate cut off, and `extract.reopened` writes a stock first sentence
   again, every other sentence word for word, or keeps the card as it was.
   `STOCK_OPENING` moved from scenes.py to extract.py, shared.
+- **The rewrite opened on a date.** Its first prompt kept 6 of the next 15
+  cards stock: it rewrote "This is…" as "On 16 April 2024…", stock too, or
+  changed more than the first sentence. `REOPEN_PROMPT` now forbids a date
+  first and shows one before/after. On 20 good stock cards it passed the guard
+  for 17 against 10, and stopped adding detail ("Montgomery waved…"). Misses:
+  a first sentence that sets the scene, and "K.H.M." splitting a sentence.
 
 ### Yield by genre, 2026-10-07
 
