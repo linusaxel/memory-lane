@@ -42,6 +42,49 @@ festivals', venues' and institutions' own history pages and news archives.
 | 1860-1919 | Public-domain memoirs: Gottschalksen `archive:engladmusikantsd00gott` (densest), Bang `runeberg:bang/6 København`, Grandjean `archive:spredtemindergen00gran`, Egan `gutenberg:36412 Copenhagen` | Trialled 2026-10-07, 5 windows each: 5 good of 6 memories on the new scale, but only 6 from 20 windows. Active: Grandjean 283 (4 memories, 3 good), Gottschalksen 281 (1, an 8); both fully ingested, 46 windows pending. Rejected: Bang 282 (vol. 6 is touring, 0), Egan 284 (royalty outside the bbox, 1) |
 | 1790-1890 | Copenhagen-only memoirs, sweep 2026-10-08 (2 agents: runeberg via its `authors/a.lst`+`t.lst` catalogue and `download.pl?mode=ocrtext&work=<key>`; archive.org with a common-word ratio to tell roman OCR, about 0.3, from Fraktur, about 0.15) | Registered and ingested whole: Bergsøe *De forbistrede drenge* 285, Schorn *Da Voldene stod* 286, Sødring *Erindringer* 287, Zinck *Fra mit Studenter- og Teater-Liv* 288, Foersom's *levnedsskildring* `runeberg:foersom` 289; trialled 5 densest windows each. Bergsøe vol. 2 done with fact sheets 2026-10-10 (290, 15 good); vol. 3 (291) not run: Bergsøe is over the per-author cap and little known. Open leads: Muusmann's three *glade København* (`archive:muusmann-det-glade-kbh-bd-1..3`, venue history by an eyewitness), Lorck `archive:femoghalvfjerdsi00lorc` (death year unchecked), Bauditz `archive:livserindringer00baudgoog` (half Copenhagen), `runeberg:paheiberg` (Bakkehus letters, 40%), `runeberg:billedhugg` (Sinding, 30%). Fraktur OCR, unusable: Rahbek *Erindringer*, Bournonville *Mit Theaterliv*, Davidsen *Fra det gamle Kongens Kjøbenhavn*, Falkenskjold, Martensen, Friis. Not online: Overskou, Hostrup. `runeberg:eberindr` (Bøgh) downloads empty |
 
+**Sweep 2026-10-10: well-known tellers, recent first, and pictures (5 agents).**
+- **Video, 1960-now.** No new Københavnerglimt: famous Danes telling their
+  spots on video belong to DR and TV 2. Best: Christiania1's
+  *christianiahistorie* (source 7, 10 films, manual Danish subtitles, Jon
+  Bang Carlsen, Mikael Fock); Roskilde TV's Ragnarock talks (Gasolin's
+  Beckerlee, Lecia, Poul Krebs; auto-captions; part Copenhagen); Christiania
+  TV (157), Loppen at 50. Low density: Christian Puglisi's channel,
+  Munchies *Chef's Night Out*, *Ikke Et Ord Om Politik*, Louisiana Channel.
+  Opt out: Copenhagen Sundays' *Mit København* (Squarespace AI block).
+  Re-uploads of DR/TV 2 documentaries (DET SKÆVE ARKIV, Nostalgoteket) are
+  traps. No captions: Lars H.U.G.'s Vartov talks, Huset-KBH 50 år.
+  `yt-dlp -J`/`--list-subs` answered without the IP block.
+- **Web text, 1960-now.** Nothing open collects them. The one clean lead at
+  volume: Wikipedia event and tour articles by title (Led Zeppelin as "The
+  Nobs" at K.B. Hallen 1970, the Little Mermaid's head 1964, the Beatles
+  1964), about 30-60 scenes. Ask permission: Euroman/Eurowoman *Mit
+  København*, Soundvenue, GAFFA (terms silent or grey). Opt out or blocked:
+  cphpost.dk, thelocal.dk, dr.dk (robots), altinget.dk (ai.txt §11b), Vice,
+  Kinfolk (terms); 403: zetland.dk, kristeligt-dagblad.dk, movie-locations.com.
+  Low: forfatterweb.dk, heartbeats.dk, danskefilm.dk (tables).
+- **Old, well-known, free text.** Johanne Luise Heiberg, *Et Liv gjenoplevet*
+  (tekster.kb.dk `adl-texts-heibfr05val-root`, `06`, `07`; FRI; clean TEI;
+  ~80% Copenhagen; avoid heibfr01-04 and 08, in copyright). Andersen, *Mit
+  Livs Eventyr* in Danish to 1867 (`runeberg:miteventyr`). Edmund Gosse,
+  *Two Visits to Denmark* 1872/74 (`archive:twovisitstodenma00gossuoft`,
+  dehyphenate). Bernhardt, *My Double Life* (`gutenberg:9100`, 1880 visit,
+  short). Thinner: Heiberg-Krieger letters, Gade, Drachmann's letters home,
+  Ørsted's letters (all tekster.kb.dk, free), Nelson 1801, Wraxall 1774,
+  Carr 1805, Marryat 1860 (obscure), Madvig (`gutenberg:44967`, politics).
+  Fraktur or in copyright: Steffens, Holberg's Epistler, Baggesen, Ewald,
+  Biehl, Wied.
+- **Pictures** (picture-first: a great, placeable picture of a moment is a
+  memory). Wikimedia Commons is the one usable at volume: `deepcat:` Events
+  in Copenhagen 10,318, decades 1960s-90s 701/247/121/57, protests 121;
+  about 25% geotagged, most placeable from the caption; licence via
+  `extmetadata` as enrich.py reads it. Also on Commons: Frihedsmuseet's 1945
+  photos (324, CC BY-SA), Elfelt (1,420, PD). SMK's API: 171 public-domain
+  paintings naming their spot (Kongens Nytorv 1807, Brandes at the
+  university). kbhbilleder.dk: 50,000+ placed photos, mostly PD, but an AWS
+  WAF challenge: ask Stadsarkiv for API access, don't spoof. Not usable: KB
+  COP (storied photos "muligvis beskyttet"), Arbejdermuseet (InC), Flickr
+  API (terms), Europeana (thin), Polfoto/Ritzau.
+
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
   clubs) gave 4 good from 67 items (source 245). Danish Wikipedia's 2,783
