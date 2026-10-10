@@ -24,6 +24,19 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **Walk scores are never refreshed when the rubric changes.** 2026-10-10:
+  re-scoring 68 memories, 10 scored on 09-27 fell from 6-8 to 3-5 and stayed
+  there on two reruns; 81 of 261 good memories carry pre-October scores, so
+  "how far from 1k" is inflated. Fix: store the prompt's hash beside
+  `walk_score` and have `walk_score --all` re-score the stale ones.
+
+- **The source screen fails biographies that hold a spot scene.** 2026-10-10:
+  Haiku's screen scored Kirstine Meyer's Ørsted essays 0.00 and 0.25, rejecting
+  the 1820 Nørregade discovery window as "not personal experiences"; the
+  screen's 0.3 bar would have dropped it. Fix: `CLASSIFIER_PROMPT` in
+  `pipeline/tasks.py` asks whether something happened at a named spot, not
+  whether it is first-hand.
+
 - **No e2e flow screenshots the locket.** 2026-10-10: porting the unlock
   engine, walk-and-unlock passed green with nothing showing the lid had drawn
   or swung. It took a hand loop of `simctl io screenshot` and contact sheets

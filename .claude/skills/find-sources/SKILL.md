@@ -163,6 +163,14 @@ festivals', venues' and institutions' own history pages and news archives.
   picture lead, not text. For works and breakthroughs made at a spot, read
   memoirs, letters and biographies (Ørsted, Andersen, Bohr), where the
   writer says where it happened.
+- **Ørsted (2026-10-10).** Not on ADL or Runeberg; his letters are in French
+  and German (Harding 1920). Kirstine Meyer's essays (d. 1941, PD) in
+  `archive:h.-c.-orsted-naturvidenskabelige-skrifter-vol-i`/`-iii` hold the
+  Lion Pharmacy (vol I, part 3, content 4300) and the 1820 discovery at
+  Pingels Gaard, Nørregade (vol III, part 1, content 4296): sources 302, 301.
+  Screened 0.25 and 0.00, the screen's bias, not the text. Harding's 1920
+  *En kort levnedsskildring* names the spot best ("where Københavns Telefonhus
+  is now") but his death year is unverified.
 - **Restricted:** Street Art Cities (address metadata needs written
   permission), StoryHunt (stories in its paid app), Sydhavnens Historie
   ("reproduction only by prior agreement", 1940s-60s, about 25 good).
