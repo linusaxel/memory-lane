@@ -1,11 +1,14 @@
-"""Scene-first extraction, trialled and not wired in (docs/04, *About the spot*).
+"""Scene-first extraction of book windows (docs/04, *About the spot*).
 
-    python -m pipeline.scenes <content_id>...   # bills: only the windows named
+    python -m pipeline.scenes <content_id>...       # bills: only the windows named
+    python -m pipeline.scenes --source <id> --save  # bills: every pending window, saved
 
 An index of the whole book, then a scene finder that writes no prose, then
 the spot placed by the geocoder, then a short writer, then today's check and
-trim. Every call is stored like a chunk, so a rerun is free. Prints the cards;
-saves nothing.
+rewrites. Every call is stored like a chunk, so a rerun is free. Prints the
+cards; --save stores them through `extract.save_memories` (geocode, launch
+area, retelling check) and marks each window extracted, one commit a window.
+Not yet in batch: full price, no worth-telling judge, no tags or dates.
 """
 
 import argparse
@@ -229,6 +232,9 @@ SLACK = 80
 REWRITES = 2
 BEFORE_CHARS = 1500
 
+PENDING_WINDOWS = """SELECT c.id FROM content c JOIN transcripts t ON t.content_id = c.id
+WHERE c.source_id = :s AND NOT c.memories_extracted AND NOT c.extraction_failed ORDER BY c.id"""
+
 PREVIOUS_WINDOW = """SELECT t.full_text FROM content c JOIN transcripts t ON t.content_id = c.id
 WHERE c.source_id = :s AND c.id < :id ORDER BY c.id DESC LIMIT 1"""
 
@@ -424,7 +430,23 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: set[str]) -> lis
         summary = faithful(session, client, cid, passage, ctx, sc, entry, w["summary"], note)
         if not summary:
             continue
-        out.append({"place": entry["today"], "summary": summary, "quote": w["quote"]})
+        out.append(
+            {
+                "place": entry["today"],
+                "summary": summary,
+                "quote": w["quote"],
+                "venue": entry["today"],
+                "address": entry["address"],
+                "locality": "Copenhagen",
+                "region": "Capital Region of Denmark",
+                "country": "DK",
+                "lat": hit[0] if hit else None,
+                "lng": hit[1] if hit else None,
+                "location_precision": "street",
+                "confidence": "high" if hit else "medium",
+                "spot_test": "pass",
+            }
+        )
     return out
 
 
@@ -459,15 +481,29 @@ def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("content_ids", type=int, nargs="+")
+    parser.add_argument("content_ids", type=int, nargs="*")
+    parser.add_argument("--source", type=int, help="every window of this source not yet extracted")
+    parser.add_argument("--save", action="store_true", help="save the cards as memories")
     args = parser.parse_args()
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     idx_by_source, seen = {}, set()
     with get_session() as s:
-        for cid in args.content_ids:
+        ids = args.content_ids + [
+            r.id
+            for r in s.execute(text(PENDING_WINDOWS), {"s": args.source}).fetchall()
+            if args.source
+        ]
+        for cid in ids:
             print(f"######## {cid}", flush=True)
-            for c in cards(s, client, cid, idx_by_source, seen):
+            found = cards(s, client, cid, idx_by_source, seen)
+            for c in found:
                 print(f"--- {c['place']} ({len(c['summary'].split())}w)\n{c['summary']}\n")
+            if args.save:
+                extract.save_memories(s, cid, found, extract.layer_for("book"), client)
+                s.execute(
+                    text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": cid}
+                )
+                s.commit()
 
 
 if __name__ == "__main__":
