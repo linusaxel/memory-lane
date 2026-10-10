@@ -49,7 +49,8 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/pdfs.py` | Back issues from a page that links their PDFs (`<index url> [<from year>] [<via regex>]`; via: one page per issue, each linking its PDF), newest first, via `pdftotext`; typed press, so forgotten once extracted |
 | `crawler/plaques.py` | OSM plaques and inscribed memorials in a box, with the Wikipedia intro of their subject |
 | `crawler/stolpersteine.py` | Stolpersteine from a German Wikipedia city list (the list's title), one record per address, inscription and life; no coordinates, the geocoder places the address |
-| `crawler/wikipedia.py` | Wikipedia articles geotagged near a point (`<lang> <lat>,<lng> <metres>`) or in categories (`<lang> category:<A>|<B>`, longest first), reference sections dropped; `article_text` for the others |
+| `crawler/wikipedia.py` | Wikipedia articles geotagged near a point (`<lang> <lat>,<lng> <metres>`), in categories (`<lang> category:<A>|<B>`, longest first) or by title (`<lang> titles:<A>|<B>`, only the windows naming Copenhagen), reference sections dropped; `article_text` for the others |
+| `crawler/commons.py` | Wikimedia Commons pictures by a CirrusSearch string (`deepcat:"Copenhagen in the 1970s"`): caption, date, categories, licence, author and point as text; `files()` for a picture's metadata |
 | `crawler/filming.py` | Films shot at a spot (Wikidata P915, cities left out), with the shoot paragraphs of the film's article |
 | `crawler/rss.py` | `press`: a feed's articles; `podcast`: episodes' `<podcast:transcript>`. Both forgotten once extracted |
 | `.claude/skills/find-sources/SKILL.md` | **How to find a source:** research, legal check, sample, screen, trial, decide |
@@ -64,6 +65,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/enqueue.py` | CLI to queue videos for parallel processing |
 | `pipeline/queue.py` | Redis/RQ queue setup |
 | `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change; `--compare` scores a candidate prompt against the current one on the same chunks; `--labels` re-judges the labelled memories and prints what the judge keeps of each verdict |
+| `pipeline/pictures.py` | **Picture-first memories** (docs/10, *A picture can be the memory*): a `commons` source's pictures, licence checked, looked at with their caption, placed (Commons' point first), told in a few lines, the picture first in `enrichment.pictures`. `--source <id> [--save]`. Bills |
 | `pipeline/scenes.py` | **Scene-first extraction, the book path** (docs/10, *Scene-first is the book path*): index, scene finder, geocoded spot, writer, check. Prints cards; `--source <id> --save` stores a book's pending windows and runs `after_save`. Not in batch: full price. Bills |
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
 | `pipeline/repin.py` | Places still on the model's guess (`llm`): the geocoder chain again, free; `--choose` lets the model pick one of the map's points, never a coordinate of its own |

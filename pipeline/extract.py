@@ -677,7 +677,7 @@ STREAM_ABOVE = 21_000
 
 def _params(
     system_prompt: str,
-    user: str,
+    user: str | list,
     schema: dict,
     context: str,
     max_tokens: int,
@@ -691,13 +691,10 @@ def _params(
     10% along with the system prompt. `think` lets the model think first: for
     a check where a miss costs more than the tokens.
     """
+    # A list is content blocks as they are: a picture with its caption.
+    blocks = user if isinstance(user, list) else [{"type": "text", "text": user}]
     content = (
-        [
-            {"type": "text", "text": context, "cache_control": CACHE},
-            {"type": "text", "text": user},
-        ]
-        if context
-        else user
+        [{"type": "text", "text": context, "cache_control": CACHE}, *blocks] if context else user
     )
     return dict(
         model=model,
@@ -727,7 +724,7 @@ def reply_text(response) -> str | None:
 def _request(
     client: anthropic.Anthropic,
     system_prompt: str,
-    user: str,
+    user: str | list,
     schema: dict = MEMORY_SCHEMA,
     context: str = "",
     max_tokens: int = 2000,

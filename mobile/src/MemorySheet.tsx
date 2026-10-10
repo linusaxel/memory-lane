@@ -200,6 +200,8 @@ export default function MemorySheet({
   const radius = memory?.unlock_radius_meters ?? FALLBACK_RADIUS_M;
   const withinReach = fromHere != null && fromHere <= radius;
   const locked = !!memory?.locked;
+  const first = memory?.pictures?.[0];
+  const shot = first?.page && first.page === memory?.content?.url ? first : null;
   // A locked memory over the map. Standing on it, the ring is on the map.
   const peeking = locked && compact;
   const peekNote = withinReach
@@ -593,6 +595,9 @@ export default function MemorySheet({
                       photograph and the weight shifts to it. */}
                   {/* docs/10, "The open story has a shape": when, the peak
                       first, their words, and what you can see now last. */}
+                  {/* A picture that is the source is the memory: it leads
+                      (docs/10, "A picture can be the memory"). */}
+                  {shot && <Pictures pictures={[shot]} />}
                   {/* One sentence is not a lede, it is the story. */}
                   {/* The #words are the tags, in the semibold, and a linked
                       name is underlined (StoryBody). */}
@@ -651,7 +656,7 @@ export default function MemorySheet({
                       </View>
                     )}
 
-                    <Pictures pictures={memory.pictures ?? []} />
+                    <Pictures pictures={(memory.pictures ?? []).filter((p) => p !== shot)} />
                     <MemoryMedia media={memory.media.filter((m) => !placed.includes(m.id))} />
 
                     <DiamondRule />

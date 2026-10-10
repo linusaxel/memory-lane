@@ -4325,6 +4325,36 @@ It is saved in `memory_sheets`, one row per extraction, never overwritten.
 - A column on `memories`: it keeps one sheet, so an old one is lost.
 - Rendering from the facts alone: the cards read like bullet lists.
 
+### A picture can be the memory
+
+Status: Accepted 2026-10-10. The founder: "if we find AMAZING pictures
+depicting some scene in CPH and we can correctly identify its location then
+that's good enough for a memory."
+
+A freely licensed picture of a moment, placed on its spot, is a memory with a
+few lines beside it. `crawler/commons.py` fetches Commons files by a search
+(`deepcat:"Copenhagen in the 1970s"`); `pipeline/pictures.py` looks at each one.
+
+- **The model sees the picture.** One call with the image and its caption,
+  date and categories says whether it is a moment (people doing something,
+  an event, the harbour frozen; not a building with nothing going on),
+  how striking it is (3 of 5 or better), where to stand, when, and writes 30
+  to 80 words from what the caption says and the picture plainly shows.
+- **Commons' point wins** over a geocoded venue. Without one, the venue the
+  model names is geocoded, inside the launch area or dropped.
+- **The picture leads.** It is the first of `enrichment.pictures`, and the
+  app shows it above the story when its page is the memory's source.
+  Enrichment fills only a memory with no enrichment, so it leaves this one be.
+- **Licences per file**, as *The sources' legal footing* says: public domain,
+  CC0, CC BY, CC BY-SA, Attribution. `enrich.free` now refuses "CC BY-NC" and
+  "CC BY-ND", which it had let through on their "cc by" prefix.
+- Not batched, and no fact check: the check reads text and can't see the
+  picture. Measure the first trial against walk scores before more.
+
+**Options considered:** the caption through the text extractor (captions are
+one line; the judge drops them as thin); a picture column on `memories` (the
+served `pictures` field already carries one, with its credit).
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

@@ -130,7 +130,9 @@ PICK_SCHEMA = {
 COMMONS = "https://commons.wikimedia.org/w/api.php"
 # Free to show with a credit. Anything else (non-commercial, no derivatives,
 # fair use) is not ours to show in a paid app.
-FREE = ("public domain", "pd", "cc0", "cc by", "cc-by")
+FREE = ("public domain", "pd", "cc0", "cc by", "cc-by", "attribution")
+# "CC BY-NC-SA 4.0" starts with "cc by" too.
+UNFREE = re.compile(r"\bnc\b|\bnd\b|non-?commercial|no ?deriv", re.I)
 PICTURE_METERS = 60
 SOURCE_PICTURES = 30
 # A logo, icon or tracking pixel is no picture of the story.
@@ -222,6 +224,10 @@ class _Images(HTMLParser):
             self._caption = None
         elif tag == "figure":
             self._figure = None
+
+
+def free(license_: str) -> bool:
+    return license_.lower().startswith(FREE) and not UNFREE.search(license_)
 
 
 def name(src: str) -> str:
@@ -411,9 +417,7 @@ def pictures_near(lat: float, lng: float, venue: str, locality: str | None) -> l
         for page in found.get("query", {}).get("pages", {}).values():
             info = (page.get("imageinfo") or [{}])[0]
             license_ = _meta(info, "LicenseShortName")
-            if not info.get("mime", "").startswith("image/") or not license_.lower().startswith(
-                FREE
-            ):
+            if not info.get("mime", "").startswith("image/") or not free(license_):
                 continue
             pictures.append(
                 {

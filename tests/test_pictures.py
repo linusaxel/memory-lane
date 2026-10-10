@@ -1,0 +1,42 @@
+from pipeline import pictures
+
+FILE = {
+    "title": "File:Nyhavn 1970.jpg",
+    "url": "https://upload.wikimedia.org/a.jpg",
+    "thumb": "https://upload.wikimedia.org/a_1024.jpg",
+    "page": "https://commons.wikimedia.org/wiki/File:Nyhavn_1970.jpg",
+    "caption": "Sailors dancing in Nyhavn",
+    "date": "1970",
+    "categories": "Nyhavn",
+    "author": "A. Photographer",
+    "license": "CC BY-SA 2.0",
+    "lat": 55.6797,
+    "lng": 12.5907,
+}
+SEEN = {
+    "moment": True,
+    "striking": 4,
+    "venue": "Nyhavn",
+    "address": None,
+    "happened_at": "1970",
+    "happened_precision": "year",
+    "summary": "Sailors danced on the quay.",
+    "tags": [],
+}
+
+
+def test_a_moment_keeps_commons_point_and_its_picture(monkeypatch):
+    monkeypatch.setattr(pictures.commons, "files", lambda titles: [FILE])
+    monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
+    mem, picture = pictures.card(None, None, 1, FILE["page"], "caption")
+    assert (mem["lat"], mem["lng"]) == (FILE["lat"], FILE["lng"])
+    assert picture["url"] == FILE["url"] and picture["license"] == "CC BY-SA 2.0"
+
+
+def test_an_unfree_or_still_picture_is_dropped(monkeypatch):
+    monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
+    monkeypatch.setattr(pictures.commons, "files", lambda t: [FILE | {"license": "CC BY-NC 2.0"}])
+    assert pictures.card(None, None, 1, FILE["page"], "c") is None
+    monkeypatch.setattr(pictures.commons, "files", lambda t: [FILE])
+    monkeypatch.setattr(pictures, "look", lambda *a: SEEN | {"moment": False})
+    assert pictures.card(None, None, 1, FILE["page"], "c") is None
