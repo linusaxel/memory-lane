@@ -440,7 +440,14 @@ def claim(fact: str, quote: str, passage: str) -> dict | None:
     """A fact with its quote found in the passage by code, never by the model's
     word: the shape of a W3C TextQuoteSelector plus offsets (docs/04, *The fact
     sheet*). None when the quote isn't there."""
-    at = span(quote, passage)
+    exact = passage.find(quote.strip())
+    # The gaps span() allows let a match start up to SLACK early; a quote
+    # copied exactly is taken where it stands.
+    at = (
+        (exact, exact + len(quote.strip()))
+        if exact >= 0 and quote.strip()
+        else span(quote, passage)
+    )
     if not at:
         return None
     a, b = at
@@ -452,7 +459,7 @@ def claim(fact: str, quote: str, passage: str) -> dict | None:
             "suffix": passage[b : b + QUOTE_EDGE],
         },
         "pos": {"start": a, "end": b},
-        "match": "exact" if quote.strip() in passage else "fuzzy",
+        "match": "exact" if exact >= 0 else "fuzzy",
     }
 
 

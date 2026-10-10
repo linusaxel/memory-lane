@@ -106,6 +106,10 @@ def test_a_claim_is_kept_only_where_its_quote_is_found():
     assert passage[c["pos"]["start"] : c["pos"]["end"]] == "faldt bogen i vandet"
     assert c["quote"]["prefix"].endswith("1853 ") and c["match"] == "exact"
     assert scenes.claim("The book flew", "bogen fløj væk", passage) is None
+    on = "om broen, og så om aftenen den 5. april faldt han"
+    assert scenes.claim("date", "om aftenen den 5. april", on)["quote"]["exact"] == (
+        "om aftenen den 5. april"
+    ), "an exact quote is taken where it stands, not from an earlier 'om'"
 
 
 def test_the_excerpt_is_the_scene_in_whole_paragraphs():
