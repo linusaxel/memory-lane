@@ -4,7 +4,9 @@ Query is "<lang> <lat>,<lng> <metres>", e.g. "da 55.6761,12.5683 2000": the
 articles Wikipedia geotags within that radius (at most 10 km), nearest first.
 Or "<lang> category:<name>|<name>", e.g. "en category:Crime in Copenhagen|Cinemas
 in Copenhagen": the categories' geotagged articles, longest first, which skips
-the stubs and the citywide article a radius drags in. Either way as plain
+the stubs and the citywide article a radius drags in. Or "<lang> titles:<A>|<B>",
+for events no map pins (a tour, a happening): only the windows that name
+Copenhagen, placed by the extractor. Either way as plain
 text without their reference sections, in windows of whole paragraphs. Most of an
 article is description the extractor's judge rejects; the incidents in its
 history are what it keeps. CC BY-SA: our own words, credited by the link
@@ -94,6 +96,13 @@ def categories(lang: str, names: str) -> list[dict]:
     ]
 
 
+COPENHAGEN = re.compile(r"Copenhagen|København|Kjøbenhavn", re.I)
+
+
+def titles(names: str) -> list[dict]:
+    return [{"title": t.strip(), "lat": None, "lon": None} for t in names.split("|") if t.strip()]
+
+
 def parse_query(query: str) -> tuple[str, float, float, int]:
     lang, point, metres = query.split()
     lat, lng = (float(x) for x in point.split(","))
@@ -109,6 +118,9 @@ class Wikipedia:
         lang, _, rest = query.partition(" ")
         if rest.startswith("category:"):
             yield from self._windows(lang, categories(lang, rest.removeprefix("category:")), limit)
+            return
+        if rest.startswith("titles:"):
+            yield from self._windows(lang, titles(rest.removeprefix("titles:")), limit)
             return
         lang, lat, lng, metres = parse_query(query)
         found = _api(
@@ -131,15 +143,20 @@ class Wikipedia:
                 page["title"].replace(" ", "_")
             )
             body = article_text(lang, page["title"])
+            pinned = page["lat"] is not None
             for i, window in enumerate(windows(body)):
+                if not pinned and not COPENHAGEN.search(window):
+                    continue
                 if n >= limit:
                     return
                 n += 1
+                where = (
+                    f"\n\nWikipedia places this at {page['lat']}, {page['lon']}." if pinned else ""
+                )
                 yield {
                     "source_url": f"{url}#{i}",
                     "title": page["title"],
-                    "text": f"{page['title']} (Wikipedia)\n\n{window}\n\n"
-                    f"Wikipedia places this at {page['lat']}, {page['lon']}.",
+                    "text": f"{page['title']} (Wikipedia)\n\n{window}{where}",
                     "language": lang,
                     "lat": page["lat"],
                     "lng": page["lon"],

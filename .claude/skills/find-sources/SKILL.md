@@ -217,7 +217,7 @@ know *this is where it happens*:
 |---|---|---|---|
 | Plaques, memorials | `plaques` | `plaques:<s,w,n,e>` | Already names its spot; exact pin |
 | Film and TV shot here | `filming` | `filming:<s,w,n,e>` | Wikidata P915 to a spot, not a city |
-| Wikipedia places | `wikipedia` | `wikipedia:<lang> <lat>,<lng> <metres>` or `wikipedia:<lang> category:<A>|<B>` | History sections with incidents; categories beat a radius, which drags in stubs and the citywide article |
+| Wikipedia places | `wikipedia` | `wikipedia:<lang> <lat>,<lng> <metres>`, `wikipedia:<lang> category:<A>|<B>` or `wikipedia:<lang> titles:<A>|<B>` (an event no map pins: only its Copenhagen windows) | History sections with incidents; categories beat a radius, which drags in stubs and the citywide article |
 | Stolpersteine | `stolpersteine` | `stolpersteine:<de.wikipedia list title>` | One record per door; the geocoder places the address |
 | Back issues as PDFs | `pdfs` | `pdfs:<index page url> [<from year>] [<via regex>]` | A paper or society that links its issues; read for stories, not ads and listings |
 | A site's own pages | `webpages` | `webpages:<page url>` or `webpages:<sitemap.xml> [<url regex>]` | First-party dated posts with spot-tied anecdotes |

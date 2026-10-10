@@ -43,6 +43,16 @@ def test_an_article_loses_its_reference_sections(monkeypatch):
     assert "A book." not in text and "Galleri" not in text
 
 
+def test_a_titled_article_keeps_only_its_copenhagen_windows(monkeypatch):
+    body = "In Paris they played.\n\nIn Copenhagen they were billed as The Nobs."
+    monkeypatch.setattr(wikipedia, "article_text", lambda lang, title: body)
+    monkeypatch.setattr(wikipedia, "windows", lambda text: text.split("\n\n"))
+    monkeypatch.setattr(wikipedia, "PAUSE_S", 0)
+    got = list(wikipedia.Wikipedia().fetch("en titles:Led Zeppelin European Tour 1970", 10))
+    assert [r["text"].count("Nobs") for r in got] == [1]
+    assert "places this at" not in got[0]["text"]
+
+
 def test_the_wikipedia_query_is_language_point_and_radius_capped():
     assert wikipedia.parse_query("da 55.67,12.56 50000") == ("da", 55.67, 12.56, 10_000)
 
