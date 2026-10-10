@@ -14,6 +14,7 @@ first picture, so enrichment leaves it be; `tasks.after_save` scores it.
 import argparse
 import base64
 import json
+import urllib.parse
 
 import anthropic
 from sqlalchemy import text
@@ -33,24 +34,28 @@ on that spot will see the picture on their phone with a few lines beside it.
   famous person, the harbour frozen, a street as it was with life in it.
   False for a building with nothing going on, a portrait with no place, an
   object, a map, a document, a view anyone could take today.
-- striking: 1-5, how much the picture holds the eye on a phone.
+- occasion: true if the caption, date or categories say what was going on -
+  the event, the occasion, who is in it - and not only where it was taken.
+- striking: 1-5, how much the picture holds the eye on a phone. 5 is a
+  picture people would stop to look at; a pleasant tourist snapshot is 2.
 - venue: where to stand, as today's map of Copenhagen names it, in Danish
   ("Kongens Nytorv", "Rådhuspladsen", "Nyhavn 17"). From the caption, the
   categories or what the picture plainly shows; null if none of them says.
 - address: street and number if known, else null.
 - happened_at: ISO date ("1972-04-23", "1972-04", "1972") and its precision,
   from the date or caption; nulls if neither says.
-- summary: 30 to 80 words, past tense, English, for the walker looking at the
-  picture where it was taken: what was happening, when, and anyone the
-  caption names, introduced. Only what the caption, the date, the categories
-  or the picture itself plainly show; no name, cause or feeling of your own.
-  Never "this photo shows" or "in this picture".
+- summary: 30 to 80 words, past tense, English, beside the picture. The
+  walker can see it: do not describe it. Tell what was going on - the
+  occasion, who, when, what came of it - from the caption, the date and the
+  categories, and anyone named, introduced. No name, cause or feeling of your
+  own. Never "this photo shows" or "in this picture".
 - tags: 1 to 3 from the list."""
 
 LOOK_SCHEMA = {
     "type": "object",
     "properties": {
         "moment": {"type": "boolean"},
+        "occasion": {"type": "boolean"},
         "striking": {"type": "integer"},
         "venue": extract._NULLABLE_STRING,
         "address": extract._NULLABLE_STRING,
@@ -66,6 +71,7 @@ LOOK_SCHEMA = {
     },
     "required": [
         "moment",
+        "occasion",
         "striking",
         "venue",
         "address",
@@ -77,7 +83,7 @@ LOOK_SCHEMA = {
     "additionalProperties": False,
 }
 
-STRIKING = 3
+STRIKING = 4
 
 PENDING = """SELECT c.id, c.url, c.title, t.full_text FROM content c
 JOIN transcripts t ON t.content_id = c.id
@@ -112,13 +118,14 @@ def spot(seen: dict, f: dict) -> tuple[float, float] | None:
 
 
 def card(session, client, cid: int, page: str, caption: str) -> tuple[dict, dict] | None:
-    found = commons.files(["File:" + page.rsplit("File:", 1)[-1].replace("_", " ")])
+    name = urllib.parse.unquote(page.rsplit("File:", 1)[-1]).replace("_", " ")
+    found = commons.files(["File:" + name])
     if not found or not enrich.free(found[0]["license"]):
         print(f"  drop, not free: {found and found[0]['license']}")
         return None
     f = found[0]
     seen = look(session, client, cid, f, caption)
-    if not seen or not seen["moment"] or seen["striking"] < STRIKING:
+    if not seen or not (seen["moment"] and seen["occasion"]) or seen["striking"] < STRIKING:
         print(f"  drop, no moment: {seen and (seen['striking'], seen['summary'][:80])}")
         return None
     at = spot(seen, f)

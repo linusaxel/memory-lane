@@ -4338,8 +4338,12 @@ few lines beside it. `crawler/commons.py` fetches Commons files by a search
 - **The model sees the picture.** One call with the image and its caption,
   date and categories says whether it is a moment (people doing something,
   an event, the harbour frozen; not a building with nothing going on),
-  how striking it is (3 of 5 or better), where to stand, when, and writes 30
-  to 80 words from what the caption says and the picture plainly shows.
+  whether the caption says what was going on, how striking it is (4 of 5 or
+  better), where to stand and when, and writes 30 to 80 words of what was
+  going on. The walker sees the picture, so the words never describe it.
+  The first trial (2026-10-10, 25 pictures from "Copenhagen in the 1970s")
+  kept 7 tourist snapshots at 3 of 5, each card a description, all walk
+  score 2: the bar was raised and the occasion made a must.
 - **Commons' point wins** over a geocoded venue. Without one, the venue the
   model names is geocoded, inside the launch area or dropped.
 - **The picture leads.** It is the first of `enrichment.pictures`, and the

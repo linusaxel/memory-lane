@@ -15,6 +15,7 @@ FILE = {
 }
 SEEN = {
     "moment": True,
+    "occasion": True,
     "striking": 4,
     "venue": "Nyhavn",
     "address": None,
