@@ -64,3 +64,7 @@ def test_an_unsupported_fact_is_written_again_never_cut(monkeypatch):
 
     draws[:] = ["bad", "bad"]
     assert scenes.faithful(None, None, 1, "", "", {}, entry, "first", "") is None
+
+    draws[:] = ["This was second", "clean"]
+    assert scenes.faithful(None, None, 1, "", "", {}, entry, "first", "") == "clean"
+    assert "stock opening" in notes[-1] and "two colleagues" in notes[-1]

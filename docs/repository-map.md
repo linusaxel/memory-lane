@@ -64,7 +64,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/enqueue.py` | CLI to queue videos for parallel processing |
 | `pipeline/queue.py` | Redis/RQ queue setup |
 | `pipeline/quality.py` | **Score the summaries.** Run before and after any prompt change; `--compare` scores a candidate prompt against the current one on the same chunks; `--labels` re-judges the labelled memories and prints what the judge keeps of each verdict |
-| `pipeline/scenes.py` | **Scene-first extraction, on trial** (docs/04, *About the spot*): index, scene finder, geocoded spot, writer, check, on the windows named. Prints cards, saves nothing; not wired in. Bills |
+| `pipeline/scenes.py` | **Scene-first extraction, the book path** (docs/10, *Scene-first is the book path*): index, scene finder, geocoded spot, writer, check. Prints cards; `--source <id> --save` stores a book's pending windows and runs `after_save`. Not in batch: full price. Bills |
 | `pipeline/classifier_audit.py` | Re-extract a sample of chunks the pre-filter rejected; counts what it drops. Bills |
 | `pipeline/repin.py` | Places still on the model's guess (`llm`): the geocoder chain again, free; `--choose` lets the model pick one of the map's points, never a coordinate of its own |
 | `pipeline/review.py` | **Review extractions by hand.** Accept/edit/reject; `--stats` is the edit rate |

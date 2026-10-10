@@ -909,7 +909,7 @@ it ships (TODO.md, *Scene-first extraction*).
 ### Scene-first, before it ships, 2026-10-09
 
 The trial now lives in `pipeline/scenes.py` (`python -m pipeline.scenes <id>...`,
-bills only the windows named; not wired in). Three of the four items before it
+bills only the windows named; shipped 2026-10-10, below). Three of the four items before it
 ships, rerun on the five windows they came from (3898, 3900, 3903, 4000, 4001)
 for about $1.10 at Sonnet's list price, mostly the thinking check:
 
@@ -1026,6 +1026,11 @@ still added after that. A card with only colour left is kept as written.
   - A rewrite's opening is not checked, so "This was…", "On the evening of…"
     and "Børsen is where…" got back in: 5 of 24.
   - The Nygade shop card, dropped as `setting` in round 2, came back.
+
+**Shipped, 2026-10-10** (docs/10, *Scene-first is the book path*): `--save`
+runs `after_save`, openings count per book, a rewrite's opening is checked,
+and a scene outside the launch area is dropped before it is written. Same-event
+cards and leaked payoffs are left to dedup.
 
 ### Yield by genre, 2026-10-07
 

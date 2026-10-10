@@ -7,7 +7,8 @@ An index of the whole book, then a scene finder that writes no prose, then
 the spot placed by the geocoder, then a short writer, then today's check and
 rewrites. Every call is stored like a chunk, so a rerun is free. Prints the
 cards; --save stores them through `extract.save_memories` (geocode, launch
-area, retelling check) and marks each window extracted, one commit a window.
+area, retelling check), marks each window extracted, one commit a window, and
+runs `tasks.after_save` (walk score, links, enrichment, the book's repeats).
 Not yet in batch: full price, no worth-telling judge, no tags or dates.
 """
 
@@ -19,8 +20,8 @@ import re
 import anthropic
 from sqlalchemy import text
 
-from pipeline import extract, geocode
-from pipeline.config import ANTHROPIC_API_KEY
+from pipeline import extract, geocode, tasks
+from pipeline.config import ANTHROPIC_API_KEY, LAUNCH_BBOX
 from pipeline.db import get_session
 
 INDEX_PROMPT = """You read a whole memoir about Copenhagen and write the index that a
@@ -393,7 +394,7 @@ def write(session, client, cid, passage, ctx, sc, entry, note=""):
     return json.loads(raw) if raw else None
 
 
-def cards(session, client, cid: int, idx_by_source: dict, seen: set[str]) -> list[dict]:
+def cards(session, client, cid: int, idx_by_source: dict, seen: dict) -> list[dict]:
     r = session.execute(
         text("SELECT source_id, source_name, title FROM content WHERE id = :c"), {"c": cid}
     ).one()
@@ -403,6 +404,7 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: set[str]) -> lis
     if r.source_id not in idx_by_source:
         idx_by_source[r.source_id] = index_for(session, client, r.source_id, r.source_name)
     idx = idx_by_source[r.source_id]
+    seen = seen.setdefault(r.source_id, set())
     ctx = extract.source_context(r.source_name, r.title) + index_text(idx)
     prior = before(session, r.source_id, cid)
     passage = f"{prior}\n\n{chunk}" if prior else chunk
@@ -413,6 +415,9 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: set[str]) -> lis
         entry, hit = resolve(sc, idx) if kept(sc, passage) else (None, None)
         if not entry:
             print(f"  drop  {tag}")
+            continue
+        if hit and LAUNCH_BBOX and not extract._in_box(hit[0], hit[1], LAUNCH_BBOX):
+            print(f"  drop, outside the launch area: {entry['today']}")
             continue
         print(f"  keep  {tag} -> {entry['today']} ({hit[3] if hit else 'NO GEOCODE'})")
         w = write(session, client, cid, passage, ctx, sc, entry)
@@ -472,6 +477,12 @@ def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: 
         print(f"  rewrite, unsupported: {'; '.join(c['claim'] for c in claims)}")
         leave_out = f"The passage does not say: {'; '.join(named)}. Leave these out; keep the rest."
         again = write(session, client, cid, passage, ctx, sc, entry, f"{note}\n{leave_out}".strip())
+        if again and (fault := opening_fault(again["summary"], set())):
+            reopen = (
+                f"Do not open as before: {fault}. Open with the person, the moment or a line said."
+            )
+            note = f"{note}\n{reopen}".strip()
+            again = write(session, client, cid, passage, ctx, sc, entry, f"{note}\n{leave_out}")
         if not again:
             return None
         summary = again["summary"]
@@ -486,7 +497,7 @@ def main():
     parser.add_argument("--save", action="store_true", help="save the cards as memories")
     args = parser.parse_args()
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    idx_by_source, seen = {}, set()
+    idx_by_source, seen = {}, {}
     with get_session() as s:
         ids = args.content_ids + [
             r.id
@@ -504,6 +515,7 @@ def main():
                     text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": cid}
                 )
                 s.commit()
+                tasks.after_save(client, cid)
 
 
 if __name__ == "__main__":

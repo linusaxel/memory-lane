@@ -169,28 +169,14 @@ worth the walk. Measure every change against the labels before and after
 (`python -m pipeline.quality --labels`). Every change is to
 `pipeline/extract.py` unless named.
 
-- [ ] **Scene-first extraction.** (2026-10-09) An index of the whole source,
-      then a scene finder that writes no prose, then the spot resolved by the
-      geocoder, then a short writer with varied example cards. It won 10 of 24
-      memoir windows against 6 for the stored cards (docs/04, *About the
-      spot*).
-      Now `pipeline/scenes.py` (docs/04, *Scene-first, before it ships*).
-      Before it ships:
-      1. The founder labelled 20 of the 82 blind cards. They led to people
-         being introduced and to `setting` being dropped (docs/04). The rest
-         are optional.
-      2. The opening check misses near-repeats ("Classens Have is…", "…lies…",
-         "<Place> is where…") and counts repeats per run; count per book when
-         wired.
-      2b. Cards are never cut now: up to two rewrites, then a drop (docs/04,
-         round 4). No broken sentences. Open: a rewrite's opening isn't
-         checked (5 of 24 stock openings); a kept "colour" flourish can be a
-         generalisation; the mother's grave is lost to the check's nitpicks.
-      2c. One window can give five cards about one week (November 1863).
-      3. One story's payoff still leaks into a neighbouring card.
-      4. Scenes outside Copenhagen (Herlufsholm, Lolland) are kept: intended?
-      Then wire it into the book path of `extract.py`/`tasks.py`/`batch.py`,
-      and the video path after measuring it.
+- [ ] **Scene-first: re-do every stored memory.** (2026-10-10) Scene-first
+      shipped as the book path (docs/10, *Scene-first is the book path*).
+      Now, under $50: redraw the scores from before 10-05, `dedup --memories`,
+      then re-extract each book source with its old memories kept and dedup
+      picking the stronger retelling; log good counts before and after in
+      docs/04 *Road to 1,000*. Still open: a kept "colour" flourish can be a
+      generalisation; the mother's grave is lost to the check's nitpicks;
+      `batch.py` for half price; the video path after measuring it.
 - [ ] **Memories written by tour guides.** (2026-10-04, the founder's idea)
       A licensed guide files the stories they already tell at a place: quality
       from the author, where `walk_score` is too weak a signal (r = 0.45). An

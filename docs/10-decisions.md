@@ -3012,7 +3012,10 @@ Status: Accepted
   2026-10-05** by *The schema keeps only what is read*).
 - **Density over coverage.** One neighborhood before a second.
 - **Never re-extract.** Extraction is a one-time, cached cost per place, with a
-  hard cap on user-submitted ingestion.
+  hard cap on user-submitted ingestion. (**Superseded 2026-10-10** for books
+  and other kept text by *Scene-first is the book path*: a book is
+  re-extracted when the pipeline improves. Videos still can't be: their
+  transcripts are gone.)
 - **Legal posture.** Snippets, attribution, deep links to the source at the
   right timestamp. Behave like a search engine. Never sell the raw corpus.
   Source by source, see *The sources' legal footing*.
@@ -4088,7 +4091,9 @@ So:
   first (*A memory is enriched when it is made*).
 
 **Consequences:** more memories per venue page, scored on the same scale.
-Stored scores stay as they are. Measured before and after in docs/04.
+Stored scores stay as they are (**Superseded 2026-10-10** by *Scene-first is
+the book path*: scores from before the 10-05 scale are redrawn). Measured
+before and after in docs/04.
 
 **Options considered:** only lowering the bar (the visits would still never
 be extracted); a `celebrity` tag (the model emitted it off-menu once; a tag
@@ -4256,6 +4261,35 @@ gear* had it:
 **Consequences:** Settings and the paywall are among the sheets that move
 into the journal while it is open, so Subscribe in Settings can present the
 paywall over it. A native rebuild drops the Core Motion module.
+
+### Scene-first is the book path
+
+Status: Accepted 2026-10-10. Follows *A card is about the spot it stands on*,
+which called scene-first the next step.
+
+The founder's 20 blind labels and four rounds (docs/04, *Scene-first, before
+it ships*) took `pipeline/scenes.py` from a trial to the way a book is
+extracted: `python -m pipeline.scenes --source <id> --save`.
+
+- **A saved card gets what any memory gets.** `--save` runs
+  `tasks.after_save`: walk score, links, then-vs-now, enrichment, and the
+  book's retellings hidden.
+- **Openings are counted per book**, and a rewrite's opening is checked too.
+- **A scene outside the launch area is dropped before it is written**
+  (Herlufsholm, Lolland): `save_memories` would drop it anyway.
+- **One event told twice, or a payoff in the next card, is left to dedup**
+  (`hide_repeats`, `dedup --memories`): no finder rule for it yet.
+- **Old memories are re-done, not kept on trust.** Scores from before the
+  10-05 scale are redrawn so old and new compare; a book is re-extracted with
+  its old memories still there, and `dedup --memories --apply` hides the weaker
+  retelling. Video and press keep their memories as they are, re-scored only.
+- **Not in batch yet.** Full price, about $0.22 a window. Wire it into
+  `batch.py` before the first large new book source.
+
+**Options considered:** deleting a book's old memories before re-extracting
+(loses a good old card the new pass misses); a version column on memories
+(nothing would read it; `extraction_chunks.prompt_hash` already says which
+prompt ran).
 
 ### Rejected approaches, do not retry
 
