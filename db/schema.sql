@@ -165,7 +165,11 @@ INSERT INTO lockets (id, name, level) VALUES
     ('deco-sunburst', 'Deco sunburst', 5),
     ('monogram-cushion', 'Monogram cushion', 7),
     ('gold-line-night', 'Gold line, night', 9),
-    ('victorian-garnet', 'Victorian garnet', 11);
+    ('victorian-garnet', 'Victorian garnet', 11),
+    ('celtic-knot', 'Celtic knot', 13),
+    ('moon-phase', 'Moon phase', 15),
+    ('lovers-eye', 'Lover''s eye', 17),
+    ('sweetheart', 'Sweetheart', 19);
 
 CREATE OR REPLACE FUNCTION random_locket() RETURNS TEXT LANGUAGE sql VOLATILE AS
 $$ SELECT id FROM lockets ORDER BY random() LIMIT 1 $$;

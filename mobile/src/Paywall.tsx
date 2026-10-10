@@ -233,8 +233,8 @@ function Velvet() {
           stroke={metal.mid}
         />
       </Svg>
-      {LOCKETS.map((locket, i) => {
-        // Strung along a smile, the middle two highest.
+      {LOCKETS.slice(0, 6).map((locket, i) => {
+        // Six strung along a smile, the middle two highest.
         const t = (i - 2.5) / 2.5;
         const x = w / 2 + t * (w / 2 - size * 0.95) - size / 2;
         const y = h * 0.16 + t * t * h * 0.16;

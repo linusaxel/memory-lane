@@ -4409,10 +4409,10 @@ line.
   inside and its own hold, on the hold's progress, all on the UI thread.
   `LocketUnlock.tsx` keeps its props, so the slide, the seal and `IrisGrow`
   did not change.
-- **Six now, ten once the pins are drawn.** The new four (celtic knot, moon
-  phase, lover's eye, sweetheart) join `lockets.ts`, the picker and
-  `random_locket()` together, only when each has both pin faces. A memory
-  must never get a locket the map can't draw.
+- **Ten, in rotation.** The new four (celtic knot, moon phase, lover's eye,
+  sweetheart) are in `lockets.ts`, the picker and `random_locket()`
+  (migration 052). Their keyhole faces aren't drawn yet, so for now a locked
+  one shows its plain pin. The paywall strings only the first six.
 - **No progress ring and no status line.** The round-4 files had both. The app
   keeps the slide and the emerald glow (*Jewel Box*: "never a ring").
 - **Sparkles, the light sweep and the tilt are off under Reduce Motion.**

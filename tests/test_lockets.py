@@ -21,6 +21,10 @@ def test_a_memory_with_no_choice_draws_one_and_keeps_it_even_locked(api_client):
         "monogram-cushion",
         "gold-line-night",
         "victorian-garnet",
+        "celtic-knot",
+        "moon-phase",
+        "lovers-eye",
+        "sweetheart",
     }
 
 
@@ -28,6 +32,11 @@ def test_a_first_time_author_can_pick_any_locket(api_client):
     response = api_client.post("/v1/memories", json=submission(locket="victorian-garnet"))
     assert response.status_code == 201
     assert response.json()["locket"] == "victorian-garnet"
+
+
+def test_a_round_four_locket_can_be_picked(api_client):
+    response = api_client.post("/v1/memories", json=submission(locket="celtic-knot"))
+    assert response.status_code == 201
 
 
 def test_an_unknown_locket_is_refused(api_client):

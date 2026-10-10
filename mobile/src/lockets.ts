@@ -4,9 +4,13 @@
 
 import type { ImageSourcePropType } from 'react-native';
 
+import { GoldCeltic } from './lockets/designs/GoldCeltic.tsx';
 import { GoldDeco } from './lockets/designs/GoldDeco.tsx';
+import { GoldEye } from './lockets/designs/GoldEye.tsx';
+import { GoldHeart } from './lockets/designs/GoldHeart.tsx';
 import { GoldHunter } from './lockets/designs/GoldHunter.tsx';
 import { GoldMonogram } from './lockets/designs/GoldMonogram.tsx';
+import { GoldMoon } from './lockets/designs/GoldMoon.tsx';
 import { GoldNight } from './lockets/designs/GoldNight.tsx';
 import { GoldOval } from './lockets/designs/GoldOval.tsx';
 import { GoldVictorian } from './lockets/designs/GoldVictorian.tsx';
@@ -18,7 +22,11 @@ export type LocketId =
   | 'deco-sunburst'
   | 'monogram-cushion'
   | 'gold-line-night'
-  | 'victorian-garnet';
+  | 'victorian-garnet'
+  | 'celtic-knot'
+  | 'moon-phase'
+  | 'lovers-eye'
+  | 'sweetheart';
 
 type Locket = {
   id: LocketId;
@@ -72,6 +80,38 @@ export const LOCKETS: Locket[] = [
     locked: require('../assets/lockets/pin-victorian-garnet-keyhole.png'),
     opened: require('../assets/lockets/pin-victorian-garnet.png'),
     design: GoldVictorian,
+  },
+  {
+    id: 'celtic-knot',
+    name: 'Celtic knot',
+    // ponytail: no keyhole face drawn yet, so locked shows the plain one.
+    locked: require('../assets/lockets/pin-celtic-knot.png'),
+    opened: require('../assets/lockets/pin-celtic-knot.png'),
+    design: GoldCeltic,
+  },
+  {
+    id: 'moon-phase',
+    name: 'Moon phase',
+    // ponytail: no keyhole face drawn yet, so locked shows the plain one.
+    locked: require('../assets/lockets/pin-moon-phase.png'),
+    opened: require('../assets/lockets/pin-moon-phase.png'),
+    design: GoldMoon,
+  },
+  {
+    id: 'lovers-eye',
+    name: "Lover's eye",
+    // ponytail: no keyhole face drawn yet, so locked shows the plain one.
+    locked: require('../assets/lockets/pin-lovers-eye.png'),
+    opened: require('../assets/lockets/pin-lovers-eye.png'),
+    design: GoldEye,
+  },
+  {
+    id: 'sweetheart',
+    name: 'Sweetheart',
+    // ponytail: no keyhole face drawn yet, so locked shows the plain one.
+    locked: require('../assets/lockets/pin-sweetheart.png'),
+    opened: require('../assets/lockets/pin-sweetheart.png'),
+    design: GoldHeart,
   },
 ];
 
