@@ -38,7 +38,9 @@ delete an entry when its fix lands.
   permission classifier refused a hand triage (merge two places, hide four
   memories) and its undo, each a round-trip through the founder. The free
   pipeline commands are allowed in `.claude/settings.json` since 2026-10-04;
-  writes stay a prompt on purpose. Fix: a human runs them with `!`.
+  writes stay a prompt on purpose. 2026-10-10: billed `pipeline.scenes` runs
+  and the delete before a book's re-run were refused too, even after "you do
+  it". Fix: a human runs them with `!`; say so up front, don't try first.
 
 ---
 

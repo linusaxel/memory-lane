@@ -1057,6 +1057,11 @@ split the words. The writer gets the spot, the source note, the facts and the
 excerpt. The check reads the excerpt and the quotes, never the whole window.
 `happened_at` and `tags` come from the sheet.
 
+A scene whose venue the geocoder can't place is dropped before the sheet: the
+first vol. 2 pass wrote and saved 8 cards with no spot. The finder's asides
+("Holms Plads, ved Langebro") are stripped before the lookup, which found
+about half of them.
+
 `python -m pipeline.scenes --source <id> --render` writes a book's saved cards
 again from their sheets alone, and prints before and after. `--apply` stores
 them. Only the writer and the check bill.

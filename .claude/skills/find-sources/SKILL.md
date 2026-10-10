@@ -136,7 +136,8 @@ Hunt in this order, and register an institution's history of itself or an
 encyclopedia only when the page shows a named person's anecdote on its spot:
 
 Memoirs and channels were scored on the looser pre-10-05 scale, so trust the
-order, not the gap.
+order, not the gap. Within a genre, prefer a teller a walker may have heard of,
+and many tellers over one: make-memories caps an author at 15 good memories.
 
 | Genre | Good (6+) per memory, 2026-10-07 |
 |---|---|

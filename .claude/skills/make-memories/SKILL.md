@@ -76,6 +76,11 @@ ORDER BY expected DESC, pending DESC;
   holding no good memory that its places would land in. A walk wants one a
   kilometre, so a 6 in an empty cell beats the tenth in Indre By. A one-venue
   source gives a walk at most one stop there, whatever it yields.
+- **One teller, a few stops.** At most 15 good memories per author, across
+  all their books (the source name starts with the author). A walk that is
+  every second stop Bergsøe is one man's diary, and a teller the walker may
+  have heard of (Andersen, Oehlenschläger, Blixen) beats an obscure one at
+  the same yield. Bergsøe reached 25 on 2026-10-10: no more of his books.
 - If a source's done items average under 7, suggest
   `! venv/bin/python -m pipeline.sources set <id> paused --note "<why>"` to the user and skip it.
 
