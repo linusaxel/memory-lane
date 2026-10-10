@@ -176,7 +176,9 @@ worth the walk. Measure every change against the labels before and after
       picking the stronger retelling; log good counts before and after in
       docs/04 *Road to 1,000*. Still open: a kept "colour" flourish can be a
       generalisation; the mother's grave is lost to the check's nitpicks;
-      `batch.py` for half price; the video path after measuring it.
+      `batch.py` for half price; the video path after measuring it; a
+      book's pictures into its fact sheets, from Gutenberg's HTML edition
+      (docs/10, *A card is rendered from its fact sheet*).
 - [ ] **Memories written by tour guides.** (2026-10-04, the founder's idea)
       A licensed guide files the stories they already tell at a place: quality
       from the author, where `walk_score` is too weak a signal (r = 0.45). An

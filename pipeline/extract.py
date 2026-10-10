@@ -1878,7 +1878,7 @@ def sure(note: str | None) -> str | None:
 
 
 def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str):
-    session.execute(
+    memory_id = session.execute(
         text("""
             INSERT INTO memories (
                 place_id, content_id, timestamp_start, summary, tags,
@@ -1892,6 +1892,7 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
                 :attribution, :source_url, :contrast_score, :contrast_note,
                 :quote, :quote_by
             )
+            RETURNING id
         """),
         {
             "place_id": place_id,
@@ -1915,7 +1916,13 @@ def _save_memory(session, place_id: int, content_id: int, mem: dict, layer: str)
             "quote": mem.get("quote"),
             "quote_by": mem.get("quote_by"),
         },
-    )
+    ).scalar()
+    if mem.get("sheet"):
+        session.execute(
+            text("""INSERT INTO memory_sheets (memory_id, content_id, sheet)
+                    VALUES (:m, :c, CAST(:s AS JSONB))"""),
+            {"m": memory_id, "c": content_id, "s": json.dumps(mem["sheet"], ensure_ascii=False)},
+        )
 
 
 def extract_all_pending(content_ids: list[int] | None = None):

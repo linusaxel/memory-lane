@@ -2,18 +2,23 @@
 
     python -m pipeline.scenes <content_id>...       # bills: only the windows named
     python -m pipeline.scenes --source <id> --save  # bills: every pending window, saved
+    python -m pipeline.scenes --source <id> --render [--apply]  # bills: writer only
 
-An index of the whole book, then a scene finder that writes no prose, then
-the spot placed by the geocoder, then a short writer, then today's check and
-rewrites. Every call is stored like a chunk, so a rerun is free. Prints the
-cards; --save stores them through `extract.save_memories` (geocode, launch
-area, retelling check), marks each window extracted, one commit a window, and
-runs `tasks.after_save` (walk score, links, enrichment, the book's repeats).
-Not yet in batch: full price, no worth-telling judge, no tags or dates.
+An index of the whole book and a note on who wrote it, then a scene finder
+that writes no prose, then the spot placed by the geocoder, then a fact sheet
+of the scene (every claim with its quote, found in the text by code), then a
+short writer that tells it from the sheet, then today's check and rewrites.
+Every call is stored like a chunk, so a rerun is free. Prints the cards;
+--save stores them through `extract.save_memories` (geocode, launch area,
+retelling check) with their sheet in `memory_sheets`, marks each window
+extracted, one commit a window, and runs `tasks.after_save`. --render writes
+saved cards again from their sheets alone (docs/04, *The fact sheet*).
+Not yet in batch: full price, no worth-telling judge.
 """
 
 import argparse
 import difflib
+import hashlib
 import json
 import re
 
@@ -23,6 +28,7 @@ from sqlalchemy import text
 from pipeline import extract, geocode, tasks
 from pipeline.config import ANTHROPIC_API_KEY, LAUNCH_BBOX
 from pipeline.db import get_session
+from pipeline.tags import TAGS
 
 INDEX_PROMPT = """You read a whole memoir about Copenhagen and write the index that a
 later reader of any one passage of it will use: who each person is, and where
@@ -72,6 +78,47 @@ INDEX_SCHEMA = {
         },
     },
     "required": ["people", "places"],
+    "additionalProperties": False,
+}
+
+SOURCE_PROMPT = """You write the note a walker reads about where a story comes from: who
+wrote this book, when, and why their word is worth having. From the opening
+of the book, the index of its people, and what you know for certain; null
+where you are not sure.
+
+- title, author: as the book gives them.
+- author_life: birth and death years, "1835-1911", or null.
+- author_role: who the author was, in at most 12 plain words ("zoologist and
+  novelist, raised on Christianshavn").
+- kind: memoir, diary, letters, travel account, history, interview.
+- written: when it was written or first published, or null.
+- covers: the years the book tells of, or null.
+- why_care: one or two sentences a stranger would be glad to read before the
+  story: what the author saw with their own eyes, and from how far off in
+  time they tell it. No praise ("vivid", "fascinating")."""
+
+SOURCE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "author": extract._NULLABLE_STRING,
+        "author_life": extract._NULLABLE_STRING,
+        "author_role": extract._NULLABLE_STRING,
+        "kind": {"type": "string"},
+        "written": extract._NULLABLE_STRING,
+        "covers": extract._NULLABLE_STRING,
+        "why_care": {"type": "string"},
+    },
+    "required": [
+        "title",
+        "author",
+        "author_life",
+        "author_role",
+        "kind",
+        "written",
+        "covers",
+        "why_care",
+    ],
     "additionalProperties": False,
 }
 
@@ -168,9 +215,91 @@ FIND_SCHEMA = {
     "additionalProperties": False,
 }
 
+SHEET_PROMPT = """You write the fact sheet of one scene of a memoir about Copenhagen. A
+later writer tells the scene to a walker standing on its spot from this sheet
+and the passage around the scene, nothing else, and may write it many times
+over. So be complete - every fact the story needs, in order - and add nothing
+the passage does not say.
+
+Every item carries a quote: the words of the passage that say it, copied
+exactly, 3 to 25 words. An item you cannot quote is left out.
+
+- what: the beats of the scene in order, one fact each: who did what, what
+  was seen, the object at the turn, how it ended. Keep the small details that
+  make it - what they ate, the weather, the price, the song.
+- who: everyone in the scene, by name or by role if unnamed: who they were,
+  from the passage and the index, with their age then if known. quote: where
+  the passage says who they were, or null if only the index does.
+- when: the date of the scene, ISO ("1853-07-14", "1853-07", "1853"), and how
+  much of it to trust; quote: the words that date it, which may lie outside
+  the scene. All null if the passage does not date it.
+- said: what was said or written in the scene, copied exactly, and who by.
+- context: what the passage tells around the scene that a stranger needs to
+  follow it: the war, the epidemic, what a place, trade or thing was. Not
+  your own knowledge.
+- why: one or two sentences: why a stranger standing there today would be
+  glad to know it.
+- tags: 1 to 5 from the list."""
+
+_CLAIM = {
+    "type": "object",
+    "properties": {"fact": {"type": "string"}, "quote": {"type": "string"}},
+    "required": ["fact", "quote"],
+    "additionalProperties": False,
+}
+
+SHEET_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "what": {"type": "array", "items": _CLAIM},
+        "who": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "role": {"type": "string"},
+                    "quote": extract._NULLABLE_STRING,
+                },
+                "required": ["name", "role", "quote"],
+                "additionalProperties": False,
+            },
+        },
+        "when": {
+            "type": "object",
+            "properties": {
+                "date": extract._NULLABLE_STRING,
+                "precision": {
+                    "anyOf": [
+                        {"type": "string", "enum": ["day", "month", "year", "decade"]},
+                        {"type": "null"},
+                    ]
+                },
+                "quote": extract._NULLABLE_STRING,
+            },
+            "required": ["date", "precision", "quote"],
+            "additionalProperties": False,
+        },
+        "said": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"by": {"type": "string"}, "words": {"type": "string"}},
+                "required": ["by", "words"],
+                "additionalProperties": False,
+            },
+        },
+        "context": {"type": "array", "items": _CLAIM},
+        "why": {"type": "string"},
+        "tags": {"type": "array", "items": {"type": "string", "enum": list(TAGS)}},
+    },
+    "required": ["what", "who", "when", "said", "context", "why", "tags"],
+    "additionalProperties": False,
+}
+
 WRITE_PROMPT = """You write one story card for a walker standing on a spot in Copenhagen,
-reading it on a phone. You get where they are standing, who the people are,
-and the passage with the scene marked.
+reading it on a phone. You get where they are standing, who wrote the book,
+the scene's fact sheet, and the passage around the scene.
 
 - The spot is the subject. Within the first two sentences the reader knows
   what of the story they are standing at - what they can see, or that it is
@@ -186,8 +315,8 @@ and the passage with the scene marked.
   not "quay"; "nonsense", not "humbug". An old trade or thing is said in a few
   words of what it was.
 - 60 to 150 words, past tense, English. Two short paragraphs past 90 words.
-- Every fact comes from the passage or the spot and people given; add no
-  name, date, image or adjective of your own.
+- Every fact comes from the sheet, the passage or the spot; add no name,
+  date, image or adjective of your own.
 - quote: the passage's best line about this moment in someone's own voice,
   copied exactly, at most 40 words, or null.
 
@@ -232,6 +361,9 @@ STOCK_OPENING = re.compile(
 SLACK = 80
 REWRITES = 2
 BEFORE_CHARS = 1500
+AROUND_CHARS = 1500
+QUOTE_EDGE = 32
+SHEET_VERSION = 1
 
 PENDING_WINDOWS = """SELECT c.id FROM content c JOIN transcripts t ON t.content_id = c.id
 WHERE c.source_id = :s AND NOT c.memories_extracted AND NOT c.extraction_failed ORDER BY c.id"""
@@ -288,15 +420,62 @@ def reach(found: list[dict], chunk: str) -> int:
     return reached
 
 
-def copied(words: str, passage: str) -> bool:
-    """The words are in the passage, in order, with room for what a scan puts
-    between them: a running head and page number split "det nye kongelige
-    Teater", and the theatre fall was dropped for it."""
+def span(words: str, passage: str) -> tuple[int, int] | None:
+    """Where the words are in the passage, in order, with room for what a scan
+    puts between them: a running head and page number split "det nye
+    kongelige Teater", and the theatre fall was dropped for it."""
     tokens = [re.escape(w) for w in map(extract._squash, words.split()) if w]
-    return (
-        bool(tokens)
-        and re.search(f".{{0,{SLACK}}}?".join(tokens), extract._squash(passage)) is not None
-    )
+    if not tokens:
+        return None
+    at = [(i, c) for i, ch in enumerate(passage) for c in extract._squash(ch)]
+    m = re.search(f".{{0,{SLACK}}}?".join(tokens), "".join(c for _, c in at))
+    return (at[m.start()][0], at[m.end() - 1][0] + 1) if m else None
+
+
+def copied(words: str, passage: str) -> bool:
+    return span(words, passage) is not None
+
+
+def claim(fact: str, quote: str, passage: str) -> dict | None:
+    """A fact with its quote found in the passage by code, never by the model's
+    word: the shape of a W3C TextQuoteSelector plus offsets (docs/04, *The fact
+    sheet*). None when the quote isn't there."""
+    at = span(quote, passage)
+    if not at:
+        return None
+    a, b = at
+    return {
+        "fact": fact,
+        "quote": {
+            "exact": passage[a:b],
+            "prefix": passage[max(0, a - QUOTE_EDGE) : a],
+            "suffix": passage[b : b + QUOTE_EDGE],
+        },
+        "pos": {"start": a, "end": b},
+        "match": "exact" if quote.strip() in passage else "fuzzy",
+    }
+
+
+def excerpt(sc: dict, passage: str) -> dict:
+    """The scene in whole paragraphs, with up to AROUND_CHARS of whole
+    paragraphs either side: the writer tells it from this alone."""
+    start, end = span(sc["start"], passage), span(sc["end"], passage)
+    a = start[0] if start else 0
+    b = end[1] if end and end[1] > a else len(passage)
+    lo, hi = 0, len(passage)
+    if a > AROUND_CHARS:
+        cut = passage.find("\n\n", a - AROUND_CHARS, a)
+        cut = cut if cut >= 0 else passage.rfind("\n\n", 0, a)
+        lo = cut + 2 if cut >= 0 else 0
+    if b + AROUND_CHARS < len(passage):
+        cut = passage.rfind("\n\n", b, b + AROUND_CHARS)
+        cut = cut if cut >= 0 else passage.find("\n\n", b)
+        hi = cut if cut >= 0 else len(passage)
+    return {
+        "text": passage[lo:hi],
+        "pos": {"start": lo, "end": hi},
+        "scene": {"start": a, "end": b},
+    }
 
 
 def kept(sc: dict, passage: str) -> bool:
@@ -336,6 +515,30 @@ def index_text(idx: dict) -> str:
         for p in idx["places"]
     )
     return f"<index>\nPeople:\n{people}\n\nPlaces:\n{places}\n</index>\n"
+
+
+def about_source(session, client, source_id: int, name: str, idx: dict) -> dict:
+    """Who wrote the book and why their word is worth having, once a book."""
+    first = session.execute(
+        text("""SELECT t.full_text FROM content c JOIN transcripts t ON t.content_id = c.id
+                WHERE c.source_id = :s ORDER BY c.id LIMIT 1"""),
+        {"s": source_id},
+    ).scalar()
+    first_id = session.execute(
+        text("SELECT min(id) FROM content WHERE source_id = :s"), {"s": source_id}
+    ).scalar()
+    people = "\n".join(f"- {p['name']}: {p['role']}" for p in idx["people"])
+    user = f"The book: {name}\n\nPeople:\n{people}\n\nThe opening:\n\n{first}"
+    raw = extract._stored_request(
+        session, client, first_id, -11, SOURCE_PROMPT, user, SOURCE_SCHEMA
+    )
+    return json.loads(raw)
+
+
+def source_line(src: dict) -> str:
+    who = ", ".join(x for x in (src["author"], src["author_life"], src["author_role"]) if x)
+    written = f", written {src['written']}" if src["written"] else ""
+    return f"{src['title']} ({src['kind']}{written}), by {who}. {src['why_care']}"
 
 
 def find(session, client, cid: int, chunk: str, prior: str, ctx: str) -> list[dict]:
@@ -390,64 +593,169 @@ def spot_card(entry: dict) -> str:
     )
 
 
-def write(session, client, cid, passage, ctx, sc, entry, note=""):
+def make_sheet(session, client, cid, ctx, passage, prior, sc, entry, hit, src) -> dict | None:
+    """The scene's fact sheet: the model's claims, kept only where code finds
+    their quote; the spot, the excerpt and the book from code."""
     user = (
         f'{spot_card(entry)}\nThe scene runs from "{sc["start"]}" to "{sc["end"]}": '
-        f"{sc['what_happens']}\n{note}\nPassage:\n\n{passage}"
+        f"{sc['what_happens']}\n\nPassage:\n\n{passage}"
+    )
+    raw = extract._stored_request(
+        session, client, cid, 0, SHEET_PROMPT, user, SHEET_SCHEMA, ctx, max_tokens=6000
+    )
+    if not raw:
+        return None
+    r = json.loads(raw)
+
+    def grounded(items):
+        return [c for i in items if (c := claim(i["fact"], i["quote"], passage))]
+
+    when = r["when"]
+    dated = when["date"] and when["quote"] and claim(when["date"], when["quote"], passage)
+    return {
+        "schema_version": SHEET_VERSION,
+        "made": {
+            "model": extract.EXTRACTION_MODEL,
+            "prompt_sha": hashlib.sha256(SHEET_PROMPT.encode()).hexdigest()[:12],
+        },
+        "source": src,
+        "passage": {
+            "content_id": cid,
+            "before_chars": len(prior) + 2 if prior else 0,
+            "sha": hashlib.sha256(passage.encode()).hexdigest()[:12],
+        },
+        "where": {
+            **entry,
+            "place_words": sc["place_words"],
+            "lat": hit[0],
+            "lng": hit[1],
+            "precision_m": hit[2],
+            "geocoder": hit[3],
+        },
+        "when": {"date": when["date"], "precision": when["precision"], "quote": dated}
+        if dated
+        else {"date": None, "precision": None, "quote": None},
+        "who": [
+            {
+                "name": p["name"],
+                "role": p["role"],
+                "quote": p["quote"] and claim(p["role"], p["quote"], passage),
+            }
+            for p in r["who"]
+        ],
+        "what": grounded(r["what"]),
+        "said": [
+            {"by": x["by"], **c} for x in r["said"] if (c := claim(x["words"], x["words"], passage))
+        ],
+        "context": grounded(r["context"]),
+        "why": r["why"],
+        "tags": r["tags"],
+        "finder": sc,
+        "excerpt": excerpt(sc, passage),
+    }
+
+
+def brief(sheet: dict) -> str:
+    """The sheet as the writer reads it: the facts, not the bookkeeping."""
+    return json.dumps(
+        {
+            "who": [f"{p['name']}: {p['role']}" for p in sheet["who"]],
+            "when": sheet["when"]["date"],
+            "what": [c["fact"] for c in sheet["what"]],
+            "said": [f"{c['by']}: {c['fact']}" for c in sheet["said"]],
+            "context": [c["fact"] for c in sheet["context"]],
+            "why": sheet["why"],
+        },
+        ensure_ascii=False,
+        indent=1,
+    )
+
+
+def grounds(sheet: dict) -> str:
+    """What the check may find a card's facts in: the excerpt and every quote."""
+    quotes = [c["quote"]["exact"] for part in ("what", "said", "context") for c in sheet[part]] + [
+        p["quote"]["quote"]["exact"] for p in sheet["who"] if p["quote"]
+    ]
+    return sheet["excerpt"]["text"] + "\n\n" + "\n".join(quotes)
+
+
+def write(session, client, cid, ctx, sheet, note=""):
+    user = (
+        f"{spot_card(sheet['where'])}\n<source>\n{source_line(sheet['source'])}\n</source>\n"
+        f"<sheet>\n{brief(sheet)}\n</sheet>\n{note}\nPassage:\n\n{sheet['excerpt']['text']}"
     )
     raw = extract._stored_request(session, client, cid, 0, WRITE_PROMPT, user, WRITE_SCHEMA, ctx)
     return json.loads(raw) if raw else None
 
 
-def cards(session, client, cid: int, idx_by_source: dict, seen: dict) -> list[dict]:
+def render(session, client, cid, ctx, sheet, seen: set) -> dict | None:
+    """The card from its sheet: written, opened again if it opens stock, and
+    checked."""
+    w = write(session, client, cid, ctx, sheet)
+    fault = w and opening_fault(w["summary"], seen)
+    note = ""
+    if fault:
+        print(f"  reopen: {fault}")
+        note = f"Do not open as before: {fault}. Open with the person, the moment or a line said."
+        w = write(session, client, cid, ctx, sheet, note) or w
+    if not w:
+        return None
+    seen.add(" ".join(w["summary"].split()[:3]).lower())
+    summary = faithful(session, client, cid, ctx, sheet, w["summary"], note)
+    return {"summary": summary, "quote": w["quote"]} if summary else None
+
+
+def book(session, client, books: dict, source_id: int, name: str) -> dict:
+    if source_id not in books:
+        idx = index_for(session, client, source_id, name)
+        books[source_id] = {
+            "index": idx,
+            "source": about_source(session, client, source_id, name, idx),
+            "seen": set(),
+        }
+    return books[source_id]
+
+
+def cards(session, client, cid: int, books: dict) -> list[dict]:
     r = session.execute(
         text("SELECT source_id, source_name, title FROM content WHERE id = :c"), {"c": cid}
     ).one()
     chunk = session.execute(
         text("SELECT full_text FROM transcripts WHERE content_id = :c"), {"c": cid}
     ).scalar()
-    if r.source_id not in idx_by_source:
-        idx_by_source[r.source_id] = index_for(session, client, r.source_id, r.source_name)
-    idx = idx_by_source[r.source_id]
-    seen = seen.setdefault(r.source_id, set())
-    ctx = extract.source_context(r.source_name, r.title) + index_text(idx)
+    b = book(session, client, books, r.source_id, r.source_name)
+    ctx = extract.source_context(r.source_name, r.title) + index_text(b["index"])
     prior = before(session, r.source_id, cid)
     passage = f"{prior}\n\n{chunk}" if prior else chunk
 
     out = []
     for sc in find(session, client, cid, chunk, prior, ctx):
         tag = f"[{sc['place_use']}/{sc['shape']}/turn={sc['turn']}] {sc['what_happens']}"
-        entry, hit = resolve(sc, idx) if kept(sc, passage) else (None, None)
+        entry, hit = resolve(sc, b["index"]) if kept(sc, passage) else (None, None)
         if not entry:
             print(f"  drop  {tag}")
             continue
         if not hit:
             print(f"  drop, not on the map: {entry['today']}")
             continue
-        if hit and LAUNCH_BBOX and not extract._in_box(hit[0], hit[1], LAUNCH_BBOX):
+        if LAUNCH_BBOX and not extract._in_box(hit[0], hit[1], LAUNCH_BBOX):
             print(f"  drop, outside the launch area: {entry['today']}")
             continue
         print(f"  keep  {tag} -> {entry['today']} ({hit[3]})")
-        w = write(session, client, cid, passage, ctx, sc, entry)
-        fault = w and opening_fault(w["summary"], seen)
-        note = ""
-        if fault:
-            print(f"  reopen: {fault}")
-            note = (
-                f"Do not open as before: {fault}. Open with the person, the moment or a line said."
-            )
-            w = write(session, client, cid, passage, ctx, sc, entry, note) or w
-        if not w:
+        sheet = make_sheet(session, client, cid, ctx, passage, prior, sc, entry, hit, b["source"])
+        if not sheet or not sheet["what"]:
+            print("  drop, no fact on the sheet found in the text")
             continue
-        seen.add(" ".join(w["summary"].split()[:3]).lower())
-        summary = faithful(session, client, cid, passage, ctx, sc, entry, w["summary"], note)
-        if not summary:
+        card = render(session, client, cid, ctx, sheet, b["seen"])
+        if not card:
             continue
         out.append(
             {
                 "place": entry["today"],
-                "summary": summary,
-                "quote": w["quote"],
+                **card,
+                "tags": sheet["tags"],
+                "happened_at": sheet["when"]["date"],
+                "happened_precision": sheet["when"]["precision"],
                 "venue": entry["today"],
                 "address": entry["address"],
                 "locality": "Copenhagen",
@@ -458,13 +766,14 @@ def cards(session, client, cid: int, idx_by_source: dict, seen: dict) -> list[di
                 "location_precision": "street",
                 "confidence": "high",
                 "spot_test": "pass",
+                "sheet": sheet,
             }
         )
     return out
 
 
-def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: str) -> str | None:
-    """The card with no fact the passage doesn't give, or None.
+def faithful(session, client, cid, ctx, sheet, summary: str, note: str) -> str | None:
+    """The card with no fact the sheet and excerpt don't give, or None.
 
     The writer writes it again, told everything the check has named so far,
     up to REWRITES times; nothing is ever cut from it. The trim left fragments
@@ -473,7 +782,8 @@ def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: 
     grave to "sixteen" and "crying in secret" (docs/04, *Scene-first, before
     it ships*). A card with only colour left is kept as written.
     """
-    context = ctx + spot_card(entry)
+    context = ctx + spot_card(sheet["where"])
+    passage = grounds(sheet)
     named: list[str] = []
     for draw in range(REWRITES + 1):
         claims = extract.unsupported(session, client, cid, 0, passage, context, summary) or []
@@ -484,13 +794,13 @@ def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: 
             break
         print(f"  rewrite, unsupported: {'; '.join(c['claim'] for c in claims)}")
         leave_out = f"The passage does not say: {'; '.join(named)}. Leave these out; keep the rest."
-        again = write(session, client, cid, passage, ctx, sc, entry, f"{note}\n{leave_out}".strip())
+        again = write(session, client, cid, ctx, sheet, f"{note}\n{leave_out}".strip())
         if again and (fault := opening_fault(again["summary"], set())):
             reopen = (
                 f"Do not open as before: {fault}. Open with the person, the moment or a line said."
             )
             note = f"{note}\n{reopen}".strip()
-            again = write(session, client, cid, passage, ctx, sc, entry, f"{note}\n{leave_out}")
+            again = write(session, client, cid, ctx, sheet, f"{note}\n{leave_out}")
         if not again:
             return None
         summary = again["summary"]
@@ -498,15 +808,44 @@ def faithful(session, client, cid, passage, ctx, sc, entry, summary: str, note: 
     return None
 
 
+SAVED_SHEETS = """SELECT DISTINCT ON (m.id) m.id, m.content_id, m.summary, ms.sheet,
+       c.source_name, c.title
+FROM memories m JOIN content c ON c.id = m.content_id JOIN memory_sheets ms ON ms.memory_id = m.id
+WHERE c.source_id = :s AND NOT m.hidden ORDER BY m.id, ms.id DESC"""
+
+
+def rerender(session, client, source_id: int, apply: bool):
+    """Every saved card of a source written again from its sheet: the book is
+    not read again, only the writer and the check bill."""
+    books: dict = {}
+    for m in session.execute(text(SAVED_SHEETS), {"s": source_id}).fetchall():
+        b = book(session, client, books, source_id, m.source_name)
+        ctx = extract.source_context(m.source_name, m.title) + index_text(b["index"])
+        card = render(session, client, m.content_id, ctx, m.sheet, b["seen"])
+        print(f"######## memory {m.id}\n--- before\n{m.summary}\n--- after")
+        print(card["summary"] if card else "(dropped)", "\n", flush=True)
+        if apply and card:
+            session.execute(
+                text("UPDATE memories SET summary = :s, quote = :q WHERE id = :id"),
+                {"s": card["summary"], "q": card["quote"], "id": m.id},
+            )
+    session.commit()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("content_ids", type=int, nargs="*")
     parser.add_argument("--source", type=int, help="every window of this source not yet extracted")
     parser.add_argument("--save", action="store_true", help="save the cards as memories")
+    parser.add_argument("--render", action="store_true", help="write saved cards from their sheets")
+    parser.add_argument("--apply", action="store_true", help="with --render, store the new cards")
     args = parser.parse_args()
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-    idx_by_source, seen = {}, {}
+    books: dict = {}
     with get_session() as s:
+        if args.render:
+            rerender(s, client, args.source, args.apply)
+            return
         ids = args.content_ids + [
             r.id
             for r in s.execute(text(PENDING_WINDOWS), {"s": args.source}).fetchall()
@@ -514,7 +853,7 @@ def main():
         ]
         for cid in ids:
             print(f"######## {cid}", flush=True)
-            found = cards(s, client, cid, idx_by_source, seen)
+            found = cards(s, client, cid, books)
             for c in found:
                 print(f"--- {c['place']} ({len(c['summary'].split())}w)\n{c['summary']}\n")
             if args.save:

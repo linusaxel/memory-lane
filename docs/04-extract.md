@@ -1032,6 +1032,35 @@ runs `after_save`, openings count per book, a rewrite's opening is checked,
 and a scene outside the launch area is dropped before it is written. Same-event
 cards and leaked payoffs are left to dedup.
 
+### The fact sheet, 2026-10-10
+
+Each kept scene first gets a fact sheet (docs/10, *A card is rendered from its
+fact sheet*). One call lists the scene's facts, each with the passage's own
+words. Code then keeps only what it can find:
+
+| Part | What | From |
+|---|---|---|
+| `what` | the beats in order, small details kept | model, each with a quote code finds |
+| `who` | name, role, age then | model and the book index |
+| `when` | ISO date, precision | model; kept only if its quote is found |
+| `said` | lines spoken, copied exactly | model, found by code |
+| `context` | what the passage says a stranger needs (the war, the epidemic) | model, found by code |
+| `why` | why a stranger is glad to know it | model |
+| `where` | venue, address, then, standing, coordinates, geocoder | code |
+| `source` | title, author, life, role, kind, written, why care | one call a book, from its opening |
+| `excerpt` | the scene in whole paragraphs, plus 1,500 characters around it | code |
+| `made`, `passage`, `finder` | model, prompt hash, window, the finder's candidate | code |
+
+A claim is a W3C TextQuoteSelector with offsets: `{fact, quote: {exact,
+prefix, suffix}, pos, match}`. `match` is `exact`, or `fuzzy` when a page break
+split the words. The writer gets the spot, the source note, the facts and the
+excerpt. The check reads the excerpt and the quotes, never the whole window.
+`happened_at` and `tags` come from the sheet.
+
+`python -m pipeline.scenes --source <id> --render` writes a book's saved cards
+again from their sheets alone, and prints before and after. `--apply` stores
+them. Only the writer and the check bill.
+
 ### Yield by genre, 2026-10-07
 
 The 412 visible memories, grouped by source. A source's genre predicts its

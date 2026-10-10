@@ -93,6 +93,7 @@ Who writes which is in [architecture.md](architecture.md#data-ownership).
 | `extraction_chunks` | Each chunk's raw model reply, keyed on the exact request |
 | `classifier_verdicts` | What the Haiku pre-filter decided per chunk, and why |
 | `memory_reviews` | An accept / edit / reject on an extracted memory, by a person or an agent (`reviewer`). Outlives it |
+| `memory_sheets` | A memory's fact sheet: each claim with its quote, the spot, the source and the excerpt the card is written from. One row per extraction; the newest is current |
 | `places` | Locations with PostGIS coordinates |
 | `memories` | Experiences pinned to places. `content_id` **or** `user_id`, never both |
 | `devices` | An installation's self-issued UUID. Not a person |

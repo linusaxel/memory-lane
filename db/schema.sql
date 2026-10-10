@@ -510,6 +510,18 @@ CREATE TABLE memory_reviews (
     reviewer VARCHAR(10) NOT NULL DEFAULT 'agent' CHECK (reviewer IN ('person', 'agent'))
 );
 
+-- A memory's fact sheet: each claim with its quote, and the excerpt the card
+-- is written from. One row per extraction; the newest is current. See
+-- pipeline/scenes.py.
+CREATE TABLE memory_sheets (
+    id SERIAL PRIMARY KEY,
+    memory_id INTEGER NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    content_id INTEGER REFERENCES content(id) ON DELETE CASCADE,
+    sheet JSONB COMPRESSION lz4 NOT NULL CHECK (sheet ? 'schema_version'),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_memory_sheets_memory ON memory_sheets (memory_id);
+
 -- The promote-or-reject number. `screened` is the Haiku pass rate, which is
 -- known before a cent goes to Sonnet; fail-open verdicts are not judgements.
 CREATE VIEW source_yield AS

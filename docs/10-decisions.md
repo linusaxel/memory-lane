@@ -4291,6 +4291,40 @@ extracted: `python -m pipeline.scenes --source <id> --save`.
 (nothing would read it; `extraction_chunks.prompt_hash` already says which
 prompt ran).
 
+### A card is rendered from its fact sheet
+
+Status: Accepted 2026-10-10. Builds on *Scene-first is the book path*.
+
+A scene-first card is written from a stored fact sheet, not straight from the
+book. `make_sheet` (pipeline/scenes.py) writes it after the spot is resolved:
+- who, when, what happened in order, what was said, and the passage's own
+  context;
+- every claim with the quote that says it, found in the text by code. A claim
+  whose quote isn't there is dropped;
+- the spot from the geocoder, a note on who wrote the book and why to care,
+  and the scene in whole paragraphs with up to 1,500 characters either side.
+
+It is saved in `memory_sheets`, one row per extraction, never overwritten.
+`--render` writes the cards again from the sheets alone.
+
+- **The writer never works from the facts alone.** It also reads the excerpt,
+  which is where a card's texture lives ("lobster in mayonnaise").
+- **jsonb, one row per sheet.** A sheet is one document from one call and
+  changes shape with every prompt round. The fields a query filters on
+  (coordinates, date, tags) stay real columns on `memories`. Research
+  2026-10-10: Postgres 16 docs (JSON types, TOAST), W3C Web Annotation's
+  TextQuoteSelector, Google LangExtract's source grounding.
+- **Provenance lives in the sheet** (`made`: model, prompt hash; `passage`:
+  window, hash), not in columns, until a query needs it.
+- **Book pictures are not in it yet.** Gutenberg's text edition drops them;
+  the HTML edition would give them.
+
+**Options considered:**
+- Normalized tables for facts and people: a migration every prompt round.
+  Add one when facts are linked across memories.
+- A column on `memories`: it keeps one sheet, so an old one is lost.
+- Rendering from the facts alone: the cards read like bullet lists.
+
 ### Rejected approaches, do not retry
 
 Status: Rejected
