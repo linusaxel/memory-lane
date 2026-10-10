@@ -4355,8 +4355,9 @@ few lines beside it. `crawler/commons.py` fetches Commons files by a search
 - **The walk score sees the picture** (2026-10-10, the founder's choice over
   picking by hand). A memory whose first picture is its source is scored
   with the picture and `PICTURE_PROMPT`; every other memory keeps `PROMPT`
-  unchanged. A picture memory under 6 is hidden as it is saved: "amazing" is
-  the bar, and a walk should not stop for less.
+  unchanged. The picture card is scored before it is saved, and one under 6
+  is never made: "amazing" is the bar. (It was hidden after saving at first;
+  the founder: "we should not create them to begin with".)
 - Not batched, and no fact check: the check reads text and can't see the
   picture.
 

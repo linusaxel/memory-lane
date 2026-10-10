@@ -27,6 +27,7 @@ SEEN = {
 
 
 def test_a_moment_keeps_commons_point_and_its_picture(monkeypatch):
+    monkeypatch.setattr(pictures.walk_score, "walk_score", lambda *a: 7)
     monkeypatch.setattr(pictures.commons, "files", lambda titles: [FILE])
     monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
     mem, picture = pictures.card(None, None, 1, FILE["page"], "caption", set())
@@ -60,6 +61,7 @@ def test_the_walk_score_sees_a_picture_memorys_picture(monkeypatch):
 
 
 def test_a_series_is_looked_at_once(monkeypatch):
+    monkeypatch.setattr(pictures.walk_score, "walk_score", lambda *a: 7)
     monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
     monkeypatch.setattr(
         pictures.commons, "files", lambda t: [FILE | {"caption": "Show at Vega 01"}]
@@ -70,3 +72,10 @@ def test_a_series_is_looked_at_once(monkeypatch):
         pictures.commons, "files", lambda t: [FILE | {"caption": "Show at Vega 02"}]
     )
     assert pictures.card(None, None, 2, FILE["page"], "c", looked) is None
+
+
+def test_a_picture_under_good_is_never_made(monkeypatch):
+    monkeypatch.setattr(pictures, "look", lambda *a: SEEN)
+    monkeypatch.setattr(pictures.commons, "files", lambda t: [FILE])
+    monkeypatch.setattr(pictures.walk_score, "walk_score", lambda *a: pictures.GOOD - 1)
+    assert pictures.card(None, None, 1, FILE["page"], "c", set()) is None

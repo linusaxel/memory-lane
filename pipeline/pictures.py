@@ -8,7 +8,8 @@ For each pending picture of a `commons` source: its licence is checked, the
 model looks at the picture with its caption and says whether it shows a
 moment worth standing at, where, when, and writes the few lines beside it.
 Commons' own point wins over a geocoded venue. The picture is the memory's
-first picture, so enrichment leaves it be; `tasks.after_save` scores it.
+first picture, so enrichment leaves it be. It is scored with the picture in
+view before it is saved, and one under GOOD is never made.
 """
 
 import argparse
@@ -20,7 +21,7 @@ import anthropic
 from sqlalchemy import text
 
 from crawler import commons
-from pipeline import enrich, extract, geocode, tasks
+from pipeline import enrich, extract, geocode, tasks, walk_score
 from pipeline.config import ANTHROPIC_API_KEY, LAUNCH_BBOX
 from pipeline.db import get_session
 from pipeline.tags import TAGS
@@ -172,7 +173,13 @@ def card(
         "author": f["author"],
         "license": f["license"],
     }
-    return mem, picture
+    # Scored as the walker meets it, picture and words, before anything is
+    # saved: a picture under GOOD is not amazing, and is never made.
+    score = walk_score.walk_score(client, f"{venue}: {seen['summary']}", f["thumb"])
+    if score is None or score < GOOD:
+        print(f"  drop, walk score {score}: {seen['summary'][:80]}")
+        return None
+    return mem | {"walk_score": score}, picture
 
 
 def save(session, client, cid: int, mem: dict, picture: dict):
@@ -180,9 +187,13 @@ def save(session, client, cid: int, mem: dict, picture: dict):
     fills a memory that has none."""
     extract.save_memories(session, cid, [mem], extract.layer_for("picture"), client)
     session.execute(
-        text("""UPDATE memories SET enrichment = CAST(:e AS JSONB)
+        text("""UPDATE memories SET enrichment = CAST(:e AS JSONB), walk_score = :w
                 WHERE content_id = :c AND enrichment IS NULL"""),
-        {"e": json.dumps({"pictures": [picture]}, ensure_ascii=False), "c": cid},
+        {
+            "e": json.dumps({"pictures": [picture]}, ensure_ascii=False),
+            "w": mem["walk_score"],
+            "c": cid,
+        },
     )
 
 
@@ -209,14 +220,6 @@ def main():
                 s.commit()
                 if made:
                     tasks.after_save(client, r.id)
-                    # Scored with the picture in view (walk_score); below
-                    # GOOD it is not amazing, and a walk should not stop for it.
-                    s.execute(
-                        text("""UPDATE memories SET hidden = TRUE
-                                WHERE content_id = :c AND walk_score < :g"""),
-                        {"c": r.id, "g": GOOD},
-                    )
-                    s.commit()
 
 
 if __name__ == "__main__":
