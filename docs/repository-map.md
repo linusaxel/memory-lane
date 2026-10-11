@@ -150,6 +150,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/lockets/designs/Gold*.tsx` | One locket each: its case, lid, inside and its own hold animation |
 | `mobile/src/lockets/{parts.tsx,math.ts,haptics.ts,types.ts}` | What the designs share: gradients, chain, hinges, the engraved place; worklet easing and Svg matrices; haptics; the design type |
 | `mobile/src/lockets.ts` | The six lockets: pin images and names |
+| `mobile/assets/collector/` | The Collector's looks, `<class>-<stage>.png` (1-8). Placeholders: each class's sheet front view at every stage, so the real art only swaps files |
 | `mobile/assets/guardian/` | The fir guardian's three poses, light and dark (the dark one has a moss rim) |
 | `mobile/assets/lockets/` | The locket pins, one per locket, @1x-@3x |
 | `mobile/assets/onboarding/` | The first-run pages' pictures, light and dark, rasterised from the Jewel Box handoff |
@@ -203,7 +204,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/PlanWalkButton.tsx` | Plan a walk on home: the gold glass pill whose figure walks through its label before the planner opens |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen, what the source button says, and the era slider's stops (`ERA_STOPS`) |
-| `mobile/src/collector.ts` | The Collector: four classes and the locket counts that grow each through eight stages. Not wired in yet; the art is to come |
+| `mobile/src/collector.ts` | The Collector's rules: four classes, the locket counts that open each of eight stages, and a rank that never goes down. Pure, so node tests it |
+| `mobile/src/CollectorLook.tsx` | A Collector's look at a stage (a silhouette when ahead), the art map, and the pick and stage this phone keeps |
 | `mobile/src/countUp.ts` | The values a journal number rolls through on its way up |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/story.ts` | A story's little markdown: blocks, marks, placed photos |

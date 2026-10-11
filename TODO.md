@@ -493,7 +493,9 @@ ever covers a memory.
       ranks and its locket line are in `collector.ts` and the memory notes.
       Then: transparent backgrounds, a check that it reads in dark mode, and a
       check at 44 pt (does each stage still look different at journal size?).
-      Files go in `mobile/assets/collector/<class>-<stage>.png`.
+      Files replace the placeholders in `mobile/assets/collector/<class>-<stage>.png`
+      (today every stage is the sheet's front view, cut by hand); nothing
+      else changes.
 - [ ] **Pick your Collector: the last onboarding page.** (checked 2026-10-11)
       It replaces "Walks earn lockets". All four at stage 4 side by side, one tap
       to choose, "Change it any time in your journal". Choosing on day one is
