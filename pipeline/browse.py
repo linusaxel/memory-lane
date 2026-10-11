@@ -37,7 +37,7 @@ SELECT m.id, m.summary, m.quote, m.quote_by, m.tags, m.layer, m.hidden,
 FROM memories m
 JOIN places p ON p.id = m.place_id
 LEFT JOIN content c ON c.id = m.content_id
-ORDER BY m.id DESC
+ORDER BY m.created_at DESC, m.id DESC
 """
 
 PAGE = Path(__file__).with_name("browse.html")
