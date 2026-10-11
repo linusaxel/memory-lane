@@ -19,7 +19,7 @@ if [ $# -gt 0 ]; then
   SCREENS=("$@")
 else
   # Read from devOpen.ts so the list cannot drift.
-  SCREENS=($(sed -n '/^export const SCREENS/,/] as const/p' src/devOpen.ts | grep -o "'[a-z-]*'" | tr -d "'"))
+  SCREENS=($(sed -n '/^export const SCREENS/,/] as const/p' src/devOpen.ts | grep -o "'[a-z0-9-]*'" | tr -d "'"))
 fi
 
 started=$(date +%s)
