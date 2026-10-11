@@ -424,7 +424,7 @@ export default function MemorySheet({
           <Animated.View
             style={[
               styles.sheet,
-              { opacity: shown },
+              { opacity: hidden ? 0 : shown },
               compact &&
                 (peeking
                   ? [

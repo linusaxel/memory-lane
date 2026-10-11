@@ -97,6 +97,7 @@ import { PlanWalkButton } from './src/PlanWalkButton.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
+import { seg } from './src/lockets/math.ts';
 import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
@@ -395,6 +396,13 @@ export default function App() {
   // The locket and the slide that opens it share one hold (UnlockHere, SlideToUnlock).
   const lockDrive = useRef<LocketDrive>(null);
   const lockProgress = useSharedValue(0);
+  // The locket's dive, 0–1: the paper (IrisGrow) and the chrome around the lock ride it.
+  const lockDive = useSharedValue(0);
+  const stepBack = useAnimatedStyle(() => ({ opacity: 1 - seg(lockDive.value, 0, 0.2) }));
+  // Back to the start once the card is up (or the hold refused), so the next lock shows.
+  useEffect(() => {
+    if (!opening && !diving) lockDive.value = 0;
+  }, [opening, diving, lockDive]);
   const watcher = useRef<Location.LocationSubscription | null>(null);
 
   useEffect(() => {
@@ -1896,8 +1904,9 @@ export default function App() {
         onDisplayName={rename}
         nameError={nameError}
       />
-      {diving && (
+      {(opening || diving) && (
         <IrisGrow
+          dive={lockDive}
           height={windowHeight * TALL}
           onGrown={() => setDiving((d) => d && { ...d, grown: true })}
         />
@@ -2439,9 +2448,10 @@ export default function App() {
               onOpened={() => setOpening(null)}
               drive={lockDrive}
               progress={lockProgress}
+              dive={lockDive}
             />
           )}
-          {slide && <View style={styles.slideRow}>{slide}</View>}
+          {slide && <Reanimated.View style={[styles.slideRow, stepBack]}>{slide}</Reanimated.View>}
           {sealing && (
             <LocketSeal
               locket={sealing.memory.locket}

@@ -20,14 +20,7 @@
  *
  * The parent must not clip this view: the dive scales it past its bounds.
  */
-import {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  type ReactNode,
-  type Ref,
-} from 'react';
+import { useCallback, useImperativeHandle, useRef, type ReactNode, type Ref } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -41,8 +34,8 @@ import Animated, {
   Easing,
   runOnJS,
   useAnimatedProps,
+  useAnimatedReaction,
   useAnimatedStyle,
-  useDerivedValue,
   useReducedMotion,
   useSharedValue,
   withTiming,
@@ -73,9 +66,6 @@ const BOX = 400;
 const VIEWBOX = `${-OX} ${-OY} ${BOX} ${BOX}`;
 const PERSPECTIVE = 900;
 
-const OPEN_MS = 2300;
-// The zoom runs over o 0.5 → 0.9 of the open; IrisGrow waits it out.
-const DIVE_MS = 0.4 * OPEN_MS;
 const SETTLE_MS = 380;
 
 type Props = {
@@ -95,6 +85,8 @@ type Props = {
   ref?: Ref<LocketDrive>;
   /** The hold, when the parent shares it (SlideToUnlock's thumb rides it). */
   progress?: SharedValue<number>;
+  /** The dive, 0–1, written here for IrisGrow to ride. */
+  dive?: SharedValue<number>;
   /** Plays the opening backwards instead of waiting for a hold: the lid shuts
    *  on a memory just filed (docs/10, "Writing is a calm page"). Called once
    *  it is shut. */
@@ -122,6 +114,7 @@ export default function LocketUnlock({
   style,
   ref,
   progress,
+  dive,
   onSealed,
 }: Props) {
   const design = locketOf(locket).design;
@@ -153,6 +146,7 @@ export default function LocketUnlock({
     onSealed,
     progress,
     zoomMax,
+    dive,
   });
   useImperativeHandle(ref, () => ({ scrub, release, open }), [scrub, release, open]);
 
@@ -163,7 +157,7 @@ export default function LocketUnlock({
     [open],
   );
 
-  const dive = useAnimatedStyle(() => ({
+  const diveStyle = useAnimatedStyle(() => ({
     opacity: d.lockOp.value,
     transform: [{ scale: d.zoom.value }],
   }));
@@ -201,7 +195,7 @@ export default function LocketUnlock({
         <View style={[styles.box, { transform: [{ scale: k }], transformOrigin: [0, 0, 0] }]}>
           <Animated.View
             pointerEvents="none"
-            style={[styles.layer, { transformOrigin: [150 + OX, cy + OY, 0] }, dive]}
+            style={[styles.layer, { transformOrigin: [150 + OX, cy + OY, 0] }, diveStyle]}
           >
             <Animated.View style={[styles.fill, { transformOrigin: [150 + OX, OY, 0] }, rig]}>
               <Layer design={design} z={-12} d={d}>
@@ -321,6 +315,8 @@ function Sparkle({ i, x, y, m, d }: { i: number; x: number; y: number; m: Motion
 }
 
 type IrisProps = {
+  /** The locket's dive, 0–1 (LocketUnlock's `dive`): the paper runs on its clock. */
+  dive: SharedValue<number>;
   /** The open memory's card it lands on: full width, on the bottom edge. */
   height: number;
   /** Settled on the card's frame: the card can show. */
@@ -336,42 +332,50 @@ type IrisProps = {
  *  settles. In dark, where a cream screen would flash, the paper fades in over
  *  the dive itself, so the locket dives into plum-black and nothing is ever
  *  white.
- *  The parent removes it once the card is up. With Reduce Motion it draws
- *  nothing and hands over at once. */
-export function IrisGrow({ height, onGrown }: IrisProps) {
+ *  It rides the locket's own `dive`, never a clock of its own: one started
+ *  from JS ran late by however long the card took to render, and the locket
+ *  left before the paper covered it. Mount it before the dive; the parent
+ *  removes it once the card is up. With Reduce Motion it draws nothing and
+ *  hands over as the dive starts. */
+export function IrisGrow({ dive, height, onGrown }: IrisProps) {
   const reduce = useReducedMotion();
   const { height: screen } = useWindowDimensions();
   const dark = useColorScheme() === 'dark';
-  const ms = useSharedValue(0);
-  const total = DIVE_MS + SETTLE_MS;
+  const settle = useSharedValue(0);
+  const started = useSharedValue(false);
 
-  useEffect(() => {
-    if (reduce) {
-      onGrown();
-      return;
-    }
-    ms.value = withTiming(total, { duration: total, easing: Easing.linear }, (fin) => {
-      if (fin) runOnJS(onGrown)();
-    });
-    // Once, as it mounts: the callback is new every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useAnimatedReaction(
+    () => dive.value,
+    (v) => {
+      if (started.value || v < (reduce ? 1e-6 : 1)) return;
+      started.value = true;
+      if (reduce) runOnJS(onGrown)();
+      else
+        settle.value = withTiming(
+          1,
+          { duration: SETTLE_MS, easing: Easing.linear },
+          (fin) => fin && runOnJS(onGrown)(),
+        );
+    },
+  );
 
-  const settle = useDerivedValue(() => eio(Math.max((ms.value - DIVE_MS) / SETTLE_MS, 0)));
   const frame = useAnimatedStyle(() => {
-    const b = settle.value;
+    const b = eio(settle.value);
     return {
-      opacity: dark ? Math.min(ms.value / DIVE_MS, 1) : seg(ms.value, 0.7 * DIVE_MS, DIVE_MS),
+      opacity: dark ? dive.value : seg(dive.value, 0.7, 1),
       top: (screen - height) * b,
       borderTopLeftRadius: radius.card * b,
       borderTopRightRadius: radius.card * b,
     };
   });
-  const glow = useAnimatedStyle(() => ({
-    opacity: 1 - settle.value,
-    borderTopLeftRadius: radius.card * settle.value,
-    borderTopRightRadius: radius.card * settle.value,
-  }));
+  const glow = useAnimatedStyle(() => {
+    const b = eio(settle.value);
+    return {
+      opacity: 1 - b,
+      borderTopLeftRadius: radius.card * b,
+      borderTopRightRadius: radius.card * b,
+    };
+  });
 
   if (reduce) return null;
   return (

@@ -35,6 +35,8 @@ export type LockMotionOptions = {
   progress?: SharedValue<number>;
   /** How far the dive zooms: enough for the inside to cover the screen. */
   zoomMax: SharedValue<number>;
+  /** The dive, 0–1, for what hands over from it (IrisGrow) to run on this clock. */
+  dive?: SharedValue<number>;
 };
 
 /**
@@ -63,6 +65,8 @@ export function useLockMotion(design: LocketDesign, opts: LockMotionOptions) {
   /** 0 pending, 1 ok, -1 refused */
   const verified = useSharedValue(0);
   const m: Motion = { p, phase, c, o, t, press };
+
+  const dive = opts.dive;
 
   const optsRef = useRef(opts);
   optsRef.current = opts;
@@ -129,6 +133,7 @@ export function useLockMotion(design: LocketDesign, opts: LockMotionOptions) {
       if (c.value >= 1 && verified.value === 1) {
         phase.value = PHASE.open;
         o.value = 0;
+        if (dive) dive.value = 0;
         scheduleOnRN(fireHaptic, 'success');
       } else if (c.value >= 1 && verified.value === -1) {
         phase.value = PHASE.spring;
@@ -144,6 +149,8 @@ export function useLockMotion(design: LocketDesign, opts: LockMotionOptions) {
       const prev = o.value;
       o.value = Math.min(1, prev + dt / OPEN_S);
       if (prev < 0.5 && o.value >= 0.5) scheduleOnRN(diveStart);
+      // After diveStart, so what IrisGrow sends JS lands behind it.
+      if (dive) dive.value = seg(o.value, 0.5, 0.9);
       if (prev < 1 && o.value >= 1) scheduleOnRN(opened);
     }
 
@@ -216,7 +223,7 @@ function useDerived(
     return ph === PHASE.commit || ph === PHASE.open ? 1 : clamp(m.p.value, 0, 1);
   });
   const oa = useDerivedValue(() => (m.phase.value === PHASE.open ? seg(m.o.value, 0, 0.45) : 0));
-  // The dive: o 0.5 → 0.9 of the open. LocketUnlock's IrisGrow waits it out.
+  // The dive: o 0.5 → 0.9 of the open. LocketUnlock's IrisGrow rides it (opts.dive).
   const zt = useDerivedValue(() =>
     !reduceMotion && m.phase.value === PHASE.open ? seg(m.o.value, 0.5, 0.9) : 0,
   );

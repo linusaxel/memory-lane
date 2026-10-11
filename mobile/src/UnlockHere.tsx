@@ -5,13 +5,14 @@
 
 import { useEffect, type RefObject } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import Svg, { Circle, Defs, Line, RadialGradient, Stop } from 'react-native-svg';
 
 import type { LocatedMemory } from './api.ts';
 import Glyph from './Glyph.tsx';
 import LocketUnlock, { type LocketDrive } from './LocketUnlock.tsx';
 import DiamondRule from './DiamondRule.tsx';
+import { seg } from './lockets/math.ts';
 import { color, dim, font, metal, solid, story } from './theme.ts';
 
 type Props = {
@@ -28,6 +29,8 @@ type Props = {
   /** The slide's handle on the locket, and the hold they share. */
   drive: RefObject<LocketDrive | null>;
   progress: SharedValue<number>;
+  /** The locket's dive, 0–1: the words and arrows step back as it starts. */
+  dive: SharedValue<number>;
 };
 
 export default function UnlockHere({
@@ -40,8 +43,11 @@ export default function UnlockHere({
   error,
   drive,
   progress,
+  dive,
 }: Props) {
   const many = count > 1;
+  // Drawn after the locket, so they would sit on top of its dive.
+  const stepBack = useAnimatedStyle(() => ({ opacity: 1 - seg(dive.value, 0, 0.2) }));
   const glow = solid(useColorScheme() === 'dark').glow;
   const { lat, lng } = memory.place.coordinates;
   // ‹ › brings a fresh locket, so the thumb starts over with it.
@@ -57,7 +63,9 @@ export default function UnlockHere({
     <View style={styles.stack} pointerEvents="box-none">
       <View style={styles.row} pointerEvents="box-none">
         {many && (
-          <Arrow glyph="chevron.left" name="Previous memory here" onPress={() => onStep(-1)} />
+          <Animated.View style={stepBack}>
+            <Arrow glyph="chevron.left" name="Previous memory here" onPress={() => onStep(-1)} />
+          </Animated.View>
         )}
         <View pointerEvents="box-none">
           {/* It hangs on its chain from the top of the screen, and glows because
@@ -95,15 +103,22 @@ export default function UnlockHere({
             size={LOCKET}
             ref={drive}
             progress={progress}
+            dive={dive}
           />
         </View>
-        {many && <Arrow glyph="chevron.right" name="Next memory here" onPress={() => onStep(1)} />}
+        {many && (
+          <Animated.View style={stepBack}>
+            <Arrow glyph="chevron.right" name="Next memory here" onPress={() => onStep(1)} />
+          </Animated.View>
+        )}
       </View>
-      <DiamondRule place={styles.rule} />
-      <Text style={styles.place} numberOfLines={2}>
-        {memory.place.name}
-      </Text>
-      <Text style={styles.here}>You're standing on it</Text>
+      <Animated.View style={[styles.words, stepBack]}>
+        <DiamondRule place={styles.rule} />
+        <Text style={styles.place} numberOfLines={2}>
+          {memory.place.name}
+        </Text>
+        <Text style={styles.here}>You're standing on it</Text>
+      </Animated.View>
     </View>
   );
 }
@@ -140,6 +155,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24 },
   chain: { position: 'absolute', left: LOCKET / 2 - 2, bottom: LOCKET - 6 },
   glow: { position: 'absolute', left: (LOCKET - GLOW) / 2, top: (LOCKET - GLOW) / 2 },
+  words: { alignSelf: 'stretch', alignItems: 'center' },
   rule: { width: 160, marginTop: 8 },
   place: { ...story.title, textAlign: 'center', marginTop: 14 },
   here: { ...font.prose, fontSize: 17, color: color.inkSoft, marginTop: 6 },

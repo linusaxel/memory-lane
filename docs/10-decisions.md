@@ -185,6 +185,11 @@ whose inside is narrower than its half-width says so with `inside` (the eye,
 the heart's cleft), and in light the paper fades in over the dive's last
 stretch, so a darker inside (night) blends instead of cutting.
 
+The paper runs on the locket's clock (`dive`, written by the hold's frame
+callback), never on its own timer. A timer started from JS ran late by however
+long the card took to render: with some memories the locket left before the
+paper covered it, and the map flashed through (2026-10-11).
+
 **Options considered:** an iris per shape (an oval, an octagon...), which
 every new locket would have to redraw and a View cannot round into an
 ellipse anyway.
