@@ -236,3 +236,25 @@ def test_a_licence_longer_than_its_column_is_refused():
     assert licence("CC BY-SA 4.0") == "CC BY-SA 4.0"
     with pytest.raises(argparse.ArgumentTypeError):
         licence("x" * 41)
+
+
+def test_a_download_escapes_an_old_homepages_spaces_and_letters(monkeypatch):
+    from crawler import gutenberg
+
+    asked = []
+
+    class _Body:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b"ok"
+
+    monkeypatch.setattr(
+        gutenberg.urllib.request, "urlopen", lambda r, timeout: asked.append(r.full_url) or _Body()
+    )
+    assert gutenberg.download("http://x.dk/Photos/land photos/ø.jpg?a=1%20b") == b"ok"
+    assert asked == ["http://x.dk/Photos/land%20photos/%C3%B8.jpg?a=1%20b"]

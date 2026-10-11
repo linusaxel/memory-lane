@@ -380,7 +380,7 @@ venv/bin/python -m pipeline.enqueue --video <content_id>
 venv/bin/python -m pipeline.worker --burst
 ```
 
-Auto mode refuses billed runs: hand them to the founder as `!` commands.
+Run the free steps (add, set, ingest, transcripts) yourself; a billed run waits for the founder's yes.
 
 Before enqueueing, check that it isn't already queued or extracted
 (`content.memories_extracted`, the queue). After it runs, run the duplicate

@@ -87,3 +87,18 @@ def test_an_old_homepages_gif_is_sent_as_a_gif(monkeypatch):
 
     monkeypatch.setattr(commons, "download", lambda url, ua: b"GIF89a\x01\x00")
     assert image_block("https://x/a.jpg")["source"]["media_type"] == "image/gif"
+
+
+def test_a_picture_gone_from_its_page_is_scored_as_the_story_alone(monkeypatch):
+    from pipeline import walk_score
+
+    def _gone(url):
+        raise OSError("404")
+
+    asked = []
+    monkeypatch.setattr(walk_score, "image_block", _gone)
+    monkeypatch.setattr(
+        walk_score, "_request", lambda c, prompt, *a, **k: asked.append(prompt) or '{"score": 6}'
+    )
+    assert walk_score.walk_score(None, "Nyhavn: sailors danced.", "https://x/gone.jpg") == 6
+    assert asked == [walk_score.PROMPT]

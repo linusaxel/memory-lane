@@ -9,6 +9,7 @@ packed into windows of whole paragraphs instead of split on chapters.
 import http.client
 import re
 import time
+import urllib.parse
 import urllib.request
 from collections import Counter
 
@@ -21,7 +22,9 @@ PAGE_NUMBER = re.compile(r"\W*[\dIil]*\d[\dIil]*\W*")
 
 
 def download(url: str, user_agent: str | None = None, tries: int = 3) -> bytes:
-    """The whole body, retried: both sites drop connections and cut bodies short."""
+    """The whole body, retried: both sites drop connections and cut bodies short.
+    An old homepage links its files with spaces and æøå in the path: escaped."""
+    url = urllib.parse.quote(url, safe=":/?#[]@!$&'()*+,;=%~")
     headers = {"User-Agent": user_agent} if user_agent else {}
     for attempt in range(tries):
         try:

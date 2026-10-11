@@ -71,7 +71,16 @@ SCHEMA = {
 def walk_score(client, summary: str, picture: str | None = None) -> int | None:
     """0-12, or None when the model did not answer usably."""
     if picture:
-        user = [image_block(picture), {"type": "text", "text": summary}]
+        try:
+            block = image_block(picture)
+        except (
+            OSError,
+            ValueError,
+        ):
+            # A picture gone from its page is scored as the story alone.
+            logger.warning("Picture unreachable, scoring the text: %s", picture)
+            return walk_score(client, summary)
+        user = [block, {"type": "text", "text": summary}]
         raw = _request(client, PICTURE_PROMPT, user, SCHEMA, max_tokens=200, model=GRADER_MODEL)
     else:
         raw = _request(client, PROMPT, summary, SCHEMA, max_tokens=200, model=GRADER_MODEL)

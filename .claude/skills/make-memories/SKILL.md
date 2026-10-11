@@ -86,8 +86,8 @@ ORDER BY expected DESC, pending DESC;
   however well they score (Frihedsmuseet's pictures did). Count with
   `extract(year FROM happened_at)`. Recent (1960-now) comes first: it had 13 (docs/10, *No teller or theme
   dominates*).
-- If a source's done items average under 7, suggest
-  `! venv/bin/python -m pipeline.sources set <id> paused --note "<why>"` to the user and skip it.
+- If a source's done items average under 7, run
+  `venv/bin/python -m pipeline.sources set <id> paused --note "<why>"` and skip it.
 
 ## 3. Thin backlog: find new sources
 
@@ -128,8 +128,8 @@ venv/bin/python -m pipeline.dedup --memories --source <id>   # dry run: retellin
 Rerun step 0. Then read ten of the new memories, `summary`, `quote` and
 `enrichment`, against the bars: *glad to know*, and *needs its spot*. If the
 memories are weak, the fix goes into the pipeline (prompt, judge, source
-choice), not into verdicts. Hand every database write (`dedup --apply`,
-`review`, `sources set`) to the user as a `!` command.
+choice), not into verdicts. Run the database writes yourself (`dedup --apply`,
+`sources set`, `walk_score --all`); the founder doesn't want them handed over.
 
 ## 6. Log and report
 
