@@ -91,6 +91,8 @@ import SlideToUnlock from './src/SlideToUnlock.tsx';
 import { seg } from './src/lockets/math.ts';
 import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
+import { type Collector, loadCollector, saveCollector } from './src/CollectorLook.tsx';
+import { classOf } from './src/collector.ts';
 import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
@@ -338,6 +340,18 @@ export default function App() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   // The four pages and the location primer, once, right after a sign-in.
   const [intro, setIntro] = useState(false);
+  // The Collector's class and highest stage, as this phone keeps them.
+  const [collector, setCollector] = useState<Collector>({});
+  useEffect(() => {
+    loadCollector().then(setCollector);
+  }, []);
+  const keepCollector = useCallback((patch: Collector) => {
+    setCollector((now) => {
+      const next = { ...now, ...patch };
+      saveCollector(next);
+      return next;
+    });
+  }, []);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -347,7 +361,6 @@ export default function App() {
   useEffect(() => {
     identify(profile?.user_id ?? null).catch(() => {});
   }, [profile?.user_id]);
-  // What finishing today's walk earned: the closing card says so.
   // A past walk tapped in the journal, drawn on the map in place of today's
   // pins until Done. A look: nothing on it opens that was not earned.
   const [pastWalk, setPastWalk] = useState<WalkedRoute | null>(null);
@@ -2486,6 +2499,8 @@ export default function App() {
             permission={permission}
             onLocation={goToMyLocation}
             onDone={() => setIntro(false)}
+            picked={classOf(collector.class).id}
+            onPick={(id) => keepCollector({ class: id })}
             key={devPage}
             devPage={devPage}
           />

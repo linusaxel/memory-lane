@@ -496,12 +496,6 @@ ever covers a memory.
       Files replace the placeholders in `mobile/assets/collector/<class>-<stage>.png`
       (today every stage is the sheet's front view, cut by hand); nothing
       else changes.
-- [ ] **Pick your Collector: the last onboarding page.** (checked 2026-10-11)
-      It replaces "Walks earn lockets". All four at stage 4 side by side, one tap
-      to choose, "Change it any time in your journal". Choosing on day one is
-      what makes people identify with a character (Birk et al. 2016), so don't
-      wait until the first walk. Skip means the Wayfinder. The choice is
-      `AsyncStorage` (`memorylane.collector.v1`).
 - [ ] **The Collector page.** (checked 2026-10-11) A new screen opened by
       tapping the Collector in the journal. The current look large, the class
       and rank ("Lantern Warden"), "84 lockets · 36 to Elder of Roads" and a

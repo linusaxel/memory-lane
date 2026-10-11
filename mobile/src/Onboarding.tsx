@@ -1,16 +1,20 @@
 /** Four pages on what the app is, then the location primer: once, right after
  *  sign-in, over the map (docs/10, "Four pages, then the map"). The pictures
- *  are the design handoff's own, rasterised (mobile/assets/onboarding).
+ *  are the design handoff's own, rasterised (mobile/assets/onboarding). The
+ *  last page picks your Collector (docs/10, "The Collector"); Skip leaves the
+ *  Wayfinder.
  *  "Turn on location" is a press with a reason, so the system prompt is never
  *  the first thing anyone sees (UI.md, location). */
 
 import { useState } from 'react';
-import { Image, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Button from './Button.tsx';
+import CollectorLook from './CollectorLook.tsx';
+import { CLASSES, type ClassId } from './collector.ts';
 import type { Permission } from './types.ts';
-import { color, font, screenTitle } from './theme.ts';
+import { color, dim, font, screenTitle } from './theme.ts';
 
 const ART = {
   welcome: [
@@ -24,10 +28,6 @@ const ART = {
   daily: [
     require('../assets/onboarding/daily-light.jpg'),
     require('../assets/onboarding/daily-dark.jpg'),
-  ],
-  lockets: [
-    require('../assets/onboarding/lockets-light.jpg'),
-    require('../assets/onboarding/lockets-dark.jpg'),
   ],
   location: [
     require('../assets/onboarding/location-light.jpg'),
@@ -43,6 +43,8 @@ type Props = {
   onDone: () => void;
   /** The page a dev link opens on: 4 is the location primer. */
   devPage?: number;
+  picked: ClassId;
+  onPick: (id: ClassId) => void;
 };
 
 export default function Onboarding({
@@ -51,6 +53,8 @@ export default function Onboarding({
   onLocation,
   onDone,
   devPage,
+  picked,
+  onPick,
 }: Props) {
   const insets = useSafeAreaInsets();
   const dark = useColorScheme() === 'dark' ? 1 : 0;
@@ -74,9 +78,9 @@ export default function Onboarding({
       body: 'Pick how far. Loop home or end somewhere new.',
     },
     {
-      art: ART.lockets,
-      title: 'Walks earn lockets',
-      body: 'Finish walks to level up. Every second level brings a new locket to seal the memories you leave.',
+      art: null,
+      title: 'Pick your Collector',
+      body: 'It grows with every memory you open. Change it any time in your journal.',
     },
   ];
   // Someone who already said yes is not asked again.
@@ -96,14 +100,32 @@ export default function Onboarding({
       <View style={styles.skipRow}>
         {!primer && <Button kind="text" label="Skip" onPress={() => setPage(pages.length)} />}
       </View>
-      <View style={styles.art}>
-        <Image
-          source={shown.art[dark]}
-          style={styles.fill}
-          accessibilityIgnoresInvertColors
-          accessible={false}
-        />
-      </View>
+      {shown.art ? (
+        <View style={styles.art}>
+          <Image
+            source={shown.art[dark]}
+            style={styles.fill}
+            accessibilityIgnoresInvertColors
+            accessible={false}
+          />
+        </View>
+      ) : (
+        <View style={[styles.art, styles.pick]} accessibilityRole="radiogroup">
+          {CLASSES.map((c) => (
+            <Pressable
+              key={c.id}
+              style={dim([styles.choice, c.id === picked && styles.chosen])}
+              onPress={() => onPick(c.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: c.id === picked }}
+              accessibilityLabel={c.name}
+            >
+              <CollectorLook id={c.id} stage={3} size={128} />
+              <Text style={styles.name}>{c.name}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
       <View style={styles.words}>
         <Text style={styles.title} accessibilityRole="header">
           {shown.title}
@@ -166,6 +188,26 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   fill: { width: '100%', height: '100%' },
+  pick: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 8,
+    gap: 8,
+    backgroundColor: color.paperRaised,
+  },
+  choice: {
+    width: '48%',
+    height: '49%',
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  chosen: { borderColor: color.gold, backgroundColor: color.paper },
+  name: { ...font.uiBold, fontSize: 15, color: color.ink },
   words: { marginTop: 28, paddingHorizontal: 16, gap: 12, alignItems: 'center' },
   title: { ...screenTitle, textAlign: 'center' },
   body: { ...font.prose, fontSize: 17, lineHeight: 25, color: color.inkSoft, textAlign: 'center' },

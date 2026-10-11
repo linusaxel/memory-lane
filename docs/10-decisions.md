@@ -3631,7 +3631,8 @@ the "no carousel" half of *Sign-in comes first, and it is the whole onboarding*.
 
 Sign-in is still the first screen. Right after a real sign-in, four pages say
 what the app is (stories in your city; they open only on the spot; one walk a
-day, free; walks earn lockets), with Skip and dots, then the location primer:
+day, free; pick your Collector, since 2026-10-11 by *The Collector*), with
+Skip and dots, then the location primer:
 "Turn on location", a press with a reason, or "Not now". Someone who already
 granted location skips the primer. `Onboarding.tsx`, over the map so the
 primer's fix flies the map there.

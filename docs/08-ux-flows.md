@@ -62,6 +62,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F35 | Subscribe for more walks | Implemented (no store yet) |
 | F36 | Choose your first memory | Removed from the app |
 | F37 | See where stories wait | Removed from the app |
+| F38 | Choose your Collector | Implemented |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
 screen, no map to browse — no carousel, no settings anybody
@@ -112,7 +113,7 @@ because nothing is reachable before it (docs/10, *Sign-in comes first*).
    own control and Continue with Google. Nothing else — no carousel, no email
    field, no password, no magic link.
    Once signed in, four pages and the location primer follow, once (docs/10,
-   *Four pages, then the map*).
+   *Four pages, then the map*). The fourth picks your Collector (F38).
 2. The provider's sheet, then back. The app sends the ID token it was given and
    is told who that makes it.
 3. The planner (F1), which draws a walk at once and is where location is
@@ -1176,6 +1177,25 @@ this account yet."
 
 **Done when:** the finish-card and paywall checks in `.maestro/walk-and-unlock.yml` pass, and
 `tests/test_api_billing.py` and `tests/test_api_routes.py`.
+
+## F38 · Choose your Collector — **Implemented**
+
+Someone new picks the character that will grow with their lockets.
+
+1. The last onboarding page, "Pick your Collector", shows the four classes
+   (Wayfinder, Pilgrim, Skywatcher, Chronicler) at stage 4 in a grid. The
+   Wayfinder is chosen until another is tapped; one tap chooses, with a gold
+   ring. "Change it any time in your journal."
+2. Start (or Next, to the location primer) goes on with it. Skip on any page
+   leaves the Wayfinder.
+3. Later, tapping the Collector in the journal's header opens its page, where
+   any of the four can be chosen again. The stage comes along: it is your
+   lockets, not the class's.
+
+The pick lives on the phone (`memorylane.collector.v1`), so a new phone starts
+as the Wayfinder. Nothing is sold and the look opens nothing.
+`src/Onboarding.tsx`, `src/CollectorPage.tsx`, `src/CollectorLook.tsx`.
+Why, in `docs/10-decisions.md`, "The Collector".
 
 ## F37 · See where stories wait — **Removed from the app**
 
