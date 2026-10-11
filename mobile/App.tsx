@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   Dimensions,
@@ -374,7 +374,8 @@ export default function App() {
   // The journal is the only other screen, over a map that stays mounted.
   const [journalOpen, setJournalOpen] = useState(false);
   // Under __DEV__ only, both: where a dev link put the journal, and a crash on demand.
-  const [devSection, setDevSection] = useState<'walks' | 'unlocked' | 'mine'>();
+  const [devJournal, setDevJournal] = useState<ComponentProps<typeof Memories>['dev']>();
+  const [devStep, setDevStep] = useState<'stops' | 'choices' | null>();
   const [devCrash, setDevCrash] = useState(false);
   const [devPage, setDevPage] = useState<number>();
   // The walk without a memory in reach, so its own card shows, not the lock.
@@ -1146,9 +1147,14 @@ export default function App() {
       }
       setStage('walk');
     };
-    const journal = (section: 'walks' | 'unlocked' | 'mine') => {
-      setDevSection(section);
+    const journal = (dev: NonNullable<typeof devJournal>) => {
+      setDevJournal(dev);
       setJournalOpen(true);
+    };
+    const plan = (step: 'stops' | 'choices' | null) => {
+      if (stage !== 'preview') dropRoute();
+      setStage('preview');
+      setDevStep(step);
     };
     switch (screen) {
       case 'signin':
@@ -1169,8 +1175,11 @@ export default function App() {
         openMemory(memory ?? groups[0]?.memories[0]?.id ?? -1);
         return;
       case 'preview':
-        if (stage !== 'preview') dropRoute();
-        return setStage('preview');
+        return plan(null);
+      case 'preview-stops':
+        return plan('stops');
+      case 'customize':
+        return plan('choices');
       case 'walked-out':
         setStage('preview');
         return setWalkedOut(true);
@@ -1187,11 +1196,24 @@ export default function App() {
         setReward({ xp: 40 });
         return setWalkDone(true);
       case 'journal':
-        return journal('walks');
+        return journal({ section: 'walks' });
+      case 'journal-walk':
+        return journal({ section: 'walks', open: 'walk' });
+      case 'journal-cards':
+        return journal({ section: 'walks', open: 'cards' });
       case 'journal-unlocked':
-        return journal('unlocked');
+        return journal({ section: 'unlocked' });
+      case 'journal-hearted':
+        return journal({ section: 'unlocked', open: 'hearted' });
       case 'journal-mine':
-        return journal('mine');
+        return journal({ section: 'mine' });
+      case 'journal-memory':
+        journal({ section: 'unlocked' });
+        if (unlockedByOthers[0]) {
+          setOpenAt([unlockedByOthers[0]]);
+          setOpenIndex(0);
+        }
+        return;
       case 'past':
         if (device) fetchWalked(device).then((walks) => walks[0] && setPastWalk(walks[0]));
         return;
@@ -1980,6 +2002,7 @@ export default function App() {
               emptyAt={emptyAt}
               newNearby={preview?.new_nearby ?? 0}
               walkedOut={walkedOut}
+              devStep={devStep}
               onSubscribe={() => setPaywallOpen(true)}
               onHeight={setPreviewCardHeight}
               onClose={() => {
@@ -2330,7 +2353,7 @@ export default function App() {
             }}
             onClose={() => setJournalOpen(false)}
             position={position}
-            devSection={devSection}
+            dev={devJournal}
           />
           {journalOpen && sheets}
         </Modal>

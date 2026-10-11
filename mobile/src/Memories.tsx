@@ -91,8 +91,8 @@ type Props = {
   onClose: () => void;
   /** Where the person is standing, or null - rows show no distance then. */
   position: Coordinates | null;
-  /** The section a dev link asked for (src/devOpen.ts). */
-  devSection?: Section;
+  /** The section, and what is open in it, a dev link asked for (src/devOpen.ts). */
+  dev?: { section: Section; open?: 'walk' | 'cards' | 'hearted' };
 };
 
 type Status = 'loading' | 'ready' | 'failed';
@@ -122,7 +122,7 @@ export default function Memories({
   onOpenStop,
   onClose,
   position,
-  devSection,
+  dev,
 }: Props) {
   const [section, setSection] = useState<Section>('walks');
   const [mine, setMine] = useState<LocatedMemory[]>([]);
@@ -383,13 +383,16 @@ export default function Memories({
       : undefined;
 
   useEffect(() => {
-    if (!devSection || !focused) return;
-    const x = SECTIONS.indexOf(devSection) * pageWidth;
-    setSection(devSection);
+    if (!dev || !focused) return;
+    const x = SECTIONS.indexOf(dev.section) * pageWidth;
+    setSection(dev.section);
+    setOpenWalk(dev.open === 'walk' ? 0 : null);
+    setWalkCards(dev.open === 'cards');
+    setHeartedOnly(dev.open === 'hearted');
     pager.current?.scrollTo({ x, animated: false });
     // An unanimated scroll fires no onScroll, so the pill is told directly.
     swiped.setValue(x);
-  }, [devSection, focused, pageWidth, swiped]);
+  }, [dev, focused, pageWidth, swiped]);
 
   const select = (next: Section) => {
     if (next === section) return;

@@ -302,6 +302,8 @@ type PreviewProps = {
   onHeight: (height: number) => void;
   /** Back to the map, from any step. */
   onClose: () => void;
+  /** The step a dev link asked for (src/devOpen.ts). */
+  devStep?: 'stops' | 'choices' | null;
 };
 
 /** One side of the pages; null keeps the side's space empty. */
@@ -373,10 +375,14 @@ export function Preview({
   onSubscribe,
   onHeight,
   onClose,
+  devStep,
 }: PreviewProps) {
   // Two steps: the length and the shape with the walk drawn behind, then its
   // stops, paged between walks, and Start.
   const [step, setStep] = useState<'stops' | 'choices' | null>(null);
+  useEffect(() => {
+    if (devStep !== undefined) setStep(devStep);
+  }, [devStep]);
   // Said, not focused: the arrows keep VoiceOver where it is (WAI carousels).
   const stepped = useRef(false);
   useEffect(() => {
