@@ -200,3 +200,11 @@ def test_a_book_waits_on_its_index_and_a_text_needs_none(monkeypatch):
     assert b["index"] == scenes.NO_INDEX and b["source"]["title"] == "Allotria-huset"
     assert scenes.worded(scenes.FIND_PROMPT, "book") is scenes.FIND_PROMPT
     assert "an encyclopedia article about" in scenes.worded(scenes.FIND_PROMPT, "encyclopedia")
+
+
+def test_a_spot_whose_fate_is_unknown_tells_the_writer_nothing_of_it():
+    from pipeline.scenes import spot_card
+
+    entry = {"today": "Howitzvej", "address": None, "old_name": "3 Falke Bio", "what": ""}
+    assert "Now: gone." in spot_card(entry | {"standing": "no"})
+    assert "Now" not in spot_card(entry | {"standing": "unknown"})

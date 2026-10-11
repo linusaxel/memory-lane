@@ -306,9 +306,11 @@ the scene's fact sheet, and the passage around the scene.
 
 - The spot is the subject. Within the first two sentences the reader knows
   what of the story they are standing at - what they can see, or that it is
-  gone and what is there now.
+  gone and what is there now. Where the spot doesn't say whether it still
+  stands, say neither; never tell the reader something is not known.
 - Then the one scene, in order, with the details that make it: what was said
-  or done, the object at the turn, the date. Not rooms, fittings or ancestors.
+  or done, the object at the turn, the date. Not rooms, fittings, ancestors,
+  seat counts or renovations.
 - The reader knows none of these people, the author included. Everyone named
   is introduced the first time, from the people given: who they were, and
   their age if it matters ("Otto Zinck, three years old, later an actor";
@@ -642,12 +644,13 @@ def resolve(sc: dict, idx: dict):
 
 
 def spot_card(entry: dict) -> str:
-    now = {"yes": "still there", "no": "gone", "unknown": "not known if still there"}
+    # Unknown says nothing: told "not known", the writer told the walker so.
+    now = {"yes": " Now: still there.", "no": " Now: gone.", "unknown": ""}
     address = f", {entry['address']}" if entry["address"] else ""
     what = f", {entry['what']}" if entry["what"] else ""
     return (
         f"<spot>\nThe walker stands at: {entry['today']}{address}.\n"
-        f"Then: {entry['old_name']}{what}. Now: {now[entry['standing']]}.\n</spot>\n"
+        f"Then: {entry['old_name']}{what}.{now[entry['standing']]}\n</spot>\n"
     )
 
 
@@ -899,7 +902,10 @@ def rerender(session, client, source_id: int, apply: bool):
         print(card["summary"] if card else "(dropped)", "\n", flush=True)
         if apply and card:
             session.execute(
-                text("UPDATE memories SET summary = :s, quote = :q WHERE id = :id"),
+                # A new text is scored again: the old score was the old text's.
+                text(
+                    "UPDATE memories SET summary = :s, quote = :q, walk_score = NULL WHERE id = :id"
+                ),
                 {"s": card["summary"], "q": card["quote"], "id": m.id},
             )
     session.commit()
