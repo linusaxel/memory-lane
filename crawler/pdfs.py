@@ -52,17 +52,18 @@ class Pdfs:
         via = next((t for t in rest if not t.isdigit()), None)
         pause = robots(url, USER_AGENT).crawl_delay(USER_AGENT) or PAUSE_S
         get = lambda u: download(u, USER_AGENT).decode("utf-8", "replace")  # noqa: E731
+        if urllib.parse.urlparse(url).path.lower().endswith(".pdf"):  # one PDF, no index
+            yield from self._windows(url)
+            return
         index = get(url)
         pages = pdf_links(index, url, since, via) if via else [url]
         for page_url in pages:
             page = index if page_url == url else get(page_url)
             for link in pdf_links(page, page_url, None if via else since):
                 time.sleep(pause)
-                title = urllib.parse.unquote(link.rsplit("/", 1)[-1])
-                for i, window in enumerate(windows(pdf_text(download(link, USER_AGENT)))):
-                    yield {
-                        "source_url": f"{link}#{i}",
-                        "title": title,
-                        "text": window,
-                        "language": "da",
-                    }
+                yield from self._windows(link)
+
+    def _windows(self, link: str):
+        title = urllib.parse.unquote(link.rsplit("/", 1)[-1])
+        for i, window in enumerate(windows(pdf_text(download(link, USER_AGENT)))):
+            yield {"source_url": f"{link}#{i}", "title": title, "text": window, "language": "da"}

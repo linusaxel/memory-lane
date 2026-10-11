@@ -1,6 +1,7 @@
 """The new text sources' parsing, offline: plaques, Wikipedia, filming, feeds, stones, PDFs, ADL."""
 
 import argparse
+import urllib.robotparser
 
 import pytest
 
@@ -192,6 +193,17 @@ def test_an_old_homepage_without_paragraphs_reads_as_all_its_text_but_its_style(
 def test_an_old_homepage_keeps_its_letters_in_any_of_its_encodings():
     for encoding in ("utf-8", "cp1252", "utf-16"):
         assert webpages.decoded("Fjords Allé, Nørrebro".encode(encoding)) == "Fjords Allé, Nørrebro"
+
+
+def test_a_pdf_locator_is_that_one_pdf_with_no_index(monkeypatch):
+    fetched = []
+    monkeypatch.setattr(pdfs, "robots", lambda *a: urllib.robotparser.RobotFileParser())
+    monkeypatch.setattr(pdfs, "download", lambda u, *a: fetched.append(u) or b"%PDF")
+    monkeypatch.setattr(pdfs, "pdf_text", lambda data: "Lygterne på Blågårds Plads var gaslygter.")
+    records = list(pdfs.Pdfs().fetch("https://x.dk/PDF%20og%20DOC/drengen.pdf", 5))
+    assert fetched == ["https://x.dk/PDF%20og%20DOC/drengen.pdf"]
+    assert records[0]["title"] == "drengen.pdf"
+    assert records[0]["text"] == "Lygterne på Blågårds Plads var gaslygter."
 
 
 def test_sitemap_urls_are_unescaped_once_and_filtered():
