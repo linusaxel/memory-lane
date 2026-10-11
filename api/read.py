@@ -8,6 +8,7 @@ a device accepts, next to the preview (both call api/route_solver.py), and
 POST /v1/routes/today/end ends it. None records an unlock - that stays write.py's alone.
 """
 
+import datetime
 import json
 import os
 import time
@@ -60,6 +61,7 @@ from api.queries import (
     DEVICE_UNLOCKS_QUERY,
     EARNED_QUERY,
     HOTSPOTS_QUERY,
+    LAST_FREE_WALK_QUERY,
     MEMORY_NOTES_QUERY,
     MY_MEMORIES_COUNT_QUERY,
     MY_MEMORIES_QUERY,
@@ -79,10 +81,9 @@ from api.queries import (
     SUBSCRIBED_QUERY,
     WALKED_QUERY,
     WALKED_STOPS_QUERY,
-    WALKED_TODAY_QUERY,
 )
 from api.route_solver import ROUTE_LOOP, _plan_route
-from pipeline.config import DEV_SUBSCRIBED, UNLIMITED_WALKS
+from pipeline.config import DEV_SUBSCRIBED, FREE_WALK_EVERY_DAYS, UNLIMITED_WALKS
 from pipeline.db import get_session
 
 router = APIRouter()
@@ -411,24 +412,28 @@ def _route_response(
 
 
 def _shaped(session, device: str, tags, years):
-    """A subscriber's Customize, themes and an era, or none for anyone else: shaping the
-    walk is what a subscription buys (docs/10, "Subscribers shape the walk")."""
+    """A subscriber's Customize, themes and an era: shaping the walk is what a
+    subscription buys (docs/10, "Subscribers shape the walk"). A free walk is
+    shaped too, to the best stories (docs/10, "A free walk a week")."""
     if DEV_SUBSCRIBED or session.execute(text(SUBSCRIBED_QUERY), {"device_id": device}).scalar():
         return {"tags": tags, "years": years}
-    return {}
+    return {"best": True}
 
 
 def _refuse_second_walk(session, device: str, route_date) -> None:
-    """One walk a day per account; a subscriber has no limit (docs/10, "A walk
-    planner, nothing else"). A walk's stops are the only thing that opens, so
-    without it End walk and plan again would open any memory for nothing."""
+    """One walk in FREE_WALK_EVERY_DAYS per account; a subscriber has no limit
+    (docs/10, "A free walk a week"). A walk's stops are the only thing that
+    opens, so without it End walk and plan again would open any memory for
+    nothing. The refusal says the day the next free walk comes."""
     if UNLIMITED_WALKS:
         return
-    binds = {"device_id": device, "today": route_date}
-    if session.execute(text(WALKED_TODAY_QUERY), binds).scalar() and not (
-        session.execute(text(SUBSCRIBED_QUERY), binds).scalar()
-    ):
-        raise HTTPException(status_code=403, detail={"reason": "walked_today"})
+    binds = {"device_id": device, "today": route_date, "days": FREE_WALK_EVERY_DAYS}
+    last = session.execute(text(LAST_FREE_WALK_QUERY), binds).scalar()
+    if last and not session.execute(text(SUBSCRIBED_QUERY), binds).scalar():
+        next_free = last + datetime.timedelta(days=FREE_WALK_EVERY_DAYS)
+        raise HTTPException(
+            status_code=403, detail={"reason": "walked", "next_free": next_free.isoformat()}
+        )
 
 
 def _legs_json(legs):
@@ -492,7 +497,7 @@ def preview_route(
 
 @router.post("/v1/routes/today", response_model=RouteResponse)
 def accept_route(body: RouteRequest):
-    """Accept today's walk. One a day per account, bar a subscriber, and one in
+    """Accept today's walk. One a week per account, bar a subscriber, and one in
     progress per device: the first accept is stored and every later one gets it
     back, whatever it asked for, until POST /v1/routes/today/end ends it.
 

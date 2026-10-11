@@ -37,8 +37,11 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   another" (F32), another walk as good. `end_lat` and `end_lng`, together, are
   where a one-way walk finishes (it makes the walk one-way, and is stored
   nowhere); 422 `{reason: "too_far", min_budget_meters}` when this walk cannot
-  reach it. 403 `{reason: "walked_today"}` when
-  the account already walked today and is not subscribed. A subscriber's
+  reach it. 403 `{reason: "walked", next_free}` when
+  the account walked within `FREE_WALK_EVERY_DAYS` and is not subscribed;
+  `next_free` is the date the next free walk comes. Anyone not subscribed
+  gets only the best-scored stories when there are enough (docs/10, "A free
+  walk a week"). A subscriber's
   `tags` (repeated, from `pipeline/tags.py` `TAGS`, else 422) lean the walk
   towards memories carrying one, and `year_from`/`year_to` (inclusive) leave
   out memories outside them or with no year; anyone else's are ignored.
@@ -48,7 +51,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   the walk's mystery stop or null: id 0 and no place while withheld (docs/10,
   "A mystery stop")
 - `POST /v1/routes/today` `{device, lat, lng, budget_meters, loop?, again?, end?, tags?, year_from?, year_to?}` - accept it. The
-  same solve, stored; one a day per account (403 `walked_today`, bar a
+  same solve, stored; one a week per account (403 `walked`, bar a
   subscriber), one in progress per device, and a second accept gets that walk
   back until it is ended. The client never names a stop
 - `POST /v1/routes/today/end` `{device}` - end today's walk, finished or not;

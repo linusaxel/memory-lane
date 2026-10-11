@@ -567,7 +567,7 @@ progress; refine what exists rather than add.
 
 ## Money beyond the subscription
 
-One walk a day is free; Memory Lane+ buys more walks a day and Customize
+One walk a week is free (docs/10, *A free walk a week*); Memory Lane+ buys a walk every day and Customize
 (themes and an era; docs/10, *A walk planner, nothing else* and
 *Subscribers shape the walk*). Nothing else is sold. Every price is borrowed
 from a neighbouring kind of app; tune on real data. The sources behind each

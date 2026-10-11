@@ -43,6 +43,8 @@ PARAMS = {
     "device": "00000000-0000-0000-0000-000000000000",
     "user_id": "00000000-0000-0000-0000-000000000000",
     "days": 7,
+    # A free walk's floor, above WALK_FLOOR: its full predicate.
+    "floor": 8,
     "ids": [1],
     "today": "2026-09-22",
     "city_lat": 55.6761,

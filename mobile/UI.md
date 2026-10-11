@@ -48,7 +48,7 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
    │  ├─ the list               a row per stop in walk order: gold number, place 16/700, "1978 · Vega
    │  │                         Archive · #music #nightlife", a padlock. Four rows, then it scrolls
    │  └─ Start walk
-   └─ walked out (one a day, F35), the card is the sleepy guardian, "Today's walk is done" + More walks
+   └─ walked out (one a week, F35), the card is the sleepy guardian, "This week's free walk is done" + More walks
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
 │                              position the camera is pinned on you: it follows,
@@ -297,7 +297,7 @@ enamel with a gold bezel: anything that starts or moves on (Plan a walk,
 Next, Start walk, Keep walking, Turn on location). `foil` is a gold gradient:
 keeping something (Seal it here, Subscribe, Done on the finish card). `quiet`
 is the way back or aside (End walk, Cancel, a past walk's Done), with a gold
-hairline in the dark. `text` is a gold word (Another walk today ›, Not now).
+hairline in the dark. `text` is a gold word (Walk again tomorrow ›, Not now).
 56pt capsules that squish to 0.94 when pressed. Destructive is never gold:
 Delete account is `danger` text. An in-page action whose Pressable lays out
 its own children spreads `button.quiet` from `theme.ts`, and `button.small`
@@ -1118,7 +1118,7 @@ Sign-in is F22, the first flow, and it is Google and Apple only — see
 
 The paywall is F35 (`src/Paywall.tsx`). One sheet at a time: it opens from Settings,
 the walked-out planner's **More walks**, or the finish card's quiet
-**Another walk today ›**, never on top of a sheet and never by itself. Yearly
+**Walk again tomorrow ›**, never on top of a sheet and never by itself. Yearly
 first and solid, monthly outlined. No price is ever written in the app; the
 store's `priceString` and `pricePerMonthString` are. Without a RevenueCat key
 it says "Subscriptions aren't available right now.", never a button that

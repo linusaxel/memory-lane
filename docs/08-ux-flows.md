@@ -212,11 +212,12 @@ the planner*).
 3. **Start walk**, on step two (step one, free), is `POST /v1/routes/today` with the same
    position, length, loop, themes and era, and lands on the walk (F25).
 
-**Accepting starts the walk.** It stands until it is ended (F34). One a day:
-another the same day needs a subscription, unless the first opened nothing.
-Walked out, the card reads "Today's walk is done", "There's another tomorrow.
-Or get Plus for as many as you like." and **More walks** opens the paywall
-(F35). A relaunch after accepting skips this page and goes straight to the walk.
+**Accepting starts the walk.** It stands until it is ended (F34). One a week
+free: another within seven days needs a subscription, unless the first opened
+nothing. A free walk takes only the best stories (docs/10, *A free walk a
+week*). Walked out, the card reads "This week's free walk is done", "Your next
+one comes on Thursday. Or get Plus and walk every day." and **More walks**
+opens the paywall (F35). A relaunch after accepting skips this page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length — the card moves the
 slider up to the nearest length that has a walk and says "Nothing at 4 km; this
@@ -833,7 +834,7 @@ anyone else's collection or the local unlock cache.
    ends itself: there is nothing left to lose. No confetti — the success haptic on that final
    unlock is the whole celebration.
 
-**One walk a day, one at a time.** `POST /v1/routes/today` stores the first accept with
+**One walk a week, one at a time.** `POST /v1/routes/today` stores the first accept with
 `ON CONFLICT DO NOTHING`; a second accept, from anywhere, at any length, gets
 the first walk back until it is ended (F34). `GET /v1/routes/today` only reads
 — 404 until something is accepted, or once it is ended — and is how a relaunch
@@ -1148,15 +1149,15 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 
 **Who:** a free account. **Trigger:** **More walks** on the
 planner once today's walk is walked (F1), the Plus-badged
-**Customize** on the planner (F1), **Another walk today ›** under
+**Customize** on the planner (F1), **Walk again tomorrow ›** under
 **Done** on the finish card (signed in, not subscribed; never a pop-up), or
 **Get Plus** in Settings.
 
-1. The paywall (`src/Paywall.tsx`): "More than one walk a day" and what it
-   buys (more walks, Customize), yearly first (solid, with the store's price a month) then monthly,
+1. The paywall (`src/Paywall.tsx`): "Walk every day" and what it
+   buys (a walk every day, Customize), yearly first (solid, with the store's price a month) then monthly,
    "No commitment … cancel anytime", **Restore purchases**, Terms and
    Privacy, and **Not now**. No trial, no exit-intent offer, no countdown:
-   the free walk each day is the trial.
+   the free walk each week is the trial.
 2. A purchase or a restore asks the server to read the store back
    (`POST /v1/me/subscription`); only its answer counts. The sheet closes when
    it says subscribed, and the planner plans again.

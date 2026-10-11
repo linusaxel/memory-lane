@@ -529,13 +529,25 @@ SURPRISED_LATELY_QUERY = """
 # devices, bar this device's own in progress. An ended walk that opened nothing
 # was deleted by ROUTE_PRUNE, so it never counts: a bad plan or rain before the
 # first stop does not spend the day.
-WALKED_TODAY_QUERY = f"""
-    SELECT EXISTS (
-        SELECT 1 FROM daily_routes
-        WHERE device_id IN {MY_DEVICES}
-          AND route_date = CAST(:today AS date)
-          AND NOT (device_id = CAST(:device_id AS uuid) AND ended_at IS NULL)
-    )
+# The day of this account's last walk within :days, or NULL: a walk in
+# progress on this device today is the one being asked for, and a past walk
+# that opened nothing is no walk (ROUTE_PRUNE deletes it on the next accept).
+LAST_FREE_WALK_QUERY = f"""
+    SELECT MAX(r.route_date) FROM daily_routes r
+    WHERE r.device_id IN {MY_DEVICES}
+      AND r.route_date > CAST(:today AS date) - CAST(:days AS integer)
+      AND NOT (
+          r.device_id = CAST(:device_id AS uuid)
+          AND r.ended_at IS NULL
+          AND r.route_date = CAST(:today AS date)
+      )
+      AND (
+          r.route_date = CAST(:today AS date)
+          OR EXISTS (
+              SELECT 1 FROM unlocks u
+              WHERE u.device_id IN {MY_DEVICES} AND u.memory_id = ANY(r.memory_ids)
+          )
+      )
 """
 
 # Every finished walk this account took, oldest first, one a day: a
@@ -571,6 +583,8 @@ SUBSCRIBED_QUERY = """
 # `preferred` counts how many of a subscriber's choices a memory meets, its theme
 # and its era (an undated memory meets no era): they lean the walk, never
 # filter it (docs/10, "Subscribers shape the walk").
+# `:floor` raises WALK_FLOOR for a free walk, the best the map has, and
+# leaves out the unscored (docs/10, "A free walk a week").
 # `is_new` is a memory added since this account's last walk began: it leans
 # the walk like `preferred`, and NEW_NEARBY_QUERY counts them (docs/10, "New
 # since your last walk"). No walk yet, nothing is new.
@@ -612,6 +626,7 @@ SELECT {MEMORY_COLUMNS},
     {DISTANCE}
 {MEMORY_JOIN}
 WHERE {WALKABLE}
+    AND (CAST(:floor AS integer) <= {WALK_FLOOR} OR m.walk_score >= CAST(:floor AS integer))
 -- A stack's memories share one distance: the preferred, then the best scored
 -- stands for the place, and the id makes that the same on every call, so a
 -- preview and its accept agree.

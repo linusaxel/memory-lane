@@ -51,7 +51,8 @@ uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.
 | `GOOGLE_CLIENT_IDS` | For sign-in | Comma-separated audience whitelist. Empty = `/v1/auth/*` answers 503 |
 | `APPLE_CLIENT_IDS` | For sign-in | Same, for Apple |
 | `CONTACT_EMAIL` | Before launch | The address the privacy policy's Contact section gives, and so the app's Contact row. Unset, it says one is coming |
-| `UNLIMITED_WALKS` | No | `1` lifts the one walk a day. Ignored on the public host. `docker-compose.yml` turns it on for the local API |
+| `FREE_WALK_EVERY_DAYS` | No | A free walker gets one walk in this many days; `1` is a walk a day (default: 7) |
+| `UNLIMITED_WALKS` | No | `1` lifts the free walk limit. Ignored on the public host. `docker-compose.yml` turns it on for the local API |
 | `DEV_SUBSCRIBED` | No | `1` makes every device a subscriber: Customize (themes and an era), more walks a day. Ignored on the public host. `docker-compose.yml` turns it on for the local API; `DEV_SUBSCRIBED=0 docker compose up -d api` shows the free planner |
 | `REVENUECAT_WEBHOOK_SECRET` | For subscriptions and keys | What RevenueCat's webhook sends as `Authorization: Bearer …`. Empty = `/v1/billing/revenuecat` answers 503 |
 | `REVENUECAT_API_KEY` | For subscriptions and keys | RevenueCat's secret server key (not the app's public one), to read a subscriber back. Empty = `/v1/billing/revenuecat` and `/v1/me/subscription` answer 503 |

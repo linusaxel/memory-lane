@@ -55,7 +55,7 @@ appId: ${APP_ID}
 - tapOn:
     id: "themes-plus"
 - extendedWaitUntil:
-    visible: "More than one walk a day"
+    visible: "Walk every day"
     timeout: 20000
 - tapOn: "Not now"
 - assertNotVisible:

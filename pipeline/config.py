@@ -84,7 +84,10 @@ PHOTON_URL = (os.getenv("PHOTON_URL") or "https://photon.komoot.io").rstrip("/")
 # self-hosted one is the same API.
 OVERPASS_URL = (os.getenv("OVERPASS_URL") or "https://overpass-api.de/api/interpreter").rstrip("/")
 
-# Lift the one walk a day, so the simulator can plan again after one walk.
+# A free walker gets one walk in this many days; a subscriber has no limit
+# (docs/10, "A free walk a week"). 1 is a walk a day.
+FREE_WALK_EVERY_DAYS = int(os.getenv("FREE_WALK_EVERY_DAYS", "7"))
+# Lift the free walk limit, so the simulator can plan again after one walk.
 # Never on the public host, whatever it is set to.
 UNLIMITED_WALKS = not PUBLIC_HOST and os.getenv("UNLIMITED_WALKS") == "1"
 # Every device a subscriber, so the simulator sees the subscriber planner.

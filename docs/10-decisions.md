@@ -333,7 +333,8 @@ whole app; without one there is nothing to do.
   unlock, no key spend, no subscriber exception: anything else is 403
   `not_on_walk` (`api/write.py` `pay_for_unlock`). Earned stays earned.
 - **One walk a day free; a subscription buys more walks** and nothing else
-  (`_refuse_second_walk`). Walked out, the planner offers it. (Amended
+  (`_refuse_second_walk`). (Amended 2026-10-11 by *A free walk a week*: one
+  free walk a week, and it takes the best stories.) Walked out, the planner offers it. (Amended
   2026-10-03 by *Subscribers shape the walk*: it also buys seeing the stops
   before you go, and Customize: themes and an era.)
 - **Keys are earned, never sold** (**Superseded 2026-10-04** by *No keys;
@@ -761,7 +762,8 @@ walk is the wait.
   free. Away from it, only the welcome unlock opens anything, as before. A key
   never gets past the 20 m.
 - **One walk a day per account, bar a subscriber** (`_refuse_second_walk`,
-  `WALKED_TODAY_QUERY`, 403 `walked_today` at preview and accept). Without it,
+  `WALKED_TODAY_QUERY`, 403 `walked_today` at preview and accept). (Amended
+  2026-10-11 by *A free walk a week*: one a week, 403 `walked`.) Without it,
   free stops and **Walk here** open any pin for nothing in two taps: the hole
   *A subscription opens the map* closed the first time. A walk that opened
   nothing is deleted when it ends (*A walk that opened nothing is deleted*),
@@ -4569,6 +4571,43 @@ second generation would have drifted off-model.
 **Options considered:** a locket mascot (too much locket); a cultural spirit
 (not wanted); a companion that guides the walk (the evidence above); hiding it
 in dark mode.
+
+### A free walk a week
+
+Status: Accepted 2026-10-11. Amends *A walk planner, nothing else* (one walk
+a day free) and *Subscribers shape the walk* (a free walk is shaped too).
+
+The founder: one free walk a week, then the paywall, and the free walk gets
+only the best memories, for the best shot at conversion. The research
+(2026-10-11, RevenueCat SOSA 2025/2026, Duolingo and NYT filings, teardowns):
+
+- A free allowance sells only when it binds: Tinder's heavy swipers,
+  Duolingo's energy, the NYT cutting 20 free articles a month to 10. A walk
+  is about 50 minutes; almost nobody wants two a day, so a walk a day free
+  almost never met the paywall. A week binds on the second day a walker
+  wants to go.
+- Not one walk ever: a walker who does not buy after it is gone for good,
+  and the free walk is the word of mouth and the city pitch (TODO.md,
+  *Pitch commissioned walks*). A week brings them back with another chance.
+- Not a cheap hard paywall (~15 DKK a month): low-priced apps convert worse,
+  1.4% against 2.8% download to paid; the jump from free to paid is what
+  loses people (Shampanier, Mazar & Ariely 2007), not the amount.
+
+The rule:
+
+- **One walk in `FREE_WALK_EVERY_DAYS` (7) per account; a subscriber has no
+  limit** (`_refuse_second_walk`, `LAST_FREE_WALK_QUERY`, 403 `{reason:
+  "walked", next_free}` at preview and accept). `next_free` is the day the
+  next one comes, and the planner's card names it. 1 is the old walk a day.
+  A walk that opened nothing still gives the allowance back, and a past one
+  that opened nothing never counts (it is deleted on the next accept).
+- **A free walk takes the best stories:** only memories scored `BEST_FLOOR`
+  (8) or more on the walk rubric, the top sixth (161 of ~975 on 2026-10-11),
+  and no unscored ones. Too few places within reach to fill the walk, it
+  falls back to `WALK_FLOOR`: never an empty walk.
+- `UNLIMITED_WALKS=1` still lifts the limit off the public host.
+
+Watch: how many free walkers meet the card, and how many of them buy.
 
 ### Writing faults are rewritten, not reported
 

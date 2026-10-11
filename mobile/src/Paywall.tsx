@@ -1,5 +1,5 @@
-/** The subscription: more than one walk a day (F35, docs/10 "A walk
- *  planner, nothing else"). Keys are earned, never sold.
+/** The subscription: a walk every day, not one a week (F35, docs/10 "A free
+ *  walk a week"). Keys are earned, never sold.
  *
  *  Prices come from the store, never from here. Without a RevenueCat key
  *  (the simulator, e2e) there is nothing to sell and it says so: never a
@@ -109,16 +109,15 @@ export default function Paywall({ visible, onClose, device, profile, onProfile }
     >
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Velvet />
-        <Text style={styles.title}>More than one walk a day</Text>
+        <Text style={styles.title}>Walk every day</Text>
         {pitch && (
           <Text style={styles.pitch} testID="paywall-so-far">
             {pitch}
           </Text>
         )}
         <View style={styles.perks}>
-          <Perk glyph="infinity" text="As many walks a day as you like" />
+          <Perk glyph="infinity" text="A new walk every day, as many as you like" />
           <Perk glyph="number" text="Customize your walk: themes and eras it leans towards" />
-          <Perk glyph="gift" text="Your first walk each day stays free" />
         </View>
 
         {offered === null ? null : offered.length === 0 ? (
@@ -251,7 +250,7 @@ function Velvet() {
   );
 }
 
-function Perk({ glyph, text }: { glyph: 'infinity' | 'number' | 'gift'; text: string }) {
+function Perk({ glyph, text }: { glyph: 'infinity' | 'number'; text: string }) {
   return (
     <View style={styles.perk}>
       <View style={styles.perkIcon}>

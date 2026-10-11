@@ -295,8 +295,9 @@ type PreviewProps = {
   /** Memories added within 2 km since your last walk (docs/10, "New since
    *  your last walk"). */
   newNearby: number;
-  /** Today's free walk is walked: the card offers the subscription instead. */
-  walkedOut: boolean;
+  /** This week's free walk is walked: the day the next one comes, and the
+   *  card offers the subscription instead. */
+  walkedOut: string | null;
   onSubscribe: () => void;
   /** The card's height, so the map fits the walk into what is left above it. */
   onHeight: (height: number) => void;
@@ -390,13 +391,16 @@ export function Preview({
     stepped.current = true;
   }, [walkNumber]);
   const close = <CloseButton label="Close the planner" onPress={onClose} place={styles.close} />;
-  if (walkedOut) {
+  if (walkedOut !== null) {
+    const day = walkedOut
+      ? `on ${new Date(`${walkedOut}T12:00`).toLocaleDateString('en', { weekday: 'long' })}`
+      : 'next week';
     return (
       <GlassCard style={styles.card}>
         <Guardian pose="sleepy" size={88} />
-        <Text style={styles.cardTitle}>Today's walk is done</Text>
+        <Text style={styles.cardTitle}>This week's free walk is done</Text>
         <Text style={styles.cardBody}>
-          There's another tomorrow. Or get Plus for as many as you like.
+          Your next one comes {day}. Or get Plus and walk every day.
         </Text>
         <Button
           kind="go"
@@ -853,7 +857,12 @@ export function WalkDone({
       )}
       <Button kind="foil" label="Done" onPress={onDone} place={styles.primary} />
       {onMore && (
-        <Button kind="text" label="Another walk today ›" onPress={onMore} testID="walk-done-more" />
+        <Button
+          kind="text"
+          label="Walk again tomorrow ›"
+          onPress={onMore}
+          testID="walk-done-more"
+        />
       )}
     </GlassCard>
   );

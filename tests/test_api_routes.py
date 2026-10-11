@@ -807,17 +807,43 @@ def _finish(client):
         ).is_success
 
 
-def test_a_second_walk_the_same_day_is_refused(client, db_session):
-    """docs/10, "Keys open a lock, and today's walk is free": its stops are
-    free, so a second walk would open any pin for nothing."""
+def test_a_free_walker_walks_once_a_week(client, db_session):
+    """docs/10, "A free walk a week": a walk's stops are free, so a second
+    walk would open any pin for nothing. The refusal names the next free day."""
     for n in range(1, 9):
         _offset(db_session, n)
     db_session.commit()
     _walk_one_stop(client)
+    today = read.gate.today()
+    next_free = (today + datetime.timedelta(days=7)).isoformat()
 
     for refused in (_preview(client), _route(client)):
         assert refused.status_code == 403
-        assert refused.json()["detail"] == {"reason": "walked_today"}
+        assert refused.json()["detail"] == {"reason": "walked", "next_free": next_free}
+
+    def walked_days_ago(days):
+        db_session.execute(
+            text("UPDATE daily_routes SET route_date = :d"),
+            {"d": today - datetime.timedelta(days=days)},
+        )
+        db_session.commit()
+
+    walked_days_ago(6)
+    assert _preview(client).status_code == 403
+    walked_days_ago(7)
+    assert _route(client).is_success
+
+
+def test_a_free_walk_takes_the_best_stories_when_there_are_enough(client, db_session):
+    """Good stories near, the best a little further: a free walk goes further."""
+    ids = [_offset(db_session, n) for n in range(1, 9)]
+    best = ids[4:]
+    db_session.execute(text("UPDATE memories SET walk_score = 7"))
+    db_session.execute(text("UPDATE memories SET walk_score = 8 WHERE id = ANY(:b)"), {"b": best})
+    db_session.commit()
+
+    picked = [m["id"] for m in _route(client).json()["memories"]]
+    assert picked and set(picked) <= set(best)
 
 
 def test_a_walk_that_opened_nothing_gives_the_day_back(client, db_session):
@@ -980,7 +1006,10 @@ def _added(session, memory_id, days_ago):
     )
 
 
-def test_new_nearby_counts_what_arrived_within_2km_since_the_last_walk(client, db_session):
+def test_new_nearby_counts_what_arrived_within_2km_since_the_last_walk(
+    client, db_session, monkeypatch
+):
+    monkeypatch.setattr(read, "FREE_WALK_EVERY_DAYS", 1)
     old, new, far = _offset(db_session, 1), _offset(db_session, 2), _offset(db_session, 30)
     assert _preview(client).json()["meta"]["new_nearby"] == 0, "no walk yet, nothing is new"
 
@@ -992,7 +1021,8 @@ def test_new_nearby_counts_what_arrived_within_2km_since_the_last_walk(client, d
     assert _preview(client).json()["meta"]["new_nearby"] == 1
 
 
-def test_a_memory_new_since_the_last_walk_leans_the_walk(client, db_session):
+def test_a_memory_new_since_the_last_walk_leans_the_walk(client, db_session, monkeypatch):
+    monkeypatch.setattr(read, "FREE_WALK_EVERY_DAYS", 1)
     south, north = _themed_pair(db_session)
     _last_walk(db_session, 2)
     _added(db_session, south, 5)

@@ -300,7 +300,7 @@ appId: ${APP_ID}
 # (docs/10, "A walk planner, nothing else").
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
-    visible: "Today's walk is done"
+    visible: "This week's free walk is done"
     timeout: 30000
 - assertNotVisible: "End walk"
 - assertVisible:
@@ -325,7 +325,7 @@ appId: ${APP_ID}
 - tapOn:
     id: "more-walks"
 - extendedWaitUntil:
-    visible: "More than one walk a day"
+    visible: "Walk every day"
     timeout: 20000
 - assertVisible:
     id: "subscriptions-unavailable"
@@ -337,7 +337,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "[0-9]+ memor(y|ies) · .*"
     timeout: 40000
-- assertNotVisible: "Today's walk is done"
+- assertNotVisible: "This week's free walk is done"
 - tapOn: "Next"
 - assertVisible:
     id: "walk-stops"

@@ -616,10 +616,11 @@ export async function refreshSubscription(device: string): Promise<Profile> {
   return post<Profile>('/v1/me/subscription', { device });
 }
 
-/** A walk refused because today's is already walked (one a day, bar a
- *  subscriber). */
-export function walkedToday(e: unknown): boolean {
-  return ((e as ApiError)?.detail as { reason?: string } | undefined)?.reason === 'walked_today';
+/** The day the next free walk comes, when a walk was refused because this
+ *  week's is walked (one a week, bar a subscriber); null for any other error. */
+export function nextFreeWalk(e: unknown): string | null {
+  const detail = (e as ApiError)?.detail as { reason?: string; next_free?: string } | undefined;
+  return detail?.reason === 'walked' ? (detail.next_free ?? '') : null;
 }
 
 /** Text the screening refused (api/moderation.py), as against a failure that

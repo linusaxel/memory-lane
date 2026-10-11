@@ -29,7 +29,7 @@ from sqlalchemy import text
 
 from api.gate import MYSTERY_REACH_METERS, UNLOCK_RADIUS_METERS, meters_between
 from api.models import Coordinates
-from api.queries import ROUTE_CANDIDATES_QUERY
+from api.queries import ROUTE_CANDIDATES_QUERY, WALK_FLOOR
 from api.streets import crossings, fewer_retraced, retraced_meters, street_legs, street_table
 
 ROUTE_SIZE = int(os.getenv("ROUTE_SIZE", "5"))
@@ -46,6 +46,10 @@ def _route_size(budget_meters: float) -> int:
 # start; the app remembers it.
 ROUTE_LOOP = os.getenv("ROUTE_LOOP", "1") != "0"
 
+
+# A free walk's stops: the walk rubric's top sixth, the best shot at a walker
+# coming back for more (docs/10, "A free walk a week").
+BEST_FLOOR = 8
 
 # A memory nobody scored (a walker's own post) counts as the corpus's middle.
 UNSCORED_WALK = 6
@@ -465,6 +469,7 @@ def _plan_route(
     end: Coordinates | None = None,
     tags: list[str] = (),
     years: tuple[int | None, int | None] = (None, None),
+    best: bool = False,
 ):
     """The walk this device would get from `at` today: (stops in order,
     stop-to-stop street legs, {out, home} street legs touching `at`, the
@@ -487,24 +492,28 @@ def _plan_route(
     point, so candidates come from there. 422 too_far if the end is out of reach.
 
     `tags` and `years` are a subscriber's: memories with one of the tags weigh
-    more, and a range leaves out every memory outside it."""
+    more, and a range leaves out every memory outside it. `best` is a free
+    walk's: only memories scored BEST_FLOOR or more, unless too few places
+    within reach have one to fill the walk."""
     if end:
         loop = False
     centre = Coordinates(lat=(at.lat + end.lat) / 2, lng=(at.lng + end.lng) / 2) if end else at
-    candidates = session.execute(
-        text(ROUTE_CANDIDATES_QUERY),
-        {
-            "lat": centre.lat,
-            "lng": centre.lng,
-            "radius_meters": budget_meters / 2,
-            "device_id": device,
-            "limit": ROUTE_POOL,
-            "tags": list(tags),
-            "year_from": years[0],
-            "year_to": years[1],
-        },
-    ).fetchall()
-    candidates = _spread(_one_per_place(candidates), budget_meters)
+    binds = {
+        "lat": centre.lat,
+        "lng": centre.lng,
+        "radius_meters": budget_meters / 2,
+        "device_id": device,
+        "limit": ROUTE_POOL,
+        "tags": list(tags),
+        "year_from": years[0],
+        "year_to": years[1],
+        "floor": BEST_FLOOR if best else WALK_FLOOR,
+    }
+    candidates = _one_per_place(session.execute(text(ROUTE_CANDIDATES_QUERY), binds).fetchall())
+    if best and len(candidates) < _route_size(budget_meters):
+        binds["floor"] = WALK_FLOOR
+        candidates = _one_per_place(session.execute(text(ROUTE_CANDIDATES_QUERY), binds).fetchall())
+    candidates = _spread(candidates, budget_meters)
     stops_at = [Coordinates(lat=r.lat, lng=r.lng) for r in candidates]
     d, snaps = street_table([at, *stops_at, *([end] if end else [])])
     keep = range(len(candidates))

@@ -61,7 +61,7 @@ export default function Onboarding({
     {
       art: ART.welcome,
       title: 'The corner you pass has a story',
-      body: 'Memory Lane plans a walk a day past a few of them, about one a kilometre.',
+      body: 'Memory Lane plans walks past a few of them, about one a kilometre.',
     },
     {
       art: ART.spot,
@@ -70,7 +70,7 @@ export default function Onboarding({
     },
     {
       art: ART.daily,
-      title: 'One walk a day, free',
+      title: 'A free walk every week',
       body: 'Pick how far. Loop home or end somewhere new.',
     },
     {

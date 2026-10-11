@@ -41,7 +41,7 @@ import {
   saveDisplayName,
   fetchNearby,
   unlockMemory,
-  walkedToday,
+  nextFreeWalk,
   wasRefused,
   type Coordinates,
   type LocatedMemory,
@@ -288,7 +288,7 @@ export default function App() {
   const [planBusy, setPlanBusy] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
   // Today's free walk is walked: the planner offers the subscription.
-  const [walkedOut, setWalkedOut] = useState(false);
+  const [walkedOut, setWalkedOut] = useState<string | null>(null);
   // What was tapped is a point, not a memory: the sheet pages through it.
   const [openAt, setOpenAt] = useState<LocatedMemory[]>([]);
   const [openIndex, setOpenIndex] = useState(0);
@@ -748,10 +748,11 @@ export default function App() {
         setPlanFrom(anchor);
         setPlanFallback(fallback);
         setPreview(walk);
-        setWalkedOut(false);
+        setWalkedOut(null);
       } catch (e) {
         if (!mounted.current) return;
-        if (walkedToday(e)) setWalkedOut(true);
+        const next = nextFreeWalk(e);
+        if (next !== null) setWalkedOut(next);
         else setPlanError("Can't reach Memory Lane right now.");
       } finally {
         if (mounted.current) setPlanBusy(false);
@@ -804,7 +805,8 @@ export default function App() {
       Haptics.selectionAsync().catch(() => {});
     } catch (e) {
       if (!mounted.current) return;
-      if (walkedToday(e)) setWalkedOut(true);
+      const next = nextFreeWalk(e);
+      if (next !== null) setWalkedOut(next);
       else setPlanError("Can't reach Memory Lane right now.");
     } finally {
       if (mounted.current) setPlanBusy(false);
@@ -1150,7 +1152,7 @@ export default function App() {
     setPastWalk(null);
     setConfirmEnd(false);
     setWalkDone(false);
-    setWalkedOut(false);
+    setWalkedOut(null);
     setSealing(null);
     setDevCrash(false);
     setOffline(false);
@@ -1301,7 +1303,7 @@ export default function App() {
         return planWalkRef.current(0);
       case 'walked-out':
         setStage('preview');
-        return setWalkedOut(true);
+        return setWalkedOut(new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10));
       case 'end':
         return setStage('end');
       case 'walk':

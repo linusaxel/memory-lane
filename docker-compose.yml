@@ -28,7 +28,7 @@ services:
       MEDIA_DIR: /data/media
       # Street distances for today's route. Crow-flies when osrm is not up.
       ROUTING_URL: http://osrm:5000
-      # More than one walk a day (pipeline/config.py). 0 to see the day lock.
+      # Lift the free walk a week (pipeline/config.py). 0 to see the lock.
       UNLIMITED_WALKS: ${UNLIMITED_WALKS:-1}
       # Every device is a subscriber (pipeline/config.py). 0 to see the free planner.
       DEV_SUBSCRIBED: ${DEV_SUBSCRIBED:-1}
