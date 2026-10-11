@@ -195,7 +195,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/useMapCamera.ts` | Owns the map ref and every camera move |
 | `mobile/scripts/fresh-splash.sh` | Dev: clear the simulator's saved launch screen, so a new native splash shows |
 | `mobile/scripts/sim.sh` | Dev: start Metro, launch the dev build on the booted simulator, reset unlocks |
-| `mobile/scripts/shoot.sh` | Dev: screenshot every screen (or those named) into `e2e/out/shots/`, no taps |
+| `mobile/scripts/shoot.sh` | Dev: screenshot every screen (or those named) into `~/Downloads/memory-lane-shots/`, no taps |
 | `mobile/scripts/reset-unlocks.sh` | Dev: lock everything again for the simulator's user, in the dev DB and on the device |
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification and the weekly surprise: the native wrapper, the pure region maths, the opt-in flag |

@@ -754,7 +754,7 @@ writing a flow; four of its rules are not guessable.
 
 **Every screen in under a minute, no Metro restart:** `mobile/scripts/shoot.sh`
 (the `/shoot` skill) asks the running dev build for each screen through a file
-it polls, and saves one PNG each into `e2e/out/shots/`.
+it polls, and saves one PNG each into `~/Downloads/memory-lane-shots/`.
 
 For a single screenshot the recipe below is still shorter than a flow.
 `EXPO_PUBLIC_DEV_OPEN_MEMORY` opens one memory on launch, so every state the

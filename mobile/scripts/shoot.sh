@@ -3,7 +3,7 @@
 # Each is asked for in a file the app polls (devWatch in src/devOpen.ts).
 # Needs scripts/sim.sh running and the dev API up.
 #
-#   scripts/shoot.sh                  every screen, into e2e/out/shots/
+#   scripts/shoot.sh                  every screen, into ~/Downloads/memory-lane-shots/
 #   scripts/shoot.sh paywall walk     just those
 #
 # Names and order: SCREENS in src/devOpen.ts. walk, end-confirm and done take
@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-OUT=../e2e/out/shots
+OUT=~/Downloads/memory-lane-shots
 mkdir -p "$OUT"
 BUNDLE=com.PLACEHOLDER.memorylane
 ASK="$(xcrun simctl get_app_container booted "$BUNDLE" data)/Documents/dev-screen"

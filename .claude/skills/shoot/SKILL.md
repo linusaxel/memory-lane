@@ -21,7 +21,7 @@ mobile/scripts/shoot.sh                  # every screen, ~1.5 s each
 mobile/scripts/shoot.sh paywall journal  # just those
 ```
 
-The output is `e2e/out/shots/<screen>.png`. Then Read the PNGs that matter.
+The output is `~/Downloads/memory-lane-shots/<screen>.png`. Then Read the PNGs that matter.
 The screen names are `SCREENS` in `mobile/src/devOpen.ts`. To add a screen, add
 its name there and a case in `devApply` in `mobile/App.tsx`.
 
