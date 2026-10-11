@@ -582,13 +582,6 @@ export type Profile = {
   subscribed: boolean;
   /** When it ends or ended, UTC without a zone; null if never subscribed. */
   subscribed_until: string | null;
-  /** Counted from finished walks, never stored or sold (docs/10, "Walks
-   *  earn XP; rare memories wait for a level"). This level started at
-   *  xp_level; the next starts at xp_next. */
-  xp: number;
-  level: number;
-  xp_level: number;
-  xp_next: number;
 };
 
 export type Draft = {

@@ -53,10 +53,10 @@ type Props = {
   onProfile: (next: Profile) => void;
 };
 
-/** The pitch is your own walking so far, once there is any: xp counts only
- *  finished walks. A count still at zero says nothing. */
+/** The pitch is your own walking so far, once there is any. A count still at
+ *  zero says nothing. */
 function soFar(profile: Profile | null): string | null {
-  if (!profile || profile.xp <= 0) return null;
+  if (!profile) return null;
   const parts: string[] = [];
   const { unlocked } = profile;
   if (unlocked > 0) parts.push(`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'} unlocked`);

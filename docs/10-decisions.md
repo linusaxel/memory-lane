@@ -461,7 +461,9 @@ second phone can pick again in a tap).
 
 ### Walks earn XP; rare memories wait for a level
 
-Status: Accepted 2026-10-03. Amended 2026-10-07 by *Fewer games: no board, no
+Status: **Superseded 2026-10-11** by *The Collector*: XP and levels are gone,
+and progress is the locket count. *Your walks are the collection* still holds.
+Was: Accepted 2026-10-03. Amended 2026-10-07 by *Fewer games: no board, no
 level gate, no count strip*: a level gates no locket and is off the map. Amends the Keys bullet of *A walk planner,
 nothing else*: there are no keys.
 
@@ -4649,6 +4651,47 @@ the finish card's streak and its 7/30/100 milestone, the journal header's
 "n-day streak", the paywall's "n days in a row" and `tests/test_streak.py`.
 Nothing was stored, so nothing is migrated. If the weekly bet fails
 (`FREE_WALK_EVERY_DAYS=1`), the commit that removed it reverts cleanly.
+
+### The Collector
+
+Status: Accepted 2026-10-11. Supersedes *Walks earn XP*.
+
+The founder plays RPGs; what pulls is a character that grows (gear, looks),
+and exploring. You pick one of four wizard classes (Wayfinder, Pilgrim,
+Skywatcher, Chronicler) and it grows through eight looks as your lockets climb
+(`src/collector.ts`).
+
+- **Progress is the locket count**, `profile.unlocked`: memories opened. Not
+  XP, not walks finished: a locket is the thing this app is about, and the
+  count is already on the profile. XP and levels go.
+- **Stages open at 0/3/8/15/30/60/120/250.** A new look on walks one, two and
+  three, then about six weeks, three months and six months apart on the free
+  walk. The first draft (0/5/15/…/1000) outran the library: 847 visible
+  memories, 137 good enough for a free walk. Revisit when it grows.
+- **A rank never goes down.** The count falls when a memory is hidden or
+  deleted; the phone keeps the highest stage reached (Ingress never takes a
+  medal back).
+- **The pick lives on the phone** (`memorylane.collector.v1`): nothing is
+  spent or sold, so nothing needs the server. Skipping means the Wayfinder.
+  It is chosen on the last onboarding page, since choosing a look on day one
+  is what makes people identify with a character (Birk et al., CHI 2016).
+- **One loud moment.** Done on a walk that crossed a stage opens a
+  full-screen reveal before the map. Never on the unlock and never over a
+  memory: the memory is read first (F30). Lockets opened before the Collector
+  get one "You're already …" reveal.
+- **Nothing is sold, and nothing covers a memory.** No shop, prices or
+  currency, and the look opens nothing: the gate decides that alone. The
+  paywall never mentions ranks: a subscription buys walks, not looks.
+
+Fantasy Hike's 708 reviews never asked for gear
+(`docs/research-fantasy-hike.md`), so this is the founder's pull until
+walkers show it is theirs too: TODO.md has the walker test. The art is a
+placeholder (each sheet's front view at every stage) until the real stages
+land in `mobile/assets/collector/`.
+
+**Options considered:** keeping XP beside it (two progress bars for one
+thing); gear from places (Pikmin's rule; more art than eight stages, later);
+the class kept with the account (only once someone loses it on a new phone).
 
 ### Rejected approaches, do not retry
 

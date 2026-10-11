@@ -74,16 +74,7 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import {
-  EndPick,
-  EndWalk,
-  PastWalk,
-  Preview,
-  WALK_KM,
-  WalkDone,
-  type Reward,
-  levelInto,
-} from './src/Plan.tsx';
+import { EndPick, EndWalk, PastWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
 import EditProfile from './src/EditProfile.tsx';
@@ -357,7 +348,6 @@ export default function App() {
     identify(profile?.user_id ?? null).catch(() => {});
   }, [profile?.user_id]);
   // What finishing today's walk earned: the closing card says so.
-  const [reward, setReward] = useState<Reward | null>(null);
   // A past walk tapped in the journal, drawn on the map in place of today's
   // pins until Done. A look: nothing on it opens that was not earned.
   const [pastWalk, setPastWalk] = useState<WalkedRoute | null>(null);
@@ -1326,7 +1316,6 @@ export default function App() {
       case 'done':
       case 'done-ask':
         walk();
-        setReward({ xp: 40 });
         setWalkDone(true);
         if (screen === 'done-ask') borrow(notifyChosen, setNotifyChosen, false);
         return;
@@ -1551,28 +1540,19 @@ export default function App() {
 
   /** The profile again, after a stop. `finished`: that was the walk's last
    *  stop, so the same Success haptic LocketUnlock fires for one memory, once
-   *  more, and the finish card shows what the walk earned. */
-  const refreshProfile = useCallback(
-    (finished: boolean) => {
-      if (finished) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        setReward(null);
-        setWalkDone(true);
-      }
-      const before = profile;
-      deviceId()
-        .then(fetchProfile)
-        .then((who) => {
-          if (!mounted.current) return;
-          setProfile(who);
-          if (finished && before && who.xp > before.xp) {
-            setReward({ xp: who.xp - before.xp });
-          }
-        })
-        .catch(() => {});
-    },
-    [profile],
-  );
+   *  more, and the finish card. */
+  const refreshProfile = useCallback((finished: boolean) => {
+    if (finished) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      setWalkDone(true);
+    }
+    deviceId()
+      .then(fetchProfile)
+      .then((who) => {
+        if (mounted.current) setProfile(who);
+      })
+      .catch(() => {});
+  }, []);
 
   const unlock = useCallback(
     async (memory: LocatedMemory): Promise<boolean> => {
@@ -2183,9 +2163,6 @@ export default function App() {
               meters={pathMeters(donePath)}
               loop={!!routeHome}
               minutes={doneMinutes}
-              level={profile?.level ?? 1}
-              into={profile ? levelInto(profile) : 0}
-              reward={reward}
               path={donePath}
               onDone={() => setWalkDone(false)}
               onHeight={setDoneCardHeight}

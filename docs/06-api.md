@@ -27,8 +27,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   from it, it answers the locked memory and its distance. Opening one this
   account already has always works. 403 `{reason: "not_on_walk"}` standing on
   anything else, subscriber or not. Finishing today's walk with it sets
-  `completed_at`, which XP counts (docs/10, "Walks earn XP; rare memories
-  wait for a level")
+  `completed_at`, which the journal's walks read
 - `GET /v1/unlocks?device=UUID` - that device's collection, always unlocked.
   Each says `hearted`: this account hearted it, for the journal's Hearted filter
 - `GET /v1/routes/preview?device=UUID&lat=X&lng=Y&budget_meters=4000&loop=true` - the walk
@@ -109,8 +108,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, `subscribed` /
-  `subscribed_until`, and `xp` / `level` / `xp_level` / `xp_next` / `items` /
-  `items_total`, counted from finished walks on every read (`api/progression.py`).
+  `subscribed_until`, and `unlocked`, the lockets the Collector grows with
+  (docs/10, "The Collector").
   `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.
   The GET creates nothing

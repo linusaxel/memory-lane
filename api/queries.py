@@ -535,17 +535,6 @@ LAST_FREE_WALK_QUERY = f"""
       )
 """
 
-# Every finished walk this account took, oldest first, one a day: a
-# subscriber's second walk earns nothing more (api.progression).
-FINISHED_WALKS_QUERY = f"""
-    SELECT DISTINCT ON (route_date) id,
-        cardinality(memory_ids) - (mystery_id IS NOT NULL)::int AS stops, budget_meters
-    FROM daily_routes
-    WHERE device_id IN {MY_DEVICES} AND completed_at IS NOT NULL
-    ORDER BY route_date, completed_at
-"""
-
-
 # Is this device's account paid up? A device with no account never is. Only
 # the store's webhook writes the row (docs/10, "A walk planner, nothing else").
 SUBSCRIBED_QUERY = """

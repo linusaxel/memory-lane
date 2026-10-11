@@ -377,12 +377,6 @@ class Profile(BaseModel):
     # date and reads subscribed=false. docs/10, "A walk planner, nothing else".
     subscribed: bool = False
     subscribed_until: datetime | None = None
-    # Counted from finished walks on every read, never stored or sold:
-    # api.progression. This level starts at xp_level, the next at xp_next.
-    xp: int = 0
-    level: int = 1
-    xp_level: int = 0
-    xp_next: int = 50
 
 
 class ProfileRequest(BaseModel):
@@ -407,7 +401,7 @@ class SubmissionRequest(BaseModel):
     happened_at: date | None = None
     happened_precision: str | None = Field(None, pattern="^(day|month|year|decade)$")
     media_ids: list[int] = Field(default_factory=list, max_length=6)
-    # None is the default locket. One above the author's level is refused.
+    # None is the default locket.
     locket: str | None = None
 
 

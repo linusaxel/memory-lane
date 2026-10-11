@@ -474,9 +474,9 @@ progress; refine what exists rather than add.
 ### The Collector
 
 You pick one of four wizard classes and it grows through eight looks as your
-lockets (memories opened) climb (`mobile/src/collector.ts`, nothing wired in
-yet). It replaces XP and levels. Nothing is spent or sold, and nothing ever
-covers a memory. Order: test it, then the art, then the build.
+lockets (memories opened) climb (`mobile/src/collector.ts`). It replaced XP
+and levels (docs/10, *The Collector*). Nothing is spent or sold, and nothing
+ever covers a memory.
 
 - [ ] **Test it with walkers before building it.** (checked 2026-10-11) The
       Locket-keeper lesson: four game layers were reversed in eight days
@@ -485,17 +485,6 @@ covers a memory. Order: test it, then the art, then the build.
       what comes next? Fantasy Hike's 708 reviews never asked for gear
       (`docs/research-fantasy-hike.md`), so this is the founder's pull until
       walkers show it is theirs too.
-- [ ] **The thresholds outrun the library.** (checked 2026-10-11) Stages open
-      at 0/5/15/30/60/120/300/1000, but there are 847 visible memories, and only
-      137 score 8+, which is what a free walk takes. A free walker stops at
-      stage 5; 300 and 1,000 can't be reached by anyone today. Propose
-      0/3/8/15/30/60/120/250: a new look on walks one, two and three, then
-      about 6 weeks, 3 months and 6 months on the free walk. Revisit when the
-      library grows. Founder's call.
-- [ ] **A rank never goes down.** (checked 2026-10-11) The locket count can
-      fall when a memory is hidden or deleted. Keep the highest stage reached
-      (Ingress never takes a medal back) and grow it from the count, never
-      shrink it.
 - [ ] **The art: 4 classes × 8 stages, one stage at a time.** (checked
       2026-10-11) The Canva lineups were bad: eight figures in one image drift
       and blur. In Figma (GPT image), start from the sheet's front view as stage
@@ -505,16 +494,6 @@ covers a memory. Order: test it, then the art, then the build.
       Then: transparent backgrounds, a check that it reads in dark mode, and a
       check at 44 pt (does each stage still look different at journal size?).
       Files go in `mobile/assets/collector/<class>-<stage>.png`.
-- [ ] **Take XP and levels out.** (checked 2026-10-11) `api/progression.py`
-      (`LOCKET_DEFAULT` moves to `api/gate.py`), the `xp`, `level`,
-      `xp_level`, `xp_next` fields on `/v1/me` and `api.ts`, the two tests that
-      read `xp` to see a walk finished (`test_api_routes.py`,
-      `test_api_unlocks.py`: use the walked routes instead), the journal's
-      `Level` bar, `+N XP` and the level on the walk-done card,
-      `levelInto`, Paywall's `xp <= 0` check (use walked routes), the copy in
-      Settings, the onboarding lockets page, and the `+N XP` assert in
-      `.maestro/walk-and-unlock.yml`. `docs/10`: mark *Walks earn XP*
-      Superseded. The lockets table's `level` column is already unused.
 - [ ] **Pick your Collector: the last onboarding page.** (checked 2026-10-11)
       It replaces "Walks earn lockets". All four at stage 4 side by side, one tap
       to choose, "Change it any time in your journal". Choosing on day one is

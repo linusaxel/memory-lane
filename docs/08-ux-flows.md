@@ -1028,8 +1028,7 @@ The last stop unlocks and the day should feel finished.
 3. The card reads "Nice walk." beside the walk's shape, the card it becomes in
    the journal, then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
-   another day), then "+60 XP" when finishing earned it (once a day) and "Level 3" when it
-   reached one. Until the surprise was
+   another day). Until the surprise was
    chosen either way, it asks "Let a story find you now and then?" (F28).
 4. Done ends the walk and goes back to the map, following you again. A walked
    walk ends itself, so there is no "every stop unlocked" limbo, and a relaunch
@@ -1164,7 +1163,7 @@ planner once today's walk is walked (F1), the Plus-badged
 3. Settings shows "Plus until …" and **Manage subscription**; signed in
    and not subscribed, **Get Plus**.
 
-XP and levels are not sold: they come from finishing a walk, once a day.
+The paywall never mentions the Collector or its ranks: a subscription buys walks, not looks.
 
 **Why:** [A walk planner, nothing else](10-decisions.md#a-walk-planner-nothing-else)
 and [RevenueCat sells it; our table decides](10-decisions.md#revenuecat-sells-it-our-table-decides).

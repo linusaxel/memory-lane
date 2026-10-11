@@ -186,8 +186,6 @@ appId: ${APP_ID}
       id: "walk-done"
     timeout: 30000
 - assertVisible: "4 memories · .* loop · .* min"
-# Every stop opened for nothing, and finishing earned XP.
-- assertVisible: "\\+[0-9]+ XP"
 - takeScreenshot: finish-card
 # F35: signed in, not subscribed: a quiet way to the paywall, never a pop-up.
 - assertVisible:

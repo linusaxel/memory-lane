@@ -130,7 +130,6 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `api/media.py` | What an upload is allowed to be, and where it lands |
 | `api/auth.py` | Google and Apple ID tokens: the three checks, and why each one |
 | `api/billing.py` | Who has paid: RevenueCat's webhook and the read-back that writes `subscriptions` |
-| `api/progression.py` | XP, level and the rare tier, counted from finished walks and never stored or sold |
 | `api/privacy.py` | The privacy policy both app stores require, served from here. Its #contact is the app's Contact row |
 | `api/moderation.py` | Screens a post, note or name by local rules before it is public (App Store 1.2) |
 | `api/blocked_words.txt` | The words `moderation.py` refuses: LDNOOBW English and Danish, pruned |

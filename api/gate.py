@@ -25,7 +25,9 @@ from api.models import (
     Place,
     Source,
 )
-from api.progression import LOCKET_DEFAULT
+
+# The locket a memory with none chosen is drawn as. docs/10, "Lockets".
+LOCKET_DEFAULT = "hunter-compass"
 
 # How close you have to stand to read a memory: on the spot, not down the
 # street. See docs/10-decisions.md#20-m.

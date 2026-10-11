@@ -267,10 +267,6 @@ def test_reading_a_profile_creates_nobody(client, db_session):
         "providers": [],
         "subscribed": False,
         "subscribed_until": None,
-        "xp": 0,
-        "level": 1,
-        "xp_level": 0,
-        "xp_next": 50,
     }
     assert db_session.execute(text("SELECT COUNT(*) FROM users")).scalar() == 0
 

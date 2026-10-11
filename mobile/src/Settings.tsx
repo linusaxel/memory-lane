@@ -182,8 +182,8 @@ export default function Settings({
           <View style={[styles.padded, styles.how]}>
             <Image source={locketOf().pin} style={styles.locket} />
             <Text style={styles.howText}>
-              A memory unlocks only on a walk, within {Math.round(radiusMeters)} m of it. Finish the
-              walk to earn XP.
+              A memory unlocks only on a walk, within {Math.round(radiusMeters)} m of it. Each one
+              you open is a locket, and your Collector grows with them.
             </Text>
           </View>
         </Group>

@@ -142,8 +142,9 @@ def _press(client, memory_id):
     )
 
 
-def _xp(client, device=DEVICE):
-    return client.get(f"/v1/me?device={device}").json()["xp"]
+def _finished(client, device=DEVICE):
+    walks = client.get(f"/v1/routes/walked?device={device}").json()["walks"]
+    return [w for w in walks if w["meta"]["completed_at"]]
 
 
 def _subscribe(db_session, device=DEVICE):
@@ -177,10 +178,10 @@ def test_nothing_opens_from_afar(client, memory_id, db_session):
     assert db_session.execute(text("SELECT count(*) FROM unlocks")).scalar() == 0
 
 
-def test_a_stop_of_todays_walk_opens_and_finishing_earns_xp(client, memory_id):
-    assert _xp(client) == 0
+def test_a_stop_of_todays_walk_opens_and_finishes_it(client, memory_id):
+    assert _finished(client) == []
     assert _press(client, memory_id).status_code == 200
-    assert _xp(client) == 10 + 40, "a stop and a 4 km walk"
+    assert len(_finished(client)) == 1
 
 
 def test_an_ended_walks_stop_does_not_open(client, memory_id, db_session):

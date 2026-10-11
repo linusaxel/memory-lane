@@ -128,8 +128,7 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              × to close. Reduce Motion: no cascade. The journal is you as well
 ├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
 │                              it "12 memories · 4 places · 2 added · 5 hearts",
-│                              zeros left out but the first, then "Level 3" and a thin plum XP
-│                              bar. Tapping it opens Edit profile. A gear, then × top right. A
+│                              zeros left out but the first. Tapping it opens Edit profile. A gear, then × top right. A
 │                              number that grew since the last look rolls up from its old
 │                              value (countUp.ts, at most 8 ticks over ~600 ms, a selection
 │                              haptic each); one that fell just shows. First look and Reduce
@@ -282,8 +281,8 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 | `sealInk` | `#F6F1E7` / `#0B1F17` | anything drawn on seal |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
 | `glow` | emerald at 55% | the radial glow behind an in-reach locket. Never a ring |
-| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Level, XP |
-| `track` | `#E9DFEE` / `#362C3F` | the empty part of the level bar |
+| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Lockets, the rank bar |
+| `track` | `#E9DFEE` / `#362C3F` | the empty part of the rank bar |
 | `danger` | `#9B2C2C` / `#F09A9A` | Delete account. Nothing destructive is gold |
 | `heart` | `#A3294E` / `#F29BB4` | a filled heart |
 

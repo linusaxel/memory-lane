@@ -19,7 +19,6 @@ from api.models import (
     SignInRequest,
 )
 from api.moderation import screen
-from api.progression import XP_STEP, level, xp_of
 from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
     UNLOCK_COUNT_QUERY,
@@ -107,16 +106,9 @@ def profile_of(session, device: str) -> Profile:
         {"device_id": device},
     ).fetchone()
     unlocked = session.execute(text(UNLOCK_COUNT_QUERY), {"device_id": device}).scalar() or 0
-    xp = xp_of(session, device)
-    earned = {
-        "xp": xp,
-        "level": level(xp),
-        "xp_level": XP_STEP * (level(xp) - 1) ** 2,
-        "xp_next": XP_STEP * level(xp) ** 2,
-    }
 
     if not row:
-        return Profile(unlocked=unlocked, subscribed=DEV_SUBSCRIBED, **earned)
+        return Profile(unlocked=unlocked, subscribed=DEV_SUBSCRIBED)
     return Profile(
         user_id=str(row.id),
         display_name=row.display_name,
@@ -127,7 +119,6 @@ def profile_of(session, device: str) -> Profile:
         providers=list(row.providers),
         subscribed=DEV_SUBSCRIBED or row.subscribed,
         subscribed_until=row.subscribed_until,
-        **earned,
     )
 
 

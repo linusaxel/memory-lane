@@ -191,7 +191,7 @@ def unlock_memory(memory_id: int, body: UnlockRequest):
             """),
             {"device": body.device, "memory_id": memory_id},
         )
-        # Finishing today's walk is what XP counts (api.progression).
+        # The last stop of today's walk marks it walked (the journal, metrics).
         session.execute(
             text(ROUTE_COMPLETED_QUERY),
             {"device_id": body.device, "memory_id": memory_id, "today": today()},

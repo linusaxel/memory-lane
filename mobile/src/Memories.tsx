@@ -1,5 +1,5 @@
 /** The journal: a pageSheet from the map's Journal button. It is you as
- *  well: your photo, name, numbers and level on top (tap them for Edit
+ *  well: your photo, name and numbers on top (tap them for Edit
  *  profile), the cog for Settings beside ×, then three sections of what you
  *  did behind a segmented control (docs/10-decisions.md, "The journal is
  *  you").
@@ -540,7 +540,6 @@ export default function Memories({
                 ? stats(rolling.memories, rolling.places, profile)
                 : stats(unlockedCount, placeCount, profile)}
             </Text>
-            <Level profile={profile} />
           </View>
         </Pressable>
         <Pressable
@@ -603,25 +602,6 @@ function stats(unlocked: number, places: number, profile: Profile | null): strin
   const hearts = profile?.hearts_received ?? 0;
   if (hearts > 0) parts.push(`${hearts} ${hearts === 1 ? 'heart' : 'hearts'}`);
   return parts.join(' · ');
-}
-
-/** Your level and how far into it, as a thin bar: finished walks fill it. */
-function Level({ profile }: { profile: Profile | null }) {
-  const level = profile?.level ?? 1;
-  const into = (profile?.xp ?? 0) - (profile?.xp_level ?? 0);
-  const span = (profile?.xp_next ?? 50) - (profile?.xp_level ?? 0);
-  return (
-    <View
-      style={styles.level}
-      accessible
-      accessibilityLabel={`Level ${level}, ${Math.max(0, span - into)} XP to the next`}
-    >
-      <Text style={styles.levelText}>{`Level ${level}`}</Text>
-      <View style={styles.bar}>
-        <View style={[styles.fill, { width: `${Math.min(100, (into / span) * 100)}%` }]} />
-      </View>
-    </View>
-  );
 }
 
 function Switcher({
@@ -855,10 +835,6 @@ const styles = StyleSheet.create({
   whoText: { flex: 1 },
   title: { ...screenTitle, fontSize: 28, lineHeight: 34 },
   stats: { ...label, fontSize: 12, marginTop: 2 },
-  level: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
-  levelText: { ...font.uiBold, fontSize: 12, color: color.plum },
-  bar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: color.track },
-  fill: { height: 4, borderRadius: 2, backgroundColor: color.plum },
   cog: { padding: 6 },
   shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 24, paddingTop: 16 },
   // A capsule with the open tab raised in it, like the planner's Mode row.

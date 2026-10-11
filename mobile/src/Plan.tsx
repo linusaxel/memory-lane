@@ -29,7 +29,7 @@ import {
   View,
 } from 'react-native';
 
-import type { Coordinates, LocatedMemory, Profile, WalkAsk, WalkedRoute } from './api.ts';
+import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
@@ -704,12 +704,6 @@ type WalkDoneProps = {
   loop: boolean;
   /** First unlock to last, or null when they were not all earned today. */
   minutes: number | null;
-  /** Where you stand now, for the level column. */
-  level: number;
-  into: number;
-  /** What finishing earned, once the profile is back; null for a
-   *  subscriber's second walk of the day, which earns nothing. */
-  reward: Reward | null;
   /** The walk drawn whole, for the card it becomes in the journal. */
   path: Coordinates[];
   onDone: () => void;
@@ -722,10 +716,6 @@ type WalkDoneProps = {
    *  first walk, since nobody finds it in Settings (docs/10, "A surprise,
    *  once a week"). */
   onNotify?: (yes: boolean) => void;
-};
-
-export type Reward = {
-  xp: number;
 };
 
 type EndWalkProps = {
@@ -775,20 +765,12 @@ export function EndWalk({ left, busy, error, onEnd, onKeep }: EndWalkProps) {
   );
 }
 
-/** How far from this level's start to the next, 0 to 1. */
-export function levelInto({ xp, xp_level, xp_next }: Profile): number {
-  return Math.min(1, (xp - xp_level) / Math.max(1, xp_next - xp_level));
-}
-
 /** The day's last card: the walk drawn whole behind it, and what it came to. */
 export function WalkDone({
   stops,
   meters,
   loop,
   minutes,
-  level,
-  into,
-  reward,
   path,
   onDone,
   onHeight,
@@ -816,21 +798,6 @@ export function WalkDone({
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
-      {/* What you earned, in plum: this walk, and where it leaves you. */}
-      <View style={styles.stats}>
-        {reward && (
-          <View style={styles.stat}>
-            <Text style={styles.statFigure}>{`+${reward.xp} XP`}</Text>
-            <Text style={label}>This walk</Text>
-          </View>
-        )}
-        <View style={[styles.stat, styles.statRuled]}>
-          <Text style={[styles.statFigure, styles.statInk]}>{`Level ${level}`}</Text>
-          <View style={styles.bar}>
-            <View style={[styles.barFill, { width: `${into * 100}%` }]} />
-          </View>
-        </View>
-      </View>
       {onNotify && (
         <View testID="surprise-ask">
           <Text style={styles.cardBody}>Let a story find you now and then?</Text>

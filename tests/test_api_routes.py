@@ -794,8 +794,9 @@ def _walk_one_stop(client):
     _end(client)
 
 
-def _xp(client):
-    return client.get(f"/v1/me?device={DEVICE}").json()["xp"]
+def _finished(client):
+    walks = client.get(f"/v1/routes/walked?device={DEVICE}").json()["walks"]
+    return [w for w in walks if w["meta"]["completed_at"]]
 
 
 def _finish(client):
@@ -862,24 +863,20 @@ def test_a_subscriber_walks_again(client, db_session):
     assert _route(client).is_success
 
 
-def test_finishing_a_walk_earns_xp_once_a_day(client, db_session):
+def test_finishing_a_walk_marks_it_walked(client, db_session):
     for n in range(1, 9):
         _offset(db_session, n)
-    _subscribe(db_session)
+    db_session.commit()
     _finish(client)
-    first = _xp(client)
-    assert first > 0
-    _end(client)
-    _finish(client)
-    assert _xp(client) == first, "a subscriber's second walk earns nothing"
+    assert len(_finished(client)) == 1
 
 
-def test_a_walk_left_unfinished_earns_no_key(client, db_session):
+def test_a_walk_left_unfinished_is_not_finished(client, db_session):
     for n in (1, 2):
         _offset(db_session, n)
     db_session.commit()
     _walk_one_stop(client)
-    assert _xp(client) == 0
+    assert _finished(client) == []
 
 
 def _shape(session, memory_id, tags, year):
