@@ -220,8 +220,8 @@ Or subscribe for as many as you like." and **More walks** opens the paywall
 slider up to the nearest length that has a walk and says "Nothing at 4 km; this
 is the nearest." (F32). Nothing within 10 km at all reads "No walk within 10 km
 from here." with the slider still there, and no Start walk. The map runs
-out before the slider does (the lakes top out at 7.4 km) — a walk under 80% of
-the ask (`ROUTE_FILL`) adds "That's the longest walk from here." No position
+out before the slider does (the lakes top out at 7.4 km) — the card shows the
+walk's real length, and nothing more. No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
 unreachable — the card says "Can't reach Memory Lane right now." under the
 button, and any change retries.

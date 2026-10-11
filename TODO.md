@@ -24,6 +24,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The dev pin silently beats the simulator's location.** 2026-10-11:
+  `EXPO_PUBLIC_DEV_LOCATION` in `mobile/.env` overrides `simctl location` and
+  Maestro's `setLocation`, so a walk driven on the dev sim never reaches its
+  stop and nothing says why; it cost two blind runs. Fix: a `--walk` flag on
+  `mobile/scripts/sim.sh` that starts Metro with the pin empty.
+
 - **Walk scores are never refreshed when the rubric changes.** 2026-10-10:
   re-scoring 68 memories, 10 scored on 09-27 fell from 6-8 to 3-5 and stayed
   there on two reruns; 81 of 261 good memories carry pre-October scores, so

@@ -80,9 +80,6 @@ export const THEMES = [
 
 const themeName = (theme: string) => theme[0].toUpperCase() + theme.slice(1);
 
-/** api/route_solver.py ROUTE_FILL: under this share of the ask, the map ran out. */
-const ROUTE_FILL = 0.8;
-
 type LengthProps = { km: number; min: number; onKm: (km: number) => void };
 
 /** Uncontrolled: the library's `value` is write-only, and lifting every tick
@@ -281,7 +278,6 @@ export function Preview({
   }
   const count = stops?.length ?? null;
   const found = count != null && count > 0;
-  const short = found && meters < ROUTE_FILL * km * 1000;
   const unreachable = floorKm > WALK_KM.max;
   // Up to the slider's grid, so a floor of 2.3 km does not shift every step.
   const min = Math.min(
@@ -423,11 +419,6 @@ export function Preview({
       )}
       {found && emptyAt != null && (
         <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
-      )}
-      {short && (
-        <Text style={styles.cardBody} testID="longest-walk">
-          That's the longest walk from here.
-        </Text>
       )}
       {fallback && (
         <View style={styles.from}>

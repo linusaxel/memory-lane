@@ -161,8 +161,6 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: "10 memories · .* loop"
     timeout: 40000
-- assertVisible:
-    id: "longest-walk"
 # Past Sortedams Sø, the lake at the door, on every roll. The stops land as
 # the line draws through them.
 - extendedWaitUntil:

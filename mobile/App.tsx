@@ -1322,9 +1322,11 @@ export default function App() {
         const opened = await unlockMemory(memory.id, at, await deviceId());
         if (!mounted.current) return false;
         if (opened) {
-          // This was the last not-yet-earned stop of a started route.
+          // This was the last not-yet-earned stop of a started route. On a
+          // walk, this unlock starts it too: requestUnlock's setRouteStarted
+          // has not reached this closure yet, and a one-stop walk never finished.
           const finished =
-            routeStarted &&
+            (routeStarted || (stage === 'walk' && !pastWalk)) &&
             nextRouteStop?.id === memory.id &&
             routeShown.every((stop) => stop.id === memory.id || earned.has(stop.id));
           refreshProfile(finished);
@@ -1341,7 +1343,7 @@ export default function App() {
       }
       return false;
     },
-    [unlocked, routeStarted, nextRouteStop, routeShown, earned, refreshProfile],
+    [unlocked, routeStarted, stage, pastWalk, nextRouteStop, routeShown, earned, refreshProfile],
   );
 
   const checkJournal = useCallback(() => {
