@@ -67,6 +67,33 @@ gate. Several products have one or two of them, and most are dead.
   Also in Copenhagen: *Hidden Copenhagen*, a 7-site trail around a 1673 murder
   ([KU](https://teol.ku.dk/nyheder/nyheder-2023/immersive-app-brings-the-hidden-histories-of-copenhagen-to-life)).
 
+### Spatial Memory, read from its code
+
+2026-10-11: read the backend ([kevinten10/spatial-memory](https://github.com/kevinten10/spatial-memory),
+Go, about 45 commits from March to July 2026) and its design spec. The Kotlin
+and ARCore app lives in another repo, which was not read. The author's own list
+of mistakes: no value until there is critical mass, GPS, "a cool idea isn't
+enough", AR battery drain, and privacy worries.
+
+- **Supply was planned by hand.** The spec has 50 recruited "Memory Seed
+  Officers" planting 1,000 memories at 200 Hangzhou spots before launch. At
+  launch most of the 23 pins were the author's own. The author called the
+  broad pitch the "biggest strategic mistake": "Too broad, needs too much mass
+  to work."
+- **The gate leaked in the code before GPS gave it a button.** The spec calls
+  being there non-negotiable (15 m to open). But `/memories/nearby` returns
+  full public memories up to 50 km away, and reading one by id checks only its
+  visibility. Then came the force-unlock button.
+- **Built for scale before anyone used it.** Four visibility tiers, circles,
+  likes, bookmarks, LLM moderation and an AR layer meant for future glasses.
+  About 20 of the 45 commits are deployment and database plumbing.
+- **The camera view needs density everywhere.** The spec wants a memory about
+  every 500 m across the whole city. A planned walk needs that density only on
+  its route.
+- **One idea worth testing:** "Memory Invitation", where you leave something
+  at a spot for a friend, who has to go there to open it. It is a built-in
+  share that keeps the gate. It never reached users.
+
 ## Older notes and stories left at places (mostly dead)
 
 | Project | Years | Why it stopped |
@@ -152,10 +179,11 @@ downloads, [D&AD](https://www.dandad.org/work/d-ad-awards-archive/streetmuseum))
    layer is the biggest open risk, now that the Locket-keeper was reverted.
 2. **Content was too thin or too costly.** Made by hand, it was slow (Detour,
    Autio). Posted by strangers, it was empty or spam (Woices, Broadcastr,
-   Sekai Camera). The pipeline is the way out, but only if every story clears
-   "glad to know".
-3. **Soft gates leaked** ([murmur], Broadcastr, Wallit), and the magic went
-   with them. Keep the gate hard.
+   Sekai Camera), or hand-planted by the founder (Spatial Memory). The pipeline
+   is the way out, but only if every story clears "glad to know".
+3. **Soft gates leaked** ([murmur], Broadcastr, Wallit, and Spatial Memory's
+   own nearby endpoint), and the magic went with them. Keep the gate hard,
+   and in one place (`api/gate.py`).
 4. **The novelty of a locked story fades** (Spatial Memory, Randonautica's 2020
    TikTok spike, [Webworm](https://www.webworm.co/randonautica/)).
 5. **GPS error is about the size of the gate** (20-30 m in urban canyons).
