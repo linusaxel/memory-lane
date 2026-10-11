@@ -127,3 +127,29 @@ def test_a_stock_opening_is_written_again_and_nothing_else(monkeypatch):
     again = extract.reopened(None, None, 1, 0, memory)["summary"]
     assert again.startswith("A Beaufort car") and again.endswith("Nobody had tried.")
     assert extract.reopened(None, None, 1, 0, memory) == memory, "the rest must stay word for word"
+
+
+def test_a_hedge_is_written_out_and_a_rewrite_that_keeps_it_is_refused(monkeypatch):
+    from pipeline import extract
+
+    story = "A cinema stood here; whether anything of it is left is not known. Spies sat in it."
+    replies = iter(
+        [
+            '{"summary": "A cinema stood here, and nothing of it is not known. Spies sat in it."}',
+            '{"summary": "A cinema stood here. Spies sat in it."}',
+        ]
+    )
+    asked = []
+    monkeypatch.setattr(
+        extract, "_stored_request", lambda *a, **k: asked.append(a[5]) or next(replies)
+    )
+    memory = {"summary": story}
+    assert extract.mended(None, None, 1, 0, memory) == memory, "still hedging"
+    assert (
+        extract.mended(None, None, 1, 0, memory)["summary"]
+        == "A cinema stood here. Spies sat in it."
+    )
+    assert asked[0].startswith("Fault: say only what is known")
+    assert extract.mended(None, None, 1, 0, {"summary": "Spies sat in it."}) == {
+        "summary": "Spies sat in it."
+    }

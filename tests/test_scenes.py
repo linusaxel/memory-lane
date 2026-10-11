@@ -208,3 +208,40 @@ def test_a_spot_whose_fate_is_unknown_tells_the_writer_nothing_of_it():
     entry = {"today": "Howitzvej", "address": None, "old_name": "3 Falke Bio", "what": ""}
     assert "Now: gone." in spot_card(entry | {"standing": "no"})
     assert "Now" not in spot_card(entry | {"standing": "unknown"})
+
+
+def test_a_card_that_hedges_is_written_once_more_told_to_fix_it(monkeypatch):
+    from pipeline import scenes
+
+    entry = {
+        "today": "Howitzvej",
+        "address": None,
+        "old_name": "",
+        "what": "",
+        "standing": "unknown",
+    }
+    sheet = {
+        "where": entry,
+        "who": [],
+        "what": [],
+        "said": [],
+        "context": [],
+        "excerpt": {"text": ""},
+    }
+    cards = iter(
+        [
+            {
+                "summary": "Spies bought a seat for his stick; it is not known if it stands.",
+                "quote": None,
+            },
+            {"summary": "Spies bought a seat for his stick.", "quote": None},
+        ]
+    )
+    notes = []
+    monkeypatch.setattr(
+        scenes, "write", lambda *a: notes.append(a[-1] if len(a) > 5 else "") or next(cards)
+    )
+    monkeypatch.setattr(scenes.extract, "unsupported", lambda *a: [])
+    card = scenes.render(None, None, 1, "ctx", sheet, set())
+    assert card["summary"] == "Spies bought a seat for his stick."
+    assert notes[1].startswith("Fix: say only what is known")

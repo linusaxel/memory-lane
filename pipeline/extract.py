@@ -907,6 +907,11 @@ word for word, in its order and paragraphs.
 Before: "This is the bridge where a swan nested in 1971. Traffic stopped for a week."
 After: "A swan nested on the bridge in 1971. Traffic stopped for a week.\""""
 
+MEND_PROMPT = """The text is a story told at a place, and it has a fault the user names.
+Write again only the sentences that have it, so they no longer do; keep every
+other sentence word for word, in its order and paragraphs. Use the same facts
+and nothing new. A sentence that is only the fault is left out."""
+
 TRIM_SCHEMA = {
     "type": "object",
     "properties": {"summary": {"type": "string"}},
@@ -1011,8 +1016,9 @@ def reopened(session, client, content_id, chunk_index, memory: dict) -> dict:
 
 
 def checked(session, client, content_id, chunk_index, chunk, context, memory: dict) -> dict:
-    """The memory with what its chunk doesn't say cut from the summary, and a
-    stock opening written again (`reopened`).
+    """The memory with what its chunk doesn't say cut from the summary, a
+    stock opening written again (`reopened`), and a hedge or the source's
+    voice written out (`mended`).
 
     A longer summary is where invention creeps in, and a prompt rule against
     it was not enough (docs/04, *A longer card*). Only a memory that passed
@@ -1023,7 +1029,30 @@ def checked(session, client, content_id, chunk_index, chunk, context, memory: di
     if memory.get("spot_test") != "pass" or not memory.get("summary"):
         return memory
     memory = _trimmed(session, client, content_id, chunk_index, chunk, context, memory)
-    return reopened(session, client, content_id, chunk_index, memory)
+    memory = reopened(session, client, content_id, chunk_index, memory)
+    return mended(session, client, content_id, chunk_index, memory)
+
+
+def mended(session, client, content_id, chunk_index, memory: dict) -> dict:
+    """The memory with a hedge or the source's voice written out of it; as it
+    was when the rewrite still has it, or grew."""
+    from pipeline.quality import faults  # quality imports this module
+
+    summary = memory.get("summary") or ""
+    if not (fixes := faults(summary)):
+        return memory
+    user = f"Fault: {'; '.join(fixes)}.\n\n{summary}"
+    raw = _stored_request(session, client, content_id, chunk_index, MEND_PROMPT, user, TRIM_SCHEMA)
+    try:
+        again = json.loads(raw)["summary"].strip() if raw else ""
+    except (
+        ValueError,
+        KeyError,
+    ):
+        again = ""
+    if not again or faults(again) or len(again) > len(summary):
+        return memory
+    return {**memory, "summary": again}
 
 
 def _trimmed(session, client, content_id, chunk_index, chunk, context, memory: dict) -> dict:

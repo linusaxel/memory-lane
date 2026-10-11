@@ -31,6 +31,7 @@ from sqlalchemy import text
 from pipeline import extract, geocode, tasks
 from pipeline.config import ANTHROPIC_API_KEY, LAUNCH_BBOX
 from pipeline.db import get_session
+from pipeline.quality import faults
 from pipeline.tags import TAGS
 
 INDEX_PROMPT = """You read a whole memoir about Copenhagen and write the index that a
@@ -753,7 +754,8 @@ def write(session, client, cid, ctx, sheet, note=""):
 
 
 def render(session, client, cid, ctx, sheet, seen: set) -> dict | None:
-    """The card from its sheet: written, opened again if it opens stock, and
+    """The card from its sheet: written, opened again if it opens stock,
+    written again once if it hedges or talks in the source's voice, and
     checked."""
     w = write(session, client, cid, ctx, sheet)
     fault = w and opening_fault(w["summary"], seen)
@@ -761,6 +763,10 @@ def render(session, client, cid, ctx, sheet, seen: set) -> dict | None:
     if fault:
         print(f"  reopen: {fault}")
         note = f"Do not open as before: {fault}. Open with the person, the moment or a line said."
+        w = write(session, client, cid, ctx, sheet, note) or w
+    if w and (fixes := faults(w["summary"])):
+        print(f"  mend: {'; '.join(fixes)}")
+        note = f"{note}\nFix: {'; '.join(fixes)}.".strip()
         w = write(session, client, cid, ctx, sheet, note) or w
     if not w:
         return None
@@ -888,11 +894,13 @@ FROM memories m JOIN content c ON c.id = m.content_id JOIN memory_sheets ms ON m
 WHERE c.source_id = :s AND NOT m.hidden ORDER BY m.id, ms.id DESC"""
 
 
-def rerender(session, client, source_id: int, apply: bool):
-    """Every saved card of a source written again from its sheet: the book is
-    not read again, only the writer and the check bill."""
+def rerender(session, client, source_id: int, apply: bool, only: set[int] | None = None):
+    """Every saved card of a source written again from its sheet, or `only`
+    those: the book is not read again, only the writer and the check bill."""
     books: dict = {}
     for m in session.execute(text(SAVED_SHEETS), {"s": source_id}).fetchall():
+        if only is not None and m.id not in only:
+            continue
         b = book(session, client, books, m, m.content_id)
         if not b:
             continue

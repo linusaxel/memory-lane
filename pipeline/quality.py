@@ -7,6 +7,7 @@
     python -m pipeline.quality --whole [5] [--runs 2]
     python -m pipeline.quality --visible [--source-type book]
     python -m pipeline.quality --places new_prompt.txt [--source-type book]
+    python -m pipeline.quality --faults [--source ID] [--fix]
 
 Run it before and after any prompt change; extraction costs money and you get
 one shot. Baseline in docs/04-extract.md, reasoning in
@@ -41,6 +42,12 @@ same prompt, filter and judge, and prints what it keeps beside what the
 4-minute chunks kept: walks found again, failure checks, duplicates. It saves
 no memory. One extractor call per video per run plus the judge, stored at
 chunk_index -5, so a rerun is free; --runs draws again to show the noise.
+
+--faults lists the shown cards that hedge ("it is not known whether…") or talk
+in the source's voice ("the author", "the passage"): the faults new cards are
+written again for before they are saved. --fix writes each again the same way
+(bills a call or two a card) and clears its walk score: run walk_score --all
+after.
 
 --places judges a placement change: over the chunks of content holding an
 `llm` place, the ones whose baseline keeps a memory the geocoders can't place,
@@ -103,9 +110,41 @@ SOURCE_TALK = re.compile(
     re.I,
 )
 
+# What nobody knows, told to the walker: "it is not known whether it still
+# stands". The writer echoed a spot line that said so (docs/10, *Writing faults
+# are rewritten, not reported*).
+HEDGE = re.compile(
+    r"\b(not known|unknown whether|unclear (whether|if)|no one knows"
+    r"|whether (it|anything)\b.{0,30}\b(still|remains?|left))",
+    re.I,
+)
+
+# The source's voice, which the walker never met: "the author", "the passage".
+SOURCE_VOICE = re.compile(
+    r"\b(the (author|passage|narrator|speaker|video|recording|transcript)"
+    r"|this memory|who wrote (this|it)|later tellings|rare glimpse)\b",
+    re.I,
+)
+
+# These two are rewritten before a card is saved; the rest only report.
+MENDED = (
+    ("tells what is not known", HEDGE.search, "say only what is known, nothing of what is not"),
+    (
+        "the source's voice",
+        SOURCE_VOICE.search,
+        "tell the event, not the author, passage or recording",
+    ),
+)
+
+
+def faults(summary: str) -> list[str]:
+    """What the writer is asked to fix, one rewrite, before the card is saved."""
+    return [why for _, test, why in MENDED if test(summary)]
+
+
 WORD_LIMIT = 180
 
-CHECKS = (
+CHECKS = MENDED + (
     ("anonymous subject", ANONYMOUS.search, 'says "the speaker" instead of a name'),
     ("talks about talking", META.search, "reports the recording, not the event"),
     ("not past tense", NOT_PAST.search, "an announcement or a live narration"),
@@ -463,6 +502,45 @@ def _print_whole(results):
                 print(f"    {m.get('venue')}: {m.get('summary')}")
 
 
+SHOWN = """SELECT m.id, m.content_id, m.summary, c.source_id,
+       EXISTS (SELECT 1 FROM memory_sheets ms WHERE ms.memory_id = m.id) AS has_sheet
+FROM memories m JOIN content c ON c.id = m.content_id
+WHERE m.user_id IS NULL AND NOT m.hidden
+  AND (CAST(:s AS INTEGER) IS NULL OR c.source_id = :s)
+ORDER BY m.id"""
+
+# The slot a backlog mend is stored under, apart from every chunk's.
+MEND_INDEX = -6
+
+
+def mend_shown(session, client, source_id: int | None, fix: bool) -> None:
+    """Print the shown cards `faults` names; with `fix`, write each again, a
+    scene-first card from its sheet and any other through `extract.mended`,
+    and clear its walk score so `walk_score --all` scores the new text."""
+    from pipeline import extract, scenes
+
+    rows = [r for r in session.execute(text(SHOWN), {"s": source_id}) if faults(r.summary)]
+    for r in rows:
+        print(f"[{r.id}] source {r.source_id}: {'; '.join(faults(r.summary))}\n  {r.summary[:160]}")
+    print(f"{len(rows)} cards with faults")
+    if not fix:
+        return
+    by_source: dict[int, set[int]] = {}
+    for r in rows:
+        if r.has_sheet:
+            by_source.setdefault(r.source_id, set()).add(r.id)
+            continue
+        again = extract.mended(session, client, r.content_id, MEND_INDEX, {"summary": r.summary})
+        if again["summary"] != r.summary:
+            session.execute(
+                text("UPDATE memories SET summary = :s, walk_score = NULL WHERE id = :id"),
+                {"s": again["summary"], "id": r.id},
+            )
+    session.commit()
+    for sid, ids in by_source.items():
+        scenes.rerender(session, client, sid, True, only=ids)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compare", metavar="PROMPT_FILE", help="a candidate system prompt")
@@ -489,7 +567,17 @@ def main():
     parser.add_argument(
         "--score", action="store_true", help="--compare: walk rubric and faithfulness (bills)"
     )
+    parser.add_argument(
+        "--faults", action="store_true", help="shown cards that hedge or talk in the source's voice"
+    )
+    parser.add_argument("--fix", action="store_true", help="--faults: write them again (bills)")
     args = parser.parse_args()
+
+    if args.faults:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if args.fix else None
+        with get_session() as session:
+            mend_shown(session, client, args.source, args.fix)
+        return
 
     if args.places:
         with open(args.places) as f:

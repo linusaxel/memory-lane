@@ -33,6 +33,8 @@ def counts(*summaries):
 
 def test_the_good_shape_trips_nothing():
     assert counts(GOOD) == {
+        "tells what is not known": 0,
+        "the source's voice": 0,
         "anonymous subject": 0,
         "talks about talking": 0,
         "not past tense": 0,
@@ -274,3 +276,22 @@ def test_an_unreadable_venue_reply_changes_nothing():
 
     memories = [{"venue": "Maskot"}, {"venue": "Mexibar"}]
     assert one_name_per_venue(_replying("not json"), None, 1, memories) == memories
+
+
+# Verbatim from the live corpus, 2026-10-11: the writer echoed "not known if still there".
+HEDGE_REAL = (
+    "A McDonald's once stood on Nørrebrogade, and it is not known whether it is still there. "
+    "On New Year's Eve 1994, only just opened, it was vandalised."
+)
+VOICE_REAL = "The author remembered the lamb over the door from his first visit."
+
+
+def test_a_hedge_and_the_sources_voice_are_faults_and_a_clean_card_is_not():
+    from pipeline.quality import faults
+
+    assert faults(HEDGE_REAL) == ["say only what is known, nothing of what is not"]
+    assert faults("Whether anything of it is left is not known.")
+    assert faults(VOICE_REAL) == ["tell the event, not the author, passage or recording"]
+    assert (
+        faults("Andersen, fourteen, circled the theatre; the seller thought he was mocked.") == []
+    )
