@@ -696,6 +696,36 @@ Each waits on something named; none is worth building before it.
       `celebrity`, `theater`, `festival` (15 rows) predate the filter;
       `tags.clean()` drops them on write but nothing remaps the old rows. Map
       them if a theme ever needs them.
+- [ ] **A map that carries the brand.** (checked 2026-10-11) Waits on
+      wanting the map itself on-brand (paper tones, Gloock street names);
+      muted Apple Maps is the default developers back for a story-walk app.
+      Apple Maps' ceiling: map types, dark mode, points of interest, tint. No
+      colours, fonts or label control, and only raster tiles
+      (`UrlTile shouldReplaceMapContent`). Cheap step first: a translucent
+      world `Polygon` as a paper wash. If that falls short:
+      1. **Spike for a day** in a worktree: the walk screen on
+         `@maplibre/maplibre-react-native` (v11, New Architecture only, one
+         maintainer, needs a dev build). Judge it on a real phone: fling,
+         pinch and label feel are what migrations lose, not features.
+      2. **Tiles:** a Protomaps PMTiles extract on Cloudflare R2 ($0-12 a
+         month). MapTiler's and Stadia's free tiers are non-commercial;
+         OpenFreeMap is one person with no SLA, so use it for the spike only.
+      3. **The port is a rewrite of the map screen**, about 3-5 days. It
+         touches `App.tsx` (the `MapView` and its camera calls),
+         `MemoryMarker.tsx`, `RouteLine.tsx` and `useMapCamera.ts`. The
+         camera is the hard part: MapLibre's is declarative and zoom-based,
+         not region-based. The ring becomes a GeoJSON polygon.
+         `patches/react-native-maps+1.29.8.patch` goes, because `belowLayerID`
+         and `line-trim-offset` are built in.
+      4. **Costs on top:** glyph PBFs for Gloock (MapLibre Native can't use
+         local fonts), a dark style to maintain, VoiceOver that MapKit gave
+         for free, and a tile host in the privacy policy.
+      No adapter layer in the meantime. Map wrappers leak at the camera
+      (Mapstraction, react-native-maps' own providers); keeping map code in
+      those four files is the portability that pays. Teardown: Komoot,
+      Bikemap and Felt run MapLibre on their own tiles; Zenly and Pedometer++
+      left MapKit for creative control; Wikipedia iOS stayed for
+      accessibility.
 
 ---
 
