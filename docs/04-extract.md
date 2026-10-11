@@ -1064,7 +1064,13 @@ about half of them.
 
 `python -m pipeline.scenes --source <id> --render` writes a book's saved cards
 again from their sheets alone, and prints before and after. `--apply` stores
-them. Only the writer and the check bill.
+them. Only the writer and the check bill. `python -m pipeline.batch --render
+<id> --run` does the same at half price (2026-10-11).
+
+A text window (Wikipedia, a PDF, a web page) goes the same way with `batch
+--scenes`. It has no book to index, so `source` is filled by code from the
+content row (title, credit, "encyclopedia article"), with no author and no
+`why_care`.
 
 ### Wikipedia moments, and three fixes, 2026-10-10
 

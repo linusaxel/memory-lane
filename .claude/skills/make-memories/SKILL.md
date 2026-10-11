@@ -111,6 +111,10 @@ with `run_in_background` and wait for the notification. Don't poll.
 venv/bin/python -m pipeline.batch --source "<exact name>" --run
 ```
 
+A book goes scene-first with fact sheets on its own; add `--scenes` for any
+other text (Wikipedia, PDFs, pages), so its cards can be written again from
+their sheets with `batch --render <source id> --run`.
+
 A batch takes minutes to hours, and each pass polls every 30 s. If it exits
 with "stored nothing", stop and report. Don't retry.
 

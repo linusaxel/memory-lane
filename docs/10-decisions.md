@@ -4289,6 +4289,13 @@ extracted: `python -m pipeline.scenes --source <id> --save`.
   retelling. Video and press keep their memories as they are, re-scored only.
 - **Not in batch yet.** Full price, about $0.22 a window. Wire it into
   `batch.py` before the first large new book source.
+- **In batch, 2026-10-11.** `pipeline.batch` sends every book window
+  scene-first, at half price, and any other text window with `--scenes`, so
+  a Wikipedia or PDF card gets a sheet it can be written again from.
+  `batch --render <source id>` batches the replay. A text window has no index
+  and no `<before>`; its source note is built from its own row, and the
+  prompts name what it is ("an encyclopedia article"), a book's left byte for
+  byte so its stored replies still hit.
 
 **Options considered:** deleting a book's old memories before re-extracting
 (loses a good old card the new pass misses); a version column on memories

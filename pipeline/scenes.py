@@ -13,7 +13,10 @@ Every call is stored like a chunk, so a rerun is free. Prints the cards;
 retelling check) with their sheet in `memory_sheets`, marks each window
 extracted, one commit a window, and runs `tasks.after_save`. --render writes
 saved cards again from their sheets alone (docs/04, *The fact sheet*).
-Not yet in batch: full price, no worth-telling judge.
+`pipeline.batch` runs the same steps at half price (`extract_windows`, and
+`--render`): books always, any other text window with `--scenes`. A text
+window has no index and its source note comes from its own row. No
+worth-telling judge.
 """
 
 import argparse
@@ -499,7 +502,20 @@ def book_text(session, source_id: int) -> str:
     return "\n\n".join(r.full_text for r in rows)
 
 
-def index_for(session, client, source_id: int, name: str) -> dict:
+def waiting(cid: int) -> bool:
+    """A batch pass collected a call this window needs: it is not done, only waiting."""
+    return extract.COLLECT is not None and cid in extract.COLLECT.stage
+
+
+def wait_on(cid: int, raw, prompt: str):
+    """The book's calls are stored under its first window: hold this one too, as
+    `extract.book_brief` does."""
+    if raw is None and extract.COLLECT is not None:
+        extract.COLLECT.stage.setdefault(cid, prompt)
+    return json.loads(raw) if raw else None
+
+
+def index_for(session, client, source_id: int, name: str, cid: int) -> dict | None:
     first = session.execute(
         text("SELECT min(id) FROM content WHERE source_id = :s"), {"s": source_id}
     ).scalar()
@@ -507,10 +523,12 @@ def index_for(session, client, source_id: int, name: str) -> dict:
     raw = extract._stored_request(
         session, client, first, -10, INDEX_PROMPT, user, INDEX_SCHEMA, max_tokens=16000
     )
-    return json.loads(raw)
+    return wait_on(cid, raw, INDEX_PROMPT)
 
 
 def index_text(idx: dict) -> str:
+    if not (idx["people"] or idx["places"]):
+        return ""
     people = "\n".join(f"- {p['name']}: {p['role']}" for p in idx["people"])
     places = "\n".join(
         f"- {p['old_name']}: {p['what']}; today: {p['today']} ({p['standing']})"
@@ -519,7 +537,7 @@ def index_text(idx: dict) -> str:
     return f"<index>\nPeople:\n{people}\n\nPlaces:\n{places}\n</index>\n"
 
 
-def about_source(session, client, source_id: int, name: str, idx: dict) -> dict:
+def about_source(session, client, source_id: int, name: str, idx: dict, cid: int) -> dict | None:
     """Who wrote the book and why their word is worth having, once a book."""
     first = session.execute(
         text("""SELECT t.full_text FROM content c JOIN transcripts t ON t.content_id = c.id
@@ -534,7 +552,37 @@ def about_source(session, client, source_id: int, name: str, idx: dict) -> dict:
     raw = extract._stored_request(
         session, client, first_id, -11, SOURCE_PROMPT, user, SOURCE_SCHEMA
     )
-    return json.loads(raw)
+    return wait_on(cid, raw, SOURCE_PROMPT)
+
+
+NO_INDEX = {"people": [], "places": []}
+TEXT_KIND = {"encyclopedia": "an encyclopedia article"}
+
+
+def text_kind(source_type: str) -> str:
+    return TEXT_KIND.get(source_type, "a text")
+
+
+def worded(prompt: str, source_type: str) -> str:
+    """A book's prompt byte for byte, so its stored replies still hit; for any
+    other text the same prompt, about what it is."""
+    if source_type == "book":
+        return prompt
+    return prompt.replace("a memoir about Copenhagen", f"{text_kind(source_type)} about Copenhagen")
+
+
+def text_source(r) -> dict:
+    """A text window's source note, from its own row: no opening to read."""
+    return {
+        "title": r.title,
+        "author": r.source_name,
+        "author_life": None,
+        "author_role": None,
+        "kind": text_kind(r.source_type).split(" ", 1)[1],
+        "written": None,
+        "covers": None,
+        "why_care": "",
+    }
 
 
 def source_line(src: dict) -> str:
@@ -543,7 +591,7 @@ def source_line(src: dict) -> str:
     return f"{src['title']} ({src['kind']}{written}), by {who}. {src['why_care']}"
 
 
-def find(session, client, cid: int, chunk: str, prior: str, ctx: str) -> list[dict]:
+def find(session, client, cid, chunk, prior, ctx, source_type="book") -> list[dict]:
     """The candidates, asked again for the rest of the passage when the list
     stopped short: two windows came back with one candidate from their first
     page and nothing after it (docs/04, *Scene-first, before it ships*)."""
@@ -552,7 +600,15 @@ def find(session, client, cid: int, chunk: str, prior: str, ctx: str) -> list[di
         lead = f"<before>\n{prior}\n</before>\n\n" if prior and part == 0 else ""
         user = f"{lead}Passage:\n\n{passage}"
         raw = extract._stored_request(
-            session, client, cid, part, FIND_PROMPT, user, FIND_SCHEMA, ctx, max_tokens=6000
+            session,
+            client,
+            cid,
+            part,
+            worded(FIND_PROMPT, source_type),
+            user,
+            FIND_SCHEMA,
+            ctx,
+            max_tokens=6000,
         )
         return json.loads(raw)["scenes"] if raw else []
 
@@ -595,15 +651,18 @@ def spot_card(entry: dict) -> str:
     )
 
 
-def make_sheet(session, client, cid, ctx, passage, prior, sc, entry, hit, src) -> dict | None:
+def make_sheet(
+    session, client, cid, ctx, passage, prior, sc, entry, hit, src, source_type="book"
+) -> dict | None:
     """The scene's fact sheet: the model's claims, kept only where code finds
     their quote; the spot, the excerpt and the book from code."""
     user = (
         f'{spot_card(entry)}\nThe scene runs from "{sc["start"]}" to "{sc["end"]}": '
         f"{sc['what_happens']}\n\nPassage:\n\n{passage}"
     )
+    prompt = worded(SHEET_PROMPT, source_type)
     raw = extract._stored_request(
-        session, client, cid, 0, SHEET_PROMPT, user, SHEET_SCHEMA, ctx, max_tokens=6000
+        session, client, cid, 0, prompt, user, SHEET_SCHEMA, ctx, max_tokens=6000
     )
     if not raw:
         return None
@@ -618,7 +677,7 @@ def make_sheet(session, client, cid, ctx, passage, prior, sc, entry, hit, src) -
         "schema_version": SHEET_VERSION,
         "made": {
             "model": extract.EXTRACTION_MODEL,
-            "prompt_sha": hashlib.sha256(SHEET_PROMPT.encode()).hexdigest()[:12],
+            "prompt_sha": hashlib.sha256(prompt.encode()).hexdigest()[:12],
         },
         "source": src,
         "passage": {
@@ -707,31 +766,39 @@ def render(session, client, cid, ctx, sheet, seen: set) -> dict | None:
     return {"summary": summary, "quote": w["quote"]} if summary else None
 
 
-def book(session, client, books: dict, source_id: int, name: str) -> dict:
-    if source_id not in books:
-        idx = index_for(session, client, source_id, name)
-        books[source_id] = {
-            "index": idx,
-            "source": about_source(session, client, source_id, name, idx),
-            "seen": set(),
-        }
-    return books[source_id]
+def book(session, client, books: dict, r, cid: int) -> dict | None:
+    """The book's index and source note, paid for once a book; None while a
+    batch waits on them. Any other text: no index, and a note from its row."""
+    if r.source_type != "book":
+        b = books.setdefault(r.source_id, {"index": NO_INDEX, "seen": set()})
+        return {**b, "source": text_source(r)}
+    if r.source_id not in books:
+        idx = index_for(session, client, r.source_id, r.source_name, cid)
+        src = idx and about_source(session, client, r.source_id, r.source_name, idx, cid)
+        if not src:
+            return None
+        books[r.source_id] = {"index": idx, "source": src, "seen": set()}
+    return books[r.source_id]
+
+
+CONTENT_ROW = "SELECT source_id, source_name, source_type, title FROM content WHERE id = :c"
 
 
 def cards(session, client, cid: int, books: dict) -> list[dict]:
-    r = session.execute(
-        text("SELECT source_id, source_name, title FROM content WHERE id = :c"), {"c": cid}
-    ).one()
+    r = session.execute(text(CONTENT_ROW), {"c": cid}).one()
     chunk = session.execute(
         text("SELECT full_text FROM transcripts WHERE content_id = :c"), {"c": cid}
     ).scalar()
-    b = book(session, client, books, r.source_id, r.source_name)
+    b = book(session, client, books, r, cid)
+    if not b:
+        return []
     ctx = extract.source_context(r.source_name, r.title) + index_text(b["index"])
-    prior = before(session, r.source_id, cid)
+    # A title set's windows in id order are different articles.
+    prior = before(session, r.source_id, cid) if r.source_type == "book" else ""
     passage = f"{prior}\n\n{chunk}" if prior else chunk
 
     out = []
-    for sc in find(session, client, cid, chunk, prior, ctx):
+    for sc in find(session, client, cid, chunk, prior, ctx, r.source_type):
         tag = f"[{sc['place_use']}/{sc['shape']}/turn={sc['turn']}] {sc['what_happens']}"
         entry, hit = resolve(sc, b["index"]) if kept(sc, passage) else (None, None)
         if not entry:
@@ -744,7 +811,9 @@ def cards(session, client, cid: int, books: dict) -> list[dict]:
             print(f"  drop, outside the launch area: {entry['today']}")
             continue
         print(f"  keep  {tag} -> {entry['today']} ({hit[3]})")
-        sheet = make_sheet(session, client, cid, ctx, passage, prior, sc, entry, hit, b["source"])
+        sheet = make_sheet(
+            session, client, cid, ctx, passage, prior, sc, entry, hit, b["source"], r.source_type
+        )
         if not sheet or not sheet["what"]:
             print("  drop, no fact on the sheet found in the text")
             continue
@@ -811,7 +880,7 @@ def faithful(session, client, cid, ctx, sheet, summary: str, note: str) -> str |
 
 
 SAVED_SHEETS = """SELECT DISTINCT ON (m.id) m.id, m.content_id, m.summary, ms.sheet,
-       c.source_name, c.title
+       c.source_id, c.source_name, c.source_type, c.title
 FROM memories m JOIN content c ON c.id = m.content_id JOIN memory_sheets ms ON ms.memory_id = m.id
 WHERE c.source_id = :s AND NOT m.hidden ORDER BY m.id, ms.id DESC"""
 
@@ -821,7 +890,9 @@ def rerender(session, client, source_id: int, apply: bool):
     not read again, only the writer and the check bill."""
     books: dict = {}
     for m in session.execute(text(SAVED_SHEETS), {"s": source_id}).fetchall():
-        b = book(session, client, books, source_id, m.source_name)
+        b = book(session, client, books, m, m.content_id)
+        if not b:
+            continue
         ctx = extract.source_context(m.source_name, m.title) + index_text(b["index"])
         card = render(session, client, m.content_id, ctx, m.sheet, b["seen"])
         print(f"######## memory {m.id}\n--- before\n{m.summary}\n--- after")
@@ -832,6 +903,34 @@ def rerender(session, client, source_id: int, apply: bool):
                 {"s": card["summary"], "q": card["quote"], "id": m.id},
             )
     session.commit()
+
+
+def save(session, client, cid: int, found: list[dict]) -> None:
+    extract.save_memories(session, cid, found, extract.layer_for("book"), client)
+    session.execute(
+        text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": cid}
+    )
+    session.commit()
+
+
+def extract_windows(client, ids: list[int]) -> None:
+    """One batch pass over these windows: each is saved on the pass where it
+    waits on nothing, as `extract.extract_all_pending` does (docs/10,
+    *Extraction is batched*)."""
+    books: dict = {}
+    with get_session() as s:
+        for cid in s.execute(
+            text(
+                "SELECT id FROM content WHERE id = ANY(:ids) AND NOT memories_extracted ORDER BY id"
+            ),
+            {"ids": ids},
+        ).scalars():
+            print(f"######## {cid}", flush=True)
+            found = cards(s, client, cid, books)
+            if waiting(cid):
+                s.rollback()
+                continue
+            save(s, client, cid, found)
 
 
 def main():
@@ -859,11 +958,7 @@ def main():
             for c in found:
                 print(f"--- {c['place']} ({len(c['summary'].split())}w)\n{c['summary']}\n")
             if args.save:
-                extract.save_memories(s, cid, found, extract.layer_for("book"), client)
-                s.execute(
-                    text("UPDATE content SET memories_extracted = TRUE WHERE id = :id"), {"id": cid}
-                )
-                s.commit()
+                save(s, client, cid, found)
                 tasks.after_save(client, cid)
 
 

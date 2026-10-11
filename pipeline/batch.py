@@ -17,6 +17,11 @@ aggregation gives it (`tasks.after_save`, sent as it comes, at full price).
 A batch usually ends within the hour, at most 24, so a run is a handful of
 passes. There is no Haiku pre-filter: every chunk goes to the extractor, at
 half price. docs/10, *Extraction is batched*.
+
+A book goes scene-first (`scenes.extract_windows`), and so does any text with
+`--scenes`: the same passes, so every card's fact sheet is made at half price.
+`--render <source id>` writes a source's saved cards again from their sheets,
+the writer and the check batched, then stored with `--apply`.
 """
 
 import argparse
@@ -33,9 +38,10 @@ from pipeline.extract import Collect, log_cache, pending_query, reply_text, stor
 logger = logging.getLogger(__name__)
 
 POLL_SECONDS = 30
-# Brief, chunks, judge, check, trim and one per retelling in a row: a content
-# that needs more is stuck, not slow.
-MAX_PASSES = 12
+# Brief, chunks, judge, check, trim and one per retelling in a row; scene-first
+# adds the book's index and note, the finder's second ask, the sheet and two
+# rewrites, each one a check. A content that needs more is stuck, not slow.
+MAX_PASSES = 20
 
 
 def chosen(session, content_ids: list[int] | None, source: str | None) -> list[int]:
@@ -130,11 +136,20 @@ def passes(client, step) -> str | None:
     return f"Still waiting after {MAX_PASSES} passes"
 
 
-def run(client, content_ids: list[int]) -> None:
+def run(client, content_ids: list[int], scene_first: bool = False) -> None:
+    from pipeline import scenes
     from pipeline.enrich import enrich_memories
     from pipeline.tasks import _thin, after_save, seeded
 
     funnel = {}
+    with get_session() as session:
+        books = set(
+            session.execute(
+                text("SELECT id FROM content WHERE id = ANY(:ids) AND source_type = 'book'"),
+                {"ids": content_ids},
+            ).scalars()
+        )
+    by_scene = set(content_ids) if scene_first else books
 
     def extraction(collect: Collect) -> None:
         with get_session() as session:
@@ -149,8 +164,11 @@ def run(client, content_ids: list[int]) -> None:
                 if row.segments and _thin(row.source_type, row.segments):
                     seeded(session, client, row.id, row.title, row.segments)
         # A thin record still waiting on its research is not extracted without it.
-        if ready := [i for i in content_ids if i not in collect.stage]:
-            extract.extract_all_pending(ready)
+        ready = [i for i in content_ids if i not in collect.stage]
+        if old := [i for i in ready if i not in by_scene]:
+            extract.extract_all_pending(old)
+        if scene := [i for i in ready if i in by_scene]:
+            scenes.extract_windows(client, scene)
         # Every pass replays every content; the last one it got through counts.
         funnel.update(collect.funnel)
 
@@ -181,6 +199,21 @@ def run(client, content_ids: list[int]) -> None:
         raise SystemExit(stopped)
 
 
+def render(client, source_id: int, apply: bool) -> None:
+    """Every saved card of a source written again from its sheet: the passes
+    batch the writer and the check, the last run reads them all back."""
+    from pipeline import scenes
+
+    def step(collect: Collect) -> None:
+        with get_session() as session:
+            scenes.rerender(session, client, source_id, False)
+
+    if stopped := passes(client, step):
+        raise SystemExit(stopped)
+    with get_session() as session:
+        scenes.rerender(session, client, source_id, apply)
+
+
 def print_funnel(funnel: dict[int, dict]) -> None:
     """One line per content: how many each step kept. Placing drops the rest
     (the city as venue, outside the launch area, a retelling), each logged."""
@@ -206,7 +239,14 @@ def main():
     parser.add_argument("--content", type=int, nargs="+", help="content ids")
     parser.add_argument("--source", help="every pending content of one source, by name")
     parser.add_argument("--run", action="store_true", help="send the batches; bills")
+    parser.add_argument("--scenes", action="store_true", help="scene-first with fact sheets")
+    parser.add_argument("--render", type=int, metavar="SOURCE_ID", help="cards again from sheets")
+    parser.add_argument("--apply", action="store_true", help="with --render, store the new cards")
     args = parser.parse_args()
+    if args.render:
+        if args.run:
+            render(anthropic.Anthropic(api_key=ANTHROPIC_API_KEY), args.render, args.apply)
+        return
     if not (args.content or args.source):
         parser.error("choose --content or --source: a batch never takes everything pending")
     with get_session() as session:
@@ -218,7 +258,7 @@ def main():
         raise SystemExit("Some chosen contents are not pending; drop them or fix them first")
     print(f"{len(ids)} pending: {ids[:20]}{' ...' if len(ids) > 20 else ''}")
     if args.run and ids:
-        run(anthropic.Anthropic(api_key=ANTHROPIC_API_KEY), ids)
+        run(anthropic.Anthropic(api_key=ANTHROPIC_API_KEY), ids, args.scenes)
 
 
 if __name__ == "__main__":

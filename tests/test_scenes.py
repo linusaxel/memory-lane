@@ -176,3 +176,27 @@ def test_render_writes_from_the_sheet_alone(monkeypatch):
     card = scenes.render(None, None, 1, "", sheet, set())
     assert card["summary"].startswith("Brodtkorb")
     assert "Minen sprang." in sent[0] and "A mine went off" in sent[0]
+
+
+def test_a_book_waits_on_its_index_and_a_text_needs_none(monkeypatch):
+    from types import SimpleNamespace
+
+    from pipeline.extract import Collect
+
+    monkeypatch.setattr(scenes.extract, "COLLECT", Collect())
+    monkeypatch.setattr(
+        scenes, "index_for", lambda s, c, sid, n, cid: scenes.wait_on(cid, None, "i")
+    )
+    books = {}
+    memoir = SimpleNamespace(source_id=7, source_name="B", source_type="book", title="t")
+    assert scenes.book(None, None, books, memoir, 42) is None
+    assert scenes.waiting(42) and 7 not in books
+
+    monkeypatch.setattr(scenes, "index_for", lambda *a: pytest.fail("a text has no index"))
+    article = SimpleNamespace(
+        source_id=8, source_name="Wikipedia", source_type="encyclopedia", title="Allotria-huset"
+    )
+    b = scenes.book(None, None, books, article, 43)
+    assert b["index"] == scenes.NO_INDEX and b["source"]["title"] == "Allotria-huset"
+    assert scenes.worded(scenes.FIND_PROMPT, "book") is scenes.FIND_PROMPT
+    assert "an encyclopedia article about" in scenes.worded(scenes.FIND_PROMPT, "encyclopedia")

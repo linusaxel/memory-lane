@@ -331,8 +331,10 @@ Under about 0.3 pass rate: reject with a note.
 
 ```bash
 venv/bin/python -m pipeline.sources set <id> trial
-# A book: scene-first with fact sheets (docs/10, *Scene-first is the book path*)
-venv/bin/python -m pipeline.scenes <content_id>... --save   # about $0.22 a window
+# A book: scene-first with fact sheets, at half price (docs/10, *Scene-first is the book path*)
+venv/bin/python -m pipeline.batch --content <content_id>... --run
+# Text windows (Wikipedia, PDFs, pages): the same, with sheets
+venv/bin/python -m pipeline.batch --content <content_id>... --scenes --run
 # Anything else: one item; never pipeline.extract
 venv/bin/python -m pipeline.enqueue --video <content_id>
 venv/bin/python -m pipeline.worker --burst
