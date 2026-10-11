@@ -57,7 +57,8 @@ delete an entry when its fix lands.
 - **A change to `mobile/app.json` leaves e2e on INFRA for the next
   session.** 2026-10-09: the privacy commit touched it and the next
   `./e2e/run.sh` stopped until a hand `expo prebuild --clean` and `pod
-  install`. Fix: run.sh prebuilds itself when its stamp is stale.
+  install`. Again 2026-10-11 after 8b70bba (about 10 min lost, plus a
+  `--build` rerun). Fix: run.sh prebuilds itself when its stamp is stale.
 
 - **Explicit-path commits still carry other sessions' hunks.** 2026-10-09:
   a parallel session's `git commit docs/10-decisions.md` took another's

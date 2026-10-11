@@ -3589,8 +3589,8 @@ B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
   once subscribed. Shared cards and the embed set Gloock and Newsreader too.
 - **Sign-in and the crash screen.** Sign-in is the tile with a soft shadow,
   the name in Gloock at the splash's size, and the line in Newsreader italic.
-  A render error shows a locket sprung open in line, the diamond rule and Try
-  again, and hides the splash itself, since a crash before `StartupLogo`
+  A render error shows a locket sprung open in line (**Superseded 2026-10-11**
+  by *The fir guardian, at the edges*), the diamond rule and Try again, and hides the splash itself, since a crash before `StartupLogo`
   mounts would otherwise leave it up.
 - **Writing.** The byline is three chips (who, When ▾, the street in gold)
   over the diamond rule, and a `>` block is set as the sheet's pull quote, so
@@ -4485,6 +4485,41 @@ them a good memory costs about $0.16, not $0.55.
 **Options considered:** research only cards at `walk_score >= 6` (scoring
 first, still paying for data no one sees); fewer searches a card (thinner,
 still unserved).
+
+### The fir guardian, at the edges
+
+Status: Accepted 2026-10-11. The founder picked a mascot: a small creature in a
+cloak of fir branches, two golden dot eyes and stubby feet, generated in Figma
+and cut into three poses (front, curious, sleepy). No locket on it and no
+Danish costume: the locket already is the pin and the unlock.
+
+It goes only where the app is otherwise empty or waiting: an empty journal tab
+(curious, in place of the diamond rule), the walked-out and no-walk planner
+card (sleepy), sign-in (front, under the line) and the crash screen (sleepy,
+in place of the sprung locket). Never beside a memory, on the unlock, or
+cheering a streak.
+
+Why there and nowhere else:
+
+- No study shows a mascot raises app retention. Duolingo's measured gains
+  are its streak and reminder mechanics, not the owl.
+- A humanlike helper inside the core loop made games less fun by taking
+  away control (Kim, Chen & Zhang, *JCR* 2016, six experiments). A
+  humanized agent beside sensitive personal content backfired (Puzakova et
+  al., *IJA*). Cuteness blunts serious messages (*APJML* 2023). So it is
+  faceless bar the eyes, has no hands, and stays out of the walk.
+- What has evidence is a recurring character over time (System1 on the IPA
+  databank: 37% likelier share gain, correlational). The edges are where
+  it recurs.
+
+It is a character, not an ornament: the diamond rule stays the one ornament
+on every other surface. The dark version is the light drawing with a 3 px
+moss rim (`#5E8F6E`), since the plum-black body vanishes on dark paper. A
+second generation would have drifted off-model.
+
+**Options considered:** a locket mascot (too much locket); a cultural spirit
+(not wanted); a companion that guides the walk (the evidence above); hiding it
+in dark mode.
 
 ### Rejected approaches, do not retry
 

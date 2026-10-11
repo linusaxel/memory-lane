@@ -34,6 +34,7 @@ import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
+import Guardian from './Guardian.tsx';
 import { distance, walkDate } from './format.ts';
 import { locketOf } from './lockets.ts';
 import { ERAS } from './route.ts';
@@ -297,6 +298,7 @@ export function Preview({
   if (walkedOut) {
     return (
       <GlassCard style={styles.card}>
+        <Guardian pose="sleepy" size={88} />
         <Text style={styles.cardTitle}>Today's walk is done</Text>
         <Text style={styles.cardBody}>
           There's another tomorrow. Or get Plus for as many as you like.
@@ -436,9 +438,15 @@ export function Preview({
               style={styles.cardBody}
             >{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
           ) : (
-            <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
-              {count == null ? 'Finding a walk…' : `No walk within ${WALK_KM.max} km from here.`}
-            </Text>
+            <View style={styles.noWalk}>
+              {count != null && <Guardian pose="sleepy" size={56} />}
+              <Text
+                style={[styles.cardBody, styles.grow]}
+                testID={count === 0 ? 'no-walk' : undefined}
+              >
+                {count == null ? 'Finding a walk…' : `No walk within ${WALK_KM.max} km from here.`}
+              </Text>
+            </View>
           )}
         </View>
         {found && (
@@ -914,6 +922,7 @@ const styles = StyleSheet.create({
   cardBody: { ...font.prose, fontSize: 16, lineHeight: 25, color: color.inkSoft },
   from: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   grow: { flex: 1 },
+  noWalk: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   badge: {
     backgroundColor: metal.light,
     borderRadius: radius.pill,
