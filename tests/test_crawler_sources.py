@@ -182,6 +182,18 @@ def test_pdf_links_can_pick_issue_pages_to_hop_through():
     ]
 
 
+def test_an_old_homepage_without_paragraphs_reads_as_all_its_text_but_its_style():
+    old = "<style>body { color: red }</style><font>Vi boede i Saxogade.<br>Skolen lå i Matthæusgade.</font><p>Menu</p>"
+    assert webpages.page_text(old) == "Vi boede i Saxogade.\n\nSkolen lå i Matthæusgade.\n\nMenu"
+    article = "<nav>Forside</nav><p>Le Carrousel lå på Axeltorv ved Vesterport Station.</p>"
+    assert webpages.page_text(article) == "Le Carrousel lå på Axeltorv ved Vesterport Station."
+
+
+def test_an_old_homepage_keeps_its_letters_in_any_of_its_encodings():
+    for encoding in ("utf-8", "cp1252", "utf-16"):
+        assert webpages.decoded("Fjords Allé, Nørrebro".encode(encoding)) == "Fjords Allé, Nørrebro"
+
+
 def test_sitemap_urls_are_unescaped_once_and_filtered():
     xml = "<loc>https://x.dk/a?b=1&amp;c=2</loc><loc>https://x.dk/da/a</loc><loc>https://x.dk/a?b=1&amp;c=2</loc>"
     assert webpages.sitemap_urls(xml) == ["https://x.dk/a?b=1&c=2", "https://x.dk/da/a"]

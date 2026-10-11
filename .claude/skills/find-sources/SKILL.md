@@ -33,7 +33,7 @@ festivals', venues' and institutions' own history pages and news archives.
 | 2000-now | First-party dated posts: noma.dk blog (dozens of fun, spot-tied posts; 403 to plain bots, so only if our crawler gets through as is), Tivoli's history timeline (about 10 since 2000, one spot), cphdistortion.dk/history (about 6; robots.txt has Cloudflare's preamble without a Content-Signal line, re-check before every run) | Registered 2026-10-07 via `webpages:` as 256 Noma (83 items, sitemap), 257 Tivoli, 258 Distortion. Untrialled |
 | 2000-now | 1960-now | Exhaustive sweep, 2026-10-07 (8 agents: festivals, one-off events, food, institutions, music/film, blogs, community, open data). First-party history pages, each one spot: K.B. Hallen 261, Copenhagen Pride 263, Kjeld Frandsen's jazz-festival history 265, Jazzhus Montmartre 266, Parken 267, Fiskebaren 268, Eurovision 2001 272. Archives: Københavns Museum's digs and building stories 260, LGBT+ Danmark 264, Rundetårn 269, Zoo 270, Københavns Biblioteker's 281 history articles 271 (mostly pre-1960) | Screened: 1.00 for 261, 263, 265-268, 271; 0.67 for 260, 264, 269, 270; 0 for 272. Rejected: By & Havn 259 (0/6, notices), Olsen-banden Drehorte 262 (text in tables). Trialled 261, 263, 265-268 (first window each): 10 memories, mean 4.3, none 7+, all rejected. 260, 264, 269-272 untrialled. Not yet registered, one page each: Sticks'n'Sushi /dk/en/about/, groed.com/om-grod, Torvehallerne /om-os/arkitekten-bag, fantask.dk/history.asp, ab-b.dk/om-amagerbio-2/, cirkusbygningen.dk/historie/, folketshus.dk/da/historie2/, copenhagenmarathon.dk/om-os/, kbhallen.dk/om/byggeriet/, eurovision.com copenhagen-1964 and -2014. Larger, low hit rate: indenforvoldene.dk (wp-sitemap.xml, one page per address, venue lines in architecture text; source 18's "all rights reserved" predates the without-permission rule), VisitCopenhagen POIs (sitemap.xml `gdk\d+$`, 1,826 pages, 3-5% with an anecdote), Reffen, Culture Box, Kongehuset's begivenheder |
 | 1001 fortællinger om Danmark: 305 places in the bbox, about 10-15 really post-2000. The KML dump survives at web.archive.org (`kulturarv.dk/1001fortaellinger/gps/1001.kml`); text rights sit with Slots- og Kulturstyrelsen, which may license partners | Read 2026-10-07: encyclopedic short entries (architecture, founding dates), like Wikipedia. Skip even with permission |
-| 2010s-now | Bar stories: VLTV's *De Brune Værtshuse* on YouTube (vltv@hotmail.com, auto-captions); the podcasts *Sidste Omgang* (86 episodes, one bar each, Instagram @sidste.omgang) and *Barvox* (info@barvox.com); the book *Stamsteder* (220 pubs, 2021, print only) | VLTV is registered as source 251: 10 bar videos ingested (two others are gone), with captions waiting on YouTube's IP block. The podcasts have no transcripts, and we don't transcribe audio |
+| 2010s-now | Bar stories: VLTV's *De Brune Værtshuse* on YouTube (vltv@hotmail.com, auto-captions); the podcasts *Sidste Omgang* (86 episodes, one bar each, Instagram @sidste.omgang) and *Barvox* (info@barvox.com); the book *Stamsteder* (220 pubs, 2021, print only) | VLTV is registered as source 251: 10 bar videos ingested (two others are gone), with captions waiting on YouTube's IP block. *Sidste Omgang* is on YouTube with Danish auto-captions (2026-10-11): source 311. Barvox is careers, not places |
 | 1950-2000 | Local-history society yearbooks: Nørrebro (24 PDFs 2000-23, about 80-100 good), Sydhavnen (26 articles), SLAK for the other 8 | Email drafted in `docs/permission-request.md`, not sent |
 | 2000-now | Events at their spots: festivals' own history pages, Wikidata P276+P585 events in the bbox (see step 1) | Open: not searched. Distortion (258) and Tivoli (257) are the first two |
 | Trials of the screened text, 2026-10-07 | 2-3 richest items each | Rundetårn 269 active (8 and 6). Københavns Biblioteker 271 stays trial (4 memories, mean 5.5). Rejected: Valby 255 (4.75, all occupation bombings), Kilden 253 (0), Københavns Museum 260 (4, 3), LGBT+ 264 (5), Zoo 270 (0) |
@@ -123,6 +123,30 @@ Junkblokaden, Kvindehuset, Danmark-Sverige 2007): use an en article that says
 Copenhagen. Open: more da articles in "Uroligheder i København", "Aktivisme i
 Danmark", "København i 1900-tallet". Activism and squats are now a theme:
 count them against the cap of 30.
+
+**Sweep 2026-10-11: YouTube, podcasts, archive TV (3 agents).**
+- **Podcasts:** 255 Apple feeds (27 da/en terms, DR excluded) grepped for
+  `<podcast:transcript>`: 11 have it, none Copenhagen history. No show site
+  publishes episode text. Route that works: the show's own YouTube with
+  auto-captions. Found one: *Sidste Omgang* (Nicolai Banck,
+  `UChogeDFZc7wgo3yB2-c_ZYg`, ~52 Copenhagen bars, titles `S\dE\d+: <district>:`;
+  the rest is English CEO talk), registered 311. No text and no YouTube copy:
+  Bag om København, Københavnerhistorier, Gang i gaden, Under Byen, Byen på
+  Bakken, Frederiksberg Stadsarkiv's, Al Magt til Kærligheden (61 Christiania
+  portraits, ask Shazia Khan for transcripts). *Byen rundt* (KNR) reads out
+  kbharkiv memoirs; københavnLIV's *Byens Lommer* reserves AI in ai.txt.
+- **YouTube:** TV Østerbro's archive (Kjeld Lykke, `UCoNKLuIdQrAUFpekqqCrzGQ`,
+  99 × 25 min, *Mennesker og By* first-person, mostly debate), registered 312.
+  Burhan Bayhan's oral history (`UCPivCzNhMwx_v6jwrirn2-A`, ~10 Copenhagen WW2
+  eyewitnesses, first-person, © line only): good, but WW2 is at its cap. No:
+  Valby Lokalhistorie (silent rides), Regensianer (one spot), ASSISTENS
+  (graves), Copenhagen Walkers, byvandring.nu, True story (crime), Soundvenue
+  On The Road, Katrine og Maries Historiepodcast (lectures).
+- **Archive TV:** DR (incl. its own P3 Essensen channel) and TV 2 Kosmopol opt
+  out (robots ClaudeBot; tv2.dk/ai.txt §11b); DFI and Filmcentralen too.
+  Frederiksberg-erindringer: 50+ films of 6-20 min on Dream Broker
+  (`fosreg5v`), no subtitles, no opt-out: ask the archive for transcripts.
+  Københavns Museum's YouTube is clean but finds, not eyewitnesses.
 
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,

@@ -29,22 +29,29 @@ TRANSCRIPT_TYPES += ("application/json", "text/html")
 
 
 class _Paragraphs(HTMLParser):
-    """The text inside <p>, one paragraph each: an article's body, not its menus."""
+    """The text inside <p>, one paragraph each: an article's body, not its menus.
+    With `every`, the text outside <p> too; never a script's or a style's."""
 
     def __init__(self, every: bool = False):
         super().__init__()
-        self.paragraphs, self._open, self._every = [], 0, every
+        self.paragraphs, self._open, self._every, self._code = [], 0, every, 0
 
     def handle_starttag(self, tag, attrs):
         if tag == "p":
             self._open += 1
             self.paragraphs.append("")
+        elif tag in ("script", "style"):
+            self._code += 1
 
     def handle_endtag(self, tag):
         if tag == "p" and self._open:
             self._open -= 1
+        elif tag in ("script", "style") and self._code:
+            self._code -= 1
 
     def handle_data(self, data):
+        if self._code:
+            return
         if self._open:
             self.paragraphs[-1] += data
         elif self._every and data.strip():

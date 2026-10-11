@@ -26,6 +26,23 @@ def sitemap_urls(xml: str, pattern: str | None = None) -> list[str]:
     return [u for u in urls if pattern is None or re.search(pattern, u)]
 
 
+def decoded(body: bytes) -> str:
+    """UTF-8, else what an old Danish homepage is: UTF-16 by its BOM, or Windows-1252."""
+    if body.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return body.decode("utf-16")
+    try:
+        return body.decode("utf-8")
+    except UnicodeDecodeError:
+        return body.decode("cp1252", "replace")
+
+
+def page_text(raw: str) -> str:
+    """A page's paragraphs; an old homepage writes with <br> and <font>, not
+    <p>, so when they hold under a quarter of its text, all of its text."""
+    body, every = paragraphs(raw), paragraphs(raw, every=True)
+    return body if len(body) * 4 >= len(every) else every
+
+
 def robots(url: str, user_agent: str = USER_AGENT) -> urllib.robotparser.RobotFileParser:
     """The site's robots.txt, fetched as us: RobotFileParser.read() fetches as
     Python-urllib, which some sites answer with 403, and it then disallows all."""
@@ -51,7 +68,7 @@ class Webpages:
         url, _, pattern = query.partition(" ")
         rules = robots(url)
         pause = rules.crawl_delay(USER_AGENT) or PAUSE_S
-        get = lambda u: download(u, USER_AGENT).decode("utf-8", "replace")  # noqa: E731
+        get = lambda u: decoded(download(u, USER_AGENT))  # noqa: E731
         xml = urllib.parse.urlparse(url).path.endswith(".xml")
         pages = sitemap_urls(get(url), pattern or None) if xml else [url]
         for page in pages:
@@ -60,7 +77,7 @@ class Webpages:
             time.sleep(pause)
             raw = get(page)
             title = m[1].strip() if (m := re.search(r"<title>([^<]*)", raw)) else page
-            for i, window in enumerate(windows(paragraphs(raw))):
+            for i, window in enumerate(windows(page_text(raw))):
                 yield {
                     "source_url": f"{page}#{i}",
                     "title": html.unescape(title),
