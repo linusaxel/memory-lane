@@ -77,6 +77,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/cost.py` | Dollars per memory over a date range: the Admin Cost Report API's spend over the memories made. Needs `ANTHROPIC_ADMIN_KEY`; free |
 | `pipeline/enrich.py` | Researches each new memory on the web (people, quotes, then and now, asides) and keeps only what a page fetched to check it says; adds freely licensed Commons pictures of the place. Into `memories.enrichment`, not served yet. Runs after aggregation. Also `seed`: researches a thin record (a plaque) before it is extracted. Bills |
 | `pipeline/links.py` | Links the names in a summary to Wikipedia via Wikidata, only on one exact match. Runs after aggregation; alone, it is the backfill. Bills a little |
+| `pipeline/waypoints.py` | Loads the plain lockets: named OpenStreetMap spots (memorials, landmarks, churches, artworks, squares, parks) in the launch area, thinned 100 m apart and off memory spots. A rerun only adds. Free |
 | `pipeline/now.py` | Asks OpenStreetMap what a building-level pin stands inside today, and writes the "now" side of its contrast from that. Runs after aggregation on that content's places; alone, it is the backfill. Free |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset. `--memories` finds retold memories within 150 m, and `--apply` hides the weaker telling |

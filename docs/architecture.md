@@ -100,7 +100,7 @@ One database, two writers. Nothing else writes to it.
 
 | Writer | Tables |
 |--------|--------|
-| Pipeline | `sources`, `content`, `transcripts`, `extraction_chunks`, `classifier_verdicts`, `places`, `memories` (extracted), `memory_sheets`, `memory_reviews` |
+| Pipeline | `sources`, `content`, `transcripts`, `extraction_chunks`, `classifier_verdicts`, `places`, `memories` (extracted), `memory_sheets`, `memory_reviews`, `waypoints` |
 | API | `devices`, `users`, `identities`, `unlocks`, `memory_hearts`, `daily_routes`, `places` + `memories` (submitted), `media`, `reports` |
 
 `pipeline/seed_dev.py` and `pipeline/sweep.py` also write the API's tables. They

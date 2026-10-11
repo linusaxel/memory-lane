@@ -341,6 +341,17 @@ CREATE UNIQUE INDEX daily_routes_in_progress
 -- The partial index above serves no ended walk; this serves the rest. See 044.
 CREATE INDEX idx_daily_routes_device ON daily_routes (device_id, route_date);
 
+-- Plain lockets: named spots from OpenStreetMap, collected on a walk. No story,
+-- so no gate. Loaded by pipeline/waypoints.py. See 053.
+CREATE TABLE waypoints (
+    id SERIAL PRIMARY KEY,
+    osm_id TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    coordinates GEOGRAPHY(POINT, 4326) NOT NULL
+);
+CREATE INDEX idx_waypoints_coordinates ON waypoints USING GIST(coordinates);
+
 -- Who has paid, and until when: on the account, so every device of it is
 -- covered. See db/migrations/028_subscriptions.sql.
 CREATE TABLE subscriptions (
