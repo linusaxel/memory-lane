@@ -73,7 +73,7 @@ keys); Claude's own coordinate is the fallback.
 
 ### Schema
 
-Twenty tables and a view. `db/schema.sql` is the full definition and is applied on first
+Nineteen tables and a view. `db/schema.sql` is the full definition and is applied on first
 container init; `db/migrations/` carries the same changes for databases that
 already exist. `python -m pipeline.migrate` applies whichever is missing and
 records each file in `schema_migrations`; the Dockerfile runs it before the API,
@@ -93,7 +93,6 @@ Who writes which is in [architecture.md](architecture.md#data-ownership).
 | `extraction_chunks` | Each chunk's raw model reply, keyed on the exact request |
 | `classifier_verdicts` | What the Haiku pre-filter decided per chunk, and why |
 | `memory_reviews` | An accept / edit / reject on an extracted memory, by a person or an agent (`reviewer`). Outlives it |
-| `waypoints` | Plain lockets: named OpenStreetMap spots a walk collects between its memories. No story, so no gate |
 | `memory_sheets` | A memory's fact sheet: each claim with its quote, the spot, the source and the excerpt the card is written from. One row per extraction; the newest is current |
 | `places` | Locations with PostGIS coordinates |
 | `memories` | Experiences pinned to places. `content_id` **or** `user_id`, never both |
