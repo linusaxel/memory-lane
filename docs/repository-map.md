@@ -204,6 +204,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/PlanWalkButton.tsx` | Plan a walk on home: the gold glass pill whose figure walks through its label before the planner opens |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen, what the source button says, and the era slider's stops (`ERA_STOPS`) |
+| `mobile/src/collector.ts` | The Collector: four classes and the locket counts that grow each through eight stages. Not wired in yet; the art is to come |
 | `mobile/src/countUp.ts` | The values a journal number rolls through on its way up |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/story.ts` | A story's little markdown: blocks, marks, placed photos |
