@@ -4088,7 +4088,7 @@ self-reported*), so a spoofer gets one memory a week.
 
 Status: Accepted 2026-10-07. Supersedes "a visit is not an event" in the
 archival prompt and the judge (docs/04, *The place test*), and "good is 7 or
-more" in docs/04, *Road to 1,000*.
+more" in docs/04, *Road to coverage*.
 
 The six venue pages trialled on 2026-10-07 (K.B. Hallen, Parken, Montmartre)
 averaged 4.3: "Michael Jackson was in this pub" was a story the founder wanted
@@ -4414,6 +4414,44 @@ is judged by hand.
 **Options considered:** a cap in the route solver (a walk would still be one
 theme where the map is); hiding memories over the cap (moves the count by
 hand).
+
+### Thirty good in every kilometre near the centre
+
+Status: Accepted 2026-10-11. Supersedes "1,000 good memories in the launch
+bbox", the goal in docs/04, *Road to coverage*.
+
+A count says nothing about where the memories are. On 2026-10-11 there were
+394 good, but one 1 km cell held 71 and 14 of the 51 cells near the centre
+held none. Walks never revisit, so a walker whose cell is empty runs out on
+the first day, however high the count is.
+
+- **The goal is 30 good memories (`walk_score >= 6`) in each 1 km cell** of
+  the EPSG:25832 grid whose centre is within 4 km of Rådhuspladsen: 51
+  cells, 1,530 in all. Indre By, Christianshavn, Vesterbro, Nørrebro,
+  Østerbro, Frederiksberg and north Amager. Every one has a footpath within
+  400 m of its centre (OSRM `foot` `/nearest`), so none is water.
+- **Why 30.** A walk is 4 km by default, so it has 4 stops (*About a stop a
+  km, from the first*). A 4 km loop from home stays within about 1.3 km of
+  it (a circle that long is 1.27 km across), which is about 5 cells. Three
+  walks a week for 12 weeks is 3 × 4 × 12 = 144 stops, about 29 a cell. 12
+  weeks is the D60-D90 horizon that *New since your last walk* measures.
+  Walking every day would need about 70 a cell, which free sources can't
+  give. The weekly new memories have to cover the gap.
+- **Progress is `sum(least(good in cell, 30))` out of 1,530.** A memory past
+  30 in its cell doesn't count, so the 71 in one cell can't hide the 14
+  empty ones. On 2026-10-11 it stood at 290 of 1,530, with 4 cells full.
+- **Sources are picked to fill cells** in the make-memories skill. A good
+  memory in a cell under 30 counts and one in a full cell doesn't, and
+  between near-equals the source that lands in empty cells wins.
+
+The 4 km ring and the 3 walks a week are guesses until walkers are measured.
+Redo the sum once real walks give the length and the pace.
+
+**Options considered:** 50k across the bbox (the caps of 15 per author and
+30 per theme would need about 3,300 tellers); 20 a cell across all 188
+walkable cells of the bbox, 3,760 in all (most of them are suburbs no walker
+reaches at launch); keeping 1,000 (met in Indre By alone without one walk
+more in Valby).
 
 ### Each locket opens as itself
 

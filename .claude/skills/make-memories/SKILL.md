@@ -1,12 +1,14 @@
 ---
 name: make-memories
-description: Resume making Memory Lane memories toward the goal of 1,000 good ones in Copenhagen. One pass per kick-off - progress, pick the best source, ask, batch-extract, check, log. Use when asked to make, resume or continue memory creation, or to say how far we are from 1k.
+description: Resume making Memory Lane memories toward the goal of 30 good ones in every km near Copenhagen's centre. One pass per kick-off - progress, pick the best source, ask, batch-extract, check, log. Use when asked to make, resume or continue memory creation, or to say how far we are from the goal.
 ---
 
 # Make memories
 
-**Goal: 1,000 good memories in Copenhagen.** Good means visible, not a user's,
-inside the launch bbox, and `walk_score >= 6`. The database is the state: every
+**Goal: 30 good memories in each of the 51 km cells within 4 km of
+Rådhuspladsen, 1,530 in all** (docs/10, *Thirty good in every kilometre near
+the centre*). Good means visible, not a user's, and `walk_score >= 6`. A
+memory past 30 in its cell doesn't count toward the goal. The database is the state: every
 pass starts by counting, so there is nothing to resume by hand.
 Scores from 2026-10-05 on are stricter (docs/10, *The walk score asks one
 question*), so a source's old good-per-item overstates its yield now.
@@ -21,13 +23,38 @@ All SQL runs as `docker exec memory-lane-db-1 psql -U memorylane -d memorylane -
 ```sql
 SELECT count(*) FILTER (WHERE NOT m.hidden) visible,
        count(*) FILTER (WHERE NOT m.hidden AND m.walk_score >= 6) good,
-       count(*) FILTER (WHERE NOT m.hidden AND m.walk_score IS NULL) unscored,
-       1000 - count(*) FILTER (WHERE NOT m.hidden AND m.walk_score >= 6) to_go
+       count(*) FILTER (WHERE NOT m.hidden AND m.walk_score IS NULL) unscored
 FROM memories m JOIN places p ON p.id = m.place_id
 WHERE m.user_id IS NULL
   AND ST_Y(p.coordinates::geometry) BETWEEN 55.60 AND 55.74
   AND ST_X(p.coordinates::geometry) BETWEEN 12.45 AND 12.66;
 ```
+
+Coverage, the goal: `toward_goal` out of `goal`.
+
+```sql
+WITH hall AS (SELECT ST_Transform(ST_SetSRID(ST_MakePoint(12.5683, 55.6761), 4326), 25832) g),
+cells AS (
+  SELECT x, y FROM hall,
+    generate_series(floor(ST_X(g) / 1000)::int - 4, floor(ST_X(g) / 1000)::int + 4) x,
+    generate_series(floor(ST_Y(g) / 1000)::int - 4, floor(ST_Y(g) / 1000)::int + 4) y
+  WHERE ST_Distance(ST_SetSRID(ST_MakePoint(x * 1000 + 500, y * 1000 + 500), 25832), g) <= 4000),
+good AS (
+  SELECT floor(ST_X(t) / 1000)::int x, floor(ST_Y(t) / 1000)::int y, count(*) n
+  FROM memories m JOIN places p ON p.id = m.place_id,
+    LATERAL ST_Transform(p.coordinates::geometry, 25832) t
+  WHERE m.user_id IS NULL AND NOT m.hidden AND m.walk_score >= 6
+  GROUP BY 1, 2)
+SELECT count(*) cells,
+       count(*) FILTER (WHERE n >= 30) full_cells,
+       count(*) FILTER (WHERE n IS NULL) empty_cells,
+       sum(least(coalesce(n, 0), 30)) toward_goal,
+       30 * count(*) goal
+FROM cells LEFT JOIN good USING (x, y);
+```
+
+Swap the last `SELECT` for `SELECT x, y, coalesce(n, 0) FROM cells LEFT JOIN
+good USING (x, y) ORDER BY 3` to list the emptiest cells.
 
 Unscored memories get `venv/bin/python -m pipeline.walk_score --all`, which bills
 pennies. Ask first.
@@ -71,10 +98,11 @@ ORDER BY expected DESC, pending DESC;
   its next 40 were thin records with no good memory.
 - With no track record, genre is the prior (find-sources step 1): memoirs and
   people telling their own places first, an institution about itself last.
-- Between near-equals, take the one that fills the empty map: count the 1 km
-  cells (`ST_SnapToGrid(ST_Transform(p.coordinates::geometry, 25832), 1000)`)
-  holding no good memory that its places would land in. A walk wants one a
-  kilometre, so a 6 in an empty cell beats the tenth in Indre By. A one-venue
+- **Coverage decides between near-equals.** A source's worth is its good
+  memories that land in ring cells still under 30. One in a full cell, or
+  outside the 4 km ring, doesn't move the goal. Count where its places would
+  land against step 0's cell list: a 6 in an empty cell beats the fortieth in
+  Indre By. A one-venue
   source gives a walk at most one stop there, whatever it yields.
 - **One teller, a few stops.** At most 15 good memories per author, across
   all their books (the source name starts with the author). A walk that is
@@ -102,7 +130,7 @@ venv/bin/python -m pipeline.batch --source "<exact name>"   # dry: counts pendin
 ```
 
 Tell the user the items, the expected good memories, and the estimated cost.
-Use the source's own $/memory from `docs/04-extract.md` § Road to 1,000 if a
+Use the source's own $/memory from `docs/04-extract.md` § Road to coverage if a
 run has been logged; otherwise use about $0.05 per memory extracted in a batch
 (measured 2026-10-11 from the Batches API usage, research paused), or about
 $0.15 per good one. The $ logged before 2026-10-11 were guessed at $0.25 a memory. Ask with AskUserQuestion. On a yes, start it
@@ -133,10 +161,11 @@ choice), not into verdicts. Run the database writes yourself (`dedup --apply`,
 
 ## 6. Log and report
 
-- Append one line to `docs/04-extract.md` § *Road to 1,000 (Copenhagen)*:
-  date, source, items, memories, good, mean `walk_score`, $ if known.
-- Tell the user: good **X / 1000**, what this pass added, and the next source
-  step 2 would pick.
+- Append one line to `docs/04-extract.md` § *Road to coverage (Copenhagen)*:
+  date, source, items, memories, good, mean `walk_score`, $ if known, and
+  coverage after the pass (`toward_goal`, full and empty cells).
+- Tell the user: coverage **X / 1530** (full and empty cells), good overall,
+  what this pass added, and the next source step 2 would pick.
 - Friction goes in `TODO.md` per AGENTS.md. Then commit and push.
 
 ## Don't

@@ -1134,14 +1134,18 @@ not the size. The next memoir trial checks it on the new scale:
   median with 3. The skills now weigh empty cells and genre when choosing a
   source.
 
-### Road to 1,000 (Copenhagen)
+### Road to coverage (Copenhagen)
 
-The goal is 1,000 good memories in the launch bbox. Good means visible and
-`walk_score >= 6` (7 until 2026-10-07: docs/10, *Famous people at a spot, and
-good is 6*). `.claude/skills/make-memories` runs one source per pass and adds a
-line here. Started 2026-10-05 at 74 good out of 169 visible. On 2026-10-07,
-403 visible: 116 at 7 or more, 197 at 6 or more. Rows above that date count
-"Good" at 7.
+The goal is 30 good memories in each of the 51 km cells within 4 km of
+Rådhuspladsen, 1,530 in all (docs/10, *Thirty good in every kilometre near
+the centre*). Until 2026-10-11 it was 1,000 good anywhere in the launch bbox.
+Good means visible and `walk_score >= 6` (7 until 2026-10-07: docs/10,
+*Famous people at a spot, and good is 6*). `.claude/skills/make-memories` runs
+one source per pass and adds a line here. Started 2026-10-05 at 74 good out of
+169 visible. On 2026-10-07, 403 visible: 116 at 7 or more, 197 at 6 or more.
+Rows above that date count "Good" at 7. On 2026-10-11, 394 good, of which 290
+count toward coverage. Rows from then on also give the coverage after the
+pass.
 
 | Date | Source | Items | Memories | Good | Mean score | $ |
 |---|---|---|---|---|---|---|

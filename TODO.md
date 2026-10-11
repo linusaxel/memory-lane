@@ -43,7 +43,7 @@ delete an entry when its fix lands.
 - **Walk scores are never refreshed when the rubric changes.** 2026-10-10:
   re-scoring 68 memories, 10 scored on 09-27 fell from 6-8 to 3-5 and stayed
   there on two reruns; 81 of 261 good memories carry pre-October scores, so
-  "how far from 1k" is inflated. Fix: store the prompt's hash beside
+  "how far from the goal" is inflated. Fix: store the prompt's hash beside
   `walk_score` and have `walk_score --all` re-score the stale ones.
 
 - **The source screen fails biographies that hold a spot scene.** 2026-10-10:
@@ -212,7 +212,7 @@ worth the walk. Measure every change against the labels before and after
       Now, under $50: redraw the scores from before 10-05, `dedup --memories`,
       then re-extract each book source with its old memories kept and dedup
       picking the stronger retelling; log good counts before and after in
-      docs/04 *Road to 1,000*. Still open: a kept "colour" flourish can be a
+      docs/04 *Road to coverage*. Still open: a kept "colour" flourish can be a
       generalisation; the mother's grave is lost to the check's nitpicks;
       `batch.py` for half price; the video path after measuring it; a
       book's pictures into its fact sheets, from Gutenberg's HTML edition
@@ -639,8 +639,9 @@ day is a rule, not a shield (*A rest day in the streak*).
 Each waits on something named; none is worth building before it.
 
 - [ ] **The first four cities.** (checked 2026-10-07) Waits on Copenhagen
-      at ~1,000 good memories and two measured numbers: the city's share
-      using the app each month and the share of those who pay. Target ~10k €
+      at full coverage (docs/10, *Thirty good in every kilometre near the
+      centre*) and two measured numbers: the city's share using the app each
+      month and the share of those who pay. Target ~10k €
       net a month ≈ 18k € pre-tax ≈ 19.5k € a month paid out by the stores
       (prices include VAT; then the stores keep 15%). That is ~4,400 payers
       at 49 DKK a month, ~7,400 on the year. At a guessed 1% of a city using it monthly and 3% of those
