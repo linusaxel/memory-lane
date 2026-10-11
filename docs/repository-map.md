@@ -187,7 +187,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/DiamondRule.tsx` | The one ornament: gold hairline, emerald diamond, gold hairline |
 | `mobile/src/PullQuote.tsx` | A quote set apart: a gold Gloock mark over Newsreader italic |
 | `mobile/src/Notes.tsx` | The notes under an open memory (F33) |
-| `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative. Also a subscriber's Customize (themes, era, `ERAS`), kept on the phone |
+| `mobile/src/route.ts` | What this device's daily walk looks like, and the journal's walks. Cached, server-authoritative. Also a subscriber's Customize (themes, era), kept on the phone |
 | `mobile/src/reach.ts` | Which locked pins can be opened from where you stand (unit tested) |
 | `mobile/src/cluster.ts` | Group memories that share a map point (unit tested) |
 | `mobile/src/region.ts` | Metres, paths and framing a walk (unit tested) |
@@ -201,7 +201,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
 | `mobile/src/PlanWalkButton.tsx` | Plan a walk on home: the gold glass pill whose figure walks through its label before the planner opens |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
-| `mobile/src/format.ts` | How numbers are written on screen, and what the source button says |
+| `mobile/src/format.ts` | How numbers are written on screen, what the source button says, and the era slider's stops (`ERA_STOPS`) |
 | `mobile/src/countUp.ts` | The values a journal number rolls through on its way up |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |
 | `mobile/src/story.ts` | A story's little markdown: blocks, marks, placed photos |

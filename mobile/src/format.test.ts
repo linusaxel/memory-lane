@@ -3,6 +3,10 @@ import { test } from 'node:test';
 
 import {
   count,
+  ERA_STOPS,
+  eraLabel,
+  eraSpan,
+  eraStops,
   distance,
   duration,
   happened,
@@ -124,4 +128,23 @@ test('a Wikipedia link previews from its summary, in its own language', () => {
   );
   assert.equal(wikiSummaryUrl('https://www.youtube.com/watch?v=abc'), null);
   assert.equal(wikiSummaryUrl('https://www.gutenberg.org/ebooks/1'), null);
+});
+
+test('every era the slider makes maps back to its stops', () => {
+  const last = ERA_STOPS.length - 1;
+  for (let lo = 0; lo < last; lo++) {
+    for (let hi = lo + 1; hi <= last; hi++) {
+      const { from, until } = eraSpan(lo, hi);
+      assert.deepEqual(eraStops(from, until), [lo, hi]);
+    }
+  }
+  assert.equal(eraStops(1850, null), null);
+  assert.equal(eraStops(1945, 1800), null);
+});
+
+test('an era reads as a span, open at either end', () => {
+  assert.equal(eraLabel(null, null), 'Any time');
+  assert.equal(eraLabel(null, 1800), 'Before 1800');
+  assert.equal(eraLabel(1945, null), 'Since 1945');
+  assert.equal(eraLabel(1800, 1945), '1800–1945');
 });

@@ -24,6 +24,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A subscriber's Customize row has no handle for Maestro.** 2026-10-11: its
+  testID (`themes-plus`) is set only for free walkers, and its text is whatever
+  is chosen ("Before 1800"), so a flow can't find it by either; a tap by point
+  landed on a walk instead and started one. Fix: give the row a testID always.
+
 - **The $ column in docs/04 is a guess.** 2026-10-11: no token usage is stored
   anywhere, so every Road-to-1,000 row priced memories at $0.25 each; the real
   Batches API usage said ~$0.55 a good one, 71% of it unserved research. It took

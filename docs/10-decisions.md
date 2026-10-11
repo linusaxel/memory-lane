@@ -431,9 +431,15 @@ things, all of them on the planner card:
   founder): **an era leans the walk, as a theme does.** 288 of 498 memories had
   no year, so a range threw out 58% of the map. `preferred` now counts the
   choices a memory meets (theme, era; an undated one meets no era), each worth
-  `PREFERRED_PRIZE`. The app offers four eras, not free years: Any time,
-  Before 1800, 1800–1945, Since 1945 (`ERAS`, `mobile/src/route.ts`), split
-  where the dated memories fall about evenly.
+  `PREFERRED_PRIZE`. ~~The app offers four eras, not free years: Any time,
+  Before 1800, 1800–1945, Since 1945, split where the dated memories fall
+  about evenly.~~ **Superseded 2026-10-11** (the founder): the era is a range
+  slider with two thumbs that snap to Earlier · 1800 · 1900 · 1945 · 1990 ·
+  Today (`ERA_STOPS`, `mobile/src/format.ts`), evenly spaced so the recent
+  decades the memories cluster in get room. "Only modern" and "only old" are
+  each one drag, which a pick of four was not. Two thumbs are misread when
+  they slide freely and say nothing (Baymard), so these snap, tick, and name
+  the span above the track. Still a lean, never a filter.
 
 The server heeds `tags` and the years only when `SUBSCRIBED_QUERY` is true
 (`api/read.py` `_shaped`), and drops them silently otherwise. The app keeps the

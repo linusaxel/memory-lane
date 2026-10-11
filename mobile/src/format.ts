@@ -124,3 +124,25 @@ export function wikiSummaryUrl(url: string): string | null {
   const m = url.match(/^https?:\/\/([a-z-]+)(?:\.m)?\.wikipedia\.org\/wiki\/([^#?]+)/);
   return m ? `https://${m[1]}.wikipedia.org/api/rest_v1/page/summary/${m[2]}` : null;
 }
+
+/** Where the era slider snaps, Earlier to Today: evenly spaced, so the recent
+ *  decades the memories cluster in get as much track as the centuries before. */
+export const ERA_STOPS = [null, 1800, 1900, 1945, 1990, null] as const;
+const LAST = ERA_STOPS.length - 1;
+
+/** The years between two stops; `until` is exclusive, null is open. */
+export function eraSpan(lo: number, hi: number): { from: number | null; until: number | null } {
+  return { from: lo === 0 ? null : ERA_STOPS[lo], until: hi === LAST ? null : ERA_STOPS[hi] };
+}
+
+/** The stops a span sits on, or null for one the slider cannot make. */
+export function eraStops(from: number | null, until: number | null): [number, number] | null {
+  const lo = from == null ? 0 : ERA_STOPS.indexOf(from as never);
+  const hi = until == null ? LAST : ERA_STOPS.indexOf(until as never);
+  return lo >= 0 && hi > 0 && lo < hi && lo < LAST ? [lo, hi] : null;
+}
+
+export function eraLabel(from: number | null, until: number | null): string {
+  if (from == null) return until == null ? 'Any time' : `Before ${until}`;
+  return until == null ? `Since ${from}` : `${from}–${until}`;
+}

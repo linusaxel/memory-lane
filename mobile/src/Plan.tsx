@@ -22,6 +22,7 @@ import {
   Image,
   Animated,
   type LayoutChangeEvent,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,9 +36,9 @@ import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
 import Guardian from './Guardian.tsx';
-import { distance, walkDate } from './format.ts';
+import { ERA_STOPS, distance, eraLabel, eraSpan, eraStops, walkDate } from './format.ts';
+import { clamp } from './lockets/math.ts';
 import { locketOf } from './lockets.ts';
-import { ERAS } from './route.ts';
 import { Chip } from './Submit.tsx';
 import {
   button,
@@ -110,13 +111,64 @@ function LengthSlider({ km, min, onKm }: LengthProps) {
   );
 }
 
-type EraProps = { era: (typeof ERAS)[number]; onEra: (era: (typeof ERAS)[number]) => void };
+type Span = { from: number | null; until: number | null };
+type EraProps = Span & { onEra: (span: Span) => void };
 
-/** The eras as a timeline you tap, not drag: a two-thumb slider is misread on
- *  a phone, and the labels sit above where a finger does not cover them.
- *  Equal segments, since the years before 1800 would eat a linear track.
- *  Any time lights all three; tapping the one lit goes back to it. */
-function EraTimeline({ era, onEra }: EraProps) {
+// The length slider's native thumb: a pill, so the two read as one family.
+const THUMB = 38;
+const THUMB_HEIGHT = 24;
+const LAST_STOP = ERA_STOPS.length - 1;
+
+/** Two thumbs that snap to ERA_STOPS: Earlier to 1945 is old only, 1945 to
+ *  Today modern only, both ends any time. A two-thumb slider is misread when
+ *  it slides freely and says nothing (Baymard), so this one snaps, ticks, and
+ *  names the span above it. Hand-rolled with a PanResponder, as SlideToUnlock
+ *  is: the community slider has one thumb. The walk redraws once, on release. */
+function EraRange({ from, until, onEra }: EraProps) {
+  const [span, setSpan] = useState<[number, number]>(eraStops(from, until) ?? [0, LAST_STOP]);
+  const [width, setWidth] = useState(0);
+  const live = useRef(span);
+  const at = useRef({ x: 0, thumb: 0, width: 0 });
+  const done = useRef(onEra);
+  done.current = onEra;
+
+  const move = (thumb: number, stop: number) => {
+    const [lo, hi] = live.current;
+    const next: [number, number] =
+      thumb === 0 ? [clamp(stop, 0, hi - 1), hi] : [lo, clamp(stop, lo + 1, LAST_STOP)];
+    if (next[0] === lo && next[1] === hi) return;
+    Haptics.selectionAsync().catch(() => {});
+    live.current = next;
+    setSpan(next);
+  };
+  const stopAt = (x: number) =>
+    clamp(Math.round(((x - THUMB / 2) / (at.current.width - THUMB)) * LAST_STOP), 0, LAST_STOP);
+  const release = () => done.current(eraSpan(live.current[0], live.current[1]));
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderGrant: (e) => {
+        // The thumbs take no touches, so this is the track's own x.
+        const x = e.nativeEvent.locationX;
+        const stop = stopAt(x);
+        const [lo, hi] = live.current;
+        const thumb = stop <= lo ? 0 : stop >= hi ? 1 : stop - lo <= hi - stop ? 0 : 1;
+        at.current = { ...at.current, x, thumb };
+        move(thumb, stop);
+      },
+      onPanResponderMove: (_, g) => move(at.current.thumb, stopAt(at.current.x + g.dx)),
+      onPanResponderRelease: release,
+      onPanResponderTerminate: release,
+    }),
+  ).current;
+
+  const [lo, hi] = span;
+  const x = (stop: number) => THUMB / 2 + (stop * (width - THUMB)) / LAST_STOP;
+  const named = (stop: number) =>
+    stop === 0 ? 'Earlier' : stop === LAST_STOP ? 'Today' : String(ERA_STOPS[stop]);
+  const { from: shownFrom, until: shownUntil } = eraSpan(lo, hi);
   return (
     <>
       <View style={styles.lengthRow}>
@@ -124,35 +176,72 @@ function EraTimeline({ era, onEra }: EraProps) {
           Era
         </Text>
         <Text style={styles.eraName} accessibilityLiveRegion="polite">
-          {era.label}
+          {eraLabel(shownFrom, shownUntil)}
         </Text>
       </View>
-      {/* Each year starts where its segment does. */}
-      <View style={styles.ticks}>
-        {['Earlier', '1800', '1945'].map((t, i) => (
-          <View key={t} style={[styles.grow, styles.ends]}>
-            <Text style={label}>{t}</Text>
-            {i === 2 && <Text style={label}>Today</Text>}
-          </View>
-        ))}
+      <View style={styles.tickNames}>
+        {width > 0 &&
+          ERA_STOPS.map((_, stop) => (
+            <Text
+              key={stop}
+              style={[
+                label,
+                styles.tickName,
+                stop === 0
+                  ? { left: 0, textAlign: 'left' }
+                  : stop === LAST_STOP
+                    ? { right: 0, textAlign: 'right' }
+                    : { left: x(stop) - 30 },
+              ]}
+            >
+              {named(stop)}
+            </Text>
+          ))}
       </View>
-      <View style={styles.timeline}>
-        {ERAS.slice(1).map((e, i) => {
-          const lit = era === ERAS[0] || era === e;
-          return (
-            <Pressable
-              key={e.label}
-              style={[styles.era, i > 0 && styles.eraRule, lit && styles.eraOn]}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                onEra(era === e ? ERAS[0] : e);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={e.label}
-              accessibilityState={{ selected: era === e }}
+      <View
+        style={styles.eraTrack}
+        onLayout={(e) => {
+          at.current.width = e.nativeEvent.layout.width;
+          setWidth(e.nativeEvent.layout.width);
+        }}
+        {...pan.panHandlers}
+      >
+        {width > 0 && (
+          <>
+            <View pointerEvents="none" style={styles.rail} />
+            <View
+              pointerEvents="none"
+              style={[styles.rail, styles.railOn, { left: x(lo), width: x(hi) - x(lo) }]}
             />
-          );
-        })}
+            {ERA_STOPS.map((_, stop) => (
+              <View
+                key={stop}
+                pointerEvents="none"
+                style={[
+                  styles.tick,
+                  stop >= lo && stop <= hi && styles.tickOn,
+                  { left: x(stop) - 3 },
+                ]}
+              />
+            ))}
+            {[lo, hi].map((stop, thumb) => (
+              <View
+                key={thumb}
+                pointerEvents="none"
+                style={[styles.thumb, { left: x(stop) - THUMB / 2 }]}
+                accessible
+                accessibilityRole="adjustable"
+                accessibilityLabel={thumb === 0 ? 'From' : 'Until'}
+                accessibilityValue={{ text: named(stop) }}
+                accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+                onAccessibilityAction={(e) => {
+                  move(thumb, stop + (e.nativeEvent.actionName === 'increment' ? 1 : -1));
+                  release();
+                }}
+              />
+            ))}
+          </>
+        )}
       </View>
     </>
   );
@@ -357,8 +446,8 @@ export function Preview({
       </GlassCard>
     );
   }
-  const era = ERAS.find((e) => e.from === ask.from && e.until === ask.until) ?? ERAS[0];
-  const customized = ask.themes.length > 0 || era !== ERAS[0];
+  const era = ask.from == null && ask.until == null ? '' : eraLabel(ask.from, ask.until);
+  const customized = ask.themes.length > 0 || era !== '';
   if (step === 'choices') {
     return (
       <GlassCard style={styles.card} onLayout={measure} testID="walk-choices">
@@ -382,7 +471,12 @@ export function Preview({
           The walk leans towards these, and still fills up with the best nearby.
         </Text>
         <ScrollView style={styles.choices} contentContainerStyle={styles.choicesInner}>
-          <EraTimeline era={era} onEra={(e) => onAsk({ ...ask, from: e.from, until: e.until })} />
+          <EraRange
+            key={`${ask.from}:${ask.until}`}
+            from={ask.from}
+            until={ask.until}
+            onEra={(span) => onAsk({ ...ask, ...span })}
+          />
           {THEME_GROUPS.map((group) => (
             <View key={group.title}>
               <Text style={styles.section} accessibilityRole="header">
@@ -423,9 +517,7 @@ export function Preview({
       </GlassCard>
     );
   }
-  const chosen = [ask.themes.map(themeName).join(', '), era === ERAS[0] ? '' : era.label]
-    .filter(Boolean)
-    .join(' · ');
+  const chosen = [ask.themes.map(themeName).join(', '), era].filter(Boolean).join(' · ');
   return (
     <GlassCard style={styles.card} onLayout={measure}>
       {/* The arrows page through walks. A missing one keeps its space, so
@@ -890,20 +982,42 @@ const styles = StyleSheet.create({
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   themeChip: { width: '31%' },
-  choices: { maxHeight: 440 },
-  choicesInner: { gap: 10 },
-  timeline: {
-    flexDirection: 'row',
-    height: 28,
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-    backgroundColor: color.quiet,
-  },
-  ticks: { flexDirection: 'row' },
+  // Bled out and padded back, so a thumb's or chip's shadow is not cut at the edge.
+  choices: { maxHeight: 440, marginHorizontal: -8 },
+  choicesInner: { gap: 10, paddingHorizontal: 8 },
   eraName: { ...font.uiBold, fontSize: 15, color: color.ink },
-  era: { flex: 1 },
-  eraRule: { borderLeftWidth: StyleSheet.hairlineWidth, borderColor: color.rule },
-  eraOn: { backgroundColor: color.gold },
+  tickNames: { height: 16 },
+  tickName: { position: 'absolute', width: 60, textAlign: 'center' },
+  eraTrack: { height: 40, justifyContent: 'center' },
+  rail: {
+    position: 'absolute',
+    left: THUMB / 2,
+    right: THUMB / 2,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: color.rule,
+  },
+  railOn: { right: undefined, backgroundColor: color.gold },
+  tick: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: color.inkSoft,
+    opacity: 0.35,
+  },
+  tickOn: { backgroundColor: color.paper, opacity: 1 },
+  thumb: {
+    position: 'absolute',
+    width: THUMB,
+    height: THUMB_HEIGHT,
+    borderRadius: THUMB_HEIGHT / 2,
+    backgroundColor: metal.light,
+    shadowColor: color.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    shadowOpacity: 0.2,
+  },
   primary: { marginTop: 14 },
   pair: { flexDirection: 'row', gap: 12, marginTop: 14 },
   secondary: button.quiet,
