@@ -264,7 +264,6 @@ def test_reading_a_profile_creates_nobody(client, db_session):
         "submitted": 0,
         "hearts_received": 0,
         "unlocked": 0,
-        "streak": 0,
         "providers": [],
         "subscribed": False,
         "subscribed_until": None,

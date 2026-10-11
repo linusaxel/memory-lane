@@ -74,7 +74,6 @@ export const SCREENS = [
   'end-confirm',
   'offline-end',
   'done',
-  'done-milestone',
   'done-ask',
   'journal',
   'journal-walk',

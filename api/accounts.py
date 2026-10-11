@@ -5,12 +5,10 @@ and signing in binds devices.user_id. docs/10-decisions.md#identity.
 """
 
 import uuid
-from datetime import date, timedelta
 
 from fastapi import APIRouter, Form, HTTPException, Query, Response, UploadFile
 from sqlalchemy import text
 
-import api.gate
 import api.media
 from api.auth import apple_identity, either_identity, google_identity
 from api.models import (
@@ -24,35 +22,12 @@ from api.moderation import screen
 from api.progression import XP_STEP, level, xp_of
 from api.queries import (
     DELETE_ORPHAN_SUBMITTED_PLACE,
-    STREAK_DAYS_QUERY,
     UNLOCK_COUNT_QUERY,
 )
 from pipeline.config import DEV_SUBSCRIBED
 from pipeline.db import get_session
 
 router = APIRouter()
-
-REST_EVERY = timedelta(days=7)
-
-
-def current_streak(days: list[date], today: date) -> int:
-    """Consecutive calendar days walked, ending today or yesterday.
-
-    One missed day a week is a rest day and doesn't break it, nor count:
-    a miss is bridged when the day before it was walked and no other was
-    bridged in the six days after it. Nothing earns it or buys it.
-    """
-    walked = set(days)
-    day = today if today in walked else today - timedelta(days=1)
-    count, rested = 0, None
-    while True:
-        if day in walked:
-            count += 1
-        elif day - timedelta(days=1) in walked and (rested is None or rested - day >= REST_EVERY):
-            rested = day
-        else:
-            return count
-        day -= timedelta(days=1)
 
 
 def touch_device(session, device: str) -> None:
@@ -132,10 +107,6 @@ def profile_of(session, device: str) -> Profile:
         {"device_id": device},
     ).fetchone()
     unlocked = session.execute(text(UNLOCK_COUNT_QUERY), {"device_id": device}).scalar() or 0
-    streak_days = [
-        r.d for r in session.execute(text(STREAK_DAYS_QUERY), {"device_id": device}).fetchall()
-    ]
-    streak = current_streak(streak_days, api.gate.today())
     xp = xp_of(session, device)
     earned = {
         "xp": xp,
@@ -145,7 +116,7 @@ def profile_of(session, device: str) -> Profile:
     }
 
     if not row:
-        return Profile(unlocked=unlocked, streak=streak, subscribed=DEV_SUBSCRIBED, **earned)
+        return Profile(unlocked=unlocked, subscribed=DEV_SUBSCRIBED, **earned)
     return Profile(
         user_id=str(row.id),
         display_name=row.display_name,
@@ -153,7 +124,6 @@ def profile_of(session, device: str) -> Profile:
         submitted=row.submitted,
         hearts_received=row.hearts_received,
         unlocked=unlocked,
-        streak=streak,
         providers=list(row.providers),
         subscribed=DEV_SUBSCRIBED or row.subscribed,
         subscribed_until=row.subscribed_until,

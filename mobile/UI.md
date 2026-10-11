@@ -83,9 +83,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ "Turn on location"         the bottom row's middle, only on a walk with no position
 └─ card (WalkDone)            once, when the last stop's sheet closes: the map unpins and fits
                                the whole loop, drawn; "Nice walk." 34/700, "5 memories · 4.1 km
-                               loop · 52 min", the streak, Done. At 7, 30 and 100 days the streak
-                               springs in with a purple flame and a second success haptic; any
-                               other day it is one quiet line. A relaunch does not show it again
+                               loop · 52 min", what it earned, Done. A relaunch does not show it again
 
 MemorySheet (over the map: a floating card when locked, a 92% sheet when open; a pageSheet from the journal) - two compositions, not one with holes in it
 
@@ -129,7 +127,7 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              header, sections and list arrive a beat apart. Drag it down or
 │                              × to close. Reduce Motion: no cascade. The journal is you as well
 ├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
-│                              it "3-day streak · 12 memories · 4 places · 2 added · 5 hearts",
+│                              it "12 memories · 4 places · 2 added · 5 hearts",
 │                              zeros left out but the first, then "Level 3" and a thin plum XP
 │                              bar. Tapping it opens Edit profile. A gear, then × top right. A
 │                              number that grew since the last look rolls up from its old
@@ -284,7 +282,7 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 | `sealInk` | `#F6F1E7` / `#0B1F17` | anything drawn on seal |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
 | `glow` | emerald at 55% | the radial glow behind an in-reach locket. Never a ring |
-| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Level, streak, XP |
+| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Level, XP |
 | `track` | `#E9DFEE` / `#362C3F` | the empty part of the level bar |
 | `danger` | `#9B2C2C` / `#F09A9A` | Delete account. Nothing destructive is gold |
 | `heart` | `#A3294E` / `#F29BB4` | a filled heart |
@@ -339,7 +337,7 @@ of the app and its tracking had drifted three ways before anybody noticed.
 and Submit and must not drift between them.
 
 **Scale**: 34 `screenTitle` · 34/38 `story.title` (the place name) · 52
-`figure` (the gate's distance, the streak, the stats) · 36 `figureSmall` (the
+`figure` (the gate's distance, the stats) · 36 `figureSmall` (the
 peek's distance) · 20/31 `story.body` (the story, then-and-now, notes) · 16/25
 prose (body elsewhere) · 13 `label` · 17 buttons. A memory, open or being
 written, is `story` in `theme.ts` and nothing else: 34, 20 and 13.

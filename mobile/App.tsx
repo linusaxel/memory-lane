@@ -1324,13 +1324,10 @@ export default function App() {
         endWalk();
         return;
       case 'done':
-      case 'done-milestone':
       case 'done-ask':
         walk();
         setReward({ xp: 40 });
         setWalkDone(true);
-        if (screen === 'done-milestone' && profile)
-          borrow(profile, setProfile, { ...profile, streak: 7 });
         if (screen === 'done-ask') borrow(notifyChosen, setNotifyChosen, false);
         return;
       case 'journal':
@@ -1554,8 +1551,7 @@ export default function App() {
 
   /** The profile again, after a stop. `finished`: that was the walk's last
    *  stop, so the same Success haptic LocketUnlock fires for one memory, once
-   *  more, and the finish card shows what the walk earned and the streak,
-   *  counting today. */
+   *  more, and the finish card shows what the walk earned. */
   const refreshProfile = useCallback(
     (finished: boolean) => {
       if (finished) {
@@ -2187,7 +2183,6 @@ export default function App() {
               meters={pathMeters(donePath)}
               loop={!!routeHome}
               minutes={doneMinutes}
-              streak={profile?.streak ?? 0}
               level={profile?.level ?? 1}
               into={profile ? levelInto(profile) : 0}
               reward={reward}

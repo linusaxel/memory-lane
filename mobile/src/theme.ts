@@ -56,7 +56,7 @@ export const color = {
   /** The glow behind an in-reach locket. Never a ring. */
   glow: dual('rgba(28,140,98,0.55)', 'rgba(76,193,150,0.55)'),
 
-  /** What you earned: your level, your streak, XP.
+  /** What you earned: your level, XP.
    *  Never a memory or an action. */
   plum: dual('#5D2A71', '#CFA4E2'),
   /** The empty part of the level bar. */
@@ -216,7 +216,7 @@ export const pill = {
   gap: 8,
 };
 
-/** The number a screen is about: the distance to a pin, a streak, a stat. The
+/** The number a screen is about: the distance to a pin, a stat. The
  *  peek's distance is the small one, under the place it belongs to. */
 export const figure = { ...font.title, fontSize: 52, lineHeight: 56, color: color.ink };
 export const figureSmall = { ...font.title, fontSize: 36, lineHeight: 42, color: color.ink };

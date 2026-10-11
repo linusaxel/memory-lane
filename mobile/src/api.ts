@@ -575,8 +575,6 @@ export type Profile = {
   submitted: number;
   hearts_received: number;
   unlocked: number;
-  /** Consecutive days, ending today or yesterday, with at least one unlock. */
-  streak: number;
   /** Which sign-ins are attached, oldest first. Empty means this is still just
    *  a device: everything works, but a new phone would start empty. */
   providers: ('google' | 'apple')[];

@@ -1,5 +1,5 @@
 # F13 Walk into range -> F7 Unlock by standing near it -> F25 walk today's
-# loop 1 -> 4 -> F30 finish it (F27 streak) -> F15/F31 reread it in the
+# loop 1 -> 4 -> F30 finish it -> F15/F31 reread it in the
 # journal (F26 heart it, F33 leave a note), with F28 the nearby notification on
 # leg 1 and F35 the paywall once walked out.
 # docs/08-ux-flows.md
@@ -188,11 +188,6 @@ appId: ${APP_ID}
 - assertVisible: "4 memories · .* loop · .* min"
 # Every stop opened for nothing, and finishing earned XP.
 - assertVisible: "\\+[0-9]+ XP"
-# F27 + G5: e2e/sql gave this device a walk on each of the six days before,
-# so today makes seven, a milestone with its own moment.
-- assertVisible:
-    id: "streak-milestone"
-- assertVisible: "7 days in a row"
 - takeScreenshot: finish-card
 # F35: signed in, not subscribed: a quiet way to the paywall, never a pop-up.
 - assertVisible:

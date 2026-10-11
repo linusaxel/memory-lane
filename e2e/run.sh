@@ -174,7 +174,7 @@ reset_database() {
     || infra "could not drop the bridge from $DB"
 }
 
-# A flow that needs more than the seed (a streak, a history, a subscriber) has
+# A flow that needs more than the seed (a history, a subscriber) has
 # it in e2e/sql/<flow>.sql, applied after the reset. Mostly triggers on the
 # device or user the app has not minted yet.
 flow_sql() {
@@ -242,10 +242,7 @@ echo "     walk: $(tail -1 "$LOGS/travel.log")"
 # which costs an afternoon before anybody suspects the port.
 say "2/5  api on :$API_PORT"
 kill_port "$API_PORT"
-# A walk a day: walk-and-unlock.sql seeds a walk on each of the six days
-# before, for the streak, which a free walk a week would refuse.
-# tests/test_api_routes.py covers the week.
-DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL="$ROUTING" FREE_WALK_EVERY_DAYS=1 \
+DATABASE_URL="$DB_URL" MEDIA_DIR="$ROOT/media" ROUTING_URL="$ROUTING" \
   venv/bin/python -m uvicorn api.main:app --port "$API_PORT" > "$LOGS/api.log" 2>&1 &
 API_PID=$!
 for _ in $(seq 30); do

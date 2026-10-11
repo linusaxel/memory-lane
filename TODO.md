@@ -604,20 +604,12 @@ covers a memory. Order: test it, then the art, then the build.
       that are gone. Next: only where OSM confirms the place still stands,
       given OSM and Wikidata's description of the building instead of the
       story. A new extracted field: measure before and after.
-- [ ] **The streak: a sound, and a rest day or a repair.** (checked
-      2026-10-04) The 7/30/100 moment has a flame and a haptic (`Milestone` in
-      `src/Plan.tsx`), no sound; a chime needs a bundled asset and an audio
-      session set to mix, or it stops the walker's podcast. A missed day
-      punishes: a rest day or a repair (broken streaks hurt less when they
-      can be repaired, Silverman & Barasch 2023; Duolingo's second freeze
-      lifted DAU 0.38%). The founder turned down a streak shield as a reward,
-      so ask first. Watch for streak anxiety.
 - [ ] **A today card in the journal.** (checked 2026-10-04) First in Walks, like Pikmin
       Bloom's Lifelog: today's trace on a mini map, steps, and a week strip
       with a dot for each day walked. Maybe later: brighten the streets you
       have walked (Fog of World, Wandrer), never hiding content.
 - [ ] **A Lock Screen widget** (`expo-widgets`). (checked 2026-10-04)
-      Today's walk or the nearest stop, and the streak. After launch; skip
+      Today's walk or the nearest stop. After launch; skip
       Live Activities.
 - [ ] **Hear the story at its spot.** (checked 2026-10-04) A paragraph read
       on a street corner is the wrong format for somebody walking, and the
@@ -674,7 +666,7 @@ from a neighbouring kind of app; tune on real data. The sources behind each
 line are in this file at `9421fb0`, *Map, walk and money*. Anything a walk
 earns stays unsold (Apple 3.1.1, the loot-box rulings). The founder turned
 down, as rewards: keeping a previewed memory for the next walk, a streak
-shield, and an extra walk. A surprise open off a walk is now free, once a
+shield (the streak is gone: docs/10, *No streak*), and an extra walk. A surprise open off a walk is now free, once a
 week, by timer (docs/10, *A surprise, once a week*), and the streak's rest
 day is a rule, not a shield (*A rest day in the streak*).
 

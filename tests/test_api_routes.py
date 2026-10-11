@@ -760,7 +760,6 @@ def test_an_ended_walk_keeps_what_it_earned(client, db_session):
 
     [walk] = client.get(f"/v1/routes/walked?device={DEVICE}").json()["walks"]
     assert (walk["meta"]["earned"], walk["meta"]["completed_at"]) == (1, None)
-    assert client.get(f"/v1/me?device={DEVICE}").json()["streak"] == 1
 
 
 def _subscribe(session, days=30):

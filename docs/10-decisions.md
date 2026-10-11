@@ -3261,6 +3261,8 @@ Not done, and each is the founder's call:
 ### A streak and a proximity notification, after all
 
 Status: Accepted 2026-09-22. Amended 2026-10-07 by *A rest day in the streak*.
+The streak half **Superseded 2026-10-11** by *No streak*; the proximity
+notification stands.
 
 Decided 2026-09-22, against the earlier "no notifications, no streaks" rule
 (`docs/11-memory-types.md`) and foreground-only location (`mobile/UI.md` rule
@@ -4162,7 +4164,7 @@ experiment); D30 and D60 of walkers who have opened 80% of what is within
 
 ### A rest day in the streak
 
-Status: Accepted 2026-10-07. Amends *A streak and a proximity notification,
+Status: **Superseded 2026-10-11** by *No streak*. Was: Accepted 2026-10-07. Amends *A streak and a proximity notification,
 after all* (F27 step 3).
 
 A missed day lost everything. Duolingo measured +0.38% DAU from a second
@@ -4629,6 +4631,24 @@ The other rules (`META`, `NOT_PAST`, `someone`, over 180 words) stay
 report-only: "he explained" and "you are standing" are fine in a card.
 Considered: an LLM self-contradiction check; the hedge was the contradiction
 seen, so it waits until `--faults` misses one in the cards read.
+
+### No streak
+
+Status: Accepted 2026-10-11. Supersedes the streak half of *A streak and a
+proximity notification, after all*, and *A rest day in the streak*.
+
+The founder: remove the streak altogether. With *A free walk a week*, a free
+walker's days-in-a-row broke every week, so for most walkers it either did
+nothing or punished them; kept for subscribers only, it would be a feature for
+a few. Duolingo's streak is the best-evidenced retention lever there is
+(*research-progression.md*), and that is what is given up. A weeks-in-a-row
+count could replace it later, if a retention metric asks for one.
+
+Gone: `api.accounts.current_streak`, `STREAK_DAYS_QUERY`, `Profile.streak`,
+the finish card's streak and its 7/30/100 milestone, the journal header's
+"n-day streak", the paywall's "n days in a row" and `tests/test_streak.py`.
+Nothing was stored, so nothing is migrated. If the weekly bet fails
+(`FREE_WALK_EVERY_DAYS=1`), the commit that removed it reverts cleanly.
 
 ### Rejected approaches, do not retry
 

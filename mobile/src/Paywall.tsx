@@ -58,9 +58,8 @@ type Props = {
 function soFar(profile: Profile | null): string | null {
   if (!profile || profile.xp <= 0) return null;
   const parts: string[] = [];
-  const { unlocked, streak } = profile;
+  const { unlocked } = profile;
   if (unlocked > 0) parts.push(`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'} unlocked`);
-  if (streak > 1) parts.push(`${streak} days in a row`);
   return parts.length ? `So far: ${parts.join(' · ')}` : null;
 }
 

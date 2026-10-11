@@ -80,7 +80,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/now.py` | Asks OpenStreetMap what a building-level pin stands inside today, and writes the "now" side of its contrast from that. Runs after aggregation on that content's places; alone, it is the backfill. Free |
 | `pipeline/tags.py` | The extractor's closed tag list, and `from_text`: a submission's #words |
 | `pipeline/dedup.py` | Propose place merges; `--only` applies a reviewed subset. `--memories` finds retold memories within 150 m, and `--apply` hides the weaker telling |
-| `pipeline/browse.py` | **Every memory, all its content, on a map.** Local only (127.0.0.1), ungated, hidden ones faded: search, sort, source/score/hidden filters, opens and reports, fact sheet, nearby places; `#<id>` links one. Free |
+| `pipeline/browse.py` | **Every memory, all its content, on a map.** Local only (127.0.0.1), ungated, hidden ones faded: search, sort (newest created first), source/score/hidden filters, a Full screen reader (no map, one memory at a time between arrows), opens and reports, fact sheet, nearby places; `#<id>` links one. Free |
 | `pipeline/browse.html` | Its page, read per request, so an edit shows on reload |
 | `pipeline/export.py` | Hand a customer the corpus as rows, without the transcripts |
 | `pipeline/perf.py` | **Time the read path on a corpus this size isn't.** Run before and after touching `api/queries.py` |
@@ -92,7 +92,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `pipeline/config.py` | **Every env knob**, read once. Add new settings here |
 | `e2e/run.sh` | **Watch the flows happen.** Drives the real app on a simulator; `--record` leaves an mp4 |
 | `e2e/travel.py` | Writes the walk flow's legs and stop names for the seeded start |
-| `e2e/sql/` | What a flow needs beyond the seed (a streak, past walks, a subscriber), applied by flow name |
+| `e2e/sql/` | What a flow needs beyond the seed (past walks, a subscriber), applied by flow name |
 | `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/walk_labels.json` | Walk/maybe/skip for all 209 memories as of 2026-09-29 (docs/04, *Corpus read*): what a judge change is measured against |

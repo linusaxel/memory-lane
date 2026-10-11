@@ -468,21 +468,6 @@ UNLOCK_COUNT_QUERY = (
     f"SELECT COUNT(DISTINCT memory_id) FROM unlocks WHERE device_id IN {MY_DEVICES}"
 )
 
-# The distinct calendar days this account unlocked a stop of that day's walk,
-# newest first. Filing records an unlock too and must not count, or a streak
-# is kept by posting anything. api.accounts.current_streak turns this into a
-# number - no stored counter, so nothing to keep in sync across devices.
-STREAK_DAYS_QUERY = f"""
-    SELECT DISTINCT u.unlocked_at::date AS d
-    FROM unlocks u
-    JOIN daily_routes r
-      ON r.device_id IN {MY_DEVICES}
-     AND r.route_date = u.unlocked_at::date
-     AND u.memory_id = ANY(r.memory_ids)
-    WHERE u.device_id IN {MY_DEVICES}
-    ORDER BY d DESC
-"""
-
 # Has this account opened this memory already, on any of its devices? Opening
 # it again costs nothing (docs/10, "Pick one to start, then where you
 # stand").
@@ -692,8 +677,8 @@ LIMIT :limit
 
 # This device's walks that opened nothing and never will: every one but
 # today's in progress (docs/10, "A walk that opened nothing is deleted").
-# Hidden memories count here, unlike the journal: the streak counts their
-# unlocks, so a walk with one is not empty.
+# Hidden memories count here, unlike the journal: a walk that opened one
+# opened something.
 ROUTE_PRUNE = f"""
 DELETE FROM daily_routes r
 WHERE r.device_id = CAST(:device_id AS uuid)

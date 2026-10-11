@@ -52,7 +52,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F4 | Switch between layers | Implemented |
 | F25 | Walk today's route | Implemented |
 | F26 | Heart a memory | Implemented |
-| F27 | Keep a streak | Implemented |
+| F27 | Keep a streak | Removed from the app |
 | F28 | Get notified near a memory | Implemented |
 | F29 | See what is locked around you | Removed from the app |
 | F30 | Finish a walk | Implemented |
@@ -93,8 +93,8 @@ This is the entire product; every other flow exists to get somebody here or to
 make it worth having got here.
 
 **Session three — coming back.** The collection has things in it (F15), it works
-on the train home with no signal (F16), the streak says how many days in a row
-(F27), and tomorrow there is another walk. The map shows what is locked around
+on the train home with no signal (F16), and next week there is another free
+walk. The map shows what is locked around
 you, never what it says: standing there is the only way in. Settings, behind the journal's gear, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
@@ -910,7 +910,9 @@ reinstall and covers every phone on the account.
 
 ---
 
-## F27 · Keep a streak — **Implemented**
+## F27 · Keep a streak — **Removed 2026-10-11** (docs/10, *No streak*)
+
+Kept as it was, for the next person with the idea.
 
 **Who:** someone who walks most days.
 **Trigger:** none - it is the number on top of the journal's *Walks*, not a moment.
@@ -1027,8 +1029,7 @@ The last stop unlocks and the day should feel finished.
    the journal, then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
    another day), then "+60 XP" when finishing earned it (once a day) and "Level 3" when it
-   reached one, then
-   the streak once it is more than one day (F27). Until the surprise was
+   reached one. Until the surprise was
    chosen either way, it asks "Let a story find you now and then?" (F28).
 4. Done ends the walk and goes back to the map, following you again. A walked
    walk ends itself, so there is no "every stop unlocked" limbo, and a relaunch
@@ -1054,8 +1055,7 @@ already walked and another in mind.
    a subscriber, or when the ended one opened nothing; otherwise it offers
    **More walks** (F35).
 
-The ended walk stays in the journal (F31) with what it earned, and still counts
-for the streak (F27). A walk that earned nothing is deleted as it ends. Its unearned stops lock again until a walk passes them.
+The ended walk stays in the journal (F31) with what it earned. A walk that earned nothing is deleted as it ends. Its unearned stops lock again until a walk passes them.
 Offline, the card says "Can't reach Memory Lane right now." and the walk goes on.
 
 `App.tsx` (`endWalk`, `confirmEnd`), `src/Plan.tsx` (`EndWalk`),

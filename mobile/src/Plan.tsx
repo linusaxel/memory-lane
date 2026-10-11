@@ -20,7 +20,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Image,
-  Animated,
   type LayoutChangeEvent,
   PanResponder,
   Pressable,
@@ -705,7 +704,6 @@ type WalkDoneProps = {
   loop: boolean;
   /** First unlock to last, or null when they were not all earned today. */
   minutes: number | null;
-  streak: number;
   /** Where you stand now, for the level column. */
   level: number;
   into: number;
@@ -788,7 +786,6 @@ export function WalkDone({
   meters,
   loop,
   minutes,
-  streak,
   level,
   into,
   reward,
@@ -819,7 +816,7 @@ export function WalkDone({
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
-      {/* What you earned, in plum: this walk, where it leaves you, the streak. */}
+      {/* What you earned, in plum: this walk, and where it leaves you. */}
       <View style={styles.stats}>
         {reward && (
           <View style={styles.stat}>
@@ -833,14 +830,7 @@ export function WalkDone({
             <View style={[styles.barFill, { width: `${into * 100}%` }]} />
           </View>
         </View>
-        {streak > 0 && (
-          <View style={[styles.stat, styles.statRuled]}>
-            <Text style={styles.statFigure}>{`${streak} ${streak === 1 ? 'day' : 'days'}`}</Text>
-            <Text style={label}>Streak</Text>
-          </View>
-        )}
       </View>
-      {MILESTONES.includes(streak) && <Milestone streak={streak} />}
       {onNotify && (
         <View testID="surprise-ask">
           <Text style={styles.cardBody}>Let a story find you now and then?</Text>
@@ -865,34 +855,6 @@ export function WalkDone({
         />
       )}
     </GlassCard>
-  );
-}
-
-// Quiet by default, loud only here: an ordinary day's streak is one line.
-const MILESTONES = [7, 30, 100];
-
-/** A streak milestone's own moment on the finish card: it springs in with a
- *  flame and a second success haptic. Still, under Reduce Motion. */
-function Milestone({ streak }: { streak: number }) {
-  const scale = useRef(new Animated.Value(0.8)).current;
-  useEffect(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    AccessibilityInfo.isReduceMotionEnabled().then((still) => {
-      if (still) scale.setValue(1);
-      else
-        Animated.spring(scale, {
-          toValue: 1,
-          speed: 8,
-          bounciness: 14,
-          useNativeDriver: true,
-        }).start();
-    });
-  }, [scale]);
-  return (
-    <Animated.View style={[styles.milestone, { transform: [{ scale }] }]} testID="streak-milestone">
-      <Glyph name="flame.fill" size={22} color={color.plum} bounce={streak} />
-      <Text style={styles.milestoneText}>{`${streak} days in a row`}</Text>
-    </Animated.View>
   );
 }
 
@@ -953,8 +915,6 @@ const styles = StyleSheet.create({
   bar: { height: 6, borderRadius: 3, backgroundColor: color.track, overflow: 'hidden' },
   barFill: { height: 6, borderRadius: 3, backgroundColor: color.plum },
   doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  milestone: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
-  milestoneText: { ...font.uiBold, fontSize: 18, color: color.ink },
   value: { ...font.title, fontSize: 30, lineHeight: 34, color: color.ink },
   lengthRow: {
     flexDirection: 'row',

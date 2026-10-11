@@ -1,5 +1,4 @@
-"""XP and level, counted from finished walks and never stored, like the
-streak. Nothing here is ever sold. docs/10, "Walks earn XP; rare memories wait
+"""XP and level, counted from finished walks and never stored. Nothing here is ever sold. docs/10, "Walks earn XP; rare memories wait
 for a level"."""
 
 from math import isqrt

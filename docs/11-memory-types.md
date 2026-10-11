@@ -151,7 +151,7 @@ first tried on:
 And a related restraint that isn't visual, **reopened 2026-09-22** (see
 `docs/10-decisions.md`, "A streak and a proximity notification, after all"): this product used to have
 no notifications, no streaks and no gamification chrome anywhere
-(`docs/08-ux-flows.md`'s "deliberately absent" list under F1). Both have shipped: a streak counter (F27, no
+(`docs/08-ux-flows.md`'s "deliberately absent" list under F1). Both have shipped (the streak removed again 2026-10-11, docs/10 *No streak*): a streak counter (F27, no
 notification of its own) and a geofenced proximity notification (F28) that is
 the one narrow exception F1's list now names — local, opt-in, off by default,
 scoped to memories that are locked and unlockable by walking there. This

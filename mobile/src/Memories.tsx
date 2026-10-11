@@ -597,8 +597,6 @@ export default function Memories({
  *  nothing, bar the first. */
 function stats(unlocked: number, places: number, profile: Profile | null): string {
   const parts = [`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'}`];
-  const streak = profile?.streak ?? 0;
-  if (streak > 0) parts.unshift(`${streak}-day streak`);
   if (places > 0) parts.push(`${places} ${places === 1 ? 'place' : 'places'}`);
   const added = profile?.submitted ?? 0;
   if (added > 0) parts.push(`${added} added`);

@@ -87,8 +87,8 @@ never see what they post again. You can delete anything you posted, in the app.<
 <h2>Your walks, openings, hearts and notes</h2>
 <p>We keep the walks you planned and finished, which stories you opened and when, the
 stories you hearted, the notes you left, the reports you made and the people you
-blocked. They make your journal, your walk history and its experience points, your
-streak, and the counts an author sees (how many walkers read their memory and hearted
+blocked. They make your journal, your walk history and its experience points, and
+the counts an author sees (how many walkers read their memory and hearted
 it, never who). A walk that opened nothing is deleted when it ends.</p>
 
 <h2>The identifier your app makes</h2>
