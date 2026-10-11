@@ -71,11 +71,21 @@ select.pill.set { background-color: var(--ink); color: var(--paper); }
 .stamp time { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 .stamp .src { color: var(--gold); font-weight: 600; }
 
-/* List: the map hidden, every summary whole, for reviewing. */
-body.listview { grid-template-columns: 1fr; }
-body.listview #map { display: none; }
-body.listview #side { width: 100%; max-width: 860px; margin: 0 auto; border-left: 1px solid var(--rule); }
-body.listview .row p { -webkit-line-clamp: unset; }
+/* Full: the map hidden, every summary whole, one memory at a time between big arrows, for reviewing. */
+body.full { grid-template-columns: 1fr; }
+body.full #map { display: none; }
+body.full #side { width: 100%; max-width: 860px; margin: 0 auto; border: 1px solid var(--rule); border-width: 0 1px; }
+body.full .row p { -webkit-line-clamp: unset; }
+body.full.reading header { display: none; }
+body.full .story { font-size: 20px; }
+.arrow { display: none; position: fixed; top: 50%; transform: translateY(-50%); z-index: 600; width: 56px; height: 56px;
+  border-radius: 50%; border: 1px solid var(--goldline); background: var(--raised); color: var(--gold);
+  font: 34px/1 Gloock, serif; cursor: pointer; }
+.arrow:hover:not(:disabled) { background: var(--gold); color: var(--paper); }
+.arrow:disabled { opacity: .3; cursor: default; }
+#prev { left: max(16px, calc(50% - 500px)); } #next { right: max(16px, calc(50% - 500px)); }
+body.full.reading .arrow { display: block; }
+@media (max-width: 1000px) { body.full.reading .arrow { top: auto; bottom: 16px; transform: none; } }
 .score { color: var(--gold); font-weight: 700; }
 .faded { opacity: .5; }
 .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
@@ -157,7 +167,7 @@ kbd { font: 11px ui-monospace, monospace; background: var(--quiet); border-radiu
         <option value="all">Hidden too</option><option value="shown">Shown only</option><option value="hidden">Hidden only</option>
       </select>
       <button class="pill" id="stranger" aria-pressed="false" title="Memories filed by a person">Filed by people</button>
-      <button class="pill" id="listview" aria-pressed="false" title="Hide the map, show every summary whole">List</button>
+      <button class="pill" id="full" aria-pressed="false" title="Full screen: no map, one memory at a time (← →)">Full screen</button>
       <button class="pill" id="inview" aria-pressed="false" title="Only what is on the map">In view</button>
     </div>
     <div id="hist"></div><div id="histaxis"></div>
@@ -166,6 +176,7 @@ kbd { font: 11px ui-monospace, monospace; background: var(--quiet); border-radiu
   <div id="list"></div>
   <div id="detail"></div>
 </div>
+<button class=arrow id=prev title="Previous (←)">‹</button><button class=arrow id=next title="Next (→)">›</button>
 <div id="map">
   <div id="keys"><kbd>/</kbd> search · <kbd>↑</kbd><kbd>↓</kbd> move · <kbd>↵</kbd> open · <kbd>←</kbd><kbd>→</kbd> prev/next · <kbd>esc</kbd> back</div>
 </div>
@@ -375,6 +386,8 @@ function openMemory(id, {fly = true, push = true} = {}) {
       `<button data-id="${pick(o).id}"><b>${esc(o.name)}</b><span class=meta>${o.mems.length > 1 ? o.mems.length + ' · ' : ''}${Math.round(d)} m</span></button>`).join('')}</div>` : ''}`;
   $('list').style.display = 'none';
   $('detail').style.display = 'block';
+  document.body.classList.add('reading');
+  $('prev').disabled = i <= 0; $('next').disabled = i < 0 || i >= shown.length - 1;
   $('detail').scrollTop = 0;
 
   if (ring) ring.remove();
@@ -397,6 +410,7 @@ function closeDetail({push = true} = {}) {
   map.eachLayer(l => l.closeTooltip?.());
   $('detail').style.display = 'none';
   $('list').style.display = 'block';
+  document.body.classList.remove('reading');
   drawList();
   $('list').querySelector('.row.active')?.scrollIntoView({block: 'nearest'});
   if (location.hash && push) history.pushState(null, '', location.pathname);
@@ -421,13 +435,15 @@ $('q').oninput = e => set('q', e.target.value.toLowerCase().trim());
 $('sort').onchange = e => set('sort', e.target.value);
 $('source').onchange = e => { e.target.classList.toggle('set', !!e.target.value); set('source', e.target.value); };
 $('hidden').onchange = e => { e.target.classList.toggle('set', e.target.value !== 'all'); set('hidden', e.target.value); };
-const listview = on => {
-  document.body.classList.toggle('listview', on); $('listview').setAttribute('aria-pressed', on);
-  try { localStorage.listview = on ? '1' : ''; } catch {}
+const full = on => {
+  document.body.classList.toggle('full', on); $('full').setAttribute('aria-pressed', on);
+  try { localStorage.full = on ? '1' : ''; } catch {}
   if (!on) map.invalidateSize();
 };
-$('listview').onclick = () => listview(!document.body.classList.contains('listview'));
-try { listview(!!localStorage.listview); } catch {}
+$('full').onclick = () => full(!document.body.classList.contains('full'));
+try { full(!!localStorage.full); } catch {}
+$('prev').onclick = () => step(-1);
+$('next').onclick = () => step(1);
 for (const k of ['stranger', 'inview']) $(k).onclick = e => { e.target.setAttribute('aria-pressed', !state[k]); set(k, !state[k]); };
 $('hist').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
