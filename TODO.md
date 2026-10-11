@@ -24,6 +24,11 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The $ column in docs/04 is a guess.** 2026-10-11: no token usage is stored
+  anywhere, so every Road-to-1,000 row priced memories at $0.25 each; the real
+  Batches API usage said ~$0.55 a good one, 71% of it unserved research. It took
+  a scratch script over `batches.list()` to find. Fix: `batch.send` logs each
+  batch's $ from `result.message.usage`.
 - **The dev pin silently beats the simulator's location.** 2026-10-11:
   `EXPO_PUBLIC_DEV_LOCATION` in `mobile/.env` overrides `simctl location` and
   Maestro's `setLocation`, so a walk driven on the dev sim never reaches its

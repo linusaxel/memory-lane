@@ -418,7 +418,7 @@ things, all of them on the planner card:
   a free walker as a gold tile with a lock and a **PLUS** badge. (Renamed
   **Customize** 2026-10-07, a row with a Plus badge.)
 - **Themes lean the walk.** Picked from the extractor's closed vocabulary
-  (`pipeline/tags.py` `TAGS`, mirrored as `THEMES` in `mobile/src/Plan.tsx`),
+  (`pipeline/tags.py` `TAGS`, mirrored as `THEME_GROUPS` in `mobile/src/Plan.tsx`),
   sent as `tags` on preview and accept. A memory carrying one is
   `preferred`: it stands for its place and is worth `PREFERRED_PRIZE` more to
   the solver. Lean, not filter, so a rare theme still gives a full walk.
@@ -3758,7 +3758,8 @@ summaries).
 
 ### A memory is enriched when it is made
 
-Status: Accepted 2026-10-04. Data first: stored, not served yet.
+Status: Accepted 2026-10-04. Data first: stored, not served yet. **Research superseded
+2026-10-11** by *Research waits until it is served*: pictures only.
 
 What a story doesn't tell is often the best of it: who the sculptor was, what
 the place is now, a line someone said. `pipeline/enrich.py` runs on each new
@@ -4462,6 +4463,28 @@ about a work, so it loosened extraction without reaching these stories); a
 sentence in the judge's `only_here` (nothing to fix); a Wikidata
 made/set/discovered-here fetcher (the find-sources ledger: P840 is fiction,
 and P1071 and P189 are empty here).
+
+### Research waits until it is served
+
+Status: Accepted 2026-10-11. Supersedes the research half of *A memory is
+enriched when it is made*.
+
+A memory's enrichment is its pictures, nothing else. The web research and
+its structuring wrote people, quotes, then-and-now and asides that nothing
+serves (`api/queries.py` reads only `enrichment->'pictures'`), and they were
+most of the bill. Measured from the Batches API's own usage, Københavnerglimt
+ids 642-646: $3.82 in all, of it $2.43 research (about 7 searches a card,
+not halved in a batch) and $0.29 structure, for 7 good memories. Without
+them a good memory costs about $0.16, not $0.55.
+
+- **Pictures stay**, found by code and chosen by the pick call.
+- **A thin record's research stays** (`enrich.seed`): it feeds extraction.
+- **When the rest is served**, research the good cards then, in one batch:
+  a memory enriched from now on has no `people` key to find it by.
+
+**Options considered:** research only cards at `walk_score >= 6` (scoring
+first, still paying for data no one sees); fewer searches a card (thinner,
+still unserved).
 
 ### Rejected approaches, do not retry
 

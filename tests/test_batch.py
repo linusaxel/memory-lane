@@ -221,9 +221,7 @@ def test_a_thin_record_waiting_on_its_research_is_not_marked_done(db_session, co
 def test_an_enrichment_waiting_on_its_pictures_is_not_saved_without_them(
     db_session, collecting, monkeypatch
 ):
-    found = {"people": [], "quotes": [], "then_now": [], "asides": []}
-    monkeypatch.setattr(enrich, "research", lambda *a: "notes")
-    monkeypatch.setattr(enrich, "structured", lambda *a: found)
+    monkeypatch.setattr(enrich, "research", lambda *a: pytest.fail("research is paused"))
     picture = {"caption": "Vega, 1996", "year": None, "source": True}
     monkeypatch.setattr(enrich, "source_pictures", lambda *a: [picture])
     args = ("Vega", "the amp caught fire", None, None, None, None, "https://example.org/v")

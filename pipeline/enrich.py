@@ -12,8 +12,9 @@ Pictures come by code, never from the model: Wikimedia Commons under a
 licence that lets us show them with a credit, and the source page's own,
 hotlinked and never copied (docs/10, *The sources' legal footing*).
 
-Bills: one research call (web search at ENRICH_MAX_SEARCHES, about $0.01 a
-search, plus the pages read) and two short calls a memory. Each reply is stored
+Bills: one short pick call a memory. The research (web search at
+ENRICH_MAX_SEARCHES, about $0.01 a search) now runs only for a thin record's
+seed (docs/10, *Research waits until it is served*). Each reply is stored
 in extraction_chunks, so `python -m pipeline.batch` sends them at half price.
 """
 
@@ -468,13 +469,9 @@ def enrich(
     source_url: str | None = None,
     credit: str | None = None,
 ) -> dict | None:
-    """The memory's enrichment, or None when research got no answer: it is
-    looked at again next run (or next batch pass) rather than stored empty."""
-    found = structured(
-        session, client, content_id, research(session, client, content_id, place, summary)
-    )
-    if found is None:
-        return None
+    """The memory's pictures, or None while the pick waits on a batch pass.
+    No web research: its people, quotes and asides are not served, and were
+    most of the bill (docs/10, *Research waits until it is served*)."""
     pictures = []
     try:
         found_pictures = source_pictures(source_url, credit or "the source")
@@ -485,7 +482,7 @@ def enrich(
         logger.exception("Pictures failed for %s", place)
     if pictures is None:
         return None
-    return found | {"pictures": pictures, "at": datetime.now(UTC).isoformat(timespec="seconds")}
+    return {"pictures": pictures, "at": datetime.now(UTC).isoformat(timespec="seconds")}
 
 
 def seed(session, client, content_id: int, place: str, record: str) -> str | None:

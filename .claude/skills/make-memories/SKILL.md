@@ -103,8 +103,9 @@ venv/bin/python -m pipeline.batch --source "<exact name>"   # dry: counts pendin
 
 Tell the user the items, the expected good memories, and the estimated cost.
 Use the source's own $/memory from `docs/04-extract.md` § Road to 1,000 if a
-run has been logged; otherwise use about $0.25 per memory extracted, which is
-about 2× the expected good count. Ask with AskUserQuestion. On a yes, start it
+run has been logged; otherwise use about $0.05 per memory extracted in a batch
+(measured 2026-10-11 from the Batches API usage, research paused), or about
+$0.15 per good one. The $ logged before 2026-10-11 were guessed at $0.25 a memory. Ask with AskUserQuestion. On a yes, start it
 with `run_in_background` and wait for the notification. Don't poll.
 
 ```bash

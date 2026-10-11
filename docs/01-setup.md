@@ -28,7 +28,7 @@ uv pip install --python venv/bin/python -r requirements.txt -r requirements-dev.
 | `GRADER_MODEL` | No | Scores the walk rubric and a bake-off's added claims, whatever extracts (default: claude-sonnet-5-5) |
 | `ANTHROPIC_ADMIN_KEY` | No | Admin key, read only by `python -m pipeline.cost` for the bill |
 | `CLASSIFIER_MODEL` | No | Haiku pre-filter (default: claude-haiku-4-5) |
-| `ENRICH_MAX_SEARCHES` | No | Web searches, and page reads, per new memory's enrichment (default: 5; about a cent a search) |
+| `ENRICH_MAX_SEARCHES` | No | Web searches, and page reads, per thin record's seed research (default: 5; about a cent a search) |
 | `CHUNK_MINUTES` | No | Transcript chunk size (default: 4) |
 | `CHUNK_OVERLAP_SECONDS` | No | Chunk overlap (default: 30) |
 | `MIN_VIDEO_MINUTES` | No | Shorter videos (clips cut from episodes) are never transcribed or extracted (default: 20). Backfill old rows with `python -m pipeline.ingest --refresh-sources` |
