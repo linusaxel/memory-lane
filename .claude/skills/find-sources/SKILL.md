@@ -112,6 +112,18 @@ festivals', venues' and institutions' own history pages and news archives.
   Arbejdermuseet's 1968 activists are audio. Recent material is in print
   (*Bunk, Monk & Funk*, *Stemmer fra 68*). Ask Stadsarkiv (thread already open).
 
+**Sweep 2026-10-11: Wikipedia by title, third round (2 agents, en and da).**
+Sources 308 (en), 309 (da), 310 (Bjørn Nørgaard): 40 windows, 23 memories,
+15 good, mean 6.3. Danish happening, squat and action articles are the seam
+(Allotria 11, Ryesgade, Solvognen, Bøssernes Befrielsesfront 8): 9 good of 15.
+English live albums and sports games read as "X played here", 4-5. Title mode
+keeps only windows that say "København", so articles naming only Børsen,
+Christiania or Parken are skipped silently (Uddrivelsen af templet,
+Junkblokaden, Kvindehuset, Danmark-Sverige 2007): use an en article that says
+Copenhagen. Open: more da articles in "Uroligheder i København", "Aktivisme i
+Danmark", "København i 1900-tallet". Activism and squats are now a theme:
+count them against the cap of 30.
+
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
   clubs) gave 4 good from 67 items (source 245). Danish Wikipedia's 2,783
