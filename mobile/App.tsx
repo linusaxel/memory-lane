@@ -32,6 +32,7 @@ import {
   fetchMine,
   fetchProfile,
   fetchTodaysRoute,
+  fetchWalked,
   fetchUnlocked,
   heartMemory,
   unheartMemory,
@@ -52,7 +53,7 @@ import {
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
-import { devOpenMemory, devOpenScreen } from './src/devOpen.ts';
+import { type DevScreen, devOpenMemory, devOpenScreen, devWatch } from './src/devOpen.ts';
 import { loadSurprise, noteOpened, startWatching, stopWatching } from './src/geofence.ts';
 import type { Surprise } from './src/geofenceRegions.ts';
 import { forgetHearted, loadHearted, rememberHearted } from './src/hearted.ts';
@@ -96,6 +97,7 @@ import { PlanWalkButton } from './src/PlanWalkButton.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
+import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, radius, solid } from './src/theme.ts';
@@ -371,6 +373,12 @@ export default function App() {
   const scheme = useColorScheme();
   // The journal is the only other screen, over a map that stays mounted.
   const [journalOpen, setJournalOpen] = useState(false);
+  // Under __DEV__ only, both: where a dev link put the journal, and a crash on demand.
+  const [devSection, setDevSection] = useState<'walks' | 'unlocked' | 'mine'>();
+  const [devCrash, setDevCrash] = useState(false);
+  const [devPage, setDevPage] = useState<number>();
+  // The walk without a memory in reach, so its own card shows, not the lock.
+  const [devQuiet, setDevQuiet] = useState(false);
   // A heart or a note came back for something you filed, unseen yet.
   const [journalNew, setJournalNew] = useState(false);
 
@@ -1081,17 +1089,6 @@ export default function App() {
   }, [donePath, mapRef, mapReady, doneCardHeight]);
   const mine = !!openMemories[openIndex] && filedBy(openMemories[openIndex], me);
 
-  // EXPO_PUBLIC_DEV_OPEN_SCREEN, under __DEV__ only. The submit sheet is three
-  // taps in and there are no taps, so without this it could only be read as
-  // source. Mount-only: it sets where you land, not where you stay.
-  useEffect(() => {
-    const screen = devOpenScreen();
-    if (!screen) return;
-    setJournalOpen(screen === 'journal');
-    setSubmitOpen(screen === 'submit');
-    setIntro(screen === 'onboarding');
-  }, []);
-
   // EXPO_PUBLIC_DEV_OPEN_MEMORY, under __DEV__ only. See src/devOpen.ts: there
   // is no way to script a tap on this simulator, so without it the sheet cannot
   // be looked at by anything but a person. Fires once - closing it by hand must
@@ -1118,6 +1115,106 @@ export default function App() {
     if (id == null || devOpened.current) return;
     if (openMemory(id)) devOpened.current = true;
   }, [openMemory]);
+
+  // EXPO_PUBLIC_DEV_OPEN_SCREEN on launch, and the dev-screen file after,
+  // under __DEV__ only (src/devOpen.ts). Each clears what the last one opened.
+  // The walk is taken on this phone only, from the planned preview: accepting
+  // it for real would spend the day's walk on every run of scripts/shoot.sh.
+  const devApply = (screen: DevScreen, memory: number | null) => {
+    setSignedIn(true);
+    setJournalOpen(false);
+    setSubmitOpen(false);
+    setIntro(false);
+    setSettingsOpen(false);
+    setProfileOpen(false);
+    setPaywallOpen(false);
+    setOpenAt([]);
+    setPastWalk(null);
+    setConfirmEnd(false);
+    setWalkDone(false);
+    setWalkedOut(false);
+    setDevCrash(false);
+    setDevQuiet(['walk', 'end-confirm', 'done'].includes(screen));
+    const onboarding = (page: number) => {
+      setDevPage(page);
+      setIntro(true);
+    };
+    const walk = () => {
+      if (preview) {
+        takeRoute(preview, planFrom, walkAsk.end);
+        setPreview(null);
+      }
+      setStage('walk');
+    };
+    const journal = (section: 'walks' | 'unlocked' | 'mine') => {
+      setDevSection(section);
+      setJournalOpen(true);
+    };
+    switch (screen) {
+      case 'signin':
+        return setSignedIn(false);
+      case 'onboarding':
+        return onboarding(0);
+      case 'onboarding-2':
+        return onboarding(1);
+      case 'onboarding-3':
+        return onboarding(2);
+      case 'onboarding-4':
+        return onboarding(3);
+      case 'onboarding-location':
+        return onboarding(4);
+      case 'map':
+        return dropRoute();
+      case 'memory':
+        openMemory(memory ?? groups[0]?.memories[0]?.id ?? -1);
+        return;
+      case 'preview':
+        if (stage !== 'preview') dropRoute();
+        return setStage('preview');
+      case 'walked-out':
+        setStage('preview');
+        return setWalkedOut(true);
+      case 'end':
+        return setStage('end');
+      case 'walk':
+      case 'lock':
+        return walk();
+      case 'end-confirm':
+        walk();
+        return setConfirmEnd(true);
+      case 'done':
+        walk();
+        setReward({ xp: 40 });
+        return setWalkDone(true);
+      case 'journal':
+        return journal('walks');
+      case 'journal-unlocked':
+        return journal('unlocked');
+      case 'journal-mine':
+        return journal('mine');
+      case 'past':
+        if (device) fetchWalked(device).then((walks) => walks[0] && setPastWalk(walks[0]));
+        return;
+      case 'submit':
+        return setSubmitOpen(true);
+      case 'settings':
+        return setSettingsOpen(true);
+      case 'profile':
+        return setProfileOpen(true);
+      case 'paywall':
+        return setPaywallOpen(true);
+      case 'crash':
+        return setDevCrash(true);
+    }
+  };
+  const devApplyRef = useRef(devApply);
+  devApplyRef.current = devApply;
+  useEffect(() => {
+    if (!__DEV__) return;
+    const screen = devOpenScreen();
+    if (screen) devApplyRef.current(screen, null);
+    return devWatch((next, memory) => devApplyRef.current(next, memory));
+  }, []);
 
   // Tapping the proximity notification (src/geofence.ts) opens the memory it
   // named. Waits for `groups`, which are still empty on a cold start.
@@ -1205,12 +1302,12 @@ export default function App() {
   // you are at, else the nearest. docs/10, "The lock says where".
   const [pickedId, setPickedId] = useState<number | null>(null);
   const ringFor = useMemo(() => {
-    if (!position) return null;
+    if (!position || devQuiet) return null;
     const picked = ringHere.find(({ group, index }) => group.memories[index].id === pickedId);
     if (picked) return picked;
     if (stopHere) return stopHere;
     return [...ringHere].sort((a, b) => a.away - b.away)[0] ?? null;
-  }, [ringHere, position, pickedId, stopHere]);
+  }, [ringHere, position, pickedId, stopHere, devQuiet]);
   const ringMemory = ringFor ? ringFor.group.memories[ringFor.index] : null;
   const lockFor = opening ?? ringFor;
   // The bottom row's middle while a memory is in reach: the slide that opens it.
@@ -1529,6 +1626,8 @@ export default function App() {
   }
 
   if (signedIn === null) return null;
+
+  if (devCrash) return <Broke onRetry={() => setDevCrash(false)} />;
 
   if (!signedIn) {
     return (
@@ -2231,6 +2330,7 @@ export default function App() {
             }}
             onClose={() => setJournalOpen(false)}
             position={position}
+            devSection={devSection}
           />
           {journalOpen && sheets}
         </Modal>
@@ -2243,6 +2343,8 @@ export default function App() {
             permission={permission}
             onLocation={goToMyLocation}
             onDone={() => setIntro(false)}
+            key={devPage}
+            devPage={devPage}
           />
         )}
       </View>

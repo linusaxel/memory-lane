@@ -55,6 +55,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `crawler/rss.py` | `press`: a feed's articles; `podcast`: episodes' `<podcast:transcript>`. Both forgotten once extracted |
 | `.claude/skills/find-sources/SKILL.md` | **How to find a source:** research, legal check, sample, screen, trial, decide |
 | `.claude/skills/make-memories/SKILL.md` | **How to resume making memories:** progress to 1,000, pick a source, ask, batch, check, log |
+| `.claude/skills/shoot/SKILL.md` | **How to see every screen:** one PNG per screen of the running dev build, in under a minute |
 | `pipeline/ingest.py` | Polls the `active` channels in `sources` into `content`; `--video <url> --to <id>` adds one; `--source <name> --query <q>` runs a text source |
 | `pipeline/sources.py` | **The source funnel:** `list` (yield per source), `discover` (YouTube search over Copenhagen), `screen` (Haiku only), `set`, `add` |
 | `pipeline/geocode.py` | **Places what the model names:** Photon, Wikidata behind one guard, `place()` |
@@ -194,6 +195,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/useMapCamera.ts` | Owns the map ref and every camera move |
 | `mobile/scripts/fresh-splash.sh` | Dev: clear the simulator's saved launch screen, so a new native splash shows |
 | `mobile/scripts/sim.sh` | Dev: start Metro, launch the dev build on the booted simulator, reset unlocks |
+| `mobile/scripts/shoot.sh` | Dev: screenshot every screen (or those named) into `e2e/out/shots/`, no taps |
 | `mobile/scripts/reset-unlocks.sh` | Dev: lock everything again for the simulator's user, in the dev DB and on the device |
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification and the weekly surprise: the native wrapper, the pure region maths, the opt-in flag |
@@ -208,5 +210,5 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/StoryBody.tsx` | A story laid out as written, photos wrapped; the sheet and Preview |
 | `mobile/src/types.ts` | Types more than one screen needs |
 | `mobile/src/Crashed.tsx` | What a render error shows instead of a blank screen, around the whole app |
-| `mobile/src/devLocation.ts`, `devOpen.ts` | Dev only: a told position, a screen opened on launch |
+| `mobile/src/devLocation.ts`, `devOpen.ts` | Dev only: a told position, a screen opened on launch or on asking |
 | `mobile/plugins/withoutBackgroundFetch.js` | Takes back the `fetch` background mode expo-task-manager declares for every app |

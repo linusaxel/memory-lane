@@ -25,21 +25,22 @@ export class Crashed extends Component<{ children: ReactNode }, { failed: boolea
 
   render() {
     if (!this.state.failed) return this.props.children;
-    return (
-      <View style={styles.page}>
-        <Guardian pose="sleepy" size={160} />
-        <Text style={styles.title}>Something broke.</Text>
-        <DiamondRule place={styles.rule} />
-        <Text style={styles.body}>Your walk and your memories are safe.</Text>
-        <Button
-          kind="go"
-          label="Try again"
-          place={styles.button}
-          onPress={() => this.setState({ failed: false })}
-        />
-      </View>
-    );
+    return <Broke onRetry={() => this.setState({ failed: false })} />;
   }
+}
+
+/** The page itself. App.tsx shows it for a dev link too: a real throw in a
+ *  dev build is covered by React Native's own red error screen. */
+export function Broke({ onRetry }: { onRetry: () => void }) {
+  return (
+    <View style={styles.page}>
+      <Guardian pose="sleepy" size={160} />
+      <Text style={styles.title}>Something broke.</Text>
+      <DiamondRule place={styles.rule} />
+      <Text style={styles.body}>Your walk and your memories are safe.</Text>
+      <Button kind="go" label="Try again" place={styles.button} onPress={onRetry} />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

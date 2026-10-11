@@ -41,12 +41,20 @@ type Props = {
   /** Asks for location; true once there is a fix. */
   onLocation: () => Promise<boolean>;
   onDone: () => void;
+  /** The page a dev link opens on: 4 is the location primer. */
+  devPage?: number;
 };
 
-export default function Onboarding({ radiusMeters, permission, onLocation, onDone }: Props) {
+export default function Onboarding({
+  radiusMeters,
+  permission,
+  onLocation,
+  onDone,
+  devPage,
+}: Props) {
   const insets = useSafeAreaInsets();
   const dark = useColorScheme() === 'dark' ? 1 : 0;
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(devPage ?? 0);
   const [asking, setAsking] = useState(false);
 
   const pages = [

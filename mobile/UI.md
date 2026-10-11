@@ -752,6 +752,10 @@ unlock ring — and `--record` leaves an mp4. It seeds its own throwaway
 database, so it does not disturb the corpus. Read `e2e/README.md` before
 writing a flow; four of its rules are not guessable.
 
+**Every screen in under a minute, no Metro restart:** `mobile/scripts/shoot.sh`
+(the `/shoot` skill) asks the running dev build for each screen through a file
+it polls, and saves one PNG each into `e2e/out/shots/`.
+
 For a single screenshot the recipe below is still shorter than a flow.
 `EXPO_PUBLIC_DEV_OPEN_MEMORY` opens one memory on launch, so every state the
 sheet can render is reachable from a script:

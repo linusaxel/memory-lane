@@ -12,11 +12,42 @@
  *
  *     EXPO_PUBLIC_DEV_OPEN_MEMORY=265 npx expo start --dev-client
  *     xcrun simctl io booted screenshot /tmp/sheet.png
+ *
+ * Or with no restart, by writing `screen=paywall` into `dev-screen` in the app's
+ * documents, which `devWatch` polls: `scripts/shoot.sh` walks every screen so.
+ * Not a deep link: `simctl openurl` asks "Open in Memory Lane?" every time.
  */
 
-/** Every screen a launch can land on: the map, the journal over it, the
- *  submit modal over that, or the first-run pages. */
-const SCREENS = ['walk', 'journal', 'submit', 'onboarding'] as const;
+import { File, Paths } from 'expo-file-system';
+
+/** Every screen a launch or the dev-screen file can land on. In `scripts/shoot.sh`'s
+ *  order: `walk` and after build on the walk `preview` planned. */
+export const SCREENS = [
+  'signin',
+  'onboarding',
+  'onboarding-2',
+  'onboarding-3',
+  'onboarding-4',
+  'onboarding-location',
+  'map',
+  'memory',
+  'preview',
+  'walked-out',
+  'end',
+  'walk',
+  'lock',
+  'end-confirm',
+  'done',
+  'journal',
+  'journal-unlocked',
+  'journal-mine',
+  'past',
+  'submit',
+  'settings',
+  'profile',
+  'paywall',
+  'crash',
+] as const;
 
 export type DevScreen = (typeof SCREENS)[number];
 
@@ -25,14 +56,38 @@ export type DevScreen = (typeof SCREENS)[number];
 export function devOpenScreen(): DevScreen | null {
   if (!__DEV__) return null;
 
-  const raw = process.env.EXPO_PUBLIC_DEV_OPEN_SCREEN?.trim();
-  if (!raw) return null;
+  return asScreen(process.env.EXPO_PUBLIC_DEV_OPEN_SCREEN);
+}
 
+function asScreen(raw: string | null | undefined): DevScreen | null {
+  raw = raw?.trim();
+  if (!raw) return null;
   if (!(SCREENS as readonly string[]).includes(raw)) {
-    console.warn(`EXPO_PUBLIC_DEV_OPEN_SCREEN is not one of ${SCREENS.join(', ')}: ${raw}`);
+    console.warn(`Dev screen is not one of ${SCREENS.join(', ')}: ${raw}`);
     return null;
   }
   return raw as DevScreen;
+}
+
+/** Calls `open` each time `dev-screen` changes, with what it now says:
+ *  `screen=memory&memory=265&n=<anything new>`. What was there at launch is
+ *  stale and ignored. Returns the stop. */
+export function devWatch(open: (screen: DevScreen, memory: number | null) => void): () => void {
+  if (!__DEV__) return () => {};
+  const file = new File(Paths.document, 'dev-screen');
+  const read = () => (file.exists ? file.textSync().trim() : '');
+  let last = read();
+  const timer = setInterval(() => {
+    const now = read();
+    if (now === last) return;
+    last = now;
+    // Not URLSearchParams: React Native's has no get().
+    const query = Object.fromEntries(now.split('&').map((pair) => pair.split('=')));
+    const screen = asScreen(query.screen);
+    const memory = Number(query.memory);
+    if (screen) open(screen, Number.isInteger(memory) && memory > 0 ? memory : null);
+  }, 250);
+  return () => clearInterval(timer);
 }
 
 /** `EXPO_PUBLIC_DEV_OPEN_MEMORY=265`. Baked in when Metro starts, so changing
