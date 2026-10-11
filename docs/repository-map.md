@@ -205,6 +205,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen, what the source button says, and the era slider's stops (`ERA_STOPS`) |
 | `mobile/src/collector.ts` | The Collector's rules: four classes, the locket counts that open each of eight stages, and a rank that never goes down. Pure, so node tests it |
+| `mobile/src/CollectorPage.tsx` | Your Collector, a sheet from the journal: the look now, the path of eight with silhouettes ahead, the four classes to switch |
 | `mobile/src/CollectorLook.tsx` | A Collector's look at a stage (a silhouette when ahead), the art map, and the pick and stage this phone keeps |
 | `mobile/src/countUp.ts` | The values a journal number rolls through on its way up |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |

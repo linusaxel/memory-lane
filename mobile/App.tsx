@@ -92,7 +92,8 @@ import { seg } from './src/lockets/math.ts';
 import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
 import { type Collector, loadCollector, saveCollector } from './src/CollectorLook.tsx';
-import { classOf } from './src/collector.ts';
+import { classOf, stageNow } from './src/collector.ts';
+import CollectorPage from './src/CollectorPage.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
@@ -345,6 +346,8 @@ export default function App() {
   useEffect(() => {
     loadCollector().then(setCollector);
   }, []);
+  const lockets = profile?.unlocked ?? 0;
+  const rank = stageNow(collector.stage, lockets);
   const keepCollector = useCallback((patch: Collector) => {
     setCollector((now) => {
       const next = { ...now, ...patch };
@@ -356,6 +359,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [collectorOpen, setCollectorOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
   // server knows (src/purchases.ts).
   useEffect(() => {
@@ -1151,6 +1155,7 @@ export default function App() {
     setSettingsOpen(false);
     setProfileOpen(false);
     setPaywallOpen(false);
+    setCollectorOpen(false);
     setOpenAt([]);
     setPastWalk(null);
     setConfirmEnd(false);
@@ -1368,6 +1373,8 @@ export default function App() {
           fetchMine(device).then(({ memories }) => memories[0] && openEditor(memories[0]));
         }
         return;
+      case 'collector':
+        return setCollectorOpen(true);
       case 'settings':
       case 'settings-lower':
       case 'settings-delete':
@@ -1884,6 +1891,17 @@ export default function App() {
         device={device}
         profile={profile}
         onProfile={setProfile}
+      />
+      <CollectorPage
+        visible={collectorOpen}
+        onClose={() => setCollectorOpen(false)}
+        id={classOf(collector.class).id}
+        stage={rank}
+        lockets={lockets}
+        onChoose={(id) => {
+          Haptics.selectionAsync().catch(() => {});
+          keepCollector({ class: id });
+        }}
       />
       <EditProfile
         visible={profileOpen}
@@ -2471,6 +2489,9 @@ export default function App() {
               Haptics.selectionAsync().catch(() => {});
               setSettingsOpen(true);
             }}
+            collector={classOf(collector.class).id}
+            rank={rank}
+            onCollector={() => setCollectorOpen(true)}
             onOpenWalk={(walk) => {
               setJournalOpen(false);
               setPastWalk(walk);

@@ -496,19 +496,6 @@ ever covers a memory.
       Files replace the placeholders in `mobile/assets/collector/<class>-<stage>.png`
       (today every stage is the sheet's front view, cut by hand); nothing
       else changes.
-- [ ] **The Collector page.** (checked 2026-10-11) A new screen opened by
-      tapping the Collector in the journal. The current look large, the class
-      and rank ("Lantern Warden"), "84 lockets · 36 to Elder of Roads" and a
-      bar. Below it, the path: all eight stages in a row, the reached ones in
-      colour and the ones ahead as dark silhouettes, each with its count ("at
-      120"). The silhouettes are the pull, like a talent tree you can see
-      ahead. Then the four classes to switch between; the stage comes with
-      you, since it is your lockets, not the class's. No shop, no prices, no
-      currency.
-- [ ] **The journal wears the Collector.** (checked 2026-10-11) The level bar
-      under the name goes; the Collector stands at the header's right, about
-      56 pt, tappable. The photo stays as the face others see on what you
-      file. Stats line: "84 lockets" leads.
 - [ ] **The walk-done card counts lockets.** (checked 2026-10-11) "+5 lockets"
       replaces "+60 XP", and a small Collector with its bar to the next rank
       replaces "Level 3". The new count is the profile's `unlocked`, read after

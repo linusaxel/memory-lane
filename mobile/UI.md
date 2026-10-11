@@ -127,8 +127,10 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 │                              header, sections and list arrive a beat apart. Drag it down or
 │                              × to close. Reduce Motion: no cascade. The journal is you as well
 ├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
-│                              it "12 memories · 4 places · 2 added · 5 hearts",
-│                              zeros left out but the first. Tapping it opens Edit profile. A gear, then × top right. A
+│                              it "12 lockets · 4 places · 2 added · 5 hearts",
+│                              zeros left out but the first. Tapping it opens Edit profile.
+│                              Then your Collector, 56pt at its stage (tapped: its page), a
+│                              gear, then × top right. A
 │                              number that grew since the last look rolls up from its old
 │                              value (countUp.ts, at most 8 ticks over ~600 ms, a selection
 │                              haptic each); one that fell just shows. First look and Reduce
@@ -161,6 +163,15 @@ Grouped rows: a small label, a paperRaised card with a gold hairline, an optiona
 ├─ Location, Notifications     one row each: "Location  On ›", "A memory is nearby" + Switch
 ├─ How it works                the one place that answers "why can't I read this", two lines
 └─ About                       privacy policy, contact, OpenStreetMap, each ↗
+
+Your Collector (src/CollectorPage.tsx, pageSheet, from the Collector in the header) - "Your
+Collector" 34/700, × top right
+├─ now                         the look at 200pt, the class, the rank 28/700, "4 lockets · 4 to
+│                              Lamplit" and a plum bar (full at the top or above the count)
+├─ The path                    the eight stages in a row, reached in colour, ahead as inkFaint
+│                              silhouettes (the look with tintColor), each "at 15"
+└─ Your class                  the four, two to a row, gold ring on yours; a tap switches. The
+                               stage comes along. No shop, no prices, no currency
 
 Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/700, × top right
 ├─ the photo, 112pt            Choose photo / Take photo, square crop; Remove photo. Public,
@@ -208,6 +219,7 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
 | `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
+| `src/CollectorPage.tsx` | your Collector: the look, the path of eight, the four classes. Its own sheet, from the journal's header |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
 | `src/DiamondRule.tsx` | the one ornament, twice on an open story: under the byline, before the notes |
 | `src/PullQuote.tsx` | a quote set apart: gold mark, Newsreader italic, a caption |

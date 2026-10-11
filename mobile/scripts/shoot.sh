@@ -54,7 +54,7 @@ for screen in "${SCREENS[@]}"; do
   case "$screen" in
     preview | plan-one-way | plan-ends-here | plan-unreachable | customize*) wait=6 ;;
     preview-customized | offline-plan) wait=4 ;;
-    memory-* | notes-* | past | journal* | submit-editor | submit-delete) wait=3 ;;
+    memory-* | notes-* | past | journal* | collector | submit-editor | submit-delete) wait=3 ;;
     settings-lower) wait=2.5 ;;
     seal-first) wait=2.2 ;;
     *) wait=1.5 ;;

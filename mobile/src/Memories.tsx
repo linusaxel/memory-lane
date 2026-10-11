@@ -62,6 +62,8 @@ import {
   type Seen,
 } from './seen.ts';
 import { color, dim, font, label, lift, screenTitle } from './theme.ts';
+import CollectorLook from './CollectorLook.tsx';
+import { classOf, type ClassId } from './collector.ts';
 import { useReduceMotion } from './useBreath.ts';
 
 type Props = {
@@ -74,6 +76,10 @@ type Props = {
   placeCount: number;
   onEditProfile: () => void;
   onSettings: () => void;
+  /** Your Collector at its stage, at the header's right: tapped, its page. */
+  collector: ClassId;
+  rank: number;
+  onCollector: () => void;
   /** A walk card tapped: show that walk on the map. */
   onOpenWalk: (walk: WalkedRoute) => void;
   /** Refetches each time this turns true: the journal stays mounted. */
@@ -113,6 +119,9 @@ export default function Memories({
   placeCount,
   onEditProfile,
   onSettings,
+  collector,
+  rank,
+  onCollector,
   onOpenWalk,
   focused,
   refreshKey,
@@ -543,6 +552,15 @@ export default function Memories({
           </View>
         </Pressable>
         <Pressable
+          style={dim(styles.collector)}
+          onPress={onCollector}
+          accessibilityRole="button"
+          accessibilityLabel={`Your Collector, ${classOf(collector).ranks[rank]}`}
+          testID="journal-collector"
+        >
+          <CollectorLook id={collector} stage={rank} size={56} />
+        </Pressable>
+        <Pressable
           style={dim(styles.cog)}
           hitSlop={8}
           onPress={onSettings}
@@ -595,7 +613,7 @@ export default function Memories({
 /** Your numbers in one line under the name. A count that is still zero says
  *  nothing, bar the first. */
 function stats(unlocked: number, places: number, profile: Profile | null): string {
-  const parts = [`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'}`];
+  const parts = [`${unlocked} ${unlocked === 1 ? 'locket' : 'lockets'}`];
   if (places > 0) parts.push(`${places} ${places === 1 ? 'place' : 'places'}`);
   const added = profile?.submitted ?? 0;
   if (added > 0) parts.push(`${added} added`);
@@ -836,6 +854,7 @@ const styles = StyleSheet.create({
   title: { ...screenTitle, fontSize: 28, lineHeight: 34 },
   stats: { ...label, fontSize: 12, marginTop: 2 },
   cog: { padding: 6 },
+  collector: { marginVertical: -6 },
   shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 24, paddingTop: 16 },
   // A capsule with the open tab raised in it, like the planner's Mode row.
   switcher: {
