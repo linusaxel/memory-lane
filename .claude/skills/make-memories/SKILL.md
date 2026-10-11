@@ -151,6 +151,7 @@ with "stored nothing", stop and report. Don't retry.
 
 ```bash
 venv/bin/python -m pipeline.dedup --memories --source <id>   # dry run: retellings
+venv/bin/python -m pipeline.quality --faults --source <id>   # hedges, the source's voice; --fix mends
 ```
 
 Rerun step 0. Then read ten of the new memories, `summary`, `quote` and

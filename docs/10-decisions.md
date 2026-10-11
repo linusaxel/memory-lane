@@ -4570,6 +4570,27 @@ second generation would have drifted off-model.
 (not wanted); a companion that guides the walk (the evidence above); hiding it
 in dark mode.
 
+### Writing faults are rewritten, not reported
+
+2026-10-11. The text rules in `pipeline/quality.py` only ever reported, and
+two faults reached the walker: "A McDonald's once stood on Nørrebrogade, and
+it is not known whether it is still there… it has since closed" (19 shown
+cards hedged like that), and "the author" or "the passage" (26, several
+scored 8-10: the walk score rates interest, not writing). The hedge came from
+`scenes.spot_card`, which told the writer "Now: not known if still there"
+while the prompt asked it to say what is there now; an unknown fate now says
+nothing.
+
+Two rules act (`quality.MENDED`, `faults()`): a scene-first card is written
+once more told to fix them (`scenes.render`), a transcript card has the
+sentences with them written again (`extract.mended`). A rewrite that still
+has the fault, or grew, is refused and the card kept: a regex never drops a
+story. `quality --faults [--source] [--fix]` finds and mends the shown ones.
+The other rules (`META`, `NOT_PAST`, `someone`, over 180 words) stay
+report-only: "he explained" and "you are standing" are fine in a card.
+Considered: an LLM self-contradiction check; the hedge was the contradiction
+seen, so it waits until `--faults` misses one in the cards read.
+
 ### Rejected approaches, do not retry
 
 Status: Rejected
