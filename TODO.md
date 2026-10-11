@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The gate is INFRA in a cloud session: it needs Docker.** 2026-10-11:
+  a docs-only change in a Claude Code cloud container got `GATE=INFRA Docker
+  is not running` after a fresh venv and `npm ci`, so nothing verified it but a
+  hand-picked pytest. Fix: verify.sh runs the Docker-free checks (compileall,
+  ruff, app typecheck and Prettier) and reports the database tests as skipped
+  when Docker is absent.
+
 - **No e2e flow screenshots the locket.** 2026-10-10: porting the unlock
   engine, walk-and-unlock passed green with nothing showing the lid had drawn
   or swung. It took a hand loop of `simctl io screenshot` and contact sheets

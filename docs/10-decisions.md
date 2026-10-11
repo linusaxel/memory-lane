@@ -3105,9 +3105,34 @@ The cost: `quality --compare`/`--whole` and `classifier_audit` can't read an
 extracted video any more. Measure a video prompt change on videos not yet
 extracted, or on books.
 
+### Copenhagen is the first market, not the product
+
+Status: Accepted 2026-10-11. Amends *Copenhagen first, and the podcast is test
+data* and *One launch area*.
+
+The founder: Copenhagen is just the first market; no decision is made on that
+fact. The app, the pipeline and the brand work for any city, and nothing is
+tailored to this one.
+
+- **Copenhagen is a value, not an assumption.** Where it shows up today
+  (`LAUNCH_BBOX`, the app's `FALLBACK_REGION` and its "Plan from central
+  Copenhagen" copy, the sources the funnel searches) it is the first market's
+  setting. A new market changes those values, not the code around them.
+- **No feature, rule or threshold is chosen because of Copenhagen.** Its
+  harbour, its 1859 renumbering or its press's TDM reservations are data the
+  code meets, not a shape the code takes. If something only works there, it
+  is not done.
+- **The brand is not Danish.** The mascot, the copy and the visual design use
+  nothing that only reads in Copenhagen: no Danish names, landmarks or local
+  plants as the identity.
+
+**Consequences:** a change that hardcodes a city, a language or a local
+custom outside the market's own settings is a bug, whichever market it is.
+
 ### Copenhagen first, and the podcast is test data
 
-Status: Accepted 2026-09-20
+Status: Accepted 2026-09-20. Amended 2026-10-11 by *Copenhagen is the first
+market, not the product*: Copenhagen is the first market, not a design input.
 
 Decided 2026-09-20. Copenhagen is the launch area. The US comedy podcast
 (`Tuesdays with Stories`: 224 memories, none within 20 km of Copenhagen) stays

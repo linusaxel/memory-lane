@@ -30,6 +30,7 @@ Read what the change touches, not everything:
 - **The device UUID is the only credential.** Self-issued, sent in the body, and never a session token. See [Identity](docs/architecture.md#identity)
 - **Google and Apple sign-in only.** See [Google and Apple only](docs/10-decisions.md#google-and-apple-only)
 - **The summary is the product.** Measure a prompt change before and after it ships. See [Memory quality](docs/04-extract.md#memory-quality)
+- **Copenhagen is the first market, not the product.** Nothing is tailored to it: a city lives in the market's settings, never in the code, copy or brand. See [Copenhagen is the first market](docs/10-decisions.md#copenhagen-is-the-first-market-not-the-product)
 - Two writers to one database: the pipeline and the API. See [Data ownership](docs/architecture.md#data-ownership)
 
 ## Forbidden actions
