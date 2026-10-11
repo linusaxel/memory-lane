@@ -4,6 +4,7 @@ appId: ${APP_ID}
 ---
 - tapOn: "Journal"
 - tapOn: "Edit profile"
+- takeScreenshot: edit-profile
 - tapOn: "The name your memories are signed with"
 - eraseText: 10
 - inputText: ${NAME}

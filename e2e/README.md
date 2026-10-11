@@ -109,7 +109,9 @@ Each of these cost an afternoon.
 
 To see a screen mid-flow, add `- takeScreenshot: name`; it lands in
 `e2e/out/shots/<flow>/takeScreenshot/name.png`, beside the failure screenshots and Maestro's
-logs. `walk-and-unlock` keeps two: `walk-card` and `finish-card`.
+logs. Every main screen already has one, so a clean `./e2e/run.sh` leaves a
+full set of the app's screens there (one folder per flow; a shared step's shot,
+such as `sign-in` or `planner`, keeps its last take).
 
 Coordinates and `dev seed` names in the YAML are held against `seed_dev.py` by
 `tests/test_flows.py::test_maestro_flows_still_point_at_the_seed`: when they

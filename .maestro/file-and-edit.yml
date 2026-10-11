@@ -25,6 +25,7 @@ appId: ${APP_ID}
 # text is something this flow can look for again once it sits in a list.
 - tapOn: "Add a memory here"
 - assertVisible: "Next"
+- takeScreenshot: add-memory
 
 # The fields have no box and no label on screen, so the flow finds them by id.
 - tapOn:
@@ -67,6 +68,7 @@ appId: ${APP_ID}
     file: steps/tap-clear.yml
     env:
       ID: block-quote
+- takeScreenshot: editor-blocks
 
 # A photo, which no other flow attaches: SDK 57's expo/fetch once refused the
 # { uri } FormData part and every upload failed without reaching the API.
@@ -112,11 +114,13 @@ appId: ${APP_ID}
 - tapOn:
     id: "caption"
 - inputText: "The dock at dawn"
+- takeScreenshot: editor-photo
 
 # Next opens the seal: the locket is chosen once the story is written.
 - tapOn: "Next"
 - assertVisible:
     id: "locket-hunter-compass"
+- takeScreenshot: seal
 - tapOn:
     id: "seal"
 
@@ -126,6 +130,7 @@ appId: ${APP_ID}
     timeout: 40000
 - assertVisible: ".*after. #food"
 - assertVisible: "The step by the ferry landing"
+- takeScreenshot: filed-memory
 # Every block the editor made, set as the sheet reads it: the marks gone.
 - assertVisible: "The horn"
 - assertVisible: "Somebody do it again"
@@ -148,6 +153,7 @@ appId: ${APP_ID}
 - assertNotVisible: "Heart"
 - tapOn: "More"
 - assertVisible: "Edit this memory"
+- takeScreenshot: author-menu
 - assertNotVisible: "Report this memory"
 - tapOn: "Cancel"
 - scrollUntilVisible:
@@ -183,6 +189,7 @@ appId: ${APP_ID}
 - assertVisible: "The step by the ferry landing, .*1 note, New"
 # Opening the tab was the look: the dot goes with it.
 - assertVisible: "Mine"
+- takeScreenshot: journal-mine
 
 # The Filed row opens the same sheet as editing: fields come back exactly as
 # filed. Rows carry a live distance alongside the place name in their
@@ -192,6 +199,7 @@ appId: ${APP_ID}
 - assertVisible: "Save"
 - assertVisible: ".*The step by the ferry landing"
 - assertVisible: ".*ferry horn.*"
+- takeScreenshot: edit-memory
 
 # Change the place name and save. Next becomes Save while editing - same
 # button, relabelled. Both fields asserted above sit above the fold, so
@@ -218,6 +226,7 @@ appId: ${APP_ID}
     element:
       id: "camera-take"
     direction: DOWN
+- takeScreenshot: camera
 - tapOn:
     id: "camera-take"
 - extendedWaitUntil:

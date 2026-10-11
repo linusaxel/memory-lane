@@ -7,4 +7,5 @@ appId: ${APP_ID}
     timeout: 40000
 - assertNotVisible: "A walk from here"
 - assertNotVisible: "Plan a walk"
+- takeScreenshot: sign-in
 - tapOn: "Skip \\(dev build\\)"

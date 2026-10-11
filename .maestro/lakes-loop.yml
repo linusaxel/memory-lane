@@ -35,6 +35,7 @@ appId: ${APP_ID}
     visible:
       id: "planning-from-centre"
     timeout: 40000
+- takeScreenshot: planning-from-centre
 - tapOn: "Use my location"
 - tapOn:
     text: "Allow While Using App"
@@ -82,6 +83,7 @@ appId: ${APP_ID}
     visible: "[0-9]+ memories · [0-9.]+ k?m"
     timeout: 40000
 - assertNotVisible: "[0-9]+ memories · .* loop"
+- takeScreenshot: one-way
 - tapOn: "Loop"
 # × goes back to the map from any step, and Plan a walk plans again.
 - tapOn: "Close the planner"
@@ -104,6 +106,7 @@ appId: ${APP_ID}
     visible:
       id: "planning-from-centre"
     timeout: 40000
+- takeScreenshot: location-refused
 
 # ---- F1, nothing walkable
 #
@@ -121,6 +124,7 @@ appId: ${APP_ID}
       id: "no-walk"
     timeout: 40000
 - assertVisible: "Walk length"
+- takeScreenshot: no-walk
 
 # ---- F1 the whole slider, F32 until the far lake, F31 past walks
 - runFlow:
@@ -143,6 +147,7 @@ appId: ${APP_ID}
 - tapOn:
     point: "50%,30%"
 - assertVisible: "Ends where you tapped"
+- takeScreenshot: pick-end
 - extendedWaitUntil:
     visible: "[0-9]+ memor(y|ies) · [0-9.]+ k?m"
     timeout: 40000
@@ -163,6 +168,7 @@ appId: ${APP_ID}
     timeout: 40000
 - assertVisible:
     id: "longest-walk"
+- takeScreenshot: longest-walk
 # Past Sortedams Sø, the lake at the door, on every roll. The stops land as
 # the line draws through them.
 - extendedWaitUntil:
@@ -193,12 +199,14 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*, 5 memories · .*"
     timeout: 30000
+- takeScreenshot: journal-walks
 - assertVisible: ".*, 2 memories · 4\\.0 km"
 - tapOn: ".*, 2 memories · 4\\.0 km"
 - extendedWaitUntil:
     visible: "Stop \\d+, Peblinge Sø 5, dev seed, .*"
     timeout: 30000
 - assertVisible: "Stop \\d+, Sortedams Sø 4, dev seed, .*"
+- takeScreenshot: past-walk-stops
 - assertNotVisible: "Stop \\d+, Sortedams Sø 3, dev seed, .*"
 - tapOn: ".*, 2 memories · 4\\.0 km"
 # The sections are pages: a swipe turns one, and the tab follows it.
@@ -209,6 +217,7 @@ appId: ${APP_ID}
       text: "Unlocked"
       selected: true
     timeout: 10000
+- takeScreenshot: journal-unlocked
 - swipe:
     direction: RIGHT
 - extendedWaitUntil:

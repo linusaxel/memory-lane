@@ -67,6 +67,7 @@ appId: ${APP_ID}
 - tapOn: "Stop 2 of 4. ${STOP2}. Locked, too far to open."
 # Only standing there opens it (docs/10, "A walk planner, nothing else").
 - assertVisible: "Get within .* m to unlock it\\."
+- takeScreenshot: locked-stop
 # F26: nothing to heart until it is open.
 - assertNotVisible: "Heart"
 - tapOn: "Close"
@@ -83,6 +84,7 @@ appId: ${APP_ID}
     longitude: ${START_LNG}
 - tapOn: "Journal"
 - tapOn: "Settings"
+- takeScreenshot: settings
 - scrollUntilVisible:
     element: "Notify me when a memory is nearby"
     direction: DOWN
@@ -204,6 +206,7 @@ appId: ${APP_ID}
     visible: "Plan a walk"
     timeout: 30000
 - assertNotVisible: "End walk"
+- takeScreenshot: map-home
 
 # F15 + F31: the journal keeps the walk. Its row opens in place to its
 # stops, and an earned one opens the same sheet. (F16, the same journal with
@@ -212,6 +215,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*, 4 memories · .*"
     timeout: 30000
+- takeScreenshot: journal
 - tapOn: ".*, 4 memories · .*"
 # A stop row's label is "Stop N, <place>, <distance>"; the walk row's names no stop.
 - extendedWaitUntil:
@@ -219,6 +223,7 @@ appId: ${APP_ID}
     timeout: 30000
 - tapOn: "Stop \\d+, ${STOP1}, .*"
 - assertVisible: ".*${WORDS1}.*"
+- takeScreenshot: memory-reread
 # A linked name previews in the card, not a browser (docs/10, "Wikipedia
 # previews inline"). e2e/sql makes WORDS1 the link.
 - tapOn: "${WORDS1}"
@@ -227,6 +232,7 @@ appId: ${APP_ID}
       id: "wiki-preview"
     timeout: 15000
 - assertVisible: "Read on Wikipedia.*"
+- takeScreenshot: wiki-preview
 # Centred, as the note below is: low down, the pinned heart covers it.
 - scrollUntilVisible:
     element: "Close preview"
@@ -268,6 +274,7 @@ appId: ${APP_ID}
     visible: "Rewrite"
     timeout: 30000
 - assertVisible: "Stood here twice\\."
+- takeScreenshot: memory-note
 - assertNotVisible: "Stood here at dawn\\."
 - tapOn: "Close"
 
@@ -306,6 +313,7 @@ appId: ${APP_ID}
 - assertVisible:
     id: "more-walks"
 
+- takeScreenshot: walked-out
 # The walk is kept: the journal's Walks tab, as cards, draws it as its shape,
 # and a card shows the walk on the map again.
 - tapOn: "Journal"
@@ -317,6 +325,7 @@ appId: ${APP_ID}
     index: 0
 - assertVisible:
     id: "past-walk"
+- takeScreenshot: past-walk
 - tapOn: "Done"
 
 # F35: the paywall has nothing to sell on a simulator (no RevenueCat key) and
@@ -329,6 +338,7 @@ appId: ${APP_ID}
     timeout: 20000
 - assertVisible:
     id: "subscriptions-unavailable"
+- takeScreenshot: paywall
 - tapOn: "Not now"
 - runFlow:
     file: steps/rename.yml

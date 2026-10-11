@@ -24,6 +24,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A cloud session can neither run the app nor pass the gate.** 2026-10-11:
+  asked to screenshot every screen; the app is iOS-only (SwiftUI, Apple Maps)
+  and the Linux container has no simulator, no KVM and no Docker, so
+  `verify.sh` stops at INFRA and the database tests can't run. Cost: the
+  screens had to be scripted blind as Maestro shots for a Mac to take. Fix:
+  a SessionStart hook that starts dockerd (or a `pytest -m "not db"` gate
+  for containers), and say up front in AGENTS.md that the app runs on a Mac only.
 - **Walk scores are never refreshed when the rubric changes.** 2026-10-10:
   re-scoring 68 memories, 10 scored on 09-27 fell from 6-8 to 3-5 and stayed
   there on two reruns; 81 of 261 good memories carry pre-October scores, so

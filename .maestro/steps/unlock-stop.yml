@@ -9,6 +9,7 @@ appId: ${APP_ID}
     visible: "Stop ${N} of 4. ${STOP}. Locked, within reach."
     timeout: 45000
 - assertVisible: "Unlock this memory"
+- takeScreenshot: unlock-ready-${N}
 # Two ways in (docs/10, "Slide to unlock"). SLIDE=1 drags the knob of the
 # slide, in place of the bottom row, to its end: by screen point, since the track
 # is one accessibility element and its knob sits at its left (a 402pt-wide
@@ -32,6 +33,7 @@ appId: ${APP_ID}
 - extendedWaitUntil:
     visible: ".*${WORDS}.*"
     timeout: 30000
+- takeScreenshot: memory-open-${N}
 - assertNotVisible: "Unlock this memory"
 # F30: never over a memory, which is read first. Only closing the last one
 # shows the whole loop.
