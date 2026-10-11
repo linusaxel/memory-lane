@@ -19,6 +19,7 @@ import {
   TextInput,
   View,
   type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Haptics from 'expo-haptics';
@@ -1259,11 +1260,13 @@ export function Chip({
   label: text,
   on,
   testID,
+  style,
   onPress,
 }: {
   label: string;
   on: boolean;
   testID?: string;
+  style?: ViewStyle;
   onPress: () => void;
 }) {
   const pop = useRef(new Animated.Value(1)).current;
@@ -1288,6 +1291,7 @@ export function Chip({
       accessibilityRole="button"
       accessibilityState={{ selected: on }}
       testID={testID}
+      style={style}
     >
       {({ pressed }) => (
         <Animated.View
@@ -1298,6 +1302,8 @@ export function Chip({
             { transform: [{ scale: pop }] },
           ]}
         >
+          {/* Selected by more than its colour. */}
+          {on && <Glyph name="checkmark" size={11} weight="bold" color={color.paper} />}
           <Text style={[styles.chipText, on && styles.chipTextOn]}>{text}</Text>
         </Animated.View>
       )}
@@ -1523,6 +1529,10 @@ const styles = StyleSheet.create({
     // from stealing the edges of the target.
     paddingVertical: 12,
     backgroundColor: color.quiet,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
   },
   chipOn: { backgroundColor: color.gold },
   chipText: { ...label, fontSize: 12, color: color.inkSoft },

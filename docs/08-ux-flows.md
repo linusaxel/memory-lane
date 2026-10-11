@@ -202,8 +202,9 @@ the planner*).
    what it is*). A walk with a mystery stop ends the list with a "?" row,
    "Somewhere on the way" (docs/10, *A mystery stop*). On step one, under Loop · One way, **Customize** (or what is
    chosen, "History, Music · 1800–1945") opens a third step: a title and
-   Clear, chips for the 18 themes, richest first, one era (Any time, Before
-   1800, 1800–1945, Since 1945), and **Done · N stops**. Themes and the era both
+   Clear, one era on a timeline you tap (Before 1800, 1800–1945, Since 1945;
+   all lit is Any time), chips for the 18 themes in three headed groups
+   (Places & past, Out & about, People), and **Done · N stops**. Themes and the era both
    lean the walk, never filter it, and are kept on the phone (docs/10,
    *Subscribers shape the walk*). A free walker's Customize carries a Plus
    badge and opens the paywall (F35).

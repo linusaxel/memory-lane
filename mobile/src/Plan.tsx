@@ -56,26 +56,14 @@ import { WalkShape } from './WalkCard.tsx';
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
 
 /** pipeline/tags.py TAGS, the vocabulary a walk can lean on; a test holds the
- *  two to the same list. Richest first (the corpus, 2026-10-07). */
-export const THEMES = [
-  'history',
-  'culture',
-  'strange',
-  'personal',
-  'drink',
-  'art',
-  'work',
-  'comedy',
-  'food',
-  'business',
-  'family',
-  'music',
-  'travel',
-  'adventure',
-  'nightlife',
-  'sport',
-  'nature',
-  'romance',
+ *  two to the same list. Three groups of six, so the grid has no gaps. */
+const THEME_GROUPS = [
+  {
+    title: 'Places & past',
+    themes: ['history', 'culture', 'art', 'music', 'strange', 'adventure'],
+  },
+  { title: 'Out & about', themes: ['food', 'drink', 'nightlife', 'sport', 'nature', 'travel'] },
+  { title: 'People', themes: ['personal', 'family', 'romance', 'comedy', 'work', 'business'] },
 ];
 
 const themeName = (theme: string) => theme[0].toUpperCase() + theme.slice(1);
@@ -116,6 +104,54 @@ function LengthSlider({ km, min, onKm }: LengthProps) {
       <View style={styles.ends}>
         <Text style={label}>{`${min} km`}</Text>
         <Text style={label}>{`${WALK_KM.max} km`}</Text>
+      </View>
+    </>
+  );
+}
+
+type EraProps = { era: (typeof ERAS)[number]; onEra: (era: (typeof ERAS)[number]) => void };
+
+/** The eras as a timeline you tap, not drag: a two-thumb slider is misread on
+ *  a phone, and the labels sit above where a finger does not cover them.
+ *  Equal segments, since the years before 1800 would eat a linear track.
+ *  Any time lights all three; tapping the one lit goes back to it. */
+function EraTimeline({ era, onEra }: EraProps) {
+  return (
+    <>
+      <View style={styles.lengthRow}>
+        <Text style={styles.section} accessibilityRole="header">
+          Era
+        </Text>
+        <Text style={styles.eraName} accessibilityLiveRegion="polite">
+          {era.label}
+        </Text>
+      </View>
+      {/* Each year starts where its segment does. */}
+      <View style={styles.ticks}>
+        {['Earlier', '1800', '1945'].map((t, i) => (
+          <View key={t} style={[styles.grow, styles.ends]}>
+            <Text style={label}>{t}</Text>
+            {i === 2 && <Text style={label}>Today</Text>}
+          </View>
+        ))}
+      </View>
+      <View style={styles.timeline}>
+        {ERAS.slice(1).map((e, i) => {
+          const lit = era === ERAS[0] || era === e;
+          return (
+            <Pressable
+              key={e.label}
+              style={[styles.era, i > 0 && styles.eraRule, lit && styles.eraOn]}
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                onEra(era === e ? ERAS[0] : e);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={e.label}
+              accessibilityState={{ selected: era === e }}
+            />
+          );
+        })}
       </View>
     </>
   );
@@ -343,36 +379,37 @@ export function Preview({
         <Text style={styles.cardBody}>
           The walk leans towards these, and still fills up with the best nearby.
         </Text>
-        <Text style={styles.section}>Themes</Text>
-        <View style={styles.chips}>
-          {THEMES.map((theme) => {
-            const on = ask.themes.includes(theme);
-            return (
-              <Chip
-                key={theme}
-                label={themeName(theme)}
-                on={on}
-                onPress={() =>
-                  onAsk({
-                    ...ask,
-                    themes: on ? ask.themes.filter((t) => t !== theme) : [...ask.themes, theme],
-                  })
-                }
-              />
-            );
-          })}
-        </View>
-        <Text style={styles.section}>Era</Text>
-        <View style={styles.chips}>
-          {ERAS.map((e) => (
-            <Chip
-              key={e.label}
-              label={e.label}
-              on={e === era}
-              onPress={() => onAsk({ ...ask, from: e.from, until: e.until })}
-            />
+        <ScrollView style={styles.choices} contentContainerStyle={styles.choicesInner}>
+          <EraTimeline era={era} onEra={(e) => onAsk({ ...ask, from: e.from, until: e.until })} />
+          {THEME_GROUPS.map((group) => (
+            <View key={group.title}>
+              <Text style={styles.section} accessibilityRole="header">
+                {group.title}
+              </Text>
+              <View style={styles.chips}>
+                {group.themes.map((theme) => {
+                  const on = ask.themes.includes(theme);
+                  return (
+                    <Chip
+                      key={theme}
+                      label={themeName(theme)}
+                      on={on}
+                      style={styles.themeChip}
+                      onPress={() =>
+                        onAsk({
+                          ...ask,
+                          themes: on
+                            ? ask.themes.filter((t) => t !== theme)
+                            : [...ask.themes, theme],
+                        })
+                      }
+                    />
+                  );
+                })}
+              </View>
+            </View>
           ))}
-        </View>
+        </ScrollView>
         <Button
           kind="go"
           label={found ? `Done · ${count} ${count === 1 ? 'stop' : 'stops'}` : 'Done'}
@@ -844,6 +881,21 @@ const styles = StyleSheet.create({
   slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  themeChip: { width: '31%' },
+  choices: { maxHeight: 440 },
+  choicesInner: { gap: 10 },
+  timeline: {
+    flexDirection: 'row',
+    height: 28,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
+    backgroundColor: color.quiet,
+  },
+  ticks: { flexDirection: 'row' },
+  eraName: { ...font.uiBold, fontSize: 15, color: color.ink },
+  era: { flex: 1 },
+  eraRule: { borderLeftWidth: StyleSheet.hairlineWidth, borderColor: color.rule },
+  eraOn: { backgroundColor: color.gold },
   primary: { marginTop: 14 },
   pair: { flexDirection: 'row', gap: 12, marginTop: 14 },
   secondary: button.quiet,

@@ -36,8 +36,10 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
    ├─ Loop · One way            Submit's Chip; One way adds "Pick where it ends"
    ├─ Customize ›               a ruled row; what is chosen once set ("History · 1800–1945"); Plus badge free
    │  ├─ ‹ Back, "Customize" + Clear   Clear only once something is chosen
-   │  ├─ Themes                 18 Chips, richest first, many at once; they lean, never filter
-   │  ├─ Era                    Any time · Before 1800 · 1800–1945 · Since 1945, one at a time
+   │  ├─ Era                    a timeline you tap: three equal segments under Earlier · 1800 · 1945 · Today;
+   │  │                         all lit is Any time, tapping the lit one goes back to it; first, then themes
+   │  ├─ Themes                 18 Chips in three headed groups of six, a 3-column grid; a ✓ when on;
+   │  │                         many at once; they lean, never filter
    │  └─ Done · N stops         primary, back to step one
    ├─ Next                      primary, every walker; step two, the map refits above the taller card
    │  ├─ ‹ Back                 to step one ("Back to the length")

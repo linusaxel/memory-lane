@@ -18,8 +18,9 @@ def test_hashtags(text, tags):
 
 
 def test_the_planners_themes_are_the_extractors_tags():
-    """mobile/src/Plan.tsx THEMES is what a subscriber can lean a walk on; the
-    API refuses anything outside pipeline/tags.py TAGS."""
+    """mobile/src/Plan.tsx THEME_GROUPS is what a subscriber can lean a walk on;
+    the API refuses anything outside pipeline/tags.py TAGS."""
     plan = (pathlib.Path(__file__).parents[1] / "mobile/src/Plan.tsx").read_text()
-    block = plan.split("export const THEMES = [", 1)[1].split("];", 1)[0]
-    assert sorted(re.findall(r"'(\w+)'", block)) == sorted(TAGS), "in any order"
+    block = plan.split("const THEME_GROUPS = [", 1)[1].split("];", 1)[0]
+    themes = re.findall(r"'(\w+)'", "".join(re.findall(r"themes: \[([^\]]*)\]", block)))
+    assert sorted(themes) == sorted(TAGS), "in any order"
