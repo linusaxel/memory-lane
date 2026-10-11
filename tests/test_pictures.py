@@ -79,3 +79,11 @@ def test_a_picture_under_good_is_never_made(monkeypatch):
     monkeypatch.setattr(pictures.commons, "files", lambda t: [FILE])
     monkeypatch.setattr(pictures.walk_score, "walk_score", lambda *a: pictures.GOOD - 1)
     assert pictures.card(None, None, 1, FILE["page"], "c", set()) is None
+
+
+def test_an_old_homepages_gif_is_sent_as_a_gif(monkeypatch):
+    from crawler import commons
+    from pipeline.extract import image_block
+
+    monkeypatch.setattr(commons, "download", lambda url, ua: b"GIF89a\x01\x00")
+    assert image_block("https://x/a.jpg")["source"]["media_type"] == "image/gif"

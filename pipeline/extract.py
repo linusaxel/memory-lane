@@ -676,13 +676,16 @@ CACHE = {"type": "ephemeral", "ttl": "1h"}
 STREAM_ABOVE = 21_000
 
 
+IMAGE_MAGIC = ((b"\x89PNG", "image/png"), (b"GIF8", "image/gif"), (b"RIFF", "image/webp"))
+
+
 def image_block(url: str) -> dict:
     """A picture as a request's content block, sent as bytes: Wikimedia
     refuses the API's own fetch of a URL."""
     from crawler.commons import USER_AGENT, download
 
     raw = download(url, USER_AGENT)
-    kind = "image/png" if raw.startswith(b"\x89PNG") else "image/jpeg"
+    kind = next((k for m, k in IMAGE_MAGIC if raw.startswith(m)), "image/jpeg")
     data = base64.b64encode(raw).decode()
     return {"type": "image", "source": {"type": "base64", "media_type": kind, "data": data}}
 

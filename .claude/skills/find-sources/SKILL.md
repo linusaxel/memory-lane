@@ -148,6 +148,22 @@ count them against the cap of 30.
   (`fosreg5v`), no subtitles, no opt-out: ask the archive for transcripts.
   Københavns Museum's YouTube is clean but finds, not eyewitnesses.
 
+**Sweep 2026-10-11: personal, user-written sources (3 agents plus a snowball).**
+No open bulk first-person collection exists. Stadsarkivet's ~3,300 memoirs
+and erindringer.dk are behind a WAF or non-commercial, Facebook groups need a
+login, and the university repositories block ClaudeBot. The seam is
+one-person homepages by Danes born in the 1940s, registered as `webpages:`
+(old homepages: `crawler/webpages.page_text`, `decoded`) and `pdfs:` 313-331.
+Scene-first batch: 91 windows, 35 memories, 13 good, $3.75 (docs/04). The
+ones that paid: Kurt Starlit's venue pages (313) and com2me's Nørrebrodrengen
+(322), 7 of 13 between them. The ones that didn't: Pontoppidan (315-317),
+Saxogade (318), the Sundby and music pages (314, 331), and Bispebjerg Skole's
+reunion pages (326, 328, 329), childhood routine with no scene. Rejected: the
+Sydhavnens historie pages (restricted), and chrarkiv→kbharkiv (WAF). Ask
+permission: Stadsarkivet, Frederiksberg-erindringer, minnen.se's Danish
+counterpart, *Al Magt til Kærligheden* (Shazia Khan), Realdania's *Mit sted*,
+and the local-history societies.
+
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
   clubs) gave 4 good from 67 items (source 245). Danish Wikipedia's 2,783
