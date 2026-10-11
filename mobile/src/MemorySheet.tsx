@@ -477,7 +477,7 @@ export default function MemorySheet({
                     style={dim(styles.byline)}
                     accessibilityRole="link"
                     accessibilityLabel={sourceAction(memory.content).spoken}
-                    onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                    onPress={() => open(memory.content!.url, "That link didn't open.")}
                   >
                     <Text style={styles.meta} numberOfLines={2}>
                       Retold by AI from {memory.content.title}
@@ -510,7 +510,7 @@ export default function MemorySheet({
                   {asking === 'report' ? 'Why should it come down?' : `Block ${blockee(memory)}?`}
                 </Text>
                 {asking === 'block' && (
-                  <Text style={styles.meta}>You will not see anything they post.</Text>
+                  <Text style={styles.meta}>You won't see anything they post.</Text>
                 )}
                 {(asking === 'report'
                   ? REASONS.map(({ reason, label: text }) => ({
@@ -571,7 +571,7 @@ export default function MemorySheet({
                 {/* In reach, the ring is on the map and this is not open. */}
                 <Approach meters={fromHere} radius={radius} locket={memory.locket} />
                 <Text style={styles.gateFigure}>
-                  {position == null ? '—' : formatDistance(fromHere)?.replace(' away', '')}
+                  {position == null ? '?' : formatDistance(fromHere)?.replace(' away', '')}
                 </Text>
                 <Text style={styles.gateNote}>
                   {position == null
@@ -608,7 +608,7 @@ export default function MemorySheet({
                     onLink={(url) =>
                       wikiSummaryUrl(url)
                         ? setPreview((now) => (now === url ? null : url))
-                        : open(url, "Couldn't open that link.")
+                        : open(url, "That link didn't open.")
                     }
                     part={(i, node) => (
                       <Animated.View key={i} style={rise(Math.min(i, 1))}>
@@ -623,7 +623,7 @@ export default function MemorySheet({
                         onClose={() => setPreview(null)}
                         onFail={() => {
                           setPreview(null);
-                          open(preview, "Couldn't open that link.");
+                          open(preview, "That link didn't open.");
                         }}
                       />
                     </View>
@@ -637,7 +637,7 @@ export default function MemorySheet({
                         style={dim(styles.quote)}
                         disabled={!memory.content}
                         accessibilityRole={memory.content ? 'link' : 'text'}
-                        onPress={() => open(memory.content!.url, "Couldn't open that link.")}
+                        onPress={() => open(memory.content!.url, "That link didn't open.")}
                       >
                         <PullQuote caption={quoteBy || 'In their words'}>{memory.quote}</PullQuote>
                       </Pressable>

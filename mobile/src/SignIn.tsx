@@ -203,7 +203,7 @@ function GoogleButton({ device, onProfile, onError, onBusy }: Setters) {
       accessibilityRole="button"
       onPress={() => {
         onError(null);
-        prompt?.().catch(() => onError("Couldn't open Google sign-in."));
+        prompt?.().catch(() => onError("Google sign-in didn't open. Try again."));
       }}
     >
       <Text style={styles.googleText}>Continue with Google</Text>
@@ -233,7 +233,7 @@ function LinkApple(props: Setters) {
       {...props}
       onPress={() => {
         props.onError(null);
-        prompt?.().catch(() => props.onError("Couldn't open Google sign-in."));
+        prompt?.().catch(() => props.onError("Google sign-in didn't open. Try again."));
       }}
     />
   );
@@ -264,7 +264,7 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
         </View>
         <Text style={styles.title}>Memory Lane</Text>
         <Text style={styles.tagline}>
-          A walk planner with memories along the way. One walk a day, free.
+          A walk past what happened on your streets. One a day, free.
         </Text>
       </View>
 
@@ -272,7 +272,7 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
         {appleAvailable && <AppleButton {...setters} />}
         {GOOGLE_CONFIGURED && <GoogleButton {...setters} />}
         {!appleAvailable && !GOOGLE_CONFIGURED && (
-          <Text style={styles.note}>Sign-in is not available in this build.</Text>
+          <Text style={styles.note}>Sign-in isn't available in this build.</Text>
         )}
         {busy && <ActivityIndicator size="small" color={color.inkFaint} />}
         {error && <Text style={styles.error}>{error}</Text>}
@@ -319,7 +319,7 @@ export default function SignIn({ device, profile, onProfile, beside }: Props) {
       await deleteAccount(device);
       onProfile(await fetchProfile(device));
     } catch {
-      setError("Couldn't delete the account. Try again.");
+      setError("That didn't delete. Try again.");
     } finally {
       setBusy(false);
     }
@@ -331,7 +331,7 @@ export default function SignIn({ device, profile, onProfile, beside }: Props) {
     try {
       onProfile(await signOut(device));
     } catch {
-      setError("Couldn't sign out. Try again.");
+      setError("That didn't sign you out. Try again.");
     } finally {
       setBusy(false);
     }

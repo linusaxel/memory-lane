@@ -62,7 +62,7 @@ export default function WalkCard({ walk, size, onPress }: Props) {
       style={dim([styles.card, { width: size }])}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${day}: ${walk.earned} memories, ${km}.`}
+      accessibilityLabel={`${day}: ${walk.earned} ${walk.earned === 1 ? 'memory' : 'memories'}, ${km}.`}
       accessibilityHint="Shows the walk on the map"
       testID="walk-card"
     >

@@ -19,13 +19,13 @@ Travel (secondary: Entertainment)
 Memory Lane is a walk planner with memories along the way. Each day it plans
 a walk past real stories pinned to the places they happened, some from travel
 shows and podcasts and some left by people who were there, and a story only
-opens once you're standing on its spot. It's meant to make a familiar walk
+unlocks once you're standing on its spot. It's meant to make a familiar walk
 feel new, because the ordinary corner you pass every day turns out to have a
 story.
 
 Pick how far you feel like going. Memory Lane plans a loop past about one
 story a kilometre and lists what each is about. Not taken with them? Ask for
-another walk. Then walk to each stop, hold to unlock, and read what happened
+another walk. Then walk to each stop, slide to unlock, and read what happened
 right where you're standing.
 
 Most stories come with the moment they were told. Tap once and the video opens
@@ -39,7 +39,7 @@ a photo or say it out loud, and it waits there for whoever walks by next.
 • Stories unlock only on a walk, standing on the spot
 • Jump to the second the story is told
 • Leave your own, with a photo or a voice recording
-• Finish a walk for a key, keep a streak, and reread anything you've unlocked
+• Finish walks for XP and lockets, keep a streak, and reread anything you've unlocked
 
 One walk a day is free. A subscription plans as many as you like.
 
@@ -76,7 +76,7 @@ real account features. Paste this into the review notes:
 > you unlock is earned by walking to its spot, and your account is what carries
 > that collection, and the memories you file, to a new phone. Sign in with
 > Apple or Google; there is no password. To try the app, sign in, then press
-> "Show me the walk". Location is optional; declining it plans a walk from
+> "Plan a walk", then "Next" and "Start walk". Location is optional; declining it plans a walk from
 > central Copenhagen.
 
 ## Play Data safety answers

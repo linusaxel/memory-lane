@@ -78,7 +78,7 @@ export default function SlideToUnlock({ drive, progress, placeName }: Props) {
       <View style={styles.rim} pointerEvents="none" />
       <Animated.View style={[styles.words, wordsStyle]} pointerEvents="none">
         <Animated.View style={[styles.say, shimmerStyle]}>
-          <Text style={styles.slide}>slide to open</Text>
+          <Text style={styles.slide}>Slide to unlock</Text>
           <Glyph name="chevron.right.2" size={18} weight="semibold" color={color.onGo} />
         </Animated.View>
       </Animated.View>

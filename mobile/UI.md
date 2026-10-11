@@ -689,7 +689,17 @@ the tells that make text read as machine-written.
   aphorisms, "not X, but Y", three-part lists picked for rhythm, and "quietly",
   "truly", "hidden gem".
 - **One word per thing.** A *memory* is what is pinned, a *walk* is today's
-  plan (never "route" on screen), *unlock* is what the hold does.
+  plan (never "route" on screen), *unlock* is what the hold does (never
+  "open"), and *Plus* is the subscription (never "Subscribe" on a button).
+- **Three tests for a line** (Harry Dry, after Hopkins and Durfee): can you
+  picture it, could it be proven wrong, could another app say it? A line
+  that fails all three is filler: swap the abstract noun for a thing, a
+  number or a street. "The corner you pass has a story", not "Your city has
+  stories in it".
+- **Lead with what the person gets** on a permission ask, the paywall and a
+  notification. Purpose strings name the benefit in one active sentence
+  (Apple HIG, NN/g's permission study); a paywall is clear before it is
+  clever (RevenueCat).
 
 No exclamation marks: celebrations are in the words ("Nice walk.") and the
 haptic, not the punctuation. Count strings are singular/plural aware ("1 memory

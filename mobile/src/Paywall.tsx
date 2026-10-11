@@ -59,7 +59,7 @@ function soFar(profile: Profile | null): string | null {
   if (!profile || profile.xp <= 0) return null;
   const parts: string[] = [];
   const { unlocked, streak } = profile;
-  if (unlocked > 0) parts.push(`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'} opened`);
+  if (unlocked > 0) parts.push(`${unlocked} ${unlocked === 1 ? 'memory' : 'memories'} unlocked`);
   if (streak > 1) parts.push(`${streak} days in a row`);
   return parts.length ? `So far: ${parts.join(' · ')}` : null;
 }
@@ -139,7 +139,7 @@ export default function Paywall({ visible, onClose, device, profile, onProfile }
             </View>
             <Button
               kind="foil"
-              label="Subscribe"
+              label="Get Plus"
               busy={paying === 'buy'}
               disabled={busy || !plan}
               onPress={() => plan && settle('buy', () => buy(plan))}

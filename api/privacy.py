@@ -29,10 +29,9 @@ its organisation number and postal address go here before launch]. See
 <a href="#contact">Contact</a> for how to reach us.</p>
 
 <h2>Location</h2>
-<p>The app uses your phone's precise location, with your permission, for four things:
+<p>The app uses your phone's precise location, with your permission, for three things:
 to plan a walk from where you are, to check that you are standing at a stop before its
-story opens, to show the locked stories around you on the map, and to place a memory
-you post.</p>
+story unlocks, and to place a memory you post.</p>
 <p>The position itself is sent with each of those requests and is not saved in our
 database. What is saved: the walks you plan (their stops and the streets between them,
 but not where you started from or where you finished), and which story you opened and

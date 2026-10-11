@@ -52,18 +52,18 @@ export default function Onboarding({ radiusMeters, permission, onLocation, onDon
   const pages = [
     {
       art: ART.welcome,
-      title: 'Your city has stories in it',
-      body: 'Memory Lane plans one walk a day past places with something to tell.',
+      title: 'The corner you pass has a story',
+      body: 'Memory Lane plans a walk a day past a few of them, about one a kilometre.',
     },
     {
       art: ART.spot,
-      title: 'They only open on the spot',
-      body: `Walk to within ${Math.round(radiusMeters)} m and slide to open. No reading from the sofa.`,
+      title: 'They only unlock on the spot',
+      body: `Walk to within ${Math.round(radiusMeters)} m and slide to unlock. No reading from the sofa.`,
     },
     {
       art: ART.daily,
       title: 'One walk a day, free',
-      body: 'About one memory per kilometre. Pick how far, loop or one way.',
+      body: 'Pick how far. Loop home or end somewhere new.',
     },
     {
       art: ART.lockets,
@@ -78,8 +78,8 @@ export default function Onboarding({ radiusMeters, permission, onLocation, onDon
   const shown = primer
     ? {
         art: ART.location,
-        title: 'Memory Lane needs your location',
-        body: "To know when you're standing at a memory. Your position is never stored.",
+        title: "Know when you're standing on one",
+        body: "Location tells Memory Lane when you've reached a memory. It's never stored.",
       }
     : pages[page];
 

@@ -108,7 +108,7 @@ out, and on a new phone.
 because nothing is reachable before it (docs/10, *Sign-in comes first*).
 
 1. The logo lands (StartupLogo) and the page grows around it: the name, one line
-   ("A walk planner with memories along the way. One walk a day, free."), Apple's
+   ("A walk past what happened on your streets. One a day, free."), Apple's
    own control and Continue with Google. Nothing else — no carousel, no email
    field, no password, no magic link.
    Once signed in, four pages and the location primer follow, once (docs/10,
@@ -213,7 +213,7 @@ the planner*).
 **Accepting starts the walk.** It stands until it is ended (F34). One a day:
 another the same day needs a subscription, unless the first opened nothing.
 Walked out, the card reads "Today's walk is done", "There's another tomorrow.
-Or subscribe for as many as you like." and **More walks** opens the paywall
+Or get Plus for as many as you like." and **More walks** opens the paywall
 (F35). A relaunch after accepting skips this page and goes straight to the walk.
 
 **What can go wrong:** nothing walkable within that length — the card moves the
@@ -1148,7 +1148,7 @@ it gets 403 from both routes. `tests/test_api_notes.py`.
 planner once today's walk is walked (F1), the Plus-badged
 **Customize** on the planner (F1), **Another walk today ›** under
 **Done** on the finish card (signed in, not subscribed; never a pop-up), or
-**Subscribe** in Settings.
+**Get Plus** in Settings.
 
 1. The paywall (`src/Paywall.tsx`): "More than one walk a day" and what it
    buys (more walks, Customize), yearly first (solid, with the store's price a month) then monthly,
@@ -1158,8 +1158,8 @@ planner once today's walk is walked (F1), the Plus-badged
 2. A purchase or a restore asks the server to read the store back
    (`POST /v1/me/subscription`); only its answer counts. The sheet closes when
    it says subscribed, and the planner plans again.
-3. Settings shows "Subscribed until …" and **Manage subscription**; signed in
-   and not subscribed, **Subscribe**.
+3. Settings shows "Plus until …" and **Manage subscription**; signed in
+   and not subscribed, **Get Plus**.
 
 XP and levels are not sold: they come from finishing a walk, once a day.
 

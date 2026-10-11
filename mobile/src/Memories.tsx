@@ -482,7 +482,7 @@ export default function Memories({
         ) : mineStatus === 'failed' ? (
           <Empty text="Can't reach Memory Lane right now." />
         ) : (
-          <Empty text="You haven't left a memory yet. Tap the pin up top to leave one right where you are." />
+          <Empty text="You haven't left a memory yet. Tap + on the map to leave one right where you are." />
         )
       }
       ListFooterComponent={

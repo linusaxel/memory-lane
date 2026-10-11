@@ -73,8 +73,8 @@ export default function Settings({
             {profile?.subscribed && (
               <Text style={styles.note}>
                 {profile.subscribed_until
-                  ? `Subscribed until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
-                  : 'Subscribed.'}
+                  ? `Plus until ${new Date(`${profile.subscribed_until}Z`).toLocaleDateString()}.`
+                  : 'Plus.'}
               </Text>
             )}
             <SignIn
@@ -94,7 +94,7 @@ export default function Settings({
                   profile?.user_id && (
                     <Button
                       kind="foil"
-                      label="Subscribe"
+                      label="Get Plus"
                       onPress={onSubscribe}
                       place={styles.half}
                     />
@@ -166,7 +166,7 @@ export default function Settings({
           <View style={[styles.padded, styles.how]}>
             <Image source={locketOf().pin} style={styles.locket} />
             <Text style={styles.howText}>
-              A memory opens only on a walk, within {Math.round(radiusMeters)} m of it. Finish the
+              A memory unlocks only on a walk, within {Math.round(radiusMeters)} m of it. Finish the
               walk to earn XP.
             </Text>
           </View>

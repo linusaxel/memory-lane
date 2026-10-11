@@ -163,7 +163,7 @@ async function onSurprise(id: string) {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'A story is open nearby',
-      body: `Something happened at ${granted.place}. It's yours to read there for the next half hour.`,
+      body: `Something happened at ${granted.place}. Walk over in the next 30 minutes to read it.`,
       data: { memoryId: granted.memory_id },
     },
     trigger: null,

@@ -263,7 +263,7 @@ export function Preview({
       <GlassCard style={styles.card}>
         <Text style={styles.cardTitle}>Today's walk is done</Text>
         <Text style={styles.cardBody}>
-          There's another tomorrow. Or subscribe for as many as you like.
+          There's another tomorrow. Or get Plus for as many as you like.
         </Text>
         <Button
           kind="go"

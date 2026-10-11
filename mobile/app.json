@@ -131,7 +131,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Memory Lane uses your location to plan walks from where you are and to open the memories you reach.",
+          "locationWhenInUsePermission": "Memory Lane uses your location to plan walks from where you are and to unlock memories when you reach them.",
           "locationAlwaysAndWhenInUsePermission": "Memory Lane can notify you when you're near a memory you haven't unlocked yet, even when the app is in the background. This is off until you turn it on in Settings.",
           "locationAlwaysPermission": false,
           "isIosBackgroundLocationEnabled": true,
