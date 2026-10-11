@@ -318,8 +318,7 @@ would still have to explain.
 Status: Accepted 2026-10-03. Supersedes *A map of what is locked*, *Keys open
 a lock, and today's walk is free* and *Pick one to start, then where you
 stand*, and the Walk here parts of *Preview, then accept* and *Draw first,
-adjust after*. Amended 2026-10-11 by *The Locket-keeper: most stops are plain
-lockets*: most stops are plain lockets, and a memory stop needs a key.
+adjust after*.
 
 The founder: "a walk planner with memories along the way". The walk is the
 whole app; without one there is nothing to do.
@@ -3647,9 +3646,7 @@ primer's fix flies the map there.
 Status: Accepted 2026-10-04. The **count of each kind** bullet is
 **Superseded 2026-10-07** by *Fewer games: no board, no level gate, no count
 strip*. Supersedes the Keys bullet of *A walk planner,
-nothing else*: what a key does is decided, and it is nothing. **Superseded
-2026-10-11** on keys by *The Locket-keeper: most stops are plain lockets*:
-a key is earned on the walk and opens its memory stops.
+nothing else*: what a key does is decided, and it is nothing.
 
 The founder: "too much gamification already". A walk's reward is its
 memories, XP and its card; the key that turns in the hold
@@ -4179,9 +4176,7 @@ after a break, and D30.
 
 Status: Accepted 2026-10-07. Supersedes *A city board, by opens*, the
 **Earned, never sold** bullet of *Lockets*, and the count-of-each-kind bullet
-of *No keys*; amends *Walks earn XP*. The level-gate bullet is **Superseded
-2026-10-11** by *The Locket-keeper*: levels unlock wizards, then kinds of
-memories.
+of *No keys*; amends *Walks earn XP*.
 
 A critique of what keeps a walker past month two (points and levels raise
 output, not intrinsic motivation, Mekler 2017) kept the locket opening, the
@@ -4536,55 +4531,6 @@ second generation would have drifted off-model.
 **Options considered:** a locket mascot (too much locket); a cultural spirit
 (not wanted); a companion that guides the walk (the evidence above); hiding it
 in dark mode.
-
-### The Locket-keeper: most stops are plain lockets
-
-Status: Accepted 2026-10-11. Supersedes *No keys; your memories are your
-lockets* on keys, and the level-gate bullet of *Fewer games: no board, no level
-gate, no count strip*. Amends *A walk planner, nothing else*: a walk's stops
-are not all memories.
-
-The founder: keep the walk planner, and put a game on top of it. You are a
-wizard collecting lockets. Every stop a memory used the stories up a kilometre
-at a time, which does not scale, and a stretch of city with no memories had no
-walk. Now most stops are plain lockets, and about one in five is a memory.
-
-- **A plain locket is a place, not a story.** `waypoints` holds named spots
-  from OpenStreetMap (`historic`, artwork, viewpoints, fountains, memorials,
-  named squares), loaded by `pipeline/waypoints.py` from Overpass. It is free,
-  it covers any city, and no model is involved. A waypoint has no summary, so it
-  needs no gate. Collecting it, standing there on today's walk, is the XP and,
-  later, loot.
-- **A walk's share of memories is fixed.** About one stop in five, and at least
-  one, at random positions. It is not a roll per stop, so no walk comes up
-  empty. The memories are still picked by `_prize`, so the best stories win.
-- **Keys are earned on the walk, and die with it.** A key is two plain lockets
-  opened on this walk, less the memories opened on it. It is counted, never
-  stored, like XP. A memory stop opens only with a key (403 `no_key`), and the
-  solver orders the walk so you hold one when you get there. So a key cannot be
-  hoarded, bought or carried to a memory off the walk. The reasons *No keys*
-  stood on still hold: nothing random is sold (loot-box rules, Apple 3.1.1), and
-  no summary opens off the spot.
-- **Levels unlock wizards, then kinds of memories.** You pick a wizard (the
-  Apprentice to start). Levels unlock the others, the Old Hermit with the
-  locket ring last, and kinds of memories behind a level are decided in their
-  own entry. That brings back the Naxx gate *Fewer games* removed. Customize
-  stays a subscriber's and is not also put behind a level.
-- **The wizard is you, not a guide.** It is your dot on the walk and your face
-  on the finish card. *The fir guardian, at the edges* keeps a helper out of
-  the walk because a helper takes control (Kim, Chen & Zhang 2016). An avatar
-  you play takes none, so the evidence there does not apply to it.
-- **Money does not move.** A subscription buys more walks a day, so more
-  memories. Keys, levels, wizards and loot are never sold.
-
-**Options considered:** a one-line OSM fact on a plain locket (later); loot
-from plain lockets (later, cosmetic only, never sold); keys from levelling up
-(you could reach a memory with none); a 20% roll per stop (some walks would
-have no memory).
-
-**Measure:** stories opened per walker per week before and after (it should
-fall to about a fifth at the same walking), D30, and hearts per open (it
-should not fall).
 
 ### Rejected approaches, do not retry
 
