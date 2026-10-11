@@ -40,6 +40,7 @@ import { deleteAccount, fetchProfile, signIn, signOut, type Profile } from './ap
 import Button from './Button.tsx';
 import Guardian from './Guardian.tsx';
 import { LogoTile } from './StartupLogo.tsx';
+import { useDevScreen } from './devOpen.ts';
 import { button, buttonText, color, dim, font, label, screenTitle } from './theme.ts';
 
 // Closes the browser tab the moment the redirect comes back. Without it the
@@ -309,6 +310,8 @@ export default function SignIn({ device, profile, onProfile, beside }: Props) {
   const providers = profile?.providers ?? [];
   // Two presses, as Submit's delete: this app never uses a system dialog.
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // scripts/shoot.sh, under __DEV__ only.
+  useDevScreen(({ screen }) => setConfirmingDelete(screen === 'settings-delete'));
 
   const remove = async () => {
     if (!device) return;

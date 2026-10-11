@@ -7,7 +7,7 @@
  * the numbers) is the journal's header, not here.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { API_BASE, type Profile } from './api.ts';
@@ -20,6 +20,7 @@ import SignIn from './SignIn.tsx';
 import { locketOf } from './lockets.ts';
 import type { Permission } from './types.ts';
 import Button from './Button.tsx';
+import { useDevScreen } from './devOpen.ts';
 import { color, dim, font, label, lift, screenTitle } from './theme.ts';
 
 type Props = {
@@ -54,6 +55,21 @@ export default function Settings({
 }: Props) {
   const granted = permission === 'granted';
   const [chosen, choose] = useState<Look>(look);
+  // scripts/shoot.sh, under __DEV__ only: the foot of the page, once the sheet is up.
+  const scroll = useRef<ScrollView>(null);
+  const [devLower, setDevLower] = useState(false);
+  useDevScreen(({ screen }) => setDevLower(screen === 'settings-lower'));
+  useEffect(() => {
+    if (!visible) return;
+    const timer = setTimeout(
+      () =>
+        devLower
+          ? scroll.current?.scrollToEnd({ animated: false })
+          : scroll.current?.scrollTo({ y: 0, animated: false }),
+      600,
+    );
+    return () => clearTimeout(timer);
+  }, [devLower, visible]);
 
   return (
     <Modal
@@ -62,7 +78,7 @@ export default function Settings({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
+      <ScrollView ref={scroll} style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
           <Text style={styles.title}>Settings</Text>
           <CloseButton onPress={onClose} label="Close settings" />

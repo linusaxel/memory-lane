@@ -11,6 +11,7 @@ import Avatar from './Avatar.tsx';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import DiamondRule from './DiamondRule.tsx';
+import { useDevScreen } from './devOpen.ts';
 import { color, dim, font, input, label, screenTitle } from './theme.ts';
 
 type Props = {
@@ -40,6 +41,10 @@ export default function EditProfile({
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  // scripts/shoot.sh, under __DEV__ only.
+  useDevScreen(({ screen }) =>
+    setPhotoError(screen === 'profile-error' ? "That didn't upload. Try again in a moment." : null),
+  );
 
   const choose = async (fromCamera: boolean) => {
     if (!device) return;

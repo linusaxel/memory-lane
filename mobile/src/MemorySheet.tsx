@@ -34,6 +34,7 @@ import StoryBody from './StoryBody.tsx';
 import WikiPreview from './WikiPreview.tsx';
 import { useReduceMotion } from './useBreath.ts';
 import { metersBetween } from './region.ts';
+import { useDevScreen } from './devOpen.ts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   color,
@@ -180,6 +181,22 @@ export default function MemorySheet({
   // A linked Wikipedia name previews in the card; tapped again, it closes.
   const [preview, setPreview] = useState<string | null>(null);
   useEffect(() => setPreview(null), [memory?.id]);
+  // scripts/shoot.sh, under __DEV__ only: asked for before the memory arrives,
+  // so applied each time one does.
+  const [devAsked, setDevAsked] = useState<string | null>(null);
+  useDevScreen(({ screen }) => setDevAsked(screen));
+  useEffect(() => {
+    if (!devAsked) return;
+    setAsking(
+      devAsked === 'memory-report' ? 'report' : devAsked === 'memory-block' ? 'block' : null,
+    );
+    const wiki = memory?.links?.find((link) => wikiSummaryUrl(link.url));
+    setPreview(devAsked === 'memory-wiki' && wiki ? wiki.url : null);
+    if (!devAsked.startsWith('notes-')) return;
+    const timer = setTimeout(() => body.current?.scrollToEnd({ animated: false }), 800);
+    return () => clearTimeout(timer);
+  }, [devAsked, memory?.id]);
+  const body = useRef<ScrollView>(null);
 
   const open = (url: string, whenNothingOpens: string) => {
     setLinkFailed(null);
@@ -586,6 +603,7 @@ export default function MemorySheet({
                     first tap on it send rather than only drop the keyboard, and
                     the insets let it scroll clear of the keyboard. */}
                 <ScrollView
+                  ref={body}
                   contentContainerStyle={[styles.body, { paddingBottom: 24 + insets.bottom }]}
                   keyboardShouldPersistTaps="handled"
                   automaticallyAdjustKeyboardInsets
@@ -617,7 +635,13 @@ export default function MemorySheet({
                     )}
                   />
                   {preview && (
-                    <View style={styles.quote}>
+                    <View
+                      style={styles.quote}
+                      onLayout={(e) =>
+                        devAsked === 'memory-wiki' &&
+                        body.current?.scrollTo({ y: e.nativeEvent.layout.y - 200, animated: false })
+                      }
+                    >
                       <WikiPreview
                         url={preview}
                         onClose={() => setPreview(null)}

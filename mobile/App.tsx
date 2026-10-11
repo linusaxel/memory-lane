@@ -53,7 +53,7 @@ import {
 } from './src/api.ts';
 import { CLUSTER_SPAN_M, groupByLocation, type MemoryGroup, precisionFor } from './src/cluster.ts';
 import { devLocation } from './src/devLocation.ts';
-import { type DevScreen, devOpenMemory, devOpenScreen, devWatch } from './src/devOpen.ts';
+import { type DevScreen, devOpenMemory, useDevScreen } from './src/devOpen.ts';
 import { loadSurprise, noteOpened, startWatching, stopWatching } from './src/geofence.ts';
 import type { Surprise } from './src/geofenceRegions.ts';
 import { forgetHearted, loadHearted, rememberHearted } from './src/hearted.ts';
@@ -380,6 +380,7 @@ export default function App() {
   const [devPage, setDevPage] = useState<number>();
   // The walk without a memory in reach, so its own card shows, not the lock.
   const [devQuiet, setDevQuiet] = useState(false);
+  const devRestore = useRef<(() => void)[]>([]);
   // A heart or a note came back for something you filed, unseen yet.
   const [journalNew, setJournalNew] = useState(false);
 
@@ -1122,9 +1123,17 @@ export default function App() {
   // The walk is taken on this phone only, from the planned preview: accepting
   // it for real would spend the day's walk on every run of scripts/shoot.sh.
   const devApply = (screen: DevScreen, memory: number | null) => {
+    devRestore.current.forEach((restore) => restore());
+    devRestore.current = [];
+    // A value a screen fakes is put back by whichever screen comes next.
+    const borrow = <T,>(value: T, set: (value: T) => void, next: T) => {
+      set(next);
+      devRestore.current.push(() => set(value));
+    };
     setSignedIn(true);
     setJournalOpen(false);
     setSubmitOpen(false);
+    setEditingMemory(null);
     setIntro(false);
     setSettingsOpen(false);
     setProfileOpen(false);
@@ -1134,8 +1143,19 @@ export default function App() {
     setConfirmEnd(false);
     setWalkDone(false);
     setWalkedOut(false);
+    setSealing(null);
     setDevCrash(false);
-    setDevQuiet(['walk', 'end-confirm', 'done'].includes(screen));
+    setOffline(false);
+    setPlanError(null);
+    setDevQuiet(screen.startsWith('walk') || /end-|offline-end|done/.test(screen));
+    const ask = (next: Partial<WalkAsk>) => {
+      const want = { loop: true, end: null, themes: [], from: null, until: null, ...next };
+      const same = (Object.keys(want) as (keyof WalkAsk)[]).every(
+        (key) => JSON.stringify(want[key]) === JSON.stringify(walkAsk[key]),
+      );
+      if (!same) setWalkAsk(want);
+    };
+    if (!screen.startsWith('plan-') && !screen.includes('customiz')) ask({});
     const onboarding = (page: number) => {
       setDevPage(page);
       setIntro(true);
@@ -1156,6 +1176,24 @@ export default function App() {
       setStage('preview');
       setDevStep(step);
     };
+    const drawn = (change: Partial<TodaysRoute>) => {
+      plan(null);
+      if (preview) setPreview({ ...preview, ...change });
+    };
+    // The memory the script picked, from what this device has earned or filed.
+    const show = (pick: (device: string) => Promise<LocatedMemory | undefined>) => {
+      if (!device) return;
+      pick(device).then((found) => {
+        if (!found) return;
+        setOpenAt([found]);
+        setOpenIndex(0);
+      });
+    };
+    const earned = (id: number | null) =>
+      show(async (me) => (await fetchUnlocked(me)).find((m) => id == null || m.id === id));
+    const filed = () => show(async (me) => (await fetchMine(me)).memories[0]);
+    const here = position ?? { lat: FALLBACK_REGION.latitude, lng: FALLBACK_REGION.longitude };
+    const away = (group: MemoryGroup) => metersBetween(here.lat, here.lng, group.lat, group.lng);
     switch (screen) {
       case 'signin':
         return setSignedIn(false);
@@ -1171,15 +1209,88 @@ export default function App() {
         return onboarding(4);
       case 'map':
         return dropRoute();
+      case 'offline-map':
+        dropRoute();
+        return setRetry((n) => n + 1);
       case 'memory':
         openMemory(memory ?? groups[0]?.memories[0]?.id ?? -1);
+        return;
+      case 'memory-far': {
+        const far = [...groups].sort((a, b) => away(b) - away(a))[0];
+        if (far) openMemory(far.memories[0].id);
+        return;
+      }
+      case 'memory-group': {
+        const stack = groups.find((group) => group.memories.length > 1);
+        if (stack) {
+          setOpenAt(stack.memories);
+          setOpenIndex(0);
+        }
+        return;
+      }
+      case 'memory-open':
+      case 'memory-quote':
+      case 'memory-wiki':
+      case 'memory-notes':
+      case 'memory-report':
+      case 'memory-block':
+      case 'notes-typing':
+      case 'notes-error':
+        return earned(memory);
+      case 'memory-mine':
+        return filed();
+      case 'seal-first':
+        if (device) {
+          fetchMine(device).then(({ memories }) => {
+            const { width, height } = Dimensions.get('window');
+            if (memories[0])
+              setSealing({ memory: memories[0], at: { x: width / 2, y: height / 2 }, first: true });
+          });
+        }
         return;
       case 'preview':
         return plan(null);
       case 'preview-stops':
         return plan('stops');
+      case 'plan-mystery':
+        // Three stops, so the mystery row is in sight without scrolling.
+        drawn({ mystery: true, memories: preview?.memories.slice(0, 3) ?? [] });
+        return setDevStep('stops');
+      case 'plan-new-nearby':
+        return drawn({ new_nearby: 3 });
+      case 'plan-empty-at':
+        plan(null);
+        return borrow(emptyAt, setEmptyAt, Math.max(WALK_KM.min, planKm - 1));
+      case 'plan-fallback':
+        plan(null);
+        return borrow(planFallback, setPlanFallback, true);
+      case 'plan-no-walk':
+        return drawn({ memories: [], mystery: false });
+      case 'plan-finding':
+        plan(null);
+        return borrow(preview, setPreview, null);
+      case 'plan-one-way':
+        plan(null);
+        return ask({ loop: false });
+      case 'plan-ends-here':
+        plan(null);
+        return ask({ loop: false, end: { lat: here.lat + 0.012, lng: here.lng + 0.012 } });
+      case 'plan-unreachable':
+        plan(null);
+        // Aarhus: no walk under 10 km reaches it.
+        return ask({ loop: false, end: { lat: 56.1567, lng: 10.2108 } });
       case 'customize':
+        ask({});
         return plan('choices');
+      case 'customize-set':
+        ask({ themes: ['history', 'art'], from: 1900, until: 1945 });
+        return plan('choices');
+      case 'preview-customized':
+        ask({ themes: ['history', 'art'], from: 1900, until: 1945 });
+        return plan(null);
+      case 'offline-plan':
+        plan(null);
+        return planWalkRef.current(0);
       case 'walked-out':
         setStage('preview');
         return setWalkedOut(true);
@@ -1188,13 +1299,30 @@ export default function App() {
       case 'walk':
       case 'lock':
         return walk();
+      case 'walk-mystery':
+        walk();
+        return borrow(mystery, setMystery, true);
+      case 'walk-no-location':
+        walk();
+        return borrow(position, setPosition, null);
       case 'end-confirm':
         walk();
         return setConfirmEnd(true);
+      case 'offline-end':
+        walk();
+        setConfirmEnd(true);
+        endWalk();
+        return;
       case 'done':
+      case 'done-milestone':
+      case 'done-ask':
         walk();
         setReward({ xp: 40 });
-        return setWalkDone(true);
+        setWalkDone(true);
+        if (screen === 'done-milestone' && profile)
+          borrow(profile, setProfile, { ...profile, streak: 7 });
+        if (screen === 'done-ask') borrow(notifyChosen, setNotifyChosen, false);
+        return;
       case 'journal':
         return journal({ section: 'walks' });
       case 'journal-walk':
@@ -1218,10 +1346,25 @@ export default function App() {
         if (device) fetchWalked(device).then((walks) => walks[0] && setPastWalk(walks[0]));
         return;
       case 'submit':
+      case 'submit-filled':
+      case 'submit-styling':
+      case 'submit-date':
+      case 'submit-discard':
+      case 'submit-error':
+      case 'submit-seal':
         return setSubmitOpen(true);
+      case 'submit-editor':
+      case 'submit-delete':
+        if (device) {
+          fetchMine(device).then(({ memories }) => memories[0] && openEditor(memories[0]));
+        }
+        return;
       case 'settings':
+      case 'settings-lower':
+      case 'settings-delete':
         return setSettingsOpen(true);
       case 'profile':
+      case 'profile-error':
         return setProfileOpen(true);
       case 'paywall':
         return setPaywallOpen(true);
@@ -1229,14 +1372,7 @@ export default function App() {
         return setDevCrash(true);
     }
   };
-  const devApplyRef = useRef(devApply);
-  devApplyRef.current = devApply;
-  useEffect(() => {
-    if (!__DEV__) return;
-    const screen = devOpenScreen();
-    if (screen) devApplyRef.current(screen, null);
-    return devWatch((next, memory) => devApplyRef.current(next, memory));
-  }, []);
+  useDevScreen(({ screen, memory }) => devApply(screen, memory));
 
   // Tapping the proximity notification (src/geofence.ts) opens the memory it
   // named. Waits for `groups`, which are still empty on a cold start.

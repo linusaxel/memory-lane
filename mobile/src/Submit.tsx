@@ -55,6 +55,7 @@ import Glyph from './Glyph.tsx';
 import { duration, happened } from './format.ts';
 import { hashtagParts } from './hashtags.ts';
 import { LOCKET_DEFAULT, LOCKETS, locketOf, type LocketId } from './lockets.ts';
+import { useDevScreen } from './devOpen.ts';
 import { metersBetween } from './region.ts';
 import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
@@ -114,6 +115,17 @@ type TextItem = Extract<Item, { kind: 'p' | 'h' | 'quote' }>;
 
 let keys = 0;
 const key = () => String(++keys);
+/** What `submit-filled` and after write, every kind of block once. */
+const DEV_STORY = `We sat here the summer the lakes froze late, and **nobody** believed us.
+
+## The night of the skates
+
+> You could hear the ice sing all the way to Fredens Bro.
+
+---
+
+Our grandmother told it every *winter* after.`;
+
 const empty = (): Item => ({ key: key(), kind: 'p', text: '' });
 
 /** The written blocks as items, a photo's id swapped for its attachment uri. */
@@ -186,6 +198,25 @@ export default function Submit({
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set by a discard or a post: the close that follows keeps nothing.
   const done = useRef(false);
+
+  // scripts/shoot.sh, under __DEV__ only: each step of the sheet without typing.
+  useDevScreen(({ screen }) => {
+    if (!screen.startsWith('submit')) {
+      done.current = true;
+      return;
+    }
+    const filled = screen !== 'submit' && screen !== 'submit-editor' && screen !== 'submit-delete';
+    if (filled) {
+      setPlaceName('The bench by the lakes');
+      setItems(toItems(blocks(DEV_STORY), () => undefined));
+    }
+    setStyling(screen === 'submit-styling');
+    setPickingDay(screen === 'submit-date');
+    setDiscarding(screen === 'submit-discard');
+    setSealing(screen === 'submit-seal');
+    setConfirmingDelete(screen === 'submit-delete');
+    setError(screen === 'submit-error' ? "That didn't post. Try again in a moment." : null);
+  });
 
   const camera = useRef<CameraView>(null);
   const [, requestCamera] = useCameraPermissions();

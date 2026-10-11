@@ -752,7 +752,7 @@ unlock ring — and `--record` leaves an mp4. It seeds its own throwaway
 database, so it does not disturb the corpus. Read `e2e/README.md` before
 writing a flow; four of its rules are not guessable.
 
-**Every screen in under a minute, no Metro restart:** `mobile/scripts/shoot.sh`
+**Every screen and state, no taps and no Metro restart:** `mobile/scripts/shoot.sh`
 (the `/shoot` skill) asks the running dev build for each screen through a file
 it polls, and saves one PNG each into `~/Downloads/memory-lane-shots/`.
 

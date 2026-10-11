@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { fetchNotes, hideNote, leaveNote, wasRefused, type Note } from './api.ts';
+import { useDevScreen } from './devOpen.ts';
 import { deviceId } from './device.ts';
 import { when } from './format.ts';
 import { color, dim, input, label, story } from './theme.ts';
@@ -28,6 +29,11 @@ export default function Notes({ memoryId, isAuthor, heart }: Props) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<boolean | 'refused'>(false);
+  // scripts/shoot.sh, under __DEV__ only.
+  useDevScreen(({ screen }) => {
+    setDraft(screen === 'notes-typing' ? 'We had our first kiss on these steps, 1987.' : '');
+    setFailed(screen === 'notes-error');
+  });
 
   useEffect(() => {
     let live = true;
