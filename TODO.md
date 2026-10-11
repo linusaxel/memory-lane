@@ -471,6 +471,106 @@ before the planner*); the planner plans one walk and only its stops open. The
 rule for anything game-like or crafted: quiet by default, loud only for real
 progress; refine what exists rather than add.
 
+### The Collector
+
+You pick one of four wizard classes and it grows through eight looks as your
+lockets (memories opened) climb (`mobile/src/collector.ts`, nothing wired in
+yet). It replaces XP and levels. Nothing is spent or sold, and nothing ever
+covers a memory. Order: test it, then the art, then the build.
+
+- [ ] **Test it with walkers before building it.** (checked 2026-10-11) The
+      Locket-keeper lesson: four game layers were reversed in eight days
+      without a user. Print the four classes, each with its eight stages, and
+      show five people after a walk. Do they pick one quickly, and do they ask
+      what comes next? Fantasy Hike's 708 reviews never asked for gear
+      (`docs/research-fantasy-hike.md`), so this is the founder's pull until
+      walkers show it is theirs too.
+- [ ] **The thresholds outrun the library.** (checked 2026-10-11) Stages open
+      at 0/5/15/30/60/120/300/1000, but there are 847 visible memories, and only
+      137 score 8+, which is what a free walk takes. A free walker stops at
+      stage 5; 300 and 1,000 can't be reached by anyone today. Propose
+      0/3/8/15/30/60/120/250: a new look on walks one, two and three, then
+      about 6 weeks, 3 months and 6 months on the free walk. Revisit when the
+      library grows. Founder's call.
+- [ ] **A rank never goes down.** (checked 2026-10-11) The locket count can
+      fall when a memory is hidden or deleted. Keep the highest stage reached
+      (Ingress never takes a medal back) and grow it from the count, never
+      shrink it.
+- [ ] **The art: 4 classes × 8 stages, one stage at a time.** (checked
+      2026-10-11) The Canva lineups were bad: eight figures in one image drift
+      and blur. In Figma (GPT image), start from the sheet's front view as stage
+      4 (`~/Downloads/memory-lane-mascot/wizards/` 01, 08, 19, 09), then make each
+      stage as an edit of the one before, up to 8 and down to 1. Each class's
+      ranks and its locket line are in `collector.ts` and the memory notes.
+      Then: transparent backgrounds, a check that it reads in dark mode, and a
+      check at 44 pt (does each stage still look different at journal size?).
+      Files go in `mobile/assets/collector/<class>-<stage>.png`.
+- [ ] **Take XP and levels out.** (checked 2026-10-11) `api/progression.py`
+      (`LOCKET_DEFAULT` moves to `api/gate.py`), the `xp`, `level`,
+      `xp_level`, `xp_next` fields on `/v1/me` and `api.ts`, the two tests that
+      read `xp` to see a walk finished (`test_api_routes.py`,
+      `test_api_unlocks.py`: use the walked routes instead), the journal's
+      `Level` bar, `+N XP` and the level on the walk-done card,
+      `levelInto`, Paywall's `xp <= 0` check (use walked routes), the copy in
+      Settings, the onboarding lockets page, and the `+N XP` assert in
+      `.maestro/walk-and-unlock.yml`. `docs/10`: mark *Walks earn XP*
+      Superseded. The lockets table's `level` column is already unused.
+- [ ] **Pick your Collector: the last onboarding page.** (checked 2026-10-11)
+      It replaces "Walks earn lockets". All four at stage 4 side by side, one tap
+      to choose, "Change it any time in your journal". Choosing on day one is
+      what makes people identify with a character (Birk et al. 2016), so don't
+      wait until the first walk. Skip means the Wayfinder. The choice is
+      `AsyncStorage` (`memorylane.collector.v1`).
+- [ ] **The Collector page.** (checked 2026-10-11) A new screen opened by
+      tapping the Collector in the journal. The current look large, the class
+      and rank ("Lantern Warden"), "84 lockets · 36 to Elder of Roads" and a
+      bar. Below it, the path: all eight stages in a row, the reached ones in
+      colour and the ones ahead as dark silhouettes, each with its count ("at
+      120"). The silhouettes are the pull, like a talent tree you can see
+      ahead. Then the four classes to switch between; the stage comes with
+      you, since it is your lockets, not the class's. No shop, no prices, no
+      currency.
+- [ ] **The journal wears the Collector.** (checked 2026-10-11) The level bar
+      under the name goes; the Collector stands at the header's right, about
+      56 pt, tappable. The photo stays as the face others see on what you
+      file. Stats line: "84 lockets" leads.
+- [ ] **The walk-done card counts lockets.** (checked 2026-10-11) "+5 lockets"
+      replaces "+60 XP", and a small Collector with its bar to the next rank
+      replaces "Level 3". The new count is the profile's `unlocked`, read after
+      the walk, minus the one before it, as XP is today.
+- [ ] **Rank up: the one loud moment.** (checked 2026-10-11) When a walk
+      crosses a stage, Done on the walk-done card opens a full-screen reveal
+      before the map: the old look, a beat, the new one with the locket that
+      did it, the rank's name and its count ("Lamplit · 15 lockets"), a
+      success haptic, one tap to go on. Never on the unlock, never over a
+      memory (F30: the memory is read first; UI.md: loud only for real
+      progress, and this is). A walk ended early shows it the same way.
+      Reduce Motion is a crossfade.
+- [ ] **Someone who already has lockets.** (checked 2026-10-11) On the first
+      launch with the Collector, an account with 40 opened lands at its stage
+      with one reveal: "You're already Lamplit." Then the normal rules.
+- [ ] **The Collector replaces the fir at the edges.** (checked 2026-10-11)
+      One character, not two: the empty journal tab, the walked-out planner,
+      sign-in and the crash screen use your Collector's front view
+      (`Guardian.tsx`). It needs a curious and a sleepy pose per class, or one
+      neutral pose to start. Update docs/10, *The fir guardian, at the edges*.
+- [ ] **Keep the class with the account.** (checked 2026-10-11) Local
+      storage loses it on a new phone. When signed in, a `users.collector`
+      column, set with the profile, read on `/v1/me`. Only once someone
+      complains, or with sign-in's next change.
+- [ ] **Later, maybe: your Collector is the dot on the walk.** (checked
+      2026-10-11) A custom user marker in place of MapKit's dot (the
+      Locket-keeper idea). It costs the heading beam and accuracy ring
+      (`followsUserLocation`), so only after a real-phone look. Not before the
+      rest has been used.
+- [ ] **Paper it.** (checked 2026-10-11) When it ships: a docs/10 entry (*The
+      Collector*, superseding *Walks earn XP* and amending *The fir
+      guardian*), new flows in `docs/08` (choose a Collector, rank up), a
+      UI.md rule (the reveal is the one loud moment; the Collector never sits
+      beside a memory), Maestro asserts on the walk-done card, and the new
+      screens in `/shoot`. Measure: D30 and walks per walker, before and after.
+      The paywall never mentions ranks: a subscription buys walks, not looks.
+
 ### The walk on the map
 
 - [ ] **A direction arrow on the user dot.** (checked 2026-10-04)
