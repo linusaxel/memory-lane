@@ -139,8 +139,15 @@ const ROLLS = 1_000_000;
 const planKey = (km: number, ask: WalkAsk) =>
   `${km}|${ask.loop}|${ask.end?.lat},${ask.end?.lng}|${ask.themes}|${ask.from}|${ask.until}`;
 
-/** How far around you the home map draws locked pins: half the longest walk. */
-const MAP_RADIUS_KM = WALK_KM.max / 2;
+/** The home map draws what is on screen: from its centre out to a corner,
+ *  in km, within what the API allows. */
+const screenRadiusKm = (r: Region) => {
+  const ns = (r.latitudeDelta * 111) / 2;
+  const ew = (r.longitudeDelta * 111 * Math.cos((r.latitude * Math.PI) / 180)) / 2;
+  return Math.min(Math.max(Math.hypot(ns, ew), 0.1), 100);
+};
+/** How long the camera rests before the home map asks for what it shows. */
+const SETTLE_MS = 400;
 /** A pin on the home map: there, but not yours to open until a walk passes it. */
 const FADED_PIN = 0.4;
 /** How far you walk before the server is asked again whether you are near the
@@ -855,21 +862,23 @@ export default function App() {
   }, [device, planFrom, planKm, walkAsk, again, takeRoute]);
 
   const me = profile?.user_id;
-  // On the home map, and again when a position first arrives: by where you
-  // are, never by viewport, so panning fetches nothing (UI.md rule 3).
-  const located = !!position;
+  // On the home map, what is on screen once the camera rests: panning fires
+  // onRegionChangeComplete continuously, so it waits SETTLE_MS (UI.md rule 3).
+  const [onScreen, setOnScreen] = useState<Region | null>(null);
+  useEffect(() => {
+    if (stage !== 'map') return;
+    const settle = setTimeout(() => setOnScreen(region), SETTLE_MS);
+    return () => clearTimeout(settle);
+  }, [stage, region]);
   // The home map's one fetch failing is the app being offline, as far as a
   // walker can tell: a banner with Try again, gone on the next success.
   const [offline, setOffline] = useState(false);
   const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (stage !== 'map') return;
+    if (stage !== 'map' || !onScreen) return;
     const controller = new AbortController();
-    const at = positionRef.current ?? {
-      lat: FALLBACK_REGION.latitude,
-      lng: FALLBACK_REGION.longitude,
-    };
-    fetchNearby(at, MAP_RADIUS_KM, device, controller.signal)
+    const at = { lat: onScreen.latitude, lng: onScreen.longitude };
+    fetchNearby(at, screenRadiusKm(onScreen), device, controller.signal)
       .then((found) => {
         if (!mounted.current) return;
         setNearby(found);
@@ -879,7 +888,7 @@ export default function App() {
         if (!controller.signal.aborted && mounted.current) setOffline(true);
       });
     return () => controller.abort();
-  }, [stage, located, me, device, retry]);
+  }, [stage, onScreen, me, device, retry]);
 
   const stopsShown = revealed.walk === preview ? revealed.count : 0;
 

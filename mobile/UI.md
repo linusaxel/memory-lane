@@ -576,10 +576,13 @@ Each of these exists because something broke or would have been rejected.
    nothing was watched. The F28 step of `.maestro/walk-and-unlock.yml` is what caught it. The
    mode is declared for the geofence only; nothing calls
    `startLocationUpdatesAsync`.
-3. **Nothing fetches by viewport.** The map before a walk fetches by position
-   (on entering it, and when a position first arrives), and a walk fetches
-   nothing; if a fetch ever follows the viewport, debounce it, because panning
-   fires `onRegionChangeComplete` continuously.
+3. **The home map fetches what is on screen, debounced.** Before a walk it
+   asks for up to 200 memories from the screen's centre out to a corner,
+   once the camera has rested 400 ms (`SETTLE_MS`), because panning fires
+   `onRegionChangeComplete` continuously. The planner and the walk fetch
+   nothing by viewport. (Until 2026-10-12 it fetched 100 within 5 km of you;
+   836 sit within 5 km of central Copenhagen, and 1000 pins lagged the
+   simulator.)
 4. *(Retired with Explore: the viewport-to-radius maths.)*
 5. **A memory with no coordinates cannot be drawn.** The API filters those out;
    do not assume `coordinates` is always present on types that allow null.
