@@ -83,7 +83,7 @@ Everything below is one of three sessions. If a flow does not belong to one of
 these, it is probably not a flow.
 
 **Session one — "what is this?"** The planner (F1): a walk drawn on the map
-and the list of what its memories are of, your level at the top. Try another
+and the list of what its memories are of, your Collector at the top. Try another
 walk until the list appeals, then Start walk. A memory opens only on a walk,
 standing on it. The planner is where location is asked for (F8); decline it
 and the walk is planned from central Copenhagen instead (F9).
@@ -195,7 +195,7 @@ the planner*).
    where you tapped"; a second tap lets it go), with the slider at least the
    crow's distance to it ×1.3 (`endFloorKm`). Any change redraws the walk; the
    slider only on release. × closes it back to the map, from either step.
-   Journal is top left. "4 memories · 3.8 km loop"
+   Your Collector and the Journal are across the top. "4 memories · 3.8 km loop"
    sits between ‹ › (another walk, F32). **Next**, for every walker,
    is step two: ‹ Back,
    then **the list**: each stop numbered in walk order, its place, and year · source ·
@@ -553,10 +553,10 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, the book top left of the map, opens the journal as a sheet
-   over the map. It is you as well: your photo, name, numbers and level on
-   top (a tap is Edit profile, F21), a gear for Settings (F17), then *Walks*,
-   *Unlocked* and *Mine* (F24).
+1. **Journal**, the velvet book at the end of the Collector's bar, opens the
+   journal as a sheet over the map. It is you as well: your photo, name,
+   numbers and level on top (a tap is Edit profile, F21), a gear for Settings
+   (F17), then *Walks*, *Unlocked* and *Mine* (F24).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
    says so. *Cards* shows the walks two to a row, each drawn as its shape.
@@ -795,7 +795,9 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. Journal sits top left at every stage; Add sits
+   no hotspots card. Your Collector and the Journal sit across the top at
+   every stage, hidden while a memory is up (tapped, the Collector opens its
+   page); Add sits
    bottom right on the home map, beside Journal in the planner, and at the
    bottom row's left on a walk. There are no tabs. There is no
    "Near me": Center on me recentres, and "Turn on location" shows only while

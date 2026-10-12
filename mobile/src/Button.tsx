@@ -1,6 +1,7 @@
 /** The app's buttons, one meaning each (docs/10, "Jewel Box"): `go` starts or
  *  moves on, `foil` keeps something, `quiet` is the way back or aside, and
- *  `text` is a gold word. A press squishes it to 0.94. Where it sits (margin,
+ *  `text` is a gold word. Go and foil stand on a 4pt ledge, a border and not a
+ *  shadow (docs/10, "Game menus"). A press squishes it to 0.94. Where it sits (margin,
  *  flex, alignSelf) is the caller's, through `place`. */
 
 import type { ComponentProps, ReactNode } from 'react';
@@ -14,9 +15,9 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Foil } from './Game.tsx';
 import Glyph from './Glyph.tsx';
-import { buttonText, color, foil, radius } from './theme.ts';
+import { buttonText, color, foil, metal, radius } from './theme.ts';
 
 type Kind = 'go' | 'foil' | 'quiet' | 'text';
 
@@ -54,11 +55,7 @@ export default function Button({
     >
       {kind === 'foil' && (
         <>
-          <LinearGradient
-            colors={foil.colors}
-            locations={[0, 0.5, 1]}
-            style={StyleSheet.absoluteFill}
-          />
+          <Foil style={StyleSheet.absoluteFill} />
           <View style={styles.highlight} />
         </>
       )}
@@ -94,8 +91,8 @@ const styles = StyleSheet.create({
     gap: 8,
     overflow: 'hidden',
   },
-  go: { backgroundColor: color.goBg },
-  foil: {},
+  go: { backgroundColor: color.goBg, borderBottomWidth: 4, borderBottomColor: color.goLedge },
+  foil: { borderBottomWidth: 4, borderBottomColor: metal.dark },
   quiet: { backgroundColor: color.quiet, borderWidth: 1, borderColor: color.quietEdge },
   text: { minHeight: 44, paddingHorizontal: 8 },
   pressed: { transform: [{ scale: 0.94 }] },

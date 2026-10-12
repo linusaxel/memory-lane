@@ -24,8 +24,8 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 
 Preview (src/Plan.tsx)          home: the first screen after sign-in, unless today's walk is accepted,
 │                              and where ending a walk lands. The map, fitted to the drawn walk above
-│                              the measured card. Draw first, adjust after. Journal and Add top left, level top
-│                              centre, you top right; no bottom row
+│                              the measured card. Draw first, adjust after. Your Collector across the top,
+│                              the Journal orb at its end (src/CollectorHud.tsx); no bottom row
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out gold under labels so the pins pop
 └─ card (Preview)              two steps; every change on it redraws the walk
@@ -54,8 +54,10 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ Journal                    top left, a 44pt glass circle, the planner and the walk, never over a
-│                              card with its own buttons. `book.closed`, a 10pt gold dot: a heart
+├─ Collector + Journal        across the top: the velvet HUD (medal, rank, bar; tapped: its page), compact
+│                              on the walk, then the Journal, a 52pt velvet orb in foil, the planner and the walk.
+│                              Hidden while a memory, the locket in reach or a sheet is up (rule 13).
+│                              `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
 │                              journal sheet
 ├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), on the walk only,
@@ -187,7 +189,7 @@ There are no tabs on the map, and no map of what is locked: the planner draws th
 offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
 On a walk the bottom is where you act, one tap each: Add, the walk card and Center on me;
 in the planner the card's own buttons are. The top is where you read:
-Journal top left, nothing top right (docs/10, "The journal is you").
+your Collector and the Journal (docs/10, "Game menus").
 ```
 
 **Unlocked memories are readable forever, and the server now holds the copy that
@@ -226,6 +228,8 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
 | `src/CollectorPage.tsx` | your Collector, a character sheet: the look in its plate, the ladder of eight, the four crests. Its own sheet, from the journal's header |
 | `src/Plate.tsx` | the Collector's framed plate: the portrait, the crests, the rank-up |
+| `src/CollectorHud.tsx` | your Collector across the top of the map: medal, rank, bar to the next. Tapped, its page |
+| `src/Game.tsx` | the game menus' pieces: `Foil`, `Velvet`, `Ribbon`, `Panel`, `Coin`, `Medal`, `Bar` |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
 | `src/DiamondRule.tsx` | the one ornament, twice on an open story: under the byline, before the notes |
 | `src/PullQuote.tsx` | a quote set apart: gold mark, Newsreader italic, a caption |
@@ -300,7 +304,8 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 | `sealInk` | `#F6F1E7` / `#0B1F17` | anything drawn on seal |
 | `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
 | `glow` | emerald at 55% | the radial glow behind an in-reach locket. Never a ring |
-| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Lockets, the rank bar |
+| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Lockets, the rank bar on paper |
+| `velvetGround`, `onVelvet`, `onVelvetSoft`, `onVelvetGold` | `#4E1F63`; words `#F6F1E7`, `#E9DFEE`, `#F2D58A` | **yours.** The Collector's HUD, a chosen mode or chip, a reward, the rank-up. One set in both themes; the rank bar on velvet is foil |
 | `track` | `#E9DFEE` / `#362C3F` | the empty part of the rank bar |
 | `danger` | `#9B2C2C` / `#F09A9A` | Delete account. Nothing destructive is gold |
 | `heart` | `#A3294E` / `#F29BB4` | a filled heart |
@@ -314,7 +319,8 @@ Next, Start walk, Keep walking, Turn on location). `foil` is a gold gradient:
 keeping something (Seal it here, Subscribe, Done on the finish card). `quiet`
 is the way back or aside (End walk, Cancel, a past walk's Done), with a gold
 hairline in the dark. `text` is a gold word (Walk again tomorrow ›, Not now).
-56pt capsules that squish to 0.94 when pressed. Destructive is never gold:
+56pt capsules that squish to 0.94 when pressed; go and foil stand on a 4pt
+darker ledge (`goLedge`, `metal.dark`), a border. Destructive is never gold:
 Delete account is `danger` text. An in-page action whose Pressable lays out
 its own children spreads `button.quiet` from `theme.ts`, and `button.small`
 for the 36pt size with `buttonTextSmall` and `hitSlop={4}`. An action inside
@@ -609,9 +615,10 @@ Each of these exists because something broke or would have been rejected.
 12. **Every view has a way out.** A card over the map dismisses with an × in
     its top-trailing corner, on the title line (Apple Maps' convention, HIG
     Toolbars: a back chevron retraces a hierarchy, a close dismisses a layer).
-    Never a new floating control top left: it is kept empty, and it is
-    the least accurate tap on the screen (Hoober 2017: corner targets need
-    ~12 mm against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
+    Nothing new floats top left: the Collector's HUD starts there and is the
+    one thing that does (docs/10, "Game menus"); the corner is the least
+    accurate tap on the screen (Hoober 2017: corner targets need ~12 mm
+    against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
     preview, Journal, Settings, Edit profile, a memory's sheet, Add a memory.
     Always trailing, never leading: a sheet's own action is not a corner
@@ -621,9 +628,10 @@ Each of these exists because something broke or would have been rejected.
     a memory.** Full screen, a success haptic, only when a walk hands back the
     map (Done on its card, or ending it) and a stage was crossed
     (`src/RankUp.tsx`). Never on the unlock or over a story: the memory is
-    read first. The Collector stands in the journal's header, on the finish
-    card and on its own page, nowhere near a summary. Reduce Motion: a
-    crossfade, no growth.
+    read first. The Collector stands across the top of the map, in the
+    journal's header, on the finish card and on its own page, never beside a
+    summary: App hides the HUD while a memory, the locket in reach or a sheet
+    is up. Reduce Motion: a crossfade, no growth.
 
 ## Writing
 

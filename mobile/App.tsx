@@ -4,7 +4,9 @@ import {
   Dimensions,
   Linking,
   Modal,
+  Image,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -92,6 +94,9 @@ import { seg } from './src/lockets/math.ts';
 import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
 import { type Collector, loadCollector, saveCollector } from './src/CollectorLook.tsx';
+import CollectorHud from './src/CollectorHud.tsx';
+import { Foil, Ribbon, Velvet } from './src/Game.tsx';
+import { locketOf } from './src/lockets.ts';
 import { classOf, stageNow, stageOf } from './src/collector.ts';
 import RankUp from './src/RankUp.tsx';
 import CollectorPage from './src/CollectorPage.tsx';
@@ -2168,6 +2173,10 @@ export default function App() {
             <Preview
               stops={preview ? preview.memories : null}
               mystery={preview?.mystery === true}
+              collector={collectorId}
+              rank={rank}
+              lockets={lockets}
+              filed={filed}
               meters={pathMeters(previewPath)}
               km={planKm}
               onKm={setWalkKm}
@@ -2273,25 +2282,41 @@ export default function App() {
 
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
-              read at the top"). Journal top left, you top right. */}
+              read at the top"). Your Collector across the top, the Journal
+              at its end; neither while a memory is up (UI.md rule 13). */}
           {(stage === 'map' || stage === 'preview' || stage === 'walk') &&
             !confirmEnd &&
-            !showDone && (
-              <GlassButton
-                place={styles.topLeft}
-                style={styles.circle}
-                hitSlop={4}
-                accessibilityRole="button"
-                accessibilityLabel="Journal"
-                accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setJournalOpen(true);
-                }}
-              >
-                <Glyph name="book.closed" size={20} weight="medium" color={color.ink} />
-                {journalNew && <View style={styles.newDot} />}
-              </GlassButton>
+            !showDone &&
+            !lockFor &&
+            openAt.length === 0 && (
+              <View style={styles.top}>
+                <CollectorHud
+                  id={collectorId}
+                  stage={rank}
+                  lockets={lockets}
+                  filed={filed}
+                  compact={stage === 'walk'}
+                  onPress={() => setCollectorOpen(true)}
+                />
+                <Pressable
+                  hitSlop={4}
+                  accessibilityRole="button"
+                  accessibilityLabel="Journal"
+                  accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setJournalOpen(true);
+                  }}
+                  style={({ pressed }) => pressed && styles.squish}
+                >
+                  <Foil style={styles.orb}>
+                    <Velvet style={styles.orbIn}>
+                      <Glyph name="book.closed" size={20} weight="medium" color={color.onVelvet} />
+                    </Velvet>
+                  </Foil>
+                  {journalNew && <View style={styles.newDot} />}
+                </Pressable>
+              </View>
             )}
           {stage === 'map' && offline && !journalOpen && (
             <GlassCard style={styles.offline} accessibilityLiveRegion="polite">
@@ -2405,6 +2430,13 @@ export default function App() {
                         routeDone ? 'Shows the whole walk' : 'Shows you and the next stop'
                       }
                     >
+                      <Ribbon
+                        label={
+                          nextRouteStop
+                            ? `Stop ${routeUnlockedCount + 1} of ${routeTotal}`
+                            : 'Every stop unlocked'
+                        }
+                      />
                       <Text style={styles.walkLeft} numberOfLines={1}>
                         {nextRouteStop
                           ? `Next${toNextStop === null ? '' : ` · ${distance(toNextStop)}`}`
@@ -2419,18 +2451,17 @@ export default function App() {
                         {/* Done, next and later: a checklist, filled as stops
                             open. Not a ring: the ring is the hold's (UI.md). */}
                         {routeShown.map((memory) => (
-                          <View
+                          // The stop's own locket: full gold ahead, faded once
+                          // opened, as its pin is; the next one larger.
+                          <Image
                             key={memory.id}
+                            source={locketOf(memory.locket).pin}
                             style={[
-                              styles.stamp,
-                              memory === nextRouteStop && styles.stampNext,
-                              earned.has(memory.id) && styles.stamped,
+                              styles.stampLocket,
+                              memory === nextRouteStop && styles.stampLocketNext,
+                              earned.has(memory.id) && styles.stampLocketOpened,
                             ]}
-                          >
-                            {earned.has(memory.id) && (
-                              <Glyph name="checkmark" size={9} weight="bold" color={color.paper} />
-                            )}
-                          </View>
+                          />
                         ))}
                         {mystery !== false && (
                           <View
@@ -2617,7 +2648,19 @@ const styles = StyleSheet.create({
   },
   // Glass over the map (src/Glass.tsx). `topLeft` and friends place a
   // control; `pill` and `circle` are its shape.
-  topLeft: { position: 'absolute', top: 64, left: 18 },
+  // The Collector's bar and the Journal orb, across the top.
+  top: {
+    position: 'absolute',
+    top: 58,
+    left: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  orb: { width: 52, height: 52, borderRadius: 26, padding: 2.5 },
+  orbIn: { flex: 1, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  squish: { transform: [{ scale: 0.92 }] },
   // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
   // over Apple's logo and Legal link (HIG Maps asks 10).
   bottom: {
@@ -2656,7 +2699,7 @@ const styles = StyleSheet.create({
   },
   offline: {
     position: 'absolute',
-    top: 124,
+    top: 140,
     left: 18,
     right: 18,
     flexDirection: 'row',
@@ -2701,9 +2744,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stampNext: { borderColor: color.gold },
   stamped: { backgroundColor: color.gold, borderColor: color.gold },
   stampMark: { ...label, fontSize: 10, lineHeight: 12 },
+  stampLocket: { width: 18, height: 18, resizeMode: 'contain' },
+  stampLocketNext: { width: 24, height: 24 },
+  stampLocketOpened: { opacity: 0.4 },
 });
 
 /** The paper wash behind the lock: in over 600 ms, out the same, so walking

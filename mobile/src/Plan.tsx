@@ -29,8 +29,7 @@ import {
   View,
 } from 'react-native';
 
-import CollectorLook from './CollectorLook.tsx';
-import { classOf, rankInto, wants, wantsWords, type ClassId } from './collector.ts';
+import { classOf, rankInto, stageOf, wants, wantsWords, type ClassId } from './collector.ts';
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
@@ -53,7 +52,9 @@ import {
   metal,
   radius,
   screenTitle,
+  velvet,
 } from './theme.ts';
+import { Bar, Coin, Medal, Panel, Ribbon, Velvet } from './Game.tsx';
 import { WalkShape } from './WalkCard.tsx';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
@@ -265,6 +266,11 @@ type PreviewProps = {
   stops: LocatedMemory[] | null;
   /** One more stop, withheld until the walk passes it. */
   mystery: boolean;
+  /** Your Collector, for the stops' reward: the rank this walk could reach. */
+  collector: ClassId;
+  rank: number;
+  lockets: number;
+  filed: number;
   meters: number;
   /** What the slider asked for. */
   km: number;
@@ -355,6 +361,10 @@ function Mode({ label: text, on, onPress }: { label: string; on: boolean; onPres
 export function Preview({
   stops,
   mystery,
+  collector,
+  rank,
+  lockets,
+  filed,
   meters,
   km,
   onKm,
@@ -451,6 +461,12 @@ export function Preview({
       <GlassCard style={styles.card} onLayout={measure}>
         {back}
         <Stops stops={stops} mystery={mystery} />
+        <Reward
+          id={collector}
+          rank={rank}
+          reach={stageOf(lockets + stops.length, filed)}
+          count={stops.length}
+        />
         {start}
         {error && <Text style={styles.error}>{error}</Text>}
         {close}
@@ -489,10 +505,7 @@ export function Preview({
             onEra={(span) => onAsk({ ...ask, ...span })}
           />
           {THEME_GROUPS.map((group) => (
-            <View key={group.title}>
-              <Text style={styles.section} accessibilityRole="header">
-                {group.title}
-              </Text>
+            <Panel key={group.title} title={group.title}>
               <View style={styles.chips}>
                 {group.themes.map((theme) => {
                   const on = ask.themes.includes(theme);
@@ -514,7 +527,7 @@ export function Preview({
                   );
                 })}
               </View>
-            </View>
+            </Panel>
           ))}
         </ScrollView>
         <Button
@@ -535,6 +548,7 @@ export function Preview({
           the title never shifts between walks. */}
       <View style={styles.pages}>
         <View style={styles.grow}>
+          <Ribbon label={subscribed ? "Today's walk" : "This week's walk"} />
           <Text style={styles.cardTitle}>A walk from here</Text>
           {found ? (
             <Text
@@ -616,7 +630,9 @@ export function Preview({
         accessibilityHint={subscribed ? undefined : 'Part of Plus'}
         testID="themes"
       >
-        <Glyph name="slider.horizontal.3" size={18} weight="semibold" color={color.gold} />
+        <Coin size={30}>
+          <Glyph name="slider.horizontal.3" size={15} weight="semibold" color={foil.text} />
+        </Coin>
         <Text style={styles.themesText} numberOfLines={1}>
           {(subscribed && chosen) || 'Customize'}
         </Text>
@@ -638,6 +654,33 @@ export function Preview({
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </GlassCard>
+  );
+}
+
+/** What walking it all would earn, and the rank it would reach. */
+function Reward({
+  id,
+  rank,
+  reach,
+  count,
+}: {
+  id: ClassId;
+  rank: number;
+  reach: number;
+  count: number;
+}) {
+  const ranks = classOf(id).ranks;
+  return (
+    <Velvet style={styles.reward}>
+      <Medal id={id} stage={rank} size={38} />
+      <View style={styles.grow}>
+        <Text style={styles.rewardLabel}>REWARD</Text>
+        <Text style={styles.rewardText} numberOfLines={1}>
+          {`Up to +${count} ${count === 1 ? 'locket' : 'lockets'}` +
+            (reach > rank ? ` · reach ${ranks[reach]}` : '')}
+        </Text>
+      </View>
+    </Velvet>
   );
 }
 
@@ -664,9 +707,7 @@ function Stops({ stops, mystery }: { stops: LocatedMemory[]; mystery: boolean })
             accessible
             accessibilityLabel={`Stop ${i + 1}, ${memory.place.name}. ${about}`}
           >
-            <View style={styles.number}>
-              <Text style={styles.numberText}>{i + 1}</Text>
-            </View>
+            <Coin size={28}>{i + 1}</Coin>
             <View style={styles.stopText}>
               <Text style={styles.stopName} numberOfLines={1}>
                 {memory.place.name}
@@ -683,9 +724,7 @@ function Stops({ stops, mystery }: { stops: LocatedMemory[]; mystery: boolean })
       })}
       {mystery && (
         <View style={styles.stop} accessible testID="mystery-stop">
-          <View style={styles.number}>
-            <Text style={styles.numberText}>?</Text>
-          </View>
+          <Coin size={28}>?</Coin>
           <View style={styles.stopText}>
             <Text style={styles.stopName} numberOfLines={1}>
               Somewhere on the way
@@ -802,6 +841,7 @@ export function WalkDone({
       accessibilityViewIsModal
       onLayout={(e) => onHeight(e.nativeEvent.layout.height)}
     >
+      <Ribbon label="Quest complete" />
       <View style={styles.doneTop}>
         <Text style={styles.doneTitle} accessibilityRole="header" testID="walk-done">
           Nice walk.
@@ -811,30 +851,34 @@ export function WalkDone({
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
-      {/* What you earned, in plum: this walk's lockets, and where they leave you. */}
-      <View style={styles.stats}>
-        <View style={styles.stat}>
-          <Text style={styles.statFigure}>{`+${stops} ${stops === 1 ? 'locket' : 'lockets'}`}</Text>
-          <Text style={label}>This walk</Text>
-        </View>
+      {/* What you earned: a tile per locket, then the Collector's bar
+          filling with them (docs/10, "Game menus"). */}
+      <View style={styles.loot}>
+        {Array.from({ length: Math.min(stops, 5) }, (_, n) => (
+          <Velvet key={n} style={styles.lootTile}>
+            <Image source={locketOf().pin} style={styles.lootLocket} />
+            <Text style={styles.lootPlus}>+1</Text>
+          </Velvet>
+        ))}
+      </View>
+      <Text style={[styles.cardBody, styles.lootText]}>
+        {`+${stops} ${stops === 1 ? 'locket' : 'lockets'} this walk`}
+      </Text>
+      <Velvet style={styles.rankStrip}>
         <View
-          style={[styles.stat, styles.statRuled, styles.rankStat]}
+          style={styles.rankStripIn}
           accessible
           accessibilityLabel={`${classOf(collector).ranks[rank]}, ${lockets} lockets`}
         >
-          <CollectorLook id={collector} stage={rank} size={44} />
+          <Medal id={collector} stage={rank} size={50} />
           <View style={styles.grow}>
-            <Text style={[label, styles.statInk]} numberOfLines={1}>
+            <Text style={styles.rankName} numberOfLines={1}>
               {classOf(collector).ranks[rank]}
             </Text>
-            <View style={styles.bar}>
-              <View
-                style={[styles.barFill, { width: `${rankInto(rank, lockets, filed) * 100}%` }]}
-              />
-            </View>
+            <Bar into={rankInto(rank, lockets, filed)} height={12} />
           </View>
         </View>
-      </View>
+      </Velvet>
       {/* Lockets alone don't grow it: when a memory of theirs is what's
           missing, say so here, where the walk just paid out. */}
       {want && want.filed > 0 && (
@@ -902,7 +946,35 @@ export function PastWalk({
 }
 
 const styles = StyleSheet.create({
-  locket: { width: 13, height: 13 },
+  locket: { width: 22, height: 22 },
+  loot: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 4 },
+  lootTile: {
+    width: 60,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: color.edge,
+    borderBottomWidth: 3,
+    borderBottomColor: velvet.deep,
+  },
+  lootLocket: { width: 28, height: 28 },
+  lootPlus: { ...font.display, fontSize: 14, color: color.onVelvetGold },
+  lootText: { textAlign: 'center' },
+  rankStrip: { borderRadius: 18, borderWidth: 1, borderColor: color.edge },
+  rankStripIn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10 },
+  rankName: { ...font.title, fontSize: 18, lineHeight: 22, color: color.onVelvet, marginBottom: 4 },
+  reward: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: color.edge,
+  },
+  rewardLabel: { ...font.display, fontSize: 10, letterSpacing: 1.6, color: color.onVelvetGold },
+  rewardText: { ...font.uiBold, fontSize: 14, color: color.onVelvet },
   checks: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   check: {
     width: 20,
@@ -912,20 +984,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stats: {
-    flexDirection: 'row',
-    paddingVertical: 14,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: color.rule,
-  },
-  stat: { flex: 1, gap: 4, paddingHorizontal: 10 },
-  statRuled: { borderLeftWidth: StyleSheet.hairlineWidth, borderColor: color.rule },
-  statFigure: { ...font.title, fontSize: 24, lineHeight: 30, color: color.plum },
-  statInk: { color: color.ink },
-  rankStat: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bar: { height: 6, borderRadius: 3, backgroundColor: color.track, overflow: 'hidden' },
-  barFill: { height: 6, borderRadius: 3, backgroundColor: color.plum },
   doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   value: { ...font.title, fontSize: 30, lineHeight: 34, color: color.ink },
   lengthRow: {
@@ -950,17 +1008,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modeOn: { backgroundColor: color.paperRaised, ...lift, shadowOpacity: 0.08 },
+  // The chosen one in velvet, standing on its ledge (docs/10, "Game menus").
+  modeOn: { backgroundColor: color.velvetGround, borderBottomWidth: 3, borderColor: velvet.deep },
   modeText: { ...font.uiMedium, fontSize: 15, color: color.inkSoft },
-  modeTextOn: { ...font.uiBold, color: color.ink },
+  modeTextOn: { ...font.uiBold, color: color.onVelvet },
   themes: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     minHeight: 52,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: color.rule,
+    paddingHorizontal: 10,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: 16,
+    borderColor: color.goldLine,
     marginTop: 6,
   },
   themesText: { ...font.uiMedium, flex: 1, fontSize: 17, color: color.ink },
@@ -984,7 +1045,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: color.rule,
   },
-  railOn: { right: undefined, backgroundColor: color.gold },
+  railOn: { right: undefined, backgroundColor: color.velvetGround },
   tick: {
     position: 'absolute',
     width: 6,
@@ -1032,17 +1093,18 @@ const styles = StyleSheet.create({
   },
   badgeText: { ...font.uiBold, fontSize: 13, color: foil.text },
   // Four rows in view, the rest a scroll away: the map behind still shows the walk.
-  stops: { maxHeight: 4 * 52, flexGrow: 0 },
-  stop: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52 },
-  number: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: color.gold,
+  stops: { maxHeight: 4 * 56, flexGrow: 0 },
+  // A quest log: each stop on its own paper tile, its number a coin.
+  stop: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
+    height: 52,
+    marginBottom: 4,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    backgroundColor: color.paper,
   },
-  numberText: { ...font.uiBold, fontSize: 13, color: color.paper },
   stopText: { flex: 1, gap: 2 },
   stopName: { ...font.uiBold, fontSize: 16, color: color.ink },
   back: {

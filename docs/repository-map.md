@@ -208,6 +208,8 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/RankUp.tsx` | The rank-up: full screen when a walk hands back the map past a new stage (the old look, a gathering gold light, the new look springs in), and the one-time "You're already" |
 | `mobile/src/CollectorPage.tsx` | Your Collector, a character sheet from the journal: the look in its plate, the ladder of eight with silhouettes ahead, the four classes as crests to switch |
 | `mobile/src/Plate.tsx` | The Collector's framed plate (double gold rule, corner diamonds): the portrait, the crests and the rank-up stand in one |
+| `mobile/src/CollectorHud.tsx` | Your Collector across the top of the map: medal, rank and the bar to the next; tapped, its page. Hidden while a memory is up |
+| `mobile/src/Game.tsx` | The game menus' pieces: foil and velvet fills, the ribbon over a title, a panel with a foil tab, a coin, the medal, the rank bar on velvet |
 | `mobile/src/CollectorLook.tsx` | A Collector's look at a stage (a silhouette when ahead), the art map, and the pick and stage this phone keeps |
 | `mobile/src/countUp.ts` | The values a journal number rolls through on its way up |
 | `mobile/src/hashtags.ts` | A description's #words, the server's rule, for drawing them |

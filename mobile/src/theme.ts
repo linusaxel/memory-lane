@@ -47,6 +47,8 @@ export const color = {
   goBg: dual('#24694E', '#256349'),
   goRim: dual('rgba(233,201,120,0.55)', 'rgba(227,190,107,0.55)'),
   onGo: dual('#FFFCF6', '#F3ECE0'),
+  /** A raised button's ledge: the darker 4pt under go. */
+  goLedge: dual('#174A36', '#123B2B'),
 
   /** Openable now, and nothing else: a lit pin, the diamond in the rule. A
    *  fill and a text colour both; marks drawn on it are sealInk. */
@@ -55,6 +57,13 @@ export const color = {
   sealSoft: dual('#D5EBDF', '#173528'),
   /** The glow behind an in-reach locket. Never a ring. */
   glow: dual('rgba(28,140,98,0.55)', 'rgba(76,193,150,0.55)'),
+
+  /** Velvet, and words on it: the Collector's colours, cloth, so one set in
+   *  both themes (docs/10, "Game menus"). The ground is velvet.mid. */
+  velvetGround: dual('#4E1F63', '#4E1F63'),
+  onVelvet: dual('#F6F1E7', '#F6F1E7'),
+  onVelvetSoft: dual('#E9DFEE', '#E9DFEE'),
+  onVelvetGold: dual('#F2D58A', '#F2D58A'),
 
   /** What you earned: lockets, and the bar to your next rank.
    *  Never a memory or an action. */

@@ -18,7 +18,8 @@ import Plate from './Plate.tsx';
 import { STAGES, classOf, type ClassId } from './collector.ts';
 import { locketOf } from './lockets.ts';
 import { useReduceMotion } from './useBreath.ts';
-import { color, font, label, metal, screenTitle } from './theme.ts';
+import { color, foil, font, label, metal, screenTitle } from './theme.ts';
+import { Foil, Velvet } from './Game.tsx';
 
 type Props = {
   id: ClassId;
@@ -135,12 +136,19 @@ export default function RankUp({ id, from, to, lockets, filed, onDone }: Props) 
     ? [{ translateY: words.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }]
     : [];
   return (
-    <View
-      style={[styles.screen, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 16 }]}
+    <Velvet
+      style={[styles.screen, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 16 }]}
       accessibilityViewIsModal
       testID="rank-up"
     >
-      <Text style={label}>{still ? 'Your Collector' : `Rank ${to + 1} of ${STAGES.length}`}</Text>
+      {!still && (
+        <Foil style={styles.banner}>
+          <Text style={styles.bannerText}>RANK UP</Text>
+        </Foil>
+      )}
+      <Text style={styles.over}>
+        {still ? 'Your Collector' : `Rank ${to + 1} of ${STAGES.length}`}
+      </Text>
       <View style={styles.stage}>
         <Animated.View style={[styles.light, { opacity: glow }]} pointerEvents="none">
           <Svg width={LIGHT} height={LIGHT} viewBox="0 0 100 100">
@@ -193,9 +201,9 @@ export default function RankUp({ id, from, to, lockets, filed, onDone }: Props) 
         </View>
       </Animated.View>
       <View style={styles.foot}>
-        <Button kind="go" label="Go on" onPress={onDone} />
+        <Button kind="foil" label="Go on" onPress={onDone} />
       </View>
-    </View>
+    </Velvet>
   );
 }
 
@@ -206,7 +214,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: color.paper,
     paddingHorizontal: 24,
     alignItems: 'center',
   },
@@ -220,9 +227,12 @@ const styles = StyleSheet.create({
   light: { position: 'absolute', top: 0, left: 0 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   words: { marginTop: 12, gap: 12, alignItems: 'center' },
-  title: { ...screenTitle, textAlign: 'center' },
+  banner: { paddingHorizontal: 26, paddingVertical: 8, borderRadius: 6, marginBottom: 12 },
+  bannerText: { ...font.display, fontSize: 15, letterSpacing: 4, color: foil.text },
+  over: { ...label, letterSpacing: 1.4, color: color.onVelvetGold },
+  title: { ...screenTitle, textAlign: 'center', color: color.onVelvet },
   count: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   locket: { width: 18, height: 18 },
-  body: { ...font.prose, fontSize: 17, lineHeight: 25, color: color.inkSoft },
+  body: { ...font.prose, fontSize: 17, lineHeight: 25, color: color.onVelvetSoft },
   foot: { flex: 1, justifyContent: 'flex-end', alignSelf: 'stretch' },
 });

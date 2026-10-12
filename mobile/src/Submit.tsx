@@ -59,7 +59,19 @@ import { useDevScreen } from './devOpen.ts';
 import { metersBetween } from './region.ts';
 import { blocks, inline, plain, serialize, type Block, type Place, type Size } from './story.ts';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { color, dim, font, label, lift, metal, radius, screenTitle, story, sunk } from './theme.ts';
+import {
+  color,
+  dim,
+  font,
+  label,
+  lift,
+  metal,
+  radius,
+  screenTitle,
+  story,
+  sunk,
+  velvet,
+} from './theme.ts';
 
 const MAX_SUMMARY = 2000;
 const MAX_PHOTOS = 4;
@@ -1565,9 +1577,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 5,
   },
-  chipOn: { backgroundColor: color.gold },
+  // Chosen: velvet on its ledge (docs/10, "Game menus").
+  chipOn: { backgroundColor: color.velvetGround, borderBottomWidth: 3, borderColor: velvet.deep },
   chipText: { ...label, fontSize: 12, color: color.inkSoft },
-  chipTextOn: { color: color.paper },
+  chipTextOn: { color: color.onVelvet },
 
   // MemoryMedia's photo, so a photo here is the size it will be read at.
   photo: {

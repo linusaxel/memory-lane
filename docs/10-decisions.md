@@ -3569,8 +3569,10 @@ for every memory (rejected by the founder: each locket opens as itself).
 ### Jewel Box
 
 Status: Accepted 2026-10-06. Supersedes *One font, the map's*, and the colour
-values of *Lockets* (the roles stay). The founder's round-2 redesign, direction
-B with two parts of A; the handoff is `docs/design-brief/jewel-box.md`.
+values of *Lockets* (the roles stay). Partly superseded 2026-10-12 by *Game
+menus*: ornaments and velvet in the chrome. The founder's round-2 redesign,
+direction B with two parts of A; the handoff is
+`docs/design-brief/jewel-box.md`.
 
 - **One meaning per colour.** Gold is a memory and the way to it (links, the
   route, pins). Green enamel (`goBg`) is go: every start or next action. Gold
@@ -4655,7 +4657,8 @@ Nothing was stored, so nothing is migrated. If the weekly bet fails
 
 ### The Collector
 
-Status: Accepted 2026-10-11. Supersedes *Walks earn XP*.
+Status: Accepted 2026-10-11. Supersedes *Walks earn XP*. Where it stands is
+amended 2026-10-12 by *Game menus*: across the top of the map too.
 
 The founder plays RPGs; what pulls is a character that grows (gear, looks),
 and exploring. You pick one of four wizard classes (Wayfinder, Pilgrim,
@@ -4705,6 +4708,43 @@ land in `mobile/assets/collector/`.
 **Options considered:** keeping XP beside it (two progress bars for one
 thing); gear from places (Pikmin's rule; more art than eight stages, later);
 the class kept with the account (only once someone loses it on a new phone).
+
+### Game menus
+
+Status: Accepted 2026-10-12. Supersedes, in *Jewel Box*, "one ornament" and
+the quiet chrome; in *The Collector*, where it may stand; and the glass
+Journal circle top left.
+
+The founder wanted the menus to feel like a game now the Collector exists,
+Pokémon and RPG status bars in mind, and picked ten concept screens
+(rendered from HTML, the Figma MCP being capped). The look stays the Jewel
+Box's, cream, plum velvet and gold; what changes is that the chrome plays.
+
+- **Your Collector across the top** of the planner, the map and the walk
+  (`src/CollectorHud.tsx`): a velvet capsule with the medal, the rank and its
+  bar, and the Journal as a velvet orb at its end. Tapped, it opens the
+  Collector's page. It hides whenever a memory is up, the locket in reach or
+  a sheet: rule 13 now reads "never beside a summary", not "only in three
+  places". Top left is no longer kept empty.
+- **Velvet is a colour with a meaning:** yours, the Collector and what you
+  chose (a mode, a theme chip, a reward). Words on it are `onVelvet*`, one
+  set in both themes, since velvet is cloth. Gold on velvet fills the rank
+  bar; plum stays the rank's on paper.
+- **Ornaments are allowed in the chrome:** a ribbon over a card's title
+  ("◆ This week's walk ◆"), foil coins for numbers, a foil tab on a panel
+  (`src/Game.tsx`). The diamond rule stays the one ornament inside a story.
+- **Go and foil stand on a ledge**, a 4pt darker bottom border, not a third
+  shadow.
+- **Quest words, not quest mechanics:** the planner says what a walk would
+  earn ("Up to +4 lockets · reach Lamplit"), the finish shows a tile per
+  locket. Nothing new is counted, sold or gated: the paywall still never
+  mentions ranks.
+
+The Locket-keeper lesson stands: this is a skin on what exists, and the
+walker test in TODO.md still decides whether the Collector earns its place.
+
+**Options considered:** the Collector in the planner card only (the founder
+wanted it on top, as games do); Figma frames first (out of MCP calls).
 
 ### Rejected approaches, do not retry
 
