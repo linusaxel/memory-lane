@@ -614,7 +614,7 @@ export function Preview({
         disabled={busy}
         accessibilityRole="button"
         accessibilityHint={subscribed ? undefined : 'Part of Plus'}
-        testID={subscribed ? undefined : 'themes-plus'}
+        testID="themes"
       >
         <Glyph name="slider.horizontal.3" size={18} weight="semibold" color={color.gold} />
         <Text style={styles.themesText} numberOfLines={1}>

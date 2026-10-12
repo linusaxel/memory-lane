@@ -53,7 +53,7 @@ appId: ${APP_ID}
 # Customize is a subscriber's: for a free walker the Plus row is
 # the paywall.
 - tapOn:
-    id: "themes-plus"
+    id: "themes"
 - extendedWaitUntil:
     visible: "Walk every day"
     timeout: 20000

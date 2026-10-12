@@ -272,16 +272,23 @@ BUILT_STAMP=mobile/ios/build/native.built
 REANIMATED=$(node -p 'JSON.stringify(require("./mobile/package.json").reanimated)')
 NATIVE=$( (cat mobile/ios/Podfile.lock mobile/patches/* 2>/dev/null; echo "$REANIMATED") | shasum)
 [ "$NATIVE" = "$(cat "$BUILT_STAMP" 2>/dev/null)" ] || BUILD=1
-# A damaged Pods tree or a stale prebuild fails minutes into xcodebuild as a
-# link or copy error. Say which, up front.
-[ -f mobile/ios/Pods/React-Core-prebuilt/React.xcframework/ios-arm64_x86_64-simulator/React.framework/React ] \
-  || infra "React binary missing: rm -rf mobile/ios/Pods/React-Core-prebuilt && (cd mobile/ios && pod install)"
 PREBUILD_STAMP=mobile/ios/build/prebuild.stamp
 # Only what prebuild reads: a devDependency or a script is not a native change.
 PREBUILD=$( (cat mobile/app.json; node -p 'const p = require("./mobile/package.json"); JSON.stringify([p.dependencies, p.reanimated])') | shasum)
 [ -f "$PREBUILD_STAMP" ] || echo "$PREBUILD" > "$PREBUILD_STAMP"
-[ "$PREBUILD" = "$(cat "$PREBUILD_STAMP")" ] \
-  || infra "app.json or package.json's dependencies changed since prebuild: (cd mobile && npx expo prebuild --platform ios --clean) && (cd mobile/ios && pod install), then rm $PREBUILD_STAMP"
+# A stale prebuild fails minutes into xcodebuild as a link or copy error, so
+# redo it here. --clean wipes mobile/ios, the stamps with it.
+if [ "$PREBUILD" != "$(cat "$PREBUILD_STAMP")" ]; then
+  echo "     app.json or the dependencies changed: prebuild and pod install (several minutes)"
+  (cd mobile && npx expo prebuild --platform ios --clean && cd ios && pod install) > "$LOGS/prebuild.log" 2>&1 \
+    || { tail -40 "$LOGS/prebuild.log" >&2; infra "prebuild failed"; }
+  mkdir -p mobile/ios/build && echo "$PREBUILD" > "$PREBUILD_STAMP"
+  NATIVE=$( (cat mobile/ios/Podfile.lock mobile/patches/* 2>/dev/null; echo "$REANIMATED") | shasum)
+  BUILD=1
+fi
+# A damaged Pods tree fails the same way. Say so up front.
+[ -f mobile/ios/Pods/React-Core-prebuilt/React.xcframework/ios-arm64_x86_64-simulator/React.framework/React ] \
+  || infra "React binary missing: rm -rf mobile/ios/Pods/React-Core-prebuilt && (cd mobile/ios && pod install)"
 if [ "$BUILD" = 1 ] || ! xcrun simctl get_app_container "$DEVICE" "$APP_ID" >/dev/null 2>&1; then
   echo "     building $APP_ID (several minutes)"
   (cd mobile/ios && xcodebuild \

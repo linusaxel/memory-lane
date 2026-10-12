@@ -109,7 +109,7 @@ cd mobile && npx expo start --ios    # the app (mobile/UI.md has the recipe)
 
 ## Commit checklist
 
-- [ ] `./loop/verify.sh; echo $?` prints `0`
+- [ ] `./loop/verify.sh; echo $?` prints `0`, then commit at once, before `./e2e/run.sh`: uncommitted work blocks every parallel session, which can't tell a live one from a dead one. A failing flow gets its own fix commit
 - [ ] Committed with explicit paths (`git commit <paths>`), and files deleted with plain `rm`, not `git rm`: parallel sessions share one git index
 - [ ] Friction logged in `TODO.md`, or nothing qualified
 - [ ] If a decision changed: `docs/10-decisions.md` is updated (the old one marked `Superseded`), and so is any doc that restated it

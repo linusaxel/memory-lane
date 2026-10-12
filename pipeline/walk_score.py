@@ -1,8 +1,8 @@
 """Score a summary on the walk rubric, which picks a walk's stops.
 
-    python -m pipeline.walk_score               # how many are unscored, and nothing else
+    python -m pipeline.walk_score               # how many are unscored or stale, and nothing else
     python -m pipeline.walk_score --memory 42   # one, printed
-    python -m pipeline.walk_score --all         # every unscored extracted memory (bills)
+    python -m pipeline.walk_score --all         # every unscored or stale extracted memory (bills)
     python -m pipeline.walk_score --labels      # the prompt against the labels; writes nothing
 
 One holistic question, 0-12: would a curious walker standing here be glad
@@ -14,7 +14,8 @@ summaries stay untouched. The Weather Girls are not in the prompt: they are
 the held-out test.
 
 Bills a little (one short model call per memory). Aggregation runs it on each
-new video's memories; --all is the backfill.
+new video's memories; --all is the backfill. A score is stale when the prompt
+has changed since (`walk_score_prompt` holds its hash), and is scored again.
 """
 
 import argparse
@@ -24,7 +25,7 @@ import logging
 from sqlalchemy import text
 
 from pipeline.config import GRADER_MODEL
-from pipeline.extract import _request, image_block
+from pipeline.extract import _request, _sha256, image_block
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,9 @@ The picture beside the text is what the walker sees with it, taken on this
 spot. Score the two together: an arresting picture of the moment raises it, a
 snapshot anyone could take there today sinks it."""
 )
+
+# PICTURE_PROMPT holds PROMPT, so one hash changes with either.
+PROMPT_HASH = _sha256(PICTURE_PROMPT)
 
 SCHEMA = {
     "type": "object",
@@ -105,7 +109,8 @@ UNSCORED = """
                 THEN m.enrichment->'pictures'->0->>'thumb' END AS picture
     FROM memories m JOIN places p ON p.id = m.place_id
     LEFT JOIN content c ON c.id = m.content_id
-    WHERE m.walk_score IS NULL AND m.user_id IS NULL
+    WHERE (m.walk_score IS NULL OR m.walk_score_prompt IS DISTINCT FROM :prompt)
+      AND m.user_id IS NULL
       AND (CAST(:content_id AS INTEGER) IS NULL OR m.content_id = :content_id)
       AND (CAST(:memory_id AS INTEGER) IS NULL OR m.id = :memory_id)
     ORDER BY m.id
@@ -113,10 +118,10 @@ UNSCORED = """
 
 
 def score_memories(session, client, content_id: int | None = None, memory_id: int | None = None):
-    """Score every extracted memory still unscored; return {memory_id: score}.
+    """Score every extracted memory unscored or stale; return {memory_id: score}.
     Only extracted ones: what a person filed is theirs, and hearts decide it."""
     rows = session.execute(
-        text(UNSCORED), {"content_id": content_id, "memory_id": memory_id}
+        text(UNSCORED), {"content_id": content_id, "memory_id": memory_id, "prompt": PROMPT_HASH}
     ).fetchall()
     done = {}
     for r in rows:
@@ -124,7 +129,8 @@ def score_memories(session, client, content_id: int | None = None, memory_id: in
         if score is None:
             continue
         session.execute(
-            text("UPDATE memories SET walk_score = :s WHERE id = :id"), {"s": score, "id": r.id}
+            text("UPDATE memories SET walk_score = :s, walk_score_prompt = :h WHERE id = :id"),
+            {"s": score, "h": PROMPT_HASH, "id": r.id},
         )
         done[r.id] = score
     return done
@@ -179,7 +185,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--memory", type=int, help="one memory, by id")
-    parser.add_argument("--all", action="store_true", help="every unscored one; bills")
+    parser.add_argument("--all", action="store_true", help="every unscored or stale one; bills")
     parser.add_argument("--labels", action="store_true", help="measure the prompt; bills")
     args = parser.parse_args()
     with get_session() as session:
@@ -187,8 +193,12 @@ def main():
             print(check_labels(session, anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)))
             return
         if not (args.memory or args.all):
-            n = len(session.execute(text(UNSCORED), {"content_id": None, "memory_id": None}).all())
-            print(f"{n} unscored. --all scores them, one short model call each.")
+            n = len(
+                session.execute(
+                    text(UNSCORED), {"content_id": None, "memory_id": None, "prompt": PROMPT_HASH}
+                ).all()
+            )
+            print(f"{n} unscored or stale. --all scores them, one short model call each.")
             return
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         done = score_memories(session, client, memory_id=args.memory)

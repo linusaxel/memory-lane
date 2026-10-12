@@ -45,6 +45,9 @@ def test_scored_once_and_only_extracted(db_session):
     assert walk_score.score_memories(db_session, fake) == {extracted: 10}
     assert walk_score.score_memories(db_session, fake) == {}
     assert len(fake.messages.calls) == 1
+    # A changed prompt makes the old score stale, and it is scored again.
+    db_session.execute(text("UPDATE memories SET walk_score_prompt = 'older'"))
+    assert walk_score.score_memories(db_session, fake) == {extracted: 10}
 
 
 def test_graded_by_the_grader_whatever_extracts():

@@ -29,6 +29,8 @@ appId: ${APP_ID}
       true: ${SLIDE != '1'}
     commands:
       - longPressOn: "Unlock this memory"
+# The locket as it opens: nothing else in a flow shows the lid drew and swung.
+- takeScreenshot: locket-${N}
 - extendedWaitUntil:
     visible: ".*${WORDS}.*"
     timeout: 30000

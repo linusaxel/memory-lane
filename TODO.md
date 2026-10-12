@@ -24,54 +24,17 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **A session that stops before committing blocks every other.** 2026-10-11:
-  the streak removal sat gated but uncommitted in 25 files while its session
-  ran e2e and went quiet; the Collector session needed almost all of them and
-  waited ~45 min, then committed it on the founder's say-so. Nothing tells a
-  live session from a dead one. Fix: AGENTS.md's checklist commits once the
-  gate is green, before `./e2e/run.sh`, and a failing flow gets its own fix
-  commit.
-
-- **A subscriber's Customize row has no handle for Maestro.** 2026-10-11: its
-  testID (`themes-plus`) is set only for free walkers, and its text is whatever
-  is chosen ("Before 1800"), so a flow can't find it by either; a tap by point
-  landed on a walk instead and started one. Fix: give the row a testID always.
-
 - **The $ column in docs/04 is a guess.** 2026-10-11: no token usage is stored
   anywhere, so every Road-to-1,000 row priced memories at $0.25 each; the real
   Batches API usage said ~$0.55 a good one, 71% of it unserved research. It took
   a scratch script over `batches.list()` to find. Fix: `batch.send` logs each
   batch's $ from `result.message.usage`.
-- **The dev pin silently beats the simulator's location.** 2026-10-11:
-  `EXPO_PUBLIC_DEV_LOCATION` in `mobile/.env` overrides `simctl location` and
-  Maestro's `setLocation`, so a walk driven on the dev sim never reaches its
-  stop and nothing says why; it cost two blind runs. Fix: a `--walk` flag on
-  `mobile/scripts/sim.sh` that starts Metro with the pin empty.
-
-- **Walk scores are never refreshed when the rubric changes.** 2026-10-10:
-  re-scoring 68 memories, 10 scored on 09-27 fell from 6-8 to 3-5 and stayed
-  there on two reruns; 81 of 261 good memories carry pre-October scores, so
-  "how far from the goal" is inflated. Fix: store the prompt's hash beside
-  `walk_score` and have `walk_score --all` re-score the stale ones.
-
 - **The source screen fails biographies that hold a spot scene.** 2026-10-10:
   Haiku's screen scored Kirstine Meyer's Ørsted essays 0.00 and 0.25, rejecting
   the 1820 Nørregade discovery window as "not personal experiences"; the
   screen's 0.3 bar would have dropped it. Fix: `CLASSIFIER_PROMPT` in
   `pipeline/tasks.py` asks whether something happened at a named spot, not
   whether it is first-hand.
-
-- **No e2e flow screenshots the locket.** 2026-10-10: porting the unlock
-  engine, walk-and-unlock passed green with nothing showing the lid had drawn
-  or swung. It took a hand loop of `simctl io screenshot` and contact sheets
-  to see it. Fix: `takeScreenshot` in `steps/unlock-stop.yml` mid-hold and
-  just after the commit.
-
-- **A change to `mobile/app.json` leaves e2e on INFRA for the next
-  session.** 2026-10-09: the privacy commit touched it and the next
-  `./e2e/run.sh` stopped until a hand `expo prebuild --clean` and `pod
-  install`. Again 2026-10-11 after 8b70bba (about 10 min lost, plus a
-  `--build` rerun). Fix: run.sh prebuilds itself when its stamp is stale.
 
 - **Explicit-path commits still carry other sessions' hunks.** 2026-10-09:
   a parallel session's `git commit docs/10-decisions.md` took another's

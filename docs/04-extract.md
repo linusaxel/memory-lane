@@ -315,6 +315,8 @@ A total of 9 or more out of 12 is worth the walk, 7–8 is filler, and 6 or less
 `memories.walk_score`, which picks a walk's stops (docs/10, "A walk picks its stops by the rubric").
 Since 2026-10-05 it asks one holistic question instead, with these criteria as
 what raises and sinks a story (docs/10, *The walk score asks one question*).
+Each score keeps its prompt's hash (`walk_score_prompt`), so after a prompt
+change `walk_score` counts the stale ones and `--all` scores them again.
 Whatever the total, site-lock must score at least 1, and trace and relates can't
 both be 0. Being on the spot adds imagery, not emotion or recall (Karapanos et al.,
 [IwC 2012](https://www.sciencedirect.com/science/article/abs/pii/S0953543812000367)),

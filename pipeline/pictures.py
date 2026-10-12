@@ -187,11 +187,13 @@ def save(session, client, cid: int, mem: dict, picture: dict):
     fills a memory that has none."""
     extract.save_memories(session, cid, [mem], extract.layer_for("picture"), client)
     session.execute(
-        text("""UPDATE memories SET enrichment = CAST(:e AS JSONB), walk_score = :w
+        text("""UPDATE memories SET enrichment = CAST(:e AS JSONB), walk_score = :w,
+                       walk_score_prompt = :h
                 WHERE content_id = :c AND enrichment IS NULL"""),
         {
             "e": json.dumps({"pictures": [picture]}, ensure_ascii=False),
             "w": mem["walk_score"],
+            "h": walk_score.PROMPT_HASH,
             "c": cid,
         },
     )

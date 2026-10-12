@@ -3,7 +3,10 @@
 # foreground, Ctrl-C stops it), the launch, then nothing unlocked.
 # --clear because EXPO_PUBLIC values bake into the bundle, and a Metro an
 # `./e2e/run.sh --keep` left behind points at the e2e database.
+# --walk blanks EXPO_PUBLIC_DEV_LOCATION, so `simctl location` and Maestro's
+# setLocation move the dot; with the pin set they are ignored (e2e/run.sh).
 set -euo pipefail
+[ "${1:-}" = --walk ] && export EXPO_PUBLIC_DEV_LOCATION=
 cd "$(dirname "$0")/.."
 
 BUNDLE=com.PLACEHOLDER.memorylane

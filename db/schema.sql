@@ -218,6 +218,8 @@ CREATE TABLE memories (
     -- The walk rubric (docs/04-extract.md): six criteria, 0-2 each. A walk's
     -- stops are picked by it (api/route_solver.py, _prize).
     walk_score SMALLINT CHECK (walk_score BETWEEN 0 AND 12),
+    -- The hash of the prompt that scored it; another one's score is stale.
+    walk_score_prompt TEXT,
 
     -- The locket its pin and unlock are drawn as: chosen by its author, or
     -- drawn at random for one the pipeline files.

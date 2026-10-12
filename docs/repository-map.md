@@ -194,7 +194,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/region.ts` | Metres, paths and framing a walk (unit tested) |
 | `mobile/src/useMapCamera.ts` | Owns the map ref and every camera move |
 | `mobile/scripts/fresh-splash.sh` | Dev: clear the simulator's saved launch screen, so a new native splash shows |
-| `mobile/scripts/sim.sh` | Dev: start Metro, launch the dev build on the booted simulator, reset unlocks |
+| `mobile/scripts/sim.sh` | Dev: start Metro, launch the dev build on the booted simulator, reset unlocks; `--walk` lets the simulator's location move the dot |
 | `mobile/scripts/shoot.sh` | Dev: screenshot every screen (or those named) into `~/Downloads/memory-lane-shots/`, no taps |
 | `mobile/scripts/reset-unlocks.sh` | Dev: lock everything again for the simulator's user, in the dev DB and on the device |
 | `mobile/src/useBreath.ts` | The next stop's pin hop. Transform only, so the tap target never moves |
