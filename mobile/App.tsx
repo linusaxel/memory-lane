@@ -86,7 +86,7 @@ import Glyph from './src/Glyph.tsx';
 import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton, GlassCard } from './src/Glass.tsx';
-import { PlanWalkButton } from './src/PlanWalkButton.tsx';
+import MapDock from './src/MapDock.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
@@ -101,7 +101,7 @@ import { classOf, stageNow, stageOf } from './src/collector.ts';
 import RankUp from './src/RankUp.tsx';
 import CollectorPage from './src/CollectorPage.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
-import { color, font, label, pill, radius, solid } from './src/theme.ts';
+import { color, font, label, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import { loadLook } from './src/appearance.ts';
@@ -1856,20 +1856,25 @@ export default function App() {
     );
   }
 
-  // Bottom right on every map state: back to you, filled while the map
-  // follows you, as Apple Maps does.
+  const openJournal = () => {
+    Haptics.selectionAsync().catch(() => {});
+    setJournalOpen(true);
+  };
+  const locate = () => {
+    Haptics.selectionAsync().catch(() => {});
+    const you = positionRef.current;
+    if (!you) goToMyLocation().catch(() => false);
+    else setFollowing(true);
+  };
+  // Bottom right on the walk: back to you, filled while the map follows you,
+  // as Apple Maps does.
   const centerButton = (
     <GlassButton
       style={styles.bigCircle}
       hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel="Center on me"
-      onPress={() => {
-        Haptics.selectionAsync().catch(() => {});
-        const you = positionRef.current;
-        if (!you) goToMyLocation().catch(() => false);
-        else setFollowing(true);
-      }}
+      onPress={locate}
     >
       {/* Filled while the map is on you, as Apple Maps does. */}
       <Glyph
@@ -1883,19 +1888,20 @@ export default function App() {
 
   // Add, one tap from the map and the walk alike: filing is standing
   // somewhere, not unlocking. The planner has none: its card fills the bottom.
+  const add = async () => {
+    // Without a fix the sheet says "Waiting for your location" and
+    // holds Post until one arrives, which beats a dead tap.
+    if (!positionRef.current) await goToMyLocation().catch(() => false);
+    Haptics.selectionAsync().catch(() => {});
+    setSubmitOpen(true);
+  };
   const addButton = (
     <GlassButton
       style={styles.bigCircle}
       hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel="Add a memory here"
-      onPress={async () => {
-        // Without a fix the sheet says "Waiting for your location" and
-        // holds Post until one arrives, which beats a dead tap.
-        if (!positionRef.current) await goToMyLocation().catch(() => false);
-        Haptics.selectionAsync().catch(() => {});
-        setSubmitOpen(true);
-      }}
+      onPress={add}
     >
       <AddIcon size={30} color={color.gold} />
     </GlassButton>
@@ -2280,8 +2286,9 @@ export default function App() {
 
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
-              read at the top"). Your Collector across the top, the Journal
-              at its end; neither while a memory is up (UI.md rule 13). */}
+              read at the top"). Your Collector across the top, and off the
+              map, where the dock has it, the Journal at its end; neither
+              while a memory is up (UI.md rule 13). */}
           {(stage === 'map' || stage === 'preview' || stage === 'walk') &&
             !confirmEnd &&
             !showDone &&
@@ -2296,24 +2303,28 @@ export default function App() {
                   compact={stage === 'walk'}
                   onPress={() => setCollectorOpen(true)}
                 />
-                <Pressable
-                  hitSlop={4}
-                  accessibilityRole="button"
-                  accessibilityLabel="Journal"
-                  accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setJournalOpen(true);
-                  }}
-                  style={({ pressed }) => pressed && styles.squish}
-                >
-                  <Foil style={styles.orb}>
-                    <Velvet style={styles.orbIn}>
-                      <Glyph name="book.closed" size={20} weight="medium" color={color.onVelvet} />
-                    </Velvet>
-                  </Foil>
-                  {journalNew && <View style={styles.newDot} />}
-                </Pressable>
+                {stage !== 'map' && (
+                  <Pressable
+                    hitSlop={4}
+                    accessibilityRole="button"
+                    accessibilityLabel="Journal"
+                    accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
+                    onPress={openJournal}
+                    style={({ pressed }) => pressed && styles.squish}
+                  >
+                    <Foil style={styles.orb}>
+                      <Velvet style={styles.orbIn}>
+                        <Glyph
+                          name="book.closed"
+                          size={20}
+                          weight="medium"
+                          color={color.onVelvet}
+                        />
+                      </Velvet>
+                    </Foil>
+                    {journalNew && <View style={styles.newDot} />}
+                  </Pressable>
+                )}
               </View>
             )}
           {stage === 'map' && offline && !journalOpen && (
@@ -2323,20 +2334,17 @@ export default function App() {
               <Button kind="text" label="Try again" onPress={() => setRetry((n) => n + 1)} />
             </GlassCard>
           )}
-          {/* Home: the map, you on it, the way into the planner and Add. */}
+          {/* Home: the map, you on it, and the dock. */}
           {stage === 'map' && !journalOpen && !pastWalk && !slide && (
-            <View style={styles.bottom}>
-              {addButton}
-              <View style={styles.middle}>
-                <PlanWalkButton
-                  place={styles.wide}
-                  style={styles.planWalk}
-                  onPress={() => Haptics.selectionAsync().catch(() => {})}
-                  onWalkEnd={() => setStage('preview')}
-                />
-              </View>
-              {centerButton}
-            </View>
+            <MapDock
+              journalNew={journalNew}
+              onYou={!offYou}
+              onJournal={openJournal}
+              onAdd={add}
+              onPlanPress={() => Haptics.selectionAsync().catch(() => {})}
+              onPlan={() => setStage('preview')}
+              onLocate={locate}
+            />
           )}
           {/* On a walk: Add, the walk card, Center on me (docs/10, "One
               gold button that changes"). Not over a card with its own
@@ -2677,7 +2685,6 @@ const styles = StyleSheet.create({
   slideRow: { position: 'absolute', left: 18, right: 18, bottom: 70 },
   wash: { ...StyleSheet.absoluteFill, backgroundColor: color.paper },
   grow: { flex: 1 },
-  planWalk: { ...pill, minHeight: 60 },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
   // Add and Center on me, each end of the bottom row.

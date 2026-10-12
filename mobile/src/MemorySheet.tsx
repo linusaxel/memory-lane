@@ -27,6 +27,7 @@ import Avatar from './Avatar.tsx';
 import DiamondRule from './DiamondRule.tsx';
 import PullQuote from './PullQuote.tsx';
 import Glyph from './Glyph.tsx';
+import Icon from './Icon.tsx';
 import { FALLBACK_RADIUS_M } from './reach.ts';
 import { distance, duration, happened, sourceAction, wikiSummaryUrl } from './format.ts';
 import { photoIds } from './story.ts';
@@ -267,7 +268,7 @@ export default function MemorySheet({
         accessibilityLabel="Hearts"
         accessibilityValue={{ text: heartsText }}
       >
-        <Glyph name="heart.fill" size={17} color={color.inkSoft} />
+        <Icon name="heart" size={18} color={color.inkSoft} filled />
         {heartCount}
       </View>
     ) : (
@@ -280,12 +281,7 @@ export default function MemorySheet({
         accessibilityValue={hearts > 0 ? { text: heartsText } : undefined}
         onPress={() => onHeart(memory)}
       >
-        <Glyph
-          name={hearted ? 'heart.fill' : 'heart'}
-          size={17}
-          color={color.inkSoft}
-          bounce={hearted}
-        />
+        <Icon name="heart" size={18} color={color.inkSoft} filled={!!hearted} bounce={hearted} />
         {heartCount}
       </Pressable>
     );

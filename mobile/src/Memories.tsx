@@ -44,6 +44,7 @@ import {
 import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
+import Icon from './Icon.tsx';
 import Guardian from './Guardian.tsx';
 import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
@@ -574,7 +575,7 @@ export default function Memories({
                 accessibilityRole="button"
                 accessibilityLabel="Settings"
               >
-                <Glyph name="gearshape" size={20} color={color.onVelvet} />
+                <Icon name="settings" size={22} color={color.onVelvet} />
               </Pressable>
             </View>
           </View>
@@ -776,10 +777,11 @@ function Header({ note, filter, cards }: { note: string; filter?: Toggle; cards?
           accessibilityLabel="Hearted only"
           accessibilityState={{ selected: filter.on }}
         >
-          <Glyph
-            name={filter.on ? 'heart.fill' : 'heart'}
-            size={15}
+          <Icon
+            name="heart"
+            size={16}
             color={filter.on ? color.ink : color.inkFaint}
+            filled={filter.on}
           />
           <Text style={[styles.filterText, filter.on && styles.filterTextOn]}>Hearted</Text>
         </Pressable>

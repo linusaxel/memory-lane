@@ -972,3 +972,29 @@ sources, map-app teardowns, perception research.
 - [WCAG 1.4.11, Non-text Contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)
 - [NN/g, Liquid Glass](https://www.nngroup.com/articles/liquid-glass/); [Glassmorphism](https://www.nngroup.com/articles/glassmorphism/)
 - [Komoot redesign](https://newsroom.komoot.com/254263-komoot-unveils-modern-design-as-part-of-ambitious-product-roadmap/); [Google Maps colours](https://9to5google.com/2023/08/31/google-maps-new-colors/); App Store screenshots of Citymapper, Uber, Google Maps
+
+# 16. Muted, from the founder's board — **shipped 2026-10-12**
+
+Six things competed to be the accent: green go, plum velvet, gold foil,
+emerald seal, the class art and the lockets. Three saturated candidates
+(Velvet & Gold, Moss & Brass, Night Ink & Gold), shot in the app, read as
+"going overboard". The founder's board of RPG mobile menus agreed on four
+things: few colours, low saturation, flat fills, and ink outlines where a
+game would put gloss.
+
+Three muted candidates followed it: **Dusk** (the board's dusk-city
+palette: cream, dusty indigo, charcoal-plum, coral, lavender), **Tea house**
+(tan, umber, black, sage) and **Ink & paper** (near monochrome, one
+terracotta). The founder picked Dusk. The roles are the Jewel Box's; only
+values changed, and the foil and velvet gradients went flat (three equal-ish
+stops, so no component changed). The lockets keep their own gold: they are
+the product's one bright thing now, which is the point.
+
+How it was tested, with Figma's MCP capped: each candidate a value swap in
+`theme.ts` by a throwaway script, the map, planner, Collector and journal shot
+with `mobile/scripts/shoot.sh`, set side by side. Faster than frames, and it
+shows the real map under the chrome.
+
+## Sources
+
+- The founder's Pinterest board, "rpg mobile menus" (10 pins, 2026-10-12)

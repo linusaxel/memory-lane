@@ -25,7 +25,7 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 Preview (src/Plan.tsx)          home: the first screen after sign-in, unless today's walk is accepted,
 │                              and where ending a walk lands. The map, fitted to the drawn walk above
 │                              the measured card. Draw first, adjust after. Your Collector across the top,
-│                              the Journal orb at its end (src/CollectorHud.tsx); no bottom row
+│                              the Journal orb at its end (src/CollectorHud.tsx); no bottom row or dock
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out gold under labels so the pins pop
 └─ card (Preview)              two steps; every change on it redraws the walk
@@ -239,7 +239,9 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12); with another `icon`, the walk card's skip and a story's ⋯ |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
-| `src/PlanWalkButton.tsx` | Plan a walk: the figure walks through its label, then the planner opens (0.9 s) |
+| `src/PlanWalkButton.tsx` | Plan a walk: the dock's raised compass rose; it swings, then the planner opens (0.9 s) |
+| `src/MapDock.tsx` | home's dock: Journal · Add · Plan a walk · Locate |
+| `src/Icon.tsx` | the drawn icons: journal, locate, settings, heart |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
@@ -276,49 +278,50 @@ Two traps, both hit:
   `userInterfaceStyle` and the `StatusBar`, which is `"auto"` — hardcoding it is
   how an app gets black glyphs on a black background.
 
-**Dark is not the light palette inverted.** Paper becomes plum-black rather
+**Dark is not the light palette inverted.** Paper becomes dusk-black rather
 than a grey, gold *lightens* so it holds on a dark map, and `faded` lightens
 too: a locked pin has to survive a dark map.
 
-**Jewel Box** since 2026-10-06 (docs/10, "Jewel Box"): cream and plum-black
-paper, one meaning per colour, Gloock and Newsreader beside SF Pro Rounded.
+**Dusk** since 2026-10-12 (docs/10, "Dusk, and the map's dock"): the Jewel
+Box's roles in muted values, cream and dusk-black paper, flat fills, Gloock
+and Newsreader beside SF Pro Rounded.
 
 | Token | Hex | Used for |
 |---|---|---|
-| `paper` | `#F6F1E7` / `#14101A` | every surface |
-| `paperRaised` | `#FFFCF6` / `#211A29` | a surface that lifts off the paper: cards, fields |
-| `ink` | `#1E1626` / `#F3ECE0` | primary text |
-| `inkSoft` | `#4A3F52` / `#C5BAC9` | secondary prose |
-| `inkFaint` | `#6B6172` / `#9B90A3` | labels, captions |
-| `rule` | `#E2D8CA` / `#362C3F` | hairlines |
-| `quiet` | `#ECE4D7` / `#2A2233` | the quiet button's fill, a close button's, an off chip's |
-| `faded` | `#6B6172` / `#9B90A3` | a locked pin out of reach |
+| `paper` | `#F6EEDF` / `#1C1A20` | every surface |
+| `paperRaised` | `#FCF7EE` / `#26232B` | a surface that lifts off the paper: cards, fields |
+| `ink` | `#2E2A31` / `#F1E9DC` | primary text |
+| `inkSoft` | `#4D4852` / `#C9C2CC` | secondary prose |
+| `inkFaint` | `#68626D` / `#9C96A2` | labels, captions |
+| `rule` | `#E3D9C8` / `#38343E` | hairlines |
+| `quiet` | `#EEE5D5` / `#2E2B34` | the quiet button's fill, a close button's, an off chip's |
+| `faded` | `#68626D` / `#9C96A2` | a locked pin out of reach |
 
 **Each colour means one thing.** Blue is left to the map and to your location
 dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 
 | Token | Hex | Meaning |
 |---|---|---|
-| `gold` | `#7E5E14` / `#E3BE6B` | **a memory, and the way to it.** The route, the next stop, a link, a text button |
-| `goldLine` | gold at 55% / 60% | a gold hairline: glass edges, quiet buttons in the dark |
-| `goBg`, `goRim`, `onGo` | `#24694E` / `#256349` | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
-| `foil` | `#F6DE9A → #D9B45E → #B88E36` | **keep something.** Seal it here, Subscribe, Done. One set in both themes |
-| `seal` | `#1C6A4D` / `#4CC196` | **openable.** Emerald: a lit pin, the reach circle, the diamond in the rule. Fill or text |
-| `sealInk` | `#F6F1E7` / `#0B1F17` | anything drawn on seal |
-| `sealSoft` | `#D5EBDF` / `#173528` | the ring filling during a hold |
-| `glow` | emerald at 55% | the radial glow behind an in-reach locket. Never a ring |
-| `plum` | `#5D2A71` / `#CFA4E2` | **what you earned.** Lockets, the rank bar on paper |
-| `velvetGround`, `onVelvet`, `onVelvetSoft`, `onVelvetGold` | `#4E1F63`; words `#F6F1E7`, `#E9DFEE`, `#F2D58A` | **yours.** The Collector's HUD, a chosen mode or chip, a reward, the rank-up. One set in both themes; the rank bar on velvet is foil |
-| `track` | `#E9DFEE` / `#362C3F` | the empty part of the rank bar |
+| `gold` | `#7A5A2E` / `#D9B98A` | **a memory, and the way to it.** The route, the next stop, a link, a text button |
+| `goldLine` | gold at 45% / 50% | a gold hairline: glass edges, quiet buttons in the dark |
+| `goBg`, `goRim`, `onGo` | `#57659E` / `#5B69A3`, dusty indigo | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
+| `foil` | `#F6DEB8 → #EDD2A6 → #E3C796`, flat cream | **keep something.** Seal it here, Subscribe, Done. One set in both themes |
+| `seal` | `#A8403F` / `#F28A82` | **openable.** Coral: a lit pin, the reach circle, the diamond in the rule. Fill or text |
+| `sealInk` | `#FBF6EC` / `#2A1213` | anything drawn on seal |
+| `sealSoft` | `#F6DCD8` / `#3D2224` | the ring filling during a hold |
+| `glow` | coral at 50% | the radial glow behind an in-reach locket. Never a ring |
+| `plum` | `#6E6890` / `#B8B3D1`, lavender | **what you earned.** Lockets, the rank bar on paper |
+| `velvetGround`, `onVelvet`, `onVelvetSoft`, `onVelvetGold` | `#443E46`, charcoal-plum; words `#F6F1E7`, `#E4DFE8`, `#F6DEB8` | **yours.** The Collector's HUD, a chosen mode or chip, a reward, the rank-up. One set in both themes; the rank bar on velvet is foil |
+| `track` | `#E6E3EE` / `#38343E` | the empty part of the rank bar |
 | `danger` | `#9B2C2C` / `#F09A9A` | Delete account. Nothing destructive is gold |
 | `heart` | `#A3294E` / `#F29BB4` | a filled heart |
 
 Gold and seal differ in hue and lightness: gold beside gold is no signal, so
 openable is the one thing on the map that is not gold.
 
-**Buttons are `Button` (`src/Button.tsx`), one meaning each.** `go` is green
-enamel with a gold bezel: anything that starts or moves on (Plan a walk,
-Next, Start walk, Keep walking, Turn on location). `foil` is a gold gradient:
+**Buttons are `Button` (`src/Button.tsx`), one meaning each.** `go` is indigo
+enamel with a cream bezel: anything that starts or moves on (Plan a walk,
+Next, Start walk, Keep walking, Turn on location). `foil` is flat cream:
 keeping something (Seal it here, Subscribe, Done on the finish card). `quiet`
 is the way back or aside (End walk, Cancel, a past walk's Done), with a gold
 hairline in the dark. `text` is a gold word (Walk again tomorrow ›, Not now).
@@ -380,13 +383,15 @@ contrast; not the memory sheet's peek, whose parent animates opacity
 (Journal, Add, the walk card, the keys pill, you,
 Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
 or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. Plan a walk is the one
-tinted control, `prominent`: green enamel glass (`solid().goGlass`) in a gold
-bezel, its label in `onGo`. A tap walks its figure through the label, the letters
-parting, and the planner opens as he arrives, 0.9 s
-(`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. Turn on location is a go `Button`. **Every map state shares one bottom
-row** (docs/10, "Jewel Box"): Add a memory bottom left and Center on me bottom
-right, 60pt glass circles, with the state's main thing between them (Plan a
-walk at home, the walk card on a walk). In reach, the slide replaces the whole
+tinted control, `prominent`: indigo enamel glass (`solid().goGlass`) in a cream
+bezel, its label in `onGo`. Turn on location is a go `Button`. **Home has the
+dock** (`src/MapDock.tsx`, docs/10, "Dusk, and the map's dock"): one glass bar
+at bottom 70, Journal · Add · a raised Plan a walk · Locate, each named under
+its icon (`src/Icon.tsx`, AddIcon). Plan a walk is a 72pt compass rose on go
+enamel in a foil ring; a tap swings it and the planner opens as it settles,
+0.9 s (`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. **The walk
+has the bottom row**: Add a memory bottom left and Center on me bottom right,
+60pt glass circles, the walk card between them. In reach, the slide replaces the whole
 row. The walk card says "Next · 280 m", the place in Gloock, and a checklist of
 16pt circles: done gold with a check, next a gold ring, later a rule ring. When
 the home map's fetch fails, a glass banner says "Can't reach Memory Lane right

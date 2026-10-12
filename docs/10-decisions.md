@@ -3570,7 +3570,9 @@ for every memory (rejected by the founder: each locket opens as itself).
 
 Status: Accepted 2026-10-06. Supersedes *One font, the map's*, and the colour
 values of *Lockets* (the roles stay). Partly superseded 2026-10-12 by *Game
-menus*: ornaments and velvet in the chrome. The founder's round-2 redesign,
+menus*: ornaments and velvet in the chrome; and 2026-10-12 by *Dusk*: every
+colour value, green go, the foil and velvet gradients, and the shared bottom
+row on home. The founder's round-2 redesign,
 direction B with two parts of A; the handoff is
 `docs/design-brief/jewel-box.md`.
 
@@ -4713,7 +4715,9 @@ the class kept with the account (only once someone loses it on a new phone).
 
 Status: Accepted 2026-10-12. Supersedes, in *Jewel Box*, "one ornament" and
 the quiet chrome; in *The Collector*, where it may stand; and the glass
-Journal circle top left.
+Journal circle top left. Partly superseded 2026-10-12 by *Dusk*: plum velvet
+and gold foil become flat charcoal-plum and cream, and on home the Journal
+orb moves into the dock.
 
 The founder wanted the menus to feel like a game now the Collector exists,
 Pokémon and RPG status bars in mind, and picked ten concept screens
@@ -4746,6 +4750,46 @@ walker test in TODO.md still decides whether the Collector earns its place.
 
 **Options considered:** the Collector in the planner card only (the founder
 wanted it on top, as games do); Figma frames first (out of MCP calls).
+
+### Dusk, and the map's dock
+
+Status: Accepted 2026-10-12. Supersedes the colour values of *Jewel Box* and
+*Game menus* (the roles and token names stay), their gradients, and on home
+the shared bottom row and the Journal orb.
+
+Green go, plum velvet, gold foil, emerald seal and the class art all wanted
+to be the accent. The founder asked for one palette, then, shown three loud
+ones in the real app, for "more muted colours", pointing at their Pinterest
+board of RPG menus: few colours, low saturation, flat fills, ink outlines.
+Of three muted candidates built from it (Dusk, Tea house, Ink & paper) the
+founder picked Dusk, the board's dusk-city palette. Done without Figma (the
+MCP capped): each candidate was a value swap in `theme.ts`, shot on the
+simulator.
+
+- **Dusk.** Cream paper and dusk-black in the dark; charcoal-plum `#443E46`
+  velvet; dusty indigo `#57659E` go; flat cream foil; a muted brass for gold;
+  coral for openable (`seal`, darkened to `#A8403F` in light to hold 4.5:1);
+  lavender for earned (`plum`). Meanings unchanged.
+- **Flat, not gradients.** Foil and velvet keep their three stops, all but
+  equal, so `Foil` and `Velvet` need no change and the look stays one file.
+- **The map's dock** (`src/MapDock.tsx`): Journal · Add · a raised Plan a
+  walk · Locate in one glass bar at bottom 70, each named under its icon. The
+  Collector HUD keeps the top; the Journal orb stays only off home (planner,
+  walk), where the dock is not. The walk keeps its bottom row.
+- **Plan a walk is an emblem**, a compass rose on indigo enamel in a foil
+  ring (`src/PlanWalkButton.tsx`), not the walking figure: the character is
+  already on top. A tap swings it a turn and a half and the planner opens as
+  it settles, 0.9 s.
+- **One icon family.** Journal, Locate, Settings and the heart are drawn
+  (`src/Icon.tsx`) in AddIcon's outline, with the rose; every other glyph
+  stays an SF Symbol in a palette colour.
+
+Tomorrow's Figma pass (TODO.md, *One look*) redraws these against the shots;
+anything better there changes values here.
+
+**Options considered:** Velvet & Gold, Moss & Brass, Night Ink & Gold (too
+loud); Tea house (warmest, quietest); Ink & paper (starkest); the character
+floating over the map (later, if at all).
 
 ### Rejected approaches, do not retry
 

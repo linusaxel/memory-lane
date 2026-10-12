@@ -134,9 +134,9 @@ FONT_HREF = (
 # values and no build step between TypeScript and Python. tests/test_palette.py
 # fails if the two drift. Why these colours at all: docs/09-visual-design.md.
 CARD_CSS = """
-:root{--bg:#f6f1e7;--fg:#1e1626;--muted:#6b6172;--rule:#e2d8ca;--accent:#7e5e14}
+:root{--bg:#f6eedf;--fg:#2e2a31;--muted:#68626d;--rule:#e3d9c8;--accent:#7a5a2e}
 @media (prefers-color-scheme:dark){
-  :root{--bg:#14101a;--fg:#f3ece0;--muted:#9b90a3;--rule:#362c3f;--accent:#e3be6b}
+  :root{--bg:#1c1a20;--fg:#f1e9dc;--muted:#9c96a2;--rule:#38343e;--accent:#d9b98a}
 }
 *{box-sizing:border-box}
 /* The app's type (docs/10, "Jewel Box"): Gloock for the title, Newsreader

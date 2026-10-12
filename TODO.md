@@ -280,44 +280,32 @@ before the planner*); the planner plans one walk and only its stops open. The
 rule for anything game-like or crafted: quiet by default, loud only for real
 progress; refine what exists rather than add.
 
-### One look (2026-10-12, waits on Figma resetting)
+### One look (2026-10-12: built without Figma; tomorrow, the Figma pass)
 
-Green go, plum velvet, gold foil, emerald seal and the class art's own
-colours all compete to be the accent. The founder wants one palette, the
-map's buttons in one dock, and one icon family. Do these in order; the
-design is drawn in Figma first and screenshotted through the MCP.
+Built in the app on 2026-10-12, with Figma's MCP capped (docs/10, *Dusk, and
+the map's dock*): the Dusk palette, the dock, the compass-rose emblem and the
+drawn icons. The comparison shots are re-made by `mobile/scripts/shoot.sh map
+preview collector journal`.
 
-The prompt for this batch (the founder's, 2026-10-12): "Figma has reset. Using
-the Figma MCP (get_screenshot for references): make the three palette
-candidates below, each as one frame of four screens (map with the new bottom
-dock, planner, Collector, journal), built from `~/Downloads/memory-lane-shots/`.
-Screenshot each frame and show me side by side. Once I've picked one: draw the
-Plan-a-walk emblem and the six map/dock icons in it, screenshot them, then
-implement theme.ts, the dock and the emblem, run the gate, and shoot the
-touched screens." If the MCP is still capped, ask before falling back to HTML.
+The prompt for tomorrow: "Figma has reset. Using the Figma MCP: take the
+shipped Dusk screens (map with the dock, planner, Collector, journal) as
+references, draw the same four as one frame, then push them: a calmer dock,
+the rose, the six icons as one family. Screenshot and show me beside the app's
+shots. What wins in Figma changes values in theme.ts and the SVGs, not
+meanings; run the gate and shoot the touched screens."
 
-- [ ] **Palette: three candidates, shown, then one chosen.** *Velvet & Gold*
-      (plum ground, gold accent, no green go, emerald only for "openable"),
-      *Moss & Brass* (no purple; deep moss and brass, lantern amber), *Night
-      Ink & Gold* (midnight indigo, works with the map's water). One Figma
-      frame each of map (with the dock), planner, Collector and journal, from
-      `~/Downloads/memory-lane-shots/`. Then `src/theme.ts` changes values,
-      not meanings; sweep `src/link.ts:11` (duplicates `solid().gold`) and
-      `app.json` (`#A8350F` adaptive-icon orange, `primaryColor`); update
-      UI.md › Tokens, `docs/09-visual-design.md`, and a docs/10 entry that
-      supersedes part of *Jewel Box*.
-- [ ] **The map dock.** One dock along the bottom: Journal · Add · a raised
-      Plan a walk · Locate, replacing the bottom row and the top orb in
-      `App.tsx`. The top keeps a slim `CollectorHud`. Hides while a memory
-      is up (rule 13). Rerun only the flows that touch the map.
-- [ ] **A Plan-a-walk emblem**, not the character (it's already on top): a
-      compass rose or a path strung with lockets, drawn in `react-native-svg`
-      as `AddIcon.tsx` is, in the chosen palette. Replaces the walking figure
-      in `PlanWalkButton.tsx`; its tap animation stays.
-- [ ] **One icon family.** The app draws ~30 SF Symbols through `Glyph.tsx`
-      plus `AddIcon` and `DiamondRule`. Draw custom only the six the map and
-      dock show (journal, add, plan, locate, settings, heart); tint the rest
-      to the palette.
+- [x] **Palette.** Three loud candidates, then three muted ones from the
+      founder's Pinterest board; Dusk chosen. theme.ts, api/card.py, link.ts,
+      app.json's splash and primaryColor, UI.md › Tokens, docs/09 part 16,
+      docs/10.
+- [x] **The map dock** (`MapDock.tsx`). Not yet run: the e2e flows that tap
+      Journal, Add and Plan a walk on home (labels kept).
+- [x] **A Plan-a-walk emblem**: the compass rose, swings 0.9 s.
+- [x] **One icon family** (`Icon.tsx`): journal, locate, settings, heart, with
+      AddIcon and the rose.
+- [ ] **In Figma, push it further** (the prompt above). Open: the raised
+      button sits third of four, off centre; `app.json`'s `#A8350F`
+      adaptive-icon orange waits on the icon art itself.
 - [ ] **(Later) the character floating over the map** with its bar under it.
       Not chosen now. If it comes back: a pre-rendered idle loop, no 3D engine.
 
