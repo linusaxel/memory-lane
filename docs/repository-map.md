@@ -151,7 +151,6 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/lockets/{parts.tsx,math.ts,haptics.ts,types.ts}` | What the designs share: gradients, chain, hinges, the engraved place; worklet easing and Svg matrices; haptics; the design type |
 | `mobile/src/lockets.ts` | The six lockets: pin images and names |
 | `mobile/assets/collector/` | The Collector's looks, `<class>-<stage>.png` (1-8). Placeholders: each class's sheet front view at every stage, so the real art only swaps files |
-| `mobile/assets/guardian/` | The fir guardian's three poses, light and dark (the dark one has a moss rim) |
 | `mobile/assets/lockets/` | The locket pins, one per locket, @1x-@3x |
 | `mobile/assets/onboarding/` | The first-run pages' pictures, light and dark, rasterised from the Jewel Box handoff |
 | `mobile/src/UnlockHere.tsx` | The locket over the map, for the memory you stand on |
@@ -174,7 +173,6 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/MemoryMedia.tsx` | A submitted memory's photo and its recording |
 | `mobile/src/WalkCard.tsx` | A past walk as a card, drawn as its shape (`react-native-svg`); `WalkShape` for the finish card and journal rows |
 | `mobile/src/SourceLine.tsx` | Who said this, with their face on it |
-| `mobile/src/Guardian.tsx` | The fir guardian, the mascot, at the app's edges only |
 | `mobile/src/Glyph.tsx` | Every icon, as an SF Symbol (`@expo/ui`) |
 | `mobile/src/StartupLogo.tsx` | The launch logo |
 | `mobile/src/api.ts` | The API client. One fetch, no wrapper library |

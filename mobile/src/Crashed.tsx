@@ -7,7 +7,6 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import Button from './Button.tsx';
 import DiamondRule from './DiamondRule.tsx';
-import Guardian from './Guardian.tsx';
 import { color, font, screenTitle } from './theme.ts';
 
 export class Crashed extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -34,7 +33,6 @@ export class Crashed extends Component<{ children: ReactNode }, { failed: boolea
 export function Broke({ onRetry }: { onRetry: () => void }) {
   return (
     <View style={styles.page}>
-      <Guardian pose="sleepy" size={160} />
       <Text style={styles.title}>Something broke.</Text>
       <DiamondRule place={styles.rule} />
       <Text style={styles.body}>Your walk and your memories are safe.</Text>

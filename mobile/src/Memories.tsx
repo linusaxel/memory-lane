@@ -45,7 +45,6 @@ import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
 import Icon from './Icon.tsx';
-import Guardian from './Guardian.tsx';
 import { distance, walkDate, when } from './format.ts';
 import { metersBetween } from './region.ts';
 import { loadWalked, saveWalked } from './route.ts';
@@ -871,7 +870,6 @@ function Row({
 function Empty({ text }: { text: string }) {
   return (
     <View style={styles.empty}>
-      <Guardian pose="curious" size={96} place={styles.guardian} />
       <Text style={styles.emptyText}>{text}</Text>
     </View>
   );
@@ -991,7 +989,6 @@ const styles = StyleSheet.create({
   badge: { ...label, fontSize: 12, color: color.seal, marginTop: 2 },
   spinner: { marginTop: 12 },
   empty: { paddingHorizontal: 24, paddingVertical: 12, gap: 16 },
-  guardian: { alignSelf: 'center' },
   emptyText: {
     ...font.storyItalic,
     fontSize: 18,

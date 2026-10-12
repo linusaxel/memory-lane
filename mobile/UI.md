@@ -17,7 +17,6 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 ├─ the logo tile               where StartupLogo left it, at rest
 ├─ "Memory Lane"               34/700
 ├─ one line                   what the app is, 17 prose, inkSoft
-├─ the guardian, front, 80     out of the flow at the hero's foot, so the tile never moves
 ├─ Apple's own button          white on the dark paper, black on the light
 ├─ "Continue with Google"      outlined; absent without a client id
 └─ "Skip (dev build)"          __DEV__ only, so a release bundle has none
@@ -30,7 +29,7 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
 ├─ the loop, drawn             RouteLine from the start and back, washed-out gold under labels so the pins pop
 └─ card (Preview)              two steps; every change on it redraws the walk
    ├─ "A walk from here"        23/700; nothing to close back to
-   ├─ "4 memories · 3.8 km loop"   "Finding a walk…" first; "No walk within 10 km from here." beside the sleepy guardian
+   ├─ "4 memories · 3.8 km loop"   "Finding a walk…" first; "No walk within 10 km from here."
    ├─ "Nothing at 4 km; this is the nearest."   an empty length moved up to one with a walk
    ├─ "Planning from central Copenhagen." + Use my location   with no position; the location ask
    ├─ "4 km" + slider           1-10 km, 0.5 steps (WALK_KM), uncontrolled: redraws on release
@@ -48,7 +47,7 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
    │  ├─ the list               a row per stop in walk order: gold number, place 16/700, "1978 · Vega
    │  │                         Archive · #music #nightlife", a padlock. Four rows, then it scrolls
    │  └─ Start walk
-   └─ walked out (one a week, F35), the card is the sleepy guardian, "This week's free walk is done" + More walks
+   └─ walked out (one a week, F35), the card is "This week's free walk is done" + More walks
 
 MapView (the walk, full bleed)  only today's accepted stops, nothing else. With a
 │                              position the camera is pinned on you: it follows,
@@ -215,7 +214,6 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 
 | File | What it owns |
 |---|---|
-| `src/Guardian.tsx` | the fir guardian, the mascot: front, curious or sleepy, light or dark, decorative. Only an empty journal tab, the walked-out and no-walk planner, sign-in and the crash screen; never beside a memory, the unlock or a celebration, and never with words of its own |
 | `src/Glyph.tsx` | every icon: an SF Symbol at a point size, in a theme colour, bouncing when `bounce` changes. Not what is locked: that is always the locket, full gold |
 | `src/MemoryMarker.tsx` | one locket, faded once opened, lit when it can be opened from here |
 | `src/lockets.ts` | the six lockets: their pin images and names, any of them an author's |

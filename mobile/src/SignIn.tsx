@@ -38,7 +38,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { deleteAccount, fetchProfile, signIn, signOut, type Profile } from './api.ts';
 import Button from './Button.tsx';
-import Guardian from './Guardian.tsx';
 import { LogoTile } from './StartupLogo.tsx';
 import { useDevScreen } from './devOpen.ts';
 import { button, buttonText, color, dim, font, label, screenTitle } from './theme.ts';
@@ -268,7 +267,6 @@ export function SignInScreen({ device, onProfile, onSkip }: ScreenProps) {
         <Text style={styles.tagline}>
           A walk past what happened on your streets. One a day, free.
         </Text>
-        <Guardian pose="front" size={80} place={styles.guardian} />
       </View>
 
       <View style={styles.actions}>
@@ -395,8 +393,6 @@ const styles = StyleSheet.create({
   },
   // StartupLogo's size, so the name does not jump when the splash hands over.
   title: { ...screenTitle, fontSize: 44, lineHeight: 50, marginTop: 8 },
-  // Out of the flow, so the tile stays where the splash left it.
-  guardian: { position: 'absolute', bottom: 8 },
   tagline: {
     ...font.storyItalic,
     fontSize: 19,

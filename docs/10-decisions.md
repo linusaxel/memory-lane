@@ -4548,7 +4548,11 @@ still unserved).
 
 ### The fir guardian, at the edges
 
-Status: Accepted 2026-10-11. The founder picked a mascot: a small creature in a
+Status: **Superseded 2026-10-12.** The founder retired the fir guardian, old
+news once the mascot moved on to hooded wizards. The component and its poses
+are gone, and its places hold nothing in its stead.
+
+Was: Accepted 2026-10-11. The founder picked a mascot: a small creature in a
 cloak of fir branches, two golden dot eyes and stubby feet, generated in Figma
 and cut into three poses (front, curious, sleepy). No locket on it and no
 Danish costume: the locket already is the pin and the unlock.
