@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { CLASSES, STAGES, classOf, stageNow, stageOf, toNext } from './collector.ts';
+import { CLASSES, STAGES, classOf, rankInto, stageNow, stageOf, toNext } from './collector.ts';
 
 test('a stage opens at its count and the next waits', () => {
   assert.equal(stageOf(0), 0);
@@ -26,4 +26,11 @@ test('no pick is the Wayfinder', () => {
 
 test('every class has a rank for every stage', () => {
   for (const c of CLASSES) assert.equal(c.ranks.length, STAGES.length, c.id);
+});
+
+test('the bar to the next rank', () => {
+  assert.equal(rankInto(1, 3), 0);
+  assert.equal(rankInto(1, 5.5), 0.5);
+  assert.equal(rankInto(3, 2), 0, 'a kept rank above the count starts empty, never negative');
+  assert.equal(rankInto(7, 300), 1);
 });

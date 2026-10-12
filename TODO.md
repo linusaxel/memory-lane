@@ -496,18 +496,6 @@ ever covers a memory.
       Files replace the placeholders in `mobile/assets/collector/<class>-<stage>.png`
       (today every stage is the sheet's front view, cut by hand); nothing
       else changes.
-- [ ] **The walk-done card counts lockets.** (checked 2026-10-11) "+5 lockets"
-      replaces "+60 XP", and a small Collector with its bar to the next rank
-      replaces "Level 3". The new count is the profile's `unlocked`, read after
-      the walk, minus the one before it, as XP is today.
-- [ ] **Rank up: the one loud moment.** (checked 2026-10-11) When a walk
-      crosses a stage, Done on the walk-done card opens a full-screen reveal
-      before the map: the old look, a beat, the new one with the locket that
-      did it, the rank's name and its count ("Lamplit · 15 lockets"), a
-      success haptic, one tap to go on. Never on the unlock, never over a
-      memory (F30: the memory is read first; UI.md: loud only for real
-      progress, and this is). A walk ended early shows it the same way.
-      Reduce Motion is a crossfade.
 - [ ] **Someone who already has lockets.** (checked 2026-10-11) On the first
       launch with the Collector, an account with 40 opened lands at its stage
       with one reveal: "You're already Lamplit." Then the normal rules.

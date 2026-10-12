@@ -63,6 +63,7 @@ free number. F3 is still proposed and sits at the bottom.
 | F36 | Choose your first memory | Removed from the app |
 | F37 | See where stories wait | Removed from the app |
 | F38 | Choose your Collector | Implemented |
+| F39 | Rank up | Implemented |
 
 **Not flows, and deliberately absent:** no onboarding beyond F22's one
 screen, no map to browse — no carousel, no settings anybody
@@ -1029,9 +1030,11 @@ The last stop unlocks and the day should feel finished.
 3. The card reads "Nice walk." beside the walk's shape, the card it becomes in
    the journal, then "5 memories · 4.1 km loop · 52 min" (the
    time is first unlock to last, and is left off if a stop was earned on
-   another day). Until the surprise was
+   another day). Under it, in plum, "+5 lockets · This walk", and your
+   Collector small beside its rank and a bar to the next. Until the surprise was
    chosen either way, it asks "Let a story find you now and then?" (F28).
-4. Done ends the walk and goes back to the map, following you again. A walked
+4. Done ends the walk and goes back to the map, following you again; if the
+   walk crossed a stage, the rank-up comes first (F39). A walked
    walk ends itself, so there is no "every stop unlocked" limbo, and a relaunch
    on a walked day lands on the map too.
 
@@ -1051,7 +1054,8 @@ already walked and another in mind.
 2. With stops still to reach, a card asks: "End this walk?", "The 3 stops you
    haven't reached will lock again. Anything you've unlocked stays unlocked.", **End walk** and
    **Keep walking**. A walked walk skips the card: nothing is lost.
-3. Ended, the planner comes back (F1). Another walk the same day is only for
+3. Ended, the planner comes back (F1), after the rank-up if the walk crossed
+   a stage (F39). Another walk the same day is only for
    a subscriber, or when the ended one opened nothing; otherwise it offers
    **More walks** (F35).
 
@@ -1196,6 +1200,23 @@ The pick lives on the phone (`memorylane.collector.v1`), so a new phone starts
 as the Wayfinder. Nothing is sold and the look opens nothing.
 `src/Onboarding.tsx`, `src/CollectorPage.tsx`, `src/CollectorLook.tsx`.
 Why, in `docs/10-decisions.md`, "The Collector".
+
+## F39 · Rank up — **Implemented**
+
+A walk's lockets carried the Collector to its next stage.
+
+1. Done on the finish card (F30), or ending the walk (F34), hands back the
+   map. If the locket count now opens a stage the phone has not kept, a full
+   screen comes first: "Rank up", the old look, a beat, then the new one
+   growing in, its rank ("Lamplit") and the count beside a locket, with a
+   success haptic.
+2. **Go on** is the map. The new stage is kept, so it shows once.
+
+Never on the unlock and never over a memory: the story is read first. A
+rank never goes down: a hidden memory lowers the count, not the stage.
+Reduce Motion: a crossfade. `App.tsx` (`revealRank`), `src/RankUp.tsx`,
+`.maestro/walk-and-unlock.yml`. Why, in `docs/10-decisions.md`, "The
+Collector".
 
 ## F37 · See where stories wait — **Removed from the app**
 

@@ -167,7 +167,7 @@ Grouped rows: a small label, a paperRaised card with a gold hairline, an optiona
 Your Collector (src/CollectorPage.tsx, pageSheet, from the Collector in the header) - "Your
 Collector" 34/700, × top right
 ├─ now                         the look at 200pt, the class, the rank 28/700, "4 lockets · 4 to
-│                              Lamplit" and a plum bar (full at the top or above the count)
+│                              Lamplit" and a plum bar (full at the top)
 ├─ The path                    the eight stages in a row, reached in colour, ahead as inkFaint
 │                              silhouettes (the look with tintColor), each "at 15"
 └─ Your class                  the four, two to a row, gold ring on yours; a tap switches. The
@@ -611,6 +611,13 @@ Each of these exists because something broke or would have been rejected.
     Always trailing, never leading: a sheet's own action is not a corner
     word but the solid button at the end of the page (Next, Save). A text
     button stays only where it says more than close: Not now on the paywall.
+13. **The rank-up is the one loud moment, and the Collector never sits beside
+    a memory.** Full screen, a success haptic, only when a walk hands back the
+    map (Done on its card, or ending it) and a stage was crossed
+    (`src/RankUp.tsx`). Never on the unlock or over a story: the memory is
+    read first. The Collector stands in the journal's header, on the finish
+    card and on its own page, nowhere near a summary. Reduce Motion: a
+    crossfade, no growth.
 
 ## Writing
 

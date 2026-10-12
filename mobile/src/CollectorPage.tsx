@@ -8,7 +8,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 
 import CloseButton from './CloseButton.tsx';
 import CollectorLook from './CollectorLook.tsx';
-import { CLASSES, STAGES, classOf, toNext, type ClassId } from './collector.ts';
+import { CLASSES, STAGES, classOf, rankInto, toNext, type ClassId } from './collector.ts';
 import { color, dim, font, label, lift, screenTitle } from './theme.ts';
 
 type Props = {
@@ -24,10 +24,7 @@ export default function CollectorPage({ visible, onClose, id, stage, lockets, on
   const chosen = classOf(id);
   const left = toNext(lockets);
   const next = stage + 1 < STAGES.length ? chosen.ranks[stage + 1] : null;
-  // A rank kept after a memory was hidden can sit above the count: the bar is full.
-  const from = STAGES[stage];
-  const into =
-    next === null ? 1 : Math.min(1, (lockets - from) / Math.max(1, STAGES[stage + 1] - from));
+  const into = rankInto(stage, lockets);
   return (
     <Modal
       visible={visible}

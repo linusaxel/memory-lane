@@ -92,7 +92,8 @@ import { seg } from './src/lockets/math.ts';
 import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
 import { type Collector, loadCollector, saveCollector } from './src/CollectorLook.tsx';
-import { classOf, stageNow } from './src/collector.ts';
+import { classOf, stageNow, stageOf } from './src/collector.ts';
+import RankUp from './src/RankUp.tsx';
 import CollectorPage from './src/CollectorPage.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
 import { color, font, label, pill, radius, solid } from './src/theme.ts';
@@ -341,13 +342,15 @@ export default function App() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   // The four pages and the location primer, once, right after a sign-in.
   const [intro, setIntro] = useState(false);
-  // The Collector's class and highest stage, as this phone keeps them.
-  const [collector, setCollector] = useState<Collector>({});
+  // The Collector's class and highest stage, as this phone keeps them; null
+  // until read.
+  const [collector, setCollector] = useState<Collector | null>(null);
   useEffect(() => {
     loadCollector().then(setCollector);
   }, []);
   const lockets = profile?.unlocked ?? 0;
-  const rank = stageNow(collector.stage, lockets);
+  const rank = stageNow(collector?.stage, lockets);
+  const collectorId = classOf(collector?.class).id;
   const keepCollector = useCallback((patch: Collector) => {
     setCollector((now) => {
       const next = { ...now, ...patch };
@@ -355,6 +358,23 @@ export default function App() {
       return next;
     });
   }, []);
+  // The one loud moment, over the map (docs/10, "The Collector"). `from` is
+  // null for "You're already".
+  const [rankUp, setRankUp] = useState<{ from: number | null; to: number } | null>(null);
+  // A stage crossed since the last one kept shows as the walk hands back the
+  // map: Done on its card, or ending it. Never on the unlock.
+  const revealRank = useCallback(() => {
+    if (collector?.stage === undefined) return;
+    const to = stageOf(lockets);
+    if (to <= collector.stage) return;
+    setRankUp({ from: collector.stage, to });
+    keepCollector({ stage: to });
+  }, [collector, lockets, keepCollector]);
+  // The first time the Collector meets this account's lockets.
+  useEffect(() => {
+    if (!collector || collector.stage !== undefined || !profile) return;
+    keepCollector({ stage: stageOf(profile.unlocked) });
+  }, [collector, profile, keepCollector]);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -664,13 +684,16 @@ export default function App() {
     setPlanError(null);
     try {
       await endRoute(device);
-      if (mounted.current) dropRoute();
+      if (mounted.current) {
+        dropRoute();
+        revealRank();
+      }
     } catch {
       if (mounted.current) setPlanError("Can't reach Memory Lane right now.");
     } finally {
       if (mounted.current) setPlanBusy(false);
     }
-  }, [device, dropRoute]);
+  }, [device, dropRoute, revealRank]);
 
   // The shortest walk that reaches a one-way walk's end, estimated from where
   // you are. It lifts the length without changing the one chosen.
@@ -1156,6 +1179,7 @@ export default function App() {
     setProfileOpen(false);
     setPaywallOpen(false);
     setCollectorOpen(false);
+    setRankUp(null);
     setOpenAt([]);
     setPastWalk(null);
     setConfirmEnd(false);
@@ -1375,6 +1399,8 @@ export default function App() {
         return;
       case 'collector':
         return setCollectorOpen(true);
+      case 'rank-up':
+        return setRankUp({ from: 1, to: 2 });
       case 'settings':
       case 'settings-lower':
       case 'settings-delete':
@@ -1895,7 +1921,7 @@ export default function App() {
       <CollectorPage
         visible={collectorOpen}
         onClose={() => setCollectorOpen(false)}
-        id={classOf(collector.class).id}
+        id={collectorId}
         stage={rank}
         lockets={lockets}
         onChoose={(id) => {
@@ -2194,8 +2220,14 @@ export default function App() {
               meters={pathMeters(donePath)}
               loop={!!routeHome}
               minutes={doneMinutes}
+              collector={collectorId}
+              rank={rank}
+              lockets={lockets}
               path={donePath}
-              onDone={() => setWalkDone(false)}
+              onDone={() => {
+                setWalkDone(false);
+                revealRank();
+              }}
               onHeight={setDoneCardHeight}
               onNotify={
                 notifyChosen
@@ -2489,7 +2521,7 @@ export default function App() {
               Haptics.selectionAsync().catch(() => {});
               setSettingsOpen(true);
             }}
-            collector={classOf(collector.class).id}
+            collector={collectorId}
             rank={rank}
             onCollector={() => setCollectorOpen(true)}
             onOpenWalk={(walk) => {
@@ -2514,13 +2546,23 @@ export default function App() {
 
         {!journalOpen && sheets}
 
+        {rankUp && (
+          <RankUp
+            id={collectorId}
+            from={rankUp.from}
+            to={rankUp.to}
+            lockets={lockets}
+            onDone={() => setRankUp(null)}
+          />
+        )}
+
         {intro && (
           <Onboarding
             radiusMeters={radiusMeters}
             permission={permission}
             onLocation={goToMyLocation}
             onDone={() => setIntro(false)}
-            picked={classOf(collector.class).id}
+            picked={collectorId}
             onPick={(id) => keepCollector({ class: id })}
             key={devPage}
             devPage={devPage}

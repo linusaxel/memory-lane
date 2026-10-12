@@ -186,12 +186,21 @@ appId: ${APP_ID}
       id: "walk-done"
     timeout: 30000
 - assertVisible: "4 memories · .* loop · .* min"
+# What the walk earned: a locket a stop, and the Collector's bar.
+- assertVisible: "\\+4 lockets"
 - takeScreenshot: finish-card
 # F35: signed in, not subscribed: a quiet way to the paywall, never a pop-up.
 - assertVisible:
     id: "walk-done-more"
-# A walked walk ends itself: Done is the map again, no walk card.
+# A walked walk ends itself: Done is the map again, no walk card. Four
+# lockets crossed the first stage (3), so the rank-up comes first, once.
 - tapOn: "Done"
+- extendedWaitUntil:
+    visible:
+      id: "rank-up"
+    timeout: 10000
+- assertVisible: ".*Trailwalker.*"
+- tapOn: "Go on"
 
 - extendedWaitUntil:
     visible: "Plan a walk"

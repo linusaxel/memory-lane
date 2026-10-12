@@ -29,6 +29,8 @@ import {
   View,
 } from 'react-native';
 
+import CollectorLook from './CollectorLook.tsx';
+import { classOf, rankInto, type ClassId } from './collector.ts';
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
@@ -704,6 +706,10 @@ type WalkDoneProps = {
   loop: boolean;
   /** First unlock to last, or null when they were not all earned today. */
   minutes: number | null;
+  /** Your Collector and every locket so far, for its bar to the next rank. */
+  collector: ClassId;
+  rank: number;
+  lockets: number;
   /** The walk drawn whole, for the card it becomes in the journal. */
   path: Coordinates[];
   onDone: () => void;
@@ -771,6 +777,9 @@ export function WalkDone({
   meters,
   loop,
   minutes,
+  collector,
+  rank,
+  lockets,
   path,
   onDone,
   onHeight,
@@ -798,6 +807,28 @@ export function WalkDone({
       <Text style={styles.cardBody}>
         {`${stops} ${stops === 1 ? 'memory' : 'memories'} · ${distance(meters)}${loop ? ' loop' : ''}${took}`}
       </Text>
+      {/* What you earned, in plum: this walk's lockets, and where they leave you. */}
+      <View style={styles.stats}>
+        <View style={styles.stat}>
+          <Text style={styles.statFigure}>{`+${stops} ${stops === 1 ? 'locket' : 'lockets'}`}</Text>
+          <Text style={label}>This walk</Text>
+        </View>
+        <View
+          style={[styles.stat, styles.statRuled, styles.rankStat]}
+          accessible
+          accessibilityLabel={`${classOf(collector).ranks[rank]}, ${lockets} lockets`}
+        >
+          <CollectorLook id={collector} stage={rank} size={44} />
+          <View style={styles.grow}>
+            <Text style={[label, styles.statInk]} numberOfLines={1}>
+              {classOf(collector).ranks[rank]}
+            </Text>
+            <View style={styles.bar}>
+              <View style={[styles.barFill, { width: `${rankInto(rank, lockets) * 100}%` }]} />
+            </View>
+          </View>
+        </View>
+      </View>
       {onNotify && (
         <View testID="surprise-ask">
           <Text style={styles.cardBody}>Let a story find you now and then?</Text>
@@ -879,6 +910,7 @@ const styles = StyleSheet.create({
   statRuled: { borderLeftWidth: StyleSheet.hairlineWidth, borderColor: color.rule },
   statFigure: { ...font.title, fontSize: 24, lineHeight: 30, color: color.plum },
   statInk: { color: color.ink },
+  rankStat: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bar: { height: 6, borderRadius: 3, backgroundColor: color.track, overflow: 'hidden' },
   barFill: { height: 6, borderRadius: 3, backgroundColor: color.plum },
   doneTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

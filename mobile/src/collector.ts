@@ -91,3 +91,11 @@ export function classOf(id: string | null | undefined): CollectorClass {
 export function stageNow(reached: number | undefined, lockets: number): number {
   return Math.max(reached ?? 0, stageOf(lockets));
 }
+
+/** How far from this stage's count to the next, 0 to 1: full at the top, and
+ *  empty while a kept rank sits above the count. */
+export function rankInto(stage: number, lockets: number): number {
+  if (stage + 1 >= STAGES.length) return 1;
+  const from = STAGES[stage];
+  return Math.min(1, Math.max(0, (lockets - from) / (STAGES[stage + 1] - from)));
+}
