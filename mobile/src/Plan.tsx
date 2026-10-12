@@ -862,7 +862,7 @@ export function WalkDone({
         ))}
       </View>
       <Text style={[styles.cardBody, styles.lootText]}>
-        {`+${stops} ${stops === 1 ? 'locket' : 'lockets'} this walk`}
+        {`+${stops} ${stops === 1 ? 'locket' : 'lockets'}`}
       </Text>
       <Velvet style={styles.rankStrip}>
         <View
