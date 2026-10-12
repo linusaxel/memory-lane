@@ -36,6 +36,14 @@ delete an entry when its fix lands.
   `pipeline/tasks.py` asks whether something happened at a named spot, not
   whether it is first-hand.
 
+- **No e2e flow screenshots the locket.** 2026-10-10: porting the unlock
+  engine, walk-and-unlock passed green with nothing showing the lid had drawn
+  or swung. It took a hand loop of `simctl io screenshot` and contact sheets
+  to see it. 2026-10-12: a `takeScreenshot` after the press lands on the open
+  memory, since `longPressOn` and the slide's `swipe` block past the unlock.
+  Fix: a background `simctl io screenshot` loop in `steps/unlock-stop.yml`
+  (`runScript`), or a dev knob that holds the locket open on screen.
+
 - **Explicit-path commits still carry other sessions' hunks.** 2026-10-09:
   a parallel session's `git commit docs/10-decisions.md` took another's
   uncommitted entry with it. Fix: shared docs are committed by one session
