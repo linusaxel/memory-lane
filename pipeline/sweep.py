@@ -43,9 +43,7 @@ ORPHAN_ROWS = """
     ORDER BY id
 """
 
-ALL_PATHS = (
-    "SELECT path FROM media UNION SELECT avatar_path FROM users WHERE avatar_path IS NOT NULL"
-)
+ALL_PATHS = "SELECT path FROM media"
 
 
 def find(session, hours: int):

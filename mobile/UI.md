@@ -126,11 +126,8 @@ Submit (pageSheet modal, from Add) - see Writing
 
 Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted map;
 │                              header, sections and list arrive a beat apart. Drag it down or
-│                              × to close. Reduce Motion: no cascade. The journal is you as well
-├─ header                      velvet, a character screen: your Collector's medal, 76pt (tapped:
-│                              its page), then a 26pt photo or initial and your name 28/700 (or
-│                              "Journal"), "WAYFINDER · TRAILWALKER" and the rank bar; tapping
-│                              them opens Edit profile. × and the gear stacked top right. Under
+│                              × to close. Reduce Motion: no cascade
+├─ header                      velvet: "Journal" 28/700 and × on one line. Under
 │                              them four tiles, Lockets · Places · Added · Hearts, zeros shown;
 │                              VoiceOver hears them as one line. A
 │                              number that grew since the last look rolls up from its old
@@ -152,11 +149,10 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 └─ Mine                        what you added; a row opens Submit as the editor. "3 hearts ·
                                1 note · last heart yesterday", never who
 
-Settings and Edit profile are sections of nothing: a section is what you did,
-and the account is not (docs/10, "The journal is you"). They open as pageSheet modals over the journal, which
-stays mounted under it: Settings from its gear, Edit profile from its header.
+The journal is what you did; who you are is your Collector's page, with your
+name and the gear for Settings (docs/10, "One you").
 
-Settings (src/Settings.tsx, pageSheet, from the journal's gear) - a "Camp" ribbon over "Settings"
+Settings (src/Settings.tsx, pageSheet, from the gear on your Collector's page, which closes first) - a "Camp" ribbon over "Settings"
 34/700, × top right. Grouped rows: a Panel (src/Game.tsx) named by its foil tab, a line under
 it; a row may lead with a coloured badge (seal location, plum notifications, gold links).
 Appearance's chosen segment is velvet, the Switch's track foil
@@ -167,12 +163,14 @@ Appearance's chosen segment is velvet, the Switch's track foil
 ├─ How it works                the one place that answers "why can't I read this", two lines
 └─ About                       privacy policy, contact, OpenStreetMap, each ↗
 
-Your Collector (src/CollectorPage.tsx, pageSheet, from the Collector in the journal's header
-or the map's HUD) - a "Character" ribbon over "Your Collector" 34/700, × top right
+Your Collector (src/CollectorPage.tsx, pageSheet, from the map's HUD) - a "Character" ribbon
+over "Your Collector" 34/700, the settings gear and × top right
 ├─ now                         a velvet sheet: the look in its plate (src/Plate.tsx: double gold
 │                              rule, a diamond at each corner) at 128pt, a foil class tag, the
 │                              rank 24/700, "Rank 2 of 8", and a bar per scale ("LOCKETS 4 / 8",
 │                              "ADDED 1 / 2")
+├─ Your name                   what memories are signed with, saved as typed. Blank = Anonymous.
+│                              A line under it says so, or that the save failed
 ├─ Evolution                   the eight looks in a row, yours ringed in plum, the ones ahead
 │                              as inkFaint silhouettes (the look with tintColor)
 ├─ Next: Lamplit               a Panel: "1 memory of yours to Lamplit", then the two wants as a
@@ -181,11 +179,6 @@ or the map's HUD) - a "Character" ribbon over "Your Collector" 34/700, × top ri
 └─ Your class                  four crests, two to a row, each a small plate, full gold on
                                yours; a tap switches. The stage comes along. No shop, no
                                prices, no currency
-
-Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/700, × top right
-├─ the photo, 112pt            Choose photo / Take photo, square crop; Remove photo. Public,
-│                              like the name: it signs what you file (src/Avatar.tsx)
-└─ Your name                   what submissions are signed with, saved as typed. Blank = Anonymous
 
 There are no tabs on the map, and no map of what is locked: the planner draws the walk it
 offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
@@ -225,13 +218,12 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
-| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
-| `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
-| `src/CollectorPage.tsx` | your Collector, a character sheet: the look in its plate, the ladder of eight, the four crests. Its own sheet, from the journal's header |
+| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the gear on your Collector's page |
+| `src/CollectorPage.tsx` | you: your Collector as a character sheet (the look in its plate, the ladder of eight, the four crests), your name, and the gear to Settings. Its own sheet, from the map's HUD |
 | `src/Plate.tsx` | the Collector's framed plate: the portrait, the crests, the rank-up |
 | `src/CollectorHud.tsx` | your Collector across the top of the map: medal, rank, bar to the next. Tapped, its page |
 | `src/Game.tsx` | the game menus' pieces: `Foil`, `Velvet`, `Ribbon`, `Panel`, `Coin`, `Medal`, `Bar` |
-| `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
+| `src/Avatar.tsx` | an initial or nobody, in one circle at any size: a memory's byline |
 | `src/DiamondRule.tsx` | the one ornament, twice on an open story: under the byline, before the notes |
 | `src/PullQuote.tsx` | a quote set apart: gold mark, Newsreader italic, a caption |
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12); with another `icon`, the walk card's skip and a story's ⋯ |
@@ -361,7 +353,7 @@ of the app and its tracking had drifted three ways before anybody noticed.
 
 **`buttonText`** is 600 at 17, the HIG's Headline size; pair it with
 `color.paper` on gold and `color.ink` on the quiet and outlined buttons.
-**`input`** is the whole text-field block, which renders in both Edit profile
+**`input`** is the whole text-field block, which renders in both your Collector's page
 and Submit and must not drift between them.
 
 **Scale**: 34 `screenTitle` · 34/38 `story.title` (the place name) · 52
@@ -629,7 +621,7 @@ Each of these exists because something broke or would have been rejected.
     accurate tap on the screen (Hoober 2017: corner targets need ~12 mm
     against ~7 mm at the centre). The glyph is 30pt with `hitSlop` to
     44pt (HIG Buttons). It is `src/CloseButton.tsx` everywhere: the walk
-    preview, Journal, Settings, Edit profile, a memory's sheet, Add a memory.
+    preview, Journal, Settings, your Collector, a memory's sheet, Add a memory.
     Always trailing, never leading: a sheet's own action is not a corner
     word but the solid button at the end of the page (Next, Save). A text
     button stays only where it says more than close: Not now on the paywall.
@@ -637,8 +629,8 @@ Each of these exists because something broke or would have been rejected.
     a memory.** Full screen, a success haptic, only when a walk hands back the
     map (Done on its card, or ending it) and a stage was crossed
     (`src/RankUp.tsx`). Never on the unlock or over a story: the memory is
-    read first. The Collector stands across the top of the map, in the
-    journal's header, on the finish card and on its own page, never beside a
+    read first. The Collector stands across the top of the map, on Plan a
+    walk, on the finish card and on its own page, never beside a
     summary: App hides the HUD while a memory, the locket in reach or a sheet
     is up. Reduce Motion: a crossfade, no growth.
 

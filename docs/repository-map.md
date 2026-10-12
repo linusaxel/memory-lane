@@ -162,8 +162,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name, numbers and level, a gear for Settings, then past walks (list or cards), unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
 | `mobile/src/Settings.tsx` | Settings: grouped rows in its own sheet, from the gear in the journal |
-| `mobile/src/EditProfile.tsx` | Edit profile: the photo and the name, from the journal's header |
-| `mobile/src/Avatar.tsx` | A photo, an initial or nobody, in one circle |
+| `mobile/src/Avatar.tsx` | An initial or nobody, in one circle: a memory's byline |
 | `mobile/src/Paywall.tsx` | The subscription: more walks a day (F35). Prices from the store; "not available" without a RevenueCat key |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: the plans and the key packs, no-ops without a key. Never decides who has paid |
 | `mobile/src/Button.tsx` | The four buttons: go (green), foil (gold), quiet, text |

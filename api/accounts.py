@@ -6,7 +6,7 @@ and signing in binds devices.user_id. docs/10-decisions.md#identity.
 
 import uuid
 
-from fastapi import APIRouter, Form, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, HTTPException, Query, Response
 from sqlalchemy import text
 
 import api.media
@@ -88,7 +88,7 @@ def profile_of(session, device: str) -> Profile:
     changed it. Creates nothing."""
     row = session.execute(
         text("""
-            SELECT u.id, u.display_name, u.avatar_path,
+            SELECT u.id, u.display_name,
                 (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id AND NOT m.hidden) AS submitted,
                 (SELECT COUNT(*) FROM memory_hearts mh JOIN memories m ON m.id = mh.memory_id
                  WHERE m.user_id = u.id) AS hearts_received,
@@ -112,7 +112,6 @@ def profile_of(session, device: str) -> Profile:
     return Profile(
         user_id=str(row.id),
         display_name=row.display_name,
-        avatar_url=api.media.media_url(row.avatar_path) if row.avatar_path else None,
         submitted=row.submitted,
         hearts_received=row.hearts_received,
         unlocked=unlocked,
@@ -141,50 +140,6 @@ def set_profile(body: ProfileRequest):
         user_id = user_for_device(session, body.device)
         set_display_name(session, user_id, name)
         return profile_of(session, body.device)
-
-
-# The old path, read under the row lock, so two racing uploads each take the
-# file they replaced with them.
-SWAP_AVATAR = """
-    UPDATE users u SET avatar_path = :path
-    FROM (SELECT id, avatar_path FROM users WHERE id = CAST(:id AS uuid) FOR UPDATE) old
-    WHERE u.id = old.id
-    RETURNING old.avatar_path
-"""
-
-
-def swap_avatar(device: str, path: str | None) -> Profile:
-    """Point the user at `path` and delete the file it replaces. No upload
-    quota: a user holds one photo, so replacing it costs the disk nothing."""
-    try:
-        with get_session() as session:
-            user_id = user_for_device(session, device)
-            previous = session.execute(text(SWAP_AVATAR), {"path": path, "id": user_id}).scalar()
-            profile = profile_of(session, device)
-    except Exception:
-        if path:
-            (api.media.MEDIA_DIR / path).unlink(missing_ok=True)
-        raise
-    # File after row, as delete_memory does: sweep reaps what a crash leaves.
-    if previous:
-        (api.media.MEDIA_DIR / previous).unlink(missing_ok=True)
-    return profile
-
-
-@router.post("/v1/me/avatar", response_model=Profile)
-async def set_avatar(file: UploadFile, device: str = Form(..., pattern=DEVICE_PATTERN)):
-    """A profile photo, shown beside the name on what you file. Through the
-    same checks and EXIF strip as a memory's photo (api/media.py)."""
-    path, kind, _, _ = await api.media.save_upload(file)
-    if kind != "photo":
-        (api.media.MEDIA_DIR / path).unlink(missing_ok=True)
-        raise HTTPException(status_code=415, detail="A profile photo has to be a photo")
-    return swap_avatar(device, path)
-
-
-@router.delete("/v1/me/avatar", response_model=Profile)
-def remove_avatar(device: str = Query(..., pattern=DEVICE_PATTERN)):
-    return swap_avatar(device, None)
 
 
 # Signing in binds devices.user_id and issues no token. api/auth.py verifies the
@@ -379,11 +334,6 @@ def delete_account(device: str = Query(..., pattern=DEVICE_PATTERN)):
                 owner,
             )
         ]
-        avatar = session.execute(
-            text("SELECT avatar_path FROM users WHERE id = CAST(:user AS uuid)"), owner
-        ).scalar()
-        if avatar:
-            paths.append(avatar)
         session.execute(text(f"DELETE FROM media WHERE device_id IN {devices}"), owner)
         session.execute(text("DELETE FROM memories WHERE user_id = CAST(:user AS uuid)"), owner)
         for place_id in places:

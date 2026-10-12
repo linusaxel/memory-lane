@@ -79,7 +79,6 @@ import Memories from './src/Memories.tsx';
 import { EndPick, EndWalk, PastWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
 import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
-import EditProfile from './src/EditProfile.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
 import CloseButton from './src/CloseButton.tsx';
 import Glyph from './src/Glyph.tsx';
@@ -395,7 +394,6 @@ export default function App() {
   }, [collector, profile, signedIn, intro, keepCollector]);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [collectorOpen, setCollectorOpen] = useState(false);
   // The store's customer is this account, so the webhook names a user the
@@ -1196,7 +1194,6 @@ export default function App() {
     setEditingMemory(null);
     setIntro(false);
     setSettingsOpen(false);
-    setProfileOpen(false);
     setPaywallOpen(false);
     setCollectorOpen(false);
     setRankUp(null);
@@ -1431,9 +1428,6 @@ export default function App() {
       case 'settings-lower':
       case 'settings-delete':
         return setSettingsOpen(true);
-      case 'profile':
-      case 'profile-error':
-        return setProfileOpen(true);
       case 'paywall':
         return setPaywallOpen(true);
       case 'crash':
@@ -1457,7 +1451,6 @@ export default function App() {
     setJournalOpen(false);
     setSubmitOpen(false);
     setSettingsOpen(false);
-    setProfileOpen(false);
     setPaywallOpen(false);
   }, [notification, openMemory]);
 
@@ -1961,16 +1954,14 @@ export default function App() {
           Haptics.selectionAsync().catch(() => {});
           keepCollector({ class: id });
         }}
-      />
-      <EditProfile
-        visible={profileOpen}
-        onClose={() => setProfileOpen(false)}
-        device={device}
-        profile={profile}
-        onProfile={accountChanged}
         displayName={displayName}
         onDisplayName={rename}
         nameError={nameError}
+        onSettings={() => {
+          Haptics.selectionAsync().catch(() => {});
+          setCollectorOpen(false);
+          setSettingsOpen(true);
+        }}
       />
       {(opening || diving) && (
         <IrisGrow
@@ -2015,7 +2006,7 @@ export default function App() {
         onPosted={posted}
         onSaved={saved}
         onDeleted={deleted}
-        author={{ name: displayName.trim() || 'Anonymous', avatar_url: profile?.avatar_url }}
+        author={{ name: displayName.trim() || 'Anonymous' }}
         radiusMeters={radiusMeters}
       />
     </>
@@ -2570,17 +2561,8 @@ export default function App() {
           <Memories
             device={device}
             profile={profile}
-            displayName={displayName}
             unlockedCount={collected.length}
             placeCount={placesUnlocked}
-            onEditProfile={() => setProfileOpen(true)}
-            onSettings={() => {
-              Haptics.selectionAsync().catch(() => {});
-              setSettingsOpen(true);
-            }}
-            collector={collectorId}
-            rank={rank}
-            onCollector={() => setCollectorOpen(true)}
             onOpenWalk={(walk) => {
               setJournalOpen(false);
               setPastWalk(walk);

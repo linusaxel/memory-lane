@@ -99,8 +99,6 @@ export const SCREENS = [
   'settings',
   'settings-lower',
   'settings-delete',
-  'profile',
-  'profile-error',
   'paywall',
   'crash',
 ] as const;

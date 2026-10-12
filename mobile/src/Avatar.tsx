@@ -1,29 +1,19 @@
-/** Your face, or your initial, or nobody: one circle at any size. The
- *  journal header, Edit profile and a memory's byline. */
+/** Your initial, or nobody: one circle at any size, on a memory's byline.
+ *  There is no photo: your Collector is the one picture of you (docs/10,
+ *  "One you"). */
 
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { mediaUrl } from './api.ts';
 import Glyph from './Glyph.tsx';
 import { color, font } from './theme.ts';
 
 type Props = {
-  url: string | null | undefined;
   name: string | null | undefined;
   size: number;
 };
 
-export default function Avatar({ url, name, size }: Props) {
+export default function Avatar({ name, size }: Props) {
   const circle = { width: size, height: size, borderRadius: size / 2 };
-  if (url) {
-    return (
-      <Image
-        source={{ uri: mediaUrl({ url }) }}
-        style={[styles.circle, circle]}
-        accessibilityIgnoresInvertColors
-      />
-    );
-  }
   const initial = name && name !== 'Anonymous' ? name.trim().charAt(0).toUpperCase() : '';
   return (
     <View style={[styles.circle, circle]}>

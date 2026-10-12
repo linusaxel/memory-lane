@@ -452,12 +452,7 @@ export default function MemorySheet({
               </Text>
               {peeking && (memory.author || memory.source_name) && (
                 <View style={styles.peekFrom}>
-                  {memory.author &&
-                    (memory.author.avatar_url ? (
-                      <Avatar url={memory.author.avatar_url} name={memory.author.name} size={16} />
-                    ) : (
-                      <Glyph name="person" size={12} color={color.inkFaint} />
-                    ))}
+                  {memory.author && <Glyph name="person" size={12} color={color.inkFaint} />}
                   <Text style={styles.meta} numberOfLines={1}>
                     {memory.author ? `Left by ${memory.author.name}` : `From ${memory.source_name}`}
                   </Text>
@@ -472,7 +467,7 @@ export default function MemorySheet({
               {!locked &&
                 (memory.author ? (
                   <View style={[styles.byline, styles.bylineRow]}>
-                    <Avatar url={memory.author.avatar_url} name={memory.author.name} size={26} />
+                    <Avatar name={memory.author.name} size={26} />
                     <Text style={styles.bylineText} numberOfLines={2}>
                       Left by <Text style={styles.bylineName}>{memory.author.name}</Text>
                     </Text>

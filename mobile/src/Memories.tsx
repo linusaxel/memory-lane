@@ -1,8 +1,7 @@
-/** The journal: a pageSheet from the map's Journal button. It is you as
- *  well: your photo, name and numbers on top (tap them for Edit
- *  profile), the cog for Settings beside ×, then three sections of what you
- *  did behind a segmented control (docs/10-decisions.md, "The journal is
- *  you").
+/** The journal: a pageSheet from the map's Journal button. What you did:
+ *  your numbers on top, then three sections behind a segmented control. Who
+ *  you are, your name and Settings, is the Collector's page (docs/10-decisions.md,
+ *  "One you").
  *
  * **Walks** - every walk this account took that opened something, newest
  * first (a walk that opened nothing is deleted, docs/10). As a list, a row
@@ -41,7 +40,6 @@ import {
   type Profile,
   type WalkedRoute,
 } from './api.ts';
-import Avatar from './Avatar.tsx';
 import CloseButton from './CloseButton.tsx';
 import Glyph from './Glyph.tsx';
 import Icon from './Icon.tsx';
@@ -62,24 +60,15 @@ import {
   type Seen,
 } from './seen.ts';
 import { color, dim, font, label, lift, screenTitle } from './theme.ts';
-import { classOf, rankInto, type ClassId } from './collector.ts';
-import { Bar, Medal, Velvet } from './Game.tsx';
+import { Velvet } from './Game.tsx';
 import { useReduceMotion } from './useBreath.ts';
 
 type Props = {
   device: string | null;
   profile: Profile | null;
-  /** As typed, ahead of the profile coming back. */
-  displayName: string;
   /** Everything earned, your own included, as against `unlocked`. */
   unlockedCount: number;
   placeCount: number;
-  onEditProfile: () => void;
-  onSettings: () => void;
-  /** Your Collector at its stage, at the header's right: tapped, its page. */
-  collector: ClassId;
-  rank: number;
-  onCollector: () => void;
   /** A walk card tapped: show that walk on the map. */
   onOpenWalk: (walk: WalkedRoute) => void;
   /** Refetches each time this turns true: the journal stays mounted. */
@@ -114,14 +103,8 @@ type Item =
 export default function Memories({
   device,
   profile,
-  displayName,
   unlockedCount,
   placeCount,
-  onEditProfile,
-  onSettings,
-  collector,
-  rank,
-  onCollector,
   onOpenWalk,
   focused,
   refreshKey,
@@ -532,51 +515,15 @@ export default function Memories({
 
   return (
     <View style={styles.screen}>
-      {/* You, as a game's character screen: the Collector, your name and
-          the bar to the next rank, then your numbers (docs/10, "Game menus"). */}
+      {/* What you did, in numbers. Who you are is the Collector's page
+          (docs/10, "One you"). */}
       <Animated.View style={arrive(0)}>
         <Velvet style={styles.hero}>
           <View style={styles.top}>
-            <Pressable
-              style={dim(null)}
-              onPress={onCollector}
-              accessibilityRole="button"
-              accessibilityLabel={`Your Collector, ${classOf(collector).ranks[rank]}`}
-              testID="journal-collector"
-            >
-              <Medal id={collector} stage={rank} size={76} />
-            </Pressable>
-            <Pressable
-              style={dim(styles.who)}
-              onPress={onEditProfile}
-              accessibilityRole="button"
-              accessibilityLabel="Edit profile"
-            >
-              <View style={styles.nameRow}>
-                <Avatar url={profile?.avatar_url} name={displayName} size={26} />
-                <Text style={styles.title} numberOfLines={1}>
-                  {displayName.trim() || 'Journal'}
-                </Text>
-              </View>
-              <Text style={styles.cls} numberOfLines={1}>
-                {`${classOf(collector).name} · ${classOf(collector).ranks[rank]}`.toUpperCase()}
-              </Text>
-              <Bar
-                into={rankInto(rank, profile?.unlocked ?? unlockedCount, profile?.submitted ?? 0)}
-              />
-            </Pressable>
-            <View style={styles.corner}>
-              <CloseButton onPress={onClose} label="Close journal" />
-              <Pressable
-                style={dim(styles.cog)}
-                hitSlop={8}
-                onPress={onSettings}
-                accessibilityRole="button"
-                accessibilityLabel="Settings"
-              >
-                <Icon name="settings" size={22} color={color.onVelvet} />
-              </Pressable>
-            </View>
+            <Text style={styles.title} accessibilityRole="header">
+              Journal
+            </Text>
+            <CloseButton onPress={onClose} label="Close journal" />
           </View>
           <View
             style={styles.tiles}
@@ -880,13 +827,8 @@ const styles = StyleSheet.create({
   hero: { paddingTop: 28, paddingBottom: 16, paddingHorizontal: 20, gap: 14 },
   list: { flex: 1 },
   body: { paddingBottom: 72 },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  who: { flex: 1, gap: 4 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { ...screenTitle, flexShrink: 1, fontSize: 28, lineHeight: 34, color: color.onVelvet },
-  cls: { ...font.display, fontSize: 11, letterSpacing: 1.4, color: color.onVelvetGold },
-  corner: { alignSelf: 'flex-start', alignItems: 'center', gap: 10 },
-  cog: { padding: 6 },
   tiles: { flexDirection: 'row', gap: 8 },
   tile: {
     flex: 1,

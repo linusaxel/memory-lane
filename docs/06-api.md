@@ -112,13 +112,7 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   filed and still public (not hidden): the two counts the Collector grows with
   (docs/10, "The Collector").
   `hearts_received` counts every heart on what the account filed.
-  `avatar_url` is the profile photo, server-relative, or null.
-  The GET creates nothing
-- `POST /v1/me/avatar` (multipart: `device`, `file`) - set the profile photo,
-  deleting the one it replaces; `DELETE /v1/me/avatar?device=UUID` clears it.
-  Both return the `Profile`. Photos only, through `/v1/media`'s checks and
-  EXIF strip; anything else is 415. A memory's `author` carries the same
-  `avatar_url`
+  The GET creates nothing. There is no profile photo (docs/10, "One you")
 - `POST /v1/auth/google` / `POST /v1/auth/apple` `{device, id_token,
   display_name?, link_token?}` - verify a provider ID token and bind this device
   to that account. `display_name` is for Apple, which gives the name to the

@@ -260,7 +260,6 @@ def test_reading_a_profile_creates_nobody(client, db_session):
     assert empty == {
         "user_id": None,
         "display_name": None,
-        "avatar_url": None,
         "submitted": 0,
         "hearts_received": 0,
         "unlocked": 0,
@@ -311,50 +310,6 @@ def test_a_photo_travels_with_the_memory(client, tmp_path):
     memory = submit(client, device=dev, media_ids=[uploaded["id"]])
     assert [item["url"] for item in memory["media"]] == [uploaded["url"]]
     assert memory["media_count"] == 1
-
-
-def set_avatar(client, dev, data=PNG, mime="image/png"):
-    return client.post(
-        "/v1/me/avatar", data={"device": dev}, files={"file": ("face.png", data, mime)}
-    )
-
-
-def test_a_profile_photo_signs_what_you_file(client, tmp_path):
-    dev = device()
-    response = set_avatar(client, dev)
-    assert response.status_code == 200, response.text
-    url = response.json()["avatar_url"]
-    assert (tmp_path / url.removeprefix("/media/")).exists()
-
-    memory = submit(client, device=dev)
-    assert memory["author"]["avatar_url"] == url
-
-
-def test_a_new_profile_photo_takes_the_old_file_with_it(client, tmp_path):
-    dev = device()
-    first = set_avatar(client, dev).json()["avatar_url"]
-    second = set_avatar(client, dev).json()["avatar_url"]
-
-    assert first != second
-    assert not (tmp_path / first.removeprefix("/media/")).exists()
-
-    cleared = client.delete("/v1/me/avatar", params={"device": dev}).json()
-    assert cleared["avatar_url"] is None
-    assert not (tmp_path / second.removeprefix("/media/")).exists()
-
-
-def test_deleting_the_account_deletes_the_profile_photo(client, tmp_path):
-    dev = device()
-    url = set_avatar(client, dev).json()["avatar_url"]
-
-    assert client.delete("/v1/me", params={"device": dev}).status_code == 204
-    assert not (tmp_path / url.removeprefix("/media/")).exists()
-
-
-def test_a_recording_is_not_a_profile_photo(client, tmp_path):
-    response = set_avatar(client, device(), data=M4A, mime="audio/mp4")
-    assert response.status_code == 415
-    assert list(tmp_path.iterdir()) == []
 
 
 def test_a_recording_keeps_the_length_the_phone_measured(client):

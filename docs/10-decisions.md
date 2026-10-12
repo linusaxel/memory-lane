@@ -1169,7 +1169,8 @@ claim about what the bytes are — and none of the three comes from the client.
 
 ### A profile photo is public, like the name
 
-Status: Accepted, 2026-10-01
+Status: **Superseded 2026-10-12** by *One you*: there is no profile photo.
+Accepted 2026-10-01.
 
 It signs what you file, beside the name, because every memory is public and
 the photo is part of who left it. So it gets what a memory's photo gets:
@@ -4261,7 +4262,8 @@ means what it says.
 
 ### The journal is you
 
-Status: Accepted 2026-10-07. Supersedes *Where stories wait*, the **Steps buy
+Status: **Superseded 2026-10-12** by *One you*: you are the Collector's page,
+and the journal is only what you did. Accepted 2026-10-07. Supersedes *Where stories wait*, the **Steps buy
 nothing** bullet of *Keys open a lock*, and where *The journal is a sheet* and
 *Fewer games* put the account menu and Your walks.
 
@@ -4813,6 +4815,46 @@ anything better there changes values here.
 **Options considered:** Velvet & Gold, Moss & Brass, Night Ink & Gold (too
 loud); Tea house (warmest, quietest); Ink & paper (starkest); the character
 floating over the map (later, if at all).
+
+### One you
+
+Status: Accepted 2026-10-12. Supersedes *The journal is you* and *A profile
+photo is public, like the name*.
+
+The founder found the menus a mess: the Collector across the top opened a
+character sheet, while the name, the photo and Settings hid behind the
+journal's header, a sheet over a sheet. The Collector stood in four places,
+and a profile photo beside it made two pictures of one person. Researched
+(apps' help pages, Apple's HIG, NN/g) before deciding:
+
+- **One "you", the Collector's page.** Opened from the Collector across the
+  top of the map, it holds your name (saved as typed) and a gear for
+  Settings. Every app looked at has one "me" entry with Settings behind a
+  gear in it, two taps from home: Pokémon GO's trainer, Monster Hunter Now's
+  hunter, AllTrails' and Strava's profile. The gear closes the page and opens
+  Settings: one sheet at a time (HIG, Sheets), as Get Plus already did.
+- **The journal is what you did:** its numbers, then Walks, Unlocked and
+  Mine. No medal, name, photo or gear. One tap from the dock, as before.
+- **No profile photo.** Your Collector is the one picture of you. Duolingo
+  turned off photo upload for anyone who made an avatar (blog, July 2023);
+  the location games (Pokémon GO, Monster Hunter Now, Pikmin Bloom) show a
+  character and a name, never a face. A face beside a name on memories
+  pinned to places someone goes is the risk police and the NSPCC raised
+  about Snap Map; a user's photo needs moderating, a closed set of
+  characters does not. A memory's byline is the name and its initial.
+  `POST/DELETE /v1/me/avatar` and `users.avatar_path` are gone (054); the
+  files are left for `pipeline/sweep.py`.
+
+**When friends come**, they find each other by an invite link or code, or
+contacts matched on the phone, as Game Center, Pokémon GO and Pikmin Bloom
+do: a friend is known from the contact, not a face. Show their name and
+Collector, which means the class and stage go to the server then. A photo
+comes back only if walkers can't tell friends apart that way, and then only
+to mutual friends.
+
+**Options considered:** the journal's header as the one "you", as AllTrails
+and Strava do (undoes the Collector across the top, which *Game menus* chose);
+an account avatar top right, as the App Store (a third thing over the map).
 
 ### Rejected approaches, do not retry
 

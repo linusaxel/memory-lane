@@ -39,7 +39,6 @@ class Author(BaseModel):
 
     id: str
     name: str
-    avatar_url: str | None = None
 
 
 class MediaItem(BaseModel):
@@ -365,7 +364,6 @@ class Profile(BaseModel):
 
     user_id: str | None = None
     display_name: str | None = None
-    avatar_url: str | None = None
     submitted: int = 0
     # Every heart on what this account filed, all time.
     hearts_received: int = 0

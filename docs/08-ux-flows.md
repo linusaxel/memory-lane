@@ -97,7 +97,7 @@ make it worth having got here.
 **Session three — coming back.** The collection has things in it (F15), it works
 on the train home with no signal (F16), and next week there is another free
 walk. The map shows what is locked around
-you, never what it says: standing there is the only way in. Settings, behind the journal's gear, is where
+you, never what it says: standing there is the only way in. Settings, behind the gear on your Collector's page, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -553,10 +553,9 @@ product is about.
 
 ## F15 · Reread what you unlocked — **Implemented**
 
-1. **Journal**, the velvet book at the end of the Collector's bar, opens the
-   journal as a sheet over the map. It is you as well: your photo, name,
-   numbers and level on top (a tap is Edit profile, F21), a gear for Settings
-   (F17), then *Walks*, *Unlocked* and *Mine* (F24).
+1. **Journal**, in the dock, opens the journal as a sheet over the map: what
+   you did, your numbers on top, then *Walks*, *Unlocked* and *Mine* (F24).
+   Who you are, your name and Settings, is your Collector's page (F21, F17).
 2. *Walks* is this flow and F31: one row per walk, newest first. A row opens in
    place to its stops; an earned one opens the full sheet, one not walked to
    says so. *Cards* shows the walks two to a row, each drawn as its shape.
@@ -586,18 +585,18 @@ kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
-**Settings** (the gear in the journal's header) exists because every proximity-gated app needs somewhere to
+**Settings** (the gear on your Collector's page) exists because every proximity-gated app needs somewhere to
 answer that, and answering it only inside the sheet that provoked the question
 is too late.
 
 1. What this device has done, memories unlocked and places visited, is the
-   journal's header, right above it.
+   journal's header.
 2. **How unlocking works** — the radius, that the *server* withholds the text,
    and that city-centroid memories are open to everyone because asking somebody
    to walk to a guess would be a lie.
 3. Location state, with the route to Settings.
 4. The sign-in that makes a collection survive a new phone, and signing out —
-   see F22. The name is Edit profile's (F21).
+   see F22. The name is on your Collector's page (F21).
 
 ## F18 · Stand somewhere with nothing in it — **Removed from the app**
 
@@ -711,18 +710,16 @@ Settings → About → **Contact us** opens the policy at its Contact section.
 ## F21 · Be somebody — **Implemented**
 
 **Who:** anybody who has filed something, or is about to.
-**Trigger:** Journal → the header (your photo and name) → Edit profile. The
+**Trigger:** the Collector across the top of the map → *Your name*. The
 submit sheet asks for no name: a memory is signed by the account that filed it.
 
 1. A name, saved as it is typed. No Save button to forget to press.
-2. A photo: Choose photo or Take photo, cropped square, and Remove photo. It
-   uploads as it is picked, through the same checks and EXIF strip as a
-   memory's photo, and replacing it deletes the old file.
-3. Both appear under every memory they file, as "Left by —" with the photo,
-   or the initial without one.
-4. Blank is Anonymous, and clearing it has to keep working: the name and the
-   photo are the things here other people see.
-5. The journal's header gains "added" once there is one — how many they have
+2. It appears under every memory they file, as "Left by —" with its initial.
+   There is no photo: the Collector is the one picture of you (docs/10,
+   "One you").
+3. Blank is Anonymous, and clearing it has to keep working: the name is the
+   thing here other people see.
+4. The journal's header gains "added" once there is one — how many they have
    filed, beside how many they unlocked and in how many places.
 
 A name needs no sign-in behind it. A `users` row is a display name and an id
@@ -1198,7 +1195,7 @@ memories they file.
    time in your journal."
 2. Start (or Next, to the location primer) goes on with it. Skip on any page
    leaves the Wayfinder.
-3. Later, tapping the Collector in the journal's header opens its page, where
+3. Later, tapping the Collector across the top of the map opens its page, where
    any of the four can be chosen again. The stage comes along: it is your
    counts, not the class's. The page shows both counts, what the next rank
    still wants ("1 memory of yours to Lamplit"), and when a memory is

@@ -99,7 +99,7 @@ type Props = {
   onSaved?: (memory: LocatedMemory) => void;
   onDeleted?: (id: number) => void;
   /** Who it will be signed by, shown where the open sheet shows it. */
-  author: { name: string; avatar_url?: string | null };
+  author: { name: string };
   /** How near a reader has to stand, for the seal's last line. */
   radiusMeters: number;
 };
@@ -863,7 +863,7 @@ export default function Submit({
 
           <View style={styles.byline}>
             <View style={[styles.tag, styles.tagAuthor]}>
-              <Avatar url={author.avatar_url ?? null} name={author.name} size={28} />
+              <Avatar name={author.name} size={28} />
               <Text style={styles.tagText}>{author.name}</Text>
             </View>
             <Pressable

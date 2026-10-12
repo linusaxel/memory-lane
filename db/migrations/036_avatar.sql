@@ -5,4 +5,5 @@
 --   docker compose exec -T db psql -U memorylane -d memorylane -v ON_ERROR_STOP=1 \
 --     < db/migrations/036_avatar.sql
 
-ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_path TEXT;
+-- users.avatar_path was added here; 054_drop_avatar.sql drops it again.
+SELECT 1;
