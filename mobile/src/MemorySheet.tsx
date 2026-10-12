@@ -438,7 +438,7 @@ export default function MemorySheet({
             {hasMore && (
               <CloseButton
                 place={styles.more}
-                icon="ellipsis"
+                icon="more"
                 label="More"
                 onPress={() =>
                   moreActions(memory, reported, setAsking, !!onReport, !!onBlock, onEdit)

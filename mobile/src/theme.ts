@@ -43,11 +43,11 @@ export const color = {
   goldLine: dual('rgba(122,90,46,0.45)', 'rgba(217,185,138,0.5)'),
 
   /** Go: Plan a walk, Start walk, Next, the slide track. Text on it is onGo. */
-  goBg: dual('#57659E', '#5B69A3'),
+  goBg: dual('#443E46', '#4C454F'),
   goRim: dual('rgba(246,222,184,0.5)', 'rgba(246,222,184,0.45)'),
   onGo: dual('#FBF6EC', '#FBF6EC'),
   /** A raised button's ledge: the darker 4pt under go. */
-  goLedge: dual('#3E4A7A', '#3A4573'),
+  goLedge: dual('#2E2A31', '#2A262D'),
 
   /** Openable now, and nothing else: a lit pin, the diamond in the rule. A
    *  fill and a text colour both; marks drawn on it are sealInk. */
@@ -152,10 +152,10 @@ export const solid = (dark: boolean) => ({
   /** The reach circle: the seal, washed over the map. */
   reachStroke: dark ? 'rgba(242,138,130,0.75)' : 'rgba(168,64,63,0.7)',
   reachFill: dark ? 'rgba(242,138,130,0.12)' : 'rgba(168,64,63,0.12)',
-  /** The one tinted control over the map, Plan a walk: indigo enamel glass,
+  /** The one tinted control over the map, Plan a walk: charcoal enamel glass,
    *  dense, because a light tint on the cream map measured 1.01:1
    *  (docs/09 part 15). A tint, so a real colour. */
-  goGlass: dark ? 'rgba(91,105,163,0.94)' : 'rgba(87,101,158,0.94)',
+  goGlass: dark ? 'rgba(76,69,79,0.94)' : 'rgba(68,62,70,0.94)',
   /** The same warmth on a glass card, thicker: a card carries prose, which
    *  must hold its contrast over a busy map. */
   frostCard: dark ? 'rgba(38,35,43,0.86)' : 'rgba(252,247,238,0.86)',

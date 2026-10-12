@@ -4767,7 +4767,8 @@ MCP capped): each candidate was a value swap in `theme.ts`, shot on the
 simulator.
 
 - **Dusk.** Cream paper and dusk-black in the dark; charcoal-plum `#443E46`
-  velvet; dusty indigo `#57659E` go; flat cream foil; a muted brass for gold;
+  velvet, and go the same charcoal (dusty indigo `#57659E` at first, the
+  same day: beside the dark HUD it clashed); flat cream foil; a muted brass for gold;
   coral for openable (`seal`, darkened to `#A8403F` in light to hold 4.5:1);
   lavender for earned (`plum`). Meanings unchanged.
 - **Flat, not gradients.** Foil and velvet keep their three stops, all but
@@ -4776,13 +4777,16 @@ simulator.
   walk · Locate in one glass bar at bottom 70, each named under its icon. The
   Collector HUD keeps the top; the Journal orb stays only off home (planner,
   walk), where the dock is not. The walk keeps its bottom row.
-- **Plan a walk is an emblem**, a compass rose on indigo enamel in a foil
+- **Plan a walk is an emblem**, a compass rose on charcoal enamel in a foil
   ring (`src/PlanWalkButton.tsx`), not the walking figure: the character is
   already on top. A tap swings it a turn and a half and the planner opens as
   it settles, 0.9 s.
-- **One icon family.** Journal, Locate, Settings and the heart are drawn
-  (`src/Icon.tsx`) in AddIcon's outline, with the rose; every other glyph
-  stays an SF Symbol in a palette colour.
+- **One icon family** (`src/Icon.tsx`): a 2pt ink line over one flat cream
+  tone, chunky, as the board's game items are. Every button over the map,
+  the walk and the planner: journal, add, locate, close and more (every
+  `CloseButton`), back and forward, customize, the slide's key and », and
+  settings and the heart; the rose wears the same ink edge. Rare states
+  (Turn on location, offline) stay an SF Symbol in a palette colour.
 
 Tomorrow's Figma pass (TODO.md, *One look*) redraws these against the shots;
 anything better there changes values here.

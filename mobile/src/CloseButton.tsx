@@ -2,9 +2,8 @@
  *  (UI.md, rule 12). 40pt drawn, 44pt to the finger. The same circle with
  *  another `icon` is a story's ⋯. */
 
-import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import Glyph from './Glyph.tsx';
+import Icon, { type IconName } from './Icon.tsx';
 import { color, dim } from './theme.ts';
 
 type Props = {
@@ -13,7 +12,7 @@ type Props = {
   label?: string;
   disabled?: boolean;
   place?: StyleProp<ViewStyle>;
-  icon?: ComponentProps<typeof Glyph>['name'];
+  icon?: IconName;
 };
 
 export default function CloseButton({
@@ -21,7 +20,7 @@ export default function CloseButton({
   label = 'Close',
   disabled,
   place,
-  icon = 'xmark',
+  icon = 'close',
 }: Props) {
   return (
     <Pressable
@@ -32,7 +31,7 @@ export default function CloseButton({
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Glyph name={icon} size={15} weight="semibold" color={color.ink} />
+      <Icon name={icon} size={18} color={color.ink} />
     </Pressable>
   );
 }

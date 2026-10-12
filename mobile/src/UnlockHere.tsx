@@ -9,7 +9,7 @@ import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reani
 import Svg, { Circle, Defs, Line, RadialGradient, Stop } from 'react-native-svg';
 
 import type { LocatedMemory } from './api.ts';
-import Glyph from './Glyph.tsx';
+import Icon from './Icon.tsx';
 import LocketUnlock, { type LocketDrive } from './LocketUnlock.tsx';
 import DiamondRule from './DiamondRule.tsx';
 import { seg } from './lockets/math.ts';
@@ -64,7 +64,7 @@ export default function UnlockHere({
       <View style={styles.row} pointerEvents="box-none">
         {many && (
           <Animated.View style={stepBack}>
-            <Arrow glyph="chevron.left" name="Previous memory here" onPress={() => onStep(-1)} />
+            <Arrow glyph="back" name="Previous memory here" onPress={() => onStep(-1)} />
           </Animated.View>
         )}
         <View pointerEvents="box-none">
@@ -108,7 +108,7 @@ export default function UnlockHere({
         </View>
         {many && (
           <Animated.View style={stepBack}>
-            <Arrow glyph="chevron.right" name="Next memory here" onPress={() => onStep(1)} />
+            <Arrow glyph="forward" name="Next memory here" onPress={() => onStep(1)} />
           </Animated.View>
         )}
       </View>
@@ -123,7 +123,7 @@ export default function UnlockHere({
   );
 }
 
-type ArrowProps = { glyph: 'chevron.left' | 'chevron.right'; name: string; onPress: () => void };
+type ArrowProps = { glyph: 'back' | 'forward'; name: string; onPress: () => void };
 
 function Arrow({ glyph, name, onPress }: ArrowProps) {
   return (
@@ -133,7 +133,7 @@ function Arrow({ glyph, name, onPress }: ArrowProps) {
       accessibilityRole="button"
       accessibilityLabel={name}
     >
-      <Glyph name={glyph} size={22} weight="semibold" color={color.ink} />
+      <Icon name={glyph} size={24} color={color.ink} />
     </Pressable>
   );
 }

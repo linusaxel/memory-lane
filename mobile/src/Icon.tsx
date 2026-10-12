@@ -1,32 +1,67 @@
-/** The app's own icons, one outlined family with AddIcon and the Plan-a-walk
- *  rose: the ones the map, the dock and a memory show. Everything else is a
- *  Glyph (SF Symbol) in a palette colour (docs/10, "Dusk"). `filled` is the
- *  on state: hearted, or the map following you. `bounce` pops it each time
- *  its value changes, as Glyph's does. */
+/** The app's own icons, one family: a 2pt ink line over one flat tone, chunky,
+ *  as a game's items are (docs/10, "Dusk, and the map's dock"). Every button
+ *  over the map, the walk and the planner, and the close circle everywhere.
+ *  Rare states stay a Glyph (SF Symbol) in a palette colour. `filled` is the
+ *  on state, the tone in the line's colour: hearted, or the map following
+ *  you. `bounce` pops it each time its value changes, as Glyph's does. */
 
 import { useEffect, useRef } from 'react';
 import { Animated, type ColorValue } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
-const PATHS = {
-  journal:
-    'M6 4h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4zM6 18a2 2 0 0 1 2-2h11M12.5 7.5l2 2-2 2-2-2z',
-  locate: 'M20 4L4 11l7.2 1.8L13 20z',
-  heart:
-    'M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0 1 12 7.4a4.1 4.1 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z',
-  settings:
-    'M19.0 10.3L21.4 10.6L21.4 13.4L19.0 13.7L18.2 15.7L19.6 17.6L17.6 19.6L15.7 18.2L13.7 19.0L13.4 21.4L10.6 21.4L10.3 19.0L8.3 18.2L6.4 19.6L4.4 17.6L5.8 15.7L5.0 13.7L2.6 13.4L2.6 10.6L5.0 10.3L5.8 8.3L4.4 6.4L6.4 4.4L8.3 5.8L10.3 5.0L10.6 2.6L13.4 2.6L13.7 5.0L15.7 5.8L17.6 4.4L19.6 6.4L18.2 8.3z',
-};
+import { foil } from './theme';
+
+const dot = (x: number, y: number, r: number) =>
+  `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
+const GEAR =
+  'M19.0 10.3L21.4 10.6L21.4 13.4L19.0 13.7L18.2 15.7L19.6 17.6L17.6 19.6L15.7 18.2L13.7 19.0L13.4 21.4L10.6 21.4L10.3 19.0L8.3 18.2L6.4 19.6L4.4 17.6L5.8 15.7L5.0 13.7L2.6 13.4L2.6 10.6L5.0 10.3L5.8 8.3L4.4 6.4L6.4 4.4L8.3 5.8L10.3 5.0L10.6 2.6L13.4 2.6L13.7 5.0L15.7 5.8L17.6 4.4L19.6 6.4L18.2 8.3z';
+const HEART =
+  'M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0 1 12 7.4a4.1 4.1 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z';
+const ARROW = 'M20 4L4 11l7.2 1.8L13 20z';
+const LOCKET = 'M5 13.8a7 8.2 0 1 0 14 0a7 8.2 0 1 0 -14 0z';
+
+/** `tone` is filled, `line` stroked, `solid` filled in the line's colour. */
+const ICONS = {
+  journal: {
+    tone: 'M6 4h11a2 2 0 0 1 2 2v10H8a2 2 0 0 0-2 2z',
+    line: 'M6 4h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4zM6 18a2 2 0 0 1 2-2h11M12.5 6.8l2.2 2.5-2.2 2.5-2.2-2.5z',
+  },
+  add: { tone: LOCKET, line: `${dot(12, 3.4, 1.7)}${LOCKET}M12 10.3v7M8.5 13.8h7` },
+  locate: { tone: ARROW, line: ARROW },
+  heart: { tone: HEART, line: HEART },
+  settings: { tone: GEAR, line: GEAR + dot(12, 12, 3) },
+  close: { line: 'M7 7l10 10M17 7L7 17' },
+  more: { solid: dot(5.5, 12, 1.8) + dot(12, 12, 1.8) + dot(18.5, 12, 1.8) },
+  back: { line: 'M15 5l-7 7 7 7' },
+  forward: { line: 'M9 5l7 7-7 7' },
+  slide: { line: 'M5 6l6 6-6 6M12 6l6 6-6 6' },
+  customize: {
+    tone: dot(9, 6.5, 2.2) + dot(15.5, 12, 2.2) + dot(7.5, 17.5, 2.2),
+    line:
+      'M3.5 6.5h3.3M11.2 6.5h9.3M3.5 12h9.8M17.7 12h2.8M3.5 17.5h1.8M9.7 17.5h10.8' +
+      dot(9, 6.5, 2.2) +
+      dot(15.5, 12, 2.2) +
+      dot(7.5, 17.5, 2.2),
+  },
+  key: {
+    tone: dot(7, 12, 4),
+    line: `${dot(7, 12, 4)}M11 12h10M17.5 12v3.5M20.5 12v2.5`,
+  },
+} satisfies Record<string, { tone?: string; line?: string; solid?: string }>;
+
+export type IconName = keyof typeof ICONS;
 
 type Props = {
-  name: keyof typeof PATHS;
+  name: IconName;
   size: number;
   color: ColorValue;
+  /** The flat fill under the line; cream by default. */
+  tone?: ColorValue;
   filled?: boolean;
   bounce?: unknown;
 };
 
-export default function Icon({ name, size, color, filled, bounce }: Props) {
+export default function Icon({ name, size, color, tone = foil.colors[1], filled, bounce }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
   const first = useRef(true);
   useEffect(() => {
@@ -42,20 +77,22 @@ export default function Icon({ name, size, color, filled, bounce }: Props) {
       useNativeDriver: true,
     }).start();
   }, [bounce, scale]);
+  const icon: { tone?: string; line?: string; solid?: string } = ICONS[name];
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
-      <Svg
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill={filled ? color : 'none'}
-        stroke={color}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <Path d={PATHS[name]} />
-        {name === 'settings' && <Circle cx={12} cy={12} r={3} fill="none" />}
+      <Svg width={size} height={size} viewBox="0 0 24 24">
+        {icon.tone && <Path d={icon.tone} fill={filled ? color : tone} />}
+        {icon.line && (
+          <Path
+            d={icon.line}
+            fill="none"
+            stroke={color}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+        {icon.solid && <Path d={icon.solid} fill={color} />}
       </Svg>
     </Animated.View>
   );

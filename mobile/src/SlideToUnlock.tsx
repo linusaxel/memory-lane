@@ -18,7 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { LinearGradient } from 'expo-linear-gradient';
-import Glyph from './Glyph.tsx';
+import Icon from './Icon.tsx';
 import type { LocketDrive } from './LocketUnlock.tsx';
 import { clamp } from './lockets/math.ts';
 import { color, foil, font, lift, radius } from './theme.ts';
@@ -79,7 +79,7 @@ export default function SlideToUnlock({ drive, progress, placeName }: Props) {
       <Animated.View style={[styles.words, wordsStyle]} pointerEvents="none">
         <Animated.View style={[styles.say, shimmerStyle]}>
           <Text style={styles.slide}>Slide to unlock</Text>
-          <Glyph name="chevron.right.2" size={18} weight="semibold" color={color.onGo} />
+          <Icon name="slide" size={18} color={color.onGo} />
         </Animated.View>
       </Animated.View>
       <Animated.View style={[styles.thumb, thumbStyle]} {...pan.panHandlers}>
@@ -90,7 +90,7 @@ export default function SlideToUnlock({ drive, progress, placeName }: Props) {
           pointerEvents="none"
         />
         <View pointerEvents="none">
-          <Glyph name="key.horizontal.fill" size={22} weight="semibold" color={foil.text} />
+          <Icon name="key" size={26} color={foil.text} tone={color.paperRaised} />
         </View>
       </Animated.View>
     </View>

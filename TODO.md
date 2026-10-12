@@ -45,6 +45,15 @@ delete an entry when its fix lands.
   ("In 1820, in his rooms on Nørregade, Ørsted saw the needle move"), measured
   with `classifier_audit` (cents, so run with `!`).
 
+- **A chrome change costs the whole e2e suite.** 2026-10-12: the map's dock
+  changed the buttons every flow taps through `steps/launch.yml`, so the
+  only honest check was all three flows, about 7 minutes with the editor
+  blocked (Metro serves the run). Consolidating again won't fix it: they went
+  six to three on 2026-10-07, and the time is the per-flow database rebuild,
+  the cold start and the walked legs. Fix: a `smoke.yml` (launch, then tap
+  Plan a walk, Journal, Add and Locate and back, about a minute), run
+  first and alone for chrome changes; the full suite before a release.
+
 - **No e2e flow screenshots the locket.** 2026-10-10: porting the unlock
   engine, walk-and-unlock passed green with nothing showing the lid had drawn
   or swung. It took a hand loop of `simctl io screenshot` and contact sheets
@@ -301,8 +310,8 @@ meanings; run the gate and shoot the touched screens."
 - [x] **The map dock** (`MapDock.tsx`). Not yet run: the e2e flows that tap
       Journal, Add and Plan a walk on home (labels kept).
 - [x] **A Plan-a-walk emblem**: the compass rose, swings 0.9 s.
-- [x] **One icon family** (`Icon.tsx`): journal, locate, settings, heart, with
-      AddIcon and the rose.
+- [x] **One icon family** (`Icon.tsx`): ink line over a cream tone, every
+      button over the map, walk and planner; go is now the HUD's charcoal.
 - [ ] **In Figma, push it further** (the prompt above). Open: the raised
       button sits third of four, off centre; `app.json`'s `#A8350F`
       adaptive-icon orange waits on the icon art itself.

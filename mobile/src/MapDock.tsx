@@ -5,7 +5,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import AddIcon from './AddIcon';
 import { GlassCard } from './Glass';
 import Icon from './Icon';
 import { PlanWalkButton } from './PlanWalkButton';
@@ -64,7 +63,7 @@ export default function MapDock(p: Props) {
           {p.journalNew && <View style={styles.newDot} />}
         </Slot>
         <Slot label="Add" say="Add a memory here" onPress={p.onAdd}>
-          <AddIcon size={28} color={color.gold} />
+          <Icon name="add" size={28} color={color.ink} />
         </Slot>
         <View style={styles.raised}>
           <PlanWalkButton onPress={p.onPlanPress} onWalkEnd={p.onPlan} />

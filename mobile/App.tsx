@@ -87,6 +87,7 @@ import Submit from './src/Submit.tsx';
 import { distance } from './src/format.ts';
 import { GlassButton, GlassCard } from './src/Glass.tsx';
 import MapDock from './src/MapDock.tsx';
+import Icon from './src/Icon.tsx';
 import { IrisGrow, type LocketDrive } from './src/LocketUnlock.tsx';
 import LocketSeal from './src/LocketSeal.tsx';
 import SlideToUnlock from './src/SlideToUnlock.tsx';
@@ -112,7 +113,6 @@ import { identify } from './src/purchases.ts';
 import RouteLine from './src/RouteLine.tsx';
 import StartupLogo from './src/StartupLogo.tsx';
 import Button from './src/Button.tsx';
-import AddIcon from './src/AddIcon.tsx';
 import { useFonts } from 'expo-font';
 import { Gloock_400Regular } from '@expo-google-fonts/gloock';
 import {
@@ -1877,12 +1877,7 @@ export default function App() {
       onPress={locate}
     >
       {/* Filled while the map is on you, as Apple Maps does. */}
-      <Glyph
-        name={offYou ? 'location' : 'location.fill'}
-        size={22}
-        weight="medium"
-        color={color.ink}
-      />
+      <Icon name="locate" size={26} color={color.ink} filled={!offYou} />
     </GlassButton>
   );
 
@@ -1903,7 +1898,7 @@ export default function App() {
       accessibilityLabel="Add a memory here"
       onPress={add}
     >
-      <AddIcon size={30} color={color.gold} />
+      <Icon name="add" size={30} color={color.ink} />
     </GlassButton>
   );
 
@@ -2314,12 +2309,7 @@ export default function App() {
                   >
                     <Foil style={styles.orb}>
                       <Velvet style={styles.orbIn}>
-                        <Glyph
-                          name="book.closed"
-                          size={20}
-                          weight="medium"
-                          color={color.onVelvet}
-                        />
+                        <Icon name="journal" size={24} color={color.onVelvet} />
                       </Velvet>
                     </Foil>
                     {journalNew && <View style={styles.newDot} />}

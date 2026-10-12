@@ -241,7 +241,7 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
 | `src/PlanWalkButton.tsx` | Plan a walk: the dock's raised compass rose; it swings, then the planner opens (0.9 s) |
 | `src/MapDock.tsx` | home's dock: Journal · Add · Plan a walk · Locate |
-| `src/Icon.tsx` | the drawn icons: journal, locate, settings, heart |
+| `src/Icon.tsx` | the icon family, ink line over a cream tone: every button over the map, walk and planner, and the close circle |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
@@ -304,7 +304,7 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 |---|---|---|
 | `gold` | `#7A5A2E` / `#D9B98A` | **a memory, and the way to it.** The route, the next stop, a link, a text button |
 | `goldLine` | gold at 45% / 50% | a gold hairline: glass edges, quiet buttons in the dark |
-| `goBg`, `goRim`, `onGo` | `#57659E` / `#5B69A3`, dusty indigo | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
+| `goBg`, `goRim`, `onGo` | `#443E46` / `#4C454F`, charcoal: the HUD's velvet | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
 | `foil` | `#F6DEB8 → #EDD2A6 → #E3C796`, flat cream | **keep something.** Seal it here, Subscribe, Done. One set in both themes |
 | `seal` | `#A8403F` / `#F28A82` | **openable.** Coral: a lit pin, the reach circle, the diamond in the rule. Fill or text |
 | `sealInk` | `#FBF6EC` / `#2A1213` | anything drawn on seal |
@@ -319,7 +319,7 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 Gold and seal differ in hue and lightness: gold beside gold is no signal, so
 openable is the one thing on the map that is not gold.
 
-**Buttons are `Button` (`src/Button.tsx`), one meaning each.** `go` is indigo
+**Buttons are `Button` (`src/Button.tsx`), one meaning each.** `go` is charcoal
 enamel with a cream bezel: anything that starts or moves on (Plan a walk,
 Next, Start walk, Keep walking, Turn on location). `foil` is flat cream:
 keeping something (Seal it here, Subscribe, Done on the finish card). `quiet`
@@ -383,11 +383,11 @@ contrast; not the memory sheet's peek, whose parent animates opacity
 (Journal, Add, the walk card, the keys pill, you,
 Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
 or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. Plan a walk is the one
-tinted control, `prominent`: indigo enamel glass (`solid().goGlass`) in a cream
+tinted control, `prominent`: charcoal enamel glass (`solid().goGlass`) in a cream
 bezel, its label in `onGo`. Turn on location is a go `Button`. **Home has the
 dock** (`src/MapDock.tsx`, docs/10, "Dusk, and the map's dock"): one glass bar
 at bottom 70, Journal · Add · a raised Plan a walk · Locate, each named under
-its icon (`src/Icon.tsx`, AddIcon). Plan a walk is a 72pt compass rose on go
+its icon (`src/Icon.tsx`). Plan a walk is a 72pt compass rose on go
 enamel in a foil ring; a tap swings it and the planner opens as it settles,
 0.9 s (`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. **The walk
 has the bottom row**: Add a memory bottom left and Center on me bottom right,

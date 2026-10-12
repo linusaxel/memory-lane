@@ -35,6 +35,7 @@ import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
+import Icon from './Icon.tsx';
 import Guardian from './Guardian.tsx';
 import { ERA_STOPS, distance, eraLabel, eraSpan, eraStops, walkDate } from './format.ts';
 import { clamp } from './lockets/math.ts';
@@ -313,7 +314,7 @@ type PreviewProps = {
 
 /** One side of the pages; null keeps the side's space empty. */
 type ArrowProps = {
-  glyph: 'chevron.left' | 'chevron.right';
+  glyph: 'back' | 'forward';
   name: string;
   onPress: (() => void) | null;
   busy: boolean;
@@ -330,7 +331,7 @@ function Arrow({ glyph, name, onPress, busy }: ArrowProps) {
       accessibilityRole="button"
       accessibilityLabel={name}
     >
-      <Glyph name={glyph} size={17} weight="semibold" color={color.ink} />
+      <Icon name={glyph} size={20} color={color.ink} />
     </Pressable>
   );
 }
@@ -435,7 +436,7 @@ export function Preview({
       accessibilityRole="button"
       accessibilityLabel="Back to the length"
     >
-      <Glyph name="chevron.left" size={17} weight="semibold" color={color.ink} />
+      <Icon name="back" size={18} color={color.ink} />
       <Text style={styles.secondaryText}>Back</Text>
     </Pressable>
   );
@@ -558,8 +559,8 @@ export function Preview({
         </View>
         {found && (
           <>
-            <Arrow glyph="chevron.left" name="Previous walk" onPress={onBack} busy={busy} />
-            <Arrow glyph="chevron.right" name="Next walk" onPress={onNext} busy={busy} />
+            <Arrow glyph="back" name="Previous walk" onPress={onBack} busy={busy} />
+            <Arrow glyph="forward" name="Next walk" onPress={onNext} busy={busy} />
           </>
         )}
         <CloseButton label="Close the planner" onPress={onClose} />
@@ -621,7 +622,7 @@ export function Preview({
         testID="themes"
       >
         <Coin size={30}>
-          <Glyph name="slider.horizontal.3" size={15} weight="semibold" color={foil.text} />
+          <Icon name="customize" size={18} color={foil.text} tone={color.paperRaised} />
         </Coin>
         <Text style={styles.themesText} numberOfLines={1}>
           {(subscribed && chosen) || 'Customize'}
@@ -631,7 +632,7 @@ export function Preview({
             <Text style={styles.badgeText}>Plus</Text>
           </View>
         )}
-        <Glyph name="chevron.right" size={14} weight="semibold" color={color.inkFaint} />
+        <Icon name="forward" size={16} color={color.inkFaint} />
       </Pressable>
       <Button
         kind="go"

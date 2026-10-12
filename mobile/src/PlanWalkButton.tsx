@@ -33,13 +33,18 @@ function Rose({ size }: { size: number }) {
         key={`${angle}l`}
         d={`M24 ${24 - r} L${24 - w} 24 L24 24 Z`}
         fill={foil.colors[0]}
+        stroke={foil.text}
+        strokeWidth={0.6}
+        strokeLinejoin="round"
         transform={`rotate(${angle} 24 24)`}
       />,
       <Path
         key={`${angle}d`}
         d={`M24 ${24 - r} L${24 + w} 24 L24 24 Z`}
         fill={foil.colors[2]}
-        opacity={0.75}
+        stroke={foil.text}
+        strokeWidth={0.6}
+        strokeLinejoin="round"
         transform={`rotate(${angle} 24 24)`}
       />,
     ];
