@@ -123,7 +123,7 @@ export default function CollectorPage({
                   {chosen.ranks[i]}
                 </Text>
                 <Text style={styles.stepAt}>
-                  {i === stage ? 'You' : `at ${at} · ${FILED[i]} added`}
+                  {i === stage ? 'You' : `at ${at}${FILED[i] > 0 ? ` · ${FILED[i]} added` : ''}`}
                 </Text>
               </View>
             </View>

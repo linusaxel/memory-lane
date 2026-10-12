@@ -64,6 +64,9 @@ type Props = {
 export default function CollectorLook({ id, stage, size, ahead, place }: Props) {
   return (
     <Image
+      // iOS keeps an image templated once tintColor goes, drawn in the system
+      // blue: a silhouette that becomes reached is a new image, not a restyle.
+      key={ahead ? 'ahead' : 'look'}
       source={LOOKS[id][stage]}
       style={[{ width: size, height: size }, ahead && { tintColor: color.inkFaint }, place]}
       resizeMode="contain"
