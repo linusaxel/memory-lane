@@ -16,6 +16,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Without Metro every shot is the home screen, and it still says it took them:
+# e2e/run.sh stops Metro when it ends.
+if ! lsof -ti :8081 >/dev/null; then
+  echo "Metro is down: start scripts/sim.sh first." >&2
+  exit 2
+fi
+
 OUT=~/Downloads/memory-lane-shots
 mkdir -p "$OUT"
 BUNDLE=com.PLACEHOLDER.memorylane
