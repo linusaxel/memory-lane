@@ -81,6 +81,9 @@ export const color = {
    *  One alpha reads about the same over either map. */
   halo: 'rgba(242,138,130,0.35)',
 
+  /** A glass bar's light inner edge (`contour`). */
+  sheen: dual('rgba(255,252,246,0.85)', 'rgba(255,255,255,0.14)'),
+
   /** The hairline round a glass control, so it holds an edge on the map. */
   edge: dual('rgba(46,42,49,0.14)', 'rgba(246,222,184,0.3)'),
 
@@ -207,9 +210,10 @@ export const glassLift = {
   shadowOpacity: 0.18,
 };
 
-/** The brass hairline round the chrome over the map: the Collector's bar,
- *  the Journal orb and the dock. An overlay inside the glass, since GlassView
- *  draws no border of its own. */
+/** The light inner edge round the chrome over the map: the Collector's bar,
+ *  the Journal orb and the dock. No line: the glass casts its own shadow and
+ *  this catches the light (docs/10, "Dusk, and the map's dock"). An overlay
+ *  inside the glass, since GlassView draws no border of its own. */
 export const contour = {
   position: 'absolute' as const,
   top: 0,
@@ -218,7 +222,7 @@ export const contour = {
   left: 0,
   borderRadius: radius.card,
   borderWidth: 1,
-  borderColor: color.goldLine,
+  borderColor: color.sheen,
 };
 
 /** A card over the map: the unlock card, Plan's, the peek. Where it sits and
