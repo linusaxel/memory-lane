@@ -29,6 +29,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The agent shell is zsh, so an id list in a variable doesn't split.**
+  2026-10-12: `batch --content $IDS` sent one argument and argparse refused it,
+  and `S="venv/bin/python -m pipeline.sources set"; $S 379 ...` ran nothing. It
+  cost two runs and a background wait. Fix: the skills' batch snippets say
+  `${=IDS}` or `$(cat ids)` (command substitution does split), and a function
+  in place of a command in a variable.
+
 - **The Figma MCP stops after a handful of calls.** 2026-10-12: the personal
   team is on Starter, which caps MCP calls a month, and the Monta seat is
   Collab, which can't edit. A redesign session made the file and then got no

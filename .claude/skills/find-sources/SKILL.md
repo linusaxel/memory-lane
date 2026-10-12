@@ -164,6 +164,33 @@ permission: Stadsarkivet, Frederiksberg-erindringer, minnen.se's Danish
 counterpart, *Al Magt til Kærligheden* (Shazia Khan), Realdania's *Mit sted*,
 and the local-history societies.
 
+**Sweep 2026-10-12 (evening): old memoirs, Biografmuseet-shaped sites, Wikipedia
+5, YouTube (4 agents).** Trialled in batch (docs/04, 124 windows, ~58 good).
+- **Memoirs, all roman OCR:** Muusmann *Det glade København* 1 (379, 7.5),
+  Heiberg *Et Liv gjenoplevet* (`adl:heibfr05val`, 382, 6.8) and Bauditz (386,
+  7.0) are active. Waiting, ingested: Muusmann 2-3 (380-381), Heiberg 06-07
+  (383-384), and the rest of 379/382/386. Gosse 385 rejected (description).
+  Not registered: Lorck (11 of 63 windows spot-dense), Andersen's *Mit Livs
+  Eventyr* (overlaps 202). Rejected unread: `runeberg:paheiberg`,
+  `runeberg:billedhugg` (Kristiania, Paris).
+- **Kim Greiner, rejsefortaelling.dk** (one page per source, no sitemap,
+  387-412): his house-by-house Nyhavn (404, 16 good of 21) and Christianshavn
+  (407, 10 of 16) pay; his Vesterbro column of his own errands (pubs,
+  canteens, toilets) scores 2-4. He is past the author cap of 15. No other
+  reader-memory site of Biografmuseet's shape exists for dance halls, stores,
+  trams, baths or record shops. Small, unregistered: mitnorrebro.dk's "fra X
+  til Y" house histories (`post-sitemap.xml`), Jens Unmack's blog (rare).
+  Blocked: jernbanen.dk (proof-of-work), faergelejet.dk (opts out
+  anthropic-ai), Sporvejsmuseet (JS only).
+- **Wikipedia 5:** da (415, 7 good of 8: Stormen på Børsen, Dannerhuset,
+  Pink Army) active. en discoveries and works made here (416: Hafnium, Finsen,
+  Poulsen, Kid A, Krogh) gave 1 card from 18 windows: biographies don't place
+  the moment. Danish Wikipedia's happenings are now nearly mined out.
+- **YouTube:** Dansk rockhistorie (414, `UCz0mJQVpBbLIjOq-oOb2nkA`, 5 videos
+  ingested, captions waiting on the IP block). FCK's fan stories (Parken,
+  sponsored, partly uncaptioned) and Gunnar Wille (uncaptioned) are no.
+  School anniversaries, sports grounds and architects on their works are PR.
+
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
   clubs) gave 4 good from 67 items (source 245). Danish Wikipedia's 2,783
