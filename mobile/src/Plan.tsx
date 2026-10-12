@@ -29,7 +29,7 @@ import {
   View,
 } from 'react-native';
 
-import { classOf, rankInto, stageOf, wants, wantsWords, type ClassId } from './collector.ts';
+import { classOf, rankInto, wants, wantsWords, type ClassId } from './collector.ts';
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
@@ -265,11 +265,9 @@ type PreviewProps = {
   stops: LocatedMemory[] | null;
   /** One more stop, withheld until the walk passes it. */
   mystery: boolean;
-  /** Your Collector, for the stops' reward: the rank this walk could reach. */
+  /** Your Collector, for the stops' reward. */
   collector: ClassId;
   rank: number;
-  lockets: number;
-  filed: number;
   meters: number;
   /** What the slider asked for. */
   km: number;
@@ -362,8 +360,6 @@ export function Preview({
   mystery,
   collector,
   rank,
-  lockets,
-  filed,
   meters,
   km,
   onKm,
@@ -460,12 +456,7 @@ export function Preview({
       <GlassCard style={styles.card} onLayout={measure}>
         {back}
         <Stops stops={stops} mystery={mystery} />
-        <Reward
-          id={collector}
-          rank={rank}
-          reach={stageOf(lockets + stops.length, filed)}
-          count={stops.length}
-        />
+        <Reward id={collector} rank={rank} count={stops.length} />
         {start}
         {error && <Text style={styles.error}>{error}</Text>}
         {close}
@@ -656,27 +647,15 @@ export function Preview({
   );
 }
 
-/** What walking it all would earn, and the rank it would reach. */
-function Reward({
-  id,
-  rank,
-  reach,
-  count,
-}: {
-  id: ClassId;
-  rank: number;
-  reach: number;
-  count: number;
-}) {
-  const ranks = classOf(id).ranks;
+/** What walking it all would earn. */
+function Reward({ id, rank, count }: { id: ClassId; rank: number; count: number }) {
   return (
     <Velvet style={styles.reward}>
       <Medal id={id} stage={rank} size={38} />
       <View style={styles.grow}>
         <Text style={styles.rewardLabel}>REWARD</Text>
         <Text style={styles.rewardText} numberOfLines={1}>
-          {`Up to +${count} ${count === 1 ? 'locket' : 'lockets'}` +
-            (reach > rank ? ` · reach ${ranks[reach]}` : '')}
+          {`Up to +${count} ${count === 1 ? 'locket' : 'lockets'}`}
         </Text>
       </View>
     </Velvet>
@@ -881,9 +860,7 @@ export function WalkDone({
       {/* Lockets alone don't grow it: when a memory of theirs is what's
           missing, say so here, where the walk just paid out. */}
       {want && want.filed > 0 && (
-        <Text style={styles.cardBody}>
-          {`${wantsWords(want)} to ${classOf(collector).ranks[rank + 1]}`}
-        </Text>
+        <Text style={styles.cardBody}>{`${wantsWords(want)} to rank up`}</Text>
       )}
       {onNotify && (
         <View testID="surprise-ask">

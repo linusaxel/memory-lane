@@ -4736,8 +4736,9 @@ Box's, cream, plum velvet and gold; what changes is that the chrome plays.
 - **Go and foil stand on a ledge**, a 4pt darker bottom border, not a third
   shadow.
 - **Quest words, not quest mechanics:** the planner says what a walk would
-  earn ("Up to +4 lockets · reach Lamplit"), the finish shows a tile per
-  locket. Nothing new is counted, sold or gated: the paywall still never
+  earn ("Up to +4 lockets"), the finish shows a tile per locket. The next
+  rank is named only on the Collector's page (2026-10-12, the founder): the
+  HUD, the planner and the finish show the bar, not where it leads. Nothing new is counted, sold or gated: the paywall still never
   mentions ranks.
 
 The Locket-keeper lesson stands: this is a skin on what exists, and the

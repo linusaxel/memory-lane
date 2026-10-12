@@ -27,7 +27,7 @@ export default function CollectorHud({ id, stage, lockets, filed, compact, onPre
   const words = want ? wantsWords(want) : '';
   const say =
     `Your Collector, ${ranks[stage]}, rank ${stage + 1} of ${STAGES.length}.` +
-    (words ? ` ${words} to ${ranks[stage + 1]}.` : '');
+    (words ? ` ${words} to the next rank.` : '');
   return (
     <Pressable
       accessibilityRole="button"
@@ -62,12 +62,9 @@ export default function CollectorHud({ id, stage, lockets, filed, compact, onPre
           )}
           <Bar into={rankInto(stage, lockets, filed)} height={compact ? 8 : 10} />
           {!compact && next !== null && (
-            <View style={styles.line}>
-              <Text style={styles.xp}>
-                {lockets} / {next} lockets
-              </Text>
-              <Text style={styles.xp}>→ {ranks[stage + 1]}</Text>
-            </View>
+            <Text style={styles.xp}>
+              {lockets} / {next} lockets
+            </Text>
           )}
         </View>
       </Velvet>

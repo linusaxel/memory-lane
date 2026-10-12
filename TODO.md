@@ -277,6 +277,38 @@ before the planner*); the planner plans one walk and only its stops open. The
 rule for anything game-like or crafted: quiet by default, loud only for real
 progress; refine what exists rather than add.
 
+### One look (2026-10-12, waits on Figma resetting)
+
+Green go, plum velvet, gold foil, emerald seal and the class art's own
+colours all compete to be the accent. The founder wants one palette, the
+map's buttons in one dock, and one icon family. Do these in order; the
+design is drawn in Figma first and screenshotted through the MCP.
+
+- [ ] **Palette: three candidates, shown, then one chosen.** *Velvet & Gold*
+      (plum ground, gold accent, no green go, emerald only for "openable"),
+      *Moss & Brass* (no purple; deep moss and brass, lantern amber), *Night
+      Ink & Gold* (midnight indigo, works with the map's water). One Figma
+      frame each of map (with the dock), planner, Collector and journal, from
+      `~/Downloads/memory-lane-shots/`. Then `src/theme.ts` changes values,
+      not meanings; sweep `src/link.ts:11` (duplicates `solid().gold`) and
+      `app.json` (`#A8350F` adaptive-icon orange, `primaryColor`); update
+      UI.md › Tokens, `docs/09-visual-design.md`, and a docs/10 entry that
+      supersedes part of *Jewel Box*.
+- [ ] **The map dock.** One dock along the bottom: Journal · Add · a raised
+      Plan a walk · Locate, replacing the bottom row and the top orb in
+      `App.tsx`. The top keeps a slim `CollectorHud`. Hides while a memory
+      is up (rule 13). Rerun only the flows that touch the map.
+- [ ] **A Plan-a-walk emblem**, not the character (it's already on top): a
+      compass rose or a path strung with lockets, drawn in `react-native-svg`
+      as `AddIcon.tsx` is, in the chosen palette. Replaces the walking figure
+      in `PlanWalkButton.tsx`; its tap animation stays.
+- [ ] **One icon family.** The app draws ~30 SF Symbols through `Glyph.tsx`
+      plus `AddIcon` and `DiamondRule`. Draw custom only the six the map and
+      dock show (journal, add, plan, locate, settings, heart); tint the rest
+      to the palette.
+- [ ] **(Later) the character floating over the map** with its bar under it.
+      Not chosen now. If it comes back: a pre-rendered idle loop, no 3D engine.
+
 ### The Collector
 
 You pick one of four wizard classes and it grows through eight looks as your

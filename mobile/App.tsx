@@ -2175,8 +2175,6 @@ export default function App() {
               mystery={preview?.mystery === true}
               collector={collectorId}
               rank={rank}
-              lockets={lockets}
-              filed={filed}
               meters={pathMeters(previewPath)}
               km={planKm}
               onKm={setWalkKm}
