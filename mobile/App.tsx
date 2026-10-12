@@ -370,11 +370,14 @@ export default function App() {
     setRankUp({ from: collector.stage, to });
     keepCollector({ stage: to });
   }, [collector, lockets, keepCollector]);
-  // The first time the Collector meets this account's lockets.
+  // The first time the Collector meets this account's lockets, on the map:
+  // someone who already has some is told their rank once ("You're already").
   useEffect(() => {
-    if (!collector || collector.stage !== undefined || !profile) return;
-    keepCollector({ stage: stageOf(profile.unlocked) });
-  }, [collector, profile, keepCollector]);
+    if (!collector || collector.stage !== undefined || !profile || !signedIn || intro) return;
+    const to = stageOf(profile.unlocked);
+    keepCollector({ stage: to });
+    if (to > 0) setRankUp({ from: null, to });
+  }, [collector, profile, signedIn, intro, keepCollector]);
   const [submitOpen, setSubmitOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -1401,6 +1404,8 @@ export default function App() {
         return setCollectorOpen(true);
       case 'rank-up':
         return setRankUp({ from: 1, to: 2 });
+      case 'rank-already':
+        return setRankUp({ from: null, to: 2 });
       case 'settings':
       case 'settings-lower':
       case 'settings-delete':

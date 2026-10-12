@@ -24,6 +24,14 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A session that stops before committing blocks every other.** 2026-10-11:
+  the streak removal sat gated but uncommitted in 25 files while its session
+  ran e2e and went quiet; the Collector session needed almost all of them and
+  waited ~45 min, then committed it on the founder's say-so. Nothing tells a
+  live session from a dead one. Fix: AGENTS.md's checklist commits once the
+  gate is green, before `./e2e/run.sh`, and a failing flow gets its own fix
+  commit.
+
 - **A subscriber's Customize row has no handle for Maestro.** 2026-10-11: its
   testID (`themes-plus`) is set only for free walkers, and its text is whatever
   is chosen ("Before 1800"), so a flow can't find it by either; a tap by point
@@ -478,7 +486,7 @@ lockets (memories opened) climb (`mobile/src/collector.ts`). It replaced XP
 and levels (docs/10, *The Collector*). Nothing is spent or sold, and nothing
 ever covers a memory.
 
-- [ ] **Test it with walkers before building it.** (checked 2026-10-11) The
+- [ ] **Test it with walkers before the real art.** (checked 2026-10-11) The
       Locket-keeper lesson: four game layers were reversed in eight days
       without a user. Print the four classes, each with its eight stages, and
       show five people after a walk. Do they pick one quickly, and do they ask
@@ -496,9 +504,6 @@ ever covers a memory.
       Files replace the placeholders in `mobile/assets/collector/<class>-<stage>.png`
       (today every stage is the sheet's front view, cut by hand); nothing
       else changes.
-- [ ] **Someone who already has lockets.** (checked 2026-10-11) On the first
-      launch with the Collector, an account with 40 opened lands at its stage
-      with one reveal: "You're already Lamplit." Then the normal rules.
 - [ ] **The Collector replaces the fir at the edges.** (checked 2026-10-11)
       One character, not two: the empty journal tab, the walked-out planner,
       sign-in and the crash screen use your Collector's front view
@@ -513,13 +518,8 @@ ever covers a memory.
       Locket-keeper idea). It costs the heading beam and accuracy ring
       (`followsUserLocation`), so only after a real-phone look. Not before the
       rest has been used.
-- [ ] **Paper it.** (checked 2026-10-11) When it ships: a docs/10 entry (*The
-      Collector*, superseding *Walks earn XP* and amending *The fir
-      guardian*), new flows in `docs/08` (choose a Collector, rank up), a
-      UI.md rule (the reveal is the one loud moment; the Collector never sits
-      beside a memory), Maestro asserts on the walk-done card, and the new
-      screens in `/shoot`. Measure: D30 and walks per walker, before and after.
-      The paywall never mentions ranks: a subscription buys walks, not looks.
+- [ ] **Measure it.** (checked 2026-10-12) D30 and walks per walker,
+      before and after the Collector shipped (2026-10-12).
 
 ### The walk on the map
 

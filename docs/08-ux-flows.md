@@ -1212,8 +1212,10 @@ A walk's lockets carried the Collector to its next stage.
    success haptic.
 2. **Go on** is the map. The new stage is kept, so it shows once.
 
-Never on the unlock and never over a memory: the story is read first. A
-rank never goes down: a hidden memory lowers the count, not the stage.
+Someone with lockets from before the Collector meets it once: on the first
+launch on the map, "Your Collector", their look, "You're already Lamplit." and
+Go on. Then the normal rules. Never on the unlock and never over a memory:
+the story is read first. A rank never goes down: a hidden memory lowers the count, not the stage.
 Reduce Motion: a crossfade. `App.tsx` (`revealRank`), `src/RankUp.tsx`,
 `.maestro/walk-and-unlock.yml`. Why, in `docs/10-decisions.md`, "The
 Collector".

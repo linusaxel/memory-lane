@@ -76,6 +76,7 @@ export const SCREENS = [
   'done',
   'done-ask',
   'rank-up',
+  'rank-already',
   'journal',
   'journal-walk',
   'journal-cards',
