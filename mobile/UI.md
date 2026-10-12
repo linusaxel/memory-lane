@@ -53,7 +53,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ Collector + Journal        across the top: the HUD, cream glass in a 2pt ink contour (medal, rank, a plum bar;
+├─ Collector + Journal        across the top: the HUD, cream glass in a brass hairline (`contour`) (medal, rank, a plum bar;
 │                              tapped: its page), compact on the walk, then the Journal, a 48pt glass orb in the same contour, the planner and the walk.
 │                              Hidden while a memory, the locket in reach or a sheet is up (rule 13).
 │                              `book.closed`, a 10pt gold dot: a heart

@@ -4793,10 +4793,12 @@ simulator.
   (Turn on location, offline) stay an SF Symbol in a palette colour.
 - **The top matches the bottom.** A charcoal HUD over a cream dock read as two
   apps, so the Collector's bar and the Journal orb are the dock's cream glass,
-  and all three wear a 2pt ink contour (`contour` in `theme.ts`, an overlay,
+  and all three wear a 1px brass hairline, `goldLine` (`contour` in `theme.ts`, an overlay,
   since GlassView draws no border). On paper the rank bar is plum on `track`,
   as earned reads; velvet stays for the Collector's page and the journal's
-  header. The compass is the one dark thing over the map.
+  header. The compass is the one dark thing over the map. A 2pt ink contour came
+  first and read too heavy; the brass hairline followed the same day (Apple
+  asks custom borders not to fight Liquid Glass's own rim).
 
 Tomorrow's Figma pass (TODO.md, *One look*) redraws these against the shots;
 anything better there changes values here.

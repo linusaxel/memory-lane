@@ -207,9 +207,9 @@ export const glassLift = {
   shadowOpacity: 0.18,
 };
 
-/** The ink outline round the chrome over the map, the Collector's bar, the
- *  Journal orb and the dock, as the icons are drawn. An overlay inside the
- *  glass, since GlassView draws no border of its own. */
+/** The brass hairline round the chrome over the map: the Collector's bar,
+ *  the Journal orb and the dock. An overlay inside the glass, since GlassView
+ *  draws no border of its own. */
 export const contour = {
   position: 'absolute' as const,
   top: 0,
@@ -217,8 +217,8 @@ export const contour = {
   bottom: 0,
   left: 0,
   borderRadius: radius.card,
-  borderWidth: 2,
-  borderColor: color.ink,
+  borderWidth: 1,
+  borderColor: color.goldLine,
 };
 
 /** A card over the map: the unlock card, Plan's, the peek. Where it sits and
