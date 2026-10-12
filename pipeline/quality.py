@@ -513,10 +513,20 @@ ORDER BY m.id"""
 MEND_INDEX = -6
 
 
+def _store(session, r, summary: str) -> None:
+    """A mended text, scored again: the old score was the old text's."""
+    if summary != r.summary:
+        session.execute(
+            text("UPDATE memories SET summary = :s, walk_score = NULL WHERE id = :id"),
+            {"s": summary, "id": r.id},
+        )
+
+
 def mend_shown(session, client, source_id: int | None, fix: bool) -> None:
     """Print the shown cards `faults` names; with `fix`, write each again, a
-    scene-first card from its sheet and any other through `extract.mended`,
-    and clear its walk score so `walk_score --all` scores the new text."""
+    scene-first card from its sheet, then whatever still has a fault through
+    `extract.mended`, and clear its walk score so `walk_score --all` scores
+    the new text."""
     from pipeline import extract, scenes
 
     rows = [r for r in session.execute(text(SHOWN), {"s": source_id}) if faults(r.summary)]
@@ -529,16 +539,17 @@ def mend_shown(session, client, source_id: int | None, fix: bool) -> None:
     for r in rows:
         if r.has_sheet:
             by_source.setdefault(r.source_id, set()).add(r.id)
-            continue
-        again = extract.mended(session, client, r.content_id, MEND_INDEX, {"summary": r.summary})
-        if again["summary"] != r.summary:
-            session.execute(
-                text("UPDATE memories SET summary = :s, walk_score = NULL WHERE id = :id"),
-                {"s": again["summary"], "id": r.id},
-            )
-    session.commit()
     for sid, ids in by_source.items():
         scenes.rerender(session, client, sid, True, only=ids)
+    # What is left: transcript cards, and cards their sheet can't write again
+    # faithfully (rerender keeps the old text). Mend only the faulty sentences.
+    for r in session.execute(text(SHOWN), {"s": source_id}):
+        if faults(r.summary):
+            again = extract.mended(
+                session, client, r.content_id, MEND_INDEX, {"summary": r.summary}
+            )
+            _store(session, r, again["summary"])
+    session.commit()
 
 
 def main():

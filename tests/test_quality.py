@@ -295,3 +295,33 @@ def test_a_hedge_and_the_sources_voice_are_faults_and_a_clean_card_is_not():
     assert (
         faults("Andersen, fourteen, circled the theatre; the seller thought he was mocked.") == []
     )
+
+
+def test_a_card_its_sheet_cannot_write_again_has_its_faulty_sentence_mended(monkeypatch):
+    from types import SimpleNamespace as NS
+
+    from pipeline import extract, quality, scenes
+
+    card = NS(id=7, content_id=1, source_id=3, has_sheet=True, summary=HEDGE_REAL)
+
+    class _Session:
+        def __init__(self):
+            self.stored = []
+
+        def execute(self, sql, params):
+            if "UPDATE" in str(sql):
+                self.stored.append(params)
+            return [card]
+
+        def commit(self):
+            pass
+
+    rerendered = []
+    monkeypatch.setattr(scenes, "rerender", lambda s, c, sid, apply, only: rerendered.append(only))
+    monkeypatch.setattr(
+        extract, "mended", lambda *a: {"summary": "A McDonald's stood on Nørrebrogade."}
+    )
+    session = _Session()
+    quality.mend_shown(session, None, None, True)
+    assert rerendered == [{7}], "the sheet is tried first"
+    assert session.stored == [{"s": "A McDonald's stood on Nørrebrogade.", "id": 7}]
