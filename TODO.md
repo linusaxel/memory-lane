@@ -9,7 +9,9 @@ TASKS.yaml is wrong.
 TODO.md` keeps its history, and a decision it carried goes to
 `docs/10-decisions.md` first. Everything done before 2026-09-24 is in the
 history of this file at `c4703b4`; the long research behind the money, walk and
-source entries, before this file was consolidated, is at `9421fb0`.
+source entries, before this file was consolidated, is at `9421fb0`. Entries
+that didn't move launch, coverage or retention were cut on 2026-10-12; they
+are at `a3a85ef`.
 
 **Every entry says when it was last checked** against the code, as
 `checked YYYY-MM-DD`. More than a few days old means verify before acting on
@@ -147,35 +149,20 @@ Retention is measured already: `python -m api.metrics`.
         `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `_ANDROID_KEY` (eas.json).
       - Both listings and privacy disclosures name the subscription and
         purchases; the review note says how to reach the paywall.
+      - The listing: lead with the story cards, captured from the e2e flows;
+        title, subtitle and keywords in Danish and English. Give it 3–4 days:
+        Apple boosts a new app once, in its first week or two.
       - Then on a real device: buy monthly, see the row, plan a second walk
         the same day, cancel in the sandbox, see it lapse. Nothing has ever
         called RevenueCat for real: the tests patch `billing.fetch_subscriber`.
-- [ ] **Once the stores exist: the paywall's follow-ups.** (checked 2026-10-04) From a
-      Mobbin talk on ~3,000 paywalls; trials, exit-intent offers, fake urgency
-      and pop-ups are ruled out (docs/08, *Subscribe for more walks*).
-      - A "save X%" badge on yearly, computed from the two store products'
-        `price`, shown only when it rounds to 10% or more.
-      - Experiments through RevenueCat's offerings A/B before anything of our
-        own. First test: the stats line against the outcome line.
-      - Retention and LTV from `subscriptions`: renewals by plan and cohort
-        month, and how many second walks subscribers take. Without second
-        walks, the product sells something nobody uses.
-      - Social proof once a store rating is worth showing: the rating and one
-        real review. Never invented.
-- [ ] **The store listing: give the screenshots 3–4 days.** (checked
-      2026-10-04) Apple boosts a new app for its first week or two, once. Lead
-      with the story cards; title, subtitle and keywords in Danish and
-      English. Capture them from the e2e simulator flows so they stay current.
-      Needs `STORE_ACCOUNT`.
+- [ ] **Rate limiting on the API.** (checked 2026-09-24) None exists;
+      `CORS_ORIGINS` and `REPORT_THRESHOLD` are the only abuse controls.
+      Needed before the public launch.
 - [ ] **The launch bar, then launch day.** (checked 2026-10-04) Launch when
       the closed-testing cohort comes back for days (`python -m api.metrics`);
       people gone after a day means not yet. Then email the waitlist; post in
       r/copenhagen, Danish local-history groups and press, and Product Hunt.
       Start a week ahead so it lands inside Apple's boost.
-- [ ] **Lifecycle nudges, after launch.** (checked 2026-10-04) Sign-in emails
-      are often Apple relays with no marketing consent, so a push to a user
-      idle for 7 days: "there's a walk near you". Wait for `api.metrics` to
-      show where people drop off.
 
 ---
 
@@ -196,26 +183,16 @@ worth the walk. Measure every change against the labels before and after
       `batch.py` for half price; the video path after measuring it; a
       book's pictures into its fact sheets, from Gutenberg's HTML edition
       (docs/10, *A card is rendered from its fact sheet*).
-- [ ] **Memories written by tour guides.** (2026-10-04, the founder's idea)
-      A licensed guide files the stories they already tell at a place: quality
-      from the author, where `walk_score` is too weak a signal (r = 0.45). An
-      ordinary public memory through the gate, a higher prize in `_prize`
-      (`api/route_solver.py`), never held for subscribers; a byline, maybe a
-      link to book their tour. Ties to *Pitch commissioned walks to the city*
-      and *Premium walks on GetYourGuide*. Open: how a guide is marked (by
-      hand, never on email), whether their memory says so before it opens,
-      paid or credited.
-- [ ] **Measure $/memory from the bill.** (2026-10-04) `python -m
-      pipeline.cost --since 2026-10-04` answers it, but the key in `.env` is a
-      personal `sk-ant-usr-` key and the Cost Report API refuses it
-      (`permission_error`). Needs an Admin key (`sk-ant-admin01-`, Console,
-      Settings, Admin keys). Then record the figure in docs/04 *What it
-      costs*; the estimate is ~$0.25 a memory with seeding and enrichment.
+      The batched web research (c7eff8d) has run on fakes only: on the first
+      `batch --run`, check the batch API takes the web tools with
+      `cache_control` and effort (a rejection stops with "A batch stored no
+      reply"), and compare `pipeline.cost` with an earlier run.
 - [ ] **Human labels, then let them decide.** (2026-10-05) Every judge and
       prompt number so far is against `walk_labels.json`, which an agent
       made, and the judge, fact-check and trim run on the extractor's own
-      model. The founder labels ~100 memories (walk / maybe / skip) in
-      `review.py`. Then, in order:
+      model. The founder labels ~100 memories: `python -m pipeline.review
+      --limit 40` at a time, then `--accept` / `--reject` the ids with
+      `--person` (without it a verdict is an agent's). Then, in order:
       1. Add Cohen's κ (judge against human) to `quality --labels`.
       2. Pit the 3-pass judge against a walk-score threshold. The judge is
          at 31-41% precision; walk score is at AUC 0.87.
@@ -241,109 +218,15 @@ worth the walk. Measure every change against the labels before and after
       lands, set `CLASSIFIER_MODEL=claude-sonnet-5-5` in `.env` and Railway.
       `classify_chunk` already sends no thinking. Then run
       `classifier_audit.py` once to confirm the pass rate holds.
-- [ ] **See the 1-hour cache hold in a real run.** (2026-10-05) Shipped
-      with only the gate as proof. Run the next paid `enqueue --video`, or
-      a batch, and check its `log_cache` lines: cache reads should be ≥10×
-      writes. If they aren't, the TTL isn't taking.
-- [ ] **Drop the redundant JSON lines from the prompts.** (2026-10-05)
-      "Return JSON: {...}" (`SYSTEM_PROMPT`, `HISTORICAL_SYSTEM_PROMPT`) and
-      "Return only valid JSON" (`USER_PROMPT_TEMPLATE`) repeat what the
-      enforced schema already does. Fold the change into the next measured
-      prompt change rather than paying for a measurement of its own.
 - [ ] **The rest of the plaques.** (2026-10-04) 18 of 105 are done: research
       first (docs/10 *A thin source is a lead*), then extraction. Run
       `python -m pipeline.batch --source "OpenStreetMap plaques" --run`
       (~$10-20), and read the memories it makes before the next source.
-- [ ] **Review what the new judge would drop.** (2026-10-04) `glad_to_know`
-      only filters new extractions. `python -m pipeline.quality --visible`
-      lists the visible memories it now drops; read the list, then
-      `pipeline.review --reject` what should go.
-- [ ] **Video quotes after the longer card.** (2026-10-04) The 60-180 word
-      prompt kept video's keep rate but quotes fell 9 to 4 on 15 chunks
-      (docs/04, *A longer card*). Try "leave the quoted line out of the
-      summary: it is read right below" and measure with `quality --compare
-      --source-type video --score --runs 3`.
 - [ ] **Screen and trial the new sources.** (2026-10-04, blocked on credits)
       Ingested, all `candidate`: plaques 232 (105), filming 233 (39),
       Wikipedia 234 (15 windows), memoirs 235–243 (256 windows; Carl Møller's
       *Paa Farten* first). Follow `.claude/skills/find-sources`: `screen`,
       then a one-item trial each.
-- [ ] **Ask Københavns Museum for its podcasts.** (2026-10-04) Four
-      place-bound shows on Podbean, no transcripts, ©. Ask for permission
-      and transcripts, as `docs/permission-request.md` asks a channel.
-- [ ] **Enrichment, first live run.** (2026-10-04) `pipeline/enrich.py` is
-      built and tested with fakes; the first live call hit an empty credit
-      balance. Run `python -m pipeline.enrich --memory <id>` on five strong
-      memories, read every item against its page, and record the cost per
-      memory in docs/04 before a new source's trial relies on it.
-- [ ] **Re-extract the paused books with the archival prompt.** (checked
-      2026-10-04) Carl Møller, Oehlenschläger vol. I, Andersen and Leonora
-      Christina are done (docs/04). Left: Oehlenschläger 206-208 and
-      Liebenberg (210), if they earn it. The recipe: set `memories_extracted =
-      false` for the source's content, delete the Redis keys `extraction:<id>`
-      and `extraction:<id>:memories`, enqueue each, `pipeline.worker --burst
-      --yes`, and read the worker's "Retellings hidden" lines.
-- [ ] **Places that are still the model's guess.** (checked 2026-10-04)
-      `python -m pipeline.repin --choose --apply` placed 7 of 58 visible `llm`
-      places; the other 51 are mostly gone rather than misnamed (closed
-      cinemas, factories, hospitals), which is a Wikidata or historical-map
-      lookup, not a prompt fix. A "name it as the local map does" venue line
-      was measured and not shipped (docs/04). Two decisions, one question:
-      should a 1000 m `llm` pin be planned on a walk at all (25 places, among
-      them 5615, Andersen on "the ramparts"), and should `is_gated`
-      (`api/gate.py`) gate on `precision_meters` instead of
-      `coordinate_is_unique` (docs/10, "The coordinates are
-      mostly guesses")? The position is self-reported either way: it stops
-      `curl`, not a spoofer.
-- [ ] **40 labels by a person.** (checked 2026-10-05) The judge and
-      `walk_score` are tuned on agent labels; `memory_reviews.reviewer` now
-      tells them apart. Run `python -m pipeline.review --limit 40`, then
-      `--accept` / `--reject` the ids with `--person` (without it a verdict is
-      an agent's). Unblocks the few-shot item in Parked.
-- [ ] **Then-vs-now: the points.** (checked 2026-10-04) `now.py` asks for
-      named points within 25 m when no area matches; `--blank` confirmed 3 of
-      29 before the public Overpass refused the rest (docs/04, *Corpus work*).
-      2026-10-09: the mirrors (kumi, private.coffee, mail.ru) were down too,
-      and a public rerun looked at 20 of 97 and confirmed 13 (written to the
-      dev DB; some read oddly: "Still Field's, a parking"). Fix that holds: a self-hosted
-      Overpass on the Denmark extract beside OSRM. Then check that the
-      ranking reads better. Also check `now.py`'s `[!boundary][!place]`
-      area filter: a hand query still returned boundaries.
-- [ ] **Summary against its chunk.** (checked 2026-10-04) ~20 factual or
-      speech-recognition errors: Tom "Christensen", Vestergade for
-      Vimmelskaftet, lupus called cancer. Automatic fixes damaged walks and
-      the first flag-only prompt flagged 77%. A verdict prompt that stores
-      only contradictions is on branch `parked/unsupported-flags`, never run.
-      Unmeasured and cheaper: have the extraction prompt spell known people as
-      they are in print.
-- [ ] **Judge v2 on the research rubric.** (checked 2026-10-04) Parked until
-      grounding lands (docs/04, *Judge v2, measured and parked*). When it
-      comes back, the three drop-gates (`private_person` within living memory,
-      `promo`, `relative_time`) worked as worded; the bar of two of incident,
-      breach and feeling cost 40% of the walks, so retune that. Measure with
-      `quality --labels --half tune`, then `--half check` against v1's 32% /
-      96%.
-- [ ] **Rank, don't bar.** (checked 2026-10-04) A pairwise judge, both
-      orders, over a video's candidates (later a neighbourhood's), in place of
-      `worth_telling`'s absolute bar.
-- [ ] **A video read whole: measured, not shipped.** (checked 2026-10-04) It
-      kept a third fewer memories and lost a walk on both runs. Before trying
-      again, draw today's chunked prompt twice on the same five videos, and
-      try 15-minute chunks as the middle course.
-- [ ] **The batched web research, first live run.** (2026-10-09) Built with
-      fakes only (c7eff8d). On the next `batch --run`, check: the batch API
-      accepts the web search/fetch tools with `cache_control` and effort (a
-      rejected batch stops with "A batch stored no reply"); research replies
-      cut on `pause_turn`/`max_tokens` (now resent, not used); "Still waiting
-      after 12 passes" (a pick's picture list changing between passes);
-      `pipeline.cost` against an earlier run, since searches aren't
-      discounted. Links and the walk score in `after_save` still go at full
-      price.
-- [ ] **`published_at` is NULL for flat-crawled videos.** (checked
-      2026-10-04) `api/gate.py` serves it as the source's year and newspapers
-      fill it; yt-dlp flat extraction returns no timestamp. A real date needs
-      a per-video fetch, paid only for videos that pass the filter, or the
-      channel RSS feed (newest 15).
 
 ---
 
@@ -366,10 +249,6 @@ priority order.
       the nearest. Sources for the ring first, or shrink `LAUNCH_BBOX`. The flow for it in docs/08,
       *Arrive somewhere and find its history*, is still only proposed, waiting on a source that has since been chosen: specify it
       from the product, not from whatever ingestion produced.
-- [ ] **Three streets, counted by hand.** (checked 2026-10-04) In the launch
-      area, count the *interesting* cards each source yields per street: would
-      this make someone stop walking? The prediction: newspapers and the
-      sabotage set win, directories are filler.
 - [ ] **Email it@historiskatlas.dk for API access.** (checked 2026-10-04) The
       per-story licence ("Geo" in their API) is not on the public pages, and
       the sitemap source has title and intro only. 340 sabotage stories are
@@ -378,65 +257,13 @@ priority order.
 - [ ] **Email kbhbilleder@kff.kk.dk.** (checked 2026-10-04) 41,779 historical
       photos, maps and drawings, ~5,000 out of copyright and commercially
       usable, many geotagged. Bot-protected: ask, never scrape. Open source
-      with a public APACS API (github.com/CopenhagenCityArchives). Unblocks *Then and now, lined up*.
+      with a public APACS API (github.com/CopenhagenCityArchives). Picture memories.
 - [ ] **More public-domain memoirs.** (checked 2026-10-04) Brandes' *Levned*
       I added 4 (source 231); volumes 2 and 3 are `runeberg:gblevned/2` and
       `/3`, queried as `Kjøbenhavn`. Heiberg's *Et Liv gjenoplevet* is
       `--source adl --query heibfr05val` (and `06val`, `07val`). Nexø has no free text;
       *Mit Livs Eventyr* retells source 202. Gutenberg's own search works when
       gutendex is down.
-- [ ] **Open sources with coordinates.** (checked 2026-10-04) Wikidata (CC0)
-      and Wikipedia (CC BY-SA): 4,321 items within 5 km of Rådhuspladsen,
-      about famous people, not personal memories. OSM memorial plaques: 108 in
-      the centre (ODbL). Both fit the text-source path in
-      `crawler/sources.py`. Wikidata is already used for placement and the
-      "since" year, not as a source.
-- [ ] **Building history: FBB plus Wikidata.** (checked 2026-10-03) 1,029
-      protection cases in København with real text (architect, dates, value)
-      at `kulturarv.dk/fbb/sagvis.pub?sag=N`, terms allow use; email
-      cfk@slks.dk once for commercial use. `sagvis.pub` answers "Systemfejl"
-      outside a search session, so the crawler drives the search form first.
-      Join Wikidata (P84 architect, P1435 heritage) for architect and date;
-      `crawler/fbb.py` as a text source. Fund og Fortidsminder (bulk `FF.zip`)
-      and BBR are enrichment; Stadsarkiv byggesager, kbhbilleder scraping and
-      arkitekturbilleder.dk are no.
-- [ ] **Decide on the local TV channels.** (checked 2026-09-29) All screened.
-      The two active channels pass 0.85–1.00 at 6–31 memories an hour. NTV
-      Nørrebro (144) passes 0.57 at 2.5/h, Bispebjerg Lokal-TV (146) 0.47 at
-      1.3/h; Frederiksberg Lokal TV (159) 0.42 and Christianshavns Kvarter
-      (155) 0.32, not trialled. Kgs. Enghave (176) waits on Whisper. Subject
-      to the YouTube permission under *Launch*.
-- [ ] **One-off videos.** (checked 2026-09-27) Andrew Schulz "Dropping In #20"
-      (Copenhagen) and Ari Shaffir "You Be Trippin'" with Iain Stirling
-      (Denmark): `ingest --video … --to <id>` under their channels.
-- [ ] **Kraks Vejviser and older address directories.** (checked 2026-09-26)
-      Pre-1900 editions at kb.dk carry a public domain mark; Copenhagen
-      Libraries host digitised volumes. OCR'd scans, real extraction work.
-      "What stood here" for nearly every address: filler between the
-      interesting cards.
-- [ ] **Now on a spot** (docs/10, *The recent past is a memory*; docs/04,
-      *Now, 2026-10-02*). In order:
-      1. **Film shoots from the KK permits.** Snapshot the `Filmoptagelse`
-         permits weekly; once a shoot has happened it becomes a dated card at
-         the address it names, attached to the story already there. Credit
-         Open Data DK.
-      2. **Seating permits, weekly.** A restaurant name new to the address is
-         a candidate opening; check it against CVR's registration date
-         (`distribution.virk.dk`) before it counts.
-      3. **The "now" line for bars**, from the current seating permit:
-         measure on the ~20 places `now.py` leaves blank.
-      4. **Expiring cards, designed not built.** Street events ("until
-         Sunday") and KK's `anlaegsprojekter` (226 projects, CC BY, "opens
-         2029"). Open: `expires_at` from the permit's end date, a re-check
-         job, the sheet label, and whether a walk may route to one. A planned
-         project is a dated fact that expires, not a memory: a second card
-         type or nothing. Every planned-building AR app died of staleness;
-         Stockholm växer survives by carrying the city's own status label.
-- [ ] **Sources that need their own plan.** (checked 2026-09-27) Walk-and-talk
-      recording (Whisper plus the GPS track; a product feature, not a source);
-      podcasts (RSS plus local Whisper, never DR); Politiets Registerblade
-      1890–1923 (filler); film locations (DFI, fan lists); "Were you ever
-      here?" at a thin spot, opening the submit sheet.
 - **Excluded:** arkiv.dk (private use only, no API) and setlist.fm
   (non-commercial API; commercial means Live Nation). Revisit only with a
   licence.
@@ -464,7 +291,9 @@ ever covers a memory.
       what comes next? Does needing their own memories to grow read as a push
       or a wall? Fantasy Hike's 708 reviews never asked for gear
       (`docs/research-fantasy-hike.md`), so this is the founder's pull until
-      walkers show it is theirs too.
+      walkers show it is theirs too. Then measure: D30, walks and memories
+      filed per walker, before and after the Collector (2026-10-12), and how
+      many filed ones get hidden.
 - [ ] **The art: 4 classes × 8 stages, one stage at a time.** (checked
       2026-10-11) The Canva lineups were bad: eight figures in one image drift
       and blur. In Figma (GPT image), start from the sheet's front view as stage
@@ -479,87 +308,6 @@ ever covers a memory.
       for gear: each stage should visibly add something (hood trim, a staff,
       a lantern, a robe colour), or the rank-up springs a wizard into itself.
       The placeholders' white fringe shows on the dark plate.
-- [ ] **The Collector replaces the fir at the edges.** (checked 2026-10-11)
-      One character, not two: the empty journal tab, the walked-out planner,
-      sign-in and the crash screen use your Collector's front view
-      (`Guardian.tsx`). It needs a curious and a sleepy pose per class, or one
-      neutral pose to start. Update docs/10, *The fir guardian, at the edges*.
-- [ ] **Keep the class with the account.** (checked 2026-10-11) Local
-      storage loses it on a new phone. When signed in, a `users.collector`
-      column, set with the profile, read on `/v1/me`. Only once someone
-      complains, or with sign-in's next change.
-- [ ] **Later, maybe: your Collector is the dot on the walk.** (checked
-      2026-10-11) A custom user marker in place of MapKit's dot (the
-      Locket-keeper idea). It costs the heading beam and accuracy ring
-      (`followsUserLocation`), so only after a real-phone look. Not before the
-      rest has been used.
-- [ ] **Measure it.** (checked 2026-10-12) D30, walks and memories filed
-      per walker, before and after the Collector shipped (2026-10-12), and how
-      many filed ones get hidden.
-
-### The walk on the map
-
-- [ ] **A direction arrow on the user dot.** (checked 2026-10-04)
-      react-native-maps 1.29.8 has `followsUserLocation` but no heading prop.
-      Look on a real phone whether MapKit's dot draws the heading beam with
-      `showsUserLocation` (`mobile/App.tsx`). Only if not:
-      `Location.watchHeadingAsync` and a custom marker. See *On a real phone*.
-- [ ] **A long walk still falls short where the map runs out.** (checked
-      2026-10-04) The lakes top out at 7.4 km for any stop count: shortest
-      legs cross the bridges. The preview says "The longest from here." Left:
-      legs routed longer than the shortest path (round the shore), if an
-      honest short walk isn't enough. 10 km plans were p95 1.5 s, mostly the
-      spur cleanup re-solving once per stop; retracing fell 21% → 13% with
-      0e136e2. Speed bought with spurs is a founder's call: measure with
-      `route_bench`.
-- [ ] **Generated themed routes, reviewed before publishing.** (checked
-      2026-10-04) An offline job: for each hotspot cluster × each tag, solve
-      from the centroid, write `status='draft'`, accept or reject in the style
-      of `pipeline/review.py`. `routes` went in 044 for want of a writer, so
-      this brings the table back with its first draft. Waits on one area with ≥3 tags of ≥5 walkable
-      stops: `python -m pipeline.themed_routes` says which. None yet outside
-      the dev seed.
-
-### A reason to finish the walk
-
-- [ ] **"What to look at when you're there" on a stop.** (checked
-      2026-10-04) A pointer to the spot ("the corner doorway, the green
-      tiles"), never a line of the story; it also helps when GPS wobbles near
-      20 m (Smith et al. 2019; Riot! 1831). Tried from the summary alone
-      (docs/04, *What to look at*): about 6 of 40 real, 14 invented at places
-      that are gone. Next: only where OSM confirms the place still stands,
-      given OSM and Wikidata's description of the building instead of the
-      story. A new extracted field: measure before and after.
-- [ ] **A today card in the journal.** (checked 2026-10-04) First in Walks, like Pikmin
-      Bloom's Lifelog: today's trace on a mini map, steps, and a week strip
-      with a dot for each day walked. Maybe later: brighten the streets you
-      have walked (Fog of World, Wandrer), never hiding content.
-- [ ] **A Lock Screen widget** (`expo-widgets`). (checked 2026-10-04)
-      Today's walk or the nearest stop. After launch; skip
-      Live Activities.
-- [ ] **Hear the story at its spot.** (checked 2026-10-04) A paragraph read
-      on a street corner is the wrong format for somebody walking, and the
-      sources are already recordings with an offset (docs/10, *An offset
-      only exists when the source is a recording*). At the unlock, offer the
-      clip from that second, for earbuds, beside the text. DR clips wait on
-      *Licensing before money*; start with sources clearly ours or
-      linkable. Prototype one stop before building it.
-
-### Craft
-
-- [ ] **Then and now, lined up.** (blocked 2026-10-03: no memory has an
-      image; needs kbhbilleder access) The viewfinder in Add (docs/10, *The camera is a
-      block*) ghosts an archival photo over itself at ~40% so the walker can match it. Open: where the
-      "now" photo goes. Founder's call.
-- [ ] **The seal starts with a cut.** (2026-10-09) The seal page cuts
-      straight to a full-size open locket over the map, its lid large and
-      partly off the left edge: the unlock played backwards, probably
-      intended, but no transition. Founder's eye. Nothing guards the drop if
-      the user's dot is off-screen.
-- [ ] **Hand-drawn illustrations.** (checked 2026-10-03) The app has
-      none. Places that want one: the empty walk list, sign-in, the paywall,
-      the finish card. Commission one base style (`ILLUSTRATOR`), derive the
-      rest. Bar: nobody asks which prompt made it.
 
 ### On a real phone
 
@@ -608,10 +356,6 @@ day is a rule, not a shield (*A rest day in the streak*).
       year. Western Europe medians: $8.99 a month, $39.44 a year (RevenueCat
       report). Push annual: 44.1% retained after a year against 17.0% monthly.
       Plan for the subscription to carry ~80% of revenue.
-- [ ] **A pass for visitors.** (checked 2026-10-04) A visitor fits "a walk
-      a day" exactly and rarely subscribes for a three-day trip. A 1- or
-      3-day pass, non-renewing, through RevenueCat beside the subscription.
-      Price it against the entry above and StoryHunt (11 walks at 99 DKK).
 - [ ] **Pitch commissioned walks to the city.** (checked 2026-10-02)
       Probably year one's biggest line, guessed 50–300K DKK. Budget 2024 set
       aside 2.1M DKK for "The Copenhagen App"; the city leads a 35M DKK EU
@@ -619,36 +363,6 @@ day is a rule, not a shield (*A rest day in the streak*).
       Museum and StoryHunt, the incumbent (8 free walks, 11 at 99 DKK). The
       city pays for free walks that spread tourists out. A sales
       conversation, not code.
-- [ ] **Premium walks on GetYourGuide / TripAdvisor.** (checked
-      2026-10-02) Questo's model, revenue share (agencies 20–25%, stores 15%).
-      Only on public-domain or licensed sources (see licensing above). Guessed 20–150K DKK.
-- [ ] **Later: sponsored stops.** (checked 2026-10-02) Works only at
-      McDonald's-scale footfall; small cafés churn. Revisit after real
-      traffic, and label it if built. Not doing: walk-to-earn with a brand
-      marketplace (near nothing below ~1M users).
-- [ ] **Benchmarks for the business case.** (checked 2026-10-02) Download
-      to paid: 2.0% median (freemium 2.1%). Revenue per install at D60:
-      Health & Fitness $0.66. Ceiling: Pikmin Bloom, $100M lifetime from
-      passes and events, never access.
-- [ ] **Running out of stories: the first retention metric.** (checked
-      2026-10-02) Detour never got traction (3–4 months a tour), Field Trip
-      shut, Pokémon GO lost most of its daily users within months; the
-      survivors (VoiceMap, izi.TRAVEL) scaled on creators' content. Once
-      someone has walked the stories near them, nothing brings them back but
-      corpus density and submissions. Track it.
-
----
-
-## Embed
-
-- [ ] **Map tiles of our own, before the embed is public.** (checked 2026-10-04)
-      `TILE_URL` in `api/embed.py` is OSM's public tiles, which OSMF policy
-      forbids for this. Stadia Maps (one URL + a key) or Protomaps/PMTiles
-      (~$3/mo on R2), per `docs/09-visual-design.md`. **Blocks deploying the
-      embed anywhere public.**
-- [ ] **Per-customer `CORS_ORIGINS` and a per-embed key.** (checked
-      2026-09-20) Blocked on `DEPLOY`. The first thing with a customer
-      attached, so the first that needs a usage bound.
 
 ---
 
@@ -667,7 +381,7 @@ Each waits on something named; none is worth building before it.
       walk-testable from Copenhagen, a language we can judge, free sources,
       tourists.
       1. **Copenhagen.** Finish and measure; nothing else ships first. Watch
-         whether visitors or locals pay (*A pass for visitors*): visitors
+         whether visitors or locals pay: visitors
          paying moves London up.
       2. **Stockholm.** A cheap replication: can we make a good city without
          living in it? One trip to walk-test. Ask what the next city costs in
@@ -682,69 +396,6 @@ Each waits on something named; none is worth building before it.
       phrases and neighbourhoods in `pipeline/sources.py`, `--area` in
       `pipeline/neighbourhoods.py`, and the extraction prompt's examples.
       Make each one a per-city setting when city 2 starts, not before.
-
-- [ ] **Retrieve few-shot examples instead of hard-coding three.** (checked
-      2026-10-04) Waits on ~50 person-reviewed rows (*40 labels by a person*).
-- [ ] **Revealed-preference report.** (checked 2026-09-23) A `quality.py
-      --signals` view: do the regex flags predict hearts and reports? Waits on
-      hearts and reports from real people.
-- [ ] **Incremental channel re-crawl, tiered.** (checked 2026-09-23) Waits on
-      several channels and a scheduled ingest. Stopping at the first known id
-      would break backfilling by dropping `limit`.
-- [ ] **Rate limiting on the API.** (checked 2026-09-24) None exists;
-      `CORS_ORIGINS` and `REPORT_THRESHOLD` are the only abuse controls. Waits
-      on a public launch.
-- [ ] **Revisit RevenueCat when its fee outgrows two integrations.**
-      (checked 2026-10-03) Free
-      under $2.5k/month, then 1% of gross. Leaving changes only
-      `billing.fetch_subscriber` and the app's SDK; `subscriptions` stays
-      ours.
-- [ ] **Steps on Android.** (checked 2026-09-30) Steps are a journal stat that
-      buys nothing, so this waits on wanting it. `react-native-health-connect`
-      v4, `READ_STEPS`, 30 days back, `dataOriginFilter` on the phone's own
-      origin. Play needs the Health Connect and Health apps declarations and
-      an in-app rationale screen. Store disclosure for steps on both: Fitness,
-      linked to you, app functionality, not tracking.
-- [ ] **More themes.** (checked 2026-10-04) Themes lean a subscriber's walk
-      on the extractor's tags (`THEMES` in `Plan.tsx`, `_shaped` in
-      `api/read.py`). Architecture needs a new tag and re-tagging (credits).
-      Friends-only needs a friend graph: `layer='friend'` has no writer. A
-      walk that tells one story (one era, person or source) is the richer
-      version.
-- [ ] **Four off-vocabulary tags.** (checked 2026-10-04) `entertainment`,
-      `celebrity`, `theater`, `festival` (15 rows) predate the filter;
-      `tags.clean()` drops them on write but nothing remaps the old rows. Map
-      them if a theme ever needs them.
-- [ ] **A map that carries the brand.** (checked 2026-10-11) Waits on
-      wanting the map itself on-brand (paper tones, Gloock street names);
-      muted Apple Maps is the default developers back for a story-walk app.
-      Apple Maps' ceiling: map types, dark mode, points of interest, tint. No
-      colours, fonts or label control, and only raster tiles
-      (`UrlTile shouldReplaceMapContent`). Cheap step first: a translucent
-      world `Polygon` as a paper wash. If that falls short:
-      1. **Spike for a day** in a worktree: the walk screen on
-         `@maplibre/maplibre-react-native` (v11, New Architecture only, one
-         maintainer, needs a dev build). Judge it on a real phone: fling,
-         pinch and label feel are what migrations lose, not features.
-      2. **Tiles:** a Protomaps PMTiles extract on Cloudflare R2 ($0-12 a
-         month). MapTiler's and Stadia's free tiers are non-commercial;
-         OpenFreeMap is one person with no SLA, so use it for the spike only.
-      3. **The port is a rewrite of the map screen**, about 3-5 days. It
-         touches `App.tsx` (the `MapView` and its camera calls),
-         `MemoryMarker.tsx`, `RouteLine.tsx` and `useMapCamera.ts`. The
-         camera is the hard part: MapLibre's is declarative and zoom-based,
-         not region-based. The ring becomes a GeoJSON polygon.
-         `patches/react-native-maps+1.29.8.patch` goes, because `belowLayerID`
-         and `line-trim-offset` are built in.
-      4. **Costs on top:** glyph PBFs for Gloock (MapLibre Native can't use
-         local fonts), a dark style to maintain, VoiceOver that MapKit gave
-         for free, and a tile host in the privacy policy.
-      No adapter layer in the meantime. Map wrappers leak at the camera
-      (Mapstraction, react-native-maps' own providers); keeping map code in
-      those four files is the portability that pays. Teardown: Komoot,
-      Bikemap and Felt run MapLibre on their own tiles; Zenly and Pedometer++
-      left MapKit for creative control; Wikipedia iOS stayed for
-      accessibility.
 
 ---
 
@@ -771,8 +422,8 @@ They cost money, need an account, or need a person. Full detail in
       Mortensen) for written permission to summarise them first. Strip the
       writers' addresses and phone numbers.
 - [ ] **`DEPLOY`** (checked 2026-09-20) Railway, ~$5/mo. Not Fly: its managed
-      Postgres has no PostGIS. Unblocks the waitlist, the webhook, the embed
-      and an OSRM sidecar (~1.6 GB RAM to build).
+      Postgres has no PostGIS. Unblocks the waitlist, the webhook and an OSRM
+      sidecar (~1.6 GB RAM to build).
 - [ ] **`EAS_BUILD`** (checked 2026-09-20) Three `PLACEHOLDER` tripwires to
       replace first; the bundle id is irreversible once submitted. Sign-in
       needs this too: neither button works in Expo Go, and
@@ -797,19 +448,11 @@ They cost money, need an account, or need a person. Full detail in
       testers for 14 continuous days**: start it the day EAS produces an
       `.aab`. The nearby-memory notification's background location needs the privacy disclosures
       updated and a real device confirming delivery.
-- [ ] **`ILLUSTRATOR`** (checked 2026-10-03) An artist for the illustrations'
-      base style, a few hundred. And decide where a "now" photo goes.
 
 ---
 
 ## Open questions
 
-- **A floor on `walk_score`?** (checked 2026-10-03) Ranking by it moved
-  planned stops only slightly (docs/10, *A walk picks its stops by the
-  rubric*). Leaving 3 or less off walks would drop 22 labelled skips and 2
-  walks. A bar, which the research argues against; the founder's call.
-- **Does the podcast corpus eventually get pruned?** (checked 2026-09-20) It is
-  US comedy anecdote in a product about Copenhagen history.
 - **Sign in at the first unlock, not at launch?** (checked 2026-10-04) The
   wall comes before anything is shown, and "your collection follows you"
   holds only once there is one. App Review 5.1.1(v) allows sign-in where an
