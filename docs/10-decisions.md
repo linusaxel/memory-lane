@@ -4783,10 +4783,13 @@ simulator.
   down to 34pt the same day). The
   Collector HUD keeps the top; the Journal orb stays only off home (planner,
   walk), where the dock is not. The walk keeps its bottom row.
-- **Plan a walk is an emblem**, a compass rose on charcoal enamel in a foil
-  ring (`src/PlanWalkButton.tsx`), not the walking figure: the character is
-  already on top. A tap swings it a turn and a half and the planner opens as
-  it settles, 0.9 s.
+- **Plan a walk is your Collector** (`src/PlanWalkButton.tsx`): your class
+  at its rank, in a foil ring as the HUD's medal draws it. A tap sets them
+  walking, three bobbing steps and out of the ring, and the planner opens as
+  they leave, 0.9 s. A compass rose came first; twenty-odd compasses, maps
+  and hand-drawn walkers were mocked up the same day, and the founder chose
+  the real art over any drawing of it. A proper side-view walk cycle is in
+  TODO.md (*One look*).
 - **One icon family** (`src/Icon.tsx`): a 2pt ink line over one flat cream
   tone, chunky, as the board's game items are. Every button over the map,
   the walk and the planner: journal, add, locate, close and more (every

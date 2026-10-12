@@ -2326,6 +2326,8 @@ export default function App() {
           {/* Home: the map, you on it, and the dock. */}
           {stage === 'map' && !journalOpen && !pastWalk && !slide && (
             <MapDock
+              collector={collectorId}
+              stage={rank}
               journalNew={journalNew}
               onYou={!offYou}
               onJournal={openJournal}

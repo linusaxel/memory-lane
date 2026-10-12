@@ -5,12 +5,16 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import type { ClassId } from './collector';
 import { GlassCard } from './Glass';
 import Icon from './Icon';
 import { PlanWalkButton } from './PlanWalkButton';
 import { color, contour, font } from './theme';
 
 type Props = {
+  /** Your Collector, who stands in Plan a walk. */
+  collector: ClassId;
+  stage: number;
   journalNew: boolean;
   /** The map is following you: Locate draws filled, as Apple Maps does. */
   onYou: boolean;
@@ -66,7 +70,12 @@ export default function MapDock(p: Props) {
           <Icon name="add" size={28} color={color.ink} />
         </Slot>
         <View style={styles.slot}>
-          <PlanWalkButton onPress={p.onPlanPress} onWalkEnd={p.onPlan} />
+          <PlanWalkButton
+            id={p.collector}
+            stage={p.stage}
+            onPress={p.onPlanPress}
+            onWalkEnd={p.onPlan}
+          />
         </View>
         <Slot label="Locate" say="Center on me" onPress={p.onLocate}>
           <Icon name="locate" size={24} color={color.ink} filled={p.onYou} />

@@ -198,7 +198,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification and the weekly surprise: the native wrapper, the pure region maths, the opt-in flag |
 | `mobile/src/theme.ts` | Every colour and typeface. Never a hex or font name anywhere else |
 | `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
-| `mobile/src/PlanWalkButton.tsx` | Plan a walk, in the dock: a compass rose that swings a turn and a half before the planner opens |
+| `mobile/src/PlanWalkButton.tsx` | Plan a walk, in the dock: your Collector in a foil ring, who walks out of it before the planner opens |
 | `mobile/src/MapDock.tsx` | Home's dock along the bottom: Journal · Add · Plan a walk · Locate |
 | `mobile/src/Icon.tsx` | The icon family, a 2pt ink line over a cream tone: every button over the map, the walk and the planner, the close circle, settings and the heart |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
