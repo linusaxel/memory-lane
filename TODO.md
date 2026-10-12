@@ -321,6 +321,8 @@ meanings; run the gate and shoot the touched screens."
       frames, same image tool and care as the eight stages, one stage at a
       time), played on a tap in `PlanWalkButton.tsx`. Hand-drawn SVG walkers
       were tried 2026-10-12 and rejected: the art has to be the classes'.
+      So was 3D (2026-10-12): Hunyuan3D-2 made a good Chronicler shape from
+      the sheet, but painted and toon-shaded in Blender it looked horrible.
 - [ ] **(Later) the character floating over the map** with its bar under it.
       Not chosen now. If it comes back: a pre-rendered idle loop, no 3D engine.
 
