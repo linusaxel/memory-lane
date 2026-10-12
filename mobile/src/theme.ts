@@ -207,6 +207,20 @@ export const glassLift = {
   shadowOpacity: 0.18,
 };
 
+/** The ink outline round the chrome over the map, the Collector's bar, the
+ *  Journal orb and the dock, as the icons are drawn. An overlay inside the
+ *  glass, since GlassView draws no border of its own. */
+export const contour = {
+  position: 'absolute' as const,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+  borderRadius: radius.card,
+  borderWidth: 2,
+  borderColor: color.ink,
+};
+
 /** A card over the map: the unlock card, Plan's, the peek. Where it sits and
  *  its padding are the caller's. */
 export const floating = {

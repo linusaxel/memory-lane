@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GlassCard } from './Glass';
 import Icon from './Icon';
 import { PlanWalkButton } from './PlanWalkButton';
-import { color, font } from './theme';
+import { color, contour, font } from './theme';
 
 type Props = {
   journalNew: boolean;
@@ -71,6 +71,7 @@ export default function MapDock(p: Props) {
         <Slot label="Locate" say="Center on me" onPress={p.onLocate}>
           <Icon name="locate" size={24} color={color.ink} filled={p.onYou} />
         </Slot>
+        <View style={contour} pointerEvents="none" />
       </GlassCard>
     </View>
   );

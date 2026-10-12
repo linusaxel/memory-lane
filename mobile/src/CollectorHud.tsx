@@ -6,8 +6,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { STAGES, classOf, rankInto, wants, wantsWords } from './collector.ts';
 import type { ClassId } from './collector.ts';
-import { Bar, Medal, Velvet } from './Game.tsx';
-import { color, font } from './theme.ts';
+import { Bar, Medal } from './Game.tsx';
+import { GlassCard } from './Glass.tsx';
+import { color, contour, font } from './theme.ts';
 
 type Props = {
   id: ClassId;
@@ -36,7 +37,7 @@ export default function CollectorHud({ id, stage, lockets, filed, compact, onPre
       onPress={onPress}
       style={({ pressed }) => [styles.press, pressed && styles.pressed]}
     >
-      <Velvet style={[styles.plate, compact && styles.plateCompact]}>
+      <GlassCard style={[styles.plate, compact && styles.plateCompact]}>
         <Medal id={id} stage={stage} size={compact ? 44 : 58} />
         <View style={styles.who}>
           {compact ? (
@@ -60,14 +61,15 @@ export default function CollectorHud({ id, stage, lockets, filed, compact, onPre
               </Text>
             </>
           )}
-          <Bar into={rankInto(stage, lockets, filed)} height={compact ? 8 : 10} />
+          <Bar into={rankInto(stage, lockets, filed)} height={compact ? 8 : 10} paper />
           {!compact && next !== null && (
             <Text style={styles.xp}>
               {lockets} / {next} lockets
             </Text>
           )}
         </View>
-      </Velvet>
+        <View style={contour} pointerEvents="none" />
+      </GlassCard>
     </Pressable>
   );
 }
@@ -81,16 +83,13 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 5,
     paddingRight: 16,
-    borderRadius: 40,
-    borderWidth: 1.5,
-    borderColor: color.edge,
   },
   plateCompact: { padding: 4, paddingRight: 14 },
   who: { flex: 1, minWidth: 0, gap: 3 },
   line: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  cls: { ...font.display, fontSize: 10, letterSpacing: 1.4, color: color.onVelvetGold },
-  rank: { ...font.title, fontSize: 20, lineHeight: 24, color: color.onVelvet },
+  cls: { ...font.display, fontSize: 10, letterSpacing: 1.4, color: color.gold },
+  rank: { ...font.title, fontSize: 20, lineHeight: 24, color: color.ink },
   rankCompact: { fontSize: 17, lineHeight: 21, flexShrink: 1 },
-  count: { ...font.uiBold, fontSize: 12, color: color.onVelvetGold },
-  xp: { ...font.uiBold, fontSize: 12, color: color.onVelvetSoft },
+  count: { ...font.uiBold, fontSize: 12, color: color.gold },
+  xp: { ...font.uiBold, fontSize: 12, color: color.inkSoft },
 });

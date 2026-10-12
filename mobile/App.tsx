@@ -96,13 +96,13 @@ import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
 import { type Collector, loadCollector, saveCollector } from './src/CollectorLook.tsx';
 import CollectorHud from './src/CollectorHud.tsx';
-import { Foil, Ribbon, Velvet } from './src/Game.tsx';
+import { Ribbon } from './src/Game.tsx';
 import { locketOf } from './src/lockets.ts';
 import { classOf, stageNow, stageOf } from './src/collector.ts';
 import RankUp from './src/RankUp.tsx';
 import CollectorPage from './src/CollectorPage.tsx';
 import UnlockHere from './src/UnlockHere.tsx';
-import { color, font, label, radius, solid } from './src/theme.ts';
+import { color, contour, font, label, radius, solid } from './src/theme.ts';
 import type { Permission } from './src/types.ts';
 import { useMapCamera } from './src/useMapCamera.ts';
 import { loadLook } from './src/appearance.ts';
@@ -2307,11 +2307,10 @@ export default function App() {
                     onPress={openJournal}
                     style={({ pressed }) => pressed && styles.squish}
                   >
-                    <Foil style={styles.orb}>
-                      <Velvet style={styles.orbIn}>
-                        <Icon name="journal" size={24} color={color.onVelvet} />
-                      </Velvet>
-                    </Foil>
+                    <GlassCard style={styles.orb}>
+                      <Icon name="journal" size={24} color={color.ink} />
+                      <View style={contour} pointerEvents="none" />
+                    </GlassCard>
                     {journalNew && <View style={styles.newDot} />}
                   </Pressable>
                 )}
@@ -2654,8 +2653,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  orb: { width: 52, height: 52, borderRadius: 26, padding: 2.5 },
-  orbIn: { flex: 1, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  orb: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   squish: { transform: [{ scale: 0.92 }] },
   // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
   // over Apple's logo and Legal link (HIG Maps asks 10).

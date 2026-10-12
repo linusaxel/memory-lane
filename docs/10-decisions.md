@@ -4791,6 +4791,12 @@ simulator.
   `CloseButton`), back and forward, customize, the slide's key and », and
   settings and the heart; the rose wears the same ink edge. Rare states
   (Turn on location, offline) stay an SF Symbol in a palette colour.
+- **The top matches the bottom.** A charcoal HUD over a cream dock read as two
+  apps, so the Collector's bar and the Journal orb are the dock's cream glass,
+  and all three wear a 2pt ink contour (`contour` in `theme.ts`, an overlay,
+  since GlassView draws no border). On paper the rank bar is plum on `track`,
+  as earned reads; velvet stays for the Collector's page and the journal's
+  header. The compass is the one dark thing over the map.
 
 Tomorrow's Figma pass (TODO.md, *One look*) redraws these against the shots;
 anything better there changes values here.

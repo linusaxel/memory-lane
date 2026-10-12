@@ -102,11 +102,25 @@ export function Medal({ id, stage, size }: { id: ClassId; stage: number; size: n
   );
 }
 
-/** The rank bar on velvet: foil filling a dark groove, notched in quarters. */
-export function Bar({ into, height = 10 }: { into: number; height?: number }) {
+/** The rank bar on velvet: foil filling a dark groove, notched in quarters.
+ *  On `paper`, plum filling the track, as earned reads on paper. */
+export function Bar({
+  into,
+  height = 10,
+  paper,
+}: {
+  into: number;
+  height?: number;
+  paper?: boolean;
+}) {
+  const width = `${Math.round(into * 100)}%` as const;
   return (
-    <View style={[styles.groove, { height, borderRadius: height / 2 }]}>
-      <Foil style={[styles.fill, { width: `${Math.round(into * 100)}%` }]} />
+    <View style={[styles.groove, paper && styles.track, { height, borderRadius: height / 2 }]}>
+      {paper ? (
+        <View style={[styles.fill, styles.plum, { width }]} />
+      ) : (
+        <Foil style={[styles.fill, { width }]} />
+      )}
       {[0.25, 0.5, 0.75].map((at) => (
         <View key={at} style={[styles.notch, { left: `${at * 100}%` }]} />
       ))}
@@ -160,5 +174,7 @@ const styles = StyleSheet.create({
   },
   groove: { backgroundColor: color.scrim, overflow: 'hidden', borderRadius: radius.pill },
   fill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: radius.pill },
+  track: { backgroundColor: color.track },
+  plum: { backgroundColor: color.plum },
   notch: { position: 'absolute', top: 0, bottom: 0, width: 1, backgroundColor: velvet.deep },
 });
