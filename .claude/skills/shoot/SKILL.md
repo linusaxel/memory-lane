@@ -35,7 +35,7 @@ ends where tapped, unreachable end, Customize empty and set), the walk (card,
 mystery, no location, lock, end, done and the notify ask, the rank-up and "You're already"), the
 journal and what opens in it, the Collector's page, Submit at each step (filled, styling, date,
 discard, error, seal, editor, delete), Settings top and foot, delete account,
-Profile, Paywall, and the crash page. `offline-` screens fail every request to
+Paywall, and the crash page. `offline-` screens fail every request to
 the API through the real code paths.
 
 Not covered, on purpose:
@@ -55,7 +55,7 @@ Not covered, on purpose:
   the app's sim container. `src/devOpen.ts` (in `__DEV__` only) polls it and
   tells every `useDevScreen` listener: `devApply` in App.tsx closes what the
   last screen opened and opens this one, and each sheet (Submit, MemorySheet,
-  Notes, Settings, SignIn, EditProfile) sets its own step.
+  Notes, Settings, SignIn) sets its own step.
 - The `memory-` screens' memories are picked from the dev database and
   unlocked for the simulator's device. `scripts/reset-unlocks.sh` undoes that.
 - To add a screen: its name in `SCREENS`, a case in `devApply` for what opens
