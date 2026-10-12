@@ -128,17 +128,17 @@ Submit (pageSheet modal, from Add) - see Writing
 Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted map;
 │                              header, sections and list arrive a beat apart. Drag it down or
 │                              × to close. Reduce Motion: no cascade. The journal is you as well
-├─ header                      44pt photo or initial, your name 28/700 (or "Journal"), and under
-│                              it "12 lockets · 4 places · 2 added · 5 hearts",
-│                              zeros left out but the first. Tapping it opens Edit profile.
-│                              Then your Collector, 56pt at its stage (tapped: its page), a
-│                              gear, then × top right. A
+├─ header                      velvet, a character screen: your Collector's medal, 76pt (tapped:
+│                              its page), then a 26pt photo or initial and your name 28/700 (or
+│                              "Journal"), "WAYFINDER · TRAILWALKER" and the rank bar; tapping
+│                              them opens Edit profile. × and the gear stacked top right. Under
+│                              them four tiles, Lockets · Places · Added · Hearts, zeros shown;
+│                              VoiceOver hears them as one line. A
 │                              number that grew since the last look rolls up from its old
 │                              value (countUp.ts, at most 8 ticks over ~600 ms, a selection
 │                              haptic each); one that fell just shows. First look and Reduce
 │                              Motion: no roll
-├─ tabs                        a quiet capsule, the open tab raised in paperRaised with a gold
-│                              hairline: Walks · Unlocked · Mine ("Mine ·" when something
+├─ tabs                        a quiet capsule, the open tab a velvet pill: Walks · Unlocked · Mine ("Mine ·" when something
 │                              came back). The sections are pages: swipe between them, and
 │                              the raised pill follows the finger. Reduce Motion: it jumps
 ├─ Walks                       one row per walk that opened something, date and length; a row
@@ -157,8 +157,10 @@ Settings and Edit profile are sections of nothing: a section is what you did,
 and the account is not (docs/10, "The journal is you"). They open as pageSheet modals over the journal, which
 stays mounted under it: Settings from its gear, Edit profile from its header.
 
-Settings (src/Settings.tsx, pageSheet, from the journal's gear) - "Settings" 34/700, × top right.
-Grouped rows: a small label, a paperRaised card with a gold hairline, an optional line under it
+Settings (src/Settings.tsx, pageSheet, from the journal's gear) - a "Camp" ribbon over "Settings"
+34/700, × top right. Grouped rows: a Panel (src/Game.tsx) named by its foil tab, a line under
+it; a row may lead with a coloured badge (seal location, plum notifications, gold links).
+Appearance's chosen segment is velvet, the Switch's track foil
 ├─ Account                     which sign-ins, add the other, sign out (back to the gate),
 │                              delete; the subscription
 ├─ Appearance                  System · Light · Dark (src/appearance.ts, kept on the phone)
@@ -166,16 +168,17 @@ Grouped rows: a small label, a paperRaised card with a gold hairline, an optiona
 ├─ How it works                the one place that answers "why can't I read this", two lines
 └─ About                       privacy policy, contact, OpenStreetMap, each ↗
 
-Your Collector (src/CollectorPage.tsx, pageSheet, from the Collector in the header) - "Your
-Collector" 34/700, × top right
-├─ now                         the look in its plate (src/Plate.tsx: double gold rule, a diamond
-│                              at each corner) at 200pt, the class, the rank 28/700, "9 lockets
-│                              · 1 added", a plum bar (the scale further behind fills it),
-│                              "1 memory of yours to Lamplit", and while a memory is missing
-│                              a quiet "Leave a memory here" (closes to Add)
-├─ The path                    a ladder of eight: a gold spine up to you, a gold knot on each
-│                              reached rung and a plum one on yours ("You"), the rest ahead as
-│                              inkFaint silhouettes (the look with tintColor), each "at 15 · 3 added"
+Your Collector (src/CollectorPage.tsx, pageSheet, from the Collector in the journal's header
+or the map's HUD) - a "Character" ribbon over "Your Collector" 34/700, × top right
+├─ now                         a velvet sheet: the look in its plate (src/Plate.tsx: double gold
+│                              rule, a diamond at each corner) at 128pt, a foil class tag, the
+│                              rank 24/700, "Rank 2 of 8", and a bar per scale ("LOCKETS 4 / 8",
+│                              "ADDED 1 / 2")
+├─ Evolution                   the eight looks in a row, yours ringed in plum, the ones ahead
+│                              as inkFaint silhouettes (the look with tintColor)
+├─ Next: Lamplit               a Panel: "1 memory of yours to Lamplit", then the two wants as a
+│                              checklist, a foil check once met; while a memory is missing a
+│                              go "Leave a memory here" under it (closes to Add)
 └─ Your class                  four crests, two to a row, each a small plate, full gold on
                                yours; a tap switches. The stage comes along. No shop, no
                                prices, no currency
@@ -1153,4 +1156,7 @@ the walked-out planner's **More walks**, or the finish card's quiet
 first and solid, monthly outlined. No price is ever written in the app; the
 store's `priceString` and `pricePerMonthString` are. Without a RevenueCat key
 it says "Subscriptions aren't available right now.", never a button that
-cannot work, and **Not now** is always there (rule 1).
+cannot work, and **Not now** is always there (rule 1). A "Plus" ribbon over
+the title, the perks on foil coins, the chosen plan a plum ring on its ledge,
+Best value a foil tag; no Collector and no rank, since a subscription buys
+walks, not looks (docs/10, "Game menus").

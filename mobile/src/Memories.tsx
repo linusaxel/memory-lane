@@ -62,8 +62,8 @@ import {
   type Seen,
 } from './seen.ts';
 import { color, dim, font, label, lift, screenTitle } from './theme.ts';
-import CollectorLook from './CollectorLook.tsx';
-import { classOf, type ClassId } from './collector.ts';
+import { classOf, rankInto, type ClassId } from './collector.ts';
+import { Bar, Medal, Velvet } from './Game.tsx';
 import { useReduceMotion } from './useBreath.ts';
 
 type Props = {
@@ -532,44 +532,71 @@ export default function Memories({
 
   return (
     <View style={styles.screen}>
-      <Animated.View style={[styles.top, arrive(0)]}>
-        <Pressable
-          style={dim(styles.who)}
-          onPress={onEditProfile}
-          accessibilityRole="button"
-          accessibilityLabel="Edit profile"
-        >
-          <Avatar url={profile?.avatar_url} name={displayName} size={44} />
-          <View style={styles.whoText}>
-            <Text style={styles.title} numberOfLines={1}>
-              {displayName.trim() || 'Journal'}
-            </Text>
-            <Text style={styles.stats} numberOfLines={1}>
-              {rolling
-                ? stats(rolling.memories, rolling.places, profile)
-                : stats(unlockedCount, placeCount, profile)}
-            </Text>
+      {/* You, as a game's character screen: the Collector, your name and
+          the bar to the next rank, then your numbers (docs/10, "Game menus"). */}
+      <Animated.View style={arrive(0)}>
+        <Velvet style={styles.hero}>
+          <View style={styles.top}>
+            <Pressable
+              style={dim(null)}
+              onPress={onCollector}
+              accessibilityRole="button"
+              accessibilityLabel={`Your Collector, ${classOf(collector).ranks[rank]}`}
+              testID="journal-collector"
+            >
+              <Medal id={collector} stage={rank} size={76} />
+            </Pressable>
+            <Pressable
+              style={dim(styles.who)}
+              onPress={onEditProfile}
+              accessibilityRole="button"
+              accessibilityLabel="Edit profile"
+            >
+              <View style={styles.nameRow}>
+                <Avatar url={profile?.avatar_url} name={displayName} size={26} />
+                <Text style={styles.title} numberOfLines={1}>
+                  {displayName.trim() || 'Journal'}
+                </Text>
+              </View>
+              <Text style={styles.cls} numberOfLines={1}>
+                {`${classOf(collector).name} · ${classOf(collector).ranks[rank]}`.toUpperCase()}
+              </Text>
+              <Bar
+                into={rankInto(rank, profile?.unlocked ?? unlockedCount, profile?.submitted ?? 0)}
+              />
+            </Pressable>
+            <View style={styles.corner}>
+              <CloseButton onPress={onClose} label="Close journal" />
+              <Pressable
+                style={dim(styles.cog)}
+                hitSlop={8}
+                onPress={onSettings}
+                accessibilityRole="button"
+                accessibilityLabel="Settings"
+              >
+                <Glyph name="gearshape" size={20} color={color.onVelvet} />
+              </Pressable>
+            </View>
           </View>
-        </Pressable>
-        <Pressable
-          style={dim(styles.collector)}
-          onPress={onCollector}
-          accessibilityRole="button"
-          accessibilityLabel={`Your Collector, ${classOf(collector).ranks[rank]}`}
-          testID="journal-collector"
-        >
-          <CollectorLook id={collector} stage={rank} size={56} />
-        </Pressable>
-        <Pressable
-          style={dim(styles.cog)}
-          hitSlop={8}
-          onPress={onSettings}
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-        >
-          <Glyph name="gearshape" size={20} color={color.inkSoft} />
-        </Pressable>
-        <CloseButton onPress={onClose} label="Close journal" />
+          <View
+            style={styles.tiles}
+            accessible
+            accessibilityLabel={stats(
+              rolling?.memories ?? unlockedCount,
+              rolling?.places ?? placeCount,
+              profile,
+            )}
+          >
+            {tiles(rolling?.memories ?? unlockedCount, rolling?.places ?? placeCount, profile).map(
+              ([n, name]) => (
+                <View key={name} style={styles.tile}>
+                  <Text style={styles.tileFigure}>{n}</Text>
+                  <Text style={styles.tileName}>{name}</Text>
+                </View>
+              ),
+            )}
+          </View>
+        </Velvet>
       </Animated.View>
       <Animated.View style={arrive(1)}>
         <Switcher
@@ -610,7 +637,17 @@ export default function Memories({
   );
 }
 
-/** Your numbers in one line under the name. A count that is still zero says
+/** The header's four tiles: every count, zeros too, so the row keeps its shape. */
+function tiles(unlocked: number, places: number, profile: Profile | null): [number, string][] {
+  return [
+    [unlocked, 'LOCKETS'],
+    [places, 'PLACES'],
+    [profile?.submitted ?? 0, 'ADDED'],
+    [profile?.hearts_received ?? 0, 'HEARTS'],
+  ];
+}
+
+/** Your numbers in one line, said to VoiceOver for the tiles. A count that is still zero says
  *  nothing, bar the first. */
 function stats(unlocked: number, places: number, profile: Profile | null): string {
   const parts = [`${unlocked} ${unlocked === 1 ? 'locket' : 'lockets'}`];
@@ -839,22 +876,28 @@ function Empty({ text }: { text: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingTop: 28, backgroundColor: color.paper },
+  screen: { flex: 1, backgroundColor: color.paper },
+  hero: { paddingTop: 28, paddingBottom: 16, paddingHorizontal: 20, gap: 14 },
   list: { flex: 1 },
   body: { paddingBottom: 72 },
-  top: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 24,
-  },
-  who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  whoText: { flex: 1 },
-  title: { ...screenTitle, fontSize: 28, lineHeight: 34 },
-  stats: { ...label, fontSize: 12, marginTop: 2 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  who: { flex: 1, gap: 4 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  title: { ...screenTitle, flexShrink: 1, fontSize: 28, lineHeight: 34, color: color.onVelvet },
+  cls: { ...font.display, fontSize: 11, letterSpacing: 1.4, color: color.onVelvetGold },
+  corner: { alignSelf: 'flex-start', alignItems: 'center', gap: 10 },
   cog: { padding: 6 },
-  collector: { marginVertical: -6 },
+  tiles: { flexDirection: 'row', gap: 8 },
+  tile: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: color.edge,
+  },
+  tileFigure: { ...font.title, fontSize: 22, lineHeight: 26, color: color.onVelvet },
+  tileName: { ...font.uiBold, fontSize: 11, letterSpacing: 1, color: color.onVelvetSoft },
   shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 24, paddingTop: 16 },
   // A capsule with the open tab raised in it, like the planner's Mode row.
   switcher: {
@@ -883,13 +926,13 @@ const styles = StyleSheet.create({
     left: 4,
     borderRadius: 999,
     borderWidth: 1,
-    backgroundColor: color.paperRaised,
-    borderColor: color.goldLine,
+    backgroundColor: color.velvetGround,
+    borderColor: color.edge,
     ...lift,
     shadowOpacity: 0.08,
   },
   switcherLabel: { ...label, color: color.inkSoft },
-  switcherLabelActive: { ...font.uiBold, color: color.ink },
+  switcherLabelActive: { ...font.uiBold, color: color.onVelvet },
   // Space, not a rule, sets the list off from the switcher: a rule here and
   // another between rows read as a double line.
   header: {

@@ -27,6 +27,7 @@ import { buy, plans, restore } from './purchases.ts';
 import { openLink } from './link.ts';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
+import { Coin, Foil, Ribbon } from './Game.tsx';
 import Glyph from './Glyph.tsx';
 import { LOCKETS } from './lockets.ts';
 import {
@@ -108,6 +109,9 @@ export default function Paywall({ visible, onClose, device, profile, onProfile }
     >
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <Velvet />
+        <View style={styles.ribbon}>
+          <Ribbon label="Plus" />
+        </View>
         <Text style={styles.title}>Walk every day</Text>
         {pitch && (
           <Text style={styles.pitch} testID="paywall-so-far">
@@ -252,9 +256,9 @@ function Velvet() {
 function Perk({ glyph, text }: { glyph: 'infinity' | 'number'; text: string }) {
   return (
     <View style={styles.perk}>
-      <View style={styles.perkIcon}>
-        <Glyph name={glyph} size={17} weight="semibold" color={color.gold} />
-      </View>
+      <Coin size={38}>
+        <Glyph name={glyph} size={16} weight="semibold" color={foil.text} />
+      </Coin>
       <Text style={styles.perkText}>{text}</Text>
     </View>
   );
@@ -279,9 +283,9 @@ function PlanCard({
       accessibilityLabel={`${yearly ? 'Yearly' : 'Monthly'}, ${plan.product.priceString}`}
     >
       {yearly && (
-        <View style={styles.best}>
+        <Foil style={styles.best}>
           <Text style={styles.bestText}>Best value</Text>
-        </View>
+        </Foil>
       )}
       <View style={styles.planTop}>
         <Text style={styles.planName}>{yearly ? 'Yearly' : 'Monthly'}</Text>
@@ -308,19 +312,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingHorizontal: 24, paddingTop: 44, paddingBottom: 56, gap: 16 },
   close: { position: 'absolute', top: 16, right: 16 },
-  title: { ...screenTitle, textAlign: 'center', marginTop: 8 },
+  ribbon: { alignItems: 'center', marginTop: 8, marginBottom: -12 },
+  title: { ...screenTitle, textAlign: 'center' },
   pitch: { ...font.uiBold, fontSize: 16, color: color.plum, textAlign: 'center', marginTop: -8 },
   note: { ...font.prose, fontSize: 16, lineHeight: 24, color: color.inkSoft, textAlign: 'center' },
   perks: { gap: 12, marginVertical: 4 },
   perk: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  perkIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: color.quiet,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   perkText: { ...font.uiMedium, flex: 1, fontSize: 17, lineHeight: 23, color: color.ink },
   plans: { flexDirection: 'row', gap: 12, marginTop: 10 },
   plan: {
@@ -333,7 +330,8 @@ const styles = StyleSheet.create({
     borderColor: color.rule,
     backgroundColor: color.paperRaised,
   },
-  planOn: { borderWidth: 2, borderColor: color.gold, backgroundColor: color.quiet },
+  // Chosen: a plum ring on its ledge, as a chosen chip is velvet (docs/10, "Game menus").
+  planOn: { borderWidth: 2.5, borderColor: color.plum, borderBottomWidth: 4 },
   planTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   planName: { ...font.uiBold, fontSize: 16, color: color.ink },
   check: {
@@ -345,7 +343,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkOn: { backgroundColor: color.gold, borderColor: color.gold },
+  checkOn: { backgroundColor: color.plum, borderColor: color.plum },
   price: { ...font.title, fontSize: 24, lineHeight: 30, color: color.ink },
   per: { ...font.title, fontSize: 18, color: color.inkSoft },
   best: {
@@ -355,7 +353,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 2,
     borderRadius: radius.pill,
-    backgroundColor: metal.light,
   },
   bestText: { ...font.uiBold, fontSize: 12, color: foil.text },
   row: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12 },

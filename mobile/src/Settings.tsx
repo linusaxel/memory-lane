@@ -7,8 +7,18 @@
  * the numbers) is the journal's header, not here.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import {
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+  type ColorValue,
+} from 'react-native';
 
 import { API_BASE, type Profile } from './api.ts';
 import { type Look, look, setLook } from './appearance.ts';
@@ -21,7 +31,8 @@ import { locketOf } from './lockets.ts';
 import type { Permission } from './types.ts';
 import Button from './Button.tsx';
 import { useDevScreen } from './devOpen.ts';
-import { color, dim, font, label, lift, screenTitle } from './theme.ts';
+import { Panel, Ribbon } from './Game.tsx';
+import { color, dim, font, label, metal, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -80,7 +91,10 @@ export default function Settings({
     >
       <ScrollView ref={scroll} style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
-          <Text style={styles.title}>Settings</Text>
+          <View>
+            <Ribbon label="Camp" />
+            <Text style={styles.title}>Settings</Text>
+          </View>
           <CloseButton onPress={onClose} label="Close settings" />
         </View>
 
@@ -158,6 +172,8 @@ export default function Settings({
         >
           <Row
             label="Location"
+            icon="location.fill"
+            tone={color.seal}
             value={granted ? 'On' : 'Off'}
             onPress={onRequestLocation}
             accessibilityLabel={granted ? 'Manage in Settings' : 'Turn on location'}
@@ -168,8 +184,9 @@ export default function Settings({
           title="Notifications"
           footer="Needs location in the background, only to check whether you're near a memory. Your position is never stored."
         >
-          <Row label="A memory is nearby">
+          <Row label="A memory is nearby" icon="bell.fill" tone={color.plum}>
             <Switch
+              trackColor={{ true: metal.mid }}
               testID="notify-nearby"
               value={notifyNearby}
               onValueChange={onNotifyNearby}
@@ -190,10 +207,24 @@ export default function Settings({
         </Group>
 
         <Group title="About">
-          <Row label="Privacy policy" link onPress={() => openLink(`${API_BASE}/privacy`)} />
-          <Row label="Contact us" link onPress={() => openLink(`${API_BASE}/privacy#contact`)} />
+          <Row
+            label="Privacy policy"
+            icon="hand.raised.fill"
+            tone={color.gold}
+            link
+            onPress={() => openLink(`${API_BASE}/privacy`)}
+          />
+          <Row
+            label="Contact us"
+            icon="envelope.fill"
+            tone={color.gold}
+            link
+            onPress={() => openLink(`${API_BASE}/privacy#contact`)}
+          />
           <Row
             label="Places © OpenStreetMap"
+            icon="map.fill"
+            tone={color.inkSoft}
             link
             onPress={() => openLink('https://www.openstreetmap.org/copyright')}
           />
@@ -203,7 +234,7 @@ export default function Settings({
   );
 }
 
-/** A small label, a paper card of rows, and an optional line under it. */
+/** A panel with a foil tab naming it, its rows, and an optional line under it. */
 function Group({
   title,
   footer,
@@ -215,16 +246,20 @@ function Group({
 }) {
   return (
     <View style={styles.group}>
-      <Text style={styles.groupTitle}>{title}</Text>
-      <View style={styles.card}>{children}</View>
+      <Panel title={title} style={styles.card}>
+        {children}
+      </Panel>
       {footer && <Text style={styles.footer}>{footer}</Text>}
     </View>
   );
 }
 
-/** One line: a label, then a value and a chevron, an arrow out, or a control. */
+/** One line: a coloured badge, a label, then a value and a chevron, an arrow
+ *  out, or a control. */
 function Row({
   label: text,
+  icon,
+  tone,
   value,
   link,
   onPress,
@@ -232,17 +267,26 @@ function Row({
   children,
 }: {
   label: string;
+  icon?: ComponentProps<typeof Glyph>['name'];
+  /** The badge's colour: a theme colour that says what kind of row it is. */
+  tone?: ColorValue;
   value?: string;
   link?: boolean;
   onPress?: () => unknown;
   accessibilityLabel?: string;
   children?: React.ReactNode;
 }) {
+  const badge = icon && (
+    <View style={[styles.badge, { backgroundColor: tone }]}>
+      <Glyph name={icon} size={15} weight="semibold" color={color.paper} />
+    </View>
+  );
   // A control row stays a View: a Pressable around it would hide the
   // control's own label from VoiceOver.
   if (!onPress)
     return (
       <View style={styles.row}>
+        {badge}
         <Text style={styles.rowText}>{text}</Text>
         {children}
       </View>
@@ -254,6 +298,7 @@ function Row({
       accessibilityRole={link ? 'link' : 'button'}
       accessibilityLabel={accessibilityLabel}
     >
+      {badge}
       <Text style={styles.rowText}>{text}</Text>
       {value && <Text style={styles.value}>{value}</Text>}
       <Glyph
@@ -278,16 +323,14 @@ const styles = StyleSheet.create({
   },
   title: screenTitle,
   group: { marginTop: 28, gap: 8 },
-  groupTitle: { ...label, fontSize: 12, color: color.inkFaint, marginLeft: 16 },
-  // A raised paper card, like the journal's switcher tab.
-  card: {
-    backgroundColor: color.paperRaised,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: color.goldLine,
-    overflow: 'hidden',
-    ...lift,
-    shadowOpacity: 0.06,
+  // The rows bring their own padding; the panel only clears its tab.
+  card: { padding: 0, paddingTop: 10, marginTop: 0 },
+  badge: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footer: {
     ...font.prose,
@@ -320,9 +363,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
-  segmentOn: { backgroundColor: color.quiet, borderColor: color.goldLine },
+  segmentOn: { backgroundColor: color.velvetGround, borderColor: color.edge },
   segmentText: { ...label, color: color.inkSoft },
-  segmentTextOn: { ...font.uiBold, color: color.ink },
+  segmentTextOn: { ...font.uiBold, color: color.onVelvet },
   how: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   locket: { width: 32, height: 32 },
   howText: { flex: 1, ...font.prose, fontSize: 15, lineHeight: 22, color: color.inkSoft },

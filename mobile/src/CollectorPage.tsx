@@ -1,7 +1,8 @@
 /** Your Collector: a sheet of its own, opened from the Collector in the
- *  journal's header (docs/10, "The Collector"). A character sheet: the look
- *  now in its plate, how far to the next robe, the path of eight as a ladder
- *  with the ones ahead as silhouettes, and the four classes as crests. A stage
+ *  journal's header or the map's (docs/10, "The Collector"). A character
+ *  sheet: the look in its plate with a bar for each thing the next rank wants,
+ *  the eight looks as a chain with the ones ahead as silhouettes, the next
+ *  rank's checklist, and the four classes as crests. A stage
  *  needs lockets and memories you filed both (docs/10, "The Collector"); when
  *  a memory is what's missing, the page offers to leave one. The stage comes
  *  along on a switch: it is yours, not the class's. No shop, no prices, no
@@ -13,17 +14,10 @@ import CloseButton from './CloseButton.tsx';
 import CollectorLook from './CollectorLook.tsx';
 import Plate from './Plate.tsx';
 import Button from './Button.tsx';
-import {
-  CLASSES,
-  FILED,
-  STAGES,
-  classOf,
-  rankInto,
-  wants,
-  wantsWords,
-  type ClassId,
-} from './collector.ts';
-import { color, dim, font, label, screenTitle } from './theme.ts';
+import { CLASSES, FILED, STAGES, classOf, wants, wantsWords, type ClassId } from './collector.ts';
+import { Bar, Coin, Foil, Panel, Ribbon, Velvet } from './Game.tsx';
+import Glyph from './Glyph.tsx';
+import { color, dim, foil, font, label, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -48,7 +42,7 @@ export default function CollectorPage({
 }: Props) {
   const chosen = classOf(id);
   const want = wants(stage, lockets, filed);
-  const into = rankInto(stage, lockets, filed);
+  const next = stage + 1 < STAGES.length;
   return (
     <Modal
       visible={visible}
@@ -58,45 +52,38 @@ export default function CollectorPage({
     >
       <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
-          <Text style={styles.title}>Your Collector</Text>
+          <View>
+            <Ribbon label="Character" />
+            <Text style={styles.title}>Your Collector</Text>
+          </View>
           <CloseButton onPress={onClose} label="Close Collector" />
         </View>
 
-        <View style={styles.hero} accessible testID="collector-page">
-          <Plate size={200} on>
-            <CollectorLook id={chosen.id} stage={stage} size={184} />
+        {/* A character sheet: the plate, the class, the rank and a bar for
+            each thing the next one wants (docs/10, "Game menus"). */}
+        <Velvet style={styles.hero} accessible testID="collector-page">
+          <Plate size={128} on>
+            <CollectorLook id={chosen.id} stage={stage} size={120} />
           </Plate>
-          <Text style={[label, styles.className]}>{chosen.name}</Text>
-          <Text style={styles.rank} accessibilityRole="header">
-            {chosen.ranks[stage]}
-          </Text>
-          <Text style={styles.count}>
-            {`${lockets} ${lockets === 1 ? 'locket' : 'lockets'} · `}
-            {`${filed} added`}
-          </Text>
-          <View style={styles.bar}>
-            <View style={[styles.fill, { width: `${into * 100}%` }]} />
+          <View style={styles.sheet}>
+            <Foil style={styles.tag}>
+              <Text style={styles.tagText}>{chosen.name.toUpperCase()}</Text>
+            </Foil>
+            <Text style={styles.rank} accessibilityRole="header" numberOfLines={2}>
+              {chosen.ranks[stage]}
+            </Text>
+            <Text style={styles.of}>{`Rank ${stage + 1} of ${STAGES.length}`}</Text>
+            <Scale name="Lockets" have={lockets} need={next && STAGES[stage + 1]} />
+            <Scale name="Added" have={filed} need={next && FILED[stage + 1]} />
           </View>
-          {want && wantsWords(want) !== '' && (
-            <Text style={styles.wants}>{`${wantsWords(want)} to ${chosen.ranks[stage + 1]}`}</Text>
-          )}
-          {want && want.filed > 0 && (
-            <Button
-              kind="quiet"
-              label="Leave a memory here"
-              onPress={onAdd}
-              accessibilityHint="Files a memory where you stand"
-              place={styles.add}
-            />
-          )}
-        </View>
+        </Velvet>
 
-        <Text style={styles.groupTitle}>The path</Text>
-        <View style={styles.ladder}>
+        <Text style={styles.groupTitle}>Evolution</Text>
+        <View style={styles.chain}>
           {STAGES.map((at, i) => (
             <View
               key={at}
-              style={styles.rung}
+              style={[styles.link, i === stage && styles.linkNow, i > stage && styles.linkAhead]}
               accessible
               accessibilityLabel={
                 i <= stage
@@ -104,31 +91,35 @@ export default function CollectorPage({
                   : `${chosen.ranks[i]}, at ${at} lockets and ${FILED[i]} added`
               }
             >
-              <View style={styles.spine}>
-                <View style={[styles.line, i === 0 && styles.clear, i <= stage && styles.lineOn]} />
-                <View
-                  style={[styles.knot, i <= stage && styles.knotOn, i === stage && styles.knotNow]}
-                />
-                <View
-                  style={[
-                    styles.line,
-                    i === STAGES.length - 1 && styles.clear,
-                    i < stage && styles.lineOn,
-                  ]}
-                />
-              </View>
-              <CollectorLook id={chosen.id} stage={i} size={48} ahead={i > stage} />
-              <View style={styles.rungWords}>
-                <Text style={[styles.stepRank, i > stage && styles.ahead]} numberOfLines={1}>
-                  {chosen.ranks[i]}
-                </Text>
-                <Text style={styles.stepAt}>
-                  {i === stage ? 'You' : `at ${at}${FILED[i] > 0 ? ` · ${FILED[i]} added` : ''}`}
-                </Text>
-              </View>
+              <CollectorLook id={chosen.id} stage={i} size={36} ahead={i > stage} />
             </View>
           ))}
         </View>
+
+        {want && (
+          <Panel title={`Next: ${chosen.ranks[stage + 1]}`} style={styles.next}>
+            {wantsWords(want) !== '' && (
+              <Text
+                style={styles.wants}
+              >{`${wantsWords(want)} to ${chosen.ranks[stage + 1]}`}</Text>
+            )}
+            <Goal text={`Open ${STAGES[stage + 1]} lockets`} met={want.lockets === 0} />
+            <Goal
+              text={`Leave ${FILED[stage + 1]} ${FILED[stage + 1] === 1 ? 'memory' : 'memories'}`}
+              met={want.filed === 0}
+            />
+          </Panel>
+        )}
+        {want && want.filed > 0 && (
+          <Button
+            kind="go"
+            label="Leave a memory here"
+            glyph="plus"
+            onPress={onAdd}
+            accessibilityHint="Files a memory where you stand"
+            place={styles.add}
+          />
+        )}
 
         <Text style={styles.groupTitle}>Your class</Text>
         <View style={styles.classes}>
@@ -153,6 +144,35 @@ export default function CollectorPage({
   );
 }
 
+/** One thing the next rank wants, as a bar on the sheet: "4 / 8". */
+function Scale({ name, have, need }: { name: string; have: number; need: number | false }) {
+  return (
+    <View style={styles.scale}>
+      <View style={styles.scaleTop}>
+        <Text style={styles.scaleName}>{name.toUpperCase()}</Text>
+        <Text style={styles.scaleCount}>{need ? `${have} / ${need}` : have}</Text>
+      </View>
+      <Bar into={need ? Math.min(1, have / need) : 1} height={8} />
+    </View>
+  );
+}
+
+/** A line on the next rank's checklist: a foil check once met. */
+function Goal({ text, met }: { text: string; met: boolean }) {
+  return (
+    <View style={styles.goal} accessible accessibilityLabel={`${text}${met ? ', done' : ''}`}>
+      {met ? (
+        <Coin size={26}>
+          <Glyph name="checkmark" size={12} weight="bold" color={foil.text} />
+        </Coin>
+      ) : (
+        <View style={styles.goalOpen} />
+      )}
+      <Text style={[styles.goalText, met && styles.goalMet]}>{text}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.paper },
   body: { paddingHorizontal: 20, paddingTop: 28, paddingBottom: 72 },
@@ -164,43 +184,56 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   title: screenTitle,
-  hero: { alignItems: 'center', gap: 6, marginTop: 24 },
-  className: { marginTop: 14 },
-  rank: { ...screenTitle, fontSize: 28, lineHeight: 34, textAlign: 'center' },
-  count: { ...font.prose, fontSize: 16, color: color.inkSoft },
-  wants: { ...font.ui, fontSize: 13, color: color.inkFaint, marginTop: 6 },
-  add: { marginTop: 10 },
-  bar: {
-    alignSelf: 'stretch',
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: color.track,
-    marginTop: 8,
-    marginHorizontal: 32,
+  hero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: color.edge,
   },
-  fill: { height: 6, borderRadius: 3, backgroundColor: color.plum },
-  groupTitle: { ...label, fontSize: 12, color: color.inkFaint, marginTop: 32, marginLeft: 4 },
-  // The path of eight, a ladder: a gold spine up to where you stand.
-  ladder: { marginTop: 8, paddingHorizontal: 4 },
-  rung: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 60 },
-  spine: { width: 16, alignSelf: 'stretch', alignItems: 'center' },
-  line: { flex: 1, width: 2, backgroundColor: color.rule },
-  lineOn: { backgroundColor: color.gold },
-  clear: { backgroundColor: 'transparent' },
-  knot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  sheet: { flex: 1, gap: 6 },
+  tag: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  tagText: { ...font.display, fontSize: 10, letterSpacing: 1.4, color: foil.text },
+  rank: { ...screenTitle, fontSize: 24, lineHeight: 28, color: color.onVelvet },
+  of: { ...font.uiBold, fontSize: 12, color: color.onVelvetGold },
+  scale: { gap: 3, marginTop: 4 },
+  scaleTop: { flexDirection: 'row', justifyContent: 'space-between' },
+  scaleName: { ...font.uiBold, fontSize: 11, letterSpacing: 1, color: color.onVelvetSoft },
+  scaleCount: { ...font.uiBold, fontSize: 11, color: color.onVelvetSoft },
+  groupTitle: { ...label, fontSize: 12, color: color.inkFaint, marginTop: 28, marginLeft: 4 },
+  // The eight looks side by side, the ones ahead as silhouettes.
+  chain: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  link: {
+    width: 40,
+    height: 48,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+    backgroundColor: color.paperRaised,
+    borderWidth: 1,
+    borderColor: color.goldLine,
+  },
+  linkNow: { borderWidth: 2.5, borderColor: color.plum },
+  linkAhead: { backgroundColor: color.quiet, borderColor: color.quiet },
+  next: { marginTop: 28, gap: 10 },
+  wants: { ...font.ui, fontSize: 13, color: color.inkFaint },
+  goal: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 32 },
+  goalOpen: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 2,
     borderColor: color.rule,
-    backgroundColor: color.paper,
   },
-  knotOn: { borderColor: color.gold, backgroundColor: color.gold },
-  knotNow: { width: 16, height: 16, borderRadius: 8, borderColor: color.plum, borderWidth: 3 },
-  rungWords: { flex: 1, gap: 2 },
-  stepRank: { ...font.uiBold, fontSize: 15, color: color.ink },
-  ahead: { color: color.inkFaint },
-  stepAt: { ...font.ui, fontSize: 12, color: color.inkFaint },
+  goalText: { ...font.uiMedium, fontSize: 16, color: color.ink },
+  goalMet: { color: color.inkFaint },
+  add: { marginTop: 16 },
   classes: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 },
   class: {
     width: '47%',

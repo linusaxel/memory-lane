@@ -48,7 +48,6 @@ import {
   foil,
   font,
   label,
-  lift,
   metal,
   radius,
   screenTitle,
