@@ -18,6 +18,9 @@ are at `a3a85ef`.
 it: a stale entry once sent a session to rebuild search, which had shipped a
 week earlier.
 
+**Next batch** (asked for as "pick the next batch of todos"): The app › One
+look, run with the prompt there. Delete this line once that section is done.
+
 ---
 
 ## Friction
@@ -283,6 +286,15 @@ Green go, plum velvet, gold foil, emerald seal and the class art's own
 colours all compete to be the accent. The founder wants one palette, the
 map's buttons in one dock, and one icon family. Do these in order; the
 design is drawn in Figma first and screenshotted through the MCP.
+
+The prompt for this batch (the founder's, 2026-10-12): "Figma has reset. Using
+the Figma MCP (get_screenshot for references): make the three palette
+candidates below, each as one frame of four screens (map with the new bottom
+dock, planner, Collector, journal), built from `~/Downloads/memory-lane-shots/`.
+Screenshot each frame and show me side by side. Once I've picked one: draw the
+Plan-a-walk emblem and the six map/dock icons in it, screenshot them, then
+implement theme.ts, the dock and the emblem, run the gate, and shoot the
+touched screens." If the MCP is still capped, ask before falling back to HTML.
 
 - [ ] **Palette: three candidates, shown, then one chosen.** *Velvet & Gold*
       (plum ground, gold accent, no green go, emerald only for "openable"),
