@@ -1,5 +1,5 @@
-/** Plan a walk, the raised middle of the map's dock: a compass rose on go
- *  enamel in a foil ring, its name under it. A tap swings the rose a turn and
+/** Plan a walk, in the map's dock beside the others and their size: a
+ *  compass rose on go enamel in a foil ring, its name under it. A tap swings the rose a turn and
  *  a half, and when it settles (0.9 s) `onWalkEnd` opens the planner. Reduce
  *  Motion skips the swing. */
 
@@ -19,7 +19,7 @@ import { Foil } from './Game';
 import { color, foil, font } from './theme';
 
 const LABEL = 'Plan a walk';
-const SIZE = 72;
+const SIZE = 34;
 const SWING_MS = 900;
 
 /** Eight points, each a light and a dark half, so the rose reads as struck
@@ -114,7 +114,7 @@ export function PlanWalkButton({
       <Foil style={styles.ring}>
         <View style={styles.enamel}>
           <Animated.View style={spin}>
-            <Rose size={SIZE - 18} />
+            <Rose size={SIZE - 6} />
           </Animated.View>
         </View>
       </Foil>
@@ -124,9 +124,9 @@ export function PlanWalkButton({
 }
 
 const styles = StyleSheet.create({
-  press: { alignItems: 'center', gap: 4 },
+  press: { alignItems: 'center', gap: 2 },
   pressed: { transform: [{ scale: 0.95 }] },
-  ring: { width: SIZE, height: SIZE, borderRadius: SIZE / 2, padding: 3 },
+  ring: { width: SIZE, height: SIZE, borderRadius: SIZE / 2, padding: 1.5 },
   enamel: {
     flex: 1,
     borderRadius: SIZE / 2,
@@ -136,5 +136,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { ...font.uiBold, fontSize: 12, color: color.ink },
+  label: { ...font.uiBold, fontSize: 11, color: color.inkSoft },
 });

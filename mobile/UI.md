@@ -237,7 +237,7 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12); with another `icon`, the walk card's skip and a story's ⋯ |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
-| `src/PlanWalkButton.tsx` | Plan a walk: the dock's raised compass rose; it swings, then the planner opens (0.9 s) |
+| `src/PlanWalkButton.tsx` | Plan a walk: the dock's compass rose; it swings, then the planner opens (0.9 s) |
 | `src/MapDock.tsx` | home's dock: Journal · Add · Plan a walk · Locate |
 | `src/Icon.tsx` | the icon family, ink line over a cream tone: every button over the map, walk and planner, and the close circle |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
@@ -384,8 +384,8 @@ or raised paper with `lift` where glass is unavailable. Never glass on a full sh
 tinted control, `prominent`: charcoal enamel glass (`solid().goGlass`) in a cream
 bezel, its label in `onGo`. Turn on location is a go `Button`. **Home has the
 dock** (`src/MapDock.tsx`, docs/10, "Dusk, and the map's dock"): one glass bar
-at bottom 70, Journal · Add · a raised Plan a walk · Locate, each named under
-its icon (`src/Icon.tsx`). Plan a walk is a 72pt compass rose on go
+at bottom 70, Journal · Add · Plan a walk · Locate, one size, each named under
+its icon (`src/Icon.tsx`). Plan a walk is a 34pt compass rose on go
 enamel in a foil ring; a tap swings it and the planner opens as it settles,
 0.9 s (`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. **The walk
 has the bottom row**: Add a memory bottom left and Center on me bottom right,

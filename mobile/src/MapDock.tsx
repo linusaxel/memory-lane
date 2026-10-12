@@ -1,5 +1,5 @@
-/** The map's dock: Journal · Add · a raised Plan a walk · Locate, one glass
- *  bar along the bottom, a game's action bar. Every button says its name
+/** The map's dock: Journal · Add · Plan a walk · Locate, one glass bar along
+ *  the bottom, a game's action bar, four buttons of one size. Every button says its name
  *  under it. Never over a memory: App hides it while one is up (UI.md rule 13). */
 
 import type { ReactNode } from 'react';
@@ -65,7 +65,7 @@ export default function MapDock(p: Props) {
         <Slot label="Add" say="Add a memory here" onPress={p.onAdd}>
           <Icon name="add" size={28} color={color.ink} />
         </Slot>
-        <View style={styles.raised}>
+        <View style={styles.slot}>
           <PlanWalkButton onPress={p.onPlanPress} onWalkEnd={p.onPlan} />
         </View>
         <Slot label="Locate" say="Center on me" onPress={p.onLocate}>
@@ -91,9 +91,8 @@ const styles = StyleSheet.create({
   },
   slot: { flex: 1, alignItems: 'center', gap: 2, minHeight: 44 },
   pressed: { transform: [{ scale: 0.92 }] },
-  icon: { height: 30, justifyContent: 'center', alignItems: 'center' },
+  icon: { height: 34, justifyContent: 'center', alignItems: 'center' },
   name: { ...font.uiBold, fontSize: 11, color: color.inkSoft },
-  raised: { flex: 1.3, alignItems: 'center', marginTop: -40 },
   newDot: {
     position: 'absolute',
     top: 0,

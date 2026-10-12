@@ -4777,8 +4777,10 @@ simulator.
   lavender for earned (`plum`). Meanings unchanged.
 - **Flat, not gradients.** Foil and velvet keep their three stops, all but
   equal, so `Foil` and `Velvet` need no change and the look stays one file.
-- **The map's dock** (`src/MapDock.tsx`): Journal · Add · a raised Plan a
-  walk · Locate in one glass bar at bottom 70, each named under its icon. The
+- **The map's dock** (`src/MapDock.tsx`): Journal · Add · Plan a walk ·
+  Locate in one glass bar at bottom 70, each named under its icon, all one
+  size (a raised 72pt rose stood out and broke the bar's edge, so it came
+  down to 34pt the same day). The
   Collector HUD keeps the top; the Journal orb stays only off home (planner,
   walk), where the dock is not. The walk keeps its bottom row.
 - **Plan a walk is an emblem**, a compass rose on charcoal enamel in a foil
