@@ -474,7 +474,10 @@ ever covers a memory.
       check at 44 pt (does each stage still look different at journal size?).
       Files replace the placeholders in `mobile/assets/collector/<class>-<stage>.png`
       (today every stage is the sheet's front view, cut by hand); nothing
-      else changes.
+      else changes. The rank-up and the ladder (2026-10-12) are built
+      for gear: each stage should visibly add something (hood trim, a staff,
+      a lantern, a robe colour), or the rank-up springs a wizard into itself.
+      The placeholders' white fringe shows on the dark plate.
 - [ ] **The Collector replaces the fir at the edges.** (checked 2026-10-11)
       One character, not two: the empty journal tab, the walked-out planner,
       sign-in and the crash screen use your Collector's front view

@@ -166,12 +166,15 @@ Grouped rows: a small label, a paperRaised card with a gold hairline, an optiona
 
 Your Collector (src/CollectorPage.tsx, pageSheet, from the Collector in the header) - "Your
 Collector" 34/700, × top right
-├─ now                         the look at 200pt, the class, the rank 28/700, "4 lockets · 4 to
-│                              Lamplit" and a plum bar (full at the top)
-├─ The path                    the eight stages in a row, reached in colour, ahead as inkFaint
-│                              silhouettes (the look with tintColor), each "at 15"
-└─ Your class                  the four, two to a row, gold ring on yours; a tap switches. The
-                               stage comes along. No shop, no prices, no currency
+├─ now                         the look in its plate (src/Plate.tsx: double gold rule, a diamond
+│                              at each corner) at 200pt, the class, the rank 28/700, "4 lockets
+│                              · 4 more to the next robe" and a plum bar (full at the top)
+├─ The path                    a ladder of eight: a gold spine up to you, a gold knot on each
+│                              reached rung and a plum one on yours ("You"), the rest ahead as
+│                              inkFaint silhouettes (the look with tintColor), each "at 15"
+└─ Your class                  four crests, two to a row, each a small plate, full gold on
+                               yours; a tap switches. The stage comes along. No shop, no
+                               prices, no currency
 
 Edit profile (src/EditProfile.tsx, pageSheet, from the header) - "Profile" 34/700, × top right
 ├─ the photo, 112pt            Choose photo / Take photo, square crop; Remove photo. Public,
@@ -219,7 +222,8 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
 | `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the map's ⚙ |
 | `src/EditProfile.tsx` | the photo and the name. Its own sheet, from the journal's header |
-| `src/CollectorPage.tsx` | your Collector: the look, the path of eight, the four classes. Its own sheet, from the journal's header |
+| `src/CollectorPage.tsx` | your Collector, a character sheet: the look in its plate, the ladder of eight, the four crests. Its own sheet, from the journal's header |
+| `src/Plate.tsx` | the Collector's framed plate: the portrait, the crests, the rank-up |
 | `src/Avatar.tsx` | a photo, an initial or nobody, in one circle at any size |
 | `src/DiamondRule.tsx` | the one ornament, twice on an open story: under the byline, before the notes |
 | `src/PullQuote.tsx` | a quote set apart: gold mark, Newsreader italic, a caption |

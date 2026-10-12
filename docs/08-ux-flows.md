@@ -1207,16 +1207,17 @@ A walk's lockets carried the Collector to its next stage.
 
 1. Done on the finish card (F30), or ending the walk (F34), hands back the
    map. If the locket count now opens a stage the phone has not kept, a full
-   screen comes first: "Rank up", the old look, a beat, then the new one
-   growing in, its rank ("Lamplit") and the count beside a locket, with a
-   success haptic.
+   screen comes first: "Rank 3 of 8", the old look in its gold plate, a beat,
+   then a gold light gathers behind it with two light taps, the new look
+   springs in with a success haptic, and its rank ("Lamplit") and the count
+   beside a locket rise under it.
 2. **Go on** is the map. The new stage is kept, so it shows once.
 
 Someone with lockets from before the Collector meets it once: on the first
 launch on the map, "Your Collector", their look, "You're already Lamplit." and
-Go on. Then the normal rules. Never on the unlock and never over a memory:
+Go on, with the plate and the light still. Then the normal rules. Never on the unlock and never over a memory:
 the story is read first. A rank never goes down: a hidden memory lowers the count, not the stage.
-Reduce Motion: a crossfade. `App.tsx` (`revealRank`), `src/RankUp.tsx`,
+Reduce Motion: a crossfade, no rays. `App.tsx` (`revealRank`), `src/RankUp.tsx`,
 `.maestro/walk-and-unlock.yml`. Why, in `docs/10-decisions.md`, "The
 Collector".
 
