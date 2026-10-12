@@ -646,6 +646,8 @@ one (not over the preview's card). Filing needs no walk.
    here**. Its locket shuts over the map and drops onto the spot, and the
    memory, already unlocked, opens on top of the map: the first sight of what
    anybody else will find here. The first memory ever holds a beat and says so.
+   Closing it shows the rank-up first if this memory carried the Collector a
+   stage (F39).
 
 ### It files where you are, and nowhere else
 
@@ -1184,17 +1186,21 @@ this account yet."
 
 ## F38 · Choose your Collector — **Implemented**
 
-Someone new picks the character that will grow with their lockets.
+Someone new picks the character that will grow with their lockets and the
+memories they file.
 
 1. The last onboarding page, "Pick your Collector", shows the four classes
    (Wayfinder, Pilgrim, Skywatcher, Chronicler) at stage 4 in a grid. The
    Wayfinder is chosen until another is tapped; one tap chooses, with a gold
-   ring. "Change it any time in your journal."
+   ring. "It grows as you open memories and leave your own. Change it any
+   time in your journal."
 2. Start (or Next, to the location primer) goes on with it. Skip on any page
    leaves the Wayfinder.
 3. Later, tapping the Collector in the journal's header opens its page, where
    any of the four can be chosen again. The stage comes along: it is your
-   lockets, not the class's.
+   counts, not the class's. The page shows both counts, what the next rank
+   still wants ("1 memory of yours to Lamplit"), and when a memory is
+   missing, **Leave a memory here** (F5).
 
 The pick lives on the phone (`memorylane.collector.v1`), so a new phone starts
 as the Wayfinder. Nothing is sold and the look opens nothing.
@@ -1203,10 +1209,14 @@ Why, in `docs/10-decisions.md`, "The Collector".
 
 ## F39 · Rank up — **Implemented**
 
-A walk's lockets carried the Collector to its next stage.
+A walk's lockets, or a memory filed, carried the Collector to its next stage.
+Every stage needs both counts: lockets 0/3/8/15/30/60/120/250 and memories
+filed (still public) 0/1/2/3/5/8/12/20. While a memory is what's missing, the
+finish card says so ("1 memory of yours to Trailwalker").
 
-1. Done on the finish card (F30), or ending the walk (F34), hands back the
-   map. If the locket count now opens a stage the phone has not kept, a full
+1. Done on the finish card (F30), ending the walk (F34), or, off a walk,
+   closing a memory's sheet (how a filed memory crosses one, F5) hands back
+   the map. If the two counts now open a stage the phone has not kept, a full
    screen comes first: "Rank 3 of 8", the old look in its gold plate, a beat,
    then a gold light gathers behind it with two light taps, the new look
    springs in with a success haptic, and its rank ("Lamplit") and the count

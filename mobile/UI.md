@@ -167,11 +167,13 @@ Grouped rows: a small label, a paperRaised card with a gold hairline, an optiona
 Your Collector (src/CollectorPage.tsx, pageSheet, from the Collector in the header) - "Your
 Collector" 34/700, × top right
 ├─ now                         the look in its plate (src/Plate.tsx: double gold rule, a diamond
-│                              at each corner) at 200pt, the class, the rank 28/700, "4 lockets
-│                              · 4 more to the next robe" and a plum bar (full at the top)
+│                              at each corner) at 200pt, the class, the rank 28/700, "9 lockets
+│                              · 1 added", a plum bar (the scale further behind fills it),
+│                              "1 memory of yours to Lamplit", and while a memory is missing
+│                              a quiet "Leave a memory here" (closes to Add)
 ├─ The path                    a ladder of eight: a gold spine up to you, a gold knot on each
 │                              reached rung and a plum one on yours ("You"), the rest ahead as
-│                              inkFaint silhouettes (the look with tintColor), each "at 15"
+│                              inkFaint silhouettes (the look with tintColor), each "at 15 · 3 added"
 └─ Your class                  four crests, two to a row, each a small plate, full gold on
                                yours; a tap switches. The stage comes along. No shop, no
                                prices, no currency

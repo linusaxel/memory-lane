@@ -4664,7 +4664,19 @@ Skywatcher, Chronicler) and it grows through eight looks as your lockets climb
 
 - **Progress is the locket count**, `profile.unlocked`: memories opened. Not
   XP, not walks finished: a locket is the thing this app is about, and the
-  count is already on the profile. XP and levels go.
+  count is already on the profile. XP and levels go. *Amended 2026-10-12:
+  lockets and memories filed, below.*
+- **Amended 2026-10-12: every stage also needs memories you filed**, 0/1/2/3/
+  5/8/12/20 (`FILED`), counted while still public (`profile.submitted`, not
+  hidden). A stage opens when both counts reach it. The founder's call: the
+  corpus grows with what walkers leave, and the Collector is the push. Its
+  costs, accepted: someone who only reads stays at stage 1 until they file
+  one, and filing is public at once behind only a word list and reports
+  (*Posts are screened by rules, not a model*), so a reward invites throwaway
+  posts; a hidden one stops counting. When memories are what's missing, the
+  Collector page offers "Leave a memory here" and the walk's card says how
+  many. A filed memory can cross a stage too: the reveal follows closing its
+  sheet, off a walk.
 - **Stages open at 0/3/8/15/30/60/120/250.** A new look on walks one, two and
   three, then about six weeks, three months and six months apart on the free
   walk. The first draft (0/5/15/…/1000) outran the library: 847 visible

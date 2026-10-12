@@ -26,6 +26,7 @@ type Props = {
   from: number | null;
   to: number;
   lockets: number;
+  filed: number;
   onDone: () => void;
 };
 
@@ -39,7 +40,7 @@ const RAYS = Array.from({ length: 12 }, (_, i) => {
   return `M${at(6, -0.05)} L${at(50, 0)} L${at(6, 0.05)} Z`;
 }).join(' ');
 
-export default function RankUp({ id, from, to, lockets, onDone }: Props) {
+export default function RankUp({ id, from, to, lockets, filed, onDone }: Props) {
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
   const still = from === null;
@@ -186,7 +187,9 @@ export default function RankUp({ id, from, to, lockets, onDone }: Props) {
         </Text>
         <View style={styles.count}>
           <Image source={locketOf().pin} style={styles.locket} />
-          <Text style={styles.body}>{`${lockets} ${lockets === 1 ? 'locket' : 'lockets'}`}</Text>
+          <Text style={styles.body}>
+            {`${lockets} ${lockets === 1 ? 'locket' : 'lockets'} · ${filed} added`}
+          </Text>
         </View>
       </Animated.View>
       <View style={styles.foot}>

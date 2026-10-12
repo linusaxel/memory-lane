@@ -30,7 +30,7 @@ import {
 } from 'react-native';
 
 import CollectorLook from './CollectorLook.tsx';
-import { classOf, rankInto, type ClassId } from './collector.ts';
+import { classOf, rankInto, wants, wantsWords, type ClassId } from './collector.ts';
 import type { Coordinates, LocatedMemory, WalkAsk, WalkedRoute } from './api.ts';
 import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
@@ -706,10 +706,12 @@ type WalkDoneProps = {
   loop: boolean;
   /** First unlock to last, or null when they were not all earned today. */
   minutes: number | null;
-  /** Your Collector and every locket so far, for its bar to the next rank. */
+  /** Your Collector, every locket so far and the memories you filed, for its
+   *  bar to the next rank. */
   collector: ClassId;
   rank: number;
   lockets: number;
+  filed: number;
   /** The walk drawn whole, for the card it becomes in the journal. */
   path: Coordinates[];
   onDone: () => void;
@@ -780,12 +782,14 @@ export function WalkDone({
   collector,
   rank,
   lockets,
+  filed,
   path,
   onDone,
   onHeight,
   onMore,
   onNotify,
 }: WalkDoneProps) {
+  const want = wants(rank, lockets, filed);
   const took =
     minutes === null
       ? ''
@@ -824,11 +828,20 @@ export function WalkDone({
               {classOf(collector).ranks[rank]}
             </Text>
             <View style={styles.bar}>
-              <View style={[styles.barFill, { width: `${rankInto(rank, lockets) * 100}%` }]} />
+              <View
+                style={[styles.barFill, { width: `${rankInto(rank, lockets, filed) * 100}%` }]}
+              />
             </View>
           </View>
         </View>
       </View>
+      {/* Lockets alone don't grow it: when a memory of theirs is what's
+          missing, say so here, where the walk just paid out. */}
+      {want && want.filed > 0 && (
+        <Text style={styles.cardBody}>
+          {`${wantsWords(want)} to ${classOf(collector).ranks[rank + 1]}`}
+        </Text>
+      )}
       {onNotify && (
         <View testID="surprise-ask">
           <Text style={styles.cardBody}>Let a story find you now and then?</Text>

@@ -80,7 +80,7 @@ export default function Onboarding({
     {
       art: null,
       title: 'Pick your Collector',
-      body: 'It grows with every memory you open. Change it any time in your journal.',
+      body: 'It grows as you open memories and leave your own. Change it any time in your journal.',
     },
   ];
   // Someone who already said yes is not asked again.

@@ -280,6 +280,15 @@ def test_the_profile_counts_what_you_did(client):
     assert profile["unlocked"] == 2
 
 
+def test_a_hidden_memory_no_longer_counts_as_filed(client, db_session):
+    """The Collector grows with what is still public (docs/10, "The Collector")."""
+    dev = device()
+    gone = submit(client, device=dev)
+    submit(client, device=dev)
+    db_session.execute(text("UPDATE memories SET hidden = true WHERE id = :id"), {"id": gone["id"]})
+    assert client.get(f"/v1/me?device={dev}").json()["submitted"] == 1
+
+
 def test_two_submissions_from_one_device_are_one_person(client, db_session):
     dev = device()
     first = submit(client, device=dev)

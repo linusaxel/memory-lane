@@ -183,7 +183,8 @@ export default function Settings({
             <Image source={locketOf().pin} style={styles.locket} />
             <Text style={styles.howText}>
               A memory unlocks only on a walk, within {Math.round(radiusMeters)} m of it. Each one
-              you open is a locket, and your Collector grows with them.
+              you open is a locket, and your Collector grows with them and with the memories you
+              leave.
             </Text>
           </View>
         </Group>

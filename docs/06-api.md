@@ -108,7 +108,8 @@ is in [repository-map.md](repository-map.md#api); why it is gated is in
   for a blocked word, an email, a phone number or a link
 - `GET /v1/me?device=UUID` / `PUT /v1/me` `{device, display_name}` - the name a
   submission is signed with, which sign-ins are attached, `subscribed` /
-  `subscribed_until`, and `unlocked`, the lockets the Collector grows with
+  `subscribed_until`, `unlocked`, the lockets, and `submitted`, the memories
+  filed and still public (not hidden): the two counts the Collector grows with
   (docs/10, "The Collector").
   `hearts_received` counts every heart on what the account filed.
   `avatar_url` is the profile photo, server-relative, or null.

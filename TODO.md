@@ -461,7 +461,8 @@ ever covers a memory.
       Locket-keeper lesson: four game layers were reversed in eight days
       without a user. Print the four classes, each with its eight stages, and
       show five people after a walk. Do they pick one quickly, and do they ask
-      what comes next? Fantasy Hike's 708 reviews never asked for gear
+      what comes next? Does needing their own memories to grow read as a push
+      or a wall? Fantasy Hike's 708 reviews never asked for gear
       (`docs/research-fantasy-hike.md`), so this is the founder's pull until
       walkers show it is theirs too.
 - [ ] **The art: 4 classes × 8 stages, one stage at a time.** (checked
@@ -492,8 +493,9 @@ ever covers a memory.
       Locket-keeper idea). It costs the heading beam and accuracy ring
       (`followsUserLocation`), so only after a real-phone look. Not before the
       rest has been used.
-- [ ] **Measure it.** (checked 2026-10-12) D30 and walks per walker,
-      before and after the Collector shipped (2026-10-12).
+- [ ] **Measure it.** (checked 2026-10-12) D30, walks and memories filed
+      per walker, before and after the Collector shipped (2026-10-12), and how
+      many filed ones get hidden.
 
 ### The walk on the map
 

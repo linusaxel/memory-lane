@@ -1,15 +1,28 @@
 /** Your Collector: a sheet of its own, opened from the Collector in the
  *  journal's header (docs/10, "The Collector"). A character sheet: the look
  *  now in its plate, how far to the next robe, the path of eight as a ladder
- *  with the ones ahead as silhouettes, and the four classes as crests. The stage comes along on a switch: it is your
- *  lockets, not the class's. No shop, no prices, no currency. */
+ *  with the ones ahead as silhouettes, and the four classes as crests. A stage
+ *  needs lockets and memories you filed both (docs/10, "The Collector"); when
+ *  a memory is what's missing, the page offers to leave one. The stage comes
+ *  along on a switch: it is yours, not the class's. No shop, no prices, no
+ *  currency. */
 
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import CloseButton from './CloseButton.tsx';
 import CollectorLook from './CollectorLook.tsx';
 import Plate from './Plate.tsx';
-import { CLASSES, STAGES, classOf, rankInto, toNext, type ClassId } from './collector.ts';
+import Button from './Button.tsx';
+import {
+  CLASSES,
+  FILED,
+  STAGES,
+  classOf,
+  rankInto,
+  wants,
+  wantsWords,
+  type ClassId,
+} from './collector.ts';
 import { color, dim, font, label, screenTitle } from './theme.ts';
 
 type Props = {
@@ -18,14 +31,24 @@ type Props = {
   id: ClassId;
   stage: number;
   lockets: number;
+  filed: number;
   onChoose: (id: ClassId) => void;
+  onAdd: () => void;
 };
 
-export default function CollectorPage({ visible, onClose, id, stage, lockets, onChoose }: Props) {
+export default function CollectorPage({
+  visible,
+  onClose,
+  id,
+  stage,
+  lockets,
+  filed,
+  onChoose,
+  onAdd,
+}: Props) {
   const chosen = classOf(id);
-  const left = toNext(lockets);
-  const next = stage + 1 < STAGES.length ? chosen.ranks[stage + 1] : null;
-  const into = rankInto(stage, lockets);
+  const want = wants(stage, lockets, filed);
+  const into = rankInto(stage, lockets, filed);
   return (
     <Modal
       visible={visible}
@@ -48,12 +71,24 @@ export default function CollectorPage({ visible, onClose, id, stage, lockets, on
             {chosen.ranks[stage]}
           </Text>
           <Text style={styles.count}>
-            {`${lockets} ${lockets === 1 ? 'locket' : 'lockets'}`}
-            {next !== null && left !== null && left > 0 ? ` · ${left} more to the next robe` : ''}
+            {`${lockets} ${lockets === 1 ? 'locket' : 'lockets'} · `}
+            {`${filed} added`}
           </Text>
           <View style={styles.bar}>
             <View style={[styles.fill, { width: `${into * 100}%` }]} />
           </View>
+          {want && wantsWords(want) !== '' && (
+            <Text style={styles.wants}>{`${wantsWords(want)} to ${chosen.ranks[stage + 1]}`}</Text>
+          )}
+          {want && want.filed > 0 && (
+            <Button
+              kind="quiet"
+              label="Leave a memory here"
+              onPress={onAdd}
+              accessibilityHint="Files a memory where you stand"
+              place={styles.add}
+            />
+          )}
         </View>
 
         <Text style={styles.groupTitle}>The path</Text>
@@ -64,7 +99,9 @@ export default function CollectorPage({ visible, onClose, id, stage, lockets, on
               style={styles.rung}
               accessible
               accessibilityLabel={
-                i <= stage ? `${chosen.ranks[i]}, reached` : `${chosen.ranks[i]}, at ${at} lockets`
+                i <= stage
+                  ? `${chosen.ranks[i]}, reached`
+                  : `${chosen.ranks[i]}, at ${at} lockets and ${FILED[i]} added`
               }
             >
               <View style={styles.spine}>
@@ -85,7 +122,9 @@ export default function CollectorPage({ visible, onClose, id, stage, lockets, on
                 <Text style={[styles.stepRank, i > stage && styles.ahead]} numberOfLines={1}>
                   {chosen.ranks[i]}
                 </Text>
-                <Text style={styles.stepAt}>{i === stage ? 'You' : `at ${at}`}</Text>
+                <Text style={styles.stepAt}>
+                  {i === stage ? 'You' : `at ${at} · ${FILED[i]} added`}
+                </Text>
               </View>
             </View>
           ))}
@@ -129,6 +168,8 @@ const styles = StyleSheet.create({
   className: { marginTop: 14 },
   rank: { ...screenTitle, fontSize: 28, lineHeight: 34, textAlign: 'center' },
   count: { ...font.prose, fontSize: 16, color: color.inkSoft },
+  wants: { ...font.ui, fontSize: 13, color: color.inkFaint, marginTop: 6 },
+  add: { marginTop: 10 },
   bar: {
     alignSelf: 'stretch',
     height: 6,

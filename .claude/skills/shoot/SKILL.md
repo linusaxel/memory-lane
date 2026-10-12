@@ -1,6 +1,6 @@
 ---
 name: shoot
-description: Screenshot every screen of the Memory Lane app (or the ones named), 75 of them in about 3.5 minutes, without Maestro. Use when asked to capture, screenshot or look at every screen, or to check a UI change across the app.
+description: Screenshot every screen of the Memory Lane app (or the ones named), 76 of them in about 3.5 minutes, without Maestro. Use when asked to capture, screenshot or look at every screen, or to check a UI change across the app.
 ---
 
 # Shoot every screen
@@ -27,7 +27,7 @@ screen names are `SCREENS` in `mobile/src/devOpen.ts`.
 
 ## What it covers
 
-75 screens: startup, sign-in, onboarding, the map, every memory card (locked
+76 screens: startup, sign-in, onboarding, the map, every memory card (locked
 near and far, a stack, open with pictures, a quote, a Wikipedia preview,
 notes, report, block, your own), the planner and its variants (stops, mystery,
 new nearby, nothing at that length, no location, no walk, finding, one way,

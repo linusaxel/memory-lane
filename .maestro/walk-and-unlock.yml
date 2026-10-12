@@ -192,20 +192,47 @@ appId: ${APP_ID}
 # F35: signed in, not subscribed: a quiet way to the paywall, never a pop-up.
 - assertVisible:
     id: "walk-done-more"
-# A walked walk ends itself: Done is the map again, no walk card. Four
-# lockets crossed the first stage (3), so the rank-up comes first, once.
+# Four lockets reach the first stage's 3, but every stage also wants a
+# memory of your own (docs/10, "The Collector"), and this device has filed
+# none: the card says so, and Done is only the map.
+- assertVisible: "1 memory of yours to Trailwalker"
+# A walked walk ends itself: Done is the map again, no walk card.
 - tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Plan a walk"
+    timeout: 30000
+- assertNotVisible:
+    id: "rank-up"
+- assertNotVisible: "End walk"
+
+# F39 by filing: one memory of its own opens Trailwalker. The reveal waits
+# until its sheet is closed: the memory is read first.
+- tapOn: "Add a memory here"
+- tapOn:
+    id: "title"
+- inputText: "Where the walk came round"
+- tapOn:
+    id: "story"
+- inputText: "We came back to where we started and the light had changed on the water."
+- tapOn: "Hide keyboard"
+- tapOn: "Next"
+- tapOn:
+    id: "seal"
+- extendedWaitUntil:
+    visible: ".*light had changed.*"
+    timeout: 40000
+- assertNotVisible:
+    id: "rank-up"
+- tapOn: "Close"
 - extendedWaitUntil:
     visible:
       id: "rank-up"
     timeout: 10000
 - assertVisible: ".*Trailwalker.*"
 - tapOn: "Go on"
-
 - extendedWaitUntil:
     visible: "Plan a walk"
-    timeout: 30000
-- assertNotVisible: "End walk"
+    timeout: 10000
 
 # F15 + F31: the journal keeps the walk. Its row opens in place to its
 # stops, and an earned one opens the same sheet. (F16, the same journal with

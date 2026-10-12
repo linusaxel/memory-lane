@@ -85,6 +85,7 @@ export const SCREENS = [
   'journal-mine',
   'journal-memory',
   'collector',
+  'collector-filing',
   'past',
   'submit',
   'submit-filled',

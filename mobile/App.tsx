@@ -349,7 +349,9 @@ export default function App() {
     loadCollector().then(setCollector);
   }, []);
   const lockets = profile?.unlocked ?? 0;
-  const rank = stageNow(collector?.stage, lockets);
+  // Memories this account filed that are still public: the second scale.
+  const filed = profile?.submitted ?? 0;
+  const rank = stageNow(collector?.stage, lockets, filed);
   const collectorId = classOf(collector?.class).id;
   const keepCollector = useCallback((patch: Collector) => {
     setCollector((now) => {
@@ -361,20 +363,21 @@ export default function App() {
   // The one loud moment, over the map (docs/10, "The Collector"). `from` is
   // null for "You're already".
   const [rankUp, setRankUp] = useState<{ from: number | null; to: number } | null>(null);
-  // A stage crossed since the last one kept shows as the walk hands back the
-  // map: Done on its card, or ending it. Never on the unlock.
+  // A stage crossed since the last one kept shows as the map comes back: Done
+  // on a walk's card, ending it, or closing a memory's sheet off a walk (how
+  // a filed memory crosses one). Never on the unlock, never over a memory.
   const revealRank = useCallback(() => {
     if (collector?.stage === undefined) return;
-    const to = stageOf(lockets);
+    const to = stageOf(lockets, filed);
     if (to <= collector.stage) return;
     setRankUp({ from: collector.stage, to });
     keepCollector({ stage: to });
-  }, [collector, lockets, keepCollector]);
+  }, [collector, lockets, filed, keepCollector]);
   // The first time the Collector meets this account's lockets, on the map:
   // someone who already has some is told their rank once ("You're already").
   useEffect(() => {
     if (!collector || collector.stage !== undefined || !profile || !signedIn || intro) return;
-    const to = stageOf(profile.unlocked);
+    const to = stageOf(profile.unlocked, profile.submitted);
     keepCollector({ stage: to });
     if (to > 0) setRankUp({ from: null, to });
   }, [collector, profile, signedIn, intro, keepCollector]);
@@ -1402,6 +1405,10 @@ export default function App() {
         return;
       case 'collector':
         return setCollectorOpen(true);
+      // Lockets enough for the next stage and a memory short: the nudge.
+      case 'collector-filing':
+        if (profile) borrow(profile, setProfile, { ...profile, unlocked: 9, submitted: 1 });
+        return setCollectorOpen(true);
       case 'rank-up':
         return setRankUp({ from: 1, to: 2 });
       case 'rank-already':
@@ -1929,6 +1936,12 @@ export default function App() {
         id={collectorId}
         stage={rank}
         lockets={lockets}
+        filed={filed}
+        onAdd={() => {
+          setCollectorOpen(false);
+          setJournalOpen(false);
+          setSubmitOpen(true);
+        }}
         onChoose={(id) => {
           Haptics.selectionAsync().catch(() => {});
           keepCollector({ class: id });
@@ -1965,6 +1978,7 @@ export default function App() {
         onClose={() => {
           setOpenAt([]);
           setDiving(null);
+          if (!walking) revealRank();
         }}
         position={position}
         revealId={revealId}
@@ -2228,6 +2242,7 @@ export default function App() {
               collector={collectorId}
               rank={rank}
               lockets={lockets}
+              filed={filed}
               path={donePath}
               onDone={() => {
                 setWalkDone(false);
@@ -2557,6 +2572,7 @@ export default function App() {
             from={rankUp.from}
             to={rankUp.to}
             lockets={lockets}
+            filed={filed}
             onDone={() => setRankUp(null)}
           />
         )}

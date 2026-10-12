@@ -89,7 +89,7 @@ def profile_of(session, device: str) -> Profile:
     row = session.execute(
         text("""
             SELECT u.id, u.display_name, u.avatar_path,
-                (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id) AS submitted,
+                (SELECT COUNT(*) FROM memories m WHERE m.user_id = u.id AND NOT m.hidden) AS submitted,
                 (SELECT COUNT(*) FROM memory_hearts mh JOIN memories m ON m.id = mh.memory_id
                  WHERE m.user_id = u.id) AS hearts_received,
                 COALESCE(
