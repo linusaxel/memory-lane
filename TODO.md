@@ -26,6 +26,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **The Figma MCP stops after a handful of calls.** 2026-10-12: the personal
+  team is on Starter, which caps MCP calls a month, and the Monta seat is
+  Collab, which can't edit. A redesign session made the file and then got no
+  further. Mockups came out as HTML rendered by headless Chrome instead
+  (`~/Downloads/memory-lane-redesign/board.html`). Fix: a Professional seat on
+  the personal team, or start design work from HTML and skip Figma.
+
 - **The source screen fails biographies that hold a spot scene.** 2026-10-10:
   Haiku's screen scored Kirstine Meyer's Ørsted essays 0.00 and 0.25, rejecting
   the 1820 Nørregade discovery window as "not personal experiences"; the
