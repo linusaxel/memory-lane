@@ -98,7 +98,7 @@ def get_nearby_memories(
     lat: float = Query(..., ge=-90, le=90, description="Latitude"),
     lng: float = Query(..., ge=-180, le=180, description="Longitude"),
     radius_km: float = Query(10, ge=0.1, le=100, description="Search radius in km"),
-    limit: int = Query(20, ge=1, le=100, description="Max results"),
+    limit: int = Query(20, ge=1, le=1000, description="Max results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     tags: str | None = Query(None, description="Comma-separated tags to filter"),
     layer: str | None = Query(

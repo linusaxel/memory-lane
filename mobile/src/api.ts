@@ -224,7 +224,7 @@ export async function fetchNearby(
     lat: String(at.lat),
     lng: String(at.lng),
     radius_km: String(radiusKm),
-    limit: '100',
+    limit: '1000',
   });
   // Only so the server can leave out whoever this account blocked.
   if (device) params.set('device', device);
