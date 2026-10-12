@@ -7,8 +7,8 @@ For any agent (Claude Code, Codex, Cursor) or person working in this repo.
 
 **Memory Lane** is a walk planner with memories along the way. The pipeline
 extracts location-based memories from video transcripts; the app plans one
-free walk a day past about one a kilometre, and a story opens only on that
-walk, standing on its spot. A subscription buys more walks a day.
+free walk a week past about one a kilometre, and a story opens only on that
+walk, standing on its spot. A subscription buys a walk every day.
 
 Pipeline: `Content URLs → Transcripts → LLM Extraction (with coords) → Query API → Expo app (the walk planner)`
 

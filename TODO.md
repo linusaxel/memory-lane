@@ -241,21 +241,22 @@ priority order.
       the nearest. Sources for the ring first, or shrink `LAUNCH_BBOX`. The flow for it in docs/08,
       *Arrive somewhere and find its history*, is still only proposed, waiting on a source that has since been chosen: specify it
       from the product, not from whatever ingestion produced.
-- [ ] **Email it@historiskatlas.dk for API access.** (checked 2026-10-04) The
+- [ ] **Email it@historiskatlas.dk for API access.** (checked 2026-10-12) Drafted
+      in `docs/permission-request.md`; send it. The
       per-story licence ("Geo" in their API) is not on the public pages, and
       the sitemap source has title and intro only. 340 sabotage stories are
       ingested (dev DB), each a title and one line. Also a partial competitor:
       judge their neighbourhood-level content before building on it.
-- [ ] **Email kbhbilleder@kff.kk.dk.** (checked 2026-10-04) 41,779 historical
+- [ ] **Email kbhbilleder@kff.kk.dk.** (checked 2026-10-12) Drafted in
+      `docs/permission-request.md`; send it. 41,779 historical
       photos, maps and drawings, ~5,000 out of copyright and commercially
       usable, many geotagged. Bot-protected: ask, never scrape. Open source
       with a public APACS API (github.com/CopenhagenCityArchives). Picture memories.
-- [ ] **More public-domain memoirs.** (checked 2026-10-04) Brandes' *Levned*
-      I added 4 (source 231); volumes 2 and 3 are `runeberg:gblevned/2` and
-      `/3`, queried as `Kjøbenhavn`. Heiberg's *Et Liv gjenoplevet* is
-      `--source adl --query heibfr05val` (and `06val`, `07val`). Nexø has no free text;
-      *Mit Livs Eventyr* retells source 202. Gutenberg's own search works when
-      gutendex is down.
+- [ ] **More public-domain memoirs.** (checked 2026-10-12) Ingested, none
+      extracted: Brandes' *Levned* II (242) and III (243), Heiberg's *Et Liv
+      gjenoplevet* 1-3 (382-384; 383 and 384 still `candidate`). Brandes I
+      (231) gave 4. Next, billed: `python -m pipeline.batch --source "<name>"
+      --run` for each, then read what it made. Nexø has no free text.
 - **Excluded:** arkiv.dk (private use only, no API) and setlist.fm
   (non-commercial API; commercial means Live Nation). Revisit only with a
   licence.

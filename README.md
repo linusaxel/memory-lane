@@ -1,6 +1,6 @@
 # Memory Lane
 
-**A walk planner with memories along the way.** One free walk a day past real
+**A walk planner with memories along the way.** One free walk a week past real
 stories pinned to the places they happened, from travel shows, podcasts and
 people who were there. A story only opens on the walk, standing on its spot.
 

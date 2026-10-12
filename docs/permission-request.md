@@ -37,7 +37,7 @@ Jeres videoer er fulde af den slags: [ét konkret eksempel fra kanalen, fx
 - **I kan altid sige stop**, også for en enkelt historie, og så er den væk
   inden for et døgn.
 
-Appen er gratis med én gåtur om dagen; et abonnement giver flere. Vi sælger
+Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag. Vi sælger
 aldrig adgang til jeres indhold enkeltvis.
 
 Er det i orden med jer? Og skal jeres navn stå på en bestemt måde?
@@ -85,9 +85,80 @@ om lov til at bruge dem sådan:
 - **Private navne**: handler en historie om en privatperson, der kan være i
   live, nævner vi ikke navnet uden at have spurgt.
 
-Appen er gratis med én gåtur om dagen; et abonnement giver flere.
+Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
 
 Er det i orden med jer? Og skal jeres navn stå på en bestemt måde?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+## For Historisk Atlas
+
+it@historiskatlas.dk. Their API carries each story's licence ("Geo"), which
+the public pages don't show; the sitemap gives only a title and an intro.
+Ingest only stories under CC BY, BY-SA or public domain (docs/10, *The
+sources' legal footing*). They are partly a competitor, so ask for access,
+not a partnership.
+
+---
+
+**Emne:** Adgang til jeres API til en gåtursapp om Københavns historie
+
+Hej,
+
+Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
+steder hvor noget er sket. Når man står på stedet, åbner en kort historie
+om hvad der skete netop dér.
+
+Jeres fortællinger passer præcis til det, fx [én konkret historie]. Må jeg
+få adgang til jeres API, så jeg kan se hver fortællings licens og hele
+teksten?
+
+- **Kun åbne licenser**: vi bruger kun fortællinger under CC BY, CC BY-SA
+  eller i public domain, og følger licensens krav.
+- **I står som kilde** med Historisk Atlas' navn og et link til
+  fortællingen hos jer.
+- **I kan altid sige stop**, også for en enkelt fortælling, og så er den
+  væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
+
+Venlig hilsen
+[navn]
+[telefon]
+
+## For kbhbilleder
+
+kbhbilleder@kff.kk.dk. 41,779 photos, maps and drawings, about 5,000 out of
+copyright and free for commercial use, many geotagged. The site is
+bot-protected, so ask and never scrape. The code is open with a public APACS
+API (github.com/CopenhagenCityArchives). A great, precisely located picture
+of a scene is a memory in itself.
+
+---
+
+**Emne:** Jeres frie billeder i en gåtursapp om Københavns historie
+
+Hej,
+
+Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
+steder hvor noget er sket. Når man står på stedet, åbner en kort historie
+om hvad der skete netop dér, og et gammelt billede fra præcis det sted er
+ofte den bedste historie af alle.
+
+Må jeg hente de billeder der er fri af ophavsret og frie til kommerciel
+brug, med deres placering, gennem jeres API i stedet for at belaste
+hjemmesiden? Og findes der en liste over netop dem, eller et felt der
+siger det?
+
+- **I står som kilde** under hvert billede, med arkivets navn, fotografen
+  og et link til billedet hos jer.
+- **Kun frie billeder**: vi bruger intet der stadig er beskyttet.
+- **I kan altid sige stop**, også for et enkelt billede, og så er det væk
+  inden for et døgn.
+
+Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
 
 Venlig hilsen
 [navn]
