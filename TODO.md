@@ -26,17 +26,14 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
-- **The $ column in docs/04 is a guess.** 2026-10-11: no token usage is stored
-  anywhere, so every Road-to-1,000 row priced memories at $0.25 each; the real
-  Batches API usage said ~$0.55 a good one, 71% of it unserved research. It took
-  a scratch script over `batches.list()` to find. Fix: `batch.send` logs each
-  batch's $ from `result.message.usage`.
 - **The source screen fails biographies that hold a spot scene.** 2026-10-10:
   Haiku's screen scored Kirstine Meyer's Ørsted essays 0.00 and 0.25, rejecting
   the 1820 Nørregade discovery window as "not personal experiences"; the
-  screen's 0.3 bar would have dropped it. Fix: `CLASSIFIER_PROMPT` in
-  `pipeline/tasks.py` asks whether something happened at a named spot, not
-  whether it is first-hand.
+  screen's 0.3 bar would have dropped it. `CLASSIFIER_PROMPT` in
+  `pipeline/tasks.py` already says "first-hand or as history" (616d507), and
+  Haiku still failed it. Fix: a biography line among its QUALIFY examples
+  ("In 1820, in his rooms on Nørregade, Ørsted saw the needle move"), measured
+  with `classifier_audit` (cents, so run with `!`).
 
 - **No e2e flow screenshots the locket.** 2026-10-10: porting the unlock
   engine, walk-and-unlock passed green with nothing showing the lid had drawn
@@ -45,11 +42,6 @@ delete an entry when its fix lands.
   memory, since `longPressOn` and the slide's `swipe` block past the unlock.
   Fix: a background `simctl io screenshot` loop in `steps/unlock-stop.yml`
   (`runScript`), or a dev knob that holds the locket open on screen.
-
-- **Explicit-path commits still carry other sessions' hunks.** 2026-10-09:
-  a parallel session's `git commit docs/10-decisions.md` took another's
-  uncommitted entry with it. Fix: shared docs are committed by one session
-  at the end, or `git add -p` then `git commit` without paths.
 
 - **Auto mode blocks dev-database writes.** 2026-09-30: Claude Code's
   permission classifier refused a hand triage (merge two places, hide four

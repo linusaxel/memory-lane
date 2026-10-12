@@ -42,6 +42,15 @@ POLL_SECONDS = 30
 # adds the book's index and note, the finder's second ask, the sheet and two
 # rewrites, each one a check. A content that needs more is stuck, not slow.
 MAX_PASSES = 20
+# $ per 1M tokens at the Batches API's half price: input, output, cache read
+# (2026-10-12). A 1-hour cache write is twice input; a web search is $10 a
+# thousand, not halved.
+PRICES = {
+    "claude-sonnet-5-5": (1.0, 5.0, 0.10),
+    "claude-opus-5-5": (2.0, 10.0, 0.10),
+    "claude-fable-5-1": (5.0, 25.0, 0.125),
+    "claude-haiku-4-5": (0.5, 2.5, 0.05),
+}
 
 
 def chosen(session, content_ids: list[int] | None, source: str | None) -> list[int]:
@@ -87,6 +96,22 @@ def dropped(session, content_ids: list[int], ids: list[int]) -> list[str]:
     return [f"{i}: {why(rows.get(i))}" for i in missing]
 
 
+def dollars(message) -> float | None:
+    """What one batched reply cost, or None for a model PRICES doesn't know."""
+    if (price := PRICES.get(message.model)) is None:
+        return None
+    inp, out, read = price
+    u = message.usage
+    searches = getattr(getattr(u, "server_tool_use", None), "web_search_requests", 0) or 0
+    tokens = (
+        u.input_tokens * inp
+        + u.cache_creation_input_tokens * 2 * inp
+        + u.cache_read_input_tokens * read
+        + u.output_tokens * out
+    )
+    return tokens / 1e6 + searches * 0.01
+
+
 def send(client, requests: dict[str, dict], session) -> int:
     """One batch of `requests`, waited on; how many replies were stored."""
     batch = client.messages.batches.create(
@@ -102,18 +127,26 @@ def send(client, requests: dict[str, dict], session) -> int:
             logger.warning(f"Batch {batch.id}: {e}; polling again")
             continue
         logger.info(f"Batch {batch.id}: {batch.request_counts}")
-    stored = 0
+    stored, spent, unpriced = 0, 0.0, set()
     for result in client.messages.batches.results(batch.id):
         r = requests[result.custom_id]
         if result.result.type != "succeeded":
             logger.warning(f"[content:{r['content_id']}] {result.result.type}: {result.result}")
             continue
         log_cache(result.result.message)
+        if (cost := dollars(result.result.message)) is None:
+            unpriced.add(result.result.message.model)
+        else:
+            spent += cost
         if (raw := reply_text(result.result.message)) is None:
             logger.warning(f"[content:{r['content_id']}] {r['stage']} cut; raise its max_tokens")
             continue
         store(session, result.custom_id, r["content_id"], r["chunk_index"], r["prompt_hash"], raw)
         stored += 1
+    logger.info(
+        f"Batch {batch.id}: ${spent:.2f}"
+        + (f", not counting {', '.join(sorted(unpriced))}" if unpriced else "")
+    )
     return stored
 
 

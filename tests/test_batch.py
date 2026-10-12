@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy import text
 
 from pipeline import enrich, extract
-from pipeline.batch import dropped, send
+from pipeline.batch import dollars, dropped, send
 from pipeline.extract import Collect, _stored_request
 from tests.fakes import _Response
 
@@ -71,6 +71,19 @@ def test_a_batch_reply_is_stored_where_the_next_pass_reads_it(db_session, collec
     assert _stored_request(db_session, None, cid, 0, "extract", "chunk 0") == '{"memories": []}'
     assert _rows(db_session) == 1
     assert f"[content:{cid}] extract cut" in caplog.text, "a cut reply names its stage"
+
+
+def test_a_reply_is_priced_from_its_usage_at_half_price():
+    usage = NS(
+        input_tokens=1_000_000,
+        cache_creation_input_tokens=1_000_000,
+        cache_read_input_tokens=1_000_000,
+        output_tokens=1_000_000,
+        server_tool_use=NS(web_search_requests=3),
+    )
+    # Sonnet 5.5 halved: $1 in, $2 for the 1-hour write, $0.10 read, $5 out, 3 searches.
+    assert dollars(NS(model="claude-sonnet-5-5", usage=usage)) == pytest.approx(8.13)
+    assert dollars(NS(model="fake", usage=usage)) is None
 
 
 class _Blip(_Batches):

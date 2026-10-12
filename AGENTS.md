@@ -111,6 +111,7 @@ cd mobile && npx expo start --ios    # the app (mobile/UI.md has the recipe)
 
 - [ ] `./loop/verify.sh; echo $?` prints `0`, then commit at once, before `./e2e/run.sh`: uncommitted work blocks every parallel session, which can't tell a live one from a dead one. A failing flow gets its own fix commit
 - [ ] Committed with explicit paths (`git commit <paths>`), and files deleted with plain `rm`, not `git rm`: parallel sessions share one git index
+- [ ] A shared doc another session may have touched (`TODO.md`, `docs/10-decisions.md`): `git add -p` only your hunks, then `git commit` without paths. A path commit takes the other session's uncommitted hunks too
 - [ ] Friction logged in `TODO.md`, or nothing qualified
 - [ ] If a decision changed: `docs/10-decisions.md` is updated (the old one marked `Superseded`), and so is any doc that restated it
 - [ ] New files are in `docs/repository-map.md`; new env knobs are in `pipeline/config.py` and `docs/01-setup.md`
