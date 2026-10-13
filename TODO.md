@@ -42,6 +42,13 @@ delete an entry when its fix lands.
   `${=IDS}` or `$(cat ids)` (command substitution does split), and a function
   in place of a command in a variable.
 
+- **UI commits leave e2e flows tapping labels that are gone.** 2026-10-13:
+  walk-and-unlock had been red since *One you* (057d6c1: "Edit profile" and
+  the journal's Settings gone) and 05a3c43 (the finish card's "to
+  Trailwalker"); found only when an unrelated dock change ran it, three reruns
+  at 2-5 min each. Fix: a gate check that every literal `tapOn`/`assertVisible`
+  string in `.maestro/` still appears in `mobile/src/`.
+
 - **The Figma MCP stops after a handful of calls.** 2026-10-12: the personal
   team is on Starter, which caps MCP calls a month, and the Monta seat is
   Collab, which can't edit. A redesign session made the file and then got no

@@ -81,15 +81,15 @@ appId: ${APP_ID}
 - setLocation:
     latitude: ${Number(START_LAT) + 0.02}
     longitude: ${START_LNG}
-- tapOn: "Journal"
+- tapOn:
+    id: collector-hud
 - tapOn: "Settings"
 - scrollUntilVisible:
     element: "Notify me when a memory is nearby"
     direction: DOWN
 - tapOn: "Notify me when a memory is nearby"
-# Settings opens over the journal, and the map's walk waits under both.
+# The gear closes the Collector's page for Settings; the walk waits under it.
 - tapOn: "Close settings"
-- tapOn: "Close journal"
 # Another app in front, not `pressKey: home`: home left this app on screen,
 # and the toggle's own label then passed for the banner.
 - launchApp: com.apple.Preferences
@@ -195,7 +195,7 @@ appId: ${APP_ID}
 # Four lockets reach the first stage's 3, but every stage also wants a
 # memory of your own (docs/10, "The Collector"), and this device has filed
 # none: the card says so, and Done is only the map.
-- assertVisible: "1 memory of yours to Trailwalker"
+- assertVisible: "1 memory of yours to rank up"
 # A walked walk ends itself: Done is the map again, no walk card.
 - tapOn: "Done"
 - extendedWaitUntil:

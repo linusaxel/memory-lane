@@ -1,14 +1,13 @@
-# Sign as NAME, then relaunch: the profile, and so the subscription, is read
+# Sign as NAME on the Collector's page, then relaunch: the profile, and so the subscription, is read
 # at launch. e2e/sql's `subscriber` trigger keys off the name.
 appId: ${APP_ID}
 ---
-- tapOn: "Journal"
-- tapOn: "Edit profile"
+- tapOn:
+    id: collector-hud
 - tapOn: "The name your memories are signed with"
 - eraseText: 10
 - inputText: ${NAME}
-- tapOn: "Close profile"
-- tapOn: "Close journal"
+- tapOn: "Close Collector"
 - launchApp:
     clearState: false
 - extendedWaitUntil:
