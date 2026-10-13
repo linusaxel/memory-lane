@@ -96,6 +96,7 @@ and `e2e/` are the scripts, and each module in `pipeline/` is its own CLI
 | `.maestro/` | Six journeys covering the ids in `docs/08-ux-flows.md`. Read `e2e/README.md` before writing one |
 | `tests/test_flows.py` | The same six journeys headless, so a red flow can be attributed |
 | `tests/fixtures/walk_labels.json` | Walk/maybe/skip for all 209 memories as of 2026-09-29 (docs/04, *Corpus read*): what a judge change is measured against |
+| `tests/fixtures/fun_labels.json` | Dull (`skip`), best (`walk`) or the rest (`maybe`) for all 1,015 shown memories as of 2026-10-13 (docs/04, *Fun read*): `quality --labels tests/fixtures/fun_labels.json` |
 | `tests/test_quality_labels.py` | `quality --labels` scores the judge against the labels and reruns free |
 | `tests/test_batch.py` | A batch pass collects one stage and saves nothing; replies, the web research's too, land where the next pass reads them |
 | `tests/test_cost.py` | `pipeline.cost` sums the bill over every page |

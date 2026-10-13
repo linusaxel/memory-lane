@@ -1268,10 +1268,16 @@ For each candidate, write a one-line note first, then answer yes or no:
   was fun", "it was wild" or "it's where they met"?
 - stands_alone: Would a stranger understand every name and event in it?
 - glad_to_know: Would a stranger standing here say "huh!" and want to tell
-  someone? That takes a surprise, stakes, a human moment, or something they
-  can see from here. A bare record - a name and a date, that someone died, was
-  born, lived or worked here - is no, however true; so is scenery, a crowd
-  cheering, or a building existing.
+  someone? That takes one moment: someone here doing or saying something
+  unexpected - a surprise, stakes, a human moment - or something odd they can
+  see from here. A record is no, however true and well placed: a name and a
+  date; that someone died, was born, lived or worked here; a building's
+  owners, architects, rebuilds and renamings; damage done, a crowd count, a
+  price, a budget, a menu or opening hours; what used to stand here; how a
+  street got its name. Judge the story as told, not its best line: one good
+  detail inside a chronology is still a chronology. A narrator's errand with
+  no payoff is no, and so is a teaser that names a secret, joke or crime and
+  never tells it. So is scenery, a crowd cheering, or a building existing.
 
 <examples>
 <example>
@@ -1331,6 +1337,41 @@ Mindesmærke for Ejler Haubirk: "First mate Ejler Haubirk fell on this spot on
 note: a true death on this spot, but only a name and a date: nothing a
 stranger learns or feels.
 only_here yes, breach yes, consequence no, visible_now yes, so_what no,
+stands_alone yes, glad_to_know no
+</example>
+<example>
+Amalienborg Slotsplads: "The guardroom dog howled along whenever the band
+played the colours' march. When Frederik VI died in 1839 all music was banned;
+the dog howled into the silence, fell quiet, bolted under a table, and was too
+ashamed to go to parade for days."
+note: a setup and a punchline on the square you stand on.
+only_here yes, breach yes, consequence no, visible_now yes, so_what yes,
+stands_alone yes, glad_to_know yes
+</example>
+<example>
+Gammeltorv: "Copenhagen governed itself here before there was a town hall.
+The tingsted lay just outside the rampart; Saxo mentions it; in 1167 Absalon
+received the area and moved the centre to Slotsholmen. The city tree is
+remembered in a relief in today's town hall."
+note: a history lecture - dates, names, a relief somewhere else. Nobody does
+anything here.
+only_here yes, breach no, consequence yes, visible_now no, so_what yes,
+stands_alone yes, glad_to_know no
+</example>
+<example>
+Parken: "The last national match at Idrætsparken was lost 0-2 in 1990. The
+stadium was rebuilt for 640 million kroner and opened in 1992; in 1998 the
+investors sold it to F.C. Copenhagen for 138 million."
+note: a finance and ownership timeline; the stadium is there, nothing happens.
+only_here yes, breach no, consequence yes, visible_now yes, so_what no,
+stands_alone yes, glad_to_know no
+</example>
+<example>
+Royal Hotel: "The writer pressed the button for the 20th floor and nothing
+happened. The man in uniform in the lobby put his card in a slot, and the lift
+worked."
+note: the narrator's errand; the anecdote's shape with no payoff.
+only_here no, breach no, consequence no, visible_now yes, so_what no,
 stands_alone yes, glad_to_know no
 </example>
 </examples>

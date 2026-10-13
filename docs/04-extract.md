@@ -1136,6 +1136,74 @@ not the size. The next memoir trial checks it on the new scale:
   median with 3. The skills now weigh empty cells and genre when choosing a
   source.
 
+### Fun read, 2026-10-13
+
+Four readers graded every visible memory (1,019, test rows aside) on one
+bar: would a stranger on the spot be glad they read it? 21% great, 45% OK, 34%
+dull. The verdicts are `tests/fixtures/fun_labels.json`: `skip` is dull,
+`walk` the 20 best named, `maybe` the rest (great and OK alike).
+
+**It has not improved.** Dull per week of extraction: 36%, 33%, 35%, 32%. The
+judge (10-04) and the fact sheet (10-10) moved it within noise, while the mean
+walk score rose 4.2 to 6.0: the scorer got kinder, not the cards better. Each
+change was measured on a small handpicked set; none on what ships.
+
+**The judge looked for any hook.** Its stored notes on passed cards say "mostly
+a chronology of buildings", "mostly a history lecture", "nothing is visible",
+and `glad_to_know` still said yes: one good line carried a whole timeline
+through. Replayed on 220 graded memories from 59 sources, it kept 56% of the
+dull and 64% of the rest. `glad_to_know` now names the records that fail (owners
+and rebuilds, damage, budgets, menus, what used to stand here, a street's
+name), says to judge the story as told and not its best line, fails a
+narrator's errand and a teaser, and carries four new examples from this read.
+On the same 220 it keeps 8% of the dull (7 of 89) and 52% of the rest (66
+of 127); the four labelled best all pass. The price is some good cards: 12132
+(the skipped reels), 12373 (Dorthe holding the bar six days), 4418 (the women
+bowing to Ditlevsen's coffin) now fail. 43 dull fewer for 15 others fewer.
+The judge only gates new extraction; shown cards are untouched
+(`quality --visible` lists what it would now drop).
+
+**Genre still decides more than any prompt** (dull share, sources of 8+):
+
+| Source | Dull |
+|---|---|
+| Bergsøe, Grandjean, Zinck, Andersen (first-person memoir) | 0-8% |
+| Oehlenschläger, Heiberg, Bauditz, Kim Greiner's Nyhavn | 10-24% |
+| Københavnerliv, Wikipedia *famous moments* | 24-33% |
+| Københavnerglimt (336 cards) | 40% |
+| Wikipedia *modern Copenhagen*, Noma | 41-50% |
+| Ole Petersen, Historisk Atlas (sabotage rows), Magasinet KBH | 80-88% |
+
+The same source can do both. Københavnerglimt's Isted Lion (11763, a drunken
+night in Berlin, a ferry captain kicking the height marker away) is among the
+best cards; its Gammeltorv (11921, the tingsted, Saxo, Absalon) is a lecture.
+The host telling a story beats the host explaining a district.
+
+Great, all one moment with a person in it: 9735 ("So - you're still alive?",
+the cholera pharmacy), 12392 (an airman falls out of a thundercloud into this
+box room), 4981 (Andersen weeps at the play and is fed a sausage sandwich),
+11763 (the Isted Lion), 12297 (the guard dog howling into the mourning
+silence). Dull, all a record: 11921 (Gammeltorv), 4951 (a sabotage row:
+windows, walls, roof tiles), 9198 (Noma's burger bar, opening hours), 12315
+(a hotel lift that works once a card goes in), 7675 (Parken's rebuild and sale
+prices).
+
+The other faults, by pattern:
+
+- **"There used to be an X here."** Closed cinemas and hospitals: nothing
+  happens and nothing is left (4481-4517).
+- **One teller, one building, many cards.** Greiner, Heiberg and Bauditz gave
+  about 80 cards; Børsen has 4, the first town hall 3, Allotria and the Gammel
+  Strand fishwives 2 each.
+- **The walk score.** 8+ is reliably great and 3 and below reliably dull; 5-6
+  holds all three grades. It rewards length, dates and named famous people,
+  and underrates a short anecdote with a punchline (4419, Leth's glasses left
+  facing the barber chair: 4). So `walk_score >= 6` as *good*, the coverage
+  goal's count, overcounts.
+- **Broken text in shown cards** (7660 "but local opposition.", 8871 "Seen
+  from behind, he.", 7336 "a0rstedsparken"), and six test rows shown unscored
+  (4958, 4986, 4987, 5622, 8924, 9380).
+
 ### Road to coverage (Copenhagen)
 
 The goal is 30 good memories in each of the 51 km cells within 4 km of

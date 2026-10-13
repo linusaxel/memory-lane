@@ -12,6 +12,9 @@ memory past 30 in its cell doesn't count toward the goal. The database is the st
 pass starts by counting, so there is nothing to resume by hand.
 Scores from 2026-10-05 on are stricter (docs/10, *The walk score asks one
 question*), so a source's old good-per-item overstates its yield now.
+A 6 is not yet glad-to-know: on 2026-10-13 a read of every card found a
+third dull, many of them at 5-6 (docs/04, *Fun read*). Read the cards, not
+just the count.
 
 One pass, one source. Every step is free except the one marked **bills**, and
 that one waits for a yes.
@@ -155,7 +158,11 @@ venv/bin/python -m pipeline.quality --faults --source <id>   # hedges, the sourc
 ```
 
 Rerun step 0. Then read ten of the new memories, `summary`, `quote` and
-`enrichment`, against the bars: *glad to know*, and *needs its spot*. If the
+`enrichment`, against the bars: *glad to know*, and *needs its spot*. Great
+is one moment with a person in it (Andersen fed a sausage sandwich at the play,
+9735's "So - you're still alive?"); dull is a record (owners and rebuilds,
+sabotage damage, opening hours, what used to stand here, a narrator's errand).
+More than one dull in ten means pause the source. If the
 memories are weak, the fix goes into the pipeline (prompt, judge, source
 choice), not into verdicts. Run the database writes yourself (`dedup --apply`,
 `sources set`, `walk_score --all`); the founder doesn't want them handed over.

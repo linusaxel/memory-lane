@@ -351,6 +351,11 @@ theme dominates*).
 | An institution about itself (venue, festival, restaurant) | ~10% |
 | Encyclopedic (Wikipedia) | 14% |
 
+A 6 overstates it. Read for fun on 2026-10-13 (docs/04, *Fun read*), memoirs
+were 0-8% dull, Københavnerglimt 40%, and sabotage records, institutions and
+magazine notes 50-88%. A teller explaining a district is a lecture; a teller
+telling what happened one night is a story. Trial for the second.
+
 Kinds worth a fan-out beyond the table's archives, because a walker is glad to
 know *this is where it happens*:
 
