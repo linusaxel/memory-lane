@@ -368,7 +368,7 @@ ever covers a memory.
       walkers show it is theirs too. Then measure: D30, walks and memories
       filed per walker, before and after the Collector (2026-10-12), and how
       many filed ones get hidden.
-- [ ] **The art: 4 classes × 8 stages, one stage at a time.** (checked
+- [x] **The art: 4 classes × 8 stages, one stage at a time.** (checked
       2026-10-11) The Canva lineups were bad: eight figures in one image drift
       and blur. In Figma (GPT image), start from the sheet's front view as stage
       4 (`~/Downloads/memory-lane-mascot/wizards/` 01, 08, 19, 09), then make each
@@ -382,6 +382,11 @@ ever covers a memory.
       for gear: each stage should visibly add something (hood trim, a staff,
       a lantern, a robe colour), or the rank-up springs a wizard into itself.
       The placeholders' white fringe shows on the dark plate.
+      Done 2026-10-13: the 32 stages from
+      `~/Downloads/memory-lane-mascot/collector/<class>/<n>.png`, white
+      flood-filled out from the edges, one scale for all. Still open: a few
+      white gaps enclosed inside a figure stay white (Wayfinder 2 between staff
+      and robe), and the 44 pt check.
 
 ### On a real phone
 

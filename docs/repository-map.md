@@ -150,7 +150,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/lockets/designs/Gold*.tsx` | One locket each: its case, lid, inside and its own hold animation |
 | `mobile/src/lockets/{parts.tsx,math.ts,haptics.ts,types.ts}` | What the designs share: gradients, chain, hinges, the engraved place; worklet easing and Svg matrices; haptics; the design type |
 | `mobile/src/lockets.ts` | The six lockets: pin images and names |
-| `mobile/assets/collector/` | The Collector's looks, `<class>-<stage>.png` (1-8). Placeholders: each class's sheet front view at every stage, so the real art only swaps files |
+| `mobile/assets/collector/` | The Collector's looks, `<class>-<stage>.png` (1-8), 512 square, transparent, one scale for all 32 so later stages stand bigger |
 | `mobile/assets/lockets/` | The locket pins, one per locket, @1x-@3x |
 | `mobile/assets/onboarding/` | The first-run pages' pictures, light and dark, rasterised from the Jewel Box handoff |
 | `mobile/src/UnlockHere.tsx` | The locket over the map, for the memory you stand on |
