@@ -379,18 +379,6 @@ ever covers a memory.
       flood-filled out from the edges, one scale for all. Still open: a few
       white gaps enclosed inside a figure stay white (Wayfinder 2 between staff
       and robe), and the 44 pt check.
-- [ ] **Collect the locket, don't just close it.** (2026-10-13, the founder)
-      Once a memory is unlocked and read (`src/MemorySheet.tsx`, after
-      `src/LocketUnlock.tsx`), the only way out is the X, which reads as
-      dismissing it. It should feel like you found a locket and are about to
-      keep it: a clear confirming action at the foot ("Collect" or "Keep this
-      locket", the one primary), the X kept for later re-reads from the
-      journal. Then a collect animation: the locket flies from the sheet to the
-      Collector top left (`src/CollectorHud.tsx`), lands, and the plum ring
-      ticks forward (a rank-up still hands over to `src/RankUp.tsx`). Mock it
-      in HTML first; Reduce Motion skips the flight. Rule 13 holds: the HUD
-      comes back only once the sheet is gone.
-
 ### On a real phone
 
 - [ ] **Things only a device can check.** (checked 2026-10-04) The simulator

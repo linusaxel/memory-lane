@@ -319,9 +319,14 @@ other distribution channel (see *Core, not polish* in `docs/10-decisions.md`).
 4. The sheet opens on the memory, and it reveals: summary, source, the watch
    link — animated once, because that arrival is the only payoff the product
    has.
-5. It stays unlocked, and it stays in the journal under that day's walk (F15).
+5. **Collect** at its foot keeps it: the sheet goes, the locket flies up to
+   your Collector top left and lands, and the plum ring ticks forward. The ×
+   and a pull down do the same, so a locket is never dropped. A rank-up
+   follows off a walk (F39). Reduce Motion: no flight, the ring just moves.
+   A re-read from the journal has only the ×.
+6. It stays unlocked, and it stays in the journal under that day's walk (F15).
    Re-locking something they earned is a punishment for leaving.
-6. The journal works with no network and no position: it renders from what the
+7. The journal works with no network and no position: it renders from what the
    device stored, so a memory you walked to is readable on the train home.
 
 **Only on a walk:** only a stop of the walk in progress opens, and only

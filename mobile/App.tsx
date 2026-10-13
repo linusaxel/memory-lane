@@ -12,6 +12,7 @@ import {
   View,
   useColorScheme,
   useWindowDimensions,
+  type ImageSourcePropType,
 } from 'react-native';
 import Reanimated, {
   Easing,
@@ -94,9 +95,11 @@ import { seg } from './src/lockets/math.ts';
 import { Broke } from './src/Crashed.tsx';
 import Onboarding from './src/Onboarding.tsx';
 import { type Collector, loadCollector, saveCollector } from './src/CollectorLook.tsx';
-import CollectorHud from './src/CollectorHud.tsx';
+import CollectorHud, { SIZE as HUD_SIZE } from './src/CollectorHud.tsx';
+import CollectFlight from './src/CollectFlight.tsx';
 import { Ribbon } from './src/Game.tsx';
 import { locketOf } from './src/lockets.ts';
+import { useReduceMotion } from './src/useBreath.ts';
 import { classOf, stageNow, stageOf } from './src/collector.ts';
 import RankUp from './src/RankUp.tsx';
 import CollectorPage from './src/CollectorPage.tsx';
@@ -312,7 +315,8 @@ export default function App() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [revealId, setRevealId] = useState<number | null>(null);
-  const { height: windowHeight } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const still = useReduceMotion();
   // The dive, growing over the map into the card it opens.
   const [diving, setDiving] = useState<{ grown?: boolean } | null>(null);
   // The locket being opened, kept on screen through its lid swing and dive.
@@ -374,6 +378,16 @@ export default function App() {
   // The one loud moment, over the map (docs/10, "The Collector"). `from` is
   // null for "You're already".
   const [rankUp, setRankUp] = useState<{ from: number | null; to: number } | null>(null);
+  // The count and rank from before a hold, kept until its locket is collected:
+  // the HUD shows them until it lands, then ticks to the new count on the old
+  // rank, so a rank-up fills the ring first (docs/10, "Collect, don't close").
+  const held = useRef<{ lockets: number; stage: number } | null>(null);
+  const [collecting, setCollecting] = useState<{
+    pin: ImageSourcePropType;
+    lockets: number;
+    stage: number;
+    landed: boolean;
+  } | null>(null);
   // A stage crossed since the last one kept shows as the map comes back: Done
   // on a walk's card, ending it, or closing a memory's sheet off a walk (how
   // a filed memory crosses one). Never on the unlock, never over a memory.
@@ -1197,6 +1211,7 @@ export default function App() {
     setPaywallOpen(false);
     setCollectorOpen(false);
     setRankUp(null);
+    setCollecting(null);
     setOpenAt([]);
     setPastWalk(null);
     setConfirmEnd(false);
@@ -1904,6 +1919,26 @@ export default function App() {
     </GlassButton>
   );
 
+  // A memory a hold just opened: any way out of its sheet keeps the locket.
+  const justOpened = openMemories.find((memory) => memory.id === revealId && !memory.locked);
+  const closeMemory = () => {
+    setOpenAt([]);
+    setDiving(null);
+    setRevealId(null);
+    if (!walking) revealRank();
+  };
+  // Not to a corner nothing stands in: the finish card or the next locket in
+  // reach hides the HUD, and Reduce Motion skips the flight.
+  const collect = () => {
+    const was = held.current;
+    held.current = null;
+    if (!justOpened || !was || still || walkDone || ringFor) return closeMemory();
+    setOpenAt([]);
+    setDiving(null);
+    setRevealId(null);
+    setCollecting({ pin: locketOf(justOpened.locket).pin, ...was, landed: false });
+  };
+
   // What opens over the journal. iOS presents a modal over another only when
   // it is rendered inside it, so these move into the journal while it is open.
   const sheets = (
@@ -1977,11 +2012,8 @@ export default function App() {
         memories={openMemories}
         index={openIndex}
         onIndex={setOpenIndex}
-        onClose={() => {
-          setOpenAt([]);
-          setDiving(null);
-          if (!walking) revealRank();
-        }}
+        onClose={closeMemory}
+        onCollect={justOpened ? collect : undefined}
         position={position}
         revealId={revealId}
         hidden={!!diving && !diving.grown}
@@ -2288,8 +2320,8 @@ export default function App() {
               <View style={styles.top}>
                 <CollectorHud
                   id={collectorId}
-                  stage={rank}
-                  lockets={lockets}
+                  stage={collecting ? collecting.stage : rank}
+                  lockets={collecting && !collecting.landed ? collecting.lockets : lockets}
                   filed={filed}
                   onPress={() => setCollectorOpen(true)}
                 />
@@ -2311,6 +2343,22 @@ export default function App() {
                 )}
               </View>
             )}
+          {collecting && (
+            <CollectFlight
+              pin={collecting.pin}
+              // From Collect at the sheet's foot to the portrait's middle.
+              from={{ x: windowWidth / 2, y: windowHeight - 80 }}
+              to={{ x: styles.top.left + HUD_SIZE / 2, y: styles.top.top + HUD_SIZE / 2 }}
+              onLanded={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                setCollecting((now) => now && { ...now, landed: true });
+              }}
+              onDone={() => {
+                setCollecting(null);
+                if (!walking) revealRank();
+              }}
+            />
+          )}
           {stage === 'map' && offline && !journalOpen && (
             <GlassCard style={styles.offline} accessibilityLiveRegion="polite">
               <Glyph name="icloud.slash" size={20} weight="medium" color={color.inkSoft} />
@@ -2506,6 +2554,7 @@ export default function App() {
               error={unlockError}
               requestUnlock={async () => {
                 if (walking) setRouteStarted(true);
+                held.current = { lockets, stage: rank };
                 // Held while the lid opens: once unlocked, the memory leaves
                 // the ring's list, and the locket would vanish mid-swing.
                 setOpening(lockFor);

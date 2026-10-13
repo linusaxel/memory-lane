@@ -16,6 +16,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
+import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import type { Coordinates, LocatedMemory, ReportReason } from './api.ts';
 import MemoryMedia, { Pictures } from './MemoryMedia.tsx';
@@ -56,6 +57,9 @@ type Props = {
   index: number;
   onIndex: (next: number) => void;
   onClose: () => void;
+  /** Present only on the memory a hold just opened: every way out keeps the
+   *  locket, and the foot says so (docs/10, "Collect, don't close"). */
+  onCollect?: () => void;
   /** Where the person is standing, or null if they said no to location. */
   position: Coordinates | null;
   /** The memory a hold on the map just opened: its story arrives animated. */
@@ -154,7 +158,8 @@ export default function MemorySheet({
   memories,
   index,
   onIndex,
-  onClose,
+  onClose: dismiss,
+  onCollect,
   position,
   revealId,
   hidden,
@@ -168,6 +173,7 @@ export default function MemorySheet({
   onBlock,
 }: Props) {
   const memory = memories[index] ?? null;
+  const onClose = onCollect ?? dismiss;
   const insets = useSafeAreaInsets();
   // Over the map, before or on a walk: a card sized to what it holds, not a
   // page (docs/10, "An open memory is a card too").
@@ -682,8 +688,8 @@ export default function MemorySheet({
             )}
 
             {/* Over the story, only what is not the story: the way to the
-                others under this pin. */}
-            {many && (
+                others under this pin, and Collect on the one just opened. */}
+            {(many || onCollect) && (
               <View
                 style={[
                   styles.actions,
@@ -726,6 +732,9 @@ export default function MemorySheet({
                       />
                     </Pressable>
                   </View>
+                )}
+                {onCollect && (
+                  <Button kind="foil" label="Collect" testID="collect" onPress={onCollect} />
                 )}
               </View>
             )}

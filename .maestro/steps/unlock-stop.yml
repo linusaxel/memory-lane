@@ -37,4 +37,7 @@ appId: ${APP_ID}
 # shows the whole loop.
 - assertNotVisible:
     id: "walk-done"
-- tapOn: "Close"
+# Kept, not closed: the locket flies to the Collector (docs/10, "Collect,
+# don't close").
+- tapOn:
+    id: "collect"

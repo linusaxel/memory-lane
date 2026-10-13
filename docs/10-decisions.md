@@ -4923,6 +4923,24 @@ gone with `PlanWalkButton.tsx`.
 **Options considered:** the seven others; keeping the Collector there (two
 of you on one screen).
 
+### Collect, don't close
+
+Status: Accepted 2026-10-13.
+
+The founder found the × on a memory just unlocked read as dismissing it. Now
+a foil **Collect** (foil keeps something, `src/Button.tsx`) sits at the
+sheet's foot, and the locket flies from there to the Collector top left,
+lands with a pop and a few sparks, and the plum ring ticks forward
+(`src/CollectFlight.tsx`, `src/CollectorHud.tsx`). The × and a pull down
+collect too: the locket was earned, and no way out should drop it. A re-read
+has the × alone. Timings come from an HTML mock the founder approved: 160 ms
+lift, 650 ms flight, 425 ms ring. No flight under Reduce Motion, nor when
+nothing stands top left to land on (the finish card, the next locket in
+reach).
+
+**Options considered:** hiding the × on a fresh unlock (Collect the only
+button); an × that closes without the flight.
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

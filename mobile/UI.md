@@ -629,7 +629,11 @@ Each of these exists because something broke or would have been rejected.
     read first. The Collector stands across the top of the map, on Plan a
     walk, on the finish card and on its own page, never beside a
     summary: App hides the HUD while a memory, the locket in reach or a sheet
-    is up. Reduce Motion: a crossfade, no growth.
+    is up. Reduce Motion: a crossfade, no growth. A locket just opened is
+    collected (`src/CollectFlight.tsx`): the sheet goes first, the HUD is back,
+    and only then does the locket fly to it. Until it lands the HUD shows the
+    count from before the hold, then the ring ticks on the old rank, so a
+    rank-up fills it before RankUp takes over.
 
 ## Writing
 
