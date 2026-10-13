@@ -1881,7 +1881,11 @@ export default function App() {
     Haptics.selectionAsync().catch(() => {});
     const you = positionRef.current;
     if (!you) goToMyLocation().catch(() => false);
-    else setFollowing(true);
+    else {
+      // Following only moves the camera on a walk; the map has to fly itself.
+      setFollowing(true);
+      flyTo({ ...region, latitude: you.lat, longitude: you.lng });
+    }
   };
   // Bottom right on the walk: back to you, filled while the map follows you,
   // as Apple Maps does.
