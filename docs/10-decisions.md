@@ -5029,6 +5029,26 @@ feature, has to be seen. Now one card:
 Loop (two rows for one control); ‹ › flanking the shape row (on a 393pt
 phone they left the slider about 60pt).
 
+### One material over the map
+
+Status: Accepted 2026-10-13.
+
+The founder found the walk screen visually off: the walk card read white and
+lifted off the map, while the dock, the top-right capsule and the planner's
+card were cream-tinted glass with no edge, so they melted into the cream map
+and looked like a second family. Of three mocks on the real screens
+(`~/Downloads/memory-lane-redesign/consistent.html`: bright glass
+everywhere, solid paper with a gold rim, ink controls with bright cards),
+they picked bright glass:
+
+- **Everything over the map is the walk card's glass.** `GlassCard` keeps
+  its thicker tint for prose, but `frostCard` is near-white, not cream, and
+  it takes the controls' hairline and shadow (`glassEdge`, `glassLift`).
+  The dock, the capsule and every card over the map now match.
+
+**Options considered:** solid paper with a gold rim (no glass at all); ink
+controls with bright cards.
+
 ### Rejected approaches, do not retry
 
 Status: Rejected

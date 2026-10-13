@@ -856,8 +856,8 @@ on a card" and the 4pt ledge under every button (part 8 and UI.md).
 
 - **Cards over the map are Liquid Glass.** `GlassCard` in `src/Glass.tsx`:
   the planner's card in every step, End walk, the finish card, a past walk,
-  and the unlock card. Tinted by `solid().frostCard`, a 0.72 paper (a dark
-  paper in dark mode), which is thicker than a control's `frost` because a
+  and the unlock card. Tinted by `solid().frostCard`, a 0.86 near-white (a dark
+  paper in dark mode; docs/10, "One material over the map"), which is thicker than a control's `frost` because a
   card carries prose and part 2's finding still holds: text over glass needs
   4.5:1. Where there is no glass it is `floating` paper, as before.
 - **Not the memory sheet's peek.** Its parent animates `opacity`, which stops

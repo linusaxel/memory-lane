@@ -155,9 +155,11 @@ export const solid = (dark: boolean) => ({
    *  dense, because a light tint on the cream map measured 1.01:1
    *  (docs/09 part 15). A tint, so a real colour. */
   goGlass: dark ? 'rgba(76,69,79,0.94)' : 'rgba(68,62,70,0.94)',
-  /** The same warmth on a glass card, thicker: a card carries prose, which
-   *  must hold its contrast over a busy map. */
-  frostCard: dark ? 'rgba(38,35,43,0.86)' : 'rgba(252,247,238,0.86)',
+  /** A glass card's tint, thicker than a control's: a card carries prose,
+   *  which must hold its contrast over a busy map. Near-white, not cream, so
+   *  it reads as the walk card's glass and not as the map (docs/10, "One
+   *  material over the map"). */
+  frostCard: dark ? 'rgba(38,35,43,0.86)' : 'rgba(250,249,246,0.86)',
 });
 
 /** Three families. Gloock for titles, place names and big figures; Newsreader

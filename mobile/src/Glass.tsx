@@ -111,11 +111,11 @@ export function GlassCard({ style, ...props }: ViewProps) {
   return GLASS ? (
     <GlassView
       {...props}
-      style={[style, { borderRadius: radius.card }]}
+      style={[style, glassEdge, glassLift, { borderRadius: radius.card }]}
       glassEffectStyle="regular"
       tintColor={frost}
     />
   ) : (
-    <View {...props} style={[style, floating]} />
+    <View {...props} style={[style, floating, glassEdge]} />
   );
 }

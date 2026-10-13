@@ -360,7 +360,8 @@ written, is `story` in `theme.ts` and nothing else: 34, 20 and 13.
 
 **Glass over the map, flat inside sheets.** The cards over the map (the
 planner in every step, End walk, the finish card, a past walk, the unlock
-card) are `GlassCard`, tinted by `solid().frostCard` so prose holds its
+card) are `GlassCard`, tinted by `solid().frostCard` (near-white, with the walk card's
+hairline and shadow: docs/10, "One material over the map") so prose holds its
 contrast; not the memory sheet's peek, whose parent animates opacity
 (docs/09 part 13, superseding "never glass on a card"). The controls floating over the map
 (Journal, Add, the walk card, the keys pill, you,
