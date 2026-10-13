@@ -1884,7 +1884,12 @@ export default function App() {
     else {
       // Following only moves the camera on a walk; the map has to fly itself.
       setFollowing(true);
-      flyTo({ ...region, latitude: you.lat, longitude: you.lng });
+      flyTo({
+        latitude: you.lat,
+        longitude: you.lng,
+        latitudeDelta: LOCATED_DELTA,
+        longitudeDelta: LOCATED_DELTA,
+      });
     }
   };
   // Bottom right on the walk: back to you, filled while the map follows you,
