@@ -53,8 +53,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ Collector + Journal        across the top: the HUD, cream glass, no line, a light inner edge (`contour`) (medal, rank, a plum bar;
-│                              tapped: its page), compact on the walk, then the Journal, a 48pt glass orb in the same contour, the planner and the walk.
+├─ Collector + Journal        across the top: the portrait in a plum ring filling to the next rank, its rank on the coin; no card,
+│                              no words (tapped: its page), then the Journal, a 48pt glass orb in its contour, the planner and the walk.
 │                              Hidden while a memory, the locket in reach or a sheet is up (rule 13).
 │                              `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
@@ -219,7 +219,7 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the gear on your Collector's page |
 | `src/CollectorPage.tsx` | you: your Collector as a character sheet (the look in its plate, the ladder of eight), your name, and the gear to Settings. Its own sheet, from the map's HUD |
 | `src/Plate.tsx` | the Collector's framed plate: the portrait, the onboarding pick, the rank-up |
-| `src/CollectorHud.tsx` | your Collector across the top of the map: medal, rank, bar to the next. Tapped, its page |
+| `src/CollectorHud.tsx` | your Collector top left of the map: the medal in a ring filling to the next rank. Tapped, its page |
 | `src/Game.tsx` | the game menus' pieces: `Foil`, `Velvet`, `Ribbon`, `Panel`, `Coin`, `Medal`, `Bar` |
 | `src/Avatar.tsx` | an initial or nobody, in one circle at any size: a memory's byline |
 | `src/DiamondRule.tsx` | the one ornament, twice on an open story: under the byline, before the notes |
@@ -292,15 +292,15 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 |---|---|---|
 | `gold` | `#7A5A2E` / `#D9B98A` | **a memory, and the way to it.** The route, the next stop, a link, a text button |
 | `goldLine` | gold at 45% / 50% | a gold hairline: glass edges, quiet buttons in the dark |
-| `goBg`, `goRim`, `onGo` | `#443E46` / `#4C454F`, charcoal: the HUD's velvet | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
+| `goBg`, `goRim`, `onGo` | `#443E46` / `#4C454F`, charcoal | **go.** Plan a walk, Next, Start walk, the slide track; text is `onGo` |
 | `foil` | `#F6DEB8 → #EDD2A6 → #E3C796`, flat cream | **keep something.** Seal it here, Subscribe, Done. One set in both themes |
 | `seal` | `#A8403F` / `#F28A82` | **openable.** Coral: a lit pin, the reach circle, the diamond in the rule. Fill or text |
 | `sealInk` | `#FBF6EC` / `#2A1213` | anything drawn on seal |
 | `sealSoft` | `#F6DCD8` / `#3D2224` | the ring filling during a hold |
 | `glow` | coral at 50% | the radial glow behind an in-reach locket. Never a ring |
-| `plum` | `#6E6890` / `#B8B3D1`, lavender | **what you earned.** Lockets, the rank bar on paper |
-| `velvetGround`, `onVelvet`, `onVelvetSoft`, `onVelvetGold` | `#443E46`, charcoal-plum; words `#F6F1E7`, `#E4DFE8`, `#F6DEB8` | **yours.** The Collector's HUD, a chosen mode or chip, a reward, the rank-up. One set in both themes; the rank bar on velvet is foil |
-| `track` | `#E6E3EE` / `#38343E` | the empty part of the rank bar |
+| `plum` | `#6E6890` / `#B8B3D1`, lavender | **what you earned.** Lockets, the rank bar on paper, the HUD's ring |
+| `velvetGround`, `onVelvet`, `onVelvetSoft`, `onVelvetGold` | `#443E46`, charcoal-plum; words `#F6F1E7`, `#E4DFE8`, `#F6DEB8` | **yours.** A chosen mode or chip, a reward, the rank-up. One set in both themes; the rank bar on velvet is foil |
+| `track` | `#E6E3EE` / `#38343E` | the empty part of the rank bar and the HUD's ring |
 | `danger` | `#9B2C2C` / `#F09A9A` | Delete account. Nothing destructive is gold |
 | `heart` | `#A3294E` / `#F29BB4` | a filled heart |
 

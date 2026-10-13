@@ -4729,7 +4729,8 @@ Status: Accepted 2026-10-12. Supersedes, in *Jewel Box*, "one ornament" and
 the quiet chrome; in *The Collector*, where it may stand; and the glass
 Journal circle top left. Partly superseded 2026-10-12 by *Dusk*: plum velvet
 and gold foil become flat charcoal-plum and cream, and on home the Journal
-orb moves into the dock.
+orb moves into the dock. HUD superseded 2026-10-13 by *The Collector is a
+portrait*: no capsule, rank name or counter across the top.
 
 The founder wanted the menus to feel like a game now the Collector exists,
 Pokémon and RPG status bars in mind, and picked ten concept screens
@@ -4887,6 +4888,22 @@ on its first drawing call) went to the founder, who picked:
 **Options considered:** a dark-only velvet tone under the cream line (quieter,
 but the icons stop being cream items in the dark); the dock as a 249pt pill
 with Locate beside it; no bar, a dusk scrim under three buttons.
+
+### The Collector is a portrait
+
+Status: Accepted 2026-10-13. Supersedes, in *Game menus*, the HUD's capsule
+with the rank name, bar and count.
+
+The founder found the top cluttered. Of four options (the portrait alone, a
+ring round it, a small chip, the portrait and its rank name), they picked the
+ring: the medal alone, top left, in a plum ring filling toward the next rank,
+its rank on the coin, no card and no words (`src/CollectorHud.tsx`). One size
+on the map, the planner and the walk. The Journal orb stays beside it. The
+rank's name and counts live on the Collector's page; the label still reads
+them aloud.
+
+**Options considered:** the portrait and coin only (no sense of progress); a
+glass chip with a thin bar; the rank name beside the portrait.
 
 ### Rejected approaches, do not retry
 

@@ -2291,7 +2291,6 @@ export default function App() {
                   stage={rank}
                   lockets={lockets}
                   filed={filed}
-                  compact={stage === 'walk'}
                   onPress={() => setCollectorOpen(true)}
                 />
                 {stage !== 'map' && (
@@ -2632,7 +2631,7 @@ const styles = StyleSheet.create({
   },
   // Glass over the map (src/Glass.tsx). `topLeft` and friends place a
   // control; `pill` and `circle` are its shape.
-  // The Collector's bar and the Journal orb, across the top.
+  // The Collector's portrait and the Journal orb, across the top.
   top: {
     position: 'absolute',
     top: 58,
