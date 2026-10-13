@@ -1,13 +1,13 @@
 /** Your Collector: a sheet of its own, opened from the Collector across the
- *  top of the map, and the one place that is you (docs/10, "One you"): your
- *  name, and the gear for Settings. A character sheet: the look in its plate with a bar for each thing the next rank wants,
+ *  top of the map, and only the game (docs/10, "Map controls top right"): your
+ *  name and Settings are in Settings. A character sheet: the look in its plate with a bar for each thing the next rank wants,
  *  the eight looks as a chain with the ones ahead as silhouettes, the next
  *  rank's checklist. The class was picked once, at onboarding, and is not
  *  switched here. A stage needs lockets and memories you filed both (docs/10,
  *  "The Collector"); when a memory is what's missing, the page offers to
  *  leave one. No shop, no prices, no currency. */
 
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import CloseButton from './CloseButton.tsx';
 import CollectorLook from './CollectorLook.tsx';
@@ -16,8 +16,7 @@ import Button from './Button.tsx';
 import { FILED, STAGES, classOf, wants, wantsWords, type ClassId } from './collector.ts';
 import { Bar, Coin, Foil, Panel, Ribbon, Velvet } from './Game.tsx';
 import Glyph from './Glyph.tsx';
-import Icon from './Icon.tsx';
-import { color, dim, foil, font, input, label, screenTitle } from './theme.ts';
+import { color, foil, font, label, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -27,15 +26,6 @@ type Props = {
   lockets: number;
   filed: number;
   onAdd: () => void;
-  /** Empty means Anonymous. Saved as it is typed, so there is no Save button
-   *  to forget to press. */
-  displayName: string;
-  onDisplayName: (next: string) => void;
-  /** Set when the last save did not land. The field keeps the typed value
-   *  either way, so without this the name looks saved and is not. */
-  nameError: string | null;
-  /** Close this and open Settings: one sheet at a time. */
-  onSettings: () => void;
 };
 
 export default function CollectorPage({
@@ -46,10 +36,6 @@ export default function CollectorPage({
   lockets,
   filed,
   onAdd,
-  displayName,
-  onDisplayName,
-  nameError,
-  onSettings,
 }: Props) {
   const chosen = classOf(id);
   const want = wants(stage, lockets, filed);
@@ -61,28 +47,13 @@ export default function CollectorPage({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ScrollView
-        style={styles.screen}
-        contentContainerStyle={styles.body}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView style={styles.screen} contentContainerStyle={styles.body}>
         <View style={styles.top}>
           <View>
             <Ribbon label="Character" />
             <Text style={styles.title}>Your Collector</Text>
           </View>
-          <View style={styles.corner}>
-            <Pressable
-              style={dim(styles.cog)}
-              hitSlop={8}
-              onPress={onSettings}
-              accessibilityRole="button"
-              accessibilityLabel="Settings"
-            >
-              <Icon name="settings" size={24} color={color.ink} />
-            </Pressable>
-            <CloseButton onPress={onClose} label="Close Collector" />
-          </View>
+          <CloseButton onPress={onClose} label="Close Collector" />
         </View>
 
         {/* A character sheet: the plate, the class, the rank and a bar for
@@ -103,21 +74,6 @@ export default function CollectorPage({
             <Scale name="Added" have={filed} need={next && FILED[stage + 1]} />
           </View>
         </Velvet>
-
-        <Text style={styles.groupTitle}>Your name</Text>
-        <TextInput
-          style={styles.name}
-          value={displayName}
-          onChangeText={onDisplayName}
-          placeholder="Anonymous"
-          placeholderTextColor={color.inkFaint}
-          maxLength={60}
-          autoCapitalize="words"
-          accessibilityLabel="The name your memories are signed with"
-        />
-        <Text style={styles.nameNote}>
-          {nameError ?? 'Signs the memories you leave. Blank stays anonymous.'}
-        </Text>
 
         <Text style={styles.groupTitle}>Evolution</Text>
         <View style={styles.chain}>
@@ -206,8 +162,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   title: screenTitle,
-  corner: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  cog: { padding: 6 },
   hero: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -227,15 +181,6 @@ const styles = StyleSheet.create({
   scaleTop: { flexDirection: 'row', justifyContent: 'space-between' },
   scaleName: { ...font.uiBold, fontSize: 11, letterSpacing: 1, color: color.onVelvetSoft },
   scaleCount: { ...font.uiBold, fontSize: 11, color: color.onVelvetSoft },
-  name: { ...input, ...font.title, fontSize: 22, marginTop: 10 },
-  nameNote: {
-    ...font.ui,
-    fontSize: 13,
-    lineHeight: 20,
-    color: color.inkFaint,
-    marginTop: 6,
-    marginLeft: 4,
-  },
   groupTitle: { ...label, fontSize: 12, color: color.inkFaint, marginTop: 28, marginLeft: 4 },
   // The eight looks side by side, the ones ahead as silhouettes.
   chain: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },

@@ -161,7 +161,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/RouteLine.tsx` | The route drawn: ink over a paper casing, still. Why still: docs/09 §3a |
 | `mobile/src/Memories.tsx` | **The journal, which is you.** Photo, name, numbers and level, a gear for Settings, then past walks (list or cards), unlocked, and what you filed |
 | `mobile/src/Submit.tsx` | **The only screen that writes.** Photo, voice, tags, and why there is no map picker |
-| `mobile/src/Settings.tsx` | Settings: grouped rows in its own sheet, from the gear in the journal |
+| `mobile/src/Settings.tsx` | Settings: your name, then grouped rows, in its own sheet, from the gear top right of the map |
 | `mobile/src/Avatar.tsx` | An initial or nobody, in one circle: a memory's byline |
 | `mobile/src/Paywall.tsx` | The subscription: more walks a day (F35). Prices from the store; "not available" without a RevenueCat key |
 | `mobile/src/purchases.ts` | RevenueCat, and nothing else: the plans and the key packs, no-ops without a key. Never decides who has paid |
@@ -197,7 +197,7 @@ The endpoint list is [06-api.md](06-api.md).
 | `mobile/src/geofence.ts`, `geofenceRegions.ts`, `notifyNearby.ts` | The opt-in proximity notification and the weekly surprise: the native wrapper, the pure region maths, the opt-in flag |
 | `mobile/src/theme.ts` | Every colour and typeface. Never a hex or font name anywhere else |
 | `mobile/src/Glass.tsx` | A control floating over the map: Liquid Glass, or paper and the one shadow |
-| `mobile/src/MapDock.tsx` | Home's dock along the bottom: Journal · Plan a walk · Add, and Locate's circle over it |
+| `mobile/src/MapDock.tsx` | Home's dock along the bottom: Journal · Plan a walk · Add |
 | `mobile/src/Icon.tsx` | The icon family, stickers in both themes (a 2pt charcoal line over a cream tone, a cream halo): every button over the map, the walk and the planner, the close circle, settings and the heart |
 | `mobile/src/mapStyle.ts` | How the map gets out of the way |
 | `mobile/src/format.ts` | How numbers are written on screen, what the source button says, and the era slider's stops (`ERA_STOPS`) |

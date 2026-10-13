@@ -4828,7 +4828,8 @@ floating over the map (later, if at all).
 ### One you
 
 Status: Accepted 2026-10-12. Supersedes *The journal is you* and *A profile
-photo is public, like the name*.
+photo is public, like the name*. The name and the gear on the Collector's
+page are superseded by *Map controls top right* (2026-10-13).
 
 The founder found the menus a mess: the Collector across the top opened a
 character sheet, while the name, the photo and Settings hid behind the
@@ -4868,7 +4869,8 @@ an account avatar top right, as the App Store (a third thing over the map).
 ### Sticker icons, and Plan a walk centred
 
 Status: Accepted 2026-10-13. Supersedes, in *Dusk, and the map's dock*, the
-dock's order and the icons' line colour.
+dock's order and the icons' line colour. Locate's circle over the bar is
+superseded by *Map controls top right* (2026-10-13).
 
 Shot in the dark, the dock's icons were blobs: the line (`ink`, cream in the
 dark) and the tone (foil cream) were one colour. And Plan a walk sat third of
@@ -4940,6 +4942,31 @@ reach).
 
 **Options considered:** hiding the × on a fresh unlock (Collect the only
 button); an × that closes without the flight.
+
+### Map controls top right
+
+Status: Accepted 2026-10-13. Supersedes, in *One you*, the name and the gear
+on the Collector's page, and, in *Sticker icons*, Locate's circle over the
+dock.
+
+The founder found Locate awkward, a circle floating over the pins above the
+dock's right end, and Settings behind the Collector's gear two taps away.
+Of four mocks on the real map (`~/Downloads/memory-lane-redesign/chrome.html`:
+a top-right stack as Apple Maps keeps it, a top-right capsule, the dock's two
+ends, the gear top right and Locate beside a shorter dock), they picked the
+capsule:
+
+- **One row across the top.** Your Collector on the left; on the right one
+  glass capsule, Center on me then Settings, level with it (`App.tsx`). The
+  planner and the walk keep the gear alone there: each has its own Center on
+  me at the bottom.
+- **The Collector's page is the game:** the look, the rank, the evolution,
+  what's next. No gear, no name.
+- **Your name is first in Settings**, saved as typed, as before. It signs
+  your memories, which is the account, not the game.
+
+**Options considered:** the other three mocks; the top-right stack would
+have hidden more map and put Locate further from a thumb.
 
 ### Rejected approaches, do not retry
 

@@ -81,14 +81,12 @@ appId: ${APP_ID}
 - setLocation:
     latitude: ${Number(START_LAT) + 0.02}
     longitude: ${START_LNG}
-- tapOn:
-    id: collector-hud
 - tapOn: "Settings"
 - scrollUntilVisible:
     element: "Notify me when a memory is nearby"
     direction: DOWN
 - tapOn: "Notify me when a memory is nearby"
-# The gear closes the Collector's page for Settings; the walk waits under it.
+# Settings is the gear top right; the walk waits under it.
 - tapOn: "Close settings"
 # Another app in front, not `pressKey: home`: home left this app on screen,
 # and the toggle's own label then passed for the banner.

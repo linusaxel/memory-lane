@@ -55,6 +55,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ Collector + Journal        across the top: the portrait in a plum ring filling to the next rank, its rank on the coin; no card,
 │                              no words (tapped: its page), then the Journal, a 48pt glass orb in its contour, the planner and the walk.
+│                              Top right a glass capsule: Center on me (home only) | the Settings gear.
 │                              Hidden while a memory, the locket in reach or a sheet is up (rule 13).
 │                              `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
@@ -149,13 +150,15 @@ Journal (src/Memories.tsx, pageSheet, from the Journal button)  over the mounted
 └─ Mine                        what you added; a row opens Submit as the editor. "3 hearts ·
                                1 note · last heart yesterday", never who
 
-The journal is what you did; who you are is your Collector's page, with your
-name and the gear for Settings (docs/10, "One you").
+The journal is what you did; your Collector's page is the game. Your name is
+first in Settings, the gear top right of the map (docs/10, "Map controls top right").
 
-Settings (src/Settings.tsx, pageSheet, from the gear on your Collector's page, which closes first) - a "Camp" ribbon over "Settings"
+Settings (src/Settings.tsx, pageSheet, from the gear top right of the map) - a "Camp" ribbon over "Settings"
 34/700, × top right. Grouped rows: a Panel (src/Game.tsx) named by its foil tab, a line under
 it; a row may lead with a coloured badge (seal location, plum notifications, gold links).
 Appearance's chosen segment is velvet, the Switch's track foil
+├─ Your name                   what memories are signed with, saved as typed. Blank = Anonymous.
+│                              A line under it says so, or that the save failed
 ├─ Account                     which sign-ins, add the other, sign out (back to the gate),
 │                              delete; the subscription
 ├─ Appearance                  System · Light · Dark (src/appearance.ts, kept on the phone)
@@ -164,13 +167,11 @@ Appearance's chosen segment is velvet, the Switch's track foil
 └─ About                       privacy policy, contact, OpenStreetMap, each ↗
 
 Your Collector (src/CollectorPage.tsx, pageSheet, from the map's HUD) - a "Character" ribbon
-over "Your Collector" 34/700, the settings gear and × top right
+over "Your Collector" 34/700, × top right
 ├─ now                         a velvet sheet: the look in its plate (src/Plate.tsx: double gold
 │                              rule, a diamond at each corner) at 128pt, a foil class tag, the
 │                              rank 24/700, "Rank 2 of 8", and a bar per scale ("LOCKETS 4 / 8",
 │                              "ADDED 1 / 2")
-├─ Your name                   what memories are signed with, saved as typed. Blank = Anonymous.
-│                              A line under it says so, or that the save failed
 ├─ Evolution                   the eight looks in a row, yours ringed in plum, the ones ahead
 │                              as inkFaint silhouettes (the look with tintColor)
 └─ Next: Lamplit               a Panel: "1 memory of yours to Lamplit", then the two wants as a
@@ -216,8 +217,8 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/Plan.tsx` | the planner card, home: a walk drawn at once, its list, length and shape, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
-| `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the gear on your Collector's page |
-| `src/CollectorPage.tsx` | you: your Collector as a character sheet (the look in its plate, the ladder of eight), your name, and the gear to Settings. Its own sheet, from the map's HUD |
+| `src/Settings.tsx` | your name, account, how unlocking works, location, notifications, about. Its own sheet, from the gear top right of the map |
+| `src/CollectorPage.tsx` | the game: your Collector as a character sheet (the look in its plate, the ladder of eight). Its own sheet, from the map's HUD |
 | `src/Plate.tsx` | the Collector's framed plate: the portrait, the onboarding pick, the rank-up |
 | `src/CollectorHud.tsx` | your Collector top left of the map: the medal in a ring filling to the next rank. Tapped, its page |
 | `src/Game.tsx` | the game menus' pieces: `Foil`, `Velvet`, `Ribbon`, `Panel`, `Coin`, `Medal`, `Bar` |
@@ -227,7 +228,7 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/CloseButton.tsx` | the × that closes a card, sheet or page (rule 12); with another `icon`, the walk card's skip and a story's ⋯ |
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
-| `src/MapDock.tsx` | home's dock: Journal · Plan a walk · Add, and Locate's circle over it |
+| `src/MapDock.tsx` | home's dock: Journal · Plan a walk · Add |
 | `src/Icon.tsx` | the icon family, stickers (charcoal line, cream tone, cream halo) in both themes: every button over the map, walk and planner, and the close circle |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |

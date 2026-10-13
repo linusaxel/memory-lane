@@ -1,10 +1,10 @@
-/** Settings: a sheet of its own, opened from the cog in the journal's header.
+/** Settings: a sheet of its own, opened from the gear top right of the map
+ *  (docs/10, "Map controls top right").
  *
- * Grouped one-line rows, like iOS's own: the account, how it looks, location,
- * notifications, and the answer to "why can I not read this". Every app with a
- * proximity gate needs somewhere to answer that, and a sheet you only see once
- * you are already frustrated is too late. Who you are (the photo, the name,
- * the numbers) is the journal's header, not here.
+ * Your name first, then grouped one-line rows, like iOS's own: the account,
+ * how it looks, location, notifications, and the answer to "why can I not
+ * read this". Every app with a proximity gate needs somewhere to answer that,
+ * and a sheet you only see once you are already frustrated is too late.
  */
 
 import { useEffect, useRef, useState, type ComponentProps } from 'react';
@@ -16,6 +16,7 @@ import {
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
   type ColorValue,
 } from 'react-native';
@@ -32,7 +33,7 @@ import type { Permission } from './types.ts';
 import Button from './Button.tsx';
 import { useDevScreen } from './devOpen.ts';
 import { Panel, Ribbon } from './Game.tsx';
-import { color, dim, font, label, metal, screenTitle } from './theme.ts';
+import { color, dim, font, input, label, metal, screenTitle } from './theme.ts';
 
 type Props = {
   visible: boolean;
@@ -49,6 +50,13 @@ type Props = {
    *  the one permission this screen has to explain before the OS prompt does. */
   notifyNearby: boolean;
   onNotifyNearby: (next: boolean) => void;
+  /** Empty means Anonymous. Saved as it is typed, so there is no Save button
+   *  to forget to press. */
+  displayName: string;
+  onDisplayName: (next: string) => void;
+  /** Set when the last save did not land. The field keeps the typed value
+   *  either way, so without this the name looks saved and is not. */
+  nameError: string | null;
 };
 
 export default function Settings({
@@ -63,6 +71,9 @@ export default function Settings({
   notifyNearby,
   onNotifyNearby,
   onSubscribe,
+  displayName,
+  onDisplayName,
+  nameError,
 }: Props) {
   const granted = permission === 'granted';
   const [chosen, choose] = useState<Look>(look);
@@ -89,7 +100,12 @@ export default function Settings({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <ScrollView ref={scroll} style={styles.screen} contentContainerStyle={styles.body}>
+      <ScrollView
+        ref={scroll}
+        style={styles.screen}
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.top}>
           <View>
             <Ribbon label="Camp" />
@@ -97,6 +113,21 @@ export default function Settings({
           </View>
           <CloseButton onPress={onClose} label="Close settings" />
         </View>
+
+        <Text style={styles.nameTitle}>Your name</Text>
+        <TextInput
+          style={styles.name}
+          value={displayName}
+          onChangeText={onDisplayName}
+          placeholder="Anonymous"
+          placeholderTextColor={color.inkFaint}
+          maxLength={60}
+          autoCapitalize="words"
+          accessibilityLabel="The name your memories are signed with"
+        />
+        <Text style={styles.nameNote}>
+          {nameError ?? 'Signs the memories you leave. Blank stays anonymous.'}
+        </Text>
 
         <Group title="Account">
           <View style={styles.padded}>
@@ -322,6 +353,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   title: screenTitle,
+  nameTitle: { ...label, fontSize: 12, color: color.inkFaint, marginTop: 28, marginLeft: 4 },
+  name: { ...input, ...font.title, fontSize: 22, marginTop: 10 },
+  nameNote: {
+    ...font.ui,
+    fontSize: 13,
+    lineHeight: 20,
+    color: color.inkFaint,
+    marginTop: 6,
+    marginLeft: 4,
+  },
   group: { marginTop: 28, gap: 8 },
   // The rows bring their own padding; the panel only clears its tab.
   card: { padding: 0, paddingTop: 10, marginTop: 0 },

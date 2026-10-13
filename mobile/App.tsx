@@ -1973,6 +1973,9 @@ export default function App() {
         }}
         notifyNearby={notifyNearby}
         onNotifyNearby={handleNotifyNearby}
+        displayName={displayName}
+        onDisplayName={rename}
+        nameError={nameError}
       />
 
       <Paywall
@@ -1993,14 +1996,6 @@ export default function App() {
           setCollectorOpen(false);
           setJournalOpen(false);
           setSubmitOpen(true);
-        }}
-        displayName={displayName}
-        onDisplayName={rename}
-        nameError={nameError}
-        onSettings={() => {
-          Haptics.selectionAsync().catch(() => {});
-          setCollectorOpen(false);
-          setSettingsOpen(true);
         }}
       />
       {(opening || diving) && (
@@ -2319,8 +2314,9 @@ export default function App() {
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
               read at the top"). Your Collector across the top, and off the
-              map, where the dock has it, the Journal at its end; neither
-              while a memory is up (UI.md rule 13). */}
+              map, where the dock has it, the Journal at its end; top right,
+              Center on me (home only) and Settings (docs/10, "Map controls
+              top right"); none while a memory is up (UI.md rule 13). */}
           {(stage === 'map' || stage === 'preview' || stage === 'walk') &&
             !confirmEnd &&
             !showDone &&
@@ -2350,6 +2346,36 @@ export default function App() {
                     {journalNew && <View style={styles.newDot} />}
                   </Pressable>
                 )}
+                <View style={styles.grow} />
+                <GlassCard style={styles.controls}>
+                  {stage === 'map' && (
+                    <>
+                      <Pressable
+                        hitSlop={4}
+                        accessibilityRole="button"
+                        accessibilityLabel="Center on me"
+                        onPress={locate}
+                        style={({ pressed }) => [styles.orb, pressed && styles.squish]}
+                      >
+                        <Icon name="locate" size={22} color={color.ink} filled={!offYou} />
+                      </Pressable>
+                      <View style={styles.divider} />
+                    </>
+                  )}
+                  <Pressable
+                    hitSlop={4}
+                    accessibilityRole="button"
+                    accessibilityLabel="Settings"
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setSettingsOpen(true);
+                    }}
+                    style={({ pressed }) => [styles.orb, pressed && styles.squish]}
+                  >
+                    <Icon name="settings" size={24} color={color.ink} />
+                  </Pressable>
+                  <View style={contour} pointerEvents="none" />
+                </GlassCard>
               </View>
             )}
           {collecting && (
@@ -2379,12 +2405,10 @@ export default function App() {
           {stage === 'map' && !journalOpen && !pastWalk && !slide && (
             <MapDock
               journalNew={journalNew}
-              onYou={!offYou}
               onJournal={openJournal}
               onAdd={add}
               onPlanPress={() => Haptics.selectionAsync().catch(() => {})}
               onPlan={() => setStage('preview')}
-              onLocate={locate}
             />
           )}
           {/* On a walk: Add, the walk card, Center on me (docs/10, "One
@@ -2704,6 +2728,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   squish: { transform: [{ scale: 0.92 }] },
+  // Top right: Center on me (home only) and Settings in one capsule.
+  controls: { flexDirection: 'row', alignItems: 'center' },
+  divider: { width: StyleSheet.hairlineWidth, height: 28, backgroundColor: color.rule },
   // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
   // over Apple's logo and Legal link (HIG Maps asks 10).
   bottom: {

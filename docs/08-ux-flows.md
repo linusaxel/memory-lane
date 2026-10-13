@@ -97,7 +97,7 @@ make it worth having got here.
 **Session three — coming back.** The collection has things in it (F15), it works
 on the train home with no signal (F16), and next week there is another free
 walk. The map shows what is locked around
-you, never what it says: standing there is the only way in. Settings, behind the gear on your Collector's page, is where
+you, never what it says: standing there is the only way in. Settings, behind the gear top right of the map, is where
 "why can't I read this" gets answered before it becomes a complaint (F17).
 
 ---
@@ -590,7 +590,7 @@ kind of thing otherwise discovered at the worst moment.
 
 ## F17 · Understand why you cannot read something — **Implemented**
 
-**Settings** (the gear on your Collector's page) exists because every proximity-gated app needs somewhere to
+**Settings** (the gear top right of the map) exists because every proximity-gated app needs somewhere to
 answer that, and answering it only inside the sheet that provoked the question
 is too late.
 
