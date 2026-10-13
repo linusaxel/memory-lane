@@ -4,15 +4,21 @@
 
 import type { ImageSourcePropType } from 'react-native';
 
+import { GoldBulla } from './lockets/designs/GoldBulla.tsx';
 import { GoldCeltic } from './lockets/designs/GoldCeltic.tsx';
 import { GoldDeco } from './lockets/designs/GoldDeco.tsx';
+import { GoldDragonfly } from './lockets/designs/GoldDragonfly.tsx';
 import { GoldEye } from './lockets/designs/GoldEye.tsx';
+import { GoldFrost } from './lockets/designs/GoldFrost.tsx';
 import { GoldHeart } from './lockets/designs/GoldHeart.tsx';
 import { GoldHunter } from './lockets/designs/GoldHunter.tsx';
+import { GoldMokume } from './lockets/designs/GoldMokume.tsx';
 import { GoldMonogram } from './lockets/designs/GoldMonogram.tsx';
 import { GoldMoon } from './lockets/designs/GoldMoon.tsx';
 import { GoldNight } from './lockets/designs/GoldNight.tsx';
 import { GoldOval } from './lockets/designs/GoldOval.tsx';
+import { GoldQuatre } from './lockets/designs/GoldQuatre.tsx';
+import { GoldRoseEgg } from './lockets/designs/GoldRoseEgg.tsx';
 import { GoldVictorian } from './lockets/designs/GoldVictorian.tsx';
 import type { LocketDesign } from './lockets/types.ts';
 
@@ -26,7 +32,13 @@ export type LocketId =
   | 'celtic-knot'
   | 'moon-phase'
   | 'lovers-eye'
-  | 'sweetheart';
+  | 'sweetheart'
+  | 'quatre-couleur'
+  | 'rose-egg'
+  | 'dragonfly'
+  | 'white-gold-frost'
+  | 'etruscan-bulla'
+  | 'mokume-river';
 
 type Locket = {
   id: LocketId;
@@ -97,6 +109,42 @@ export const LOCKETS: Locket[] = [
     name: 'Sweetheart',
     pin: require('../assets/lockets/pin-sweetheart.png'),
     design: GoldHeart,
+  },
+  {
+    id: 'quatre-couleur',
+    name: 'Quatre-couleur garland',
+    pin: require('../assets/lockets/pin-quatre-couleur.png'),
+    design: GoldQuatre,
+  },
+  {
+    id: 'rose-egg',
+    name: 'Rose-gold egg',
+    pin: require('../assets/lockets/pin-rose-egg.png'),
+    design: GoldRoseEgg,
+  },
+  {
+    id: 'dragonfly',
+    name: 'Green-gold dragonfly',
+    pin: require('../assets/lockets/pin-dragonfly.png'),
+    design: GoldDragonfly,
+  },
+  {
+    id: 'white-gold-frost',
+    name: 'White-gold frost',
+    pin: require('../assets/lockets/pin-white-gold-frost.png'),
+    design: GoldFrost,
+  },
+  {
+    id: 'etruscan-bulla',
+    name: 'Etruscan bulla',
+    pin: require('../assets/lockets/pin-etruscan-bulla.png'),
+    design: GoldBulla,
+  },
+  {
+    id: 'mokume-river',
+    name: 'Mokume-gane river',
+    pin: require('../assets/lockets/pin-mokume-river.png'),
+    design: GoldMokume,
   },
 ];
 

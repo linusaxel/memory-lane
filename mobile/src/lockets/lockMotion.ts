@@ -217,6 +217,7 @@ function useDerived(
   const claspB = tune.clasp?.[1] ?? 0.95;
   const tremble = !!tune.tremble;
   const noShine = !!tune.noShine;
+  const shineMax = tune.shineOp ?? 0.42;
 
   const pp = useDerivedValue(() => {
     const ph = m.phase.value;
@@ -264,7 +265,7 @@ function useDerived(
     m.phase.value === PHASE.open ? -60 + 260 * seg(oa.value, 0, 0.5) : -60 + 230 * eio(pp.value),
   );
   const shineOp = useDerivedValue<number>(() =>
-    noShine || reduceMotion || m.phase.value === PHASE.idle ? 0 : 0.42,
+    noShine || reduceMotion || m.phase.value === PHASE.idle ? 0 : shineMax,
   );
   const glowOp = useDerivedValue(() =>
     m.phase.value === PHASE.open

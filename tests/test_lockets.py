@@ -25,6 +25,12 @@ def test_a_memory_with_no_choice_draws_one_and_keeps_it_even_locked(api_client):
         "moon-phase",
         "lovers-eye",
         "sweetheart",
+        "quatre-couleur",
+        "rose-egg",
+        "dragonfly",
+        "white-gold-frost",
+        "etruscan-bulla",
+        "mokume-river",
     }
 
 
@@ -36,6 +42,11 @@ def test_a_first_time_author_can_pick_any_locket(api_client):
 
 def test_a_round_four_locket_can_be_picked(api_client):
     response = api_client.post("/v1/memories", json=submission(locket="celtic-knot"))
+    assert response.status_code == 201
+
+
+def test_a_round_five_locket_can_be_picked(api_client):
+    response = api_client.post("/v1/memories", json=submission(locket="mokume-river"))
     assert response.status_code == 201
 
 

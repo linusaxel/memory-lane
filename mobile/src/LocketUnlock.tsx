@@ -224,7 +224,15 @@ export default function LocketUnlock({
               <Layer design={design} z={6} d={d}>
                 {!d.reduceMotion &&
                   design.sparkles.map((q, i) => (
-                    <Sparkle key={i} i={i} x={q[0]} y={q[1]} m={m} d={d} />
+                    <Sparkle
+                      key={i}
+                      i={i}
+                      x={q[0]}
+                      y={q[1]}
+                      m={m}
+                      d={d}
+                      color={design.sparkleColors?.[i] ?? metal.inner}
+                    />
                   ))}
                 {Overlay ? <Overlay {...props} /> : null}
               </Layer>
@@ -298,7 +306,21 @@ function LayerSvg({ design, children }: { design: LocketDesign; children: ReactN
   );
 }
 
-function Sparkle({ i, x, y, m, d }: { i: number; x: number; y: number; m: Motion; d: Derived }) {
+function Sparkle({
+  i,
+  x,
+  y,
+  m,
+  d,
+  color,
+}: {
+  i: number;
+  x: number;
+  y: number;
+  m: Motion;
+  d: Derived;
+  color: string;
+}) {
   const props = useAnimatedProps(() => {
     const kk =
       m.phase.value === PHASE.open
@@ -309,7 +331,7 @@ function Sparkle({ i, x, y, m, d }: { i: number; x: number; y: number; m: Motion
   });
   return (
     <AG animatedProps={props}>
-      <Path d={SPARKLE} fill={metal.inner} />
+      <Path d={SPARKLE} fill={color} />
     </AG>
   );
 }

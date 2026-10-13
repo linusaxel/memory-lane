@@ -4477,7 +4477,7 @@ thing over the hold: the compass rose hunts and settles, the deco rays light
 one by one, the garnet turns over, the night locket draws itself in one gold
 line.
 
-- **One engine, ten drawings.** `mobile/src/lockets/lockMotion.ts` is the state
+- **One engine, sixteen drawings.** `mobile/src/lockets/lockMotion.ts` is the state
   machine (hold, spring back, checking, open, seal) and the shared
   choreography. `lockets/designs/Gold*.tsx` each draw a case, a lid, its
   inside and its own hold, on the hold's progress, all on the UI thread.
@@ -4486,6 +4486,14 @@ line.
 - **Ten, in rotation.** The new four (celtic knot, moon phase, lover's eye,
   sweetheart) are in `lockets.ts`, the picker and `random_locket()`
   (migration 052). The paywall strings only the first six.
+- **Sixteen, and every memory drew again.** *(Added 2026-10-13.)* The round-5
+  six (quatre-couleur garland, rose-gold egg, green-gold dragonfly, white-gold
+  frost, Etruscan bulla, mokume-gane river) are generated straight from their
+  canvas boards: each keeps the board's maths in a `vals` worklet that
+  `lockets/dyn.tsx` applies. They bring their own sparkle colours and sweep
+  strength (`sparkleColors`, `tune.shineOp`). Migration 055 adds them and
+  re-draws every memory's locket, the authored ones too, so the new six show
+  up on the map at once.
 - **No keyholes, on the pin either.** Each locket has one pin image. Locked,
   it is full gold; opened, it fades to half, so what is left to walk to stands
   out. Supersedes *Lockets*' "two faces each".

@@ -58,6 +58,8 @@ export type Tune = {
   scaleFn?: (p: number, pp: number) => number;
   /** turn off the light sweep (Night) */
   noShine?: boolean;
+  /** opacity of the light sweep while held (default 0.42) */
+  shineOp?: number;
 };
 
 export type PlaceInfo = {
@@ -88,6 +90,8 @@ export type LocketDesign = {
   outline: string;
   /** where the 5 sparkles pop on open ([] for none) */
   sparkles: ReadonlyArray<readonly [number, number]>;
+  /** colour per sparkle (default: all gold) */
+  sparkleColors?: ReadonlyArray<string>;
   /** haptics fired as hold progress crosses each `at` (on top of the shared press / commit / open haptics) */
   holdHaptics: HoldHaptic[];
   tune?: Tune;

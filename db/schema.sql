@@ -166,7 +166,13 @@ INSERT INTO lockets (id, name, level) VALUES
     ('celtic-knot', 'Celtic knot', 13),
     ('moon-phase', 'Moon phase', 15),
     ('lovers-eye', 'Lover''s eye', 17),
-    ('sweetheart', 'Sweetheart', 19);
+    ('sweetheart', 'Sweetheart', 19),
+    ('quatre-couleur', 'Quatre-couleur garland', 21),
+    ('rose-egg', 'Rose-gold egg', 23),
+    ('dragonfly', 'Green-gold dragonfly', 25),
+    ('white-gold-frost', 'White-gold frost', 27),
+    ('etruscan-bulla', 'Etruscan bulla', 29),
+    ('mokume-river', 'Mokume-gane river', 31);
 
 CREATE OR REPLACE FUNCTION random_locket() RETURNS TEXT LANGUAGE sql VOLATILE AS
 $$ SELECT id FROM lockets ORDER BY random() LIMIT 1 $$;
