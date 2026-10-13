@@ -99,7 +99,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the workers' stories from Humlen ved Carlsberg at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. I saw that the site allows non-commercial use only, so I'm asking first. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the workers' stories from Humlen ved Carlsberg at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. I saw that the site allows non-commercial use only, so I'm asking first. For the sake of transparency, the app is free to try and has a paid subscription.
 
 A yes or no is all I need, and tell me if you'd like the credit worded a certain way.
 
@@ -119,7 +119,7 @@ Hi Bo,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the articles from Nyt fra Lokalhistorien at the places they're about? We have very few stories from Brønshøj, Husum and Utterslev so far. We'd write them in our own words, credit you with a link, and take anything down if you ask. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the articles from Nyt fra Lokalhistorien at the places they're about? We have very few stories from Brønshøj, Husum and Utterslev so far. We'd write them in our own words, credit you with a link, and take anything down if you ask. For the sake of transparency, the app is free to try and has a paid subscription.
 
 A yes or no is all I need. If Min barndom på Bispebjerg exists as text, I'd like to ask about that too.
 
@@ -139,7 +139,7 @@ Hi Eva,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the memoirs in your collection at the places they're about? We'd write them in our own words, link to each memoir, leave out private people's names, and take anything down if you ask. If so, could we get them as text, through an API or an export? I didn't want to scrape kbharkiv.dk. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the memoirs in your collection at the places they're about? We'd write them in our own words, link to each memoir, leave out private people's names, and take anything down if you ask. If so, could we get them as text, through an API or an export? I didn't want to scrape kbharkiv.dk. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -156,7 +156,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the memoir articles on sydhavnenshistorie.dk at the places they're about? We have almost no stories from Sydhavnen so far. We'd write them in our own words, credit you with a link, leave out private people's names, and take anything down if you ask. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the memoir articles on sydhavnenshistorie.dk at the places they're about? We have almost no stories from Sydhavnen so far. We'd write them in our own words, credit you with a link, leave out private people's names, and take anything down if you ask. For the sake of transparency, the app is free to try and has a paid subscription.
 
 A yes or no is all I need.
 
@@ -176,7 +176,7 @@ Hi Caspar,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the Frederiksberg-erindringer films at the places they're about? We'd write them in our own words, credit the archive and the storyteller with a link to the film, and take anything down if you ask. Do the films have transcripts or subtitles? We don't transcribe audio, so we need text to find the places. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the Frederiksberg-erindringer films at the places they're about? We'd write them in our own words, credit the archive and the storyteller with a link to the film, and take anything down if you ask. Do the films have transcripts or subtitles? We don't transcribe audio, so we need text to find the places. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -193,7 +193,7 @@ Hi Andreas,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of Bryggebladet's stories at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few issues from 2019 on, before I saw your copyright page. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of Bryggebladet's stories at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few issues from 2019 on, before I saw your copyright page. If you'd rather we didn't, we'll delete it. For the sake of transparency, the app is free to try and has a paid subscription.
 
 A yes or no is all I need.
 
@@ -212,7 +212,7 @@ Hi Jan,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from your yearbooks at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few yearbooks, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from your yearbooks at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few yearbooks, and I should have asked first. If you'd rather we didn't, we'll delete it. For the sake of transparency, the app is free to try and has a paid subscription.
 
 A yes or no is all I need.
 
@@ -248,7 +248,7 @@ Hi Allan,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from Københavnerglimt at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from Københavnerglimt at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it. For the sake of transparency, the app is free to try and has a paid subscription.
 
 I think DNR Media makes the channel. If not, could you pass this on? A yes or no is all I need.
 
@@ -267,7 +267,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from your videos at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from your videos at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it. For the sake of transparency, the app is free to try and has a paid subscription.
 
 A yes or no is all I need.
 
@@ -286,7 +286,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from the christianiahistorie films on the Christiania1 channel at the places they're about? We'd write them in our own words, show no clips, and credit the channel and the storyteller with a link. We already tried this on a few films, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from the christianiahistorie films on the Christiania1 channel at the places they're about? We'd write them in our own words, show no clips, and credit the channel and the storyteller with a link. We already tried this on a few films, and I should have asked first. If you'd rather we didn't, we'll delete it. For the sake of transparency, the app is free to try and has a paid subscription.
 
 The channel says it's part of your archive. If I've got the wrong people, could you pass this on? A yes or no is all I need.
 
@@ -305,7 +305,7 @@ Hi Kim,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from your pages on Nyhavn and Christianshavn at the places they're about? We'd write them in our own words, with your name and a link to your page, and take anything down if you ask. We've already done this with a few of them, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from your pages on Nyhavn and Christianshavn at the places they're about? We'd write them in our own words, with your name and a link to your page, and take anything down if you ask. We've already done this with a few of them, and I should have asked first. If you'd rather we didn't, we'll delete it. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -324,7 +324,7 @@ I can't find an address for Refshaleøen TV. Could you pass this on to them, or 
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from the film Refshaleøens historie at the places they're about? We'd write them in our own words, credit the channel and Kim Bargsteen with a link to the film, and take anything down if you ask. Is there a transcript of the film? We don't transcribe audio, so we need text to find the places. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from the film Refshaleøens historie at the places they're about? We'd write them in our own words, credit the channel and Kim Bargsteen with a link to the film, and take anything down if you ask. Is there a transcript of the film? We don't transcribe audio, so we need text to find the places. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -342,7 +342,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from your videos at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We'd take anything down if you ask. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from your videos at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We'd take anything down if you ask. For the sake of transparency, the app is free to try and has a paid subscription.
 
 A yes or no is all I need.
 
@@ -361,7 +361,7 @@ Hi Kenneth,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from your Enghave Plads films at the places they're about? We'd write them in our own words, with your name and a link, without naming the people in them, and take anything down if you ask. Is there a transcript of the films? We don't transcribe audio, so we need text to find the places. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from your Enghave Plads films at the places they're about? We'd write them in our own words, with your name and a link, without naming the people in them, and take anything down if you ask. Is there a transcript of the films? We don't transcribe audio, so we need text to find the places. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -378,7 +378,7 @@ Hi Shazia,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the portraits from Al Magt til Kærligheden at the places they're about? We'd write them in our own words, with your name and a link, and take anything down if you ask. Do the portraits exist as text? We don't transcribe audio, so we need text to find the places. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the portraits from Al Magt til Kærligheden at the places they're about? We'd write them in our own words, with your name and a link, and take anything down if you ask. Do the portraits exist as text? We don't transcribe audio, so we need text to find the places. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -395,7 +395,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the stories from Stemmer fra Bjerget at the places they're about? We'd write them in our own words, credit you with a link to the episode, never name patients, and take anything down if you ask. The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the stories from Stemmer fra Bjerget at the places they're about? We'd write them in our own words, credit you with a link to the episode, never name patients, and take anything down if you ask. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -412,7 +412,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we showed some of your copyright-free photos at the places they show? Each photo would carry the archive, the photographer and a link back, and we'd take anything down if you ask. If so, could I fetch them with their locations through your API? I don't want to load the website. The app is a business, free to try with a paid subscription.
+Would it be okay if we showed some of your copyright-free photos at the places they show? Each photo would carry the archive, the photographer and a link back, and we'd take anything down if you ask. If so, could I fetch them with their locations through your API? I don't want to load the website. For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
@@ -429,7 +429,7 @@ Hi,
 
 I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Would it be okay if we retold some of the openly licensed stories from Historisk Atlas at the places they're about? We'd follow each licence and credit Historisk Atlas with a link. To see which stories are open, I'd need access to your API. Could I get that? The app is a business, free to try with a paid subscription.
+Would it be okay if we retold some of the openly licensed stories from Historisk Atlas at the places they're about? We'd follow each licence and credit Historisk Atlas with a link. To see which stories are open, I'd need access to your API. Could I get that? For the sake of transparency, the app is free to try and has a paid subscription.
 
 [name]
 [phone]
