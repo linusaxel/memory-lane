@@ -1,99 +1,100 @@
 # Permission requests
 
 Every source we may only use with a yes, and the email that asks for it. Send
-from the founder's own address, one at a time. When a reply comes, file its
-date and wording on the `sources` row (`pipeline.sources set <id> ... --note`)
-and update the tracker below.
+from the founder's own address, one at a time, and fill in `[navn]` and
+`[telefon]`. When a reply comes, file its date and wording on the `sources`
+row (`pipeline.sources set <id> ... --note`) and update the tracker.
 
 docs/10-decisions.md, *The sources' legal footing* and *Recent sources without
 permission*, says why each needs asking: a channel always does; a site whose
 terms say "non-commercial", "after agreement" or "no digital copies" does; a
 block (WAF, robots, ai.txt) is never gone around.
 
+Contacts were checked on each organisation's own pages on 2026-10-13. Where
+the address is a guess or sits behind YouTube's "View email" button, the
+tracker says so.
+
 ## Tracker
 
-Ordered by what a yes would add to the goal's empty cells (make-memories
-skill, step 0). "Cells" are the 1 km cells within 4 km of Rådhuspladsen.
+Ordered by what a yes adds to the goal's empty cells (make-memories skill,
+step 0).
 
-| # | Who | What a yes unlocks | Cells | Contact | Status |
-|---|---|---|---|---|---|
-| 1 | Arbejdermuseet, *Humlen ved Carlsberg* | 195 posts of brewery workers telling their own buildings, 1950s-2008 | Carlsberg (empty) | find on humlenvedcarlsberg.dk / arbejdermuseet.dk | Not sent |
-| 2 | Lokalhistorisk Selskab for Brønshøj, Husum og Utterslev | *Nyt fra Lokalhistorien* story pages; *Min barndom på Bispebjerg*, *Erindringssamtaler fra Nordvest-Bispebjerg* | Nordvest, Bispebjerg (empty) | info.lhsbhu@gmail.com | Not sent |
-| 3 | Københavns Stadsarkiv, memoirs | ~3,300 memoirs from the 1969 and 1995 calls, behind kbharkiv.dk's WAF | every district | the open thread (see §3) | Thread open, not asked for memoirs |
-| 4 | Sydhavnens Lokalhistoriske Arkiv | 26 *erindringsartikler*, 1940s-60s | Sydhavn (empty) | sydhavnen@outlook.dk | Not sent |
-| 5 | Refshaleøen TV, Kim Bargsteen | *Refshaleøens historie* (2022) with a former B&W worker; uncaptioned, so a transcript or subtitles | Refshaleøen, Holmen (empty) | YouTube `UC-z4gV_vcO2_rrJIpddwvCg`, About page | Not sent |
-| 6 | Frederiksberg Stadsarkiv, *Frederiksberg-erindringer* | 50+ first-person films of 6-20 min on Dream Broker, no subtitles | west Frederiksberg (empty) | find on stadsarkivet.frederiksberg.dk | Not sent |
-| 7 | Bryggebladet | the 2003-06 HTML archive's resident portraits, and a yes for source 247 already in use | Islands Brygge (empty) | redaktion@bryggebladet.dk | Not sent |
-| 8 | Nørrebro Lokalhistoriske Forening | 24 yearbooks 2000-23 (source 248 in use) | Nørrebro, Nordvest edge | info@noerrebrolokalhistorie.dk | Not sent |
-| 9 | SLAK | an introduction to the Østerbro, Valby and Vesterbro societies | outer districts | `slak.dk/kontakt` | Not sent |
-| 10 | Københavnerliv, Københavnerglimt | the YouTube corpus, 107 visible memories (sources in use) | Indre By, Vesterbro | the channels | Check: not recorded as sent |
-| 11 | kbhbilleder (Stadsarkivet) | ~5,000 free, placed photos through the APACS API | every district | kbhbilleder@kff.kk.dk | Not sent |
-| 12 | Historisk Atlas | the API's per-story licence, so CC stories can be used | every district | it@historiskatlas.dk | Not sent |
+| # | Who | Send to | What a yes unlocks | Status |
+|---|---|---|---|---|
+| 1 | Arbejdermuseet, *Humlen ved Carlsberg* | am@arbejdermuseet.dk (rights go through the museum; site by Kathrine Noes Sørensen and Hans Uwe Petersen) | 195 brewery workers' posts, 1950s-2008; Carlsberg cell is empty | Not sent |
+| 2 | Lokalhistorisk Selskab for Brønshøj, Husum og Utterslev | Bo Öhrström, formand, bo.oehrstroem@gmail.com, cc info.lhsbhu@gmail.com | *Nyt fra Lokalhistorien* and the Bispebjerg and Nordvest books; empty cells | Not sent |
+| 3 | Københavns Stadsarkiv, erindringer | Eva Greve Mortensen, arkivar, XM9P@kk.dk, cc stadsarkiv@kk.dk | ~3,300 memoirs from 1969 and 1995, every district | Not sent (an older thread exists; mention it if it was with her) |
+| 4 | Kgs. Enghave Lokalhistoriske Arkiv (sydhavnenshistorie.dk) | sydhavnen@outlook.dk (no names on the site) | 26 erindringsartikler, 1940s-60s; Sydhavn cells are empty | Not sent |
+| 5 | Frederiksberg Stadsarkiv, *Frederiksberg-erindringer* | Caspar Christiansen, stadsarkivar, cach01@frederiksberg.dk, cc stadsarkivet@frederiksberg.dk | 50+ first-person films, if transcripts exist; west Frederiksberg | Not sent |
+| 6 | Bryggebladet | Andreas Kirkeskov, redaktør, redaktion@bryggebladet.dk | A yes for source 247 (in use), and the 2003-06 archive | Not sent |
+| 7 | Nørrebro Lokalhistoriske Forening | Jan Malinowski, formand, info@noerrebrolokalhistorie.dk | A yes for source 248 (in use), 24 yearbooks | Not sent |
+| 8 | SLAK | Helge Rørdam Olesen, formand, helge.olesen@email.dk | An introduction to the Østerbro, Valby and Vesterbro societies | Not sent |
+| 9 | Københavnerglimt | info@dnrmedia.dk (a guess from the videos' #DNRmedia.dk tag); presenter Allan Mylius Thomsen | A yes for source 3, our biggest (336 memories) | Not sent |
+| 10 | Københavnerliv | YouTube About page, "View email" (sign in); kbherliv.dk blocks us | A yes for source 2 (in use) | Not sent |
+| 11 | Christiania1 | caarkiv@gmail.com (Christianias Arkiv, where the channel says it sits) | A yes for source 7 (in use) | Not sent |
+| 12 | Kim Greiner, rejsefortaelling.dk | kim@greiner.dk | A courtesy yes for sources 387-412 (in use, no opt-out) | Not sent |
+| 13 | Refshaleøen TV, Kim Bargsteen | No address found. Ask mail@refshaleoen.dk (the landlord) to pass it on | *Refshaleøens historie* (2022), if there is a transcript | Not sent |
+| 14 | Dansk rockhistorie | YouTube About page, "View email"; maybe kontakt@peterbak.dk (a guess via budowski.dk) | Source 414, five videos waiting | Not sent |
+| 15 | Kenneth A. Balfelt | kenneth@kennethbalfelt.org | The Enghave Plads films, if there is a transcript | Not sent |
+| 16 | Shazia Khan, *Al Magt til Kærligheden* | zarzia@gmail.com | 61 Christiania portraits, if there is text | Not sent |
+| 17 | Stemmer fra Bjerget (Bispebjerg and Frederiksberg Hospital) | YouTube About page, "View email" | Hospital podcast with captions | Not sent |
+| 18 | kbhbilleder | kbhbilleder@kff.kk.dk (unverified: the site blocks us); else stadsarkiv@kk.dk | ~5,000 free, placed photos via the API | Not sent |
+| 19 | Historisk Atlas | info@historiskatlas.dk (it@ is not on their pages) | Each story's licence via the API | Not sent |
 
-Later, if the above come back yes: Kenneth A. Balfelt's Enghave Plads films
-(uncaptioned), Bispebjerg and Frederiksberg Hospital's *Stemmer fra Bjerget*
-(YouTube `UCzkyW2Y9sGT4eC1S4gMkAgg`), Marinehistorisk Selskab, DieselHouse
-(B&W), Shazia Khan's *Al Magt til Kærligheden* (Christiania).
+Later, no email drafted: Marinehistorisk Selskab (Gustav Lang,
+langgustav@gmail.com), DieselHouse (dieselhouse@everllence.com),
+Christianshavns Kvarter (info@christianshavnskvarter.dk) and Frederiksberg
+Lokal TV (form at frbtv.dk/kontakt), both uncaptioned. Dropped: Euroman and
+Eurowoman have no *Mit København* series (that was Copenhagen Sundays', which
+opts out), and Realdania's *Mit sted* is a podcast with no text.
 
 ## What every email promises
 
 Each has to be true before we send:
 
-- **Our own words.** A short text about one episode, never a quote longer than
-  a line, an excerpt or a clip.
-- **They are the source**, by name, with a link back to them on every memory.
-- **The text is forgotten once extracted** (`pipeline.transcripts.forget`;
-  for videos, `python -m pipeline.transcripts --forget-extracted` for the
-  backlog before sending).
-- **A stop is honoured within a day**, for one story or the whole source.
-- **No proxy** for a permitted channel: drop `WEBSHARE_PROXY_*` for it.
-- **Private names**: a story about a private person who may be alive doesn't
-  name them without asking.
+- Our own words: a short text about one episode, never more than a line
+  quoted, never an excerpt or a clip.
+- They are named as the source, with a link back, on every memory.
+- The text is forgotten once extracted (`pipeline.transcripts.forget`; for
+  videos, run `python -m pipeline.transcripts --forget-extracted` first).
+- A stop is honoured within a day, for one story or the whole source.
+- No proxy for a permitted channel: drop `WEBSHARE_PROXY_*` for it.
+- A private person who may be alive is not named without asking.
 
-The price line is *A free walk a week* (docs/10): "Appen er gratis med én
-gåtur om ugen; et abonnement giver en hver dag." Change it in every email if
-that decision changes.
+The price line follows *A free walk a week* (docs/10). Change it in every
+email if that decision changes.
 
 ---
 
 ## 1. Arbejdermuseet: Humlen ved Carlsberg
 
-The richest find of the 2026-10-12 sweep: workers telling where things
-happened at the brewery ("over på værtshuset 'Als', som lå lige over for
-porten"), the 1985 strike, the last can line. The site says "må kun citeres
-i ikke-kommerciel sammenhæng", so it is closed without a yes. The Carlsberg
-cell has no good memory.
+Til: am@arbejdermuseet.dk
 
-**Emne:** Må vi fortælle bryggeriarbejdernes historier på stedet i Carlsberg Byen?
+Emne: Humlen ved Carlsberg i en gåtursapp
 
-Hej [navn],
+Hej,
 
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér.
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
 
-*Humlen ved Carlsberg* er fuld af den slags: [ét konkret eksempel, fx
-værtshuset Als over for porten, hvor arbejderne gik over efter
-portreglerne]. I dag er Carlsberg Byen et kvarter mange går igennem uden
-at vide, hvad der foregik i bygningerne. Jeg vil gerne spørge om lov til
-at bruge fortællingerne sådan:
+Humlen ved Carlsberg er fuld af den slags. Fx to-øres-strejken i 1965. I dag
+går folk gennem Carlsberg Byen uden at vide, hvad der skete i bygningerne, og
+det er netop et kvarter, hvor vi mangler historier.
 
-- **Vi skriver selv en kort tekst** om én episode, med vores egne ord,
-  aldrig et uddrag af indlægget.
-- **I står som kilde** med Arbejdermuseets og *Humlen ved Carlsberg*s navn,
-  og et link til indlægget hos jer.
-- **Vi gemmer ikke jeres tekster.** Vi læser hvert indlæg én gang for at
-  finde stedet, og sletter teksten bagefter.
-- **Navne**: fortæller en tidligere medarbejder om en kollega, nævner vi
-  ikke kollegaens navn uden at have spurgt.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
+På siden står der, at teksterne kun må citeres i ikke-kommerciel sammenhæng,
+så derfor spørger jeg først. Sådan ville vi bruge dem:
 
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag. Jeg
-ved, at I har skrevet "ikke-kommerciel sammenhæng", og derfor spørger jeg
-først.
+Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
+højst en enkelt linje. Ved hver historie står Arbejdermuseet og Humlen ved
+Carlsberg som kilde, med et link til indlægget. Vi gemmer ikke teksterne,
+når vi har læst dem. Vi nævner ikke kolleger ved navn uden at spørge. Og vil
+I have en historie fjernet, eller det hele, så er den væk inden for et døgn.
 
-Er det i orden med jer? Og skal jeres navn stå på en bestemt måde?
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer? Jeg svarer gerne på spørgsmål, også på telefon.
 
 Venlig hilsen
 [navn]
@@ -103,220 +104,34 @@ Venlig hilsen
 
 ## 2. Lokalhistorisk Selskab for Brønshøj, Husum og Utterslev
 
-`lokalhistorie-bhu.dk` (use http: the https certificate fails). Eight issues
-of *Nyt fra Lokalhistorien* as HTML, by named members, 1900-1970: Emdrupborg
-as a film studio 1911-17, Bispebjerg Kirkegård, Nørrebro Station. Every issue
-says "Eftertryk er tilladt efter aftale". Their print books on Bispebjerg and
-Nordvest are what the open web lacks.
+Til: bo.oehrstroem@gmail.com
+Cc: info.lhsbhu@gmail.com
 
-**Emne:** Må vi fortælle historierne fra Nyt fra Lokalhistorien på stedet?
+Emne: Jeres lokalhistorie i en gåtursapp
 
-Hej,
+Hej Bo,
 
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér.
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
 
-Jeres blad er fuldt af den slags: [ét konkret eksempel, fx Emdrupborgs park,
-hvor Filmfabrikken Skandinavien optog film 1911-17]. Nordvest og Bispebjerg
-er netop de kvarterer, hvor vi har færrest historier. Jeg vil gerne spørge
-om lov til at bruge jeres artikler sådan:
+Brønshøj, Husum, Utterslev og Bispebjerg er de kvarterer, hvor vi har færrest
+historier. Jeres blad har netop dem, fx mindestenen ved gadekæret i 1931 og
+filmoptagelserne på Emdrupborg fra 1911 til 1917. Der står "eftertryk efter
+aftale", så jeg spørger, om vi må bruge artiklerne sådan her:
 
-- **Vi skriver selv en kort tekst** om én episode, med vores egne ord,
-  aldrig et uddrag af artiklen.
-- **I står som kilde** med selskabets navn, og et link til bladet og til
-  hvordan man bliver medlem.
-- **Vi gemmer ikke jeres tekster.** Vi læser hver artikel én gang for at
-  finde stederne, og sletter teksten bagefter.
-- **Private navne**: handler en historie om en privatperson, der kan være i
-  live, nævner vi ikke navnet uden at have spurgt.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
+Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
+højst en enkelt linje. Ved hver historie står selskabets navn og et link til
+jer, også til hvordan man bliver medlem. Vi gemmer ikke teksterne, når vi har
+læst dem. Vi nævner ikke privatpersoner, der kan være i live, uden at spørge.
+Og vil I have en historie fjernet, eller det hele, så er den væk inden for et
+døgn.
 
-Har I også *Min barndom på Bispebjerg* eller *Erindringssamtaler fra
-Nordvest-Bispebjerg* som tekst, vil jeg gerne spørge om de samme vilkår for
-dem.
+Har I også Min barndom på Bispebjerg eller Erindringssamtaler fra
+Nordvest-Bispebjerg som tekst, vil jeg gerne spørge om det samme for dem.
 
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
-
-Er det i orden med jer? Og skal jeres navn stå på en bestemt måde?
-
-Venlig hilsen
-[navn]
-[telefon]
-
----
-
-## 3. Københavns Stadsarkiv: the memoirs
-
-About 3,300 memoirs from the archive's 1969 and 1995 calls, mostly before
-1950, read on kbharkiv.dk behind an AWS WAF challenge: never scraped. A
-thread with Stadsarkivet is already open (find-sources skill); ask in it,
-and combine with §11 (kbhbilleder) if that has not gone yet.
-
-**Emne:** Erindringerne fra 1969 og 1995 i en gåtursapp om København
-
-Hej [navn],
-
-[En linje om tråden I allerede har.]
-
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér. Jeres indsamlede erindringer er den bedste
-kilde, der findes, til hvordan byen var at leve i, gade for gade.
-
-Kan vi få adgang til erindringerne som tekst, gennem et API eller et
-udtræk, i stedet for at belaste kbharkiv.dk? Vi vil bruge dem sådan:
-
-- **Vi skriver selv en kort tekst** om én episode, med vores egne ord,
-  aldrig et uddrag af erindringen.
-- **I står som kilde** med Stadsarkivets navn og et link til erindringen
-  hos jer.
-- **Private navne**: vi nævner ikke privatpersoner ved navn, kun stedet og
-  det der skete.
-- **Vi gemmer ikke teksterne.** Vi læser hver erindring én gang for at finde
-  stederne, og sletter teksten bagefter.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
-
-Gælder der særlige vilkår for erindringer, hvor skribenten stadig kan være
-i live, vil jeg gerne kende dem.
-
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
-
-Venlig hilsen
-[navn]
-[telefon]
-
----
-
-## 4. Sydhavnens Lokalhistoriske Arkiv
-
-sydhavnen@outlook.dk. 26 *erindringsartikler*, 1940s-60s, about 25 good;
-"reproduction only by prior agreement". The two Sydhavn cells are empty.
-Use the local-history society email (§8) with this example: [én artikel fra
-sydhavnenshistorie.dk, med sted].
-
----
-
-## 5. Refshaleøen TV, Kim Bargsteen
-
-YouTube `UC-z4gV_vcO2_rrJIpddwvCg`, *Refshaleøens historie* (2022): Kim
-Bargsteen, who worked at Burmeister & Wain, tells the island. No captions,
-and we don't transcribe audio, so the ask is a transcript or subtitles, and
-permission. The east harbour column has almost nothing open.
-
-**Emne:** Må vi fortælle Refshaleøens historie på stedet?
-
-Hej [navn],
-
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér.
-
-Jeres film *Refshaleøens historie* med Kim Bargsteen er præcis den slags:
-[ét konkret øjeblik fra filmen, med sted]. Om Refshaleøen og B&W findes der
-næsten intet, der er fortalt af nogen, der var der. Jeg vil gerne spørge om
-to ting:
-
-1. Må vi bruge filmen sådan som beskrevet herunder?
-2. Har I en tekst eller undertekster til den? Vi lytter ikke selv lyd af,
-   så uden tekst kan vi ikke finde stederne.
-
-- **Vi skriver selv en kort tekst** om én episode, med vores egne ord,
-  aldrig et klip eller en afskrift.
-- **I står som kilde** med jeres navn og Kim Bargsteens, og et link der
-  åbner filmen på YouTube præcis hvor historien bliver fortalt.
-- **Vi gemmer ikke teksten.** Vi læser den én gang for at finde stederne,
-  og sletter den bagefter.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
-
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
-
-Er det i orden med jer, og med Kim?
-
-Venlig hilsen
-[navn]
-[telefon]
-
----
-
-## 6. Frederiksberg Stadsarkiv: Frederiksberg-erindringer
-
-50+ films of 6-20 min on Dream Broker (`fosreg5v`), people telling their own
-Frederiksberg. No subtitles and no opt-out; YouTube has only trailers. The
-ask is transcripts and permission. West Frederiksberg (Grøndal, Fuglebakken,
-Flintholm) has no open source at all.
-
-**Emne:** Frederiksberg-erindringerne i en gåtursapp: må vi, og findes der tekst?
-
-Hej [navn],
-
-Jeg bygger Memory Lane, en app der planlægger gåture i København og på
-Frederiksberg forbi steder hvor noget er sket. Når man står på stedet,
-åbner en kort historie om hvad der skete netop dér.
-
-*Frederiksberg-erindringer* er præcis den slags: [én konkret erindring fra
-en film, med sted]. Jeg vil gerne spørge om to ting:
-
-1. Må vi bruge filmene sådan som beskrevet herunder?
-2. Findes der udskrifter eller undertekster til dem? Vi lytter ikke selv lyd
-   af, så uden tekst kan vi ikke finde stederne.
-
-- **Vi skriver selv en kort tekst** om én episode, med vores egne ord,
-  aldrig et klip eller en afskrift.
-- **I står som kilde** med Stadsarkivets navn og fortællerens, og et link
-  til filmen hos jer.
-- **Private navne**: nævner en fortæller andre privatpersoner, nævner vi dem
-  ikke.
-- **Vi gemmer ikke teksten.** Vi læser den én gang for at finde stederne,
-  og sletter den bagefter.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
-
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
-
-Venlig hilsen
-[navn]
-[telefon]
-
----
-
-## 7. Bryggebladet
-
-redaktion@bryggebladet.dk. Source 247 (issues 2019-26) is used today under
-*Recent sources without permission*, but `/ombryggebladet/ophavsret/` says
-"Det er ikke tilladt at tage kopi i elektronisk/digital form… Al yderligere
-anvendelse kræver tilladelse". A yes turns that risk into a credit, and opens
-the 2003-06 HTML archive (about 540 articles, resident portraits such as the
-centenarians of Egilsgade 59).
-
-**Emne:** Må vi fortælle Bryggens historier fra Bryggebladet på stedet?
-
-Hej,
-
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér.
-
-Bryggebladet har den slags historier om Islands Brygge, som ingen andre har:
-[ét konkret eksempel, fx de to hundredårige, der flyttede til Egilsgade 59
-i 1908]. Jeg har læst jeres side om ophavsret, og derfor spørger jeg om lov
-til at bruge artiklerne sådan:
-
-- **Vi skriver selv en kort tekst** om én episode, med vores egne ord,
-  aldrig et uddrag af artiklen.
-- **I står som kilde** som "Bryggebladet" med dato, som I beder om, og et
-  link til artiklen.
-- **Vi gemmer ikke jeres tekster.** Vi læser hver artikel én gang for at
-  finde stederne, og sletter teksten bagefter.
-- **Private navne**: handler en historie om en privatperson, der kan være i
-  live, nævner vi ikke navnet uden at have spurgt.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
-
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
 
 Er det i orden med jer?
 
@@ -326,43 +141,39 @@ Venlig hilsen
 
 ---
 
-## 8-9. Local-history societies: Nørrebro, SLAK (and §4's wording)
+## 3. Københavns Stadsarkiv: erindringerne
 
-Their first-hand stories from living memory are what the free sources lack
-(research 2026-10-05). Ask in this order, one at a time:
+Til: XM9P@kk.dk
+Cc: stadsarkiv@kk.dk
 
-1. Nørrebro Lokalhistoriske Forening, info@noerrebrolokalhistorie.dk: 24
-   yearbooks 2000-2023 as text PDFs at `noerrebrolokalhistorie.dk/aarsskrifter/`
-2. Sydhavnens Lokalhistoriske Arkiv, sydhavnen@outlook.dk: 26 "erindringsartikler"
-3. SLAK, `slak.dk/kontakt`: the umbrella for the city's ten societies, for an
-   introduction to Østerbro, Valby and Vesterbro
+Emne: Erindringerne fra 1969 og 1995 i en gåtursapp
 
-**Emne:** Må vi fortælle historierne fra jeres årsskrifter på stedet?
+Hej Eva,
 
-Hej [navn],
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
 
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér.
+Jeres erindringer er det bedste, der findes, om hvordan byen var at leve i,
+gade for gade. Børnene der legede på Sønder Boulevard i 1955, eller hvor folk
+stod den 4. maj 1945. Vi har ikke hentet noget fra kbharkiv.dk, og det vil vi
+heller ikke gøre uden lov.
 
-Jeres årsskrifter er fulde af den slags: [ét konkret eksempel, fx Esthers
-frisørsalon i Korsgade 10, "Korsgades sidste butik"]. Jeg vil gerne spørge
-om lov til at bruge dem sådan:
+Kan vi få adgang til erindringerne som tekst, fx gennem et API eller et
+udtræk? Sådan ville vi bruge dem:
 
-- **Vi skriver selv en kort tekst** om én episode, med vores egne ord,
-  aldrig et uddrag af artiklen.
-- **I står som kilde** med foreningens navn, og et link til årsskriftet og
-  til hvordan man bliver medlem.
-- **Vi gemmer ikke jeres tekster.** Vi læser hvert årsskrift én gang for at
-  finde stederne, og sletter teksten bagefter.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
-- **Private navne**: handler en historie om en privatperson, der kan være i
-  live, nævner vi ikke navnet uden at have spurgt.
+Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
+højst en enkelt linje. Ved hver historie står Stadsarkivet som kilde, med et
+link til erindringen hos jer. Vi nævner ikke privatpersoner ved navn, kun
+stedet og det der skete. Vi gemmer ikke teksterne, når vi har læst dem. Og
+vil I have en historie fjernet, eller det hele, så er den væk inden for et
+døgn.
 
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
+Gælder der særlige regler for erindringer, hvor skribenten kan være i live,
+vil jeg gerne kende dem.
 
-Er det i orden med jer? Og skal jeres navn stå på en bestemt måde?
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
 
 Venlig hilsen
 [navn]
@@ -370,72 +181,32 @@ Venlig hilsen
 
 ---
 
-## 10. YouTube channels: Københavnerliv, Københavnerglimt
+## 4. Kgs. Enghave Lokalhistoriske Arkiv (Sydhavnens historie)
 
-docs/10, *The sources' legal footing*, rates the YouTube corpus "No, as
-built": every channel needs written permission. Københavnerliv and
-Københavnerglimt first (107 of the visible memories).
+Til: sydhavnen@outlook.dk
 
-**Emne:** Må vi fortælle jeres Københavnerhistorier på stedet?
-
-Hej [navn],
-
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér.
-
-Jeres videoer er fulde af den slags: [ét konkret eksempel fra kanalen, fx
-"historien om …" på …]. Jeg vil gerne spørge om lov til at bruge dem sådan:
-
-- **Vi skriver selv en kort tekst** om én episode fra en video, med vores
-  egne ord, aldrig et klip eller en afskrift.
-- **I står som kilde** med kanalens navn øverst, og et link der åbner videoen
-  på YouTube præcis hvor historien bliver fortalt. Seerne ender hos jer.
-- **Vi gemmer ikke jeres videoer.** Vi læser undertekstsporet én gang for at
-  finde stederne, og sletter det bagefter.
-- **I kan altid sige stop**, også for en enkelt historie, og så er den væk
-  inden for et døgn.
-
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag. Vi sælger
-aldrig adgang til jeres indhold enkeltvis.
-
-Er det i orden med jer? Og skal jeres navn stå på en bestemt måde?
-
-Venlig hilsen
-[navn]
-[telefon]
-
----
-
-## 11. kbhbilleder
-
-kbhbilleder@kff.kk.dk. 41,779 photos, maps and drawings, about 5,000 out of
-copyright and free for commercial use, many geotagged. The site is
-bot-protected, so ask and never scrape. The code is open with a public APACS
-API (github.com/CopenhagenCityArchives). A great, precisely located picture
-of a scene is a memory in itself.
-
-**Emne:** Jeres frie billeder i en gåtursapp om Københavns historie
+Emne: Jeres erindringsartikler i en gåtursapp
 
 Hej,
 
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér, og et gammelt billede fra præcis det sted er
-ofte den bedste historie af alle.
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
 
-Må jeg hente de billeder der er fri af ophavsret og frie til kommerciel
-brug, med deres placering, gennem jeres API i stedet for at belaste
-hjemmesiden? Og findes der en liste over netop dem, eller et felt der
-siger det?
+I Sydhavnen har vi næsten ingen historier endnu. Jeres erindringsartikler fra
+40'erne, 50'erne og 60'erne er præcis det, vi mangler. Der står, at de kun må
+gengives efter aftale, så jeg spørger, om vi må bruge dem sådan her:
 
-- **I står som kilde** under hvert billede, med arkivets navn, fotografen
-  og et link til billedet hos jer.
-- **Kun frie billeder**: vi bruger intet der stadig er beskyttet.
-- **I kan altid sige stop**, også for et enkelt billede, og så er det væk
-  inden for et døgn.
+Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
+højst en enkelt linje. Ved hver historie står arkivet som kilde, med et link
+til artiklen. Vi gemmer ikke teksterne, når vi har læst dem. Vi nævner ikke
+privatpersoner, der kan være i live, uden at spørge. Og vil I have en
+historie fjernet, eller det hele, så er den væk inden for et døgn.
 
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
 
 Venlig hilsen
 [navn]
@@ -443,34 +214,507 @@ Venlig hilsen
 
 ---
 
-## 12. Historisk Atlas
+## 5. Frederiksberg Stadsarkiv: Frederiksberg-erindringer
 
-it@historiskatlas.dk. Their API carries each story's licence ("Geo"), which
-the public pages don't show; the sitemap gives only a title and an intro.
-Ingest only stories under CC BY, BY-SA or public domain (docs/10, *The
-sources' legal footing*). They are partly a competitor, so ask for access,
-not a partnership.
+Til: cach01@frederiksberg.dk
+Cc: stadsarkivet@frederiksberg.dk
 
-**Emne:** Adgang til jeres API til en gåtursapp om Københavns historie
+Emne: Frederiksberg-erindringerne i en gåtursapp
+
+Hej Caspar,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København og på Frederiksberg. Undervejs kommer man forbi steder,
+hvor noget er sket, og når man står der, kan man læse en kort historie om
+det.
+
+Jeres film med folk, der fortæller om deres eget Frederiksberg, er præcis
+den slags, fx Elektrikeren og Mariendalskvarteret. Jeg har to spørgsmål:
+
+Findes der udskrifter eller undertekster til filmene? Vi lytter ikke selv
+lyd af, så uden tekst kan vi ikke finde stederne.
+
+Og må vi bruge dem sådan her: Vi skriver selv en kort tekst om én episode
+med vores egne ord og viser aldrig klip. Ved hver historie står Stadsarkivet
+og fortælleren som kilde, med et link til filmen. Vi gemmer ikke teksten,
+når vi har læst den. Vi nævner ikke andre privatpersoner, som fortælleren
+taler om. Og vil I have en historie fjernet, eller det hele, så er den væk
+inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 6. Bryggebladet
+
+Til: redaktion@bryggebladet.dk
+
+Emne: Bryggens historier i en gåtursapp
+
+Hej Andreas,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Bryggebladet har historier om Islands Brygge, som ingen andre har, fx de to
+hundredårige, der flyttede ind i Egilsgade 59 i 1908. Vi har prøvet at finde
+historier i nogle af jeres numre fra 2019 og frem. Bagefter så jeg jeres side
+om ophavsret, og derfor spørger jeg nu. Siger I nej, sletter vi det.
+
+Sådan ville vi bruge artiklerne: Vi skriver selv en kort tekst om én episode
+med vores egne ord og citerer højst en enkelt linje. Ved hver historie står
+Bryggebladet med dato og et link til artiklen. Vi gemmer ikke teksterne, når
+vi har læst dem. Vi nævner ikke privatpersoner, der kan være i live, uden at
+spørge. Og vil I have en historie fjernet, eller det hele, så er den væk
+inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 7. Nørrebro Lokalhistoriske Forening
+
+Til: info@noerrebrolokalhistorie.dk
+
+Emne: Jeres årsskrifter i en gåtursapp
+
+Hej Jan,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Jeres årsskrifter er fulde af den slags. Den bedste historie, vi har fundet,
+er Kierkegaards begravelse på Assistens Kirkegård i 1855, fra årsskriftet
+2023. Vi har prøvet det af på nogle af årsskrifterne, og jeg burde have
+spurgt først. Siger I nej, sletter vi det.
+
+Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
+vores egne ord og citerer højst en enkelt linje. Ved hver historie står
+foreningens navn og et link til årsskriftet, også til hvordan man bliver
+medlem. Vi gemmer ikke teksterne, når vi har læst dem. Vi nævner ikke
+privatpersoner, der kan være i live, uden at spørge. Og vil I have en
+historie fjernet, eller det hele, så er den væk inden for et døgn.
+
+Er der artikler, hvor den der gav materialet har sat begrænsninger, så sig
+endelig til.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 8. SLAK
+
+Til: helge.olesen@email.dk
+
+Emne: Kan du hjælpe mig videre til de lokalhistoriske foreninger?
+
+Hej Helge,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+De bedste historier, vi har fundet, kommer fra de lokalhistoriske foreninger:
+folk der fortæller om deres egen gade. Jeg spørger allerede Nørrebro og
+Sydhavnen, men vil gerne også i kontakt med foreningerne på Østerbro, i Valby
+og på Vesterbro.
+
+Vi skriver selv en kort tekst om én episode med vores egne ord, foreningen
+står som kilde med et link, vi gemmer ikke teksterne, og en forening kan
+altid sige stop.
+
+Vil du sende det her videre, eller fortælle mig hvem jeg skal skrive til?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 9. Københavnerglimt
+
+Til: info@dnrmedia.dk
+
+Emne: Københavnerglimt i en gåtursapp
+
+Hej Allan,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Jeg skriver til DNR Media, fordi jeg tror, det er jer, der laver
+Københavnerglimt. Er det forkert, vil I så sende det videre?
+
+Jeres videoer er de bedste, vi har fundet. Fx fodboldspillerne fra KB, der
+blev anholdt i Guldbergsgade for at vise benene, eller Vor Frues klokker, der
+spillede som en salme, mens tårnet brændte. Vi har prøvet det af på jeres
+videoer, og jeg burde have spurgt først. Siger I nej, sletter vi det.
+
+Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
+vores egne ord og viser aldrig klip. Ved hver historie står Københavnerglimt
+øverst, med et link der åbner videoen på YouTube præcis dér, hvor historien
+bliver fortalt. Vi læser underteksterne én gang for at finde stederne og
+sletter dem bagefter. Og vil I have en historie fjernet, eller det hele, så
+er den væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 10. Københavnerliv
+
+Til: the address behind "View email" on youtube.com/@Kbherliv/about
+
+Emne: Københavnerliv i en gåtursapp
 
 Hej,
 
-Jeg bygger Memory Lane, en app der planlægger gåture i København forbi
-steder hvor noget er sket. Når man står på stedet, åbner en kort historie
-om hvad der skete netop dér.
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
 
-Jeres fortællinger passer præcis til det, fx [én konkret historie]. Må jeg
-få adgang til jeres API, så jeg kan se hver fortællings licens og hele
-teksten?
+Jeres videoer er fulde af den slags. Fx baren på det gamle Hotel Kong
+Frederik, hvor Politikens journalister og Tom Kristensen sad efter fyraften.
+Vi har prøvet det af på jeres videoer, og jeg burde have spurgt først. Siger
+I nej, sletter vi det.
 
-- **Kun åbne licenser**: vi bruger kun fortællinger under CC BY, CC BY-SA
-  eller i public domain, og følger licensens krav.
-- **I står som kilde** med Historisk Atlas' navn og et link til
-  fortællingen hos jer.
-- **I kan altid sige stop**, også for en enkelt fortælling, og så er den
-  væk inden for et døgn.
+Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
+vores egne ord og viser aldrig klip. Ved hver historie står Københavnerliv
+øverst, med et link der åbner videoen på YouTube præcis dér, hvor historien
+bliver fortalt. Vi læser underteksterne én gang for at finde stederne og
+sletter dem bagefter. Og vil I have en historie fjernet, eller det hele, så
+er den væk inden for et døgn.
 
-Appen er gratis med én gåtur om ugen; et abonnement giver en hver dag.
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 11. Christiania1 (via Christianias Arkiv)
+
+Til: caarkiv@gmail.com
+
+Emne: Christianiahistorierne i en gåtursapp
+
+Hej,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+YouTube-kanalen Christiania1 skriver, at den ligger i jeres arkiv, så jeg
+håber, I er de rigtige at spørge. Ellers vil I så sende det videre?
+
+Filmene i serien christianiahistorie er fulde af den slags. Fx Mikael Focks
+fortælling om Solvognen og giftlageret hos Sadolin & Holmblad. Vi har prøvet
+det af på nogle af filmene, og jeg burde have spurgt først. Siger I nej,
+sletter vi det.
+
+Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
+vores egne ord og viser aldrig klip. Ved hver historie står kanalen og
+fortælleren som kilde, med et link der åbner filmen præcis dér, hvor
+historien bliver fortalt. Vi læser underteksterne én gang og sletter dem
+bagefter. Og vil I have en historie fjernet, eller det hele, så er den væk
+inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 12. Kim Greiner
+
+Til: kim@greiner.dk
+
+Emne: Dine historier om Nyhavn og Christianshavn
+
+Hej Kim,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Dine sider om Nyhavns huse og om Christianshavn er noget af det bedste, vi
+har fundet. Fx Titanic-billetterne, der blev solgt i Nyhavn 1, og
+fangeoprøret i 1817, hvor Lagkagehuset ligger i dag. Vi har allerede brugt
+dem, og jeg vil gerne høre, om det er i orden med dig.
+
+Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
+højst en enkelt linje. Ved hver historie står dit navn og et link til din
+side. Vi gemmer ikke teksterne, når vi har læst dem. Og vil du have en
+historie fjernet, eller det hele, så er den væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 13. Refshaleøen TV, Kim Bargsteen
+
+Til: mail@refshaleoen.dk (no address for the channel; ask them to pass it on)
+
+Emne: Til Refshaleøen TV og Kim Bargsteen: Refshaleøens historie
+
+Hej,
+
+Jeg kan ikke finde en adresse til Refshaleøen TV. Vil I sende det her videre
+til dem, eller til Kim Bargsteen? Tak.
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Filmen Refshaleøens historie fra 2022, hvor Kim Bargsteen fortæller om B&W,
+er præcis den slags. Der findes næsten intet om Refshaleøen fortalt af nogen,
+der var der. Jeg har to spørgsmål:
+
+Findes der en tekst eller undertekster til filmen? Vi lytter ikke selv lyd
+af, så uden tekst kan vi ikke finde stederne.
+
+Og må vi bruge den sådan her: Vi skriver selv en kort tekst om én episode
+med vores egne ord og viser aldrig klip. Ved hver historie står kanalen og
+Kim Bargsteen som kilde, med et link der åbner filmen præcis dér, hvor
+historien bliver fortalt. Vi gemmer ikke teksten, når vi har læst den. Og
+vil I have en historie fjernet, så er den væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 14. Dansk rockhistorie
+
+Til: the address behind "View email" on the channel's About page
+(`UCz0mJQVpBbLIjOq-oOb2nkA`); kontakt@peterbak.dk only if that fails
+
+Emne: Dansk rockhistorie i en gåtursapp
+
+Hej,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Jeres portrætter af musikerne fortæller om de øvelokaler, spillesteder og
+studier, hvor det skete. Fx Flemming Rasmussen om Sweet Silence Studio. Vi
+vil gerne lade folk stå på stedet og høre historien.
+
+Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
+vores egne ord og viser aldrig klip. Ved hver historie står kanalen og
+musikeren som kilde, med et link der åbner videoen på YouTube præcis dér,
+hvor historien bliver fortalt. Vi læser underteksterne én gang og sletter
+dem bagefter. Og vil I have en historie fjernet, eller det hele, så er den
+væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 15. Kenneth A. Balfelt
+
+Til: kenneth@kennethbalfelt.org
+
+Emne: Dine film fra Enghave Plads
+
+Hej Kenneth,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Dine film med ølfolket på Enghave Plads er nogle af de få steder, hvor folk
+selv fortæller om Vesterbro og Sydhavnen. Jeg har to spørgsmål:
+
+Findes der en tekst eller undertekster til filmene? Vi lytter ikke selv lyd
+af, så uden tekst kan vi ikke finde stederne.
+
+Og må vi bruge dem sådan her: Vi skriver selv en kort tekst om én episode
+med vores egne ord og viser aldrig klip. Ved hver historie står dit navn som
+kilde, med et link til filmen. Vi nævner ikke de medvirkende ved navn uden
+at spørge. Vi gemmer ikke teksten, når vi har læst den. Og vil du have en
+historie fjernet, så er den væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 16. Shazia Khan: Al Magt til Kærligheden
+
+Til: zarzia@gmail.com
+
+Emne: Al Magt til Kærligheden i en gåtursapp
+
+Hej Shazia,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Dine portrætter af christianitter fortæller om livet i Christiania, sted for
+sted, af dem der selv var der. Jeg har to spørgsmål:
+
+Findes portrætterne som tekst? Vi lytter ikke selv lyd af, så uden tekst kan
+vi ikke finde stederne.
+
+Og må vi bruge dem sådan her: Vi skriver selv en kort tekst om én episode
+med vores egne ord og citerer højst en enkelt linje. Ved hver historie står
+dit navn og den der fortæller, med et link til dig. Vi gemmer ikke teksten,
+når vi har læst den. Og vil du have en historie fjernet, så er den væk inden
+for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 17. Stemmer fra Bjerget
+
+Til: the address behind "View email" on youtube.com/@bbh_frh_hosp/about
+
+Emne: Stemmer fra Bjerget i en gåtursapp
+
+Hej,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Stemmer fra Bjerget fortæller om livet på Bispebjerg Hospital af dem, der
+var der. Bispebjerg er et af de kvarterer, hvor vi har færrest historier.
+
+Sådan ville vi bruge afsnittene: Vi skriver selv en kort tekst om én episode
+med vores egne ord og viser aldrig klip. Ved hver historie står podcasten og
+hospitalet som kilde, med et link til afsnittet. Vi nævner ikke patienter
+ved navn. Vi læser underteksterne én gang og sletter dem bagefter. Og vil I
+have en historie fjernet, så er den væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Er det i orden med jer?
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 18. kbhbilleder
+
+Til: kbhbilleder@kff.kk.dk (unverified; if it bounces, stadsarkiv@kk.dk)
+
+Emne: Jeres frie billeder i en gåtursapp
+
+Hej,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man se en kort historie om det. Et gammelt billede fra
+præcis det sted er tit den bedste historie.
+
+Må jeg hente de billeder, der er fri af ophavsret og frie til kommerciel
+brug, med deres placering, gennem jeres API? Jeg vil ikke belaste
+hjemmesiden. Og findes der en liste over netop de billeder, eller et felt
+der siger det?
+
+Under hvert billede står arkivet, fotografen og et link til billedet hos
+jer. Vi bruger kun frie billeder. Og vil I have et billede fjernet, så er det
+væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
+
+Venlig hilsen
+[navn]
+[telefon]
+
+---
+
+## 19. Historisk Atlas
+
+Til: info@historiskatlas.dk
+
+Emne: Adgang til jeres API
+
+Hej,
+
+Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
+gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
+når man står der, kan man læse en kort historie om det.
+
+Må jeg få adgang til jeres API, så jeg kan se hver fortællings licens og
+hele teksten? Vi bruger kun fortællinger under CC BY, CC BY-SA eller i public
+domain og følger licensens krav. Ved hver historie står Historisk Atlas som
+kilde, med et link til fortællingen hos jer. Og vil I have en fortælling
+fjernet, så er den væk inden for et døgn.
+
+Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
+abonnement.
 
 Venlig hilsen
 [navn]
