@@ -1894,17 +1894,6 @@ export default function App() {
     Haptics.selectionAsync().catch(() => {});
     setSubmitOpen(true);
   };
-  const addButton = (
-    <GlassButton
-      style={styles.bigCircle}
-      hitSlop={4}
-      accessibilityRole="button"
-      accessibilityLabel="Add a memory here"
-      onPress={add}
-    >
-      <Icon name="add" size={30} color={color.ink} />
-    </GlassButton>
-  );
 
   // A memory a hold just opened: any way out of its sheet keeps the locket.
   const justOpened = openMemories.find((memory) => memory.id === revealId && !memory.locked);
@@ -2287,11 +2276,9 @@ export default function App() {
 
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
-              read at the top"). Your Collector across the top, and off the
-              map, where the dock has it, the Journal at its end (the walk, not
-              the planner); top right, always Center on me and Settings
-              (docs/10, "Map controls top right"); none while a memory is up
-              (UI.md rule 13). */}
+              read at the top"). Your Collector top left; top right, always
+              Center on me and Settings (docs/10, "Map controls top right");
+              none while a memory is up (UI.md rule 13). */}
           {(stage === 'map' || stage === 'preview' || stage === 'walk') &&
             !confirmEnd &&
             !showDone &&
@@ -2305,22 +2292,6 @@ export default function App() {
                   filed={filed}
                   onPress={() => setCollectorOpen(true)}
                 />
-                {stage === 'walk' && (
-                  <Pressable
-                    hitSlop={4}
-                    accessibilityRole="button"
-                    accessibilityLabel="Journal"
-                    accessibilityHint={journalNew ? 'Something new on your memories' : undefined}
-                    onPress={openJournal}
-                    style={({ pressed }) => pressed && styles.squish}
-                  >
-                    <GlassCard style={styles.orb}>
-                      <Icon name="journal" size={24} color={color.ink} />
-                      <View style={contour} pointerEvents="none" />
-                    </GlassCard>
-                    {journalNew && <View style={styles.newDot} />}
-                  </Pressable>
-                )}
                 <View style={styles.grow} />
                 <GlassCard style={styles.controls}>
                   <Pressable
@@ -2372,19 +2343,24 @@ export default function App() {
               <Button kind="text" label="Try again" onPress={() => setRetry((n) => n + 1)} />
             </GlassCard>
           )}
-          {/* Home: the map, you on it, and the dock. */}
-          {stage === 'map' && !journalOpen && !pastWalk && !slide && (
-            <MapDock
-              journalNew={journalNew}
-              onJournal={openJournal}
-              onAdd={add}
-              onPlanPress={() => Haptics.selectionAsync().catch(() => {})}
-              onPlan={() => setStage('preview')}
-            />
-          )}
-          {/* On a walk: Add and the walk card (docs/10, "One
-              gold button that changes"). Not over a card with its own
-              buttons at the bottom. */}
+          {/* Home and the walk: the map, you on it, and the dock, the same
+              on both; on a walk Plan a walk is dimmed. */}
+          {(stage === 'map' || (stage === 'walk' && !confirmEnd && !showDone && !lockFor)) &&
+            !journalOpen &&
+            !pastWalk &&
+            !slide && (
+              <MapDock
+                journalNew={journalNew}
+                onJournal={openJournal}
+                onAdd={add}
+                onPlanPress={() => Haptics.selectionAsync().catch(() => {})}
+                onPlan={() => setStage('preview')}
+                planOff={stage === 'walk'}
+              />
+            )}
+          {/* On a walk: the walk card over the dock (docs/10, "One gold
+              button that changes"). Not over a card with its own buttons at
+              the bottom. */}
           {pastWalk && (
             <PastWalk
               walk={pastWalk}
@@ -2397,7 +2373,6 @@ export default function App() {
           )}
           {stage === 'walk' && !confirmEnd && !showDone && !pastWalk && !slide && (
             <View style={styles.bottom}>
-              {addButton}
               <View style={styles.middle}>
                 {walking && !position && (
                   // Without location nothing can ever unlock, so the button says so
@@ -2456,7 +2431,7 @@ export default function App() {
                             longitude: memory.place.coordinates.lng,
                           })),
                           {
-                            edgePadding: { top: 80, right: 80, bottom: 160, left: 80 },
+                            edgePadding: { top: 80, right: 80, bottom: 280, left: 80 },
                             animated: true,
                           },
                         );
@@ -2701,18 +2676,16 @@ const styles = StyleSheet.create({
   // Top right: Center on me and Settings in one capsule, on every screen.
   controls: { flexDirection: 'row', alignItems: 'center' },
   divider: { width: StyleSheet.hairlineWidth, height: 28, backgroundColor: color.rule },
-  // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
-  // over Apple's logo and Legal link (HIG Maps asks 10).
+  // The walk card, edge to edge 12pt over the dock (at 70, about 68 tall).
   bottom: {
     position: 'absolute',
-    bottom: 70,
-    left: 18,
-    right: 18,
+    bottom: 150,
+    left: 12,
+    right: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  // 60, the circles' height, so the row keeps its line without the card.
   middle: { flex: 1, minHeight: 60, alignItems: 'center', justifyContent: 'center' },
   // The slide's own row, centred over the bottom row (56 tall, at 70) with
   // 16 between: near edge to edge, as slide to power off is.
@@ -2721,14 +2694,6 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
-  // Add, the bottom row's left end.
-  bigCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   circle: {
     width: 48,
     height: 48,
@@ -2749,17 +2714,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   offlineText: { ...font.uiMedium, flex: 1, fontSize: 16, lineHeight: 21, color: color.ink },
-  newDot: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: color.paper,
-    backgroundColor: color.gold,
-  },
+
   walkCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',

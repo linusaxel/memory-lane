@@ -793,11 +793,10 @@ anyone else's collection or the local unlock cache.
    exactly this walk.
 2. **The map shows the route and nothing else.** Its stops are the only pins;
    nothing off the route is fetched or drawn, and there is no reach banner and
-   no hotspots card. Your Collector and the Journal sit across the top at
+   no hotspots card. Your Collector sits across the top at
    every stage, hidden while a memory is up (tapped, the Collector opens its
-   page); Add sits
-   bottom right on the home map, beside Journal in the planner, and at the
-   bottom row's left on a walk. There are no tabs. There is no
+   page); the dock (Journal · Plan a walk · Add) is the same on the home map
+   and on a walk, Plan a walk dimmed there. There are no tabs. There is no
    "Near me": Center on me recentres, and "Turn on location" shows only while
    there is no position.
 3. **One walk card at the bottom centre** says this is a walk and not the

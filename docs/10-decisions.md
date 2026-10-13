@@ -4969,8 +4969,9 @@ capsule:
   glass capsule, Center on me then Settings, level with it (`App.tsx`). The
   same capsule on every screen, home, planner and walk: the founder saw it
   change and asked that it never does (2026-10-13), so the walk's bottom
-  Center on me is gone. The Journal orb beside the Collector shows on the walk
-  only, not over the planner.
+  Center on me is gone. For the same reason the walk keeps the home dock,
+  Plan a walk dimmed, with the walk card over it; no Journal orb beside the
+  Collector and no lone Add circle.
 - **The Collector's page is the game:** the look, the rank, the evolution,
   what's next. No gear, no name.
 - **Your name is first in Settings**, saved as typed, as before. It signs

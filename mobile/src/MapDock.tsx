@@ -16,6 +16,8 @@ type Props = {
   onAdd: () => void;
   onPlanPress: () => void;
   onPlan: () => void;
+  /** On a walk: Plan a walk stays in its place, dimmed, so the dock never changes. */
+  planOff?: boolean;
 };
 
 function Slot({
@@ -23,6 +25,7 @@ function Slot({
   say = label,
   hint,
   go,
+  off,
   onPress,
   children,
 }: {
@@ -32,6 +35,7 @@ function Slot({
   hint?: string;
   /** Plan a walk: named in gold. */
   go?: boolean;
+  off?: boolean;
   onPress: () => void;
   children: ReactNode;
 }) {
@@ -41,8 +45,10 @@ function Slot({
       accessibilityRole="button"
       accessibilityLabel={say}
       accessibilityHint={hint}
+      accessibilityState={{ disabled: off }}
+      disabled={off}
       onPress={onPress}
-      style={({ pressed }) => [styles.slot, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.slot, pressed && styles.pressed, off && styles.off]}
     >
       <View style={styles.icon}>{children}</View>
       <Text style={[styles.name, go && styles.go]}>{label}</Text>
@@ -65,6 +71,7 @@ export default function MapDock(p: Props) {
         <Slot
           label="Plan a walk"
           go
+          off={p.planOff}
           onPress={() => {
             p.onPlanPress();
             p.onPlan();
@@ -95,6 +102,7 @@ const styles = StyleSheet.create({
   },
   slot: { flex: 1, alignItems: 'center', gap: 2, minHeight: 44 },
   pressed: { transform: [{ scale: 0.92 }] },
+  off: { opacity: 0.4 },
   icon: { height: 34, justifyContent: 'center', alignItems: 'center' },
   name: { ...font.uiBold, fontSize: 11, color: color.inkSoft },
   go: { color: color.gold },

@@ -23,8 +23,8 @@ SignInScreen (src/SignIn.tsx)  the first screen, and the only one until signed i
 
 Preview (src/Plan.tsx)          home: the first screen after sign-in, unless today's walk is accepted,
 │                              and where ending a walk lands. The map, fitted to the drawn walk above
-│                              the measured card. Draw first, adjust after. Your Collector across the top,
-│                              the Journal orb at its end (src/CollectorHud.tsx); no bottom row or dock
+│                              the measured card. Draw first, adjust after. Your Collector across the top
+│                              (src/CollectorHud.tsx); no bottom row or dock
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out gold under labels so the pins pop
 └─ card (Preview)              one card: ‹ ›, shape + length, Customize, Start; every change redraws the walk
@@ -53,17 +53,14 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              position the camera is pinned on you: it follows,
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
-├─ Collector + Journal        across the top: the portrait in a plum ring filling to the next rank, its rank on the coin; no card,
-│                              no words (tapped: its page), then the Journal, a 48pt glass orb in its contour, on the walk only.
+├─ Collector                  across the top: the portrait in a plum ring filling to the next rank, its rank on the coin; no card,
+│                              no words (tapped: its page).
 │                              Top right a glass capsule, the same on every screen: Center on me | the Settings gear.
 │                              Hidden while a memory, the locket in reach or a sheet is up (rule 13).
-│                              `book.closed`, a 10pt gold dot: a heart
-│                              or a note came back on something you filed (src/seen.ts). Opens the
-│                              journal sheet
-├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), on the walk only,
+├─ the dock                   the home dock, the same: Journal · Plan a walk (dimmed) · Add (src/MapDock.tsx)
+├─ the bottom row             edge to edge, 12pt over the dock, on the walk only,
 │                              never over a card with its own buttons (Preview, EndWalk,
-│                              WalkDone). Add, a 44pt glass circle with an gold `plus`, files a
-│                              memory, no walk needed (see "Writing"). Beside it the one thing to do, which changes:
+│                              WalkDone). The one thing to do, which changes:
 │                              Turn on location (gold) with no position, else the walk card.
 │                              While a hold would open the ring the walk card stays under it
 ├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
@@ -180,7 +177,7 @@ over "Your Collector" 34/700, × top right
 
 There are no tabs on the map, and no map of what is locked: the planner draws the walk it
 offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
-On a walk the bottom is where you act, one tap each: Add and the walk card;
+On a walk the bottom is where you act, one tap each: the dock and the walk card;
 in the planner the card's own buttons are. The top is where you read:
 your Collector and the Journal (docs/10, "Game menus").
 ```
@@ -376,9 +373,8 @@ centred"): one glass bar at bottom 70, Journal · Plan a walk · Add, Plan a wal
 centred and named in gold, each named under its icon (`src/Icon.tsx`); Center
 on me is top right (docs/10, "Map controls top right"). Plan a walk is a folded map
 (`map`), a sticker like the others; a tap opens the planner. **The walk
-has the bottom row**: Add a memory bottom left, a 60pt glass circle, the walk card
-beside it. In reach, the slide replaces the whole
-row. The walk card says "Next · 280 m", the place in Gloock, and a checklist of
+keeps the dock**, Plan a walk dimmed, and the walk card over it. In reach, the
+slide replaces both. The walk card says "Next · 280 m", the place in Gloock, and a checklist of
 16pt circles: done gold with a check, next a gold ring, later a rule ring. When
 the home map's fetch fails, a glass banner says "Can't reach Memory Lane right
 now." with Try again. The walk card is
