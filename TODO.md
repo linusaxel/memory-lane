@@ -29,6 +29,13 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`./e2e/run.sh` wipes the dev simulator's app state and kills its Metro.**
+  2026-10-13: run on the sim the founder was using, it deleted the app's
+  AsyncStorage (a Collector rank set by hand for them) and left the app on "No
+  script URL"; saved only because the store was backed up first. Fix: run.sh
+  backs up `RCTAsyncLocalStorage_V1` before the first flow and puts it back,
+  with Metro, on exit.
+
 - **`batch.send` retries a network blip while polling, not while creating**
   (2026-10-12). Pass 6 of an 86-item run died on `APIConnectionError` at
   `batches.create`, exit 1, last cards unwritten; resuming on the still-pending
