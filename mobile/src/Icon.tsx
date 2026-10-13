@@ -39,6 +39,9 @@ const ICONS = {
   more: { solid: dot(5.5, 12, 1.8) + dot(12, 12, 1.8) + dot(18.5, 12, 1.8) },
   back: { line: 'M15 5l-7 7 7 7' },
   forward: { line: 'M9 5l7 7-7 7' },
+  shuffle: {
+    line: 'M3.5 7h3c5.5 0 5.5 10 11 10h3M3.5 17h3c5.5 0 5.5-10 11-10h3M17.5 4l3 3-3 3M17.5 14l3 3-3 3',
+  },
   slide: { line: 'M5 6l6 6-6 6M12 6l6 6-6 6' },
   customize: {
     tone: dot(9, 6.5, 2.2) + dot(15.5, 12, 2.2) + dot(7.5, 17.5, 2.2),

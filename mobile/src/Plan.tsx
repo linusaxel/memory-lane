@@ -16,7 +16,7 @@
 
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Image,
@@ -35,8 +35,8 @@ import Button from './Button.tsx';
 import CloseButton from './CloseButton.tsx';
 import { GlassCard } from './Glass.tsx';
 import Glyph from './Glyph.tsx';
-import Icon from './Icon.tsx';
-import { ERA_STOPS, distance, eraLabel, eraSpan, eraStops, walkDate } from './format.ts';
+import Icon, { type IconName } from './Icon.tsx';
+import { ERA_STOPS, distance, eraLabel, eraSpan, eraStops, walkBlurb, walkDate } from './format.ts';
 import { clamp } from './lockets/math.ts';
 import { locketOf } from './lockets.ts';
 import { Chip } from './Submit.tsx';
@@ -57,6 +57,9 @@ import { Bar, Coin, Medal, Panel, Ribbon, Velvet } from './Game.tsx';
 import { WalkShape } from './WalkCard.tsx';
 
 export const WALK_KM = { min: 1, max: 10, step: 0.5, initial: 4 };
+
+// A stop's coin on the walk card's timeline.
+const COIN = 30;
 
 /** pipeline/tags.py TAGS, the vocabulary a walk can lean on; a test holds the
  *  two to the same list. Three groups of six, so the grid has no gaps. */
@@ -259,15 +262,19 @@ export function EndPick({ onCancel }: { onCancel: () => void }) {
   );
 }
 
+export type PlanStep = 'shape' | 'length' | 'walk' | 'choices';
+
+/** The two stop lists on trial: a row of coins, or a rail down the card.
+ *  ponytail: one goes once the founder picks; the dev screens set the other. */
+export type TimelineKind = 'horizontal' | 'vertical';
+export const TIMELINE: TimelineKind = 'horizontal';
+
 type PreviewProps = {
   /** In walk order, locked: what each is of, never what it says. Null until
    *  the first walk comes back. */
   stops: LocatedMemory[] | null;
   /** One more stop, withheld until the walk passes it. */
   mystery: boolean;
-  /** Your Collector, for the stops' reward. */
-  collector: ClassId;
-  rank: number;
   meters: number;
   /** What the slider asked for. */
   km: number;
@@ -287,11 +294,9 @@ type PreviewProps = {
   busy: boolean;
   error: string | null;
   onAccept: () => void;
-  /** On through the walks stepped back past, then a new one. Null on the last:
-   *  no length near this one has another walk. */
+  /** Another walk: on through the ones seen, then a new one. Null when no
+   *  length near this one has another. */
   onNext: (() => void) | null;
-  /** Back to the walk shown before this one; null on the first. */
-  onBack: (() => void) | null;
   /** Which walk this is, counting from the first: said to VoiceOver. */
   walkNumber: number;
   /** The asked length, when it had no walk and the card moved to the nearest. */
@@ -308,49 +313,61 @@ type PreviewProps = {
   /** Back to the map, from any step. */
   onClose: () => void;
   /** The step a dev link asked for (src/devOpen.ts). */
-  devStep?: 'stops' | 'choices' | null;
+  devStep?: PlanStep;
+  /** The stop list a dev link asked for. */
+  timeline?: TimelineKind;
 };
 
-/** One side of the pages; null keeps the side's space empty. */
-type ArrowProps = {
-  glyph: 'back' | 'forward';
+/** A round button in the walk card's corner. */
+function Round({
+  icon,
+  name,
+  onPress,
+  busy,
+  hint,
+  testID,
+  children,
+}: {
+  icon: IconName;
   name: string;
-  onPress: (() => void) | null;
+  onPress: () => void;
   busy: boolean;
-};
-
-function Arrow({ glyph, name, onPress, busy }: ArrowProps) {
-  if (!onPress) return <View style={styles.arrowSpace} />;
+  hint?: string;
+  testID?: string;
+  children?: ReactNode;
+}) {
   return (
     <Pressable
-      style={dim(styles.arrow)}
+      style={dim(styles.round)}
       hitSlop={2}
       onPress={onPress}
       disabled={busy}
       accessibilityRole="button"
       accessibilityLabel={name}
+      accessibilityHint={hint}
+      testID={testID}
     >
-      <Icon name={glyph} size={20} color={color.ink} />
+      <Icon name={icon} size={20} color={color.ink} />
+      {children}
     </Pressable>
   );
 }
 
-/** One of the planner's three shapes: a segment of one capsule, the chosen
- *  one raised. */
-function Mode({ label: text, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+/** One of the two shapes, a tile you tap to choose it and go on. */
+function Shape({ title, body, onPress }: { title: string; body: string; onPress: () => void }) {
   return (
     <Pressable
-      style={[styles.mode, on && styles.modeOn]}
+      style={dim(styles.shape)}
       onPress={() => {
         Haptics.selectionAsync().catch(() => {});
         onPress();
       }}
       accessibilityRole="button"
-      accessibilityState={{ selected: on }}
+      accessibilityLabel={title}
+      accessibilityHint={body}
     >
-      <Text style={[styles.modeText, on && styles.modeTextOn]} numberOfLines={1}>
-        {text}
-      </Text>
+      <Text style={styles.shapeTitle}>{title}</Text>
+      <Text style={label}>{body}</Text>
     </Pressable>
   );
 }
@@ -358,8 +375,6 @@ function Mode({ label: text, on, onPress }: { label: string; on: boolean; onPres
 export function Preview({
   stops,
   mystery,
-  collector,
-  rank,
   meters,
   km,
   onKm,
@@ -374,7 +389,6 @@ export function Preview({
   error,
   onAccept,
   onNext,
-  onBack,
   walkNumber,
   emptyAt,
   newNearby,
@@ -383,14 +397,16 @@ export function Preview({
   onHeight,
   onClose,
   devStep,
+  timeline = TIMELINE,
 }: PreviewProps) {
-  // Two steps: the length and the shape with the walk drawn behind, then its
-  // stops, paged between walks, and Start.
-  const [step, setStep] = useState<'stops' | 'choices' | null>(null);
+  // One question a step: loop or one way, then a loop's length, then the
+  // walk. A one-way walk's end is tapped on the map, which unmounts this card;
+  // it comes back on the walk.
+  const [step, setStep] = useState<PlanStep>(ask.end ? 'walk' : 'shape');
   useEffect(() => {
     if (devStep !== undefined) setStep(devStep);
   }, [devStep]);
-  // Said, not focused: the arrows keep VoiceOver where it is (WAI carousels).
+  // Said, not focused: shuffling keeps VoiceOver where it is (WAI carousels).
   const stepped = useRef(false);
   useEffect(() => {
     if (stepped.current) AccessibilityInfo.announceForAccessibility(`Walk ${walkNumber}`);
@@ -427,47 +443,97 @@ export function Preview({
     WALK_KM.max,
   );
   const measure = (e: LayoutChangeEvent) => onHeight(e.nativeEvent.layout.height);
-  const back = (
+  const back = (to: PlanStep, name: string) => (
     <Pressable
       style={dim(styles.back)}
-      onPress={() => setStep(null)}
+      onPress={() => setStep(to)}
       accessibilityRole="button"
-      accessibilityLabel="Back to the length"
+      accessibilityLabel={name}
     >
       <Icon name="back" size={18} color={color.ink} />
       <Text style={styles.secondaryText}>Back</Text>
     </Pressable>
   );
-  const start = (
-    <Button
-      kind="go"
-      label="Start walk"
-      onPress={onAccept}
-      disabled={busy || !found}
-      busy={busy}
-      accessibilityLabel="Start this walk"
-      accessibilityHint="You can end it any time."
-      place={styles.primary}
-    />
+  const summary = found ? (
+    <Text
+      style={styles.cardBody}
+    >{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
+  ) : (
+    <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
+      {count == null ? 'Finding a walk…' : `No walk within ${WALK_KM.max} km from here.`}
+    </Text>
   );
-  if (step === 'stops' && found && stops) {
+  const era = ask.from == null && ask.until == null ? '' : eraLabel(ask.from, ask.until);
+  const customized = ask.themes.length > 0 || era !== '';
+
+  if (step === 'shape') {
     return (
       <GlassCard style={styles.card} onLayout={measure}>
-        {back}
-        <Stops stops={stops} mystery={mystery} />
-        <Reward id={collector} rank={rank} count={stops.length} />
-        {start}
+        <Ribbon label={subscribed ? "Today's walk" : "This week's walk"} />
+        <Text style={styles.cardTitle} accessibilityRole="header">
+          A walk from here
+        </Text>
+        {fallback && (
+          <View style={styles.from}>
+            <Text style={[styles.cardBody, styles.grow]} testID="planning-from-centre">
+              Planning from central Copenhagen.
+            </Text>
+            <Pressable
+              style={dim([styles.secondary, button.small])}
+              onPress={onLocate}
+              accessibilityRole="button"
+              accessibilityHint="Plans the walk from where you are"
+            >
+              <Text style={styles.secondaryText}>Use my location</Text>
+            </Pressable>
+          </View>
+        )}
+        <View style={styles.pair}>
+          <Shape
+            title="Loop"
+            body="Back where you started"
+            onPress={() => {
+              onAsk({ ...ask, loop: true, end: null });
+              setStep('length');
+            }}
+          />
+          <Shape title="One way" body="End where you tap" onPress={onPickEnd} />
+        </View>
+        {close}
+      </GlassCard>
+    );
+  }
+
+  if (step === 'length') {
+    return (
+      <GlassCard style={styles.card} onLayout={measure}>
+        {back('shape', 'Back to loop or one way')}
+        {summary}
+        {found && emptyAt != null && (
+          <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
+        )}
+        {/* Keyed, so a length the server lifted resets the label; never
+            mid-drag, since only a release changes km. */}
+        <LengthSlider key={`${min}:${km}`} km={Math.max(km, min)} min={min} onKm={onKm} />
+        <Button
+          kind="go"
+          label="Next"
+          onPress={() => setStep('walk')}
+          disabled={busy || !found}
+          busy={busy}
+          accessibilityHint="Shows the stops on this walk"
+          place={styles.primary}
+        />
         {error && <Text style={styles.error}>{error}</Text>}
         {close}
       </GlassCard>
     );
   }
-  const era = ask.from == null && ask.until == null ? '' : eraLabel(ask.from, ask.until);
-  const customized = ask.themes.length > 0 || era !== '';
+
   if (step === 'choices') {
     return (
       <GlassCard style={styles.card} onLayout={measure} testID="walk-choices">
-        {back}
+        {back('walk', 'Back to the walk')}
         <View style={styles.from}>
           <Text style={[styles.cardTitle, styles.grow]} accessibilityRole="header">
             Customize
@@ -522,7 +588,7 @@ export function Preview({
         <Button
           kind="go"
           label={found ? `Done · ${count} ${count === 1 ? 'stop' : 'stops'}` : 'Done'}
-          onPress={() => setStep(null)}
+          onPress={() => setStep('walk')}
           busy={busy}
           place={styles.primary}
         />
@@ -530,109 +596,58 @@ export function Preview({
       </GlassCard>
     );
   }
-  const chosen = [ask.themes.map(themeName).join(', '), era].filter(Boolean).join(' · ');
+
+  const blurb = found && stops ? walkBlurb(stops, ask.themes) : null;
+  const Stops = timeline === 'vertical' ? Rail : Row;
   return (
     <GlassCard style={styles.card} onLayout={measure}>
-      {/* The arrows page through walks. A missing one keeps its space, so
-          the title never shifts between walks. */}
-      <View style={styles.pages}>
-        <View style={styles.grow}>
-          <Ribbon label={subscribed ? "Today's walk" : "This week's walk"} />
-          <Text style={styles.cardTitle}>A walk from here</Text>
-          {found ? (
-            <Text
-              style={styles.cardBody}
-            >{`${count} ${count === 1 ? 'memory' : 'memories'} · ${distance(meters)}${ask.loop ? ' loop' : ''}`}</Text>
-          ) : (
-            <Text style={styles.cardBody} testID={count === 0 ? 'no-walk' : undefined}>
-              {count == null ? 'Finding a walk…' : `No walk within ${WALK_KM.max} km from here.`}
-            </Text>
-          )}
-        </View>
-        {found && (
-          <>
-            <Arrow glyph="back" name="Previous walk" onPress={onBack} busy={busy} />
-            <Arrow glyph="forward" name="Next walk" onPress={onNext} busy={busy} />
-          </>
+      {ask.loop ? back('length', 'Back to the length') : back('shape', 'Back to loop or one way')}
+      {close}
+      <View style={styles.from}>
+        <Text style={[styles.cardTitle, styles.grow]} accessibilityRole="header">
+          {subscribed ? "Today's walk" : "This week's walk"}
+        </Text>
+        {found && onNext && (
+          <Round icon="shuffle" name="Another walk" onPress={onNext} busy={busy} />
         )}
-        <CloseButton label="Close the planner" onPress={onClose} />
+        {/* A subscriber's, offered to a free walker: badged Plus, so it reads
+            as the paywall before it is tapped. */}
+        <Round
+          icon="customize"
+          name="Customize"
+          hint={subscribed ? undefined : 'Part of Plus'}
+          onPress={subscribed ? () => setStep('choices') : onSubscribe}
+          busy={busy}
+          testID="themes"
+        >
+          {!subscribed && (
+            <View style={[styles.badge, styles.roundBadge]}>
+              <Text style={[styles.badgeText, styles.roundBadgeText]}>Plus</Text>
+            </View>
+          )}
+        </Round>
       </View>
+      {summary}
+      {blurb && <Text style={styles.blurb}>{blurb}</Text>}
       {found && newNearby > 0 && (
         <Text style={styles.cardBody} testID="new-nearby">
           {`${newNearby} new ${newNearby === 1 ? 'story' : 'stories'} within 2 km since your last walk`}
         </Text>
       )}
-      {found && emptyAt != null && (
-        <Text style={styles.cardBody}>{`Nothing at ${emptyAt} km; this is the nearest.`}</Text>
-      )}
-      {fallback && (
-        <View style={styles.from}>
-          <Text style={[styles.cardBody, styles.grow]} testID="planning-from-centre">
-            Planning from central Copenhagen.
-          </Text>
-          <Pressable
-            style={dim([styles.secondary, button.small])}
-            onPress={onLocate}
-            accessibilityRole="button"
-            accessibilityHint="Plans the walk from where you are"
-          >
-            <Text style={styles.secondaryText}>Use my location</Text>
-          </Pressable>
-        </View>
-      )}
-      {unreachable ? (
+      {unreachable && !ask.loop && (
         <Text
           style={styles.cardBody}
         >{`The nearest walk from here is over ${WALK_KM.max} km.`}</Text>
-      ) : (
-        // Keyed, so a length the server lifted resets the label; never mid-drag,
-        // since only a release changes km.
-        <LengthSlider key={`${min}:${km}`} km={Math.max(km, min)} min={min} onKm={onKm} />
       )}
-      <View style={styles.modes}>
-        <Mode label="Loop" on={ask.loop} onPress={() => onAsk({ ...ask, loop: true, end: null })} />
-        <Mode
-          label="One way"
-          on={!ask.loop && !ask.end}
-          onPress={() => onAsk({ ...ask, loop: false, end: null })}
-        />
-        {/* A second tap lets the end go. */}
-        <Mode
-          label={ask.end ? 'Ends where you tapped' : 'Pick where it ends'}
-          on={!!ask.end}
-          onPress={() => (ask.end ? onAsk({ ...ask, end: null }) : onPickEnd())}
-        />
-      </View>
-      {/* A subscriber's, offered to a free walker: badged Plus, so it reads
-          as the paywall before it is tapped. */}
-      <Pressable
-        style={dim(styles.themes)}
-        onPress={subscribed ? () => setStep('choices') : onSubscribe}
-        disabled={busy}
-        accessibilityRole="button"
-        accessibilityHint={subscribed ? undefined : 'Part of Plus'}
-        testID="themes"
-      >
-        <Coin size={30}>
-          <Icon name="customize" size={18} color={foil.text} tone={color.paperRaised} />
-        </Coin>
-        <Text style={styles.themesText} numberOfLines={1}>
-          {(subscribed && chosen) || 'Customize'}
-        </Text>
-        {!subscribed && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>Plus</Text>
-          </View>
-        )}
-        <Icon name="forward" size={16} color={color.inkFaint} />
-      </Pressable>
+      {found && stops && <Stops stops={stops} mystery={mystery} />}
       <Button
         kind="go"
-        label="Next"
-        onPress={() => setStep('stops')}
+        label="Start walk"
+        onPress={onAccept}
         disabled={busy || !found}
         busy={busy}
-        accessibilityHint="Shows the stops on this walk"
+        accessibilityLabel="Start this walk"
+        accessibilityHint="You can end it any time."
         place={styles.primary}
       />
       {error && <Text style={styles.error}>{error}</Text>}
@@ -640,52 +655,96 @@ export function Preview({
   );
 }
 
-/** What walking it all would earn. */
-function Reward({ id, rank, count }: { id: ClassId; rank: number; count: number }) {
+type StopsProps = { stops: LocatedMemory[]; mystery: boolean };
+
+/** What a stop is, said: all of it is on a locked memory already
+ *  (api/gate.py locked_memory). */
+function about(memory: LocatedMemory) {
+  return [
+    memory.year,
+    memory.source_name,
+    memory.tags
+      .slice(0, 2)
+      .map((tag) => `#${tag}`)
+      .join(' '),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+/** The walk as a line of coins, start to end, each stop's year under it.
+ *  Past five it scrolls sideways rather than shrink the coins. */
+function Row({ stops, mystery }: StopsProps) {
   return (
-    <Velvet style={styles.reward}>
-      <Medal id={id} stage={rank} size={38} />
-      <View style={styles.grow}>
-        <Text style={styles.rewardLabel}>REWARD</Text>
-        <Text style={styles.rewardText} numberOfLines={1}>
-          {`Up to +${count} ${count === 1 ? 'locket' : 'lockets'}`}
-        </Text>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.row}
+      contentContainerStyle={styles.rowInner}
+      testID="walk-stops"
+    >
+      <View style={styles.rowRule} />
+      <View style={styles.rowStop}>
+        <View style={styles.startMark} accessibilityLabel="Start" accessible />
       </View>
-    </Velvet>
+      {stops.map((memory, i) => (
+        <View
+          key={memory.id}
+          style={styles.rowStop}
+          accessible
+          accessibilityLabel={`Stop ${i + 1}, ${memory.place.name}. ${about(memory)}`}
+        >
+          <Coin size={COIN}>{i + 1}</Coin>
+          <Text style={[label, styles.rowYear]} numberOfLines={1}>
+            {memory.year ?? ' '}
+          </Text>
+        </View>
+      ))}
+      {mystery && (
+        <View
+          style={styles.rowStop}
+          accessible
+          accessibilityLabel="One more stop, somewhere on the way. It shows when you're close."
+          testID="mystery-stop"
+        >
+          <View style={styles.mysteryCoin}>
+            <Text style={styles.mysteryText}>?</Text>
+          </View>
+          <Text style={[label, styles.rowYear]} numberOfLines={1}>
+            on the way
+          </Text>
+        </View>
+      )}
+      <View style={styles.rowStop}>
+        <View style={styles.endMark} accessibilityLabel="End" accessible />
+      </View>
+    </ScrollView>
   );
 }
 
-/** What the walk passes, in order: the place, when, whose story, a tag or
- *  two. All of it is on a locked memory already (api/gate.py locked_memory). */
-function Stops({ stops, mystery }: { stops: LocatedMemory[]; mystery: boolean }) {
+/** The walk as a rail down the card: each stop's coin, its place and what it
+ *  is of. Four in view, the rest a scroll away. */
+function Rail({ stops, mystery }: StopsProps) {
   return (
-    <ScrollView style={styles.stops} testID="walk-stops">
+    <ScrollView style={styles.timeRail} testID="walk-stops">
+      <View style={styles.timeRailRule} />
       {stops.map((memory, i) => {
-        const about = [
-          memory.year,
-          memory.source_name,
-          memory.tags
-            .slice(0, 2)
-            .map((tag) => `#${tag}`)
-            .join(' '),
-        ]
-          .filter(Boolean)
-          .join(' · ');
+        const said = about(memory);
         return (
           <View
             key={memory.id}
-            style={styles.stop}
+            style={styles.railStop}
             accessible
-            accessibilityLabel={`Stop ${i + 1}, ${memory.place.name}. ${about}`}
+            accessibilityLabel={`Stop ${i + 1}, ${memory.place.name}. ${said}`}
           >
-            <Coin size={28}>{i + 1}</Coin>
+            <Coin size={COIN}>{i + 1}</Coin>
             <View style={styles.stopText}>
               <Text style={styles.stopName} numberOfLines={1}>
                 {memory.place.name}
               </Text>
-              {about !== '' && (
+              {said !== '' && (
                 <Text style={label} numberOfLines={1}>
-                  {about}
+                  {said}
                 </Text>
               )}
             </View>
@@ -694,8 +753,10 @@ function Stops({ stops, mystery }: { stops: LocatedMemory[]; mystery: boolean })
         );
       })}
       {mystery && (
-        <View style={styles.stop} accessible testID="mystery-stop">
-          <Coin size={28}>?</Coin>
+        <View style={styles.railStop} accessible testID="mystery-stop">
+          <View style={styles.mysteryCoin}>
+            <Text style={styles.mysteryText}>?</Text>
+          </View>
           <View style={styles.stopText}>
             <Text style={styles.stopName} numberOfLines={1}>
               Somewhere on the way
@@ -933,17 +994,6 @@ const styles = StyleSheet.create({
   rankStrip: { borderRadius: 18, borderWidth: 1, borderColor: color.edge },
   rankStripIn: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10 },
   rankName: { ...font.title, fontSize: 18, lineHeight: 22, color: color.onVelvet, marginBottom: 4 },
-  reward: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: color.edge,
-  },
-  rewardLabel: { ...font.display, fontSize: 10, letterSpacing: 1.6, color: color.onVelvetGold },
-  rewardText: { ...font.uiBold, fontSize: 14, color: color.onVelvet },
   checks: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   check: {
     width: 20,
@@ -961,39 +1011,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginTop: 6,
   },
-  modes: {
-    flexDirection: 'row',
-    padding: 4,
-    borderRadius: radius.pill,
-    backgroundColor: color.quiet,
-    borderWidth: 1,
-    borderColor: color.quietEdge,
-  },
-  mode: {
-    flexGrow: 1,
-    minHeight: 40,
-    paddingHorizontal: 12,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // The chosen one in velvet, standing on its ledge (docs/10, "Game menus").
-  modeOn: { backgroundColor: color.velvetGround, borderBottomWidth: 3, borderColor: velvet.deep },
-  modeText: { ...font.uiMedium, fontSize: 15, color: color.inkSoft },
-  modeTextOn: { ...font.uiBold, color: color.onVelvet },
-  themes: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    minHeight: 52,
-    paddingHorizontal: 10,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderRadius: 16,
-    borderColor: color.goldLine,
-    marginTop: 6,
-  },
-  themesText: { ...font.uiMedium, flex: 1, fontSize: 17, color: color.ink },
   section: { ...font.uiBold, fontSize: 13, color: color.inkSoft, marginTop: 6 },
   slider: { height: 40 },
   ends: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -1060,19 +1077,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   badgeText: { ...font.uiBold, fontSize: 13, color: foil.text },
-  // Four rows in view, the rest a scroll away: the map behind still shows the walk.
-  stops: { maxHeight: 4 * 56, flexGrow: 0 },
-  // A quest log: each stop on its own paper tile, its number a coin.
-  stop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    height: 52,
-    marginBottom: 4,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    backgroundColor: color.paper,
-  },
   stopText: { flex: 1, gap: 2 },
   stopName: { ...font.uiBold, fontSize: 16, color: color.ink },
   back: {
@@ -1083,10 +1087,8 @@ const styles = StyleSheet.create({
     minHeight: 44,
     marginTop: -10,
   },
-  pages: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingRight: 0 },
-  // 40pt drawn; hitSlop takes it to Apple's 44.
-  arrowSpace: { width: 40 },
-  arrow: {
+  doneTitle: screenTitle,
+  round: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -1096,5 +1098,71 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  doneTitle: screenTitle,
+  roundBadge: { position: 'absolute', bottom: -8, paddingHorizontal: 4, paddingVertical: 0 },
+  roundBadgeText: { fontSize: 10 },
+  shape: {
+    flex: 1,
+    gap: 2,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: color.paper,
+    borderBottomWidth: 3,
+    borderColor: color.goldLine,
+  },
+  shapeTitle: { ...font.title, fontSize: 22, lineHeight: 26, color: color.ink },
+  blurb: { ...font.storyItalic, fontSize: 17, lineHeight: 23, color: color.ink },
+  row: { flexGrow: 0, marginHorizontal: -8 },
+  // Grows to the card when the walk is short, so the coins spread out.
+  rowInner: { flexGrow: 1, justifyContent: 'space-between', paddingHorizontal: 8 },
+  rowRule: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    top: COIN / 2 - 2,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: color.gold,
+  },
+  rowStop: { minWidth: 44, alignItems: 'center', gap: 4 },
+  rowYear: { fontSize: 12 },
+  startMark: {
+    width: 20,
+    height: 20,
+    marginTop: (COIN - 20) / 2,
+    borderRadius: 10,
+    borderWidth: 3,
+    borderColor: color.gold,
+    backgroundColor: color.paper,
+  },
+  endMark: {
+    width: 16,
+    height: 16,
+    marginTop: (COIN - 16) / 2,
+    borderRadius: 4,
+    backgroundColor: color.gold,
+  },
+  mysteryCoin: {
+    width: COIN,
+    height: COIN,
+    borderRadius: COIN / 2,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: color.gold,
+    backgroundColor: color.paper,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mysteryText: { ...font.uiBold, fontSize: 14, color: color.ink },
+  // Four rows in view, the rest a scroll away: the map behind still shows the walk.
+  timeRail: { maxHeight: 4 * 48, flexGrow: 0 },
+  timeRailRule: {
+    position: 'absolute',
+    left: COIN / 2 - 2,
+    top: COIN / 2,
+    bottom: COIN / 2,
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: color.gold,
+  },
+  railStop: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 48 },
 });

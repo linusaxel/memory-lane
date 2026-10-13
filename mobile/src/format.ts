@@ -146,3 +146,36 @@ export function eraLabel(from: number | null, until: number | null): string {
   if (from == null) return until == null ? 'Any time' : `Before ${until}`;
   return until == null ? `Since ${from}` : `${from}–${until}`;
 }
+
+// Themes that are adjectives read as nouns after "the".
+const THEME_NOUNS: Record<string, string> = { strange: 'the strange', personal: 'the personal' };
+
+/** The walk in a line, from what its stops are of: the themes asked for, else
+ *  the two its stops share most, then the years they span. Null with neither. */
+export function walkBlurb(
+  stops: { tags: string[]; year?: number | null }[],
+  themes: string[],
+  thisYear: number = new Date().getFullYear(),
+): string | null {
+  const counts = new Map<string, number>();
+  for (const tag of stops.flatMap((stop) => stop.tags)) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  const top = themes.length
+    ? themes.slice(0, 2)
+    : [...counts]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([tag]) => tag);
+  const words = top.map((theme) => THEME_NOUNS[theme] ?? theme);
+  const named = words.length ? words[0][0].toUpperCase() + words[0].slice(1) : '';
+  const both = words.length > 1 ? `${named} and ${words[1]}` : named;
+  const years = stops.map((stop) => stop.year).filter((year): year is number => year != null);
+  const [old, recent] = [Math.min(...years), Math.max(...years)];
+  const span = !years.length
+    ? ''
+    : old === recent
+      ? `from ${old}`
+      : `from ${old} to ${recent >= thisYear ? 'now' : recent}`;
+  if (!both && !span) return null;
+  if (!both) return `${span[0].toUpperCase()}${span.slice(1)}.`;
+  return span ? `${both}, ${span}.` : `${both}.`;
+}

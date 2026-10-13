@@ -2,10 +2,14 @@
 # default length is a 4-stop loop; walk-and-unlock.yml starts here.
 appId: ${APP_ID}
 ---
+# Loop or one way first, then a loop's length, then the walk and Start.
+- extendedWaitUntil:
+    visible: "A walk from here"
+    timeout: 40000
+- tapOn: "Loop"
 - extendedWaitUntil:
     visible: "4 memories · .* loop"
     timeout: 40000
-# Next is the stops, which everyone sees, then Start.
 - tapOn: "Next"
 - assertVisible:
     id: "walk-stops"

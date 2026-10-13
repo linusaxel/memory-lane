@@ -15,7 +15,7 @@
 # The whole slider, 10 km. The lakes top out near 7 km however many stops, so
 # every walk here is the longest from here. Which of them the first preview
 # shows is a random roll; only some reach Sankt Jørgens Sø, the far lake, so
-# Next walk is tapped until one does, stepping the length when the lakes
+# Another walk is tapped until one does, stepping the length when the lakes
 # run out of walks at it, so reaching it is F32 working.
 
 appId: ${APP_ID}
@@ -40,17 +40,25 @@ appId: ${APP_ID}
     text: "Allow While Using App"
     optional: true
 
-# F1: drawn again from here. The whole loop on the map, then its list, and a decision.
+# F1: drawn again from here. Loop or one way, the loop's length with the
+# whole loop on the map, then the walk, its stops, and a decision.
 - extendedWaitUntil:
-    visible: "[0-9]+ memor(y|ies) · .* loop"
+    visible: "A walk from here"
     timeout: 40000
 - assertNotVisible:
     id: "planning-from-centre"
+- tapOn: "Loop"
+- extendedWaitUntil:
+    visible: "[0-9]+ memor(y|ies) · .* loop"
+    timeout: 40000
 # The stops land as the line draws through them.
 - extendedWaitUntil:
     visible: "Stop [0-9]+ of [0-9]+\\. .*"
     timeout: 5000
-# Customize is a subscriber's: for a free walker the Plus row is
+- tapOn: "Next"
+- assertVisible:
+    id: "walk-stops"
+# Customize is a subscriber's: for a free walker the Plus button is
 # the paywall.
 - tapOn:
     id: "themes"
@@ -61,34 +69,19 @@ appId: ${APP_ID}
 - assertNotVisible:
     id: "walk-choices"
 
-# F32: › is another walk as good, or one of a similar length, still a preview.
-- assertNotVisible: "Previous walk"
-- tapOn: "Next walk"
+# F32: shuffle is another walk as good, or one of a similar length, still a preview.
+- tapOn: "Another walk"
 - extendedWaitUntil:
-    visible: "Previous walk"
+    visible: "[0-9]+ memories · .* loop"
     timeout: 40000
-- assertVisible: "[0-9]+ memories · .* loop"
-- assertVisible: "Next"
-# Pages: back to the first, which has no ‹.
-- tapOn: "Previous walk"
-- extendedWaitUntil:
-    notVisible: "Previous walk"
-    timeout: 5000
-- assertVisible: "[0-9]+ memor(y|ies) · .* loop"
+- assertVisible: "Start this walk"
 
-# One way redraws in place: the same stops' worth, ending somewhere new.
-- tapOn: "One way"
-- extendedWaitUntil:
-    visible: "[0-9]+ memories · [0-9.]+ k?m"
-    timeout: 40000
-- assertNotVisible: "[0-9]+ memories · .* loop"
-- tapOn: "Loop"
-# × goes back to the map from any step, and Plan a walk plans again.
+# × goes back to the map from any step, and Plan a walk asks again.
 - tapOn: "Close the planner"
-- assertNotVisible: "A walk from here"
+- assertNotVisible: "Start this walk"
 - tapOn: "Plan a walk"
 - extendedWaitUntil:
-    visible: "[0-9]+ memor(y|ies) · .* loop"
+    visible: "A walk from here"
     timeout: 40000
 
 # ---- F8, refused
@@ -117,6 +110,10 @@ appId: ${APP_ID}
       LNG: 13.0038
       LOCATION: inuse
 - extendedWaitUntil:
+    visible: "A walk from here"
+    timeout: 40000
+- tapOn: "Loop"
+- extendedWaitUntil:
     visible:
       id: "no-walk"
     timeout: 40000
@@ -130,24 +127,24 @@ appId: ${APP_ID}
       LNG: 12.5759
       LOCATION: inuse
 
-# F1: the planner is home and draws a walk at once.
+# F1: the planner is home and asks loop or one way.
 - extendedWaitUntil:
-    visible: "[0-9]+ memor(y|ies) · .* loop"
+    visible: "A walk from here"
     timeout: 40000
 
-# One way, ending where the map is tapped: anywhere near the start is within
-# 4 km. The preview's line has no " loop" on it; Loop again for the rest.
+# One way is the end, tapped on the map: anywhere near the start is within
+# 4 km. Its walk has no " loop" on it, and no length; Back, then Loop.
 - tapOn: "One way"
-- tapOn: "Pick where it ends"
 - assertVisible: "Where does it end?"
 - tapOn:
     point: "50%,30%"
-- assertVisible: "Ends where you tapped"
 - extendedWaitUntil:
     visible: "[0-9]+ memor(y|ies) · [0-9.]+ k?m"
     timeout: 40000
+- assertNotVisible: "[0-9]+ memor(y|ies) · .* loop"
+- assertNotVisible: "Walk length"
+- tapOn: "Back to loop or one way"
 - tapOn: "Loop"
-- assertNotVisible: "Ends where you tapped"
 
 # The slider seeks where it is tapped (tapToSeek), so its right end is 10 km,
 # wherever the page puts it. The value is the "10 km" above the slider; the end
@@ -167,19 +164,19 @@ appId: ${APP_ID}
     visible: "Stop .* of 10\\. Peblinge Sø.*"
     timeout: 5000
 
+- tapOn: "Next"
 - repeat:
     while:
       notVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
     times: 7
     commands:
-      - tapOn: "Next walk"
+      - tapOn: "Another walk"
       - waitForAnimationToEnd
 - assertVisible: "Stop .* of [0-9]+\\. Sankt Jørgens Sø.*"
 - assertVisible: "[0-9]+ memories · .* loop"
-- assertVisible: "Next walk"
+- assertVisible: "Another walk"
 
 # Accepting is what registers the device, and with it the past walks.
-- tapOn: "Next"
 - tapOn: "Start this walk"
 - extendedWaitUntil:
     visible: "Next: .*\\. .* of 10.*"

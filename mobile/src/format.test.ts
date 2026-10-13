@@ -11,6 +11,7 @@ import {
   duration,
   happened,
   sourceAction,
+  walkBlurb,
   walkDate,
   when,
   wikiSummaryUrl,
@@ -147,4 +148,17 @@ test('an era reads as a span, open at either end', () => {
   assert.equal(eraLabel(null, 1800), 'Before 1800');
   assert.equal(eraLabel(1945, null), 'Since 1945');
   assert.equal(eraLabel(1800, 1945), '1800–1945');
+});
+
+test('a walk reads as its themes and the years it spans', () => {
+  const stops = [
+    { tags: ['history', 'strange'], year: 2026 },
+    { tags: ['history'], year: 1945 },
+    { tags: ['strange', 'food'], year: 1807 },
+  ];
+  assert.equal(walkBlurb(stops, [], 2026), 'History and the strange, from 1807 to now.');
+  assert.equal(walkBlurb(stops, ['art'], 2026), 'Art, from 1807 to now.');
+  assert.equal(walkBlurb([{ tags: [], year: 1945 }], [], 2026), 'From 1945.');
+  assert.equal(walkBlurb([{ tags: ['food'] }], [], 2026), 'Food.');
+  assert.equal(walkBlurb([{ tags: [] }], [], 2026), null);
 });

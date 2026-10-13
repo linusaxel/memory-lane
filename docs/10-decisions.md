@@ -381,7 +381,7 @@ progress opens, standing on it (`not_on_walk`), as before.
 
 ### The planner is two steps
 
-Status: Accepted 2026-10-03. Amends *Draw first, adjust after*: the walk is
+Status: Superseded 2026-10-13 by *The planner asks one thing at a time*. Accepted 2026-10-03. Amends *Draw first, adjust after*: the walk is
 still drawn first, but its list is a step away.
 
 One card held the stop list, the slider, the shape and Start, about 600pt,
@@ -2934,7 +2934,7 @@ same way, they went a little more even (max 1.63 → 1.60) but fresh fell from
 
 ### Draw first, adjust after
 
-Status: Accepted 2026-09-27. **Amended 2026-10-03** by *A walk planner, nothing else*: Walk here is gone, and the card is home, with no ✕ back to a map. **Amended 2026-10-03** by *The planner is two steps*: the stop list and Start are a step past the length.
+Status: Accepted 2026-09-27. **Amended 2026-10-13** by *The planner asks one thing at a time*: the walk is still drawn behind the card at once, but loop or one way is asked first. **Amended 2026-10-03** by *A walk planner, nothing else*: Walk here is gone, and the card is home, with no ✕ back to a map. **Amended 2026-10-03** by *The planner is two steps*: the stop list and Start are a step past the length.
 
 "Plan a walk" and a pin's "Walk here" both draw a walk at once. The
 "How far today?" page that used to come first is gone, and the slider, Loop /
@@ -4967,6 +4967,32 @@ capsule:
 
 **Options considered:** the other three mocks; the top-right stack would
 have hidden more map and put Locate further from a thumb.
+
+### The planner asks one thing at a time
+
+Status: Accepted 2026-10-13. Supersedes *The planner is two steps*.
+
+Step one held the length, three shapes (Loop | One way | Pick where it
+ends), Customize and Next; step two the stop list, a "Reward: up to +N
+lockets" box and Start. The founder: ask loop or one way first; a length
+matters only for a loop; a one-way walk always ends where you tap. Now:
+
+- **Loop or One way**, two tiles. One way goes straight to the map for the
+  end; there is no one-way walk the app ends for you.
+- **A loop's length**, the slider, with the walk drawn live behind it.
+- **The walk**: its title with shuffle (another walk, in place of ‹ ›) and
+  Customize beside it, the count and length, a line of what it is about,
+  built on the phone from the themes and years (no model in the request
+  path), the stops as a timeline, and Start walk.
+- **The reward box is gone.** "+N lockets" was the stop count said twice.
+
+Two timelines are on trial, a row of coins with years (the founder's mock)
+and a rail down the card with each stop's place; `TIMELINE` in
+`mobile/src/Plan.tsx` picks one, and `plan-long-h`/`-v` show the most a
+walk has, ten stops and the mystery. The loser goes once one is chosen.
+
+**Options considered:** keeping the length on the walk card for one way too
+(the end sets the length, so it would only fight the tap).
 
 ### Rejected approaches, do not retry
 

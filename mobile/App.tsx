@@ -77,7 +77,16 @@ import {
 } from './src/unlocked.ts';
 import { deviceId } from './src/device.ts';
 import Memories from './src/Memories.tsx';
-import { EndPick, EndWalk, PastWalk, Preview, WALK_KM, WalkDone } from './src/Plan.tsx';
+import {
+  EndPick,
+  EndWalk,
+  PastWalk,
+  type PlanStep,
+  Preview,
+  type TimelineKind,
+  WALK_KM,
+  WalkDone,
+} from './src/Plan.tsx';
 import { walkPath } from './src/WalkCard.tsx';
 import Settings from './src/Settings.tsx';
 import { SignInScreen, loadSignedIn, saveSignedIn } from './src/SignIn.tsx';
@@ -433,7 +442,8 @@ export default function App() {
   const [journalOpen, setJournalOpen] = useState(false);
   // Under __DEV__ only, both: where a dev link put the journal, and a crash on demand.
   const [devJournal, setDevJournal] = useState<ComponentProps<typeof Memories>['dev']>();
-  const [devStep, setDevStep] = useState<'stops' | 'choices' | null>();
+  const [devStep, setDevStep] = useState<PlanStep>();
+  const [devTimeline, setDevTimeline] = useState<TimelineKind>();
   const [devCrash, setDevCrash] = useState(false);
   const [devPage, setDevPage] = useState<number>();
   // The walk without a memory in reach, so its own card shows, not the lock.
@@ -1245,13 +1255,13 @@ export default function App() {
       setDevJournal(dev);
       setJournalOpen(true);
     };
-    const plan = (step: 'stops' | 'choices' | null) => {
+    const plan = (step: PlanStep) => {
       if (stage !== 'preview') dropRoute();
       setStage('preview');
       setDevStep(step);
     };
-    const drawn = (change: Partial<TodaysRoute>) => {
-      plan(null);
+    const drawn = (change: Partial<TodaysRoute>, step: PlanStep = 'walk') => {
+      plan(step);
       if (preview) setPreview({ ...preview, ...change });
     };
     // The memory the script picked, from what this device has earned or filed.
@@ -1323,34 +1333,50 @@ export default function App() {
         }
         return;
       case 'preview':
-        return plan(null);
-      case 'preview-stops':
-        return plan('stops');
+        return plan('shape');
+      case 'plan-length':
+        return plan('length');
+      case 'plan-walk':
+        return plan('walk');
+      case 'plan-walk-h':
+      case 'plan-walk-v':
+        setDevTimeline(screen.endsWith('-h') ? 'horizontal' : 'vertical');
+        return plan('walk');
+      case 'plan-long-h':
+      case 'plan-long-v': {
+        // The most a walk has: ten stops and the mystery. Repeats get ids of
+        // their own when fewer came back.
+        const some = preview?.memories ?? [];
+        setDevTimeline(screen.endsWith('-h') ? 'horizontal' : 'vertical');
+        return drawn({
+          mystery: true,
+          memories: Array.from({ length: some.length ? 10 : 0 }, (_, i) => ({
+            ...some[i % some.length],
+            id: i < some.length ? some[i].id : -1 - i,
+          })),
+        });
+      }
       case 'plan-mystery':
-        // Three stops, so the mystery row is in sight without scrolling.
-        drawn({ mystery: true, memories: preview?.memories.slice(0, 3) ?? [] });
-        return setDevStep('stops');
+        // Three stops, so the mystery is in sight without scrolling.
+        return drawn({ mystery: true, memories: preview?.memories.slice(0, 3) ?? [] });
       case 'plan-new-nearby':
         return drawn({ new_nearby: 3 });
       case 'plan-empty-at':
-        plan(null);
+        plan('length');
         return borrow(emptyAt, setEmptyAt, Math.max(WALK_KM.min, planKm - 1));
       case 'plan-fallback':
-        plan(null);
+        plan('shape');
         return borrow(planFallback, setPlanFallback, true);
       case 'plan-no-walk':
-        return drawn({ memories: [], mystery: false });
+        return drawn({ memories: [], mystery: false }, 'length');
       case 'plan-finding':
-        plan(null);
+        plan('length');
         return borrow(preview, setPreview, null);
-      case 'plan-one-way':
-        plan(null);
-        return ask({ loop: false });
       case 'plan-ends-here':
-        plan(null);
+        plan('walk');
         return ask({ loop: false, end: { lat: here.lat + 0.012, lng: here.lng + 0.012 } });
       case 'plan-unreachable':
-        plan(null);
+        plan('walk');
         // Aarhus: no walk under 10 km reaches it.
         return ask({ loop: false, end: { lat: 56.1567, lng: 10.2108 } });
       case 'customize':
@@ -1361,9 +1387,9 @@ export default function App() {
         return plan('choices');
       case 'preview-customized':
         ask({ themes: ['history', 'art'], from: 1900, until: 1945 });
-        return plan(null);
+        return plan('walk');
       case 'offline-plan':
-        plan(null);
+        plan('walk');
         return planWalkRef.current(0);
       case 'walked-out':
         setStage('preview');
@@ -2206,8 +2232,6 @@ export default function App() {
             <Preview
               stops={preview ? preview.memories : null}
               mystery={preview?.mystery === true}
-              collector={collectorId}
-              rank={rank}
               meters={pathMeters(previewPath)}
               km={planKm}
               onKm={setWalkKm}
@@ -2236,12 +2260,12 @@ export default function App() {
                     ? null
                     : () => planWalk((shown[shown.length - 1]?.again ?? again) + 1, true)
               }
-              onBack={shownAt > 0 ? () => showAt(shownAt - 1) : null}
               walkNumber={shownAt + 1}
               emptyAt={emptyAt}
               newNearby={preview?.new_nearby ?? 0}
               walkedOut={walkedOut}
               devStep={devStep}
+              timeline={devTimeline}
               onSubscribe={() => setPaywallOpen(true)}
               onHeight={setPreviewCardHeight}
               onClose={() => {
