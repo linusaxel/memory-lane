@@ -97,7 +97,9 @@ Subject: Humlen ved Carlsberg
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the workers' stories from Humlen ved Carlsberg in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the workers' stories from Humlen ved Carlsberg in the app.
 
 Would it be okay if we retold some of the workers' stories from Humlen ved Carlsberg at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. I saw that the site allows non-commercial use only, so I'm asking first.
 
@@ -119,7 +121,9 @@ Subject: Your local history articles
 
 Hi Bo,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the articles from Nyt fra Lokalhistorien in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the articles from Nyt fra Lokalhistorien in the app.
 
 Would it be okay if we retold some of the articles from Nyt fra Lokalhistorien at the places they're about? We have very few stories from Brønshøj, Husum and Utterslev so far. We'd write them in our own words, credit you with a link, and take anything down if you ask.
 
@@ -141,7 +145,9 @@ Subject: Access to the memoir collection
 
 Hi Eva,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the memoirs in your collection in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the memoirs in your collection in the app.
 
 Would it be okay if we retold some of the memoirs in your collection at the places they're about? We'd write them in our own words, link to each memoir, leave out private people's names, and take anything down if you ask. If so, could we get them as text, through an API or an export? I didn't want to scrape kbharkiv.dk.
 
@@ -160,7 +166,9 @@ Subject: Your memoir articles
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the memoir articles on sydhavnenshistorie.dk in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the memoir articles on sydhavnenshistorie.dk in the app.
 
 Would it be okay if we retold some of the memoir articles on sydhavnenshistorie.dk at the places they're about? We have almost no stories from Sydhavnen so far. We'd write them in our own words, credit you with a link, leave out private people's names, and take anything down if you ask.
 
@@ -182,7 +190,9 @@ Subject: Frederiksberg-erindringer transcripts
 
 Hi Caspar,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the Frederiksberg-erindringer films in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the Frederiksberg-erindringer films in the app.
 
 Would it be okay if we retold some of the Frederiksberg-erindringer films at the places they're about? We'd write them in our own words, credit the archive and the storyteller with a link to the film, and take anything down if you ask. Do the films have transcripts or subtitles? We don't transcribe audio, so we need text to find the places.
 
@@ -201,7 +211,9 @@ Subject: Bryggebladet stories
 
 Hi Andreas,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of Bryggebladet's stories in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of Bryggebladet's stories in the app.
 
 Would it be okay if we retold some of Bryggebladet's stories at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few issues from 2019 on, before I saw your copyright page. If you'd rather we didn't, we'll delete it.
 
@@ -222,7 +234,9 @@ Subject: Your yearbooks
 
 Hi Jan,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from your yearbooks in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from your yearbooks in the app.
 
 Would it be okay if we retold some of the stories from your yearbooks at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few yearbooks, and I should have asked first. If you'd rather we didn't, we'll delete it.
 
@@ -243,7 +257,9 @@ Subject: Local history societies
 
 Hi Helge,
 
-I'm [name], and I'm messaging you because I'd like to ask the local history societies for permission to use some of their articles in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask the local history societies for permission to use some of their articles in the app.
 
 I'd like to ask the local history societies in Østerbro, Valby and Vesterbro if it would be okay to retell some of their articles at the places they're about. Could you tell me who to write to?
 
@@ -260,7 +276,9 @@ Subject: Københavnerglimt
 
 Hi Allan,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from Københavnerglimt in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from Københavnerglimt in the app.
 
 Would it be okay if we retold some of the stories from Københavnerglimt at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it.
 
@@ -281,7 +299,9 @@ Subject: Københavnerliv
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from your videos in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from your videos in the app.
 
 Would it be okay if we retold some of the stories from your videos at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it.
 
@@ -302,7 +322,9 @@ Subject: The christianiahistorie films
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from the christianiahistorie films on the Christiania1 channel in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from the christianiahistorie films on the Christiania1 channel in the app.
 
 Would it be okay if we retold some of the stories from the christianiahistorie films on the Christiania1 channel at the places they're about? We'd write them in our own words, show no clips, and credit the channel and the storyteller with a link. We already tried this on a few films, and I should have asked first. If you'd rather we didn't, we'll delete it.
 
@@ -323,7 +345,9 @@ Subject: Your Nyhavn and Christianshavn pages
 
 Hi Kim,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from your pages on Nyhavn and Christianshavn in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from your pages on Nyhavn and Christianshavn in the app.
 
 Would it be okay if we retold some of the stories from your pages on Nyhavn and Christianshavn at the places they're about? We'd write them in our own words, with your name and a link to your page, and take anything down if you ask. We've already done this with a few of them, and I should have asked first. If you'd rather we didn't, we'll delete it.
 
@@ -344,7 +368,9 @@ Hi,
 
 I can't find an address for Refshaleøen TV. Could you pass this on to them, or to Kim Bargsteen? Thank you.
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from the film Refshaleøens historie in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from the film Refshaleøens historie in the app.
 
 Would it be okay if we retold some of the stories from the film Refshaleøens historie at the places they're about? We'd write them in our own words, credit the channel and Kim Bargsteen with a link to the film, and take anything down if you ask. Is there a transcript of the film? We don't transcribe audio, so we need text to find the places.
 
@@ -364,7 +390,9 @@ Subject: Dansk rockhistorie
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from your videos in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from your videos in the app.
 
 Would it be okay if we retold some of the stories from your videos at the places they're about? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We'd take anything down if you ask.
 
@@ -385,7 +413,9 @@ Subject: Your Enghave Plads films
 
 Hi Kenneth,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from your Enghave Plads films in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from your Enghave Plads films in the app.
 
 Would it be okay if we retold some of the stories from your Enghave Plads films at the places they're about? We'd write them in our own words, with your name and a link, without naming the people in them, and take anything down if you ask. Is there a transcript of the films? We don't transcribe audio, so we need text to find the places.
 
@@ -404,7 +434,9 @@ Subject: Al Magt til Kærligheden
 
 Hi Shazia,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the portraits from Al Magt til Kærligheden in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the portraits from Al Magt til Kærligheden in the app.
 
 Would it be okay if we retold some of the portraits from Al Magt til Kærligheden at the places they're about? We'd write them in our own words, with your name and a link, and take anything down if you ask. Do the portraits exist as text? We don't transcribe audio, so we need text to find the places.
 
@@ -423,7 +455,9 @@ Subject: Stemmer fra Bjerget
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the stories from Stemmer fra Bjerget in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the stories from Stemmer fra Bjerget in the app.
 
 Would it be okay if we retold some of the stories from Stemmer fra Bjerget at the places they're about? We'd write them in our own words, credit you with a link to the episode, never name patients, and take anything down if you ask.
 
@@ -442,7 +476,9 @@ Subject: Copyright-free photos through your API
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of your copyright-free photos in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of your copyright-free photos in the app.
 
 Would it be okay if we showed some of your copyright-free photos at the places they show? Each photo would carry the archive, the photographer and a link back, and we'd take anything down if you ask. If so, could I fetch them with their locations through your API? I don't want to load the website.
 
@@ -461,7 +497,9 @@ Subject: API access
 
 Hi,
 
-I'm [name], and I'm messaging you because I'd like to ask for permission to use some of the openly licensed stories from Historisk Atlas in Memory Lane, a walking app for Copenhagen that I'm building. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
+
+I'm messaging you because I'd like to ask for permission to use some of the openly licensed stories from Historisk Atlas in the app.
 
 Would it be okay if we retold some of the openly licensed stories from Historisk Atlas at the places they're about? We'd follow each licence and credit Historisk Atlas with a link. To see which stories are open, I'd need access to your API. Could I get that?
 
