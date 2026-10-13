@@ -1,8 +1,8 @@
 # Permission requests
 
 Every source we may only use with a yes, and the email that asks for it. Send
-from the founder's own address, one at a time, and fill in `[navn]` and
-`[telefon]`. When a reply comes, file its date and wording on the `sources`
+from the founder's own address, one at a time, and fill in `[name]` and
+`[phone]`. When a reply comes, file its date and wording on the `sources`
 row (`pipeline.sources set <id> ... --note`) and update the tracker.
 
 docs/10-decisions.md, *The sources' legal footing* and *Recent sources without
@@ -68,654 +68,633 @@ email if that decision changes.
 
 ## 1. Arbejdermuseet: Humlen ved Carlsberg
 
-Til: am@arbejdermuseet.dk
+To: am@arbejdermuseet.dk
 
-Emne: Humlen ved Carlsberg i en gåtursapp
+Subject: Humlen ved Carlsberg in a walking app
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Humlen ved Carlsberg er fuld af den slags. Fx to-øres-strejken i 1965. I dag
-går folk gennem Carlsberg Byen uden at vide, hvad der skete i bygningerne, og
-det er netop et kvarter, hvor vi mangler historier.
+Humlen ved Carlsberg is full of those. The two-øre strike in 1965, for
+example. People walk through Carlsberg Byen today without knowing what went
+on in the buildings, and it's exactly the kind of neighbourhood where we're
+short of stories.
 
-På siden står der, at teksterne kun må citeres i ikke-kommerciel sammenhæng,
-så derfor spørger jeg først. Sådan ville vi bruge dem:
+The site says the texts may only be quoted in a non-commercial setting, so
+I'm asking first. This is how we would use them:
 
-Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
-højst en enkelt linje. Ved hver historie står Arbejdermuseet og Humlen ved
-Carlsberg som kilde, med et link til indlægget. Vi gemmer ikke teksterne,
-når vi har læst dem. Vi nævner ikke kolleger ved navn uden at spørge. Og vil
-I have en historie fjernet, eller det hele, så er den væk inden for et døgn.
+We write a short text about one episode in our own words and quote at most
+a single line. Every story names Arbejdermuseet and Humlen ved Carlsberg as
+the source, with a link to the post. We don't keep the texts after reading
+them. We don't name colleagues without asking. And if you want a story
+taken down, or all of them, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer? Jeg svarer gerne på spørgsmål, også på telefon.
+Is that all right with you? I'm happy to answer questions, by phone too.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 2. Lokalhistorisk Selskab for Brønshøj, Husum og Utterslev
 
-Til: bo.oehrstroem@gmail.com
+To: bo.oehrstroem@gmail.com
 Cc: info.lhsbhu@gmail.com
 
-Emne: Jeres lokalhistorie i en gåtursapp
+Subject: Your local history in a walking app
 
-Hej Bo,
+Hi Bo,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Brønshøj, Husum, Utterslev og Bispebjerg er de kvarterer, hvor vi har færrest
-historier. Jeres blad har netop dem, fx mindestenen ved gadekæret i 1931 og
-filmoptagelserne på Emdrupborg fra 1911 til 1917. Der står "eftertryk efter
-aftale", så jeg spørger, om vi må bruge artiklerne sådan her:
+Brønshøj, Husum, Utterslev and Bispebjerg are where we have the fewest
+stories. Your magazine has exactly those, like the memorial stone by the
+village pond in 1931, and the films shot at Emdrupborg from 1911 to 1917. It
+says reprinting is allowed by agreement, so I'm asking if we may use the
+articles like this:
 
-Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
-højst en enkelt linje. Ved hver historie står selskabets navn og et link til
-jer, også til hvordan man bliver medlem. Vi gemmer ikke teksterne, når vi har
-læst dem. Vi nævner ikke privatpersoner, der kan være i live, uden at spørge.
-Og vil I have en historie fjernet, eller det hele, så er den væk inden for et
-døgn.
+We write a short text about one episode in our own words and quote at most
+a single line. Every story names the society as the source, with a link to
+you, including how to become a member. We don't keep the texts after reading
+them. We don't name private people who may still be alive without asking.
+And if you want a story taken down, or all of them, it's gone within a day.
 
-Har I også Min barndom på Bispebjerg eller Erindringssamtaler fra
-Nordvest-Bispebjerg som tekst, vil jeg gerne spørge om det samme for dem.
+If you also have Min barndom på Bispebjerg or Erindringssamtaler fra
+Nordvest-Bispebjerg as text, I'd like to ask the same for those.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
-## 3. Københavns Stadsarkiv: erindringerne
+## 3. Københavns Stadsarkiv: the memoirs
 
-Til: XM9P@kk.dk
+To: XM9P@kk.dk
 Cc: stadsarkiv@kk.dk
 
-Emne: Erindringerne fra 1969 og 1995 i en gåtursapp
+Subject: The 1969 and 1995 memoirs in a walking app
 
-Hej Eva,
+Hi Eva,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Jeres erindringer er det bedste, der findes, om hvordan byen var at leve i,
-gade for gade. Børnene der legede på Sønder Boulevard i 1955, eller hvor folk
-stod den 4. maj 1945. Vi har ikke hentet noget fra kbharkiv.dk, og det vil vi
-heller ikke gøre uden lov.
+Your memoirs are the best record there is of what the city was like to live
+in, street by street. The children playing on Sønder Boulevard in 1955, or
+where people stood on 4 May 1945. We haven't taken anything from
+kbharkiv.dk, and we won't without permission.
 
-Kan vi få adgang til erindringerne som tekst, fx gennem et API eller et
-udtræk? Sådan ville vi bruge dem:
+Could we get access to the memoirs as text, through an API or an export?
+This is how we would use them:
 
-Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
-højst en enkelt linje. Ved hver historie står Stadsarkivet som kilde, med et
-link til erindringen hos jer. Vi nævner ikke privatpersoner ved navn, kun
-stedet og det der skete. Vi gemmer ikke teksterne, når vi har læst dem. Og
-vil I have en historie fjernet, eller det hele, så er den væk inden for et
-døgn.
+We write a short text about one episode in our own words and quote at most
+a single line. Every story names the City Archives as the source, with a
+link to the memoir on your site. We don't name private people, only the
+place and what happened. We don't keep the texts after reading them. And if
+you want a story taken down, or all of them, it's gone within a day.
 
-Gælder der særlige regler for erindringer, hvor skribenten kan være i live,
-vil jeg gerne kende dem.
+If there are special rules for memoirs whose writers may still be alive,
+I'd like to know them.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 4. Kgs. Enghave Lokalhistoriske Arkiv (Sydhavnens historie)
 
-Til: sydhavnen@outlook.dk
+To: sydhavnen@outlook.dk
 
-Emne: Jeres erindringsartikler i en gåtursapp
+Subject: Your memoir articles in a walking app
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-I Sydhavnen har vi næsten ingen historier endnu. Jeres erindringsartikler fra
-40'erne, 50'erne og 60'erne er præcis det, vi mangler. Der står, at de kun må
-gengives efter aftale, så jeg spørger, om vi må bruge dem sådan her:
+We have almost no stories from Sydhavnen yet. Your memoir articles from the
+40s, 50s and 60s are exactly what we're missing. The site says they may only
+be reproduced by agreement, so I'm asking if we may use them like this:
 
-Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
-højst en enkelt linje. Ved hver historie står arkivet som kilde, med et link
-til artiklen. Vi gemmer ikke teksterne, når vi har læst dem. Vi nævner ikke
-privatpersoner, der kan være i live, uden at spørge. Og vil I have en
-historie fjernet, eller det hele, så er den væk inden for et døgn.
+We write a short text about one episode in our own words and quote at most
+a single line. Every story names the archive as the source, with a link to
+the article. We don't keep the texts after reading them. We don't name
+private people who may still be alive without asking. And if you want a
+story taken down, or all of them, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 5. Frederiksberg Stadsarkiv: Frederiksberg-erindringer
 
-Til: cach01@frederiksberg.dk
+To: cach01@frederiksberg.dk
 Cc: stadsarkivet@frederiksberg.dk
 
-Emne: Frederiksberg-erindringerne i en gåtursapp
+Subject: Frederiksberg-erindringer in a walking app
 
-Hej Caspar,
+Hi Caspar,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København og på Frederiksberg. Undervejs kommer man forbi steder,
-hvor noget er sket, og når man står der, kan man læse en kort historie om
-det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen and Frederiksberg. Along the way you pass places where something
+happened, and when you stand there, you can read a short story about it.
 
-Jeres film med folk, der fortæller om deres eget Frederiksberg, er præcis
-den slags, fx Elektrikeren og Mariendalskvarteret. Jeg har to spørgsmål:
+Your films of people telling their own Frederiksberg are exactly that, like
+Elektrikeren og Mariendalskvarteret. I have two questions.
 
-Findes der udskrifter eller undertekster til filmene? Vi lytter ikke selv
-lyd af, så uden tekst kan vi ikke finde stederne.
+Are there transcripts or subtitles for the films? We don't transcribe audio
+ourselves, so without text we can't find the places.
 
-Og må vi bruge dem sådan her: Vi skriver selv en kort tekst om én episode
-med vores egne ord og viser aldrig klip. Ved hver historie står Stadsarkivet
-og fortælleren som kilde, med et link til filmen. Vi gemmer ikke teksten,
-når vi har læst den. Vi nævner ikke andre privatpersoner, som fortælleren
-taler om. Og vil I have en historie fjernet, eller det hele, så er den væk
-inden for et døgn.
+And may we use them like this: We write a short text about one episode in
+our own words and never show clips. Every story names the archive and the
+storyteller as the source, with a link to the film. We don't keep the text
+after reading it. We don't name other private people the storyteller
+mentions. And if you want a story taken down, or all of them, it's gone
+within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 6. Bryggebladet
 
-Til: redaktion@bryggebladet.dk
+To: redaktion@bryggebladet.dk
 
-Emne: Bryggens historier i en gåtursapp
+Subject: Islands Brygge stories in a walking app
 
-Hej Andreas,
+Hi Andreas,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Bryggebladet har historier om Islands Brygge, som ingen andre har, fx de to
-hundredårige, der flyttede ind i Egilsgade 59 i 1908. Vi har prøvet at finde
-historier i nogle af jeres numre fra 2019 og frem. Bagefter så jeg jeres side
-om ophavsret, og derfor spørger jeg nu. Siger I nej, sletter vi det.
+Bryggebladet has stories about Islands Brygge that nobody else has, like
+the two centenarians who moved into Egilsgade 59 in 1908. We tried finding
+stories in some of your issues from 2019 onwards. Afterwards I saw your
+copyright page, so I'm asking now. If you say no, we'll delete it.
 
-Sådan ville vi bruge artiklerne: Vi skriver selv en kort tekst om én episode
-med vores egne ord og citerer højst en enkelt linje. Ved hver historie står
-Bryggebladet med dato og et link til artiklen. Vi gemmer ikke teksterne, når
-vi har læst dem. Vi nævner ikke privatpersoner, der kan være i live, uden at
-spørge. Og vil I have en historie fjernet, eller det hele, så er den væk
-inden for et døgn.
+This is how we would use the articles: We write a short text about one
+episode in our own words and quote at most a single line. Every story names
+Bryggebladet with the date and a link to the article. We don't keep the
+texts after reading them. We don't name private people who may still be
+alive without asking. And if you want a story taken down, or all of them,
+it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 7. Nørrebro Lokalhistoriske Forening
 
-Til: info@noerrebrolokalhistorie.dk
+To: info@noerrebrolokalhistorie.dk
 
-Emne: Jeres årsskrifter i en gåtursapp
+Subject: Your yearbooks in a walking app
 
-Hej Jan,
+Hi Jan,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Jeres årsskrifter er fulde af den slags. Den bedste historie, vi har fundet,
-er Kierkegaards begravelse på Assistens Kirkegård i 1855, fra årsskriftet
-2023. Vi har prøvet det af på nogle af årsskrifterne, og jeg burde have
-spurgt først. Siger I nej, sletter vi det.
+Your yearbooks are full of those. The best one we've found is Kierkegaard's
+burial at Assistens Cemetery in 1855, from the 2023 yearbook. We tried it out
+on some of the yearbooks, and I should have asked first. If you say no,
+we'll delete it.
 
-Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
-vores egne ord og citerer højst en enkelt linje. Ved hver historie står
-foreningens navn og et link til årsskriftet, også til hvordan man bliver
-medlem. Vi gemmer ikke teksterne, når vi har læst dem. Vi nævner ikke
-privatpersoner, der kan være i live, uden at spørge. Og vil I have en
-historie fjernet, eller det hele, så er den væk inden for et døgn.
+This is how we would use them: We write a short text about one episode in
+our own words and quote at most a single line. Every story names the society
+with a link to the yearbook, including how to become a member. We don't keep
+the texts after reading them. We don't name private people who may still be
+alive without asking. And if you want a story taken down, or all of them,
+it's gone within a day.
 
-Er der artikler, hvor den der gav materialet har sat begrænsninger, så sig
-endelig til.
+If the person who donated a piece has put limits on it, please tell me.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 8. SLAK
 
-Til: helge.olesen@email.dk
+To: helge.olesen@email.dk
 
-Emne: Kan du hjælpe mig videre til de lokalhistoriske foreninger?
+Subject: Could you point me to the local history societies?
 
-Hej Helge,
+Hi Helge,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-De bedste historier, vi har fundet, kommer fra de lokalhistoriske foreninger:
-folk der fortæller om deres egen gade. Jeg spørger allerede Nørrebro og
-Sydhavnen, men vil gerne også i kontakt med foreningerne på Østerbro, i Valby
-og på Vesterbro.
+The best stories we've found come from the local history societies: people
+telling about their own street. I'm already asking Nørrebro and Sydhavnen,
+and I'd like to reach the societies in Østerbro, Valby and Vesterbro too.
 
-Vi skriver selv en kort tekst om én episode med vores egne ord, foreningen
-står som kilde med et link, vi gemmer ikke teksterne, og en forening kan
-altid sige stop.
+We write a short text about one episode in our own words, the society is
+named as the source with a link, we don't keep the texts, and a society can
+always say stop.
 
-Vil du sende det her videre, eller fortælle mig hvem jeg skal skrive til?
+Would you pass this on, or tell me who to write to?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 9. Københavnerglimt
 
-Til: info@dnrmedia.dk
+To: info@dnrmedia.dk
 
-Emne: Københavnerglimt i en gåtursapp
+Subject: Københavnerglimt in a walking app
 
-Hej Allan,
+Hi Allan,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Jeg skriver til DNR Media, fordi jeg tror, det er jer, der laver
-Københavnerglimt. Er det forkert, vil I så sende det videre?
+I'm writing to DNR Media because I believe you make Københavnerglimt. If
+that's wrong, could you pass this on?
 
-Jeres videoer er de bedste, vi har fundet. Fx fodboldspillerne fra KB, der
-blev anholdt i Guldbergsgade for at vise benene, eller Vor Frues klokker, der
-spillede som en salme, mens tårnet brændte. Vi har prøvet det af på jeres
-videoer, og jeg burde have spurgt først. Siger I nej, sletter vi det.
+Your videos are the best we've found. The KB footballers arrested in
+Guldbergsgade for showing their legs, for example, or the bells of Vor Frue
+playing like a hymn while the tower burned. We tried it out on your videos,
+and I should have asked first. If you say no, we'll delete it.
 
-Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
-vores egne ord og viser aldrig klip. Ved hver historie står Københavnerglimt
-øverst, med et link der åbner videoen på YouTube præcis dér, hvor historien
-bliver fortalt. Vi læser underteksterne én gang for at finde stederne og
-sletter dem bagefter. Og vil I have en historie fjernet, eller det hele, så
-er den væk inden for et døgn.
+This is how we would use them: We write a short text about one episode in
+our own words and never show clips. Every story names Københavnerglimt at
+the top, with a link that opens the video on YouTube right where the story
+is told. We read the subtitles once to find the places and delete them
+afterwards. And if you want a story taken down, or all of them, it's gone
+within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 10. Københavnerliv
 
-Til: the address behind "View email" on youtube.com/@Kbherliv/about
+To: the address behind "View email" on youtube.com/@Kbherliv/about
 
-Emne: Københavnerliv i en gåtursapp
+Subject: Københavnerliv in a walking app
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Jeres videoer er fulde af den slags. Fx baren på det gamle Hotel Kong
-Frederik, hvor Politikens journalister og Tom Kristensen sad efter fyraften.
-Vi har prøvet det af på jeres videoer, og jeg burde have spurgt først. Siger
-I nej, sletter vi det.
+Your videos are full of those. The bar in the old Hotel Kong Frederik, for
+example, where Politiken's journalists and Tom Kristensen sat after work. We
+tried it out on your videos, and I should have asked first. If you say no,
+we'll delete it.
 
-Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
-vores egne ord og viser aldrig klip. Ved hver historie står Københavnerliv
-øverst, med et link der åbner videoen på YouTube præcis dér, hvor historien
-bliver fortalt. Vi læser underteksterne én gang for at finde stederne og
-sletter dem bagefter. Og vil I have en historie fjernet, eller det hele, så
-er den væk inden for et døgn.
+This is how we would use them: We write a short text about one episode in
+our own words and never show clips. Every story names Københavnerliv at the
+top, with a link that opens the video on YouTube right where the story is
+told. We read the subtitles once to find the places and delete them
+afterwards. And if you want a story taken down, or all of them, it's gone
+within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 11. Christiania1 (via Christianias Arkiv)
 
-Til: caarkiv@gmail.com
+To: caarkiv@gmail.com
 
-Emne: Christianiahistorierne i en gåtursapp
+Subject: The Christiania stories in a walking app
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-YouTube-kanalen Christiania1 skriver, at den ligger i jeres arkiv, så jeg
-håber, I er de rigtige at spørge. Ellers vil I så sende det videre?
+The YouTube channel Christiania1 says it belongs to your archive, so I hope
+you're the right people to ask. If not, could you pass this on?
 
-Filmene i serien christianiahistorie er fulde af den slags. Fx Mikael Focks
-fortælling om Solvognen og giftlageret hos Sadolin & Holmblad. Vi har prøvet
-det af på nogle af filmene, og jeg burde have spurgt først. Siger I nej,
-sletter vi det.
+The christianiahistorie films are full of those stories. Mikael Fock on
+Solvognen and the poison store at Sadolin & Holmblad, for example. We tried
+it out on some of the films, and I should have asked first. If you say no,
+we'll delete it.
 
-Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
-vores egne ord og viser aldrig klip. Ved hver historie står kanalen og
-fortælleren som kilde, med et link der åbner filmen præcis dér, hvor
-historien bliver fortalt. Vi læser underteksterne én gang og sletter dem
-bagefter. Og vil I have en historie fjernet, eller det hele, så er den væk
-inden for et døgn.
+This is how we would use them: We write a short text about one episode in
+our own words and never show clips. Every story names the channel and the
+storyteller as the source, with a link that opens the film right where the
+story is told. We read the subtitles once and delete them afterwards. And
+if you want a story taken down, or all of them, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 12. Kim Greiner
 
-Til: kim@greiner.dk
+To: kim@greiner.dk
 
-Emne: Dine historier om Nyhavn og Christianshavn
+Subject: Your stories about Nyhavn and Christianshavn
 
-Hej Kim,
+Hi Kim,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Dine sider om Nyhavns huse og om Christianshavn er noget af det bedste, vi
-har fundet. Fx Titanic-billetterne, der blev solgt i Nyhavn 1, og
-fangeoprøret i 1817, hvor Lagkagehuset ligger i dag. Vi har allerede brugt
-dem, og jeg vil gerne høre, om det er i orden med dig.
+Your pages on the houses of Nyhavn and on Christianshavn are some of the
+best we've found. The Titanic tickets sold at Nyhavn 1, for example, and the
+prison revolt of 1817 where Lagkagehuset is now. We've already used them,
+and I'd like to hear if that's all right with you.
 
-Vi skriver selv en kort tekst om én episode med vores egne ord og citerer
-højst en enkelt linje. Ved hver historie står dit navn og et link til din
-side. Vi gemmer ikke teksterne, når vi har læst dem. Og vil du have en
-historie fjernet, eller det hele, så er den væk inden for et døgn.
+We write a short text about one episode in our own words and quote at most
+a single line. Every story carries your name and a link to your page. We
+don't keep the texts after reading them. And if you want a story taken
+down, or all of them, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 13. Refshaleøen TV, Kim Bargsteen
 
-Til: mail@refshaleoen.dk (no address for the channel; ask them to pass it on)
+To: mail@refshaleoen.dk (no address for the channel; ask them to pass it on)
 
-Emne: Til Refshaleøen TV og Kim Bargsteen: Refshaleøens historie
+Subject: For Refshaleøen TV and Kim Bargsteen: Refshaleøens historie
 
-Hej,
+Hi,
 
-Jeg kan ikke finde en adresse til Refshaleøen TV. Vil I sende det her videre
-til dem, eller til Kim Bargsteen? Tak.
+I can't find an address for Refshaleøen TV. Could you pass this on to them,
+or to Kim Bargsteen? Thank you.
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Filmen Refshaleøens historie fra 2022, hvor Kim Bargsteen fortæller om B&W,
-er præcis den slags. Der findes næsten intet om Refshaleøen fortalt af nogen,
-der var der. Jeg har to spørgsmål:
+The 2022 film Refshaleøens historie, where Kim Bargsteen tells about B&W, is
+exactly that. There's almost nothing about Refshaleøen told by someone who
+was there. I have two questions.
 
-Findes der en tekst eller undertekster til filmen? Vi lytter ikke selv lyd
-af, så uden tekst kan vi ikke finde stederne.
+Is there a transcript or subtitles for the film? We don't transcribe audio
+ourselves, so without text we can't find the places.
 
-Og må vi bruge den sådan her: Vi skriver selv en kort tekst om én episode
-med vores egne ord og viser aldrig klip. Ved hver historie står kanalen og
-Kim Bargsteen som kilde, med et link der åbner filmen præcis dér, hvor
-historien bliver fortalt. Vi gemmer ikke teksten, når vi har læst den. Og
-vil I have en historie fjernet, så er den væk inden for et døgn.
+And may we use it like this: We write a short text about one episode in our
+own words and never show clips. Every story names the channel and Kim
+Bargsteen as the source, with a link that opens the film right where the
+story is told. We don't keep the text after reading it. And if you want a
+story taken down, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 14. Dansk rockhistorie
 
-Til: the address behind "View email" on the channel's About page
+To: the address behind "View email" on the channel's About page
 (`UCz0mJQVpBbLIjOq-oOb2nkA`); kontakt@peterbak.dk only if that fails
 
-Emne: Dansk rockhistorie i en gåtursapp
+Subject: Dansk rockhistorie in a walking app
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Jeres portrætter af musikerne fortæller om de øvelokaler, spillesteder og
-studier, hvor det skete. Fx Flemming Rasmussen om Sweet Silence Studio. Vi
-vil gerne lade folk stå på stedet og høre historien.
+Your portraits of musicians tell about the rehearsal rooms, venues and
+studios where it happened. Flemming Rasmussen on Sweet Silence Studio, for
+example. We'd like to let people stand at the spot and hear the story.
 
-Sådan ville vi bruge dem: Vi skriver selv en kort tekst om én episode med
-vores egne ord og viser aldrig klip. Ved hver historie står kanalen og
-musikeren som kilde, med et link der åbner videoen på YouTube præcis dér,
-hvor historien bliver fortalt. Vi læser underteksterne én gang og sletter
-dem bagefter. Og vil I have en historie fjernet, eller det hele, så er den
-væk inden for et døgn.
+This is how we would use them: We write a short text about one episode in
+our own words and never show clips. Every story names the channel and the
+musician as the source, with a link that opens the video on YouTube right
+where the story is told. We read the subtitles once and delete them
+afterwards. And if you want a story taken down, or all of them, it's gone
+within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 15. Kenneth A. Balfelt
 
-Til: kenneth@kennethbalfelt.org
+To: kenneth@kennethbalfelt.org
 
-Emne: Dine film fra Enghave Plads
+Subject: Your films from Enghave Plads
 
-Hej Kenneth,
+Hi Kenneth,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Dine film med ølfolket på Enghave Plads er nogle af de få steder, hvor folk
-selv fortæller om Vesterbro og Sydhavnen. Jeg har to spørgsmål:
+Your films with the beer drinkers at Enghave Plads are one of the few places
+where people tell about Vesterbro and Sydhavnen themselves. I have two
+questions.
 
-Findes der en tekst eller undertekster til filmene? Vi lytter ikke selv lyd
-af, så uden tekst kan vi ikke finde stederne.
+Is there a transcript or subtitles for the films? We don't transcribe audio
+ourselves, so without text we can't find the places.
 
-Og må vi bruge dem sådan her: Vi skriver selv en kort tekst om én episode
-med vores egne ord og viser aldrig klip. Ved hver historie står dit navn som
-kilde, med et link til filmen. Vi nævner ikke de medvirkende ved navn uden
-at spørge. Vi gemmer ikke teksten, når vi har læst den. Og vil du have en
-historie fjernet, så er den væk inden for et døgn.
+And may we use them like this: We write a short text about one episode in
+our own words and never show clips. Every story names you as the source,
+with a link to the film. We don't name the people in them without asking.
+We don't keep the text after reading it. And if you want a story taken
+down, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 16. Shazia Khan: Al Magt til Kærligheden
 
-Til: zarzia@gmail.com
+To: zarzia@gmail.com
 
-Emne: Al Magt til Kærligheden i en gåtursapp
+Subject: Al Magt til Kærligheden in a walking app
 
-Hej Shazia,
+Hi Shazia,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Dine portrætter af christianitter fortæller om livet i Christiania, sted for
-sted, af dem der selv var der. Jeg har to spørgsmål:
+Your portraits of Christianites tell about life in Christiania, place by
+place, from the people who were there. I have two questions.
 
-Findes portrætterne som tekst? Vi lytter ikke selv lyd af, så uden tekst kan
-vi ikke finde stederne.
+Do the portraits exist as text? We don't transcribe audio ourselves, so
+without text we can't find the places.
 
-Og må vi bruge dem sådan her: Vi skriver selv en kort tekst om én episode
-med vores egne ord og citerer højst en enkelt linje. Ved hver historie står
-dit navn og den der fortæller, med et link til dig. Vi gemmer ikke teksten,
-når vi har læst den. Og vil du have en historie fjernet, så er den væk inden
-for et døgn.
+And may we use them like this: We write a short text about one episode in
+our own words and quote at most a single line. Every story names you and
+the storyteller, with a link to you. We don't keep the text after reading
+it. And if you want a story taken down, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 17. Stemmer fra Bjerget
 
-Til: the address behind "View email" on youtube.com/@bbh_frh_hosp/about
+To: the address behind "View email" on youtube.com/@bbh_frh_hosp/about
 
-Emne: Stemmer fra Bjerget i en gåtursapp
+Subject: Stemmer fra Bjerget in a walking app
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Stemmer fra Bjerget fortæller om livet på Bispebjerg Hospital af dem, der
-var der. Bispebjerg er et af de kvarterer, hvor vi har færrest historier.
+Stemmer fra Bjerget tells about life at Bispebjerg Hospital from the people
+who were there. Bispebjerg is one of the areas where we have the fewest
+stories.
 
-Sådan ville vi bruge afsnittene: Vi skriver selv en kort tekst om én episode
-med vores egne ord og viser aldrig klip. Ved hver historie står podcasten og
-hospitalet som kilde, med et link til afsnittet. Vi nævner ikke patienter
-ved navn. Vi læser underteksterne én gang og sletter dem bagefter. Og vil I
-have en historie fjernet, så er den væk inden for et døgn.
+This is how we would use the episodes: We write a short text about one
+episode in our own words and never show clips. Every story names the podcast
+and the hospital as the source, with a link to the episode. We don't name
+patients. We read the subtitles once and delete them afterwards. And if you
+want a story taken down, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Er det i orden med jer?
+Is that all right with you?
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 18. kbhbilleder
 
-Til: kbhbilleder@kff.kk.dk (unverified; if it bounces, stadsarkiv@kk.dk)
+To: kbhbilleder@kff.kk.dk (unverified; if it bounces, stadsarkiv@kk.dk)
 
-Emne: Jeres frie billeder i en gåtursapp
+Subject: Your free pictures in a walking app
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man se en kort historie om det. Et gammelt billede fra
-præcis det sted er tit den bedste historie.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you see a short story about it. An old picture of that
+exact spot is often the best story of all.
 
-Må jeg hente de billeder, der er fri af ophavsret og frie til kommerciel
-brug, med deres placering, gennem jeres API? Jeg vil ikke belaste
-hjemmesiden. Og findes der en liste over netop de billeder, eller et felt
-der siger det?
+May I fetch the pictures that are out of copyright and free for commercial
+use, with their locations, through your API? I don't want to load the
+website. And is there a list of exactly those pictures, or a field that
+says so?
 
-Under hvert billede står arkivet, fotografen og et link til billedet hos
-jer. Vi bruger kun frie billeder. Og vil I have et billede fjernet, så er det
-væk inden for et døgn.
+Under every picture we name the archive, the photographer and a link to the
+picture on your site. We only use free pictures. And if you want a picture
+taken down, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
 
 ---
 
 ## 19. Historisk Atlas
 
-Til: info@historiskatlas.dk
+To: info@historiskatlas.dk
 
-Emne: Adgang til jeres API
+Subject: Access to your API
 
-Hej,
+Hi,
 
-Jeg hedder [navn], og jeg er ved at lave Memory Lane, en app der planlægger
-gåture i København. Undervejs kommer man forbi steder, hvor noget er sket, og
-når man står der, kan man læse en kort historie om det.
+My name is [name], and I'm building Memory Lane, an app that plans walks in
+Copenhagen. Along the way you pass places where something happened, and when
+you stand there, you can read a short story about it.
 
-Må jeg få adgang til jeres API, så jeg kan se hver fortællings licens og
-hele teksten? Vi bruger kun fortællinger under CC BY, CC BY-SA eller i public
-domain og følger licensens krav. Ved hver historie står Historisk Atlas som
-kilde, med et link til fortællingen hos jer. Og vil I have en fortælling
-fjernet, så er den væk inden for et døgn.
+Could I get access to your API, so I can see each story's licence and its
+full text? We only use stories under CC BY, CC BY-SA or in the public domain,
+and follow the licence's terms. Every story names Historisk Atlas as the
+source, with a link to the story on your site. And if you want a story taken
+down, it's gone within a day.
 
-Appen er gratis med én gåtur om ugen. Vil man gå flere, koster det et
-abonnement.
+The app is free with one walk a week. More walks cost a subscription.
 
-Venlig hilsen
-[navn]
-[telefon]
+Best regards,
+[name]
+[phone]
