@@ -59,7 +59,7 @@ for screen in "${SCREENS[@]}"; do
   # What a screen waits on: the API for a plan, a memory or the past walks, a
   # sheet's slide, the seal's fall.
   case "$screen" in
-    preview | plan-walk* | plan-long* | plan-ends-here | plan-unreachable | customize*) wait=6 ;;
+    preview | plan-ends-here | plan-unreachable | customize*) wait=6 ;;
     preview-customized | offline-plan) wait=4 ;;
     memory-* | notes-* | past | journal* | collector* | rank-up | submit-editor | submit-delete) wait=3 ;;
     settings-lower) wait=2.5 ;;

@@ -362,13 +362,7 @@ appId: ${APP_ID}
     env:
       NAME: "Paid"
 - extendedWaitUntil:
-    visible: "A walk from here"
+    visible: "Stop [0-9]+ of [0-9]+\\. .*"
     timeout: 40000
 - assertNotVisible: "This week's free walk is done"
-- tapOn: "Loop"
-- extendedWaitUntil:
-    visible: "[0-9]+ memor(y|ies) · .*"
-    timeout: 40000
-- tapOn: "Next"
-- assertVisible:
-    id: "walk-stops"
+- assertVisible: "Start this walk"

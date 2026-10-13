@@ -27,7 +27,7 @@ Preview (src/Plan.tsx)          home: the first screen after sign-in, unless tod
 │                              the Journal orb at its end (src/CollectorHud.tsx); no bottom row or dock
 ├─ Marker per stop, numbered   not tappable - a look, not a walk
 ├─ the loop, drawn             RouteLine from the start and back, washed-out gold under labels so the pins pop
-└─ card (Preview)              loop or one way, a loop's length, the walk; every change redraws it
+└─ card (Preview)              one card: ‹ ›, shape + length, Customize, Start; every change redraws the walk
    ├─ "A walk from here"        23/700; nothing to close back to
    ├─ "4 memories · 3.8 km loop"   "Finding a walk…" first; "No walk within 10 km from here."
    ├─ "Nothing at 4 km; this is the nearest."   an empty length moved up to one with a walk
@@ -214,7 +214,7 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/UnlockHere.tsx` | the locket over the map, ‹ › when more than one is in reach |
 | `src/SlideToUnlock.tsx` | slide to unlock, its own row over the bottom row while a memory is in reach |
 | `src/WalkCard.tsx` | a past walk drawn as its shape: the journal's walk cards, the finish card's and journal rows' small shape |
-| `src/Plan.tsx` | the planner card: loop or one way, a loop's length, then the walk as a timeline, and accept |
+| `src/Plan.tsx` | the planner card: ‹ › between walks, the shape and length in one row, Customize, then accept |
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
 | `src/Settings.tsx` | your name, account, how unlocking works, location, notifications, about. Its own sheet, from the gear top right of the map |
@@ -869,7 +869,7 @@ The app's stages (`App.tsx`'s `Stage`) must stay distinct:
 |---|---|---|
 | loading | paper, while the cache and `GET /v1/routes/today` answer | a walk found → walk; none → map |
 | map | you, the streets, Journal, Add and Plan a walk; the locked memories around you, faded, that do not open | Plan a walk → preview |
-| preview | the walk on the map, the card: loop or one way, a loop's length, the walk | Start walk → walk; × (any step) → map |
+| preview | the walk on the map, the card with its shape and length | Start walk → walk; × (any step) → map |
 | walk | today's stops, the pill | nothing - the day is locked |
 
 A failed request on the preview leaves you there with "Can't reach Memory

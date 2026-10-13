@@ -355,5 +355,5 @@ def test_the_default_walk_is_as_long_as_walk_and_unlock_walks():
     )
     # walk-and-unlock.yml plans and accepts it through this step.
     flow = (ROOT / ".maestro/steps/start-walk.yml").read_text()
-    stops = re.search(r'visible: "(\d+) memories · ', flow)
+    stops = re.search(r'visible: "Stop (\d+) of \d+', flow)
     assert _route_size(float(km[1]) * 1000) == int(stops[1])

@@ -4970,7 +4970,7 @@ have hidden more map and put Locate further from a thumb.
 
 ### The planner asks one thing at a time
 
-Status: Accepted 2026-10-13. Supersedes *The planner is two steps*.
+Status: Superseded 2026-10-13 by *The planner is one card again*. Accepted 2026-10-13. Supersedes *The planner is two steps*.
 
 Step one held the length, three shapes (Loop | One way | Pick where it
 ends), Customize and Next; step two the stop list, a "Reward: up to +N
@@ -4993,6 +4993,29 @@ walk has, ten stops and the mystery. The loser goes once one is chosen.
 
 **Options considered:** keeping the length on the walk card for one way too
 (the end sets the length, so it would only fight the tap).
+
+### The planner is one card again
+
+Status: Accepted 2026-10-13. Supersedes *The planner asks one thing at a
+time*.
+
+Tried on the simulator the same day, the steps cost more than they gave. The
+founder: paging back and forth through walks as they are drawn beats a
+shuffle; the timeline and "4 memories · 3.4 km loop" say less than the map
+behind them; "A walk from here" says nothing; and Customize, the paid
+feature, has to be seen. Now one card:
+
+- **‹ › and ×** by the title, paging walks as before (F32).
+- **The shape and the length in one row.** A chip, ↻ Loop or → One way, and
+  for a loop the slider beside it. One way is still always an end tapped on
+  the map; beside the chip then, Change the end.
+- **Customize the walk** on velvet, full width, badged Plus for a free
+  walker, above Start walk.
+- No timeline, no count, no blurb, no reward.
+
+**Options considered:** segmented Loop | One way tabs with the slider under
+Loop (two rows for one control); ‹ › flanking the shape row (on a 393pt
+phone they left the slider about 60pt).
 
 ### Rejected approaches, do not retry
 

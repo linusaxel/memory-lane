@@ -185,36 +185,28 @@ the planner*).
 2. The preview is the map, fitted to the drawn walk above the card
    (`fitToCoordinates`, padded by the card's measured height), with the stops
    numbered and the loop drawn. Preview pins do not open: it is a look, not a
-   walk. The card (`mobile/src/Plan.tsx`) asks one thing a step (docs/10,
-   *The planner asks one thing at a time*). Step one, "A walk from here": two
-   tiles, **Loop** and **One way**. One way is the map at once, a card saying
-   to tap it, and the tap is the end, with the length at least the crow's
-   distance to it ×1.3 (`endFloorKm`); it lands on the walk. Loop is step
-   two, the length: "4 memories · 3.8 km loop" over one slider, 1–10 km in
-   0.5 km steps, 4 km to start (`WALK_KM`), about one stop a km, and
-   **Next**. Any change redraws the walk; the slider only on release. Step
-   three is the walk: "Today's walk" ("This week's walk", free), shuffle
-   (another walk, F32) and Customize as round buttons beside it, "4 memories ·
-   3.8 km loop", a line in italics of what it is about ("History and the
-   strange, from 1807 to now": the themes asked for or its stops' two
-   commonest, and the years they span), "3 new stories within 2 km since your
-   last walk" when there are any (docs/10, *New since your last walk*), then
-   **the timeline**: a start ring, each stop a numbered coin with its year,
-   the mystery stop a "?" coin "on the way" (docs/10, *A mystery stop*), an
-   end mark; past five it scrolls sideways. (On trial beside it, a rail down
-   the card: each stop's place, year · source · two #tags and locket, four in
-   view; `TIMELINE` in Plan.tsx.) All of it is what a locked memory already
-   says (docs/10, *A locked memory says what it is*). ‹ Back is on steps two
-   and three, × on every step closes the planner. Customize opens a fourth
-   step: a title and Clear, an era on a two-thumb slider that snaps to
-   Earlier, 1800, 1900, 1945, 1990 and Today (drag the left thumb for only
-   modern, the right for only old; both ends is Any time), chips for the 18
-   themes in three headed groups (Places & past, Out & about, People), and
-   **Done · N stops**, back to the walk. Themes and the era both lean the
-   walk, never filter it, and are kept on the phone (docs/10, *Subscribers
-   shape the walk*). A free walker's Customize carries a Plus badge and opens
-   the paywall (F35).
-3. **Start walk**, on step three, is `POST /v1/routes/today` with the same
+   walk. The card (`mobile/src/Plan.tsx`) is one card (docs/10, *The planner
+   is one card again*): "Today's walk" ("This week's walk", free) with ‹ ›
+   (another walk, F32) and ×. Under it one control for the shape and the
+   length: a chip, **↻ Loop** or **→ One way**, and beside it, for a loop, the
+   slider, 1–10 km in 0.5 km steps, 4 km to start (`WALK_KM`), about one stop
+   a km. Tapping Loop is One way: the map, a card saying to tap it, and the
+   tap is the end, with the length at least the crow's distance to it ×1.3
+   (`endFloorKm`); beside the chip then, **Change the end** taps again.
+   Tapping One way is a loop again. Any change redraws the walk; the slider
+   only on release. The walk itself is the map: no list, no count. When they
+   apply, "3 new stories within 2 km since your last walk" (docs/10, *New
+   since your last walk*), "Nothing at 4 km; this is the nearest." and
+   "Planning from central Copenhagen." sit under the title. Then
+   **Customize the walk**, on velvet so it is seen, opens a second step: a
+   title and Clear, an era on a two-thumb slider that snaps to Earlier, 1800,
+   1900, 1945, 1990 and Today (drag the left thumb for only modern, the right
+   for only old; both ends is Any time), chips for the 18 themes in three
+   headed groups (Places & past, Out & about, People), and **Done · N
+   stops**, back to the card. Themes and the era both lean the walk, never
+   filter it, and are kept on the phone (docs/10, *Subscribers shape the
+   walk*). A free walker's carries a Plus badge and opens the paywall (F35).
+3. **Start walk**, under Customize, is `POST /v1/routes/today` with the same
    position, length, loop, themes and era, and lands on the walk (F25).
 
 **Accepting starts the walk.** It stands until it is ended (F34). One a week
@@ -227,16 +219,16 @@ opens the paywall (F35). A relaunch after accepting skips this page and goes str
 **What can go wrong:** nothing walkable within that length — the card moves the
 slider up to the nearest length that has a walk and says "Nothing at 4 km; this
 is the nearest." (F32). Nothing within 10 km at all reads "No walk within 10 km
-from here." on the length step, with the slider still there, and no Next. The map runs
+from here." with the slider still there, and Start walk off. The map runs
 out before the slider does (the lakes top out at 7.4 km) — the card shows the
 walk's real length, and nothing more. No position
 — the walk is planned from central Copenhagen and the card says so (F9). The server
 unreachable — the card says "Can't reach Memory Lane right now." under the
 button, and any change retries.
 
-**Done when:** the planner shows a whole walk on the map above the card, Loop
-or One way leads to it in one or two taps, a change redraws it, and Start walk
-makes it today's.
+**Done when:** the planner shows a whole walk on the map above the card,
+‹ › page between walks, a change to the shape or length redraws it, and
+Start walk makes it today's.
 
 ## F2 · Read one memory and go to its source — **Implemented**
 
