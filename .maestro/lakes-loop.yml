@@ -139,14 +139,13 @@ appId: ${APP_ID}
 - assertNotVisible: "Change the end"
 
 # The slider seeks where it is tapped (tapToSeek), so its right end is 10 km,
-# wherever the page puts it. The value is the "10 km" above the slider; the end
-# label under it says the same.
+# wherever the page puts it. The value is the "10 km" beside it.
 - tapOn:
     text: "Walk length"
     point: "99%,50%"
 - assertVisible:
     text: "10 km"
-    above: "Walk length"
+    rightOf: "Walk length"
 - extendedWaitUntil:
     visible: "Stop 10 of 10\\. .*"
     timeout: 40000
