@@ -39,9 +39,12 @@ delete an entry when its fix lands.
 - **The Figma MCP stops after a handful of calls.** 2026-10-12: the personal
   team is on Starter, which caps MCP calls a month, and the Monta seat is
   Collab, which can't edit. A redesign session made the file and then got no
-  further. Mockups came out as HTML rendered by headless Chrome instead
-  (`~/Downloads/memory-lane-redesign/board.html`). Fix: a Professional seat on
-  the personal team, or start design work from HTML and skip Figma.
+  further. 2026-10-13 again, same month: `use_figma` counts against the cap
+  (Figma's docs suggest writes are exempt; only `create_new_file` and
+  `whoami` are), so the planned Figma pass died on its first drawing call and
+  was redone in HTML. Mockups come out as HTML rendered by headless Chrome
+  (`~/Downloads/memory-lane-redesign/`). Fix: a Professional seat on the
+  personal team, or plan design work as HTML from the start.
 
 - **The source screen fails biographies that hold a spot scene.** 2026-10-10:
   Haiku's screen scored Kirstine Meyer's Ørsted essays 0.00 and 0.25, rejecting
@@ -296,7 +299,7 @@ before the planner*); the planner plans one walk and only its stops open. The
 rule for anything game-like or crafted: quiet by default, loud only for real
 progress; refine what exists rather than add.
 
-### One look (2026-10-12: built without Figma; tomorrow, the Figma pass)
+### One look (2026-10-12: built without Figma; 2026-10-13, the pass, in HTML)
 
 Built in the app on 2026-10-12, with Figma's MCP capped (docs/10, *Dusk, and
 the map's dock*): the Dusk palette, the dock, the compass-rose emblem and the
@@ -319,9 +322,11 @@ meanings; run the gate and shoot the touched screens."
 - [x] **A Plan-a-walk emblem**: the compass rose, swings 0.9 s.
 - [x] **One icon family** (`Icon.tsx`): ink line over a cream tone, every
       button over the map, walk and planner; go is now the HUD's charcoal.
-- [ ] **In Figma, push it further** (the prompt above). Open: the raised
-      button sits third of four, off centre; `app.json`'s `#A8350F`
-      adaptive-icon orange waits on the icon art itself.
+- [x] **Push it further** (2026-10-13). Figma capped on the first drawing
+      call, so an HTML board (`~/Downloads/memory-lane-redesign/dusk-pass.html`);
+      chosen: sticker icons and Journal · Plan a walk · Add with Locate
+      floating (docs/10, *Sticker icons, and Plan a walk centred*). Still
+      open: `app.json`'s `#A8350F` adaptive-icon orange waits on the icon art.
 - [ ] **A walk cycle for Plan a walk** (2026-10-13, Figma). The dock's
       button is your Collector's still art, bobbed and slid out of its ring
       on a tap. Make it walk for real: a side-view cycle of each class (4–6

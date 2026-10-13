@@ -4761,7 +4761,9 @@ wanted it on top, as games do); Figma frames first (out of MCP calls).
 
 Status: Accepted 2026-10-12. Supersedes the colour values of *Jewel Box* and
 *Game menus* (the roles and token names stay), their gradients, and on home
-the shared bottom row and the Journal orb.
+the shared bottom row and the Journal orb. The dock's order and the icons'
+line colour are superseded by *Sticker icons, and Plan a walk centred*
+(2026-10-13).
 
 Green go, plum velvet, gold foil, emerald seal and the class art all wanted
 to be the accent. The founder asked for one palette, then, shown three loud
@@ -4809,8 +4811,7 @@ simulator.
   the same day (Apple asks custom borders not to fight Liquid Glass's own
   rim).
 
-Tomorrow's Figma pass (TODO.md, *One look*) redraws these against the shots;
-anything better there changes values here.
+The Figma pass came the next day as *Sticker icons, and Plan a walk centred*.
 
 **Options considered:** Velvet & Gold, Moss & Brass, Night Ink & Gold (too
 loud); Tea house (warmest, quietest); Ink & paper (starkest); the character
@@ -4855,6 +4856,31 @@ to mutual friends.
 **Options considered:** the journal's header as the one "you", as AllTrails
 and Strava do (undoes the Collector across the top, which *Game menus* chose);
 an account avatar top right, as the App Store (a third thing over the map).
+
+### Sticker icons, and Plan a walk centred
+
+Status: Accepted 2026-10-13. Supersedes, in *Dusk, and the map's dock*, the
+dock's order and the icons' line colour.
+
+Shot in the dark, the dock's icons were blobs: the line (`ink`, cream in the
+dark) and the tone (foil cream) were one colour. And Plan a walk sat third of
+four, off centre. A board of two icon fixes and four docks
+(`~/Downloads/memory-lane-redesign/dusk-pass.html`; Figma's MCP capped again
+on its first drawing call) went to the founder, who picked:
+
+- **Sticker icons** (`src/Icon.tsx`). An icon with a tone is a sticker: the
+  line is `foil.text` charcoal over the cream tone, with a 4.5pt cream halo
+  under both, the same in both themes, as a game's items are. Filled (hearted,
+  following you) fills the tone charcoal. Line-only marks (close, back, more,
+  slide) keep the caller's colour, and an icon on a foil chip (customize, the
+  slide's key) passes its own `tone` and stays as it was.
+- **Journal · Plan a walk · Add** (`src/MapDock.tsx`), Plan a walk dead
+  centre with its name in `gold`. Locate leaves the bar for a 44pt glass
+  circle over its right end, as Apple Maps keeps it.
+
+**Options considered:** a dark-only velvet tone under the cream line (quieter,
+but the icons stop being cream items in the dark); the dock as a 249pt pill
+with Locate beside it; no bar, a dusk scrim under three buttons.
 
 ### Rejected approaches, do not retry
 

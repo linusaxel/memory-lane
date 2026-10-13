@@ -110,5 +110,5 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   look: { marginBottom: '-12%' },
-  label: { ...font.uiBold, fontSize: 11, color: color.inkSoft },
+  label: { ...font.uiBold, fontSize: 11, color: color.gold },
 });

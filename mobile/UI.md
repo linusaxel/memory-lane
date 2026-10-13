@@ -230,8 +230,8 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/theme.ts` | **every colour, font, corner and the one shadow.** Start here |
 | `src/Glass.tsx` | a control floating over the map: Liquid Glass, or paper and `lift` |
 | `src/PlanWalkButton.tsx` | Plan a walk: your Collector in a ring; a tap walks them out, then the planner opens (0.9 s) |
-| `src/MapDock.tsx` | home's dock: Journal · Add · Plan a walk · Locate |
-| `src/Icon.tsx` | the icon family, ink line over a cream tone: every button over the map, walk and planner, and the close circle |
+| `src/MapDock.tsx` | home's dock: Journal · Plan a walk · Add, and Locate's circle over it |
+| `src/Icon.tsx` | the icon family, stickers (charcoal line, cream tone, cream halo) in both themes: every button over the map, walk and planner, and the close circle |
 | `src/SourceLine.tsx` | who published a memory, with their avatar |
 | `src/mapStyle.ts` | how the map gets out of the way |
 | `src/reach.ts` | which pins look openable. Pure, and unit-tested |
@@ -375,9 +375,10 @@ Center on me) are `GlassButton` from `src/Glass.tsx`: iOS 26's Liquid Glass,
 or raised paper with `lift` where glass is unavailable. Never glass on a full sheet, never glass on glass. Plan a walk is the one
 tinted control, `prominent`: charcoal enamel glass (`solid().goGlass`) in a cream
 bezel, its label in `onGo`. Turn on location is a go `Button`. **Home has the
-dock** (`src/MapDock.tsx`, docs/10, "Dusk, and the map's dock"): one glass bar
-at bottom 70, Journal · Add · Plan a walk · Locate, one size, each named under
-its icon (`src/Icon.tsx`). Plan a walk is your Collector, 34pt in a
+dock** (`src/MapDock.tsx`, docs/10, "Sticker icons, and Plan a walk
+centred"): one glass bar at bottom 70, Journal · Plan a walk · Add, Plan a walk
+centred and named in gold, each named under its icon (`src/Icon.tsx`); Center
+on me is a 44pt glass circle over the bar's right end. Plan a walk is your Collector, 34pt in a
 foil ring (`CollectorLook`, as the HUD's medal); a tap walks them out of the
 ring and the planner opens as they leave, 0.9 s (`src/PlanWalkButton.tsx`); Reduce Motion opens it at once. **The walk
 has the bottom row**: Add a memory bottom left and Center on me bottom right,

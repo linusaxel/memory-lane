@@ -1,9 +1,12 @@
 /** The app's own icons, one family: a 2pt ink line over one flat tone, chunky,
  *  as a game's items are (docs/10, "Dusk, and the map's dock"). Every button
  *  over the map, the walk and the planner, and the close circle everywhere.
- *  Rare states stay a Glyph (SF Symbol) in a palette colour. `filled` is the
- *  on state, the tone in the line's colour: hearted, or the map following
- *  you. `bounce` pops it each time its value changes, as Glyph's does. */
+ *  A toned icon is a sticker: charcoal line, cream tone, a cream halo, the same
+ *  in both themes, so it never melts into the dark (docs/10, "Sticker icons").
+ *  Line-only marks (close, back) take `color`. Rare states stay a Glyph (SF
+ *  Symbol) in a palette colour. `filled` is the on state, the tone in the
+ *  line's colour: hearted, or the map following you. `bounce` pops it each
+ *  time its value changes, as Glyph's does. */
 
 import { useEffect, useRef } from 'react';
 import { Animated, type ColorValue } from 'react-native';
@@ -55,13 +58,13 @@ type Props = {
   name: IconName;
   size: number;
   color: ColorValue;
-  /** The flat fill under the line; cream by default. */
+  /** The flat fill under the line, for an icon on a foil chip: no sticker. */
   tone?: ColorValue;
   filled?: boolean;
   bounce?: unknown;
 };
 
-export default function Icon({ name, size, color, tone = foil.colors[1], filled, bounce }: Props) {
+export default function Icon({ name, size, color, tone, filled, bounce }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
   const first = useRef(true);
   useEffect(() => {
@@ -78,21 +81,36 @@ export default function Icon({ name, size, color, tone = foil.colors[1], filled,
     }).start();
   }, [bounce, scale]);
   const icon: { tone?: string; line?: string; solid?: string } = ICONS[name];
+  const sticker = !!icon.tone && !tone;
+  const line = sticker ? foil.text : color;
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
       <Svg width={size} height={size} viewBox="0 0 24 24">
-        {icon.tone && <Path d={icon.tone} fill={filled ? color : tone} />}
+        {sticker && (
+          <>
+            <Path d={icon.tone} fill={foil.colors[0]} />
+            <Path
+              d={icon.line}
+              fill="none"
+              stroke={foil.colors[0]}
+              strokeWidth={4.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </>
+        )}
+        {icon.tone && <Path d={icon.tone} fill={filled ? line : (tone ?? foil.colors[1])} />}
         {icon.line && (
           <Path
             d={icon.line}
             fill="none"
-            stroke={color}
+            stroke={line}
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         )}
-        {icon.solid && <Path d={icon.solid} fill={color} />}
+        {icon.solid && <Path d={icon.solid} fill={line} />}
       </Svg>
     </Animated.View>
   );

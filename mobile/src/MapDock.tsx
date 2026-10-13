@@ -1,12 +1,14 @@
-/** The map's dock: Journal · Add · Plan a walk · Locate, one glass bar along
- *  the bottom, a game's action bar, four buttons of one size. Every button says its name
- *  under it. Never over a memory: App hides it while one is up (UI.md rule 13). */
+/** The map's dock: Journal · Plan a walk · Add, one glass bar along the
+ *  bottom, a game's action bar, Plan a walk dead centre. Every button says its
+ *  name under it. Locate is a glass circle over the bar's right end, as Apple
+ *  Maps keeps it. Never over a memory: App hides it while one is up (UI.md
+ *  rule 13). */
 
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { ClassId } from './collector';
-import { GlassCard } from './Glass';
+import { GlassButton, GlassCard } from './Glass';
 import Icon from './Icon';
 import { PlanWalkButton } from './PlanWalkButton';
 import { color, contour, font } from './theme';
@@ -66,9 +68,6 @@ export default function MapDock(p: Props) {
           <Icon name="journal" size={26} color={color.ink} />
           {p.journalNew && <View style={styles.newDot} />}
         </Slot>
-        <Slot label="Add" say="Add a memory here" onPress={p.onAdd}>
-          <Icon name="add" size={28} color={color.ink} />
-        </Slot>
         <View style={styles.slot}>
           <PlanWalkButton
             id={p.collector}
@@ -77,11 +76,20 @@ export default function MapDock(p: Props) {
             onWalkEnd={p.onPlan}
           />
         </View>
-        <Slot label="Locate" say="Center on me" onPress={p.onLocate}>
-          <Icon name="locate" size={24} color={color.ink} filled={p.onYou} />
+        <Slot label="Add" say="Add a memory here" onPress={p.onAdd}>
+          <Icon name="add" size={28} color={color.ink} />
         </Slot>
         <View style={contour} pointerEvents="none" />
       </GlassCard>
+      <GlassButton
+        place={styles.locate}
+        style={styles.circle}
+        accessibilityRole="button"
+        accessibilityLabel="Center on me"
+        onPress={p.onLocate}
+      >
+        <Icon name="locate" size={22} color={color.ink} filled={p.onYou} />
+      </GlassButton>
     </View>
   );
 }
@@ -99,6 +107,14 @@ const styles = StyleSheet.create({
     minHeight: 68,
   },
   slot: { flex: 1, alignItems: 'center', gap: 2, minHeight: 44 },
+  locate: { position: 'absolute', right: 2, bottom: 80 },
+  circle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   pressed: { transform: [{ scale: 0.92 }] },
   icon: { height: 34, justifyContent: 'center', alignItems: 'center' },
   name: { ...font.uiBold, fontSize: 11, color: color.inkSoft },
