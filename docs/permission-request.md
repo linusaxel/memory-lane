@@ -107,7 +107,7 @@ A yes or no is all I need, and tell me if you'd like the credit worded a certain
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -134,7 +134,7 @@ A yes or no is all I need. If Min barndom på Bispebjerg exists as text, I'd lik
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -159,7 +159,7 @@ We'd write them in our own words, link to each memoir, leave out private people'
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -185,7 +185,7 @@ A yes or no is all I need.
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -210,7 +210,7 @@ We'd write them in our own words, credit the archive and the storyteller with a 
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -236,7 +236,7 @@ A yes or no is all I need.
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -262,7 +262,7 @@ A yes or no is all I need.
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -284,7 +284,7 @@ I'm messaging you because I'd like to ask the local history societies for permis
 
 I'd like to ask the local history societies in Østerbro, Valby and Vesterbro if it would be okay to retell some of their articles at the places they're about. Could you tell me who to write to?
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -310,7 +310,7 @@ I think DNR Media makes the channel. If not, could you pass this on? A yes or no
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -336,7 +336,7 @@ A yes or no is all I need.
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -362,7 +362,7 @@ The channel says it's part of your archive. If I've got the wrong people, could 
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -386,7 +386,7 @@ We'd write them in our own words, with your name and a link to your page, and ta
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -412,7 +412,7 @@ We'd write them in our own words, credit the channel and Kim Bargsteen with a li
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -439,7 +439,7 @@ A yes or no is all I need.
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -463,7 +463,7 @@ We'd write them in our own words, with your name and a link, without naming the 
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -487,7 +487,7 @@ We'd write them in our own words, with your name and a link, and take anything d
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -511,7 +511,7 @@ We'd write them in our own words, credit you with a link to the episode, never n
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -535,7 +535,7 @@ Each photo would carry the archive, the photographer and a link back, and we'd t
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
@@ -559,7 +559,7 @@ We'd follow each licence and credit Historisk Atlas with a link. To see which st
 
 For the sake of transparency, the app is free to try and has a paid subscription.
 
-I hope to hear from you.
+Thanks so much for reading, and I'd be really happy to hear back from you!
 
 Kind regards,
 [name]
