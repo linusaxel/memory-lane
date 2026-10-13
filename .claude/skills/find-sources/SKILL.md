@@ -227,6 +227,32 @@ Carlsbergfondet's Meldal page (375), Det Kolde Gys (376); Glud & Marstrand, Bell
   sponsored, partly uncaptioned) and Gunnar Wille (uncaptioned) are no.
   School anniversaries, sports grounds and architects on their works are PR.
 
+**Sweep 2026-10-13: thin backlog, empty cells, recent (4 agents).**
+- **PD tellers:** Andersen *Mit Livs Eventyr* past 1846 (417, `runeberg:miteventyr`;
+  windows 96+ are new against 202's Howitt, which stops 1846), Schandorph
+  *Oplevelser II* (418, `archive:oplevelser00schagoog`, 1870s-80s literary
+  Copenhagen), Nordström *Amerikanskt* (419, Frihavnen 1914). Riis is 229
+  already. Dead: Andersen's diaries (tekstnet.dk robots bars ClaudeBot),
+  Thorvaldsen archive (CC BY-NC-ND), Nexø *Erindringer* (still not digitized),
+  Kierkegaard (SKS public domain on tekster.kb.dk, but reflection, not scenes).
+  Ask: Carl Nielsen correspondence (© Multivers, 7,380 letters).
+- **Outer cells:** Jørgen Grandt's Amager pages (420-425, `grandts.dk/Amager/`,
+  82 pages, no robots; cinemas, Strandbo, Kløvermarken), Valby Lokalhistoriske's
+  story posts (426-429; 430 an event notice; their newsletter 255 was rejected, these are other
+  text), skolekammeraten.dk Kløvermarken (431). Low: bkfremarkiv.dk (chronicle),
+  hovedstadshistorie.dk (3,031 encyclopedic pages). mitnorrebro.dk answers
+  ClaudeBot 406: treat as a block. Still nothing for Svanemøllen, Lersø,
+  Ørestad, Sluseholmen, Flintholm.
+- **Wikipedia round 6** (432 da, 433 en, 33 windows): Wikidata P276/P585
+  since 1960 is championships and summits; the yield is hand-picked titles.
+  Dropped by title mode: Led Zeppelin's first gig (Gladsaxe Teen Club, no
+  "København"), Islands Brygge's Café Liberation/Silo 52 (past the 2-window cap).
+- **YouTube for the outer districts: stop.** ~60 searches; only
+  Christianshavns Kvarter (155) had captioned first-person videos (B&W
+  workers, OXA, George Stage: 7 ingested). Amagerbanens Venner and BK Frem
+  talks are lectures. *Stemmer fra Amager* (Museum Amager podcast) is audio
+  only: ask.
+
 **Dead ends.** Don't retry these without new evidence.
 - **Encyclopedic Wikipedia.** The en category set (venues, riots, crimes,
   clubs) gave 4 good from 67 items (source 245). Danish Wikipedia's 2,783
