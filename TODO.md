@@ -283,7 +283,14 @@ priority order.
       the nearest. Sources for the ring first, or shrink `LAUNCH_BBOX`. The flow for it in docs/08,
       *Arrive somewhere and find its history*, is still only proposed, waiting on a source that has since been chosen: specify it
       from the product, not from whatever ingestion produced.
-- [ ] **Email it@historiskatlas.dk for API access.** (checked 2026-10-12) Drafted
+- [ ] **Show the permission emails what a memory looks like.** (2026-10-13)
+      The 19 drafts in `docs/permission-request.md` describe the app in one
+      line, and a stranger has to picture the rest. Add one link to a simple
+      page (a future website, or a public page for now) with two or three
+      screenshots: the walk, a story opened at its spot, the credit line and
+      link back to the source. One link, no attachments (the research in that
+      doc). Then add the link to every draft before sending.
+- [ ] **Email info@historiskatlas.dk for API access.** (checked 2026-10-12) Drafted
       in `docs/permission-request.md`; send it. The
       per-story licence ("Geo" in their API) is not on the public pages, and
       the sitemap source has title and intro only. 340 sabotage stories are
@@ -295,8 +302,8 @@ priority order.
       usable, many geotagged. Bot-protected: ask, never scrape. Open source
       with a public APACS API (github.com/CopenhagenCityArchives). Picture memories.
 - [ ] **More public-domain memoirs.** (checked 2026-10-12) Ingested, none
-      extracted: Brandes' *Levned* II (242) and III (243), Heiberg's *Et Liv
-      gjenoplevet* 1-3 (382-384; 383 and 384 still `candidate`). Brandes I
+      extracted: Brandes' *Levned* II (242) and III (243). Heiberg 1-3 (382-384) ran
+      2026-10-13 and is paused at the author cap. Brandes I
       (231) gave 4. Next, billed: `python -m pipeline.batch --source "<name>"
       --run` for each, then read what it made. Nexø has no free text.
 - **Excluded:** arkiv.dk (private use only, no API) and setlist.fm

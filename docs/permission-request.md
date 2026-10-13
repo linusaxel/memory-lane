@@ -48,6 +48,32 @@ Lokal TV (form at frbtv.dk/kontakt), both uncaptioned. Dropped: Euroman and
 Eurowoman have no *Mit København* series (that was Copenhagen Sundays', which
 opts out), and Realdania's *Mit sted* is a podcast with no text.
 
+## How to send
+
+From the research of 2026-10-13 (cold-email reply data from Hunter, Gong,
+Woodpecker and Boomerang; Flynn & Bohns and Roghanizad & Bohns on asking
+strangers; university permission-letter guides from Stanford and Columbia):
+
+- One email per rights holder, sent by hand from your own address, with no
+  open tracking. Strangers say yes more often than we expect, but email is
+  the weakest way to ask: where a society lists a phone number, a call works
+  better.
+- Short: under about 120 words. Who you are, what the app gives people, then
+  one ask they can answer with "yes". No compliments about their work: they
+  read as fake.
+- Say the app is a business. A yes to commercial use only counts if they
+  knew.
+- Say what we already use of theirs.
+- At most one link, no attachments.
+- Follow up twice in the same thread, shorter each time: after about a week,
+  then after three. Then stop. No reply means no.
+- Keep the yes in writing and file it on the source row.
+
+Follow-up, as a reply in the same thread:
+
+> Hi [first name], just bumping this in case it got buried. A yes or no is
+> all I need. Thanks!
+
 ## What every email promises
 
 Each has to be true before we send:
@@ -61,42 +87,22 @@ Each has to be true before we send:
 - No proxy for a permitted channel: drop `WEBSHARE_PROXY_*` for it.
 - A private person who may be alive is not named without asking.
 
-The price line follows *A free walk a week* (docs/10). Change it in every
-email if that decision changes.
-
 ---
 
 ## 1. Arbejdermuseet: Humlen ved Carlsberg
 
 To: am@arbejdermuseet.dk
 
-Subject: Humlen ved Carlsberg in a walking app
+Subject: Humlen ved Carlsberg
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Humlen ved Carlsberg is full of those. The two-øre strike in 1965, for
-example. People walk through Carlsberg Byen today without knowing what went
-on in the buildings, and it's exactly the kind of neighbourhood where we're
-short of stories.
+Would it be okay if we retold some of the workers' stories from Humlen ved Carlsberg at the places they happened? We'd write them in our own words, credit you with a link, and take anything down if you ask. I saw that the site allows non-commercial use only, so I'm asking. The app is a business, free to try with a paid subscription.
 
-The site says the texts may only be quoted in a non-commercial setting, so
-I'm asking first. This is how we would use them:
+A yes or no is all I need, and tell me if you'd like the credit worded a certain way.
 
-We write a short text about one episode in our own words and quote at most
-a single line. Every story names Arbejdermuseet and Humlen ved Carlsberg as
-the source, with a link to the post. We don't keep the texts after reading
-them. We don't name colleagues without asking. And if you want a story
-taken down, or all of them, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you? I'm happy to answer questions, by phone too.
-
-Best regards,
 [name]
 [phone]
 
@@ -107,34 +113,16 @@ Best regards,
 To: bo.oehrstroem@gmail.com
 Cc: info.lhsbhu@gmail.com
 
-Subject: Your local history in a walking app
+Subject: Your local history articles
 
 Hi Bo,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Brønshøj, Husum, Utterslev and Bispebjerg are where we have the fewest
-stories. Your magazine has exactly those, like the memorial stone by the
-village pond in 1931, and the films shot at Emdrupborg from 1911 to 1917. It
-says reprinting is allowed by agreement, so I'm asking if we may use the
-articles like this:
+Would it be okay if we retold some of the articles from Nyt fra Lokalhistorien at the places they're about? We have very few stories from Brønshøj, Husum and Utterslev so far. We'd write them in our own words, credit you with a link, and take anything down if you ask. The app is a business, free to try with a paid subscription.
 
-We write a short text about one episode in our own words and quote at most
-a single line. Every story names the society as the source, with a link to
-you, including how to become a member. We don't keep the texts after reading
-them. We don't name private people who may still be alive without asking.
-And if you want a story taken down, or all of them, it's gone within a day.
+A yes or no is all I need. If Min barndom på Bispebjerg exists as text, I'd like to ask about that too.
 
-If you also have Min barndom på Bispebjerg or Erindringssamtaler fra
-Nordvest-Bispebjerg as text, I'd like to ask the same for those.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -145,34 +133,14 @@ Best regards,
 To: XM9P@kk.dk
 Cc: stadsarkiv@kk.dk
 
-Subject: The 1969 and 1995 memoirs in a walking app
+Subject: Access to the memoir collection
 
 Hi Eva,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your memoirs are the best record there is of what the city was like to live
-in, street by street. The children playing on Sønder Boulevard in 1955, or
-where people stood on 4 May 1945. We haven't taken anything from
-kbharkiv.dk, and we won't without permission.
+Would it be possible to get the memoir collection as text, through an API or an export? We'd retell single episodes at the places they happened, in our own words, with a link to each memoir and without private people's names, and take anything down if you ask. I didn't want to scrape kbharkiv.dk, so I'm asking instead. The app is a business, free to try with a paid subscription.
 
-Could we get access to the memoirs as text, through an API or an export?
-This is how we would use them:
-
-We write a short text about one episode in our own words and quote at most
-a single line. Every story names the City Archives as the source, with a
-link to the memoir on your site. We don't name private people, only the
-place and what happened. We don't keep the texts after reading them. And if
-you want a story taken down, or all of them, it's gone within a day.
-
-If there are special rules for memoirs whose writers may still be alive,
-I'd like to know them.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
 
@@ -182,29 +150,16 @@ Best regards,
 
 To: sydhavnen@outlook.dk
 
-Subject: Your memoir articles in a walking app
+Subject: Your memoir articles
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-We have almost no stories from Sydhavnen yet. Your memoir articles from the
-40s, 50s and 60s are exactly what we're missing. The site says they may only
-be reproduced by agreement, so I'm asking if we may use them like this:
+Would it be okay if we retold some of the memoir articles on sydhavnenshistorie.dk at the places they're about? We have almost no stories from Sydhavnen so far. We'd write them in our own words, credit you with a link, leave out private people's names, and take anything down if you ask. The app is a business, free to try with a paid subscription.
 
-We write a short text about one episode in our own words and quote at most
-a single line. Every story names the archive as the source, with a link to
-the article. We don't keep the texts after reading them. We don't name
-private people who may still be alive without asking. And if you want a
-story taken down, or all of them, it's gone within a day.
+A yes or no is all I need.
 
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -215,30 +170,14 @@ Best regards,
 To: cach01@frederiksberg.dk
 Cc: stadsarkivet@frederiksberg.dk
 
-Subject: Frederiksberg-erindringer in a walking app
+Subject: Frederiksberg-erindringer transcripts
 
 Hi Caspar,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen and Frederiksberg. Along the way you pass places where something
-happened, and when you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your films of people telling their own Frederiksberg are exactly that, like
-Elektrikeren og Mariendalskvarteret. I have two questions.
+Do the Frederiksberg-erindringer films have transcripts or subtitles? We don't transcribe audio, so we need text to find the places. If they do, would it be okay if we retold single episodes at the places they happened? We'd write them in our own words, credit the archive and the storyteller with a link to the film, and take anything down if you ask. The app is a business, free to try with a paid subscription.
 
-Are there transcripts or subtitles for the films? We don't transcribe audio
-ourselves, so without text we can't find the places.
-
-And may we use them like this: We write a short text about one episode in
-our own words and never show clips. Every story names the archive and the
-storyteller as the source, with a link to the film. We don't keep the text
-after reading it. We don't name other private people the storyteller
-mentions. And if you want a story taken down, or all of them, it's gone
-within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
 
@@ -248,31 +187,16 @@ Best regards,
 
 To: redaktion@bryggebladet.dk
 
-Subject: Islands Brygge stories in a walking app
+Subject: Bryggebladet stories
 
 Hi Andreas,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Bryggebladet has stories about Islands Brygge that nobody else has, like
-the two centenarians who moved into Egilsgade 59 in 1908. We tried finding
-stories in some of your issues from 2019 onwards. Afterwards I saw your
-copyright page, so I'm asking now. If you say no, we'll delete it.
+Would it be okay if we retold some of Bryggebladet's stories at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few issues from 2019 on, before I saw your copyright page. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
 
-This is how we would use the articles: We write a short text about one
-episode in our own words and quote at most a single line. Every story names
-Bryggebladet with the date and a link to the article. We don't keep the
-texts after reading them. We don't name private people who may still be
-alive without asking. And if you want a story taken down, or all of them,
-it's gone within a day.
+A yes or no is all I need.
 
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -282,33 +206,16 @@ Best regards,
 
 To: info@noerrebrolokalhistorie.dk
 
-Subject: Your yearbooks in a walking app
+Subject: Your yearbooks
 
 Hi Jan,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your yearbooks are full of those. The best one we've found is Kierkegaard's
-burial at Assistens Cemetery in 1855, from the 2023 yearbook. We tried it out
-on some of the yearbooks, and I should have asked first. If you say no,
-we'll delete it.
+Would it be okay if we retold stories from your yearbooks at the places they're about? We'd write them in our own words, credit you with a link, and take anything down if you ask. We already tried this on a few yearbooks, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
 
-This is how we would use them: We write a short text about one episode in
-our own words and quote at most a single line. Every story names the society
-with a link to the yearbook, including how to become a member. We don't keep
-the texts after reading them. We don't name private people who may still be
-alive without asking. And if you want a story taken down, or all of them,
-it's gone within a day.
+A yes or no is all I need.
 
-If the person who donated a piece has put limits on it, please tell me.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -318,25 +225,14 @@ Best regards,
 
 To: helge.olesen@email.dk
 
-Subject: Could you point me to the local history societies?
+Subject: Local history societies
 
 Hi Helge,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-The best stories we've found come from the local history societies: people
-telling about their own street. I'm already asking Nørrebro and Sydhavnen,
-and I'd like to reach the societies in Østerbro, Valby and Vesterbro too.
+I'd like to ask the local history societies in Østerbro, Valby and Vesterbro if we may retell some of their stories at the places they happened. Could you tell me who to write to?
 
-We write a short text about one episode in our own words, the society is
-named as the source with a link, we don't keep the texts, and a society can
-always say stop.
-
-Would you pass this on, or tell me who to write to?
-
-Best regards,
 [name]
 [phone]
 
@@ -346,34 +242,16 @@ Best regards,
 
 To: info@dnrmedia.dk
 
-Subject: Københavnerglimt in a walking app
+Subject: Københavnerglimt
 
 Hi Allan,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-I'm writing to DNR Media because I believe you make Københavnerglimt. If
-that's wrong, could you pass this on?
+Would it be okay if we retold stories from Københavnerglimt at the places they happened? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
 
-Your videos are the best we've found. The KB footballers arrested in
-Guldbergsgade for showing their legs, for example, or the bells of Vor Frue
-playing like a hymn while the tower burned. We tried it out on your videos,
-and I should have asked first. If you say no, we'll delete it.
+I think DNR Media makes the channel. If not, could you pass this on? A yes or no is all I need.
 
-This is how we would use them: We write a short text about one episode in
-our own words and never show clips. Every story names Københavnerglimt at
-the top, with a link that opens the video on YouTube right where the story
-is told. We read the subtitles once to find the places and delete them
-afterwards. And if you want a story taken down, or all of them, it's gone
-within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -383,31 +261,16 @@ Best regards,
 
 To: the address behind "View email" on youtube.com/@Kbherliv/about
 
-Subject: Københavnerliv in a walking app
+Subject: Københavnerliv
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your videos are full of those. The bar in the old Hotel Kong Frederik, for
-example, where Politiken's journalists and Tom Kristensen sat after work. We
-tried it out on your videos, and I should have asked first. If you say no,
-we'll delete it.
+Would it be okay if we retold stories from your videos at the places they happened? We'd write them in our own words, show no clips, and link to the video at the moment the story is told. We already tried this on your videos, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
 
-This is how we would use them: We write a short text about one episode in
-our own words and never show clips. Every story names Københavnerliv at the
-top, with a link that opens the video on YouTube right where the story is
-told. We read the subtitles once to find the places and delete them
-afterwards. And if you want a story taken down, or all of them, it's gone
-within a day.
+A yes or no is all I need.
 
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -417,33 +280,16 @@ Best regards,
 
 To: caarkiv@gmail.com
 
-Subject: The Christiania stories in a walking app
+Subject: The christianiahistorie films
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-The YouTube channel Christiania1 says it belongs to your archive, so I hope
-you're the right people to ask. If not, could you pass this on?
+Would it be okay if we retold stories from the christianiahistorie films on the Christiania1 channel at the places they happened? We'd write them in our own words, show no clips, and credit the channel and the storyteller with a link. We already tried this on a few films, and I should have asked first. If you'd rather we didn't, we'll delete it. The app is a business, free to try with a paid subscription.
 
-The christianiahistorie films are full of those stories. Mikael Fock on
-Solvognen and the poison store at Sadolin & Holmblad, for example. We tried
-it out on some of the films, and I should have asked first. If you say no,
-we'll delete it.
+The channel says it's part of your archive. If I've got the wrong people, could you pass this on? A yes or no is all I need.
 
-This is how we would use them: We write a short text about one episode in
-our own words and never show clips. Every story names the channel and the
-storyteller as the source, with a link that opens the film right where the
-story is told. We read the subtitles once and delete them afterwards. And
-if you want a story taken down, or all of them, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -453,27 +299,14 @@ Best regards,
 
 To: kim@greiner.dk
 
-Subject: Your stories about Nyhavn and Christianshavn
+Subject: Your Nyhavn and Christianshavn pages
 
 Hi Kim,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your pages on the houses of Nyhavn and on Christianshavn are some of the
-best we've found. The Titanic tickets sold at Nyhavn 1, for example, and the
-prison revolt of 1817 where Lagkagehuset is now. We've already used them,
-and I'd like to hear if that's all right with you.
+We've retold a few of the stories from your pages on Nyhavn and Christianshavn at the places they happened, in our own words, with your name and a link to your page. Is that okay with you? If not, we'll take them down. The app is a business, free to try with a paid subscription.
 
-We write a short text about one episode in our own words and quote at most
-a single line. Every story carries your name and a link to your page. We
-don't keep the texts after reading them. And if you want a story taken
-down, or all of them, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
 
@@ -483,33 +316,16 @@ Best regards,
 
 To: mail@refshaleoen.dk (no address for the channel; ask them to pass it on)
 
-Subject: For Refshaleøen TV and Kim Bargsteen: Refshaleøens historie
+Subject: For Refshaleøen TV and Kim Bargsteen
 
 Hi,
 
-I can't find an address for Refshaleøen TV. Could you pass this on to them,
-or to Kim Bargsteen? Thank you.
+I can't find an address for Refshaleøen TV. Could you pass this on to them, or to Kim Bargsteen? Thank you.
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-The 2022 film Refshaleøens historie, where Kim Bargsteen tells about B&W, is
-exactly that. There's almost nothing about Refshaleøen told by someone who
-was there. I have two questions.
+Is there a transcript of the film Refshaleøens historie? We don't transcribe audio, so we need text to find the places. And would it be okay if we retold parts of it at the places they happened, in our own words, with credit and a link to the film? The app is a business, free to try with a paid subscription.
 
-Is there a transcript or subtitles for the film? We don't transcribe audio
-ourselves, so without text we can't find the places.
-
-And may we use it like this: We write a short text about one episode in our
-own words and never show clips. Every story names the channel and Kim
-Bargsteen as the source, with a link that opens the film right where the
-story is told. We don't keep the text after reading it. And if you want a
-story taken down, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
 
@@ -520,30 +336,16 @@ Best regards,
 To: the address behind "View email" on the channel's About page
 (`UCz0mJQVpBbLIjOq-oOb2nkA`); kontakt@peterbak.dk only if that fails
 
-Subject: Dansk rockhistorie in a walking app
+Subject: Dansk rockhistorie
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your portraits of musicians tell about the rehearsal rooms, venues and
-studios where it happened. Flemming Rasmussen on Sweet Silence Studio, for
-example. We'd like to let people stand at the spot and hear the story.
+Would it be okay if we retold stories from your videos at the places they happened? We'd write them in our own words, show no clips, link to the video at the moment the story is told, and take anything down if you ask. The app is a business, free to try with a paid subscription.
 
-This is how we would use them: We write a short text about one episode in
-our own words and never show clips. Every story names the channel and the
-musician as the source, with a link that opens the video on YouTube right
-where the story is told. We read the subtitles once and delete them
-afterwards. And if you want a story taken down, or all of them, it's gone
-within a day.
+A yes or no is all I need.
 
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -553,30 +355,14 @@ Best regards,
 
 To: kenneth@kennethbalfelt.org
 
-Subject: Your films from Enghave Plads
+Subject: Your Enghave Plads films
 
 Hi Kenneth,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your films with the beer drinkers at Enghave Plads are one of the few places
-where people tell about Vesterbro and Sydhavnen themselves. I have two
-questions.
+Is there a transcript of your Enghave Plads films? We don't transcribe audio, so we need text to find the places. And would it be okay if we retold parts of them at the places they happened, in our own words, with your name and a link, without naming the people in them? The app is a business, free to try with a paid subscription.
 
-Is there a transcript or subtitles for the films? We don't transcribe audio
-ourselves, so without text we can't find the places.
-
-And may we use them like this: We write a short text about one episode in
-our own words and never show clips. Every story names you as the source,
-with a link to the film. We don't name the people in them without asking.
-We don't keep the text after reading it. And if you want a story taken
-down, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
 
@@ -586,28 +372,14 @@ Best regards,
 
 To: zarzia@gmail.com
 
-Subject: Al Magt til Kærligheden in a walking app
+Subject: Al Magt til Kærligheden
 
 Hi Shazia,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Your portraits of Christianites tell about life in Christiania, place by
-place, from the people who were there. I have two questions.
+Do the portraits in Al Magt til Kærligheden exist as text? We don't transcribe audio, so we need text to find the places. And would it be okay if we retold parts of them at the places they happened, in our own words, with your name and a link? The app is a business, free to try with a paid subscription.
 
-Do the portraits exist as text? We don't transcribe audio ourselves, so
-without text we can't find the places.
-
-And may we use them like this: We write a short text about one episode in
-our own words and quote at most a single line. Every story names you and
-the storyteller, with a link to you. We don't keep the text after reading
-it. And if you want a story taken down, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
 
@@ -617,29 +389,14 @@ Best regards,
 
 To: the address behind "View email" on youtube.com/@bbh_frh_hosp/about
 
-Subject: Stemmer fra Bjerget in a walking app
+Subject: Stemmer fra Bjerget
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Stemmer fra Bjerget tells about life at Bispebjerg Hospital from the people
-who were there. Bispebjerg is one of the areas where we have the fewest
-stories.
+Would it be okay if we retold some of the stories from Stemmer fra Bjerget at the hospital, in our own words, with credit and a link to the episode? We'd never name patients and would take anything down if you ask. The app is a business, free to try with a paid subscription.
 
-This is how we would use the episodes: We write a short text about one
-episode in our own words and never show clips. Every story names the podcast
-and the hospital as the source, with a link to the episode. We don't name
-patients. We read the subtitles once and delete them afterwards. And if you
-want a story taken down, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Is that all right with you?
-
-Best regards,
 [name]
 [phone]
 
@@ -649,27 +406,14 @@ Best regards,
 
 To: kbhbilleder@kff.kk.dk (unverified; if it bounces, stadsarkiv@kk.dk)
 
-Subject: Your free pictures in a walking app
+Subject: Copyright-free photos through your API
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you see a short story about it. An old picture of that
-exact spot is often the best story of all.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-May I fetch the pictures that are out of copyright and free for commercial
-use, with their locations, through your API? I don't want to load the
-website. And is there a list of exactly those pictures, or a field that
-says so?
+Could I fetch the photos that are free of copyright and free for commercial use, with their locations, through your API? An old photo of the same spot often tells the story best. Each photo would carry the archive, the photographer and a link back. I don't want to load the website. The app is a business, free to try with a paid subscription.
 
-Under every picture we name the archive, the photographer and a link to the
-picture on your site. We only use free pictures. And if you want a picture
-taken down, it's gone within a day.
-
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
 
@@ -679,22 +423,13 @@ Best regards,
 
 To: info@historiskatlas.dk
 
-Subject: Access to your API
+Subject: API access
 
 Hi,
 
-My name is [name], and I'm building Memory Lane, an app that plans walks in
-Copenhagen. Along the way you pass places where something happened, and when
-you stand there, you can read a short story about it.
+I'm [name], and I'm building Memory Lane, a walking app for Copenhagen. It plans a walk for you, and when you reach a place where something happened, it shows a short story about it. The idea is to get people out walking and curious about their own city.
 
-Could I get access to your API, so I can see each story's licence and its
-full text? We only use stories under CC BY, CC BY-SA or in the public domain,
-and follow the licence's terms. Every story names Historisk Atlas as the
-source, with a link to the story on your site. And if you want a story taken
-down, it's gone within a day.
+Could I get access to your API, so I can see each story's licence? We'd only use stories under CC BY, CC BY-SA or in the public domain, follow the licence, and credit Historisk Atlas with a link. The app is a business, free to try with a paid subscription.
 
-The app is free with one walk a week. More walks cost a subscription.
-
-Best regards,
 [name]
 [phone]
