@@ -29,6 +29,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **A design drop in the repo root turns the gate red.** 2026-10-13: the
+  founder's `memory-lane-lockets (1)/` (untracked, with its own Python
+  tools) failed `ruff check` and `format --check`; the gate only went green
+  with the folder moved aside. Fix: `extend-exclude = ["memory-lane-*"]` in
+  `pyproject.toml`'s ruff config, or drop bundles outside the repo.
+
 - **`./e2e/run.sh` wipes the dev simulator's app state and kills its Metro.**
   2026-10-13: run on the sim the founder was using, it deleted the app's
   AsyncStorage (a Collector rank set by hand for them) and left the app on "No
