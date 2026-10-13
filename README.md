@@ -65,7 +65,7 @@ See [docs/repository-map.md](docs/repository-map.md). Run the tests with `./loop
 | [research-progression.md](docs/research-progression.md) | XP, loot and money in walking games: what lasted, with sources |
 | [research-prior-art.md](docs/research-prior-art.md) | Who built gated place stories or daily walks before, and why they died |
 | [research-fantasy-hike.md](docs/research-fantasy-hike.md) | Fantasy Hike torn down; gear, exploring and story in walking games |
-| [permission-request.md](docs/permission-request.md) | The email asking a YouTube channel for written permission, and what must be true first |
+| [permission-request.md](docs/permission-request.md) | Every permission ask: a tracker by what a yes adds to the empty cells, the promises each email makes, and the emails (Danish) |
 | [data-protection.md](docs/data-protection.md) | The legitimate-interest assessment and DPIA: location, and sources that name private people |
 | [mobile/UI.md](mobile/UI.md) | Design tokens and app constraints |
 
