@@ -22,6 +22,7 @@ const HEART =
   'M12 20s-7.5-4.6-7.5-10.2A4.1 4.1 0 0 1 12 7.4a4.1 4.1 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z';
 const ARROW = 'M20 4L4 11l7.2 1.8L13 20z';
 const LOCKET = 'M5 13.8a7 8.2 0 1 0 14 0a7 8.2 0 1 0 -14 0z';
+const MAP = 'M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5z';
 
 /** `tone` is filled, `line` stroked, `solid` filled in the line's colour. */
 const ICONS = {
@@ -29,6 +30,7 @@ const ICONS = {
     tone: 'M6 4h11a2 2 0 0 1 2 2v10H8a2 2 0 0 0-2 2z',
     line: 'M6 4h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2V4zM6 18a2 2 0 0 1 2-2h11M12.5 6.8l2.2 2.5-2.2 2.5-2.2-2.5z',
   },
+  map: { tone: MAP, line: `${MAP}M9 4v13.5M15 6.5v13.5` },
   add: { tone: LOCKET, line: `${dot(12, 3.4, 1.7)}${LOCKET}M12 10.3v7M8.5 13.8h7` },
   locate: { tone: ARROW, line: ARROW },
   heart: { tone: HEART, line: HEART },

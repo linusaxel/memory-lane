@@ -4794,7 +4794,8 @@ simulator.
   down to 34pt the same day). The
   Collector HUD keeps the top; the Journal orb stays only off home (planner,
   walk), where the dock is not. The walk keeps its bottom row.
-- **Plan a walk is your Collector** (`src/PlanWalkButton.tsx`): your class
+- **Plan a walk is your Collector** (superseded 2026-10-13 by *Plan a walk is
+  a map*) (`src/PlanWalkButton.tsx`): your class
   at its rank, in a foil ring as the HUD's medal draws it. A tap sets them
   walking, three bobbing steps and out of the ring, and the planner opens as
   they leave, 0.9 s. A compass rose came first; twenty-odd compasses, maps
@@ -4904,6 +4905,23 @@ them aloud.
 
 **Options considered:** the portrait and coin only (no sense of progress); a
 glass chip with a thin bar; the rank name beside the portrait.
+
+### Plan a walk is a map
+
+Status: Accepted 2026-10-13. Supersedes, in *Dusk, and the map's dock*,
+"Plan a walk is your Collector".
+
+With the Collector now a portrait top left (*The Collector is a portrait*),
+it stood twice over home. The founder asked for a plain icon in the
+Journal and Add style and, of eight (a walker, a folded map, a map with a
+route, a route to a flag, footprints, a signpost, a compass, a boot;
+`~/Downloads/memory-lane-redesign/plan-icon.html`), picked the folded map:
+`map` in `src/Icon.tsx`, a sticker, its name still in gold. A tap opens the
+planner at once; the walk out of the ring and its planned walk cycle are
+gone with `PlanWalkButton.tsx`.
+
+**Options considered:** the seven others; keeping the Collector there (two
+of you on one screen).
 
 ### Rejected approaches, do not retry
 

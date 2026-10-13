@@ -7,16 +7,11 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { ClassId } from './collector';
 import { GlassButton, GlassCard } from './Glass';
 import Icon from './Icon';
-import { PlanWalkButton } from './PlanWalkButton';
 import { color, contour, font } from './theme';
 
 type Props = {
-  /** Your Collector, who stands in Plan a walk. */
-  collector: ClassId;
-  stage: number;
   journalNew: boolean;
   /** The map is following you: Locate draws filled, as Apple Maps does. */
   onYou: boolean;
@@ -31,6 +26,7 @@ function Slot({
   label,
   say = label,
   hint,
+  go,
   onPress,
   children,
 }: {
@@ -38,6 +34,8 @@ function Slot({
   /** What VoiceOver says, when the name under it is short for it. */
   say?: string;
   hint?: string;
+  /** Plan a walk: named in gold. */
+  go?: boolean;
   onPress: () => void;
   children: ReactNode;
 }) {
@@ -51,7 +49,7 @@ function Slot({
       style={({ pressed }) => [styles.slot, pressed && styles.pressed]}
     >
       <View style={styles.icon}>{children}</View>
-      <Text style={styles.name}>{label}</Text>
+      <Text style={[styles.name, go && styles.go]}>{label}</Text>
     </Pressable>
   );
 }
@@ -68,14 +66,16 @@ export default function MapDock(p: Props) {
           <Icon name="journal" size={26} color={color.ink} />
           {p.journalNew && <View style={styles.newDot} />}
         </Slot>
-        <View style={styles.slot}>
-          <PlanWalkButton
-            id={p.collector}
-            stage={p.stage}
-            onPress={p.onPlanPress}
-            onWalkEnd={p.onPlan}
-          />
-        </View>
+        <Slot
+          label="Plan a walk"
+          go
+          onPress={() => {
+            p.onPlanPress();
+            p.onPlan();
+          }}
+        >
+          <Icon name="map" size={30} color={color.ink} />
+        </Slot>
         <Slot label="Add" say="Add a memory here" onPress={p.onAdd}>
           <Icon name="add" size={28} color={color.ink} />
         </Slot>
@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
   pressed: { transform: [{ scale: 0.92 }] },
   icon: { height: 34, justifyContent: 'center', alignItems: 'center' },
   name: { ...font.uiBold, fontSize: 11, color: color.inkSoft },
+  go: { color: color.gold },
   newDot: {
     position: 'absolute',
     top: 0,
