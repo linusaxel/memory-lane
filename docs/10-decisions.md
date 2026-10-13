@@ -4959,8 +4959,10 @@ capsule:
 
 - **One row across the top.** Your Collector on the left; on the right one
   glass capsule, Center on me then Settings, level with it (`App.tsx`). The
-  planner and the walk keep the gear alone there: each has its own Center on
-  me at the bottom.
+  same capsule on every screen, home, planner and walk: the founder saw it
+  change and asked that it never does (2026-10-13), so the walk's bottom
+  Center on me is gone. The Journal orb beside the Collector shows on the walk
+  only, not over the planner.
 - **The Collector's page is the game:** the look, the rank, the evolution,
   what's next. No gear, no name.
 - **Your name is first in Settings**, saved as typed, as before. It signs

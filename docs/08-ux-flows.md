@@ -816,7 +816,7 @@ anyone else's collection or the local unlock cache.
    walk (F34).
    **The camera follows you** while there is a position, and a pinch zooms
    without moving the centre. A one-finger drag lets go so you can look
-   around, and **Center on me** (bottom right, beside the card) goes hollow
+   around, and **Center on me** (top right) goes hollow
    until a tap follows you again (F10).
 4. Each stop draws the one pin (`mobile/UI.md`, "One pin") with its position
    (1–5) in the badge. There is no line while walking: the next unearned

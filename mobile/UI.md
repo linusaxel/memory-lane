@@ -54,8 +54,8 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │                              does not pan or rotate, and a pinch stays centred
 ├─ Marker per stop            tap -> MemorySheet.  One pin, see Markers; the next one hops. No line
 ├─ Collector + Journal        across the top: the portrait in a plum ring filling to the next rank, its rank on the coin; no card,
-│                              no words (tapped: its page), then the Journal, a 48pt glass orb in its contour, the planner and the walk.
-│                              Top right a glass capsule: Center on me (home only) | the Settings gear.
+│                              no words (tapped: its page), then the Journal, a 48pt glass orb in its contour, on the walk only.
+│                              Top right a glass capsule, the same on every screen: Center on me | the Settings gear.
 │                              Hidden while a memory, the locket in reach or a sheet is up (rule 13).
 │                              `book.closed`, a 10pt gold dot: a heart
 │                              or a note came back on something you filed (src/seen.ts). Opens the
@@ -63,8 +63,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 ├─ the bottom row             edge to edge, bottom 70 (12pt over Apple's logo), on the walk only,
 │                              never over a card with its own buttons (Preview, EndWalk,
 │                              WalkDone). Add, a 44pt glass circle with an gold `plus`, files a
-│                              memory, no walk needed (see "Writing"). Center on me the same circle
-│                              at the other end. Between them the one thing to do, which changes:
+│                              memory, no walk needed (see "Writing"). Beside it the one thing to do, which changes:
 │                              Turn on location (gold) with no position, else the walk card.
 │                              While a hold would open the ring the walk card stays under it
 ├─ the walk card             the bottom row's middle, glass (F9): "Next: <place> · 350 m" over
@@ -77,7 +76,7 @@ MapView (the walk, full bleed)  only today's accepted stops, nothing else. With 
 │    row, the locket above that, ‹ › either side when more than one is in reach, and the
 │    walk card steps aside, all under a paper wash. Only a stop of the walk in progress gets it. Tapping a pin in reach
 │    points it at that pin; the slide, or the hold, opens the sheet on the story
-├─ "Center on me"             the bottom row's right end, always there (F10). `location.fill`
+├─ "Center on me"             top right in the capsule, always there (F10). `location.fill`
 │                              while the map is on you, `location` when not: on a walk once a
 │                              one-finger drag lets go of you, before one once the map is off you
 │                              by a sixth of the screen. With no position a tap asks for one.
@@ -181,7 +180,7 @@ over "Your Collector" 34/700, × top right
 
 There are no tabs on the map, and no map of what is locked: the planner draws the walk it
 offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
-On a walk the bottom is where you act, one tap each: Add, the walk card and Center on me;
+On a walk the bottom is where you act, one tap each: Add and the walk card;
 in the planner the card's own buttons are. The top is where you read:
 your Collector and the Journal (docs/10, "Game menus").
 ```
@@ -375,10 +374,10 @@ bezel, its label in `onGo`. Turn on location is a go `Button`. **Home has the
 dock** (`src/MapDock.tsx`, docs/10, "Sticker icons, and Plan a walk
 centred"): one glass bar at bottom 70, Journal · Plan a walk · Add, Plan a walk
 centred and named in gold, each named under its icon (`src/Icon.tsx`); Center
-on me is a 44pt glass circle over the bar's right end. Plan a walk is a folded map
+on me is top right (docs/10, "Map controls top right"). Plan a walk is a folded map
 (`map`), a sticker like the others; a tap opens the planner. **The walk
-has the bottom row**: Add a memory bottom left and Center on me bottom right,
-60pt glass circles, the walk card between them. In reach, the slide replaces the whole
+has the bottom row**: Add a memory bottom left, a 60pt glass circle, the walk card
+beside it. In reach, the slide replaces the whole
 row. The walk card says "Next · 280 m", the place in Gloock, and a checklist of
 16pt circles: done gold with a check, next a gold ring, later a rule ring. When
 the home map's fetch fails, a glass banner says "Can't reach Memory Lane right

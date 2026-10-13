@@ -1885,21 +1885,6 @@ export default function App() {
       });
     }
   };
-  // Bottom right on the walk: back to you, filled while the map follows you,
-  // as Apple Maps does.
-  const centerButton = (
-    <GlassButton
-      style={styles.bigCircle}
-      hitSlop={4}
-      accessibilityRole="button"
-      accessibilityLabel="Center on me"
-      onPress={locate}
-    >
-      {/* Filled while the map is on you, as Apple Maps does. */}
-      <Icon name="locate" size={26} color={color.ink} filled={!offYou} />
-    </GlassButton>
-  );
-
   // Add, one tap from the map and the walk alike: filing is standing
   // somewhere, not unlocking. The planner has none: its card fills the bottom.
   const add = async () => {
@@ -2303,9 +2288,10 @@ export default function App() {
           {/* Last, so they sit over every card. The bottom is where a thumb
               acts, the top where an eye reads (docs/10, "Act at the bottom,
               read at the top"). Your Collector across the top, and off the
-              map, where the dock has it, the Journal at its end; top right,
-              Center on me (home only) and Settings (docs/10, "Map controls
-              top right"); none while a memory is up (UI.md rule 13). */}
+              map, where the dock has it, the Journal at its end (the walk, not
+              the planner); top right, always Center on me and Settings
+              (docs/10, "Map controls top right"); none while a memory is up
+              (UI.md rule 13). */}
           {(stage === 'map' || stage === 'preview' || stage === 'walk') &&
             !confirmEnd &&
             !showDone &&
@@ -2319,7 +2305,7 @@ export default function App() {
                   filed={filed}
                   onPress={() => setCollectorOpen(true)}
                 />
-                {stage !== 'map' && (
+                {stage === 'walk' && (
                   <Pressable
                     hitSlop={4}
                     accessibilityRole="button"
@@ -2337,20 +2323,16 @@ export default function App() {
                 )}
                 <View style={styles.grow} />
                 <GlassCard style={styles.controls}>
-                  {stage === 'map' && (
-                    <>
-                      <Pressable
-                        hitSlop={4}
-                        accessibilityRole="button"
-                        accessibilityLabel="Center on me"
-                        onPress={locate}
-                        style={({ pressed }) => [styles.orb, pressed && styles.squish]}
-                      >
-                        <Icon name="locate" size={22} color={color.ink} filled={!offYou} />
-                      </Pressable>
-                      <View style={styles.divider} />
-                    </>
-                  )}
+                  <Pressable
+                    hitSlop={4}
+                    accessibilityRole="button"
+                    accessibilityLabel="Center on me"
+                    onPress={locate}
+                    style={({ pressed }) => [styles.orb, pressed && styles.squish]}
+                  >
+                    <Icon name="locate" size={22} color={color.ink} filled={!offYou} />
+                  </Pressable>
+                  <View style={styles.divider} />
                   <Pressable
                     hitSlop={4}
                     accessibilityRole="button"
@@ -2400,7 +2382,7 @@ export default function App() {
               onPlan={() => setStage('preview')}
             />
           )}
-          {/* On a walk: Add, the walk card, Center on me (docs/10, "One
+          {/* On a walk: Add and the walk card (docs/10, "One
               gold button that changes"). Not over a card with its own
               buttons at the bottom. */}
           {pastWalk && (
@@ -2553,7 +2535,6 @@ export default function App() {
                   </GlassButton>
                 )}
               </View>
-              {centerButton}
             </View>
           )}
           {/* While a memory is in reach the rest steps back: a paper wash over
@@ -2717,7 +2698,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   squish: { transform: [{ scale: 0.92 }] },
-  // Top right: Center on me (home only) and Settings in one capsule.
+  // Top right: Center on me and Settings in one capsule, on every screen.
   controls: { flexDirection: 'row', alignItems: 'center' },
   divider: { width: StyleSheet.hairlineWidth, height: 28, backgroundColor: color.rule },
   // Edge to edge, a circle each end and the gold thing between. At 70, 12pt
@@ -2740,7 +2721,7 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   wide: { alignSelf: 'stretch' },
   locate: { alignSelf: 'stretch' },
-  // Add and Center on me, each end of the bottom row.
+  // Add, the bottom row's left end.
   bigCircle: {
     width: 60,
     height: 60,
