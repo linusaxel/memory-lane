@@ -164,6 +164,42 @@ permission: Stadsarkivet, Frederiksberg-erindringer, minnen.se's Danish
 counterpart, *Al Magt til Kærligheden* (Shazia Khan), Realdania's *Mit sted*,
 and the local-history societies.
 
+**Sweep 2026-10-12: the empty outer cells, by district (5 agents).** Amager,
+Sydhavn/Carlsberg, Nordvest/west Frederiksberg, Nordhavn/harbour edge, and
+Wikipedia by title across them. Every district is thin: about 25-35 open
+stories each, none near 30 a cell. Registered 364-376 (83 windows): Wikipedia
+firsts (en 364: Kløvermarken, Selandia, the Carlsberg Lab, Emdrup playground,
+Amerikakaj) and happenings (da 365), Brodersen's Nordvest and harbour posts
+(366, under his cap), J.C. Jacobsen's archive (367-368, PD; no sitemap, one
+page per source: `dokumenter/<id>`, also nPgk, wtbu), Biografmuseet's Amager
+cinemas (369-372), Sundby Lokalhistorie's two open story pages (373-374),
+Carlsbergfondet's Meldal page (375), Det Kolde Gys (376); Glud & Marstrand, Bellahøj (377), Cisternerne (378). Trial: 12 good of 86 windows, 7 of them Brodersen; the Wikipedia firsts read as chronicle (docs/04 *Road*).
+- **Cells:** 55.710,12.558 and 55.709,12.574 are Lersø/Ryparken and north
+  Østerbro, not Bispebjerg; Bispebjerg Hospital and Grundtvigs Kirke sit
+  outside the ring's cells.
+- **Ask permission, the real volume out here:** Humlen ved Carlsberg
+  (Arbejdermuseet, 195 brewery workers' posts, "ikke-kommerciel"); Lokalhistorisk
+  Selskab for Brønshøj-Husum-Utterslev (`lokalhistorie-bhu.dk`, "eftertryk
+  efter aftale", info.lhsbhu@gmail.com); Refshaleøen TV and Kim Bargsteen (B&W,
+  uncaptioned); Balfelt's Enghave Plads beer drinkers (uncaptioned); Stemmer
+  fra Bjerget (Bispebjerg Hospital podcast, `UCzkyW2Y9sGT4eC1S4gMkAgg`).
+- **Small, unregistered:** Copenhagen Suborbitals' blog (13 Refshaleøen posts
+  in 274; skip pre-2014), ab-b.dk Amager Bio, grundtvigskirke.dk historien,
+  Frederiksberg Stadsarkiv's west route, single captioned videos (Valby:
+  `QZnyAmQ3xLs`, `hJ5g-kOpXh8`; B&W Khrushchev 1964: `lR8jwlSXE7U`).
+- **Dead:** no local-TV or society channel for Amager, Sydhavn, Valby or
+  Nordvest; bispebjerghospital.dk (F5 challenge), homeofcarlsberg.com and
+  carlsberggroup.com (403 to ClaudeBot), amager-strand.dk (526),
+  navalhistory.dk (503); no PD memoir for these districts (built up after
+  1900). Wikipedia district categories are buildings and clubs; what pays out
+  here is firsts and discoveries at a spot.
+- **Reddit as a lead finder: no.** Its terms and robots.txt rule it out as a
+  source (16), and WebSearch refuses the domain, so it gives no snippets either.
+- **Terms to know:** Bryggebladet's `/ombryggebladet/ophavsret/` forbids
+  digital copies and Tårnby Lokalarkiv's page reserves all text; neither is
+  machine-readable, so 247 and 337-339 stand under docs/10 *Recent sources
+  without permission*, but give the lawyer both pages.
+
 **Sweep 2026-10-12 (evening): old memoirs, Biografmuseet-shaped sites, Wikipedia
 5, YouTube (4 agents).** Trialled in batch (docs/04, 124 windows, ~58 good).
 - **Memoirs, all roman OCR:** Muusmann *Det glade København* 1 (379, 7.5),

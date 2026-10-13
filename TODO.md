@@ -29,6 +29,12 @@ What slowed a session down or nearly shipped something wrong, and would again.
 The rules for adding to it are in AGENTS.md, "Then log the friction". Newest first;
 delete an entry when its fix lands.
 
+- **`batch.send` retries a network blip while polling, not while creating**
+  (2026-10-12). Pass 6 of an 86-item run died on `APIConnectionError` at
+  `batches.create`, exit 1, last cards unwritten; resuming on the still-pending
+  ids cost cents but needed a human to notice. Fix: the same `except
+  anthropic.APIConnectionError` retry around `create` in `pipeline/batch.py`.
+
 - **The agent shell is zsh, so an id list in a variable doesn't split.**
   2026-10-12: `batch --content $IDS` sent one argument and argparse refused it,
   and `S="venv/bin/python -m pipeline.sources set"; $S 379 ...` ran nothing. It
