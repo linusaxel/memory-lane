@@ -267,7 +267,7 @@ export type PlanStep = 'shape' | 'length' | 'walk' | 'choices';
 /** The two stop lists on trial: a row of coins, or a rail down the card.
  *  ponytail: one goes once the founder picks; the dev screens set the other. */
 export type TimelineKind = 'horizontal' | 'vertical';
-export const TIMELINE: TimelineKind = 'horizontal';
+export const TIMELINE: TimelineKind = 'vertical';
 
 type PreviewProps = {
   /** In walk order, locked: what each is of, never what it says. Null until
