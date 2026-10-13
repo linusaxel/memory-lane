@@ -2,11 +2,10 @@
  *  top of the map, and the one place that is you (docs/10, "One you"): your
  *  name, and the gear for Settings. A character sheet: the look in its plate with a bar for each thing the next rank wants,
  *  the eight looks as a chain with the ones ahead as silhouettes, the next
- *  rank's checklist, and the four classes as crests. A stage
- *  needs lockets and memories you filed both (docs/10, "The Collector"); when
- *  a memory is what's missing, the page offers to leave one. The stage comes
- *  along on a switch: it is yours, not the class's. No shop, no prices, no
- *  currency. */
+ *  rank's checklist. The class was picked once, at onboarding, and is not
+ *  switched here. A stage needs lockets and memories you filed both (docs/10,
+ *  "The Collector"); when a memory is what's missing, the page offers to
+ *  leave one. No shop, no prices, no currency. */
 
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -14,7 +13,7 @@ import CloseButton from './CloseButton.tsx';
 import CollectorLook from './CollectorLook.tsx';
 import Plate from './Plate.tsx';
 import Button from './Button.tsx';
-import { CLASSES, FILED, STAGES, classOf, wants, wantsWords, type ClassId } from './collector.ts';
+import { FILED, STAGES, classOf, wants, wantsWords, type ClassId } from './collector.ts';
 import { Bar, Coin, Foil, Panel, Ribbon, Velvet } from './Game.tsx';
 import Glyph from './Glyph.tsx';
 import Icon from './Icon.tsx';
@@ -27,7 +26,6 @@ type Props = {
   stage: number;
   lockets: number;
   filed: number;
-  onChoose: (id: ClassId) => void;
   onAdd: () => void;
   /** Empty means Anonymous. Saved as it is typed, so there is no Save button
    *  to forget to press. */
@@ -47,7 +45,6 @@ export default function CollectorPage({
   stage,
   lockets,
   filed,
-  onChoose,
   onAdd,
   displayName,
   onDisplayName,
@@ -164,25 +161,6 @@ export default function CollectorPage({
             place={styles.add}
           />
         )}
-
-        <Text style={styles.groupTitle}>Your class</Text>
-        <View style={styles.classes}>
-          {CLASSES.map((c) => (
-            <Pressable
-              key={c.id}
-              style={dim(styles.class)}
-              onPress={() => onChoose(c.id)}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: c.id === chosen.id }}
-              accessibilityLabel={c.name}
-            >
-              <Plate size={72} on={c.id === chosen.id}>
-                <CollectorLook id={c.id} stage={stage} size={64} />
-              </Plate>
-              <Text style={styles.crestName}>{c.name}</Text>
-            </Pressable>
-          ))}
-        </View>
       </ScrollView>
     </Modal>
   );
@@ -289,14 +267,4 @@ const styles = StyleSheet.create({
   goalText: { ...font.uiMedium, fontSize: 16, color: color.ink },
   goalMet: { color: color.inkFaint },
   add: { marginTop: 16 },
-  classes: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 },
-  class: {
-    width: '47%',
-    flexGrow: 1,
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 18,
-    borderRadius: 16,
-  },
-  crestName: { ...font.uiBold, fontSize: 14, color: color.ink },
 });

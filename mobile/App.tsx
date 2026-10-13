@@ -1950,10 +1950,6 @@ export default function App() {
           setJournalOpen(false);
           setSubmitOpen(true);
         }}
-        onChoose={(id) => {
-          Haptics.selectionAsync().catch(() => {});
-          keepCollector({ class: id });
-        }}
         displayName={displayName}
         onDisplayName={rename}
         nameError={nameError}
@@ -2602,7 +2598,7 @@ export default function App() {
             permission={permission}
             onLocation={goToMyLocation}
             onDone={() => setIntro(false)}
-            picked={collectorId}
+            picked={collector?.class}
             onPick={(id) => keepCollector({ class: id })}
             key={devPage}
             devPage={devPage}

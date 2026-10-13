@@ -1189,20 +1189,20 @@ Someone new picks the character that will grow with their lockets and the
 memories they file.
 
 1. The last onboarding page, "Pick your Collector", shows the four classes
-   (Wayfinder, Pilgrim, Skywatcher, Chronicler) at stage 4 in a grid. The
-   Wayfinder is chosen until another is tapped; one tap chooses, with a gold
-   ring. "It grows as you open memories and leave your own. Change it any
-   time in your journal."
-2. Start (or Next, to the location primer) goes on with it. Skip on any page
-   leaves the Wayfinder.
-3. Later, tapping the Collector across the top of the map opens its page, where
-   any of the four can be chosen again. The stage comes along: it is your
-   counts, not the class's. The page shows both counts, what the next rank
+   (Wayfinder, Pilgrim, Skywatcher, Chronicler) at stage 4 in a grid. None is
+   chosen until one is tapped; one tap chooses, with a gold ring. "It grows
+   as you open memories and leave your own. You pick once."
+2. Start (or Next, to the location primer) waits for a pick, then goes on
+   with it. There is no Skip. The page shows only while no class is kept, so
+   a later sign-in does not offer it again.
+3. Later, tapping the Collector across the top of the map opens its page. The
+   class is not switched there. The page shows both counts, what the next rank
    still wants ("1 memory of yours to Lamplit"), and when a memory is
    missing, **Leave a memory here** (F5).
 
-The pick lives on the phone (`memorylane.collector.v1`), so a new phone starts
-as the Wayfinder. Nothing is sold and the look opens nothing.
+The pick lives on the phone (`memorylane.collector.v1`), so a new phone or a
+reinstall chooses again; someone from before who never chose stays the
+Wayfinder. Nothing is sold and the look opens nothing.
 `src/Onboarding.tsx`, `src/CollectorPage.tsx`, `src/CollectorLook.tsx`.
 Why, in `docs/10-decisions.md`, "The Collector".
 

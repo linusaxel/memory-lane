@@ -173,12 +173,10 @@ over "Your Collector" 34/700, the settings gear and × top right
 │                              A line under it says so, or that the save failed
 ├─ Evolution                   the eight looks in a row, yours ringed in plum, the ones ahead
 │                              as inkFaint silhouettes (the look with tintColor)
-├─ Next: Lamplit               a Panel: "1 memory of yours to Lamplit", then the two wants as a
-│                              checklist, a foil check once met; while a memory is missing a
-│                              go "Leave a memory here" under it (closes to Add)
-└─ Your class                  four crests, two to a row, each a small plate, full gold on
-                               yours; a tap switches. The stage comes along. No shop, no
-                               prices, no currency
+└─ Next: Lamplit               a Panel: "1 memory of yours to Lamplit", then the two wants as a
+                               checklist, a foil check once met; while a memory is missing a
+                               go "Leave a memory here" under it (closes to Add). No class
+                               switch (picked once, at onboarding), no shop, no prices
 
 There are no tabs on the map, and no map of what is locked: the planner draws the walk it
 offers, and a walk draws only itself. Only a stop of the walk in progress opens, standing on it.
@@ -201,7 +199,7 @@ with no network is never stopped at the gate.
 
 **Then four pages, once.** Right after a real sign-in: three illustrated pages
 and the Collector pick, the four classes in a grid with a gold ring on the
-chosen one (Gloock title, centred line, gold dots, Go Next/Start, gold Skip) and the
+chosen one (Gloock title, centred line, gold dots, Go Next/Start, no Skip; Start waits for a pick) and the
 location primer (Go "Turn on location", text "Not now"), drawn over the map
 (`Onboarding.tsx`; docs/10, *Four pages, then the map*).
 
@@ -219,8 +217,8 @@ location primer (Go "Turn on location", text "Not now"), drawn over the map
 | `src/useBreath.ts` | the next stop's hop |
 | `src/Memories.tsx` | the journal, which is you: photo, name, numbers, then walks, unlocked, and what you filed |
 | `src/Settings.tsx` | account, how unlocking works, location, notifications, about. Its own sheet, from the gear on your Collector's page |
-| `src/CollectorPage.tsx` | you: your Collector as a character sheet (the look in its plate, the ladder of eight, the four crests), your name, and the gear to Settings. Its own sheet, from the map's HUD |
-| `src/Plate.tsx` | the Collector's framed plate: the portrait, the crests, the rank-up |
+| `src/CollectorPage.tsx` | you: your Collector as a character sheet (the look in its plate, the ladder of eight), your name, and the gear to Settings. Its own sheet, from the map's HUD |
+| `src/Plate.tsx` | the Collector's framed plate: the portrait, the onboarding pick, the rank-up |
 | `src/CollectorHud.tsx` | your Collector across the top of the map: medal, rank, bar to the next. Tapped, its page |
 | `src/Game.tsx` | the game menus' pieces: `Foil`, `Velvet`, `Ribbon`, `Panel`, `Coin`, `Medal`, `Bar` |
 | `src/Avatar.tsx` | an initial or nobody, in one circle at any size: a memory's byline |

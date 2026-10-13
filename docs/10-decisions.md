@@ -3637,7 +3637,7 @@ the "no carousel" half of *Sign-in comes first, and it is the whole onboarding*.
 Sign-in is still the first screen. Right after a real sign-in, four pages say
 what the app is (stories in your city; they open only on the spot; one walk a
 day, free; pick your Collector, since 2026-10-11 by *The Collector*), with
-Skip and dots, then the location primer:
+dots, then the location primer (Skip gone 2026-10-13, *The Collector*):
 "Turn on location", a press with a reason, or "Not now". Someone who already
 granted location skips the primer. `Onboarding.tsx`, over the map so the
 primer's fix flies the map there.
@@ -4699,6 +4699,12 @@ Skywatcher, Chronicler) and it grows through eight looks as your lockets climb
   spent or sold, so nothing needs the server. Skipping means the Wayfinder.
   It is chosen on the last onboarding page, since choosing a look on day one
   is what makes people identify with a character (Birk et al., CHI 2016).
+- **Amended 2026-10-13: the class is chosen once, and onboarding has no
+  Skip.** The founder's call: a character you can't swap is one you
+  identify with. The pick page shows only while no class is kept, nothing
+  is pre-chosen, Start waits for a tap, and the Collector page lost its
+  crests. Someone from before who never chose stays the Wayfinder. Accepted
+  hole: the pick lives on the phone, so a reinstall chooses again.
 - **One loud moment.** Done on a walk that crossed a stage opens a
   full-screen reveal before the map. Never on the unlock and never over a
   memory: the memory is read first (F30). Lockets opened before the Collector

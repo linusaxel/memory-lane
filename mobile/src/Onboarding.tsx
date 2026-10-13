@@ -1,8 +1,8 @@
 /** Four pages on what the app is, then the location primer: once, right after
  *  sign-in, over the map (docs/10, "Four pages, then the map"). The pictures
  *  are the design handoff's own, rasterised (mobile/assets/onboarding). The
- *  last page picks your Collector (docs/10, "The Collector"); Skip leaves the
- *  Wayfinder.
+ *  last page picks your Collector, once: it shows only while no class is kept,
+ *  and nothing switches it later (docs/10, "The Collector"). No Skip.
  *  "Turn on location" is a press with a reason, so the system prompt is never
  *  the first thing anyone sees (UI.md, location). */
 
@@ -43,7 +43,8 @@ type Props = {
   onDone: () => void;
   /** The page a dev link opens on: 4 is the location primer. */
   devPage?: number;
-  picked: ClassId;
+  /** Undefined until a class is tapped; Start waits for one. */
+  picked?: ClassId;
   onPick: (id: ClassId) => void;
 };
 
@@ -60,6 +61,8 @@ export default function Onboarding({
   const dark = useColorScheme() === 'dark' ? 1 : 0;
   const [page, setPage] = useState(devPage ?? 0);
   const [asking, setAsking] = useState(false);
+  // Read once: onboarding reruns on every sign-in, and the pick is made once.
+  const [choosing] = useState(picked === undefined);
 
   const pages = [
     {
@@ -77,15 +80,20 @@ export default function Onboarding({
       title: 'A free walk every week',
       body: 'Pick how far. Loop home or end somewhere new.',
     },
-    {
-      art: null,
-      title: 'Pick your Collector',
-      body: 'It grows as you open memories and leave your own. Change it any time in your journal.',
-    },
+    ...(choosing
+      ? [
+          {
+            art: null,
+            title: 'Pick your Collector',
+            body: 'It grows as you open memories and leave your own. You pick once.',
+          },
+        ]
+      : []),
   ];
   // Someone who already said yes is not asked again.
-  const primer = page === pages.length;
+  const primer = page >= pages.length;
   const last = page === pages.length - 1;
+  const waiting = last && choosing && picked === undefined;
   const next = () => (last && permission === 'granted' ? onDone() : setPage(page + 1));
   const shown = primer
     ? {
@@ -97,9 +105,7 @@ export default function Onboarding({
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom + 16 }]}>
-      <View style={styles.skipRow}>
-        {!primer && <Button kind="text" label="Skip" onPress={() => setPage(pages.length)} />}
-      </View>
+      <View style={styles.top} />
       {shown.art ? (
         <View style={styles.art}>
           <Image
@@ -160,7 +166,13 @@ export default function Onboarding({
                 <View key={i} style={[styles.dot, i === page && styles.dotOn]} />
               ))}
             </View>
-            <Button kind="go" label={last ? 'Start' : 'Next'} onPress={next} />
+            <Button
+              kind="go"
+              label={last ? 'Start' : 'Next'}
+              onPress={next}
+              disabled={waiting}
+              place={waiting && styles.waiting}
+            />
           </>
         )}
       </View>
@@ -178,7 +190,8 @@ const styles = StyleSheet.create({
     backgroundColor: color.paper,
     paddingHorizontal: 16,
   },
-  skipRow: { height: 52, alignItems: 'flex-end', justifyContent: 'center' },
+  top: { height: 52 },
+  waiting: { opacity: 0.4 },
   art: {
     width: '100%',
     aspectRatio: 358 / 368,
