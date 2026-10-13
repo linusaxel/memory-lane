@@ -54,8 +54,6 @@ export const color = {
   seal: dual('#A8403F', '#F28A82'),
   sealInk: dual('#FBF6EC', '#2A1213'),
   sealSoft: dual('#F6DCD8', '#3D2224'),
-  /** The glow behind an in-reach locket. Never a ring. */
-  glow: dual('rgba(168,64,63,0.5)', 'rgba(242,138,130,0.5)'),
 
   /** Velvet, and words on it: the Collector's colours, cloth, so one set in
    *  both themes (docs/10, "Game menus"). The ground is velvet.mid. */
@@ -145,8 +143,6 @@ export const solid = (dark: boolean) => ({
   plum: dark ? '#B8B3D1' : '#6E6890',
   track: dark ? '#38343E' : '#E6E3EE',
   seal: dark ? '#F28A82' : '#A8403F',
-  /** color.glow, for Svg, which cannot take a dynamic colour. */
-  glow: dark ? 'rgba(242,138,130,0.5)' : 'rgba(168,64,63,0.5)',
   /** The darker edge Apple Maps draws round a route. */
   goldCasing: dark ? '#6E5216' : '#5E470F',
   /** The preview's line: gold washed out, so the lockets on it pop. */

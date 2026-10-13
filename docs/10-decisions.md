@@ -3580,7 +3580,7 @@ direction B with two parts of A; the handoff is
 - **One meaning per colour.** Gold is a memory and the way to it (links, the
   route, pins). Green enamel (`goBg`) is go: every start or next action. Gold
   foil (`foil`) is keeping something: Seal it here, Subscribe, Done. Emerald
-  (`seal`, `glow`) is openable now. Plum (`plum`) is what you earned: level,
+  (`seal`) is openable now. Plum (`plum`) is what you earned: level,
   streak, XP, your board row. Blue stays the map's and your dot's. Destructive
   actions are never gold: Delete account is `danger`, End walk is quiet.
 - **Papers.** Warm cream in light; plum-black `#14101A` in dark, replacing the
@@ -3596,9 +3596,10 @@ direction B with two parts of A; the handoff is
   Gloock mark; the gold left bar is gone. The story opens on a gold Gloock
   **drop cap**, two lines deep (`StoryBody.tsx`, measured once since React
   Native cannot float text).
-- **In reach, the locket hangs and glows.** On its chain from the top of the
-  screen, with a soft emerald glow and no ring (the founder asked for the ring
-  gone), over the place name. The slide is green enamel with a foil key,
+- **In reach, the locket hangs.** On its chain from the top of the
+  screen, with no ring (the founder asked for the ring gone), over the place
+  name. *Superseded 2026-10-13:* it hung in a soft glow too; the founder asked
+  for that gone as well, so no colour sits behind it. The slide is green enamel with a foil key,
   "slide to open", and takes the bottom row's place. In dark the dive into the
   story fades through plum-black, never white.
 - **The sheets.** Tabs are a capsule with the open one raised; the journal's

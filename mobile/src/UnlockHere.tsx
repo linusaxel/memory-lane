@@ -4,16 +4,16 @@
  *  `progress` (docs/10, "Slide to unlock"). */
 
 import { useEffect, type RefObject } from 'react';
-import { AccessibilityInfo, Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { AccessibilityInfo, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
-import Svg, { Circle, Defs, Line, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Line } from 'react-native-svg';
 
 import type { LocatedMemory } from './api.ts';
 import Icon from './Icon.tsx';
 import LocketUnlock, { type LocketDrive } from './LocketUnlock.tsx';
 import DiamondRule from './DiamondRule.tsx';
 import { seg } from './lockets/math.ts';
-import { color, dim, font, metal, solid, story } from './theme.ts';
+import { color, dim, font, metal, story } from './theme.ts';
 
 type Props = {
   memory: LocatedMemory;
@@ -48,7 +48,6 @@ export default function UnlockHere({
   const many = count > 1;
   // Drawn after the locket, so they would sit on top of its dive.
   const stepBack = useAnimatedStyle(() => ({ opacity: 1 - seg(dive.value, 0, 0.2) }));
-  const glow = solid(useColorScheme() === 'dark').glow;
   const { lat, lng } = memory.place.coordinates;
   // ‹ › brings a fresh locket, so the thumb starts over with it.
   useEffect(() => {
@@ -68,8 +67,7 @@ export default function UnlockHere({
           </Animated.View>
         )}
         <View pointerEvents="box-none">
-          {/* It hangs on its chain from the top of the screen, and glows because
-          it opens: emerald, soft, and never a ring (docs/10, "Jewel Box"). */}
+          {/* It hangs on its chain from the top of the screen (docs/10, "Jewel Box"). */}
           <Svg width={4} height={1000} style={styles.chain} pointerEvents="none">
             <Line
               x1={2}
@@ -80,16 +78,6 @@ export default function UnlockHere({
               strokeWidth={2}
               strokeDasharray="5 4"
             />
-          </Svg>
-          <Svg width={GLOW} height={GLOW} style={styles.glow} pointerEvents="none">
-            <Defs>
-              <RadialGradient id="reach">
-                <Stop offset="0" stopColor={glow} stopOpacity={1} />
-                <Stop offset="0.45" stopColor={glow} stopOpacity={0.6} />
-                <Stop offset="1" stopColor={glow} stopOpacity={0} />
-              </RadialGradient>
-            </Defs>
-            <Circle cx={GLOW / 2} cy={GLOW / 2} r={GLOW / 2} fill="url(#reach)" />
           </Svg>
           <LocketUnlock
             // A fresh locket per memory: ‹ › must not carry a half-turned key over.
@@ -139,7 +127,6 @@ function Arrow({ glyph, name, onPress }: ArrowProps) {
 }
 
 const LOCKET = 250;
-const GLOW = LOCKET * 1.5;
 
 const styles = StyleSheet.create({
   // Above the slide (App's `slideRow`, at 70, 64 tall), with room between.
@@ -154,7 +141,6 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24 },
   chain: { position: 'absolute', left: LOCKET / 2 - 2, bottom: LOCKET - 6 },
-  glow: { position: 'absolute', left: (LOCKET - GLOW) / 2, top: (LOCKET - GLOW) / 2 },
   words: { alignSelf: 'stretch', alignItems: 'center' },
   rule: { width: 160, marginTop: 8 },
   place: { ...story.title, textAlign: 'center', marginTop: 14 },

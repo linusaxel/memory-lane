@@ -297,7 +297,6 @@ dot. The lockets' own metal is `metal` in `theme.ts`, one set in both themes.
 | `seal` | `#A8403F` / `#F28A82` | **openable.** Coral: a lit pin, the reach circle, the diamond in the rule. Fill or text |
 | `sealInk` | `#FBF6EC` / `#2A1213` | anything drawn on seal |
 | `sealSoft` | `#F6DCD8` / `#3D2224` | the ring filling during a hold |
-| `glow` | coral at 50% | the radial glow behind an in-reach locket. Never a ring |
 | `plum` | `#6E6890` / `#B8B3D1`, lavender | **what you earned.** Lockets, the rank bar on paper, the HUD's ring |
 | `velvetGround`, `onVelvet`, `onVelvetSoft`, `onVelvetGold` | `#443E46`, charcoal-plum; words `#F6F1E7`, `#E4DFE8`, `#F6DEB8` | **yours.** A chosen chip, the rank-up. One set in both themes; the rank bar on velvet is foil |
 | `track` | `#E6E3EE` / `#38343E` | the empty part of the rank bar and the HUD's ring |
